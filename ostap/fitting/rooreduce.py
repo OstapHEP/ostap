@@ -22,6 +22,7 @@ from   ostap.core.meta_info         import root_info
 from   ostap.math.base              import doubles
 from   ostap.core.core              import Ostap
 from   ostap.math.reduce            import root_factory
+from   pickle                       import PicklingError, UnpicklingError 
 import ostap.fitting.variables
 import ostap.fitting.roocollections
 import ostap.histos.graph_reduce    as     GR 
@@ -40,8 +41,8 @@ _new_methods_ = []
 ## Factory for deserialization of generic objects
 #  @attention it stores the constructor kaprameters as local attributes
 def root_store_factory ( klass , *params ) :
-    """Factory for deserialization of generic object
-    - attention: it stores the constructor kaprameters as local attributes
+    """ Factory for deserialization of generic object
+    - attention: it stores the constructor kaprameters as local attribute
     """
     ## create the objects 
     obj = root_factory ( klass , *params )
@@ -49,11 +50,9 @@ def root_store_factory ( klass , *params ) :
     obj.__store = params    ## Attention - keep argumetns with newly crfeated object!
     return obj 
 
-
 # =============================================================================
 ## Some native ROOT/RooFit objects 
 # =============================================================================
-
     
 # =============================================================================
 ## Dedicated unpickling factory for RooRealVar
@@ -69,18 +68,18 @@ def _rrv_factory ( args , errors , binnings , fixed , *attrs ) :
     elif errors and  1 == len ( errors ) : rrv.setError     ( *errors )
 
     for b in binnings :
-        if b : rrv.setBinning ( b , b.GetName ()) 
+        if b : rrv.setBinning ( b , b.GetName () ) 
 
     rrv.setConstant ( fixed )
     
     if attrs :
-        battrs = attrs[0] 
+        battrs = attrs [ 0 ] 
         for n , a in battrs : rrv.setAttribute          ( n , a )
         if 1 < len ( attrs ) :
-            sattrs = attrs[1] 
+            sattrs = attrs [ 1 ] 
             for n , a in sattrs : rrv.setStringAttribute    ( n , a )
             if 2 < len ( attrs ) :
-                tattrs = attrs[2]             
+                tattrs = attrs [ 2 ]             
                 for n , a in tattrs : rrv.setTransientAttribute ( n , a ) 
     
     return rrv
@@ -100,7 +99,7 @@ def _rrv_reduce ( rrv ) :
     has_max = rrv.hasMax ()
 
     ## constructor arguments 
-    if has_min and has_max :
+    if   has_min and has_max :
         args = name , title , value ,  rrv.getMin () , rrv.getMax ()              , rrv.getUnit ()
     elif has_min : 
         args = name , title , value ,  rrv.getMin () , ROOT.RooNumber.infinity () , rrv.getUnit () 
@@ -112,12 +111,12 @@ def _rrv_reduce ( rrv ) :
     ## errors 
     if   rrv.hasAsymError () :
         errors = rrv.getAsymErrorLo () , rrv.getAsymErrorHi ()
-    elif rrv.hasError   () :
+    elif rrv.hasError     () :
         errors = rrv.getError() ,
     else :
         errors = () 
 
-    ## binings 
+    ## binnings 
         
     binnings = tuple (   rrv.getBinning ( n , False )       for n in rrv.getBinningNames     () )
 
@@ -143,7 +142,6 @@ def _rrv_reduce ( rrv ) :
 
 ROOT.RooRealVar.__reduce__ = _rrv_reduce
 
-
 # =============================================================================
 ## Reduce <code>RooConstVar</code>
 #  @see RooConstVar 
@@ -162,7 +160,7 @@ ROOT.RooConstVar.__reduce__ = _rconst_reduce
 ## reduce <code>RooLinearVar</code>
 #  @see RooLinearVar
 def _rlinv_reduce ( var ) :
-    """Reduce `RooLinearVar`
+    """ Reduce `RooLinearVar`
     - see `ROOT.RooLinearVar`
     """ 
     return root_factory , ( type ( var )  ,
@@ -179,7 +177,7 @@ ROOT.RooLinearVar.__reduce__ = _rlinv_reduce
 ## factory for RooCategory objects
 #  @see RooCategory
 def _rcat_factory_  ( klass , name , title , index  , items ) :
-    """factory for `ROOT.RooCategory` objects
+    """ Factory for `ROOT.RooCategory` objects
     - see `ROOT.RooCategory`
     """
     cat = klass ( name , title )
@@ -191,7 +189,7 @@ def _rcat_factory_  ( klass , name , title , index  , items ) :
 ## reduce RooCategory instance 
 #  @see RooCategory
 def _rcat_reduce_ ( cat ) :
-    """reduce RooCategory instance 
+    """ Reduce RooCategory instance 
     - see `ROOT.RooCategory`
     """
     items = tuple ( (l,i) for (l,i) in cat.items() )
@@ -205,7 +203,7 @@ ROOT.RooCategory   .__reduce__    = _rcat_reduce_
 #  @see RooFormualVar 
 #  @see Ostap::FormualVar 
 def _rfv_factory ( klass , args , vars ) :
-    """Factory for unpickling of `RooFormulaVar` and `Ostap.FormulaVar`
+    """ Factory for unpickling of `RooFormulaVar` and `Ostap.FormulaVar`
     - see ROOT.RooFormulaVar 
     - see Ostap.FormualVar 
     """
@@ -228,7 +226,7 @@ def _rfv_factory ( klass , args , vars ) :
 #  @see RooFormulaVar 
 #  @see Ostap::FormulaVar 
 def _rfv_reduce ( rfv ) : 
-    """Reduce `RooFormulaVar` and `Ostap::FormulaVar` for pickling
+    """ Reduce `RooFormulaVar` and `Ostap.FormulaVar` for pickling
     - see RooFormulaVar 
     - see Ostap.FormulaVar 
     """
@@ -244,15 +242,16 @@ def _rfv_reduce ( rfv ) :
     
     return _rfv_factory , ( type ( rfv ) , args , vars ) 
 
-
-if (6,22) <= root_info : ROOT.RooFormulaVar.__reduce__  = _rfv_reduce
-else                   : Ostap.FormulaVar.__reduce__    = _rfv_reduce
+# =============================================================================
+if ( 6 , 22 ) <= root_info : ROOT.RooFormulaVar.__reduce__  = _rfv_reduce
+else                       : Ostap.FormulaVar.__reduce__    = _rfv_reduce
+# =============================================================================
 
 # =============================================================================
 ## unpickle RooUniformBinning object
 #  @see RooUniformBinnig  
 def _rub_factory ( *args ) :
-    """unpickle RooUniformBinning object
+    """ Unpickle RooUniformBinning object
     -see ROOT.RooUniformBinnig
     """
     return ROOT.RooUniformBinning ( *args )
@@ -261,12 +260,12 @@ def _rub_factory ( *args ) :
 ## reduce uniform binning scheme
 #  @see RoUniformBinnig 
 def _rub_reduce_ ( rub ) :
-    """Reduce RooUniformBininkg Object
+    """ Reduce RooUniformBininkg Object
     - see ROOT.RooUniformBinning
     """
     nbins = rub.numBoundaries()
     if nbins : nbins -= 1
-    content = rub.lowBound () , rub.highBound(), nbins , rub.GetName()
+    content = rub.lowBound () , rub.highBound() , nbins , rub.GetName()
     
     return _rub_factory, content
 
@@ -274,7 +273,7 @@ def _rub_reduce_ ( rub ) :
 ## unpickle RooBinning object
 #  @see RooBinnig  
 def _rb_factory ( data , name  ) :
-    """unpickle RooBinning object
+    """ Unpickle RooBinning object
     -see ROOT.RooUniformBinnig
     """
     return ROOT.RooBinning ( len ( data ) - 1 , data [ 0 ] , name )
@@ -282,14 +281,14 @@ def _rb_factory ( data , name  ) :
 ## reduce RooBinning object
 #  @see RooBinning 
 def _rb_reduce_ ( rb  )  :
-    """Reduce RooBinning object
+    """ Reduce RooBinning object
     - see ROOT.RooBinning 
     """
     if rb.isUniform() : return _rub_reduce_ ( rb )
 
     nb    = rb.numBoundaries() 
     ab    = rb.array ()
-    data  = array.array ( 'd' , [ 1.0 * ab[i] for i in range ( nb ) ] )
+    data  = array.array ( 'd' , [ 1.0 * ab [ i ] for i in range ( nb ) ] )
 
     content = data, rb.GetName()  
     return _rb_factory, content
@@ -298,36 +297,39 @@ def _rb_reduce_ ( rb  )  :
 ## unpickle RooRangeBinning object
 #  @see RooRangeBinnig 
 def _rrb_factory ( low , high , name ) :
-    """unpickle RooRangeBinning object"""
+    """ Unpickle RooRangeBinning object"""
     return ROOT.RooRangeBinning( low , high , name )
 # ============================================================================
 ## reduce RooRangeBinnig object
 #  @see RooRangeBinnig 
 def _rrb_reduce_ ( rrb ) :
-    """Reduce RooRangeBinnig object"""
+    """ Reduce RooRangeBinnig object"""
     return _rrb_factory ,  ( rrb.lowBound() , rrb.highBound() , rrb.GetName() ) 
 
 ROOT.RooBinning       .__reduce__ = _rb_reduce_
 ROOT.RooUniformBinning.__reduce__ = _rub_reduce_
 ROOT.RooRangeBinning  .__reduce__ = _rrb_reduce_
     
+# =============================================================================
 if not hasattr ( ROOT.RooGaussian , 'getX' ) :
     def _rgau_x_ ( pdf ) :
-        """Get x-observable"""
+        """ Get x-observable"""
         return Ostap.MoreRooFit.getX ( pdf )
     ROOT.RooGaussian.getX = _rgau_x_
     _new_methods_ += [ ROOT.RooGaussian.getX ]
 
+# =============================================================================
 if not hasattr ( ROOT.RooGaussian , 'getMean' ) :
     def _rgau_mean_ ( pdf ) :
-        """Get x-observable"""
+        """ Get x-observable"""
         return Ostap.MoreRooFit.getMean ( pdf )
     ROOT.RooGaussian.getMean = _rgau_mean_
     _new_methods_ += [ ROOT.RooGaussian.getMean ]
 
+# =============================================================================
 if not hasattr ( ROOT.RooGaussian , 'getSigma' ) :
     def _rgau_sigma_ ( pdf ) :
-        """Get sigma"""
+        """ Get sigma"""
         return Ostap.MoreRooFit.getSigma ( pdf )
     ROOT.RooGaussian.getSigma = _rgau_sigma_
     _new_methods_ += [ ROOT.RooGaussian.getSigma ]
@@ -335,7 +337,7 @@ if not hasattr ( ROOT.RooGaussian , 'getSigma' ) :
 # ==========================================================================--
 ## reduce  RooGaussian object 
 def _rgau_reduce_ ( pdf ) :
-    """Reduce `RooGaussian` object"""
+    """ Reduce `RooGaussian` object"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -345,17 +347,18 @@ def _rgau_reduce_ ( pdf ) :
 
 ROOT.RooGaussian.__reduce__ = _rgau_reduce_ 
 
-
+# =============================================================================
 if not hasattr ( ROOT.RooMultiVarGaussian , 'observables' ) :
     def _rmvgau_observables_ ( pdf ) :
-        """Get observables"""
+        """ Get observables"""
         return Ostap.MoreRooFit.observables( pdf )
     ROOT.RooMultiVarGaussian.observables = _rmvgau_observables_
     _new_methods_ += [ ROOT.RooMultiVarGaussian.observables ]
 
+# =============================================================================
 if not hasattr ( ROOT.RooMultiVarGaussian , 'mu_vec' ) :
     def _rmvgau_mu_vec_ ( pdf ) :
-        """Get mu-vec"""
+        """ Get mu-vec"""
         return Ostap.MoreRooFit.mu_vec ( pdf )
     ROOT.RooMultiVarGaussian.mu_vec = _rmvgau_mu_vec_
     _new_methods_ += [ ROOT.RooMultiVarGaussian.mu_vec ]
@@ -364,28 +367,28 @@ if not hasattr ( ROOT.RooMultiVarGaussian , 'mu_vec' ) :
 ## deserialize RooMultiVarGaussian object
 #  @see RooMultiVarGaussian
 def _rmvgau_factory_ ( klass , *args ) :
-    """Deserialize `ROOT.RooMultiVarGaussian` 
+    """ Deserialize `ROOT.RooMultiVarGaussian` 
     - see `ROOT.RooMultiVarGaussian`
     """
 
-    if 5 != len ( args ) : raise pickle.UnpicklingError("RooMultiVarGaussian: ivalid record length!")
+    if 5 != len ( args ) : raise UnpicklingError("RooMultiVarGaussian: ivalid record length!")
 
     muvec  = args [3]
     covm   = args [4]
 
     N = len ( muvec )
-    if N * N != len ( covm ) : raise pickle.UnpicklingError("RooMultiVarGaussian: cannot reconstruct covmatrix")
+    if N * N != len ( covm ) : raise UnpicklingError("RooMultiVarGaussian: cannot reconstruct covmatrix")
     
     muvec = ROOT.TVectorD    ( N , muvec )
     covm  = ROOT.TMatrixDSym ( N , covm  )
     
-    newargs = args [:3]  + ( muvec, covm ) 
+    newargs = args [ : 3 ]  + ( muvec, covm ) 
     return root_store_factory ( klass , *newargs )  
     
 # ==========================================================================--
 ## reduce  RooMultiVarGaussian object 
 def _rmvgau_reduce_ ( pdf ) :
-    """Reduce `RooMultiVarGaussian` object"""
+    """ Reduce `RooMultiVarGaussian` object"""
     return _rmvgau_factory_ , ( type ( pdf )                                  ,
                                 pdf.name                                      ,
                                 pdf.title                                     ,
@@ -394,7 +397,6 @@ def _rmvgau_reduce_ ( pdf ) :
                                 array.array ( 'd' , pdf.covarianceMatrix () ) )
 
 ROOT.RooMultiVarGaussian.__reduce__ = _rmvgau_reduce_ 
-
 
 # ==========================================================================--
 ## Get the original fractions from the <code>RooAddPdf</code>
@@ -420,7 +422,7 @@ _new_methods_ += [ ROOT.RooAddPdf  .orig_fracs ]
 # ==========================================================================--
 ## reduce  RooAddPdf object 
 def _raddpdf_reduce_ ( pdf ) :
-    """Reduce `RooAddPdf` object"""
+    """ Reduce `RooAddPdf` object"""
     content = type ( pdf ) , pdf.name , pdf.title , pdf.pdfList()
     pars    = pdf.coefList ()
     if 1 <= len ( pars ) :
@@ -433,7 +435,7 @@ ROOT.RooAddPdf.__reduce__ = _raddpdf_reduce_
 ## Is this <code>RooProdPdf</code> object conditional ?
 #  @see RooProdPdf 
 def _rprodpdf_cond_ ( pdf ) :
-    """Is this `RooProdPdf` object conditional ?
+    """ Is this `RooProdPdf` object conditional ?
     - see `ROOT.RooProdPdf` 
     """
     for p in pdf.pdfList() :
@@ -449,12 +451,10 @@ _new_methods_ += [ ROOT.RooProdPdf.conditional ]
 ## reduce RooProdPdf 
 #  @see RooProdPdf
 def _rprodpdf_reduce_ ( pdf ) :
-    """Reduce `ROOT.RooProdPdf`
+    """ Reduce `ROOT.RooProdPdf`
     - see `ROOT.RooProdPdf`
     """
-    if pdf.conditional () :
-        import pickle
-        raise pickle.PicklingError("RooProdPdf is conditional (cannot be picked)")
+    if pdf.conditional () : raise PicklingError("RooProdPdf is conditional (cannot be pickled)")
     
     content = type ( pdf ) , pdf.name , pdf.title , pdf.pdfList()
     return root_store_factory , content
@@ -465,7 +465,7 @@ ROOT.RooProdPdf.__reduce__ = _rprodpdf_reduce_
 ## Factory for RooFFTConfPdf 
 #  @see RooFFTConfPdf 
 def _rfft_factory_ ( klass , args , params ) :
-    """Factory for `ROOT.RooFFTConvPdf` 
+    """ Factory for `ROOT.RooFFTConvPdf` 
     - see `ROOT.RooFFTConvPdf`
     """
     pdf = klass ( *args )
@@ -499,7 +499,7 @@ ROOT.RooFFTConvPdf.__reduce__ = _rfft_reduce_
 ## Factory for RooSimultaneous
 #  @see RooSimultaneous 
 def _rsim_factory_ ( klass , args , catlst ) :
-    """Factory for `ROOT.RooSimultaneous` 
+    """ Factory for `ROOT.RooSimultaneous` 
     - see `ROOT.Simultaneous`
     """
     pdf = klass ( *args )
@@ -512,8 +512,8 @@ def _rsim_factory_ ( klass , args , catlst ) :
 ## Reduce RooSimultaneous object
 #  @see RooSimultaneous 
 def _rsim_reduce_ ( pdf ) :
-    """Reduce RooSimultaneous object
-    -see RooSimultaneous 
+    """ Reduce `RooSimultaneous` object
+    -see `RooSimultaneous` 
     """
     cat    = pdf.indexCat()
     labels = cat.labels()
@@ -528,7 +528,7 @@ ROOT.RooSimultaneous.__reduce__  = _rsim_reduce_
 #  @see RooEfficiency 
 #  @see Ostap::MorERooFit::get_eff 
 def _reff_efficiency_  ( pdf )  :
-    """Access to underlying efficiency function from RooEfficiency
+    """ Access to underlying efficiency function from RooEfficiency
     - see `ROOT.RooEfficiency`
     - see `Ostap.MoreRooFit.get_eff`
     """
@@ -539,7 +539,7 @@ def _reff_efficiency_  ( pdf )  :
 #  @see RooEfficiency 
 #  @see Ostap::MorERooFit::get_cat 
 def _reff_category_  ( pdf )  :
-    """Access to underlying accept/reject category from RooEfficiency
+    """ Access to underlying accept/reject category from `RooEfficiency`
     - see `ROOT.RooEfficiency`
     - see `Ostap.MoreRooFit.get_cat`
     """
@@ -550,7 +550,7 @@ def _reff_category_  ( pdf )  :
 #  @see RooEfficiency 
 #  @see Ostap::MorERooFit::get_acc
 def _reff_accept_  ( pdf )  :
-    """Access to accept category from RooEfficiency
+    """ Access to accept category `from RooEfficiency`
     - see `ROOT.RooEfficiency`
     - see `Ostap.MoreRooFit.get_acc`
     """
@@ -570,7 +570,7 @@ _new_methods_ += [
 ## reduce RooEfficiency
 #  @see RooEfficiency
 def _reff_reduce_ ( pdf ) :
-    """Reduce `ROOT.RooEfficiency`
+    """ Reduce `ROOT.RooEfficiency`
     - see `ROOT.RooEfficiency`
     """
     return root_store_factory , ( type ( pdf )     ,
@@ -587,7 +587,7 @@ ROOT.RooEfficiency.__reduce__  = _reff_reduce_
 #  @see RooPolyVar
 #  @see RooPolynomial
 def _rpv_coefficients_ ( var ) :
-    """Get the list of coefficients from `ROOT.RooPolyVar` & `ROOT.RooPolynomial` &
+    """ Get the list of coefficients from `ROOT.RooPolyVar` & `ROOT.RooPolynomial` &
     - see `ROOT.RooPolyVar`
     - see `ROOT.RooPolynomial`
     """
@@ -597,7 +597,7 @@ def _rpv_coefficients_ ( var ) :
 #  @see RooPolyVar
 #  @see RooPolynomial
 def _rpv_variable_ ( var ) :
-    """Get the variable from `ROOT.RooPolyVar` & `ROOT.RooPolynomial` &
+    """ Get the variable from `ROOT.RooPolyVar` & `ROOT.RooPolynomial` &
     - see `ROOT.RooPolyVar`
     - see `ROOT.RooPolynomial`
     """
@@ -607,12 +607,11 @@ def _rpv_variable_ ( var ) :
 #  @see RooPolyVar
 #  @see RooPolynomial
 def _rpv_lowest_order_ ( var ) :
-    """Get the lowest order from `ROOT.RooPolyVar` & `ROOT.RooPolynomial` &
+    """ Get the lowest order from `ROOT.RooPolyVar` & `ROOT.RooPolynomial` &
     - see `ROOT.RooPolyVar`
     - see `ROOT.RooPolynomial`
     """
     return Ostap.MoreRooFit.lowest_order( var ) 
-
 
 
 ROOT.RooPolyVar   . coefficients = _rpv_coefficients_
@@ -637,7 +636,7 @@ _new_methods_ += [
 #  @see RooPolyVar
 #  @see RooPolynomial
 def _rpv_reduce_ ( var ) :
-    """Reduce `ROOT.RooPolyVar` & `ROOT.RooPolynomial`
+    """ Reduce `ROOT.RooPolyVar` & `ROOT.RooPolynomial`
     - see `ROOT.RooPolyVar`
     - see `ROOT.RooPolynomial`
     """
@@ -657,7 +656,7 @@ ROOT.RooPolynomial. __reduce__  = _rpv_reduce_
 #  @see RooFitResult
 #  @see Ostap::Utils::FitResults
 def _rrfr_factory_ ( klass , *args ) :
-    """Deserialize RooFitResult
+    """ Deserialize RooFitResult
     - see `ROOT.RooFitResult`
     - see `Ostap.Utils.FitResults`
     """
@@ -667,15 +666,13 @@ def _rrfr_factory_ ( klass , *args ) :
     covargs = args [   10 ] ## covariance related arguments 
     history = args [   11 ] ## the last argument, history 
 
-    import pickle
-
     if 3 == len ( covargs ) :
         
         gcc , corm , covm = covargs 
         D    = len ( gcc )
         
-        if D * D != len ( corm ) : raise pickle.UnpicklingError("FitResult(1): cannot reconstruct cormatrix")
-        if D * D != len ( covm ) : raise pickle.UnpicklingError("FitResult(1): cannot reconstruct covmatrix")
+        if D * D != len ( corm ) : raise UnpicklingError("FitResult(1): cannot reconstruct cormatrix")
+        if D * D != len ( covm ) : raise UnpicklingError("FitResult(1): cannot reconstruct covmatrix")
 
         gcc      = doubles ( gcc ) 
         corm     = ROOT.TMatrixDSym ( D , corm )
@@ -689,8 +686,7 @@ def _rrfr_factory_ ( klass , *args ) :
         
         l2 = len ( covm )
         D  = int ( math.sqrt ( l2 ) ) 
-        if D * D != l2 :
-            raise pickle.UnpicklingError("FitResult(2): cannot reconstruct covmatrix")
+        if D * D != l2 : raise UnpicklingError("FitResult(2): cannot reconstruct covmatrix")
         covm = ROOT.TMatrixDSym ( D , covm )
 
         newargs += covm ,
@@ -728,7 +724,7 @@ def _rrfr_reduce_ ( res ) :
     else :
         covargs = array.array ( 'd' , covm )  
         
-    history = tuple ( ( nr.statusLabelHistory(i) ,nr.statusCodeHistory(i) ) \
+    history = tuple ( ( nr.statusLabelHistory ( i ) ,nr.statusCodeHistory ( i ) ) \
                       for i in range ( nr.numStatusHistory () ) )
     
     content += covargs , history 
@@ -740,7 +736,7 @@ ROOT.RooFitResult.__reduce__  = _rrfr_reduce_
 # =============================================================================
 ## reconstruct/deserialize <code>RooPlot</code> object
 def _rplot_factory_ ( klass , xmin , xmax , ymin , ymax , items )  :
-    """Reconstruct/deserialize `ROOT.RooPlot` object
+    """ Reconstruct/deserialize `ROOT.RooPlot` object
     """
     plot = klass    ( xmin , xmax )
     plot.SetMinimum ( ymin )
@@ -757,11 +753,10 @@ def _rplot_factory_ ( klass , xmin , xmax , ymin , ymax , items )  :
     plot.__store = items  ## ATTENTION!! keep the items! 
     return plot 
                 
-
 # =============================================================================
 ## reduce RooPlot object
 def _rplot_reduce_ ( plot ) :
-    """Reduce `ROOT.RooPlot` object"""
+    """ Reduce `ROOT.RooPlot` object"""
     return _rplot_factory_ , ( type ( plot )   ,
                                plot.GetXaxis().GetXmin() ,
                                plot.GetXaxis().GetXmax() ,
@@ -777,14 +772,14 @@ ROOT.RooPlot.__reduce__  = _rplot_reduce_
 #  @see RooPlotable
 #  @see TGraph
 def _rcurv_factory_ ( klass , *args ) : 
-    """Reconstruct/deserialize/unpickle `ROOT.RooCurve` object
+    """ Reconstruct/deserialize/unpickle `ROOT.RooCurve` object
     -see `ROOT.RooCurve`
     -see `ROOT.RooPlotable`
     -see `ROOT.TGraph`
     """
     graph     = GR.graph_factory ( klass , *args [:-1] )
     ## 
-    rplotatts = args[-1]
+    rplotatts = args [ -1 ]
     graph.setYAxisLabel  (  rplotatts [0 ] )
     graph.setYAxisLimits ( *rplotatts [1:] )
     ## 
@@ -794,7 +789,7 @@ def _rcurv_factory_ ( klass , *args ) :
 ## Reduce/serialize/pickle  simple <code>TGraph</code> object
 #  @see ROOT.TGraph
 def _rcurv_reduce_ ( graph ) :
-    """Reduce/serialize/pickle simple `ROOT.RooCurve` object\
+    """ Reduce/serialize/pickle simple `ROOT.RooCurve` object\
     - see `ROOT.RooCurve`
     - see `ROOT.RooEllipse`
     - see `ROOT.RooPlotable`
@@ -813,7 +808,7 @@ ROOT.RooEllipse.__reduce__ = _rcurv_reduce_
 #  @see RooPlotable
 #  @see TGraphAsymmErrors
 def _rhist_factory_ ( klass , *args ) :
-    """Reconstruct/deserialize/unpickle `ROOT.RooHist` object
+    """ Reconstruct/deserialize/unpickle `ROOT.RooHist` object
     -see `ROOT.RooHist`
     -see `ROOT.RooPlotable`
     -see `ROOT.TGraphAsymmErrors`
@@ -837,7 +832,7 @@ def _rhist_factory_ ( klass , *args ) :
 #  @see ROOT.RooHist
 #  @see ROOT.TGraphAsymmErorrs
 def _rhist_reduce_ ( graph ) :
-    """Reduce/serialize/pickle simple `ROOT.RooHist` object
+    """ Reduce/serialize/pickle simple `ROOT.RooHist` object
     - see `ROOT.RooHist`
     - see `ROOT.TGraphAsymmErrors`
     """
@@ -857,7 +852,7 @@ ROOT.RooHist.__reduce__ = _rhist_reduce_
 ## Reduce <code>Ostap::MoreRooFit::TwoVars</code> objects
 #  @see Ostap::MoreRooFit.TwoVars
 def _r2v_reduce ( var ) :
-    """Reduce `Ostap::MoreRooFit::TwoVars` objects
+    """ Reduce `Ostap.MoreRooFit.TwoVars` objects
     - see Ostap.MoreRooFit.TwoVars
     """
     return root_store_factory , ( type ( var ) , var.name , var.title , var.x() , var.y() )
@@ -868,7 +863,7 @@ Ostap.MoreRooFit.TwoVars.__reduce__  = _r2v_reduce
 ## Reduce <code>Ostap::MoreRooFit::Addition</code> objects
 #  @see Ostap::MoreRooFit.Addition
 def _radd1_reduce ( var ) :
-    """Reduce `Ostap.MoreRooFit.Addition` objects
+    """ Reduce `Ostap.MoreRooFit.Addition` objects
     - see Ostap.MoreRooFit.Addition
     """
     content = type ( var ) , var.name , var.title , var.x () , var.y ()
@@ -878,7 +873,7 @@ def _radd1_reduce ( var ) :
 ## Reduce <code>Ostap::MoreRooFit::Addition2</code> objects
 #  @see Ostap::MoreRooFit.Addition3
 def _radd2_reduce ( var ) :
-    """Reduce `Ostap.MoreRooFit.Addition2` objects
+    """ Reduce `Ostap.MoreRooFit.Addition2` objects
     - see Ostap.MoreRooFit.Addition2
     """
     content = type ( var ) , var.name , var.title , var.x () , var.y () , var.c1 () , var.c2 () 
@@ -888,7 +883,7 @@ def _radd2_reduce ( var ) :
 ## reduce <code>Ostap::MoreRooFit::Id</code> object
 #  @see Ostap.MoreRooFit::Id
 def _rid_reduce ( var ) :
-    """Reduce `Ostap.MoreRooFit.Id` object
+    """ Reduce `Ostap.MoreRooFit.Id` object
     - see Ostap.MoreRooFit.Id
     """
     return root_store_factory , ( type ( var ) ,
@@ -896,12 +891,11 @@ def _rid_reduce ( var ) :
                                   var.title    ,
                                   var.x ()     )
 
-
 # =============================================================================
 ## reduce <code>Ostap::MoreRooFit::ABC</code> object
 #  @see Ostap.MoreRooFit::ABC
 def _rabc_reduce ( var ) :
-    """Reduce `Ostap.MoreRooFit.ABC` object
+    """ Reduce `Ostap.MoreRooFit.ABC` object
     - see Ostap.MoreRooFit.ABC
     """
     vvars = var.vars() 
@@ -912,12 +906,11 @@ def _rabc_reduce ( var ) :
                                   vvars [ 1 ]  ,
                                   vvars [ 2 ]  ) 
 
-
 # =============================================================================
 ## reduce <code>Ostap::MoreRooFit::Clamp</code> object
 #  @see Ostap.MoreRooFit::Clamp
 def _rclamp_reduce ( var ) :
-    """Reduce `Ostap.MoreRooFit.Clamp` object
+    """ Reduce `Ostap.MoreRooFit.Clamp` object
     - see Ostap.MoreRooFit.Clamp
     """
     return root_store_factory , ( type ( var ) ,
@@ -931,7 +924,7 @@ def _rclamp_reduce ( var ) :
 ## reduce <code>Ostap::MoreRooFit::AddDeps<code> object
 #  @see Ostap.MoreRooFit::AddDeps
 def _radddep_reduce ( var ) :
-    """Reduce `Ostap.MoreRooFit.AddDeps` object
+    """ Reduce `Ostap.MoreRooFit.AddDeps` object
     - see Ostap.MoreRooFit.AddDeps
     """
     return root_store_factory , ( type ( var ) ,
@@ -939,7 +932,6 @@ def _radddep_reduce ( var ) :
                                   var.title    ,
                                   var.x ()     ,
                                   var.vlst()   )
-
 
 
 Ostap.MoreRooFit.Addition    .__reduce__  = _radd1_reduce
@@ -960,7 +952,7 @@ Ostap.MoreRooFit.Clamp       .__reduce__  = _rclamp_reduce
 #  @see Ostap.MoreRooFit::Minimal
 #  @see Ostap.MoreRooFit::Maximal
 def _romrfm_reduce ( var ) :
-    """Reduce `Ostap.MoreRooFit.Minimal/Maximal` object
+    """ Reduce `Ostap.MoreRooFit.Minimal/Maximal` object
     - see `Ostap.MoreRooFit.Minimal`
     - see `Ostap.MoreRooFit.Maximal`
     """
@@ -976,7 +968,7 @@ Ostap.MoreRooFit.Maximal .__reduce__  = _romrfm_reduce
 ## Reduce <code>Ostap::MoreRooFit::Combination</code> objects
 #  @see Ostap::MoreRooFit.Combination
 def _rcomb_reduce ( var ) :
-    """Reduce `Ostap.MoreRooFit.Combination` objects
+    """ Reduce `Ostap.MoreRooFit.Combination` objects
     - see Ostap.MoreRooFit.Combination
     """
     return root_store_factory , ( type ( var ) ,
@@ -994,7 +986,7 @@ Ostap.MoreRooFit.Combination.__reduce__  = _rcomb_reduce
 ## Reduce <code>Ostap::MoreRooFit::Asymmetry</code> objects
 #  @see Ostap::MoreRooFit.Asymmetry
 def _rasym_reduce ( var ) :
-    """Reduce  `Ostap::MoreRooFit::Asymmetry` objects
+    """ Reduce  `Ostap.MoreRooFit.Asymmetry` objects
     - see Ostap.MoreRooFit.Asymmetry
     """
     return root_store_factory , ( type ( var ) ,
@@ -1021,7 +1013,7 @@ Ostap.MoreRooFit.Constant.  __reduce__  = _rconst2_reduce
 ## Reduce <code>Ostap::MoreRooFit::Bernstein</code> object 
 #  @see Ostap::MoreRooDit::Bernstein
 def _rbern_reduce ( var ) :
-    """Reduce `Ostap.MoreRooFit.Bernstein` object 
+    """ Reduce `Ostap.MoreRooFit.Bernstein` object 
     - see Ostap.MoreRooDit.Bernstein
     """
     return root_store_factory , ( type ( var )  ,
@@ -1038,7 +1030,7 @@ Ostap.MoreRooFit.Bernstein.  __reduce__  = _rbern_reduce
 ## Reduce <code>Ostap::MoreRooFit::Monotonic</code> object 
 #  @see Ostap::MoreRooDit::Monotonic
 def _rmono_reduce ( var ) :
-    """Reduce `Ostap.MoreRooFit.Monotonic` object 
+    """ Reduce `Ostap.MoreRooFit.Monotonic` object 
     - see Ostap.MoreRooDit.Monotonic
     """
     return root_store_factory , ( type ( var )  ,
@@ -1058,7 +1050,7 @@ Ostap.MoreRooFit.Monotonic.  __reduce__  = _rmono_reduce
 ## Reduce <code>Ostap::MoreRooFit::Convex</code> object 
 #  @see Ostap::MoreRooDit::Monotonic
 def _rconv1_reduce ( var ) :
-    """Reduce `Ostap.MoreRooFit.Monotonic` object 
+    """ Reduce `Ostap.MoreRooFit.Monotonic` object 
     - see Ostap.MoreRooDit.Monotonic
     """
     return root_store_factory , ( type ( var )  ,
@@ -1079,7 +1071,7 @@ Ostap.MoreRooFit.Convex.  __reduce__  = _rconv1_reduce
 ## Reduce <code>Ostap::MoreRooFit::ConvexOnly</code> object 
 #  @see Ostap::MoreRooDit::ConvexOnly
 def _rconv2_reduce ( var ) :
-    """Reduce `Ostap.MoreRooFit.ConvexOnly` object 
+    """ Reduce `Ostap.MoreRooFit.ConvexOnly` object 
     - see Ostap.MoreRooDit.ConvexOnly
     """
     return root_store_factory , ( type ( var )  ,
@@ -1099,7 +1091,7 @@ Ostap.MoreRooFit.ConvexOnly.  __reduce__  = _rconv2_reduce
 ## unpickle <code>Ostap::MoreRooFit::BSpline</code> objects
 #  @see Ostap::MoreRooFit::BSpline
 def _rbspl_factory ( klass , name , title , xvar , knots , pars ) :
-    """unpickle `Ostap.MoreRooFit.BSpline` objects
+    """ Unpickle `Ostap.MoreRooFit.BSpline` objects
     - see Ostap.MoreRooFit.BSpline
     """
     plst  = ROOT.RooArgList()
@@ -1114,7 +1106,7 @@ def _rbspl_factory ( klass , name , title , xvar , knots , pars ) :
 ## Reduce <code>Ostap::MoreRooFit::BSpline</code> object 
 #  @see Ostap::MoreRooDit::BSpline
 def _rbspl_reduce ( spl ) :
-    """Reduce `Ostap.MoreRooFit.BSpline` object 
+    """ Reduce `Ostap.MoreRooFit.BSpline` object 
     - see Ostap.MoreRooDit.BSpline
     """
     return _rbspl_factory, ( type ( spl ) ,
@@ -1130,7 +1122,7 @@ Ostap.MoreRooFit.BSpline.  __reduce__  = _rbspl_reduce
 ## reduce <code>Ostap::Models::Uniform<code> object
 #  @see Ostap::Models.Uniform 
 def _runi_reduce_ ( uni ) :
-    """reduce <code>Ostap::Models::Uniform<code> object
+    """ Reduce `Ostap.Models.Uniform` object
     - see Ostap::Models.Uniform 
     """
     tail = ()
@@ -1150,7 +1142,7 @@ Ostap.Models.Uniform.__reduce__ = _runi_reduce_
 ## reduce Ostap::MoreRooFit::Histo1D
 #  @see Ostap::MoreRooFit::Histo1D
 def _rmrfh_reduce_ ( h1d ) :
-    """ reduce Ostap.MoreRooFit.Histo1D
+    """ Reduce `Ostap.MoreRooFit.Histo1D`
     -see  `Ostap.MoreRooFit.Histo1D`
     """
     return root_store_factory , ( type ( h1d ) ,
@@ -1164,7 +1156,7 @@ Ostap.MoreRooFit.Histo1D.__reduce__ = _rmrfh_reduce_
 # =============================================================================
 ## reduce BreitWigner
 def _rbw_reduce_ ( pdf ):
-    """Reduce BreitWigner"""
+    """ Reduce BreitWigner"""
     return root_store_factory , ( type ( pdf )      ,
                                   pdf.name          ,
                                   pdf.title         ,
@@ -1192,7 +1184,7 @@ Ostap.Models.BreitWignerMC.__reduce__ = _rbwmc_reduce_
 # =============================================================================
 ## reduce BWI
 def _rbwi_reduce_ ( pdf ):
-    """Reduce BWI"""
+    """ Reduce BWI"""
     return root_store_factory , ( type ( pdf )     ,
                                   pdf.name         ,
                                   pdf.title        ,
@@ -1207,7 +1199,7 @@ Ostap.Models.BWI.__reduce__ = _rbwi_reduce_
 # =============================================================================
 ## reduce Flatte
 def _rflatte_reduce_ ( pdf ):
-    """Reduce Flatte"""
+    """ Reduce Flatte"""
     return root_store_factory , ( type ( pdf )     ,
                                   pdf.name         ,
                                   pdf.title        ,
@@ -1271,7 +1263,7 @@ Ostap.Models.BWPS.__reduce__ = _rbwps_reduce_
 # =============================================================================
 ## reduce BW3L
 def _rbw3l_reduce_ ( pdf ):
-    """Reduce BW3L"""
+    """ Reduce BW3L"""
     return root_store_factory , ( type ( pdf )     ,
                                   pdf.name         ,
                                   pdf.title        ,
@@ -1286,7 +1278,7 @@ Ostap.Models.BW3L.__reduce__ = _rbw3l_reduce_
 # =============================================================================
 ## reduce Voigt
 def _rvoigt_reduce_ ( pdf ):
-    """Reduce Voigt"""
+    """ Reduce Voigt"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -1301,7 +1293,7 @@ Ostap.Models.PseudoVoigt.__reduce__ = _rvoigt_reduce_
 # =============================================================================
 ## reduce CrystalBall
 def _rcb_reduce_ ( pdf ):
-    """Reduce CristalBall"""
+    """ Reduce CristalBall"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -1317,7 +1309,7 @@ Ostap.Models.CrystalBallRS .__reduce__ = _rcb_reduce_
 # =============================================================================
 ## reduce CrystalBallDS
 def _rcb2_reduce_ ( pdf ):
-    """Reduce CristalBallDS"""
+    """ Reduce CristalBallDS"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -1334,7 +1326,7 @@ Ostap.Models.CrystalBallDS .__reduce__ = _rcb2_reduce_
 # =============================================================================
 ## reduce Needham
 def _rneedham_reduce_ ( pdf ):
-    """Reduce Needham"""
+    """ Reduce Needham"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -1350,7 +1342,7 @@ Ostap.Models.Needham .__reduce__ = _rneedham_reduce_
 # =============================================================================
 ## reduce Apollonious
 def _rapo_reduce_ ( pdf ):
-    """Reduce Apollonios"""
+    """ Reduce Apollonios"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -1381,7 +1373,7 @@ Ostap.Models.Apollonios2.__reduce__ = _rapo2_reduce_
 # =============================================================================
 ## reduce BifurcatedGauss
 def _rgbf_reduce_ ( pdf ):
-    """Reduce BifurcatedGauss"""
+    """ Reduce BifurcatedGauss"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -1396,7 +1388,7 @@ Ostap.Models.BifurcatedGauss.__reduce__ = _rgbf_reduce_
 # =============================================================================
 ## reduce GenGaussV1
 def _rggv1_reduce_ ( pdf ):
-    """Reduce GenGaussV1"""
+    """ Reduce GenGaussV1"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -1411,7 +1403,7 @@ Ostap.Models.GenGaussV1.__reduce__ = _rggv1_reduce_
 # =============================================================================
 ## reduce GenGaussV2
 def _rggv2_reduce_ ( pdf ):
-    """Reduce GenGaussV2"""
+    """ Reduce GenGaussV2"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -1425,7 +1417,7 @@ Ostap.Models.GenGaussV2.__reduce__ = _rggv2_reduce_
 # =============================================================================
 ## reduce SkewGauss
 def _rskg_reduce_ ( pdf ):
-    """Reduce SkewGauss"""
+    """ Reduce SkewGauss"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -1455,7 +1447,7 @@ Ostap.Models.ExGauss2.__reduce__ = _rexg_reduce_
 # =============================================================================
 ## reduce Bukin2
 def _rbk2_reduce_ ( pdf ):
-    """Reduce Bukin2"""
+    """ Reduce Bukin2"""
     return root_store_factory , ( type ( pdf )     ,
                                   pdf.name         ,
                                   pdf.title        ,
@@ -1487,7 +1479,7 @@ Ostap.Models.NormalLaplace.__reduce__ = _rnl_reduce_
 # =============================================================================
 ## reduce Novosibirsk
 def _rnovo_reduce_ ( pdf ):
-    """Reduce Novisibirsk"""
+    """ Reduce Novisibirsk"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -1501,7 +1493,7 @@ Ostap.Models.Novosibirsk.__reduce__ = _rnovo_reduce_
 # =============================================================================
 ## reduce Bukin
 def _rbukin_reduce_ ( pdf ):
-    """Reduce Bukin"""
+    """ Reduce Bukin"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -1532,7 +1524,7 @@ Ostap.Models.StudentT.__reduce__ = _rstt_reduce_
 # =============================================================================
 ## reduce BifurcatedStudentT
 def _rbstt_reduce_ ( pdf ):
-    """Reduce BifurcatedStudentT"""
+    """ Reduce BifurcatedStudentT"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -1548,7 +1540,7 @@ Ostap.Models.BifurcatedStudentT.__reduce__ = _rbstt_reduce_
 # =============================================================================
 ## reduce PearsonIV
 def _rp4_reduce_ ( pdf ):
-    """Reduce PearsonIV"""
+    """ Reduce PearsonIV"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -1563,7 +1555,7 @@ Ostap.Models.PearsonIV.__reduce__ = _rp4_reduce_
 # =============================================================================
 ## reduce SkewGenT
 def _rsgt_reduce_ ( pdf ):
-    """Reduce SkewGenT"""
+    """ Reduce SkewGenT"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -1579,7 +1571,7 @@ Ostap.Models.SkewGenT.__reduce__ = _rsgt_reduce_
 # =============================================================================
 ## reduce SkewGenError
 def _rsge_reduce_ ( pdf ):
-    """Reduce SkewGenError"""
+    """ Reduce SkewGenError"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -1594,7 +1586,7 @@ Ostap.Models.SkewGenError.__reduce__ = _rsge_reduce_
 # =============================================================================
 ## reduce GramCharlierA
 def _rgca_reduce_ ( pdf ):
-    """Reduce GramCharlierA"""
+    """ Reduce GramCharlierA"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -1609,7 +1601,7 @@ Ostap.Models.GramCharlierA.__reduce__ = _rgca_reduce_
 # =============================================================================
 ## reduce PhaseSpace2
 def _rps2_reduce_ ( pdf ):
-    """Reduce PhaseSpace2"""
+    """ Reduce PhaseSpace2"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -1637,7 +1629,7 @@ Ostap.Models.PhaseSpaceLeft.__reduce__ = _rpsl_reduce_
 # =============================================================================
 ## reduce PhaseSpaceRight
 def _rpsr_reduce_ ( pdf ):
-    """Reduce PhaseSpaceRight"""
+    """ Reduce PhaseSpaceRight"""
     return root_store_factory , ( type ( pdf )     ,
                                   pdf.name         ,
                                   pdf.title        ,
@@ -1652,7 +1644,7 @@ Ostap.Models.PhaseSpaceRight.__reduce__ = _rpsr_reduce_
 # =============================================================================
 ## reduce PhaseSpaceNL
 def _rpsnl_reduce_ ( pdf ):
-    """Reduce PhaseSpaceNL"""
+    """ Reduce PhaseSpaceNL"""
     return root_store_factory , ( type ( pdf )     ,
                                   pdf.name         ,
                                   pdf.title        ,
@@ -1681,7 +1673,7 @@ Ostap.Models.PhaseSpacePol.__reduce__ = _rpspol_reduce_
 # =============================================================================
 ## reduce PhaseSpaceLeftExpoPol
 def _rpslepol_reduce_ ( pdf ):
-    """Reduce PhaseSpaceLeftExpoPol"""
+    """ Reduce PhaseSpaceLeftExpoPol"""
     return root_store_factory , ( type ( pdf )     ,
                                   pdf.name         ,
                                   pdf.title        ,
@@ -1714,7 +1706,7 @@ Ostap.Models.PolyPositive.__reduce__ = _rpolpos_reduce_
 # =============================================================================
 ## reduce PolyPositiveEven 
 def _rpolpose_reduce_ ( pdf ):
-    """Reduce PolyPositiveEven"""
+    """ Reduce PolyPositiveEven"""
     return root_store_factory , ( type ( pdf )     ,
                                   pdf.name         ,
                                   pdf.title        ,
@@ -1728,7 +1720,7 @@ Ostap.Models.PolyPositiveEven.__reduce__ = _rpolpose_reduce_
 # =============================================================================
 ## reduce PolyMonotonic
 def _rpolmon_reduce_ ( pdf ):
-    """Reduce PolyMonotonic"""
+    """ Reduce PolyMonotonic"""
     return root_store_factory , ( type ( pdf )      ,
                                   pdf.name          ,
                                   pdf.title         ,
@@ -1743,7 +1735,7 @@ Ostap.Models.PolyMonotonic.__reduce__ = _rpolmon_reduce_
 # =============================================================================
 ## reduce PolyConvex
 def _rpolcon_reduce_ ( pdf ):
-    """Reduce PolyConvex"""
+    """ Reduce PolyConvex"""
     return root_store_factory , ( type ( pdf )      ,
                                   pdf.name          ,
                                   pdf.title         ,
@@ -1759,7 +1751,7 @@ Ostap.Models.PolyConvex.__reduce__ = _rpolcon_reduce_
 # =============================================================================
 ## reduce PolyConvexOnly
 def _rpolcono_reduce_ ( pdf ):
-    """Reduce PolyConvexOnly"""
+    """ Reduce PolyConvexOnly"""
     return root_store_factory , ( type ( pdf )      ,
                                   pdf.name          ,
                                   pdf.title         ,
@@ -1774,7 +1766,7 @@ Ostap.Models.PolyConvexOnly.__reduce__ = _rpolcono_reduce_
 # =============================================================================
 ## reduce ExpoPositive
 def _rexppos_reduce_ ( pdf ):
-    """Reduce ExpoPoisitive"""
+    """ Reduce ExpoPoisitive"""
     return root_store_factory , ( type ( pdf )      ,
                                   pdf.name          ,
                                   pdf.title         ,
@@ -1789,7 +1781,7 @@ Ostap.Models.ExpoPositive.__reduce__ = _rexppos_reduce_
 # =============================================================================
 ## reduce PolySigmoid
 def _rpolsigm_reduce_ ( pdf ):
-    """Reduce PoLySigmoid"""
+    """ Reduce PoLySigmoid"""
     return root_store_factory , ( type ( pdf )      ,
                                   pdf.name          ,
                                   pdf.title         ,
@@ -1805,7 +1797,7 @@ Ostap.Models.PolySigmoid.__reduce__ = _rpolsigm_reduce_
 # =============================================================================
 ## reduce TwoExpoPositive
 def _r2exppos_reduce_ ( pdf ):
-    """Reduce TwoExpoPositive"""
+    """ Reduce TwoExpoPositive"""
     return root_store_factory , ( type ( pdf )      ,
                                   pdf.name          ,
                                   pdf.title         ,
@@ -1822,7 +1814,7 @@ Ostap.Models.TwoExpoPositive.__reduce__ = _r2exppos_reduce_
 # =============================================================================
 ## reduce GammaDist
 def _rgamdist_reduce_ ( pdf ):
-    """Reduce GammaDist"""
+    """ Reduce GammaDist"""
     return root_store_factory , ( type ( pdf )      ,
                                   pdf.name          ,
                                   pdf.title         ,
@@ -1837,7 +1829,7 @@ Ostap.Models.Log10GammaDist.__reduce__ = _rgamdist_reduce_
 # =============================================================================
 ## reduce GenGammaDist
 def _rggamdist_reduce_ ( pdf ):
-    """Reduce GenGammaDist"""
+    """ Reduce GenGammaDist"""
     return root_store_factory , ( type ( pdf )      ,
                                   pdf.name          ,
                                   pdf.title         ,
@@ -1852,7 +1844,7 @@ Ostap.Models.GenGammaDist.__reduce__ = _rggamdist_reduce_
 # =============================================================================
 ## reduce Amoroso
 def _ramoroso_reduce_ ( pdf ):
-    """Reduce Amoroso"""
+    """ Reduce Amoroso"""
     return root_store_factory , ( type ( pdf )      ,
                                   pdf.name          ,
                                   pdf.title         ,
@@ -1867,7 +1859,7 @@ Ostap.Models.Amoroso.__reduce__ = _ramoroso_reduce_
 # =============================================================================
 ## reduce LogGamma
 def _rloggam_reduce_ ( pdf ):
-    """Reduce LogGamma"""
+    """ Reduce LogGamma"""
     return root_store_factory , ( type ( pdf )      ,
                                   pdf.name          ,
                                   pdf.title         ,
@@ -1881,7 +1873,7 @@ Ostap.Models.LogGamma   .__reduce__ = _rloggam_reduce_
 # =============================================================================
 ## reduce BetaPrime
 def _rbetap_reduce_ ( pdf ):
-    """Reduce BetaPrime"""
+    """ Reduce BetaPrime"""
     return root_store_factory , ( type ( pdf )      ,
                                   pdf.name          ,
                                   pdf.title         ,
@@ -1896,7 +1888,7 @@ Ostap.Models.BetaPrime.__reduce__ = _rbetap_reduce_
 # =============================================================================
 ## reduce Landau
 def _rlandau_reduce_ ( pdf ):
-    """Reduce Landau"""
+    """ Reduce Landau"""
     return root_store_factory , ( type ( pdf )      ,
                                   pdf.name          ,
                                   pdf.title         ,
@@ -1909,7 +1901,7 @@ Ostap.Models.Landau.__reduce__ = _rlandau_reduce_
 # =============================================================================
 ## reduce SinhAsinh
 def _rshash_reduce_ ( pdf ):
-    """Reduce SinhAsinh"""
+    """ Reduce SinhAsinh"""
     return root_store_factory , ( type ( pdf )   ,
                                   pdf.name       ,
                                   pdf.title      ,
@@ -1924,7 +1916,7 @@ Ostap.Models.SinhAsinh.__reduce__ = _rshash_reduce_
 # =============================================================================
 ## reduce JohnsonSU
 def _rjsu_reduce_ ( pdf ):
-    """Reduce JohnsonSU"""
+    """ Reduce JohnsonSU"""
     return root_store_factory , ( type ( pdf )   ,
                                   pdf.name       ,
                                   pdf.title      ,
@@ -1939,7 +1931,7 @@ Ostap.Models.JohnsonSU.__reduce__ = _rjsu_reduce_
 # =============================================================================
 ## reduce ATLAS
 def _ratlas_reduce_ ( pdf ):
-    """Reduce Atlas"""
+    """ Reduce Atlas"""
     return root_store_factory , ( type ( pdf )   ,
                                   pdf.name       ,
                                   pdf.title      ,
@@ -1957,7 +1949,7 @@ Ostap.Models.Up       .__reduce__ = _ratlas_reduce_
 # =============================================================================
 ## reduce GenLogisticVF 
 def _rgl4_reduce_ ( pdf ):
-    """Reduce GenLogisticIV"""
+    """ Reduce GenLogisticIV"""
     return root_store_factory , ( type ( pdf )   ,
                                   pdf.name       ,
                                   pdf.title      ,
@@ -1972,7 +1964,7 @@ Ostap.Models.GenLogisticIV .__reduce__ = _rgl4_reduce_
 # =============================================================================
 ## reduce BatesShate  
 def _rbats_reduce_ ( pdf ):
-    """Reduce BatesShape"""
+    """ Reduce BatesShape"""
     return root_store_factory , ( type ( pdf )   ,
                                   pdf.name       ,
                                   pdf.title      ,
@@ -1986,7 +1978,7 @@ Ostap.Models.BatesShape .__reduce__ = _rbats_reduce_
 # =============================================================================
 ## reduce GenPareto & ExGenPareto & GEV
 def _rgpd1_reduce_ ( pdf ):
-    """Reduce GenPareto & ExGenPareto & GEV"""
+    """ Reduce GenPareto & ExGenPareto & GEV"""
     return root_store_factory , ( type ( pdf )   ,
                                   pdf.name       ,
                                   pdf.title      ,
@@ -2003,7 +1995,7 @@ Ostap.Models.GEV         .__reduce__ = _rgpd1_reduce_
 # =============================================================================
 ## reduce Benini
 def _rben_reduce_ ( pdf ):
-    """Reduce Benini"""
+    """ Reduce Benini"""
     return root_store_factory , ( type ( pdf )   ,
                                   pdf.name       ,
                                   pdf.title      ,
@@ -2018,7 +2010,7 @@ Ostap.Models.Benini .__reduce__ = _rben_reduce_
 # =============================================================================
 ## reduce MPERT
 def _rmpert_reduce_ ( pdf ):
-    """Reduce MPERT"""
+    """ Reduce MPERT"""
     return root_store_factory , ( type ( pdf )   ,
                                   pdf.name       ,
                                   pdf.title      ,
@@ -2033,7 +2025,7 @@ Ostap.Models.MPERT        .__reduce__ = _rmpert_reduce_
 # =============================================================================
 ## reduce Slash
 def _rslash_reduce_ ( pdf ):
-    """Reduce Slasj"""
+    """ Reduce Slash"""
     return root_store_factory , ( type ( pdf )   ,
                                   pdf.name       ,
                                   pdf.title      ,
@@ -2046,7 +2038,7 @@ Ostap.Models.Slash    .__reduce__ = _rslash_reduce_
 # =============================================================================
 ## reduce ARGUS
 def _rargus_reduce_ ( pdf ):
-    """Reduce ARGUS"""
+    """ Reduce ARGUS"""
     return root_store_factory , ( type ( pdf )   ,
                                   pdf.name       ,
                                   pdf.title      ,
@@ -2060,7 +2052,7 @@ Ostap.Models.Argus  .__reduce__ = _rargus_reduce_
 # =============================================================================
 ## reduce GenArgus
 def _rgargus_reduce_ ( pdf ):
-    """Reduce GenArgus"""
+    """ Reduce GenArgus"""
     return root_store_factory , ( type ( pdf )   ,
                                   pdf.name       ,
                                   pdf.title      ,
@@ -2075,7 +2067,7 @@ Ostap.Models.GenArgus .__reduce__ = _rgargus_reduce_
 # =============================================================================
 ## reduce Losev
 def _rlosev_reduce_ ( pdf ):
-    """Reduce Losev"""
+    """ Reduce Losev"""
     return root_store_factory , ( type ( pdf )   ,
                                   pdf.name       ,
                                   pdf.title      ,
@@ -2089,7 +2081,7 @@ Ostap.Models.Losev.__reduce__ = _rlosev_reduce_
 # =============================================================================
 ## reduce AsymmetricLaplace
 def _ralap_reduce_ ( pdf ):
-    """Reduce AsymmetricLaplace"""
+    """ Reduce AsymmetricLaplace"""
     return root_store_factory , ( type ( pdf )   ,
                                   pdf.name       ,
                                   pdf.title      ,
@@ -2103,7 +2095,7 @@ Ostap.Models.AsymmetricLaplace.__reduce__ = _ralap_reduce_
 # =============================================================================
 ## reduce FupN
 def _rfupn_reduce_ ( pdf ):
-    """Reduce FupN"""
+    """ Reduce FupN"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2117,7 +2109,7 @@ Ostap.Models.FupN.__reduce__ = _rfupn_reduce_
 # =============================================================================
 ## reduce Tsallis
 def _rtsal_reduce_ ( pdf ):
-    """Reduce Tsallis"""
+    """ Reduce Tsallis"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2131,7 +2123,7 @@ Ostap.Models.Tsallis.__reduce__ = _rtsal_reduce_
 # =============================================================================
 ## reduce QGSM
 def _rqgsm_reduce_ ( pdf ):
-    """Reduce QGSM"""
+    """ Reduce QGSM"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2144,7 +2136,7 @@ Ostap.Models.QGSM.__reduce__ = _rqgsm_reduce_
 # =============================================================================
 ## reduce Hagedorn
 def _rhage_reduce_ ( pdf ):
-    """Reduce Hagedorn"""
+    """ Reduce Hagedorn"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2157,7 +2149,7 @@ Ostap.Models.Hagedorn.__reduce__ = _rhage_reduce_
 # =============================================================================
 ## reduce Tsallis2
 def _rtsal2_reduce_ ( pdf ):
-    """Reduce Tsallis2"""
+    """ Reduce Tsallis2"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2173,7 +2165,7 @@ Ostap.Models.Tsallis2.__reduce__ = _rtsal2_reduce_
 # =============================================================================
 ## reduce TwoExpos
 def _r2expo_reduce_ ( pdf ):
-    """Reduce TwoExpos"""
+    """ Reduce TwoExpos"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2187,7 +2179,7 @@ Ostap.Models.TwoExpos.__reduce__ = _r2expo_reduce_
 # =============================================================================
 ## reduce DoubleGauss
 def _r2gau_reduce_ ( pdf ):
-    """Reduce DoubleGauss"""
+    """ Reduce DoubleGauss"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2202,7 +2194,7 @@ Ostap.Models.DoubleGauss.__reduce__ = _r2gau_reduce_
 # =============================================================================
 ## reduce Gumbel
 def _rgumbel_reduce_ ( pdf ):
-    """Reduce Gumbel"""
+    """ Reduce Gumbel"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2215,7 +2207,7 @@ Ostap.Models.Gumbel.__reduce__ = _rgumbel_reduce_
 # =============================================================================
 ## reduce Weibull
 def _rweibull_reduce_ ( pdf ):
-    """Reduce Weibull"""
+    """ Reduce Weibull"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2229,7 +2221,7 @@ Ostap.Models.Weibull.__reduce__ = _rweibull_reduce_
 # =============================================================================
 ## reduce Rice
 def _rrice_reduce_ ( pdf ):
-    """Reduce Rice"""
+    """ Reduce Rice"""
     return root_store_factory , ( type ( pdf )     ,
                                   pdf.name         ,
                                   pdf.title        ,
@@ -2243,7 +2235,7 @@ Ostap.Models.Rice.__reduce__ = _rrice_reduce_
 # =============================================================================
 ## reduce RasingCosine 
 def _rrcos_reduce_ ( pdf ):
-    """Reduce RaisingCosine"""
+    """ Reduce RaisingCosine"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2256,7 +2248,7 @@ Ostap.Models.RaisingCosine.__reduce__ = _rrcos_reduce_
 # =============================================================================
 ## reduce q-Gaussian
 def _rqgau_reduce_ ( pdf ):
-    """Reduce QGaussian"""
+    """ Reduce QGaussian"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2270,7 +2262,7 @@ Ostap.Models.QGaussian.__reduce__ = _rqgau_reduce_
 # =============================================================================
 ## reduce k-Gaussian
 def _rkgau_reduce_ ( pdf ):
-    """Reduce KGaussian"""
+    """ Reduce KGaussian"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2284,7 +2276,7 @@ Ostap.Models.KGaussian.__reduce__ = _rkgau_reduce_
 # =============================================================================
 ## reduce Hyperbolic
 def _rhyp_reduce_ ( pdf ):
-    """Reduce Hyperbolic"""
+    """ Reduce Hyperbolic"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2299,7 +2291,7 @@ Ostap.Models.Hyperbolic.__reduce__ = _rhyp_reduce_
 # =============================================================================
 ## reduce GenHyperbolic
 def _rghyp_reduce_ ( pdf ):
-    """Reduce GenHyperbolic"""
+    """ Reduce GenHyperbolic"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2315,7 +2307,7 @@ Ostap.Models.GenHyperbolic.__reduce__ = _rghyp_reduce_
 # =============================================================================
 ## reduce Das
 def _rdas_reduce_ ( pdf ):
-    """Reduce Das"""
+    """ Reduce Das"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2330,7 +2322,7 @@ Ostap.Models.Das.__reduce__ = _rdas_reduce_
 # =============================================================================
 ## reduce GenInvGauss
 def _rgig_reduce_ ( pdf ):
-    """Reduce GenInvGauss"""
+    """ Reduce GenInvGauss"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -2345,7 +2337,7 @@ Ostap.Models.GenInvGauss.__reduce__ = _rgig_reduce_
 # =============================================================================
 ## reduce PositiveSpline 
 def _rsplpos_reduce_ ( pdf ):
-    """Reduce PositiveSpline"""
+    """ Reduce PositiveSpline"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2361,7 +2353,7 @@ Ostap.Models.ConvexOnlySpline .__reduce__ = _rsplpos_reduce_
 # =============================================================================
 ## reduce HORNSdini
 def _rdini_reduce_ ( pdf ):
-    """Reduce HORNSdini"""
+    """ Reduce HORNSdini"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -2376,7 +2368,7 @@ Ostap.Models.HILLdini .__reduce__ = _rdini_reduce_
 # =============================================================================
 ## reduce Histo1D
 def _rh1d_reduce_ ( pdf ) :
-    """reduce Histo1D"""
+    """ Reduce Histo1D"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -2388,7 +2380,7 @@ Ostap.Models.Histo1D.__reduce__ = _rh1d_reduce_
 # =============================================================================
 ## reduce Histo2D
 def _rh2d_reduce_ ( pdf ) :
-    """reduce Histo2D"""
+    """ Reduce Histo2D"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -2401,7 +2393,7 @@ Ostap.Models.Histo2D.__reduce__ = _rh2d_reduce_
 # =============================================================================
 ## reduce Histo3D
 def _rh3d_reduce_ ( pdf ) :
-    """reduce Histo3D"""
+    """ Reduce Histo3D"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -2415,7 +2407,7 @@ Ostap.Models.Histo3D.__reduce__ = _rh3d_reduce_
 # =============================================================================
 ## reduce CutoffGauss
 def _rcutgau_reduce_ ( pdf ):
-    """Reduce CutOffGauss"""
+    """ Reduce CutOffGauss"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2429,7 +2421,7 @@ Ostap.Models.CutOffGauss.__reduce__ = _rcutgau_reduce_
 # =============================================================================
 ## reduce CutoffStudent
 def _rcutstt_reduce_ ( pdf ):
-    """Reduce CutOffStudent"""
+    """ Reduce CutOffStudent"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2448,7 +2440,7 @@ Ostap.Models.CutOffStudent.__reduce__ = _rcutstt_reduce_
 # =============================================================================
 ## reduce Poly2DPositive
 def _rpol2d_reduce_ ( pdf ):
-    """Reduce Poly2DPositive"""
+    """ Reduce Poly2DPositive"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2463,7 +2455,7 @@ Ostap.Models.Poly2DPositive.__reduce__ = _rpol2d_reduce_
 # =============================================================================
 ## reduce Poly2DSymPositive
 def _rpol2ds_reduce_ ( pdf ):
-    """Reduce Poly2DSymPositive"""
+    """ Reduce Poly2DSymPositive"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2477,7 +2469,7 @@ Ostap.Models.Poly2DSymPositive.__reduce__ = _rpol2ds_reduce_
 # =============================================================================
 ## reduce PS2DPol
 def _rps2dpol_reduce_ ( pdf ):
-    """Reduce PS2DPol"""
+    """ Reduce PS2DPol"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2494,7 +2486,7 @@ Ostap.Models.PS2DPol.__reduce__ = _rps2dpol_reduce_
 # =============================================================================
 ## reduce PS2DPolSym
 def _rps2dpols_reduce_ ( pdf ):
-    """Reduce PS2DPolSym"""
+    """ Reduce PS2DPolSym"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2509,7 +2501,7 @@ Ostap.Models.PS2DPolSym.__reduce__ = _rps2dpols_reduce_
 # =============================================================================
 ## reduce PS2DPol2
 def _rps2dpol2_reduce_ ( pdf ):
-    """Reduce PS2DPol2"""
+    """ Reduce PS2DPol2"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2528,7 +2520,7 @@ Ostap.Models.PS2DPol3.__reduce__ = _rps2dpol2_reduce_
 # =============================================================================
 ## reduce PS2DPol2Sym
 def _rps2dpol2s_reduce_ ( pdf ):
-    """Reduce PS2DPol2Sym"""
+    """ Reduce PS2DPol2Sym"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2545,7 +2537,7 @@ Ostap.Models.PS2DPol3Sym.__reduce__ = _rps2dpol2s_reduce_
 # =============================================================================
 ## Reduce Expo2DPol
 def _rexp2d_reduce_ ( pdf ):
-    """Reduce Expo2DPol"""
+    """ Reduce Expo2DPol"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2562,7 +2554,7 @@ Ostap.Models.Expo2DPol.__reduce__ = _rexp2d_reduce_
 # =============================================================================
 ## Reduce Expo2DPolSym
 def _rexp2ds_reduce_ ( pdf ):
-    """Reduce Expo2DPolSym"""
+    """ Reduce Expo2DPolSym"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2577,7 +2569,7 @@ Ostap.Models.Expo2DPolSym.__reduce__ = _rexp2ds_reduce_
 # =============================================================================
 ## Reduce ExpoPS2DPol
 def _rexpps2d_reduce_ ( pdf ):
-    """Reduce ExpoPS2DPol"""
+    """ Reduce ExpoPS2DPol"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2594,7 +2586,7 @@ Ostap.Models.ExpoPS2DPol.__reduce__ = _rexpps2d_reduce_
 # =============================================================================
 ## reduce Spline2D
 def _rspl2d_reduce_ ( pdf ):
-    """Reduce Spline2D"""
+    """ Reduce Spline2D"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2608,7 +2600,7 @@ Ostap.Models.Spline2D .__reduce__ = _rspl2d_reduce_
 # =============================================================================
 ## reduce Spline2DSym
 def _rspl2ds_reduce_ ( pdf ):
-    """Reduce Spline2DSym"""
+    """ Reduce Spline2DSym"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2622,7 +2614,7 @@ Ostap.Models.Spline2DSym.__reduce__ = _rspl2ds_reduce_
 # =============================================================================
 ## reduce Gauss2D
 def _rgauss2d_reduce_ ( pdf ):
-    """Reduce Gauss2D"""
+    """ Reduce Gauss2D"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2639,7 +2631,7 @@ Ostap.Models.Gauss2D.__reduce__ = _rgauss2d_reduce_
 # =============================================================================
 ## reduce Poly3DPositive
 def _rpol3d_reduce_ ( pdf ):
-    """Reduce Poly3DPositive"""
+    """ Reduce Poly3DPositive"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2657,7 +2649,7 @@ Ostap.Models.Poly3DPositive.__reduce__ = _rpol3d_reduce_
 # =============================================================================
 ## reduce Poly3DSymPositive
 def _rpol3ds_reduce_ ( pdf ):
-    """Reduce Poly3DSymPosiitive"""
+    """ Reduce Poly3DSymPosiitive"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2672,7 +2664,7 @@ Ostap.Models.Poly3DSymPositive.__reduce__ = _rpol3ds_reduce_
 # =============================================================================
 ## reduce Poly3DMixPositive
 def _rpol3dm_reduce_ ( pdf ):
-    """Reduce Poly3DMixPosiitive"""
+    """ Reduce Poly3DMixPosiitive"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2688,7 +2680,7 @@ Ostap.Models.Poly3DMixPositive.__reduce__ = _rpol3dm_reduce_
 # =============================================================================
 ## reduce Gauss3D
 def _rgauss3d_reduce_ ( pdf ):
-    """Reduce Gauss3D"""
+    """ Reduce Gauss3D"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2710,7 +2702,7 @@ Ostap.Models.Gauss3D.__reduce__ = _rgauss3d_reduce_
 # =============================================================================
 ## reduce Rational
 def _rational_reduce_ ( pdf ):
-    """Reduce Ostap::Models::Rational & Ostap::MoreRooFit::Rational
+    """ Reduce `Ostap.Models.Rational` & `Ostap.MoreRooFit.Rational`
     """
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
@@ -2730,14 +2722,14 @@ Ostap.MoreRooFit.RationalBernstein .__reduce__ = _rational_reduce_
 # =============================================================================
 ## reduce Ostap::Functions::FuncRooTH1 
 def _rfth1_reduce_ ( fun ):
-    """Reduce Ostap.Functions.FuncTH1"""
+    """ Reduce Ostap.Functions.FuncTH1"""
     return root_factory , ( type ( fun ) ,
                             fun.histo () ,
                             fun.x     () )
 # =============================================================================
 ## reduce Ostap::Functions::FuncRooTH3 
 def _rfth2_reduce_ ( fun ):
-    """Reduce Ostap.Functions.FuncRooTH2"""
+    """ Reduce Ostap.Functions.FuncRooTH2"""
     return root_factory , ( type ( fun ) ,
                             fun.histo () ,
                             fun.x     () , 
@@ -2745,7 +2737,7 @@ def _rfth2_reduce_ ( fun ):
 # =============================================================================
 ## reduce Ostap::Functions::FuncRooTH3
 def _rfth3_reduce_ ( fun ):
-    """Reduce Ostap.Functions.FuncRooTH3"""
+    """ Reduce Ostap.Functions.FuncRooTH3"""
     return root_factory , ( type ( fun ) ,
                             fun.histo () ,
                             fun.x     () ,
@@ -2754,7 +2746,7 @@ def _rfth3_reduce_ ( fun ):
 # =============================================================================
 ## reduce Ostap::Functions::FuncRooFormula & Ostap::Functions::Expression
 def _rfff_reduce_ ( fun ):
-    """Reduce Ostap.Functions.FuncRooFormula & Ostap.Functions.Expression
+    """ Reduce Ostap.Functions.FuncRooFormula & Ostap.Functions.Expression
     """
     return root_factory , ( type ( fun ) , fun.expression() )
 
