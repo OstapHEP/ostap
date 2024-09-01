@@ -733,9 +733,9 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
         v , a = pars_float [ p ]
 
         if not a.hasAsymError () :
-            s , n = pretty_ve   ( v ) 
+            s , n = pretty_ve   ( v , parentheses = False ) 
         else :
-            s , n = pretty_err2 (  a.getVal() , a.getAsymErrorHi() , a.getAsymErrorLo() )
+            s , n = pretty_err2 (  a.getVal() , a.getAsymErrorHi() , a.getAsymErrorLo() , parentheses = False )
 
         if n : n = '[10^%+d]' % n
         else : n = '' 
@@ -800,7 +800,7 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
 
     import ostap.logger.table as T
 
-    return T.table ( all , title = title if title else r.GetTitle() , prefix = prefix , alignment = 'llllc' )
+    return T.table ( all , title = title if title else r.GetTitle() , prefix = prefix , alignment = 'lcclcccc' )
 
 # =============================================================================
 ## 'easy' print of RooFitResult

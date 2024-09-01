@@ -54,7 +54,7 @@ def _fit_repr_ ( self ) :
 # ==============================================================================
 ## print <code>TFitResult</code> as a table 
 def _fit_table_ ( rfit , title = '' , prefix = '' ) :
-    """Print <code>TFitResult</code> as a table
+    """ Print <code>TFitResult</code> as a table
     """
     from  ostap.fitting.utils    import fit_status, cov_qual
     from ostap.logger.colorized  import attention, allright
@@ -143,7 +143,6 @@ def _fit_table_ ( rfit , title = '' , prefix = '' ) :
         rows = [ row + ('',)      for row in rows ] 
         header = header + ( 'Global corr.' , )   
 
-    
     for i in rfit :
         
         pname  = rfit.GetParameterName ( i )
@@ -160,7 +159,7 @@ def _fit_table_ ( rfit , title = '' , prefix = '' ) :
             error = rfit.Error ( i )
             v     = VE ( value , error * error )
             ##
-            fmt , fmtv , fmte , n = fmt_pretty_ve  ( v )
+            fmt , fmtv , fmte , n = fmt_pretty_ve  ( v , parentheses = False )
             s  = fmt % ( value / 10**n , error / 10**n )
             nv = n 
         if n : n = '[10^%+d]' % n
