@@ -228,7 +228,7 @@ def warning_info ( what ) :
 
 # ==============================================================================
 ## Attention information
-def attention_str ( what ) :
+def attention_info  ( what ) :
     """ Attention information """ 
     return colored_string ( what                ,
                             foreground = WHITE  ,
