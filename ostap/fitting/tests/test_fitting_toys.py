@@ -16,14 +16,18 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   ostap.core.pyrouts       import hID
+from   ostap.core.pyrouts       import hID, VE 
 import ostap.fitting.models     as     Models
 import ostap.fitting.toys       as     Toys
 import ostap.histos.histos
-from   ostap.utils.timing       import timing 
+from   ostap.utils.timing       import timing
+from   ostap.utils.memory       import memory 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
 from   ostap.fitting.toys       import pull_var
+from   ostap.math.base          import num_range 
+from   ostap.utils.progress_bar import progress_bar
+import ostap.logger.table       as     T
 import ROOT, time, random
 # =============================================================================
 # logging 
@@ -34,16 +38,36 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-nominal_mean  = 0.4
-nominal_sigma = 0.1
+nominal_mean    = 0.4
+nominal_sigma   = 0.1
+nominal_S       = 1000
+nominal_B       = 100
+nominal_F       = float ( nominal_S ) / ( nominal_S + nominal_B )
 
-mass      = ROOT.RooRealVar ( 'mass' , '', 0 , 1 )  
-gen_gauss = Models.Gauss_pdf ( 'GG' , xvar = mass )
-fit_gauss = Models.Gauss_pdf ( 'FG' , xvar = mass )
+mass            = ROOT.RooRealVar  ( 'mass' , '', 0 , 1 )  
+gen_gauss       = Models.Gauss_pdf ( 'GG' , xvar = mass )
+fit_gauss       = Models.Gauss_pdf ( 'FG' , xvar = mass )
 gen_gauss.mean  = nominal_mean
 gen_gauss.sigma = nominal_sigma 
-model     = Models.Fit1D ( signal     = gen_gauss , background = 'flat'    )
+model           = Models.Fit1D ( signal     = gen_gauss , background = 'flat'  )
+model_NE        = Models.Fit1D ( signal     = gen_gauss , background = 'flat'  , extended = False )
 
+model.S         = nominal_S 
+model.B         = nominal_B
+model_NE.F      = nominal_F
+
+fit_config      = { 'silent'   : True  , 'refit'  : 5 }
+
+def reset_funcs () :
+    
+    gen_gauss.mean  = nominal_mean
+    gen_gauss.sigma = nominal_sigma
+    fit_gauss.mean  = nominal_mean
+    fit_gauss.sigma = nominal_sigma    
+    model.S         = nominal_S
+    model.B         = nominal_B
+
+toy_results  = {}
 
 # ==============================================================================
 ## Perform toy-study for possible fit bias and correct uncertainty evaluation
@@ -54,7 +78,7 @@ model     = Models.Fit1D ( signal     = gen_gauss , background = 'flat'    )
 #  - fill distributions for fit results
 #  - fill distribution of pulls 
 def test_toys ( ) :
-    """Perform toys-study for possible fit bias and correct uncertainty evaluation
+    """ Perform toys-study for possible fit bias and correct uncertainty evaluation
     - generate `nToys` pseudoexperiments with some PDF `pdf`
     - fit teach experiment with the same PDF
     - store  fit results
@@ -67,14 +91,19 @@ def test_toys ( ) :
     
     more_vars   = { 'pull:mean_GG'  : pull_var ( 'mean_GG'  , nominal_mean  ) ,  
                     'pull:sigma_GG' : pull_var ( 'sigma_GG' , nominal_sigma ) }
+\
+    ## reset all functions 
+    reset_funcs () 
+
+    pdf = model
     
     with timing ( 'Toys      analysis' , logger = logger )  :        
         results , stats = Toys.make_toys  (
-            pdf         = gen_gauss ,
+            pdf         = pdf       ,            
             nToys       = 1000      ,
             data        = [ mass ]  ,
-            gen_config  = { 'nEvents'  : 200  , 'sample'  : True } ,
-            fit_config  = { 'silent'   : True , 'refit'   : 5   } ,
+            gen_config  = { 'nEvents'  : 1100  , 'sample'  : True } ,
+            fit_config  = fit_config   ,
             init_pars   = { 'mean_GG'  : nominal_mean   ,
                             'sigma_GG' : nominal_sigma  } ,
             more_vars   = more_vars , 
@@ -91,6 +120,8 @@ def test_toys ( ) :
     
     for h in ( h_mean , h_sigma ) :
         with use_canvas ( 'test_toys  %s' % h.title  , wait = 1 ) : h.draw()
+        
+    toy_results [ 'test_toys' ] = results , stats 
 
 # =============================================================================
 ## Perform toy-study for possible fit bias and correct uncertainty evaluation
@@ -111,6 +142,9 @@ def test_toys2 ( ) :
     more_vars   = { 'pull:mean_FG'  : pull_var ( 'mean_FG' , nominal_mean  ) ,  
                     'pull:sigma_FG' : pull_var ( 'sigma_FG', nominal_sigma ) }
     
+    ## reset all functions 
+    reset_funcs () 
+
     with timing ( 'Toys2     analysis' , logger = logger )  :        
         results , stats = Toys.make_toys2 (
             gen_pdf     = gen_gauss ,
@@ -118,7 +152,7 @@ def test_toys2 ( ) :
             nToys       = 1000      ,
             data        = [ mass ]  , 
             gen_config  = { 'nEvents' : 200  , 'sample' : True } ,
-            fit_config  = { 'silent'  : True } ,
+            fit_config  = fit_config   ,
             gen_pars    = { 'mean_GG' : nominal_mean , 'sigma_GG' : nominal_sigma  } ,
             fit_pars    = { 'mean_FG' : nominal_mean , 'sigma_FG' : nominal_sigma } ,
             more_vars   = more_vars , 
@@ -137,49 +171,197 @@ def test_toys2 ( ) :
     for h in ( h_mean , h_sigma ) :
         with use_canvas ( 'test_toys2 %s' % h.title  , wait = 1 ) : h.draw()
 
+    toy_results [ 'test_toys2' ] = results , stats 
 
 # ==============================================================================
-## Perform toy-study for Jackknife 
-def test_jackknife ( ) :
-    """Perform toys-study for Jackknife
+## Perform toy-study for Jackknife (non-extended model) 
+def test_jackknife_NE1 ( ) :
+    """ Perform toys-study for Jackknife (non-extended model) 
     """
 
-    logger = getLogger ( 'test_parallel_jackknife' ) 
+    logger = getLogger ( 'test_parallel_jackknife_NE1' ) 
+    logger.info ( 'Jackknife analysis for non-extended model' ) 
+                  
+    pdf = model_NE
     
-    with timing ( 'Jackknife analysis' , logger = logger )  :        
-        model.S = 1000
-        model.B = 100
+    with timing ( 'Jackknife analysis (non-extended)' , logger = logger )  :
         
-        data    = model.generate ( 1100 ) 
+        ## reset all functions 
+        reset_funcs () 
         
-        Toys.make_jackknife ( pdf        = model ,
-                              data       = data  ,
-                              fit_config = { 'silent' : True } ,                     
-                              progress   = True  ,
-                              silent     = True  ) 
-
+        data = pdf.generate ( nominal_S )
+        with use_canvas ( "Jackknife analysis (non-extended)" , wait = 3 ) :
+            r , f = pdf.fitTo ( data , draw = True , nbins = 100 , **fit_config )
+            
+            ## reset all functions 
+            reset_funcs () 
+            
+            results, stats = Toys.make_jackknife ( pdf        = pdf        ,
+                                                   data       = data       ,
+                                                   fit_config = fit_config ,
+                                                   progress   = True       ,
+                                                   silent     = True       ) 
+            
+        toy_results [ 'test_jackknife_NE1' ] = results , stats
+            
 # ==============================================================================
-## Perform toy-study for Bootstrap 
-def test_bootstrap ( ) :
-    """Perform toys-study for Bootstrap
+## Perform toy-study for Jackknife (non-extended model) 
+def test_jackknife_NE2 ( ) :
+    """ Perform toys-study for Jackknife (non-extended model) 
     """
 
-    logger = getLogger ( 'test_parallel_bootstrap' ) 
+    logger = getLogger ( 'test_parallel_jackknife_NE2' ) 
+    logger.info ( 'Jackknife analysis for non-extended model' ) 
+                  
+    pdf = fit_gauss 
+    
+    with timing ( 'Jackknife analysis (non-extended)' , logger = logger )  :
+        
+        ## reset all functions 
+        reset_funcs () 
+        
+        data = pdf.generate ( nominal_S )
+        with use_canvas ( "Jackknife analysis (non-extended)" , wait = 3 ) :
+            r , f = pdf.fitTo ( data , draw = True , nbins = 100 , **fit_config )
+            
+            ## reset all functions 
+            reset_funcs () 
+            
+            results, stats = Toys.make_jackknife ( pdf        = pdf        ,
+                                                   data       = data       ,
+                                                   fit_config = fit_config ,
+                                                   progress   = True       ,
+                                                   silent     = True       )
+            
+        toy_results [ 'test_jackknife_NE2' ] = results , stats
+            
+# ==============================================================================
+## Perform toy-study for Jackknife (extended model) 
+def test_jackknife_EXT ( ) :
+    """ Perform toys-study for Jackknife (extended model) 
+    """
 
-    with timing ( 'Bootstrap analysis' , logger = logger )  :        
+    logger = getLogger ( 'test_jackknife_EXT' ) 
+    logger.info ( 'Jackknife analysis for extended model' ) 
+                  
+    pdf = model
+    
+    with timing ( 'Jackknife analysis (extended)' , logger = logger )  :
+        
+        ## reset all functions 
+        reset_funcs () 
+        
+        data = pdf.generate ( nominal_S )
+        with use_canvas ( "Jackknife analysis (extended)" , wait = 3 ) :
+            r , f = pdf.fitTo ( data , draw = True , nbins = 100 , **fit_config )
+            
+            ## reset all functions 
+            reset_funcs () 
+            
+            results, stats = Toys.make_jackknife ( pdf        = pdf        ,
+                                                   data       = data       ,
+                                                   fit_config = fit_config ,
+                                                   progress   = True       ,
+                                                   silent     = True       ) 
+            
+        toy_results [ 'test_jackknife_EXT' ] = results , stats
+            
+# ==============================================================================
+## Perform toy-study for Bootstrap (non-extended)
+def test_bootstrap_NE1 ( ) :
+    """ Perform toys-study for Bootstrap (non-extended)
+    """
 
-        model.S = 1000
-        model.B = 100
+    logger = getLogger ( 'test_bootstrap_NE1' ) 
+    logger.info ( 'Bootstrap analysis for non-extended model' ) 
+
+    pdf = model_NE 
+    with timing ( 'Bootstrap analysis (non-extended)' , logger = logger )  :        
+
+        ## reset all functions 
+        reset_funcs () 
+
+        data    = pdf.generate ( nominal_S + nominal_B ) 
+        with use_canvas ( "Booststrap analysis" , wait = 3 ) :
+            r , f = pdf.fitTo ( data , draw = True , nbins = 100 , **fit_config )
+
+            ## reset all functions 
+            reset_funcs () 
         
-        data    = model.generate ( 1100 ) 
-        
-        Toys.make_bootstrap ( pdf        = model ,
-                              size       = 100   , 
-                              data       = data  ,
-                              fit_config = { 'silent' : True } ,                     
-                              progress   = True  ,
-                              silent     = True  ) 
-        
+            results, stats = Toys.make_bootstrap ( pdf        = pdf        ,
+                                                   size       = 400        , 
+                                                   data       = data       ,
+                                                   fit_config = fit_config ,
+                                                   extended   = False      , 
+                                                   progress   = True       ,
+                                                   silent     = True       ) 
+            
+        toy_results [ 'test_bootstrap_NE1' ] = results , stats
+
+# ==============================================================================
+## Perform toy-study for Bootstrap (non-extended)
+def test_bootstrap_NE2 ( ) :
+    """ Perform toys-study for Bootstrap (non-extended)
+    """
+
+    logger = getLogger ( 'test_parallel_bootstrap_NE2' ) 
+    logger.info ( 'Bootstrap analysis for non-extended model' ) 
+
+    pdf = fit_gauss 
+    with timing ( 'Bootstrap analysis (non-extended)' , logger = logger )  :        
+
+        ## reset all functions 
+        reset_funcs () 
+
+        data    = pdf.generate ( nominal_S + nominal_B ) 
+        with use_canvas ( "Booststrap analysis" , wait = 3 ) :
+            r , f = pdf.fitTo ( data , draw = True , nbins = 100 , **fit_config )
+
+            ## reset all functions 
+            reset_funcs () 
+                        
+            results, stats = Toys.make_bootstrap ( pdf        = pdf        ,
+                                                   size       = 400        , 
+                                                   data       = data       ,
+                                                   fit_config = fit_config ,
+                                                   extended   = False      , 
+                                                   progress   = True       ,
+                                                   silent     = True       ) 
+
+        toy_results [ 'test_bootstrap_NE2' ] = results , stats
+
+# ==============================================================================
+## Perform toy-study for Bootstrap (extended)
+def test_bootstrap_EXT ( ) :
+    """ Perform toys-study for Bootstrap (extended)
+    """
+    
+    logger = getLogger ( 'test_parallel_bootstrap_EXT' ) 
+    logger.info ( 'Bootstrap analysis for extended model' ) 
+
+    pdf = model 
+    with timing ( 'Bootstrap analysis (extended)' , logger = logger )  :        
+
+        ## reset all functions 
+        reset_funcs () 
+
+        data    = pdf.generate ( nominal_S + nominal_B ) 
+        with use_canvas ( "(Extended) Booststrap analysis" , wait = 3 ) :
+            r , f = pdf.fitTo ( data , draw = True , nbins = 100 , **fit_config )
+
+            ## reset all functions 
+            reset_funcs () 
+                        
+            results, stats = Toys.make_bootstrap ( pdf        = pdf        ,
+                                                     size       = 400        , 
+                                                     data       = data       ,
+                                                     fit_config = fit_config ,
+                                                     extended   = True       , 
+                                                     progress   = True       ,
+                                                     silent     = True       ) 
+            
+        toy_results [ 'test_bootstrap_EXT' ] = results , stats
+
 # =============================================================================
 ## Perform toy-study for significance of the signal 
 #  - generate <code>nToys</code> pseudoexperiments using background-only hypothesis 
@@ -187,7 +369,7 @@ def test_bootstrap ( ) :
 #  - store  fit results
 #  - fill distributions for fit results
 def test_significance ( ) :
-    """Perform toy-study for significance of the signal 
+    """ Perform toy-study for significance of the signal 
     - generate `nToys` pseudoexperiments using background-only hypothesis 
     - fit each experiment with signal+background hypothesis
     - store  fit results
@@ -196,6 +378,9 @@ def test_significance ( ) :
     
     logger = getLogger ( 'test_significance' )
 
+    ## reset all functions 
+    reset_funcs () 
+    
     with timing ( 'Significance analysis' , logger = logger )  :        
         
         ## only background hypothesis
@@ -209,35 +394,120 @@ def test_significance ( ) :
         model.background.tau.fix ( 0 )
         
         results , stats = Toys.make_toys2 (
-            gen_pdf     = bkg_only  ,
-            fit_pdf     = model     ,
-            nToys       = 1000      ,
-            data        = [ mass ]  , 
-            gen_config  = { 'nEvents'  : 100 , 'sample' : True } ,
-            fit_config  = { 'silent'   : True } ,
+            gen_pdf     = bkg_only   ,
+            fit_pdf     = model      ,
+            nToys       = 2000       ,
+            data        = [ mass ]   , 
+            gen_config  = { 'nEvents'  : 110 , 'sample' : True } ,
+            fit_config  = fit_config ,
             gen_pars    = { 'tau_BKG'  : 0.   } , ## initial values for generation 
-            fit_pars    = { 'B' : 100         ,
-                            'S' : 10          ,
-                            'phi0_Bkg_S': 0.0 } , ## initial fit values for parameters 
+            fit_pars    = { 'B'          : 100 ,
+                            'S'          : 10  ,
+                            'phi0_Bkg_S' : 0.0 } , ## initial fit values for parameters 
             silent      = True , 
             progress    = True )
-        
-    h_S      = ROOT.TH1F ( hID() , '#S' , 60 ,  0 , 60 )
-        
-    for r in results ['S'  ] : h_S .Fill ( r )
+
+
+    # =========================================================================
+    ## yields 
+    h_Y      = ROOT.TH1F ( hID() , '#S' , 140 , 0 , 70 )    
+    for r in results [ 'S'  ] : h_Y .Fill ( r )
+
+    ## get p-value and significance histograms:  
+    h_P , h_S = h_Y.significance ( cut_low = True )
+
+    h_S.red  ()
+    h_P.blue ()
+
+    minv = 1.e+100
+    for i,_,y in h_P.items() :
+        yv = y.value()
+        if 0 < yv and yv < minv : minv = yv
+    minv , _  = num_range ( 0.75 * minv ) 
+    h_P.SetMinimum ( minv )
+    h_S.SetMinimum ( 0    )
     
-    for h in ( h_S ,  ) :
-        with use_canvas ( 'test_significance  %s' % h.title  , wait = 1 ) : h.draw()
-        
+    with use_canvas ( 'test_significance: yields'       , wait = 1 ) : h_Y.draw ( )
+    with use_canvas ( 'test_significance: p-value'      , wait = 1 ) : h_P.draw ( logy = True )
+    with use_canvas ( 'test_significance: significance' , wait = 3 ) : h_S.draw ()
+    
+    toy_results [ 'test_significance' ] = results , stats
 
 # =============================================================================
-if '__main__' == __name__ :
+## Save resuls of toys to DBASE 
+def test_db () :
+    """ Save resuls of toys to DBASE 
+    """
+    logger = getLogger ( 'test_db' ) 
+    logger.info ( 'Saving all toys results into DBASE' )
+    import ostap.io.zipshelve   as     DBASE
+    from ostap.utils.timing     import timing 
+    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db :
+        for key in progress_bar ( toy_results ) :
+            r , s = toy_results [ key ] 
+            key1 = '%s:results' % key
+            key2 = '%s:stats'   % key
+            db [ key1 ] = r
+            db [ key2 ] = s 
+        db.ls()
+    while toy_results : toy_results.popitem() 
+# =============================================================================
+
     
-    test_toys         ( ) 
-    test_toys2        ( )
-    test_jackknife    ( )
-    test_bootstrap    ( )    
-    test_significance ( ) 
+# =============================================================================
+if '__main__' == __name__ :
+
+    """
+    with memory ( 'test_toys'          , logger = logger ) as mtt : test_toys          ()
+    with memory ( 'test_toys2'         , logger = logger ) as mt2 : test_toys          ()
+    with memory ( 'test_jackknife_NE1' , logger = logger ) as mj1 : test_jackknife_NE1 ()
+    with memory ( 'test_jackknife_NE2' , logger = logger ) as mj2 : test_jackknife_NE2 ()
+    with memory ( 'test_jackknife_EXT' , logger = logger ) as mje : test_jackknife_EXT ()
+    with memory ( 'test_bootstrap_NE1' , logger = logger ) as mb1 : test_bootstrap_NE1 ()
+    with memory ( 'test_bootstrap_NE2' , logger = logger ) as mb2 : test_bootstrap_NE2 ()
+    with memory ( 'test_bootstrap_EXT' , logger = logger ) as mbe : test_bootstrap_EXT ()
+    """
+    
+    with memory ( 'test_significance'  , logger = logger ) as mts : test_significance  ()
+    with memory ( 'test_db'            , logger = logger ) as mdb : test_db            ()
+
+    rows = [ ( 'Test' , 'Memory [MB]' ) ]
+
+    """
+    row  = 'Toys'          , '%.1f' % mtt.delta 
+    rows.append ( row )
+
+    row  = 'Toys2'         , '%.1f' % mt2.delta 
+    rows.append ( row )
+    
+    row  = 'Jackknife_NE1' , '%.1f' % mj1.delta 
+    rows.append ( row )
+
+    row  = 'Jackknife_NE2' , '%.1f' % mj2.delta 
+    rows.append ( row )
+
+    row  = 'Jackknife_EXT' , '%.1f' % mje.delta 
+    rows.append ( row )
+    
+    row  = 'Bootstrap_NE1' , '%.1f' % mb1.delta 
+    rows.append ( row )
+
+    row  = 'Bootstrap_NE2' , '%.1f' % mb2.delta 
+    rows.append ( row )
+
+    row  = 'Bootstrap_EXT' , '%.1f' % mbe.delta 
+    rows.append ( row )
+    """
+    
+    row  = 'Significance'  , '%.1f' % mts.delta 
+    rows.append ( row )
+    
+    row  = 'test_db'       , '%.1f' % mdb.delta 
+    rows.append ( row )
+    
+    title = 'Memory usage for various toys'
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lc' ) 
+    logger.info ( '%s:\n%s' % ( title , table ) )
     
 
 # =============================================================================

@@ -1,5 +1,9 @@
 ## New features
-
+    
+  1.improve all toys machinery: toys, jackknife, bootstrapping and significance
+  1. extend all tests for toys
+       
+    
 ## Backward incompatible
 
 ## Bug fixes

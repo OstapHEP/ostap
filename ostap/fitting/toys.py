@@ -26,6 +26,8 @@ __all__     = (
 from   builtins               import range
 from   ostap.core.ostap_types import string_types, integer_types
 from   ostap.core.core        import VE, SE
+from   ostap.logger.pretty    import pretty_ve, pretty_float, fmt_pretty_float
+from   ostap.logger.colorized import attention
 import ROOT
 # =============================================================================
 # logging 
@@ -34,11 +36,36 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.toys' )
 else                       : logger = getLogger( __name__             )
 # =============================================================================
-logger.debug ( 'Utilities to run fitting toys, Jackknife, bootstrap, ... ')
+logger.debug ( 'Utilities to run toys, Jackknife, bootstrap, ... ')
 # ==============================================================================
+extmodes = {
+    ROOT.RooAbsPdf.MustBeExtended   : 'MustBeExtended' ,
+    ROOT.RooAbsPdf.CanBeExtended    : 'CanBeExtended'  ,
+    ROOT.RooAbsPdf.CanNotBeExtended : 'CanBeExtended'  ,
+}
+# ==============================================================================
+## Check the consistency of the PDF and `extended` flag
+def check_extended ( pdf , extended ) :
+    """ Check the consistency of the PDF and `extended` flag 
+    """
+    if isinstance ( pdf , ROOT.RooAbsPdf ) : pass
+    else                                   : pdf = pdf.pdf 
+    ##
+    extmode = pdf.extendMode()
+    ##
+    if   pdf.canBeExtended  ()                                       : return True
+    elif pdf.mustBeExtended ()                      and     extended : return True
+    elif ROOT.RooAbsPdf.MustBeExtended   == extmode and     extended : return True 
+    elif ROOT.RooAbsPdf.CanNotBeExtended == extmode and not extended : return True 
+    elif ROOT.RooAbsPdf.CanBeExtended    == extmode and     extended : return True 
+    ##    
+    logger.warning ( "Mismatch of `ExtendMode`:`%s` and `extended`:%s" % ( extmodes [ extmode ] , extended ) )
+    ## 
+    return False 
+# =============================================================================
 ## Technical transformation  to the dictionary :  { 'name' : float_value }
 def vars_transform ( vars ) :
-    """Technical transformation to the dictionary :  `{ 'name' : float_value }`
+    """ Technical transformation to the dictionary :  `{ 'name' : float_value }`
     """
     
     from   ostap.core.ostap_types     import dictlike_types
@@ -76,7 +103,7 @@ def pull_var ( name , value ) : return PoolVar ( name , value )
 #  statistics = make_stats ( results )
 #  @endcode 
 def make_stats ( results , fits = {} , covs = {} , accept = SE () ) :
-    """Prepare statistics from results of toys/jackknifes/boostrap studies
+    """ Prepare statistics from results of toys/jackknifes/boostrap studies
     >>> results    = ...
     >>> statistics = make_stats ( results )
     """
@@ -98,25 +125,55 @@ def make_stats ( results , fits = {} , covs = {} , accept = SE () ) :
     for k in covs :
         stats ['- CovQual %s' % k  ] = covs [ k ]
         
-
     return stats
 
 # =============================================================================
-## print statistics of pseudoexperiments
+## Print statistics of pseudoexperiments
 def print_stats ( stats , ntoys = '' , logger = logger ) :
-    """print statistics of pseudoexperiments
+    """ Print statistics of pseudoexperiments
     """
-    
-    table = [ ( 'Parameter' , '#', 'mean' , 'rms' , '%13s / %-13s' % ( 'min' , 'max' ) ) ] 
+    ##              0          1      2       3        4        5          6           7 
+    table = [ ( 'Parameter' , '#', 'mean', 'x[..]' , 'rms' , 'x[..]', 'min / max' , 'x[..]' ) ] 
 
-    def make_row ( c ) :
-        n      = "{:^11}".format ( c.nEntries() )
-        mean   = c.mean ()
-        mean   = "%+13.6g +/- %-13.6g" % ( mean.value() , mean.error () )
-        rms    = "%13.6g"             % c.rms ()
-        minmax = "%+13.6g / %-+13.6g"  % ( c.min()      , c.max      () ) 
-        return p , n , mean , rms  , minmax 
+    has_e1 = [] 
+    has_e2 = []
+    has_e3 = [] 
+    
+    def make_row ( c ) :    
         
+        n      = '%d' % c.nEntries() 
+        mean   = c.mean ()
+        rms    = c.rms  ()
+        minmax = c.min() , c.max() 
+        
+        mean , expo1 = pretty_ve    ( mean , precision = 6 , width = 8 , parentheses = False )
+        rms  , expo2 = pretty_float ( rms  , precision = 4 , width = 6 )        
+        fmt  , expo3 = fmt_pretty_float ( max ( abs ( c.min() ) , abs ( c.max() ) ) , precision = 3 , width = 5 )
+        fmt  = '%s / %s ' % ( fmt , fmt )
+
+        if expo3 : scale = 10**expo3
+        else     : scale = 1 
+        minmax = fmt % ( c.min() / scale , c.max() / scale ) 
+        
+        ## mean   = "%+13.6g +/- %-13.6g" % ( mean.value() , mean.error () )
+        ## rms    = "%13.6g"             % c.rms ()
+        ## minmax = "%+13.6g / %-+13.6g"  % ( c.min()      , c.max      () )
+    
+        if expo1 : expo1 = '10^%+d' % expo1
+        else     : expo1 = ''
+        
+        if expo2 : expo2 = '10^%+d' % expo2
+        else     : expo2 = ''
+        
+        if expo3 : expo3 = '10^%+d' % expo3
+        else     : expo3 = '' 
+
+        if expo1 : has_e1.append  ( '' )
+        if expo2 : has_e2.append  ( '' )
+        if expo3 : has_e3.append  ( '' )
+        
+        return p , n , mean, expo1, rms, expo2, minmax, expo3 
+
     for p in sorted ( stats )  :
         if    p.startswith('pull:') : continue  
         c      = stats [ p ]
@@ -127,16 +184,45 @@ def print_stats ( stats , ntoys = '' , logger = logger ) :
         c      = stats [ p ]
         table.append (  make_row ( c )  )
 
+    ## skip empty column
+    if not has_e3 :
+        rows = []
+        for row in table :
+            r = list ( row )
+            del r [ 7 ]
+            rows.append ( r )
+        table = rows
+        
+    ## skip empty column
+    if not has_e2 :
+        rows = []
+        for row in table :
+            r = list ( row )
+            del r [ 5 ]
+            rows.append ( r )
+        table = rows
+        
+    ## skip empty column
+    if not has_e1 :
+        rows = []
+        for row in table :
+            r = list ( row )
+            del r [ 3 ]
+            rows.append ( r )
+        table = rows 
+        
+
     if not ntoys :
         ntoys = 0
         for s in stats :
             ntoys = max ( ntoys , stats[s].nEntries() )
-            
+        
     import ostap.logger.table as Table
     table = Table.table ( table                                    ,
                           title     = "Results of %s toys" % ntoys ,
-                          alignment = 'lcccc'                      ,
+                          alignment = 'lccccccc'                   ,
                           prefix    = "# "                         )
+    
     logger.info ( 'Results of %s toys:\n%s' % ( ntoys , table ) ) 
 
 
@@ -148,11 +234,12 @@ def print_stats ( stats , ntoys = '' , logger = logger ) :
 #  jackknife , theta_jack = jackknife_esiimator ( statistics , value )
 #  @endcode 
 def jackknife_statistics ( statistics , theta = None ) :
-    """Jackknife estimator from jackknife statistic
+    """ Jackknife estimator from jackknife statistic
     >>> statistics = ....
     >>> jacknife                      = jackknife_estimator ( statistics         )
     >>> jacknife , theta_corr , bias  = jackknife_esiimator ( statistics , value )
     """
+    
     assert isinstance ( theta , VE ) or theta is None  ,\
            "jackknife_statistics: invalid type of 'value': %s" % type ( value ) 
     
@@ -167,24 +254,35 @@ def jackknife_statistics ( statistics , theta = None ) :
     
     bias       =  ( N - 1 ) * ( theta_dot.value() - theta.value() )
     
-    ## theta  corrected for the bias and with Jackknife variance  
+    ## theta  corrected for the bias and with Jackknife variance
+    
     theta_jack = VE ( theta.value() - bias , jvar     ) ## corrected value 
 
     return jackknife , theta_jack
 
 # =============================================================================
 ## print Jackknife statistics
-def print_jackknife  ( fitresult          ,
+def print_jackknife  ( fitresult          , ## restl of the fit of th e total datasample 
                        stats              ,
                        morevars  = {}     ,                       
                        logger    = logger ,
                        title     = ''     ) :
-    """print Jackknife statistics
+    """ Print Jackknife statistics
     """
-    
-    header = ( 'Parameter' , 'theta' , 'theta_(.)' ,  'theta_jack' , 'bias/sigma [%]' , 'error [%]' ) 
-    table  = []
 
+    
+    header = ( 'Parameter'  ,
+               'theta'      , 'x[...]' ,
+               'theta_(.)'  , 'x[...]' ,
+               'bias'       , 'x[...]' ,
+               'bias [%]'   , 's/s<j>' )
+    
+    table  = [ header ]
+
+    has_e1 = False 
+    has_e2 = False 
+    has_e3 = False 
+    
     N = 0 
     for name in sorted ( stats ) :
         
@@ -206,20 +304,45 @@ def print_jackknife  ( fitresult          ,
 
         N = max ( N , statistics.nEntries() )
         
+        
         ## jackknife estimates 
         jackknife , theta_jack = jackknife_statistics ( statistics , theta )
 
-        bias  = theta_jack.value () - theta     .value ()
+        bias =  ( N - 1 ) * ( jackknife - theta ).value()
+        
+        ## bias  = theta_jack.value () - theta     .value ()
         
         scale = theta     .error () / theta_jack.error () 
         
-        row = ( name , 
-                "%+13.6g +/- %-13.6g" % ( theta      . value () , theta      .error () ) , 
-                "%+13.6g +/- %-13.6g" % ( jackknife  . value () , jackknife  .error () ) , 
-                "%+13.6g +/- %-13.6g" % ( theta_jack . value () , theta_jack .error () ) ,  
-                '%+6.2f'              % ( bias / theta.error() * 100 ) , 
-                '%+6.2f'              % ( scale * 100 - 100 )          )
+        th1 , expo1 = pretty_ve ( theta      , precision = 4 , width = 6 , parentheses = False )
+        th2 , expo2 = pretty_ve ( jackknife  , precision = 4 , width = 6 , parentheses = False )
         
+        ## th3 , expo3 = pretty_ve ( theta_jack , precision = 4 , width = 6 , parentheses = False )
+        th3 , expo3 = pretty_float ( bias       , precision = 4 , width = 6 )
+
+        if expo1 : expo1 = '10^%+d' % expo1
+        else     : expo1 = ''
+        
+        if expo2 : expo2 = '10^%+d' % expo2
+        else     : expo2 = ''
+
+        if expo3 : expo3 = '10^%+d' % expo3
+        else     : expo3 = ''
+
+        bias = bias / theta.error() * 100 
+        
+        fbias = '%+.1f' % bias 
+        errs  = '%+.2f' % scale
+
+        if expo1 : has_e1 = True
+        if expo2 : has_e2 = True
+        if expo3 : has_e3 = True
+
+        if 50  < abs ( bias       ) : fbias = attention ( fbias )
+        if 0.5 < abs ( scale  - 1 ) : errs  = attention ( errs  )
+        
+        row = name , th1, expo1 , th2 , expo2 , th3 , expo3 , fbias , errs
+
         table.append ( row )
 
         
@@ -230,13 +353,44 @@ def print_jackknife  ( fitresult          ,
 
         statistics = stats [ name ]
         jackknife  = jackknife_statistics ( statistics ) 
+
+        th2, expo2 =  pretty_ve ( jackknife , precision = 4 , width = 6 , parentheses = False )
+
+        if expo2 : expo2 = '10^%+d' % expo2
+        else     : expo2 = ''
         
-        row = name , '' , "%+13.6g +/- %-13.6g" % ( jackknife . value () , jackknife .error () ) , '' , '' , '' 
+        if expo2 : has_e2 = True
+        
+        row = name , '' , '' , th2 , expo2 , '' , '' , '' , '' 
         table.append ( row )
         
-    
-    table = [ header ] + table 
- 
+    ## skip empty column
+    if not has_e3 :
+        rows = []
+        for row in table :
+            r = list ( row )
+            del r [ 6 ]
+            rows.append ( r )
+        table = rows
+        
+    ## skip empty column
+    if not has_e2 :
+        rows = []
+        for row in table :
+            r = list ( row )
+            del r [ 4 ]
+            rows.append ( r )
+        table = rows
+        
+    ## skip empty column
+    if not has_e1 :
+        rows = []
+        for row in table :
+            r = list ( row )
+            del r [ 2 ]
+            rows.append ( r )
+        table = rows 
+
     title = title if title else "Jackknife results (N=%d)" % N  
 
     import ostap.logger.table as Table
@@ -254,14 +408,17 @@ def print_bootstrap  ( fitresult          ,
                        morevars  = {}     ,
                        logger    = logger ,
                        title     = ''     ) :
-    """print Bootstrap statistics
+    """ Print Bootstrap statistics
     """
     
-    header = ( 'Parameter' , 'theta' ,  'theta_boot' , 'bias/sigma [%]' , 'error [%]' ) 
+    header = ( 'Parameter' , 'theta' , 'x[...]' ,  'theta_boot' , 'x[...]', 'bias[%]' , 's/s<b>' ) 
     table  = []
 
     n = 0
 
+    has_e1 = False 
+    has_e2 = False 
+    
     for name in sorted ( stats ) :
         
         if   name in fitresult :
@@ -284,15 +441,30 @@ def print_bootstrap  ( fitresult          ,
 
         theta_boot = VE ( statistics.mean().value() , statistics.mu2() ) 
         
-
         bias  = theta_boot.value () - theta     .value ()        
-        scale = theta     .error () / theta_boot.error () 
+        scale = theta     .error () / theta_boot.error ()
+        
+        th1 , expo1 = pretty_ve ( theta      , precision = 4 , width = 6 , parentheses = False )
+        th2 , expo2 = pretty_ve ( theta_boot , precision = 4 , width = 6 , parentheses = False )
 
-        row = ( name , 
-                "%+13.6g +/- %-13.6g" % ( theta      . value () , theta      .error () ) , 
-                "%+13.6g +/- %-13.6g" % ( theta_boot . value () , theta_boot .error () ) ,  
-                '%+6.2f'              % ( bias / theta.error() * 100 ) , 
-                '%+6.2f'              % ( scale * 100 - 100 )          )
+        if expo1 : expo1 = '10^%+d' % expo1
+        else     : expo1 = ''
+        
+        if expo2 : expo2 = '10^%+d' % expo2
+        else     : expo2 = ''
+
+        bias  = bias / theta.error() * 100
+        
+        fbias = '%+.1f' % bias 
+        errs  = '%+.2f' % scale
+
+        if 50  < abs ( bias       ) : fbias = attention ( fbias )
+        if 0.5 < abs ( scale  - 1 ) : errs  = attention ( errs  )
+        
+        row = name , th1, expo1 , th2 , expo2 , fbias , errs 
+
+        if expo1 : has_e1 = True
+        if expo2 : has_e2 = True
         
         table.append ( row )
 
@@ -304,19 +476,42 @@ def print_bootstrap  ( fitresult          ,
         statistics = stats [ name ]
         theta_boot = VE ( statistics.mean().value() , statistics.mu2() ) 
 
-        row = name , '',  "%+13.6g +/- %-13.6g" % ( theta_boot . value () , theta_boot .error () ) , '' , '' 
+        th2 , expo2 = pretty_ve ( theta_boot , precision = 4 , width = 6 , parentheses = False )
+        
+        if expo2 : expo2 = '10^%+d' % expo2
+        else     : expo2 = ''
+
+        if expo2 : has_e2 = True 
+        row = name , '','' , th2 , expo2 , '' , '' 
         table.append ( row )
 
-        
+    table = [ header ] + table
 
-    table = [ header ] + table 
+    ## skip empty column
+    if not has_e2 :
+        rows = []
+        for row in table :
+            r = list ( row )
+            del r [ 4 ]
+            rows.append ( r )
+        table = rows
+        
+    ## skip empty column
+    if not has_e1 :
+        rows = []
+        for row in table :
+            r = list ( row )
+            del r [ 2 ]
+            rows.append ( r )
+        table = rows 
+        
  
     title = title if title else "Bootstrapping with #%d samples" % n 
 
     import ostap.logger.table as Table
     table = Table.table ( table                ,
                           title     = title    ,
-                          alignment = 'lcccc'  ,
+                          alignment = 'lccccccc'  ,
                           prefix    = "# "     )
     logger.info ( '%s:\n%s' % ( title , table ) )
     
@@ -325,7 +520,7 @@ def print_bootstrap  ( fitresult          ,
 ## Default function to generate the data
 #  - simple call for <code>PDF.generate</code>
 def generate_data ( pdf , varset , **config ) :
-    """Default function to generate the data
+    """ Default function to generate the data
     - simple call for `PDF.generate`
     """
     return pdf.generate ( varset = varset , **config )
@@ -353,7 +548,7 @@ def make_fit    ( pdf , dataset , **config ) :
 #  @param dataset pdf
 #
 def accept_fit  ( result , pdf = None , dataset = None ) :
-    """Accept the fit result?
+    """ Accept the fit result?
     - valid fit result
     - fit status is 0 (SUCCESS)
     - covariance matrix quality  is either 0 or -1 
@@ -431,7 +626,7 @@ def make_toys ( pdf                 ,
                 progress   = True   ,
                 logger     = logger ,
                 frequency  = 500    ) : ## 
-    """Make `nToys` pseudoexperiments
+    """ Make `nToys` pseudoexperiments
 
     -   Schematically:
     >>> for toy in range ( nToys )  :
@@ -575,11 +770,13 @@ def make_toys ( pdf                 ,
         ## 3. fit it!
         r = fit_fun ( pdf , dataset , **fitcnf ) 
 
-        ## fit status 
-        fits [ r.status  () ] += 1
+        ## fit status
+        st = r.status()
+        if 0 != st :  fits [ st ] += 1
 
         ## covariance matrix quality
-        covs [ r.covQual () ] += 1
+        cq = r.covQual() 
+        if not cq in ( -1 , 3 ) : covs [ cq ] += 1
               
         ## ok ?
         ok      = accept_fun ( r , pdf , dataset )
@@ -839,10 +1036,12 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
         r = fit_fun ( fit_pdf , dataset , **fitcnf ) 
         
         ## fit status 
-        fits [ r.status  () ] += 1
+        st = r.status()
+        if 0 != st :  fits [ st ] += 1
         
         ## covariance matrix quality
-        covs [ r.covQual () ] += 1
+        cq = r.covQual() 
+        if not cq in ( -1 , 3 ) : covs [ cq ] += 1
         
         ## ok ?
         ok      = accept_fun ( r , fit_pdf , dataset )
@@ -925,14 +1124,14 @@ def make_jackknife ( pdf                  ,
                      fit_config  = {}     , ## parameters for <code>pdf.fitTo</code>
                      fit_pars    = {}     , ## fit-parameters to reset/use
                      more_vars   = {}     , ## additional  results to be calculated
-                     fit_fun     = None   , ## fit       function ( pdf , dataset , **fit_config ) 
-                     accept_fun  = None   , ## accept    function ( fit-result, pdf, dataset     )
+                     fit_fun     = None   , ## - fit       function ( pdf , dataset , **fit_config ) 
+                     accept_fun  = None   , ## - accept    function ( fit-result, pdf, dataset     )
                      event_range = ()     , ## event range for jackknife                      
                      silent      = True   ,
                      progress    = True   ,
                      logger      = logger ,
                      frequency   = 500    ) :
-    """Run Jackknife analysis, useful for evaluaton of fit biased and uncertainty estimates
+    """ Run Jackknife analysis, useful for evaluaton of fit biased and uncertainty estimates
     For each <code>i</code> remove event with index <code>i</code> from the dataset, and refit it.
     >>> dataset = ...
     >>> model   = ...
@@ -970,7 +1169,11 @@ def make_jackknife ( pdf                  ,
     assert 0 <= begin and begin < end and begin < N , 'make_jackknife: invalid event range (%s,%s)/%d' % ( begin , end , N )
     ## adjust the end 
     end   = min ( end   , N )
-    
+
+    ## check if pdf and `extended` flag are in agreemrnt, and print warning message otherwise
+    ok1 = check_extended ( pdf , False  )
+    if not ok1 and not silent : logger.warning ( "Jackknife: estimates for `yield` parameters could be wrong!")
+        
     ## 1. fitting function? 
     if fit_fun is None :
         if not silent :  logger.info ( "make_jackknife: use default 'make_fit' function!")
@@ -1024,10 +1227,12 @@ def make_jackknife ( pdf                  ,
         r = fit_fun ( pdf , ds , **fitcnf ) 
 
         ## 4. fit status 
-        fits [ r.status  () ] += 1
+        st = r.status()
+        if 0 != st :  fits [ st ] += 1
 
         ## 5. covariance matrix quality
-        covs [ r.covQual () ] += 1
+        cq = r.covQual() 
+        if not cq in ( -1 , 3 ) : covs [ cq ] += 1
 
         ## ok ?
         ok      =  accept_fun ( r , pdf , ds )
@@ -1050,8 +1255,10 @@ def make_jackknife ( pdf                  ,
             results [ '#'     ] .append ( len ( ds ) )
             results [ '#sumw' ] .append ( ds.sumVar ( '1' ) ) 
 
+        ## reset/remove/delete dataset 
         ds.clear()
-
+        del ds
+        
         if progress or not silent :
             if 0 < frequency and 1 <= i and 0 == i % frequency : 
                 stats = make_stats ( results , fits , covs , accept )
@@ -1066,19 +1273,27 @@ def make_jackknife ( pdf                  ,
         r_tot = fit_fun ( pdf , data , **fitcnf )
         r_tot = fit_fun ( pdf , data , **fitcnf )
         
-        ## 10. the final table  
+        ## 10. the final table
+        title = '' 
+        if not ok1 :
+            logger.warning ( "Jackknife: estimates for `yield` parameters are likely wrong!")
+            NN = 0
+            for k in stats : NN = max ( NN , stats[k].nEntries() ) 
+            title = "Jackknife results (N=%d).[Estimates for `yield` are likely wrong!]" % NN            
         print_jackknife ( r_tot   ,
                           stats   ,
                           morevars = dict ( ( k , more_vars [ k ]( r_tot , pdf ) ) for k in more_vars ) ,
-                          logger   = logger )
-            
+                          logger   = logger ,
+                          title    = title  ) 
+        
+    if not ok1 and not silent : logger.warning ( "Jackknife: estimates for `yield` parameters are likely wrong!")
     return results , stats 
 
 
 # =============================================================================
 ## Run Bootstrap analysis, useful for evaluaton of fit biases and uncertainty estimates
 # 
-#  In total <code>size</code> datasets are sampled (with replacement) from the original dataste
+#  In total <code>size</code> datasets are sampled (with replacement) from the original dataset
 #  <code>data</code> and each sampled dataset is fit
 #  @code
 #  dataset = ...
@@ -1102,6 +1317,7 @@ def make_jackknife ( pdf                  ,
 #  @param fit_config configuration of <code>pdf.FitTo( data , ... )</code>
 #  @param fit_pars   redefine these parameters before each fit 
 #  @param more_vars  calculate more variables from the fit-results 
+#  @param extended   use extended bootstrap? 
 #  @param fit_fun    specific fitting action (if needed) 
 #  @param accept_fun specific accept action (if needed) 
 #  @param silent     silent processing 
@@ -1115,14 +1331,15 @@ def make_bootstrap ( pdf                  ,
                      fit_config  = {}     ,   ## parameters for <code>pdf.fitTo</code>
                      fit_pars    = {}     ,   ## fit-parameters to reset/use
                      more_vars   = {}     ,   ## additional  results to be calculated
-                     fit_fun     = None   ,   ## fit       function ( pdf , dataset , **fit_config ) 
+                     extended    = True   ,   ## use extended/non-extended bootstrtap 
+                     fit_fun     = None   ,   ## fit       function ( pdf , dataset , **fit_config )                     
                      accept_fun  = None   ,   ## accept    function ( fit-result, pdf, dataset     )
                      silent      = True   ,   ## silent processing?
                      progress    = True   ,   ## shpow progress bar? 
-                     logger      = logger ,    ## use this logger 
+                     logger      = logger ,   ## use this logger 
                      frequency   = 500    ) :
 
-    """Run Bootstrap analysis, useful for evaluaton of fit biased and uncertainty estimates 
+    """ Run Bootstrap analysis, useful for evaluaton of fit biased and uncertainty estimates 
     In total `size` datasets are sampled (with replacement) from the original dataste
     `data` and each sampled dataset is fit
     >>> dataset = ...
@@ -1137,6 +1354,7 @@ def make_bootstrap ( pdf                  ,
     - `fit_config` : configuration of `pdf.FitTo( data , ... )`
     - `fit_pars`   : redefine these parameters before each fit
     - `more_vars`  : calculate more variables from the fit-results
+    - `extended`   : use extended bootstrap? 
     - `fit_fun`    : specific fitting acion (if needed) 
     - `accept_fun` : specific accept action (if needed) 
     - `silent`     : silent processing?
@@ -1152,6 +1370,10 @@ def make_bootstrap ( pdf                  ,
     assert isinstance ( size  , integer_types ) and 1 <= size ,\
            'Invalid "size"  argument %s/%s' % ( size  , type ( size ) )
     
+    ## check if pdf and `extended` flag are in agreemrnt, and print warning message otherwise
+    ok1 = check_extended ( pdf , extended )
+    if not ok1 and not silent : logger.warning ( "Bootstrap: estimates for `yield` parameters could be wrong!")
+
     ## 1. fitting function? 
     if fit_fun is None :
         if not silent :  logger.info ( "make_bootstrap: use default 'make_fit' function!")
@@ -1193,10 +1415,14 @@ def make_bootstrap ( pdf                  ,
     pdf.load_params ( params = fix_fit_pars , silent = True ) ## silent = silent )
     r_tot = fit_fun ( pdf , data , **fitcnf )
 
+    nn    = 0
+    
     from ostap.utils.progress_bar import progress_bar
-    ## run jackknife  bootstrapping
-    for i , ds in progress_bar ( enumerate ( data.bootstrap ( size ) ) , max_value = size , silent = not progress ) :
-
+    ## run bootstrapping
+    for i , ds in progress_bar ( enumerate ( data.bootstrap ( size , extended = extended ) ) ,
+                                 max_value = size         ,
+                                 silent    = not progress ) :
+        
         ## 2. reset parameters of fit_pdf
         pdf.load_params ( params = fix_fit_init , silent = True ) ## silent = silent )
         pdf.load_params ( params = fix_fit_pars , silent = True ) ## silent = silent )
@@ -1205,10 +1431,12 @@ def make_bootstrap ( pdf                  ,
         r = fit_fun ( pdf , ds , **fitcnf ) 
 
         ## 4. fit status 
-        fits [ r.status  () ] += 1
+        st = r.status()
+        if 0 != st :  fits [ st ] += 1
 
         ## 5. covariance matrix quality
-        covs [ r.covQual () ] += 1
+        cq = r.covQual() 
+        if not cq in ( -1 , 3 ) : covs [ cq ] += 1
 
         ## ok ?
         ok      = accept_fun ( r , pdf , ds ) 
@@ -1230,18 +1458,24 @@ def make_bootstrap ( pdf                  ,
                 
             results [ '#'     ] .append ( len ( ds ) )
             results [ '#sumw' ] .append ( ds.sumVar ( '1' ) ) 
+            nn += 1 
 
+        ## reset/remove/delete dataset 
         ds.clear()
+        del ds
         
         if progress or not silent :
             if 0 < frequency and 1 <= i and 0 ==  i % frequency : 
                 stats = make_stats ( results , fits , covs , accept )                
-                ## print_stats ( stats , i + 1 , logger = logger )
+                title = "Bootstrapping with #%d samples" % nn
+                if extended : title = '(Extended) %s' % title
+                if not ok1  : title += '[Estimates for `yield` are likely wrong!]'
                 print_bootstrap ( r_tot ,
                                   stats ,
                                   morevars = dict ( ( k , more_vars [ k ] ( r_tot , pdf ) ) for k in more_vars ),
-                                  logger   = logger )
-                
+                                  logger   = logger , 
+                                  title    = title  )
+                if not ok1 and not silent : logger.warning ( "Bootstrap: estimates for `yield` parameters are likely wrong!")
 
     ## 8. make a final statistics 
     stats = make_stats ( results , fits , covs , accept )    
@@ -1253,11 +1487,19 @@ def make_bootstrap ( pdf                  ,
         r_tot = fit_fun ( pdf , data , **fitcnf )
         
         ## 10. the final table  
+        title = "Bootstrapping with #%d samples" % nn 
+        if extended : title = '(Extended) %s'   % title
+        if not ok1 :
+            title += '[Estimates for `yield` are likely wrong!]'
+            logger.warning ( "Bootstrap: estimates for `yield` parameters are likely wrong!")
         print_bootstrap ( r_tot ,
                           stats ,
                           morevars = dict ( ( k , more_vars [ k ]( r_tot , pdf ) ) for k in more_vars ),
-                          logger   = logger )
+                          logger   = logger ,
+                          title    = title  ) 
             
+        if not ok1 and not silent : logger.warning ( "Bootstrap: estimates for `yield` parameters are likely wrong!")
+        
     return results , stats 
 
 

@@ -302,7 +302,8 @@ class  JackknifeTask(TheTask_) :
                    silent      = True   ,
                    progress    = True   ,
                    frequency   = 100    ) :
-        
+
+
         TheTask_.__init__ ( self                    ,
                             data       = data       ,
                             fit_config = fit_config ,
@@ -354,9 +355,38 @@ class  JackknifeTask(TheTask_) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2023-06-22 
 class BootstrapTask(JackknifeTask) :
-    """The simple task object for parallel Jackknife 
+    """ The simple task object for parallel Jackknife 
     - see ostap.fitting.toys.make_jackknife
     """
+
+    def __init__ ( self                 ,
+                   pdf                  , 
+                   data                 ,
+                   fit_config  = {}     , ## parameters for <code>pdf.fitTo</code>
+                   fit_pars    = {}     , ## fit-parameters to reset/use
+                   more_vars   = {}     , ## additional  results to be calculated
+                   extended    = True   , ## use extended bootstrap 
+                   fit_fun     = None   , ## fit       function ( pdf , dataset , **fit_config ) 
+                   accept_fun  = None   , ## accept    function ( fit-result, pdf, dataset     )
+                   silent      = True   ,
+                   progress    = True   ,
+                   frequency   = 100    ) :
+        
+        JackknifeTask.__init__ ( self ,
+                                 pdf        = pdf        ,
+                                 data       = data       ,
+                                 fit_config = fit_config , ## parameters for <code>pdf.fitTo</code>
+                                 fit_pars   = fit_pars   , ## fit-parameters to reset/use
+                                 more_vars  = more_vars  , ## additional  results to be calculated
+                                 fit_fun    = fit_fun    , ## fit       function ( pdf , dataset , **fit_config ) 
+                                 accept_fun = accept_fun , ## accept    function ( fit-result, pdf, dataset     )
+                                 silent     = silent     ,
+                                 progress   = progress   ,
+                                 frequency  = frequency  )
+        
+        self.extended = True if extended else False
+        
+
     ## the actual processing 
     def process ( self , jobid , size  ) :
 
@@ -370,16 +400,17 @@ class BootstrapTask(JackknifeTask) :
             import ostap.fitting.variables
             
         from   ostap.core.ostap_types import integer_types 
-        assert isinstance ( size , integer_types ) and 0 < size ,\
+        assert isinstance ( size , integer_types ) and 1 <= size ,\
                'Jobid %s: Invalid "size" argument %s/%s' % ( jobid , size , type ( size  ) )
         
         import ostap.fitting.toys as Toys 
         return Toys.make_bootstrap ( pdf         = self.pdf         ,
                                      data        = self.data        ,
-                                     size        = size             , ## ATTENTION
+                                     size        = size             , ## ATTENTION !!!
                                      fit_config  = self.fit_config  ,
                                      fit_pars    = self.fit_pars    ,
                                      more_vars   = self.more_vars   ,
+                                     extended    = self.extended    , 
                                      fit_fun     = self.fit_fun     ,
                                      accept_fun  = self.accept_fun  ,
                                      silent      = self.silent      ,
@@ -867,6 +898,10 @@ def parallel_jackknife ( pdf                  ,
     
     import ostap.fitting.toys as Toys
     if nSplit < 2 : return Toys.make_jackknife ( progress = progress , **config ) 
+
+    ## check if pdf and `extended` flag are in agreemrnt, and print warning message otherwise
+    ok1 = Toys.check_extended ( pdf , False  )
+    if not ok1 : logger.warning ( "Jackknife: estimates for `yield` parameters could be wrong!")
     
     ## create the task 
     task = JackknifeTask ( progress = progress and not silent , **config )
@@ -885,8 +920,6 @@ def parallel_jackknife ( pdf                  ,
     results , stats = task.results () 
     if progress or not silent :
         
-        ## Toys.print_stats ( stats )
-        
         fitcnf = {}
         fitcnf.update ( fit_config )
         if not 'silent' in fitcnf : fitcnf [ 'silent' ] = silent
@@ -896,14 +929,21 @@ def parallel_jackknife ( pdf                  ,
         ## 9. fit total dataset (twice) 
         r_tot = fit_fun ( pdf , data , **fitcnf )
         r_tot = fit_fun ( pdf , data , **fitcnf )
-     
+
+        title = '' 
+        if not ok1 :
+            logger.warning ( "Jackknife: estimates for `yield` parameters are likely wrong!")
+            NN = 0
+            for k in stats : NN = max ( NN , stats[k].nEntries() )
+            title = "Jackknife results (N=%d).[Estimates for `yield` are likely wrong!]" % NN                        
         ## the final table  
         Toys.print_jackknife (
             r_tot   ,
             stats   ,
-            morevars = dict ( ( k , more_vars [ k ]( r_tot , pdf ) ) for k in more_vars ) )
+            morevars = dict ( ( k , more_vars [ k ]( r_tot , pdf ) ) for k in more_vars ) ,
+            title    = title )
         
-        
+    if not ok1 : logger.warning ( "Jackknife: estimates for `yield` parameters are likely wrong!")        
     return results, stats   
 
 
@@ -948,6 +988,7 @@ def parallel_bootstrap ( pdf                  ,
                          fit_config  = {}     ,   ## parameters for <code>pdf.fitTo</code>
                          fit_pars    = {}     ,   ## fit-parameters to reset/use
                          more_vars   = {}     ,   ## additional  results to be calculated
+                         extended    = True   ,   ## use extended bootstrap 
                          fit_fun     = None   ,   ## fit       function ( pdf , dataset , **fit_config ) 
                          accept_fun  = None   ,   ## accept    function ( fit-result, pdf, dataset     )
                          silent      = True   ,   ## silent processing?
@@ -973,7 +1014,10 @@ def parallel_bootstrap ( pdf                  ,
     
     import ostap.fitting.toys as Toys
     if nSplit < 2 : return Toys.make_boostrap ( size = size , progress = progress , **config ) 
-    
+        
+    ## check if pdf and `extended` flag are in agreemrnt, and print warning message otherwise
+    ok1 = Toys.check_extended ( pdf , extended )
+    if not ok1 : logger.warning ( "Bootstrap: estimates for `yield` parameters could be wrong!")
 
     ## create teh task 
     task = BootstrapTask ( progress = progress and not silent , **config )
@@ -1002,13 +1046,19 @@ def parallel_bootstrap ( pdf                  ,
         r_tot = fit_fun ( pdf , data , **fitcnf )
         r_tot = fit_fun ( pdf , data , **fitcnf )
         
-        ## the final table  
+        ## the final table
+        title = '' 
+        if not ok1 :
+            logger.warning ( "Bootstrap: estimates for `yield` parameters are likely wrong!")
+            NN = 0
+            for k in stats : NN = max ( NN , stats[k].nEntries() )
+            title = "Bootstrap results (N=%d).[Estimates for `yield` are likely wrong!]" % NN 
         Toys.print_bootstrap (
             r_tot   ,
             stats   ,
             morevars = dict ( ( k , more_vars [ k ]( r_tot , pdf ) ) for k in more_vars ) )
         
-    
+    if not ok1 : logger.warning ( "Bootstrap: estimates for `yield` parameters are likely wrong!")    
     return results, stats   
 
 
