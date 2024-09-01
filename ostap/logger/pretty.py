@@ -95,7 +95,7 @@ def pretty_ve ( value              ,
     ## decode object 
     v , e =  value.value () , max ( 0 , value.error () )
     ## delegate 
-    return pretty_err1 ( v , e , width = width , precision = precision )
+    return pretty_err1 ( v , e , width = width , precision = precision , parentheses = parentheses  )
 
 # =======================================================================
 ## nice printout of complex number ( string + exponent)

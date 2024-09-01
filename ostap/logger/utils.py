@@ -168,7 +168,7 @@ def fmt_pretty_float ( value         ,
 # ===============================================================================
 ## Formats nice printout of the valuw with error
 #  @code
-#  fmt, fmtv , fmte  , expo = fmt_pretty_err1 ( value , error  ) 
+#  fmt, fmtv, fmte, expo = fmt_pretty_err1 ( value , error  ) 
 #  @endcode
 #  @return formats nice string and the separate exponent 
 def fmt_pretty_err1 ( value              ,

@@ -18,8 +18,15 @@ __all__     = (
     'attention'        , ## make "attention" string
     'allright'         , ## make "allright" string
     'infostr'          , ## just for information
-    'attstr'           , ## just for information/attenttion 
-    #
+    'attstr'           , ## just for information/attenttion
+    ##
+    'critical_info'    , ## `critical`    information 
+    'error_info'       , ## `error`       information 
+    'warning_info'     , ## `warning`     information
+    'attention_info'   , ## `attention`   information
+    'attention_info'   , ## `attention`   information
+    'info_info'        , ## `information` information
+    ##
     'with_colors'      , ## Is colorization enabled?
     'set_with_colors'  , ## Enable/Disable colorization 
     )
@@ -49,15 +56,15 @@ def isatty ( stream = None ) :
 ## global flag to indicate if we use colors 
 __with_colors__ = isatty ()   
 # =============================================================================
-## Is colorization enabled ? 
+## Is colorization enabled? 
 def with_colors() :
-    """Is colorization enabled ?"""
+    """ Is colorization enabled? """
     global __with_colors__
     return bool ( __with_colors__ ) and isatty() 
 # =============================================================================
 ## Enable/disable colorization
 def set_with_colors ( use ) :
-    """Enable/disable colorization"""
+    """ Enable/disable colorization"""
     global __with_colors__
     __with_colors__ = bool ( use )
     return with_colors () 
@@ -131,7 +138,7 @@ def decolorize ( what ) :
 # =====-=======================================================================
 ## attention!
 def attention ( what ) :
-    """Attention string """
+    """ Attention string: yellow on red """
     return colored_string ( what                ,
                             foreground = YELLOW ,
                             background = RED    ,
@@ -144,7 +151,7 @@ def attention ( what ) :
 # =====-=======================================================================
 ## attention!
 def attstr ( what ) :
-    """Attention string """
+    """ Attention string: white on blue"""
     return colored_string ( what                ,
                             foreground = WHITE  ,
                             background = BLUE   ,
@@ -157,7 +164,7 @@ def attstr ( what ) :
 # =============================================================================
 ## allright 
 def allright ( what ) :
-    """Allright string """
+    """ Allright string """
     return colored_string ( what                ,
                             foreground = YELLOW ,
                             background = GREEN  ,
@@ -170,15 +177,81 @@ def allright ( what ) :
 # ==============================================================================
 ## just for information 
 def infostr ( what ) :
-    """Just for information"""
+    """ Just for information"""
     return colored_string ( what                ,
                             foreground = WHITE  ,
                             background = BLUE   ,
                             bold       = True   ,
                             blink      = False  ,
                             underline  = False  ,
+                            bg_bright  = False  ,
+                            fg_bright  = False  )
+
+# =============================================================================
+## Critical information
+def critical_info ( what ) :
+    """ Critical information """ 
+    return colored_string ( what                ,
+                            foreground = RED    ,
+                            background = BLUE   ,
+                            bold       = True   ,
+                            blink      = True   ,
+                            underline  = True   ,
+                            bg_bright  = True   ,
+                            fg_bright  = True   )
+
+# =============================================================================
+## Error information
+def error_info ( what ) :
+    """ Error information """ 
+    return colored_string ( what                ,
+                            foreground = YELLOW ,
+                            background = RED    ,                            
+                            blink      = True   ,
+                            bold       = True   ,
+                            underline  = False  , 
+                            fg_bright  = True   ,
+                            bg_bright  = True   )
+
+# ==============================================================================
+## Critical information
+def warning_info ( what ) :
+    """ Warning information """ 
+    return colored_string ( what                ,
+                            foreground = RED    ,
+                            background = YELLOW ,
+                            bold       = False  ,
+                            blink      = False  ,
+                            underline  = True   ,
+                            bg_bright  = True   ,
+                            fg_bright  = True   )
+
+# ==============================================================================
+## Attention information
+def attention_str ( what ) :
+    """ Attention information """ 
+    return colored_string ( what                ,
+                            foreground = WHITE  ,
+                            background = BLUE   ,
+                            blink      = True   ,
+                            bold       = True   , 
+                            underline  = False  ,
+                            bg_bright  = True   ,
+                            fg_bright  = True   )
+
+# ==============================================================================
+## Info information
+def info_info ( what ) :
+    """ Info information """ 
+    return colored_string ( what                ,
+                            foreground = WHITE  ,
+                            background = BLUE   ,
+                            blink      = False  ,
+                            bold       = False  ,
+                            underline  = False  , 
+                            fg_bright  = False  ,
                             bg_bright  = False  )
- 
+
 # =============================================================================
 if __name__ == '__main__' :
 
