@@ -41,7 +41,8 @@ from   ostap.core.core import ( cpp      , Ostap     ,
                                 isint    , islong    , is_sorted       , 
                                 natural_entry        ,
                                 natural_number       )
-from   ostap.math.base          import frexp10 
+from   ostap.math.base          import frexp10
+from   ostap.math.math_ve       import probit 
 from   ostap.core.ostap_types   import ( integer_types  , num_types    ,
                                          long_type      , sized_types   , 
                                          sequence_types ) 
@@ -2576,11 +2577,11 @@ def _h1_add_ ( h1 , h2 ) :
     """
     return _h1_oper_ ( h1 , h2 , lambda x,y : x+y ) 
 # =============================================================================
-##  Subtraction of the histograms 
+## Subtraction of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_sub_ ( h1 , h2 ) :
-    """Subtract the histogram     
+    """ Subtract the histogram     
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 - h2  
@@ -2591,7 +2592,7 @@ def _h1_sub_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_frac_ ( h1 , h2 ) :
-    """``Fraction'' the histogram h1/(h1+h2)    
+    """ `Fraction' the histogram h1/(h1+h2)    
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1.frac  ( h2 ) 
@@ -2602,7 +2603,7 @@ def _h1_frac_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_asym_ ( h1 , h2 ) :
-    """``Asymmetry'' the histogram (h1-h2)/(h1+h2)    
+    """ `Asymmetry' the histogram (h1-h2)/(h1+h2)    
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1.asym ( h2 )     
@@ -2611,11 +2612,11 @@ def _h1_asym_ ( h1 , h2 ) :
 
 
 # =============================================================================
-##  ``minimum'' of the histograms 
+## `minimum' of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2023-09-11
 def _h1_min_ ( h1 , h2 ) :
-    """``minimum'' the histogram min(j1,h2)
+    """ `minimum' the histogram min(j1,h2)
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1.min ( h2 )     
@@ -2623,11 +2624,11 @@ def _h1_min_ ( h1 , h2 ) :
     return _h1_oper_ ( h1 , h2 , lambda x,y : min ( x , y ) ) 
 
 # =============================================================================
-##  ``maximum'' of the histograms 
+## `maximum' of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2023-09-11
 def _h1_max_ ( h1 , h2 ) :
-    """``maximum'' the histogram min(j1,h2)
+    """ `maximum' the histogram min(j1,h2)
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1.max ( h2 )     
@@ -2636,7 +2637,7 @@ def _h1_max_ ( h1 , h2 ) :
 
 
 # =============================================================================
-## ``Difference'' of the histograms 
+## `Difference' of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_diff_ ( h1 , h2 ) :
@@ -4188,7 +4189,7 @@ for t in ( ROOT.TH1F , ROOT.TH1D ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_effic_ ( h , cut_low ) :
-    """Calculate the cut efficiency for the histogram
+    """ Calculate the cut efficiency for the histogram
     >>> h  = ...
     >>> he = h.effic ( 14.2 , cut_low = True )    
     """
@@ -4218,7 +4219,7 @@ def _h1_effic_ ( h , cut_low ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_effic2_ ( h , value , cut_low ) :
-    """Calculate the cut efficiency for the histogram
+    """ Calculate the cut efficiency for the histogram
     >>> h  = ...
     >>> he = h.efficiency ( 14.2 , cut_low = True )
     """
@@ -4241,7 +4242,7 @@ def _h1_effic2_ ( h , value , cut_low ) :
 #  @endcode
 #  It adds two extra narrow fake bins!
 def _h1_effic3_ ( h1 , cut_low ) :
-    """Convert historgam into "efficinecy" histogram
+    """ Convert historgam into "efficinecy" histogram
     >>> histo = ...
     >>> effic = histo.eff ( ... )
     - It adds two extra narrow fake bins!
@@ -4322,14 +4323,14 @@ def _h1_effic3_ ( h1 , cut_low ) :
 
 # ===============================================================================
 ## Get the cut efficiency in graph form 
-#  - useful for efficincy visualisation
+#  - useful for efficiency visualisation
 #  - a bit better treatment of binnig effects fo wide bins
 #  @code
 #  histo     = ...
 #  eff_graph = histo.eff_graph ( cut_low )  
 #  @endcode
 def _h1_effic4_ ( histo , cut_low  ) :
-    """Get the cut efficiency in graph forms 
+    """ Get the cut efficiency in graph forms 
     - useful for drawing,
     - a bit better treatment of binnig effects for wide bins 
     >>> histo     = ...
@@ -4379,6 +4380,58 @@ ROOT.TH1F.eff        = _h1_effic3_
 ROOT.TH1D.eff        = _h1_effic3_ 
 ROOT.TH1F.eff_graph  = _h1_effic4_
 ROOT.TH1D.eff_graph  = _h1_effic4_ 
+
+# ===============================================================================
+## Convert the natural histogram into (p-value,significance) pair.
+#  E.g. one can start form distirbtion of signal yields from
+#  ensemble of presudoexperimens produced with `background-only` hypotehsis.
+#  And using the obtained `pvalue` and `signif` histograms
+#  one can convert the observed signal yeild into `p-value` or `significance'
+#  @code
+#  yields = ...
+#  pvalue, signif = yields.significance ( cut_low = True )
+#  value = ...
+#  print ( 'p-value      : %s ' % pvalue ( value ) )
+#  print ( 'sifnigicance : %s ' % signif ( value ) ) 
+#  @endcode
+def _h1_signif_ ( h1 , cut_low = True ) :
+    """ Convert the natural histogram into (p-value,significance) pair: 
+    - E.g. one can start form distirbtion of signal yields from
+    ensemble of presudoexperimens produced with `background-only` hypotehsis.
+    And using the obtained `pvalue` and `signif` histograms
+    one can convert the observed signal yeild into `p-value` or `significance'
+    >>> yields = ...
+    >>> pvalue, signif = yields.significance ( cut_low = True ) 
+    >>> print ( 'p-value      : %s ' % pvalue ( value ) ) 
+    >>> print ( 'sifnigicance : %s ' % signif ( value ) ) 
+    """
+    
+    if not h1.natural() : logger.warning ( "The input histigram is not `natural`!")
+    ## get-pvalue 
+    hp = h1.effic ( cut_low = cut_low )
+    hs = hp.clone ()
+
+    the_last = VE()
+    for i, _ , y in hs.items() :
+        yy = ( 1.0 + ( 1.0 - y ) ) / 2.0
+        yv = yy.value()
+        if   0.5 <= yv < 1 : 
+            s        = probit ( max ( yv , 0 ) )
+            the_last = s 
+        else : s = the_last
+        ##
+        hs [ i ] = s 
+        
+    hp.blue ()
+    hs.red  () 
+
+    hp.SetTitle ( 'p-value'      ) 
+    hs.SetTitle ( 'significance' )
+    
+    return hp, hs 
+
+ROOT.TH1F.significance = _h1_signif_ 
+ROOT.TH1D.significance = _h1_signif_ 
 
 # ================================================================================
 if (2,7) <= python_info : _erfc_ = math.erfc 
@@ -8770,14 +8823,16 @@ _new_methods_   = (
     ROOT.TH1F.addFunctionIntegral ,
     ROOT.TH1D.addFunctionIntegral ,
     ###
-    h1_sumv              ,
+    h1_sumv                ,
     ## 
-    ROOT.TH1F.eff        , 
-    ROOT.TH1D.eff        ,
-    ROOT.TH1F.effic      , 
-    ROOT.TH1D.effic      ,
-    ROOT.TH1F.efficiency ,
-    ROOT.TH1D.efficiency ,
+    ROOT.TH1F.eff          ,  
+    ROOT.TH1D.eff          ,
+    ROOT.TH1F.effic        , 
+    ROOT.TH1D.effic        ,
+    ROOT.TH1F.efficiency   ,
+    ROOT.TH1D.efficiency   ,
+    ROOT.TH1F.significance ,
+    ROOT.TH1D.significance ,
     #
     ROOT.TH1F. smear     ,
     ROOT.TH1D. smear     , 
