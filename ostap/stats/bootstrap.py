@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2021-05-01
 # =============================================================================
-"""Trivial bootstrap generator
+""" Trivial bootstrap generator
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -180,8 +180,6 @@ def extended_bootstrap_indices ( N , size = 100 ) :
     """
     for indices in extended_bootstrap ( range ( N ) , size ) :
         yield indices
-
-
   
 # =============================================================================
 if '__main__' == __name__ :
