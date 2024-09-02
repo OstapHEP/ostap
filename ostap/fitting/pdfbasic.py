@@ -437,18 +437,22 @@ class APDF1 ( Components ) :
                     self    .info ('Set binning cache %s for variable %s in dataset' %  ( nb1 , xv.name )  )
 
         ## define silent context
-        with roo_silent ( silent ) :
-            self.fit_result = None            
-            result          = self.fit_to ( self.pdf , dataset , *opts )
-            if result and valid_pointer ( result ) : self.fit_result = result 
+        with roo_silent ( silent ) :            
+            if self.fit_result : self.fit_result = None
+            result = self.fit_to ( self.pdf , dataset , *opts )
+            if result and valid_pointer ( result ) : self.fit_result = result
+            else :
+                self.fatal ( "fitTo: RooFitResult object is invalid! Check model&data!" )
+                self.fit_result = None             
+                return None , None
+            
             if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
 
-        if not valid_pointer (  result ) :
-            self.fatal ( "fitTo: RooFitResult is invalid. Check model&data" )
-            self.fit_result = None             
-            return None , None
-        
+        ## result = Ostap.MoreRooFit.delete_result ( result ) 
+        ## return result, None
+    
         st = result.status()
+        
         ## if 0 != st and silent :
         ##     self.warning ( 'fitTo: status is %s. Refit in non-silent regime ' % fit_status ( st ) )
         ##     return self.fitTo ( dataset ,
@@ -457,7 +461,7 @@ class APDF1 ( Components ) :
         ##                         silent = False ,
         ##                         refit  = refit ,
         ##                         args   = args  , **kwargs )
-         
+
         for_refit = False
         if 0 != st   :
             for_refit = 'status' 
@@ -543,8 +547,7 @@ class APDF1 ( Components ) :
         for s in self.signals     : 
             if hasattr ( s , 'setPars' ) : s.setPars() 
 
-        ## ##
-                         
+        ##
         return result, frame 
 
     # =========================================================================
@@ -564,7 +567,6 @@ class APDF1 ( Components ) :
             with warnings.catch_warnings():
                 warnings.simplefilter("always")
                 return Ostap.MoreRooFit.fitTo ( model , data , *options )
-            return Ostap.MoreRooFit.fitTo ( model , data , *options )
 
         ##  for "small" number of arguments use the standard function 
         if len ( options ) <= NARGS and root_info < ( 6, 29 ) :
