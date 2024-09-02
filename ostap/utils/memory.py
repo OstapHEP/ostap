@@ -36,11 +36,11 @@ _psutil = False
 from sys import version_info as python_version 
 if   python_version.major > 2 : LONG = int
 else                          : LONG = long 
-
+# =============================================================================
 try :
+    # =========================================================================
     import psutil 
-    _psutil = True
-    
+    _psutil = True    
     # =========================================================================
     ## report current memory usage (in MB)
     #  ps-based version, slow...  :-(
@@ -48,19 +48,18 @@ try :
     #  print memory_usage() 
     #  @endcode
     def memory_usage ( *args ):
-        """Report current memory usage (in MB)
+        """ Report current memory usage (in MB)
         (psutil-based version, likely fast and efficient)
         - see help(psutil)
         >>> print memory_usage()
         """
-        process = psutil.Process(os.getpid())
-        mem     = process.memory_info()[0] / float(2 ** 20)
+        process = psutil.Process(os.getpid () )
+        mem     = process.memory_info()[0] / float( 2 ** 20 )
         return mem
-    
+    # =========================================================================
 except ImportError :
-    
+    # =========================================================================    
     _psutil = False
-    
     # =========================================================================
     ## report current memory usage (in MB)
     #  @attention it is ps-based version, slow...  :-(
@@ -68,7 +67,7 @@ except ImportError :
     #  print memory_usage() 
     #  @endcode    
     def memory_usage ( proc = None ) :
-        """Report current memory usage (in MB)
+        """ Report current memory usage (in MB)
         """
         if not proc : 
             import os 
