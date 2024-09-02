@@ -396,7 +396,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
     #  pdf.load_params ( params , dataset )  
     #  @endcode 
     def load_params ( self , params = {} , dataset = None , silent = False , **kwargs ) :
-        """Load parameters from
+        """ Load parameters from
         - external dictionary `{ name : value }`
         - sequence of `RooAbsReal` objects
         - `RooFitResult` object
@@ -425,8 +425,8 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         for p in  self.params ( dataset ) :
             pars [ p.name ] = p
 
-            
-        table = [] 
+        not_used = set()
+        table    = [] 
         if isinstance ( params , dictlike_types ) :
             keys   = set () 
             for key in params :
@@ -442,7 +442,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
                     table.append ( item ) 
                 keys.add ( key )
 
-            not_used = set ( params.keys() ) - keys 
+            not_used |= set ( params.keys() ) - keys 
 
         ## list of objects 
         else :
@@ -463,10 +463,10 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
                     table.append ( item ) 
                 keys.add  ( i )
 
-            not_used = []
+            print ( 'here', type (not_used), params )
             for i , pp in enumerate ( params ) :  
                 if i in keys : continue
-                not_used.append ( pp )
+                not_used.add ( pp ) 
 
         ## explicit parameters 
         keys = set()        
