@@ -25,7 +25,7 @@ __all__     = (
 # =============================================================================
 from   builtins               import range
 from   ostap.core.ostap_types import string_types, integer_types
-from   ostap.core.core        import VE, SE
+from   ostap.core.core        import VE, SE, Ostap 
 from   ostap.logger.pretty    import pretty_ve, pretty_float, fmt_pretty_float
 from   ostap.logger.colorized import attention
 import ROOT
@@ -38,31 +38,28 @@ else                       : logger = getLogger( __name__             )
 # =============================================================================
 logger.debug ( 'Utilities to run toys, Jackknife, bootstrap, ... ')
 # ==============================================================================
-extmodes = {
-    ROOT.RooAbsPdf.MustBeExtended   : 'MustBeExtended' ,
-    ROOT.RooAbsPdf.CanBeExtended    : 'CanBeExtended'  ,
-    ROOT.RooAbsPdf.CanNotBeExtended : 'CanBeExtended'  ,
-}
-# ==============================================================================
-## Check the consistency of the PDF and `extended` flag
-def check_extended ( pdf , extended ) :
-    """ Check the consistency of the PDF and `extended` flag 
+## Check the applicablity of Jackknife
+#  - for extended fits, parameters of yield are likely wrong!
+def check_jackknife ( pdf ) :
+    """ Check the applicablity of Jackknife
+    - for extended fits, parameters of yield are likely wrong!
     """
-    if isinstance ( pdf , ROOT.RooAbsPdf ) : pass
-    else                                   : pdf = pdf.pdf 
-    ##
-    extmode = pdf.extendMode()
-    ##
-    if   pdf.canBeExtended  ()                                       : return True
-    elif pdf.mustBeExtended ()                      and     extended : return True
-    elif ROOT.RooAbsPdf.MustBeExtended   == extmode and     extended : return True 
-    elif ROOT.RooAbsPdf.CanNotBeExtended == extmode and not extended : return True 
-    elif ROOT.RooAbsPdf.CanBeExtended    == extmode and     extended : return True 
-    ##    
-    logger.warning ( "Mismatch of `ExtendMode`:`%s` and `extended`:%s" % ( extmodes [ extmode ] , extended ) )
-    ## 
-    return False 
-# =============================================================================
+    if not isinstance ( pdf , ROOT.RooAbsPdf ) : pdf = pdf.pdf 
+    return False if  ( pdf.mustBeExtended () or pdf.canBeExtended  () ) else True 
+# ===============================================================================
+## check the applicability of bootstrap
+#  - for extedned fits, non-extened bootstrap may produce wrong results!
+def check_bootstrap ( pdf , extended ) : 
+    """ Check the applicability of bootstrap
+     - for extedned fits, non-extendd bootstrap may produce wrong results!
+    """
+    if not isinstance ( pdf , ROOT.RooAbsPdf ) : pdf = pdf.pdf     
+    ok = True 
+    if   pdf.mustBeExtended () and not extended : ok = False
+    elif pdf.canBeExtended  () and not extended : ok = False
+    return ok
+
+# ==============================================================================
 ## Technical transformation  to the dictionary :  { 'name' : float_value }
 def vars_transform ( vars ) :
     """ Technical transformation to the dictionary :  `{ 'name' : float_value }`
@@ -155,10 +152,6 @@ def print_stats ( stats , ntoys = '' , logger = logger ) :
         else     : scale = 1 
         minmax = fmt % ( c.min() / scale , c.max() / scale ) 
         
-        ## mean   = "%+13.6g +/- %-13.6g" % ( mean.value() , mean.error () )
-        ## rms    = "%13.6g"             % c.rms ()
-        ## minmax = "%+13.6g / %-+13.6g"  % ( c.min()      , c.max      () )
-    
         if expo1 : expo1 = '10^%+d' % expo1
         else     : expo1 = ''
         
@@ -270,12 +263,11 @@ def print_jackknife  ( fitresult          , ## restl of the fit of th e total da
     """ Print Jackknife statistics
     """
 
-    
     header = ( 'Parameter'  ,
                'theta'      , 'x[...]' ,
                'theta_(.)'  , 'x[...]' ,
-               'bias'       , 'x[...]' ,
-               'bias [%]'   , 's/s<j>' )
+               ## 'bias'    , 'x[...]' , 'bias [%]'   ,
+               's/s<j>' )
     
     table  = [ header ]
 
@@ -341,7 +333,8 @@ def print_jackknife  ( fitresult          , ## restl of the fit of th e total da
         if 50  < abs ( bias       ) : fbias = attention ( fbias )
         if 0.5 < abs ( scale  - 1 ) : errs  = attention ( errs  )
         
-        row = name , th1, expo1 , th2 , expo2 , th3 , expo3 , fbias , errs
+        ## row = name , th1, expo1 , th2 , expo2 , th3 , expo3 , fbias , errs
+        row = name , th1, expo1 , th2 , expo2 , errs
 
         table.append ( row )
 
@@ -361,17 +354,18 @@ def print_jackknife  ( fitresult          , ## restl of the fit of th e total da
         
         if expo2 : has_e2 = True
         
-        row = name , '' , '' , th2 , expo2 , '' , '' , '' , '' 
+        ## row = name , '' , '' , th2 , expo2 , '' , '' , '' , '' 
+        row = name , '' , '' , th2 , expo2 , '' 
         table.append ( row )
         
-    ## skip empty column
-    if not has_e3 :
-        rows = []
-        for row in table :
-            r = list ( row )
-            del r [ 6 ]
-            rows.append ( r )
-        table = rows
+##    ## skip empty column
+##    if not has_e3 :
+##        rows = []
+##        for row in table :
+##            r = list ( row )
+##            del r [ 6 ]
+##            rows.append ( r )
+##        table = rows
         
     ## skip empty column
     if not has_e2 :
@@ -529,7 +523,7 @@ def generate_data ( pdf , varset , **config ) :
 ## Default function to perform the actual fit
 #  - simple call for <code>PDF.fitTo</code>
 def make_fit    ( pdf , dataset , **config ) :
-    """Default function to  perform the actual fit
+    """ Default function to  perform the actual fit
     - simple call for `PDF.fitTo`
     """
     result = pdf.fitTo ( dataset , **config )
@@ -542,16 +536,15 @@ def make_fit    ( pdf , dataset , **config ) :
 #  Accept the fit result?
 #   - valid fit result
 #   - fit status is 0 (SUCCESS)
-#   - covariance matrix quality  is either 3(full accurate matrix) or -1 (unknown/externbally provided?) 
+#   - covariance matrix quality  is either 3(full accurate matrix) or -1 (unknown/externally provided?) 
 #  @param result  fit result
 #  @param pdf     pdf
 #  @param dataset pdf
-#
 def accept_fit  ( result , pdf = None , dataset = None ) :
     """ Accept the fit result?
     - valid fit result
     - fit status is 0 (SUCCESS)
-    - covariance matrix quality  is either 0 or -1 
+    - covariance matrix quality  is either 3(full accurate matrix) or -1 (unknown/externally provided?) 
     """
     return result and ( 0 == result.status () ) and ( result.covQual () in ( -1 , 3 ) ) 
 
@@ -593,39 +586,41 @@ def accept_fit  ( result , pdf = None , dataset = None ) :
 #  r,  s = make_toys ( .... , more_vars = more_vars , ... ) 
 # @endcode
 #
-# @param pdf        PDF to be used for generation and fitting
-# @param nToys      number    of pseudoexperiments to generate
-# @param data       variable list of variables to be used for dataset generation
-# @param gen_config configuration of <code>pdf.generate</code>
-# @param fit_config configuration of <code>pdf.fitTo</code>
-# @param init_pars  redefine these parameters for each pseudoexperiment
-# @param more_vars  calculate more variables form fit-result
-# @param get_fun    specific generate action (if needed) 
-# @param fit_fun    specific fitting action (if needed) 
-# @param accept_fun specific accept action (if needed) 
-# @param silent     silent toys?
-# @param progress   show the progress?
-# @param logger     use this logger 
-# @param frequency  how often to dump the intermediate results ? 
+# @param pdf          PDF to be used for generation and fitting
+# @param nToys        number    of pseudoexperiments to generate
+# @param data         variable list of variables to be used for dataset generation
+# @param gen_config   configuration of <code>pdf.generate</code>
+# @param fit_config   configuration of <code>pdf.fitTo</code>
+# @param init_pars    redefine these parameters for each pseudoexperiment
+# @param more_vars    calculate more variables form fit-result
+# @param add_results  add fit resutls to the output?
+# @param get_fun      specific generate action (if needed) 
+# @param fit_fun      specific fitting action (if needed) 
+# @param accept_fun   specific accept action (if needed) 
+# @param silent       silent toys?
+# @param progress     show the progress?
+# @param logger       use this logger 
+# @param frequency    how often to dump the intermediate results ? 
 # @return dictionary with fit results for the toys and the dictionary of statistics
 #
 #  - If <code>gen_fun</code>    is not specified <code>generate_data</code> is used 
 #  - If <code>fit_fun</code>    is not specified <code>make_fit</code>      is used 
 #  - If <code>accept_fun</code> is not specified <code>accept_fit</code>    is used   
-def make_toys ( pdf                 ,
-                nToys               , 
-                data                , ## template for dataset/variables 
-                gen_config          , ## parameters for <code>pdf.generate</code>   
-                fit_config = {}     , ## parameters for <code>pdf.fitTo</code>
-                init_pars  = {}     ,
-                more_vars  = {}     ,
-                gen_fun    = None   , ## generator function ( pdf , varset  , **config )
-                fit_fun    = None   , ## fit       function ( pdf , dataset , **config )
-                accept_fun = None   , ## accept    function ( fit-result, pdf, dataset )
-                silent     = True   ,                
-                progress   = True   ,
-                logger     = logger ,
-                frequency  = 500    ) : ## 
+def make_toys ( pdf                   ,
+                nToys                 , 
+                data                  , ## template for dataset/variables 
+                gen_config            , ## parameters for <code>pdf.generate</code>   
+                fit_config   = {}     , ## parameters for <code>pdf.fitTo</code>
+                init_pars    = {}     ,
+                more_vars    = {}     ,
+                add_results  = False  , ## add fit-results to the output?
+                gen_fun      = None   , ## generator function ( pdf , varset  , **config )
+                fit_fun      = None   , ## fit       function ( pdf , dataset , **config )
+                accept_fun   = None   , ## accept    function ( fit-result, pdf, dataset )
+                silent       = True   ,                
+                progress     = True   ,
+                logger       = logger ,
+                frequency    = 500    ) : ## 
     """ Make `nToys` pseudoexperiments
 
     -   Schematically:
@@ -645,20 +640,21 @@ def make_toys ( pdf                 ,
     2. fit generated dataset  with `pdf` using configuration
     specified via  `fit_config`
 
-    - `pdf`        : PDF to be used for generation and fitting
-    - `nToys`      : number    of pseudoexperiments to generate
-    - `data`       : variable list of variables to be used for dataset generation
-    - `gen_config` : configuration of <code>pdf.generate</code>
-    - `fit_config` : configuration of <code>pdf.fitTo</code>
-    - `init_pars`  : redefine these parameters for each pseudoexperiment
-    - `more_vars`  : dictionary of functions to define the additional results
-    - `gen_fun`    : generator function
-    - `fit_fun`    : fitting   function
-    - `accept_fun` : accept    function
-    - `silent`     : silent toys?
-    - `progress`   : show progress bar? 
-    - `logger`     : use this logger 
-    - `frequency`  : how often to dump the intermediate results ? 
+    - `pdf`          : PDF to be used for generation and fitting
+    - `nToys`        : number    of pseudoexperiments to generate
+    - `data`         : variable list of variables to be used for dataset generation
+    - `gen_config`   : configuration of <code>pdf.generate</code>
+    - `fit_config`   : configuration of <code>pdf.fitTo</code>
+    - `init_pars`    : redefine these parameters for each pseudoexperiment
+    - `more_vars`    : dictionary of functions to define the additional results
+    - `add_results`  : add fit-resutls to the output?
+    - `gen_fun`      : generator function
+    - `fit_fun`      : fitting   function
+    - `accept_fun`   : accept    function
+    - `silent`       : silent toys?
+    - `progress`     : show progress bar? 
+    - `logger`       : use this logger 
+    - `frequency`    : how often to dump the intermediate results ? 
     
     It returns a dictionary with fit results for the toys and a dictionary of statistics
     
@@ -769,7 +765,7 @@ def make_toys ( pdf                 ,
         
         ## 3. fit it!
         r = fit_fun ( pdf , dataset , **fitcnf ) 
-
+        
         ## fit status
         st = r.status()
         if 0 != st :  fits [ st ] += 1
@@ -783,9 +779,6 @@ def make_toys ( pdf                 ,
         accept += 1 if ok else 0
         
         if ok :
-            
-            ## 4. save results 
-            results [ ''  ].append ( r ) 
             
             ## 4.1 save results 
             rpf = r.params ( float_only = True ) 
@@ -804,16 +797,22 @@ def make_toys ( pdf                 ,
                 results [ '#'     ] .append ( len ( dataset ) )
                 results [ '#sumw' ] .append ( dataset.sumVar ( '1' ) )
                 
+            ## 4.3 save results 
+            if  add_results : results [ '' ].append ( r )
 
-        if isinstance ( dataset , ROOT.RooDataSet ) :  dataset.clear()
+        ## if not add_results and isinstance ( r , ROOT.RooFitResult ) :
+        ##    r = Ostap.MoreRooFit.delete_result ( r )                                    
+        if isinstance ( dataset , ROOT.RooAbsData ) :
+            dataset = Ostap.MoreRooFit.delete_data ( dataset )
+            
         del dataset
         del r
-
+        
         if progress or not silent :
             if 0 < frequency and 1 <= i and 0 ==  i % frequency : 
                 stats = make_stats ( results , fits , covs , accept )
                 print_stats ( stats , i + 1 , logger = logger )
-                
+           
     ## make a final statistics 
     stats = make_stats ( results , fits , covs , accept )
         
@@ -864,43 +863,45 @@ def make_toys ( pdf                 ,
 #  r,  s = make_toys2 ( .... , more_vars = more_vars , ... ) 
 # @code
 #
-# @param gen_pdf    PDF to be used for generation 
-# @param fit_pdf    PDF to be used for fitting
-# @param nToys      number    of pseudoexperiments to generate
-# @param data       variable list of variables to be used for dataset generation
-# @param gen_config configuration of <code>pdf.generate</code>
-# @param fit_config configuration of <code>pdf.fitTo</code>
-# @param gen_pars   redefine these parameters for each pseudoexperiment
-# @param fit_pars   redefine these parameters for each pseudoexperiment
-# @param more_vars  calculate more variables form fit-result
-# @param gen_fun    specific generate  action (if needed) 
-# @param fit_fun    specific fitting action (if needed) 
-# @param accept_fun specific accept action (if needed) 
-# @param silent     silent toys?
-# @param progress   show progress bar?
-# @param logger     logger 
-# @param frequency  how often to dump the intermediate results ? 
+# @param gen_pdf      PDF to be used for generation 
+# @param fit_pdf      PDF to be used for fitting
+# @param nToys        number    of pseudoexperiments to generate
+# @param data         variable list of variables to be used for dataset generation
+# @param gen_config   configuration of <code>pdf.generate</code>
+# @param fit_config   configuration of <code>pdf.fitTo</code>
+# @param gen_pars     redefine these parameters for each pseudoexperiment
+# @param fit_pars     redefine these parameters for each pseudoexperiment
+# @param more_vars    calculate more variables form fit-result
+# @param add_results  add fit-resutls to the output?
+# @param gen_fun      specific generate  action (if needed) 
+# @param fit_fun      specific fitting action (if needed) 
+# @param accept_fun   specific accept action (if needed) 
+# @param silent       silent toys?
+# @param progress     show progress bar?
+# @param logger       logger 
+# @param frequency    how often to dump the intermediate results ? 
 # @return dictionary with fit results for the toys and the dictionary of statistics
 #
 #  - If <code>gen_fun</code>    is not specified <code>generate_data</code> is used 
 #  - If <code>fit_fun</code>    is not specified <code>make_fit</code>      is used 
 #  - If <code>accept_fun</code> is not specified <code>accept_fit</code>    is used   
-def make_toys2 ( gen_pdf             , ## pdf to generate toys 
-                 fit_pdf             , ## pdf to fit  
-                 nToys               , ## number of pseudoexperiments 
-                 data                , ## template for dataset/variables 
-                 gen_config          , ## parameters for <code>pdf.generate</code>   
-                 fit_config = {}     , ## parameters for <code>pdf.fitTo</code>
-                 gen_pars   = {}     , ## gen-parameters to reset/use 
-                 fit_pars   = {}     , ## fit-parameters to reset/use
-                 more_vars  = {}     , ## additional  results to be calculated
-                 gen_fun    = None   , ## generator function ( pdf , varset  , **gen_config ) 
-                 fit_fun    = None   , ## fit       function ( pdf , dataset , **fit_config ) 
-                 accept_fun = None   , ## accept    function ( fit-result, pdf, dataset     )
-                 silent     = True   ,
-                 progress   = True   ,
-                 logger     = logger ,
-                 frequency  = 500    ) :
+def make_toys2 ( gen_pdf               , ## pdf to generate toys 
+                 fit_pdf               , ## pdf to fit  
+                 nToys                 , ## number of pseudoexperiments 
+                 data                  , ## template for dataset/variables 
+                 gen_config            , ## parameters for <code>pdf.generate</code>   
+                 fit_config   = {}     , ## parameters for <code>pdf.fitTo</code>
+                 gen_pars     = {}     , ## gen-parameters to reset/use 
+                 fit_pars     = {}     , ## fit-parameters to reset/use
+                 more_vars    = {}     , ## additional  results to be calculated
+                 add_results  = False  , ## add fit-resutls to the output?
+                 gen_fun      = None   , ## generator function ( pdf , varset  , **gen_config ) 
+                 fit_fun      = None   , ## fit       function ( pdf , dataset , **fit_config ) 
+                 accept_fun   = None   , ## accept    function ( fit-result, pdf, dataset     )
+                 silent       = True   ,
+                 progress     = True   ,
+                 logger       = logger ,
+                 frequency    = 500    ) :
     """Make `ntoys` pseudoexperiments
     
     -   Schematically:
@@ -920,26 +921,33 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
     2. fit generated dataset  with `pdf` using configuration
     specified via  `fit_config`
 
-    - `pdf`         : PDF to be used for generation and fitting
-    - `nToys`       : number    of pseudoexperiments to generate
-    - `data`        : variable list of variables to be used for dataset generation
-    - `gen_config`  : configuration of <code>pdf.generate</code>
-    - `fit_config`  : configuration of <code>pdf.fitTo</code>
-    - `gen_pars`    : redefine these parameters for generation of each pseudoexperiment
-    - `fit_pars`    : redefine these parameters for fit of each pseudoexperiment
-    - `silent`      : silent toys?
-    - `progress`    : show progress bar?
-    - `logger`      : use this logger 
-    - `frequency`   : how often to dump the intermediate results ? 
+    - `pdf`          : PDF to be used for generation and fitting
+    - `nToys`        : number    of pseudoexperiments to generate
+    - `data`         : variable list of variables to be used for dataset generation
+    - `gen_config`   : configuration of <code>pdf.generate</code>
+    - `fit_config`   : configuration of <code>pdf.fitTo</code>
+    - `gen_pars`     : redefine these parameters for generation of each pseudoexperiment
+    - `fit_pars`     : redefine these parameters for fit of each pseudoexperiment
+    - `more_vars`    : dictionary of functions to define the additional results
+    - `add_results`  : add fit-results to the output?
+    - `gen_fun`      : generator function ( pdf , varset  , **gen_config )
+    - `fit_fun`      : fitting   function ( pdf , dataset , **fit_config ) 
+    - `accept_fun`   : accept    function ( fit-result, pdf, dataset     )
+    - `silent`       : silent toys?
+    - `progress`     : show progress bar?
+    - `logger`       : use this logger 
+    - `frequency`    : how often to dump the intermediate results ? 
     
     It returns a dictionary with fit results for the toys and a dictionary of statistics
     >>> pdf = ...
-    ... results, stats = make_toys ( pdf     , ## PDF  to use 
-    ...                 1000                 , ## number of toys 
-    ...                 [ 'mass' ]           , ## varibales in dataset 
-    ...                 { 'nEvents' : 5000 } , ## configuration of `pdf.generate`
-    ...                 { 'ncpus'   : 2    } , ## configuration of `pdf.fitTo`
-    ...                 { 'mean' : 0.0 , 'sigma' : 1.0 } ## parameters to use for generation 
+    ... results, stats = make_toys2 ( 
+    ...                 gen_pdf                                     , ## PDF  to generate 
+    ...                 fit_pdf                                     , ## PDF  to fit 
+    ...                 nToys       = 1000                          , ## number of toys 
+    ...                 data       = [ 'mass' ]                     , ## varibales in dataset 
+    ...                 gen_config = { 'nEvents' : 5000 }           , ## configuration of `pdf.generate`
+    ...                 fit_config = { 'ncpus'   : 2    }           , ## configuration of `pdf.fitTo`
+    ...                 gemn_pars  = { 'mean' : 0.0 , 'sigma' : 1.0 } ## parameters to use for generation 
     ...                )
     """
 
@@ -1016,7 +1024,7 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
     ## run pseudoexperiments
     from ostap.utils.progress_bar import progress_bar 
     for i in progress_bar ( range ( nToys ) , silent = not progress ) :
-        
+
         ## 1. reset PDF parameters 
         gen_pdf.load_params ( params = fix_gen_init , silent = True ) ## silent = silent )
         gen_pdf.load_params ( params = fix_gen_pars , silent = True ) ## silent = silent )
@@ -1024,17 +1032,17 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
         ## 2. generate dataset!
         dataset =  gen_fun ( gen_pdf , varset = varset , **gen_config ) 
         if not silent : logger.info ( 'Generated dataset #%d\n%s' % ( i , dataset ) )
-        
+
         ## histogram? 
         histo = dataset if isinstance ( dataset , ROOT.TH1 ) else None 
         
         ## 3. reset parameters of fit_pdf
         fit_pdf.load_params ( params = fix_fit_init , silent = True ) ## silent = silent )
         fit_pdf.load_params ( params = fix_fit_pars , silent = True ) ## silent = silent )
-        
+
         ## 4. fit it!  
-        r = fit_fun ( fit_pdf , dataset , **fitcnf ) 
-        
+        r = fit_fun ( fit_pdf , dataset , **fitcnf )
+
         ## fit status 
         st = r.status()
         if 0 != st :  fits [ st ] += 1
@@ -1044,12 +1052,10 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
         if not cq in ( -1 , 3 ) : covs [ cq ] += 1
         
         ## ok ?
-        ok      = accept_fun ( r , fit_pdf , dataset )
-        accept += 1 if ok else 0        
+        ok  = accept_fun ( r , fit_pdf , dataset )
+        accept += 1 if ok else 0
+        
         if ok : 
-            
-            ## 5. save results 
-            results [ ''  ].append ( r ) 
             
             ## 5.1 save results 
             rpf = r.params ( float_only = True ) 
@@ -1068,20 +1074,29 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
                 results [ '#'     ] .append ( len ( dataset ) )
                 results [ '#sumw' ] .append ( dataset.sumVar ( '1' ) ) 
                 
-        dataset.Delete() 
-        del dataset
+            ## 5.3 save results 
+            if add_results  : results [ '' ].append ( r )
 
+        ## if not add_results and isinstance ( r , ROOT.RooFitResult ) :
+        ##     r = Ostap.MoreRooFit.delete_result ( r )            
+        if isinstance ( dataset , ROOT.RooAbsData ) :
+            dataset = Ostap.MoreRooFit.delete_data ( dataset ) 
+            
+        del dataset
+        del r
+        
         if progress or not silent :
             if 0 < frequency and 1 <= i and 0 == i % frequency : 
                 stats = make_stats ( results , fits , covs , accept )
                 print_stats ( stats , i + 1 , logger = logger )
-                         
+
+
     ## make a final statistics 
     stats = make_stats ( results , fits , covs , accept )
                     
     if progress or not silent :
         print_stats ( stats , nToys , logger = logger  )
-
+    
     return results, stats 
 
 # =============================================================================
@@ -1110,7 +1125,8 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
 #  @param data        original dataset
 #  @param fit_config  configuration of <code>pdf.FitTo( data , ... )</code>
 #  @param fit_pars    redefine these parameters before each fit 
-#  @param more_vars   calculate more variables from the fit-results 
+#  @param more_vars   calculate more variables from the fit-results
+#  @param add_results add fit results to the output?
 #  @param fit_fun     fitting   function
 #  @param accept_fun  accept    function
 #  @param event_range event range to use for jackknife   
@@ -1124,6 +1140,7 @@ def make_jackknife ( pdf                  ,
                      fit_config  = {}     , ## parameters for <code>pdf.fitTo</code>
                      fit_pars    = {}     , ## fit-parameters to reset/use
                      more_vars   = {}     , ## additional  results to be calculated
+                     add_results = False  , ## add fit-results to the output?                  
                      fit_fun     = None   , ## - fit       function ( pdf , dataset , **fit_config ) 
                      accept_fun  = None   , ## - accept    function ( fit-result, pdf, dataset     )
                      event_range = ()     , ## event range for jackknife                      
@@ -1142,12 +1159,12 @@ def make_jackknife ( pdf                  ,
     - see print_jackknife 
     - see jackknife_statistics
 
-
     - `pdf`         : fit model
     - `data`        : original dataset
     - `fit_config`  : configuration of `pdf.FitTo( data , ... )`
     - `fit_pars`    : redefine these parameters before each fit
     - `more_vars`   : calculate more variables from the fit-results
+    - `add_results` : add fit resulsy to the output?
     - `fit_fun`     : specific fitting acion (if needed) 
     - `accept_fun`  : specific accept action (if needed)
     - `event_range` : event range to use for jackknife   
@@ -1170,9 +1187,9 @@ def make_jackknife ( pdf                  ,
     ## adjust the end 
     end   = min ( end   , N )
 
-    ## check if pdf and `extended` flag are in agreemrnt, and print warning message otherwise
-    ok1 = check_extended ( pdf , False  )
-    if not ok1 and not silent : logger.warning ( "Jackknife: estimates for `yield` parameters could be wrong!")
+    ## check if pdf is extended 
+    ok1 = False if  pdf.pdf.mustBeExtended () or pdf.pdf.canBeExtended  () else True 
+    if not ok1 and not silent : logger.warning ( "Jackknife: estimates for `yield` parameters might be wrong!")
         
     ## 1. fitting function? 
     if fit_fun is None :
@@ -1214,7 +1231,8 @@ def make_jackknife ( pdf                  ,
     pdf.load_params ( params = fix_fit_init , silent = True ) ## silent = silent )
     pdf.load_params ( params = fix_fit_pars , silent = True ) ## silent = silent )
     r_tot = fit_fun ( pdf , data , **fitcnf )
-    
+
+    NN = 0 
     from ostap.utils.progress_bar import progress_bar
     ## run jackknife  bootstrapping
     for i , ds in progress_bar ( enumerate ( data.jackknife ( begin , end ) ) , max_value = end - begin , silent = not progress ) :
@@ -1239,9 +1257,6 @@ def make_jackknife ( pdf                  ,
         accept += ( 1 if ok else 0 )             
         if ok : 
 
-            ## 6. save results 
-            results [ ''  ].append ( r ) 
-
             ## 6.1 save results 
             rpf = r.params ( float_only = True ) 
             for j in rpf : 
@@ -1253,17 +1268,25 @@ def make_jackknife ( pdf                  ,
                 results [ v ] .append ( func ( r , pdf ) )
                 
             results [ '#'     ] .append ( len ( ds ) )
-            results [ '#sumw' ] .append ( ds.sumVar ( '1' ) ) 
+            results [ '#sumw' ] .append ( ds.sumVar ( '1' ) )
+            
+            ## 6.3 save results 
+            if   add_results                          : results [ '' ].append ( r )
 
-        ## reset/remove/delete dataset 
-        ds.clear()
-        del ds
-        
+            NN += 1
+            
         if progress or not silent :
             if 0 < frequency and 1 <= i and 0 == i % frequency : 
                 stats = make_stats ( results , fits , covs , accept )
                 print_stats ( stats , i + 1 , logger = logger )
-                        
+                
+        ## if not add_result and isinstance ( r , ROOT.RooFitResult ) : r.Delete()                                
+        ## reset/remove/delete dataset 
+        if isinstance ( ds , ROOT.RooAbsData ) : ds = Ostap.MoreRooFit.delete_data ( ds ) 
+        
+        del ds
+        del r
+        
     ## 8. make a final statistics 
     stats = make_stats ( results , fits , covs , accept )
         
@@ -1277,8 +1300,6 @@ def make_jackknife ( pdf                  ,
         title = '' 
         if not ok1 :
             logger.warning ( "Jackknife: estimates for `yield` parameters are likely wrong!")
-            NN = 0
-            for k in stats : NN = max ( NN , stats[k].nEntries() ) 
             title = "Jackknife results (N=%d).[Estimates for `yield` are likely wrong!]" % NN            
         print_jackknife ( r_tot   ,
                           stats   ,
@@ -1317,6 +1338,7 @@ def make_jackknife ( pdf                  ,
 #  @param fit_config configuration of <code>pdf.FitTo( data , ... )</code>
 #  @param fit_pars   redefine these parameters before each fit 
 #  @param more_vars  calculate more variables from the fit-results 
+#  @param add_results add fit results to the output?
 #  @param extended   use extended bootstrap? 
 #  @param fit_fun    specific fitting action (if needed) 
 #  @param accept_fun specific accept action (if needed) 
@@ -1325,20 +1347,22 @@ def make_jackknife ( pdf                  ,
 #  @param logger     use this logger
 #  @param frequency  how often dump the intermediate results? 
 #  @return statistics of boostrap experiments 
-def make_bootstrap ( pdf                  ,
-                     data                 ,
-                     size        = 100    ,   ## numbere of samples 
-                     fit_config  = {}     ,   ## parameters for <code>pdf.fitTo</code>
-                     fit_pars    = {}     ,   ## fit-parameters to reset/use
-                     more_vars   = {}     ,   ## additional  results to be calculated
-                     extended    = True   ,   ## use extended/non-extended bootstrtap 
-                     fit_fun     = None   ,   ## fit       function ( pdf , dataset , **fit_config )                     
-                     accept_fun  = None   ,   ## accept    function ( fit-result, pdf, dataset     )
-                     silent      = True   ,   ## silent processing?
-                     progress    = True   ,   ## shpow progress bar? 
-                     logger      = logger ,   ## use this logger 
-                     frequency   = 500    ) :
-
+def make_bootstrap (
+        pdf                  ,
+        data                 ,
+        size        = 100    ,   ## numbere of samples 
+        fit_config  = {}     ,   ## parameters for <code>pdf.fitTo</code>
+        fit_pars    = {}     ,   ## fit-parameters to reset/use
+        more_vars   = {}     ,   ## additional  results to be calculated
+        add_results = False  ,   ## add fit results to the output?
+        extended    = True   ,   ## use extended/non-extended bootstrtap 
+        fit_fun     = None   ,   ## fit       function ( pdf , dataset , **fit_config )                     
+        accept_fun  = None   ,   ## accept    function ( fit-result, pdf, dataset     )
+        silent      = True   ,   ## silent processing?
+        progress    = True   ,   ## shpow progress bar? 
+        logger      = logger ,   ## use this logger 
+        frequency   = 500    ) :
+    
     """ Run Bootstrap analysis, useful for evaluaton of fit biased and uncertainty estimates 
     In total `size` datasets are sampled (with replacement) from the original dataste
     `data` and each sampled dataset is fit
@@ -1348,19 +1372,20 @@ def make_bootstrap ( pdf                  ,
     >>> results, stats = make_bootstrap ( model , data , size = 1000 ) ## run Bootstrap 
     >>> print_bootstrap ( r , stats )                    ## print summary table 
 
-    - `pdf`        : fit model
-    - `data`       : original dataset
-    - `size`       : number of datasets to sample
-    - `fit_config` : configuration of `pdf.FitTo( data , ... )`
-    - `fit_pars`   : redefine these parameters before each fit
-    - `more_vars`  : calculate more variables from the fit-results
-    - `extended`   : use extended bootstrap? 
-    - `fit_fun`    : specific fitting acion (if needed) 
-    - `accept_fun` : specific accept action (if needed) 
-    - `silent`     : silent processing?
-    - `progress`   : show progress bar?
-    - `logger`     : use this logger 
-    - `frequency`  : how often dump the intermediate results? 
+    - `pdf`         : fit model
+    - `data`        : original dataset
+    - `size`        : number of datasets to sample
+    - `fit_config`  : configuration of `pdf.FitTo( data , ... )`
+    - `fit_pars`    : redefine these parameters before each fit
+    - `more_vars`   : calculate more variables from the fit-results
+    - `add_results` : add fit-results to the output?
+    - `extended`    : use extended bootstrap? 
+    - `fit_fun`     : specific fitting acion (if needed) 
+    - `accept_fun`  : specific accept action (if needed) 
+    - `silent`      : silent processing?
+    - `progress`    : show progress bar?
+    - `logger`      : use this logger 
+    - `frequency`   : how often dump the intermediate results? 
     """
     
     N = len ( data )
@@ -1371,9 +1396,9 @@ def make_bootstrap ( pdf                  ,
            'Invalid "size"  argument %s/%s' % ( size  , type ( size ) )
     
     ## check if pdf and `extended` flag are in agreemrnt, and print warning message otherwise
-    ok1 = check_extended ( pdf , extended )
-    if not ok1 and not silent : logger.warning ( "Bootstrap: estimates for `yield` parameters could be wrong!")
-
+    ok1 = check_bootstrap ( pdf , extended )
+    if not ok1 and not silent : logger.warning ( "Bootstrap: estimates for `yield` parameters might be wrong!")
+        
     ## 1. fitting function? 
     if fit_fun is None :
         if not silent :  logger.info ( "make_bootstrap: use default 'make_fit' function!")
@@ -1415,8 +1440,8 @@ def make_bootstrap ( pdf                  ,
     pdf.load_params ( params = fix_fit_pars , silent = True ) ## silent = silent )
     r_tot = fit_fun ( pdf , data , **fitcnf )
 
-    nn    = 0
     
+    NN = 0
     from ostap.utils.progress_bar import progress_bar
     ## run bootstrapping
     for i , ds in progress_bar ( enumerate ( data.bootstrap ( size , extended = extended ) ) ,
@@ -1443,9 +1468,6 @@ def make_bootstrap ( pdf                  ,
         accept += ( 1 if ok else 0 )
         if ok : 
 
-            ## 6. save results 
-            results [ ''  ].append ( r ) 
-
             ## 6.1 save results 
             rpf = r.params ( float_only = True ) 
             for j in rpf : 
@@ -1457,17 +1479,17 @@ def make_bootstrap ( pdf                  ,
                 results [ v ] .append ( func ( r , pdf ) )
                 
             results [ '#'     ] .append ( len ( ds ) )
-            results [ '#sumw' ] .append ( ds.sumVar ( '1' ) ) 
-            nn += 1 
+            results [ '#sumw' ] .append ( ds.sumVar ( '1' ) )
+            
+            ## 6.3 save results 
+            if   add_results                          : results [ '' ].append ( r )
 
-        ## reset/remove/delete dataset 
-        ds.clear()
-        del ds
-        
+            NN += 1
+
         if progress or not silent :
             if 0 < frequency and 1 <= i and 0 ==  i % frequency : 
                 stats = make_stats ( results , fits , covs , accept )                
-                title = "Bootstrapping with #%d samples" % nn
+                title = "Bootstrapping with #%d/%d samples" % ( NN , i ) 
                 if extended : title = '(Extended) %s' % title
                 if not ok1  : title += '[Estimates for `yield` are likely wrong!]'
                 print_bootstrap ( r_tot ,
@@ -1477,6 +1499,12 @@ def make_bootstrap ( pdf                  ,
                                   title    = title  )
                 if not ok1 and not silent : logger.warning ( "Bootstrap: estimates for `yield` parameters are likely wrong!")
 
+        ## if not add_results and isinstance ( r , ROOT.RooFitResult ) : r.Delete()            
+        if isinstance ( ds , ROOT.RooAbsData ) : ds = Ostap.MoreRooFit.delete_data ( ds ) 
+        
+        del ds
+        del r
+        
     ## 8. make a final statistics 
     stats = make_stats ( results , fits , covs , accept )    
         
@@ -1487,8 +1515,8 @@ def make_bootstrap ( pdf                  ,
         r_tot = fit_fun ( pdf , data , **fitcnf )
         
         ## 10. the final table  
-        title = "Bootstrapping with #%d samples" % nn 
-        if extended : title = '(Extended) %s'   % title
+        title = "Bootstrapping with #%d samples" % NN 
+        if extended : title = '(Extended) %s'    % title
         if not ok1 :
             title += '[Estimates for `yield` are likely wrong!]'
             logger.warning ( "Bootstrap: estimates for `yield` parameters are likely wrong!")

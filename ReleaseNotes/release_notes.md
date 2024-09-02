@@ -5,7 +5,8 @@
   1. add brute-force way to delete `RooDataSet` - needed for JAckknife and Bootstrap
   1. add argument `delete=False` for `dataset.bootstrap` and `dataset.jackknife` method to delete the dataset        
   1. add new test `test_fitting_dataset2.py` to test interference of memory and jackknife/bootstraping
-    
+  1. extend and improve machinery for toys
+      
 ## Backward incompatible
 
 ## Bug fixes

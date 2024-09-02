@@ -4389,12 +4389,12 @@ ROOT.TH1D.eff_graph  = _h1_effic4_
 #  one can convert the observed signal yeild into `p-value` or `significance'
 #  @code
 #  yields = ...
-#  pvalue, signif = yields.significance ( cut_low = True )
+#  pvalue, signif = yields.significance ()
 #  value = ...
 #  print ( 'p-value      : %s ' % pvalue ( value ) )
 #  print ( 'sifnigicance : %s ' % signif ( value ) ) 
 #  @endcode
-def _h1_signif_ ( h1 , cut_low = True ) :
+def _h1_signif_ ( h1 ) :
     """ Convert the natural histogram into (p-value,significance) pair: 
     - E.g. one can start form distirbtion of signal yields from
     ensemble of presudoexperimens produced with `background-only` hypotehsis.
@@ -4408,7 +4408,7 @@ def _h1_signif_ ( h1 , cut_low = True ) :
     
     if not h1.natural() : logger.warning ( "The input histigram is not `natural`!")
     ## get-pvalue 
-    hp = h1.effic ( cut_low = cut_low )
+    hp = h1.effic ( cut_low = True )
     hs = hp.clone ()
 
     the_last = VE()
@@ -4416,7 +4416,7 @@ def _h1_signif_ ( h1 , cut_low = True ) :
         yy = ( 1.0 + ( 1.0 - y ) ) / 2.0
         yv = yy.value()
         if   0.5 <= yv < 1 : 
-            s        = probit ( max ( yv , 0 ) )
+            s        = probit ( yy )
             the_last = s 
         else : s = the_last
         ##

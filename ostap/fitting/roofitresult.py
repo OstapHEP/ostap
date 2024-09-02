@@ -599,6 +599,9 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
     >>> result.table() 
     """
 
+    if not rr or not valid_pointer ( rr ) :
+        return "Invalid RooFitResul object!"
+    
     r = Ostap.Utils.FitResults ( rr )
 
     from  ostap.fitting.utils    import fit_status, cov_qual

@@ -23,7 +23,8 @@ from   ostap.utils.memory           import memory
 from   ostap.core.core              import cpp, VE, dsID, hID, rooSilent
 import ostap.fitting.models         as     Models
 from   ostap.plotting.canvas        import use_canvas
-from   ostap.utils.utils            import wait 
+from   ostap.utils.utils            import wait
+from   ostap.utils.basic            import numcpu 
 from   ostap.fitting.toys           import pull_var
 from   ostap.math.base              import num_range
 from   ostap.utils.progress_bar     import progress_bar
@@ -49,12 +50,11 @@ if sys.version_info < ( 3, 0 ) and ( 6 , 18 ) <= root_info < ( 6 , 20 ) :
 
 import ostap.parallel.parallel_toys as     Toys
 
-nominal_mean  = 0.4
-nominal_sigma = 0.1
-nominal_S     = 1000
-nominal_B     = 100
-nominal_F     = float ( nominal_S ) / ( nominal_S + nominal_B )
-
+nominal_mean    = 0.4
+nominal_sigma   = 0.1
+nominal_S       = 1000
+nominal_B       = 100
+nominal_F       = float ( nominal_S ) / ( nominal_S + nominal_B )
 
 mass            = ROOT.RooRealVar ( 'mass' , '', 0 , 1 )  
 gen_gauss       = Models.Gauss_pdf ( 'GG' , xvar = mass )
@@ -73,6 +73,9 @@ toy_results  = {}
 
 fit_config      = { 'silent'   : True  , 'refit'  : 5 }
 
+NCPU = numcpu()
+NT   = max ( 4 , min ( NCPU , 12 ) )
+logger.info ( 'Parallel toys will use %d/%s split ' % ( NT , NCPU ) ) 
 # ==============================================================================
 ## Perform toy-study for possible fit bias and correct uncertainty evaluation
 #  - generate <code>nToys</code> pseudoexperiments with some PDF <code>pdf</code>
@@ -91,34 +94,44 @@ def test_parallel_toys ( ) :
     - fill distributions of pulls 
     """
 
-    logger = getLogger ( 'test_parallel_toys' ) 
+    logger = getLogger ( 'test_parallel#%d_toys' % NT ) 
     
     more_vars   = { 'pull:mean_GG'  : pull_var ( 'mean_GG'  , nominal_mean  ) ,  
                     'pull:sigma_GG' : pull_var ( 'sigma_GG' , nominal_sigma ) }
     
+    params      = { 'S'        : nominal_S      , 
+                    'B'        : nominal_B      ,
+                    'mean_GG'  : nominal_mean   ,
+                    'sigma_GG' : nominal_sigma  }
+
+    ## reset parameters 
+    model.load_params ( params )    
     with timing ( 'Toys      analysis' , logger = logger )  :        
         results , stats = Toys.parallel_toys  (
             pdf         = gen_gauss   ,
-            nToys       = 2000        ,
-            nSplit      = 20          ,
+            nToys       = 500 * NT    ,
+            nSplit      = NT          ,
             data        = [ mass ]    , 
-            gen_config  = { 'nEvents' : 200  , 'sample' : True } ,
+            gen_config  = { 'nEvents' : ( nominal_S + nominal_B )  , 'sample' : True } ,
             fit_config  = fit_config  ,
-            init_pars   = { 'mean_GG' : nominal_mean , 'sigma_GG' : nominal_sigma } ,
+            init_pars   = params      ,
             more_vars   = more_vars   , 
             silent      = True        , 
-            progress    = True        )
+            progress    = True        ,
+            logger      = logger      )
         
-    ## make histos:
-    
-    h_mean       = ROOT.TH1F ( hID() , 'mean of Gauss ' , 100 ,  0    ,  0.80 )
-    h_sigma      = ROOT.TH1F ( hID() , 'sigma of Gauss' , 100 ,  0.05 ,  0.15 )
+    logger.info( 'Results : [%s]' % ( ', '.join ( key for key in results ) ) ) 
+    logger.info( 'Stats   : [%s]' % ( ', '.join ( key for key in stats   ) ) ) 
+
+    ## make histos:    
+    h_mean       = ROOT.TH1F ( hID ()  , 'mean  of Gauss ' , 200 ,  0.75 * nominal_mean  , nominal_mean  * 1.25 ) 
+    h_sigma      = ROOT.TH1F ( hID ()  , 'sigma of Gauss'  , 200 ,  0.50 * nominal_sigma , nominal_sigma * 1.50  )
     
     for r in results [ 'mean_GG'  ] : h_mean  .Fill ( r ) 
     for r in results [ 'sigma_GG' ] : h_sigma .Fill ( r )
 
     for h in ( h_mean , h_sigma ) :
-        with use_canvas ( 'test_paralllel_toys  %s' % h.title  , wait = 1 ) : h.draw()
+        with use_canvas ( 'test_paralllel#%d_toys  %s' % ( NT , h.title ) , wait = 1 ) : h.draw()
 
     toy_results['test_parallel_toys'] = results , stats 
 
@@ -136,36 +149,47 @@ def test_parallel_toys2 ( ) :
     - fill distributions of fit results
     """    
 
-    logger = getLogger ( 'test_parallel_toys2' ) 
+    logger = getLogger ( 'test_parallel#%d_toys2' % NT ) 
 
     more_vars   = { 'pull:mean_FG'  : pull_var ( 'mean_FG' , nominal_mean  ) ,  
                     'pull:sigma_FG' : pull_var ( 'sigma_FG', nominal_sigma ) }
     
+    gen_pars    = { 'mean_GG' : nominal_mean , 'sigma_GG' : nominal_sigma  } 
+    fit_pars    = { 'mean_FG' : nominal_mean , 'sigma_FG' : nominal_sigma  }
+    
+    ## reset parameters 
+    gen_gauss.load_params ( gen_pars )    
+    fit_gauss.load_params ( fit_pars )    
+
     with timing ( 'Toys2     analysis' , logger = logger )  :        
         results , stats = Toys.parallel_toys2 (
             gen_pdf     = gen_gauss   ,
             fit_pdf     = fit_gauss   ,
-            nToys       = 2000        ,
-            nSplit      = 20          ,
+            nToys       = NT * 500    ,
+            nSplit      = NT          ,
             data        = [ mass ]    , 
-            gen_config  = { 'nEvents' : 200    , 'sample' : True } ,
+            gen_config  = { 'nEvents' : 100 , 'sample' : True } ,
             fit_config  = fit_config  ,
-            gen_pars    = { 'mean_GG' : nominal_mean , 'sigma_GG' : nominal_sigma  } ,
-            fit_pars    = { 'mean_FG' : nominal_mean , 'sigma_FG' : nominal_sigma } ,
+            gen_pars    = gen_pars    ,
+            fit_pars    = fit_pars    ,
             more_vars   = more_vars   , 
             silent      = True        , 
-            progress    = True        )
+            progress    = True        ,
+            logger      = logger      )
         
+    logger.info( 'Results : [%s]' % ( ', '.join ( key for key in results ) ) ) 
+    logger.info( 'Stats   : [%s]' % ( ', '.join ( key for key in stats   ) ) ) 
+                    
     ## make histos
         
-    h_mean       = ROOT.TH1F ( hID() , 'mean of Gauss ' , 100 ,  0    ,  0.80 )
-    h_sigma      = ROOT.TH1F ( hID() , 'sigma of Gauss' , 100 ,  0.05 ,  0.15 )
+    h_mean       = ROOT.TH1F ( hID () , 'mean  of Gauss ' , 200 ,  0.75 * nominal_mean  , nominal_mean  * 1.25 ) 
+    h_sigma      = ROOT.TH1F ( hID () , 'sigma of Gauss'  , 200 ,  0.50 * nominal_sigma , nominal_sigma * 1.50  )
 
     for r in results ['mean_FG'  ] : h_mean .Fill ( r ) 
     for r in results ['sigma_FG' ] : h_sigma.Fill ( r )
 
     for h in ( h_mean , h_sigma ) :
-        with use_canvas ( 'test_parallel_toys2 %s' % h.title  , wait = 1 ) : h.draw()
+        with use_canvas ( 'test_parallel#%d_toys2 %s' % ( NT , h.title ) , wait = 1 ) : h.draw()
 
     toy_results['test_parallel_toys2'] = results , stats 
 
@@ -177,65 +201,77 @@ def test_parallel_jackknife_NE1 ( ) :
     """ Perform toys-study for Jackknife (non-extended model) 
     """
 
-    logger = getLogger ( 'test_parallel_jackknife_NE1' ) 
+    logger = getLogger ( 'test_parallel#%d_jackknife_NE1' % NT ) 
     logger.info ( 'Jackknife analysis for non-extended model' ) 
                   
     pdf = model_NE
     
-    pdf.signal.mean  = nominal_mean
-    pdf.signal.sigma = nominal_sigma
-    pdf.F            = nominal_F 
-    
+    fit_pars  = { 'F'        : nominal_F     ,
+                  'sigma_GG' : nominal_sigma ,
+                  'mean_GG'  : nominal_mean  }
+
+    ## reset all parameters 
+    pdf.load_params ( fit_pars , silent = True )     
     with timing ( 'Jackknife analysis (non-extended)' , logger = logger )  :
         
-        data = pdf.generate ( nominal_S )
-        with use_canvas ( "Jackknife analysis (non-extended)" , wait = 3 ) :
+        data = pdf.generate ( nominal_S + nominal_B , sample = False )
+        with use_canvas ( "Jackknife parallel#%d analysis (non-extended)" % NT , wait = 3 ) :
             r , f = pdf.fitTo ( data , draw = True , nbins = 100 , **fit_config )
             
-            pdf.signal.mean  = nominal_mean
-            pdf.signal.sigma = nominal_sigma
-            pdf.F            = nominal_F 
+            ## reset all parameters 
+            pdf.load_params ( fit_pars , silent = True )
             
             results, stats = Toys.parallel_jackknife ( pdf        = pdf        ,
-                                                       nSplit     = 10         , 
+                                                       nSplit     = NT         , 
                                                        data       = data       ,
                                                        fit_config = fit_config ,
+                                                       fit_pars   = fit_pars   , 
                                                        progress   = True       ,
-                                                       silent     = True       ) 
+                                                       silent     = True       ,
+                                                       logger      = logger    )
+
             
-        toy_results [ 'test_parallel_jackknife_NE1' ] = results , stats
-            
+    logger.info ( 'Results : [%s]' % ( ', '.join ( key for key in results ) ) ) 
+    logger.info ( 'Stats   : [%s]' % ( ', '.join ( key for key in stats   ) ) )
+    
+    toy_results [ 'test_parallel_jackknife_NE1' ] = results , stats
+    
 # ==============================================================================
 ## Perform toy-study for Jackknife (non-extended model) 
 def test_parallel_jackknife_NE2 ( ) :
     """ Perform toys-study for Jackknife (non-extended model) 
     """
 
-    logger = getLogger ( 'test_parallel_jackknife_NE2' ) 
+    logger = getLogger ( 'test_parallel#%d_jackknife_NE2' % NT ) 
     logger.info ( 'Jackknife analysis for non-extended model' ) 
                   
     pdf = fit_gauss
     
-    pdf.mean  = nominal_mean
-    pdf.sigma = nominal_sigma
+    fit_pars  = { 'sigma_FG' : nominal_sigma ,
+                  'mean_FG'  : nominal_mean  }
     
+    ## reset all parameters 
+    pdf.load_params ( fit_pars , silent = True ) 
     with timing ( 'Jackknife analysis (non-extended)' , logger = logger )  :
         
-        data = pdf.generate ( nominal_S )
-        with use_canvas ( "Jackknife analysis (non-extended)" , wait = 3 ) :
+        data = pdf.generate ( nominal_S , sample = False )
+        with use_canvas ( "Jackknife parallel#%d analysis (non-extended)" % NT , wait = 3 ) :
             r , f = pdf.fitTo ( data , draw = True , nbins = 100 , **fit_config )
             
-            pdf.mean  = nominal_mean
-            pdf.sigma = nominal_sigma
-            
+            ## reset all parameters 
+            pdf.load_params ( fit_pars , silent = True )             
             results, stats = Toys.parallel_jackknife ( pdf        = pdf        ,
-                                                       nSplit     = 10         , 
+                                                       nSplit     = NT         , 
                                                        data       = data       ,
                                                        fit_config = fit_config ,
                                                        progress   = True       ,
-                                                       silent     = True       )
+                                                       silent     = True       ,
+                                                       logger     = logger     )
             
-        toy_results [ 'test_parallel_jackknife_NE2' ] = results , stats
+    logger.info ( 'Results : [%s]' % ( ', '.join ( key for key in results ) ) ) 
+    logger.info ( 'Stats   : [%s]' % ( ', '.join ( key for key in stats   ) ) )
+    
+    toy_results [ 'test_parallel_jackknife_NE2' ] = results , stats
             
 # ==============================================================================
 ## Perform toy-study for Jackknife (extended model) 
@@ -243,35 +279,39 @@ def test_parallel_jackknife_EXT ( ) :
     """ Perform toys-study for Jackknife (extended model) 
     """
 
-    logger = getLogger ( 'test_parallel_jackknife_EXT' ) 
+    logger = getLogger ( 'test_parallel#%d_jackknife_EXT' % NT ) 
     logger.info ( 'Jackknife analysis for extended model' ) 
                   
     pdf = model
-
-    pdf.signal.mean  = nominal_mean
-    pdf.signal.sigma = nominal_sigma
-    pdf.S            = nominal_S 
-    pdf.B            = nominal_B 
     
-    with timing ( 'Jackknife analysis (extended)' , logger = logger )  :
-        
-        data = pdf.generate ( nominal_S )
-        with use_canvas ( "Jackknife analysis (extended)" , wait = 3 ) :
+    fit_pars = { 'S'        : nominal_S      , 
+                 'B'        : nominal_B      ,
+                 'mean_GG'  : nominal_mean   ,
+                 'sigma_GG' : nominal_sigma  }
+    
+    ## reset all parameters 
+    pdf.load_params ( fit_pars , silent = True ) 
+    with timing ( 'Jackknife analysis (extended)' , logger = logger )  :        
+
+        data = pdf.generate ( nominal_S + nominal_B , sample = False )        
+        with use_canvas ( "Jackknife parallel#%d analysis (extended)" % NT , wait = 3 ) :
             r , f = pdf.fitTo ( data , draw = True , nbins = 100 , **fit_config )
-            
-            pdf.signal.mean  = nominal_mean
-            pdf.signal.sigma = nominal_sigma
-            pdf.S            = nominal_S 
-            pdf.B            = nominal_B
-            
+
+            ## reset all parameters 
+            pdf.load_params ( fit_pars , silent = True )             
             results, stats = Toys.parallel_jackknife ( pdf        = pdf        ,
-                                                       nSplit     = 10         , 
+                                                       nSplit     = NT         , 
                                                        data       = data       ,
                                                        fit_config = fit_config ,
+                                                       fit_pars   = fit_pars   , 
                                                        progress   = True       ,
-                                                       silent     = True       ) 
+                                                       silent     = True       ,
+                                                       logger     = logger     )
             
-        toy_results [ 'test_parallel_jackknife_EXT' ] = results , stats
+    logger.info ( 'Results : [%s]' % ( ', '.join ( key for key in results ) ) ) 
+    logger.info ( 'Stats   : [%s]' % ( ', '.join ( key for key in stats   ) ) )
+
+    toy_results [ 'test_parallel_jackknife_EXT' ] = results , stats
         
 # ==============================================================================
 ## Perform toy-study for Bootstrap (non-extended)
@@ -279,35 +319,40 @@ def test_parallel_bootstrap_NE1 ( ) :
     """ Perform toys-study for Bootstrap (non-extended)
     """
 
-    logger = getLogger ( 'test_parallel_bootstrap_NE1' ) 
+    logger = getLogger ( 'test_parallel#%d_bootstrap_NE1' % NT  ) 
     logger.info ( 'Bootstrap analysis for non-extended model' ) 
 
     pdf = model_NE
-
-    pdf.signal.mean  = nominal_mean
-    pdf.signal.sigma = nominal_sigma
-    pdf.F            = nominal_F 
     
+    fit_pars  = { 'F'        : nominal_F     ,
+                  'sigma_GG' : nominal_sigma ,
+                  'mean_GG'  : nominal_mean  }
+    
+    ## reset all parameters 
+    pdf.load_params ( fit_pars , silent = True )       
     with timing ( 'Bootstrap analysis (non-extended)' , logger = logger )  :        
 
-        data    = pdf.generate ( nominal_S + nominal_B ) 
-        with use_canvas ( "Booststrap analysis" , wait = 3 ) :
+        data    = pdf.generate ( nominal_S + nominal_B , sample = False ) 
+        with use_canvas ( "Booststrap parallel#%d analysis" % NT , wait = 3 ) :
             r , f = pdf.fitTo ( data , draw = True , nbins = 100 , **fit_config )
-
-            pdf.signal.mean  = nominal_mean
-            pdf.signal.sigma = nominal_sigma
-            pdf.F            = nominal_F 
             
+            ## reset all parameters 
+            pdf.load_params ( fit_pars , silent = True )       
             results, stats = Toys.parallel_bootstrap ( pdf        = pdf        ,
-                                                       nSplit     = 10         , 
+                                                       nSplit     = NT         , 
                                                        size       = 400        , 
                                                        data       = data       ,
                                                        fit_config = fit_config ,
+                                                       fit_pars   = fit_pars   , 
                                                        extended   = False      , 
                                                        progress   = True       ,
-                                                      silent     = True       ) 
+                                                       silent     = True       ,
+                                                       logger     = logger     )
             
-        toy_results [ 'test_parallel_bootstrap_NE1' ] = results , stats
+    logger.info ( 'Results : [%s]' % ( ', '.join ( key for key in results ) ) ) 
+    logger.info ( 'Stats   : [%s]' % ( ', '.join ( key for key in stats   ) ) )
+    
+    toy_results [ 'test_parallel_bootstrap_NE1' ] = results , stats
 
 # ==============================================================================
 ## Perform toy-study for Bootstrap (non-extended)
@@ -315,33 +360,39 @@ def test_parallel_bootstrap_NE2 ( ) :
     """ Perform toys-study for Bootstrap (non-extended)
     """
 
-    logger = getLogger ( 'test_parallel_bootstrap_NE2' ) 
+    logger = getLogger ( 'test_parallel#%d_bootstrap_NE2' % NT ) 
     logger.info ( 'Bootstrap analysis for non-extended model' ) 
 
     pdf = fit_gauss 
 
-    pdf.mean  = nominal_mean
-    pdf.sigma = nominal_sigma
+    fit_pars  = { 'sigma_FG' : nominal_sigma ,
+                  'mean_FG'  : nominal_mean  }
     
+    ## reset all parameters 
+    pdf.load_params ( fit_pars , silent = True )     
     with timing ( 'Bootstrap analysis (non-extended)' , logger = logger )  :        
 
         data    = pdf.generate ( nominal_S + nominal_B ) 
-        with use_canvas ( "Booststrap analysis" , wait = 3 ) :
+        with use_canvas ( "Booststrap parallel#%d analysis" % NT , wait = 3 ) :
             r , f = pdf.fitTo ( data , draw = True , nbins = 100 , **fit_config )
-
-            pdf.mean  = nominal_mean
-            pdf.sigma = nominal_sigma
             
+            ## reset all parameters 
+            pdf.load_params ( fit_pars , silent = True )     
             results, stats = Toys.parallel_bootstrap ( pdf        = pdf        ,
-                                                       nSplit     = 10         , 
+                                                       nSplit     = NT         , 
                                                        size       = 400        , 
                                                        data       = data       ,
                                                        fit_config = fit_config ,
+                                                       fit_pars   = fit_pars   , 
                                                        extended   = False      , 
                                                        progress   = True       ,
-                                                       silent     = True       ) 
+                                                       silent     = True       ,
+                                                       logger     = logger     )
             
-        toy_results [ 'test_parallel_bootstrap_NE2' ] = results , stats
+    logger.info ( 'Results : [%s]' % ( ', '.join ( key for key in results ) ) ) 
+    logger.info ( 'Stats   : [%s]' % ( ', '.join ( key for key in stats   ) ) )
+    
+    toy_results [ 'test_parallel_bootstrap_NE2' ] = results , stats
 
 # ==============================================================================
 ## Perform toy-study for Bootstrap (extended)
@@ -349,39 +400,42 @@ def test_parallel_bootstrap_EXT ( ) :
     """ Perform toys-study for Bootstrap (extended)
     """
     
-    logger = getLogger ( 'test_parallel_bootstrap_EXT' ) 
+    logger = getLogger ( 'test_parallel#%d_bootstrap_EXT' % NT ) 
     logger.info ( 'Bootstrap analysis for extended model' ) 
 
     pdf = model
 
-    pdf.signal.mean  = nominal_mean
-    pdf.signal.sigma = nominal_sigma
-    pdf.S            = nominal_S 
-    pdf.B            = nominal_B 
+    fit_pars = { 'S'        : nominal_S      , 
+                 'B'        : nominal_B      ,
+                 'mean_GG'  : nominal_mean   ,
+                 'sigma_GG' : nominal_sigma  }
     
+    ## reset all parameters 
+    pdf.load_params ( fit_pars , silent = True ) 
     with timing ( 'Bootstrap analysis (extended)' , logger = logger )  :        
 
         data    = pdf.generate ( nominal_S + nominal_B ) 
-        with use_canvas ( "(Extended) Booststrap analysis" , wait = 3 ) :
+        with use_canvas ( "(Extended) Booststrap parallel#%d analysis" % NT , wait = 3 ) :
             r , f = pdf.fitTo ( data , draw = True , nbins = 100 , **fit_config )
 
-            pdf.signal.mean  = nominal_mean
-            pdf.signal.sigma = nominal_sigma
-            pdf.S            = nominal_S 
-            pdf.B            = nominal_B 
-                    
+            ## reset all parameters 
+            pdf.load_params ( fit_pars , silent = True )             
             results, stats = Toys.parallel_bootstrap ( pdf        = pdf        ,
-                                                       nSplit     = 10         , 
+                                                       nSplit     = NT         , 
                                                        size       = 400        , 
                                                        data       = data       ,
                                                        fit_config = fit_config ,
+                                                       fit_pars   = fit_pars   , 
                                                        extended   = True       , 
                                                        progress   = True       ,
-                                                       silent     = True       ) 
+                                                       silent     = True       ,
+                                                       logger     = logger     )
             
-        toy_results [ 'test_parallel_bootstrap_EXT' ] = results , stats
+    logger.info ( 'Results : [%s]' % ( ', '.join ( key for key in results ) ) ) 
+    logger.info ( 'Stats   : [%s]' % ( ', '.join ( key for key in stats   ) ) )
+    
+    toy_results [ 'test_parallel_bootstrap_EXT' ] = results , stats
         
-
 # =============================================================================
 ## Perform toy-study for significance of the signal 
 #  - generate <code>nToys</code> pseudoexperiments using background-only hypothesis 
@@ -396,7 +450,7 @@ def test_parallel_significance ( ) :
     - fill distributions for fit results
     """
     
-    logger = getLogger ( 'test_parallel_significance' ) 
+    logger = getLogger ( 'test_parallel#%d_significance' % NT ) 
     logger.info ( 'Make (parallel) Significance analysis' ) 
 
     with timing ( 'Significance analysis' , logger = logger )  :        
@@ -413,44 +467,54 @@ def test_parallel_significance ( ) :
         model    = Models.Fit1D      ( signal = signal , background = 1 )
         model.background.tau.fix ( 0 )
         
+        NB = 100
+        NS =  10
+        gen_pars  = { 'tau_BKG'  : 0.   }  ## initial values for generation 
+        fit_pars  = { 'B'          : NB  ,
+                      'S'          : NS  ,
+                      'phi0_Bkg_S' : 0.0 }  ## initial fit values for parameters
+        
         results , stats = Toys.parallel_toys2 (
-            gen_pdf     = bkg_only  ,
-            fit_pdf     = model     ,
-            nToys       = 10000     ,
-            nSplit      = 20        , 
-            data        = [ mass ]  , 
-            gen_config  = { 'nEvents'   : 100 , 'sample' : True } ,
-            fit_config  = fit_config    ,
-            gen_pars    = { 'tau_BKG'   : 0.   } , ## initial values for generation 
-            fit_pars    = { 'B'         : 100    ,
-                            'S'         : 10     ,
-                            'phi0_Bkg_S': 0.0 }  , ## initial fit values for parameters 
-            silent      = True  , 
-            progress    = True  )
+            gen_pdf     = bkg_only    ,
+            fit_pdf     = model       ,
+            ## nToys       = 1000000     ,
+            ## nSplit      = 36          , 
+            nToys       = NT * 1000   ,
+            nSplit      = NT          , 
+            data        = [ mass ]    , 
+            gen_config  = { 'nEvents' : NB , 'sample' : True } ,
+            fit_config  = fit_config  ,
+            gen_pars    = gen_pars    , ## initial values for generation 
+            fit_pars    = fit_pars    , ## initial fit values for parameters
+            silent      = True        , 
+            progress    = True        ,
+            logger      = logger      )
 
+    logger.info( 'Results : [%s]' % ( ', '.join ( key for key in results ) ) ) 
+    logger.info( 'Stats   : [%s]' % ( ', '.join ( key for key in stats   ) ) )
 
     # =========================================================================
     ## yields 
-    h_Y      = ROOT.TH1F ( hID() , '#S' , 140 , 0 , 70 )    
+    h_Y      = ROOT.TH1F ( hID() , '#S' , 200 , 0 , 50 )    
     for r in results [ 'S'  ] : h_Y .Fill ( r )
 
-    ## get p-value and significance histograms:  
-    h_P , h_S = h_Y.significance ( cut_low = True )
+    ## get p-value and significance histograms 
+    h_P , h_S = h_Y.significance ()
 
     h_S.red  ()
     h_P.blue ()
 
     minv = 1.e+100
     for i,_,y in h_P.items() :
-        yv = y.value()
+        yv = y.value ()
         if 0 < yv and yv < minv : minv = yv
     minv , _  = num_range ( 0.75 * minv ) 
     h_P.SetMinimum ( minv )
     h_S.SetMinimum ( 0    )
     
-    with use_canvas ( 'test_significance: yields'       , wait = 1 ) : h_Y.draw ( )
-    with use_canvas ( 'test_significance: p-value'      , wait = 1 ) : h_P.draw ( logy = True )
-    with use_canvas ( 'test_significance: significance' , wait = 3 ) : h_S.draw ()
+    with use_canvas ( 'test_parallel#%d_significance: yields'       % NT , wait = 1 ) : h_Y.draw ( )
+    with use_canvas ( 'test_parallel#%d_significance: p-value'      % NT , wait = 1 ) : h_P.draw ( logy = True )
+    with use_canvas ( 'test_parallel#%d_significance: significance' % NT , wait = 3 ) : h_S.draw ()
     
     toy_results [ 'test_parallel_significance' ] = results , stats
 
@@ -479,17 +543,17 @@ def test_db () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    with memory ( 'test_toys'          , logger = logger ) as mtt : test_parallel_toys          ()
-    with memory ( 'test_toys2'         , logger = logger ) as mt2 : test_parallel_toys2         ()
-    with memory ( 'test_jackknife_NE1' , logger = logger ) as mj1 : test_parallel_jackknife_NE1 ()
-    with memory ( 'test_jackknife_NE2' , logger = logger ) as mj2 : test_parallel_jackknife_NE2 ()
-    with memory ( 'test_jackknife_EXT' , logger = logger ) as mje : test_parallel_jackknife_EXT ()
-    with memory ( 'test_bootstrap_NE1' , logger = logger ) as mb1 : test_parallel_bootstrap_NE1 ()
-    with memory ( 'test_bootstrap_NE2' , logger = logger ) as mb2 : test_parallel_bootstrap_NE2 ()
-    with memory ( 'test_bootstrap_EXT' , logger = logger ) as mbe : test_parallel_bootstrap_EXT ()
+    with memory ( 'test_parallel_toys'          , logger = logger ) as mtt : test_parallel_toys          ()
+    with memory ( 'test_parallel_toys2'         , logger = logger ) as mt2 : test_parallel_toys2         ()
+    with memory ( 'test_parallel_jackknife_NE1' , logger = logger ) as mj1 : test_parallel_jackknife_NE1 ()
+    with memory ( 'test_parallel_jackknife_NE2' , logger = logger ) as mj2 : test_parallel_jackknife_NE2 ()
+    with memory ( 'test_parallel_jackknife_EXT' , logger = logger ) as mje : test_parallel_jackknife_EXT ()
+    with memory ( 'test_parallel_bootstrap_NE1' , logger = logger ) as mb1 : test_parallel_bootstrap_NE1 ()
+    with memory ( 'test_parallel_bootstrap_NE2' , logger = logger ) as mb2 : test_parallel_bootstrap_NE2 ()
+    with memory ( 'test_parallel_bootstrap_EXT' , logger = logger ) as mbe : test_parallel_bootstrap_EXT ()
     
-    with memory ( 'test_significance'  , logger = logger ) as mts : test_parallel_significance  ()
-    with memory ( 'test_db'            , logger = logger ) as mdb : test_db                     ()
+    with memory ( 'test_parallel_significance'  , logger = logger ) as mts : test_parallel_significance  ()
+    with memory ( 'test_db'                     , logger = logger ) as mdb : test_db                     ()
 
     rows = [ ( 'Test' , 'Memory [MB]' ) ]
 
