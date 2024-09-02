@@ -10,6 +10,7 @@
 #include "RooAbsPdf.h"
 #include "RooAbsData.h"
 #include "RooAbsDataStore.h"
+#include "RooFitResult.h"
 #include "RooGlobalFunc.h"
 // ============================================================================
 // Ostap
@@ -1748,7 +1749,7 @@ Ostap::MoreRooFit::delete_data
   delete data ;
   return nullptr ;
 }
-// ============================================================================
+// ========================================================================
 // helper function to call RooAbsPdf::fitTo ( data , options ) 
 // ============================================================================
 RooFitResult* 
