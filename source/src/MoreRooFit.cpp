@@ -8,6 +8,8 @@
 #include "RooArgList.h"
 #include "RooAddition.h"
 #include "RooAbsPdf.h"
+#include "RooAbsData.h"
+#include "RooAbsDataStore.h"
 #include "RooGlobalFunc.h"
 // ============================================================================
 // Ostap
@@ -1704,8 +1706,48 @@ Double_t Ostap::MoreRooFit::Clamp::evaluate () const
     xx >= m_b || s_equal ( xx , m_b ) ? m_b : xx ;
 }
 // ============================================================================
-
-
+/* reset RooabsData and ubnderlying store 
+ *  @see RooAbsData
+ *  @see RooAbsDataStore 
+ *  @param data dataset to be reset/clean 
+ */
+// ============================================================================
+RooAbsData*
+Ostap::MoreRooFit::reset_data
+( RooAbsData* data )
+{
+  if ( nullptr == data ) { return nullptr ; }
+  //
+  RooAbsDataStore* store = data->store() ;
+  if ( store )
+    {
+      store -> resetCache   () ;
+      store -> resetBuffers () ;
+      store -> reset        () ; 
+    }
+  //
+  data -> resetBuffers () ;
+  data -> reset        () ;
+  //
+  return data ;
+}
+// ============================================================================
+/*  delete  RooAbsData
+ *  @see RooAbsData
+ *  @see RooAbsDataStore 
+ *  @param data dataset to be reset/clean 
+ *  @return nullptr 
+ */
+// ============================================================================
+RooAbsData*
+Ostap::MoreRooFit::delete_data
+( RooAbsData* data )
+{
+  if ( nullptr == data ) { return nullptr ; }
+  reset_data ( data ) ;
+  delete data ;
+  return nullptr ;
+}
 // ============================================================================
 // helper function to call RooAbsPdf::fitTo ( data , options ) 
 // ============================================================================

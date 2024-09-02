@@ -550,9 +550,9 @@ def  _rad_mod_ ( self , fraction ) :
 #  N = len ( dataset)
 #  for index in range ( N ) :
 #    ds_i = dataset - index
-#  @endcode 
+#  @endcode
 def _rds_remevt_ ( dataset , index ) :
-    """Make dataset with removed i-th element  (for Jackknife/bootstrapping)
+    """ Make dataset with removed i-th element  (for Jackknife/bootstrapping)
     >>> dataset = ...
     >>> N = len ( dataset)
     >>> for index in range ( N ) :
@@ -574,10 +574,13 @@ def _rds_remevt_ ( dataset , index ) :
 
         result = ds1 + ds2
 
-        ds1.clear()
-        ds2.clear()
-
         assert len ( result ) + 1 == N , 'Invalid length of the resulting dataset!'
+
+        ds1 = Ostap.MoreRooFit.delete_data ( ds1 )
+        del ds1
+        
+        ds2 = Ostap.MoreRooFit.delete_data ( ds2 )
+        del ds2
         
         return result
     
@@ -640,20 +643,54 @@ def _rds_sub_ ( dataset , what ) :
 #  @code
 #  dataset = ...
 #  for ds in ds.jackknife() :
-#  ...
-#  @endcode 
-def _rds_jackknife_ ( dataset , first  , last = LAST_ENTRY ) :
-    """Jacknife generator
+#      ...
+#  @endcode
+#  - Dataset need to be deleted explicitely:
+#  @code
+#  dataset = ...
+#  for ds in ds.jackknife() :
+#      ...
+#      ds = Ostap.MoreRooFit.delete_data ( ds )
+#      del ds 
+#  @endcode
+#  - Alternatively one can use `delete=True` :
+#  dataset = ...
+#  for ds in ds.jackknife( delete = True ) :
+#      ...
+#  @endcode
+#  @see Ostap::MoreRooFit::delete_data
+def _rds_jackknife_ ( dataset , first = 0 , last = LAST_ENTRY , delete = False ) :
+    """ Jackknife generator
+
     >>> dataset = ...
     >>> for ds in ds.jackknife() :
     >>> ...
+    
+    - Dataset need to be deleted explicitely:
+    >>> dataset = ...
+    >>> for ds in ds.jackknife() :
+    >>>     ...
+    >>>     ds = Ostap.MoreRooFit.delete_data ( ds )
+    >>>     del ds 
+    
+    - Alternatively one can use `delete=True` :
+
+    >>> dataset = ...
+    >>> for ds in ds.jackknife( delete = True ) :
+    >>>     ...
+
+    - see `Ostap.MoreRooFit.delete_data`
+
     """
     first , last = evt_range ( len ( dataset ) , first , last )
     
     for i in range ( first , last ) :
-        ds_i = dataset - i        ## this is the line 
-        yield ds_i               
-        
+        ds = dataset - i                    ## this is the line! 
+        yield ds
+        if delete :
+            ds = Ostap.MoreRooFit.delete_data ( ds )
+            del ds
+            
 # =============================================================================
 ## Boostrap generator
 #  @code
@@ -661,11 +698,39 @@ def _rds_jackknife_ ( dataset , first  , last = LAST_ENTRY ) :
 #  for ds in dataset.bootstrap ( 100 ) :
 #  ...
 #  @endcode
-def _rds_bootstrap_ ( dataset , size = 100 , extended = False ) :
-    """ Boostrap generator
+#  The dataset must be remove explicitely:
+#  @code
+#  dataset = ...
+#  for ds in dataset.bootstrap ( 100 ) :
+#      ...
+#      ds = Ostap.MoreRooFit.delete_data ( ds )
+#      del ds 
+#  @endcode
+#  Alternatively one can add `delete=True`
+#  @code
+#  for ds in dataset.bootstrap ( 100 , delete = True ) :
+#      ...
+#  @endcode 
+def _rds_bootstrap_ ( dataset , size = 100 , extended = False , delete = False ) :
+    """ Boostrap generator:
+
     >>> dataset = ...
     >>> for ds in dataset.bootstrap ( 100 ) :
-    >>> ...
+    >>>     ...
+
+    - The dataset must be remove explicitely:
+
+    >>> dataset = ...
+    >>> for ds in dataset.bootstrap ( 100 ) :
+    >>>    ...
+    >>>    ds = Ostap.MoreRooFit.delete_data ( ds )
+    >>>    del ds 
+
+     - Alternatively one can add `delete=True`
+
+    >>> dataset = ... 
+    >>> for ds in dataset.bootstrap ( 100 , delete = True ) :
+    >>>     ... 
     """
     from   ostap.stats.bootstrap  import bootstrap_indices, extended_bootstrap_indices 
 
@@ -675,6 +740,10 @@ def _rds_bootstrap_ ( dataset , size = 100 , extended = False ) :
     for indices in bgen :
         ds = dataset [ indices ] 
         yield ds
+        if delete :
+            ds = Ostap.MoreRooFit.delete_data ( ds )
+            del ds
+            
 
 # =============================================================================
 ## get (random) unique sub-sample from the dataset
@@ -1436,10 +1505,16 @@ if not hasattr ( ROOT.RooDataSet , '_old_reset_' ) :
         >>> ds.reset() ## ditto
         >>> ds.Reset() ## ditto
         >>> print ds
-        """
-        s = self.store()
-        if s : s.reset()
-        self._old_reset_()
+        """        
+        store = self.store()
+        if store :
+            store.reset        ()
+            store.resetBuffers ()
+            store.resetCache   ()
+        
+        ## self.resetCache    ()
+        self.resetBuffers  ()
+        self._old_reset_   ()
         return len ( self )
     
     ## ROOT.RooDataSet.reset = _ds_new_reset_
@@ -1447,9 +1522,29 @@ if not hasattr ( ROOT.RooDataSet , '_old_reset_' ) :
     ROOT.RooDataSet.erase = _ds_new_reset_
     ## ROOT.RooDataSet.Reset = _ds_new_reset_
 
-# ROOT.RooDataSet.clear = ROOT.RooDataSet.reset
-# ROOT.RooDataSet.erase = ROOT.RooDataSet.reset
-# ROOT.RooDataSet.Reset = ROOT.RooDataSet.reset
+
+# =============================================================================
+## clear dataset
+#  @see Ostap::MoreRooFit::reset_data
+#  @code
+#  data = ...
+#  data.clear ()
+#  data.clean () ## ditto
+#  data.erase () ## ditto
+#  @endcode 
+def _ds_clear_ ( data ) :
+    """ Clear dataset
+    - see `Ostap.MoreRooFit.reset_data`
+    >>> data = ...
+    >>> data.clear ()
+    >>> data.clean () ## ditto
+    >>> data.erase () ## ditto
+    """
+    Ostap.MoreRooFit.reset_data ( data )
+        
+ROOT.RooDataSet.clear = _ds_clear_ 
+ROOT.RooDataSet.clean = _ds_clear_ 
+ROOT.RooDataSet.erase = _ds_clear_ 
 
 ROOT.RooDataSet.get_var       = get_var
 

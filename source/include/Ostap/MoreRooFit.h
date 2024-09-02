@@ -22,6 +22,10 @@
 #include "RooSpan.h"
 #endif 
 // ============================================================================
+// Forward declarations 
+// ============================================================================
+class RooAbsData ; // ROOT/RooFit 
+// ============================================================================
 namespace Ostap 
 {
   // ==========================================================================
@@ -3291,6 +3295,21 @@ namespace Ostap
       RooRealProxy  m_func {} ;
       // ======================================================================
     }; //                            The end of clas Ostap::MoreRooFit::WrapPdf 
+    // ========================================================================
+    /** reset RooAbsData and underlying store 
+     *  @see RooAbsData
+     *  @see RooAbsDataStore 
+     *  @param data dataset to be reset/clean 
+     */
+    RooAbsData* reset_data ( RooAbsData* data ) ;
+    // ========================================================================
+    /** delete  RooAbsData
+     *  @see RooAbsData
+     *  @see RooAbsDataStore 
+     *  @param data dataset to be reset/clean 
+     *  @return nullptr 
+     */
+    RooAbsData* delete_data ( RooAbsData* data ) ;
     // ========================================================================
     /// helper function to call <code>RooAbsPdf::fitTo ( data , opts )</code>
     RooFitResult* 

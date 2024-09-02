@@ -1,8 +1,10 @@
 ## New features
     
-  1.improve all toys machinery: toys, jackknife, bootstrapping and significance
+  1. improve all toys machinery: toys, jackknife, bootstrapping and significance
   1. extend all tests for toys
-       
+  1. add brute-force way to delete `RooDataSet` - needed for JAckknife and Bootstrap
+  1. add argument `delete=False` for `dataset.bootstrap` and `dataset.jackknife` method to delete the dataset        
+  1. add new test `test_fitting_dataset2.py` to test interference of memory and jackknife/bootstraping
     
 ## Backward incompatible
 
