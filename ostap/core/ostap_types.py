@@ -43,8 +43,16 @@ __all__     = (
     'all_strings'     , ## all argumets of string  types?
     )
 # =============================================================================
-import math, os, array  
+import math, os, array, cppyy   
 from   sys                 import version_info as python_version 
+# =============================================================================
+# logging 
+# =============================================================================
+from ostap.logger.logger import getLogger 
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.ostap_types' )
+else                       : logger = getLogger( __name__     )
+# =============================================================================
+logger.debug ( 'Core objects/classes/functions for Ostap')
 # =============================================================================
 if ( 3 , 0 ) <= python_version :
     long           = int
@@ -67,22 +75,17 @@ elif ( 3 , 3 ) <= python_version :
 else :
     from collections       import Sequence , Iterable , Sized            
     from collections       import Container     as Collection
-    from types             import GeneratorType as Generator
-    
-# =============================================================================
-# logging 
-# =============================================================================
-from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.ostap_types' )
-else                       : logger = getLogger( __name__     )
-# =============================================================================
-logger.debug ( 'Core objects/classes/functions for Ostap')
+    from types             import GeneratorType as Generator    
 # =============================================================================
 iterable_types  = Iterable,
 num_types       = integer_types + ( float , ) 
 str_types       = str,
 list_types      = list , tuple
 listlike_types  = list_types + ( set , C.Sequence , array.array )
+# =============================================================================
+std = cppyy.gbl.std
+if hasattr ( std , 'string'      ) : string_types += ( std.string      , )
+if hasattr ( std , 'string_view' ) : string_types += ( std.string_view , )
 # =============================================================================
 try :
     import numpy as np
