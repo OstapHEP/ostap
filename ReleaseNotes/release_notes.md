@@ -14,7 +14,9 @@
 ## Bug fixes
     
   1. fix the typo in `ostap/tools/tests/test_tools_reweight3.py`
-    
+  1. tiny fix for `progress_bar`
+  1. tiny fix for `ostap.utils.basic.isatty`
+        
 # v1.13.0.2
 
 ## New features

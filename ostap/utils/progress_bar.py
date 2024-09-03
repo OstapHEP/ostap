@@ -103,11 +103,11 @@ __all__      = (
     "running_bar"     ## helper function for RunningBar 
     )
 # =============================================================================
-from   builtins import range
+from   builtins               import range
+from   ostap.core.ostap_types import sized_types 
+from   ostap.utils.basic      import isatty, terminal_size 
+from   ostap.logger.colorized import allright, infostr 
 import sys , os, time
-# =============================================================================
-if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Sized
-else                              : from collections     import Sized
 # =============================================================================
 ## get number of columns for xterm
 #  @code
@@ -115,16 +115,11 @@ else                              : from collections     import Sized
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 def columns () :
-    """Get number of columns for xterm
+    """ Get number of columns for xterm
     """
-    from ostap.utils.basic import terminal_size 
     height , width = terminal_size()
     return width
 
-# =============================================================================
-## is sys.stdout attached to terminal or not  ?
-from ostap.utils.basic      import isatty 
-from ostap.logger.colorized import allright, infostr 
 # =============================================================================
 ## @class ProgressBar
 #
@@ -186,7 +181,7 @@ from ostap.logger.colorized import allright, infostr
 #  @endcode 
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 class ProgressBar(object):
-    """ProgressBar
+    """ ProgressBar
     
     Use as class:
     
@@ -215,21 +210,21 @@ class ProgressBar(object):
     >>> for i in progress_bar  ( range(10000 ) ) :
     ...       ... do something here ... 
     """
-    def __init__( self            , 
-                  max_value = 100 ,
-                  width     = 110 ,
-                  min_value = 0   ,
-                  output    = sys.stdout , 
-                  **kwargs ):
+    def __init__( self                   , 
+                  max_value = 100        ,
+                  width     = 110        ,
+                  min_value = 0          ,
+                  output    = sys.stdout , **kwargs ) :
 
-        tty = isatty()
+        ## tty ? 
+        tty = isatty ( output )
         
         self.silent   = kwargs.get ( 'silent' , not tty )
         self.r        = '\r' ## '\r' if tty else '\n'
         
         self.char = kwargs.get ( 'char' , '#'       ) ##
         self.mode = kwargs.get ( 'mode' , 'fixed'   ) ## fixed or dynamic
-        if not self.mode in ['fixed', 'dynamic']:
+        if not self.mode in ( 'fixed' , 'dynamic' ) :
             self.mode = 'fixed'
             
         self.bar      = ''
@@ -243,8 +238,8 @@ class ProgressBar(object):
         ncols         = columns () - 12
         self.width    = ncols if ncols > 10 else width
         
-        self.prefix   = kwargs.get('description','' )  ## description
-        self.width    = self.width - len(self.prefix)
+        self.prefix   = kwargs.get ( 'description' , '' )  ## description
+        self.width    = self.width - len ( self.prefix )
         
         ##  self.amount   = 0    
         self.amount   = self.min ## ??    
@@ -257,21 +252,28 @@ class ProgressBar(object):
         self.show      ()
         self.__start  = time.time ()
 
+    # =========================================================================
     ## Is this bar active?
     def __nonzero__ ( self ) :
-        """Is this bar active?"""
+        """ Is this bar active? """
         return self.min <= self.amount < self.max
     
+    # =========================================================================
     ## Is this bar active?
     def __bool__    ( self ) :
-        """Is this bar active?"""
+        """ Is this bar active? """
         return self.min <= self.amount < self.max
-        
-    def increment_amount(self, add_amount = 1):
+
+    # =========================================================================
+    ## Incremeemt self.amount
+    def increment_amount ( self , add_amount = 1 ) :
+        """ Incremeemt self.amount """ 
         return self.update_amount ( self.amount + add_amount )
 
-    def update_amount(self, new_amount = None ):
-        """Update self.amount with 'new_amount', and then rebuild& show the bar
+    # =========================================================================
+    ## Update self.amount with 'new_amount', and then rebuild & show the bar
+    def update_amount ( self , new_amount = None ):
+        """ Update self.amount with 'new_amount', and then rebuild& show the bar
         """
         if new_amount is None   : new_amount = self.amount
         ##
@@ -290,8 +292,10 @@ class ProgressBar(object):
         ##
         return self
 
+    # =========================================================================
+    ## Figure new percent complete, and rebuild the bar string base on self.amount.
     def build_bar ( self ) :
-        """Figure new percent complete, and rebuild the bar string base on self.amount.
+        """ Figure new percent complete, and rebuild the bar string base on self.amount.
         """
         diff         = float ( self.amount - self.min )
         done         =  ( diff / float ( self.span ) ) * 100.0
@@ -307,7 +311,7 @@ class ProgressBar(object):
         if self.__end is None and num_hashes == self._hashes : return False 
         
         eta  = ''
-        leta = len(eta)
+        leta = len ( eta )
         if  self.__end is None and 6 < num_hashes and 1 < done :
             now   = time.time ()
             feta  = int ( ( 100 - done ) *  ( now -  self.__start ) / done )
@@ -329,8 +333,7 @@ class ProgressBar(object):
 
         if self.mode == 'dynamic':
             # build a progress bar with self.char (to create a dynamic bar
-            # where the percent string moves along with the bar progress.
-            
+            # where the percent string moves along with the bar progress.            
             if eta and leta < num_hashes : 
                 self.bar = allright (  eta + self.char * ( num_hashes - leta ) )
             else :
@@ -352,19 +355,30 @@ class ProgressBar(object):
 
         return True
 
-    def __iadd__ ( self , i ) : 
+    # =========================================================================
+    ## Increment amount
+    def __iadd__ ( self , i ) :
+        """ Incremen amount """ 
         return self.increment_amount ( i )
-    
+
+    # ==========================================================================
+    ## Show the bar 
     def __str__(self):
+        """ Show hthe bar """
         return str  ( self.bar )
 
+    # ==========================================================================
+    ## Show the  bar 
     def show ( self ) :
+        """ Show the bar """
         if not self.silent and self.bar != self.last :   
             if self.prefix : self.output.write( self.prefix ) 
             self.output.write ( self.bar + self.r ) 
             self.last = self.bar  
             self.output.flush ()
             
+    # =========================================================================
+    ## The end 
     def end  ( self  ) :
         if not self.silent :
             if self.__end is None : self.__end = time.time () 
@@ -373,12 +387,20 @@ class ProgressBar(object):
             self.output.write ( self.bar + '\n' ) 
         self.output.flush()
         self.silent = True
-        
-    def __enter__ ( self      ) :
+
+    # =========================================================================
+    ## Context manager: ENTER 
+    def __enter__ ( self      ) : 
+        """ Context manager: ENTER """
         self.show() 
         return self
-    
-    def __exit__  ( self , *_ ) : self.end ()
+        
+    # =========================================================================
+    ## Contetx manager EXIT 
+    def __exit__  ( self , *_ ) :
+        """ Context manager EXIT """
+        self.end ()
+
     def __del__   ( self      ) : self.end ()
 
 # =============================================================================
@@ -386,7 +408,7 @@ _bar_  =  ( allright ( 'Running ... | '  ) + '\r' ,
             allright ( 'Running ... / '  ) + '\r' , 
             allright ( 'Running ... - '  ) + '\r' , 
             allright ( 'Running ... \\ ' ) + '\r' ) 
-_lbar  = len( _bar_ )
+_lbar  = len ( _bar_ )
 _done_ =    infostr  ( 'Done            %-d' ) + '\n' 
 # =============================================================================
 ## @class RunningBar 
@@ -404,7 +426,7 @@ _done_ =    infostr  ( 'Done            %-d' ) + '\n'
 #  @endcode 
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 class RunningBar(object):
-    """RunningBar
+    """ RunningBar
     
     >>> with RunningBar () as bar :
     >>>    for i in xrange(2000) :
@@ -516,11 +538,11 @@ def progress_bar ( iterable , max_value = None , **kwargs ) :
     if isinstance ( iterable , int ) and  0 <= iterable  :
         iterable = range ( iterable )
         
-    if   max_value is None and isinstance ( iterable , Sized     ) :
+    if   max_value is None and isinstance ( iterable , sized_types ) :
         max_value = len ( iterable ) 
-    elif max_value is None and hasattr    ( iterable , '__len__' ) :
+    elif max_value is None and hasattr    ( iterable , '__len__'   ) :
         max_value = len ( iterable )
-    elif max_value is None and hasattr    ( iterable , 'size'    ) :
+    elif max_value is None and hasattr    ( iterable , 'size'      ) :
         max_value = iterable.size()
 
     if   max_value is None : bar = RunningBar  ( **kwargs )
@@ -542,21 +564,21 @@ def test_bars ():
     import time
     
     print('Example 1: Fixed Bar')
-    with ProgressBar(0, limit,  mode='fixed') as bar : 
-        for i in range(limit+1):
+    with ProgressBar ( limit ,  mode = 'fixed' ) as bar : 
+        for i in range ( limit + 1 ):
             bar += 1 
             time.sleep ( 0.02   )
  
     print('Example 2: Dynamic Bar')
-    with ProgressBar(0, limit, mode='dynamic', char='-') as bar : 
-        for i in range(limit+1):
+    with ProgressBar( limit , mode = 'dynamic' , char = '-' ) as bar : 
+        for i in range ( limit + 1 ):
             bar += 1 
             time.sleep ( 0.02  )
 
-    for i in progress_bar( range(15000) , description = "Doing something ") : 
+    for i in progress_bar ( range ( 15000 ) , description = "Doing something ") : 
         time.sleep(0.001)
         
-    for i in running_bar( range(15000) , description  = "Empty looping ") :         
+    for i in running_bar  ( range ( 15000 ) , description = "Empty looping ") :         
         time.sleep(0.001)
 
 # ==============================================================================

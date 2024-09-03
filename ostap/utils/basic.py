@@ -47,30 +47,30 @@ import sys, os, datetime
 #  if isatty( stream ) : print('Teminal!')
 #  @endcode 
 def isatty ( stream = None ) :
-    """Is the stream is attached to terminal?
+    """ Is the stream is attached to terminal?
     >>> stream = ...
     >>> if isatty( stream ) : print('Teminal!')
     >>> if isatty() : print('stdout is terminal!')
     """
     if not stream : stream = sys.stdout
-    #
-    try :
-        return sys.stdout.isatty()
-    except : pass 
-    #
-    try :
-        return os.isatty ( sys.stdout.fileno() ) 
-    except : pass
-    #
+    ## 
+    if hasattr ( stream , 'isatty' ) : 
+        try    : return stream.isatty()
+        except : pass
+    ##     
+    if hasattr ( stream , 'fileno' ) : 
+        try    : return os.isatty ( stream.fileno () ) 
+        except : pass
+    ## 
     return False
 
 # =============================================================================
-## Who am i ?
+## Who am I ?
 #  @cdoe
 #  print ( 'I am :' % whoami() ) 
 #  @endcode 
 def whoami () :
-    """ Who am i ?
+    """ Who am I ?
     >>> print ( "I am ", whoami() ) 
     """
     try :
@@ -84,7 +84,7 @@ def whoami () :
 # =============================================================================
 ## helper function that allows to detect running ipython
 def with_ipython()  :
-    """Helper function that allows to detect running ipython"""
+    """ Helper function that allows to detect running ipython"""
     try :
         return __IPYTHON__
     except NameError :
@@ -93,7 +93,7 @@ def with_ipython()  :
 # ============================================================================
 ## Get the terminal console size
 def terminal_size():
-    """Get the terminal console size
+    """ Get the terminal console size
     >>> height , width = terminal_size() 
     """
     try :
@@ -113,7 +113,7 @@ def terminal_size():
 #  make_dir( path )
 #  @endcode 
 def make_dir ( bdir ) :
-    """Make new directory 
+    """ Make new directory 
     >>> path = ...
     >>> make_dir ( path )
     """
@@ -135,7 +135,7 @@ def make_dir ( bdir ) :
 #  if wrietable ( my_dir ) : ...
 #  @endcode
 def writeable ( adir ) :
-    """Is this directory is writeable?
+    """ Is this directory is writeable?
     >>> my_dir = ...
     >>> if writeable ( my_dir ) : ...
     """
@@ -172,13 +172,13 @@ else :
 
 # =============================================================================
 if (3,2) <= sys.version_info :
-
+    # =========================================================================    
     make_dirs = os.makedirs
-    
+    # =========================================================================        
 else :
-    
+    # =========================================================================    
     def make_dirs ( name , mode = 0o777 , exist_ok = False ):
-        """makedirs(path [, mode=0o777])
+        """ makedirs(path [, mode=0o777])
         
         Super-mkdir; create a leaf directory and all intermediate ones.
         Works like mkdir, except that any intermediate path segment (not
@@ -215,7 +215,6 @@ else :
             if not exist_ok or not os.path.isdir ( name ) :
                 raise
 
-
 # =============================================================================
 ## @class NoContext
 #  Fake empty context manager to be used as empty placeholder
@@ -238,15 +237,28 @@ class NoContext(object) :
 
 
 # =============================================================================
-if   ( 3 , 0 ) <= sys.version_info : items_loop = lambda d : d.items     () 
-else                               : items_loop = lambda d : d.iteritems ()
+if   ( 3 , 0 ) <= sys.version_info :
+    # =========================================================================
+    def loop_items ( dct ) :
+        """ Iterate over the dictionary items
+        >>> d = { 'a' : ...   , 'b' : ... , }
+        >>> for e in   loop_items ( d ) : print (e) 
+        """
+        for item in dct.items () : yield item
+    # =========================================================================
+else :
+    # =========================================================================
+    def loop_items ( dct ) :
+        """ Iterate over the dictionary items
+        >>> d = { 'a' : ...   , 'b' : ... , }
+        >>> for e in   loop_items ( d ) : print (e) 
+        """
+        for item in dct.iteritems () : yield item
+    # =========================================================================
+        
 # =============================================================================
-def loop_items ( d ) :
-    """Return  iterator over the dictionary   items
-    >>> d = { 'a' : ...   , 'b' : ... , }
-    >>> for e in   loop_items ( d ) : print (e) 
-    """
-    return items_loop ( d ) 
+## Iterate over the dictionary items
+items_loop = loop_items 
 
 # =============================================================================
 ## case-insensitive check for existence of the environment variable
@@ -257,8 +269,7 @@ def loop_items ( d ) :
 #  has_env ( 'Ostap_Table_Style' ) 
 #  @endcode
 def has_env ( variable ) :
-    """
-    Case-insensitive check for existence of the environment variable
+    """ Case-insensitive check for existence of the environment variable
     
     - case-insensitive
     - space ignored
@@ -392,7 +403,7 @@ def copy_file ( source           ,
 def sync_file ( source              ,
                 destination         ,
                 progress    = False ) :
-    """Sync/Copy source file into destination, creating intermediate directories
+    """ Sync/Copy source file into destination, creating intermediate directories
     - see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
     """
     from   ostap.utils.utils import which
@@ -426,13 +437,29 @@ def sync_file ( source              ,
     return destination
     
 # =============================================================================
-if ( 3 , 4 ) <= sys.version_info :
+if ( 3 , 4 ) <= sys.version_info : 
+    # =========================================================================
     ## Get number of cores/CPUs
-    from os               import cpu_count as numcpu
+    from os              import cpu_count as _numcpu
+    # =========================================================================
 else :
-    ## Get number of cores/CPUs
-    from multiprocessing import cpu_count as numcpu
+    # =========================================================================
+    ## Get number of cores/CPUs    
+    from multiprocessing import cpu_count as _numcpu
+    # =========================================================================
     
+# =============================================================================
+## Get number of CPUs     
+def numcpu () :
+    """ Get number of CPUs (non-negative integer number)
+    - it uses the function `cpu_count` from `%s` module  
+    """
+    nc = _numcpu ()
+    return nc if nc and 0 < nc else 0
+
+numcpu.__doc__ = numcpu.__doc__ % _numcpu.__module__ \
+    +  '\n' + _numcpu.__doc__
+
 # =============================================================================
 if __name__ == '__main__' :
 
