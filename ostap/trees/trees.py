@@ -36,7 +36,7 @@ from   ostap.utils.basic         import isatty, terminal_size, NoContext, loop_i
 from   ostap.utils.scp_copy      import scp_copy
 from   ostap.math.reduce         import root_factory
 from   ostap.utils.progress_bar  import progress_bar
-from   ostap.trees.cuts          import vars_and_cuts 
+from   ostap.trees.cuts          import vars_and_cuts, order_warning 
 from   ostap.stats.statvars      import data_decorate , data_range 
 from   ostap.histos.histos       import histo_book, histo_keys  
 import ostap.trees.treereduce 
@@ -337,9 +337,6 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = LAST_ENTRY , p
 ROOT.TTree .rows  = _tt_rows_ 
 
 # =============================================================================
-## number of warning prints 
-_to_print = 10 
-# =============================================================================
 ## help project method for ROOT-trees and chains 
 #
 #  @code 
@@ -445,11 +442,10 @@ def tree_project ( tree                    ,
 
     ## 3) parse input expressions
     varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
-    if input_string and 2 <= len ( varlst ) and ostap_info < (1,11) :
-        if 0 < _to_print :
-            logger.attention ("From ostap v1.10.1.9 variables are trested in natural order (no reverse!)")
-            _to_print -= 1 
-    
+    if input_string and 2 <= len ( varlst ) and order_warning :
+        vv = ' ; '.join  ( varlst  ) 
+        logger.attention ("project: from v1.10.1.9 variables are in natural order [x;y;..]=[ %s ]" % vv  )
+        
     nvars = len ( varlst )
     assert ( 1 == dim and dim <= nvars ) or dim == nvars , \
         'Mismatch between the target/histo dimension %d and input variables %s' % ( dim , varlst )
@@ -498,11 +494,11 @@ def tree_project ( tree                    ,
         elif 3 == dim : 
             if progress : sc = Ostap.HistoProject.project3 ( tree , progress_conf () , *args )
             else        : sc = Ostap.HistoProject.project3 ( tree ,                    *args )
-            if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
+            if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
         elif 4 == dim : 
             if progress : sc = Ostap.HistoProject.project4 ( tree , progress_conf () , *args )
             else        : sc = Ostap.HistoProject.project4 ( tree ,                    *args )
-            if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
+            if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project4 %s" % sc )
 
         ## return None on error 
         return target if sc.isSuccess() else None 
@@ -534,6 +530,9 @@ def tree_draw ( tree                    ,
     
     ## decode variables/cuts 
     varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
+    if input_string and 2 <= len ( varlst ) and order_warning :
+        vv = ' ; '.join  ( varlst ) 
+        logger.attention ("draw: from v1.10.1.9 variables are in natural order [x;y;..]=[ %s ]" % vv  )
     
     nvars = len ( varlst ) 
     assert 1 <= nvars <= 3 , "Invalid number of variables: %s" % str ( varlst )
@@ -574,17 +573,19 @@ def tree_draw ( tree                    ,
     histo = histo_book ( histos , kw )
 
     if not native :
-        ## fill the histoigram 
+        ## fill the histogram 
         histo = tree_project ( tree , histo  , varlst , cuts = cuts , first = first , last = last , use_frame = use_frame , progress = progress )
         ## draw the histogram 
         histo.draw ( opts , **kw )
         return histo
 
+    # =========================================================================
     ## ROOT native project (a bit more efficient) 
-        
-    if   1 == nvars : varexp = varlst [ 0 ]
-    elif 2 == nvars : varexp = '%s vs %s ' % ( varlst [ 1 ] , varlst [ 0 ] ) 
-    elif 3 == nvars : varexp = '%s vs %s vs %s' % ( varlst [ 2 ] , varlst [ 1 ] , varlst [ 0 ] ) 
+    # Natiev project uses reverse order!
+    # =========================================================================
+    if   1 == nvars : varexp =                                                  varlst [ 0 ]
+    elif 2 == nvars : varexp = '%s : %s '     %                ( varlst [ 1 ] , varlst [ 0 ] ) 
+    elif 3 == nvars : varexp = '%s : %s : %s' % ( varlst [ 2 ] , varlst [ 1 ] , varlst [ 0 ] ) 
     
     ## fill the histoigram 
     tree.Project ( histo.GetName() , varexp , cuts , ''   , last  - first , first       )

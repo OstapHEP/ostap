@@ -38,7 +38,7 @@ from   ostap.core.ostap_types    import ( integer_types , string_types   ,
                                           list_types    , sequence_types )
 from   ostap.math.base           import islong
 from   ostap.fitting.variables   import valid_formula, make_formula 
-from   ostap.trees.cuts          import expression_types, vars_and_cuts
+from   ostap.trees.cuts          import expression_types, vars_and_cuts, order_warning
 from   ostap.utils.utils         import evt_range, LAST_ENTRY, ALL_ENTRIES 
 from   ostap.stats.statvars      import data_decorate, data_range 
 from   ostap.histos.histos       import histo_book
@@ -1240,7 +1240,7 @@ def ds_project  ( dataset                ,
         groot  = ROOT.ROOT.GetROOT()
         h      = groot.FindObject ( hname )
         assert h , 'Cannot get locate histo by name %s' % histos        
-        assert isinstance ( h , ROOT.TH1 ) , 'the object %s i snot ROOT.TH1' % type ( h ) 
+        assert isinstance ( h , ROOT.TH1 ) , "The object `%s' is not ROOT.TH1!" % type ( h ) 
         target = h
         
     ## 3) input histogram?
@@ -1275,10 +1275,9 @@ def ds_project  ( dataset                ,
 
     ## (6) parse input expressions
     varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
-    if input_string and 2 <= len ( varlst ) and ostap_info < (1,11) : 
-        if 0 < _to_print  : 
-            logger.attention ("From ostap v1.10.1.9 variables are treted in natural order (no reverse!)")
-            _to_print -= 1 
+    if input_string and 2 <= len ( varlst ) and order_warning :
+        vv = ' ; '.join  ( varlst  ) 
+        logger.attention ("project: from v1.10.1.9 variables are in natural order [x;y;..]=[ %s ]" % vv  )
 
     nvars = len ( varlst ) 
     assert ( 1 == dim and dim <= nvars ) or dim == nvars , \
@@ -1358,7 +1357,7 @@ def ds_draw ( dataset ,
               first     =  0          ,
               last      =  LAST_ENTRY ,
               delta     = 0.01        , **kwargs ) :
-    """Helper draw method for drawing of RooDataSet
+    """ Helper draw method for drawing of RooDataSet
     >>> dataset.draw ( 'm', 'chi2<10'                 )
     ## cuts & weight 
     >>> dataset.draw ( 'm', '(chi2<10)*weight'        )
@@ -1374,7 +1373,10 @@ def ds_draw ( dataset ,
 
     ## decode variables/cuts 
     varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
-    
+    if input_string and 2 <= len ( varlst ) and order_warning :
+        vv = ' ; '.join  ( varlst  ) 
+        logger.attention ("draw: from v1.10.1.9 variables are in natural order [x;y;..]=[ %s ]" % vv  )
+
     nvars = len ( varlst ) 
     assert 1 <= nvars <= 3 , "Invalid number of variables: %s" % str ( varlst )
     

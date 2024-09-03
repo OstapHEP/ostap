@@ -18,6 +18,7 @@ __all__     = (
     'vars_and_cuts'    , ## helper routibe to treat expressions
 )
 # =============================================================================
+from   ostap.core.meta_info   import ostap_info
 from   ostap.core.ostap_types import num_types, string_types
 from   ostap.core.core        import cpp, VE, hID, dsID, split_string 
 from   ostap.utils.utils      import balanced 
@@ -30,6 +31,12 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.trees.cuts' )
 else                       : logger = getLogger( __name__           )
 # =============================================================================
 logger.debug( 'Some useful decorations for ROOT.TCut objects')
+# =============================================================================
+## warning about the order of varibales for  `project`
+order_warning = ostap_info < ( 2 , 0 )
+if order_warning :
+    import datetime
+    order_warning = datetime.datetime.now () < datetime.datetime ( 2025, 7 , 1 )
 # =============================================================================
 ## types for expressions and cuts 
 expression_types  = string_types +  ( ROOT.TCut , )
@@ -667,7 +674,6 @@ ROOT.TCut.__invert__    = _tc_invert_
 ROOT.TCut.__truediv__   = _tc_div_
 ROOT.TCut.__itruediv__  = _tc_idiv_
 ROOT.TCut.__rtruediv__  = _tc_rdiv_
-
 
 # =============================================================================
 _decorated_classes_ = (

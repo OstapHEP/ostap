@@ -485,9 +485,8 @@ class Weight(object) :
 #  @param what    histogram varibales
 #  @param how     histogram template 
 def mc_data_projector  ( dataset , histo , what , how ) :
-    """Default function to make MC projection
+    """ Default function to make MC projection
     """
-    
     dataset.project ( histo , what , how )
     return histo 
 

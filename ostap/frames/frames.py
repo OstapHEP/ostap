@@ -150,7 +150,7 @@ def _fr_helper_ ( frame , expressions , cuts = '' , progress = False ) :
     if progress and isinstance ( frame , ROOT.TTree ) : progress = len ( frame )
 
     exprs, cuts, input_string = SV.vars_and_cuts ( expressions , cuts ) 
-
+    
     ## Frame/Tree ?
     lenght = -1
     
@@ -777,7 +777,7 @@ def frame_project ( frame            ,
     if progress and isinstance ( frame , ROOT.TTree ) : progress = len ( frame )
 
     if isinstance ( model , _types_nD ) : 
-        assert ( 6,25 ) <= root_info, '6.25<=ROOT is required here!'
+        assert ( 6 , 25 ) <= root_info, '6.25<=ROOT is required here!'
         return _fr_param_ ( frame , model , expression, cuts = cuts , progress = progress , report = report , lazy = lazy ) 
 
     ## decode expressons & cuts 
