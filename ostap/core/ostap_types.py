@@ -44,7 +44,7 @@ __all__     = (
     )
 # =============================================================================
 import math, os, array, cppyy   
-from   sys                 import version_info as python_version 
+from   sys                 import version_info as python_version
 # =============================================================================
 # logging 
 # =============================================================================
@@ -52,7 +52,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.ostap_types' )
 else                       : logger = getLogger( __name__     )
 # =============================================================================
-logger.debug ( 'Core objects/classes/functions for Ostap')
+logger.debug ( 'Core objects/classes/types for Ostap')
 # =============================================================================
 if ( 3 , 0 ) <= python_version :
     long           = int
@@ -64,7 +64,6 @@ else :
     string_types   = str   , unicode
     integer_types  = int   , long
     long_type      = long 
-    python_version = 2 
     import collections     as     C
 # =============================================================================
 if   ( 3 , 5 ) <= python_version :
