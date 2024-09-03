@@ -51,8 +51,8 @@ def test_toys_simfit_1 () :
     ## high statistic, low-background "control channel"
     mean1  = 2.0
     sigma1 = 0.50
-    NS1    =   1000
-    NB1    =    250
+    NS1    = 1000
+    NB1    =  250
     
     for i in range ( NS1 )  :
         v1 = random.gauss( mean1 , sigma1 )

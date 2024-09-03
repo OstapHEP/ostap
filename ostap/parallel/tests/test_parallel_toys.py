@@ -590,9 +590,6 @@ if '__main__' == __name__ :
     title = 'Memory usage for various toys'
     table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lc' ) 
     logger.info ( '%s:\n%s' % ( title , table ) )
-
-    raise TypeError ('Exception!')
-
     
 
 # =============================================================================
