@@ -6,11 +6,15 @@
   1. add argument `delete=False` for `dataset.bootstrap` and `dataset.jackknife` method to delete the dataset        
   1. add new test `test_fitting_dataset2.py` to test interference of memory and jackknife/bootstraping
   1. extend and improve machinery for toys
-      
+  1. add std.string and std.string_view into `string_types`
+  1. improve `attention` printout from `dataset/tree` method `project`
+            
 ## Backward incompatible
 
 ## Bug fixes
-
+    
+  1. fix the typo in `ostap/tools/tests/test_tools_reweight3.py`
+    
 # v1.13.0.2
 
 ## New features

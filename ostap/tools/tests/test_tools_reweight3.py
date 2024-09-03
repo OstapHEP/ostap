@@ -142,9 +142,9 @@ def prepare_data ( ) :
             
             x , y, z  = -1, -1, -1 
 
-            while not 0 < x < xmax : x = xmax - random.expovariate ( 1.0 / xmax ) 
-            while not 0 < y < ymax : y =        random.expovariate ( 1.0 / ymax ) 
-            while not 0 < z < zmax : z =        random.expovariate ( 1.0 / zmax ) 
+            while not 0 <= x < xmax : x = xmax - random.expovariate ( 1.0 / xmax ) 
+            while not 0 <= y < ymax : y =        random.expovariate ( 1.0 / ymax ) 
+            while not 0 <= z < zmax : z =        random.expovariate ( 1.0 / zmax ) 
                 
             h3_histo .Fill ( x , y , z )
             
@@ -247,7 +247,6 @@ with ROOT.TFile.open ( testdata , 'r' ) as dbroot :
     hy_data  = dbroot [ tag_data_y  ] . clone()
     hz_data  = dbroot [ tag_data_z  ] . clone()
 
-
 # =============================================================================
 ## prebook MC histograms
 # =============================================================================
@@ -269,7 +268,6 @@ mc_x  = h1_axis ( [ xmax/ix*i for i in range ( ix + 1 ) ] )
 mc_y  = h1_axis ( [ ymax/iy*i for i in range ( iy + 1 ) ] )
 mc_z  = h1_axis ( [ zmax/iz*i for i in range ( iz + 1 ) ] )
 
-
 ## prepare re-weighting machinery 
 maxIter = 15
 
@@ -285,7 +283,6 @@ else :
         
 # =============================================================================
 ## make reweighting iterations
-
 from   ostap.tools.reweight           import Weight, makeWeights,  WeightingPlot, W2Data  
 from   ostap.fitting.pyselectors      import Variable 
 import ostap.parallel.parallel_fill
@@ -311,10 +308,9 @@ variables  = [
     Variable ( 'z' , 'z-var'  , 0  , zmax ) ,
     ]
 
-
 # =============================================================================
 datatree   = ROOT.TChain ( tag_data ) ; datatree.Add ( testdata )  
-title = 'Data/target dataset'
+title      = 'Data/target dataset'
 logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'x' , 'y' , 'z' ] ,
                                                       title     = title    ,
                                                       prefix    = '# '     ) ) )
@@ -328,7 +324,7 @@ with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
     mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )
     ## fill dataset from input MC tree
     mcds_ , _ = mctree.make_dataset ( variables = variables ,
-                                      selection = '0<x && x<%s && 0<y && y<%s && 0<z && z<%s' % ( xmax , ymax, zmax ) )
+                                      selection = '0<=x && x<%s && 0<=y && y<%s && 0<=z && z<%s' % ( xmax , ymax, zmax ) )
 
 # =============================================================================
 ## Configuration of reweighting plots 
@@ -337,7 +333,7 @@ plots  = [
     WeightingPlot ( 'x:y:z' , 'weight' , '3D-reweight' , h3d_data , mc_3d ) , 
     WeightingPlot ( 'x:z'   , 'weight' , 'XZ-reweight' , hxz_data , mc_xz ) , 
     WeightingPlot ( 'y:z'   , 'weight' , 'YZ-reweight' , hyz_data , mc_yz ) , 
-    WeightingPlot ( 'z:y'   , 'weight' , 'XY-reweight' , hxy_data , mc_xy ) , 
+    WeightingPlot ( 'x:y'   , 'weight' , 'XY-reweight' , hxy_data , mc_xy ) , 
     WeightingPlot ( 'x'     , 'weight' , 'x-reweight'  , hx_data  , mc_x  ) ,  
     WeightingPlot ( 'z'     , 'weight' , 'z-reweight'  , hz_data  , mc_z  ) ,  
     WeightingPlot ( 'y'     , 'weight' , 'y-reweight'  , hy_data  , mc_y  ) ,  
@@ -367,13 +363,13 @@ for iter in range ( 1 , maxIter + 1 ) :
                                                           prefix    = '# '     ) ) )        
         ## get MC data in a form of vector 
         vct_mc = mcds.statVct ( 'x,y,z', 'weight' )
-        n_mc   = int ( mcds.nEff('weight') )  
-        trow = ( '%d'   % iter ,
-                 '%.4g' % vct_mc  .mahalanobis                 ( vct_data ) ,
-                 '%.4g' % Ostap.Math.hotelling ( vct_mc , n_mc , vct_data , n_data ) ,                 
-                 '%.4g' % vct_mc  .asymmetric_kullback_leibler ( vct_data ) , 
-                 '%.4g' % vct_data.asymmetric_kullback_leibler ( vct_mc   ) , 
-                 '%.4g' % vct_data.           kullback_leibler ( vct_mc   ) )
+        n_mc   = int ( mcds.nEff ( 'weight' ) )  
+        trow   = ( '%d'   % iter ,
+                   '%.4g' % vct_mc  .mahalanobis                 ( vct_data ) ,
+                   '%.4g' % Ostap.Math.hotelling ( vct_mc , n_mc , vct_data , n_data ) ,                 
+                   '%.4g' % vct_mc  .asymmetric_kullback_leibler ( vct_data ) , 
+                   '%.4g' % vct_data.asymmetric_kullback_leibler ( vct_mc   ) , 
+                   '%.4g' % vct_data.           kullback_leibler ( vct_mc   ) )
         glob_stat.append ( trow )
         ## title = 'MC-data as vector at #%s' % iter
         ## logger.info ( '%s\n%s' % ( title , vct_mc.table ( title = title , prefix = '# ' , correlations =True ) ) ) 
@@ -416,7 +412,6 @@ for iter in range ( 1 , maxIter + 1 ) :
 else :
 
     logger.error ( "No convergency!" )
-
 
 # ===========================================================================
 title = 'Weighter object'
