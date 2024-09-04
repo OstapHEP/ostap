@@ -1066,12 +1066,20 @@ var_separators = ',:;'
 ## rx_separators  = re.compile ( r'[,:;]\s*(?![^()]*\))' )
 ## rx_separators  = re.compile ( '[ ,:;](?!(?:[^(]*\([^)]*\))*[^()]*\))')
 # =============================================================================
+## mark for double columns: double column is a special for C++ namespaces 
+dc_mark = '_SSPPLLIITT_'
+# =============================================================================
 ## split string using separators and respecting the (),[] and {} groups.
 #  - group can be nested
-def split_string_respect  ( text , separators = ',;:' , strip = True ) :
-    """Split string using separators and respecting the (),[] and {} groups.
+def split_string_respect  ( text , separators = var_separators , strip = True ) :
+    """ Split string using separators and respecting the (),[] and {} groups.
     - groups can be nested
     """
+    protected = False 
+    if ':' in separators and '::' in text :
+        text      = text.replace ( '::' , dc_mark ) 
+        protected = True 
+    
     flag1  = 0
     flag2  = 0
     flag3  = 0
@@ -1092,6 +1100,13 @@ def split_string_respect  ( text , separators = ',;:' , strip = True ) :
         
     if item : items.append ( item  )
 
+    if protected :
+        nlst = []
+        for item in items :
+            if dc_mark in item : nlst.append ( item.replace ( dc_mark , '::' ) )
+            else               : nlst.appenf ( item ) 
+        items = nlst 
+                              
     ## strip items if required 
     if strip : items = [ item.strip() for item in items ] 
     ## remove empty items 
@@ -1113,7 +1128,12 @@ def split_string ( line                            ,
         return split_string_respect ( line                    ,
                                       separators = separators ,
                                       strip      = strip      )
-    ## 
+    ##
+    protected = False 
+    if ':' in separators and '::' in line :
+        line      = line.replace ( '::' , dc_mark ) 
+        protected = True 
+    
     items = [ line ]
     for s in separators :
         result = []
@@ -1122,6 +1142,13 @@ def split_string ( line                            ,
             else         : result.append ( item ) 
         items = result
 
+    if protected :
+        nlst = []
+        for item in items :
+            if dc_mark in item : nlst.append ( item.replace ( dc_mark , '::' ) )
+            else               : nlst.appenf ( item ) 
+        items = nlst 
+        
     ## strip items if required 
     if strip : items = [ i.strip() for i in items ] 
     ## remove empty items 

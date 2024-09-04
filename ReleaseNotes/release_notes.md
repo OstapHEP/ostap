@@ -7,7 +7,8 @@
   1. improve Linear Algebra tests
   1. improve the machinery for eigenvalues and eigenvectors
   1. add possibility to avodi coloring of the header row in the tables
-         
+  1. add protection for double cpoulmn (`::`) for the expression strings
+           
 ## Backward incompatible
 
 ## Bug fixes
