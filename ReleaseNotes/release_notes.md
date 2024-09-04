@@ -1,5 +1,12 @@
 ## New features
     
+  1. further improvemets for nice printout of linear algebra objects
+  1. add `lnorm` and `mnorm` methods for matrices to get L-norm and max-norm 
+  1. add `gdiagonal` method to get diagonal matrice 
+  1. add `abs` method for `SVectors`
+  1. improve Linear Algebra tests
+  1. improve the machinery for eigenvalues and eigenvectors
+      
 ## Backward incompatible
 
 ## Bug fixes

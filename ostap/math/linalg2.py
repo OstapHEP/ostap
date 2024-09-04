@@ -1010,14 +1010,19 @@ class LinAlg(object) :
         ##  square matrix ?
         square = a.kRows == a.kCols
         if not square : return NotImplemented
-        
-        ## 1.  1x1 matrix : exponent can be not onl integer 
-        if   1 == a.kRows                         : return pow ( a ( 0 , 0 ) , n )
-        ## 2.  non-integer exponent?
+
+        ## 1. zero exponent: return identity matrix 
+        if   0 == n or iszero ( n ) :
+            if isinstance ( a , ROOT.TObject ) : return type ( a ) ( a.kUnit , a ) 
+            return type ( a ) ( ROOT.ROOT.Math.SMatrixIdentity() )        
+        ## 2. unit  exponent: return copy 
+        elif 1 == n or isequal ( n , 1 ) : return type ( a ) ( a )
+        ## 3.  1x1 matrix : exponent can be not only integer 
+        elif 1 == a.kRows                         : return pow ( a ( 0 , 0 ) , n )        
+        ## 4.  non-integer exponent?
         elif not isinstance ( n , integer_types ) : return NotImplemented
-        
-        ## 3 negative integer exponent : first invert and then pow  
-        if n < 0 :
+        ## 5. negative integer exponent : first invert and then pow  
+        elif n < 0 :
             try : 
                 a_inv = LinAlg.M_INVERSE ( a )
             except ValueError : ## matrix cannot be inverted
@@ -1025,7 +1030,7 @@ class LinAlg(object) :
             if -1 == n : return a_inv 
             return LinAlg.M_POW ( a_inv , abs ( n ) )
 
-        ## 4. regular case: square matrix and non-negative integer exponent 
+        ## 6. regular case: square matrix and non-negative integer exponent 
         operation , check  = LinAlg.methods_POW ( a  )
         if operation and check and check ( a , n ) :
             result = operation ( a , n )
@@ -1330,28 +1335,73 @@ class LinAlg(object) :
         s = vct.kSize 
         for i in range ( s ) :
             yield i , vct ( i )
-        
+ 
+    # =============================================================================
+    ## Absolute value of a vector (sqrt from sum of squared elements) 
+    #  @code
+    #  vct = ...
+    #  result = abs ( vct ) 
+    #  @endcode
+    @staticmethod
+    def V_ABS ( vct ) :
+        """ Absolute value of a vector (sqrt from sum of squared elements) 
+        >>> vct  = ...
+        >>> result = abs ( vct ) 
+        """
+        return sum ( v * v for v in vct ) ** 0.5 
+   
     # =============================================================================
     ## self-printout of S-vectors
     #  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
     #  @date 2009-09-12
     @staticmethod
-    def V_STR ( vct , fmt = ' %g' ) :
+    def V_PRETTY ( vct , fmt = '%.g' , title = '' , prefix = '' , width = 6 , precision = 4 ) :
         """ Self-printout of SVectors: (...)
+        >>> vct = ...
+        >>> result, expo = vct.pretty_print( ... ) 
         """
-        result = '('
-        for i , v in enumerate ( vct ) :
-            if 0 != i : result += ', '
-            result += fmt % v 
-        return result + ')'
+        
+        N = len ( vct )
+        
+        ## the maximal element 
+        maev = abs ( Ostap.Math.maxabs_element  ( vct ) )
+        
+        fmtv , expo = fmt_pretty_float ( value     = maev      ,
+                                         width     = width     ,
+                                         precision = precision )
 
+        if expo :
+            scale = 10 ** expo
+            title = title + ( '[x10^%+d]' % expo ) 
+        else    :
+            scale = 1
+            
+        zeros =   fmtv % ( +0 ) , fmtv % ( -0 )
+        
+        row   = []
+        for v in vct :
+            vv = v / scale
+            if  iszero ( v ) or iszero ( vv ) : item = ' 0'
+            else :
+                item = fmtv % vv
+                if item in zeros : item = ' 0.0'
+            row.append ( item )
+            
+        table = [ row ]
+        table = T.table  ( table , alignment = N*'c' , prefix = prefix , title = title , colorize_header = False )
+        ## 
+        return table, expo 
+
+    
     # =============================================================================
     ## self-printout of S-vectors-with-errors
     #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
     #  @date 2020-05-15
     @staticmethod
-    def VE_STR ( vct , fmt = '' , prefix = '' , title = '' , correlations = False , width = 6 , precision = 4 ) :
+    def VE_PRETTY ( vct , fmt = '' , prefix = '' , title = '' , correlations = False , width = 6 , precision = 4 ) :
         """ Self-printout of SVectorWithError: (...)
+        >>> vcte = ...
+        >>> result, expo = vcte.pretty_print ( ... ) 
         """
         
         values = vct.value      ()    
@@ -1404,10 +1454,10 @@ class LinAlg(object) :
         row    = [ infostr ( 'V' )  ] 
         for v in values :
             vv = v / scale 
-            if iszero ( v ) or iszero ( vv ) : item = '0'
+            if iszero ( v ) or iszero ( vv ) : item = ' 0'
             else             :
                 item = fmtv % vv
-                if item in zeros : item = '0' 
+                if item in zeros : item = ' 0.0' 
             row.append ( item )    
         table.append ( row )
 
@@ -1420,7 +1470,7 @@ class LinAlg(object) :
                 elif v < 0         : item = '???'
                 else :
                     vv = math.sqrt ( v ) / scale 
-                    if iszero ( vv ) :  item = '+/-0'
+                    if  iszero ( vv ) :  item = '+/-0'
                     else : 
                         item = fmte % vv
                         if item in zeros : item = '+/-0' 
@@ -1435,15 +1485,53 @@ class LinAlg(object) :
                 else     :
                     v  = mtrx ( i , j )
                     vv = v / mscale
-                    if    iszero ( vv ) : item = 0
+                    if   iszero ( v ) or iszero ( vv ) : item = ' 0'
                     else:
                         item = fmtm % vv
-                        if item in zeros : item = '0'
+                        if item in zeros : item = ' 0.0'
                 row.append ( item ) 
             table.append ( row ) 
 
-        return T.table  ( table , alignment = 'r'+cols*'c' , prefix = prefix , title = title ) 
-            
+        table = T.table  ( table , alignment = 'r'+cols*'c' , prefix = prefix , title = title ) 
+        return table , expo 
+    
+    # =============================================================================
+    ## self-printout of S-vectors
+    #  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+    #  @date 2009-09-12
+    @staticmethod
+    def V_STR ( vct , fmt = '%.g' , title = '' , prefix = '' , width = 6 , precision = 4 ) :
+        """ Self-printout of SVectors: (...)
+        >>> vct = ...
+        >>> print ( vct ) 
+        """
+        N = len ( vct ) 
+        if 15 < N  : return '[ ' + ( ', '.join ( fmt % v for v in vct ) ) + ' ]'
+
+        result, _ = vct.pretty_print ( title     = title     ,
+                                       prefix    = prefix    ,
+                                       width     = width     ,
+                                       precision = precision )
+        return result
+    
+    # =============================================================================
+    ## self-printout of S-vectors-with-errors
+    #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+    #  @date 2020-05-15
+    @staticmethod
+    def VE_STR ( vct , fmt = '' , prefix = '' , title = '' , correlations = False , width = 6 , precision = 4 ) :
+        """ Self-printout of SVectorWithError: (...)
+        >>> vct = ...
+        >>> print ( vct ) 
+        """
+
+        result, _ = vct.pretty_print ( title        = title        ,
+                                       prefix       = prefix       , 
+                                       correlations = correlations ,
+                                       width        = width        ,
+                                       precision    = precision    )
+        return result 
+
     # =============================================================================
     ## Transform vector-with-errors to another variable
     #  for \f[ y = y ( x ) , C(y) = J C(x) J^T, \f]
@@ -1587,13 +1675,13 @@ class LinAlg(object) :
     ##  Self-printout of matrices
     #   @code  
     #   matrix = ...
-    #   print matrix
+    #   result, expo = matrix.pretty_print ( ... ) 
     #   @endcode
     @staticmethod 
-    def M_STR ( mtrx , fmt = '' , prefix = '' , title = '' , width = 6 , precision = 4 ) :
+    def M_PRETTY ( mtrx , fmt = '' , prefix = '' , title = '' , width = 6 , precision = 4 ) :
         """ Self-printout of matrices
         >>> matrix = ...
-        >>> print (matrix)
+        >>> result , expo = matrix.pretty_print ( ... )
         """
         rows = mtrx.kRows
         cols = mtrx.kCols
@@ -1612,27 +1700,117 @@ class LinAlg(object) :
         for i in range ( rows ) :
             row = [ infostr ( '%d' % i )  ]
             for j in range ( cols ) :                
-                value = mtrx ( i , j ) / scale 
-                if  iszero ( value ) : item = '0'
+                v     = mtrx ( i , j ) 
+                value = v / scale 
+                if  iszero ( v ) or iszero ( value ) : item = ' 0'
                 else :
                     item = fmtv % value
-                    if item in zeros : item = '0'
+                    if item in zeros : item = ' 0.0'
                 row.append ( item ) 
             table.append ( row )
             
-        return T.table  ( table , alignment = 'r'+cols*'l' , prefix = prefix , title = title ) 
+        table = T.table  ( table , alignment = 'r'+cols*'c' , prefix = prefix , title = title )
+        return table, expo 
+
+    # =============================================================================
+    ## Get the L(p,q) norm of matrix
+    #  - \f$ 1< p \f$ 
+    #  - \f$ 1< q \f$ 
+    #  @code
+    #  matrix = ..
+    #  norm   = matrix.lnorm () 
+    #  @endcode
+    #  @see https://en.wikipedia.org/wiki/Matrix_norm
+    @staticmethod
+    def M_LNORM ( mtrx , p = 2 , q = 2 ) :
+        """ Get the L(p,q) norm of matrix (1<p,q) 
+        - see https://en.wikipedia.org/wiki/Matrix_norm
+        >>> matrix = ..
+        >>> norm  = matrix.lnorm ( p , q ) 
+        """
+        assert isinstance ( p , num_types ) and 1 <= p , "Invalid p : %s" % p
+        assert isinstance ( q , num_types ) and 1 <= q , "Invalid q : %s" % q
+
+        result = 0
+        rows   = mtrx.kRows
+        cols   = mtrx.kCols
+
+        ## Frobenius norm 
+        if 2 == p and 2 == q :
+            for j in range ( cols ) :
+                for i in range ( rows ) :
+                    value   = mtrx ( i , j ) 
+                    result += value * value
+            return math.sqrt ( result )
+
+        qop  = float ( q ) / float ( p )        
+        nd   = min ( rows , cols )
+        for j in range ( cols ) :
+            row = 0 
+            for i in range ( rows ) :
+                v    = mtrx ( i , j ) 
+                row += pow ( abs ( v ) , p )
+            result  += pow ( row , qop )
+            
+        result = pow ( result , 1. / q )
+        return result
+
+    # =============================================================================
+    ## Get the max-norm of matrix: \f$ max_{ij} |a_{ij}| \f$ 
+    #  @code
+    #  matrix = ..
+    #  norm   = matrix.mnorm () 
+    #  @endcode
+    #  @see https://en.wikipedia.org/wiki/Matrix_norm
+    @staticmethod
+    def M_MNORM ( mtrx , submult = False ) :
+        """ Get the max-norm of the matrix: 
+        - maximal absolute value of all elements 
+        >>> matrix = ..
+        >>> norm  = matrix.mnorm ( ) 
+        """
+        
+        maev = abs ( Ostap.Math.maxabs_element  ( mtrx ) )
+        
+        if submult :            
+            rows  = mtrx.kRows
+            cols  = mtrx.kCols
+            maev *= math.sqrt ( rows * cols )
+            
+        return maev
+    
+
+    # =============================================================================
+    ## Get the matrix the same type with with diagonal elements, other elements are zeros
+    #  @code
+    #  matrix = ..
+    #  diag   = matrix.diagonal() 
+    #  @endcode 
+    @staticmethod
+    def M_DIAGONAL ( mtrx ) :
+        """ Get the matrix the same type with with diagonal elements, other elements are zeros
+        >>> matrix = ..
+        >>> diag   = matrix.diagonal() 
+        """
+        newm = type ( mtrx ) () ## make new matrix of the same type 
+        rows = mtrx.kRows
+        cols = mtrx.kCols
+        nd   = min ( rows , cols )
+        ## copy diagonal elements 
+        for  i in range ( nd ) : newm [ i , i ] = mtrx ( i , i )
+        return newm 
         
     # =============================================================================
     ##  Self-printout of symmetric matrices
     #   @code  
     #   matrix = ...
-    #   print matrix
+    #   result, exp = matrix.pretty_print ( ... ) 
     #   @endcode
     @staticmethod 
-    def MS_STR ( mtrx , fmt = '' , prefix = '' , title = '' , width = 6 , precision = 4 ) :
+    def MS_PRETTY ( mtrx , fmt = '' , prefix = '' , title = '' , width = 6 , precision = 4 ) :
         """ Self-printout of symmetric matrices
         >>> matrix = ...
-        >>> print(matrix)
+        >>> result, expo = matrix.pretty_print ( ... ) 
         """
         rows = mtrx.kRows
         cols = mtrx.kCols
@@ -1655,15 +1833,52 @@ class LinAlg(object) :
                 else     :
                     v     = mtrx ( i , j ) 
                     value = v / scale
-                    if iszero ( value ) : item = '0'
+                    if  iszero ( v ) or iszero ( value ) : item = ' 0'
                     else :
                         item = fmtv % value
-                        if item in zeros : item = '0'
+                        if item in zeros : item = ' 0.0'
                 row.append ( item )                     
             table.append ( row )
             
-        return T.table  ( table , alignment = 'r'+cols*'l' , prefix = prefix , title = title ) 
+        table = T.table  ( table , alignment = 'r'+cols*'c' , prefix = prefix , title = title )
+        return table, expo 
+    
+    # =========================================================================
+    ##  Self-printout of matrices
+    #   @code  
+    #   matrix = ...
+    #   print matrix
+    #   @endcode
+    @staticmethod 
+    def M_STR ( mtrx , fmt = '' , prefix = '' , title = '' , width = 6 , precision = 4 ) :
+        """ Self-printout of matrices
+        >>> matrix = ...
+        >>> print (matrix)
+        """
+        result , _ = mtrx.pretty_print ( prefix    = prefix    ,
+                                         title     = title     ,
+                                         width     = width     ,
+                                         precision = precision )
+        return result
 
+    # =============================================================================
+    ##  Self-printout of symmetric matrices
+    #   @code  
+    #   matrix = ...
+    #   print matrix
+    #   @endcode
+    @staticmethod 
+    def MS_STR ( mtrx , fmt = '' , prefix = '' , title = '' , width = 6 , precision = 4 ) :
+        """ Self-printout of symmetric matrices
+        >>> matrix = ...
+        >>> print(matrix)
+        """
+        result , _ = mtrx.pretty_print ( prefix    = prefix    ,
+                                         title     = title     ,
+                                         width     = width     ,
+                                         precision = precision )
+        return result
+    
     # =========================================================================
     ## get the correlation matrix
     @staticmethod 
@@ -1751,6 +1966,8 @@ class LinAlg(object) :
         >>> mtrx = ...
         >>> row2 = mtrx.row ( 2 ) 
         """
+        ## allow slightly negative indices 
+        if index < 0 : index += mtrx.kRows
 
         if not 0 <= index < mtrx.kRows :
             raise IndexError ( 'Invalid row index %s' % index )
@@ -1773,7 +1990,10 @@ class LinAlg(object) :
         >>> mtrx = ...
         >>> c2 = mtrx.column ( 2 ) 
         """
-
+        
+        ## allow slightly negative indices 
+        if index < 0 :index += mtrx.kCols
+        
         if not 0 <= index < mtrx.kCols :
             raise IndexError ( 'Invalid column index %s' % index )
 
@@ -1823,10 +2043,10 @@ class LinAlg(object) :
         >>> mtrx = ...
         >>> values = mtrx.eigenValues ( sorted = True )
         """
-        
+        ## 
         operation  = LinAlg.method_EIGEN ( mtrx  )
         if not operation  : raise NotImplementedError ("EigenValues: not implemented for %s" % typename ( mtrx ) )
-        
+        ## 
         values = LinAlg.Vector ( mtrx.kRows )()
         st     = operation ( mtrx  , values , sorted )
         assert st.isSuccess () , "Eigen-values: status code %s" % st
@@ -1841,25 +2061,49 @@ class LinAlg(object) :
     #  vectors = [ vectors.column{i) for i in range ( mtrx.rCols ) ] 
     #  @endcode
     @staticmethod
-    def MS_EIGENVECTORS ( mtrx , sorted = True ) :
+    def MS_EIGENVECTORS ( mtrx , sorted = True , ascending = True ) :
         """ Get the eigenvalues for symmetric matrices :
         >>> mtrx = ...
         >>> values, vectors = mtrx.eigenVectors ( sorted = True )
         >>> vectors = [ vectors.column{i) for i in range ( mtrx.rCols ) ] 
         """
-        
+        ## 
         operation = LinAlg.method_EIGEN ( mtrx )
         if not operation :
             raise NotImplementedError ("EigenVectors: not implemented for %s" % typename ( mtrx ) )
-        
+        ## 
         krows   = mtrx.kRows
         kcols   = mtrx.kCols        
         values  = LinAlg.Vector ( krows        ) ()
         vectors = LinAlg.Matrix ( krows, kcols ) () 
-        st      = operation ( mtrx  , values , vectors , sorted )
+        st      = operation ( mtrx  , values , vectors , sorted , ascending )
         assert st.isSuccess () , "Eigen-vectors: status code %s" % st
         ## 
         return values, vectors  
+
+    # =========================================================================
+    ## Iterator over (eigenvalue/eigenvector) pairs for symmetric matrix
+    #  @code
+    #  matrix = ...
+    #  for e, v in matrix.eigenitems ( sorted  = True ) :
+    #      ... 
+    #  @endcode
+    @staticmethod
+    def MS_EIGENITEMS ( mtrx , sorted = True , ascending = True ) :
+        """ Iterator over (eigenvalue,eigenvector) pairs  for symmetric matrices :
+        >>> mtrx = ...
+        >>> for e, v in mtrx.eigenitems ( sorted = True ) : 
+        >>>      ...
+        """
+        ## 
+        operation = LinAlg.method_EIGEN ( mtrx )
+        if not operation :
+            raise NotImplementedError ("EigenVectors: not implemented for %s" % typename ( mtrx ) )
+        ## 
+        ## eigenvalues & eigenvectors
+        values, vectors = mtrx.eigenVectors ( sorted = sorted , ascending = ascending ) 
+        for i in range ( vectors.kCols ) :
+            yield values [ i ] , vectors.column ( i )
 
     # =========================================================================
     ## reduce SVector
@@ -2005,10 +2249,14 @@ class LinAlg(object) :
         
         t.__neg__       = lambda s : s*(-1)
 
+        t.__abs__       = LinAlg.V_ABS
         
         t. __str__      = LinAlg.V_STR
         t. __repr__     = LinAlg.V_STR
-
+        t. table        = LinAlg.V_STR        
+        ## pretty printout  
+        t.pretty_print  = LinAlg.V_PRETTY
+        
         t. __len__      = lambda s : s.kSize 
         t. __contains__ = lambda s, i : 0<=i<s.kSize
 
@@ -2025,6 +2273,7 @@ class LinAlg(object) :
         t.shape         = property ( LinAlg.V_SHAPE , None , None )
 
         t.__reduce__    = LinAlg.V_REDUCE 
+
         
         s = revct.search ( t.__name__ )
         if s :
@@ -2082,7 +2331,8 @@ class LinAlg(object) :
         m.__str__       = LinAlg.M_STR
         m.__repr__      = LinAlg.M_STR
         m.table         = LinAlg.M_STR
-
+        m.pretty_print  = LinAlg.M_PRETTY
+        
         m.__iter__      = LinAlg.M_ITER 
         m.iteritems     = LinAlg.M_ITEMS 
         m.    items     = LinAlg.M_ITEMS
@@ -2111,7 +2361,12 @@ class LinAlg(object) :
         m.max_element_index    = LinAlg.M_MAXINDEX
         m.minabs_element_index = LinAlg.M_MINABSINDEX
         m.maxabs_element_index = LinAlg.M_MAXABSINDEX 
-        
+
+        m.diagonal             = LinAlg.M_DIAGONAL
+
+        m.lnorm                = LinAlg.M_LNORM 
+        m.mnorm                = LinAlg.M_MNORM 
+
         if m.kRows == m.kCols :
             m.inverse   = LinAlg.M_INVERSE            
 
@@ -2122,11 +2377,12 @@ class LinAlg(object) :
         ## should be class property!! 
         m.shape         = property ( LinAlg.M_SHAPE , None , None )
 
-        m.__pow__       = LinAlg.M_POW 
-        m.sym           = LinAlg.M_SYM
-        m.asym          = LinAlg.M_ASYM 
-        m.skew          = LinAlg.M_ASYM 
-        
+        if m.kRows == m.kCols :
+            m.__pow__       = LinAlg.M_POW 
+            m.sym           = LinAlg.M_SYM
+            m.asym          = LinAlg.M_ASYM 
+            m.skew          = LinAlg.M_ASYM 
+            
         m.__reduce__    = LinAlg.M_REDUCE 
         m.rep_size      = classgetter ( lambda cls : cls.rep_type.kSize ) 
 
@@ -2146,7 +2402,7 @@ class LinAlg(object) :
     ## Decorate symmetric SMatrix 
     @staticmethod 
     def deco_symmatrix ( m ) :
-        """Decorate the symmetrix  SMatrix
+        """ Decorate the symmetrix  SMatrix
         """
 
         if m in LinAlg.decorated_matrices : return m 
@@ -2158,6 +2414,7 @@ class LinAlg(object) :
         m.__str__        = LinAlg.MS_STR
         m.__repr__       = LinAlg.MS_STR
         m.table          = LinAlg.MS_STR
+        m.pretty_print   = LinAlg.MS_PRETTY 
 
         m.correlations   = LinAlg.MS_CORR
         
@@ -2170,7 +2427,11 @@ class LinAlg(object) :
         m.eigenVectors   = LinAlg.MS_EIGENVECTORS
         m.eigen_values   = LinAlg.MS_EIGENVALUES 
         m.eigen_vectors  = LinAlg.MS_EIGENVECTORS
-
+        m.eigen_items    = LinAlg.MS_EIGENITEMS 
+        m.eigenitems     = LinAlg.MS_EIGENITEMS 
+        m.eigenItems     = LinAlg.MS_EIGENITEMS 
+        m.eigenpairs     = LinAlg.MS_EIGENITEMS 
+        
         m.__reduce__     = LinAlg.MS_REDUCE 
         m.rep_size       = classgetter ( lambda cls : cls.rep_type.kSize ) 
         
@@ -2192,6 +2453,7 @@ class LinAlg(object) :
         t. __str__      = LinAlg.VE_STR
         t. __repr__     = LinAlg.VE_STR
         t. table        = LinAlg.VE_STR
+        t. pretty_print = LinAlg.VE_PRETTY 
 
         t. __len__      = lambda s : s.kSize 
         t. __contains__ = lambda s, i : 0 <= i < s.kSize
@@ -2203,7 +2465,6 @@ class LinAlg(object) :
 
         t.random        = LinAlg.VE_RANDOM
 
-        t.pretty_print  = pretty_array 
         return t
 
 
