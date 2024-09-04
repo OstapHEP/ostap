@@ -48,10 +48,10 @@ def test_stats_counters_1 () :
 
     rms_mu  = c_mu .rms()
     rms_mu2 = c_mu2.rms()    
-    if threshold <= rms_mu  : logger.error ( "RMS for ``mu''  : %.3g" % rms_mu  )
-    else                    : logger.info  ( "RMS for ``mu''  : %.3g" % rms_mu  )
-    if threshold <= rms_mu2 : logger.error ( "RMS for ``mu2'' : %.3g" % rms_mu2 )
-    else                    : logger.info  ( "RMS for ``mu2'' : %.3g" % rms_mu2 )
+    if threshold <= rms_mu  : logger.error ( "RMS for `mu'  : %.3g" % rms_mu  )
+    else                    : logger.info  ( "RMS for `mu'  : %.3g" % rms_mu  )
+    if threshold <= rms_mu2 : logger.error ( "RMS for `mu2' : %.3g" % rms_mu2 )
+    else                    : logger.info  ( "RMS for `mu2' : %.3g" % rms_mu2 )
 
 # =============================================================================
 def test_stats_counters_2 () :

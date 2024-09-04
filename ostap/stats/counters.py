@@ -62,7 +62,7 @@ SE. mean    = lambda s : VE ( s._orig_mean () , s.meanErr()**2 )
 #  >>> cnt += value
 #  @endcode
 def _se_iadd_ ( self , other ) :
-    """Update the counter
+    """ Update the counter
     >>> cnt  = ...
     >>> cnt += value 
     """
@@ -75,7 +75,7 @@ def _se_iadd_ ( self , other ) :
 #  >>> cnt -= value
 #  @endcode
 def _se_isub_ ( self , other ) :
-    """Update the counter
+    """ Update the counter
     >>> cnt  = ...
     >>> cnt -= value 
     """
@@ -89,7 +89,7 @@ def _se_isub_ ( self , other ) :
 #  >>> cnt  = cnt1 +  cnt2 
 #  @endcode
 def _se_add_ ( self , other ) :
-    """Update the counter
+    """ Update the counter
     >>> cnt  = ...
     >>> cnt += value 
     """
@@ -105,7 +105,7 @@ def _se_add_ ( self , other ) :
 #  >>> cnt  = cnt1 +  cnt2 
 #  @endcode
 def _wse_add_ ( self , other ) :
-    """Update the counter
+    """ Update the counter
     >>> cnt  = ...
     >>> cnt += value 
     """
@@ -127,7 +127,7 @@ def closef ( a , b , N = 100 ) :
 # =============================================================================
 ## equal counters?
 def _se_eq_ ( s1 , s2 ) :
-    """Numerically equal counters?"""
+    """ Numerically equal counters?"""
     ##
     if not isinstance ( s2 , SE ) : return NotImplemented
     ## 
@@ -140,7 +140,7 @@ def _se_eq_ ( s1 , s2 ) :
 # =============================================================================
 ## non-equal counters?
 def _se_ne_ ( s1 , s2 ) :
-    """Numerically non-equal counters?
+    """ Numerically non-equal counters?
     """
     if not isinstance ( s2 , SE ) : return NotImplemented 
     return not ( s1 == s2 )
@@ -165,7 +165,7 @@ _new_methods_ += [
 # =============================================================================
 ## equal counters?
 def _wse_eq_ ( s1 , s2 ) :
-    """Numerically equal counters?"""
+    """ Numerically equal counters?"""
     ##
     if not isinstance ( s2 , WSE ) : return NotImplemented
     ##
@@ -179,7 +179,7 @@ def _wse_eq_ ( s1 , s2 ) :
 # =============================================================================
 ## non-equal counters?
 def _wse_ne_ ( s1 , s2 ) :
-    """Numerically non-equal counters?"""
+    """ Numerically non-equal counters?"""
     ##
     if not isinstance ( s2 , WSE ) : return NotImplemented
     ##    
@@ -223,7 +223,7 @@ _new_methods_ += [
 #  c = SE.count ( [1,2,3,4] )  
 #  @endcode
 def se_count ( values ) :
-    """Count iterable
+    """ Count iterable
     >>> c = SE.count ( [1,2,3,4] )  
     """
     cnt = SE ()
@@ -243,7 +243,7 @@ _new_methods_ += [
 #  logger.info ( 'Table is \n%s' % table )
 #  @endcode
 def counters_table ( counters , prefix = '' , title = '' ) :
-    """Make table of counters
+    """ Make table of counters
     >>> counters = .... ## sequence or mapping for counters
     >>> table     = counters_table ( counters , prrefix = '# ' )
     >>> logger.info ( 'Table is \n%s' % table )

@@ -27,7 +27,6 @@ def root_factory ( klass , *params ) :
     """
     return klass ( *params )
 
-
 # =============================================================================
 ## Simple (basic) polynomials 
 # =============================================================================   
@@ -40,7 +39,7 @@ def root_factory ( klass , *params ) :
 #  @see Ostap.Math.Legendre
 #  @see Ostap.Math.PLegendre
 def pN_factory ( klass , *args ) :
-    """Factory for deserialization of simple polynomians
+    """ Factory for deserialization of simple polynomians
     - see Ostap.Math.Chebyshev  
     - see Ostap.Math.ChebyshevU 
     - see Ostap.Math.Hermite    
@@ -56,12 +55,11 @@ def pN_factory ( klass , *args ) :
 #  @see Ostap.Math.Hermite     
 #  @see Ostap.Math.Legendre   
 def pN_reduce ( p ) :
-    """Reduce simple polynomials
+    """ Reduce simple polynomials
     - see Ostap.Math.Chebyshev  
     - see Ostap.Math.ChebyshevU 
     - see Ostap.Math.Hermite    
     - see Ostap.Math.Legendre  
-
     """
     return pN_factory ,  ( type ( p ) , p.degree() ) 
 
@@ -69,9 +67,8 @@ def pN_reduce ( p ) :
 ## reduce simple polynomials
 #  @see Ostap.Math.PLegendre   
 def pLM_reduce ( p ) :
-    """Reduce simple polynomials
+    """ Reduce simple polynomials
     - see Ostap.Math.PLegendre  
-
     """
     return pN_factory ,  ( type ( p ) , p.L() , p.M() ) 
 
@@ -104,7 +101,7 @@ Ostap.Math.PLegendre.__reduce__ = pLM_reduce
 #  @see Ostap::Math::Bernstein
 #  @see Ostap::Math::BernsteinEven
 def poly_factory ( klass , params , *args ) :
-    """Factory for deserisalization of polynomials with parameters
+    """ Factory for deserisalization of polynomials with parameters
     - see Ostap.Math.Polynomial
     - see Ostap.Math.ChebyshevSum
     - see Ostap.Math.LegendreSum
@@ -124,7 +121,7 @@ def poly_factory ( klass , params , *args ) :
 #  @see Ostap::Math::BernsteinEven
 #  @see Ostap::Math::Positive 
 def poly_reduce ( p ) : 
-    """Reduce polynomials with parameters
+    """ Reduce polynomials with parameters
     - see Ostap.Math.Polynomial
     - see Ostap.Math.ChebyshevSum
     - see Ostap.Math.LegendreSum
@@ -155,7 +152,7 @@ for t in (  Ostap.Math.Polynomial     ,
 ## Reduce Rational
 #  @see Ostap::Math::Rational
 def rati_reduce ( p ) : 
-    """Reduce Rartional
+    """ Reduce Rartional
     - see Ostap.Math.Rational
     """
     return poly_factory , ( type ( p ) ,
@@ -189,7 +186,7 @@ Ostap.Math.RationalPositive .__reduce__ = rati2_reduce
 ## reduce monotonic polynomial
 #  @see Ostap::Math::Monotonic 
 def pm_reduce ( p ) :
-    """reduce monotonic polynomial
+    """ Reduce monotonic polynomial
     - see Ostap.Math.Monotonic
     """
     return poly_factory , ( type ( p ) ,
@@ -202,7 +199,7 @@ def pm_reduce ( p ) :
 ## reduce convex polynomial
 #  @see Ostap::Math::Convex  
 def pc_reduce ( p ) :
-    """reduce convex polynomial
+    """ Reduce convex polynomial
     - see Ostap.Math.Convex
     """
     return poly_factory , ( type ( p ) ,
@@ -216,7 +213,7 @@ def pc_reduce ( p ) :
 ## reduce convex-only polynomial
 #  @see Ostap::Math::ConvexOnly
 def pco_reduce ( p ) :
-    """reduce convex-only polynomial
+    """ Reduce convex-only polynomial
     - see Ostap.Math.ConvexOnly
     """
     return poly_factory , ( type ( p ) ,
@@ -225,11 +222,9 @@ def pco_reduce ( p ) :
                             p.xmax () ,
                             True if p.convex     () else False ) 
 
-
 Ostap.Math.Monotonic  .__reduce__ =  pm_reduce
 Ostap.Math.Convex     .__reduce__ =  pc_reduce
 Ostap.Math.ConvexOnly .__reduce__ = pco_reduce
-
 
 # =============================================================================
 ## B-splines 
@@ -243,7 +238,7 @@ Ostap.Math.ConvexOnly .__reduce__ = pco_reduce
 #  @see Ostap::Math::ConvexSpline 
 #  @see Ostap::Math::ConvexOnlySpline 
 def sp_factory ( klass , knots , pars , *args ) :
-    """Factory for deserisalization of splines 
+    """ Factory for deserisalization of splines 
     - see Ostap.Math.BSPline 
     - see Ostap.Math.PositiveSpline 
     - see Ostap.Math.MonotonicSpline 
@@ -253,13 +248,12 @@ def sp_factory ( klass , knots , pars , *args ) :
     """
     return klass ( doubles ( knots) , doubles ( pars ) , *args ) 
 
-
 # =============================================================================
 ## factory for deserisalization of splines 
 #  @see Ostap::Math::BSPline 
 #  @see Ostap::Math::PositiveSpline 
 def sp_reduce (  sp ) :
-    """Factory for deserisalization of splines 
+    """ Factory for deserisalization of splines 
     - see Ostap.Math.BSPline 
     - see Ostap.Math.PositiveSpline 
     """
@@ -271,15 +265,11 @@ def sp_reduce (  sp ) :
 Ostap.Math.BSpline        . __reduce__ = sp_reduce 
 Ostap.Math.PositiveSpline . __reduce__ = sp_reduce 
 
-
-
-
-
 # =============================================================================
 ## factory for deserisalization of splines 
 #  @see Ostap::Math::MonotonicSpline 
 def spm_reduce (  sp ) :
-    """Factory for deserisalization of splines 
+    """ Factory for deserisalization of splines 
     - see Ostap.Math.MonotonicSpline 
     """
     return sp_factory , ( type  ( sp ) ,
@@ -292,7 +282,7 @@ def spm_reduce (  sp ) :
 ## factory for deserisalization of splines 
 #  @see Ostap::Math::ConvexSpline 
 def spc_reduce (  sp ) :
-    """Factory for deserisalization of splines 
+    """ Factory for deserisalization of splines 
     - see Ostap.Math.ConvexSpline 
     """
     return sp_factory , ( type  ( sp ) ,
@@ -307,7 +297,7 @@ def spc_reduce (  sp ) :
 ## factory for deserisalization of splines 
 #  @see Ostap::Math::ConvexOnlySpline 
 def spco_reduce (  sp ) :
-    """Factory for deserisalization of splines 
+    """ Factory for deserisalization of splines 
     - see Ostap.Math.ConvexOnlySpline 
     """
     return sp_factory , ( type  ( sp ) ,
@@ -319,18 +309,14 @@ Ostap.Math.MonotonicSpline . __reduce__ = spm_reduce
 Ostap.Math.ConvexSpline . __reduce__ = spc_reduce 
 Ostap.Math.ConvexOnlySpline . __reduce__ = spco_reduce 
 
-
-
 # =============================================================================
 ## Interpolation stuff 
 # =============================================================================
 
-
-
 # ============================================================================
 ## factory for deserialisation of interpolation abscissas 
 def abs_factory ( arg , *args ) :
-    """Factory for deserialisation of interpolation abscissas
+    """ Factory for deserialisation of interpolation abscissas
     """
     if isinstance ( arg , sequence_types ) :
         vals = doubles ( arg )
@@ -342,7 +328,7 @@ def abs_factory ( arg , *args ) :
 # =============================================================================
 ## Reduce interpolation abscissas 
 def abs_reduce ( a ) :
-    """Reduce interpolation abscissas 
+    """ Reduce interpolation abscissas 
     """
     at = a.atype()
     if at in ( Ostap.Math.Interpolation.Abscissas.Uniform    ,
@@ -350,19 +336,19 @@ def abs_reduce ( a ) :
                Ostap.Math.Interpolation.Abscissas.Chebyshev2 ) :
         return abs_factory, ( a.n () , a.xmin() , a.xmax () , int ( at ) )
 
-    return abs_factory, ( array.array ('d' , a.x() ) , ) 
+    return abs_factory, ( array.array ( 'd' , a.x () ) , ) 
 
 # ============================================================================
 ## the factory for serialisation of the interpolation table 
 def tab_factory ( abscissas , values ) :
-    """The factory for serialisation of the interpolation table
+    """ The factory for serialisation of the interpolation table
     """
     return Ostap.Math.Interpolation.Table ( abscissas , doubles ( values ) ) 
 ## ===========================================================================
 ## Reduce the interpolation table 
 def tab_reduce ( table ) :
-    """Reduce the interpolation table"""
-    return tab_factory , ( table.abscissas ()              ,
+    """ Reduce the interpolation table"""
+    return tab_factory , ( table.abscissas ()                  ,
                            array.array ( 'd' , table.values () ) )
 
 
@@ -373,7 +359,7 @@ Ostap.Math.Interpolation.Table     . __reduce__ = tab_reduce
 # ============================================================================
 ## the factory for serialisation of the interpolation objects 
 def int_factory ( klass , abscissas , values , *args ) :
-    """The factory for serialisation of the interpolation table
+    """ The factory for serialisation of the interpolation table
     """
     the_table = Ostap.Math.Interpolation.Table ( abscissas , doubles ( values ) )
     return klass ( the_table , *args )
@@ -381,7 +367,7 @@ def int_factory ( klass , abscissas , values , *args ) :
 ## ===========================================================================
 ## Reduce the interpolation object 
 def int_reduce ( table ) :
-    """Reduce the interpolation object"""
+    """ Reduce the interpolation object"""
     return int_factory , ( type ( table )                  ,
                            table.abscissas ()              ,
                            array.array ( 'd' , table.values () ) ) 
@@ -389,7 +375,7 @@ def int_reduce ( table ) :
 ## ===========================================================================
 ## Reduce the interpolation Floater-Hormann interpolant 
 def intfh_reduce ( table ) :
-    """Reduce the Floater-Hormann interpolant"""
+    """ Reduce the Floater-Hormann interpolant"""
     return int_factory , ( type ( table )                  ,
                            table.abscissas ()              ,
                            array.array ( 'd' , table.values () ) , 
@@ -407,8 +393,6 @@ for t in ( Ostap.Math.Neville     ,
 
 Ostap.Math.FloaterHormann. __reduce__ = intfh_reduce 
 
-
-
 # =============================================================================
 ## Dalitz' objects 
 # =============================================================================   
@@ -417,7 +401,7 @@ Ostap.Math.FloaterHormann. __reduce__ = intfh_reduce
 ## Serialise class <code>Ostap::Kinematics::Dalitz0</code>
 #  @see Ostap::Kinematcis.Dalitz0
 def _dalitz0_reduce_ ( dalitz ) :
-    """Serialise class `Ostap.Kinematics.Dalitz0`
+    """ Serialise class `Ostap.Kinematics.Dalitz0`
     - see Ostap.Kinematics.Dalitz0
     """
     return root_factory , ( type ( dalitz ) ,
@@ -429,7 +413,7 @@ def _dalitz0_reduce_ ( dalitz ) :
 ## Serialise class <code>Ostap::Kinematics::Dalitz</code>
 #  @see Ostap::Kinematcis.Dalitz
 def _dalitzm_reduce_ ( dalitz ) :
-    """Serialise class `Ostap.Kinematics.Dalitz`
+    """ Serialise class `Ostap.Kinematics.Dalitz`
     - see Ostap.Kinematics.Dalitz
     """
     return root_factory , ( type ( dalitz ) ,
@@ -438,18 +422,15 @@ def _dalitzm_reduce_ ( dalitz ) :
                             dalitz.m2 () ,
                             dalitz.m3 () ) 
 
-
 Ostap.Kinematics.Dalitz0. __reduce__ = _dalitz0_reduce_ 
 Ostap.Kinematics.Dalitz . __reduce__ = _dalitzm_reduce_   
-
-
 
 # =============================================================================
 ## (Redefine standard constructor to allow usage of python lists&tuples)
 #  Lists and tuples are converted on flight to :
 # - std::vector<double> 
 def _new_init_ ( t ,  *args )  :
-    """(Redefine standard constructor to allow usage of python lists&tuples)
+    """ (Redefine standard constructor to allow usage of python lists&tuples)
     Lists and tuples are  converted on flight to :
     - std::vector<double> 
     """
@@ -541,7 +522,7 @@ Ostap.Math.PhaseSpaceRight .__reduce__ = _rm_psr_reduce_
 # ========================================================================
 ## reduce PhasSpaceLeft 
 def _rm_psl_reduce_ ( o ) :
-    """Reduce PhasSpaceLeft"""
+    """ Reduce PhasSpaceLeft"""
     content = type ( o ) ,
     c = o.ps_case()
     if   o.TwoBody    == c : tail = o.ps2  () , o.scale() 
@@ -553,20 +534,20 @@ Ostap.Math.PhaseSpaceLeft .__reduce__ = _rm_psl_reduce_
 # ========================================================================
 ## reduce PSDalitz 
 def _rm_psd_reduce_ ( o ) :
-    """Reduce PSDalitz"""
+    """ Reduce PSDalitz"""
     return root_factory , ( type ( o )  , o.M() , o.m1() , o.m2() , o.m3() )
 Ostap.Math.PSDalitz.__reduce__ = _rm_psd_reduce_
 # ========================================================================
 ## reduce PhaseSpace23L
 def _rm_ps23l_reduce_ ( o ) :
-    """Reduce PhaseSpace23L"""
+    """ Reduce PhaseSpace23L"""
     return root_factory , ( type ( o )  ,
                             o.m1() , o.m2() , o.m3() , o.m () , o.L() , o.l () )
 Ostap.Math.PSDalitz.__reduce__ = _rm_ps23l_reduce_
 # ========================================================================
 ## reduce PhaseSpaceLeftExpoPol
 def _rm_pslep_reduce_ ( o ) :
-    """reduce PhaseSpaceLeftExpoPol"""
+    """ Reduce PhaseSpaceLeftExpoPol"""
     return root_factory , ( type ( o )      ,
                             o.phasespace () ,
                             o.polynom    () ,
@@ -576,7 +557,7 @@ Ostap.Math.PhaseSpaceLeftExpoPol .__reduce__ = _rm_pslep_reduce_
 # =============================================================================
 ## reduce Histo1D
 def _rm_h1d_reduce_ ( o ) :
-    """reduce Histo1D"""
+    """ Reduce Histo1D"""
     return root_factory , ( type ( o ) , o.h () , o.t() ,
                             o.edges () , o.extrapolate() , o.density () )
 # =============================================================================
@@ -588,7 +569,7 @@ def _rm_h2d_reduce_ ( o ) :
 # =============================================================================
 ## reduce Histo3D
 def _rm_h3d_reduce_ ( o ) :
-    """reduce Histo3D"""
+    """ Reduce Histo3D"""
     return root_factory , ( type ( o ) , o.h () , o.tx() , o.ty() , o.tz() ,
                             o.edges () , o.extrapolate() , o.density () )
 # =============================================================================
@@ -600,7 +581,7 @@ Ostap.Math.Histo3D.__reduce__ = _rm_h3d_reduce_
 # =============================================================================
 ## Reduce PyCallable/PyCallable2/PyCallable3 
 def _pc_reduce_ ( o ) :
-    """Reduce 
+    """ Reduce 
     - Ostap.Functions.PyCallable
     - Ostap.Functions.PyCallable
     - Ostap.Functions.PyCallable
@@ -610,13 +591,6 @@ def _pc_reduce_ ( o ) :
 Ostap.Functions.PyCallable .__reduce__ = _pc_reduce_
 Ostap.Functions.PyCallable2.__reduce__ = _pc_reduce_
 Ostap.Functions.PyCallable3.__reduce__ = _pc_reduce_
-
-
-
-
-
-
-
 
 # =============================================================================
 ## decorated classes 

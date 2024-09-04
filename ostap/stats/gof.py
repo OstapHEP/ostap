@@ -34,9 +34,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.gof' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-logger.debug( 'Simple utilities for goodness-of-fit studies')
-
-
+logger.debug ( 'Simple utilities for goodness-of-fit studies' )
 # ============================================================================
 ## Get the mean and variance for (1D) data array with optional (1D) weight array
 #  @code
@@ -49,9 +47,9 @@ logger.debug( 'Simple utilities for goodness-of-fit studies')
 #  mean, cov2 = mean_var ( ds ['x'] , ds['weight'] )
 #  @endcode 
 def mean_var ( data , weight = None ) :
-    """Get the mean and variance for 1D-data array with optional 1D-weight array
+    """ Get the mean and variance for 1D-data array with optional 1D-weight array
 
-    >>> ds = ... ## dataste as structured array
+    >>> ds = ... ## dataset as structured array
     >>> mean, cov2 = mean_var ( ds ['x'] )
     
     - with weight 
@@ -75,8 +73,7 @@ def mean_var ( data , weight = None ) :
 #  \f{ n_{eff} = \frac{  \left\langle x \right\rangle^2}
 #                     { \left\langle x^2 \right\rangle } \f}
 def nEff ( weights ) :
-    """Get the effectibe number of entries for 1D-array
-
+    """ Get the effective number of entries for 1D-array
     n_eff = ( sum ( x )  ) ^2 / sum ( x^2 )
     """
 
@@ -162,7 +159,7 @@ def normalize2 ( datasets , weight = () , first = True ) :
         if not w : weight [ i ] = '' 
         weight = tuple ( weight )
 
-    ds     = datasets [ 0 ]
+    ds     = datasets [ 0  ]
     others = datasets [ 1: ]
     
     ## collect the floating columns 
@@ -209,13 +206,12 @@ def normalize2 ( datasets , weight = () , first = True ) :
             
     return tuple ( result ) 
 
-
 # =============================================================================
-if (3,0) <= sys.version_info : 
+if ( 3 , 0 ) <= sys.version_info : 
     code3 = """
 def normalize ( ds , *others , weight = () , first = True ) :
     result = normalize2 ( ( ds , *others ) , weight = weight , first = first )      
-    return result [ 0 ] if not others else resut 
+    return result [ 0 ] if not others else result 
     """
     exec ( code3 )
 else :
@@ -223,7 +219,7 @@ else :
 def normalize ( ds , others = () , weight = () , first = True ) :
     datasets = [ ds ] + [ d for d in others ]
     result = normalize2 ( datasets , weight = weight , first = first )          
-    return result [ 0 ] if not others else resut 
+    return result [ 0 ] if not others else result 
     """
     exec ( code2 )
 normalize.__doc__ = normalize2.__doc__ 
