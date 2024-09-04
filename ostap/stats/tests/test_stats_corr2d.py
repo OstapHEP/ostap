@@ -81,10 +81,7 @@ if not os.path.exists( testdata ) :
 
 # ============================================================================
 ## test Corr2Dstuff 
-## def test_corr2d  ( var1 = 'x' , var2 = 'y') :
-if 1 < 2 :
-    var1, var2 = 'x','y'
-    
+def test_corr2d  ( var1 = 'x' , var2 = 'y') :
     """ Test Corr2D stuff """
     
     logger = getLogger ( 'test_corr2d(%s,%s)' % ( var1 , var2 )  )
@@ -150,11 +147,10 @@ if 1 < 2 :
 # ============================================================================
 if '__main__' == __name__ :
 
-    pass
-
-    ## test_corr2d ( 'x' , 'y' )
-    ## test_corr2d ( 'x' , 'z' )
-    ## test_corr2d ( 'z' , 'y' )
+    
+    test_corr2d ( 'x' , 'y' )
+    test_corr2d ( 'x' , 'z' )
+    test_corr2d ( 'z' , 'y' )
     
 
 # =============================================================================
