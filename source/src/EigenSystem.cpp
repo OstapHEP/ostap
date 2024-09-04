@@ -104,7 +104,8 @@ Ostap::StatusCode Ostap::Math::GSL::EigenSystem::_fun1
 // find the eigenvalues&eigenvectors (& sort them if needed ) 
 // ============================================================================
 Ostap::StatusCode Ostap::Math::GSL::EigenSystem::_fun2 
-( const bool sorted ) const
+( const bool sorted    ,
+  const bool ascending ) const
 {
   // check the working space, (re)allocate if needed  
   if ( 0 != m_work2 &&  m_dim2 != m_vector->size ) 
@@ -115,9 +116,11 @@ Ostap::StatusCode Ostap::Math::GSL::EigenSystem::_fun2
   
   const int result = gsl_eigen_symmv ( m_matrix , m_vector , m_evec , m_work2 ) ;
   if ( result ) { return Ostap::StatusCode ( ErrorFromGSL + result ) ; }
-  if ( sorted ) 
-  { gsl_eigen_symmv_sort ( m_vector , m_evec , GSL_EIGEN_SORT_VAL_ASC )  ; }
-
+  if ( sorted ) { gsl_eigen_symmv_sort
+      ( m_vector  ,
+        m_evec    ,
+        ascending ? GSL_EIGEN_SORT_VAL_ASC : GSL_EIGEN_SORT_VAL_DESC ) ; }
+  //
   return Ostap::StatusCode::SUCCESS ;
 } 
 // ============================================================================

@@ -1153,20 +1153,23 @@ namespace Ostap
         typedef ROOT::Math::SMatrix<T,D,D>                             M3 ;
         // get eigen values 
         static Ostap::StatusCode operation 
-        ( const M1& m       , 
-          M2&       values  , const bool sorted = true )
+        ( const M1&  m             , 
+          M2&        values        ,
+          const bool sorted = true )
         {
           Ostap::Math::GSL::EigenSystem eigen {} ;
           return eigen.eigenValues  ( m , values , sorted ) ;
         }
         // get eigen values and eigenvectors 
         static Ostap::StatusCode operation 
-        ( const M1& m       , 
-          M2&       values  , 
-          M3&       vectors , const bool sorted = true )
+        ( const M1&  m                 , 
+          M2&        values            , 
+          M3&        vectors           ,
+          const bool sorted     = true ,
+          const bool ascending  = true )
         {
           Ostap::Math::GSL::EigenSystem eigen {} ;
-          return eigen.eigenVectors ( m , values , vectors , sorted ) ;
+          return eigen.eigenVectors ( m , values , vectors , sorted , ascending ) ;
         }
       } ;
       

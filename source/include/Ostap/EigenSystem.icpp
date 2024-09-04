@@ -97,12 +97,13 @@ Ostap::Math::GSL::EigenSystem::eigenVectors
 ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx ,
   ROOT::Math::SVector<T,D>&                                     vals , 
   ROOT::Math::SMatrix<T,D,D>&                                   vecs , 
-  const bool sorted ) const
+  const bool sorted    ,
+  const bool ascending ) const
 {
   Ostap::StatusCode sc = _fill ( mtrx ) ;
   if ( sc.isFailure() ) { return sc ; }
   // find the eigenvalues and eigenvectors (&sort them if needed) 
-  sc = _fun2 ( sorted ) ;
+  sc = _fun2 ( sorted , ascending ) ;
   if ( sc.isFailure() ) { return sc ; }                      // RETUEN 
   // copy the vector 
   _copy ( m_vector , vals ) ;
@@ -119,12 +120,13 @@ Ostap::Math::GSL::EigenSystem::eigenVectors
 ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx ,
   ROOT::Math::SVector<T,D>&                                     vals , 
   std::vector<ROOT::Math::SVector<T,D> >&                       vecs , 
-  const bool sorted ) const
+  const bool sorted    ,
+  const bool ascending ) const
 {
   Ostap::StatusCode sc = _fill ( mtrx ) ;
   if ( sc.isFailure() ) { return sc ; }
   // find the eigenvalues and eigenvectors (&sort them if needed) 
-  sc = _fun2 ( sorted ) ;
+  sc = _fun2 ( sorted , ascending ) ;
   if ( sc.isFailure() ) { return sc ; }                      // RETUEN 
   // copy the vector 
   _copy ( m_vector , vals ) ;

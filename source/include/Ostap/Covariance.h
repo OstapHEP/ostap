@@ -30,8 +30,9 @@ namespace Ostap
     public: 
       // ======================================================================
       /// the actual type of counter 
-      typedef Ostap::StatEntity   Counter ;
-      typedef Ostap::SymMatrix2x2 Matrix  ;
+      typedef Ostap::StatEntity                       Counter  ;
+      /// covarinace/correlation matrices 
+      typedef Ostap::SymMatrix2x2                     Matrix   ;
       // ======================================================================
     public:
       // ======================================================================
@@ -56,7 +57,7 @@ namespace Ostap
       /// get the true covarinace 
       inline double covariance  () const  { return empty() ? 0.0 : m_cov2m / n() ; }
       /// get the correlation coefficient 
-      double correlation () const ;
+      double        correlation () const ;
       // ======================================================================
       /// number of entries 
       inline unsigned long long  n         () const { return m_cnt1.n     () ; }
@@ -100,17 +101,17 @@ namespace Ostap
     // ========================================================================
     /// add two values to the counters 
     inline Covariance&
-      Covariance::add	
-      ( const double x ,
-	const double y )
+    Covariance::add	
+    ( const double x ,
+      const double y )
     {
       const unsigned long long nn = n ()    ;
       if ( nn )
-	{
-	  const double xA = m_cnt1.mean() ;
-	  const double yA = m_cnt2.mean() ;
-	  m_cov2m += ( x - xA ) * nn  * ( y  - yA ) / ( nn + 1 )  ;
-	}
+        {
+          const double xA = m_cnt1.mean() ;
+          const double yA = m_cnt2.mean() ;
+          m_cov2m += ( x - xA ) * nn  * ( y - yA ) / ( nn + 1 )  ;
+        }
       //
       m_cnt1 += x ;
       m_cnt2 += y ;
@@ -123,10 +124,10 @@ namespace Ostap
     { a += b ; return a ; }
     // ========================================================================
     /// get the covariance matrix
-    Covariance::Matrix covariance  ( const Covariance& ) ;
+    Covariance::Matrix   covariance   ( const Covariance& ) ;
     // ========================================================================
     /// get the correlation matrix
-    Covariance::Matrix correlation ( const Covariance& ) ;
+    Covariance::Matrix   correlation  ( const Covariance& ) ;
     // ========================================================================          
     /** @class WCovariance
      *  Counter for two variables which also counts the covariance 
@@ -138,8 +139,9 @@ namespace Ostap
     public: 
       // ======================================================================
       /// the actual type of counter 
-      typedef Ostap::WStatEntity  Counter ;
-      typedef Ostap::SymMatrix2x2 Matrix  ;
+      typedef Ostap::WStatEntity                Counter  ;
+      /// covarinace/correlation matrices 
+      typedef Ostap::Math::Covariance::Matrix   Matrix   ;
       // ======================================================================
     public:
       // ======================================================================
@@ -181,9 +183,9 @@ namespace Ostap
       // ======================================================================
       /// add two values to the counters 
       inline WCovariance& add	
-	( const double x     ,
-	  const double y     ,
-	  const double w = 1 ) ; 
+      ( const double x     ,
+        const double y     ,
+        const double w = 1 ) ; 
       /// add another counter 
       WCovariance& add ( const WCovariance& right ) ;
       // ======================================================================
@@ -196,8 +198,8 @@ namespace Ostap
       /// add x,y
       WCovariance& update
       ( const double x     ,
-	const double y     ,
-	const double w = 1 ) { return add ( x , y , w ) ; }
+        const double y     ,
+        const double w = 1 ) { return add ( x , y , w ) ; }
       /// add another counter 
       WCovariance& update  ( const WCovariance& right ) { return add ( right ) ; }
       // ======================================================================
@@ -221,11 +223,11 @@ namespace Ostap
     {
       const double ww = sumw ()    ;
       if ( ww && w )
-	{
-	  const double xA = m_cnt1.mean() ;
-	  const double yA = m_cnt2.mean() ;
-	  m_cov2m += ( x - xA ) * ww * w  * ( y  - yA ) / ( ww + w )  ;
-	}
+        {
+          const double xA = m_cnt1.mean() ;
+          const double yA = m_cnt2.mean() ;
+          m_cov2m += ( x - xA ) * ww * w  * ( y - yA ) / ( ww + w )  ;
+        }
       //
       m_cnt1.add ( x , w ) ;
       m_cnt2.add ( y , w ) ;
@@ -238,11 +240,11 @@ namespace Ostap
     { a += b ; return a ; }
     // ========================================================================
     /// get the covariance matrix
-    Covariance::Matrix covariance  ( const WCovariance& ) ;
+    WCovariance::Matrix   covariance  ( const WCovariance& ) ;
     // ========================================================================
     /// get the correlation matrix
-    Covariance::Matrix correlation ( const WCovariance& ) ;
-    // ========================================================================                  
+    WCovariance::Matrix   correlation ( const WCovariance& ) ;
+    // ========================================================================
   } //                                         The end of nameapace Ostap::Math
   // ==========================================================================
 } //                                                    The end namespace Ostap

@@ -104,9 +104,9 @@ namespace Ostap
          * 
          *  @endcode 
          *
-         *  @param mtrx   (input)  the matrix itself 
-         *  @param vals   (output) the vector fo eigenvalues 
-         *  @param sorted (input)  flag to be use for sorting 
+         *  @param mtrx      (input)  the matrix itself 
+         *  @param vals      (output) the vector fo eigenvalues 
+         *  @param sorted    (input)  flag to be use for sorting 
          *  @return status code 
          */
         template <class T,unsigned int D>
@@ -114,7 +114,7 @@ namespace Ostap
         eigenValues
         ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx ,
           ROOT::Math::SVector<T,D>&                                     vals , 
-          const bool sorted = true ) const ;
+          const bool sorted    = true ) const ;
         // ====================================================================
         /** evaluate the eigenvalues and eigenvectors of the symmetrical matrix 
          *
@@ -149,10 +149,11 @@ namespace Ostap
          *  @endcode 
          * 
          *  
-         *  @param mtrx   (input)  the matrix itself 
-         *  @param vals   (output) the vector fo eigenvalues 
-         *  @param vecs   (output) the matrix with eigenvectors 
-         *  @param sorted (input)  flag to be use for sorting 
+         *  @param  mtrx      (input)  the matrix itself 
+         *  @param  vals      (output) the vector fo eigenvalues 
+         *  @param  vecs      (output) the matrix with eigenvectors 
+         *  @param  sorted    (input)  flag to be use for sorting 
+         *  @param  ascending (input)  ascending order for sorting?
          *  @return status code 
          */
         template <class T, unsigned int D>
@@ -161,7 +162,8 @@ namespace Ostap
         ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx ,
           ROOT::Math::SVector<T,D>&                                     vals , 
           ROOT::Math::SMatrix<T,D,D>&                                   vecs , 
-          const bool sorted = true ) const ;
+          const bool sorted    = true ,
+          const bool ascending = true ) const ;
         // ====================================================================
         /** evaluate the eigenvalues and eigenvectors of the symmetrical matrix 
          *
@@ -181,10 +183,11 @@ namespace Ostap
          * 
          *  @endcode 
          *
-         *  @param mtrx   (input)  the matrix itself 
-         *  @param vals   (output) the vector fo eigenvalues 
-         *  @param vecs   (output) the vector of eigenvectors 
-         *  @param sorted (input)  flag to be use for sorting 
+         *  @param  mtrx      (input)  the matrix itself 
+         *  @param  vals      (output) the vector fo eigenvalues 
+         *  @param  vecs      (output) the vector of eigenvectors 
+         *  @param  sorted    (input)  flag to be use for sorting 
+         *  @param  ascending (input)  ascending order for sorting?
          *  @return status code 
          */
         template <class T, unsigned int D>
@@ -193,14 +196,18 @@ namespace Ostap
         ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx ,
           ROOT::Math::SVector<T,D>&                                     vals , 
           std::vector<ROOT::Math::SVector<T,D> >&                       vecs , 
-          const bool sorted = true ) const ;
+          const bool sorted    = true ,
+          const bool ascending = true ) const ;
         // ====================================================================
       protected:
         // ====================================================================
         /// find the eigenvalues   (& sort them if needed ) 
-        Ostap::StatusCode _fun1 ( const bool         sorted    ) const ;
+        Ostap::StatusCode _fun1
+        ( const bool sorted    = true ) const ;
         /// find the eigenvalues&eigenvectors (& sort them if needed ) 
-        Ostap::StatusCode _fun2 ( const bool         sorted    ) const ;
+        Ostap::StatusCode _fun2
+        ( const bool sorted    = true ,
+          const bool ascending = true ) const ;
         // ====================================================================
       private:        
         // ====================================================================
