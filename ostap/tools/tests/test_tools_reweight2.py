@@ -20,6 +20,7 @@ import ostap.io.zipshelve     as     DBASE
 from   ostap.utils.timing     import timing
 from   ostap.logger.colorized import attention, allright  
 from   ostap.plotting.canvas  import use_canvas
+from   ostap.utils.cleanup    import CleanUp
 import ostap.logger.table     as     T 
 import ROOT, random, math, os, time 
 # =============================================================================
@@ -33,7 +34,6 @@ else :
 # =============================================================================    
 logger.info ( 'Test for 2D-Reweighting machinery')
 # ============================================================================
-from ostap.utils.cleanup import CleanUp
 testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-reweight2-' )
 tag_data   = 'DATA2_histogram'
 tag_datax  = 'DATAX_histogram'

@@ -8,7 +8,8 @@
   1. improve the machinery for eigenvalues and eigenvectors
   1. add possibility to avodi coloring of the header row in the tables
   1. add protection for double cpoulmn (`::`) for the expression strings
-           
+  1. resurrect and improve `ostap.stats.corr2d` module with simple 2D-decorrelation utility
+              
 ## Backward incompatible
 
 ## Bug fixes

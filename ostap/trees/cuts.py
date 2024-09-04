@@ -32,7 +32,7 @@ else                       : logger = getLogger( __name__           )
 # =============================================================================
 logger.debug( 'Some useful decorations for ROOT.TCut objects')
 # =============================================================================
-## warning about the order of varibales for  `project`
+## warning about the order of variables for  `project`
 order_warning = ostap_info < ( 2 , 0 )
 if order_warning :
     import datetime
@@ -47,7 +47,7 @@ expression_types  = string_types +  ( ROOT.TCut , )
 #  vars_lst, cuts, input_string = vars_and_cuts ( ('x','y','z') , 'y<0' )
 #  @endcode
 def vars_and_cuts ( expressions , cuts ) :
-    """Prepare the arguments: variable names and cuts 
+    """ Prepare the arguments: variable names and cuts 
     >>> vars_lst, cuts, input_string = vars_and_cuts ( 'x', 'y<0' )
     >>> vars_lst, cuts, input_string = vars_and_cuts ( ('x','y','z') , 'y<0' )
     """
