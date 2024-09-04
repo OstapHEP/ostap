@@ -78,13 +78,15 @@ wrap_indent = '  '
 #  t = the_table ( table_data , 'Title' )
 #  print (t)
 #  @endcode
-def the_table ( rows ,
-                title      = '' ,
-                prefix     = '' ,
-                alignment  = () ,
-                wrap_width = -1 ,
-                indent     = wrap_indent , style = '' ) :
-    """Format the list of rows as a  table (home-made primitive) 
+def the_table ( rows                          ,
+                title           = ''          ,
+                prefix          = ''          ,
+                alignment       = ()          ,
+                wrap_width      = -1          ,
+                colorize_header = True        , 
+                indent          = wrap_indent ,
+                style           = ''          ) :
+    """ Format the list of rows as a  table (home-made primitive) 
     - Each row is a sequence of column cells.
     - The first row defines the column headers.
     >>> table_data = [
@@ -220,7 +222,10 @@ def the_table ( rows ,
         while len  ( cols ) < nc : cols.append ('')             
 
         if 0 == i :
-            table.append ( '| ' + ' | '.join ( [ infostr ( f.format ( decolorize ( i ) ) )  for ( f , i ) in zip ( hformats , cols ) ] ) + ' |' ) 
+            if colorize_header : 
+                table.append ( '| ' + ' | '.join ( [ infostr ( f.format ( decolorize ( i ) ) )  for ( f , i ) in zip ( hformats , cols ) ] ) + ' |' )
+            else :
+                table.append ( '|'  +  '|' .join ( [           f.format ( decolorize ( i ) )    for ( f , i ) in zip ( rformats , cols ) ] ) +  '|' )                
             table.append ( sepline )             
         else :
             table.append ( '|'  +  '|' .join ( [           f.format ( decolorize ( i ) )    for ( f , i ) in zip ( rformats , cols ) ] ) +  '|' ) 
@@ -256,8 +261,15 @@ def the_table ( rows ,
 #   - github :  use GithubFlavoredMarkdownTable
 #   - markdown :  use GithubFlavoredMarkdownTable
 #   - double (default) : DoubleTable 
-def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 , indent = wrap_indent , style = '' ) :
-    """Format the list of rows as a  table.
+def table ( rows                          ,
+            title           = ''          ,
+            prefix          = ''          ,
+            alignment       = ()          ,
+            wrap_width      = -1          ,
+            colorize_header = True        ,
+            indent          = wrap_indent ,
+            style           = ''          ) :
+    """ Format the list of rows as a  table.
     - Each row is a sequence of column cells.
     - The first row defines the column headers.
 
@@ -275,12 +287,12 @@ def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 ,
     >>> print (t)
     
     Vaild `style` arguments (case insensitive) 
-    - `local`     :  use local, handmade repalcement
-    - `ascii`     :  use `AsciiTable` 
-    - `single`    :  use `SingleTable` 
-    - `porcelain` :  use `PorcelainTable` 
-    - `github`    :  use `GithubFlavoredMarkdownTable`
-    - `markdown`  :  use `GithubFlavoredMarkdownTable`
+    - `local`     : use local, handmade repalcement
+    - `ascii`     : use `AsciiTable` 
+    - `single`    : use `SingleTable` 
+    - `porcelain` : use `PorcelainTable` 
+    - `github`    : use `GithubFlavoredMarkdownTable`
+    - `markdown`  : use `GithubFlavoredMarkdownTable`
     - `double`    : use `DoubleTable` 
     - (default)   : use `DoubleTable` 
     """
@@ -289,13 +301,14 @@ def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 ,
 
     title = allright ( decolorize ( title ).strip() ) 
     if rows :
-        rows       = list  ( rows ) 
-        header_row = rows[0]
-        header_row = [ infostr ( decolorize ( c ) ) for c in header_row ]
-        rows [0]   = header_row 
+        rows       = list  ( rows )
+        if colorize_header : 
+            header_row = rows [ 0 ]
+            header_row = [ infostr ( decolorize ( c ) ) for c in header_row ]
+            rows [ 0 ]   = header_row 
         rows = tuple ( rows )
         
-    rows = [ list(row) for row in rows ]
+    rows = [ list ( row ) for row in rows ]
 
     if not style : style = '%s' % default_style
     
@@ -303,9 +316,16 @@ def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 ,
 
     if 'local' == fmt or not terminaltables :
         
-       ## use the local replacement 
-        return the_table ( rows , title , prefix , alignment = alignment )
-
+        ## use the local replacement 
+        return the_table ( rows                              ,
+                           title           = title           , 
+                           prefix          = prefix          ,
+                           alignment       = alignment       ,
+                           wrap_width      = wrap_width      , 
+                           colorize_header = colorize_header ,
+                           indent          = indent          ,
+                           style           = style           ) 
+                           
     title = allright ( title )
     
     if 'ascii' == fmt or not isatty() : 
@@ -326,7 +346,8 @@ def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 ,
 
     wraps = [ i for ( i , a ) in enumerate ( alignment ) if a in wrapped ]
     
-    if wraps : 
+    if wraps :
+        
         from terminaltables.width_and_alignment import max_dimensions
         widths = max_dimensions ( table_instance.table_data    ,
                                   table_instance.padding_left  ,
@@ -344,7 +365,6 @@ def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 ,
     
     nw = len ( wraps ) 
             
-    
     for i, a in zip ( range ( nc ) , alignment ) :
         if a and isinstance ( a , str ) :
             al = a.lower() 
@@ -370,7 +390,7 @@ def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 ,
 # =============================================================================
 ## get the true  table width 
 def table_width  ( table ) :
-    """Get the true width of the table
+    """ Get the true width of the table
     """
     width = 0
     for row in table.split('\n') :
@@ -384,7 +404,7 @@ def table_width  ( table ) :
 #  table =  add_prefix ( table , '# ') 
 #  @endcode
 def add_prefix ( table , prefix = '' ) :
-    """Add certain prefix to  each line of the table
+    """ Add certain prefix to  each line of the table
     >>> table = ...
     >>> table =  add_prefix ( table , '# ') 
     """
@@ -396,7 +416,7 @@ def add_prefix ( table , prefix = '' ) :
 #  aligned = align_column ( table , 1 , 'left' ) 
 #  @endcode 
 def align_column ( table , index , align = 'left') :
-    """Aling the certain column of the table
+    """ Aling the certain column of the table
     >>> aligned = align_column ( table , 1 , 'left' ) 
     """
     nrows = [ list ( row ) for row in table ]

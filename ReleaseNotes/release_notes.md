@@ -6,7 +6,8 @@
   1. add `abs` method for `SVectors`
   1. improve Linear Algebra tests
   1. improve the machinery for eigenvalues and eigenvectors
-      
+  1. add possibility to avodi coloring of the header row in the tables
+         
 ## Backward incompatible
 
 ## Bug fixes
