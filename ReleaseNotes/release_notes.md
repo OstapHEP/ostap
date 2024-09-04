@@ -3,7 +3,9 @@
 ## Backward incompatible
 
 ## Bug fixes
-
+    
+  1. fix tiny bug in `histo_book`
+    
 # v1.13.1.0
 
 ## New features

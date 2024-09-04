@@ -8341,7 +8341,7 @@ histo_keys = ( 'xbins' , 'nbinsx' , 'binsx' , 'nbins' ,
 #  h3 = histo_book ( r2 , xmin = -1 , xbins =  100 , ymax = 30 , zbins = 10 )
 #  @endocode
 def histo_book ( ranges , kwargs , title = '' ) :
-    """Helper method to book/create 1/2/3-dimension histograms
+    """ Helper method to book/create 1/2/3-dimension histograms
     >>> r1 = [  ('xvar', (0,1) } ]
     >>> h1 = histo_book ( r1 , xmin = -1 , xbins =  100 )
     
@@ -8353,7 +8353,7 @@ def histo_book ( ranges , kwargs , title = '' ) :
     """
     
     nvars = len ( ranges  ) 
-    assert 1 <= nvars <= 3 , 'Invalid histigram dimension %s' % str ( items )
+    assert 1 <= nvars <= 3 , 'Invalid histogram dimension %s' % str ( items )
 
     if 1 == nvars :
         xbins = kwargs.pop ( 'xbins' , kwargs.pop ( 'nbinsx' , kwargs.pop ( 'binsx' , kwargs.pop ( 'nbins' , 100 ) ) ) )
@@ -8400,7 +8400,7 @@ def histo_book ( ranges , kwargs , title = '' ) :
         
     elif 2 == nvars :
         
-        title  = kwargs.pop ( 'title' , "x=`%s' y=`%s' z=`%s'" % ( xvar, yvar ) ) 
+        title  = kwargs.pop ( 'title' , "x=`%s' y=`%s'" % ( xvar, yvar ) ) 
         histo  = ROOT.TH2F  ( hID()   , title ,
                               xbins   , xmin , xmax ,
                               ybins   , ymin , ymax ) ; histo.Sumw2()
