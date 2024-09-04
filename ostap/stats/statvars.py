@@ -357,7 +357,7 @@ def data_range ( data              ,
 #  result  = data_covariance ( data , 'x+y' , 'z'  , '0<u') 
 #  @encode
 #  @see Ostap::Math::Covariance 
-#  @see Ostap::Math::ECovariance 
+#  @see Ostap::Math::WCovariance 
 #  @see Ostap::StatVar::statCov
 def data_covariance ( data , expression1 , expression2 , cuts = '' , *args ) :
     """Get the covariance from data 
