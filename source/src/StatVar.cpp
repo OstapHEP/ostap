@@ -1524,17 +1524,17 @@ Ostap::StatVar::statCov
   {
     const double vi_mean = stats[i].mean() ;
     for  (unsigned int j = i ; j < N ; ++j ) 
-    {
-      const double vj_mean = stats[j].mean() ;
-      const double val  = vi_mean * vj_mean ;
-      cov2 ( i , j ) -= val ;
-    }
+      {
+        const double vj_mean = stats[j].mean() ;
+        const double val     = vi_mean * vj_mean ;
+        cov2 ( i , j ) -= val ;
+      }
   }
   //
   /// strange lines.... due to ROOT 
   for ( unsigned int i = 0 ; i < N ; ++i ) 
-  { for ( unsigned int j = 0 ; j < i ; ++j ) 
-    { if ( !cov2 ( i , j ) ) { cov2 ( i , j ) = cov2 ( j , i ) ; } } }
+    { for ( unsigned int j = 0 ; j < i ; ++j ) 
+        { if ( !cov2 ( i , j ) ) { cov2 ( i , j ) = cov2 ( j , i ) ; } } }
   //
   return stats[0].nEntries() ;
 }
@@ -1825,12 +1825,12 @@ Ostap::StatVar::statCov
     { results [i] = formulas[i]->getVal() ; }
     
     for ( unsigned int i = 0 ; i < N ; ++i ) 
-    {
-      const double ri = results [i] ;
-      stats[i].add ( ri , weight ) ;
-      for ( unsigned int j = i ; j < N ; ++j ) 
-      { cov2 ( i , j ) += weight * ri * results [ j ] ; }
-    }
+      {
+        const double ri = results [i] ;
+        stats[i].add ( ri , weight ) ;
+        for ( unsigned int j = i ; j < N ; ++j ) 
+          { cov2 ( i , j ) += weight * ri * results [ j ] ; }
+      }
     //
   }
   //
@@ -1839,19 +1839,19 @@ Ostap::StatVar::statCov
   cov2 *= 1.0 / stats[0].weights().sum()  ;
   //
   for  (unsigned int i = 0 ; i < N ; ++i ) 
-  {
-    const double vi_mean = stats[i].mean() ;
-    for  (unsigned int j = i ; j < N ; ++j ) 
     {
-      const double vj_mean = stats[j].mean() ;
-      cov2 ( i , j ) -= vi_mean * vj_mean ;
+      const double vi_mean = stats[i].mean() ;
+      for  (unsigned int j = i ; j < N ; ++j ) 
+        {
+          const double vj_mean = stats[j].mean() ;
+          cov2 ( i , j ) -= vi_mean * vj_mean ;
+        }
     }
-  }
   //
   /// strange lines.... due to ROOT 
   for ( unsigned int i = 0 ; i < N ; ++i ) 
-  { for ( unsigned int j = 0 ; j < i ; ++j ) 
-    { if ( !cov2 ( i , j ) ) { cov2 ( i , j ) = cov2 ( j , i ) ; } } }
+    { for ( unsigned int j = 0 ; j < i ; ++j ) 
+        { if ( !cov2 ( i , j ) ) { cov2 ( i , j ) = cov2 ( j , i ) ; } } }
   //
   return stats[0].nEntries() ;
 }
