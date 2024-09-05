@@ -1226,7 +1226,6 @@ namespace Ostap
           return r ;
         }
       } ;
-      
       // ======================================================================
       template <class T, unsigned int D>
       struct Sym<ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > >
@@ -1237,7 +1236,6 @@ namespace Ostap
         //
         static const R& operation ( const M& m ) { return m ; }
       } ;
-      
       // ======================================================================
       template <class T, unsigned int D>
       struct ASym<ROOT::Math::SMatrix<T,D,D> >
