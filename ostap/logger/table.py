@@ -46,6 +46,21 @@ if not terminaltables :
     except ImportError :
         terminaltables = None 
         pass
+# ===============================================================================
+if terminaltables :
+    ## Vaild `style` arguments (case insensitive) 
+    table_styles = ( 'local'     , ## use local, handmade replacement
+                     'ascii'     , ## use `AsciiTable` 
+                     'single'    , ## use `SingleTable` 
+                     'porcelain' , ## use `PorcelainTable` 
+                     'github'    , ## use `GithubFlavoredMarkdownTable`
+                     'markdown'  , ## use `GithubFlavoredMarkdownTable`
+                     'double'    , ## use `DoubleTable` 
+                     'default'   ) ## use `DoubleTable` 
+else :
+    # =========================================================================
+    ## Valid `style` arguments (case insensitive)     
+    table_styles = 'local' ,
 
 # =============================================================================
 ## environment variable
@@ -53,14 +68,20 @@ env_var = 'OSTAP_TABLE_STYLE'
 ## default style
 default_style = ''
 if    not terminaltables     :
+    # =========================================================================
     ## only 'local' is available for this case 
     default_style = 'local'
+    # =========================================================================
 else :
+    # =========================================================================
     from ostap.utils.basic import has_env as ostap_hasenv 
     if  ostap_hasenv ( env_var ) :
+        # =====================================================================
         from ostap.utils.basic import get_env as ostap_getenv 
         default_style = ostap_getenv ( env_var, default_style )
+        # =====================================================================
     else :
+        # =====================================================================
         ## get the preferred table style from the configuration file(s)
         import ostap.core.config as OCC
         if 'STYLE' in OCC.tables :
@@ -68,6 +89,57 @@ else :
 # =============================================================================
 ## finally adjust the style
 default_style = default_style.strip().lower()
+# =============================================================================
+## very light wrapper for tabulate tables
+#  @see https://github.com/astanin/python-tabulate
+try :
+    # =========================================================================
+    #  @see https://github.com/astanin/python-tabulate
+    import tabulate as _tabulate 
+    # =========================================================================
+    ## Simple wrapper for <code>tabulate.tabulate</code> function
+    #  @see https://github.com/astanin/python-tabulate
+    #  @code
+    #  rows = .... ## tanle rows
+    #  table = tabulate ( rows , ... )
+    #  @endcode
+    def tabulate  ( rows ,  **kwargs ) :
+        """ Simple wrapper for `tabulate.tabulate` function
+        - see https://github.com/astanin/python-tabulate
+        >>> rows = .... ## tanle rows
+        >>> table = tabulate ( rows , ... )
+        """
+        return _tabulate.tabulate ( tabular_data = rows , **kwargs )    
+    # =========================================================================
+    ## Convert table into latex <code>tabular</code> environment    
+    #  @see https://github.com/astanin/python-tabulate
+    #  @code
+    #  rows = .... ## table rows
+    #  table = latex ( rows , ... )
+    #  @endcode
+    def latex ( rows ,  **kwargs ) :
+        """ Simple wrapper for `tabulate.tabulate` function
+        - see https://github.com/astanin/python-tabulate
+        >>> rows = .... ## tanle rows
+        >>> table = latex ( rows , ... )
+        """
+        tablefmt = kwargs.get ( 'tablefmt' , 'latex_raw' )
+        return tabulate ( rows , tablefmt = tablefmt , **kwargs ) 
+    
+    # ===========================================================================
+    ## available formats 
+    tabulate_styles = tuple ( _tabulate.tabulate_formats ) 
+    ## 
+    __all__ = __all__ + ( 'tabulate' , 'latex' )
+    ## 
+except ImportError :
+    # ===========================================================================
+    ## no formats are available
+    tabulate         = None
+    latex            = None 
+    tabulate_styles  = () 
+    pass
+
 # =============================================================================
 left        = '<' , 'l' , 'left'  
 right       = '>' , 'r' , 'right' 
@@ -166,7 +238,6 @@ def the_table ( rows                          ,
 
     for i in wraps :
         widths [ i ] = max ( min ( ww  , widths [ i ] ) , 10 ) 
-
             
     hformats = [  "{:^%d}"  % widths [ c ] for c in range ( nc ) ]
     rformats = [ " {:^%d} " % widths [ c ] for c in range ( nc ) ]
@@ -278,7 +349,7 @@ def table ( rows                          ,
             wrap_width      = -1          ,
             colorize_header = True        ,
             indent          = wrap_indent ,
-            style           = ''          ) :
+            style           = ''          , **kwargs ) :
     """ Format the list of rows as a  table.
     - Each row is a sequence of column cells.
     - The first row defines the column headers.
@@ -322,10 +393,15 @@ def table ( rows                          ,
 
     if not style : style = '%s' % default_style
     
-    fmt = style.lower() 
+    fmt = style.lower()
+    
+    if not fmt in table_styles and not fmt in tabulate_styles :
+        fmt = 'local' 
 
     if 'local' == fmt or not terminaltables :
-        
+        if kwargs :
+            keys = ', '.join ( key for key in kwargs ) 
+            loger.warning ( 'Ignore keyword arguments: %s' % keys )  
         ## use the local replacement 
         return the_table ( rows                              ,
                            title           = title           , 
@@ -335,16 +411,39 @@ def table ( rows                          ,
                            colorize_header = colorize_header ,
                            indent          = indent          ,
                            style           = style           ) 
-                           
-    title = allright ( title )
 
+    elif terminaltables and fmt in table_styles    :  pass         
+    elif tabulate       and fmt in tabulate_styles :
+        if title : logger.warning ( 'Title is ignored for tabulate!' )         
+        colalign = [] 
+        if alignment and not 'colalign' in kwargs :
+            for a in alignment :
+                aL = a.lower()
+                if   aL in left   : colalign.append ( 'ledt'   )
+                elif aL in right  : colalign.append ( 'right'  )
+                elif aL in center : colalign.append ( 'center' )
+                else              : colalign.append ( None     )
+        colalign = tuple ( colalign )
+        if colalign  : result = tabulate   ( rows   , tablefmt = fmt , colalign = colalign , **kwargs )
+        else         : result = tabulate   ( rows   , tablefmt = fmt                       , **kwargs )
+        ## 
+        if prefix : result = add_prefix ( result , prefix )
+        ## 
+        return result
+
+    if kwargs :
+        keys = ', '.join ( key for key in kwargs ) 
+        loger.warning ( 'Ignore keyword arguments: %s' % keys )  
+    
     if 'ascii' == fmt or not isatty() : 
         table_instance = terminaltables.AsciiTable                  ( rows , title )        
     elif 'single' == fmt : 
         table_instance = terminaltables.SingleTable                 ( rows , title )
     elif 'porcelain' == fmt :
+        if title : logger.warning ( 'Title is ignored for porcelain table !' ) 
         table_instance = terminaltables.PorcelainTable              ( rows )
     elif fmt in ( 'github' , 'markdown' ) :
+        if title : logger.warning ( 'Title is ignored for github/markdown tables!' )         
         table_instance = terminaltables.GithubFlavoredMarkdownTable ( rows )
     elif 'double' == fmt : 
         table_instance = terminaltables.DoubleTable                 ( rows , title )
@@ -358,11 +457,11 @@ def table ( rows                          ,
     
     if wraps :
         
-        from terminaltables.width_and_alignment import max_dimensions
-        widths = max_dimensions ( table_instance.table_data    ,
-                                  table_instance.padding_left  ,
-                                  table_instance.padding_right ) [2] 
-        widths = sum ( l  for (i,l) in enumerate ( widths ) if not i in wraps ) 
+        max_dimensions = terminaltables.width_and_alignment.max_dimensions
+        widths         = max_dimensions ( table_instance.table_data    ,
+                                          table_instance.padding_left  ,
+                                          table_instance.padding_right ) [2] 
+        widths = sum ( l  for ( i , l ) in enumerate ( widths ) if not i in wraps ) 
         widths += nc + 1 + len ( prefix ) + 4 + 2 * len ( wraps )              
         _ , w = terminal_size()
         ww = w - widths
@@ -460,46 +559,6 @@ def align_column ( table , index , align = 'left') :
             
     return [ tuple ( row ) for row in new_table ] 
 
-
-# =============================================================================
-try :
-    # =========================================================================
-    import tabulate as _tabulate 
-    # =========================================================================
-    ## Simple wrapper for <code>tabulate.tabulate</code> function
-    #  @see https://github.com/astanin/python-tabulate
-    #  @code
-    #  rows = .... ## tanle rows
-    #  table = tabulate ( rows , ... )
-    #  @endcode
-    def tabulate  ( rows ,  **kwargs ) :
-        """ Simple wrapper for `tabulate.tabulate` function
-        - see https://github.com/astanin/python-tabulate
-        >>> rows = .... ## tanle rows
-        >>> table = tabulate ( rows , ... )
-        """
-        return _tabulate.tabulate ( tabular_data = rows , **kwargs )    
-    # =========================================================================
-    ## Convert table into latex <code>tabular</code> environment    
-    #  @see https://github.com/astanin/python-tabulate
-    #  @code
-    #  rows = .... ## table rows
-    #  table = latex ( rows , ... )
-    #  @endcode
-    def latex ( rows ,  **kwargs ) :
-        """ Simple wrapper for `tabulate.tabulate` function
-        - see https://github.com/astanin/python-tabulate
-        >>> rows = .... ## tanle rows
-        >>> table = latex ( rows , ... )
-        """
-        tablefmt = kwargs.get ( 'tablefmt' , 'latex_raw')
-        return tabulate ( rows , tablefmt = tablefmt , **kwargs ) 
-
-    __all__ = __all__ + ( 'tabulate' , 'latex' )
-    
-except ImportError :
-    pass 
-    
 # =============================================================================
 if __name__ == '__main__' :
     
@@ -508,11 +567,11 @@ if __name__ == '__main__' :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-    
+
     if terminaltables :
-        logger.info     ( "``terminaltables'' will be used for formatting" )
+        logger.info     ( "`terminaltables' will be used for formatting" )
     else :
-        logger.warning  ( "``terminaltables'' is not available, use local replacement" )
+        logger.warning  ( "`terminaltables' is not available, use local replacement" )
         
     table_data = [
         ( 'Name'  , 'Occupation' , 'Note' ) ,
@@ -529,15 +588,16 @@ if __name__ == '__main__' :
                   table     ( table_data , 'Title' , prefix = '# ' ) ) 
     logger.info ( 'The table with prefix is \n%s' %
                   the_table ( table_data , 'Title' , prefix = '# ' ) ) 
-    
 
     if 'latex'    in __all__ : 
-        logger.info ( 'The table is \n%s' % latex  ( table_data ) )  
-    if 'tabulate' in __all__ :
-        for fmt in _tabulate.tabulate_formats : 
-            table = tabulate ( table_data , tablefmt = fmt )            
-            logger.info ( 'The tabulate format="%s":\n%s' % ( fmt , table ) )
-            
+        logger.info ( 'The table is \n%s' % latex  ( table_data ) )
+
+    for fmt in tabulate_styles + table_styles : 
+        result = table ( table_data , style  = fmt , prefix = '# ' )            
+        logger.info ( 'Use the format="%s":\n%s' % ( fmt , result ) )
+
+    logger.info ( 'Available styles: %s' % ( ','.join ( table_styles + tabulate_styles ) ) ) 
+        
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
