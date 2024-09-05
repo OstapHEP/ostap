@@ -1362,7 +1362,7 @@ class LinAlg(object) :
         """
         
         N = len ( vct )
-        
+
         ## the maximal element 
         maev = abs ( Ostap.Math.maxabs_element  ( vct ) )
         
@@ -1688,11 +1688,11 @@ class LinAlg(object) :
 
         mae = abs ( Ostap.Math.maxabs_element ( mtrx ) )
         fmtv , expo = fmt_pretty_float ( mae , width = width , precision = precision )
-        
+
         zeros = fmtv % ( +0.0 ) , fmtv % ( -0.0 )        
         if expo :
             scale  = 10 ** expo
-            title  = title + ( '[x10^%+d]' % expo ) 
+            title  = ( '[x10^%+d]' % expo ) + title 
         else    :
             scale = 1 
             
@@ -1709,7 +1709,7 @@ class LinAlg(object) :
                 row.append ( item ) 
             table.append ( row )
             
-        table = T.table  ( table , alignment = 'r'+cols*'c' , prefix = prefix , title = title )
+        table = T.table  ( table , title = title , alignment = 'r'+cols*'c' , prefix = prefix )
         return table, expo 
 
     # =============================================================================
@@ -2363,7 +2363,6 @@ class LinAlg(object) :
         m.maxabs_element_index = LinAlg.M_MAXABSINDEX 
 
         m.diagonal             = LinAlg.M_DIAGONAL
-
         m.lnorm                = LinAlg.M_LNORM 
         m.mnorm                = LinAlg.M_MNORM 
 

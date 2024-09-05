@@ -261,10 +261,13 @@ class LinAlgT(LA.LinAlg) :
         t. __eq__       = lambda a , b : LinAlgT.EQ ( a , b )
         t.__ne__        = lambda a , b : LinAlgT.NE ( a , b ) 
         t.__neg__       = lambda s : s*(-1)
-
         
+        t.__abs__       = LinAlgT.V_ABS
+
         t. __str__      = LinAlgT.V_STR
         t. __repr__     = LinAlgT.V_STR
+        t. table        = LinAlgT.V_STR        
+        t.pretty_print  = LinAlgT.V_PRETTY
 
         t. __len__      = lambda s : s.GetNrows ()  
         t. __contains__ = lambda s, i : 0<=i<len(s)
@@ -297,7 +300,7 @@ class LinAlgT(LA.LinAlg) :
     ## decorate TMatrixT class
     @staticmethod
     def deco_tmatrix ( m ) :
-        """Decorate TMatrixT class
+        """ Decorate TMatrixT class
         """
         if m in LinAlgT.decorated_matrices : return m
 
@@ -309,6 +312,8 @@ class LinAlgT(LA.LinAlg) :
         
         m.__str__       = LinAlgT.M_STR 
         m.__repr__      = LinAlgT.M_STR 
+        m.table         = LinAlgT.M_STR
+        m.pretty_print  = LinAlgT.M_PRETTY
 
         m. __add__      = LinAlgT. ADD
         m.__radd__      = LinAlgT.RADD
@@ -348,7 +353,11 @@ class LinAlgT(LA.LinAlg) :
         m.__pow__       = LinAlgT.M_POW 
         m.sym           = LinAlgT.M_SYM
         m.asym          = LinAlgT.M_ASYM
-        
+
+        m.diagonal      = LinAlgT.M_DIAGONAL
+        m.lnorm         = LinAlgT.M_LNORM 
+        m.mnorm         = LinAlgT.M_MNORM 
+
         m.inverse       = LinAlgT.M_INVERSE            
 
         ## convert TMatrix to SMatrix 
@@ -373,7 +382,7 @@ class LinAlgT(LA.LinAlg) :
     ## decorate TMatrixTSym class
     @staticmethod
     def deco_tsymmatrix ( m ) :
-        """Decorate TMatrixTSym class
+        """ Decorate TMatrixTSym class
         """
         if m in LinAlgT.decorated_matrices : return m
 
@@ -384,9 +393,9 @@ class LinAlgT(LA.LinAlg) :
 
         m.__str__       = LinAlgT.MS_STR 
         m.__repr__      = LinAlgT.MS_STR 
+        m.table         = LinAlgT.MS_STR
+        m.pretty_print  = LinAlgT.MS_PRETTY 
 
-        ## m.__str__       = LinAlgT.TS_STR
-        ## m.__repr__      = LinAlgT.TS_STR
 
         m.Sim            = LinAlgT.SIM
         m.sim            = LinAlgT.SIM

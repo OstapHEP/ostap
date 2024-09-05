@@ -48,74 +48,74 @@ def test_linalgt_vct () :
     t2 [ 0 ] , t2 [ 1 ] , t2 [ 2 ] = 3 , 4 , 5
 
     
-    logger.info ( 'l1 ,  l2    : %s ,  %s      '    % ( l1 , l2  ) )
-    logger.info ( 't1 ,  t2    : %s ,  %s      '    % ( t1 , t2  ) )
+    logger.info ( 'l1 ,  l2    : \n%s \n%s      '    % ( l1 , l2  ) )
+    logger.info ( 't1 ,  t2    : \n%s \n%s      '    % ( t1 , t2  ) )
     
-    logger.info ( 'l1 +  l2    : %s +  %s = %s '    % ( l1 , l2 , l1 + l2  ) )
-    logger.info ( 'l1 +  t2    : %s +  %s = %s '    % ( l1 , t2 , l1 + t2  ) )
-    logger.info ( 't1 +  l2    : %s +  %s = %s '    % ( t1 , l2 , t1 + l2  ) )
-    logger.info ( 't1 +  t2    : %s +  %s = %s '    % ( t1 , t2 , t1 + t2  ) )
+    logger.info ( 'l1 +  l2    : \n%s '    % ( l1 + l2  ) )
+    logger.info ( 'l1 +  t2    : \n%s '    % ( l1 + t2  ) )
+    logger.info ( 't1 +  l2    : \n%s '    % ( t1 + l2  ) )
+    logger.info ( 't1 +  t2    : \n%s '    % ( t1 + t2  ) )
 
-    logger.info ( 'l1 -  l2    : %s -  %s = %s '    % ( l1 , l2 , l1 - l2  ) )
-    logger.info ( 'l1 -  t2    : %s -  %s = %s '    % ( l1 , t2 , l1 - t2  ) )
-    logger.info ( 't1 -  l2    : %s -  %s = %s '    % ( t1 , l2 , t1 - l2  ) )
-    logger.info ( 't1 -  t2    : %s -  %s = %s '    % ( t1 , t2 , t1 - t2  ) )
-
-    
-    logger.info ( 'l1 *   2    : %s *  %s = %s '    % ( l1 ,  2 , l1 *  2  ) )
-    logger.info ( 't1 *   2    : %s *  %s = %s '    % ( t1 ,  2 , t1 *  2  ) )
-    
-    logger.info ( 'l1 /   3    : %s /  %s = %s '    % ( l1 ,  3 , l1 *  3  ) )
-    logger.info ( 't1 /   3    : %s /  %s = %s '    % ( t1 ,  3 , t1 *  3  ) )
+    logger.info ( 'l1 -  l2    : \n%s '    % ( l1 - l2  ) )
+    logger.info ( 'l1 -  t2    : \n%s '    % ( l1 - t2  ) )
+    logger.info ( 't1 -  l2    : \n%s '    % ( t1 - l2  ) )
+    logger.info ( 't1 -  t2    : \n%s '    % ( t1 - t2  ) )
 
     
-    logger.info ( ' 2 *  l1    : %s *  %s = %s '    % (  2 , l1 ,  2 *  l1 ) )
-    logger.info ( ' 2 *  t1    : %s *  %s = %s '    % (  2 , t1 ,  2 *  t1 ) )
+    logger.info ( 'l1 *   2    : \n%s '    % ( l1 *  2  ) )
+    logger.info ( 't1 *   2    : \n%s '    % ( t1 *  2  ) )
+    
+    logger.info ( 'l1 /   3    : \n%s '    % ( l1 *  3  ) )
+    logger.info ( 't1 /   3    : \n%s '    % ( t1 *  3  ) )
 
     
-    logger.info ( 'l1 *  l2    : %s *  %s = %s '    % ( l1 , l2 , l1 * l2  ) )
-    logger.info ( 'l1 *  t2    : %s *  %s = %s '    % ( l1 , t2 , l1 * t2  ) )
-    logger.info ( 't1 *  l2    : %s *  %s = %s '    % ( t1 , l2 , t1 * l2  ) )
-    logger.info ( 't1 *  t2    : %s *  %s = %s '    % ( t1 , t2 , t1 * t2  ) )
+    logger.info ( ' 2 *  l1    : \n%s '    % (  2 *  l1 ) )
+    logger.info ( ' 2 *  t1    : \n%s '    % (  2 *  t1 ) )
 
-    logger.info ( 'l1 x  l2    : %s x  %s = \n%s '  % ( l1 , l2 , l1.cross ( l2 ) ) )
-    logger.info ( 'l1 x  t2    : %s x  %s = \n%s '  % ( l1 , t2 , l1.cross ( t2 ) ) )
-    logger.info ( 't1 x  l2    : %s x  %s = \n%s '  % ( t1 , l2 , t1.cross ( l2 ) ) )
-    logger.info ( 't1 x  t2    : %s x  %s = \n%s '  % ( t1 , t2 , t1.cross ( t2 ) ) )
+    
+    logger.info ( 'l1 *  l2    : \n%s '    % ( l1 * l2  ) )
+    logger.info ( 'l1 *  t2    : \n%s '    % ( l1 * t2  ) )
+    logger.info ( 't1 *  l2    : \n%s '    % ( t1 * l2  ) )
+    logger.info ( 't1 *  t2    : \n%s '    % ( t1 * t2  ) )
+
+    logger.info ( 'l1 x  l2    : \n%s '  % ( l1.cross ( l2 ) ) )
+    logger.info ( 'l1 x  t2    : \n%s '  % ( l1.cross ( t2 ) ) )
+    logger.info ( 't1 x  l2    : \n%s '  % ( t1.cross ( l2 ) ) )
+    logger.info ( 't1 x  t2    : \n%s '  % ( t1.cross ( t2 ) ) )
 
 
-    logger.info ( 'l1 == l2    : %s == %s = %s '    % ( l1 , l2 , l1 == l2  ) )
-    logger.info ( 'l1 == t2    : %s == %s = %s '    % ( l1 , t2 , l1 == t2  ) )
-    logger.info ( 't1 == l2    : %s == %s = %s '    % ( t1 , l2 , t1 == l2  ) )
-    logger.info ( 't1 == t2    : %s == %s = %s '    % ( t1 , t2 , t1 == t2  ) )
+    logger.info ( 'l1 == l2    : %s '    % ( l1 == l2  ) )
+    logger.info ( 'l1 == t2    : %s '    % ( l1 == t2  ) )
+    logger.info ( 't1 == l2    : %s '    % ( t1 == l2  ) )
+    logger.info ( 't1 == t2    : %s '    % ( t1 == t2  ) )
 
-    logger.info ( 'l1 != l2    : %s != %s = %s '    % ( l1 , l2 , l1 != l2  ) )
-    logger.info ( 'l1 != t2    : %s != %s = %s '    % ( l1 , t2 , l1 != t2  ) )
-    logger.info ( 't1 != l2    : %s != %s = %s '    % ( t1 , l2 , t1 != l2  ) )
-    logger.info ( 't1 != t2    : %s != %s = %s '    % ( t1 , t2 , t1 != t2  ) )
+    logger.info ( 'l1 != l2    : %s '    % ( l1 != l2  ) )
+    logger.info ( 'l1 != t2    : %s '    % ( l1 != t2  ) )
+    logger.info ( 't1 != l2    : %s '    % ( t1 != l2  ) )
+    logger.info ( 't1 != t2    : %s '    % ( t1 != t2  ) )
 
     
     v1 = ( 0 , 1 , 2 ) 
-    logger.info ( 'l1 == tuple : %s == %s = %s '    % (  l1 , v1 , l1 == v1 ) )
-    logger.info ( 't1 == tuple : %s == %s = %s '    % (  t1 , v1 , t1 == v1 ) )
-    logger.info ( 'tuple == l1 : %s == %s = %s '    % (  v1 , l1 , v1 == l1 ) )
-    logger.info ( 'tuple == t1 : %s == %s = %s '    % (  v1 , t1 , v1 == t1 ) )
+    logger.info ( 'l1 == tuple : %s '    % (  l1 == v1 ) )
+    logger.info ( 't1 == tuple : %s '    % (  t1 == v1 ) )
+    logger.info ( 'tuple == l1 : %s '    % (  v1 == l1 ) )
+    logger.info ( 'tuple == t1 : %s '    % (  v1 == t1 ) )
 
     v1 = [ 0 , 1 , 2 ] 
-    logger.info ( 'l1 == list  : %s == %s = %s '    % (  l1 , v1 , l1 == v1 ) )
-    logger.info ( 't1 == list  : %s == %s = %s '    % (  t1 , v1 , t1 == v1 ) )    
-    logger.info ( 'list == l1  : %s == %s = %s '    % (  v1 , l1 , v1 == l1 ) )
-    logger.info ( 'list == t1  : %s == %s = %s '    % (  v1 , t1 , v1 == t1 ) )
+    logger.info ( 'l1 == list  : %s '    % (  l1 == v1 ) )
+    logger.info ( 't1 == list  : %s '    % (  t1 == v1 ) )    
+    logger.info ( 'list == l1  : %s '    % (  v1 == l1 ) )
+    logger.info ( 'list == t1  : %s '    % (  v1 == t1 ) )
 
     l1 *= 2 
     t1 *= 2 
-    logger.info ( 'l1 *= 2     : %s '  % l1 )
-    logger.info ( 't1 *= 2     : %s '  % t1 )
+    logger.info ( 'l1 *= 2     : \n%s '  % l1 )
+    logger.info ( 't1 *= 2     : \n%s '  % t1 )
 
     l1 /= 2 
     t1 /= 2 
-    logger.info ( 'l1 /= 2     : %s '  % l1 )
-    logger.info ( 't1 /= 2     : %s '  % t1 )
+    logger.info ( 'l1 /= 2     : \n%s '  % l1 )
+    logger.info ( 't1 /= 2     : \n%s '  % t1 )
     
 
     ## if ( 3 , 5 ) <= python_version :
@@ -165,8 +165,8 @@ def test_linalgt_mtrx () :
     t2 [ 0 ] , t2 [ 1 ]   = 1 , 2
     t3 [ 0 ] , t3 [ 1 ] , t3 [ 2 ] = 1 , 2 , 3 
     
-    logger.info ( 'initial    l2 , l3 : %s , %s '  % ( l2 , l3  ) )
-    logger.info ( 'initial    t2 , t3 : %s , %s '  % ( t2 , t3  ) )
+    logger.info ( 'initial    l2 , l3 : \n%s \n%s '  % ( l2 , l3  ) )
+    logger.info ( 'initial    t2 , t3 : \n%s \n%s '  % ( t2 , t3  ) )
     
     m22 [ 0 , 0 ] = 1
     m22 [ 0 , 1 ] = 1
@@ -302,7 +302,7 @@ def test_linalgt_mtrx () :
         for v in vectors2 :
             n2 = typename ( v  ) 
             r   = m * v
-            logger.info ( ' %-25s +   %25s = %s' % ( n1 , n2 , r ) )
+            logger.info ( ' %-25s +   %25s = \n%s' % ( n1 , n2 , r ) )
             row = n1 , '*' , n2 , typename ( r )
             rows.append ( row )
 
@@ -312,7 +312,7 @@ def test_linalgt_mtrx () :
         for m in matrices22 :
             n2 = typename ( m )
             r   = v * m 
-            logger.info ( ' %-25s +   %25s = %s' % ( n1 , n2 , r ) )
+            logger.info ( ' %-25s +   %25s = \n%s' % ( n1 , n2 , r ) )
             row = n1 ,  '*' , n2 ,  typename ( r )
             rows.append ( row )
 
@@ -629,10 +629,10 @@ def test_linalgt_arr () :
 if '__main__' == __name__ :
     
 
-    test_linalgt_vct  () 
+    ## test_linalgt_vct  () 
     test_linalgt_mtrx () 
-    test_linalgt_old  ()
-    test_linalgt_arr  ()
+    ## test_linalgt_old  ()
+    ## test_linalgt_arr  ()
 
 
 # =============================================================================

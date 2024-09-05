@@ -317,7 +317,7 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    /// get element with maximal absoluet value        
+    /// get element with maximal absolute value        
     template <class T>
     inline T 
     maxabs_element 
@@ -338,7 +338,7 @@ namespace Ostap
       return result ;
     }
     // ========================================================================
-    /// get element with the maximal absoluet value        
+    /// get element with the maximal absolute value        
     template <class T>
     inline T 
     maxabs_element 
@@ -378,7 +378,7 @@ namespace Ostap
       return result ;
     }
     // ========================================================================
-    /// get diaginal element with the maximal absoluet value        
+    /// get diagonal element with the maximal absolute value        
     template <class T>
     inline T 
     maxabs_diagonal 
@@ -396,27 +396,41 @@ namespace Ostap
         }
       return result ;
     }
-    // ========================================================================    
+    // ========================================================================
+    /// get element with maximal absolute value        
+    template <class T>
+    inline T 
+    maxabs_element 
+    ( const TVectorT<T>& v  )
+    {
+      if ( !v.IsValid() ) { return 0 ; }
+      T result = v ( 0 ) ;
+      const unsigned int rows = v.GetNrows () ;
+      for ( unsigned int i = 1 ; i < rows ; ++i )
+        {
+          const double value = v ( i ) ;
+          if ( std::abs ( result ) < std::abs ( value ) ) { result = value ; }
+        }
+      return result ;
+    }
+    // =======================================================================
     namespace  Ops
     {      
       // ======================================================================
       // converters 
       // ======================================================================
-      template <class M>
-      struct TM ;
-      template <class M>
-      struct SM ;
-
+      template <class M> struct TM ;
+      template <class M> struct SM ;
       // ======================================================================
       //  S --> T 
       // ======================================================================
-      template <class T, unsigned int D1, unsigned int D2>
-      struct TM<ROOT::Math::SMatrix<T,D1,D2> >
+      template <class T, unsigned int D1, unsigned int D2, class RR>
+      struct TM<ROOT::Math::SMatrix<T,D1,D2,RR> >
       {
         typedef TMatrixT<T>  R ;
         // 
         static R operation  
-        ( const ROOT::Math::SMatrix<T,D1,D2>& m )
+        ( const ROOT::Math::SMatrix<T,D1,D2,RR>& m )
         {
           R result ( D1 , D2 ) ;
           for ( unsigned int i = 0 ; i < D1 ; ++i )
