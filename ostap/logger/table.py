@@ -32,11 +32,21 @@ __all__     = (
 from   ostap.logger.colorized import infostr, allright, decolorize        
 from   ostap.utils.basic      import terminal_size 
 import textwrap, os, sys   
-# =============================================================================    
-try :
-    import terminaltables
-except ImportError :
-    terminaltables = None
+# =============================================================================
+terminaltables = None 
+if ( 3 , 8 ) <= sys.version_info :
+    try :
+        import terminaltables3 as terminaltables
+    except ImportError :
+        terminaltables = None
+# =============================================================================
+if not terminaltables :  
+    try :
+        import terminaltables
+    except ImportError :
+        terminaltables = None 
+        pass
+
 # =============================================================================
 ## environment variable
 env_var = 'OSTAP_TABLE_STYLE'
@@ -327,7 +337,7 @@ def table ( rows                          ,
                            style           = style           ) 
                            
     title = allright ( title )
-    
+
     if 'ascii' == fmt or not isatty() : 
         table_instance = terminaltables.AsciiTable                  ( rows , title )        
     elif 'single' == fmt : 

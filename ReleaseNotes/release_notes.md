@@ -9,12 +9,14 @@
   1. add possibility to avodi coloring of the header row in the tables
   1. add protection for double cpoulmn (`::`) for the expression strings
   1. resurrect and improve `ostap.stats.corr2d` module with simple 2D-decorrelation utility
-              
+  1. make use of `terminaltables3` instead of `terminaltables` where/when possible
+                
 ## Backward incompatible
 
 ## Bug fixes
     
   1. fix tiny bug in `histo_book`
+  1. fix tiny bug in printout of linear algebra objects 
     
 # v1.13.1.0
 
