@@ -34,7 +34,7 @@ from   ostap.utils.basic      import terminal_size
 import textwrap, os, sys   
 # =============================================================================
 terminaltables = None 
-if ( 3 , 8 ) <= sys.version_info :
+if ( 3 , 9 ) <= sys.version_info :
     try :
         import terminaltables3 as terminaltables
     except ImportError :

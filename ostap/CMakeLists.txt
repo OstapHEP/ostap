@@ -138,7 +138,7 @@ endif()
 find_python_module ( lmdb        QUIET )
 endif()
 
-if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.8" )
+if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.9" )
 find_python_module ( terminaltables3 QUIET )
 if ( NOT ${PY_terminaltables3_FOUND} )
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install terminaltables3 ${PIP_ARGS})
