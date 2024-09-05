@@ -2971,7 +2971,7 @@ ROOT.TH1D . cl_interval = _h1_CL_interval_
 # =============================================================================
 ## get the minumum value for the histogram 
 def _h_minv_ ( self ) :
-    """Get the minimum value for the histogram
+    """ Get the minimum value for the histogram
     >>> h  = ...
     >>> mv = h.minv ()
     """
@@ -2984,7 +2984,7 @@ def _h_minv_ ( self ) :
 # =============================================================================
 ## get the maximum value for the histogram 
 def _h_maxv_ ( self ) :
-    """Get the maximum value for the histogram
+    """ Get the maximum value for the histogram
     >>> h  = ...
     >>> mv = h.maxv ()
     """
@@ -2995,9 +2995,9 @@ def _h_maxv_ ( self ) :
     return mv 
         
 # =============================================================================
-## get the minmaximum values for the histogram 
+## get the minmax values for the histogram 
 def _h_minmax_ ( self ) :
-    """Get the minmax pair for the histogram    
+    """ Get the minmax pair for the histogram    
     >>> h     = ...
     >>> mn,mx = h.minmax ()
     """
@@ -3008,9 +3008,34 @@ ROOT.TH1 . maxv    = _h_maxv_
 ROOT.TH1 . minmax  = _h_minmax_
 
 # ============================================================================
+## Get the minimal positive entry in the historgam
+#  - It is useful e.g. to define the proper scale for drawing, especially for log-scale
+#  @code
+#  histo  = ...
+#  minpos = histo.min_positive() 
+#  @endcode
+#  @return minimal positive entry or negative infinity if no positive entries
+def _h_minpos_ ( histo ) :
+    """ Get the minimal positive entry in the histogram
+    - It is useful e.g. to define the proper scale for drawing, especially for log-scale
+    - return minimal positive entry or negative infinity if no positive entries 
+    >>> histo  = ...
+    >>> minpos = histo.min_positive() 
+    """
+    result = inf_neg 
+    for items in histo.items() :
+        v = items [ -1 ] . value()
+        if 0 < v  :
+            result = min ( v , result ) if 0 < result else v 
+    return result
+
+ROOT.TH1.minpos       = _h_minpos_
+ROOT.TH1.min_positive = _h_minpos_
+
+# ============================================================================
 ## get the first bin with the minimum content
 def _h1_minimum_bin_ ( h1 ) :
-    """Get the first bin with the minimum content
+    """ Get the first bin with the minimum content
     """
     value = None
     bin   = 0
@@ -3024,7 +3049,7 @@ def _h1_minimum_bin_ ( h1 ) :
 # ============================================================================
 ## get the first bin with the maximal content
 def _h1_maximum_bin_ ( h1 ) :
-    """Get the first bin with the maximal content
+    """ Get the first bin with the maximal content
     """
     value = None
     bin   = 0
@@ -3038,7 +3063,7 @@ def _h1_maximum_bin_ ( h1 ) :
 # =============================================================================
 ## get the first bin with the minimum content
 def _h2_minimum_bin_ ( h2 ) :
-    """Get the first bin with the minimum content
+    """ Get the first bin with the minimum content
     """
     value = None
     bin   = 0,0
@@ -3052,7 +3077,7 @@ def _h2_minimum_bin_ ( h2 ) :
 # =============================================================================
 ## get the first bin with the maximal content
 def _h2_maximum_bin_ ( h2 ) :
-    """Get the first bin with the maximal content
+    """ Get the first bin with the maximal content
     """
     value = None
     bin   = 0,0
@@ -3066,7 +3091,7 @@ def _h2_maximum_bin_ ( h2 ) :
 # =============================================================================
 ## get the first bin with the minimum content
 def _h3_minimum_bin_ ( h3 ) :
-    """Get the first bin with the minimum content
+    """ Get the first bin with the minimum content
     """
     value = None
     bin   = 0,0
@@ -3080,7 +3105,7 @@ def _h3_minimum_bin_ ( h3 ) :
 # =============================================================================
 ## get the first bin with the maximal content
 def _h3_maximum_bin_ ( h3 ) :
-    """Get the first bin with the maximal content
+    """ Get the first bin with the maximal content
     """
     value = None
     bin   = 0,0
@@ -3101,7 +3126,7 @@ ROOT.TH3.maximum_bin = _h3_maximum_bin_
 # ============================================================================
 ## get the minimum value for X-axis 
 def _ax_min_ ( self ) :
-    """Get the minimum value for X-axis
+    """ Get the minimum value for X-axis
     >>> xmin = h.xmin()
     """
     ax = self.GetXaxis () 
@@ -3109,7 +3134,7 @@ def _ax_min_ ( self ) :
 # ============================================================================
 ## get the minimum value for y-axis 
 def _ay_min_ ( self ) :
-    """Get the minimum value for Y-axis
+    """ Get the minimum value for Y-axis
     >>> ymin = h.ymin()
     """
     ay = self.GetYaxis () 
@@ -3117,7 +3142,7 @@ def _ay_min_ ( self ) :
 # ============================================================================
 ## get the minimum value for z-axis 
 def _az_min_ ( self ) :
-    """Get the minimum value for Z-axis
+    """ Get the minimum value for Z-axis
     >>> zmin = h.zmin()
     """
     az = self.GetZaxis () 
@@ -3126,7 +3151,7 @@ def _az_min_ ( self ) :
 # ============================================================================
 ## get the maximum value for X-axis 
 def _ax_max_ ( self ) :
-    """Get the maximum value for X-axis
+    """ Get the maximum value for X-axis
     >>> xmax = h.xmax()
     """
     ax = self.GetXaxis () 
@@ -3134,7 +3159,7 @@ def _ax_max_ ( self ) :
 # ============================================================================
 ## get the maximum value for y-axis 
 def _ay_max_ ( self ) :
-    """Get the maximum value for Y-axis
+    """ Get the maximum value for Y-axis
     >>> ymax = h.ymax()
     """
     ay = self.GetYaxis () 
@@ -8753,6 +8778,9 @@ _new_methods_   = (
     ROOT.TH3 . xminmax ,
     ROOT.TH3 . yminmax ,
     ROOT.TH3 . zminmax ,
+    #
+    ROOT.TH1 . min_positive  ,
+    ROOT.TH1 . minpos        ,
     #
     ROOT.TH2F.random   ,
     ROOT.TH2D.random   ,

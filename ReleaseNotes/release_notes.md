@@ -1,22 +1,25 @@
+# v1.13.2.0
+
 ## New features
     
-  1. further improvemets for nice printout of linear algebra objects
-  1. add `lnorm` and `mnorm` methods for matrices to get L-norm and max-norm 
-  1. add `gdiagonal` method to get diagonal matrice 
-  1. add `abs` method for `SVectors`
-  1. improve Linear Algebra tests
-  1. improve the machinery for eigenvalues and eigenvectors
-  1. add possibility to avodi coloring of the header row in the tables
-  1. add protection for double cpoulmn (`::`) for the expression strings
-  1. resurrect and improve `ostap.stats.corr2d` module with simple 2D-decorrelation utility
-  1. make use of `terminaltables3` instead of `terminaltables` where/when possible
-                
+  1. Further improvemets for nice printout of linear algebra objects
+  1. Add `lnorm` and `mnorm` methods for matrices to get L-norm and max-norm 
+  1. Add `gdiagonal` method to get diagonal matrice 
+  1. Add `abs` method for `SVectors`
+  1. Improve Linear Algebra tests
+  1. Improve the machinery for eigenvalues and eigenvectors
+  1. Add possibility to avoid coloring of the header row in the tables
+  1. Add protection for double cpoulmn (`::`) for the expression strings
+  1. Resurrect and improve `ostap.stats.corr2d` module with simple 2D-decorrelation utility
+  1. Make use of `terminaltables3` instead of `terminaltables` where/when possible
+  1. Add new method `TH1.min_positive` to get minimal positive entry (or negative infinity).
+    
 ## Backward incompatible
 
 ## Bug fixes
     
-  1. fix tiny bug in `histo_book`
-  1. fix tiny bug in printout of linear algebra objects 
+  1. Fix tiny bug in `histo_book`
+  1. Fix tiny bug in printout of linear algebra objects 
     
 # v1.13.1.0
 

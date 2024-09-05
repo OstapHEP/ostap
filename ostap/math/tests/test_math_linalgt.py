@@ -14,7 +14,7 @@ from   sys                  import version_info as python_version
 from   ostap.math.base      import typename 
 from   ostap.math.linalg    import checkops 
 from   ostap.core.core      import Ostap
-from   ostap.core.meta_info import root_version_int
+from   ostap.core.meta_info import root_info
 import ostap.logger.table   as     T 
 import ROOT, array, random   
 # ============================================================================= 
@@ -367,7 +367,6 @@ def test_linalgt_mtrx () :
             
             row3 = n1 , '*' , n2 , typename ( r_mult   )
             rows.append ( row3 )
-
             
     ## pow for matrices 
     for m1 in matrices22 :
@@ -418,7 +417,7 @@ def test_linalgt_mtrx () :
 # =============================================================================
 ## The main function to test linear algebra 
 def test_linalgt_old () :
-    """The main function to test linear algebra
+    """ The main function to test linear algebra
     """
 
     logger = getLogger( 'test_linangt_old')
@@ -433,19 +432,19 @@ def test_linalgt_old () :
     l1[0],l1[1],l1[2] = 0,1,2
     l2[0],l2[1],l2[2] = 3,4,5
     
-    logger.info ( 'l1 , l2 : %s %s '  % ( l1 , l2  ) )
-    logger.info ( 'l1 + l2 : %s    '  % ( l1 + l2  ) )
+    logger.info ( 'l1 , l2 : \n%s \n%s '  % ( l1 , l2  ) )
+    logger.info ( 'l1 + l2 : \n%s    '    % ( l1 + l2  ) )
     
-    logger.info ( 'l1 - l2 : %s    '  % ( l1 - l2  ) )
-    logger.info ( 'l1 * l2 : %s    '  % ( l1 * l2  ) )
-    logger.info ( 'l1 *  2 : %s    '  % ( l1 *  2  ) )
-    logger.info ( ' 2 * l2 : %s    '  % ( 2  * l2  ) )
-    logger.info ( 'l1 /  2 : %s    '  % ( l1 /  2  ) )
+    logger.info ( 'l1 - l2 : \n%s    '  % ( l1 - l2  ) )
+    logger.info ( 'l1 * l2 : \n%s    '  % ( l1 * l2  ) )
+    logger.info ( 'l1 *  2 : \n%s    '  % ( l1 *  2  ) )
+    logger.info ( ' 2 * l2 : \n%s    '  % ( 2  * l2  ) )
+    logger.info ( 'l1 /  2 : \n%s    '  % ( l1 /  2  ) )
     
     l1 /= 2 
-    logger.info ( 'l1 /= 2 : %s    '  % l1 )
+    logger.info ( 'l1 /= 2 : \n%s    '  % l1 )
     l1 *= 2 
-    logger.info ( 'l1 *= 2 : %s    '  % l1 )
+    logger.info ( 'l1 *= 2 : \n%s    '  % l1 )
 
     ## if ( 3 , 5 ) <= python_version :
 
@@ -470,7 +469,7 @@ def test_linalgt_old () :
     l3[1]    = 2
     l3[1]    = 3
     
-    logger.info ( 'l2 , l3 : %s %s '  % ( l2 , l3  ) )
+    logger.info ( 'l2 , l3 : \n%s \n%s '  % ( l2 , l3  ) )
 
     
     ## if ( 3 , 5 ) <= python_version :
@@ -502,11 +501,11 @@ def test_linalgt_old () :
     logger.info ( 'm22**3\n%s' % m22**3  ) 
     logger.info ( 's22**4\n%s' % s22**4  ) 
 
-    logger.info ( 'm22 * m23 :\n%s' % ( m22 * m23 ) ) 
-    logger.info ( 'm22 *  l2 : %s ' % ( m22 * l2  ) ) 
-    logger.info ( 'l2  * m22 : %s ' % ( l2  * m22 ) ) 
-    logger.info ( 'm23 *  l3 : %s ' % ( m23 * l3  ) ) 
-    logger.info ( 'l2  * m23 : %s ' % ( l2  * m23 ) )
+    logger.info ( 'm22 * m23 : \n%s' % ( m22 * m23 ) ) 
+    logger.info ( 'm22 *  l2 : \n%s ' % ( m22 * l2  ) ) 
+    logger.info ( 'l2  * m22 : \n%s ' % ( l2  * m22 ) ) 
+    logger.info ( 'm23 *  l3 : \n%s ' % ( m23 * l3  ) ) 
+    logger.info ( 'l2  * m23 : \n%s ' % ( l2  * m23 ) )
     
     logger.info ( 'm22 * s22 + 2 * m22 :\n%s ' %  ( m22*s22 + 2*m22  ) )
     logger.info ( 'm22 == m22*1.0 : %s ' % (  m22 == m22 * 1.0 ) )
@@ -552,20 +551,21 @@ def test_linalgt_old () :
         v2 = np.array ( [1.0,2.0]      )
         v3 = np.array ( [1.0,2.0,3.0 ] )
 
-        logger.info ( 'v2  * l2  : %s' % ( v2  * l2  ) )
-        logger.info ( 'l3  * v3  : %s' % ( l3  * v3  ) )
-        logger.info ( 's22 * v2  : %s' % ( s22 * v2  ) )
-        logger.info ( 'm22 * v2  : %s' % ( m22 * v2  ) )
-        logger.info ( 'm23 * v3  : %s' % ( m23 * v3  ) )
+        logger.info ( 'v2  * l2  : \n%s' % ( v2  * l2  ) )
+        logger.info ( 'l3  * v3  : \n%s' % ( l3  * v3  ) )
+        logger.info ( 's22 * v2  : \n%s' % ( s22 * v2  ) )
+        logger.info ( 'm22 * v2  : \n%s' % ( m22 * v2  ) )
+        logger.info ( 'm23 * v3  : \n%s' % ( m23 * v3  ) )
         
 
         n22_m = m22.to_numpy ()
         n22_s = s22.to_numpy ()
         n23   = m23.to_numpy ()
         
-        if 62006 <= root_version_int :
-            logger.warning ("Tests with numpy are broken for ROOT %s" %  root_version_int ) 
-        else : 
+        if ( 6 , 20 ) <= root_info < ( 6 ,33 ) : 
+            logger.warning ("Tests with numpy are broken for ROOT %s" %  str ( root_info ) ) 
+        else :
+            
             logger.info ( 'm22  * m22(np) :\n%s' % ( m22 * m22.to_numpy() ) )
             logger.info ( 's22  * s22(np) :\n%s' % ( s22 * s22.to_numpy() ) )
             logger.info ( 's22  * m23(np) :\n%s' % ( s22 * m23.to_numpy() ) )        
@@ -576,7 +576,7 @@ def test_linalgt_old () :
 # ==============================================================================
 ## test to check TMatrix <-> array interplay 
 def test_linalgt_arr () :
-    """Test to check TMatrix <-> array interplay"""
+    """ Test to check TMatrix <-> array interplay"""
     
 
     logger = getLogger( 'test_linangt_2')
@@ -629,10 +629,10 @@ def test_linalgt_arr () :
 if '__main__' == __name__ :
     
 
-    ## test_linalgt_vct  () 
+    test_linalgt_vct  () 
     test_linalgt_mtrx () 
-    ## test_linalgt_old  ()
-    ## test_linalgt_arr  ()
+    test_linalgt_old  ()
+    test_linalgt_arr  ()
 
 
 # =============================================================================
