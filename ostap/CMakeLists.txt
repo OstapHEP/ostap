@@ -31,221 +31,259 @@ macro(find_python_module module)
 endmacro(find_python_module)
 
 if(DEFINED ENV{VIRTUAL_ENV} OR DEFINED ENV{CONDA_PREFIX})
-  set(PIP_ARGS)
+   set(PIP_ARGS)
 else()
-  set(PIP_ARGS "--user")
+   set(PIP_ARGS "--user")
 endif()
 
-
-## find_python_module ( numpy QUIET )
-## if ( NOT ${PY_numpy_FOUND} )
-## execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install numpy ${PIP_ARGS})
-## endif()
-
+# ========================================================================================
+## NumPy & scipy
+# ========================================================================================
+    
 find_python_module ( numpy QUIET )
 if ( NOT ${PY_numpy_FOUND} )
-message ( "----> warning (optional)          numpy is NOT found!" ) 
+   message ( "----> warning (optional)           numpy is NOT found!" ) 
 endif()
-
-## find_python_module ( scipy QUIET )
-## if ( NOT ${PY_scipy_FOUND} )
-## execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install scipy ${PIP_ARGS})
-## endif()
 
 find_python_module ( scipy QUIET )
 if ( NOT ${PY_scipy_FOUND} )
-message ( "----> warning (optional)          scipy is NOT found!" ) 
+   message ( "----> warning (optional)           scipy is NOT found!" ) 
 endif()
 
-
+# ========================================================================================
+## ipyparallel 
+# ========================================================================================
 if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.6" )
-find_python_module ( ipyparallel          QUIET )
-if ( NOT ${PY_ipyparallel_FOUND} )
-execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install ipyparallel ${PIP_ARGS})
-endif()
-find_python_module ( ipyparallel          QUIET )
-if ( NOT ${PY_ipyparallel_FOUND} )
-message ( "----> (warning) (optional) ipyparallel is NOT found!" ) 
-endif()
+   find_python_module ( ipyparallel          QUIET )
+   if ( NOT ${PY_ipyparallel_FOUND} )
+      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install ipyparallel ${PIP_ARGS})
+   endif()
+   find_python_module ( ipyparallel          QUIET )
+   if ( NOT ${PY_ipyparallel_FOUND} )
+      message ( "----> warning (optional)     ipyparallel is NOT found!" ) 
+   endif()
 endif() 
 
-    
-if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.8" )
-find_python_module ( zstandard QUIET )
-if ( NOT ${PY_zstandard_FOUND} )
-execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install zstandard ${PIP_ARGS})    
-endif()
-find_python_module ( zstandard QUIET )
-if ( NOT ${PY_zstandard_FOUND} )
-message ( "----> (warning) (optional) zstandard   is NOT found!" ) 
-endif()    
+# ========================================================================================
+## zstandard
+# ========================================================================================
+if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.8" )
+   find_python_module ( zstandard QUIET )
+   if ( NOT ${PY_zstandard_FOUND} )
+      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install zstandard ${PIP_ARGS})    
+   endif()
+   find_python_module ( zstandard QUIET )
+   if ( NOT ${PY_zstandard_FOUND} )
+      message ( "----> warning (optional)       zstandard   is NOT found!" ) 
+   endif()    
 endif()
 
-
-## ============================================================================
+# ========================================================================================
 ## Check for PATHOS & friends
-## ============================================================================
-
+# ========================================================================================
 find_python_module ( dill          QUIET )
 if ( NOT ${PY_dill_FOUND} )
-execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install dill ${PIP_ARGS})
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install dill ${PIP_ARGS})
 endif()
-
 find_python_module ( dill          QUIET )
 if ( NOT ${PY_dill_FOUND} )
-message ( "----> (warning) (optional)           dill (part of pathos) is NOT found!" ) 
+   message ( "----> warning (optional)            dill is NOT found!" ) 
 endif()
-
+##
 find_python_module ( ppft          QUIET )
 if ( NOT ${PY_ppft_FOUND} )
-execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install ppft ${PIP_ARGS})
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install ppft ${PIP_ARGS})
 endif()
-
 find_python_module ( ppft          QUIET )
 if ( NOT ${PY_ppft_FOUND} )
-message ( "----> (warning) (optional)           ppft (part of pathos) is NOT found!" ) 
+   message ( "----> warning (optional)            ppft is NOT found!" ) 
 endif()
-
+##
 find_python_module ( multiprocess  QUIET )
 if ( NOT ${PY_multiprocess_FOUND} )
-execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install multiprocess ${PIP_ARGS})
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install multiprocess ${PIP_ARGS})
 endif()
 if ( NOT ${PY_multiprocess_FOUND} )
-message ( "----> (warning) (optional)   multiprocess (part of pathos) is NOT found!" ) 
+   message ( "----> warning (optional)    multiprocess is NOT found!" ) 
 endif()
-
+##
 find_python_module ( pathos        QUIET )
 if ( NOT ${PY_pathos_FOUND} )
-execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install pathos ${PIP_ARGS})
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install pathos ${PIP_ARGS})
 endif()
 if ( NOT ${PY_pathos_FOUND} )
-message ( "----> (warning) (optional)         pathos (part of pathos) is NOT found!" ) 
+   message ( "----> warning (optional)          pathos is NOT found!" ) 
 endif()
-
+##
 if ( ${PY_pathos_FOUND} AND ${PY_dill_FOUND} AND ${PY_multiprocess_FOUND} AND ${PY_ppft_FOUND} ) 
-message ( "----> Full pathos (pathos,dill,multiprocess,ppft) is found" )
+   message ( "----> Full pathos (pathos,dill,multiprocess,ppft) is found" )
+else()
+   message ( "----> warning (optional) pathos          is NOT found!" )    
 endif()
 
-
-if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.7" )
-find_python_module ( lmdb        QUIET )
-if ( NOT ${PY_lmdb_FOUND} )
-find_program(MDB_STAT_EXECUTABLE NAMES mdb_stat)
-if ( $MDB_STAT_EXECUTABLE )
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install lmdb ${PIP_ARGS})
-endif()
-endif()
-find_python_module ( lmdb        QUIET )
-endif()
-
-if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.9" )
-find_python_module ( terminaltables3 QUIET )
-if ( NOT ${PY_terminaltables3_FOUND} )
-execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install terminaltables3 ${PIP_ARGS})
-endif ()        
+# ========================================================================================
+## lmdb : check&install only if mdb_stat exists ...
+# ========================================================================================  
+if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.7" )
+   find_program(MDB_STAT_EXECUTABLE NAMES mdb_stat)
+   if ( ${MDB_STAT_EXECUTABLE} )
+      find_python_module ( lmdb        QUIET )
+      if ( NOT ${PY_lmdb_FOUND} )
+         execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install lmdb ${PIP_ARGS})
+      endif()    
+      find_python_module ( lmdb        QUIET )
+      if ( NOT ${PY_lmdb_FOUND} )
+         message ( "----> warning (optional)            lmdb is NOT found!" )
+      endif() 
+   endif()
+endif() 
+ 
+# ========================================================================================
+## terminaltables3 & terminaltables 
+# ========================================================================================
+##     
+if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.9" )
+   find_python_module ( terminaltables3 QUIET )
+   if ( NOT ${PY_terminaltables3_FOUND} )
+      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install terminaltables3 ${PIP_ARGS})
+   endif ()
+   find_python_module ( terminaltables3 QUIET )
+   if ( NOT ${PY_terminaltables3_FOUND} )
+      message ( "----> warning (optional) terminaltables3 is NOT found!" )    
+   endif ()                        
 else  ()
-find_python_module ( terminaltables QUIET )
-if ( NOT ${PY_terminaltables_FOUND} )
-execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install terminaltables ${PIP_ARGS})
-endif ()    
+   find_python_module ( terminaltables QUIET )
+   if ( NOT ${PY_terminaltables_FOUND} )
+      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install terminaltables ${PIP_ARGS})
+   endif ()
+   find_python_module ( terminaltables QUIET )
+   if ( NOT ${PY_terminaltables_FOUND} )
+      message ( "----> warning (optional)  terminaltables is NOT found!" )    
+   endif ()            
 endif ()
+
+# ========================================================================================
+## tabulate 
+# ========================================================================================
+##  
+find_python_module ( tabulate QUIET )
+if ( NOT ${PY_tabulate_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install tabulate ${PIP_ARGS})
+endif()
+find_python_module ( tabulate QUIET )
+if ( NOT ${PY_tabulate_FOUND} )
+   message ( "----> warning (optional)        tabulate is NOT found!" )
+endif()
+
+# ========================================================================================
+## more_itertools 
+# ========================================================================================
+##   
+find_python_module ( more_itertools QUIET )
+if ( NOT ${PY_more_itertools_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install more_itertools ${PIP_ARGS})
+endif()
+find_python_module ( more_itertools QUIET )
+if ( NOT ${PY_more_itertools_FOUND} )
+   message ( "----> warning (optional)  more_itertools is NOT found!" ) 
+endif()
     
-find_python_module ( tabulate QUIET )
-if ( NOT ${PY_tabulate_FOUND} )
-execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install tabulate ${PIP_ARGS})
-endif()
-
-find_python_module ( tabulate QUIET )
-if ( NOT ${PY_tabulate_FOUND} )
-message ( "----> (warning) (optional)       tabulate is NOT found!" )
-endif()
-
-find_python_module ( more_itertools QUIET )
-if ( NOT ${PY_more_itertools_FOUND} )
-execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install more_itertools ${PIP_ARGS})
-endif()
-
-find_python_module ( more_itertools QUIET )
-if ( NOT ${PY_more_itertools_FOUND} )
-message ( "----> (warning) (optional) more_itertools is NOT found!" ) 
-endif()
-
+# ========================================================================================
+## psutil 
+# ========================================================================================
+## 
 find_python_module ( psutil QUIET )
 if ( NOT ${PY_psutil_FOUND} )
-execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install psutil ${PIP_ARGS})
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install psutil ${PIP_ARGS})
 endif()
-
 find_python_module ( psutil QUIET )
 if ( NOT ${PY_psutil_FOUND} )
-message ( "----> (warning) (optional) psutils        is NOT found!" ) 
+   message ( "----> warning (optional)         psutils is NOT found!" ) 
 endif()
 
 
+# ========================================================================================
 ## BerkeleyDB
-
-if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.6" )
-if  ( ${PYTHON_VERSION} VERSION_LESS          "3.7" )
-   find_python_module ( berkeleydb QUIET )
-   if ( NOT ${PY_berkeleydb_FOUND} )
-     execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install "berkeleydb==18.1.4" ${PIP_ARGS})
+# ========================================================================================
+##  
+if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.6" )
+   if ( ${PYTHON_VERSION} VERSION_LESS       "3.7" )
+      find_python_module ( berkeleydb QUIET )
+      if ( NOT ${PY_berkeleydb_FOUND} )
+         execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install "berkeleydb==18.1.4" ${PIP_ARGS})
+      endif()
    endif()
 endif()
-endif() 
-
-if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.7" )
-if  ( ${PYTHON_VERSION} VERSION_LESS          "3.8" )
-   find_python_module ( berkeleydb QUIET )
-   if ( NOT ${PY_berkeleydb_FOUND} )
-     execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install "berkeleydb==18.1.6" ${PIP_ARGS})
+## 
+if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.7" )
+   if ( ${PYTHON_VERSION} VERSION_LESS       "3.8" )
+      find_python_module ( berkeleydb QUIET )
+      if ( NOT ${PY_berkeleydb_FOUND} )
+        execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install "berkeleydb==18.1.6" ${PIP_ARGS})
+      endif()
+    
    endif()
 endif()
-endif()
-        
-if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.3"  )
-find_python_module ( berkeleydb QUIET )
-if ( NOT ${PY_berkeleydb_FOUND} )
-   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install berkeleydb ${PIP_ARGS})
-endif()
-find_python_module ( berkeleydb QUIET )
-if ( NOT ${PY_berkeleydb_FOUND} )
-   message ( "----> (warning) (optional)     berkeleydb is NOT found!" ) 
-endif()
+## 
+if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.3"  )
+   find_python_module ( berkeleydb QUIET )
+   if ( NOT ${PY_berkeleydb_FOUND} )
+      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install berkeleydb ${PIP_ARGS})
+   endif()
+   find_python_module ( berkeleydb QUIET )
+   if ( NOT ${PY_berkeleydb_FOUND} )
+      message ( "----> warning (optional)      berkeleydb is NOT found!" ) 
+   endif()
 endif() 
 
+# ========================================================================================
 ## BDDDB3
-
-if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.3"  )    
-if  ( ${PYTHON_VERSION} VERSION_LESS          "3.10" )
-  find_python_module ( bsddb3 QUIET )
-  if ( NOT ${PY_bsddb3_FOUND} )
-     execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install bsddb3 ${PIP_ARGS})
-  endif()
-  find_python_module ( bsddb3 QUIET )
-  if ( NOT ${PY_bsddb3_FOUND} )
-     message ( "----> (warning) (optional)         bsddb3 is NOT found!" ) 
-  endif()
-endif()
+# ========================================================================================
+if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.3"  )    
+   if ( ${PYTHON_VERSION} VERSION_LESS       "3.10" )
+      find_python_module ( bsddb3 QUIET )
+      if ( NOT ${PY_bsddb3_FOUND} )
+         execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install bsddb3 ${PIP_ARGS})
+      endif()
+      find_python_module ( bsddb3 QUIET )
+      if ( NOT ${PY_bsddb3_FOUND} )
+         message ( "----> warning (optional)          bsddb3 is NOT found!" ) 
+      endif()
+   endif()
 endif() 
 
-
-
+# ========================================================================================
+## hep_ml
+# ========================================================================================
+##  
 find_python_module ( hep_ml QUIET )
 if ( NOT ${PY_hep_ml_FOUND} )
-execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install hep_ml ${PIP_ARGS})
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install hep_ml ${PIP_ARGS})
 endif()
-
 find_python_module ( hep_ml QUIET )
 if ( NOT ${PY_hep_ml_FOUND} )
-message ( "----> (warning) (optional) hep_ml         is NOT found!" ) 
+   message ( "----> warning (optional)          hep_ml is NOT found!" ) 
 endif()
 
+# =========================================================================================
+## INSTALLATION
+# =========================================================================================
 
-execute_process(
-  COMMAND "${PYTHON_EXECUTABLE}" -c "if True:
-  from distutils import sysconfig as sc
-  print(sc.get_python_lib(prefix='', plat_specific=True))"
-  OUTPUT_VARIABLE OSTAP_PYTHON_SITE_LOCAL
-  OUTPUT_STRIP_TRAILING_WHITESPACE)
+if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.10"  )    
+   execute_process(
+      COMMAND "${PYTHON_EXECUTABLE}" -c "if True:
+      import sysconfig as sc
+      print(sc.get_path( 'purelib' , vars = { 'base' : '' , 'userbase' : '' , 'platbase' : '' } ))"
+      OUTPUT_VARIABLE OSTAP_PYTHON_SITE_LOCAL
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+else()
+   execute_process(
+      COMMAND "${PYTHON_EXECUTABLE}" -c "if True:
+      from distutils import sysconfig as sc
+      print(sc.get_python_lib(prefix='', plat_specific=True))"
+      OUTPUT_VARIABLE OSTAP_PYTHON_SITE_LOCAL
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif() 
 
 install(DIRECTORY   ${CMAKE_CURRENT_SOURCE_DIR}
         DESTINATION ${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}
@@ -253,10 +291,6 @@ install(DIRECTORY   ${CMAKE_CURRENT_SOURCE_DIR}
         PATTERN  "*#*" EXCLUDE )
 
 set(OSTAP_PYTHON_SITE_DIR ${OSTAP_PYTHON_SITE_LOCAL}  PARENT_SCOPE)
-
-
-
-
 
 ## senseless? 
 set( $ENV{PYTHONPATH} ${CMAKE_INSTALL_PREFIX}:$ENV{PYTHONPATH} ) 
@@ -274,28 +308,38 @@ execute_process(
   ERROR_QUIET)
 
 if ( OSTAP_PYTHON_CHECK_WARNINGS_RESULT ) 
- set( OSTAP_TEST_PYTHON_WARNINGS "" ) 
+   set ( OSTAP_TEST_PYTHON_WARNINGS "" ) 
 else  () 
- set( OSTAP_TEST_PYTHON_WARNINGS "-Werror" ) 
+   set ( OSTAP_TEST_PYTHON_WARNINGS "-Werror" ) 
 endif () 
 
 if ( OSTAP_TEST_PYTHON_WARNINGS ) 
- MESSAGE ( "All tests will be executed with " ${OSTAP_TEST_PYTHON_WARNINGS} " flag"  ) 
+    MESSAGE ( "All tests will be executed with " ${OSTAP_TEST_PYTHON_WARNINGS} " flag"  ) 
 endif() 
 
-
+# ========================================================================================
+## main tests
+# ========================================================================================
+    
 file(GLOB files "${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}/ostap/*/tests/test_*.py")
 find_program(NOSE_EXECUTABLE NAMES nosetests)
+if ( ${NOSE_EXECUTABLE} )
+   MESSAGE ( "Nose will be used for main tests" ) 
+endif()     
 foreach(filename ${files})
    get_filename_component(tname ${filename} NAME_WE)
    string(CONCAT tname ostap. ${tname})
-   if( ${NOSE_EXECUTABLE} )
-     add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND ${NOSE_EXECUTABLE} ${filename} --process-timeout=5000 )
+   if ( ${NOSE_EXECUTABLE} )
+      add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND ${NOSE_EXECUTABLE} ${filename} --process-timeout=5000 )
    else  () 
-     add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
+      add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
    endif () 
    set_tests_properties(${tname} PROPERTIES TIMEOUT 5000 ENVIRONMENT OSTAP_CMAKE_TEST=1 ) 
-endforeach() 
+endforeach()
+
+# ========================================================================================
+## additimal tests 
+# ========================================================================================
 file(GLOB               allfiles "${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}/ostap/*/*.py")
 list(SORT               allfiles)
 list(REMOVE_DUPLICATES  allfiles)
@@ -303,34 +347,29 @@ list(FILTER             allfiles EXCLUDE REGEX ".*\\/__init__\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/tests/.*\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/sp_.*\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/.*#.*\\.py$")
-
-if (Python_VERSION VERSION_LESS "3.3")
-  list(FILTER             allfiles EXCLUDE REGEX ".*\\/lzshelve\\.py$")
-endif() 
-
-if (Python_VERSION VERSION_LESS "3.6")
-  list(FILTER             allfiles EXCLUDE REGEX ".*\\/zstshelve\\.py$")
-endif() 
-
+if ( Python_VERSION VERSION_LESS "3.3")
+   list(FILTER             allfiles EXCLUDE REGEX ".*\\/lzshelve\\.py$")
+endif () 
+if ( Python_VERSION VERSION_LESS "3.6")
+   list(FILTER             allfiles EXCLUDE REGEX ".*\\/zstshelve\\.py$")
+endif () 
 if ( NOT ${PY_zstandard_FOUND} )
-  list(FILTER             allfiles EXCLUDE REGEX ".*\\/zstshelve\\.py$")
+   list(FILTER             allfiles EXCLUDE REGEX ".*\\/zstshelve\\.py$")
 endif()
-
-
 
 set (PREFIX ${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}/ )
 
 foreach(filename ${allfiles})
 
-    string(REPLACE FAKEfakeFAKEfake ququququ   testname  ${filename} )
-    string(REPLACE ${PREFIX} ""  testname ${testname})
-    string(REPLACE "\.py" ""     testname ${testname})
-    string(REPLACE "/" "_"       testname ${testname})
-    string(CONCAT  testname ostap.runit_  ${testname})
+   string(REPLACE FAKEfakeFAKEfake ququququ   testname  ${filename} )
+   string(REPLACE ${PREFIX} ""  testname ${testname})
+   string(REPLACE "\.py" ""     testname ${testname})
+   string(REPLACE "/" "_"       testname ${testname})
+   string(CONCAT  testname ostap.runit_  ${testname})
 
-    add_test (NAME ${testname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
+   add_test (NAME ${testname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
 
-    set_tests_properties(${testname} PROPERTIES TIMEOUT 5000 ENVIRONMENT OSTAP_CMAKE_TEST=1 ) 
+   set_tests_properties(${testname} PROPERTIES TIMEOUT 5000 ENVIRONMENT OSTAP_CMAKE_TEST=1 ) 
 
 endforeach() 
 
