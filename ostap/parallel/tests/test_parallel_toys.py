@@ -504,12 +504,8 @@ def test_parallel_significance ( ) :
     h_S.red  ()
     h_P.blue ()
 
-    minv = 1.e+100
-    for i,_,y in h_P.items() :
-        yv = y.value ()
-        if 0 < yv and yv < minv : minv = yv
-    minv , _  = num_range ( 0.75 * minv ) 
-    h_P.SetMinimum ( minv )
+    minv = h_P.min_positive () 
+    if 0 < minv : h_P.SetMinimum ( minv )
     h_S.SetMinimum ( 0    )
     
     with use_canvas ( 'test_parallel#%d_significance: yields'       % NT , wait = 1 ) : h_Y.draw ( )
