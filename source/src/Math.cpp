@@ -341,6 +341,36 @@ float Ostap::Math::frexp10 ( const float  x , int& e )
   return frexp10 ( xx , e ) ;
 }
 // ============================================================================
+/*  Multiplies a floating point value num by the number 10(radix)
+ *  raised to the exp power. 
+ *  similar to std::lxep, but radix is 10 
+ *  @param num  input value 
+ *  @param exp  the 10-base exponent 
+ *  @return     propertly scaled input value 
+ *  @attention  it is not very efficient, but OK for our purpose
+ */
+// ============================================================================
+double Ostap::Math::ldexp10
+( const double value ,
+  const short  expo  )
+{
+  if ( 0 == value )  { return 0 ; }
+  //
+  long double xa = 0 < value ? value : -value ;
+  //
+  const int qq  = (int) std::floor ( std::log10 ( xa ) ) ;
+  //
+  static const int     s_maxe10 =  std::numeric_limits<double>::max_exponent10 + 3 ;
+  static const double  s_max    =  std::numeric_limits<double>::max () ;
+  //
+  if ( qq + expo > s_maxe10 ) { return 0 <= value ? s_max : -s_max ; }
+  //
+  xa *= std::pow ( 10.0L , expo ) ;
+  const long double xx= 0 <= value ? xa  : -xa ;
+  //
+  return s_max <= xa ? ( 0 <= value ? s_max : -s_max ) : xx ;
+}
+// ============================================================================
 /*  round to N-significant digits 
  *  @param x  INPUT  input value 
  *  @param n  INPUT  number of significant digits 

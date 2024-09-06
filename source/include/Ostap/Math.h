@@ -868,6 +868,18 @@ namespace Ostap
     std::pair<double,int>
     frexp2  ( const double x ) ;
     // ========================================================================
+    /** Multiplies a floating point value num by the number 10(radix)
+     *  raised to the exp power. 
+     *  similar to std::lxep, but radix is 10 
+     *  @param num  input value 
+     *  @param exp  the 10-base exponent 
+     *  @return     propertly scaled input value 
+     *  @attention  It is not very efficient, but OK for our purpose
+     */
+    double ldexp10
+    ( const double value ,
+      const short  expo  ) ;
+    // ========================================================================
     /** round to N-significant digits 
      *  @param x  INPUT  input value 
      *  @param n  INPUT  number of significnat digits 
