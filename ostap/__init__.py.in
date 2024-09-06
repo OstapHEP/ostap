@@ -45,7 +45,7 @@ version_info = VersionInfo ( @OSTAP_VERSION_MAJOR@ ,
                              @OSTAP_VERSION_PATCH@ ,
                              @OSTAP_VERSION_TWEAK@ )
 build_date   = __date__
-build_time   = datetime.datetime.utcfromtimestamp ( @OSTAP_BUILD_UTCUNIX@ )
+build_time   = datetime.datetime.fromtimestamp ( @OSTAP_BUILD_UTCUNIX@ , datetime.UTC )
 version_int  = version_info.tweak                   +\
                version_info.patch             * 100 +\
                version_info.minor       * 100 * 100 +\

@@ -347,12 +347,15 @@ list(FILTER             allfiles EXCLUDE REGEX ".*\\/__init__\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/tests/.*\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/sp_.*\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/.*#.*\\.py$")
+##
 if ( Python_VERSION VERSION_LESS "3.3")
    list(FILTER             allfiles EXCLUDE REGEX ".*\\/lzshelve\\.py$")
-endif () 
+endif ()
+##
 if ( Python_VERSION VERSION_LESS "3.6")
    list(FILTER             allfiles EXCLUDE REGEX ".*\\/zstshelve\\.py$")
-endif () 
+endif ()
+##
 if ( NOT ${PY_zstandard_FOUND} )
    list(FILTER             allfiles EXCLUDE REGEX ".*\\/zstshelve\\.py$")
 endif()
