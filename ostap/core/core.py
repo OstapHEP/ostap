@@ -1184,8 +1184,7 @@ else :
 ## Are we in CMAKE-test regime?
 def in_test () :
     """ Are we in CMAKE-test regime?"""
-    return os.environ.get( 'OSTAP_CMAKE_TEST', False)
-
+    return os.environ.get ( 'OSTAP_CMAKE_TEST' , False )
 
 # =============================================================================
 _decorated_classes_ = (
