@@ -33,7 +33,7 @@ jobs:
       docker cp  .  ostap-build:/osya
     displayName: 'docker container'
   - script: |
-     sudo yum install libdb-dev 
+     sudo app-get install libdb-dev 
      docker run --rm   -v /cvmfs:/cvmfs:shared --volumes-from ostap-build -u:0  --security-opt seccomp=unconfined ${{ parameters.dockername }} /bin/bash -c "cd /osya/ && ./.aux/build_with_lcg ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}"
     displayName: 'build stage'
   - script: |
