@@ -255,16 +255,17 @@ endif()
 # ========================================================================================
 ## hep_ml
 # ========================================================================================
-##  
-find_python_module ( hep_ml QUIET )
-if ( NOT ${PY_hep_ml_FOUND} )
-   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install hep_ml ${PIP_ARGS})
+if ( ${PYTHON_VERSION} VERSION_LESS       "3.12" )
+   find_python_module ( hep_ml QUIET )
+   if ( NOT ${PY_hep_ml_FOUND} )
+      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install hep_ml ${PIP_ARGS})
+   endif()
+   find_python_module ( hep_ml QUIET )
+   if ( NOT ${PY_hep_ml_FOUND} )
+      message ( "----> warning (optional)          hep_ml is NOT found!" ) 
+   endif()
 endif()
-find_python_module ( hep_ml QUIET )
-if ( NOT ${PY_hep_ml_FOUND} )
-   message ( "----> warning (optional)          hep_ml is NOT found!" ) 
-endif()
-
+        
 # =========================================================================================
 ## INSTALLATION
 # =========================================================================================
