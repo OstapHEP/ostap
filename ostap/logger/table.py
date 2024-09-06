@@ -95,48 +95,15 @@ default_style = default_style.strip().lower()
 try :
     # =========================================================================
     #  @see https://github.com/astanin/python-tabulate
-    import tabulate as _tabulate 
-    # =========================================================================
-    ## Simple wrapper for <code>tabulate.tabulate</code> function
-    #  @see https://github.com/astanin/python-tabulate
-    #  @code
-    #  rows = .... ## tanle rows
-    #  table = tabulate ( rows , ... )
-    #  @endcode
-    def tabulate  ( rows ,  **kwargs ) :
-        """ Simple wrapper for `tabulate.tabulate` function
-        - see https://github.com/astanin/python-tabulate
-        >>> rows = .... ## tanle rows
-        >>> table = tabulate ( rows , ... )
-        """
-        return _tabulate.tabulate ( tabular_data = rows , **kwargs )    
-    # =========================================================================
-    ## Convert table into latex <code>tabular</code> environment    
-    #  @see https://github.com/astanin/python-tabulate
-    #  @code
-    #  rows = .... ## table rows
-    #  table = latex ( rows , ... )
-    #  @endcode
-    def latex ( rows ,  **kwargs ) :
-        """ Simple wrapper for `tabulate.tabulate` function
-        - see https://github.com/astanin/python-tabulate
-        >>> rows = .... ## tanle rows
-        >>> table = latex ( rows , ... )
-        """
-        tablefmt = kwargs.get ( 'tablefmt' , 'latex_raw' )
-        return tabulate ( rows , tablefmt = tablefmt , **kwargs ) 
-    
+    import tabulate
     # ===========================================================================
     ## available formats 
-    tabulate_styles = tuple ( _tabulate.tabulate_formats ) 
-    ## 
-    __all__ = __all__ + ( 'tabulate' , 'latex' )
+    tabulate_styles = tuple ( tabulate.tabulate_formats ) 
     ## 
 except ImportError :
     # ===========================================================================
     ## no formats are available
     tabulate         = None
-    latex            = None 
     tabulate_styles  = () 
     pass
 
@@ -424,8 +391,8 @@ def table ( rows                          ,
                 elif aL in center : colalign.append ( 'center' )
                 else              : colalign.append ( None     )
         colalign = tuple ( colalign )
-        if colalign  : result = tabulate   ( rows   , tablefmt = fmt , colalign = colalign , **kwargs )
-        else         : result = tabulate   ( rows   , tablefmt = fmt                       , **kwargs )
+        if colalign  : result = tabulate.tabulate ( rows   , tablefmt = fmt , colalign = colalign , **kwargs )
+        else         : result = tabulate.tabulate ( rows   , tablefmt = fmt                       , **kwargs )
         ## 
         if prefix : result = add_prefix ( result , prefix )
         ## 
@@ -596,7 +563,7 @@ if __name__ == '__main__' :
         result = table ( table_data , style  = fmt , prefix = '# ' )            
         logger.info ( 'Use the format="%s":\n%s' % ( fmt , result ) )
 
-    logger.info ( 'Available styles: %s' % ( ','.join ( table_styles + tabulate_styles ) ) ) 
+    logger.info ( 'Available styles: \n%s' % ( '\n'.join ( table_styles + tabulate_styles ) ) ) 
         
 # =============================================================================
 ##                                                                      The END 
