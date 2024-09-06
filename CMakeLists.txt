@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 message ( "----> CMAKE  version   : " ${CMAKE_VERSION} ) 
 
 
@@ -35,7 +35,7 @@ find_program(CMAKE_C_COMPILER   NAMES $ENV{CC}  gcc PATHS ENV PATH NO_DEFAULT_PA
 find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
 
 message ( "----> C-compiler       : " $ENV{CC}  )
-message ( "----> C++-compiler     : " $ENV{CXX} )
+message ( x"----> C++-compiler     : " $ENV{CXX} )
 
 
 # You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
