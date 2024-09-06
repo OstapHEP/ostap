@@ -35,7 +35,7 @@ __all__ = (
 __version__ = "@OSTAP_VERSION@"
 __date__    = "@OSTAP_BUILD_TIMESTAMP@"
 # =============================================================================
-import datetime 
+import sys,datetime 
 from   collections import namedtuple
 # =============================================================================
 version      = __version__
@@ -45,7 +45,12 @@ version_info = VersionInfo ( @OSTAP_VERSION_MAJOR@ ,
                              @OSTAP_VERSION_PATCH@ ,
                              @OSTAP_VERSION_TWEAK@ )
 build_date   = __date__
-build_time   = datetime.datetime.fromtimestamp ( @OSTAP_BUILD_UTCUNIX@ , datetime.UTC )
+if   ( 3 , 11 ) <= sys.version_info :
+    build_time = datetime.datetime.fromtimestamp ( @OSTAP_BUILD_UTCUNIX@ , datetime.UTC )
+elif ( 3 ,  5 ) <= sys.version_info :
+    build_time = datetime.datetime.fromtimestamp ( @OSTAP_BUILD_UTCUNIX@ , datetime.timezone.utc )
+else :
+    build_time = datetime.datetime.fromtimestamp ( @OSTAP_BUILD_UTCUNIX@ )    
 version_int  = version_info.tweak                   +\
                version_info.patch             * 100 +\
                version_info.minor       * 100 * 100 +\
