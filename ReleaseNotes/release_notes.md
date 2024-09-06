@@ -1,7 +1,11 @@
-# v1.13.2.0
-
 ## New features
     
+## Backward incompatible
+
+## Bug fixes
+
+# v1.13.2.0
+
   1. Further improvemets for nice printout of linear algebra objects
   1. Add `lnorm` and `mnorm` methods for matrices to get L-norm and max-norm 
   1. Add `diagonal` method to get diagonal matrice 
