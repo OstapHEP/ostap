@@ -111,18 +111,16 @@ def test_corr2d  ( var1 = 'x' , var2 = 'y') :
     logger.info ( 'normalized2   %s' % chain.statVar ( c2d.normalized2   ) )
     logger.info ( 'uniform11     %s' % chain.statVar ( c2d.uniform1      ) )
     logger.info ( 'uniform2      %s' % chain.statVar ( c2d.uniform2      ) )
-    
-
-    
+        
     cnt1  = chain.statVar ( c2d.var1          )
     cnt1d = chain.statVar ( c2d.decorrelated1 )
     cnt1n = chain.statVar ( c2d.normalized1   )
     cnt1u = chain.statVar ( c2d.uniform1      )
     
-    cnt2  = WSE()
-    cnt2d = WSE()
-    cnt2n = WSE()
-    cnt2u = WSE()
+    cnt2  = WSE ()
+    cnt2d = WSE ()
+    cnt2n = WSE ()
+    cnt2u = WSE ()
     
     for i in progress_bar ( chain ) :
 
