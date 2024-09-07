@@ -43,8 +43,8 @@ __all__     = (
     'all_strings'     , ## all argumets of string  types?
     )
 # =============================================================================
-import sys, os, math, array, cppyy 
-from   sys          import version_info as python_version
+import sys, os, math, array
+from   sys                     import version_info as python_version
 # =============================================================================
 # logging 
 # =============================================================================
@@ -82,7 +82,15 @@ str_types       = str,
 list_types      = list , tuple
 listlike_types  = list_types + ( set , C.Sequence , array.array )
 # =============================================================================
-std = cppyy.gbl.std
+if sys.warnoptions or os.environ.get ( 'OSTAP_CMAKE_TEST', False ) :
+    import warnings 
+    with warnings.catch_warnings():
+        warnings.simplefilter ( "always" )
+        import cppyy
+else :    
+    import cppyy
+# ==============================================================================
+std = cppyy.gbl.std 
 if hasattr ( std , 'string'      ) : string_types += ( std.string      , )
 if hasattr ( std , 'string_view' ) : string_types += ( std.string_view , )
 # =============================================================================
