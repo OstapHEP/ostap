@@ -43,8 +43,8 @@ __all__     = (
     'all_strings'     , ## all argumets of string  types?
     )
 # =============================================================================
-import math, os, array, cppyy   
-from   sys                 import version_info as python_version
+import sys, os, math, array, cppyy 
+from   sys          import version_info as python_version
 # =============================================================================
 # logging 
 # =============================================================================

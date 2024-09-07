@@ -339,7 +339,7 @@ foreach(filename ${files})
 endforeach()
 
 # ========================================================================================
-## additimal tests 
+## additiomal tests 
 # ========================================================================================
 file(GLOB               allfiles "${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}/ostap/*/*.py")
 list(SORT               allfiles)
@@ -383,8 +383,10 @@ add_test (NAME ostap.dependencies WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/
 
 
 install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}  
-          DESTINATION            .
-          FILES_MATCHING PATTERN "*.py" 
+          DESTINATION             . 
+          FILES_MATCHING
+          COMPONENT python 
+          PATTERN "*.py"          
           PATTERN  "*.#*" EXCLUDE )
 
 ## nosetests -w ../ostap/tools --exe --processes=16  --process-timeout=2000 -I '.*chopping.*'

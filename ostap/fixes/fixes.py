@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-02-23
 # =============================================================================
-"""Couple of minor fixes for Ostap
+""" Couple of minor fixes for Ostap
 """
 # =============================================================================
 __version__ = '$Revision$'

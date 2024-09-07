@@ -251,19 +251,21 @@ install ( TARGETS ostap     EXPORT   ostap-export
                             LIBRARY  DESTINATION lib 
                             INCLUDES DESTINATION include )
 
-install ( TARGETS ostapDict LIBRARY  DESTINATION lib )
+install ( TARGETS ostapDict LIBRARY  DESTINATION lib COMPONENT libraries )
 
 install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap     
                     DESTINATION include 
                     FILES_MATCHING
+                    COMPONENT headers 
                     PATTERN "*.h"
                     PATTERN "*.hpp"
                     PATTERN "*.icpp"
                     PATTERN  "*#*" EXCLUDE )
-install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h    DESTINATION include/Ostap )
-install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm   DESTINATION lib           )
-install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap DESTINATION lib           )
-install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/build.config      DESTINATION lib           )
+    
+install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h    DESTINATION include/Ostap COMPONENT headers   )
+install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm   DESTINATION lib           COMPONENT libraries )
+install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap DESTINATION lib           COMPONENT libraries )
+install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/build.config      DESTINATION lib           COMPONENT libraroes )
 
 install(EXPORT ostap-export
   FILE         OstapTargets.cmake
