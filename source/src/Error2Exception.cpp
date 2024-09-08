@@ -25,17 +25,17 @@
  *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
  */
 // ============================================================================
-// #include <iostream> 
 namespace 
 {
   // ==========================================================================
   /// (previous) error  handler 
   ErrorHandlerFunc_t s_handler    = nullptr   ;
   // ==========================================================================
-  void errorHandler ( int         level    , 
-                      Bool_t      abort    , 
-                      const char* location , 
-                      const char* message  ) 
+  void errorHandler
+  ( int         level    , 
+    Bool_t      abort    , 
+    const char* location , 
+    const char* message  ) 
   {
     //
     if ( gErrorIgnoreLevel == kUnset ) 
@@ -58,9 +58,17 @@ namespace
     }
     else if ( kWarning <= level && Py_IsInitialized() ) 
       {
-	// python warning here 
-	PyErr_WarnExplicit( NULL, (char*)message, (char*)location, 0, (char*)"ROOT", NULL );
-	// std::cerr << " RAWNING HERE: loc:" << location << " mg:" << message  << std::endl ;
+        // ====================================================================
+        // python warning here 
+        // ====================================================================
+        PyErr_WarnExplicit
+          ( PyExc_RuntimeWarning , // NULL 
+            message              , // (char*)
+            location             , // (char*)
+            0                    , // 
+            "ROOT"               , // (char*)
+            NULL                 ) ;
+        // ====================================================================
       }
     else if ( nullptr != s_handler && s_handler != &errorHandler ) 
     { (*s_handler) ( level , abort , location , message ) ; }
