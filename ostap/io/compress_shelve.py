@@ -246,7 +246,8 @@ class CompressShelf (shelve.Shelf,CUBase) :
         self.__opened = False        
         dbase = dbopen ( self.dbname , flag = mode , dbtype = dbtype , **kwargs )
         self.__opened        = True
-
+        if dbase and 'r' != mode and hasattr ( dbase , 'sync' ) : dbase.sync()
+        
         # =======================================================================
         ## all files after dbopen 
         pfiles  = set ( [ the_path ( i ) for i in glob.iglob  ( self.dbname + '*'  ) ] ) 

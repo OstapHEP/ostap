@@ -113,12 +113,16 @@ if ( 3 , 3 ) <= sys.version_info < ( 3 , 10 ) :
 use_lmdb = False
 # =============================================================================
 ## make a try for LMDB 
-if ( 3 , 7 ) <= sys.version_info : 
-    try :        
+if ( 3 , 7 ) <= sys.version_info :
+    # =========================================================================
+    try :
+        # =====================================================================
         import lmdb 
         from ostap.io.lmdbdict import LmdbDict, islmdb 
         use_lmdb = True
-    except ImportError  :        
+        # =====================================================================
+    except ImportError  :
+        # =====================================================================
         lmdb     = None 
         use_lmdb = False 
 
@@ -338,7 +342,7 @@ def dbfiles ( dbtype , basename ) :
     """
     if   dbtype in ( 'dbm.ndbm' , 'dbm'      ) : 
         return '%s.pag' % basename , '%s.dir' % basename , 
-    elif dbtype in ( 'dbm.dump' , 'dumbdbm'  ) : 
+    elif dbtype in ( 'dbm.dumb' , 'dumbdbm'  , ) : 
         return '%s.dat' % basename , '%s.dir' % basename , 
     elif dbtype in ( 'lmdb', ) : 
         return ( os.path.join ( basename , ''         ) , ## directory 
