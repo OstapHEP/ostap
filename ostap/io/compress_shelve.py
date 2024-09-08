@@ -846,7 +846,8 @@ class CompressShelf (shelve.Shelf,CUBase) :
                     logger.info ( "Tar-file `%s` content:" % filein )
                     tfile.list()
                 for item in tfile  :
-                    tfile.extract ( item , path = where  )
+                    args = { 'filter' : 'data' } if ( 3 , 12 ) <= python_version else {}
+                    tfile.extract ( item , path = where  , **args )
                     name = ( os.path.join ( where , item.name ) )
                     name = os.path.normpath  ( name ) 
                     items.append  ( name )
