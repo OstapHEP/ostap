@@ -22,13 +22,13 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.sp_interpolation' 
 else                       : logger = getLogger ( __name__                      )
 # =============================================================================
 with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
+    warnings.simplefilter ( "ignore" )
     import scipy.interpolate as SI
 
 # ==============================================================================
 ## simple class for scipy-based interpolation  
 class SplineInterpolator(object) :
-    """Simple class for scipy-based interpolation
+    """ Simple class for scipy-based interpolation
     >>> x = ... ##
     >>> y = ... ##
     >>> sp = SplineInterpolator ( (x,y) , 3 )
@@ -68,14 +68,14 @@ class SplineInterpolator(object) :
 
     @property
     def derivative ( self ) :
-        """``derivative'' : get the spline object for defivative"""
+        """`derivative' : get the spline object for defivative"""
         if not self.__derivative :
             self.__derivative = self.__spline.derivative()
         return self.__derivative
 
     @property
     def antiderivative ( self ) :
-        """``antiderivative'' : get the spline object for indefinite itegral"""
+        """`antiderivative' : get the spline object for indefinite itegral"""
         if not self.__antiderivative :
             self.__antiderivative = self.__spline.antiderivative()
         return self.__antiderivative
@@ -88,7 +88,7 @@ class SplineInterpolator(object) :
     #  >>> r = spline.integral( a , b ) ##   definite integral form a to b
     #  @endcode 
     def integral ( self , a = None , b = None ) :
-        """Get the integral
+        """ Get the integral
         >>> spline = ...
         >>> o = spline.integral()        ## indefinite integral
         >>> r = spline.integral( a , b ) ##   definite integral form a to b         
@@ -102,7 +102,7 @@ class SplineInterpolator(object) :
         
     @property
     def spline ( self ) :
-        """``spline'' : get the underlying bspline/scipy object"""
+        """`spline' : get the underlying bspline/scipy object"""
         return self.__spline
 
     

@@ -212,7 +212,7 @@ def knots_from_abscissas ( abscissas , order , convert = True ) :
 #  @param order     (INPUT) the order of spline
 #  @return interpolation spline 
 def interpolate ( func , abscissas , spline , *args ) :
-    """Construct the interpolation B-spline
+    """ Construct the interpolation B-spline
     
     func      : the ``function''
     abscissas : abscissas, if None/Empty,  Greville's abscissas from the spline will be used
@@ -274,9 +274,9 @@ def interpolate ( func , abscissas , spline , *args ) :
 # =============================================================================
 
 try :
-    # =========================================================================
+    # =========================================================================    
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+        warnings.simplefilter ( "ignore" )
         import scipy.interpolate
     # =========================================================================
     ## create interpolation spline using scipy machinery

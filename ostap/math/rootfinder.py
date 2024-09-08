@@ -1244,10 +1244,10 @@ def find_root ( f                   , ## the function
     return solver.find ( a , b )
 
 # =============================================================================
-try :
+try : 
     # =========================================================================
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+        warnings.simplefilter ( "ignore" )
         from scipy.optimize import brentq as scipy_brentq 
         findroot = scipy_brentq
     # =========================================================================
@@ -1255,7 +1255,7 @@ except ImportError :
     # =========================================================================
     ## logger.warning ("scipy.optimize.brentq is not available, use local ``find_root''-replacement")
     findroot = find_root
-
+    # =========================================================================
 
 # =============================================================================
 ## solve equation \f$ f(x)=C \f$
@@ -1265,7 +1265,7 @@ except ImportError :
 #  x   = solve ( fun ,  0.0 , 1.0 , C ) 
 #  @endcode 
 def sp_solve ( fun , xmin ,  xmax , C = 0 , args = () ) :
-    """Solve equation fun(x)=C
+    """ Solve equation fun(x)=C
     >>> fun = ...
     >>> C   = ... 
     >>> x   = solve ( fun , 0 , 1 , C  ) 
@@ -1277,6 +1277,7 @@ def sp_solve ( fun , xmin ,  xmax , C = 0 , args = () ) :
     func = lambda x , *a : fun(x,*a)-C
     return findroot ( func , xmin ,  xmax , args = args )
 
+# =============================================================================
 ##
 solve = sp_solve 
     

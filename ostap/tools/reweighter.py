@@ -36,7 +36,7 @@ class Reweighter(object) :
     def __init__ ( self , **kwargs )  :
 
         with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+            warnings.simplefilter ( "ignore" )
 
             import numpy
             if not hasattr ( numpy , 'float' ) :
@@ -49,7 +49,7 @@ class Reweighter(object) :
             
     @property
     def reweighter ( self ) :
-        """``reweighter'' : get the underlying reweighter object"""
+        """`reweighter' : get the underlying reweighter object"""
         return self.__reweighter
 
     # =========================================================================
@@ -78,18 +78,19 @@ class Reweighter(object) :
         self.__nvars = original.shape[-1]
         
         with warnings.catch_warnings():
-            warnings.simplefilter("ignore")    
+            warnings.simplefilter ( "ignore" )    
             self.reweighter.fit ( original ,
                                   target   ,
                                   original_weight = original_weight , 
                                   target_weight   = target_weight   )
             
+    # =========================================================================
     def weight ( self                   ,
                  original               ,
                  original_weight = None ) :
 
         with warnings.catch_warnings():
-            warnings.simplefilter("ignore")    
+            warnings.simplefilter ( "ignore" )    
             return self.reweighter.predict_weights (
                 original        = original         ,
                 original_weight = original_weight  ) 

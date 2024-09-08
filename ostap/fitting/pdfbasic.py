@@ -554,18 +554,22 @@ class APDF1 ( Components ) :
     ## invoke <code>model.fitTo  ( data  , *options)</code> command
     #  - merge arguments using <code>RooFit::MultiArg</code> to shorted list
     def fit_to ( self , model , data , *options ) :
-        """Invoke `model.fitTo ( data , *options)` command
+        """ Invoke `model.fitTo ( data , *options)` command
         - merge arguments using `ROOT.RooFit::MultiArg` to shorted list
         """
         
         NARGS = 8
-
+        
         assert all ( isinstance ( o , ROOT.RooCmdArg ) for o in options  ), \
-               "fit_to: invalid argument types: %s" % list ( options  ) 
+            "fit_to: invalid argument types: %s" % list ( options  ) 
 
+        ## No need to restructure options: 
         if  ( 6 , 32 ) <= root_info :
-            with warnings.catch_warnings():
-                warnings.simplefilter("always")
+            if sys.warnoptions or in_test() :
+                with warnings.catch_warnings():
+                    warnings.simplefilter ( "always" , category = RuntimeWarning )        
+                    return Ostap.MoreRooFit.fitTo ( model , data , *options )
+            else : 
                 return Ostap.MoreRooFit.fitTo ( model , data , *options )
 
         ##  for "small" number of arguments use the standard function 
@@ -577,7 +581,7 @@ class APDF1 ( Components ) :
         
         if sys.warnoptions or in_test() :
             with warnings.catch_warnings():
-                warnings.simplefilter("always")
+                warnings.simplefilter ( "always" , category = RuntimeWarning )        
                 return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
             
         return Ostap.MoreRooFit.fitTo ( model , data , cmd  )

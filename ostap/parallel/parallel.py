@@ -75,7 +75,7 @@ if not worker or 'IPYPARALLEL' == worker :
     if ( 3 , 6 ) <= sys.version_info :
         try :
             with warnings.catch_warnings() :            
-                warnings.simplefilter("ignore")                
+                warnings.simplefilter ( "ignore" )                
                 import ipyparallel as _ipp
                 worker = 'IPYPARALLEL' if ( 8 , 0 ) <= _ipp.version_info else '' 
         except ImportError :

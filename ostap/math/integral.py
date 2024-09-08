@@ -425,7 +425,7 @@ def clenshaw_curtis ( fun                 ,
 try :
     # =========================================================================
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+        warnings.simplefilter ( "ignore" )
         from scipy.integrate import quad as scipy_quad
     # =========================================================================
     ## Calculate the integral (from x0 to x) for the 1D-function 
@@ -449,9 +449,9 @@ try :
         func   = lambda x : float ( fun ( x , *args ) ) 
         import warnings
         with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+            warnings.simplefilter ( "always" )
             result = scipy_quad ( func , xmin , xmax , **kwargs )
-            return VE ( result[0] , result[1] * result[1] ) if err else result[0]
+            return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
         
 except ImportError :
     # =========================================================================
@@ -911,12 +911,12 @@ try :
         func   = lambda x,y : float ( fun ( x , y , *args ) ) 
         import warnings
         with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+            warnings.simplefilter ( "always" )
             result = scipy_dblquad ( func ,
                                      ymin , ymax     ,
                                      lambda x : xmin ,
                                      lambda x : xmax , **kwargs )
-            return VE( result[0] , result[1] * result[1] ) if err else result[0]
+            return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
         
 except ImportError :
     # =========================================================================
@@ -933,7 +933,7 @@ except ImportError :
 try :
     # =========================================================================
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+        warnings.simplefilter ( "ignore" )
         from scipy.integrate import tplquad as scipy_tplquad
     # =========================================================================
     ## Calculate the inteegral for the 3D-function 
@@ -957,15 +957,15 @@ try :
         """
         func   = lambda x,y,z : float ( fun ( x , y , z , *args ) ) 
         import warnings
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with warnings.catch_warnings () :
+            warnings.simplefilter ( "always" )  
             result = scipy_tplquad ( func ,
                                      zmin , zmax ,
                                      lambda z   : ymin ,
                                      lambda z   : ymax ,
                                      lambda y,z : xmin ,
                                      lambda y,z : xmax , **kwargs )
-            return VE( result[0] , result[1] * result[1] ) if err else result[0]
+            return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
         
 except ImportError :
     # ========================================================================

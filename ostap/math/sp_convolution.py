@@ -13,10 +13,6 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2020-02-28"
 __all__     = ()
-##    'ArrayConvolution' , ## SciPy' FFT-based convolution for two arrays 
-##    'GaussConvolution' , ## SciPy' FFT-based convolution for function with a gaussian 
-##    'Convolution'      , ## SciPy' FFT-based convolution for functions 
-##    )
 # =============================================================================
 import warnings 
 from   ostap.math.operations import Function
@@ -25,18 +21,17 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.sp_convolution' )
 else                       : logger = getLogger ( __name__                    )
 # =============================================================================
-
-try :
+try : # =======================================================================
     # =========================================================================
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")        
         import scipy.signal as SS
     import numpy        as np
-    
+    # =========================================================================
     # =========================================================================
     ## simple class for scipy-based interpolation  
     class ArrayConvolution(object) :
-        """Simple class for SciPy-based convolution 
+        """ Simple class for SciPy-based convolution 
         >>> x = ... ##
         >>> y = ... ##
         >>> sp = ArrayConvolution ( x , y , ... )
@@ -49,25 +44,23 @@ try :
         #  >>> sp = ArrayConvolution (x , y )
         #  @endcode
         def __init__ ( self , x , y , mode = 'full' ) :
-            """Create the convolution 
+            """ Create the convolution 
             >>> x  = ... ##
             >>> y  = ... ##
             >>> sp = ArrayConvolution (x , y )
-            """
-            
-            ## create the interpolation spline 
+            """            
             self.__result = None 
             self.__result = SS.fftconvolve ( x , y , mode ) 
             
         @property
         def result( self ) :
-            """``result'' : result with array convolution"""
+            """`result' : result with array convolution"""
             return self.__result 
         
     # =========================================================================
     ## simple class for SciPy/FFT-based convolution 
     class GaussConvolution(ArrayConvolution,Function) :
-        """Simple class for SciPy/FFT-based convolution 
+        """ Simple class for SciPy/FFT-based convolution 
         >>> x = ... ##
         >>> y = ... ##
         >>> sp = GaussConvolution ( x , y , ... )
@@ -86,12 +79,11 @@ try :
                        N     = 1024   ,
                        sigma = 1      ,
                        mode  = 'same' ) :
-            """Create the convolution 
+            """ Create the convolution 
             >>> x  = ... ##
             >>> y  = ... ##
-            >>> sp = GaussConvolution (x , y )
-            """
-            
+            >>> sp = GaussConvolution ( x , y )
+            """            
             from ostap.core.ostap_types import integer_types
             assert isinstance ( N , integer_types ) and 1 < N , 'Illegal N %s!' % N 
             
@@ -104,8 +96,7 @@ try :
             from ostap.math.math_ve import gauss_pdf         
             gpdf   = lambda x : gauss_pdf ( x , sigma = sigma )
             
-            vgauss = np.vectorize ( gpdf )
-            
+            vgauss = np.vectorize ( gpdf )            
             dx = float ( xmax - xmin ) / N 
             a  = float ( xmax - xmin ) / 2 
             
@@ -119,27 +110,29 @@ try :
             r *= dx   
             
             self.__spline = None
-            
-        def xmin   ( self ) : return self.__params[0]
-        def xmax   ( self ) : return self.__params[1]
+
+        # =====================================================================
+        def xmin   ( self ) : return self.__params [ 0 ]
+        def xmax   ( self ) : return self.__params [ 1 ]
 
         @property
-        def N      ( self ) : return self.__params[2]
+        def N      ( self ) : return self.__params [ 2 ]
         @property
-        def sigma  ( self ) : return self.__params[3]
+        def sigma  ( self ) : return self.__params [ 3 ]
         
         @property
         def params ( self ) : return self.__params
         
         @property
         def spline ( self ) :
-            """``spline'' : get the spline fnuction for the result of convolution"""
+            """`spline' : get the spline fnuction for the result of convolution"""
             if self.__spline  : return self.__spline
             from ostap.math.sp_interpolation import SplineInterpolator 
             x = np.linspace ( self.xmin() , self.xmax() , self.N )
             self.__spline = SplineInterpolator ( ( x , self.result ) , 3 )
             return self.__spline
-        
+
+        # =====================================================================
         def __call__ ( self , x  ) :
             if not self.__spline : self.spline
             return self.__spline ( x ) 
@@ -151,8 +144,8 @@ try :
 
         # =====================================================================
         ## simple class for SciPy/FFT-based convolution 
-        class Convolution(ArrayConvolution,Function) :
-            """Simple class for SciPy/FFT-based convolution 
+        class Convolution ( ArrayConvolution,Function) :
+            """ Simple class for SciPy/FFT-based convolution 
             >>> x = ... ##
             >>> y = ... ##
             >>> sp = GaussConvolution ( x , y , ... )
@@ -171,14 +164,13 @@ try :
                            func2          ,
                            xmin2          ,
                            xmax2          ,
-                           N     = 1000   ,
+                           N     = 1024   ,
                            mode  = 'same' ) :
-                """Create the convolution 
+                """ Create the convolution 
                 >>> x  = ... ##
                 >>> y  = ... ##
                 >>> sp = Convolution (x , y )
-                """
-                
+                """                
                 from ostap.core.ostap_types import integer_types
                 assert isinstance ( N , integer_types ) and 1 < N , 'Illegal N %s!' % N 
                 
@@ -202,17 +194,16 @@ try :
                 r *= dx 
 
                 self.__spline = None
-
                 
-            def xmin    ( self ) : return self.__params1[0]
-            def xmax    ( self ) : return self.__params1[1]
-            def xmin1   ( self ) : return self.__params1[0]
-            def xmax1   ( self ) : return self.__params1[1]
-            def xmin2   ( self ) : return self.__params2[0]
-            def xmax2   ( self ) : return self.__params2[1]
+            def xmin    ( self ) : return self.__params1 [ 0 ]
+            def xmax    ( self ) : return self.__params1 [ 1 ]
+            def xmin1   ( self ) : return self.__params1 [ 0 ]
+            def xmax1   ( self ) : return self.__params1 [ 1 ]
+            def xmin2   ( self ) : return self.__params2 [ 0 ]
+            def xmax2   ( self ) : return self.__params2 [ 1 ]
             
             @property
-            def N       ( self ) : return self.__params1[2]
+            def N       ( self ) : return self.__params1 [ 2 ]
             
             @property
             def params1 ( self ) : return self.__params1
@@ -242,9 +233,12 @@ try :
         'GaussConvolution' , ## SciPy' FFT-based convolution for function with a gaussian 
         'Convolution'      , ## SciPy' FFT-based convolution for functions 
         )
-    
+
+    # =========================================================================
 except ImportError :
+    # =========================================================================
     logger.warning ("No numpy/scipy is available: convolution is disabled")
+
     
 # =============================================================================
 if '__main__' == __name__ :
@@ -253,7 +247,7 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
     if not __all__ :
-        logger.error ("No convolution is available")
+        logger.error ( "No convolution is available" )
         
 # =============================================================================
 ##                                                                      The END 

@@ -32,19 +32,23 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.minimize' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
-
-scipy_OK = False 
+scipy_OK = False
+# =============================================================================
 try :
+    # =========================================================================
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         from scipy.optimize import minimize_scalar 
-        scipy_OK = True 
+        scipy_OK = True
+    # =========================================================================
 except ImportError :
+    # =========================================================================
     from ostap.math.local_minimize import scalar_minimize as minimize_scalar 
-    scipy_OK = False 
+    scipy_OK = False
+    # =========================================================================
 
-if scipy_OK : 
-        
+# =============================================================================
+if scipy_OK : # ===============================================================        
     # =========================================================================
     ## get a minimum for 1D-function
     #  @code

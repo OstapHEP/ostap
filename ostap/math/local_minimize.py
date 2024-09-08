@@ -32,15 +32,18 @@ else                       : logger = getLogger ( __name__              )
 # =============================================================================
 import math, warnings
 from math import sqrt
+# =============================================================================
 try :
+    # =========================================================================
     import numpy
     import numpy  as np
-    
+    # =========================================================================
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        _epsilon = math.sqrt(numpy.finfo(float).eps)
-        
+        warnings.simplefilter ( "ignore" )
+        _epsilon = math.sqrt ( numpy.finfo ( float ) . eps )
+# =============================================================================
 except ImportError :
+    # =========================================================================
     class numpy(object) :
         @staticmethod 
         def abs  ( value )      : return abs ( value ) 
@@ -49,29 +52,31 @@ except ImportError :
         @staticmethod 
         def sign ( value )      : return math.copysign ( 1.0 , value )
         @staticmethod
-        def max ( a , *kwargs ) : return max ( a ) 
+        def max ( a , *kwargs ) : return max ( a )
+    # =========================================================================
     import sys 
     _epsilon = sys.float_info.epsilon*0.5
     np =  numpy
 # =============================================================================
-
 class OptimizeWarning(UserWarning):
     pass
-
+# =============================================================================
+## Test whether `x` is either a scalar or an array scalar
 def is_array_scalar(x):
-    """Test whether `x` is either a scalar or an array scalar.
-
+    """ Test whether `x` is either a scalar or an array scalar.
     """
     return np.size(x) == 1
-
+# =============================================================================
 def _check_unknown_options(unknown_options):
     if unknown_options:
         msg = ", ".join(map(str, unknown_options.keys()))
         # Stack level 4: this is called from _minimize_*, which is
         # called from another function in Scipy. Level 4 is the first
         # level in user code.
-        warnings.warn("Unknown solver options: %s" % msg, OptimizeWarning, 4)
+        warnings.warn ( "Unknown solver options: %s" % msg, OptimizeWarning, 4)
 
+# =============================================================================
+## Represents the optimization result.
 class OptimizeResult(dict):
     """ Represents the optimization result.
 
