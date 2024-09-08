@@ -36,7 +36,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.core         import items_loop, WSE, Ostap, rootWarning
 from   ostap.core.ostap_types  import num_types, string_types, integer_types 
-from   ostap.core.meta_info    import root_version_int, root_info  
+from   ostap.core.meta_info    import root_info, python_info 
 from   ostap.utils.cleanup     import CleanUp
 import ostap.io.root_file
 import ROOT, os, glob, math, tarfile, shutil, itertools 
@@ -102,7 +102,9 @@ class WeightsFiles(CleanUp) :
                     ## tar.list() 
                     xmls   = [ f for f in xml_files ( tar ) ] 
                     tmpdir = self.tempdir ( prefix = 'ostap-tmva-weights-' )
-                    tar.extractall ( path = tmpdir , members = xml_files ( tar ) )
+                    args { 'path' : tmpdir , 'members' : xml_files ( tar ) }
+                    if ( 3 , 12 ) < python_info : args [ 'filter' ] = 'data'                
+                    tar.extractall ( **args  )
                     logger.debug ('Un-tar into temporary directory %s' % tmpdir ) 
                     weights_files  = [ os.path.join ( tmpdir, x.name ) for x  in xmls ]
                     self.trash.add ( tmpdir ) 
@@ -568,7 +570,7 @@ class Trainer(object):
         self.__pattern_C     = pattern_C 
         self.__pattern_plots = pattern_PLOTS % self.name
 
-        self.__multithread = multithread and 61800 <= root_version_int 
+        self.__multithread = multithread and ( 6 ,18 ) <= root_info 
 
         if self.verbose :
             
@@ -1872,8 +1874,7 @@ class Reader(object)  :
         self.__name   = name
         self.__logger = logger if logger else getLogger ( self.name )
 
-        if root_version_int < 61800 : 
-            ROOT.TMVA.Tools.Instance()
+        if root_info < ( 6 , 18 )  :  ROOT.TMVA.Tools.Instance()
         
         verbose = True if verbose else False
         ##
