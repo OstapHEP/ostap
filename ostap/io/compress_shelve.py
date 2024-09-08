@@ -246,7 +246,7 @@ class CompressShelf (shelve.Shelf,CUBase) :
         self.__opened = False        
         dbase = dbopen ( self.dbname , flag = mode , dbtype = dbtype , **kwargs )
         self.__opened        = True
-        if dbase and 'r' != mode and hasattr ( dbase , 'sync' ) : dbase.sync()
+        if 'r' != mode and hasattr ( dbase , 'sync' ) : dbase.sync()
         
         # =======================================================================
         ## all files after dbopen 
@@ -269,6 +269,7 @@ class CompressShelf (shelve.Shelf,CUBase) :
         # ======================================================================
         ## actual type of underlying database 
         self.__dbtype        =  whichdb ( self.dbname ) ## actual dbtype 
+        if not self.dbtype : logger.error  ( 'Type of DB is no determined!' )
         
         # ======================================================================
         ## expected files for the given DB type 

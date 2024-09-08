@@ -172,6 +172,11 @@ def test_shelves1():
         'sqlite'    ,
         'sqlite3'   ,
         'dbm.gnu'   ,
+        'dbm.ndbm'  ,
+        'dbm.dumb'  ,
+        'dbhash'    ,
+        'dbm'       ,        
+        'gdbm'      ,        
         'dumbdbm'   ,
         'std'       ,
     ]
