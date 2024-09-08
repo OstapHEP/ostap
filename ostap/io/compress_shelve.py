@@ -235,7 +235,7 @@ class CompressShelf (shelve.Shelf,CUBase) :
         # =====================================================================
         the_path = lambda s : os.path.normpath ( os.path.abspath ( s ) )
         ## all files  before dbopen
-        ofiles  = set ( [ the_path ( i )  for i in glob.iglob  ( self.dbname + '*'  ) ] ) 
+        ofiles  = set ( [ the_path ( i ) for i in glob.iglob  ( self.dbname + '*'  ) ] ) 
         ofiles |= set ( [ the_path ( i ) for i in glob.iglob  ( self.dbname + '/*' ) ] )         
         
         self.__ofiles = tuple ( sorted ( ofiles ) ) 
@@ -275,7 +275,7 @@ class CompressShelf (shelve.Shelf,CUBase) :
         efiles = set ( the_path ( f ) for f in dbfiles ( self.dbtype , self.dbname ) ) 
 
         if  ( ofiles | efiles ) != pfiles :
-            logger.warning ( 'Some missing or unexpected files' )
+            logger.warning ( 'Some missing or unexpected files [%s]' % self.dbtype )
             
         files1 = pfiles & efiles ## expected and found 
         files2 = efiles - pfiles ## expected but not found 
