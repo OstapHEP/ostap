@@ -1,5 +1,10 @@
 ## New features
     
+  1. some updtae for catcing warnins
+  1. ROOT warnings -> Python warning now used RuntimeWarning
+  1. add new test `test_math_convolution` 
+  1. add `filter='data'` argument for `tarfile` (TMVA&Chopping)
+         
 ## Backward incompatible
 
 ## Bug fixes

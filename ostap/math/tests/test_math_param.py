@@ -3,7 +3,7 @@
 # ============================================================================= 
 # Copyright (c) Ostap developpers.
 # ============================================================================= 
-# @file ostap/math/tests/test_math_parampy
+# @file ostap/math/tests/test_math_param.py
 # Test module for ostap/math/param.py
 # - It tests parameterisation of functions
 # ============================================================================= 

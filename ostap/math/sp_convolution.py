@@ -61,16 +61,16 @@ try : # =======================================================================
     ## simple class for SciPy/FFT-based convolution 
     class GaussConvolution(ArrayConvolution,Function) :
         """ Simple class for SciPy/FFT-based convolution 
-        >>> x = ... ##
-        >>> y = ... ##
-        >>> sp = GaussConvolution ( x , y , ... )
+        >>> func  = ...
+        >>> sigma = ...
+        >>> sp    = GaussConvolution ( func = func , xmin = 0 , xmax = 1 , sigma = 1 , N = 2048 ) 
         """
         # =================================================================
         ## Create the convolution 
         #  @code
         #  >>> x  = ... ##
         #  >>> y  = ... ##
-        #  >>> sp = ArrayConvolution (x , y )
+        #  >>> sp = ArrayConvolution ( x , y )
         #  @endcode
         def __init__ ( self           ,
                        func           ,
@@ -88,13 +88,13 @@ try : # =======================================================================
             assert isinstance ( N , integer_types ) and 1 < N , 'Illegal N %s!' % N 
             
             self.__func   = func 
-            self.__params = xmin , xmax , N , sigma 
+            self.__params = xmin , xmax , N , abs ( sigma ) 
             
             from ostap.math.operations import digitize
             dfunc  = digitize ( func , xmin , xmax , N )
-            
+
             from ostap.math.math_ve import gauss_pdf         
-            gpdf   = lambda x : gauss_pdf ( x , sigma = sigma )
+            gpdf   = lambda x : gauss_pdf ( x , sigma = self.sigma )
             
             vgauss = np.vectorize ( gpdf )            
             dx = float ( xmax - xmin ) / N 
@@ -125,7 +125,7 @@ try : # =======================================================================
         
         @property
         def spline ( self ) :
-            """`spline' : get the spline fnuction for the result of convolution"""
+            """ `spline' : get the spline function for the result of convolution"""
             if self.__spline  : return self.__spline
             from ostap.math.sp_interpolation import SplineInterpolator 
             x = np.linspace ( self.xmin() , self.xmax() , self.N )
@@ -138,7 +138,7 @@ try : # =======================================================================
             return self.__spline ( x ) 
         
         def __str__ ( self ) :
-            return "(%s{*}Gauss(%s))" % ( self.__func , self.__sigma ) 
+            return "(%s{*}Gauss(%s))" % ( self.__func , self.sigma ) 
         
         __repr__ = __str__
 
@@ -146,9 +146,10 @@ try : # =======================================================================
         ## simple class for SciPy/FFT-based convolution 
         class Convolution ( ArrayConvolution,Function) :
             """ Simple class for SciPy/FFT-based convolution 
-            >>> x = ... ##
-            >>> y = ... ##
-            >>> sp = GaussConvolution ( x , y , ... )
+            >>> func  = ...
+            >>> reso  = ...
+            >>> sp    = Convolution ( func1 = func , xmin1 = 0 , xmax1 = 1  , 
+            >>>                       func2 = reso , xmin2 = 0 , xmax2 = 10 , N = 2048 ) 
             """
             # =================================================================
             ## Create the convolution 
@@ -212,7 +213,7 @@ try : # =======================================================================
             
             @property
             def spline ( self ) :
-                """``spline'' : get the spline function for the result of convolution"""
+                """`spline' : get the spline function for the result of convolution"""
                 if self.__spline  : return self.__spline
                 from ostap.math.sp_interpolation import SplineInterpolator 
                 x = np.linspace ( self.xmin() , self.xmax() , self.N )
