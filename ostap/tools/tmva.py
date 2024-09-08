@@ -102,7 +102,7 @@ class WeightsFiles(CleanUp) :
                     ## tar.list() 
                     xmls   = [ f for f in xml_files ( tar ) ] 
                     tmpdir = self.tempdir ( prefix = 'ostap-tmva-weights-' )
-                    args { 'path' : tmpdir , 'members' : xml_files ( tar ) }
+                    args   = { 'path' : tmpdir , 'members' : xml_files ( tar ) }
                     if ( 3 , 12 ) < python_info : args [ 'filter' ] = 'data'                
                     tar.extractall ( **args  )
                     logger.debug ('Un-tar into temporary directory %s' % tmpdir ) 
