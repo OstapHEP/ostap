@@ -85,7 +85,8 @@ listlike_types  = list_types + ( set , C.Sequence , array.array )
 if sys.warnoptions or os.environ.get ( 'OSTAP_CMAKE_TEST', False ) :
     import warnings 
     with warnings.catch_warnings():
-        warnings.simplefilter ( "always" )
+        warnings.simplefilter ( "ignore" , category = DeprecationWarning )        
+        warnings.simplefilter ( "ignore" , category = UserWarning        )        
         import cppyy
 else :    
     import cppyy
