@@ -103,7 +103,7 @@ class WeightsFiles(CleanUp) :
                     xmls   = [ f for f in xml_files ( tar ) ] 
                     tmpdir = self.tempdir ( prefix = 'ostap-tmva-weights-' )
                     args   = { 'path' : tmpdir , 'members' : xml_files ( tar ) }
-                    if ( 3 , 12 ) < python_info : args [ 'filter' ] = 'data'                
+                    if ( 3 , 12 ) <= python_info : args [ 'filter' ] = 'data'                
                     tar.extractall ( **args  )
                     logger.debug ('Un-tar into temporary directory %s' % tmpdir ) 
                     weights_files  = [ os.path.join ( tmpdir, x.name ) for x  in xmls ]
@@ -1045,8 +1045,7 @@ class Trainer(object):
         if rf : self.logger.debug ( "Remove existing xml/class-files %s" % rf  ) 
 
         ## ROOT 6/18 crashes here...
-        ## if root_version_int < 61800 : 
-        ##    ROOT.TMVA.Tools.Instance()
+        ## if root_info < ( 6 , 18 ) : ROOT.TMVA.Tools.Instance()
         with ROOT.TFile.Open ( self.output_file, 'RECREATE' )  as outFile :
 
             self.logger.debug ( 'Output ROOT file: %s ' %  outFile.GetName() )

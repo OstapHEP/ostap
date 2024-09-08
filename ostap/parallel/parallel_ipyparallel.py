@@ -20,13 +20,12 @@ logger  = getLogger('ostap.parallel.parallel_ipyparallel')
 if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Sized
 else                              : from collections     import Sized 
 # =============================================================================
-
 ## Try to import ipyparallel 
 ipp = None
 if ( 3 , 6 ) <= sys.version_info :
     try :
         with warnings.catch_warnings() :            
-            warnings.simplefilter("ignore")
+            warnings.simplefilter ( "ignore" )
             import ipyparallel as ipp
     except ImportError :
         ipp = None

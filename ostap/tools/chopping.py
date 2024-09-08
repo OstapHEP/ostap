@@ -87,7 +87,7 @@ __all__     = (
     'addChoppingResponse'  , ## add `chopping' response to TTree or RooDataSet
     )
 # =============================================================================
-from   ostap.core.meta_info    import root_info
+from   ostap.core.meta_info    import root_info, python_info
 from   ostap.tools.tmva        import Trainer as TMVATrainer
 from   ostap.tools.tmva        import Reader  as TMVAReader
 from   ostap.tools.tmva        import ( dir_name      , good_for_negative ,
@@ -1330,8 +1330,10 @@ class WeightsFiles(CleanUp) :
                 logger.debug ( "Open tarfile %s" % wf )
                 ## tar.list()
                 tmpdir = self.tempdir ( prefix = 'ostap-chopping-weights-' )  
-                self.trash.add ( tmpdir ) 
-                tar.extractall ( path = tmpdir )                
+                self.trash.add ( tmpdir )
+                args = { 'path' : tmpdir }
+                if ( 3 , 12 ) <= python_info : args [ 'filter' ] = 'data'
+                tar.extractall ( **args )                
                 logger.debug ('Un-tar into temporary directory %s' % tmpdir ) 
                 weights_files  = [ os.path.join ( tmpdir , i ) for i in tar.getnames() ]
                 self.tmpfiles += weights_files
