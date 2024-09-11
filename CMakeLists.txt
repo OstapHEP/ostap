@@ -15,6 +15,12 @@ if ( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.10" )
    cmake_host_system_information(RESULT OSTAP_OS_RELEASE QUERY OS_RELEASE)
 endif() 
 
+if ( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.15" )
+   ## https://cmake.org/cmake/help/latest/policy/CMP0094.html
+   cmake_policy ( SET CMP0094 NEW ) 
+endif() 
+    
+    
 project(ostap LANGUAGES CXX)
 include(CTest)
 
@@ -35,8 +41,7 @@ find_program(CMAKE_C_COMPILER   NAMES $ENV{CC}  gcc PATHS ENV PATH NO_DEFAULT_PA
 find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
 
 message ( "----> C-compiler       : " $ENV{CC}  )
-message ( x"----> C++-compiler     : " $ENV{CXX} )
-
+message ( "----> C++-compiler     : " $ENV{CXX} )
 
 # You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
 # - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake
@@ -54,9 +59,7 @@ add_subdirectory(examples)
 add_subdirectory(scripts)
 ## add_subdirectory(docs)
 
-
 configure_file(${CMAKE_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR})
-
 
 ### where to put the libraries
 set(LIBRARY_OUTPUT_PATH    "${CMAKE_BINARY_DIR}/lib")

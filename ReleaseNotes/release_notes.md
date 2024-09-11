@@ -4,7 +4,9 @@
   1. ROOT warnings -> Python warning now used RuntimeWarning
   1. add new test `test_math_convolution` 
   1. add `filter='data'` argument for `tarfile` (TMVA&Chopping)
-         
+  1. set `cmake_policy` to fic nuilding for virtual environemnts (conda)
+  1. more improvements and fixes for `ostap.io.dbase` module
+              
 ## Backward incompatible
 
 ## Bug fixes

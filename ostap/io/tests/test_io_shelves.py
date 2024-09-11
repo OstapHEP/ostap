@@ -228,22 +228,27 @@ def test_shelves2 () :
     if zstshelve : shelves.append ( zstshelve )
 
     backends  = [
-        'lmdb'      , 
-        'berkleydb' ,
-        'berkley'   ,
-        'bdsdb2'    ,
-        'sqlite'    ,
-        'sqlite3'   ,
-        ''
+        'lmdb'       , 
+        'berkeleydb' , 'berkeley' , 'berkeley-db' , 
+        'bsddb3'     ,
+        'sqlite3'    , 'sqlite'   , 'sql' , 
+        #
+        'dbm.gnu'   , 'gdbm'     ,
+        'dbm.ndbm'  , 'dbm'      ,
+        'dbm.dumb'  , 'dumbdbm'  ,
+        'dbhash'    ,        
+        'standard'  , 'std' , 
+        #
+        ''          , None  ,         
     ]
     
     for sh in shelves :        
         for b in backends :            
             with sh.tmpdb ( dbtype = b ) as db :
                 
-                db ['one'] = 1
-                db ['two'] = 2                
-                db.ls() 
+                db [ 'one' ] = 1
+                db [ 'two' ] = 2                
+                db.ls()
     
 # =============================================================================
 if '__main__' == __name__ :

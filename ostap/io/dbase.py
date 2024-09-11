@@ -44,15 +44,45 @@ if sys.version_info < ( 3, 7 ) :
     ordered_dict = collections.OrderedDict
 
 # =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    if ( 3 , 0 ) <= sys.version_info : import dbm.gnu  as db_gnu
+    else                             : import gdbm     as db_gnu
+    # =========================================================================
+except ImportError :
+    # =========================================================================
+    db_gnu = None
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    if ( 3 , 0 ) <= sys.version_info : import dbm.ndbm as db_dbm
+    else                             : import dbm      as db_dbm
+    # =========================================================================
+except ImportError :
+    # =========================================================================
+    db_dbm = None
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    if  sys.version_info < ( 3,0 ) : import dbhash as db_hash 
+    else                           : db_hash = None 
+    # =========================================================================
+except ImportError :
+    # =========================================================================
+    db_hash = None
+# =============================================================================
+if ( 3 , 0 ) <= sys.version_info : import dbm.dumb as db_dumb
+else                             : import dumbdbm  as db_dumb    
+# =============================================================================
 ## Check for Berkeley DB
 # =============================================================================
 use_berkeleydb = False
 # =============================================================================
 ## make a try to use berkeleydb
 if  ( 3 , 6 ) <= sys.version_info :
-    
-    try :
-        
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
         import berkeleydb
         use_berkeleydb   = True
         
@@ -81,9 +111,10 @@ if  ( 3 , 6 ) <= sys.version_info :
             db.open ( filename , dbname , filetype , berkeleydb_open_mode [ flag ]  , mode )
             
             return db
-                
-    except ImportError :
         
+        # =====================================================================
+    except ImportError :
+        # =====================================================================
         berkeleydb      = None
         use_berkeleydb  = False 
 
@@ -93,8 +124,10 @@ if  ( 3 , 6 ) <= sys.version_info :
 use_bsddb3     = False
 # =============================================================================
 ## make a try for dbddb3 
-if ( 3 , 3 ) <= sys.version_info < ( 3 , 10 ) :     
-    try :        
+if ( 3 , 3 ) <= sys.version_info < ( 3 , 10 ) :
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
         import bsddb3
         ## open bsddb3 database 
         def bsddb3_open ( filelame          ,
@@ -103,8 +136,10 @@ if ( 3 , 3 ) <= sys.version_info < ( 3 , 10 ) :
             """ Open `bsddb3` database """
             return bsddb3.hasopen ( filename , flag , mode , **kwargs )
         
-        use_bsddb3  = True        
-    except ImportError  :        
+        use_bsddb3  = True
+        # =====================================================================
+    except ImportError  :
+        # =====================================================================
         bsddb3      = None 
         use_bsddb3  = False 
 
@@ -140,7 +175,7 @@ if ( 3 , 7 ) <= sys.version_info :
 #  - Actually it is a bit extended  form of <code>dbm.whichdb</code>
 #   that accounts for  <code>bsddb3</code> and <code>sqlite3</code>
 def whichdb ( filename  ) :
-    """Guess which db package to use to open a db file.
+    """ Guess which db package to use to open a db file.
     
     Return values:
     
@@ -236,7 +271,7 @@ def dbopen ( file               ,
              flag       = 'r'   ,
              mode       = 0o666 ,
              concurrent = True  ,
-             dbtype     = ()    , ## preferred dbtype or list of preferences  
+             dbtype     = ()    , ## preferred db-type as list of preferences  
              **kwargs           ) :
     """Open or create database at path given by *file*.
     
@@ -262,26 +297,43 @@ def dbopen ( file               ,
 
     # 'n' flag is specified  or dbase does not exist and c flag is specified 
     if 'n' in flag or ( check is None and 'c' in flag ) : 
-
+        
         if isinstance ( dbtype , str ) : db_types = [ dbtype.lower() ]
+        elif not dbtype                : db_types = () 
         else                           : db_types = [ db.lower()  for db in dbtype ] 
-
 
         ## check the preferred database type:
         for db in db_types :
             
-            if use_berkeleydb and db in ( 'berkeleydb' , 'berkeley' ) : 
+            if   use_berkeleydb and db in ( 'berkeleydb' , 'berkeley' , 'berkeley-db' ) : 
                 return berkeleydb_open ( file            , flag , mode , **kwargs ) 
-            elif use_bsddb3     and 'bdsdb3'     == db :
+            elif use_bsddb3     and 'bsddb3'     == db :
                 return bsddb3_open     ( file            , flag , mode , **kwargs ) 
             elif use_lmdb       and 'lmdb'       == db :
                 return LmdbDict        ( path     = file , flag = flag , **kwargs )
-            elif db in ( 'sqlite' , 'sqlite3' ) : 
+            elif db             in ( 'sqlite3' , 'sqlite'  , 'sql' ) : 
                 return SqliteDict      ( filename = file , flag = flag , **kwargs )
-            elif 'std' == db or db.startswith ( 'dbm.' ) or db.endswith ( 'dbm' ) :
-                if kwargs : logger.warning ( 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] ) ) 
-                return std_db.open ( file , flag , mode )  
 
+            if   db_gnu  and db in ( 'dbm.gnu'  , 'gdbm' ) :
+                if kwargs : logger.warning ( 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] ) ) 
+                return db_gnu.open ( file , flag , mode )
+            elif db_dbm  and db in ( 'dbm.ndbm' , 'dbm' ) :
+                if kwargs : logger.warning ( 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] ) ) 
+                return db_dbm.open ( file , flag , mode )
+            elif db_hash and db in ( 'dbhash' , ) :
+                if kwargs : logger.warning ( 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] ) ) 
+                return db_hash.open ( file , flag , mode )
+            elif db in ( 'dbm.dumb' , 'dumbdbm' , 'dumb' ) :
+                if kwargs : logger.warning ( 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] ) ) 
+                return db_dumb.open ( file , flag , mode )
+            elif db in  ( 'std' , 'standard' ) or not db :
+                if kwargs : logger.warning ( 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] ) )                 
+                return std_db.open ( file , flag , mode )
+
+        if db_types :
+            logger.warning  ( 'DB-type hints not used: [%s]' %  (  ','.join ( db for fn in db_types ) ) ) 
+        
+                             
         if concurrent and use_berkeleydb :
             return berkeleydb_open ( file , flag , mode , **kwargs ) 
 
@@ -303,10 +355,12 @@ def dbopen ( file               ,
     if use_lmdb       and check in ( 'lmdb' , ) :
         return LmdbDict    ( path    = file , flag = flag , **kwargs )
     
-    if check == 'sqlite3' :
+    if check in ( 'sqlite3' , 'sqlite' ) :
         return SqliteDict ( filename = file , flag = flag , **kwargs )
 
     if kwargs : logger.warning ( 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] ) ) 
+
+    ## as a lasty resort - use the standard stuff 
     return std_db.open ( file , flag , mode )  
     
 # =============================================================================
@@ -410,7 +464,23 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-    
+
+    logger.info  ('Available DB-backends are:' )
+    if use_berkeleydb :
+        logger.info ( ' - BerkeleyDB : %s' % str ( berkeleydb ) ) 
+    if use_bsddb3     :
+        logger.info ( ' - BSDDB3     : %s' % str ( bsddb3     ) ) 
+    if use_lmdb       :
+        logger.info ( ' - LMDB       : %s' % str ( lmdb       ) ) 
+    if db_gnu :
+        logger.info ( ' - GNU dbase  : %s' % str ( db_gnu     ) ) 
+    if db_dbm :
+        logger.info ( ' - NDBM       : %s' % str ( db_dbm     ) ) 
+    if db_dumb :
+        logger.info ( ' - DUMB       : %s' % str ( db_dumb    ) ) 
+    if db_hash :
+        logger.info ( ' - DBHASH     : %s' % str ( db_hash    ) ) 
+        
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
