@@ -6,7 +6,8 @@
   1. add `filter='data'` argument for `tarfile` (TMVA&Chopping)
   1. set `cmake_policy` to fic nuilding for virtual environemnts (conda)
   1. more improvements and fixes for `ostap.io.dbase` module
-              
+  1. add test for availabe DB backends
+                  
 ## Backward incompatible
 
 ## Bug fixes
