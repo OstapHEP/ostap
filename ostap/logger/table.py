@@ -66,7 +66,7 @@ else :
 ## environment variable
 env_var = 'OSTAP_TABLE_STYLE'
 ## default style
-default_style = ''
+default_style = 'default'
 if    not terminaltables     :
     # =========================================================================
     ## only 'local' is available for this case 
@@ -316,7 +316,7 @@ def table ( rows                          ,
             wrap_width      = -1          ,
             colorize_header = True        ,
             indent          = wrap_indent ,
-            style           = ''          , **kwargs ) :
+            style           = None        , **kwargs ) :
     """ Format the list of rows as a  table.
     - Each row is a sequence of column cells.
     - The first row defines the column headers.
@@ -334,7 +334,7 @@ def table ( rows                          ,
     >>> t = table ( table_data , 'Title' )
     >>> print (t)
     
-    Vaild `style` arguments (case insensitive) 
+    Valid `style` arguments (case insensitive) 
     - `local`     : use local, handmade repalcement
     - `ascii`     : use `AsciiTable` 
     - `single`    : use `SingleTable` 
@@ -358,7 +358,7 @@ def table ( rows                          ,
         
     rows = [ list ( row ) for row in rows ]
 
-    if not style : style = '%s' % default_style
+    if style is None : style = '%s' % default_style
     
     fmt = style.lower()
     
@@ -401,7 +401,7 @@ def table ( rows                          ,
     if kwargs :
         keys = ', '.join ( key for key in kwargs ) 
         loger.warning ( 'Ignore keyword arguments: %s' % keys )  
-    
+
     if 'ascii' == fmt or not isatty() : 
         table_instance = terminaltables.AsciiTable                  ( rows , title )        
     elif 'single' == fmt : 
@@ -536,16 +536,21 @@ if __name__ == '__main__' :
     docme ( __name__ , logger = logger )
 
     if terminaltables :
-        logger.info     ( "`terminaltables' will be used for formatting" )
+        logger.info     ( "`terminaltables/%s' will be used for formatting"  % terminaltables.__name__ )
     else :
         logger.warning  ( "`terminaltables' is not available, use local replacement" )
-        
+
+    logger.info         ( " Default style is: `%s`" % default_style )
+    
     table_data = [
         ( 'Name'  , 'Occupation' , 'Note' ) ,
         ( 'Alice' , '?'          , '---'  ) ,
         ( 'Bob'   , 'unemployed' , ''     ) ]
+
+    logger.info ( 'The table is \n%s' % table     ( table_data , 'Title' , alignment = 'rrr' ) )
+
+    """
     
-    logger.info ( 'The table is \n%s' % table     ( table_data , 'Title' , alignment = 'rrr' ) ) 
     logger.info ( 'The table is \n%s' % table     ( table_data , 'Title' , alignment = 'lll' ) ) 
     logger.info ( 'The table is \n%s' % table     ( table_data , 'Title' , alignment = 'ccc' ) ) 
     logger.info ( 'The table is \n%s' % the_table ( table_data , 'Title' , alignment = 'rrr' ) ) 
@@ -564,7 +569,9 @@ if __name__ == '__main__' :
         logger.info ( 'Use the format="%s":\n%s' % ( fmt , result ) )
 
     logger.info ( 'Available styles: \n%s' % ( '\n'.join ( table_styles + tabulate_styles ) ) ) 
-        
+       
+    """
+    
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
