@@ -1,6 +1,6 @@
 find_package(ROOT 6 CONFIG REQUIRED )
 
-message ( "----> ROOT   version   : " ${ROOT_VERSION} )
+message ( "----> ROOT   version    : " ${ROOT_VERSION} )
 
 # =============================================================================
 ## Locate proper Python/PythonLibs 
@@ -95,9 +95,9 @@ endif()
 
 find_package(GSL REQUIRED GSL_ROOT_DIR COMPONENTS gsl)
 if (GSL_FOUND) 
-message ( "----> GSL    version   : " ${GSL_VERSION} )
-message ( "----> GSL    include   : " ${GSL_INCLUDE_DIRS} )
-message ( "----> GSL    libraries : " ${GSL_LIBRARIES} )
+message ( "----> GSL    version    : " ${GSL_VERSION} )
+message ( "----> GSL    include    : " ${GSL_INCLUDE_DIRS} )
+message ( "----> GSL    libraries  : " ${GSL_LIBRARIES} )
 else()
 endif() 
 
