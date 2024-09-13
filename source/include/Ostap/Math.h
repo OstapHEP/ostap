@@ -22,6 +22,7 @@
 /** @file Ostap/Math.h
  *  collection of generic math functions and classes 
  */
+// ===========================================================================
 #ifndef M_PIl
 #define M_PIl 0xc.90fdaa22168c235p-2L
 #endif
