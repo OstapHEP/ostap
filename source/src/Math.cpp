@@ -453,17 +453,9 @@ double Ostap::Math::nball_volume
   //
   return result ; 
 }
+// ============================================================================
 
 
-#include <iostream>
-
-void ququ()
-{
-  std::cout << " n=10 " << Ostap::Math::NBallVolume_<10>::unit_volume
-            << " n=10 " << Ostap::Math::NBallVolume_<10>::volume( 1 ) 
-            << " n=10 " << Ostap::Math::NBallVolume_<10>::volume()
-            << std::endl ;
-}
 
 // ============================================================================
 //                                                                      The END 
