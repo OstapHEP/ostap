@@ -26,6 +26,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Math.h"
 #include "Ostap/Power.h"
 #include "Ostap/UStat.h"
 #include "Ostap/Iterator.h"
@@ -95,16 +96,6 @@ namespace
     return std::sqrt ( result ) ;
   }
   // ==========================================================================
-  /// get the volume of n-ball with unit radius 
-  double nBallVolume ( const unsigned int n )
-  {
-    return 
-      0 == n ?  0.0 :  // 0-ball : nothing 
-      1 == n ?  2.0 :  // 1-ball : interval 
-      2 == n ? M_PI :  // 2-ball : circle 
-      2 * M_PI / double ( n ) * nBallVolume ( n - 2 ) ;
-  }
-  // ==========================================================================
 } //                                                 end of anonymous namespace  
 // ============================================================================
 /*  calculate U-statistics 
@@ -128,7 +119,7 @@ Ostap::StatusCode Ostap::UStat::calculate
   //
   const unsigned int dim    = args->getSize   () ;
   if ( 1 > dim   ) { return Ostap::StatusCode( InvalidDims ) ; }
-  const double volume = nBallVolume ( dim ) ;
+  const double volume = Ostap::Math::nball_volume ( dim ) ;
   //
   typedef std::vector<double> TStat ;
   TStat tstat ;
