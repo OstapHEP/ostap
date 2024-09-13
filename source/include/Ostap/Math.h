@@ -1461,6 +1461,66 @@ namespace Ostap
       return nc ;
     }
     // ========================================================================
+    /// Nolume of N-ball 
+    template <unsigned short>
+    class NBallVolume_ ;
+    // ========================================================================
+    /// Nolume of N-ball 
+    template <>
+    class NBallVolume_<0>
+    {
+    public:
+      // ======================================================================
+      /// volume of 0-ball is 1 independently on the radius        
+      static double volume ( const double /* radius */ ) { return unit_volume ; }
+      /// volume of 0-ball of unit radius 
+      static double volume () { return unit_volume   ; }
+      /// volume of unit 0-ball is 1 
+      static constexpr double unit_volume = 1 ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /// Nolume of 1-ball 
+    template <>
+    class NBallVolume_<1>
+    {
+    public:
+      // ======================================================================
+      /// volume of 1-ball is 2*R 
+      static double volume ( const double radius )
+      { return unit_volume * radius ; }
+      /// volume of 1-ball of unit radius 
+      static double volume () { return unit_volume   ; }
+      /// volume of unit 2-ball is 2  
+      static constexpr double unit_volume = 2 ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /// Volume of n-ball 
+    template <unsigned short N>
+    class NBallVolume_
+    {
+    public: 
+      // ======================================================================
+      /// volume of n-ball
+      static double volume ( const double radius  )
+      { return unit_volume * std::pow ( radius , N ) ; }
+      /// volume of n-ball of unit radius 
+      static double volume () { return unit_volume   ; }
+      /// volume of uinit n-ball is : 2*pi/n*V(n-2) 
+      static constexpr double unit_volume =
+        ( 2 * M_PIl * NBallVolume_<N-2>::unit_volume ) / N  ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** Volume of n-ball of given radius r  
+     *  @param n dimension
+     *  @param r radius 
+     */
+    double nball_volume
+    ( const unsigned short n       ,
+      const double         r = 1.0 ) ;
+    // ========================================================================    
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

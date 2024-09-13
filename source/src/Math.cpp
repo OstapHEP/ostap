@@ -427,5 +427,34 @@ long Ostap::Math::round ( const double x )
 // ============================================================================
 
 // ============================================================================
+/*  Volume of n-ball of given radius r  
+ *  @param n dimension
+ *  @param r radius 
+ */
+// ========================================================================
+double Ostap::Math::nball_volume
+( const unsigned short n ,
+  const double         r )
+{
+  //
+  if      ( 0 == n ) { return 1     ; }
+  else if ( 1 == n ) { return 2 * r ; }
+  //
+  const bool odd    = n % 2 ;
+  //
+  const long double R      = r      ;
+  const long double R2     = R * R  ;
+  const long double factor = 2 * M_PIl * R2 ;
+  //
+  long double       result = odd ? 2 * R : 1.0L ;
+  //
+  for ( unsigned short k = odd ? 3 : 2 ; k <= n ; k += 2 )
+    { result *= ( factor / k ) ; }
+  //
+  return result ; 
+}
+
+
+// ============================================================================
 //                                                                      The END 
 // ============================================================================
