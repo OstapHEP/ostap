@@ -30,6 +30,7 @@
 #include "Ostap/Power.h"
 #include "Ostap/UStat.h"
 #include "Ostap/Iterator.h"
+#include "Ostap/ProgressBar.h"
 // ============================================================================
 /** @file
  *  Implementation file for class Analysis::UStat
@@ -98,7 +99,7 @@ namespace
   // ==========================================================================
 } //                                                 end of anonymous namespace  
 // ============================================================================
-/*  calculate U-statistics 
+/*  Calculate U-statistics 
  *  @param pdf   (input) PDF
  *  @param data  (input) data 
  *  @param hist  (update) the histogram with U-statistics 
@@ -113,6 +114,33 @@ Ostap::StatusCode Ostap::UStat::calculate
   TH1*              hist  ,
   RooArgSet*        args  ) 
 {
+  /// make a fake progress bar 
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  return calculate ( progress ,
+                     pdf      ,
+                     data     ,
+                     tStat    ,
+                     hist     ,
+                     args     ) ;                  
+}
+// ============================================================================
+/*  calculate U-statistics 
+ *  @param pdf   (input) PDF
+ *  @param data  (input) data 
+ *  @param hist  (update) the histogram with U-statistics 
+ *  @param args  (input)  the arguments
+ *  @param tStat (output,optional) value for T-statistics 
+ */
+// ============================================================================
+#include <iostream> 
+Ostap::StatusCode Ostap::UStat::calculate
+( const Ostap::Utils::ProgressConf& progress , 
+  const RooAbsPdf&                  pdf      , 
+  const RooDataSet&                 data     ,  
+  double&                           tStat    ,
+  TH1*                              hist     ,
+  RooArgSet*                        args     ) 
+{
   //
   if ( 0 == args ) { args = pdf.getObservables ( data ) ; }
   if ( 0 == args ) { return Ostap::StatusCode( InvalidArgs ) ; }
@@ -124,15 +152,18 @@ Ostap::StatusCode Ostap::UStat::calculate
   typedef std::vector<double> TStat ;
   TStat tstat ;
   //
-  const RooDataSet*  cloned = (RooDataSet*)data.Clone() ;
+  // const RooDataSet*  cloned = (RooDataSet*)data.Clone() ;
+  // std::unique_ptr<RooDataSet> cloned  { new RooDataSet ( data ) } ;
+  std::unique_ptr<RooDataSet> cloned = std::make_unique<RooDataSet> ( data , nullptr ) ;
   //
   const unsigned int num    = data.numEntries () ;
   //
   const RooArgSet* event_x = 0 ;
   const RooArgSet* event_y = 0 ;
   //
-  for ( unsigned int i = 0 ; i < num ; ++i ) 
-  {
+  Ostap::Utils::ProgressBar bar ( num , progress ) ;
+  for ( unsigned int i = 0 ; i < num ; ++i , ++bar ) 
+    {
     //
     // 1. Get "Event"
     event_x = data . get(i) ;      
@@ -169,7 +200,7 @@ Ostap::StatusCode Ostap::UStat::calculate
     {
       if ( i == j ) { continue ; }
       //
-      event_y = cloned->get(j) ;      
+      event_y = cloned->get ( j ) ;      
       if ( 0 == event_y || 0 == event_y->getSize() ) 
       { return Ostap::StatusCode ( InvalidItem1 ) ; }            // RETURN 
       //
@@ -194,12 +225,12 @@ Ostap::StatusCode Ostap::UStat::calculate
     //
     tstat.push_back ( value ) ; 
     //
-  } 
-  delete cloned ;
+  }
   //
   // calculate T-statistics
   //
   std::stable_sort ( tstat.begin() , tstat.end() ) ;
+  //
   double tS = 0 ;
   double nD = tstat.size() ;
   for ( TStat::const_iterator t = tstat.begin() ; tstat.end() != t  ; ++t ) 
@@ -211,8 +242,8 @@ Ostap::StatusCode Ostap::UStat::calculate
   }
   // finally return the value:
   tStat = tS ;
-  //
-  return Ostap::StatusCode::SUCCESS ;
+  // 
+ return Ostap::StatusCode::SUCCESS ;
 }
 // ============================================================================
 //                                                                      The END 

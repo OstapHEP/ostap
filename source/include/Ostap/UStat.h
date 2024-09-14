@@ -16,6 +16,10 @@ class RooDataSet ;
 // ============================================================================
 #include "Ostap/StatusCode.h"
 // ============================================================================
+// Forward declarations 
+// ============================================================================
+namespace Ostap { namespace Utils { class ProgressConf ; } } // Ostap 
+// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
@@ -50,6 +54,21 @@ namespace Ostap
       double&           tStat           ,
       TH1*              hist  = nullptr ,
       RooArgSet*        args  = nullptr ) ;
+    // ========================================================================
+    /** calculate U-statistics 
+     *  @param pdf   (input) PDF
+     *  @param data  (input) data 
+     *  @param hist  (update) the histogram with U-statistics 
+     *  @param tStat (update) value for T-statistics 
+     *  @param args  (input)  the arguments
+     */
+    static Ostap::StatusCode calculate
+    ( const Ostap::Utils::ProgressConf& conf            , 
+      const RooAbsPdf&                  pdf             , 
+      const RooDataSet&                 data            ,  
+      double&                           tStat           ,
+      TH1*                              hist  = nullptr ,
+      RooArgSet*                        args  = nullptr ) ;
     // ========================================================================
   };
   // ==========================================================================

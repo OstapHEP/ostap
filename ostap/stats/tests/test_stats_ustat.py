@@ -11,7 +11,7 @@
 import ostap.stats.ustat     as     uStat 
 import ostap.fitting.models  as     Models
 from   ostap.utils.timing    import timing
-from   ostap.core.pyrouts    import SE
+from   ostap.core.pyrouts    import SE, Ostap 
 from   ostap.plotting.canvas import use_canvas 
 import ROOT, random, math  
 # =============================================================================
@@ -23,6 +23,7 @@ else                       : logger = getLogger ( __name__            )
 
 histos = set() 
 
+# =============================================================================
 def test_stats_ustat_G2D () :
 
     logger = getLogger ( "test_stats_ustat_G2D" )
@@ -42,28 +43,35 @@ def test_stats_ustat_G2D () :
     for n in ( 100 , 200 , 500 , 1000 ) : ## , 5000 , 10000  ) :
 
 
-        title = "2D: N=%4d test" % n 
+        title  = "TEST    2D: N=%4d " % n 
         with timing ( title , logger = logger ) , use_canvas ( title , wait = 5 ) :
-            
-            pdf.muX    = 5
-            pdf.muY    = 5
-            pdf.sigmaX = 1 
-            pdf.sigmaY = 2  
-            pdf.theta  = math.pi/4 
-            
-            
-            data       = pdf.generate ( n )
-            
-            pdf.fitTo ( data , silent = True )
-            
-            t , h , r  = uStat.uPlot ( pdf  , data ) 
+
+            title1 = "PREPARE 2D: N=%4d" % n 
+            with timing ( title1 , logger = logger ) : 
+                pdf.muX    = 5
+                pdf.muY    = 5
+                pdf.sigmaX = 1 
+                pdf.sigmaY = 2  
+                pdf.theta  = math.pi/4 
+                
+                data       = pdf.generate ( n )
+                
+                r , _  = pdf.fitTo ( data , silent = True )
+                ftitle = 'Fit 2D-Gaussian'
+                logger.info  ('%s\n%s' % ( ftitle , r.table ( title = ftitle , prefix = '# ' ) ) ) 
+
+            title2 = "uStat   2D: N=%4d" % n 
+            with timing ( title2 , logger = logger ) : 
+                t , h , r  = uStat.uPlot ( pdf  , data ) 
             
             histos.add ( h )  
             h.draw()
-            
-            data.clear()
+
+            ## delete data 
+            data = Ostap.MoreRooFit.delete_data ( data )            
             del data
 
+# =============================================================================
 def test_stats_ustat_G3D () :
 
     logger = getLogger ( "test_stats_ustat_G3D" )
@@ -86,31 +94,38 @@ def test_stats_ustat_G3D () :
     for n in ( 100 , 200 , 500 , 1000 ) : ## , 5000 , 10000  ) :
         
         
-        title = "3D: N=%4d test" % n 
+        title  = "TEST    3D: N=%4d " % n 
         with timing ( title , logger = logger ) , use_canvas ( title , wait = 5 ) :
             
-            pdf.muX    = 5
-            pdf.muY    = 5
-            pdf.muZ    = 5
-            pdf.sigmaX = 1 
-            pdf.sigmaY = 2  
-            pdf.sigmaZ = 3   
-            pdf.phi    = math.pi/4 
-            pdf.theta  = math.pi/4 
-            pdf.psi    = math.pi/4 
+            title1 = "PREPARE 3D: N=%4d" % n 
+            with timing ( title1 , logger = logger ) : 
+                pdf.muX    = 5
+                pdf.muY    = 5
+                pdf.muZ    = 5
+                pdf.sigmaX = 1 
+                pdf.sigmaY = 2  
+                pdf.sigmaZ = 3   
+                pdf.phi    = math.pi/4 
+                pdf.theta  = math.pi/4 
+                pdf.psi    = math.pi/4 
+                
+                data       = pdf.generate ( n )
+            
+                r , _ = pdf.fitTo ( data , silent = True )
+                ftitle = 'Fit 3D-Gaussian'
+                logger.info ('%s\n%s' % ( ftitle , r.table ( title = ftitle , prefix = '# ' ) ) ) 
 
-            data       = pdf.generate ( n )
-            
-            pdf.fitTo ( data , silent = True )
-            
-            t , h , r  = uStat.uPlot ( pdf  , data ) 
+                
+            title2 = "uStat   3D: N=%4d" % n 
+            with timing ( title2 , logger = logger ) : 
+                t , h , r  = uStat.uPlot ( pdf  , data ) 
             
             histos.add ( h )  
             h.draw()
             
-            data.clear()
+            ## delete data 
+            data = Ostap.MoreRooFit.delete_data ( data )            
             del data
-            
             
 
 

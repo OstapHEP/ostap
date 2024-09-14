@@ -34,7 +34,7 @@
 
 This is a simple translation of the original C++ lines written by Greig Cowan into Python
 
-- see M.Williams, ``How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics''
+- see M.Williams, `How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics'
 - see https://doi.org/10.1088/1748-0221/5/09/P09004
 - see http://arxiv.org/abs/arXiv:1003.1768
 
@@ -47,7 +47,7 @@ Usage is fairly trivial:
    >>> import ostap.stats.ustat as uStat
 
    >>> r,histo = uStat.uPlot ( pdf , data ) 
-   >>> print r                  ## print fit results
+   >>> print ( r  )             ## print fit results
    >>> histo.Draw()             ## plot the results     
 """
 # ============================================================================
@@ -86,7 +86,7 @@ def uCalc ( pdf            ,
             args   = None  , 
             histo  = None  ,
             silent = False )  :
-    """Calculate U-statistics 
+    """ Calculate U-statistics 
     """
     
     if not isinstance ( pdf , ROOT.RooAbsPdf ) or not pdf :
@@ -98,12 +98,24 @@ def uCalc ( pdf            ,
     if not histo : histo = ROOT.nullptr
 
     ##
-    tStat = ctypes.c_double (-1)
-    sc    = Ostap.UStat.calculate ( pdf   ,
-                                    data  ,
-                                    tStat ,
-                                    histo ,
-                                    args  )
+    tStat = ctypes.c_double ( -1 )
+    from ostap.utils.progress_conf import progress_conf
+    if silent : 
+        sc = Ostap.UStat.calculate ( pdf   ,
+                                     data  ,
+                                     tStat ,
+                                     histo ,
+                                     args  )
+    else :
+        from ostap.utils.progress_conf import progress_conf
+        sc = Ostap.UStat.calculate ( progress_conf () ,
+                                     pdf              ,
+                                     data             ,
+                                     tStat            ,
+                                     histo            ,
+                                     args             )
+        
+        
     if sc.isFailure() :
         logger.error ( "Error from Ostap::UStat::Calculate %s" % sc )
 
@@ -140,7 +152,7 @@ def uPlot ( pdf            ,
             bins   = None  ,
             args   = None  ,
             silent = False ) :
-    """Make the plot of U-statistics 
+    """ Make the plot of U-statistics 
     
     >>> pdf  = ...               ## pdf
     >>> data = ...               ## dataset
@@ -154,7 +166,7 @@ def uPlot ( pdf            ,
     """
     
     if not bins or bins <= 0 :
-        nEntries = float(data.numEntries())
+        nEntries = float ( data.numEntries () )
         bins     = 10 
         for nbins in ( 1000 , 500 ,
                        200  , 100 ,
@@ -162,7 +174,7 @@ def uPlot ( pdf            ,
                        25   , 20  ,
                        16   , 10  ,
                        8    , 5   ) :
-            if nEntries/float(nbins) < 100 : continue  
+            if nEntries / float ( nbins ) < 100 : continue  
             bins = nbins
             break
 
