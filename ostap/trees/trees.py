@@ -38,7 +38,7 @@ from   ostap.math.reduce         import root_factory
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.trees.cuts          import vars_and_cuts, order_warning 
 from   ostap.stats.statvars      import data_decorate , data_range 
-from   ostap.histos.histos       import histo_book, histo_keys  
+from   ostap.histos.histos       import histo_book2, histo_keys  
 import ostap.trees.treereduce 
 import ostap.trees.param
 import ostap.io.root_file 
@@ -570,7 +570,7 @@ def tree_draw ( tree                    ,
         histos.append ( item ) 
 
     ## book the histogram 
-    histo = histo_book ( histos , kw )
+    histo = histo_book2 ( histos , kw )
 
     if not native :
         ## fill the histogram 
@@ -595,7 +595,6 @@ def tree_draw ( tree                    ,
 
 ROOT.TTree .draw = tree_draw 
 ROOT.TChain.draw = tree_draw 
-
 
 # =============================================================================
 ## check if object is in tree/chain  :

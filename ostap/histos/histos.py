@@ -8483,7 +8483,9 @@ def histo_book ( ranges , **kwargs ) :
         title = 'histo_book: %d unused arguments' % len ( kw ) 
         table = T.table ( rows , title = 'Unused argumens' , prefix = '# ' , alignment = 'll' )    
         logger.warning ( '%s\n%s' % ( title , table ) )
-        
+    ## 
+    return histo
+    
 # =============================================================================
 ## Get a kind of ROC-like curve/graph from two histograms
 def _h1_roc_ ( h1 , h2 ) :

@@ -1958,12 +1958,12 @@ class APDF1 ( Components ) :
     #  @see PDF.roo_histo
     #  Unlike  <code>PDF.roo_histo</code> method, PDF is integrated within the bin
     def histo ( self             ,
-                nbins    = 100   , xmin = None , xmax = None ,
+                nbins    = 100   , 
                 hpars    = ()    , 
                 histo    = None  ,
                 integral = True  ,
                 events   = True  , 
-                errors   = False ) :
+                errors   = False , **kwargs ) :
         """ Convert PDF to the 1D-histogram in correct way
         - Unlike  `PDF.roo_histo` method, PDF is integrated within the bin
         >>> pdf = ...
@@ -1975,10 +1975,8 @@ class APDF1 ( Components ) :
         """
         
         histo = self.make_histo ( nbins = nbins ,
-                                  xmin  = xmin  ,
-                                  xmax  = xmax  ,
                                   hpars = hpars ,
-                                  histo = histo )
+                                  histo = histo , **kwargs )
 
         # loop over the histogram bins 
         for i , x , y in histo.items() :
@@ -2020,10 +2018,10 @@ class APDF1 ( Components ) :
     #  @see RooAbsPdf::fillHistogram
     #  @see PDF.histo
     def roo_histo ( self             ,
-                    nbins    = 100   , xmin = None , xmax = None ,
+                    nbins    = 100   , 
                     hpars    = ()    , 
                     histo    = None  ,
-                    events   = True  ) : 
+                    events   = True  , **kwargs ) : 
         """ Convert PDF to the 1D-histogram, taking PDF-values at bin-centres
         - see RooAbsPdf::createHistogram
         - see RooAbsPdf::fillHistogram
@@ -2033,12 +2031,16 @@ class APDF1 ( Components ) :
         >>> histo_template = ...
         >>> h2  = pdf.roo_histo ( histo = histo_template ) ## use histogram template
         """
-
+        print ( 'NBINS'  , nbins  ) 
+        print ( 'HPARS'  , hpars  ) 
+        print ( 'HISTO'  , histo  ) 
+        print ( 'HISTO'  , histo  ) 
+        print ( 'EVENTS' , events ) 
+        print ( 'KWARGS' , kwargs ) 
+        
         histo = self.make_histo ( nbins = nbins ,
-                                  xmin  = xmin  ,
-                                  xmax  = xmax  ,
                                   hpars = hpars ,
-                                  histo = histo )
+                                  histo = histo , **kwargs )
 
         hh = self.pdf.createHistogram (
             hID ()    ,
@@ -3489,24 +3491,24 @@ class APDF2 (APDF1) :
     #  h2  = pdf.roo_histo ( histo = histo_template ) ## use histogram template
     #  h3  = pdf.roo_histo ( ... , density  = True  ) ## convert to "density" histogram 
     #  @endcode
-    def roo_histo ( self             ,
-                   xbins   = 20    , xmin = None , xmax = None ,
-                   ybins   = 20    , ymin = None , ymax = None ,
+    def roo_histo ( self           ,
+                   xbins   = 20    , 
+                   ybins   = 20    , 
                    hpars   = ()    , 
                    histo   = None  , 
-                   events  = True  ) : 
-        """Convert PDF to the 2D-histogram, taking PDF-values at bin-centres
+                    events  = True  , **kwargs ) : 
+        """ Convert PDF to the 2D-histogram, taking PDF-values at bin-centres
         >>> pdf = ...
-        >>> h1  = pdf.as_histo ( 100 , 0. , 10. , 20 , 0. , 10 ) 
+        >>> h1  = pdf.roo_histo ( 100 , 0. , 10. , 20 , 0. , 10 ) 
         >>> histo_template = ...
-        >>> h2  = pdf.as_histo ( histo = histo_template ) ## use histogram template
-        >>> h3  = pdf.as_histo ( ... , density  = True  ) ## convert to 'density' histogram 
+        >>> h2  = pdf.roo_histo ( histo = histo_template ) ## use histogram template
+        >>> h3  = pdf.roo_histo ( ... , density  = True  ) ## convert to 'density' histogram 
         """
         
-        histo = self.make_histo ( xbins = xbins , xmin = xmin , xmax = xmax ,
-                                  ybins = ybins , ymin = ymin , ymax = ymax ,
+        histo = self.make_histo ( xbins = xbins , 
+                                  ybins = ybins , 
                                   hpars = hpars ,
-                                  histo = histo )
+                                  histo = histo , **kwargs )
         
         hh = self.pdf.createHistogram (
             hID()     ,
@@ -4709,13 +4711,13 @@ class APDF3 (APDF2) :
     #  histo_template = ...
     #  h2  = pdf.roo_histo ( histo = histo_template ) ## use histogram template
     #  @endcode
-    def roo_histo ( self            ,
-                   xbins    = 10    , xmin = None , xmax = None ,
-                   ybins    = 10    , ymin = None , ymax = None ,
-                   zbins    = 10    , zmin = None , zmax = None ,
-                   hpars    = ()    , 
-                   histo    = None  ,
-                   events   = True) :
+    def roo_histo ( self             ,
+                    xbins    = 10    , 
+                    ybins    = 10    , 
+                    zbins    = 10    , 
+                    hpars    = ()    , 
+                    histo    = None  ,
+                    events   = True  , **kwargs ) :
         """ Convert PDF to the 3D-histogram, taking PDF-values at bin-centres
         >>> pdf = ...
         >>> h1  = pdf.roo_histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 )
@@ -4723,11 +4725,11 @@ class APDF3 (APDF2) :
         >>> h2  = pdf.roo_histo ( histo = histo_template ) ## use histogram template
         """
         
-        histo = self.make_histo ( xbins = xbins , xmin = xmin , xmax = xmax ,
-                                  ybins = ybins , ymin = ymin , ymax = ymax ,
-                                  zbins = zbins , zmin = zmin , zmax = zmax ,
+        histo = self.make_histo ( xbins = xbins , 
+                                  ybins = ybins , 
+                                  zbins = zbins , 
                                   hpars = hpars ,
-                                  histo = histo )
+                                  histo = histo , **kwargs )
 
         hh = self.pdf.createHistogram (
             hID()     ,

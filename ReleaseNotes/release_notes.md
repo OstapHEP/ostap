@@ -7,11 +7,11 @@
   1. set `cmake_policy` to fic nuilding for virtual environemnts (conda)
   1. more improvements and fixes for `ostap.io.dbase` module
   1. add test for availabe DB backends
-  1. imporve `ostap.histos.histos.book_histo` and make use of it in `fitting`
+  1. improve `ostap.histos.histos.book_histo` and make use of it in `fitting`
     
 ## Backward incompatible
     
-  1.  From now `PDF3.fitTo` always retrn the tuple of `fit-result, frame` or `fit-result,None`  to be cohrent with all other `fitTo` methods.
+  1.  From now `PDF3.fitTo` always returns the tuple of `(fit-result, frame)` or `(fit-result,None)` to be coherent with all other `fitTo` methods.
     
 ## Bug fixes
 

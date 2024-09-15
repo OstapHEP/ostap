@@ -2052,7 +2052,8 @@ class FUN1(AFUN1,F1AUX) :
         """
         
         from ostap.histos.histos import histo_book
-        # histogram is provided 
+        # histogram is provided
+        
         if histo :
             
             assert isinstance ( histo , ROOT.TH1 ) and not isinstance ( histo , ROOT.TH2 ) , \
@@ -2060,7 +2061,7 @@ class FUN1(AFUN1,F1AUX) :
             
             histo = histo.clone()
             histo.Reset()
-
+        
         # arguments for the histogram constructor 
         elif hpars :
             

@@ -63,6 +63,8 @@ def test_stats_ustat_G2D () :
             title2 = "uStat   2D: N=%4d" % n 
             with timing ( title2 , logger = logger ) : 
                 t , h , r  = uStat.uPlot ( pdf  , data ) 
+
+            logger.info ( 'T-value is %.2f%%' % ( t * 100 ) ) 
             
             histos.add ( h )  
             h.draw()
@@ -120,6 +122,8 @@ def test_stats_ustat_G3D () :
             with timing ( title2 , logger = logger ) : 
                 t , h , r  = uStat.uPlot ( pdf  , data ) 
             
+            logger.info ( 'T-value is %.2f%%' % ( t * 100 ) ) 
+
             histos.add ( h )  
             h.draw()
             
