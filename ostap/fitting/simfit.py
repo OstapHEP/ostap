@@ -437,10 +437,10 @@ class Sim1D(PDF1) :
     # =========================================================================
     ## make the actual fit (and optionally draw it!)
     #  @code
-    #  r,f = model.fitTo ( dataset )
-    #  r,f = model.fitTo ( dataset , weighted = True )    
-    #  r,f = model.fitTo ( dataset , ncpu     = 10   )    
-    #  r,f = model.fitTo ( dataset , draw = 'signal' , nbins = 300 )    
+    #  r , f = model.fitTo ( dataset )
+    #  r , f = model.fitTo ( dataset , weighted = True )    
+    #  r , f = model.fitTo ( dataset , ncpu     = 10   )    
+    #  r , f = model.fitTo ( dataset , draw = 'signal' , nbins = 300 )    
     #  @endcode 
     def fitTo ( self           ,
                 dataset        ,
@@ -450,12 +450,11 @@ class Sim1D(PDF1) :
                 refit  = False ,
                 timer  = False ,
                 args   = ()    , **kwargs ) :
-        """
-        Perform the actual fit (and draw it)
-        >>> r,f = model.fitTo ( dataset )
-        >>> r,f = model.fitTo ( dataset , weighted = True )    
-        >>> r,f = model.fitTo ( dataset , ncpu     = 10   )    
-        >>> r,f = model.fitTo ( dataset , draw = 'signal' , nbins = 300 )    
+        """ Perform the actual fit (and draw it)
+        >>> r , f = model.fitTo ( dataset )
+        >>> r , f = model.fitTo ( dataset , weighted = True )    
+        >>> r , f = model.fitTo ( dataset , ncpu     = 10   )    
+        >>> r , f = model.fitTo ( dataset , draw = 'signal' , nbins = 300 )    
         """
         assert self.sample in dataset      ,\
                'Category %s is not in dataset' % self.sample.GetName()
@@ -497,8 +496,7 @@ class Sim1D(PDF1) :
                silent  = True ,
                args    = ()   , 
                **kwargs       ) :
-        """
-        Draw the PDF&data for the given   category
+        """ Draw the PDF&data for the given   category
         >>> pdf.fitTo ( dataset )
         >>> pf.draw ( 'signal' , dataset , nbins = 100 ) 
         """
@@ -577,7 +575,7 @@ for _a in (
     if hasattr ( Sim1D , _a ) :
         ## method is suppressed
         def _suppress_ ( self , *args , **kwargs ) :
-            """Method is suppressed"""
+            """ Method is suppressed"""
             raise AttributeError ( "'%s' object has no attribute '%s'" % ( type ( self ) , _a ) )
         setattr ( Sim1D , _a , _suppress_ ) 
         logger.verbose ( 'Remove attribute %s from Sim1D' ) 
@@ -627,8 +625,7 @@ class SimFit (VarMaker,ConfigReducer) :
                    categories        ,
                    name       = None , 
                    title      = ''   ) :
-        """Helper PDF-like class to simplify the creation and usage of simultaneous PDF
-        
+        """ Helper PDF-like class to simplify the creation and usage of simultaneous PDF        
         >>> sample = ROOT.RooCategory( 'sample', 'fitting sample' , 'A' , 'B' )
         >>> pdfA   = ... ## pdf for the sample 'A'
         >>> pdfB   = ... ## pdf for the sample 'B'
@@ -846,10 +843,10 @@ class SimFit (VarMaker,ConfigReducer) :
     # =========================================================================
     ## make the actual fit (and optionally draw it!)
     #  @code
-    #  r,f = model.fitTo ( dataset )
-    #  r,f = model.fitTo ( dataset , weighted = True )    
-    #  r,f = model.fitTo ( dataset , ncpu     = 10   )    
-    #  r,f = model.fitTo ( dataset , draw = 'signal' , nbins = 300 )    
+    #  r , f = model.fitTo ( dataset )
+    #  r , f = model.fitTo ( dataset , weighted = True )    
+    #  r , f = model.fitTo ( dataset , ncpu     = 10   )    
+    #  r , f = model.fitTo ( dataset , draw = 'signal' , nbins = 300 )    
     #  @endcode 
     def fitTo ( self           ,
                 dataset        ,
@@ -859,12 +856,11 @@ class SimFit (VarMaker,ConfigReducer) :
                 refit  = False ,
                 timer  = False ,
                 args   = ()    , **kwargs ) :
-        """
-        Perform the actual fit (and draw it optionally)
-        >>> r,f = model.fitTo ( dataset )
-        >>> r,f = model.fitTo ( dataset , weighted = True )    
-        >>> r,f = model.fitTo ( dataset , ncpu     = 10   )    
-        >>> r,f = model.fitTo ( dataset , draw = 'signal' , nbins = 300 )    
+        """ Perform the actual fit (and draw it optionally)
+        >>> r , f = model.fitTo ( dataset )
+        >>> r , f = model.fitTo ( dataset , weighted = True )    
+        >>> r , f = model.fitTo ( dataset , ncpu     = 10   )    
+        >>> r , f = model.fitTo ( dataset , draw = 'signal' , nbins = 300 )    
         """
         assert self.sample in dataset      ,\
                'Category %s is not in dataset' % self.sample.GetName()
@@ -910,8 +906,7 @@ class SimFit (VarMaker,ConfigReducer) :
                silent  = True ,
                args    = ()   , 
                **kwargs       ) :
-        """
-        Draw the PDF&data for the given category
+        """ Draw the PDF&data for the given category
         >>> pdf.fitTo ( dataset )
         >>> pf.draw ( 'signal' , dataset , nbins = 100 ) 
         """
@@ -1030,7 +1025,7 @@ class SimFit (VarMaker,ConfigReducer) :
               dataset         ,
               silent  = True  ,
               args    = ()    , **kwargs ) :
-        """Get NLL object from the pdf
+        """ Get NLL object from the pdf
         >>> model.fitTo ( dataset , ... )
         >>> nll, sf = model.nll ( dataset )
         - see RooAbsPdf::createNLL 
@@ -1051,7 +1046,7 @@ class SimFit (VarMaker,ConfigReducer) :
                    draw    = True  ,
                    silent  = True  , 
                    args    = ()    , **kwargs ) :        
-        """Draw/prepare NLL or LL-profile for seleted variable:        
+        """ Draw/prepare NLL or LL-profile for seleted variable:        
         >>> model.fitTo ( dataset , ... )
         >>> nll  , f1 = model.draw_nll ( 'B' ,  dataset )
         >>> prof , f2 = model.draw_nll ( 'B' ,  dataset , profile = True )
@@ -1107,7 +1102,7 @@ class SimFit (VarMaker,ConfigReducer) :
                  ## max_iterations = -1            ,
                  ## strategy       = None          ,
                  args           = () , **kwargs ) :
-        """Evaluate 'significance' using Wilks' theorem via NLL
+        """ Evaluate 'significance' using Wilks' theorem via NLL
         >>> data = ...
         >>> pdf  = ...
         >>> pdf.fitTo ( data , ... )
@@ -1177,7 +1172,7 @@ class SimFit (VarMaker,ConfigReducer) :
                    sample        = True  ,
                    storage       = None  ,
                    category_args = {}    ) :
-        """Generate toy-sample according to PDF
+        """ Generate toy-sample according to PDF
         >>> model  = ....
         >>> data   = model.generate ( { 'A' : 100 , 'B' : 200 } ) ## generate dataset with 10000 events
         
@@ -1276,7 +1271,7 @@ class SimFit (VarMaker,ConfigReducer) :
     #  pdf.load_params ( dataset , params )  
     #  @endcode 
     def load_params ( self , params = {}  , dataset = None , silent = False , **kwargs ) :
-        """Load parameters from external dictionary <code>{ name : value }</code>
+        """ Load parameters from external dictionary <code>{ name : value }</code>
         #  or sequence of <code>RooAbsReal</code> objects
         >>> pdf      = ...
         >>> dataset = ... 
@@ -1349,7 +1344,7 @@ class SimFit (VarMaker,ConfigReducer) :
     #  p   = pdf.parameter  ( 'A' )
     #  @endcode
     def parameter ( self , param , dataset = None ) :
-        """Get the parameter value by name
+        """ Get the parameter value by name
         >>> pdf = ...
         >>> p   = pdf.parameter  ( 'A' )
         """
@@ -1377,7 +1372,7 @@ class SimFit (VarMaker,ConfigReducer) :
     #                          dataset           )
     #  @endcode
     def graph_nll ( self , *args , **kwargs ) :
-        """Get NLL/profile-graph for the variable, using the specified abscissas
+        """ Get NLL/profile-graph for the variable, using the specified abscissas
         >>> pdf   = ...
         >>> graph = pdf.graph_nll ( 'S'               ,
         ...                          range ( 0 , 100 ) ,
@@ -1394,7 +1389,7 @@ class SimFit (VarMaker,ConfigReducer) :
     #                              dataset                   )
     #  @endcode
     def graph_profile ( self , *args , **kwargs ) :
-        """Get profile-graph for the variable, using the specified abscissas
+        """ Get profile-graph for the variable, using the specified abscissas
         >>> pdf   = ...
         >>> graph = pdf.graph_profile ( 'S'                     ,
         ...                             range ( 0 , 12.5 , 20 ) ,

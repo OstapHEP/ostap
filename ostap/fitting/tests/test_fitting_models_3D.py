@@ -57,8 +57,8 @@ def test_gauss3D() :
     
     dataset = model.generate(1000)
     
-    result = model.fitTo ( dataset , silent = True )
-    result = model.fitTo ( dataset , silent = True )
+    result , _ = model.fitTo ( dataset , silent = True )
+    result , _ = model.fitTo ( dataset , silent = True )
     
     logger.info( 'Simple 3D-Gaussian model\n%s' % result.table ( prefix = "# " ) )
     

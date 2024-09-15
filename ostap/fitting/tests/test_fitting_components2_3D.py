@@ -208,8 +208,8 @@ def test_fitting_components2_3D () :
     
     model.C  = N_sss, N_ssb * 3 , N_sbb * 3
     
-    r = model.fitTo ( dataset , silent = True  )
-    r = model.fitTo ( dataset , silent = True  )
+    r , _ = model.fitTo ( dataset , silent = True  )
+    r , _ = model.fitTo ( dataset , silent = True  )
 
     with use_canvas ( 'test_fitting_components2_3D' ) : 
         model.draw1 ( dataset )

@@ -229,8 +229,8 @@ def test_fitting_components_3D () :
     
     model.C   = N_sss , N_ssb , N_sbs , N_sbb , N_bss , N_sbs , N_bbs 
     
-    r = model.fitTo ( dataset , silent = True )
-    r = model.fitTo ( dataset , silent = True )
+    r , _ = model.fitTo ( dataset , silent = True )
+    r , _ = model.fitTo ( dataset , silent = True )
     
 
     with use_canvas ( 'test_fitting_components_3D' ) : 

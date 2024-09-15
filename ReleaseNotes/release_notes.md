@@ -9,7 +9,9 @@
   1. add test for availabe DB backends
                   
 ## Backward incompatible
-
+    
+  1.  From now `PDF3.fitTo` always retrn the tuple of `fit-result, frame` or `fit-result,None`  to be cohrent with all other `fitTo` methods.
+    
 ## Bug fixes
 
 # v1.13.2.0
