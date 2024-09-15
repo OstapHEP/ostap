@@ -2051,7 +2051,7 @@ class FUN1(AFUN1,F1AUX) :
          - see `ostap.histos.histos.histo_keys`        
         """
         
-        from ostap.histos.histos import histo_book 
+        from ostap.histos.histos import histo_book
         # histogram is provided 
         if histo :
             
@@ -2067,15 +2067,11 @@ class FUN1(AFUN1,F1AUX) :
             histo = ROOT.TH1F ( hID() , 'PDF%s' % self.name , *hpars  )
             if not histo.GetSumw2() : histo.Sumw2()
 
-        # explicit construction from (#bins,min,max)-triplet  
+        # explicit construction from description 
         else :
             
-            kw = cidict ( transform = cidict_fun , nbins = nbins , **kwargs )
-            
-            xmnmx  = self.xminmax()            
-            ranges = [ ( self.xvar.name ,    xmnmx          ) ]            
-            histo  = histo_book ( ranges , kw )
-            if kw : self.warning ( 'make_histo/histo_book: unused arguments: [%s]'%  ( ','.join ( k for k in kw ) ) )  
+            ranges = [ ( self.xvar.name , self.xminmax() ) ] 
+            histo  = histo_book ( ranges , nbins = nbins , **kwargs )
 
         return histo 
 

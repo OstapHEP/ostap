@@ -3381,14 +3381,14 @@ class APDF2 (APDF1) :
     # ==========================================================================
     ## Create the histo according to specifications 
     def make_histo ( self , 
-                     xbins    = 20    , xmin = None , xmax = None ,
-                     ybins    = 20    , ymin = None , ymax = None ,
+                     xbins    = 20    , 
+                     ybins    = 20    ,  
                      hpars    = ()    , 
-                     histo    = None  ) :
+                     histo    = None  , **kwargs ) :
         """ Create the 2D histogram according to specifications
         """
         
-        import ostap.histos.histos
+        from ostap.histos.histos import histo_book 
 
         # histogram is provided 
         if histo :
@@ -3408,19 +3408,9 @@ class APDF2 (APDF1) :
         # explicit construction from (#bins,min,max)-triplet  
         else :
             
-            assert isinstance ( xbins , integer_types ) and 0 < xbins, \
-                   "Wrong 'xbins'-argument %s" % xbins 
-            assert isinstance ( ybins , integer_types ) and 0 < ybins, \
-                   "Wrong 'ybins'-argument %s" % ybins            
-            if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
-            if xmax == None and self.xminmax() : xmax = self.xminmax()[1]
-            if ymin == None and self.yminmax() : ymin = self.yminmax()[0]
-            if ymax == None and self.yminmax() : ymax = self.yminmax()[1]
-            
-            histo = ROOT.TH2F ( hID() , 'PDF%s' % self.name ,
-                                xbins , xmin , xmax ,
-                                ybins , ymin , ymax )
-            if not histo.GetSumw2() : histo.Sumw2()
+            ranges = [ ( self.xvar.name , self.xminmax() ) ,
+                       ( self.yvar.name , self.yminmax() ) ] 
+            histo  = histo_book ( ranges , xnbins = xbins , ybins = ybins , **kwargs )
 
         return histo 
                      
@@ -3552,7 +3542,7 @@ class APDF2 (APDF1) :
     #  residual = pdf.residual ( data , nbins = 100 ) 
     #  @endcode 
     def residual ( self  , dataset , **kwargs ) :
-        """Get the residual histogram
+        """ Get the residual histogram
         - see PDF.as_histo
         - see PDF.residual_histo
         - see PDF.make_histo
@@ -3578,7 +3568,7 @@ class APDF2 (APDF1) :
     #  residual = pdf.pull ( data , nbins = 100 ) 
     #  @endcode 
     def pull ( self  , dataset , **kwargs ) :
-        """Get the pull  histogram: (data-fit)/data_error
+        """ Get the pull  histogram: (data-fit)/data_error
         - see PDF.as_histo
         - see PDF.residual_histo
         - see PDF.make_histo
@@ -4606,14 +4596,14 @@ class APDF3 (APDF2) :
     # ==========================================================================
     ## create the histogram accoring to specifications 
     def make_histo ( self ,
-                     xbins    = 10    , xmin = None , xmax = None ,
-                     ybins    = 10    , ymin = None , ymax = None ,
-                     zbins    = 10    , zmin = None , zmax = None ,
-                     hpars    = ()    , 
-                     histo    = None  ) :
+                     xbins    = 10   , 
+                     ybins    = 10   , 
+                     zbins    = 10   , 
+                     hpars    = ()   , 
+                     histo    = None , **kwargs ) :
         """ Create the histogram accoring to specifications"""
         
-        import ostap.histos.histos
+        from ostap.histos.histos import histo_book 
 
         # histogram is provided 
         if histo :
@@ -4633,26 +4623,14 @@ class APDF3 (APDF2) :
 
         # explicit contruction from (#bins,min,max)-triplet  
         else :
-            
-            assert isinstance ( xbins , integer_types ) and 0 < xbins, \
-                   "Wrong 'xbins'-argument %s" % xbins 
-            assert isinstance ( ybins , integer_types ) and 0 < ybins, \
-                   "Wrong 'ybins'-argument %s" % ybins 
-            assert isinstance ( zbins , integer_types ) and 0 < zbins, \
-                   "Wrong 'zbins'-argument %s" % zbins 
-            if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
-            if xmax == None and self.xminmax() : xmax = self.xminmax()[1]
-            if ymin == None and self.yminmax() : ymin = self.yminmax()[0]
-            if ymax == None and self.yminmax() : ymax = self.yminmax()[1]
-            if zmin == None and self.zminmax() : zmin = self.zminmax()[0]
-            if zmax == None and self.zminmax() : zmax = self.zminmax()[1]
-            
-            from ostap.core.core import hID
-            histo = ROOT.TH3F ( hID() , 'PDF%s' % self.name ,
-                                xbins , xmin , xmax ,
-                                ybins , ymin , ymax ,
-                                zbins , zmin , zmax )
-            if not histo.GetSumw2() : histo.Sumw2()
+
+            ranges = [ ( self.xvar.name , self.xminmax() ) ,
+                       ( self.yvar.name , self.yminmax() ) , 
+                       ( self.zvar.name , self.zminmax() ) ] 
+            histo  = histo_book ( ranges        ,
+                                  xbins = xbins ,
+                                  ybins = ybins ,
+                                  zbins = xbins , **kwargs )
 
         return histo 
 
