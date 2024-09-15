@@ -68,7 +68,7 @@ from   ostap.core.ostap_types    import ( integer_types , dictlike_types ,
 from   ostap.logger.utils        import multicolumn
 from   ostap.utils.progress_conf import progress_conf 
 from   ostap.utils.basic         import isatty, loop_items
-from   ostap.histos.histos       import histo_book 
+from   ostap.utils.cidict        import cidict
 import ostap.core.config         as     OCC 
 import ostap.stats.statvars      as     SV
 import ostap.logger.table        as     T 
@@ -973,7 +973,6 @@ def _fr_draw_ ( frame            ,
         logger.warning ( 'frame_draw: nothing to draw, return None' )
         return None
 
-    from ostap.utils.cidict        import cidict
     kw = cidict ( transform = cidict_fun , **kwargs )
 
     histos = [] 
@@ -982,8 +981,9 @@ def _fr_draw_ ( frame            ,
         item = key , ( mn , mx ) 
         histos.append ( item )
         
-    ## book the histogram 
-    histo = histo_book ( histos , kw )
+    ## book the histogram
+    from   ostap.histos.histos       import histo_book2
+    histo = histo_book2 ( histos , kw )
 
     ## fill the histogram 
     histo = frame_project ( cache , histo , cvars , cname , progress = progress , report = report , lazy = False )

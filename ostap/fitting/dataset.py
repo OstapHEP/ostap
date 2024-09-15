@@ -41,7 +41,6 @@ from   ostap.fitting.variables   import valid_formula, make_formula
 from   ostap.trees.cuts          import expression_types, vars_and_cuts, order_warning
 from   ostap.utils.utils         import evt_range, LAST_ENTRY, ALL_ENTRIES 
 from   ostap.stats.statvars      import data_decorate, data_range 
-from   ostap.histos.histos       import histo_book
 from   ostap.utils.valerrors     import VAE 
 import ostap.fitting.roocollections
 import ostap.fitting.printable
@@ -1408,8 +1407,9 @@ def ds_draw ( dataset ,
         item   = var, ( mn, mx) 
         histos.append ( item ) 
 
-    ## book the histogram 
-    histo = histo_book ( histos , kw )
+    ## book the histogram
+    from   ostap.histos.histos       import histo_book2
+    histo = histo_book2 ( histos , kw )
     ## fill the histogram
     histo = ds_project ( dataset , histo , varlst , cuts = cuts , cut_range = cut_range , first = first , last = last )
     ## draw the histogram 

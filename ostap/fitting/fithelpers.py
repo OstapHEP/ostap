@@ -149,7 +149,7 @@ class ConfigReducer(object) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2018-07-14
 class VarMaker (object) :
-    """Helper class that allows implement several purely  technical methods:
+    """ Helper class that allows implement several purely  technical methods:
     - creation of <code>ROOT.RooRealVar objects</code>
     - store newly created RooFit objects
     """
@@ -229,7 +229,7 @@ class VarMaker (object) :
     ## generate some unique name for PDF/FUN and objects
     @staticmethod 
     def generate_name ( prefix = '', suffix = '' , name = '' ) :
-        """Generate some unique name for PDF/FUN and objects
+        """ Generate some unique name for PDF/FUN and objects
         """
 
         def good_name ( nam ) :
@@ -260,7 +260,7 @@ class VarMaker (object) :
     #  @see RooAbsArg 
     @staticmethod
     def roo_name ( prefix = 'roo' , suffix = '' , name = '' ) :
-        """Generate some unique name for <code>RooFit</code>
+        """ Generate some unique name for <code>RooFit</code>
         - see `ROOT.RooNameReg` 
         - see `ROOT.TNamed`
         - see `ROOT.RooAbsArg`
@@ -320,13 +320,13 @@ class VarMaker (object) :
     # =============================================================================
     ## generate unique name 
     def new_name ( self , prefix = '' , suffix = '' ) :
-        """generate unique name"""
+        """ Generate unique name"""
         return self.generate_name ( prefix = prefix , suffix = suffix , name = self.name )  
 
     # =============================================================================
     ## generate unique name 
     def new_roo_name ( self , prefix = '' , suffix = '' ) :
-        """generate unique name"""
+        """ Generate unique name"""
         return self.roo_name ( prefix = prefix , suffix = suffix , name = self.name )  
     
     # =============================================================================
@@ -347,7 +347,7 @@ class VarMaker (object) :
                    name           , ## name 
                    title   = ''   , ## title 
                    fix     = None , *args ) :
-        """Make/modify  the variable:
+        """ Make/modify  the variable:
         
         v = self.make_var ( 10   , 'myvar' , 'mycomment' )
         v = self.make_var ( 10   , 'myvar' , 'mycomment' , ' ,     -1 , 1 )
@@ -550,7 +550,7 @@ class VarMaker (object) :
     # ==========================================================================
     ## check the possible name  duplication
     def var_name  ( self , name ) :
-        """Check the possible name duplication
+        """ Check the possible name duplication
         """
         if name in self.__var_names and not NameDuplicates.allowed() :
             self.warning ( 'The variable name "%s" is already defined!' % name )
@@ -560,11 +560,11 @@ class VarMaker (object) :
         return name
 
     # =========================================================================
-    ## delete the obejct
+    ## delete the object
     #  - remove the registered names in storages
     #  - clear the local storage of names 
     def __del__ ( self ) :
-        """Delete the obejct
+        """ Delete the object
         - remove the registered names in storages
         - clear the local storage of names 
         """
@@ -621,19 +621,26 @@ class FitHelper(VarMaker) :
     ## technical function to parse arguments for <code>fitTo</code> and 
     #  <code>nll</code>  methods
     def parse_args ( self ,  dataset = None , *args , **kwargs ) :
-        """Technical function to parse arguments for fitTo/nll/.. methods
+        """ Technical function to parse arguments for fitTo/nll/.. methods
         """
         _args = []
-        for a in args :
+
+        _rows = [] 
+        for i , a in enumerate ( args ) :
             if not isinstance ( a , ROOT.RooCmdArg ) :
-                self.error ( 'parse_args: unknown argument type %s/%s, skip' % ( a , type ( a ) ) )
+                ## self.error ( 'parse_args: unknown argument type %s/%s, skip' % ( a , type ( a ) ) )
+                _row = '[%d]' % i   , type ( a ).__name__ , str ( a ) 
+                _rows.append ( _row ) 
             else : _args.append ( a ) 
 
         from ostap.plotting.fit_draw import keys  as drawing_options
 
         silent  = None
         verbose = None
-
+        prntlev = False 
+        prnterr = False
+        prntwar = False
+        
         from ostap.core.core import cidict_fun as key_transform 
         transformed_draw_options = tuple ( key_transform ( k ) for k in drawing_options )
         
@@ -655,25 +662,23 @@ class FitHelper(VarMaker) :
             elif key in ( 'verbose' ,       ) and isinstance ( a , bool ) :
                 
                 if not verbose is None :
-                    if a != verbose : 
-                        self.warning ( 'parse_args: Redefine VERBOSE to %s' %  a ) 
-                        verbose = a                        
-                if not silent is None :
-                    if a == silent :
-                        self.warning ( 'parse_args: confusing VERBOSE/SILENT %s/%s' % ( a , silent ) )
-                        silent = not a 
+                    if a != verbose : self.warning ( 'parse_args: Redefine VERBOSE to %s' %  a ) 
+                if not silent  is None :
+                    if a == silent  : self.warning ( 'parse_args: confusing VERBOSE/SILENT %s/%s' % ( a , silent ) )
+                verbose =     a                        
+                silent  = not a 
                 _args.append ( ROOT.RooFit.Verbose (     a ) )
 
-            elif key in ( 'silent'  , 'silence') and isinstance ( a , bool ) :
+            elif key in ( 'silent'  ,
+                          'silence' ,
+                          'quite'   ) and isinstance ( a , bool ) :
                 
                 if not silent is None :
-                    if a != silent : 
-                        self.warning ( 'parse_args: Redefine SILENT to %s' %  a ) 
-                        verbose = a                        
+                    if a != silent :  self.warning ( 'parse_args: Redefine SILENT to %s' %  a ) 
                 if not verbose is None :
-                    if a == verbose :
-                        self.warning ( 'parse_args: confusing SILENT/VERBOSE %s/%s' % ( a , verbose ) )
-                        verbose = not a
+                    if a == verbose : self.warning ( 'parse_args: confusing SILENT/VERBOSE %s/%s' % ( a , verbose ) )
+                silent  =     a                        
+                verbose = not a
                 _args.append ( ROOT.RooFit.Verbose ( not a ) )
                 
             elif key in ( 'strategy'         , 
@@ -685,13 +690,15 @@ class FitHelper(VarMaker) :
             elif key in ( 'printlevel'       ,
                           'minuitprint'      ,
                           'minuitlevel'      ) and isinstance ( a , integer_types ) and -1 <= a <= 3 :
-                
+
+                prntlev = True 
                 _args.append ( ROOT.RooFit.PrintLevel ( a ) )
                 
             elif key in ( 'printevalerrors'  ,
                           'printerrors'      ,
-                          'errorspront'      ) and isinstance ( a , integer_types ) and -1 <= a :
-                
+                          'errorsprint'      ) and isinstance ( a , integer_types ) and -1 <= a :
+
+                prnterr = True 
                 _args.append ( ROOT.RooFit.PrintEvalErrors ( a ) )
                 
             elif key in ( 'timer' , 'timing' ) and isinstance ( a , bool ) :
@@ -699,7 +706,8 @@ class FitHelper(VarMaker) :
                 _args.append ( ROOT.RooFit.Timer    ( a ) )
                 
             elif key in ( 'warning' , 'warnings' ) and isinstance ( a , bool ) :
-                
+
+                prntwarn = True 
                 _args.append ( ROOT.RooFit.Warnings ( a ) ) 
             
             elif key in ( 'sumw2'            ,
@@ -902,14 +910,14 @@ class FitHelper(VarMaker) :
                           'binintegrate'  ,
                           'binsintegrate' ,
                           'integrate'     )  and \
-                          isinstance ( a , num_types )  and (6,24) <= root_info :
+                          isinstance ( a , num_types )  and ( 6 , 24 ) <= root_info :
                 
                 _args.append   (  ROOT.RooFit.IntegrateBins ( a ) )
                 
             elif key in ( 'newstyle' ,
                           'stylenew' ,
                           'new'      ) and \
-                          isinstance ( a , bool   ) and (6,27) <= root_info :
+                          isinstance ( a , bool   ) and ( 6 , 27 ) <= root_info :
                 
                 _args.append   (  ROOT.RooFit.NewStyle ( a ) )
 
@@ -917,7 +925,7 @@ class FitHelper(VarMaker) :
                           'parallelise' ,
                           'parallel' ) and \
                           isinstance ( a , sized_types )       and \
-                          1<= len ( a ) <= 3                   and (6,27) <= root_info :
+                          1<= len ( a ) <= 3                   and ( 6 , 27 ) <= root_info :
                 
                 _args.append   (  ROOT.RooFit.Parallelize ( *a ) )
                 
@@ -937,19 +945,22 @@ class FitHelper(VarMaker) :
                 _args.append   ( ROOT.RooFit.MaxCalls ( a ) ) 
 
             elif key in ( 'evalbackend'  ,
-                          'eval_backend' ,
                           'backendeval'  ,
-                          'backend_eval' ,
                           'backend'      ) and \
-                 isinstance ( a , string_types ) and (6,32) <= root_info :
+                 isinstance ( a , string_types ) and ( 6 , 32 ) <= root_info :
                 
                 _args.append   ( ROOT.RooFit.EvalBackend ( a ) ) 
                 
             else :
                
-                self.error ( 'parse_args: Unknown/illegal keyword argument: %s/%s, skip it ' % ( k , type ( a ) ) )
+                ## self.error ( 'parse_args: Unknown/illegal keyword argument: %s/%s, skip it ' % ( k , type ( a ) ) )
+                _row = k , type ( a ).__name__ , str ( a )                                 
+                _rows.append ( _row ) 
             
-        
+        if silent and not prntlev : _args.append ( ROOT.RooFit.PrintLevel      ( -1    ) )
+        if silent and not prnterr : _args.append ( ROOT.RooFit.PrintEvalErrors ( -1    ) )
+        if silent and not prntwar : _args.append ( ROOT.RooFit.Warnings        ( False ) )
+
         if not check_arg ( 'numcpu' , *_args ) :
             if   dataset and     isinstance ( dataset , ROOT.RooDataHist ) : pass 
             elif dataset and not isinstance ( dataset , ROOT.RooDataHist ) :
@@ -957,7 +968,6 @@ class FitHelper(VarMaker) :
             else :
                 nc = numcpu()
                 if  1 < nc : _args.append ( ROOT.RooFit.NumCPU ( nc ) )
-
                 
         # =============================================================
         ## check options for the weighted datasets 
@@ -1005,6 +1015,13 @@ class FitHelper(VarMaker) :
         if kset : self.debug ( 'parse_args: Parsed arguments %s' % keys )
         else    : self.debug ( 'parse_args: Parsed arguments %s' % keys )
 
+        if _rows :
+            na = len ( _rows ) 
+            _rows = [ ( 'Argument' , 'type' , 'value' ) ] + _rows
+            import ostap.logger.table as T
+            title = 'parse_args: %d invalid/illegal/unknown argument(s) ignored' % na             
+            table = T.table ( _rows , title = 'Invalid arguments' , prefix = '# ' , alignment = 'lll' )
+            self.error ( '%s:\n%s' % ( title , table ) )
 
         ## store them 
         self.aux_keep.append ( _args ) 
@@ -1017,7 +1034,7 @@ class FitHelper(VarMaker) :
     #  pdf.fiTo ( ..  , constraints = ... , ... )
     #  @endcode
     def parse_constraints ( self , arg ) :
-        """Technical method to parse the constraints argument
+        """ Technical method to parse the constraints argument
         >>>  pdf.fiTo ( ..  , constraints = ... , ... )
         """
         
@@ -1054,7 +1071,7 @@ class FitHelper(VarMaker) :
     #  @endcode 
     @staticmethod 
     def set_value ( var , value , ok = lambda a , b : True ) :
-        """set value to a given value with the optional check
+        """ Set value to a given value with the optional check
         pdf = ...
         pdf.set_value ( my_var1 , 10 )
         pdf.set_value ( my_var2 , 10 , lambda a,b : b>0 ) 
@@ -1089,7 +1106,7 @@ class FitHelper(VarMaker) :
     # =========================================================================
     ## gettter for certain fit components from the provided list 
     def component_getter ( self , components ) :
-        """Gettter for certain fit components from the provided list
+        """ Gettter for certain fit components from the provided list
         """
         nc = len ( components )
         if   0 == nc : return ()
@@ -1099,7 +1116,7 @@ class FitHelper(VarMaker) :
     # ======================================================
     ## setter for certian fit components form provided list 
     def component_setter ( self , components , value ) :
-        """Setter for certian fit components form provided list
+        """ Setter for certian fit components form provided list
         """
         assert 0 < len ( components ) , 'Empty list of components, setting is not possible!'
         
@@ -1131,7 +1148,7 @@ class FitHelper(VarMaker) :
     #  var4 = xxx.vars_product  ( var1 , 2.0  )    
     #  @endcode 
     def vars_multiply ( self , var1 , var2 , name = '' , title = '' ) :
-        """Construct (on-flight) variable for var1*var2 
+        """ Construct (on-flight) variable for var1*var2 
         >>> var1 = ...
         >>> var2 = ...
         >>> var3 = xxx.vars_multiply ( var1 , var2   )
@@ -1184,7 +1201,7 @@ class FitHelper(VarMaker) :
     #  var6 = xxx.vars_sum ( var1 , 2.0  )    
     #  @endcode 
     def vars_add ( self , var1 , var2 , c1 = 1 , c2 = 1 , name = '' , title = '' ) :
-        """Construct (on-flight) variable for var1*c1+var2*c2 
+        """ Construct (on-flight) variable for var1*c1+var2*c2 
         >>> var1 = ...
         >>> var2 = ...
         >>> var3 = xxx.vars_add ( var1 , var2   )
@@ -1254,7 +1271,7 @@ class FitHelper(VarMaker) :
     #  var6 = xxx.vars_difference ( var1 , 2.0  )    
     #  @endcode 
     def vars_subtract ( self , var1 , var2 , name = '' , title = '' ) :
-        """Construct (on-flight) variable  for var1-var2 
+        """ Construct (on-flight) variable  for var1-var2 
         >>> var1 = ...
         >>> var2 = ...
         >>> var3 = xxx.vars_subtract   ( var1 , var2   )
@@ -1304,7 +1321,7 @@ class FitHelper(VarMaker) :
     #  var6 = xxx.vars_ratio  ( var1 , 2.0  )    
     #  @endcode 
     def vars_divide ( self , var1 , var2 , name = '' , title = '' ) :
-        """Construct (on-flight) variable for var1/var2 
+        """ Construct (on-flight) variable for var1/var2 
         >>> var1 = ...
         >>> var2 = ...
         >>> var3 = xxx.vars_divide ( var1 , var2   )
@@ -1346,7 +1363,7 @@ class FitHelper(VarMaker) :
     #  var4 = xxx.vars_fraction ( var1 , 2.0  )    
     #  @endcode 
     def vars_fraction ( self , var1 , var2 , name = '' , title = '' ) :
-        """Construct (on-flight) variable  for var1/(var2+var1)
+        """ Construct (on-flight) variable  for var1/(var2+var1)
         >>> var1 = ...
         >>> var2 = ...
         >>> var3 = xxx.vars_fraction ( var1 , var2   )
@@ -1393,7 +1410,7 @@ class FitHelper(VarMaker) :
     #  var4 = xxx.vars_reldifference ( var1 , 2.0  )    
     #  @endcode 
     def vars_asymmetry ( self , var1 , var2 , scale = 1 , name = '' , title = '' ) :
-        """Construct (on-flight) variable for (var1-var2)/(var2+var1)
+        """ Construct (on-flight) variable for (var1-var2)/(var2+var1)
         >>> var1 = ...
         >>> var2 = ...
         >>> var3 = xxx.vars_asymmetry     ( var1 , var2   )
@@ -1441,7 +1458,7 @@ class FitHelper(VarMaker) :
     #  var4 = xxx.vars_power        ( 2.0  , var2 )    
     #  @endcode 
     def vars_power ( self , var1 , var2 , name = '' , title = '' ) :
-        """ construct (on-flight) variable  for \f$ a^b \f$ 
+        """ Construct (on-flight) variable  for \f$ a^b \f$ 
         >>> var1 = ...
         >>> var2 = ...
         >>> var3 = xxx.vars_power        ( var1 , var2 )
@@ -1487,7 +1504,7 @@ class FitHelper(VarMaker) :
     #  var4 = xxx.vars_exp ( -1   , var2 )    
     #  @endcode 
     def vars_exp ( self , var1 , var2 = 1 , name = '' , title = '' ) :
-        """ construct (on-flight) variable  for \f$ exp(a*b) \f$ 
+        """ Construct (on-flight) variable  for \f$ exp(a*b) \f$ 
         >>> var1 = ...
         >>> var2 = ...
         >>> var3 = xxx.vars_exp ( var1 , var2 )
@@ -1533,7 +1550,7 @@ class FitHelper(VarMaker) :
     #  var4 = xxx.vars_abs ( -1   , var2 )    
     #  @endcode 
     def vars_abs ( self , var1 , var2 = 1 , name = '' , title = '' ) :
-        """ construct (on-flight) variable  for \f$ |a*b| \f$ 
+        """ Construct (on-flight) variable  for \f$ |a*b| \f$ 
         >>> var1 = ...
         >>> var2 = ...
         >>> var3 = xxx.vars_abs ( var1 , var2 )
@@ -1583,7 +1600,7 @@ class FitHelper(VarMaker) :
     #  f   = OBJ.vars_formula ( '%s*%s/%s' , [ a , b, c ] , name = 'myvar' )
     #  @endcode 
     def vars_formula ( self , formula , vars , name = '' , title = '' ) :
-        """helper function to create <code>RooFormulaVar</code>
+        """ Helper function to create `RooFormulaVar`
         >>> OBJ = ...
         >>> f   = OBJ.vars_formula ( '%s*%s/%s' , [ a , b, c ] , name = 'myvar' )
         """
@@ -1648,7 +1665,7 @@ class FitHelper(VarMaker) :
                            gamma  = 1   ,
                            name   = ''  , 
                            title  = ''  ) :
-        """Make very specific combination of variables:  alpha*var1*(bets+gamma*var2)    
+        """ Make very specific combination of variables:  alpha*var1*(beta+gamma*var2)    
         r = alpha * v_1 ( beta + gamma * v_2 ) 
         """
         
@@ -1732,9 +1749,9 @@ class FitHelper(VarMaker) :
                             sum_name   = ''  ,   ## name for 'sum' variable                              
                             asym_title = ''  ,   ## title for asymmetry variable 
                             sum_title  = ''  ) : ## title for 'sum' variable 
-        """Convert pair of variables into 'sum' & 'asymmetry' pair
+        """ Convert a pair of variables into 'sum' & 'asymmetry' pair
         - 'sum'       :  sum_scale  * ( var1 + var2  )
-        - 'asymmetry' :  asym_scale * ( var1 - var2 ) / (var1+ + var2 ) 
+        - 'asymmetry' :  asym_scale * ( var1 - var2 ) / ( var1+ + var2 ) 
         >>> var1 = ...
         >>> var2 = ...
         >>> hsum , asum = self.vars_to_asymmetry ( var1 , var2 ) 
@@ -1773,7 +1790,7 @@ class FitHelper(VarMaker) :
                               v2name  = '' ,
                               v1title = '' ,
                               v2title = '' ) :
-        """Convert a pair of variables 'half-sum'&'asymmetry' into 'var1', 'var2'
+        """ Convert a pair of variables 'half-sum'&'asymmetry' into 'var1', 'var2'
         >>> halfsum   = ...
         >>> asymmetry = ...
         >>> var1 , var2 = self.vars_from_asymmetry ( halfsum , asymmetry )
@@ -1820,7 +1837,7 @@ class FitHelper(VarMaker) :
     #  constraint = pdf.soft_constraint( sigma , VE ( 0.15 , 0.01**2 ) )
     #  @endcode 
     def soft_constraint ( self , var , value , name = '' , title = '' , error = None ) :
-        """Prepare 'soft' Gaussian constraint for the variable
+        """ Prepare 'soft' Gaussian constraint for the variable
         -  consraint is prepared but not applied!
         >>> sigma      = ...
         >>> constraint = pdf.make_constraint( sigma , VE ( 0.15 , 0.01**2 ) )
@@ -1873,7 +1890,7 @@ class FitHelper(VarMaker) :
                            pos_error  , 
                            name  = '' ,
                            title = '' ) :
-        """Prepare 'soft' asymetric Gaussian constraint for the variable
+        """ Prepare 'soft' asymetric Gaussian constraint for the variable
         -  consraint is prepared but not applied!
         >>> sigma      = ...
         >>> constraint = pdf.make_constraint2 ( sigma , 0.15 , -0.01 , +0.05 ) 
@@ -1930,7 +1947,7 @@ class FitHelper(VarMaker) :
     #  constraint = pdf.soft_multivar_constraint ( vars , ( values , cov2 ) )    
     #  @see RooMultiVarGaussian 
     def soft_multivar_constraint ( self , vars , config , name = '' , title = '' ) :
-        """Create multivariate Gaussian constraint
+        """ Create multivariate Gaussian constraint
         - attention the constraint is prepared, but not applied!
         
         - use fit result:
@@ -2033,7 +2050,7 @@ class FitHelper(VarMaker) :
     #  rC = pdf.soft_ratio_contraint ( N1 , N2 , VE (10,1**2) )
     #  @endcode
     def soft_ratio_constraint ( self , a , b , value , name = '' , title = '' ) :
-        """Helper function to  create soft Gaussian constraint
+        """ Helper function to  create soft Gaussian constraint
         to the ratio of te variables 
         >>> N1 = ...
         >>> N2 = ...
@@ -2072,7 +2089,7 @@ class FitHelper(VarMaker) :
     #  rC = pdf.soft_product_contraint ( N1 , N2 , VE (10,1**2) )
     #  @endcode
     def soft_product_constraint ( self , a , b , value , name = '' , title = '' ) :
-        """Helper function to  create soft Gaussian constraint
+        """ Helper function to  create soft Gaussian constraint
         to the product of the variables 
         >>> N1 = ...
         >>> N2 = ...
@@ -2129,7 +2146,7 @@ class FitHelper(VarMaker) :
     #  rC = pdf.soft_sum_contraint ( N1 , N2 , VE (10,1**2) )
     #  @endcode
     def soft_sum_constraint ( self , a , b , value , name = '' , title = '' ) :
-        """Helper function to  create soft Gaussian constraint
+        """ Helper function to  create soft Gaussian constraint
         to the sum of the variables 
         >>> N1 = ...
         >>> N2 = ...
@@ -2163,7 +2180,7 @@ class FitHelper(VarMaker) :
     #  rC = pdf.soft_difference_contraint ( N1 , N2 , VE (10,1**2) )
     #  @endcode
     def soft_difference_constraint ( self , a , b , value , name = '' , title = '' ) :
-        """Helper function to  create soft Gaussian constraint
+        """ Helper function to  create soft Gaussian constraint
         to the difference  of the variables 
         >>> N1 = ...
         >>> N2 = ...
@@ -2201,7 +2218,7 @@ class FitHelper(VarMaker) :
     #  pdf.fitTo ( ... ,  constraints =  constraint ) 
     #  @endcode 
     def make_constraint ( self , var , value , name = '' ,  title = '' ) :
-        """Create ready-to-use 'soft' gaussian constraint for the variable
+        """ Create ready-to-use 'soft' gaussian constraint for the variable
         
         >>> var     = ...                              ## the variable 
         >>> extcntr = xxx.constraint ( VE(1,0.1**2 ) ) ## create constrains 
@@ -2226,7 +2243,7 @@ class FitHelper(VarMaker) :
     #  n =  pdf.gen_sample ( VE ( 10 , 3 ) ) ## get gaussian stuff
     #  @endcode
     def gen_sample ( self , nevents ) :
-        """Sample 'random' positive number of events
+        """ Sample 'random' positive number of events
         >>> n =  pdf.gen_sample ( 10            ) ## get poissonian 
         >>> n =  pdf.gen_sample ( VE ( 10 , 3 ) ) ## get gaussian stuff
         """
@@ -2314,7 +2331,7 @@ class FitHelper(VarMaker) :
                      fractions = True ,
                      recursive = True ,
                      fracs     = []   )  :
-        """Make list of variables/fractions for compound PDF
+        """ Make list of variables/fractions for compound PDF
         """
         assert is_integer ( N ) and 2 <= N , \
                "PDF.make_fracs: Invalid N=%s/%s" % ( N, type ( N ) )
@@ -2360,6 +2377,14 @@ class FitHelper(VarMaker) :
                          title     = ''    , 
                          recursive = True  ,
                          fractions = ()    ) :
+        """ Create list of variables that can be used as 'fractions' for
+        non-extedned N-component fit
+        >>> MV = ...
+        >>> fractions = MV.make_fractions ( 5 )
+        >>> fractions = MV.make_fractions ( 5 , name = 'F%d_A' , suffix = 'D' )
+        >>> fractions = MV.make_fractions ( 5 , name = 'F%d_B' , recursive = False )    
+        >>> fractions = MV.make_fractions ( 5 , name = 'F%d_C' , fractions = (0.4, 0.1 , 0.3 , 0.1 ) )   
+        """
         
         assert is_integer ( N ) and 2 <= N ,\
                "make_fractions: there must be at least two components!"
@@ -2411,7 +2436,7 @@ class FitHelper(VarMaker) :
                       title = ''             ,
                       minmax = ( 0 , 1.e+6 ) , 
                       yields = ()            ) :
-        """create a list of variables that can be used as 'yields' for N-component fit
+        """ Create a list of variables that can be used as 'yields' for N-component fit
         >>> M = ...
         >>> nums = M.make_yields ( 5 , name = 'S_%d_A' , minmax = (0, 1000) )
         >>> nums = M.make_yields ( 5 , name = 'S_%d_B' , minmax = (0, 1000) ,  yields =  ( 1 , 100 , 50 , 10 , 10 ) )
@@ -2440,7 +2465,7 @@ class FitHelper(VarMaker) :
                   ftitle           ,
                   recursive = True ,
                   fractions = []   ) :
-        """Helper function to build composite (non-extended) PDF from components 
+        """ Helper function to build composite (non-extended) PDF from components 
         """
         ##
         pdfs   = ROOT.RooArgList() 
@@ -2468,7 +2493,7 @@ class FitHelper(VarMaker) :
 ## @class XVar
 #  Helper MIXIN  class to keep all properties of the x-variable
 class XVar(object) :
-    """Helper MIXIN class to keep all properteis the x-variable
+    """ Helper MIXIN class to keep all properteis the x-variable
     """
     def  __init__ ( self , xvar , name = 'x' , title = 'x-observable' ) :
 
@@ -2500,12 +2525,12 @@ class XVar(object) :
         """'x'-variable (same as 'xvar')"""
         return self.xvar
     def xminmax ( self ) :
-        """Min/max values for x-variable (if/when specified)"""
+        """ Min/max values for x-variable (if/when specified)"""
         return self.xvar.minmax()
 
     ## get the proper xmin/xmax range
     def xmnmx    ( self , xmin , xmax ) :
-        """Get the proper xmin/xmax range
+        """ Get the proper xmin/xmax range
         """
         return self.vmnmx ( self.xvar , xmin , xmax )
 
@@ -2516,7 +2541,7 @@ class XVar(object) :
 #  Helper MIXIN class to keep all properties of the y-variable
 #  - it requires the method <code>make_var</code>
 class YVar(object) :
-    """Helper class to keep all properteis the y-variable
+    """ Helper class to keep all properteis the y-variable
     - it required the method `make_var`
     """
     def  __init__ ( self , yvar , name = 'y' , title = 'y-observable' ) :
@@ -2549,12 +2574,12 @@ class YVar(object) :
         """'y'-variable (same as 'yvar')"""
         return self.yvar
     def yminmax ( self ) :
-        """Min/max values for y-variable (if/when specified)"""
+        """ Min/max values for y-variable (if/when specified)"""
         return self.yvar.minmax()
 
     ## get the proper ymin/ymax range
     def ymnmx    ( self , ymin , ymax ) :
-        """Get the proper ymin/ymax range
+        """ Get the proper ymin/ymax range
         """
         return self.vmnmx ( self.yvar , ymin , ymax )
 
@@ -2563,7 +2588,7 @@ class YVar(object) :
 #  Helper MIXIN class to keep all properties of the z-variable
 #  - it requires the method <code>make_var</code>
 class ZVar(object) :
-    """Helper class to keep all properteis the z-variable
+    """ Helper class to keep all properteis the z-variable
     - it requires the method <code>make_var</code>
     """
     def  __init__ ( self , zvar , name = 'z' , title = 'z-observable' ):
@@ -2596,12 +2621,12 @@ class ZVar(object) :
         """'z'-variable (same as 'zvar')"""
         return self.zvar
     def zminmax ( self ) :
-        """Min/max values for y-variable (if/when specified)"""
+        """ Min/max values for y-variable (if/when specified)"""
         return self.zvar.minmax()
 
     ## get the proper xmin/xmax range
     def zmnmx    ( self , xmin , xmax ) :
-        """Get the proper zmin/zmax range
+        """ Get the proper zmin/zmax range
         """
         return self.vmnmx ( self.zvar , zmin , zmax )
 
@@ -2622,7 +2647,7 @@ class ZVar(object) :
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
 class H1D_dset(XVar,VarMaker) :
-    """Simple convertor of 1D-histogram into weighted or binned data set
+    """ Simple convertor of 1D-histogram into weighted or binned data set
     >>> h   = ...
     >>> dset = H1D_dset ( h )
     One can create `binned` (default) or `weighted` data set
@@ -2743,7 +2768,7 @@ class H1D_dset(XVar,VarMaker) :
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
 class H2D_dset(XVar,YVar,VarMaker) :
-    """Simple convertor of 2D-histogram into weighted or binned data set
+    """ Simple convertor of 2D-histogram into weighted or binned data set
     """
     
     w_min = -1.e+100 
@@ -2864,7 +2889,7 @@ class H2D_dset(XVar,YVar,VarMaker) :
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
 class H3D_dset(XVar,YVar,ZVar,VarMaker) :
-    """Simple convertor of 3D-histogram into weighted or binned data set
+    """ Simple convertor of 3D-histogram into weighted or binned data set
     """
     
     w_min = -1.e+100 
@@ -3001,7 +3026,7 @@ class H3D_dset(XVar,YVar,ZVar,VarMaker) :
 #  - it requres the method <code>make_var</code>
 #  - it requres the method <code>component_setter</code>
 class ParamsPoly(object) :
-    """Helper MIXIN class to implement polynomials 
+    """ Helper MIXIN class to implement polynomials 
     - it requres the method `make_var`
     - it requres the method `component_setter`
     """
@@ -3089,7 +3114,7 @@ class ParamsPoly(object) :
 #   - it requires mehtod <code>error</code>
 #   - it requires mehtod <code>component_setter</code>
 class Phases(object) :
-    """Helper MIXIN class to build/keep the list of 'phi'-arguments,
+    """ Helper MIXIN class to build/keep the list of 'phi'-arguments,
     - it is needed for polynomial functions
     - it requires method `make_var`
     - it requires method `error`
@@ -3170,13 +3195,13 @@ class Phases(object) :
 
     @property
     def phi_list ( self ) :
-        """The list/ROOT.RooArgList of 'phases', used to parameterize polynomial-like shapes
+        """ The list/ROOT.RooArgList of 'phases', used to parameterize polynomial-like shapes
         """
         return self.__phi_list
     
     @property
     def phis_lst ( self ) :
-        """The list/ROOT.RooArgList of 'phases', used to parameterize polynomial-like shapes
+        """ The list/ROOT.RooArgList of 'phases', used to parameterize polynomial-like shapes
         """
         return self.__phi_list
 
@@ -3195,7 +3220,7 @@ class Phases(object) :
 #  - it requires the method <code>make_var</code>
 #  - it requires the method <code>error</code>
 class ShiftScalePoly ( Phases ) :
-    """Helper MIXIN class to implemnet polynomials
+    """ Helper MIXIN class to implemnet polynomials
     - see Phases 
     - it requires the method `make_var`
     - it requires the method `error`
@@ -3285,7 +3310,7 @@ class ShiftScalePoly ( Phases ) :
 ## @class Fractions
 #  Helper MIXIN class for implementatiorn of SumXD objects
 class Fractions(object) :
-    """Helper MIXIN class for implementatiorn of SumXD objects
+    """ Helper MIXIN class for implementatiorn of SumXD objects
     """
     def __init__  ( self             ,
                     pdfs             , ## list of PDF objects 
@@ -3398,7 +3423,7 @@ class Fractions(object) :
 #
 #  @endcode 
 class SETPARS(object) :
-    """Context manager to keep/preserve the parameters for function/pdf
+    """ Context manager to keep/preserve the parameters for function/pdf
     >>> pdf = ...
     >>> with SETPARS ( pdf ) :
     ...   <do something here with pdf>

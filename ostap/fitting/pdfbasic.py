@@ -73,7 +73,7 @@ arg_types = num_types + ( VE , ROOT.RooAbsReal )
 #  - VE
 #  - tuple of 1-3 arguments of numeric values 
 def all_args ( *args ) :
-    """Are all arguments of 'good' type?
+    """ Are all arguments of 'good' type?
     - ROOT.RooAbsReal
     - numeric type
     - VE
@@ -105,7 +105,7 @@ def all_args ( *args ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2023-04-18
 class Components(object) :
-    """Helper base class that keeps the major fit-pdf components
+    """ Helper base class that keeps the major fit-pdf components
     - signals
     - backgrounds 
     - other components 
@@ -134,7 +134,7 @@ class Components(object) :
     # =========================================================================
     ## copy (some) structural elements 
     def copy_structures ( self , source ) :
-        """Copy (some) structural elements"""
+        """ Copy (some) structural elements"""
         
         for c in source.signals :
             if not c in self.signals :
@@ -168,33 +168,33 @@ class Components(object) :
         
     @property
     def signals     ( self ) :
-        """The list/ROOT.RooArgList of all 'signal' components,
+        """ The list/ROOT.RooArgList of all 'signal' components,
         e.g. for visualization"""
         return self.__signals
     @property
     def backgrounds ( self ) :
-        """The list/ROOT.RooArgList of all 'background' components,
+        """ The list/ROOT.RooArgList of all 'background' components,
         e.g. for visualization"""
         return self.__backgrounds 
     @property
     def components  ( self ) :
-        """The list/ROOT.RooArgList of all 'other' components,
+        """ The list/ROOT.RooArgList of all 'other' components,
         e.g. for visualization"""
         return self.__components
 
     @property
     def combined_signals     ( self ) :
-        """The list/ROOT.RooArgList of all combined 'signal' components,
+        """ The list/ROOT.RooArgList of all combined 'signal' components,
         e.g. for visualization"""
         return self.__combined_signals
     @property
     def combined_backgrounds ( self ) :
-        """The list/ROOT.RooArgList of all combined 'background' components,
+        """ The list/ROOT.RooArgList of all combined 'background' components,
         e.g. for visualization"""
         return self.__combined_backgrounds 
     @property
     def combined_components  ( self ) :
-        """The list/ROOT.RooArgList of all combined 'other' components,
+        """ The list/ROOT.RooArgList of all combined 'other' components,
         e.g. for visualization"""
         return self.__combined_components
 
@@ -216,7 +216,7 @@ class Components(object) :
         
     @property
     def alist1 ( self ) :
-        """list/RooArgList of PDF components for compound PDF"""
+        """ The list/RooArgList of PDF components for compound PDF"""
         return self.__alist1
     @alist1.setter
     def alist1 ( self , value ) :
@@ -225,7 +225,7 @@ class Components(object) :
         
     @property
     def alist2 ( self ) :
-        """list/RooArgList of PDF  component's fractions (or yields for exteded fits) for compound PDF"""        
+        """ The list/RooArgList of PDF  component's fractions (or yields for exteded fits) for compound PDF"""        
         return self.__alist2
     @alist2.setter
     def alist2 ( self , value ) :
@@ -246,7 +246,7 @@ class Components(object) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-08-21
 class APDF1 ( Components ) :
-    """Useful helper base class for implementation of various PDF-wrappers 
+    """ Useful helper base class for implementation of various PDF-wrappers 
     - it relies on `xvar`       method
     - it relies on `parse_args` method
     - it relies on `warning`    method
@@ -312,7 +312,7 @@ class APDF1 ( Components ) :
             
     @property
     def histo_data  ( self ):
-        """Histogram representation as DataSet (RooDataSet)"""
+        """ Histogram representation as DataSet (RooDataSet)"""
         return self.__histo_data
     @histo_data.setter
     def  histo_data ( self  , value ) :
@@ -339,12 +339,11 @@ class APDF1 ( Components ) :
                 refit  = False ,
                 timer  = False , 
                 args   = ()    , **kwargs ) :
-        """
-        Perform the actual fit (and draw it)
-        >>> r,f = model.fitTo ( dataset )
-        >>> r,f = model.fitTo ( dataset , weighted = True )    
-        >>> r,f = model.fitTo ( dataset , ncpu     = 10   )    
-        >>> r,f = model.fitTo ( dataset , draw = True , nbins = 300 )    
+        """ Perform the actual fit (and draw it)
+        >>> r , f = model.fitTo ( dataset )
+        >>> r , f = model.fitTo ( dataset , weighted = True )    
+        >>> r , f = model.fitTo ( dataset , ncpu     = 10   )    
+        >>> r , f = model.fitTo ( dataset , draw = True , nbins = 300 )    
         """
         if timer :
             from ostap.utils.timing import timing 
@@ -419,8 +418,16 @@ class APDF1 ( Components ) :
         ##                                                                                                             mnv , mxv ) )
 
         if not silent and opts and nontrivial_arg ( ( 'Save' , 'NumCPU' ) , *opts ) :
-            self.info ('fitTo options: %s ' % list ( flat_args ( *opts ) ) ) 
-
+            ## self.info ('fitTo options: %s ' % list ( flat_args ( *opts ) ) ) 
+            rows = [ ( 'Option' , ) ]
+            for o in opts :
+                row = str ( o ) ,
+                rows.append ( row )
+            import ostap.logger.table as T
+            title = 'fitTo: fit-options'
+            table = T.table ( rows , title = 'FitOptions' ,prefix = '# ' )
+            self.info ( '%s:\n%s' % ( title , table ) )
+                        
         ## play a bit with the binning cache for 1D-convolutions 
         if self.xvar.hasBinning ( 'cache' ) :
             nb1 = self.xvar.getBins( 'cache' ) 
@@ -614,7 +621,7 @@ class APDF1 ( Components ) :
     # ================================================================================
     ## helper method to draw "signal-like" components
     def _draw_signals ( self , frame , *args , **kwargs ) :
-        """Helper method to draw `signal-like' components
+        """ Helper method to draw `signal-like' components
         """
 
         if self.combined_signals or self.signals :
@@ -638,7 +645,7 @@ class APDF1 ( Components ) :
     # ================================================================================
     ## helper method to draw "crossterm-like" components
     def _draw_crossterms ( self , frame , *args , **kwargs ) :
-        """Helper method to draw `crossterm-like' components
+        """ Helper method to draw `crossterm-like' components
         """
 
         if self.crossterms1 or self.crossterms2 : 
@@ -660,7 +667,7 @@ class APDF1 ( Components ) :
     # ================================================================================
     ## helper method to draw "other" components
     def _draw_components ( self , frame , *args , **kwargs ) :
-        """Helper method to draw `other' components
+        """ Helper method to draw `other' components
         """
 
         if self.combined_components or self.components :
@@ -682,9 +689,9 @@ class APDF1 ( Components ) :
             self._draw( self.components , frame , coptions , cbstyle , args )
 
     # ================================================================================
-    ## helper method to draw "backgriund" components
+    ## helper method to draw "background-like" components
     def _draw_backgrounds ( self , frame , *args , **kwargs ) :
-        """Helper method to draw `backgrouns' components
+        """ Helper method to draw `background-like' components
         """
         
         if self.combined_backgrounds or self.backgrounds :
@@ -760,7 +767,7 @@ class APDF1 ( Components ) :
                drawvar               = None ,   ## drawvar 
                args                  = ()   , 
                **kwargs                     ) :
-        """  Visualize the fits results
+        """ Visualize the fits results
         >>> r,f = model.draw ( dataset )
         >>> model.draw ( dataset , nbins = 100 )
         >>> model.draw ( dataset , base_signal_color  = ROOT.kGreen+2 )
@@ -996,7 +1003,7 @@ class APDF1 ( Components ) :
                    chi2    = False ,
                    nbins   = None  , 
                    args    = () , **kwargs ) :
-        """Fit the 1D-histogram (and draw it)
+        """ Fit the 1D-histogram (and draw it)
 
         >>> histo = ...
         >>> r,f = model.fitHisto ( histo , draw = True ) 
@@ -1132,7 +1139,7 @@ class APDF1 ( Components ) :
                    draw    = True  ,
                    silent  = True  , 
                    args    = ()    , **kwargs ) :
-        """Draw/prepare NLL or LL-profile for seleted variable:        
+        """ Draw/prepare NLL or LL-profile for seleted variable:        
         >>> model.fitTo ( dataset , ... )
         >>> nll  , f1 = model.draw_nll ( 'B' ,  dataset )
         >>> prof , f2 = model.draw_nll ( 'B' ,  dataset , profile = True )
@@ -1270,7 +1277,7 @@ class APDF1 ( Components ) :
               dataset         ,
               silent  = True  ,
               args    = ()    , **kwargs ) :
-        """Create NLL object from the pdf
+        """ Create NLL object from the pdf
         >>> model.fitTo ( dataset , ... )
         >>> nll, sf = model.nll ( dataset )
         - see RooAbsPdf::createNLL 
@@ -1328,7 +1335,7 @@ class APDF1 ( Components ) :
                     draw     = False ,
                     subtract = True  , 
                     args     = ()    , **kwargs ) :
-        """Get NLL/profile-graph for the variable, using the specified abscissas
+        """ Get NLL/profile-graph for the variable, using the specified abscissas
         >>> pdf   = ...
         >>> graph = pdf.graph_nll ( 'S'                     ,
         ...                          vrange ( 0 , 100 , 100 ) ,
@@ -1404,7 +1411,7 @@ class APDF1 ( Components ) :
                         draw     = False ,
                         subtract = True  , 
                         args     = ()    , **kwargs ) :
-        """Get profile-graph for the variable, using the specified abscissas
+        """ Get profile-graph for the variable, using the specified abscissas
         >>> pdf   = ...
         >>> graph = pdf.graph_profile ( 'S'                      ,
         ...                             vrange ( 0 , 12.5 , 20 ) ,
@@ -1499,7 +1506,7 @@ class APDF1 ( Components ) :
                 range    = ( 0 , None )  ,
                 silent   = True          ,
                 args     = () , **kwargs ) :
-        """Evaluate 'significance' using Wilks' theorem via NLL
+        """ Evaluate 'significance' using Wilks' theorem via NLL
         >>> data = ...
         >>> pdf  = ...
         >>> pdf.fitTo ( data , ... )
@@ -1600,7 +1607,7 @@ class APDF1 ( Components ) :
                  range          = ( 0 , None )  ,
                  silent         = True          ,
                  args           = () , **kwargs ) :
-        """Evaluate 'significance' using Wilks' theorem via NLL
+        """ Evaluate 'significance' using Wilks' theorem via NLL
         >>> data = ...
         >>> pdf  = ...
         >>> pdf.fitTo ( data , ... )
@@ -1731,7 +1738,7 @@ class APDF1 ( Components ) :
                  scale           = True  , ## scale weighted dataset ?
                  offset          = True  , ## offset the FCN values? 
                  args            =   ()  , **kwargs  ):
-        """Get the actual minimizer for the explicit manipulations
+        """ Get the actual minimizer for the explicit manipulations
         >>> data = ...
         >>> pdf  = ...
         >>> m    = pdf.minuit ( data )
@@ -1883,7 +1890,7 @@ class APDF1 ( Components ) :
                    sample   = True  , ## sample number of events ?
                    storage  = None  , ## storage type for dataset
                    args     = ()    ) :
-        """Generate toy-sample according to PDF
+        """ Generate toy-sample according to PDF
         >>> model  = ....
         >>> data   = model.generate ( 10000 ) ## generate dataset 
         
@@ -1957,7 +1964,7 @@ class APDF1 ( Components ) :
                 integral = True  ,
                 events   = True  , 
                 errors   = False ) :
-        """Convert PDF to the 1D-histogram in correct way
+        """ Convert PDF to the 1D-histogram in correct way
         - Unlike  `PDF.roo_histo` method, PDF is integrated within the bin
         >>> pdf = ...
         >>> h1  = pdf.histo ( 100 , 0. , 10. ) ## specify histogram parameters
@@ -2017,7 +2024,7 @@ class APDF1 ( Components ) :
                     hpars    = ()    , 
                     histo    = None  ,
                     events   = True  ) : 
-        """Convert PDF to the 1D-histogram, taking PDF-values at bin-centres
+        """ Convert PDF to the 1D-histogram, taking PDF-values at bin-centres
         - see RooAbsPdf::createHistogram
         - see RooAbsPdf::fillHistogram
         - see PDF.histo
@@ -2070,7 +2077,7 @@ class APDF1 ( Components ) :
     #  residual = pdf.residual_histo ( histo )
     #  @endcode 
     def residual_histo  ( self , data_histo ) :
-        """Create the residual histogram   (data - fit)
+        """ Create the residual histogram   (data - fit)
         >>> data = ... 
         >>> pdf  = ...
         >>> pdf.fitTo ( data )
@@ -2106,7 +2113,7 @@ class APDF1 ( Components ) :
     #  pull = pdf.pull_histo ( histo )
     #  @endcode 
     def pull_histo  ( self , data_histo ) :
-        """Create the residual histogram   (data - fit)
+        """ Create the pull histogram   (data - fit)/data_error
         >>> data = ... 
         >>> pdf  = ...
         >>> pdf.fitTo ( data )
@@ -2137,7 +2144,7 @@ class APDF1 ( Components ) :
     #  residual = pdf.residual ( data , nbins = 100 ) 
     #  @endcode 
     def residual ( self  , dataset , **kwargs ) :
-        """Get the residual histogram
+        """ Get the residual histogram
         - see PDF.histo
         - see PDF.residual_histo
         - see PDF.make_histo
@@ -2164,7 +2171,7 @@ class APDF1 ( Components ) :
     #  residual = pdf.pull ( data , nbins = 100 ) 
     #  @endcode 
     def pull ( self  , dataset , **kwargs ) :
-        """Get the pull  histogram: (data-fit)/data_error
+        """ Get the pull  histogram: (data-fit)/data_error
         - see PDF.histo
         - see PDF.residual_histo
         - see PDF.make_histo
@@ -2205,8 +2212,6 @@ class APDF1 ( Components ) :
 
         return mn.contour ( var1 , var2 , npoints , *levels ) 
 
-            
-
     # =========================================================================
     ## create popular 1D "background"  function
     #  @param bkg  the type of background function/PDF
@@ -2232,7 +2237,7 @@ class APDF1 ( Components ) :
     #  - 'dN', 'decN' , 'decrN','decreasingN' : <code>Monotonic_pdf(power=N,increasing=False)</code>     
     #  @see ostap.fitting.backrgound.make_bkg 
     def make_bkg ( self , bkg , name , xvar , **kwargs ) :
-        """Create popular 1D 'background'  function.
+        """ Create popular 1D 'background'  function.
         
         Possible values for 'bkg':
         
@@ -2267,7 +2272,7 @@ class APDF1 ( Components ) :
     # ================================================================================
     ## Check the ranges for variables  in dataset 
     def check_ranges ( self , dataset , range = '' ) :
-        """Check the ranges for varibales in dataset 
+        """ Check the ranges for varibales in dataset 
         """
 
         import ostap.trees.cuts
@@ -2310,7 +2315,7 @@ class APDF1 ( Components ) :
     #  pdf2 , xvar = pdf.make_PDF( ... , xvar = .. , )
     #  @endcode
     def make_PDF1 ( self , pdf , xvar = None , *args , **kwargs ) :
-        """Make PDF1 object
+        """ Make PDF1 object
         >>> pdf = ...
         >>> pdf2 , xvar = pdf.make_PDF( ... , xvar = .. , )        
         """
@@ -2335,7 +2340,7 @@ class APDF1 ( Components ) :
     # =========================================================================
     ## helper functon to make a raw product of PDFs or RooAbsPDF objects
     def raw_product ( self , *pdfs ) :
-        """Make a raw product of PDFs or RooAbsPDF objects
+        """ Make a raw product of PDFs or RooAbsPDF objects
         """
         lpdfs = [] 
         for i , p in enumerate ( pdfs ) :
@@ -2364,7 +2369,7 @@ class APDF1 ( Components ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-08-21
 class PDF1(APDF1,FUN1) :
-    """The main helper base class for implementation of various 1D PDF-wrappers
+    """ The main helper base class for implementation of various 1D PDF-wrappers
     """
     def __init__ ( self , name ,  xvar , tricks = True , **kwargs ) :
 
@@ -2416,7 +2421,7 @@ class PDF1(APDF1,FUN1) :
     # ========================================================================
     ## convert to float 
     def __float__ ( self ) :
-        """Convert to float
+        """ Convert to float
         >>> pdf = ...
         >>> v = float ( pdf )
         """
@@ -2446,7 +2451,7 @@ class PDF1(APDF1,FUN1) :
     #  - PDF1 ( x )         * PDF1 ( x )         -> PDF1 ( x )
     #  - PDF1 ( x )         * PDF1 ( y )         -> PDF2 ( x , y )
     def __mul__ ( self , other ) :
-        """Make a product of two PDFs
+        """ Make a product of two PDFs
         
         >>> pdf1 = ...
         >>> pdf2 = ...
@@ -2496,7 +2501,7 @@ class PDF1(APDF1,FUN1) :
     #  - PDF1 ( x )         * PDF1 ( x )         -> PDF1 ( x )    
     #  - PDF1 ( x )         * PDF1 ( y )         -> PDF2 ( x , y )
     def __rmul__ ( self , other ) :
-        """Make a product of two PDFs
+        """ Make a product of two PDFs
         
         >>> pdf1 = ...
         >>> pdf2 = ...
@@ -2525,14 +2530,14 @@ class PDF1(APDF1,FUN1) :
         return NotImplemented 
 
     # =========================================================================
-    ## make a non-extender sum of 1D PDFs
+    ## make a non-extended sum of 1D PDFs
     #  @code
     #  pdf1 = ...
     #  pdf2 = ...
     #  pdf  = pdf1 + pdf2     
     #  @endcode
     def __add__ ( self , other ) :
-        """Make a no-extended sum of 1D PDFs
+        """ Make a nom-extended sum of 1D PDFs
         >>> pdf1 = ...
         >>> pdf2 = ...
         >>> pdf  = pdf1 + pdf2     
@@ -2548,7 +2553,7 @@ class PDF1(APDF1,FUN1) :
     #  pdf  = pdf1 + pdf2     
     #  @endcode
     def __radd__ ( self , other ) :
-        """Make a no-extended sum of 1D PDFs
+        """ Make a non-extended sum of 1D PDFs
         >>> pdf1 = ...
         >>> pdf2 = ...
         >>> pdf  = pdf1 + pdf2     
@@ -2627,7 +2632,7 @@ class PDF1(APDF1,FUN1) :
     #  fun = pdf.as_FUN () 
     #  @endcode
     def as_FUN ( self , name = '' ) : 
-        """Convert PDF into simple function
+        """ Convert PDF into simple function
         >>> pdf = ...
         >>> fun = pdf.as_FUN ()
         """
@@ -2651,7 +2656,7 @@ class PDF1(APDF1,FUN1) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-03-29
 class Generic1D_pdf(PDF1) :
-    """Wrapper for generic RooFit pdf
+    """ Wrapper for generic RooFit pdf
     >>> raw_pdf = RooGaussian   ( ...     )
     >>> pdf     = Generic1D_pdf ( raw_pdf , xvar = x )
     """
@@ -2661,7 +2666,7 @@ class Generic1D_pdf(PDF1) :
                    add_to_signals = True  ,
                    prefix         = ''    ,
                    suffix         = ''    ) :
-        """Wrapper for generic RooFit pdf        
+        """ Wrapper for generic RooFit pdf        
         >>> raw_pdf = RooGaussian   ( ...     )
         >>> pdf     = Generic1D_pdf ( raw_pdf , xvar = x )
         """
@@ -2718,7 +2723,7 @@ class Generic1D_pdf(PDF1) :
 #  @param pdf   input pdf of funcntion   <code>RooAbsReal</code> or <code>RooAbsPdf</code>
 #  pa
 def make_pdf ( pdf , args , name = '' ) :
-    """Helper function to create the PDF/PDF2/PDF3
+    """ Helper function to create the PDF/PDF2/PDF3
     """
     
     assert pdf and isinstance ( pdf , ROOT.RooAbsReal ), \
@@ -2757,10 +2762,10 @@ class APDF2 (APDF1) :
     # =========================================================================
     ## make the actual fit (and optionally draw it!)
     #  @code
-    #  r,f = model.fitTo ( dataset )
-    #  r,f = model.fitTo ( dataset , weighted = True )    
-    #  r,f = model.fitTo ( dataset , ncpu     = 10   )    
-    #  r,f = model.fitTo ( dataset , draw = True , nbins = 300 )    
+    #  r , f = model.fitTo ( dataset )
+    #  r , f = model.fitTo ( dataset , weighted = True )    
+    #  r , f = model.fitTo ( dataset , ncpu     = 10   )    
+    #  r , f = model.fitTo ( dataset , draw = True , nbins = 300 )    
     #  @endcode 
     def fitTo ( self           , 
                 dataset        ,
@@ -2771,12 +2776,11 @@ class APDF2 (APDF1) :
                 refit  = False ,
                 timer  = False ,
                 args   = ()    , **kwargs ) :
-        """
-        Perform the actual fit (and draw it)
-        >>> r,f = model.fitTo ( dataset )
-        >>> r,f = model.fitTo ( dataset , weighted = True )    
-        >>> r,f = model.fitTo ( dataset , ncpu     = 10   )    
-        >>> r,f = model.fitTo ( dataset , draw = True , nbins = 300 )    
+        """ Perform the actual fit (and draw it)
+        >>> r , f = model.fitTo ( dataset )
+        >>> r , f = model.fitTo ( dataset , weighted = True )    
+        >>> r , f = model.fitTo ( dataset , ncpu     = 10   )    
+        >>> r , f = model.fitTo ( dataset , draw = True , nbins = 300 )    
         """
         if   isinstance ( dataset , H2D_dset ) : dataset = dataset.dset        
         elif isinstance ( dataset , ROOT.TH2 ) and 2 == dataste.dim() :
@@ -2812,7 +2816,6 @@ class APDF2 (APDF1) :
         if not draw :
             return result , None
 
-        
         ## 2D 
         if 1 < nbins and isinstance ( ybins , integer_types ) and 1 < ybins :
             return result, self.draw ( None , dataset , nbins , ybins , silent = silent )
@@ -2892,8 +2895,7 @@ class APDF2 (APDF1) :
                 silent   = True ,
                 in_range = None ,
                 args     = ()   , **kwargs ) :
-        """
-        Draw the projection over 2nd variable
+        """ Draw the projection over 2nd variable
         
         >>> r,f = model.fitTo ( dataset ) ## fit dataset
         >>> fy  = model.draw2 ( dataset , nbins = 100 ) ## draw results
@@ -2927,8 +2929,7 @@ class APDF2 (APDF1) :
                    dataset = None ,  
                    xbins   = 20   ,
                    ybins   = 20   ) :
-        """
-        Make/draw 2D-histograms 
+        """ Make/draw 2D-histograms 
         """
         
         _xbins = ROOT.RooFit.Binning ( xbins ) 
@@ -2962,8 +2963,7 @@ class APDF2 (APDF1) :
                in_range              = None ,
                args                  = ()   , 
                **kwargs                     ) : 
-        """
-        Make 1D-plot:
+        """ Make 1D-plot:
         """
         if   drawvar in ( 'x'  , 'X' , '1' , 1 , self.xvar.name ) : drawvar = self.xvar
         elif drawvar in ( 'y'  , 'Y' , '2' , 2 , self.yvar.name ) : drawvar = self.yvar
@@ -3062,11 +3062,9 @@ class APDF2 (APDF1) :
                    density = False ,
                    chi2    = False ,
                    args    = ()    , **kwargs ) :
-        """Fit the 2D-histogram
-        
+        """ Fit the 2D-histogram        
         >>> histo = ...
-        >>> r,f = model.fitHisto ( histo )
-        
+        >>> r,f = model.fitHisto ( histo )        
         """
 
         xminmax = histo.xminmax()
@@ -3116,7 +3114,7 @@ class APDF2 (APDF1) :
                    sample   = True  ,
                    storage  = None  ,  
                    args     = ()    ) :
-        """Generate toy-sample according to PDF
+        """ Generate toy-sample according to PDF
         >>> model  = ....
         >>> data   = model.generate ( 10000 ) ## generate dataset
         
@@ -3166,7 +3164,7 @@ class APDF2 (APDF1) :
     #  mn , mx = pdf.minmax()            
     #  @endcode 
     def minmax ( self , nshoots =  100000 ) :
-        """Check min/max for the PDF using  random shoots 
+        """ Check min/max for the PDF using  random shoots 
         >>> pdf     = ....
         >>> mn , mx = pdf.minmax()        
         """
@@ -3227,7 +3225,7 @@ class APDF2 (APDF1) :
     #  print ( pdf.integral( 0,1,0,2) ) 
     #  @endcode
     def integral ( self, xmin , xmax , ymin , ymax , nevents = True ) :
-        """Get integral over (xmin,xmax,ymin,ymax) region
+        """ Get integral over (xmin,xmax,ymin,ymax) region
         >>> pdf = ...
         >>> print ( pdf.integral( 0,1,0,2) ) 
         """
@@ -3284,7 +3282,7 @@ class APDF2 (APDF1) :
     def minimum ( self ,
                   xmin = None , xmax = None ,
                   ymin = None , ymax = None , x0 = () ) :
-        """Get a minimum of PDF for certain interval
+        """ Get a minimum of PDF for certain interval
         >>> pdf2 = ...
         >>> x, y = pdf2.minimum()
         """
@@ -3321,7 +3319,7 @@ class APDF2 (APDF1) :
     #  x,y  = pdf2.maximum() 
     #  @endcode 
     def maximum ( self , xmin = None , xmax = None , x0 = None ) :
-        """Get a maximum of PDF for certain interval
+        """ Get a maximum of PDF for certain interval
         >>> pdf2  = ...
         >>> x , y  = pdf2.maximum()
         """
@@ -3358,7 +3356,7 @@ class APDF2 (APDF1) :
     #  tf2.Draw('colz')
     #  @endcode
     def tf ( self , xmin = None , xmax = None , ymin = None , ymax = None ) :
-        """Convert PDF to TF2 object, e.g. to profit from TF2::Draw options
+        """ Convert PDF to TF2 object, e.g. to profit from TF2::Draw options
         >>> pdf = ...
         >>> tf2 = pdf.tf()
         >>> tf1.Draw('colz')
@@ -3387,7 +3385,7 @@ class APDF2 (APDF1) :
                      ybins    = 20    , ymin = None , ymax = None ,
                      hpars    = ()    , 
                      histo    = None  ) :
-        """Create the histogram accordig to specifications
+        """ Create the 2D histogram according to specifications
         """
         
         import ostap.histos.histos
@@ -3413,7 +3411,7 @@ class APDF2 (APDF1) :
             assert isinstance ( xbins , integer_types ) and 0 < xbins, \
                    "Wrong 'xbins'-argument %s" % xbins 
             assert isinstance ( ybins , integer_types ) and 0 < ybins, \
-                   "Wrong 'ybins'-argument %s" % ybins 
+                   "Wrong 'ybins'-argument %s" % ybins            
             if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
             if xmax == None and self.xminmax() : xmax = self.xminmax()[1]
             if ymin == None and self.yminmax() : ymin = self.yminmax()[0]
@@ -3445,7 +3443,7 @@ class APDF2 (APDF1) :
                 errors   = False ,
                 events   = True  , 
                 density  = False ) :
-        """Convert PDF to the 2D-histogram
+        """ Convert PDF to the 2D-histogram
         >>> pdf = ...
         >>> h1  = pdf.histo ( 100 , 0. , 10. , 20 , 0. , 10 ) ## specify histogram parameters
         >>> histo_template = ...
@@ -3454,14 +3452,13 @@ class APDF2 (APDF1) :
         >>> h4  = pdf.histo ( ... , density  = True  ) ## convert to 'density' histogram 
         """
         
-        
         histos = self.make_histo ( xbins = xbins , xmin = xmin , xmax = xmax ,
                                    ybins = ybins , ymin = ymin , ymax = ymax ,
                                    hpars = hpars ,
                                    histo = histo )
 
         # loop over the histogram bins 
-        for ix,iy,x,y,z in histo.items() :
+        for ix , iy , x , y , z in histo.items() :
 
             xv , xe = x.value() , x.error()
             yv , ye = y.value() , y.error()
@@ -3626,7 +3623,7 @@ class APDF2 (APDF1) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-08-21
 class PDF2(APDF2,FUN2) :
-    """The main helper base class for implementation of various 1D PDF-wrappers
+    """ The main helper base class for implementation of various 1D PDF-wrappers
     """
     def __init__ ( self , name ,  xvar , yvar , tricks = True , **kwargs ) :
         
@@ -3710,7 +3707,7 @@ class PDF2(APDF2,FUN2) :
     #  - PDF1 ( x )         * PDF1 ( x )         -> PDF1 ( x )
     #  - PDF1 ( x )         * PDF1 ( y )         -> PDF2 ( x , y )
     def __mul__ ( self , other ) :
-        """Make a product of two PDFs
+        """ Make a product of two PDFs
         
         >>> pdf1 = ...
         >>> pdf2 = ...
@@ -3760,7 +3757,7 @@ class PDF2(APDF2,FUN2) :
     #  - PDF1 ( x )         * PDF1 ( x )         -> PDF1 ( x )    
     #  - PDF1 ( x )         * PDF1 ( y )         -> PDF2 ( x , y )
     def __rmul__ ( self , other ) :
-        """Make a product of two PDFs
+        """ Make a product of two PDFs
         
         >>> pdf1 = ...
         >>> pdf2 = ...
@@ -3796,7 +3793,7 @@ class PDF2(APDF2,FUN2) :
     #  pdf  = pdf1 + pdf2     
     #  @endcode
     def __add__ ( self , other ) :
-        """Make a no-extended sum of 1D PDFs
+        """ Make a no-extended sum of 1D PDFs
         >>> pdf1 = ...
         >>> pdf2 = ...
         >>> pdf  = pdf1 + pdf2     
@@ -3923,10 +3920,10 @@ class APDF3 (APDF2) :
     # =========================================================================
     ## make the actual fit 
     #  @code
-    #  r,f = model.fitTo ( dataset )
-    #  r,f = model.fitTo ( dataset , weighted = True )    
-    #  r,f = model.fitTo ( dataset , ncpu     = 10   )    
-    #  r,f = model.fitTo ( dataset )    
+    #  r , f = model.fitTo ( dataset )
+    #  r , f = model.fitTo ( dataset , weighted = True )    
+    #  r , f = model.fitTo ( dataset , ncpu     = 10   )    
+    #  r , f = model.fitTo ( dataset )    
     #  @endcode 
     def fitTo ( self           , 
                 dataset        ,
@@ -3986,7 +3983,7 @@ class APDF3 (APDF2) :
             f = self.draw3 ( daatset , silent = silent , args = args , **kwargs )
             return result, f
 
-        return result
+        return result , None 
     
     # =========================================================================
     ## draw the projection over 1st variable
@@ -4008,7 +4005,7 @@ class APDF3 (APDF2) :
                 in_range2 = None ,
                 in_range3 = None ,
                 args      = ()   , **kwargs ) :
-        """ Draw the projection over 3rd variable
+        """ Draw the projection over 1st variable
         
         >>> r,f = model.fitTo ( dataset ) ## fit dataset
         >>> fx  = model.draw1 ( dataset , nbins = 100 ) ## draw results
@@ -4162,7 +4159,7 @@ class APDF3 (APDF2) :
         >>> fx  = model.draw3 ( dataset , nbins = 100 , in_range2 = 'QUQU2') ## draw results
         
         """
-        in_range=None
+        in_range = None
 
         if in_range1  and  not in_range2:
             in_range = 'aux3_rng31_%s' % self.name
@@ -4238,7 +4235,7 @@ class APDF3 (APDF2) :
                    density = False ,
                    chi2    = False , 
                    args    = ()    , **kwargs ) :
-        """Fit the 3D histogram
+        """ Fit the 3D histogram
         
         >>> histo = ...
         >>> r,f = model.fitHisto ( histo )
@@ -4296,7 +4293,7 @@ class APDF3 (APDF2) :
                    sample   = True  ,
                    storage  = None  ,
                    args     = ()    ) :
-        """Generate toy-sample according to PDF
+        """ Generate toy-sample according to PDF
         >>> model  = ....
         >>> data   = model.generate ( 10000 ) ## generate dataset
         
@@ -4347,7 +4344,7 @@ class APDF3 (APDF2) :
     #  mn , mx = pdf.minmax()            
     #  @endcode 
     def minmax ( self , nshoots = 200000 ) :
-        """Check min/max for the PDF using  random shoots 
+        """ Check min/max for the PDF using  random shoots 
         >>> pdf     = ....
         >>> mn , mx = pdf.minmax()        
         """
@@ -4411,7 +4408,7 @@ class APDF3 (APDF2) :
     #  print ( pdf.integral( 0,1,0,2,0,5) ) 
     #  @endcode
     def integral ( self, xmin , xmax , ymin , ymax , zmin , zmax , nevents = True ) :
-        """Get integral over (xmin,xmax,ymin,ymax,zmin,zmax) region
+        """ Get integral over (xmin,xmax,ymin,ymax,zmin,zmax) region
         >>> pdf = ...
         >>> print ( pdf.integral( 0,1,0,2,0,5) ) 
         """
@@ -4477,7 +4474,7 @@ class APDF3 (APDF2) :
                   xmin = None , xmax = None ,
                   ymin = None , ymax = None ,
                   zmin = None , zmax = None , x0 = () ) :
-        """Get a minimum of PDF for certain interval
+        """ Get a minimum of PDF for certain interval
         >>> pdf3 = ...
         >>> x, y , z = pdf3.minimum()
         """
@@ -4580,7 +4577,7 @@ class APDF3 (APDF2) :
              xmin = None , xmax = None ,
              ymin = None , ymax = None ,
              zmin = None , zmax = None ) :
-        """Convert PDF  to TF3 object, e.g. to profit from TF3::Draw options
+        """ Convert PDF  to TF3 object, e.g. to profit from TF3::Draw options
         >>> pdf = ...
         >>> tf3 = pdf.tf()
         >>> tf3.Draw('colz')
@@ -4614,7 +4611,7 @@ class APDF3 (APDF2) :
                      zbins    = 10    , zmin = None , zmax = None ,
                      hpars    = ()    , 
                      histo    = None  ) :
-        """Create the histogram accoring to specifications"""
+        """ Create the histogram accoring to specifications"""
         
         import ostap.histos.histos
 
@@ -4678,7 +4675,7 @@ class APDF3 (APDF2) :
                 intergal = True  ,
                 events   = True  , 
                 errors   = False ) :
-        """Convert PDF to the 3D-histogram in correct way
+        """ Convert PDF to the 3D-histogram in correct way
         >>> pdf = ...
         >>> h1  = pdf.histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 ) ## specify histogram parameters
         >>> histo_template = ...
@@ -4741,7 +4738,7 @@ class APDF3 (APDF2) :
                    hpars    = ()    , 
                    histo    = None  ,
                    events   = True) :
-        """Convert PDF to the 3D-histogram, taking PDF-values at bin-centres
+        """ Convert PDF to the 3D-histogram, taking PDF-values at bin-centres
         >>> pdf = ...
         >>> h1  = pdf.roo_histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 )
         >>> histo_template = ...
@@ -4787,7 +4784,7 @@ class APDF3 (APDF2) :
     #  residual = pdf.residual ( data , nbins = 100 ) 
     #  @endcode 
     def residual ( self  , dataset , **kwargs ) :
-        """Get the residual histogram
+        """ Get the residual histogram
         - see PDF.as_histo
         - see PDF.residual_histo
         - see PDF.make_histo
@@ -4813,7 +4810,7 @@ class APDF3 (APDF2) :
     #  residual = pdf.pull ( data , nbins = 100 ) 
     #  @endcode 
     def pull ( self  , dataset , **kwargs ) :
-        """Get the pull  histogram: (data-fit)/data_error
+        """ Get the pull  histogram: (data-fit)/data_error
         - see PDF.as_histo
         - see PDF.residual_histo
         - see PDF.make_histo
@@ -4834,9 +4831,10 @@ class APDF3 (APDF2) :
             self.xvar.name , self.yvar.name , self.zvar.name )
     __repr__ = __str__ 
 
+    # =========================================================================
     ## Make PDF3 object 
     def make_PDF3 ( self , pdf , xvar = None , yvar = None , zvar = None , *args , **kwargs ) :
-        """Make PDF1 object
+        """ Make PDF1 object
         """
         if isinstance ( pdf , PDF3 ) :
             
@@ -4862,7 +4860,7 @@ class APDF3 (APDF2) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-08-21
 class PDF3(APDF3,FUN3) :
-    """The main helper base class for implementation of various 1D PDF-wrappers
+    """ The main helper base class for implementation of various 1D PDF-wrappers
     """
     def __init__ ( self , name , xvar , yvar , zvar , tricks = True , **kwargs ) :
 
@@ -4963,7 +4961,7 @@ class PDF3(APDF3,FUN3) :
     #  - PDF1 ( x )         * PDF1 ( x )         -> PDF1 ( x )
     #  - PDF1 ( x )         * PDF1 ( y )         -> PDF2 ( x , y )
     def __mul__ ( self , other ) :
-        """Make a product of two PDFs
+        """ Make a product of two PDFs
         
         >>> pdf1 = ...
         >>> pdf2 = ...
@@ -5013,7 +5011,7 @@ class PDF3(APDF3,FUN3) :
     #  - PDF1 ( x )         * PDF1 ( x )         -> PDF1 ( x )    
     #  - PDF1 ( x )         * PDF1 ( y )         -> PDF2 ( x , y )
     def __rmul__ ( self , other ) :
-        """Make a product of two PDFs
+        """ Make a product of two PDFs
         
         >>> pdf1 = ...
         >>> pdf2 = ...
@@ -5042,14 +5040,14 @@ class PDF3(APDF3,FUN3) :
         return NotImplemented 
 
     # =========================================================================
-    ## make a non-extender sum of 3D PDFs
+    ## make a non-extended sum of 3D PDFs
     #  @code
     #  pdf1 = ...
     #  pdf2 = ...
     #  pdf  = pdf1 + pdf2     
     #  @endcode
     def __add__ ( self , other ) :
-        """Make a no-extended sum of 3D PDFs
+        """ Make a non-extended sum of 3D PDFs
         >>> pdf1 = ...
         >>> pdf2 = ...
         >>> pdf  = pdf1 + pdf2     
@@ -5065,7 +5063,7 @@ class PDF3(APDF3,FUN3) :
     #  pdf  = pdf1 + pdf2     
     #  @endcode
     def __radd__ ( self , other ) :
-        """Make a no-extended sum of 3D PDFs
+        """ Make a no-extended sum of 3D PDFs
         >>> pdf1 = ...
         >>> pdf2 = ...
         >>> pdf  = pdf1 + pdf2     
@@ -5080,7 +5078,7 @@ class PDF3(APDF3,FUN3) :
     #  fun = pdf.as_FUN () 
     #  @endcode
     def as_FUN ( self , name = '' ) : 
-        """Convert PDF into simple function
+        """ Convert PDF into simple function
         >>> pdf = ...
         >>> fun = pdf.as_FUN () 
         """
@@ -5176,7 +5174,7 @@ class Generic3D_pdf(PDF3) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 class Flat3D(PDF3) :
-    """The most trival 3D-model - constant
+    """ The most trival 3D-model - constant
     >>> pdf = Flat3D( 'flat' , xvar = ...  , yvar = ... , zvar = ... )
     """
     def __init__ ( self , xvar , yvar , zvar , name = ''  , title = '' ) :
@@ -5205,7 +5203,7 @@ class Flat3D(PDF3) :
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date 2023-04-18
 class Constrained(object) :
-    """Helper mixin/base class for ceation of constrained PDFs"""
+    """ Helper mixin/base class for ceation of constrained PDFs"""
     def __init__  ( self , original , constraints ) :
 
         assert isinstance  ( original , APDF1 ) , '"original" must be APDF1!'
@@ -5222,7 +5220,7 @@ class Constrained(object) :
     # =========================================================================
     ## add more constraints  
     def add_constraints ( self , constraints ) :
-        """Add more constraints"""
+        """ Add more constraints"""
         
         assert constraints , '"constraints" are not specified!'
         

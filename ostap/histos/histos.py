@@ -30,7 +30,7 @@ __all__     = (
     #
     )
 # =============================================================================
-from   ostap.core.core import ( cpp      , Ostap     , 
+from   ostap.core.core import ( cpp      , Ostap     , cidict_fun      , 
                                 ROOTCWD  , rootID    , 
                                 funcID   , funID     , fID             ,
                                 histoID  , hID       , dsID            ,
@@ -49,7 +49,9 @@ from   ostap.core.ostap_types   import ( integer_types  , num_types    ,
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.core.meta_info     import root_info, python_info
 from   ostap.math.random_ext    import poisson
-from   ostap.utils.utils        import accumulate 
+from   ostap.utils.utils        import accumulate
+from   ostap.utils.cidict       import cidict
+import ostap.logger.table       as     T 
 import ostap.stats.moment 
 import ostap.plotting.draw_attributes 
 import ROOT, sys, math, ctypes, array  
@@ -5440,7 +5442,7 @@ def h1_axis ( axis           ,
               title  = '1D'  , 
               name   = None  ,
               double = True  ) :
-    """Make 1D-histogram with binning defined by already created axes    
+    """ Make 1D-histogram with binning defined by already created axes    
     >>> axis = ...
     >>> h1 = h1_axes ( axis , title = 'MyHisto' )     
     """
@@ -5470,7 +5472,7 @@ def h2_axes ( x_axis            ,
               title  = '2D'     , 
               name   = None     ,
               double = True     ) :
-    """Make 2D-histogram with binning deifned by already created axes    
+    """ Make 2D-histogram with binning deifned by already created axes    
     >>> x_axis = ...
     >>> y_axis = ...
     >>> h2 = h2_axes ( x_axis , y_axis , title = 'MyHisto' )     
@@ -5506,7 +5508,7 @@ def h3_axes ( x_axis            ,
               title  = '3D'     , 
               name   = None     ,
               double = True     ) :
-    """Make 3D-histogram with binning deifned by already created axes    
+    """ Make 3D-histogram with binning deifned by already created axes    
     >>> x_axis = ...
     >>> y_axis = ...
     >>> z_axis = ...
@@ -5519,10 +5521,9 @@ def h3_axes ( x_axis            ,
     if not issubclass ( type ( y_axis ) , ROOT.TAxis ) : y_axis = axis_bins   ( y_axis )
     if not issubclass ( type ( z_axis ) , ROOT.TAxis ) : z_axis = axis_bins   ( z_axis )
     #
-    # 
-    x_bins  = x_axis.edges()
-    y_bins  = y_axis.edges()
-    z_bins  = z_axis.edges()
+    x_bins  = x_axis.edges ()
+    y_bins  = y_axis.edges ()
+    z_bins  = z_axis.edges ()
     #
     if isinstance ( double , type ) and issubclass ( double , ROOT.TH3 ) : typ = double
     else : typ = ROOT.TH3D if double else ROOT.TH3F
@@ -5536,11 +5537,11 @@ def h3_axes ( x_axis            ,
 
 
 # =======================================================================
-## calculate the ``difference'' between two histograms 
+## calculate the `difference' between two histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h_diff_ ( h1 , h2 , func = lambda s1,s2 : (s1/s2).value() ) :
-    """ Estimate the ``difference'' between two histograms
+    """ Estimate the `difference' between two histograms
     """
     se = SE()
     
@@ -5581,7 +5582,7 @@ def _h1_accumulate_ ( h                        ,
                      high = -1                 ,
                      xmin = inf_neg            ,
                      xmax = inf_pos            ) : 
-    """Accumulate the function value over the histogram
+    """ Accumulate the function value over the histogram
     >>> h =...
     >>> sum = h.accumulate ()
     >>> sum = h.accumulate ( cut = lambda s :  0.4<=s[1].value()<0.5 ) 
@@ -5614,9 +5615,8 @@ def _h1_accumulate_ ( h                        ,
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _hh_accumulate_ ( histo ) :
-    
-    """Accumulate the function value over the histogram
+def _hh_accumulate_ ( histo ) :    
+    """ Accumulate the function value over the histogram
     >>> h =...
     >>> sum = h.accumulate ()
     """
@@ -5633,7 +5633,7 @@ def _hh_accumulate_ ( histo ) :
 def _h1_sum_ ( h           ,
                xmin = None ,
                xmax = None ) :
-    """Get the sum of histogram entries over the specified range xmin<x<xmax
+    """ Get the sum of histogram entries over the specified range xmin<x<xmax
     >>> h = ....
     >>> h.sum ( 1.0 , 20.0 )    
     """
@@ -8354,27 +8354,13 @@ histo_keys = ( 'xbins' , 'nbinsx' , 'binsx' , 'nbins' ,
                'ztitle', 'titlez' )
                
 # =============================================================================
-## helper method to book/create 1/2/3-dimension histograms
-#  @code
-#  r1 = [  ('xvar', (0,1) } ]
-#  h1 = histo_book ( r1 , xmin = -1 , xbins =  100 )
-#
-#  r2 = [  ('xvar', (0,1) } , ( 'yvar' , (10,20) ) ] 
-#  h2 = histo_book ( r2 , xmin = -1 , xbins =  100 , ymax = 30 )
-# 
-#  r3 = [  ('xvar', (0,1) } , ( 'yvar' , (10,20) ) , ( 'z' , (0,100) ) ] 
-#  h3 = histo_book ( r2 , xmin = -1 , xbins =  100 , ymax = 30 , zbins = 10 )
-#  @endocode
-def histo_book ( ranges , kwargs , title = '' ) :
-    """ Helper method to book/create 1/2/3-dimension histograms
-    >>> r1 = [  ('xvar', (0,1) } ]
-    >>> h1 = histo_book ( r1 , xmin = -1 , xbins =  100 )
-    
-    >>> r2 = [  ('xvar', (0,1) } , ( 'yvar' , (10,20) ) ] 
-    >>> h2 = histo_book ( r2 , xmin = -1 , xbins =  100 , ymax = 30 )
-    
-    >>> r3 = [  ('xvar', (0,1) } , ( 'yvar' , (10,20) ) , ( 'z' , (0,100) ) ] 
-    >>>h3 = histo_book ( r2 , xmin = -1 , xbins =  100 , ymax = 30 , zbins = 10 )
+## helper method to book/create 1,2&3-dimension histograms
+#  Valid keys: 
+#  @see ostap.histos.histos.histo_keys 
+def histo_book2 ( ranges , kwargs ) :
+    """ Helper method to book/create 1,2&3-dimension histograms
+    Valid keys: 
+    - see `ostap.histos.histos.histo_keys`
     """
     
     nvars = len ( ranges  ) 
@@ -8395,24 +8381,27 @@ def histo_book ( ranges , kwargs , title = '' ) :
     if 3 <= nvars : assert isinstance ( zbins , integer_types ) and 0 < zbins , "Invalid zbins setting!"
         
     xvar , xrng = ranges [ 0 ]
-    xmin , xmax = xrng
+    xmin , xmax = xrng if xrng else ( None , None ) 
     xmin        = kwargs.pop ( 'xmin' , xmin )
-    xmax        = kwargs.pop ( 'xmax' , xmax )
-    assert xmin < xmax , "Invalid xmin/xmax setting!"
-
+    xmax        = kwargs.pop ( 'xmax' , xmax )    
+    assert  isinstance ( xmin , num_types ) \
+        and isinstance ( xmax , num_types ) and xmin < xmax , "Invalid xmin/xmax setting!"
+    
     if 2 <= nvars:
         yvar , yrng = ranges [ 1 ]
-        ymin , ymax = yrng
+        ymin , ymax = yrng if yrng else ( None , None ) 
         ymin        = kwargs.pop ( 'ymin' , ymin )
         ymax        = kwargs.pop ( 'ymax' , ymax )
-        assert ymin < ymax , "Invalid ymin/ymax setting!"
+        assert  isinstance ( ymin , num_types ) \
+            and isinstance ( ymax , num_types ) and ymin < ymax , "Invalid ymin/ymax setting!"
 
     if 3 <= nvars:
         zvar , zrng = ranges [ 2 ]
-        zmin , zmax = zrng
+        zmin , zmax = zrng if zrng else ( None , None ) 
         zmin        = kwargs.pop ( 'zmin' , zmin )
         zmax        = kwargs.pop ( 'zmax' , zmax )
-        assert zmin < zmax , "Invalid zmin/zmax setting!"
+        assert  isinstance ( zmin , num_types ) \
+            and isinstance ( zmax , num_types ) and zmin < zmax , "Invalid zmin/zmax setting!"
 
     histo = None 
     if   1 == nvars :
@@ -8451,15 +8440,55 @@ def histo_book ( ranges , kwargs , title = '' ) :
         histo.GetXaxis().SetTitle ( xtitle )
         histo.GetYaxis().SetTitle ( ytitle )        
         histo.GetZaxis().SetTitle ( ztitle )        
-        
+
     return histo 
 # =============================================================================
 
-
+# =============================================================================
+## helper method to book/create 1,2&3-dimension histograms
+#  @code
+#  r1 = [  ('xvar', (0,1) } ]
+#  h1 = histo_book ( r1 , xmin = -1 , xbins =  100 )
+#
+#  r2 = [  ('xvar', (0,1) } , ( 'yvar' , (10,20) ) ] 
+#  h2 = histo_book ( r2 , xmin = -1 , xbins =  100 , ymax = 30 )
+# 
+#  r3 = [  ('xvar', (0,1) } , ( 'yvar' , (10,20) ) , ( 'z' , (0,100) ) ] 
+#  h3 = histo_book ( r2 , xmin = -1 , xbins =  100 , ymax = 30 , zbins = 10 )
+#  @endocode
+#  Valid keys: 
+#  @see ostap.histos.histos.histo_keys 
+def histo_book ( ranges , **kwargs ) :
+    """ Helper method to book/create 1,2&3-dimension histograms
+    Valid keys: 
+    - see ostap.histos.histos.histo_keys 
+    >>> r1 = [  ('xvar', ( 0 , 1 ) } ]
+    >>> h1 = histo_book ( r1 , xmin = -1 , xbins =  100 )
+    
+    >>> r2 = [  ('xvar', (0,1) } , ( 'yvar' , (10,20) ) ] 
+    >>> h2 = histo_book ( r2 , xmin = -1 , xbins =  100 , ymax = 30 )
+    
+    >>> r3 = [  ('xvar', (0,1) } , ( 'yvar' , (10,20) ) , ( 'z' , (0,100) ) ] 
+    >>>h3 = histo_book ( r2 , xmin = -1 , xbins =  100 , ymax = 30 , zbins = 10 )
+    """
+    ## 
+    kw = cidict ( transform = cidict_fun , **kwargs )
+    ## 
+    histo = histo_book2 ( ranges , kw )
+    if kw : 
+        rows = [ ( 'Argument' , 'Value' ) ]
+        for k , v  in loop_items ( kw ) :
+            row = k , str ( v )
+            rows.append ( row )
+        title = 'histo_book: %d unused arguments' % len ( kw ) 
+        table = T.table ( rows , title = 'Unused argumens' , prefix = '# ' , alignment = 'll' )    
+        logger.warning ( '%s\n%s' % ( title , table ) )
+        
 # =============================================================================
 ## Get a kind of ROC-like curve/graph from two histograms
 def _h1_roc_ ( h1 , h2 ) :
-
+    """ Get a kind of ROC-like curve/graph from two histograms
+    """
     h1sum = h1.sumv ()
     h2sum = h2.sumv ()
 
@@ -8469,8 +8498,8 @@ def _h1_roc_ ( h1 , h2 ) :
     graph [  0 ] = h1sum [  0 ] , h2sum [ 0  ] 
     graph [ -1 ] = h1sum [ -1 ] , h2sum [ -1 ] 
     
-    for i , x , y1 in h1s.items() :        
-        y2 = h2s ( x.value () )        
+    for i , x , y1 in h1sum.items() :        
+        y2 = h2sum ( x.value () )        
         graph [ i ] = y1 , y2 
         
     return graph 

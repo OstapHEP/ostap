@@ -1123,7 +1123,7 @@ class Fit3D (PDF3) :
 
     @property
     def BBS ( self ) :
-        """The yield of Background(x,y)*Signal(z) component"""
+        """ The yield of Background(x,y)*Signal(z) component"""
         return self.__bbs
     @BBS.setter 
     def BBS ( self , value ) :
@@ -1133,7 +1133,7 @@ class Fit3D (PDF3) :
 
     @property
     def BBB ( self ) :
-        """The yield of Background(x,y,z) component"""
+        """ The yield of Background(x,y,z) component"""
         return self.__bbb
     @BBB.setter 
     def BBB ( self , value ) :
@@ -1144,7 +1144,7 @@ class Fit3D (PDF3) :
 
     @property
     def C ( self ) :
-        """Get the  yields of 'other' component(s) 
+        """ Get the  yields of 'other' component(s) 
         For single 'other' component:
         >>> print pdf.C           ## read the single 'other' component 
         >>> pdf.C = 100           ## assign to it 
@@ -1162,7 +1162,7 @@ class Fit3D (PDF3) :
    
     @property
     def yields    ( self ) :
-        """The list/tuple of the yields of all numeric components"""
+        """ The list/tuple of the yields of all numeric components"""
         return tuple ( [ i for i in  self.alist2 ] )
 
     @property 
@@ -1299,7 +1299,6 @@ class Fit3D (PDF3) :
         return self.__suffix
 
 
-
 # =============================================================================
 ## @class Fit3DSym
 #  The actual model for fully symmetric 3D-fits
@@ -1360,7 +1359,7 @@ class Fit3D (PDF3) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2017-07-25
 class Fit3DSym (PDF3) :
-    """The actual model for fully symmetric 3D-fits
+    """ The actual model for fully symmetric 3D-fits
     
     >>>  model   = Models.Fit3DSym (
     ...      signal_x = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,

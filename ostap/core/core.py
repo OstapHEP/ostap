@@ -530,7 +530,6 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
         elif 'MaxValue'    in kw and hasattr ( obj , 'SetMaximum' ) :
             obj.SetMaximum     ( kw.pop ( 'MaxValue' ) )
 
-
         if 'LabelSize' in kw or 'LabelFont' in kw or 'LabelScale' in kw  :
 
             axis = [] 
@@ -572,7 +571,6 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
 
         copy = kw.pop ( 'copy' , False )
 
-
         groot = ROOT.ROOT.GetROOT ()
         pad   = groot.GetSelectedPad()
         if not pad : pad = ROOT.gPad
@@ -580,7 +578,15 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
             if 'LogX' in kw : pad.SetLogx ( kw.pop ( 'LogX' ) )
             if 'LogY' in kw : pad.SetLogy ( kw.pop ( 'LogY' ) )
         
-        if kw : logger.warning('draw: unknown attributes: %s' % kw.keys() )
+        if kw :
+            import ostap.logger.table as T 
+            rows = [ ( 'Argument' , 'Value' ) ]
+            for k , v in loop_items ( kw ) :
+                row = k , str ( v )
+                rows.append ( row )
+                title = 'draw: %d unused arguments' % len ( kw ) 
+            table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
+            logger.warning ( '%s\n%s' % ( title , table ) )
             
         with rootWarning() , rooSilent ( 2 )  :
             
@@ -963,7 +969,7 @@ def rootError   ( level = 1 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-30
 def rootWarning ( level = 1 ) :
-    """Very simple context manager to suppress ROOT printout
+    """ Very simple context manager to suppress ROOT printout
     >>> with rootWarning () : some_ROOT_code_here()
     """
     return ROOTIgnore ( ROOT.kWarning + level )
@@ -984,7 +990,7 @@ def rootWarning ( level = 1 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-09
 def rooSilent ( level = ROOT.RooFit.ERROR , silent = True ) :
-    """Very simple context manager to suppress RooFit printout
+    """ Very simple context manager to suppress RooFit printout
     >>> with rooSilent( 4 , False ) :
     ...        some_RooFit_code_here()    
     """

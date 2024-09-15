@@ -31,9 +31,10 @@ from   ostap.core.meta_info          import root_info
 from   ostap.core.ostap_types        import ( integer_types  , num_types    ,
                                               dictlike_types , list_types   ,
                                               is_good_number , string_types )
-from   ostap.core.core               import ( Ostap         , hID , 
+from   ostap.core.core               import ( Ostap         , hID ,
                                               valid_pointer ,
-                                              roo_silent    ,
+                                              cidict_fun    ,                                               
+                                              roo_silent    ,                                              
                                               rootWarning   )   
 from   ostap.math.base               import iszero , isequal  
 from   ostap.fitting.utils           import make_name 
@@ -2029,7 +2030,7 @@ class FUN1(AFUN1,F1AUX) :
     #  ff = a.asymmetry ( b )
     #  @endcode 
     def asymmetry ( self , b ) :
-        """ Asymmetry  : f = ( a - b ) / ( a+ b )   )
+        """ Asymmetry  : f = ( a - b ) / ( a + b )   )
         >>> f =
         >>> a = f.asymmetry ( b )
         """
@@ -2039,19 +2040,23 @@ class FUN1(AFUN1,F1AUX) :
 
     # =========================================================================
     ## helper function to create the histogram
+    #  @see ostap.histos.histos.histo_book
+    #  @see ostap.histos.histos.histo_keys        
     def make_histo ( self  ,
-                     nbins    = 100   , xmin = None , xmax = None ,
+                     nbins    = 100   ,
                      hpars    = ()    , 
-                     histo    = None  ) :
-        """Create the histogram according to specifications
+                     histo    = None  , **kwargs ) :
+        """ Create the 1D-histogram according to specifications
+         - see `ostap.histos.histos.histo_book`
+         - see `ostap.histos.histos.histo_keys`        
         """
         
-        import ostap.histos.histos
+        from ostap.histos.histos import histo_book 
         # histogram is provided 
         if histo :
             
             assert isinstance ( histo , ROOT.TH1 ) and not isinstance ( histo , ROOT.TH2 ) , \
-                   "Illegal type of 'histo'-argument %s" % type( histo )
+                   "Illegal type of 'histo'-argument %s" % type ( histo )
             
             histo = histo.clone()
             histo.Reset()
@@ -2065,13 +2070,12 @@ class FUN1(AFUN1,F1AUX) :
         # explicit construction from (#bins,min,max)-triplet  
         else :
             
-            assert isinstance ( nbins , integer_types ) and 0 < nbins, \
-                   "Wrong 'nbins'-argument %s" % nbins 
-            if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
-            if xmax == None and self.xminmax() : xmax = self.xminmax()[1]
+            kw = cidict ( transform = cidict_fun , nbins = nbins , **kwargs )
             
-            histo = ROOT.TH1F ( hID() , 'PDF%s' % self.name , nbins , xmin , xmax )
-            if not histo.GetSumw2() : histo.Sumw2()
+            xmnmx  = self.xminmax()            
+            ranges = [ ( self.xvar.name ,    xmnmx          ) ]            
+            histo  = histo_book ( ranges , kw )
+            if kw : self.warning ( 'make_histo/histo_book: unused arguments: [%s]'%  ( ','.join ( k for k in kw ) ) )  
 
         return histo 
 
