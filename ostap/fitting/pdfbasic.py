@@ -104,7 +104,7 @@ def all_args ( *args ) :
 # 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2023-04-18
-class Components(object) :
+class Components ( object ) :
     """ Helper base class that keeps the major fit-pdf components
     - signals
     - backgrounds 
@@ -233,7 +233,6 @@ class Components(object) :
         self.__alist2 = value                    
 
 
-
 # =============================================================================
 ## @class APDF1
 #  The helper MIXIN class for implementation of various PDF-wrappers
@@ -260,9 +259,8 @@ class APDF1 ( Components ) :
         Components.__init__ ( self )
         
         ## take care about sPlots 
-        self.__splots                = []
-        self.__histo_data            = None
-        
+        self.__splots       = []
+        self.__histo_data   = None        
         self.__fit_result   = None
 
     @property
@@ -2375,8 +2373,11 @@ class PDF1(APDF1,FUN1) :
     """
     def __init__ ( self , name ,  xvar , tricks = True , **kwargs ) :
 
+        ## initialize the base 
         FUN1  .__init__ ( self , name = name , xvar = xvar  , tricks = tricks ,
                           fun = kwargs.pop ( 'pdf' , None ) , **kwargs )
+
+        ## initialize the base 
         APDF1 .__init__ ( self )
         
         self.config   = { 'name'    : self.name    ,
@@ -2387,7 +2388,6 @@ class PDF1(APDF1,FUN1) :
 
         self.__call_OK = isinstance ( self.xvar , ROOT.RooAbsRealLValue ) 
         
-
     # =========================================================================
     ## simple 'function-like' interface 
     def __call__ ( self , x , error = False , normalized = True  ) :
@@ -2619,8 +2619,9 @@ class PDF1(APDF1,FUN1) :
         from ostap.fitting.pdf_ops import pdf_convolution
         return pdf_convolution ( self , other )
 
-    
+    ## right modulus: convoluttion
     def __rmod__ ( self , other ) :
+        """ Right modulus: convoluttion """        
         from ostap.fitting.pdf_ops import pdf_convolution
         return pdf_convolution ( self , other )
         
@@ -2642,6 +2643,23 @@ class PDF1(APDF1,FUN1) :
                        xvar = self.xvar  ,
                        name = name if name else self.new_name ( 'fun1' ) ) 
     
+    # =========================================================================
+    ## Get the 1D-CDF from 1D-PDF
+    #  @see RooAbdPdf::createCdf
+    #  @code
+    #  pdf = ...
+    #  cdf = pdf.cdf () 
+    #  @endcode
+    def cdf ( self ) :
+        """ Get the 1D-CDF from 1D-PDF
+        - see `ROOT.RooAbdPdf.createCdf`
+        >>> pdf = ...
+        >>> cdf = pdf.cdf () 
+        """
+        assert 1 == len ( self.vars ) , 'One can make CDF only for 1D-PDF!'
+        fun  = self.pdf.createCdf ( self.variables )
+        name = self.generate_name ( prefix = 'cdf_' , name = self.name )  
+        return Fun1D ( fun , xvar = self.xvar , name = name )
     
 # =============================================================================
 ## @class Generic1D_pdf

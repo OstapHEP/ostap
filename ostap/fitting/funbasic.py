@@ -156,7 +156,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
 
     @property 
     def variables ( self ) :
-        """'variables' : variables/observables at list"""
+        """'variables' : variables/observables at (python) list"""
         return self.__variables
 
     @property
@@ -1528,7 +1528,7 @@ class FUN1(AFUN1,F1AUX) :
     # =========================================================================
     ## make a constant function 
     def __constant ( self , value ) :
-        """ake a constant function"""
+        """ Make a constant function"""
         return Fun1D ( value , xvar = self.xvar , name = self.new_name ( 'const1(%s)' % value ) ) 
     
     # =========================================================================
@@ -1539,7 +1539,7 @@ class FUN1(AFUN1,F1AUX) :
     #  ff = f1 + f2
     #  @endcode 
     def __add__ ( self , other ) :
-        """Add two functions
+        """ Add two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 + f2 
@@ -1555,7 +1555,7 @@ class FUN1(AFUN1,F1AUX) :
     #  ff = f1 - f2 
     #  @endcode 
     def __sub__ ( self , other ) :
-        """Subtract two functions
+        """ Subtract two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 + f2 
@@ -1572,7 +1572,7 @@ class FUN1(AFUN1,F1AUX) :
     #  ff = f1 * f2 
     #  @endcode 
     def __mul__ ( self , other ) :
-        """Multiply two functions
+        """ Multiply two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 * f2 
@@ -1590,7 +1590,7 @@ class FUN1(AFUN1,F1AUX) :
     #  ff = f1 / f2 
     #  @endcode 
     def __div__ ( self , other ) :
-        """Divide two functions
+        """ Divide two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 / f2 
@@ -1609,7 +1609,7 @@ class FUN1(AFUN1,F1AUX) :
     #  ff = f1 ** f2 
     #  @endcode 
     def __pow__ ( self , other ) :
-        """Power function  for two functions
+        """ Power function  for two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 ** f2 
@@ -1626,7 +1626,7 @@ class FUN1(AFUN1,F1AUX) :
     #  ff = f1 + f2
     #  @endcode 
     def __radd__ ( self , other ) :
-        """Add two functions
+        """ Add two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 + f2 
@@ -1642,7 +1642,7 @@ class FUN1(AFUN1,F1AUX) :
     #  ff = f1 - f2
     #  @endcode 
     def __rsub__ ( self , other ) :
-        """Subtract two functions
+        """ Subtract two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 - f2 
@@ -1658,7 +1658,7 @@ class FUN1(AFUN1,F1AUX) :
     #  ff = f1 * f2 
     #  @endcode 
     def __rmul__ ( self , other ) :
-        """Multiply two functions
+        """ Multiply two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 * f2 
@@ -1675,7 +1675,7 @@ class FUN1(AFUN1,F1AUX) :
     #  ff = f1 / f2 
     #  @endcode 
     def __rdiv__ ( self , other ) :
-        """Divide two functions
+        """ Divide two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 / f2 
@@ -1693,7 +1693,7 @@ class FUN1(AFUN1,F1AUX) :
     #  ff = f1 ** f2 
     #  @endcode 
     def __rpow__ ( self , other ) :
-        """Power function  for two functions
+        """ Power function  for two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 ** f2 
@@ -1709,7 +1709,7 @@ class FUN1(AFUN1,F1AUX) :
     #  ff = abs ( f ) 
     #  @endcode
     def __abs__ ( self , other = 1 ) :
-        """Absolute value :  |f(x)|
+        """ Absolute value :  |f(x)|
         >>> f1 = ...
         >>> ff = abs ( f ) 
         """
@@ -2085,7 +2085,7 @@ class FUN1(AFUN1,F1AUX) :
     #  @endcode 
     #  @see RooAsbReal::derivative 
     def dFdX ( self , *args ) :
-        """Get the derivative dF/dx for 1D-fuction
+        """ Get the derivative dF/dx for 1D-fuction
         >>> F    = ...
         >>> dFdx = F.dFdX ( ) 
         - see ROOT.RooAbsReal.derivative    
@@ -2157,7 +2157,7 @@ class Fun1D ( FUN1 ) :
 ## @class Id
 #  The most trivial function \f$ f(x) = x \f$
 class Id ( FUN1 ) :
-    """The most trivial function
+    """ The most trivial function
     f(x) = x
     """
     def __init__ ( self , xvar ,  name = '' ) :
