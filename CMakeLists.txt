@@ -1,10 +1,8 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 message ( "----> CMAKE  version    : " ${CMAKE_VERSION} ) 
 
-
 string(TIMESTAMP OSTAP_BUILD_TIMESTAMP   "%b %d, %Y, %H:%M [UTC]" UTC)
 string(TIMESTAMP OSTAP_BUILD_UTCUNIX     "%s"                     UTC)
-
 
 cmake_host_system_information(RESULT OSTAP_HOSTNAME QUERY HOSTNAME)
 cmake_host_system_information(RESULT OSTAP_DOMAIN   QUERY FQDN    )
@@ -26,8 +24,8 @@ include(CTest)
 
 set(OSTAP_VERSION_MAJOR 1)
 set(OSTAP_VERSION_MINOR 13)
-set(OSTAP_VERSION_PATCH 2)
-set(OSTAP_VERSION_TWEAK 1)
+set(OSTAP_VERSION_PATCH 3)
+set(OSTAP_VERSION_TWEAK 0)
 
 set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_PATCH}.${OSTAP_VERSION_TWEAK})
 
@@ -49,7 +47,7 @@ message ( "----> C++-compiler      : " $ENV{CXX} )
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 
 if ( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
-  set ( CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install CACHE PATH "..." FORCE )
+   set ( CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install CACHE PATH "..." FORCE )
 endif ( )
 
 

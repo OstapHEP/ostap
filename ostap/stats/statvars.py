@@ -121,7 +121,7 @@ QEXACT = 10000
 #  @endcode
 #  @see Ostap::StatVar::get_moment
 def data_get_moment ( data , order , center , expression , cuts = '' , *args ) :
-    """Get the moment of order 'order' relative to 'center'
+    """ Get the moment of order 'order' relative to 'center'
     >>> data =  ...
     >>> print data_get_moment ( data , 3 , 0.0 , 'mass' , 'pt>1' )
     >>> print data.get_moment (        3 , 0.0 , 'mass' , 'pt>1' ) ## ditto
@@ -133,7 +133,7 @@ def data_get_moment ( data , order , center , expression , cuts = '' , *args ) :
     assert isinstance ( expression , expression_types ) , 'Invalid type of expression!'
     assert isinstance ( cuts       , expression_types ) , 'Invalid type of cuts/weight!'
 
-    expression = str ( expression )
+    expression = str ( expression ).strip() 
     cuts       = str ( cuts       ).strip() 
     
     with rootException() : 
@@ -152,7 +152,7 @@ def data_get_moment ( data , order , center , expression , cuts = '' , *args ) :
 #  @endcode
 #  @see Ostap::StatVar::moment
 def  data_moment ( data , order , expression , cuts  = ''  , *args ) :
-    """Get the moment of order 'order' relative to 'center'
+    """ Get the moment of order 'order' relative to 'center'
     >>> data =  ...
     >>> print data_moment ( data ,  3 , 'mass' , 'pt>1' ) 
     >>> print data.moment (         3 , 'mass' , 'pt>1' ) ## ditto
@@ -162,7 +162,7 @@ def  data_moment ( data , order , expression , cuts  = ''  , *args ) :
     assert isinstance ( expression , expression_types ) , 'Invalid type of expression!'
     assert isinstance ( cuts       , expression_types ) , 'Invalid type of cuts/weight!'
     
-    expression = str ( expression )
+    expression = str ( expression ).strip() 
     cuts       = str ( cuts       ).strip() 
     
     with rootException() : 
@@ -182,8 +182,11 @@ def  data_moment ( data , order , expression , cuts  = ''  , *args ) :
 #  - For 3rd and  4th moments,  explicit  correction is applied
 #  - Uncertainty is calculated with O(1/n^2) precision
 #  @see Ostap::StatVar::central_moment
-def  data_central_moment ( data , order , expression , cuts  = '' , *args ) :
-    """Get the moment of order 'order' relative to 'center'
+def  data_central_moment ( data       ,
+                           order      ,
+                           expression ,
+                           cuts  = '' , *args ) :
+    """ Get the moment of order 'order' relative to 'center'
     >>> data =  ...
     >>> print data_central_moment ( data , 3 , 'mass' , 'pt>1' ) 
     >>> print data.central_moment (        3 , 'mass' , 'pt>1' ) ## ditto
@@ -196,7 +199,7 @@ def  data_central_moment ( data , order , expression , cuts  = '' , *args ) :
     assert isinstance ( expression , expression_types ) , 'Invalid type of expression!'
     assert isinstance ( cuts       , expression_types ) , 'Invalid type of cuts/weight!'
     
-    expression = str ( expression )
+    expression = str ( expression ).strip() 
     cuts       = str ( cuts       ).strip() 
 
     with rootException() : 
@@ -215,8 +218,11 @@ def  data_central_moment ( data , order , expression , cuts  = '' , *args ) :
 #  @see Ostap::Math::Statistic
 #  @see Ostap::Math::WStatistic
 #  @see Ostap::statVar::the_moment
-def data_get_stat ( data , statobj , expression , cuts = '' , *args ) :
-    """Get the (W)Statistic-based statistics.counters from data  
+def data_get_stat ( data        ,
+                    statobj     ,
+                    expression  ,
+                    cuts   = '' , *args ) :
+    """ Get the (W)Statistic-based statistics.counters from data  
     >>> data   = ...
     >>> stat   = Ostap.Math.HarmonicMean() 
     >>> result = data.get_stat ( stat , 'x/y+z' , '0<qq' )
@@ -229,7 +235,7 @@ def data_get_stat ( data , statobj , expression , cuts = '' , *args ) :
     assert isinstance ( expression , expression_types ) , 'Invalid type of expression!'
     assert isinstance ( cuts       , expression_types ) , 'Invalid type of cuts/weight!'
     
-    expression = str ( expression )
+    expression = str ( expression ).strip() 
     cuts       = str ( cuts       ).strip()
     
     if isinstance ( data , ROOT.TTree ) and isinstance ( statobj , Ostap.Math.Statistic ) and not cuts : 
@@ -254,7 +260,7 @@ def data_get_stat ( data , statobj , expression , cuts = '' , *args ) :
 #  @see Ostap::WStatEntity
 #  @see Ostap::StatVar::statVar
 def data_statistics ( data , expressions , cuts = '' , *args ) :
-    """Get statistics from data 
+    """ Get statistics from data 
     >>> data    = ...
     >>> result  = data_statistics ( data , 'x/y+z' , '0<qq' )
     >>> results = data_statistics ( data , 'x/y;z' , '0<qq' ) ## result is dictionary
@@ -302,7 +308,7 @@ def data_statistics ( data , expressions , cuts = '' , *args ) :
 #  @see Ostap::WStatEntity
 #  @see Ostap::StatVar::statVar
 def data_minmax ( data , expressions , cuts = '' , *args ) :
-    """Get min/max from data 
+    """ Get min/max from data 
     >>> data    = ...
     >>> result  = data_minmax ( data , 'x/y+z' , '0<qq' )
     >>> results = data_minmax ( data , 'x/y;z' , '0<qq' ) ## result is dictionary
@@ -332,9 +338,8 @@ def data_minmax ( data , expressions , cuts = '' , *args ) :
 def data_range ( data              ,
                  expressions       ,
                  cuts      = ''    ,
-                 delta     = 0.01  ,
-                 *args             ) : 
-    """Get suitable ranges for drawing expressions/variables
+                 delta     = 0.01  , *args             ) : 
+    """ Get suitable ranges for drawing expressions/variables
     - In case there is no suitable range None is returned 
     >>> data = ...
     >>> result  = data_range ( data , 'sin(x)*100*y' , 'x<0' )
@@ -360,7 +365,7 @@ def data_range ( data              ,
 #  @see Ostap::Math::WCovariance 
 #  @see Ostap::StatVar::statCov
 def data_covariance ( data , expression1 , expression2 , cuts = '' , *args ) :
-    """Get the covariance from data 
+    """ Get the covariance from data 
     >>> data   = ...
     >>> result = data_covariance ( data , 'x/y+z' , 'qq' , 'u>0')
     - see Ostap.Math.Covariance
@@ -392,9 +397,9 @@ def data_covariance ( data , expression1 , expression2 , cuts = '' , *args ) :
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2017-02-19
-def data_covariances ( tree        ,
-                       expressions ,
-                       cuts = ''   , *args  ) :
+def data_covariances ( tree         ,
+                       expressions  ,
+                       cuts    = '' , *args  ) :
     """Get the statistic for the list of expressions 
     >>> tree  = ...
     >>> stats , cov2 , len = data_covariances ( data , ['x' , 'y'] )
@@ -449,12 +454,12 @@ def data_covariances ( tree        ,
 #  @endcode 
 def data_statvector ( data        ,
                       expressions , 
-                      cuts  = ''  ) :
+                      cuts  = ''  , *args ) :
     """Get the effective vector of mean-values with covariances for the dataset
     >>> vct = data_statvct ( data , 'a,y,z' ,'w' ) 
     """
     
-    stats , cov2, _  = data_covariances ( data , expressions , cuts = cuts )
+    stats , cov2, _  = data_covariances ( data , expressions , cuts , *args )
     
     N  = len  ( stats )
     v  = Ostap.Vector ( N ) ()
@@ -470,7 +475,9 @@ def data_statvector ( data        ,
 #  results = data_sum ( data , 'x;y;z' , 'pt>1' ) ## result is dictionary 
 #  @encode
 #  @see Ostap::StatVar::statVar
-def data_sum ( data , expressions , cuts = '' , *args ) :
+def data_sum ( data        ,
+               expressions ,
+               cuts   = '' , *args ) :
     """Get (weighted) sum over the variables 
     >>> data    = ...
     >>> result  = data_sum ( data , 'x/y+z' , '0<qq' )
@@ -497,7 +504,7 @@ def data_sum ( data , expressions , cuts = '' , *args ) :
 #  @encode
 #  @see Ostap::StatVar::nEff 
 def data_nEff ( data , expression = '' , *args ) :
-    """Get statistics from data 
+    """ Get statistics from data 
     >>> data    = ...
     >>> result  = data_nEff ( data , 'x/y+z' )
     - see Ostap.StatVar.nEff
@@ -679,7 +686,7 @@ def data_the_moment ( data , order , expression , cuts = '' , *args ) :
     assert isinstance ( expression , expression_types ) , 'Invalid type of expression!'
     assert isinstance ( cuts       , expression_types ) , 'Invalid type of cuts/weight!'
     
-    expression = str ( expression )
+    expression = str ( expression ).strip() 
     cuts       = str ( cuts       ).strip() 
     
     if isinstance ( data , ROOT.TTree ) and not cuts :
@@ -778,7 +785,7 @@ def data_skewness ( data , expression , cuts  = '' , *args ) :
     assert isinstance ( expression , expression_types ) , 'Invalid type of expression!'
     assert isinstance ( cuts       , expression_types ) , 'Invalid type of cuts/weight!'
     
-    expression = str ( expression )
+    expression = str ( expression ).strip() 
     cuts       = str ( cuts       ).strip()
     
     with rootException() : 
@@ -824,7 +831,7 @@ def  data_quantile ( data , q , expression , cuts  = '' , exact = QEXACT , *args
     assert isinstance ( expression , expression_types ) , 'Invalid type of expression!'
     assert isinstance ( cuts       , expression_types ) , 'Invalid type of cuts/weight!'
     
-    expression = str ( expression )
+    expression = str ( expression ).strip() 
     cuts       = str ( cuts       ).strip()
     
     if   exact is True  :
@@ -871,7 +878,7 @@ def data_interval ( data , qmin ,  qmax , expression , cuts = '' , exact = QEXAC
     assert isinstance ( expression , expression_types ) , 'Invalid type of expression!'
     assert isinstance ( cuts       , expression_types ) , 'Invalid type of cuts/weight!'
     
-    expression = str ( expression )
+    expression = str ( expression ).strip() 
     cuts       = str ( cuts       ).strip()
 
     qmin, qmax = min ( qmin ,  qmax ) , max  ( qmin, qmax  )
@@ -943,7 +950,7 @@ def data_quantiles ( data , quantiles , expression , cuts  = '' , exact = QEXACT
     assert isinstance ( expression , expression_types ) , 'Invalid type of expression!'
     assert isinstance ( cuts       , expression_types ) , 'Invalid type of cuts/weight!'
     
-    expression = str ( expression )
+    expression = str ( expression ).strip() 
     cuts       = str ( cuts       ).strip()
 
     if   isinstance ( quantiles , float ) and 0 < quantiles < 1 : 
