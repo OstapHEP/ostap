@@ -4,7 +4,9 @@
 from   ostap.utils.timing      import timing
 from   builtins                import range
 from   ostap.fitting.ds2numpy  import ds2numpy
-import ostap.fitting.models    as     Models 
+import ostap.fitting.models    as     Models
+from   ostap.plotting.canvas   import use_canvas
+import ostap.math.models 
 import ostap.fitting.roofit 
 import ROOT, random 
 # =============================================================================
@@ -20,7 +22,7 @@ else :
 
 # =============================================================================
 def test_small_ds():
-
+    
     logger = getLogger ( 'test_ds2numpy_small_ds' ) 
     
     NN = 1000 
@@ -50,6 +52,12 @@ def test_small_ds():
     
     ws = ds2numpy ( data, ['x', 'y' , 'i' ] , more_vars = { 'gaus1' : g1 ,
                                                             'gaus2' : g2 } )
+    
+    cdfs = data.cdfs ( 'x,y' )
+    for key in cdfs :
+        with use_canvas ( 'test_small_ds: CDF(%s)' % key , wait = 2 ) : 
+            fun = cdfs [ key ]
+            fun.draw() 
     
     print ( ws  )
 
@@ -154,7 +162,7 @@ def test_large_ds_with_weights():
 
 # ============================================================================
 def test_large_ds_without_weights():
-
+    
     logger = getLogger ( 'test_ds2numpy_large_ds_no_weights' )
 
     N  = 100
@@ -181,6 +189,13 @@ def test_large_ds_without_weights():
     var_lst = list ( set( "x{}".format( random.randint ( 0 , N - 1 ) ) for i in range ( 50 ) ) ) 
     
     ws = ds2numpy(data, var_lst )
+    
+    cdfs = data.cdfs ( 'x0,x1,x2,x3' )
+    for key in cdfs :
+        with use_canvas ( 'test_large_ds: CDF(%s)' % key , wait = 2 ) : 
+            fun = cdfs [ key ]
+            fun.draw() 
+    
 
 # ============================================================================
 

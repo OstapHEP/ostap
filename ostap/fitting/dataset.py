@@ -752,7 +752,7 @@ def _rds_bootstrap_ ( dataset , size = 100 , extended = False , delete = False )
 #  subset =  data.sample ( 0.01 )  ## get 1% of events 
 #  @endcode 
 def _rad_sample_ ( self , num ) :
-    """Get (random) unique sub-sample from the dataset
+    """ Get (random) unique sub-sample from the dataset
     >>> data   = ...
     >>> subset =  data.sample ( 100  )  ## get 100   events 
     >>> subset =  data.sample ( 0.01 )  ## get 1% of events 
@@ -779,7 +779,7 @@ def _rad_sample_ ( self , num ) :
 #  subset =  data.choince ( 0.01 )  ## get 1% of events 
 #  @endcode 
 def _rad_choice_ ( self , num ) :
-    """Get (random) sub-sample from the dataset with replacement 
+    """ Get (random) sub-sample from the dataset with replacement 
     >>> data   = ...
     >>> subset =  data.chince ( 100  )  ## get 100   events 
     >>> subset =  data.choice ( 0.01 )  ## get 1% of events 
@@ -809,7 +809,7 @@ def _rad_choice_ ( self , num ) :
 #  shuffled = data.shuffle()
 #  @endcode 
 def _rad_shuffle_ ( self ) :
-    """Get the shuffled sample
+    """ Get the shuffled sample
     >>> data = ....
     >>> shuffled = data.shuffle()
     """
@@ -845,7 +845,7 @@ def _rad_subset_ ( dataset                 ,
     assert isinstance ( cut_range , expression_types ) or not cut_range, \
         "Invalid type of cut_range: %s" % type ( cut_range )
     
-    cut_range   = str(cut_range).strip() if cut_range else ''
+    cut_range   = str ( cut_range ).strip() if cut_range else ''
 
     ## variables in this dataset 
     vset = dataset.get()
@@ -890,7 +890,7 @@ def _rad_subset_ ( dataset                 ,
 def _rds_seek_for_duplicates_ ( dataset          , 
                                 entrytag         , 
                                 criterium = ''   ) : 
-    """Helper technical method to seek for unique or duplicated entries
+    """ Helper technical method to seek for unique or duplicated entries
     """
     
     if   isinstance ( entrytag , ROOT.RooAbsArg ) : entrytag = [ entrytag ]
@@ -945,7 +945,7 @@ def _rds_seek_for_duplicates_ ( dataset          ,
 #  ... ...
 def _rds_duplicates_ ( dataset  ,
                        entrytag ) :
-    """Iterator over the duplicated groups 
+    """ Iterator over the duplicated groups 
     >>> for group in dataset.duplicats ( ( 'evt' , 'run' ) ) :
     >>> ... for entry in group :
     >>> ... ...
@@ -1051,7 +1051,7 @@ def _rds_make_unique_ ( dataset          ,
                         criterium = ''   , 
                         seed      = None ,
                         report    = True ) :
-    """Make a copy of dataset only with unique  entries 
+    """ Make a copy of dataset only with unique  entries 
     >>> dataset = ...
     >>> unique = dataset.make_unique ( ( 'evt' , 'run' ) , choice = 'random' )
     >>> unique = dataset.make_unique ( ( 'evt' , 'run' ) , choice = 'first'  )
@@ -1212,7 +1212,7 @@ def ds_project  ( dataset                ,
                   first     =  0          ,
                   last      = LAST_ENTRY  ,
                   progress  = False       ) :
-    """Helper project method for RooDataSet/DataFrame/... and similar objects 
+    """ Helper project method for RooDataSet/DataFrame/... and similar objects 
 
     >>> h1   = ROOT.TH1D(... )
     >>> dataset.project ( h1.GetName() , 'm', 'chi2<10' ) ## project variable into histo
@@ -1419,7 +1419,7 @@ def ds_draw ( dataset ,
 # =============================================================================
 ## get the attibute for RooDataSet
 def _ds_getattr_ ( dataset , attname ) :
-    """Get the attibute from RooDataSet 
+    """ Get the attibute from RooDataSet 
 
     >>> dset = ...
     >>> print dset.pt
@@ -1446,7 +1446,7 @@ def get_var ( self, aname ) :
 #  @endcode
 #  @see Ostap::StatVar::hasEntry
 def _ds_has_entry_ ( dataset , selection , *args ) : 
-    """Is there at leats one entry that satoisfies selection criteria?
+    """ Is there at leats one entry that satoisfies selection criteria?
     >>> dataset = ...
     >>> dataset.hasEntry ( 'pt>100' )
     >>> dataset.hasEntry ( 'pt>100' , 0, 1000 ) ## 
@@ -1500,7 +1500,7 @@ def ds_range  ( dataset                ,
 if not hasattr ( ROOT.RooDataSet , '_old_reset_' ) :
     ROOT.RooDataSet._old_reset_ = ROOT.RooDataSet.reset
     def _ds_new_reset_ ( self ) :
-        """Clear dataset storage
+        """ Clear dataset storage
         >>> print ds
         >>> ds.clear()
         >>> ds.erase() ## ditto
@@ -1588,7 +1588,7 @@ _new_methods_ += [
 #  @date 2019-05-30
 # =============================================================================
 def _rad_sFactor_ ( data ) :
-    """Get the s-factor for (weighted) dataset, where
+    """ Get the s-factor for (weighted) dataset, where
     s-factor is defined as
      s_{w} equiv frac{ sum w_i}{ sum w_i^2}
      
@@ -1667,12 +1667,11 @@ _new_methods_ += [
 #  cloned  = datatset.clone ( 'new_name') 
 #  @endcode
 def _rds_clone_ ( dataset , name = '' ) :
-    """Clone dataset
+    """ Clone dataset
     >>> dataset = ...
     >>> cloned  = datatset.clone ( 'new_name') 
     """
-    name = name if name else dsID () 
-    
+    name = name if name else dsID ()     
     return ROOT.RooDataSet ( dataset , name ) 
 
 # =============================================================================
@@ -1682,12 +1681,11 @@ def _rds_clone_ ( dataset , name = '' ) :
 #  cloned  = datatset.clone ( 'new_name') 
 #  @endcode
 def _rdh_clone_ ( dataset , name = '' ) :
-    """Clone dataset
+    """ Clone dataset
     >>> dataset = ...
     >>> cloned  = datatset.clone ( 'new_name') 
     """
-    name = name if name else dsID () 
-    
+    name = name if name else dsID ()     
     return ROOT.RooDataHist ( dataset , name ) 
 
 if not hasattr ( ROOT.RooDataSet  , 'clone' ) :
@@ -1703,7 +1701,7 @@ if not hasattr ( ROOT.RooDataHist , 'clone' ) :
 #  dataset.addVar ( 'NewVar' , 'A+B/3' )
 #  @endcode 
 def _rds_addVar_ ( dataset , vname , formula ) : 
-    """Add/calculate variable to RooDataSet
+    """ Add/calculate variable to RooDataSet
 
     >>> dataset.addVar ( 'ratio' , 'pt/pz' )
     """
@@ -1741,7 +1739,7 @@ def _rds_addVar_ ( dataset , vname , formula ) :
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 def add_new_var ( dataset , varname , what , *args ) : 
-    """Add/calculate/sample variable to RooDataSet
+    """ Add/calculate/sample variable to RooDataSet
 
     >>> dataset.add_new_var ( 'ratio' , 'pt/pz' )  ## use RooFormulaVar
     
@@ -1813,7 +1811,7 @@ def _rds_makeWeighted_ ( dataset           ,
                          weightvar         ,
                          cuts   = ''       ,
                          wname  = 'Weight' ) :
-    """Make weighted data set from unweighted dataset
+    """ Make weighted data set from unweighted dataset
     
     >>> dataset = ...
     >>> wdata   = dataset.makeWeighted ( 'S_sw' )    
@@ -1922,7 +1920,7 @@ def setStorage ( new_type = RAD.Tree , silent = False ) :
 ## @class UseStorage
 #  Context manager to change the storage type
 class UseStorage(object) :
-    """Context manager to change the storage type
+    """ Context manager to change the storage type
     >>> with UseStorage() :
     ...
     """
@@ -2317,7 +2315,7 @@ def _ds_table_1_ ( dataset                ,
                    last      = LAST_ENTRY ,
                    prefix    = ''         ,
                    title     = ''         ) :
-    """Print data set as table
+    """ Print data set as table
     """
     
     first, last = evt_range ( len ( dataset ) , first , last ) 
@@ -2427,7 +2425,7 @@ def _ds_table_ (  dataset                ,
                   last      = LAST_ENTRY ,                 
                   prefix    = ''         ,
                   title     = ''         ) :
-    """print dataset in a form of the table
+    """ Print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
     """
@@ -2454,7 +2452,7 @@ def _ds_table2_ (  dataset                ,
                    last      = LAST_ENTRY ,                 
                    prefix    = ''         ,
                    title     = ''         ) :
-    """print dataset in a form of the table
+    """ Print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
     """
@@ -2470,7 +2468,7 @@ def _ds_table2_ (  dataset                ,
 # =============================================================================
 ##  print DataSet
 def _ds_print2_ ( dataset ) :
-    """Print dataset"""
+    """ Print dataset"""
     if dataset.isWeighted() and not isinstance ( dataset , ROOT.RooDataHist ) :
         store = dataset.store()
         if valid_pointer ( store ) and isinstance ( store , ROOT.RooTreeDataStore ) : pass
@@ -2505,7 +2503,7 @@ _new_methods_ += [
 #  ds_sym = ds.symmetrize ( [ 'var1' , 'var2' , 'var3' ] )
 #  @endcode
 def _ds_symmetrize_ ( dataset , variables ) :
-    """Make symmetrization/randomization of the dataset
+    """ Make symmetrization/randomization of the dataset
     >>> ds     = ...
     >>> ds_sym = ds.symmetrize ( [ 'var1' , 'var2' ] )
     >>> ds_sym = ds.symmetrize ( [ 'var1' , 'var2' , 'var3' [ )
@@ -2578,18 +2576,17 @@ _new_methods_ += [
 #  @endcode 
 #  @see Ostap::Utils::getWeight
 def _ds_wname_ ( dataset ) :
-    """Get the name of weigth variable in dataset
+    """ Get the name of weigth variable in dataset
     >>> dataset = ...
     >>> wname   = dataset.wname() 
     """
-    
     if not dataset.isWeighted() : return '' ## UNWEIGHTED!
-
+    ## 
     attr = '_weight_var_name'
     if not hasattr ( dataset , attr ) :
         wn = Ostap.Utils.getWeight ( dataset )    
         setattr ( dataset , attr , wn ) 
-        
+    ## 
     return getattr ( dataset , attr , '' )
 # =============================================================================
 
@@ -2600,8 +2597,8 @@ def _ds_wname_ ( dataset ) :
 #  wvar    = dataset.weightVar() 
 #  @endcode 
 def _ds_weight_var_ ( dataset ) :
-    """Get the weight variable from the dataset
-    
+    """ Get the weight variable from the dataset
+
     >>> dataset = ...
     >>> wvar    = dataset.weightVar()
     
@@ -2619,16 +2616,16 @@ def _ds_weight_var_ ( dataset ) :
 #   <code>StoreAsymError</code> attributes for the weight variable 
 #  @see Ostap::Utils::storeError
 def _ds_store_error_ ( dataset ) :
-    """Are weight errors stored in dataset?
+    """ Are weight errors stored in dataset?
     >>> dataset     = ...
     >>> store_error = dataset.store_error () 
     The function checks the `StoreError` and 
     `StoreAsymError` attributes for the weight variable 
     - see Ostap::Utils::storeError
     """
-    
+    ## 
     if not dataset.isWeighted() : return False ## UNWEIGHTED!
-    
+    ## 
     attr = '_store_weight_error_'
     if not hasattr ( dataset , attr ) :        
         wn = Ostap.Utils.storeError  (  dataset )
@@ -2647,7 +2644,7 @@ def _ds_store_error_ ( dataset ) :
 #  The function checks the <code>StoreAsymError</code> attribute for the weight variable 
 #  @see Ostap::Utils::storeError
 def _ds_store_asym_error_ ( dataset ) :
-    """Are weight errors stored in dataset?
+    """ Are weight errors stored in dataset?
     >>> dataset     = ...
     >>> store_error = dataset.store_asym_error () 
     The function checks the `StoreAsymError` attributes for the weight variable 
@@ -2705,7 +2702,7 @@ else :
 #  data.cvs ( 'data.csv' , more_vars = ( 'a+b/c' , 'sin(a)/b' ) ) ## more variables 
 #  @endcode 
 def ds_to_csv ( dataset , fname , vars = () , more_vars = () , weight_var = '' , progress = False , mode = 'w' , **kwargs ) :
-    """Convert dataset to CSV format
+    """ Convert dataset to CSV format
     >>> data = ...
     >>> data.cvs ( 'data.csv' )
     >>> data.cvs ( 'data.csv' , dialect = 'unix'      )
@@ -2794,7 +2791,7 @@ _new_methods_ += [
 #  tree    = dataset.asTree() 
 #  @endcode
 def ds_to_tree ( dataset , filename = '' ) :
-    """Get dataset as `ROOT.TTree`
+    """ Get dataset as `ROOT.TTree`
     - for Tree-based datasets gets the internal tree
     - otherwise tree will be created
     
@@ -2888,7 +2885,7 @@ _new_methods_ += [
 #  varr , weights = data.slice ( 'a ; b ; c' , 'd>0' )
 #  @endcode
 def _rda_slice_ ( dataset , variables , cuts = '' , transpose = False , cut_range = '' , *args ) :
-    """Get "slice" from <code>RooAbsData</code> in form of numpy array
+    """ Get "slice" from <code>RooAbsData</code> in form of numpy array
     >>> data = ...
     >>> varr , weights = data.slice ( 'a : b : c' , 'd>0' )
     >>> varr , weights = data.slice ( 'a , b , c' , 'd>0' )
@@ -3132,7 +3129,7 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' , silent = False , title = ''
 #  ds.binned ()     ## ditto 
 #  @endcode 
 def _ds_binned_ ( ds ) :
-    """Ninned dataset ?
+    """ Binned dataset ?
     >>> ds = ...
     >>> ds.binned ()     ## ditto 
     """
@@ -3154,7 +3151,7 @@ _new_methods_ += [
 #  ds1 == ds2 
 #  @endcode 
 def ds_equal ( ds1 , ds2 ) : 
-    """Are two datasets equal by content?
+    """ Are two datasets equal by content?
     ds1 = ...
     ds2 = ...
     ds_equal ( ds1 , ds2 ) 
@@ -3257,7 +3254,7 @@ def ds_equal ( ds1 , ds2 ) :
 #  ds1 != ds2 
 #  @endcode 
 def ds_nonequal ( ds1 , ds2 ) : 
-    """Are two datastes non-equal by content?
+    """ Are two datastes non-equal by content?
     ds1 = ...
     ds2 = ...
     ds_nonequal ( ds1 , ds2 ) 
@@ -3268,14 +3265,14 @@ def ds_nonequal ( ds1 , ds2 ) :
 # =============================================================================
 ## Are two datasets equal by content?
 def _ds_eq_ ( ds1 , ds2 ) :
-    """Are two datasets equal by content?"""
+    """ Are two datasets equal by content?"""
     if not isinstance  ( ds2 , ROOT.RooAbsData ) : return NotImplemented 
     return ds_equal ( ds1 , ds2 ) 
 
 # =============================================================================
 ## Are two datasets non-equal by content?
 def _ds_ne_ ( ds1 , ds2 ) :
-    """Are two datasets non-equal by content?"""
+    """ Are two datasets non-equal by content?"""
     if not isinstance  ( ds2 , ROOT.RooAbsData ) : return NotImplemented 
     return ds_nonequal ( ds1 , ds2 ) 
 
@@ -3313,7 +3310,7 @@ def _rad_rows_ ( dataset                ,
                  first      = 0          ,
                  last       = LAST_ENTRY ,
                  progress   = False      ) :
-    """Iterator for rows in dataset
+    """ Iterator for rows in dataset
     >>> dataset = ...
     >>> for index, row , weight in dataset.rows ( 'pt, pt/p, mass ' , 'pt>1' ) :
     >>>    print (index, row, weight) 

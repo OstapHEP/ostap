@@ -21,12 +21,13 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.meta_info         import root_info
-from   ostap.core.ostap_types       import string_types, dictlike_types
+from   ostap.core.ostap_types       import string_types, dictlike_types, sized_types
 from   ostap.core.core              import Ostap, loop_items 
 from   ostap.utils.utils            import split_range 
 from   ostap.fitting.dataset        import useStorage
 from   ostap.fitting.funbasic       import AFUN1 
-from   ostap.utils.progress_bar     import progress_bar 
+from   ostap.utils.progress_bar     import progress_bar
+from   ostap.trees.cuts             import vars_and_cuts 
 import ostap.fitting.roocollections
 import ROOT
 # =============================================================================
@@ -73,54 +74,28 @@ if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
         - attention: Conversion to `ROOT.RooVectorDataStore` is used! 
         """
         
-        cuts      = str ( cuts      ).strip () 
-        cut_range = str ( cut_range ).strip() if cut_range else ''
-
+        if isinstance ( var_lst , string_types ) : var_lst = [ var_lst ]
+        
         # =====================================================================
         ## 1) get names of all requested variables
         if   all ( isinstance ( v , string_types   ) for v in var_lst ) :
-            vnames = [ v          for  v in var_lst ]
+            vnames , cuts , _ = vars_and_cuts ( var_lst , cuts ) 
         elif all ( isinstance ( v , ROOT.RooAbsArg ) for v in var_lst ) :
             vnames = [ v.GetName() for v in var_lst ]
         else :
             raise TypeError ( "Invalid type of `var_list`!" ) 
 
+        cuts      = str ( cuts      ).strip () 
+        cut_range = str ( cut_range ).strip () if cut_range else ''
+        
         # =====================================================================
         ## 2) check that all variables are present in the dataset 
-        assert all ( ( v in dataset ) for v in var_lst ) , 'Not all variables are in dataset!'
-
-        funcs = [] 
-        if more_vars and isinstance ( more_vars , dictlike_types ) :
-            for name , fun in loop_items ( more_vars ) :
-                if   isinstance ( fun , AFUN1           ) : absreal = fun.fun
-                elif isinstance ( fun , ROOT.RooAbsPdf  ) : absreal = fun
-                elif isinstance ( fun , ROOT.RooAbsReal ) : absreal = fun
-                else :
-                    raise TypeError ( "Invald type ofun/pdf" )
-                obsvars = absreal.getObservables ( dataset )
-                item    = name , absreal , obsvars
-                funcs.append ( item )
-        elif more_vars and all ( ( isinstance ( v , ( ROOT.RooAbsReal , AFUN1 ) ) for v in more_vars ) ) :
-            for v in more_vars :
-                if isinstance ( v  , AFUN1 ) : absreal = v.fun
-                else                         : absreal = v  
-                obsvars = absreal.getObservables ( dataset )
-                item    = v.name , absreal , obsvars
-                funcs.append ( item )
-        elif more_vars :
-            for name, var in more_vars :
-                if   isinstance ( var , AFUN1           ) : absreal = var.fun
-                elif isinstance ( var , ROOT.RooAbsReal ) : absreal = var   
-                else :
-                    raise TypeError ( "Invalid content of 'more_vars'!" )
-                obsvars = absreal.getObservables ( dataset )
-                item    = name , absreal , obsvars
-                funcs.append ( item )
+        assert all ( ( v in dataset ) for v in vnames ) , 'Not all variables are in dataset!'
 
         # =====================================================================
         ## 3) reduce dataset if only a small subset of variables is requested 
         nvars = len ( dataset.get() )
-        if 2 * len ( vnames )  <= nvars and not funcs :            
+        if 2 * len ( vnames )  <= nvars and not more_vars  :            
             with useStorage ( ROOT.RooAbsData.Vector ) : 
                 dstmp  = dataset.subset ( vnames , cuts = cuts , cut_range = cut_range )
             result = ds2numpy ( dstmp , vnames , more_vars = more_vars )
@@ -133,12 +108,58 @@ if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
         ## 4) if cuts or cut-range is specified, assume cuts are hash and make a filtering 
         if cuts or cut_range :
             with useStorage ( ROOT.RooAbsData.Vector ) :
-                dstmp = dataset.subset ( vnames if not funcs else [] ,  cuts = cuts , cut_range = cut_range )
+                dstmp = dataset.subset ( vnames if not more_vars else [] , cuts = cuts , cut_range = cut_range )
             result = ds2numpy ( dstmp , vnames , more_vars = more_vars )
             ## dstmp.erase()
             dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
             del dstmp 
             return result
+
+        funcs    = []
+        formulas = []
+        varlst   = dataset.varlst () 
+        if more_vars and isinstance ( more_vars , dictlike_types ) :
+            for name , fun in loop_items ( more_vars ) :
+                assert not name in dataset, 'da2numpy: no way to redefine variable `%s`!' % name 
+                if   isinstance ( fun , AFUN1           ) : absreal = fun.fun
+                elif isinstance ( fun , ROOT.RooAbsPdf  ) : absreal = fun
+                elif isinstance ( fun , ROOT.RooAbsReal ) : absreal = fun
+                elif isinstance ( fun , string_types    ) :
+                    formula = Ostap.FormulaVar ( name , fun , varlst )
+                    formulas.append ( formula ) 
+                    absreal = formula
+                else :
+                    raise TypeError ( "Invalid type of fun/pdf" )
+                obsvars = absreal.getObservables ( dataset )
+                item    = name , absreal , obsvars
+                funcs.append ( item )
+        elif more_vars :
+            for item in more_vars :                
+                len2 = isinstance ( item , sized_types ) and 2 == len ( item )
+                name = '' 
+                if   isinstance ( item , AFUN1           ) : absreal = item.fun
+                elif isinstance ( item , ROOT.RooAbsPdf  ) : absreal = item
+                elif isinstance ( item , ROOT.RooAbsReal ) : absreal = item
+                elif len2 and isinstance ( item [ 0 ] , string_types ) and isinstance ( item [1] , AFUN1          ) :
+                    absreal, name = item[1].fun , item[0]
+                elif len2 and isinstance ( item [ 0 ] , string_types ) and isinstance ( item [1] , ROOT.RooAbsPdf ) :
+                    absreal, name = item[1]     , item[0]
+                elif len2 and isinstance ( item [ 0 ] , string_types ) and isinstance ( item [1] , ROOT.RooAbsPdf ) :
+                    absreal, name = item[1]     , item[0]
+                elif len2 and isinstance ( item [ 0 ] , string_types ) and isinstance ( item [1] , string_types   ) :
+                    formula = Ostap.FormulaVar ( item [ 0 ] , item [ 1 ] , varlst )
+                    formulas.append ( formula ) 
+                    absreal, name = formula , item [ 0 ]                    
+                else :
+                    raise TypeError ( "Invalid type of fun/pdf!" )                
+                obsvars = absreal.getObservables ( dataset )
+                item    = name if name else absreal.name , absreal , obsvars
+                funcs.append ( item )
+
+        # =====================================================================
+        for item in funcs :
+            name , _ , _ = item 
+            assert not name in dataset, 'da2numpy: no way to redefine variable `%s`!' % name 
 
         # =========================================================================
         ## 5) convert to VectorDataStore
@@ -227,10 +248,12 @@ if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                     obsvars.assign ( entry )
                     data [ vname ] [ i ] = func.getVal()   
                 
-        if delsource : 
+        if delsource :
             source.reset()
             del source
             
+        del funcs
+        del formulas 
         return data
 
     # =========================================================================
@@ -255,57 +278,31 @@ elif   np  :  ## ROOT < 6.26
         """ Convert dataset into numpy array using (slow) explicit loops
         """
         
-        cuts      = str ( cuts      ).strip () 
-        cut_range = str ( cut_range ).strip () if cut_range else ''
 
+        if isinstance ( var_lst , string_types ) : var_lst = [ var_lst ]
+        
         # =====================================================================
         ## 1) check that all variables are present in dataset 
         if   all ( isinstance ( v , string_types   ) for v in var_lst ) :
-            vnames = [ v          for  v in var_lst ]
+            vnames , cuts , _  = vars_and_cuts ( vnames , cuts )
         elif all ( isinstance ( v , ROOT.RooAbsArg ) for v in var_lst ) :
             vnames = [ v.GetName() for v in var_lst ]
         else :
             raise TypeError ( "Invalid type of `var_list`!" ) 
 
+        cuts      = str ( cuts      ).strip () 
+        cut_range = str ( cut_range ).strip () if cut_range else ''
+        
         # =====================================================================
         ## 2) check that all variables are present in the dataset 
-        assert all ( ( v in dataset ) for v in var_lst ) , 'Not all variables are in dataset!'
- 
-        funcs = [] 
-        if more_vars and isinstance ( more_vars , dictlike_types ) :
-            for name , fun in loop_items ( more_vars ) :
-                if isinstance ( fun , AFUN1 ) :
-                    absreal = fun.fun
-                elif isinstance( fun , ROOT.RooAbsPdf  ) : absreal = fun
-                elif isinstance( fun , ROOT.RooAbsReal ) : absreal = fun
-                else :
-                    raise TypeError ( "Invald type ofun/pdf" )
-                obsvars = absreal.getObservables ( dataset )
-                item    = name , absreal , obsvars
-                funcs.append ( item )
-        elif more_vars and all ( ( isinstance ( v , ( ROOT.RooAbsReal , AFUN1 ) ) for v in more_vars ) ) :
-            for v in more_vars :
-                if isinstance ( v  , AFUN1 ) : absreal = v.fun
-                else                         : absreal = v  
-                obsvars = absreal.getObservables ( dataset )
-                item    = v.name , absreal , obsvars
-                funcs.append ( item )
-        elif more_vars :
-            for name, var in more_vars :
-                if   isinstance ( var , AFUN1           ) : absreal = var.fun
-                elif isinstance ( var , ROOT.RooAbsReal ) : absreal = var   
-                else :
-                    raise TypeError ( "Invalid content of 'more_vars'!" )
-                obsvars = absreal.getObservables ( dataset )
-                item    = name , absreal , obsvars
-                funcs.append ( item )
+        assert all ( ( v in dataset ) for v in vnames ) , 'Not all variables are in dataset!'
 
         # =====================================================================
         ## 3) reduce dataset if only a small subset of variables is requested 
         nvars = len ( dataset.get() )
-        if 2 * len ( vnames )  <= nvars and not funcs :
+        if 2 * len ( vnames )  <= nvars and not more_vars  :
             dstmp  = dataset.subset ( vnames )
-            result = ds2numpy ( dstmp , vnames , more_vars = more_vars , cuts = cuts , cut_range = cut_range )
+            result = ds2numpy ( dstmp , vnames , cuts = cuts , cut_range = cut_range )
             ## dstmp.erase()
             dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
             del dstmp 
@@ -315,12 +312,59 @@ elif   np  :  ## ROOT < 6.26
         ## 4) if cuts or cut-range is specified, assume cuts are hash and make a filtering 
         if cuts or cut_range :
             with useStorage ( ROOT.RooAbsData.Vector ) :
-                dstmp = dataset.subset ( vnames if not funcs else [] ,  cuts = cuts , cut_range = cut_range )
+                dstmp = dataset.subset ( vnames if not more_vars else [] ,  cuts = cuts , cut_range = cut_range )
             result = ds2numpy ( dstmp , vnames , more_vars = more_vars )
             ## dstmp.erase()
             dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
             del dstmp 
             return result
+        
+        # =======================================================
+        funcs    = []
+        formulas = []
+        varlst   = dataset.varlst () 
+        if more_vars and isinstance ( more_vars , dictlike_types ) :
+            for name , fun in loop_items ( more_vars ) :
+                if   isinstance ( fun , AFUN1           ) : absreal = fun.fun
+                elif isinstance ( fun , ROOT.RooAbsPdf  ) : absreal = fun
+                elif isinstance ( fun , ROOT.RooAbsReal ) : absreal = fun
+                elif isinstance ( fun , string_types    ) :
+                    formula = Ostap.FormulaVar ( name , fun , varlst )
+                    formulas.append ( formula ) 
+                    absreal = formula
+                else :
+                    raise TypeError ( "Invalid type of fun/pdf" )
+                obsvars = absreal.getObservables ( dataset )
+                item    = name , absreal , obsvars
+                funcs.append ( item )
+        elif more_vars :
+            for item in more_vars :
+                
+                len2 = isinstance ( item , sized_types ) and 2 == len ( item )
+                name = '' 
+                if   isinstance ( item , AFUN1           ) : absreal = item.fun
+                elif isinstance ( item , ROOT.RooAbsPdf  ) : absreal = item
+                elif isinstance ( item , ROOT.RooAbsReal ) : absreal = item
+                elif len2 and isinstance ( item [ 0 ] , string_types ) and isinstance ( item [1] , AFUN1          ) :
+                    absreal, name = item[1].fun , item[0]
+                elif len2 and isinstance ( item [ 0 ] , string_types ) and isinstance ( item [1] , ROOT.RooAbsPdf ) :
+                    absreal, name = item[1]     , item[0]
+                elif len2 and isinstance ( item [ 0 ] , string_types ) and isinstance ( item [1] , ROOT.RooAbsPdf ) :
+                    absreal, name = item[1]     , item[0]
+                elif len2 and isinstance ( item [ 0 ] , string_types ) and isinstance ( item [1] , string_types   ) :
+                    formula = Ostap.FormulaVar ( item [ 0 ] , item [ 1 ] , varlst )
+                    formulas.append ( formula ) 
+                    absreal, name = formula , item [ 0 ]                    
+                else :
+                    raise TypeError ( "Invalid type of fun/pdf!" )                
+                obsvars = absreal.getObservables ( dataset )
+                item    = name if name else absreal.name , absreal , obsvars
+                funcs.append ( item )
+        
+        # =====================================================================
+        for item in funcs :
+            name , _ , _ = item 
+            assert not name in dataset, 'da2numpy: no way to redefine variable `%s`!' % name 
 
         # =====================================================================
         vars       = dataset.get()
@@ -359,7 +403,9 @@ elif   np  :  ## ROOT < 6.26
             for vname , func , obsvars in funcs :
                 obsvars.assign ( evt )
                 data [ vname ] [ i ] = func.getVal()   
-        
+
+        del funcs
+        del formulas 
         return data
     
     # =========================================================================
@@ -384,14 +430,24 @@ if np : # ======================================================================
     # ==========================================================================
     ## Get the dict of empirical cumulative distribution functions from dataset
     #  @code
-    #  @endcode 
-    def ds2cdfs  ( dataset           ,
-                   variables         ,
-                   cuts       = ''   ,
-                   cut_range  = ''   ,
-                   silent     = True ) :
-        
-        cut_range = str( cut_range ).strip() if cut_range else ''
+    #  dataset = ...
+    #  ecdfs   = dataset.ecdfs ( 'a,b,c' , 'pt>10' ) 
+    #  @endcode
+    #  @see Ostap::Math::ECDF
+    def ds2cdfs ( dataset           ,
+                  variables         ,
+                  cuts       = ''   ,
+                  cut_range  = ''   ,
+                  more_vars  = {}   , 
+                  silent     = True ) :
+        """ Get the dict of empirical cumulative distribution functions from dataset
+        - see `Ostap.Math.ECDF`
+        >>> dataset = ...
+        >>> ecdfs   = dataset.ecdfs ( 'a,b,c' , 'pt>10' ) 
+        """
+
+        assert not more_vars or isinstance ( more_vars , dictlike_types ) , \
+            "ds2cdfs: invalid type of `more_vars`" % type ( more_vars )
         
         ## decode the list of variables 
         varlst, cuts ,  _ = vars_and_cuts ( variables , cuts )
@@ -399,14 +455,30 @@ if np : # ======================================================================
         extra  = [ v for v in varlst if not v in dataset ]
         assert varlst and not extra , 'Variables are not in dataset: %s' % str ( extra ) 
 
-        ## get data as numpy-array 
+        if dataset.isWeighted() :
+            logger.warning ( 'ds2cdfs: dataset is weighted! Weight will be ignored!')
+
+        ## 1) get data as numpy-array 
         data = ds2numpy ( dataset               ,
                           varlst                ,
                           cuts      = cuts      ,
                           cut_range = cut_range ,
+                          more_vars = more_vars , 
                           silent    = silent    )
         
-    
+        result = {}
+        for vname in varlst    : result [ vname ] =  Ostap.Math.ECDF ( data [ vname ] )
+        for vname in more_vars : result [ vname ] =  Ostap.Math.ECDF ( data [ vname ] )
+            
+        del data
+        return result 
+
+    __all__  = __all__ + ( 'ds2cdfs' , )
+    ROOT.RooDataSet.cdfs  = ds2cdfs
+    ROOT.RooDataSet.ecdfs = ds2cdfs
+    _new_methods_ += [ ROOT.RooDataSet.cdfs  ,
+                       ROOT.RooDataSet.ecdfs ]
+        
 # =============================================================================
 _decorated_classes_ = (
     ROOT.RooDataSet , 

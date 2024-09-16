@@ -66,10 +66,10 @@ namespace Ostap
      *  @param check      check dependents?
      */
     FormulaVar
-    ( const std::string& name             , 
-      const std::string& /* title */      , 
-      const std::string& expression       , 
-      const RooArgList & dependents       ,
+    ( const std::string&   name             , 
+      const std::string&  /* title */      , 
+      const std::string&   expression       , 
+      const RooArgList &   dependents       ,
       const bool 	       check    = true  ) ;
     // ========================================================================
     /** full constructor 
@@ -79,9 +79,9 @@ namespace Ostap
      *  @param check      check dependents?
      */
     FormulaVar
-    ( const std::string& name             , 
-      const std::string& expression       , 
-      const RooArgList & dependents       ,
+    ( const std::string&   name             , 
+      const std::string&   expression       , 
+      const RooArgList &   dependents       ,
       const bool 	       check    = true  ) ;
     // ========================================================================
     /** full constructor 
@@ -90,8 +90,8 @@ namespace Ostap
      *  @param check      check dependents?
      */    
     FormulaVar
-    ( const std::string& expression       ,   
-      const RooArgList & dependents       ,
+    ( const std::string&   expression       ,   
+      const RooArgList &   dependents       ,
       const bool 	       check    = true  ) ;
     // ========================================================================
     /// copy constructor 
@@ -123,10 +123,10 @@ namespace Ostap
    */
   std::unique_ptr<FormulaVar>  
   makeFormula 
-  ( const std::string&      name       , 
-    const std::string&      title      , 
-    const std::string&      expression , 
-    const RooArgList&       dependents ) ;
+  ( const std::string& name       , 
+    const std::string& title      , 
+    const std::string& expression , 
+    const RooArgList&  dependents ) ;
   // ===========================================================================
   /** make formula (skip unnesessary dependents)
    *  @param name  formula name 
@@ -136,9 +136,9 @@ namespace Ostap
    */
   std::unique_ptr<FormulaVar>  
   makeFormula 
-  ( const std::string&      name       , 
-    const std::string&      expression , 
-    const RooArgList&       dependents ) ;
+  ( const std::string& name       , 
+    const std::string& expression , 
+    const RooArgList&  dependents ) ;
   // ===========================================================================
   /** make formula (skip unnesessary dependents)
    *  @param expression formula expression
@@ -147,8 +147,8 @@ namespace Ostap
    */
   std::unique_ptr<FormulaVar>  
   makeFormula
-  ( const std::string&      expression , 
-    const RooArgList&       dependents ) ;
+  ( const std::string& expression , 
+    const RooArgList&  dependents ) ;
   // ===========================================================================
   /** valid formula expression ?
    *  @param expression formula expression
@@ -157,8 +157,8 @@ namespace Ostap
    */
   bool 
   validFormula 
-  ( const std::string&      expression , 
-    const RooArgList&       dependents ) ;
+  ( const std::string& expression , 
+    const RooArgList&  dependents ) ;
   // ===========================================================================
 } //                                                  The end of namespace Ostap 
 // =============================================================================

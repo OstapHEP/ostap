@@ -102,9 +102,9 @@ namespace Ostap
       inline const Data&   data () const { return m_data         ; }
       // ======================================================================
       /// minimal x-value
-      inline double xmin () const { return m_data.front () ; } 
+      inline double        xmin () const { return m_data.front () ; } 
       /// maximal x-value
-      inline double xmax () const { return m_data.back  () ; }
+      inline double        xmax () const { return m_data.back  () ; }
       // ======================================================================
     public:
       // ======================================================================

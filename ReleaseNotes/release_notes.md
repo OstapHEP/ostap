@@ -1,7 +1,10 @@
 ## New features
     
   1. Add  `cuts` and `cut_range` argumenst for `ds2numpy` function
-        
+  1. Add empirical cumulative  distribtion function `Ostap::Math::ECDF`
+  1. Add `cuts` and `cut_range` arguments for `ds2numpy` method
+  1. Add method to `RooDataSet` to get empirical cumulative distrivution functions
+    
 ## Backward incompatible
     
 ## Bug fixes
