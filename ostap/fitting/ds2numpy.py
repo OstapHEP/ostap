@@ -22,7 +22,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info         import root_info
 from   ostap.core.ostap_types       import string_types, dictlike_types
-from   ostap.core.core              import loop_items 
+from   ostap.core.core              import Ostap, loop_items 
 from   ostap.utils.utils            import split_range 
 from   ostap.fitting.dataset        import useStorage
 from   ostap.fitting.funbasic       import AFUN1 
@@ -36,7 +36,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.ds2numpy' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-logger.debug( 'Convert RooDataSet uito numpy array')
+logger.debug( 'Convert RooDataSet into numpy array')
 
 # =============================================================================
 try :
@@ -57,7 +57,12 @@ if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
     #  @see ROOT.RooAbsDataStore.getCategoryBatches
     #  @see ROOT.RooAbsDataStore.getWeightBatche
     #  @attention conversion to ROOT.RooVectorDataStore is used! 
-    def ds2numpy ( dataset , var_lst , silent = True , more_vars = {} ) :
+    def ds2numpy ( dataset          , 
+                   var_lst          ,
+                   cuts      = ''   ,
+                   cut_range = ''   , 
+                   silent    = True ,
+                   more_vars = {}   ) :
         """ Convert dataset into numpy array using `ROOT.RooAbsData` iterface 
         - see ROOT.RooAbsData.getBatches
         - see ROOT.RooAbsData.getCategoryBatches
@@ -68,6 +73,10 @@ if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
         - attention: Conversion to `ROOT.RooVectorDataStore` is used! 
         """
         
+        cuts      = str ( cuts      ).strip () 
+        cut_range = str ( cut_range ).strip() if cut_range else ''
+
+        # =====================================================================
         ## 1) get names of all requested variables
         if   all ( isinstance ( v , string_types   ) for v in var_lst ) :
             vnames = [ v          for  v in var_lst ]
@@ -76,16 +85,16 @@ if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
         else :
             raise TypeError ( "Invalid type of `var_list`!" ) 
 
+        # =====================================================================
         ## 2) check that all variables are present in the dataset 
         assert all ( ( v in dataset ) for v in var_lst ) , 'Not all variables are in dataset!'
 
         funcs = [] 
         if more_vars and isinstance ( more_vars , dictlike_types ) :
             for name , fun in loop_items ( more_vars ) :
-                if isinstance ( fun , AFUN1 ) :
-                    absreal = fun.fun
-                elif isinstance( fun , ROOT.RooAbsPdf  ) : absreal = fun
-                elif isinstance( fun , ROOT.RooAbsReal ) : absreal = fun
+                if   isinstance ( fun , AFUN1           ) : absreal = fun.fun
+                elif isinstance ( fun , ROOT.RooAbsPdf  ) : absreal = fun
+                elif isinstance ( fun , ROOT.RooAbsReal ) : absreal = fun
                 else :
                     raise TypeError ( "Invald type ofun/pdf" )
                 obsvars = absreal.getObservables ( dataset )
@@ -107,23 +116,38 @@ if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                 obsvars = absreal.getObservables ( dataset )
                 item    = name , absreal , obsvars
                 funcs.append ( item )
-                
+
+        # =====================================================================
         ## 3) reduce dataset if only a small subset of variables is requested 
         nvars = len ( dataset.get() )
-        if 2 * len ( vnames )  <= nvars :            
+        if 2 * len ( vnames )  <= nvars and not funcs :            
             with useStorage ( ROOT.RooAbsData.Vector ) : 
-                dstmp  = dataset.subset ( vnames )
+                dstmp  = dataset.subset ( vnames , cuts = cuts , cut_range = cut_range )
             result = ds2numpy ( dstmp , vnames , more_vars = more_vars )
-            dstmp.erase()
+            ## dstmp.erase()
+            dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
             del dstmp 
             return result
 
-        ## 4) convert to VectorDataStore
+        # =========================================================================
+        ## 4) if cuts or cut-range is specified, assume cuts are hash and make a filtering 
+        if cuts or cut_range :
+            with useStorage ( ROOT.RooAbsData.Vector ) :
+                dstmp = dataset.subset ( vnames if not funcs else [] ,  cuts = cuts , cut_range = cut_range )
+            result = ds2numpy ( dstmp , vnames , more_vars = more_vars )
+            ## dstmp.erase()
+            dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
+            del dstmp 
+            return result
+
+        # =========================================================================
+        ## 5) convert to VectorDataStore
         #  batches are not (yet) implemented for Tree & Composite stores 
         dataset.convertToVectorStore()
         ## dataset.convertToTreeStore()
 
-        ## 5) convert to VectorStore again...
+        # =====================================================================
+        ## 6) convert to VectorStore again...
         #  batches are not (yet) implemented for Tree & Composite stores         
         store     = dataset.store()
         source    = dataset
@@ -208,8 +232,8 @@ if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
             del source
             
         return data
-    
 
+    # =========================================================================
     __all__  = __all__ + ( 'ds2numpy' , )
     ROOT.RooDataSet.tonumpy = ds2numpy 
     ROOT.RooDataSet.tonp    = ds2numpy
@@ -222,10 +246,19 @@ if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
 elif   np  :  ## ROOT < 6.26 
     # =========================================================================
     ## Convert dataset into numpy array using (slow) explicit loops 
-    def ds2numpy ( dataset , var_lst , silent = False , more_vars = {} ) :
+    def ds2numpy ( dataset           ,
+                   var_lst           ,
+                   cuts      = ''    ,
+                   cut_range = ''    , 
+                   silent    = False ,
+                   more_vars = {}    ) :
         """ Convert dataset into numpy array using (slow) explicit loops
         """
         
+        cuts      = str ( cuts      ).strip () 
+        cut_range = str ( cut_range ).strip () if cut_range else ''
+
+        # =====================================================================
         ## 1) check that all variables are present in dataset 
         if   all ( isinstance ( v , string_types   ) for v in var_lst ) :
             vnames = [ v          for  v in var_lst ]
@@ -234,6 +267,7 @@ elif   np  :  ## ROOT < 6.26
         else :
             raise TypeError ( "Invalid type of `var_list`!" ) 
 
+        # =====================================================================
         ## 2) check that all variables are present in the dataset 
         assert all ( ( v in dataset ) for v in var_lst ) , 'Not all variables are in dataset!'
  
@@ -265,16 +299,30 @@ elif   np  :  ## ROOT < 6.26
                 obsvars = absreal.getObservables ( dataset )
                 item    = name , absreal , obsvars
                 funcs.append ( item )
-                
+
+        # =====================================================================
         ## 3) reduce dataset if only a small subset of variables is requested 
         nvars = len ( dataset.get() )
-        if 2 * len ( vnames )  <= nvars :
+        if 2 * len ( vnames )  <= nvars and not funcs :
             dstmp  = dataset.subset ( vnames )
-            result = ds2numpy ( dstmp , vnames , more_vars = more_vars )
-            dstmp.erase()
+            result = ds2numpy ( dstmp , vnames , more_vars = more_vars , cuts = cuts , cut_range = cut_range )
+            ## dstmp.erase()
+            dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
             del dstmp 
-            return result  
+            return result
         
+        # =========================================================================
+        ## 4) if cuts or cut-range is specified, assume cuts are hash and make a filtering 
+        if cuts or cut_range :
+            with useStorage ( ROOT.RooAbsData.Vector ) :
+                dstmp = dataset.subset ( vnames if not funcs else [] ,  cuts = cuts , cut_range = cut_range )
+            result = ds2numpy ( dstmp , vnames , more_vars = more_vars )
+            ## dstmp.erase()
+            dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
+            del dstmp 
+            return result
+
+        # =====================================================================
         vars       = dataset.get()
         vars       = [ v for v in vars if v.name in vnames ]
         doubles    = [ v.name for v in vars if isinstance ( v , ROOT.RooAbsReal     ) ] 
@@ -290,12 +338,10 @@ elif   np  :  ## ROOT < 6.26
             elif v in categories : dtypes.append ( ( v      , np.int64   ) )
         for f in funcs           : dtypes.append ( ( f[0]   , np.float64 ) ) 
         if weight                : dtypes.append ( ( weight , np.float64 ) ) 
-            
-        
+                    
         ## create data 
         data = np.zeros ( len ( dataset )  , dtype = dtypes )
-
-        
+    
         ## make an explict loop:
         for i , item in enumerate ( progress_bar ( dataset , silent = silent ) ) :
 
@@ -316,7 +362,7 @@ elif   np  :  ## ROOT < 6.26
         
         return data
     
-
+    # =========================================================================
     __all__  = __all__ + ( 'ds2numpy' , )
     ROOT.RooDataSet.tonumpy = ds2numpy 
     ROOT.RooDataSet.tonp    = ds2numpy
@@ -326,14 +372,41 @@ elif   np  :  ## ROOT < 6.26
                        ROOT.RooDataSet.to_np   ]
     
 
-
 # =============================================================================
-else    :
+else    : # ===================================================================
 # =============================================================================
 
     logger.warning ( "Numpy is not available: no action" )
 
 
+# ==============================================================================
+if np : # ======================================================================
+    # ==========================================================================
+    ## Get the dict of empirical cumulative distribution functions from dataset
+    #  @code
+    #  @endcode 
+    def ds2cdfs  ( dataset           ,
+                   variables         ,
+                   cuts       = ''   ,
+                   cut_range  = ''   ,
+                   silent     = True ) :
+        
+        cut_range = str( cut_range ).strip() if cut_range else ''
+        
+        ## decode the list of variables 
+        varlst, cuts ,  _ = vars_and_cuts ( variables , cuts )
+        
+        extra  = [ v for v in varlst if not v in dataset ]
+        assert varlst and not extra , 'Variables are not in dataset: %s' % str ( extra ) 
+
+        ## get data as numpy-array 
+        data = ds2numpy ( dataset               ,
+                          varlst                ,
+                          cuts      = cuts      ,
+                          cut_range = cut_range ,
+                          silent    = silent    )
+        
+    
 # =============================================================================
 _decorated_classes_ = (
     ROOT.RooDataSet , 
