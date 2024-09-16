@@ -136,7 +136,6 @@ def poly_reduce ( p ) :
                             p.xmin () ,
                             p.xmax () )
 
-    
 for t in (  Ostap.Math.Polynomial     , 
             Ostap.Math.ChebyshevSum   , 
             Ostap.Math.LegendreSum    , 
@@ -393,6 +392,25 @@ for t in ( Ostap.Math.Neville     ,
 
 Ostap.Math.FloaterHormann. __reduce__ = intfh_reduce 
 
+# ============================================================================
+## Factory for deserisalization of empirical cumulatibe distribution function
+#  @see Ostap::Math::ECDF
+def ecdf_factory ( klass , data ) :
+    """ Factory for deserisalization of empirical cumulatibe distribution function
+    - see `Ostap.Math.ECDF`
+    """
+    return klass ( doubles  ( data ) )
+# =============================================================================
+## Reduce empirical distribution function 
+#  @see Ostap::Math::ECDF    
+def ecdf_reduce  ( ecdf ) :
+    """ Reduce empirical distribution function 
+    - see `Ostap.Math.ECDF`
+    """
+    return ecdf_factory , ( type ( ecdf ) ,
+                            array.array ( 'd' , ecdf.data() ) )
+
+Ostap.Math.ECDF.__reduce__ = ecdf_reduce
 # =============================================================================
 ## Dalitz' objects 
 # =============================================================================   
@@ -467,21 +485,22 @@ for p in ( Ostap.Math.Polynomial        ,
            Ostap.Math.HermiteSum        , 
            Ostap.Math.Rational          , 
            Ostap.Math.RationalBernstein , 
-           Ostap.Math.RationalPositive  ) :
+           Ostap.Math.RationalPositive  ,
+           ##
+           Ostap.Math.ECDF              ) : 
     
     if not hasattr ( p , '_old_init_' ) :
         
         p._old_init_ = p.__init__
         ## Modifed constructor to allow python lists/tuples
         def _p_new_init_ ( s ,  *args ) :
-            """Modifed constructor to allow python lists/tuples
+            """ Modifed constructor to allow python lists/tuples
             """
             _new_init_ ( s , *args )
             
         _p_new_init_.__doc__ += '\n' +   _new_init_.__doc__ 
         _p_new_init_.__doc__ += '\n' + p._old_init_.__doc__ 
         p.__init__ = _p_new_init_ 
-
 
 # =============================================================================
 ## several Ostap::Math objects
@@ -632,6 +651,8 @@ _decorated_classes_  = (
     Ostap.Math.Berrut1st               , 
     Ostap.Math.Berrut2nd               , 
     Ostap.Math.FloaterHormann          , 
+    ##
+    Ostap.Math.ECDF                    , 
     ##
     Ostap.Kinematics.Dalitz0           , 
     Ostap.Kinematics.Dalitz            ,

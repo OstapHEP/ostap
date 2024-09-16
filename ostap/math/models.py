@@ -418,7 +418,7 @@ def _amp_ ( self , x , *a ) :
 #  r = f.amp_real ( x ) 
 # @endcode
 def _amp_re_ ( self, x , *a ) :
-    """Get   the real part of amplitude
+    """ Get   the real part of amplitude
     >>> f = ...
     >>> r = f.amp_real ( x )     
     """
@@ -431,7 +431,7 @@ def _amp_re_ ( self, x , *a ) :
 #  r = f.amp_imag ( x ) 
 # @endcode
 def _amp_im_ ( self, x , *a ) :
-    """Get   the imaginary part of amplitude
+    """ Get   the imaginary part of amplitude
     >>> f = ...
     >>> r = f.amp_imag ( x )     
     """    
@@ -444,7 +444,7 @@ def _amp_im_ ( self, x , *a ) :
 #  r = f.amp_phase ( x ) 
 # @endcode
 def _amp_phase_ ( self, x , *a ) :
-    """Get   the phase of amplitude
+    """ Get   the phase of amplitude
     >>> f = ...
     >>> r = f.amp_phase ( x )     
     """    
@@ -457,7 +457,7 @@ def _amp_phase_ ( self, x , *a ) :
 #  g = f.argand ( x , xmin = ...  , xmax = ... ) 
 #  @@endcode 
 def _amp_argand_ ( self , xmin , xmax , npx =  500 , args = () ) : 
-    """Build the Argand diagram/graph 
+    """ Build the Argand diagram/graph 
     >>> f = ...
     >>> g = f.argand ( x , xmin = ...  , xmax = ... ) 
     """
@@ -501,7 +501,7 @@ if root_info < ( 6, 24 ) :
             t._old_breit_wigner_ = t.breit_wigner
             # 
             def _new_breit_wigner_ ( f , x , amp ) :
-                """Updated `Breit-wigner` function
+                """ Updated `Breit-wigner` function
                 _ see `Ostap.Math.BW.breit_wigner`
                 _ see `Ostap.Models.breit_wigner`
                 _ see `Ostap.Math.BW._old_breit_wigner_`
@@ -524,7 +524,7 @@ if root_info < ( 6, 24 ) :
 #  The values are guaranteed that
 #  mn <= p(x) <= mx for all   xmin <= x <= xmax 
 def _b_minmax_ ( bp ) :
-    """Get min/max values for bernstein polynomials
+    """ Get min/max values for bernstein polynomials
     
     >>> p = ...
     >>> mn,mx = p.minmax()
@@ -546,7 +546,7 @@ def _b_minmax_ ( bp ) :
 #  The values are guaranteed that
 #  p(x) <= mx for all   xmin <= x <= xmax 
 def _b_max_ ( bp ) :
-    """Get max values for bernstein polynomials
+    """ Get max values for bernstein polynomials
     
     >>> p = ...
     >>> mx = p.max()
@@ -566,7 +566,7 @@ def _b_max_ ( bp ) :
 #  The values are guaranteed that
 #  mn <= p(x) for all   xmin <= x <= xmax 
 def _b_min_ ( bp ) :
-    """Get min values for bernstein polynomials
+    """ Get min values for bernstein polynomials
     
     >>> p  = ...
     >>> mn = p.min()
@@ -594,7 +594,7 @@ for t in ( Ostap.Math.Bernstein     ,
 #  The values are guaranteed that
 #  mn <= p(x) <= mx for all   xmin <= x <= xmax 
 def _p_minmax_ ( p ) :
-    """Get min/max values for derived bernstein polynomials
+    """ Get min/max values for derived bernstein polynomials
     
     >>> p = ...
     >>> mn,mx = p.minmax()
@@ -617,7 +617,7 @@ def _p_minmax_ ( p ) :
 #  The values are guaranteed that
 #  mn <= p(x) for all   xmin <= x <= xmax 
 def _p_min_ ( bp ) :
-    """Get min values for derived bernstein polynomials
+    """ Get min values for derived bernstein polynomials
     
     >>> p  = ...
     >>> mn = p.min()
@@ -645,7 +645,7 @@ for t in ( Ostap.Math.Positive      ,
 #  mx = f.max()
 #  @endcode
 def _f_max_mode_ ( f ) :
-    """Get the max-value (using exising mode function)
+    """ Get the max-value (using exising mode function)
     >>> f = ...
     >>> mx = f.max()    
     """
@@ -656,7 +656,7 @@ def _f_max_mode_ ( f ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-12-01
 def sp_integrate_1D ( func , xmin , xmax , *args , **kwargs ) :
-    """Make 1D numerical integration 
+    """ Make 1D numerical integration 
     
     >>> func = ...
     >>> print func.sp_integrate ( -10 , 10 )    
@@ -690,7 +690,7 @@ def sp_integrate_2D ( func  ,
 #  @date 2014-12-01
 def sp_integrate_2Dx ( func  , y    ,
                        xmin  , xmax , *args , **kwargs ) :
-    """Make 1D numerical integration over x-axis 
+    """ Make 1D numerical integration over x-axis 
     
     >>> func = ...  ## func ( x , y )
     ##                              y   , xmin , xmax 
@@ -711,7 +711,7 @@ def sp_integrate_2Dx ( func  , y    ,
 #  @date 2014-12-01
 def sp_integrate_2Dy ( func  , x    ,
                        ymin  , ymax , *args , **kwargs ) :
-    """Make 1D numerical integration over y-axis 
+    """ Make 1D numerical integration over y-axis 
     
     >>> func = ...  ## func ( x , y )
     ##                              x   , ymin , ymax 
@@ -735,7 +735,7 @@ def sp_integrate_3D ( func  ,
                       xmin  , xmax ,
                       ymin  , ymax ,
                       zmin  , zmax , *args , **kwargs ) :
-    """Make 3D numerical integration
+    """ Make 3D numerical integration
     
     >>> func = ...  ## func ( x , y , z )
     ##                            xmin , xmax , ymin , ymax   zmin zmax 
@@ -755,7 +755,7 @@ def sp_integrate_3D ( func  ,
 def sp_integrate_3Dx ( func  ,
                        y     , z   ,  
                        xmin  , xmax , *args , **kwargs ) :
-    """Make 1D numerical integration over x-axis 
+    """ Make 1D numerical integration over x-axis 
     
     >>> func = ...  ## func ( x , y , z )
     ##                              y   ,   z , xmin , xmax 
@@ -777,7 +777,7 @@ def sp_integrate_3Dx ( func  ,
 def sp_integrate_3Dy ( func  ,
                        x     ,  z   , 
                        ymin  , ymax , *args , **kwargs ) :
-    """Make 1D numerical integration over y-axis 
+    """ Make 1D numerical integration over y-axis 
     
     >>> func = ...  ## func ( x , y , z )
     ##                              x   , z   , ymin , ymax 
@@ -799,7 +799,7 @@ def sp_integrate_3Dy ( func  ,
 def sp_integrate_3Dz ( func  ,
                        x     , y    , 
                        zmin  , zmax , *args , **kwargs ) :
-    """Make 1D numerical integration over z-axis 
+    """ Make 1D numerical integration over z-axis 
     
     >>> func = ...  ## func ( x , y , z )
     ##                              x   , y   , zmin , zmax 
@@ -823,7 +823,7 @@ def sp_integrate_3Dxy ( func  ,
                         z     ,
                         xmin  , xmax ,
                         ymin  , ymax , *args , **kwargs ) :
-    """Make 2D numerical integration
+    """ Make 2D numerical integration
 
     >>> func = ...  ## func ( x , y , z )
     ##                            z , xmin , xmax , ymin , ymax 
@@ -848,7 +848,7 @@ def sp_integrate_3Dxz ( func  ,
                         y     ,
                         xmin  , xmax ,
                         zmin  , zmax , *args , **kwargs ) :
-    """Make 2D numerical integration
+    """ Make 2D numerical integration
 
     >>> func = ...  ## func ( x , y , z )
     ##                                 y , xmin , xmax , zmin , zmax 
@@ -873,7 +873,7 @@ def sp_integrate_3Dyz ( func  ,
                         x     ,
                         ymin  , ymax ,
                         zmin  , zmax , *args , **kwargs ) :
-    """Make 2D numerical integration
+    """ Make 2D numerical integration
 
     >>> func = ...  ## func ( x , y , z )
     ##                                 x , ymin , ymax , zmin , zmax 
@@ -968,7 +968,7 @@ def _tf1_getattr_ ( self , attr ) :
 #  f.SetLineWidth(2) ## delegate to TF2
 #  @endcode 
 def _tf2_getattr_ ( self , attr ) :
-    """Delegate some methods/attributes to TF2
+    """ Delegate some methods/attributes to TF2
     >>> f = ...
     >>> f.SetLineColor(4) ## delegate to TF2
     >>> f.SetLineWidth(2) ## delegate to TF2
@@ -986,7 +986,7 @@ def _tf2_getattr_ ( self , attr ) :
 #  f.SetLineWidth(2) ## delegate to TF3
 #  @endcode 
 def _tf3_getattr_ ( self , attr ) :
-    """Delegate some methods/attributes to TF2
+    """ Delegate some methods/attributes to TF2
     >>> f = ...
     >>> f.SetLineColor(4) ## delegate to TF2
     >>> f.SetLineWidth(2) ## delegate to TF2
@@ -1120,7 +1120,9 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.ExGenPareto            , 
                Ostap.Math.Benini                 , 
                Ostap.Math.GEV                    , 
-               Ostap.Math.MPERT                  , 
+               Ostap.Math.MPERT                  ,
+               #
+               Ostap.Math.ECDF                   , 
                #
                Ostap.Math.BSpline                , 
                Ostap.Math.PositiveSpline         ,

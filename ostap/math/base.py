@@ -151,7 +151,7 @@ neg_infinity = float('-inf')
 #  print ( 'Object type name is %s' % typename ( obj ) ) 
 #  @endcode 
 def typename ( o ) :
-    """Get the type name
+    """ Get the type name
     >>> obj = ...
     >>> print ( 'Object type name is %s' % typename ( obj ) )
     """
@@ -165,7 +165,7 @@ def typename ( o ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-30
 class ROOTIgnore( object ) :
-    """Very simple context manager to suppress ROOT printout
+    """ Very simple context manager to suppress ROOT printout
     >>> with ROOTIgnore ( ROOT.kError + 1 ) : some_ROOT_code_here()
     """
     ## constructor
@@ -260,8 +260,8 @@ else :
 # =============================================================================
 ##  get the sign of the number 
 def signum ( x ) :
-    """Get the sign of the number
-    >>>  signum ( -10  ) , signum(0),   signum ( +2.5 ) 
+    """ Get the sign of the number
+    >>> signum ( -10  ) , signum(0),   signum ( +2.5 ) 
     """
     ### for integers
     from ostap.core.ostap_types import is_integer as _is_integer 
@@ -272,7 +272,7 @@ def signum ( x ) :
 # =============================================================================
 ## the same sign ?
 def samesign ( a , b ) :
-    """The same sign for two numbers?
+    """ The same sign for two numbers?
     """
     return ( 0 < a and 0 < b ) or ( 0 > a and 0 > b ) 
 
@@ -812,7 +812,7 @@ for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
 # =============================================================================
 ## construct std::vector<std::complex> from the arguments
 def complexes ( arg1 , *args ) :
-    """Construct the std::vector<std::complex<double>> from the arguments    
+    """ Construct the std::vector<std::complex<double>> from the arguments    
     >>> v1 = complexs( 1+2j )
     >>> v2 = complexs( 1 , 1+2j , 1  )
     >>> v3 = complexs( [ 1 , 2 , 3+3j ] )    
@@ -908,7 +908,7 @@ def num_range ( value , N = 1 ) :
 # =============================================================================
 ## Find suitable range for histogram axis 
 def axis_range ( xmin , xmax , delta = 0.02 , log = False ) :
-    """Find suitable range for histogram axis
+    """ Find suitable range for histogram axis
     """
     xmn = min ( xmin , xmax )
     xmx = max ( xmin , xmax )

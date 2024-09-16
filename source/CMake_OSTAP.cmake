@@ -20,6 +20,7 @@ add_library(ostap SHARED src/format.cpp
                          src/DalitzIntegrator.cpp
                          src/DataFrameActions.cpp
                          src/DataFrameUtils.cpp
+                         src/ECDF.cpp   
                          src/EigenSystem.cpp   
                          src/Error2Exception.cpp   
                          src/Exception.cpp
