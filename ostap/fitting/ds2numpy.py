@@ -284,7 +284,7 @@ elif   np  :  ## ROOT < 6.26
         # =====================================================================
         ## 1) check that all variables are present in dataset 
         if   all ( isinstance ( v , string_types   ) for v in var_lst ) :
-            vnames , cuts , _  = vars_and_cuts ( vnames , cuts )
+            vnames , cuts , _  = vars_and_cuts ( var_lst , cuts )
         elif all ( isinstance ( v , ROOT.RooAbsArg ) for v in var_lst ) :
             vnames = [ v.GetName() for v in var_lst ]
         else :
