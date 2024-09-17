@@ -147,7 +147,7 @@ def fmt_pretty_errs ( value              ,
 def fmt_pretty_float ( value         ,
                        width     = 6 ,
                        precision = 4 ) :
-    """Format for nice printout of the floating number
+    """ Format for nice printout of the floating number
     - return format for nice string and the separate exponent 
     >>> fmt , expo = fmt_pretty_float ( number ) 
     """
@@ -246,7 +246,7 @@ def fmt_pretty_err2 ( value              ,
 def pretty_float ( value         ,
                    width     = 6 ,
                    precision = 4 ) :
-    """Nice printout of the floating number
+    """ Nice printout of the floating number
     - return nice string and the separate exponent 
     >>> s , expo = pretty_float ( number )
     """
@@ -280,7 +280,7 @@ def pretty_err1 ( value              ,
                   width       = 6    ,
                   precision   = 4    ,
                   parentheses = True ) :
-    """Nice printout of the value with error ( string + exponent)
+    """ Nice printout of the value with error ( string + exponent)
     - return nice stirng and the separate exponent 
     >>> s , expo = pretty_err1 ( value , error ) 
     """
@@ -334,7 +334,7 @@ def pretty_err2 ( value              ,
                   width       = 6    ,
                   precision   = 4    ,
                   parentheses = True ) :
-    """Nice printout of the object with asymmetric  errors   ( string + exponent)
+    """ Nice printout of the object with asymmetric  errors   ( string + exponent)
     >>> s , expo = pretty_err2 ( number , elow , ehigh ) 
     """
 
@@ -443,7 +443,7 @@ def add_expo ( value , expo , fmt = '%s x 10^%+d' ) :
 #  >>> print table
 #  @endcode 
 def multicolumn ( lines , term_width = None , indent = 0 , pad = 2 ):
-    """Format list of strings into multicolumn string
+    """ Format list of strings into multicolumn string
     >>> strings =  ....
     >>> table   = multicolumn (  strings , indent = 2 )
     >>> print table 
@@ -484,7 +484,7 @@ def multicolumn ( lines , term_width = None , indent = 0 , pad = 2 ):
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2020-01-029
 class DisplayTree ( object ) :
-    """Very simple class to allow a rendering of Tree-like objects,
+    """ Very simple class to allow a rendering of Tree-like objects,
     in particular the structure and the content of directories 
     """    
     prefix_item_middle   = '\033(0\x74\033(B' + '\033(0\x71\033(B' + '\033(0\x71\033(B'

@@ -914,10 +914,10 @@ def axis_range ( xmin , xmax , delta = 0.02 , log = False ) :
     xmx = max ( xmin , xmax )
     
     ## 1) special case
-    if iszero ( xmn ) and iszero ( xmn ) : return ( -1.0 , 1.0 )
-
+    if iszero ( xmn ) and iszero ( xmx ) : return ( -1.0 , 1.0 )
+    
     ## 2) special case 
-    if isequal ( xmn , xmx ) : return num_range ( 0.5 * ( xmn + xmx ) ) 
+    if isequal ( xmn , xmx ) : return num_range ( 0.5 * ( xmn + xmx ) , N = 2 ) 
     
     ## 3) special case
     if islong ( xmn - 0.5 ) and islong ( xmx + 0.5 ) :
@@ -927,7 +927,7 @@ def axis_range ( xmin , xmax , delta = 0.02 , log = False ) :
 
     delta = abs ( delta        )
     fr    = min ( delta , 0.9  ) 
-    
+
     if iszero ( xmn ) and xmn < xmx :
         
         xmin = 0 
@@ -955,13 +955,12 @@ def axis_range ( xmin , xmax , delta = 0.02 , log = False ) :
         
     else : 
     
-        xmin = xmn - delta * d 
-        xmax = xmx + delta * d 
-
-
-    xmin , _     = num_range ( xmin )
-    _    , xmax  = num_range ( xmax )
-    
+        xmin = xmn - delta * d        
+        xmax = xmx + delta * d
+        
+    xmin , _     = num_range ( xmin , N = 2 )
+    _    , xmax  = num_range ( xmax , N = 2 )
+     
     return xmin, xmax 
 
 # =============================================================================

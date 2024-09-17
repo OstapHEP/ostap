@@ -395,11 +395,11 @@ Ostap.Math.FloaterHormann. __reduce__ = intfh_reduce
 # ============================================================================
 ## Factory for deserisalization of empirical cumulatibe distribution function
 #  @see Ostap::Math::ECDF
-def ecdf_factory ( klass , data ) :
+def ecdf_factory ( klass , data , complementary = False ) :
     """ Factory for deserisalization of empirical cumulatibe distribution function
     - see `Ostap.Math.ECDF`
     """
-    return klass ( doubles  ( data ) )
+    return klass ( doubles  ( data ) , complementary )
 # =============================================================================
 ## Reduce empirical distribution function 
 #  @see Ostap::Math::ECDF    
@@ -408,7 +408,8 @@ def ecdf_reduce  ( ecdf ) :
     - see `Ostap.Math.ECDF`
     """
     return ecdf_factory , ( type ( ecdf ) ,
-                            array.array ( 'd' , ecdf.data() ) )
+                            array.array ( 'd' , ecdf.data() ) ,
+                            ecdf.complementary() )
 
 Ostap.Math.ECDF.__reduce__ = ecdf_reduce
 # =============================================================================

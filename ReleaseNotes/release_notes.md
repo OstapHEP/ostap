@@ -5,11 +5,15 @@
   1. Add `cuts` and `cut_range` arguments for `ds2numpy` method
   1. Add method to `RooDataSet` to get empirical cumulative distrivution functions
   1. Add `PDF1.cdf` method to get CDF from 1D-PDF
-      
-## Backward incompatible
+  1. Add new module `ostap.stats.gof_1d` for goodness-of-fit for 1D
+  1. Add new test    `test_stats+_gof1d` for goodness-of-fit for 1D
+    
+ # Backward incompatible
     
 ## Bug fixes
-
+    
+  1. fix typo in `ostap.math.bnase.axis_range` 
+    
 # v1.13.3.0
 
 ## New features

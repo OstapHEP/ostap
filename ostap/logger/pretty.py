@@ -85,7 +85,7 @@ def pretty_ve ( value              ,
                 width       = 6    ,
                 precision   = 4    ,
                 parentheses = True ) :
-    """Nice printout of the ValueWithError object  ( string + exponent)
+    """ Nice printout of the ValueWithError object  ( string + exponent)
     - return nice stirng and the separate exponent 
     >>> s , expo = pretty_ve ( number ) 
     """

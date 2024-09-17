@@ -10,6 +10,10 @@
 #include <algorithm>
 #include <vector>
 // ============================================================================
+// Ostap
+// ============================================================================
+#include "Ostap/ValueWithError.h"
+// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
@@ -31,15 +35,19 @@ namespace Ostap
     public: 
       // ======================================================================
       /// constructor from  data
-      ECDF ( const Data&  data  ) ;
+      ECDF
+      ( const Data&  data                  ,
+        const bool   complementary = false ) ;
       /// constructor from data
       template <class ITERATOR,
-        typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-        typename            = std::enable_if<std::is_convertible<value_type,double>::value> >
-        ECDF  ( ITERATOR begin ,
-                ITERATOR end   )
-        : m_data ( begin , end ) 
-        { this->sort_me() ; }
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename            = std::enable_if<std::is_convertible<value_type,double>::value> >
+      ECDF  ( ITERATOR   begin                 ,
+              ITERATOR   end                   ,
+              const bool complementary = false ) 
+        : m_data          ( begin , end   )
+        , m_complementary ( complementary ) 
+      { this->sort_me() ; }
       /// copy constructor
       ECDF ( const ECDF&  right ) = default ;
       /// move constructor 
@@ -52,6 +60,11 @@ namespace Ostap
       /// the main method 
       inline double operator() ( const double x ) const
       { return evaluate ( x ) ; }
+      // ======================================================================
+      /** get the value with binomial estimate for uncertainty
+       *  @see Ostap::Math::binomEff 
+       */ 
+      Ostap::Math::ValueWithError estimate ( const double x ) const ; 
       // ======================================================================
     public:
       // ======================================================================
@@ -95,16 +108,18 @@ namespace Ostap
     public:
       // ======================================================================
       /// data size 
-      inline unsigned long N    () const { return m_data.size () ; } 
+      inline unsigned long N             () const { return m_data.size () ; } 
       /// data size 
-      inline unsigned long size () const { return m_data.size () ; }
+      inline unsigned long size          () const { return m_data.size () ; }
       /// access to data
-      inline const Data&   data () const { return m_data         ; }
+      inline const Data&   data          () const { return m_data         ; }
       // ======================================================================
+      /// complementary?
+      inline bool          complementary () const { return m_complementary ; }
       /// minimal x-value
-      inline double        xmin () const { return m_data.front () ; } 
+      inline double        xmin          () const { return m_data.front () ; } 
       /// maximal x-value
-      inline double        xmax () const { return m_data.back  () ; }
+      inline double        xmax          () const { return m_data.back  () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -118,7 +133,9 @@ namespace Ostap
     private:
       // ======================================================================
       /// container of sorted data 
-      Data m_data {} ; // container of sorted data 
+      Data m_data           {}       ; // container of sorted data
+      /// complementary CDF?
+      bool m_complementary { false } ; // complementary CDF ? 
       // ======================================================================
     };
     // ========================================================================

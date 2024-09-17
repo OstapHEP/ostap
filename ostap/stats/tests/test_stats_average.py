@@ -17,15 +17,15 @@ import random, math
 from   ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'tests_stats_avegrate' )
 else                       : logger = getLogger ( __name__               )
-# ==============================================================================
-
-try :
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
     import warnings
     with warnings.catch_warnings():
+        # =====================================================================
         warnings.simplefilter("ignore")                
-        import bayesian_average as ba 
-        
-        
+        import bayesian_average as ba         
+    # =========================================================================
     import numpy            as np
     import warnings  
     def ba_standard     ( *values ) :
@@ -58,9 +58,9 @@ try :
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")                
             return ba.plot_average ( data , sigma , **kwargs )
-    
-    
-except ImportError :
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     ba = None 
 
 
@@ -188,7 +188,7 @@ def test_average2 () :
 # ===============================================================================
 if '__main__' == __name__ :
 
-    ## test_average1 ()
+    test_average1 ()
     test_average2 ()
     
 # ===============================================================================

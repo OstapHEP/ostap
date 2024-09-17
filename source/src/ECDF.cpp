@@ -24,8 +24,10 @@
 // Standard constructor from  data
 // ============================================================================
 Ostap::Math::ECDF::ECDF
-( const Ostap::Math::ECDF::Data&  data  )
-  : m_data ( data ) 
+( const Ostap::Math::ECDF::Data&  data          ,
+  const bool                      complementary )
+  : m_data          ( data          )
+  , m_complementary ( complementary ) 
 {
   this->sort_me() ;
 }
@@ -44,17 +46,39 @@ void Ostap::Math::ECDF::sort_me()
 // swap two objects 
 // ============================================================================
 void Ostap::Math::ECDF::swap ( Ostap::Math::ECDF& right )
-{ std::swap ( m_data , right.m_data ) ; }
+{
+  std::swap ( m_data          , right.m_data          ) ;
+  std::swap ( m_complementary , right.m_complementary ) ;
+}
 // ============================================================================
 // the main method 
 // ============================================================================
 double Ostap::Math::ECDF::evaluate   ( const double x ) const
 {
-  return
-    ( x < m_data.front () ) ? 0.0 : 
-    ( x > m_data.back  () ) ? 1.0 :
-    double ( std::upper_bound ( m_data.begin () ,
-                                m_data.end   () , x ) - m_data.begin() ) / m_data.size () ;
+  if      ( x < m_data.front () ) { return m_complementary ? 1.0 : 0.0 ; } 
+  else if ( x > m_data.back  () ) { return m_complementary ? 0.0 : 1.0 ; } 
+  //
+  const double result = double ( std::upper_bound ( m_data.begin () ,
+                                                    m_data.end   () , x ) - m_data.begin() ) / m_data.size () ;
+  return m_complementary ? ( 1 - result ) : result ; 
+}
+// ============================================================================
+// the main method 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ECDF::estimate ( const double x ) const
+{
+  const std::size_t NN = m_data.size() ;
+  //
+  if      ( x < m_data.front () )
+    { return Ostap::Math::binomEff ( m_complementary ? NN : 0u , NN ) ; }
+  else if ( x > m_data.back  () )
+    { return Ostap::Math::binomEff ( m_complementary ? 0u : NN , NN ) ; }
+  //
+  const std::size_t success  =
+    std::upper_bound ( m_data.begin () , m_data.end   () , x ) - m_data.begin() ;
+  //
+  return Ostap::Math::binomEff ( m_complementary ? NN - success : success , NN ) ;
 }
 // ============================================================================
 // add a value to data container  
@@ -93,8 +117,6 @@ Ostap::Math::ECDF::add
   std::swap ( m_data , tmp2 ) ;
   return m_data.size () ;
 }
-
-
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

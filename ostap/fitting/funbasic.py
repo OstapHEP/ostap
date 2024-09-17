@@ -566,7 +566,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
     #  @see ostap.plotting.fit_draw.Line
     #  @see ostap.plotting.fit_draw.Area
     def add_draw_option ( self , key , options = () ) :
-        """Add/define new default draw option
+        """ Add/define new default draw option
         - see ostap.plotting.fit_draw
         - see ostap.plotting.fit_draw.Style
         - see ostap.plotting.fit_draw.Styles
@@ -612,7 +612,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
     #  >>> ypdf = xpdf.clone ( xvar = yvar ,  name = 'PDFy' ) 
     #  @endcode 
     def clone ( self , **kwargs ) :
-        """Make a clone for the given fucction/PDF with
+        """ Make a clone for the given fuction/PDF with
         the optional replacement of the certain parameters
         >>> xpdf = ...
         >>> ypdf = xpdf.clone ( xvar = yvar ,  name = 'PDFy' ) 
@@ -700,7 +700,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
                style                 = None ,   ## use another style ?
                args                  = ()   , 
                **kwargs                     ) :
-        """  Visualize the function
+        """ Visualize the function
         >>> fun.draw ()
 
         - Drawing options can be specified as keyword arguments:
