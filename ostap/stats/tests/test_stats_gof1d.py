@@ -21,7 +21,7 @@ gauss = M.Gauss_pdf     ( 'G' , xvar = xvar , mean = 5 , sigma = 1 )
 model = M.Fit1D         ( signal = gauss , background = 'flat'     )
 
 
-ND = 150
+ND = 200
 # ==============================================================================
 def test_good_fit_1 ( ) :
     
@@ -75,8 +75,8 @@ def test_bad_fit_1 ( ) :
 
     gauss.mean  = 5
     gauss.sigma = 0.75
-    model.S     = 0.95 * ND
-    model.B     = 0.05 * ND
+    model.S     = 0.96 * ND
+    model.B     = 0.04 * ND
     
     data = model.generate ( ND , sample = True )
 
@@ -91,7 +91,6 @@ def test_bad_fit_1 ( ) :
         got = G1D.GoF1DToys ( gauss , data , 10000 )
         logger.info ( 'Goodness-of-fit with toys:\n%s' % got )
         
-
 
 # ===============================================================================
 if '__main__' == __name__ :

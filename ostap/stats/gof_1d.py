@@ -23,6 +23,7 @@ from   ostap.fitting.pdfbasic import PDF1
 from   ostap.core.core        import SE, VE, Ostap
 from   ostap.math.base        import doubles, axis_range  
 from   ostap.math.models      import f1_draw 
+from   ostap.math.math_ve     import probit
 import ostap.fitting.ds2numpy 
 import ostap.fitting.roofit
 import ROOT, math  
@@ -194,7 +195,15 @@ class GoF1D(object) :
 
         ## evalute CDF for sorted data 
         self.__cdf_data = vct_cdf ( self.__data )
-
+ 
+        self.__KS = kolmogorov_smirnov ( self.__cdf_data )
+        self.__AD = anderson_darling   ( self.__cdf_data )
+        self.__CM = cramer_von_mises   ( self.__cdf_data )
+        self.__ZK = ZK                 ( self.__cdf_data )
+        self.__ZA = ZA                 ( self.__cdf_data )
+        self.__ZC = ZC                 ( self.__cdf_data )
+       
+        
         del vct_cdf 
 
     # =========================================================================
@@ -211,46 +220,52 @@ class GoF1D(object) :
         return self.__ecdf
     
     # =========================================================================
-    ## Get Kolmogorov-Smirnov statistiscs KS
+    ## Get Kolmogorov-Smirnov statistiscs 
+    @property 
     def kolmogorov_smirnov ( self ) :
         """ Get Kolmogorov-Smirnov statistiscs KS
         """
-        return kolmogorov_smirnov ( self.__cdf_data )
+        return self.__KS 
 
     # ===============================================
-    ## Get Anderson-Darling  statistiscs AD^2
+    ## Get Anderson-Darling  statistiscs 
+    @property 
     def anderson_darling ( self ) :
-        """ Get Anderson-Darling statistiscs AD^2
+        """ Get Anderson-Darling statistiscs 
         """
-        return anderson_darling ( self.__cdf_data )
+        return self.__AD 
 
     # =========================================================================
-    ## Get Cramer-von Mises statistics CM^2
+    ## Get Cramer-von Mises statistics 
+    @property 
     def cramer_von_mises ( self ) :
-        """ Get Cramer-von Mises statistics CM^2
+        """ Get Cramer-von Mises statistics 
         """
-        return cramer_von_mises ( self.__cdf_data )
+        return self.__CM 
     
     # =========================================================================
     ## Get ZK statististics 
+    @property 
     def ZK  ( self ) :
-        """ Get ZK statististics 
+        """ Get ZK statistics
         """
-        return ZK ( self.__cdf_data )
+        return self.__ZK 
         
     # =========================================================================
     ## Get ZA statististics 
+    @property 
     def ZA  ( self ) :
-        """ Get ZA statististics 
+        """ Get ZA statistics
         """        
-        return ZA ( self.__cdf_data )
+        return self.__ZA
     
     # =========================================================================
     ## Get ZC statististics 
+    @property 
     def ZC  ( self ) :
-        """ Get ZC statististics 
+        """ Get ZC statistics
         """        
-        return ZC ( self.__cdf_data )
+        return self.__ZC 
             
     @property
     def data ( self ) :
@@ -270,32 +285,32 @@ class GoF1D(object) :
         from   ostap.logger.pretty import pretty_float
         import ostap.logger.table  as     T 
 
-        ks , expo = pretty_float ( self.kolmogorov_smirnov() , width = width , precision = precision )
+        ks , expo = pretty_float ( self.kolmogorov_smirnov , width = width , precision = precision )
         if expo : row = 'Kolmogorov-Smirnov' , ks , '10^%+d' % expo
         else    : row = 'Kolmogorov-Smirnov' , ks              
         rows.append ( row )
         
-        ad2 , expo = pretty_float ( self.anderson_darling() , width = width , precision = precision )
-        if expo : row = 'Anderson-Darling' , ad2, '10^%+d' % expo
-        else    : row = 'Anderson-Darling' , ad2             
+        ad , expo = pretty_float ( self.anderson_darling , width = width , precision = precision )
+        if expo : row = 'Anderson-Darling' , ad , '10^%+d' % expo
+        else    : row = 'Anderson-Darling' , ad              
         rows.append ( row )
 
-        cm2 , expo = pretty_float ( self.cramer_von_mises () , width = width , precision = precision )
-        if expo : row = 'Cramer-von Mises' , cm2, '10^%+d' % expo
-        else    : row = 'Cramer-von Mises' , cm2             
+        cm , expo = pretty_float ( self.cramer_von_mises  , width = width , precision = precision )
+        if expo : row = 'Cramer-von Mises' , cm , '10^%+d' % expo
+        else    : row = 'Cramer-von Mises' , cm              
         rows.append ( row )
 
-        zk , expo = pretty_float ( self.ZK() , width = width , precision = precision )
+        zk , expo = pretty_float ( self.ZK , width = width , precision = precision )
         if expo : row = 'ZK' , zk, '10^%+d' % expo
         else    : row = 'ZK' , zk             
         rows.append ( row )
 
-        za , expo = pretty_float ( self.ZA() , width = width , precision = precision )
+        za , expo = pretty_float ( self.ZA , width = width , precision = precision )
         if expo : row = 'ZA' , za, '10^%+d' % expo
         else    : row = 'ZA' , za             
         rows.append ( row )
 
-        zc , expo = pretty_float ( self.ZC() , width = width , precision = precision )
+        zc , expo = pretty_float ( self.ZC , width = width , precision = precision )
         if expo : row = 'ZC' , zc, '10^%+d' % expo
         else    : row = 'ZC' , zc             
         rows.append ( row )
@@ -382,6 +397,13 @@ class GoF1DToys(object) :
         self.__ecdfs   = {} 
         self.__cnts    = defaultdict(SE)
 
+        self.__KS = kolmogorov_smirnov ( self.__cdf_data )
+        self.__AD = anderson_darling   ( self.__cdf_data )
+        self.__CM = cramer_von_mises   ( self.__cdf_data )
+        self.__ZK = ZK                 ( self.__cdf_data )
+        self.__ZA = ZA                 ( self.__cdf_data )
+        self.__ZC = ZC                 ( self.__cdf_data )
+
         if 0 < nToys : self.run ( nToys , silent = silent ) 
 
     # ===============================================================================
@@ -428,8 +450,10 @@ class GoF1DToys(object) :
             ## delete data
             if isinstance ( dset , ROOT.RooDataSet ) : 
                 dset = Ostap.MoreRooFit.delete_data ( dset )
+                
             del dset
-            
+            del data
+            del cdf_data            
 
         ECDF = Ostap.Math.ECDF 
         for key in results :
@@ -455,11 +479,60 @@ class GoF1DToys(object) :
         return self.__ecdfs
 
     # =========================================================================
-    ## format a table row 
+    ## Get Kolmogorov-Smirnov statistiscs 
+    @property 
+    def kolmogorov_smirnov ( self ) :
+        """ Get Kolmogorov-Smirnov statistiscs KS
+        """
+        return self.__KS 
+
+    # ===============================================
+    ## Get Anderson-Darling  statistiscs 
+    @property 
+    def anderson_darling ( self ) :
+        """ Get Anderson-Darling statistiscs 
+        """
+        return self.__AD 
+
+    # =========================================================================
+    ## Get Cramer-von Mises statistics 
+    @property 
+    def cramer_von_mises ( self ) :
+        """ Get Cramer-von Mises statistics 
+        """
+        return self.__CM
+    
+    # =========================================================================
+    ## Get ZK statististics 
+    @property 
+    def ZK  ( self ) :
+        """ Get ZK statistics 
+        """
+        return self.__ZK 
+        
+    # =========================================================================
+    ## Get ZA statististics 
+    @property 
+    def ZA  ( self ) :
+        """ Get ZA statistics
+        """        
+        return self.__ZA
+    
+    # =========================================================================
+    ## Get ZC statististics 
+    @property 
+    def ZC  ( self ) :
+        """ Get ZC statistics 
+        """        
+        return self.__ZC 
+            
+    # =========================================================================
+    ## format a row in the table
     def _row  ( self , what , val , cnt , ecdf , width = 5 , precision = 3 ) :
+        """ Format a row in the table
+        """
     
         from   ostap.logger.pretty import fmt_pretty_ve 
-        from   ostap.math.math_ve  import probit
         
         mean = cnt.mean() 
         vmin, vmax = cnt.minmax() 
@@ -487,39 +560,39 @@ class GoF1DToys(object) :
     # =========================================================================
     ## Make a summary table
     def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 ) :
+        """ Make a summary table
+        """
         
         import ostap.logger.table  as     T 
-        
-        
-        rows = [ ( 'Statistics' , 'Value' , 'mean' , 'rms' , 'min/max' , '' , 'p-value[%]' , '#sigma' ) ] 
+                
+        rows = [ ( 'Statistics' , 'Value' , 'mean' , 'rms' , 'min/max' , '' , 'p-value [%]' , '#sigma' ) ] 
 
-        
-        val  = kolmogorov_smirnov ( self.__cdf_data )
+        val  = self.__KS 
         cnt  = self.__cnts  ['KS']
         ecdf = self.__ecdfs ['KS']
         rows.append ( self._row ( 'Kolmogorov-Smirnov' , val , cnt , ecdf , width = width , precision = precision ) )
         
-        val  = anderson_darling ( self.__cdf_data )
+        val  = self.__AD  
         cnt  = self.__cnts  ['AD']
         ecdf = self.__ecdfs ['AD']
         rows.append ( self._row ( 'Anderson-Darling' , val , cnt , ecdf , width = width , precision = precision ) ) 
 
-        val  = cramer_von_mises ( self.__cdf_data )
+        val  = self.__CM 
         cnt  = self.__cnts  ['CM']
         ecdf = self.__ecdfs ['CM']
         rows.append ( self._row ( 'Cramer-von Mises' , val , cnt , ecdf , width = width , precision = precision ) ) 
 
-        val  = ZK  ( self.__cdf_data )
+        val  = self.__ZK 
         cnt  = self.__cnts  ['ZK']
         ecdf = self.__ecdfs ['ZK']
         rows.append ( self._row ( 'ZK' , val , cnt , ecdf , width = width , precision = precision ) ) 
 
-        val  = ZA  ( self.__cdf_data )
+        val  = self.__ZA 
         cnt  = self.__cnts  ['ZA']
         ecdf = self.__ecdfs ['ZA']
         rows.append ( self._row ( 'ZA' , val , cnt , ecdf , width = width , precision = precision ) ) 
 
-        val  = ZC  ( self.__cdf_data )
+        val  = self.__ZC 
         cnt  = self.__cnts  ['ZC']
         ecdf = self.__ecdfs ['ZC']
         rows.append ( self._row ( 'ZC' , val , cnt , ecdf , width = width , precision = precision ) ) 
@@ -547,9 +620,7 @@ class GoF1DToys(object) :
 
     __repr__ = table
     __str__  = table
-    
-
-        
+            
 # =============================================================================
 if '__main__' == __name__ :
     
