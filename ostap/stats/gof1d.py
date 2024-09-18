@@ -41,6 +41,9 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Simple utilities for goodness-of-1D-fit studies' )
 # =============================================================================
+if  ( 6 , 32 ) <= root_info : data2vct = lambda s : s
+else                        : data2vct = lambda s : doubles ( s ) 
+# =============================================================================
 ## Get Kolmogorov-Smirnov statistis KS
 #  @code
 #  cdf_data =...
@@ -189,9 +192,9 @@ class GoF1D(object) :
 
         ## sorted data 
         self.__data     = np.sort  ( data )
-        
+
         ## empirical CDF function 
-        self.__ecdf     = Ostap.Math.ECDF ( self.__data ) 
+        self.__ecdf     = Ostap.Math.ECDF ( data2vct ( self.__data ) )
 
         ## evalute CDF for sorted data 
         self.__cdf_data = vct_cdf ( self.__data )
@@ -474,7 +477,7 @@ class GoF1DToys(object) :
             data = results [ key ]
             if not data : continue
             if not key in self.__ecdfs : self.__ecdfs [ key ] = ECDF ( data , True ) ## complementary ECDF!
-            else                       : self.__ecdfs [ key ]  .add  ( doubles ( data ) ) 
+            else                       : self.__ecdfs [ key ]  .add  ( data2vct ( data ) ) 
             
         del results 
     
