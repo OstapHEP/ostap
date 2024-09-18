@@ -63,7 +63,9 @@ def test_good_fit_2 ( ) :
         gof = G1D.GoF1D     ( model , data )
         logger.info ( 'Goodness-of-fit:\n%s' % gof )
 
-        got = G1D.GoF1DToys ( model , data )
+        got = G1D.GoF1DToys ( model , data , 500 )
+        got.run ( 500 ) 
+        got.run ( 500 ) 
         logger.info ( 'Goodness-of-fit with toys:\n%s' % got )
 
 
@@ -89,6 +91,7 @@ def test_bad_fit_1 ( ) :
         logger.info ( 'Goodness-of-fit:\n%s' % gof )
 
         got = G1D.GoF1DToys ( gauss , data , 10000 )
+        got.run ( 5000 ) 
         logger.info ( 'Goodness-of-fit with toys:\n%s' % got )
         
 

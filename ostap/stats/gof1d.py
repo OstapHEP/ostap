@@ -18,6 +18,7 @@ __all__     = (
     )
 # =============================================================================
 from   collections            import defaultdict, namedtuple
+from   ostap.core.meta_info   import root_info 
 from   ostap.fitting.funbasic import AFUN1
 from   ostap.fitting.pdfbasic import PDF1
 from   ostap.core.core        import SE, VE, Ostap
