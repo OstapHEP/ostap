@@ -42,7 +42,7 @@ from   ostap.core.core import ( cpp      , Ostap     , cidict_fun      ,
                                 natural_entry        ,
                                 natural_number       )
 from   ostap.math.base          import frexp10
-from   ostap.math.math_ve       import probit 
+from   ostap.math.math_ve       import significance
 from   ostap.core.ostap_types   import ( integer_types  , num_types    ,
                                          long_type      , sized_types   , 
                                          sequence_types ) 
@@ -4438,15 +4438,12 @@ def _h1_signif_ ( h1 ) :
     hp = h1.effic ( cut_low = True )
     hs = hp.clone ()
 
-    the_last = VE()
+    the_last = VE ()
     for i, _ , y in hs.items() :
-        yy = ( 1.0 + ( 1.0 - y ) ) / 2.0
-        yv = yy.value()
-        if   0.5 <= yv < 1 : 
-            s        = probit ( yy )
-            the_last = s 
+        if 0 < y.value() < 1 :
+            s        = significance ( y ) 
+            the_last = s
         else : s = the_last
-        ##
         hs [ i ] = s 
         
     hp.blue ()

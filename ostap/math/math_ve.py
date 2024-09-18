@@ -13,28 +13,29 @@ __date__    = "2014-06-02"
 __version__ = ""
 # =============================================================================
 __all__     = (
-    'exp'        , 'expm1'      ,
-    'log'        , 'log10'      , 'log1p'   , 
-    'sqrt'       , 'cbrt'       , 'pow'     ,   
-    'sin'        , 'cos'        , 'tan'     , 
-    'sinh'       , 'cosh'       , 'tanh'    , 'sech'     ,
-    'asin'       , 'acos'       , 'atan'    , 'atan2'    , 
-    'asinh'      , 'acosh'      , 'atanh'   ,
-    'erf'        , 'erfc'       , 'erfi'    , 'erfcx'    ,
-    'sinc'       , 
-    'probit'     , 'pochhammer' , 
-    'gamma'      , 'tgamma'     , 'lgamma'  , 'igamma'   ,
-    'psi'        , 'polygamma'  , 'digamma' , 'trigamma' ,
-    'beta'       , 'lnbeta'     ,
-    'gd'         , 'gd_inv'     ,
-    'Ai'         , 'Bi'         ,
-    'exp2'       , 'log2'       ,
-    'bessel_J'   , 'bessel_Y'   , 
-    'bessel_I'   , 'bessel_K'   , 
-    'gauss_pdf'  , 'gauss_cdf'  ,
-    'hypot'      , 'fma'        ,
-    'minv'       , 'maxv'       ,
-    'agm'        , 'ghm'        ,
+    'exp'          , 'expm1'      ,
+    'log'          , 'log10'      , 'log1p'   , 
+    'sqrt'         , 'cbrt'       , 'pow'     ,   
+    'sin'          , 'cos'        , 'tan'     , 
+    'sinh'         , 'cosh'       , 'tanh'    , 'sech'     ,
+    'asin'         , 'acos'       , 'atan'    , 'atan2'    , 
+    'asinh'        , 'acosh'      , 'atanh'   ,
+    'erf'          , 'erfc'       , 'erfi'    , 'erfcx'    ,
+    'sinc'         , 
+    'probit'       , 'pochhammer' , 
+    'gamma'        , 'tgamma'     , 'lgamma'  , 'igamma'   ,
+    'psi'          , 'polygamma'  , 'digamma' , 'trigamma' ,
+    'beta'         , 'lnbeta'     ,
+    'gd'           , 'gd_inv'     ,
+    'Ai'           , 'Bi'         ,
+    'exp2'         , 'log2'       ,
+    'bessel_J'     , 'bessel_Y'   , 
+    'bessel_I'     , 'bessel_K'   , 
+    'gauss_pdf'    , 'gauss_cdf'  ,
+    'hypot'        , 'fma'        ,
+    'minv'         , 'maxv'       ,
+    'agm'          , 'ghm'        ,
+    'significance' , 'nsigmas'    , 'nsigma'
     )
 # =============================================================================
 # logging 
@@ -52,9 +53,9 @@ _ln2_i = 1/math.log(2.0)                 ## useful constant
 # =============================================================================
 
 # =============================================================================
-## define ``exp'' function 
+## define `exp` function 
 def exp ( x ) :
-    """ 'exp' function taking into account the uncertainties
+    """ `exp` function taking into account the uncertainties
     """
     fun = getattr ( x , '__exp__' , None )
     if fun : return fun()
@@ -62,27 +63,27 @@ def exp ( x ) :
     return math.exp ( x )
 
 # =============================================================================
-## define ``exp2'' function 
+## define `exp2` function 
 def exp2 ( x ) :
-    """ 'exp2' function taking into account the uncertainties
+    """ `exp2` function taking into account the uncertainties
     """
     fun = getattr ( x , '__exp2__' , None )
     if fun : return fun()
     return 2**x 
 
 # =============================================================================
-## define ``expm1'' function 
+## define `expm1` function 
 def expm1 ( x ) :
-    """ 'expm1' function taking into account the uncertainties
+    """ `expm1` function taking into account the uncertainties
     """
     fun = getattr ( x , '__expm1__' , None )
     if fun : return fun()
     return math.expm1 ( x )
 
 # =============================================================================
-## define ``log'' function 
+## define `log` function 
 def log ( x ) :
-    """'log' function taking into account the uncertainties
+    """ `log` function taking into account the uncertainties
     """
     fun = getattr ( x , '__log__' , None )
     if fun : return fun()
@@ -90,9 +91,9 @@ def log ( x ) :
     return math.log ( x )
 
 # =============================================================================
-## define ``log2'' function 
+## define `log2' function 
 def log2 ( x ) :
-    """'log2' function taking into account the uncertainties
+    """ `log2` function taking into account the uncertainties
     """
     fun = getattr ( x , '__log2__' , None )
     if fun : return fun()
@@ -100,9 +101,9 @@ def log2 ( x ) :
     return _ln2_i * math.log ( x ) 
 
 # =============================================================================
-## define ``log10'' function 
+## define `log10' function 
 def log10 ( x ) :
-    """'log10' function taking into account the uncertainties
+    """ `log10` function taking into account the uncertainties
     """
     fun = getattr ( x , '__log10__' , None )
     if fun : return fun()
@@ -110,18 +111,18 @@ def log10 ( x ) :
     return math.log10 ( x )
 
 # =============================================================================
-## define ``log1p'' function 
+## define `log1p` function 
 def log1p ( x ) :
-    """'log1p' function taking into account the uncertainties
+    """ `log1p` function taking into account the uncertainties
     """
     fun = getattr ( x , '__log1p__' , None )
     if fun : return fun()
     return math.log1p ( x )
 
 # =============================================================================
-## define ``sqrt'' function 
+## define `sqrt` function 
 def sqrt ( x ) :
-    """'sqrt' function taking into account the uncertainties
+    """ `sqrt` function taking into account the uncertainties
     """
     fun = getattr ( x , '__sqrt__' , None )
     if fun : return fun()
@@ -129,26 +130,26 @@ def sqrt ( x ) :
     return math.sqrt ( x )
 
 # =============================================================================
-## define ``cbrt'' function 
+## define `cbrt` function 
 def cbrt ( x ) :
-    """'cbrt' function taking into account the uncertainties
+    """ `cbrt` function taking into account the uncertainties
     """
     fun = getattr ( x , '__cbrt__' , None )
     if fun : return fun()
     return math.pow ( x , 1.0/3.0 )
 
 # =============================================================================
-## define ``pow'' function 
+## define `pow' function 
 def pow ( x , y , *a ) :
-    """'pow' function taking into account the uncertainties
+    """ `pow` function taking into account the uncertainties
     """
     if   isinstance ( x , VE ) or isinstance ( y , VE ) : return x**y 
     return math.pow ( x , y , *a ) 
  
 # =============================================================================
-## define ``sin'' function 
+## define `sin` function 
 def sin ( x ) :
-    """'Sine' function taking into account the uncertainties
+    """ `sin` function taking into account the uncertainties
     """
     fun = getattr ( x , '__sin__' , None )
     if fun : return fun()
@@ -156,9 +157,9 @@ def sin ( x ) :
     return math.sin ( x )
 
 # =============================================================================
-## define ``cos'' function 
+## define `cos` function 
 def cos ( x ) :
-    """'Cosine' function taking into account the uncertainties
+    """ `cos` function taking into account the uncertainties
     """
     fun = getattr ( x , '__cos__' , None )
     if fun : return fun()
@@ -166,9 +167,9 @@ def cos ( x ) :
     return math.cos ( x )
 
 # =============================================================================
-## define ``tan'' function 
+## define `tan` function 
 def tan ( x ) :
-    """'tangent' function taking into account the uncertainties
+    """ `tangent` function taking into account the uncertainties
     """
     fun = getattr ( x , '__tan__' , None )
     if fun : return fun()
@@ -176,9 +177,9 @@ def tan ( x ) :
     return math.tan ( x )
 
 # =============================================================================
-## define ``sinh'' function 
+## define `sinh` function 
 def sinh ( x ) :
-    """'Sinh' function taking into account the uncertainties
+    """ `sinh`function taking into account the uncertainties
     """
     fun = getattr ( x , '__sinh__' , None )
     if fun : return fun()
@@ -186,9 +187,9 @@ def sinh ( x ) :
     return math.sinh ( x )
 
 # =============================================================================
-## define ``cosh'' function 
+## define `cosh` function 
 def cosh ( x ) :
-    """'Cosh' function taking into account the uncertainties
+    """ `cosh` function taking into account the uncertainties
     """
     fun = getattr ( x , '__cosh__' , None )
     if fun : return fun()
@@ -196,9 +197,9 @@ def cosh ( x ) :
     return math.cosh ( x )
 
 # =============================================================================
-## define ``tanh'' function 
+## define `tanh` function 
 def tanh ( x ) :
-    """'tanh' function taking into account the uncertainties
+    """ `tanh' function taking into account the uncertainties
     """
     fun = getattr ( x , '__tanh__' , None )
     if fun : return fun()
@@ -211,7 +212,7 @@ _erfi_  = Ostap.Math.erfi
 _erfcx_ = Ostap.Math.erfcx
 
 # =============================================================================
-## define ``erf'' function 
+## define `erf` function 
 #  @see https://en.wikipedia.org/wiki/Error_function
 def erf ( x ) :
     """ Error function taking into account the uncertainties
@@ -222,7 +223,7 @@ def erf ( x ) :
     return _erf_ ( x )
 
 # =============================================================================
-## define ``erfc'' function 
+## define `erfc' function : complementary error function 
 #  @see https://en.wikipedia.org/wiki/Error_function
 def erfc ( x ) :
     """ Complemenatry error function taking into account the uncertainties
@@ -233,7 +234,7 @@ def erfc ( x ) :
     return _erfc_( x )
 
 # =============================================================================
-## define ``erfcx'' function 
+## define `erfcx' function 
 #  @see https://en.wikipedia.org/wiki/Error_function
 def erfcx ( x ) :
     """ Complemenatry scaled error function taking into account the uncertainties
@@ -244,7 +245,7 @@ def erfcx ( x ) :
     return _erfcx_( x )
 
 # =============================================================================
-## define ``erfi'' function 
+## define `erfi` function 
 #  @see https://en.wikipedia.org/wiki/Error_function
 def erfi ( x ) :
     """ Imaginary error function taking into account the uncertainties
@@ -256,36 +257,36 @@ def erfi ( x ) :
 
 
 # =============================================================================
-## define ``asin'' function 
+## define `asin` function 
 def asin ( x ) :
-    """'asin' function taking into account the uncertainties
+    """ `asin` function taking into account the uncertainties
     """
     fun = getattr ( x , '__asin__' , None )
     if fun : return fun()
     return math.asin ( x )
 
 # =============================================================================
-## define ``acos'' function 
+## define `acos` function 
 def acos ( x ) :
-    """'acos' function taking into account the uncertainties
+    """ `acos` function taking into account the uncertainties
     """
     fun = getattr ( x , '__acos__' , None )
     if fun : return fun()
     return math.acos ( x )
 
 # =============================================================================
-## define ``atan'' function 
+## define `atan` function 
 def atan ( x ) :
-    """'atan' function taking into account the uncertainties
+    """ `atan` function taking into account the uncertainties
     """
     fun = getattr ( x , '__atan__' , None )
     if fun : return fun()
     return math.atan ( x )
 
 # =============================================================================
-## define ``atan2'' function 
+## define `atan2` function 
 def atan2 ( x , b = 1 ) :
-    """'atan2' function
+    """ `atan2` function
     """
     fun = getattr ( x , '__atan2__' , None )
     if fun : return fun ( b )
@@ -293,27 +294,27 @@ def atan2 ( x , b = 1 ) :
 
 
 # =============================================================================
-## define ``asinh'' function 
+## define `asinh` function 
 def asinh ( x ) :
-    """'asinh' function taking into account the uncertainties
+    """ `asinh` function taking into account the uncertainties
     """
     fun = getattr ( x , '__asinh__' , None )
     if fun : return fun()
     return math.asinh ( x )
 
 # =============================================================================
-## define ``acosh'' function 
+## define `acosh` function 
 def acosh ( x ) :
-    """'acosh' function taking into account the uncertainties
+    """ `acosh` function taking into account the uncertainties
     """
     fun = getattr ( x , '__acosh__' , None )
     if fun : return fun()
     return math.acosh ( x )
 
 # =============================================================================
-## define ``atanh'' function 
+## define `atanh` function 
 def atanh ( x ) :
-    """'atanh' function taking into account the uncertainties
+    """ `atanh` function taking into account the uncertainties
     """
     fun = getattr ( x , '__atanh__' , None )
     if fun : return fun()
@@ -321,33 +322,36 @@ def atanh ( x ) :
 
 
 # =============================================================================
-## define ``tgamma'' function 
+## define `tgamma` function 
 def tgamma ( x ) :
-    """'tgamma' function taking into account the uncertainties
+    """ `tgamma` function taking into account the uncertainties
     """
     fun = getattr ( x , '__tgamma__' , None )
     if fun : return fun()
     return math.gamma ( x )
 
-## define ``gamma'' function 
+# =============================================================================
+## define `gamma' function 
 gamma = tgamma
 
 # =============================================================================
-## define ``lgamma'' function 
+## define `lgamma` function 
 def lgamma ( x ) :
-    """'lgamma' function taking into account the uncertainties
+    """ `lgamma` function taking into account the uncertainties
     """
     fun = getattr ( x , '__lgamma__' , None )
     if fun : return fun()
     return math.lgamma ( x )
 
-_igamma_ = Ostap.Math.igamma 
 # =============================================================================
-## define ``igamma'' function
+_igamma_ = Ostap.Math.igamma
+
+# =============================================================================
+## define `igamma` function
 #  \f$ f(x) = \frac{1}{\Gamma(x)}\f$
 #  @see https://en.wikipedia.org/wiki/Reciprocal_gamma_function
 def igamma ( x ) :
-    r"""'igamma' function taking into account the uncertainties
+    r""" `igamma` function taking into account the uncertainties
     \f[ f(x) = \frac{1}{\Gamma(x)} \f]
     - see https://en.wikipedia.org/wiki/Reciprocal_gamma_function
     """
@@ -359,7 +363,7 @@ _psi_ = Ostap.Math.psi
 # =============================================================================
 ## define polygamma function
 def psi ( x , n = 0  ) :
-    """Polygamma function"""
+    """ Polygamma function"""
     assert isinstance ( n , integer_types ) and 0 <= n ,\
            'Invalid parameter n=%s' % n  
     fun = getattr ( x , '__psi__' , None )
@@ -369,14 +373,14 @@ def psi ( x , n = 0  ) :
 # =============================================================================
 ## define digamma function
 def digamma  ( x ) :
-    """Digamma function"""
-    return psi ( x )
+    """ Digamma function"""
+    return psi ( x , 0 )
 
 # =============================================================================
 ## define trigamma function
 def trigamma  ( x ) :
-    """Trigamma function"""
-    return psi ( x , 1  )
+    """ Trigamma function"""
+    return psi ( x , 1 )
 
 # =============================================================================
 ## define polygamma function
@@ -384,12 +388,12 @@ def polygamma  ( x , n  ) :
     """Polygamma function"""
     return psi ( x , n )
 
+# =============================================================================
 _sinc_ = Ostap.Math.sinc  
 # =============================================================================
 ## define sinc function  \f$ \frac{ \sin x }{x} \f$ 
 def sinc  ( x ) :
-    """ Sinc function:
-    sin(x)/x
+    """ Sinc function: sin(x)/x
     """
     fun = getattr ( x , '__sinc__' , None )
     if fun : return fun ()
@@ -399,7 +403,7 @@ _beta_ = Ostap.Math.beta
 # =============================================================================
 ## define Beta function
 def beta ( x , y ) :
-    """Beta function"""    
+    """ Beta function"""    
     fun = getattr ( x , '__beta__' , None )
     if fun : return fun ( y )
     fun = getattr ( y , '__beta__' , None )
@@ -410,38 +414,40 @@ _lnbeta_ = Ostap.Math.lnbeta
 # =============================================================================
 ## define log(Beta) function
 def lnbeta ( x , y ) :
-    """log(Beta) function"""    
+    """ log(Beta) function"""    
     fun = getattr ( x , '__lnbeta__' , None )
     if fun : return fun ( y )
     fun = getattr ( y , '__lnbeta__' , None )
     if fun : return fun ( x )
     return _lnbeta_ ( x , y )
 
+# =============================================================================
 _gd_ = Ostap.Math.gd
 # =============================================================================
 ## define Gudermannian function
 #  @see https://en.wikipedia.org/wiki/Gudermannian_function
 def gd ( x ) :
-    """Gudermannian function
+    """ Gudermannian function
     - see https://en.wikipedia.org/wiki/Gudermannian_function
     """    
     fun = getattr ( x , '__gd__' , None )
     if fun : return fun ()
     return _gd_ ( x )
 
+# =============================================================================
 _gd_inv_ = Ostap.Math.gd_inv
 # =============================================================================
 ## define inverse Gudermannian function
 #  @see https://en.wikipedia.org/wiki/Gudermannian_function
 def gd_inv ( x ) :
-    """Inverse Gudermannian function
+    """ Inverse Gudermannian function
     - see https://en.wikipedia.org/wiki/Gudermannian_function
     """    
     fun = getattr ( x , '__gd_inv__' , None )
     if fun : return fun ()
     return _gd_inv_ ( x )
 
-
+# =============================================================================
 _Ai_ = Ostap.Math.Ai
 # =============================================================================
 ##  Airy function Ai 
@@ -456,6 +462,7 @@ def Ai ( x ) :
     if fun : return fun ()
     return _Ai_ ( x )
 
+# =============================================================================
 _Bi_ = Ostap.Math.Bi
 # =============================================================================
 ##  Airy function Bi 
@@ -470,6 +477,7 @@ def Bi ( x ) :
     if fun : return fun ()
     return _Bi_ ( x )
 
+# =============================================================================
 _sech_ = Ostap.Math.sech 
 # =============================================================================
 ## define 'sech' function 
@@ -481,6 +489,7 @@ def sech ( x ) :
     if fun : return fun()
     return _sech_ ( x )
 
+# =============================================================================
 _probit_ = Ostap.Math.probit  
 # =============================================================================
 ## define `probit' function 
@@ -496,7 +505,7 @@ def probit ( x ) :
 # =============================================================================
 ## define `min' function \f$ \min (x,y) \f$ 
 def minv ( x , y ) :
-    """'minv' function: min (x,y) 
+    """ `minv` function: min (x,y) 
     """
     fun = getattr ( x , '__minv__' , None )
     if fun : return fun ( y )
@@ -507,7 +516,7 @@ def minv ( x , y ) :
 # =============================================================================
 ## define `max' function \f$ \max (x,y) \f$ 
 def maxv ( x , y ) :
-    """'maxv' function: max (x,y) 
+    """ `maxv` function: max (x,y) 
     """
     fun = getattr ( x , '__maxv__' , None )
     if fun : return fun ( y )
@@ -515,7 +524,7 @@ def maxv ( x , y ) :
     if fun : return fun ( x )
     return max ( x , y )
 
-
+# =============================================================================
 _fma_ = Ostap.Math.fma
 # =============================================================================
 ## evaluate fma(x,y,z) = x*y+x 
@@ -547,6 +556,7 @@ def fma ( x , y , z , cxy = 0 , cxz = 0 , cyz = 0 ) :
     _z = VE ( z )
     return _fma_ ( _x , _y , _z , cxy , cxz , cyz )
 
+# =============================================================================
 _hypot_ = Ostap.Math.hypot
 # =============================================================================
 ## evaluate hypot(x,y) = sqrt(x*x+y*y)
@@ -563,7 +573,7 @@ def hypot ( x , y , c = 0 ) :
     _y = VE ( y )
     return _hypot_ ( _x , _y , c )
 
-
+# =============================================================================
 _pochhammer = Ostap.Math.pochhammer
 # =============================================================================
 ## \overload calculate Pochhammer's  symbol
@@ -602,7 +612,7 @@ _ghm_ = Ostap.Math.ghm
 #  @return Arithmetic-geometric mean 
 #  @see Ostap::Math::agm
 def agm ( x  , y ) :
-    """Get Arithmetic-geometric mean 
+    """ Get Arithmetic-geometric mean 
     - see https://en.wikipedia.org/wiki/Arithmetic%E2%80%93geometric_mean
     - see `Ostap.Math.agm`
     """
@@ -615,13 +625,12 @@ def agm ( x  , y ) :
 #  @return Geometric-harmonic  mean         
 #  @see Ostap::Math::agm
 def ghm ( x  , y ) :
-    """Get Geometric-harmonic  mean         
+    """ Get Geometric-harmonic  mean         
     - see https://en.wikipedia.org/wiki/Geometric%E2%80%93harmonic_mean
     - see `Ostap.Math.ghm`
     """
     return _ghm_ ( x , y )
 # =============================================================================
-
 
 # =============================================================================
 _bessel_Jn  = Ostap.Math.bessel_Jn 
@@ -639,7 +648,7 @@ _bessel_Knu = Ostap.Math.bessel_Knu
 #  @see Ostap::Math::bessel_Jn
 #  @see Ostap::Math::bessel_Jnu
 def bessel_J ( nu , x ) : 
-    """Evaluate reguar Bessel function J_nu (x)
+    """ Evaluate regular Bessel function J_nu (x)
     - see https://en.wikipedia.org/wiki/Bessel_function
     - see `Ostap.Math.bessel_Jn`
     - see `Ostap.Math.bessel_Jnu`    
@@ -655,7 +664,7 @@ def bessel_J ( nu , x ) :
 #  @see Ostap::Math::bessel_Yn
 #  @see Ostap::Math::bessel_Ynu
 def bessel_Y ( nu , x ) : 
-    """Evaluate reguar Bessel function J_nu (x)
+    """ Evaluate irreguar Bessel function Y_nu (x)
     - see https://en.wikipedia.org/wiki/Bessel_function
     - see `Ostap.Math.bessel_Yn`
     - see `Ostap.Math.bessel_Ynu`    
@@ -673,7 +682,7 @@ def bessel_Y ( nu , x ) :
 #  @see Ostap::Math::bessel_In
 #  @see Ostap::Math::bessel_Inu
 def bessel_I ( nu , x ) : 
-    """Evaluate modified Bessel function I_nu (x)
+    """ Evaluate modified Bessel function I_nu (x)
     - see https://en.wikipedia.org/wiki/Bessel_function
     - see `Ostap.Math.bessel_In`
     - see `Ostap.Math.bessel_Inu`    
@@ -689,7 +698,7 @@ def bessel_I ( nu , x ) :
 #  @see Ostap::Math::bessel_Kn
 #  @see Ostap::Math::bessel_Knu
 def bessel_K ( nu , x ) : 
-    """Evaluate modified Bessel function K_nu (x)
+    """ Evaluate modified Bessel function K_nu (x)
     - see https://en.wikipedia.org/wiki/Bessel_function
     - see `Ostap.Math.bessel_Kn`
     - see `Ostap.Math.bessel_Knu`    
@@ -699,7 +708,7 @@ def bessel_K ( nu , x ) :
     else :
         raise TypeError ("invalid nu/index/order type!") 
     
-
+# =============================================================================
 _gauss_pdf_ = Ostap.Math.gauss_pdf
 # =============================================================================
 ## calculate the standard gaussian PDF
@@ -708,7 +717,7 @@ _gauss_pdf_ = Ostap.Math.gauss_pdf
 #  @param sigma sigma-parameter (width)
 #  @return gaussian PDF 
 def gauss_pdf( x , mu = 0.0 , sigma = 1.0 ) :
-    """Standard gaussian PDF:
+    """ Standard gaussian PDF:
     
     >>> x,mu, sigma = ....
     >>> pdf = gauss_pdf ( x  , mu , sigma )
@@ -724,13 +733,14 @@ _gauss_cdf_ = Ostap.Math.gauss_cdf
 #  @param sigma sigma-parameter (width)
 #  @return gaussian CDF 
 def gauss_cdf ( x , mu = 0.0 , sigma = 1.0 ) :
-    """Standard gaussian CDF:    
+    """ Standard gaussian CDF:    
     >>> x,mu, sigma = ....
     >>> cdf = gauss_cdf ( x  , mu , sigma )
     """
     y =  VE ( x ) 
     return _gauss_cdf_ ( y if 0 < y.cov2() else y.value () , mu , sigma )
 
+# ==============================================================================
 _FD_ = Ostap.Math.fermi_dirac 
 # =============================================================================
 ## Complete Fermi-Dirac integral
@@ -739,7 +749,7 @@ _FD_ = Ostap.Math.fermi_dirac
 #  @param x argument 
 #  @return return value of complete Fermi-Dirac integral 
 def fermi_dirac ( j , x ) :
-    """Complete Fermi-Dirac integral
+    """ Complete Fermi-Dirac integral
     """
     assert isinstance ( j , integer_types ) and 0 <= j , 'Invalid value of j!'
     ## 
@@ -748,9 +758,9 @@ def fermi_dirac ( j , x ) :
 # =============================================================================
 ## FIX
 #  @see https://sft.its.cern.ch/jira/browse/ROOT-6627'
-_a  = VE( 1  , 1 )
-_b  = VE( _a     )
-if     isequal ( _a.error () , _b.error () ) : pass 
+_a  = VE ( 1  , 1 )
+_b  = VE ( _a     )
+if   isequal ( _a.error () , _b.error () ) : pass 
 else :
     jira = 'https://sft.its.cern.ch/jira/browse/ROOT-6627'
     from ostap.core.meta_info import root_version 
@@ -758,6 +768,25 @@ else :
     logger.warning ( 'Temporarily disable cast of VE to float' )
     del VE.__float__
 
+# =============================================================================
+## Convert p-value/probability into significance (# of sigmas)
+#  @code
+#  pvalue = ...
+#  ns     = significance ( pvalue )
+#  ns     = nsigma       ( pvalue ) ## ditto 
+#  ns     = nsigmas      ( pvalue ) ## ditto 
+#  @endcode 
+#  @param p-value
+#  @return significance as number of standard deviations 
+def significance ( pvalue ) :
+    """ Convert p-value/probability into significance (# of sigmas)
+    """
+    return probit (  ( 1.0 + ( 1.0 - pvalue ) ) / 2.0 ) 
+
+# ============================================================================
+nsigma  = significance
+# ============================================================================
+nsigmas = significance
 
 # =============================================================================
 if '__main__' == __name__ :

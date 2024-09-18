@@ -8,7 +8,7 @@
 """
 # ==============================================================================
 import ostap.fitting.models  as     M 
-import ostap.stats.gof_1d    as     G1D 
+import ostap.stats.gof1d     as     G1D 
 from   ostap.plotting.canvas import use_canvas
 import ROOT  
 # ==============================================================================

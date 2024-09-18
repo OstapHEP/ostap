@@ -17,13 +17,13 @@ __date__    = "2024-09-16"
 __all__     = (
     )
 # =============================================================================
-from   collections            import defaultdict
+from   collections            import defaultdict, namedtuple
 from   ostap.fitting.funbasic import AFUN1
 from   ostap.fitting.pdfbasic import PDF1
 from   ostap.core.core        import SE, VE, Ostap
 from   ostap.math.base        import doubles, axis_range  
 from   ostap.math.models      import f1_draw 
-from   ostap.math.math_ve     import probit
+from   ostap.math.math_ve     import significance
 import ostap.fitting.ds2numpy 
 import ostap.fitting.roofit
 import ROOT, math  
@@ -36,10 +36,10 @@ except ImportError :
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.gof_1d' )
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.gof1d' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-logger.debug ( 'Simple utilities for goodness-of-fit studies (1D-case)' )
+logger.debug ( 'Simple utilities for goodness-of-1D-fit studies' )
 # =============================================================================
 ## Get Kolmogorov-Smirnov statistis KS
 #  @code
@@ -315,6 +315,7 @@ class GoF1D(object) :
         else    : row = 'ZC' , zc             
         rows.append ( row )
 
+        title = title if title else 'Goodness of 1D-fit' 
         return T.table ( rows , title = title , prefix = prefix , alignment = 'lcl' )
 
     __repr__ = table
@@ -358,6 +359,9 @@ class GoF1D(object) :
 class GoF1DToys(object) :
     """ Check Goodness of 1D-fits ysing toys 
     """
+    ## result of GoGptoys 
+    Result = namedtuple ( 'Result' , 'statistics counter pvalue nsigma' )
+    # =========================================================================
     def __init__ ( self           ,
                    pdf            ,
                    dataset        ,
@@ -395,7 +399,6 @@ class GoF1DToys(object) :
         self.__pdf     = pdf
                 
         self.__ecdfs   = {} 
-        self.__cnts    = defaultdict(SE)
 
         self.__KS = kolmogorov_smirnov ( self.__cdf_data )
         self.__AD = anderson_darling   ( self.__cdf_data )
@@ -404,6 +407,14 @@ class GoF1DToys(object) :
         self.__ZA = ZA                 ( self.__cdf_data )
         self.__ZC = ZC                 ( self.__cdf_data )
 
+        self.__KS_cnt = SE ()
+        self.__AD_cnt = SE ()
+        self.__CM_cnt = SE ()
+        self.__ZK_cnt = SE ()
+        self.__ZA_cnt = SE ()
+        self.__ZC_cnt = SE ()
+
+        self.__nToys  = 0 
         if 0 < nToys : self.run ( nToys , silent = silent ) 
 
     # ===============================================================================
@@ -433,12 +444,12 @@ class GoF1DToys(object) :
             za       = ZA                 ( cdf_data )
             zc       = ZC                 ( cdf_data )
             
-            self.__cnts [ 'KS'  ] += ks 
-            self.__cnts [ 'AD'  ] += ad 
-            self.__cnts [ 'CM'  ] += cm 
-            self.__cnts [ 'ZK'  ] += zk 
-            self.__cnts [ 'ZA'  ] += za 
-            self.__cnts [ 'ZC'  ] += zc 
+            self.__KS_cnt += ks 
+            self.__AD_cnt += ad 
+            self.__CM_cnt += cm 
+            self.__ZK_cnt += zk 
+            self.__ZA_cnt += za 
+            self.__ZC_cnt += zc 
 
             results [ 'KS'  ].append ( ks )    
             results [ 'AD'  ].append ( ad ) 
@@ -455,6 +466,9 @@ class GoF1DToys(object) :
             del data
             del cdf_data            
 
+        ## accumulate number of toys 
+        self.__nToys += nToys 
+
         ECDF = Ostap.Math.ECDF 
         for key in results :
             data = results [ key ]
@@ -464,13 +478,13 @@ class GoF1DToys(object) :
             
         del results 
     
-    # ========================================================================
-    ## Counters
-    @property 
-    def counters( self ) :
-        """`counters` : toy results as counters """
-        return self.__cnts
-
+    # =========================================================================
+    ## number of toys 
+    @property
+    def nToys ( self ) :
+        """`nToys` : number of toys"""
+        return self.__nToys
+    
     # =========================================================================
     ## ECDFs
     @property 
@@ -479,36 +493,53 @@ class GoF1DToys(object) :
         return self.__ecdfs
 
     # =========================================================================
+    ## Helper methof to get result
+    def result ( self , value , counter , label ) :
+        """ Helper method to get result 
+        """
+        if self.__ecdfs and label in self.__ecdfs :
+            pvalue = self.__ecdfs [ label ] . estimate ( value )
+            nsigma = significance ( pvalue )            
+        else : 
+            pvalue = VE ( -1 , 0 )
+            nsigma = VE ( -1 , 0 )
+        ## 
+        return self.Result ( value   ,
+                             counter ,
+                             pvalue  ,
+                             nsigma  )
+            
+    # =========================================================================
     ## Get Kolmogorov-Smirnov statistiscs 
     @property 
     def kolmogorov_smirnov ( self ) :
         """ Get Kolmogorov-Smirnov statistiscs KS
         """
-        return self.__KS 
-
+        return self.result ( self.__KS , self.__KS_cnt , 'KS' ) 
+    
     # ===============================================
     ## Get Anderson-Darling  statistiscs 
     @property 
     def anderson_darling ( self ) :
         """ Get Anderson-Darling statistiscs 
         """
-        return self.__AD 
-
+        return self.result ( self.__AD , self.__AD_cnt , 'AD' ) 
+        
     # =========================================================================
     ## Get Cramer-von Mises statistics 
     @property 
     def cramer_von_mises ( self ) :
         """ Get Cramer-von Mises statistics 
         """
-        return self.__CM
-    
+        return self.result ( self.__CM , self.__CM_cnt , 'CM' ) 
+        
     # =========================================================================
     ## Get ZK statististics 
     @property 
     def ZK  ( self ) :
         """ Get ZK statistics 
         """
-        return self.__ZK 
+        return self.result ( self.__ZK , self.__ZK_cnt , 'ZK' ) 
         
     # =========================================================================
     ## Get ZA statististics 
@@ -516,7 +547,7 @@ class GoF1DToys(object) :
     def ZA  ( self ) :
         """ Get ZA statistics
         """        
-        return self.__ZA
+        return self.result ( self.__ZA , self.__ZA_cnt , 'ZA' ) 
     
     # =========================================================================
     ## Get ZC statististics 
@@ -524,19 +555,27 @@ class GoF1DToys(object) :
     def ZC  ( self ) :
         """ Get ZC statistics 
         """        
-        return self.__ZC 
+        return self.result ( self.__ZC , self.__ZC_cnt , 'ZC' ) 
             
     # =========================================================================
     ## format a row in the table
-    def _row  ( self , what , val , cnt , ecdf , width = 5 , precision = 3 ) :
+    def _row  ( self , what , result , width = 5 , precision = 3 ) :
         """ Format a row in the table
         """
-    
+
+        value      = result.statistics
+        counter    = result.counter
+        pvalue     = result.pvalue
+        nsigma     = result.nsigma
+        
+        mean       = counter.mean   ()
+        rms        = counter.rms    () 
+        vmin, vmax = counter.minmax () 
+        
+        mxv        = max ( value , mean.value() , mean.error() , rms , vmin , vmax )
+        
         from   ostap.logger.pretty import fmt_pretty_ve 
         
-        mean = cnt.mean() 
-        vmin, vmax = cnt.minmax() 
-        mxv  = max ( val , mean.value() , mean.error() , cnt.rms() , vmin , vmax )
         fmt, fmtv , fmte , expo = fmt_pretty_ve ( VE ( mxv ,  mean.cov2() ) ,
                                                   width       = width       ,
                                                   precision   = precision   , 
@@ -545,17 +584,15 @@ class GoF1DToys(object) :
         if expo : scale = 10**expo
         else    : scale = 1
         fmt2 = '%s/%s' % ( fmtv , fmtv ) 
-
-        pvalue  = ecdf.estimate ( val )
-        nsigmas = probit ( ( 1 + ( 1 - pvalue ) ) / 2.0 )
+        
         return ( what  ,
-                 fmtv  %  ( val / scale )                 ,
-                 ( mean / scale ).toString ( fmt )        ,
-                 fmtv  %  ( cnt.rms() / scale )           ,
-                 fmt2  %  ( vmin / scale , vmax / scale ) ,
-                 ( '10^%+d' % expo  if expo else '' )     ,                  
+                 fmtv  %  ( value / scale )                    ,
+                 ( mean / scale ).toString ( fmt )             ,
+                 fmtv  %  ( rms  / scale )                     ,
+                 fmt2  %  ( vmin / scale , vmax / scale )      ,
+                 ( '10^%+d' % expo  if expo else '' )          ,                  
                  ( 100 * pvalue ) .toString ( '%.2f +/- %-.2f' ) , 
-                 ( nsigmas      ) .toString ( '%.1f +/- %-.1f' ) ) 
+                 ( nsigma       ) .toString ( '%.1f +/- %-.1f' ) ) 
     
     # =========================================================================
     ## Make a summary table
@@ -565,42 +602,18 @@ class GoF1DToys(object) :
         
         import ostap.logger.table  as     T 
                 
-        rows = [ ( 'Statistics' , 'Value' , 'mean' , 'rms' , 'min/max' , '' , 'p-value [%]' , '#sigma' ) ] 
+        rows = [ ( 'Statistics' , 'value' , 'mean' , 'rms' , 'min/max' , 'factor' , 'p-value [%]' , '#sigma' ) ] 
 
-        val  = self.__KS 
-        cnt  = self.__cnts  ['KS']
-        ecdf = self.__ecdfs ['KS']
-        rows.append ( self._row ( 'Kolmogorov-Smirnov' , val , cnt , ecdf , width = width , precision = precision ) )
-        
-        val  = self.__AD  
-        cnt  = self.__cnts  ['AD']
-        ecdf = self.__ecdfs ['AD']
-        rows.append ( self._row ( 'Anderson-Darling' , val , cnt , ecdf , width = width , precision = precision ) ) 
+        rows.append ( self._row ( 'Kolmogorov-Smirnov' , self.kolmogorov_smirnov , width = width , precision = precision ) )
+        rows.append ( self._row ( 'Anderson-Darling'   , self.anderson_darling   , width = width , precision = precision ) )
+        rows.append ( self._row ( 'Cramer-von Mises'   , self.cramer_von_mises   , width = width , precision = precision ) )
+        rows.append ( self._row ( 'ZK'                 , self.ZK                 , width = width , precision = precision ) )
+        rows.append ( self._row ( 'ZA'                 , self.ZA                 , width = width , precision = precision ) )
+        rows.append ( self._row ( 'ZC'                 , self.ZC                 , width = width , precision = precision ) )
 
-        val  = self.__CM 
-        cnt  = self.__cnts  ['CM']
-        ecdf = self.__ecdfs ['CM']
-        rows.append ( self._row ( 'Cramer-von Mises' , val , cnt , ecdf , width = width , precision = precision ) ) 
-
-        val  = self.__ZK 
-        cnt  = self.__cnts  ['ZK']
-        ecdf = self.__ecdfs ['ZK']
-        rows.append ( self._row ( 'ZK' , val , cnt , ecdf , width = width , precision = precision ) ) 
-
-        val  = self.__ZA 
-        cnt  = self.__cnts  ['ZA']
-        ecdf = self.__ecdfs ['ZA']
-        rows.append ( self._row ( 'ZA' , val , cnt , ecdf , width = width , precision = precision ) ) 
-
-        val  = self.__ZC 
-        cnt  = self.__cnts  ['ZC']
-        ecdf = self.__ecdfs ['ZC']
-        rows.append ( self._row ( 'ZC' , val , cnt , ecdf , width = width , precision = precision ) ) 
-
-        ## skip empty column
-        
+        ## skip empty columns        
         has_expo = False 
-        for row in rows :
+        for row in rows[1:] :
             r = list ( row )
             if r[-3] :
                 has_expo = True
@@ -614,7 +627,11 @@ class GoF1DToys(object) :
                 new_rows.append ( r ) 
             rows = new_rows 
 
-        if not title : title = '%d toys' % self.__cnts['KS'].nEntries()
+            
+        if   not title and self.nToys :
+            title = 'Goodness of 1D-fit with #%d toys' % self.nToys  
+        elif not title :
+            title = 'Goodness of 1D-fit'
         
         return T.table ( rows , title = title , prefix = prefix , alignment = 'lccccccccccc' )
 

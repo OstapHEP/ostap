@@ -7,6 +7,9 @@
   1. Add `PDF1.cdf` method to get CDF from 1D-PDF
   1. Add new module `ostap.stats.gof_1d` for goodness-of-fit for 1D
   1. Add new test    `test_stats+_gof1d` for goodness-of-fit for 1D
+  1. `ostap.math.math_ve` : add `significace`, `nsigmas` & `nsigma` functions to calcualte significabce from p-values
+  1. Make use of `ostap.math.math_ve.significane` function
+  1. Rename `gof_1d` to `gof1d`
     
  # Backward incompatible
     
