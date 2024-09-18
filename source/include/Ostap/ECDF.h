@@ -21,7 +21,7 @@ namespace Ostap
   {
     // ==========================================================================
     /** @class ECDF Ostap/ECDF.h
-     *  Empirical cumulative distribution fuction 
+     *  Empirical cumulative distribution function 
      *  @author Vanya Belyaev
      *  @date   2023-09-0167
      */
@@ -34,11 +34,16 @@ namespace Ostap
       // ======================================================================
     public: 
       // ======================================================================
-      /// constructor from  data
+      /** Constructor from  data
+       *  data must be non-empty!
+       */ 
       ECDF
       ( const Data&  data                  ,
         const bool   complementary = false ) ;
-      /// constructor from data
+      // =======================================================================
+      /** Constructor from data
+       *  data must be non-empty!
+       */ 
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
                 typename            = std::enable_if<std::is_convertible<value_type,double>::value> >
