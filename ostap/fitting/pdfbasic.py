@@ -2657,7 +2657,7 @@ class PDF1(APDF1,FUN1) :
         >>> cdf = pdf.cdf () 
         """
         assert 1 == len ( self.vars ) , 'One can make CDF only for 1D-PDF!'
-        fun  = self.pdf.createCdf ( self.variables )
+        fun  = self.pdf.createCdf ( self.vars  )
         name = self.generate_name ( prefix = 'cdf_' , name = self.name )  
         return Fun1D ( fun , xvar = self.xvar , name = name )
     

@@ -23,7 +23,8 @@ __all__     = (
 from   ostap.core.meta_info         import root_info
 from   ostap.core.ostap_types       import string_types, dictlike_types, sized_types
 from   ostap.core.core              import Ostap, loop_items 
-from   ostap.utils.utils            import split_range 
+from   ostap.utils.utils            import split_range
+from   ostap.math.base              import doubles 
 from   ostap.fitting.dataset        import useStorage
 from   ostap.fitting.funbasic       import AFUN1 
 from   ostap.utils.progress_bar     import progress_bar
@@ -46,7 +47,6 @@ except ImportError :
     np = None
 # =============================================================================
 _new_methods_ = []
-
 # =============================================================================
 if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT     
     # =========================================================================
@@ -424,9 +424,12 @@ else    : # ===================================================================
 
     logger.warning ( "Numpy is not available: no action" )
 
-
+    
 # ==============================================================================
 if np : # ======================================================================
+    # ==========================================================================
+    if  ( 6 , 23 ) <= root_info : data2vct = lambda s : s
+    else                        : data2vct = lambda s : doubles ( s ) 
     # ==========================================================================
     ## Get the dict of empirical cumulative distribution functions from dataset
     #  @code
@@ -467,8 +470,8 @@ if np : # ======================================================================
                           silent    = silent    )
         
         result = {}
-        for vname in varlst    : result [ vname ] =  Ostap.Math.ECDF ( data [ vname ] )
-        for vname in more_vars : result [ vname ] =  Ostap.Math.ECDF ( data [ vname ] )
+        for vname in varlst    : result [ vname ] = Ostap.Math.ECDF ( data2vct ( data [ vname ] ) ) 
+        for vname in more_vars : result [ vname ] = Ostap.Math.ECDF ( data2cvt ( data [ vname ] ) ) 
             
         del data
         return result 

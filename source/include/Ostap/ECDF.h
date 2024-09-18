@@ -48,6 +48,10 @@ namespace Ostap
         : m_data          ( begin , end   )
         , m_complementary ( complementary ) 
       { this->sort_me() ; }
+      /// constructoer to create complementary/oridnary ECDF
+      ECDF
+      ( const ECDF&  right         ,
+        const bool   complementary ) ;
       /// copy constructor
       ECDF ( const ECDF&  right ) = default ;
       /// move constructor 

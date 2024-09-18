@@ -32,6 +32,16 @@ Ostap::Math::ECDF::ECDF
   this->sort_me() ;
 }
 // ============================================================================
+// constructoer to create complementary/oridnary ECDF
+// ============================================================================
+Ostap::Math::ECDF::ECDF
+( const Ostap::Math::ECDF & right         , 
+  const bool                complementary ) 
+  : ECDF ( right ) 
+{
+  m_complementary = complementary ; 
+}
+// ============================================================================
 // sort container 
 // ============================================================================
 void Ostap::Math::ECDF::sort_me()
