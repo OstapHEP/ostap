@@ -356,7 +356,7 @@ __root_colors = {
 #  c1 = root_color ( 'KRED' )
 #  @endcode
 def root_colors ( color ) :
-    """Get predefiend ROOT color by name
+    """ Get predefiend ROOT color by name
     >>> c1 = root_color ( 'Red'  )
     >>> c1 = root_color ( 'kRed' )
     >>> c1 = root_color ( 'RED'  )
@@ -592,7 +592,6 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
             
             if copy and hasattr ( obj , 'DrawCopy' ): result = obj.DrawCopy ( option , *args )
             else                                    : result = obj.Draw     ( option , *args )
-
         
         if pad and not ROOT.gPad :            
             c = pad.GetCanvas()

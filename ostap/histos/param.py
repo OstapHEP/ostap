@@ -67,7 +67,7 @@
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2011-06-07  
 # =============================================================================
-"""Module with utilities for parameterization of histograms
+""" Module with utilities for parameterization of histograms
 
 ## (1) using fit of histograms (ROOT::TF1::Fit)
 
@@ -338,7 +338,7 @@ def _h1_bernstein_ ( h1               ,
                      params = ()      ,
                      limits = ()      ,
                      refit  = 1       ) :
-    """Represent histo as Bernstein polynomial
+    """ Represent histo as Bernstein polynomial
     
     >>> h = ...                # the histogram
     >>> b = h.bernstein ( 5 )  ## make a fit... 
@@ -396,7 +396,7 @@ def _h1_bernsteineven_ ( h1               ,
                          params = ()      ,
                          limits = ()      ,
                          refit  = 1       ) :
-    """Represent histo as even Bernstein polynomial
+    """ Represent histo as even Bernstein polynomial
     
     >>> h = ...                    ## the histogram
     >>> b = h.bernsteineven ( 3 )  ## make a fit... 
@@ -456,7 +456,7 @@ def _h1_chebyshev_ ( h1               ,
                      params = ()      ,
                      limits = ()      ,
                      refit  = 1       ) :
-    """Represent histo as Chebyshev sum 
+    """ Represent histo as Chebyshev sum 
     
     >>> h = ... # the histogram
     >>> b = h.chebyshev ( 5 )  ## make a fit... 
@@ -515,7 +515,7 @@ def _h1_legendre_ ( h1               ,
                     params = ()      ,
                     limits = ()      ,
                     refit  = 1       ) :
-    """Represent histo as Legendre sum 
+    """ Represent histo as Legendre sum 
     
     >>> h = ... # the histogram
     >>> b = h.legendre ( 5 )  ## make a fit...
@@ -569,7 +569,7 @@ def _h1_legendre_ ( h1               ,
 #  @see Ostap::LegendreSum
 #  @see Ostap::LegendreSum::fill 
 def _h1_legendre_fast_ ( h1 , degree , xmin = inf_neg , xmax = inf_pos ) :
-    """(relatively) fast parameterization of 1D histogram as sum of Legendre polynomials
+    """ (relatively) fast parameterization of 1D histogram as sum of Legendre polynomials
     >>> histo = ...
     >>> func  = histo.legendre_fast ( 5 )
     - see Ostap.Math.LegendreSum
@@ -625,7 +625,7 @@ def _h1_rational_  ( h1               ,
                      params = ()      ,
                      limits = ()      ,
                      refit  = 1       ) :
-    """Represent histo as ratioal fnuction, based on Floater-Hormann's
+    """ Represent histo as ratioal fnuction, based on Floater-Hormann's
     rational barycentric interpolant 
     
     >>> h = ...                    # the histogram
@@ -687,7 +687,7 @@ def _h1_brational_  ( h1               ,
                       params = ()      ,
                       limits = ()      ,
                       refit  = 1       ) :
-    """Represent 1D-histo as rational function - ratio
+    """ Represent 1D-histo as rational function - ratio
     of Bernstein and positive Bernstein polynomials 
     
     >>> h = ...                    # the histogram
@@ -768,7 +768,7 @@ try :
     #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
     #  @date 2015-07-26
     def _h1_fourier_sum_ ( h1 , N , fejer = False , **kwargs ) :
-        """Make a histogram representation in terms of Fourier serie
+        """ Make a histogram representation in terms of Fourier serie
         >>> histo  = ...
         >>> fsum   = histo.fourier_sum ( 4 )
         >>> print fsum
@@ -808,7 +808,7 @@ try :
                        limits = ()      , 
                        refit  = 1       ) :
         
-        """Represent histo as Fourier sum 
+        """ Represent histo as Fourier sum 
         
         >>> h = ... # the histogram
         >>> b = h.fourier ( 3 )  ## make a fit... 
@@ -858,8 +858,7 @@ except ImportError :
 
 
 # =================================================================================
-try :
-
+try : # ===========================================================================
     # =============================================================================
     from ostap.math.param       import cosine_sum    
     # =============================================================================
@@ -875,7 +874,7 @@ try :
     #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
     #  @date 2015-07-26
     def _h1_cosine_sum_ ( h1 , N , fejer = False , **kwargs ) :
-        """Make a histogram representation in terms of cosine Fourier serie
+        """ Make a histogram representation in terms of cosine Fourier serie
         >>> histo  = ...
         >>> fsum   = histo.cosine_sum ( 4 )
         >>> print fsum
@@ -913,10 +912,8 @@ try :
                       fixes  = ()      ,
                       params = ()      ,
                       limits = ()      ,
-                      refit  = 1       ) :
-        
-        """Represent histo as Cosine Fourier sum 
-        
+                      refit  = 1       ) :        
+        """ Represent histo as Cosine Fourier sum         
         >>> h = ... # the histogram
         >>> b = h.cosine ( 3 )  ## make a fit... 
         
@@ -959,9 +956,12 @@ try :
 
     _new_methods_ .append ( _h1_cosine_sum_   )
     _new_methods_ .append ( _h1_cosine_       )
-        
-except ImportError :
+
+    # ==========================================================================
+except ImportError :     # =====================================================
+    # ==========================================================================
     pass
+    # ==========================================================================
 
 # =============================================================================
 ## represent 1D-histo as plain vanilla polynomial
@@ -988,15 +988,15 @@ def _h1_polinomial_ ( h1               ,
                       params = ()      ,
                       limits = ()      ,
                       refit  = 1       ) :
-    """Represent histo as plain vanilla polynomial    
+    """ Represent histo as plain vanilla polynomial    
     >>> h = ... # the histogram    
     >>> b = h.polinomial ( 5 )  ## make a fit... 
     
-    >>> tf1        = b[0]    ## TF1 object
-    >>> obj        = b[1]    ## helper object 
-    >>> fun        = b[2]    ## underlying normalzed C++ object 
-    >>> fit_result = b[3]    ## fit result & status
-    >>> norm       = b[4]    ## normalization 
+    >>> tf1        = b [ 0 ]    ## TF1 object
+    >>> obj        = b [ 1 ]    ## helper object 
+    >>> fun        = b [ 2 ]    ## underlying normalzed C++ object 
+    >>> fit_result = b [ 3 ]    ## fit result & status
+    >>> norm       = b [ 4 ]    ## normalization 
     
     >>> x = ...
     >>> print 'TF1(%s) = %s' % ( x ,        tf1 ( x ) ) 
@@ -1050,7 +1050,7 @@ def _h1_bspline_ ( h1               ,
                    params = ()      ,
                    limits = ()      ,
                    refit  = 1       ) :
-    """Represent histo as B-spline polynomial    
+    """ Represent histo as B-spline polynomial    
     >>> h = ... # the histogram
     >>> b = h.bSpline ( degree = 3 , knots = 3  )
     >>> b = h.bSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
@@ -1116,7 +1116,7 @@ def _h1_positive_ ( h1               ,
                     params = ()      ,
                     limits = ()      , 
                     refit  = 1       ) :
-    """Represent histo as Positive Bernstein polynomial
+    """ Represent histo as Positive Bernstein polynomial
     >>> h = ...              ## the histogram
     >>> b = h.positive ( 5 ) ## 5 is degree
     
@@ -1172,7 +1172,7 @@ def _h1_positiveeven_ ( h1 ,
                         params = ()      ,
                         limits = ()      ,
                         refit  = 1       ) :
-    """Represent histo as Positive Even Bernstein polynomial
+    """ Represent histo as Positive Even Bernstein polynomial
     
     >>> h = ... # the histogram
     >>> b = h.positiveeven ( 2 ) ## 2 is half-degree
@@ -1230,7 +1230,7 @@ def _h1_monotonic_ ( h1                   ,
                      params     = ()      ,
                      limits     = ()      ,
                      refit      = 1       ) :
-    """Represent histo as Monotonic Bernstein polynomial
+    """ Represent histo as Monotonic Bernstein polynomial
     
     >>> h = ...           ## the histogram
     >>> b = h.monotonic ( 5 , increasing = True )
@@ -1290,7 +1290,7 @@ def _h1_convex_ ( h1                   ,
                   params     = ()      ,
                   limits     = ()      , 
                   refit      = 1       ) :
-    """Represent histo as Monotonic Convex/Concave  Bernstein polynomial    
+    """ Represent histo as Monotonic Convex/Concave  Bernstein polynomial    
     >>> h = ...           ## the histogram
     >>> b = h.convex ( 5 , increasing = True , convex = False )    
     
@@ -1348,7 +1348,7 @@ def _h1_convexpoly_ ( h1                   ,
                       limits     = ()      ,
                       refit      = 1       ) :
 
-    """Represent histo as Convex Bernstein polynomial
+    """ Represent histo as Convex Bernstein polynomial
     >>> h = ...           ## the histogram
     >>> b = h.convexpoly ( 5 )    
     
@@ -1405,7 +1405,7 @@ def _h1_concavepoly_ ( h1                   ,
                        limits     = ()      ,
                        refit      = 1       ) :
     
-    """Represent histo as Concave  Bernstein polynomial
+    """ Represent histo as Concave  Bernstein polynomial
 
     >>> h = ...           ## the histogram
     >>> b = h.concavepoly ( 5 )    
@@ -1464,7 +1464,7 @@ def _h1_pspline_ ( h1               ,
                    params = ()      ,
                    limits = ()      ,
                    refit  = 1       ) :
-    """Represent histo as positive B-spline 
+    """ Represent histo as positive B-spline 
     
     >>> h  = ... # the histogram
     >>> b  = h.pSpline ( degree = 3 , knots = 3  )
@@ -1533,7 +1533,7 @@ def _h1_mspline_ ( h1                   ,
                    params     = ()      ,
                    limits     = ()      ,
                    refit      = 1       ) :
-    """Represent histo as positive monotonic  spline 
+    """ Represent histo as positive monotonic  spline 
     
     >>> h  = ... # the histogram
     
@@ -1605,7 +1605,7 @@ def _h1_cspline_ ( h1                   ,
                    params     = ()      ,
                    limits     = ()      ,
                    refit      = 1       ) :
-    """Represent histo as positive monotonic convex/concave spline  
+    """ Represent histo as positive monotonic convex/concave spline  
     
     >>> h = ... # the histogram
     >>> b = h.cSpline ( degree = 3 , knots = 3  , increasing = True , convex = False )
@@ -1672,7 +1672,7 @@ def _h1_convexspline_ ( h1                  ,
                         params     = ()      ,
                         limits     = ()      ,
                         refit      = 1       ) :
-    """Represent histo as positive convex spline  
+    """ Represent histo as positive convex spline  
     
     >>> h = ... # the histogram
     >>> b = h.convexSpline ( degree = 3 , knots = 3 )
@@ -1739,7 +1739,7 @@ def _h1_concavespline_ ( h1               ,
                          params     = ()      ,
                          limits     = ()      ,
                          refit      = 1       ) :
-    """Represent histo as positive convcave spline  
+    """ Represent histo as positive convcave spline  
     
     >>> h = ... # the histogram
     >>> b = h.concaveSpline ( degree = 3 , knots = 3 )
@@ -1781,7 +1781,6 @@ def _h1_concavespline_ ( h1               ,
                             limits = limits ,
                             refit  = refit  )
 
-
 # =============================================================================
 
 # =============================================================================
@@ -1809,7 +1808,7 @@ def _h1_karlinshapley_ ( h1                   ,
                          params     = ()      ,
                          limits     = ()      ,
                          refit      = 1       ) :
-    """Represent histo as positive Karlin-Shapley polynomial
+    """ Represent histo as positive Karlin-Shapley polynomial
     
     >>> h = ... # the histogram
     >>> b = h.karlin_shapley ( degree = 3 , knots = 3 )
@@ -1824,10 +1823,9 @@ def _h1_karlinshapley_ ( h1                   ,
     >>> print ( 'TF1(%s) = %s' % ( x ,        tf1 ( x ) ) )
     >>> print ( 'FUN(%s) = %s' % ( x , norm * fun ( x ) ) )        
     """
-
+    ##
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
-    #
     #
     func   = Ostap.Math.KarlinShapley ( degree , xmin , xmax )
     
@@ -1884,7 +1882,7 @@ def _h1_karlinstudden_ ( h1               ,
                          params     = ()      ,
                          limits     = ()      ,
                          refit      = 1       ) :
-    """Represent histo as positive Karlin-Shapley polynomial
+    """ Represent histo as positive Karlin-Studden polynomial
     
     >>> h = ... # the histogram
     >>> b = h.karlin_shapley ( degree = 3 , knots = 3 )
@@ -1936,8 +1934,6 @@ def _h1_karlinstudden_ ( h1               ,
                             params = params  ,
                             limits = newlims ,
                             refit  = refit   )
-
-
 
 
 # =============================================================================
@@ -1998,7 +1994,7 @@ _new_methods_ += [
 # =============================================================================
 ## parameterize positive histogram with certain PDF
 def _h1_pdf_ ( h1 , pdf_type , pars , *args, **kwargs ) :
-    """Parameterize positive histogram with certain PDF
+    """ Parameterize positive histogram with certain PDF
     """
     ##
     mn , mx = h1.minmax()
@@ -2043,7 +2039,7 @@ def _h1_pdf_ ( h1 , pdf_type , pars , *args, **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_positive_ ( h1 , degree , *args , **kwargs ) :
-    """Parameterize/fit histogram with the positive polynomial
+    """ Parameterize/fit histogram with the positive polynomial
     >>> h1 = ...
     >>> results = h1.pdf_positive ( 3 )
     >>> results = h1.pdf_positive ( 3 , draw = 3 , silent = True )
@@ -2076,7 +2072,7 @@ def _h1_pdf_positive_ ( h1 , degree , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_even_ ( h1 , halfdegree , *args , **kwargs ) :
-    """Parameterize/fit histogram with the positive even polynomial
+    """ Parameterize/fit histogram with the positive even polynomial
     >>> h1 = ...
     >>> results = h1.pdf_even ( 2 )
     >>> results = h1.pdf_positiveeven ( 2 )                            ## ditto 
@@ -2109,7 +2105,7 @@ def _h1_pdf_even_ ( h1 , halfdegree , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_monotonic_ ( h1 , degree , increasing , *args , **kwargs ) :
-    """Parameterize/fit histogram with the monotonic positive polynomial
+    """ Parameterize/fit histogram with the monotonic positive polynomial
     >>> h1 = ...
     >>> results = h1.pdf_monotonic ( 3 , increasing = True )
     >>> results = h1.pdf_monotonic ( 3 , increasing = True , draw = 3 , silent = True )
@@ -2139,7 +2135,7 @@ def _h1_pdf_monotonic_ ( h1 , degree , increasing , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_increasing_ ( h1 , degree , *args , **kwargs ) :
-    """Parameterize/fit histogram with the monotonic positive polynomial
+    """ Parameterize/fit histogram with the monotonic positive polynomial
     >>> h1 = ...
     >>> results = h1.pdf_increasing ( 3 )
     >>> results = h1.pdf_increasing ( 3 , draw = True , silent = True )
@@ -2168,7 +2164,7 @@ def _h1_pdf_increasing_ ( h1 , degree , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_decreasing_ ( h1 , degree , *args , **kwargs ) :
-    """Parameterize/fit histogram with the monotonic positive polynomial
+    """ Parameterize/fit histogram with the monotonic positive polynomial
     >>> h1 = ...
     >>> results = h1.pdf_decreasing ( 3 )
     >>> results = h1.pdf_decreasing ( 3 , draw = True , silent = True )
@@ -2197,7 +2193,7 @@ def _h1_pdf_decreasing_ ( h1 , degree , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_convex_ ( h1 , degree , increasing , *args , **kwargs ) :
-    """Parameterize/fit histogram with convex polynomial
+    """ Parameterize/fit histogram with convex polynomial
     >>> h1 = ...
     >>> results = h1.pdf_convex ( 3 , increasing = True )
     >>> results = h1.pdf_convex ( 3 , increasing = True , draw = True , silent = True )
@@ -2227,7 +2223,7 @@ def _h1_pdf_convex_ ( h1 , degree , increasing , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_convex_increasing_ ( h1 , degree , *args , **kwargs ) :
-    """Parameterize/fit histogram with convex increasing polynomial
+    """ Parameterize/fit histogram with convex increasing polynomial
     >>> h1 = ...
     >>> results = h1.pdf_convex_increasing ( 3 ,)
     >>> results = h1.pdf_convex_increasing ( 3 , draw = True , silent = True )
@@ -2256,7 +2252,7 @@ def _h1_pdf_convex_increasing_ ( h1 , degree , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_convex_decreasing_ ( h1 , degree , *args , **kwargs ) :
-    """Parameterize/fit histogram with convex decreasing polynomial
+    """ Parameterize/fit histogram with convex decreasing polynomial
     >>> h1 = ...
     >>> results = h1.pdf_convex_decreasing ( 3 ,)
     >>> results = h1.pdf_convex_decreasing ( 3 , draw = True , silent = True )
@@ -2285,7 +2281,7 @@ def _h1_pdf_convex_decreasing_ ( h1 , degree , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_concave_ ( h1 , degree , increasing , *args , **kwargs ) :
-    """Parameterize/fit histogram with concave polynomial
+    """ Parameterize/fit histogram with concave polynomial
     >>> h1 = ...
     >>> results = h1.pdf_concave ( 3 , increasing = True )
     >>> results = h1.pdf_concave ( 3 , increasing = True , draw = True , silent = True )
@@ -2315,7 +2311,7 @@ def _h1_pdf_concave_ ( h1 , degree , increasing , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_concave_increasing_ ( h1 , degree , *args , **kwargs ) :
-    """Parameterize/fit histogram with concave increasing polynomial
+    """ Parameterize/fit histogram with concave increasing polynomial
     >>> h1 = ...
     >>> results = h1.pdf_concave_increasing ( 3 )
     >>> results = h1.pdf_concave_increasing ( 3 , draw = True , silent = True )
@@ -2344,7 +2340,7 @@ def _h1_pdf_concave_increasing_ ( h1 , degree , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_concave_decreasing_ ( h1 , degree , *args , **kwargs ) :
-    """Parameterize/fit histogram with concave decreasing polynomial
+    """ Parameterize/fit histogram with concave decreasing polynomial
     >>> h1 = ...
     >>> results = h1.pdf_concave_decreasing ( 3 )
     >>> results = h1.pdf_concave_decreasing ( 3 , draw = True , silent = True )
@@ -2373,7 +2369,7 @@ def _h1_pdf_concave_decreasing_ ( h1 , degree , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_convexpoly_ ( h1 , degree , *args , **kwargs ) :
-    """Parameterize/fit histogram with convex polynomial
+    """ Parameterize/fit histogram with convex polynomial
     >>> h1 = ...
     >>> results = h1.pdf_convexpoly ( 3 )
     >>> results = h1.pdf_convexpoly ( 3 , draw = True , silent = True )
@@ -2403,7 +2399,7 @@ def _h1_pdf_convexpoly_ ( h1 , degree , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_concavepoly_ ( h1 , degree , *args , **kwargs ) :
-    """Parameterize/fit histogram with convex polynomial
+    """ Parameterize/fit histogram with convex polynomial
     >>> h1 = ...
     >>> results = h1.pdf_concavepoly ( 3 )
     >>> results = h1.pdf_concavepoly ( 3 , draw = True , silent = True )
@@ -2416,7 +2412,6 @@ def _h1_pdf_concavepoly_ ( h1 , degree , *args , **kwargs ) :
     """
     from ostap.fitting.background import ConvexOnly_pdf
     return _h1_pdf_ ( h1 , ConvexOnly_pdf , (degree,False) , *args , **kwargs )
-
 
 # =============================================================================
 ## parameterize/fit histogram with the rational function 
@@ -2434,7 +2429,7 @@ def _h1_pdf_concavepoly_ ( h1 , degree , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2023-09-19
 def _h1_pdf_rational_ ( h1 , p , q  , *args , **kwargs ) :
-    """Parameterize/fit histogram with the rational function 
+    """ Parameterize/fit histogram with the rational function 
     >>> h1 = ...
     >>> results = h1.pdf_rational ( 3 , 3 )
     >>> results = h1.pdf_rational ( 3 , 3 , draw = 3 , silent = True )
@@ -2447,7 +2442,6 @@ def _h1_pdf_rational_ ( h1 , p , q  , *args , **kwargs ) :
     """
     from ostap.fitting.background import Rational_pdf
     return _h1_pdf_ ( h1 , Rational_pdf , ( p , q ) , *args , **kwargs )
-
 
 # =============================================================================
 
@@ -2529,7 +2523,7 @@ def _h1_pdf_pspline_ ( h1 , spline , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_mspline_ ( h1 , spline , *args , **kwargs ) :
-    """Parameterize/fit histogram with monotonic positive b-spline 
+    """ Parameterize/fit histogram with monotonic positive b-spline 
     >>> h1 = ...
     >>> results = h1.pdf_mSpline ( spline = (3,2,True) )
     >>> results = h1.pdf_mSpline ( (3,2,True) , draw = True , silent = True )
@@ -2559,7 +2553,7 @@ def _h1_pdf_mspline_ ( h1 , spline , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_cspline_ ( h1 , spline , *args , **kwargs ) :
-    """Parameterize/fit histogram with convex/concave montonic positive b-spline 
+    """ Parameterize/fit histogram with convex/concave montonic positive b-spline 
     >>> h1 = ...
     >>> results = h1.pdf_cSpline ( spline = (3,2,True,True) )
     >>> results = h1.pdf_cSpline ( (3,2,True,True), draw = True , silent = True )
@@ -2590,7 +2584,7 @@ def _h1_pdf_cspline_ ( h1 , spline , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_convexSpline_ ( h1 , spline , *args , **kwargs ) :
-    """Parameterize/fit histogram with convex positive b-spline 
+    """ Parameterize/fit histogram with convex positive b-spline 
     >>> h1 = ...
     >>> results = h1.pdf_convexSpline ( spline = (3,2) )
     >>> results = h1.pdf_convexSpline ( ( 3 , 2 ), draw = True , silent = True )
@@ -2621,7 +2615,7 @@ def _h1_pdf_convexSpline_ ( h1 , spline , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
 def _h1_pdf_concaveSpline_ ( h1 , spline , *args , **kwargs ) :
-    """Parameterize/fit histogram with positive concave b-spline 
+    """ Parameterize/fit histogram with positive concave b-spline 
     >>> h1 = ...
     >>> results = h1.pdf_concaveSpline ( spline =  ( 3 , 2 ) )
     >>> results = h1.pdf_concaveSpline ( ( 3 , 2 ), draw = True , silent = True )
@@ -2638,8 +2632,7 @@ def _h1_pdf_concaveSpline_ ( h1 , spline , *args , **kwargs ) :
     from ostap.fitting.background import CPSpline_pdf
     return _h1_pdf_ ( h1 , CPSpline_pdf , ( spline , ) , *args , **kwargs )
 
-
-
+# =============================================================================
 ## decorate !
 for t in ( ROOT.TH1D , ROOT.TH1F ) :
     t.pdf_pSpline       = _h1_pdf_pspline_
@@ -2670,7 +2663,7 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
 #  It is not very CPU efficient, but stable enough...
 #  @date 2015-07-26
 def _h1_legendre_sum_orig_ ( h1 , N , **kwargs ) :
-    """Make a histogram representation in terms of Legendre polynomials
+    """ Make a histogram representation in terms of Legendre polynomials
     >>> histo  = ...
     >>> fsum   = histo.legendre_sum_orig ( 4 )
     >>> print fsum
@@ -2683,7 +2676,6 @@ def _h1_legendre_sum_orig_ ( h1 , N , **kwargs ) :
     xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
     ##
     return legendre_sum ( h1 , N , xmin , xmax , *kwargs )
-
 
 # =============================================================================
 ## make a histogram representation in terms of Legendre polynomials
@@ -2699,7 +2691,7 @@ def _h1_legendre_sum_orig_ ( h1 , N , **kwargs ) :
 #  @author Vanya Belyaev Ivan.Belyaev@iter.ru
 #  @date 2015-07-26
 def _h1_legendre_sum_fill_ ( h1 , N , **kwargs ) :
-    """Make a histogram representation in terms of Legendre polynomials
+    """ Make a histogram representation in terms of Legendre polynomials
     >>> histo  = ...
     >>> fsum   = histo.legendre_sum_fill ( 4 )
     >>> print fsum
@@ -2724,8 +2716,6 @@ def _h1_legendre_sum_fill_ ( h1 , N , **kwargs ) :
         lsum.fill ( xx , yy * volume ) 
     return lsum 
 
-    
-
 # =============================================================================
 ## make a histogram representation in terms of Chebyshev polynomials
 #  @code 
@@ -2740,7 +2730,7 @@ def _h1_legendre_sum_fill_ ( h1 , N , **kwargs ) :
 #  It is not very CPU efficient, but stable enough...
 #  @date 2015-07-26
 def _h1_chebyshev_sum_orig_ ( h1 , N , **kwargs ) :
-    """Make a histogram representation in terms of Chebyshev polynomials
+    """ Make a histogram representation in terms of Chebyshev polynomials
     >>> histo  = ...
     >>> fsum   = histo.chebyshev_sum_orig ( 4 )
     >>> print fsum
@@ -2769,7 +2759,7 @@ def _h1_chebyshev_sum_orig_ ( h1 , N , **kwargs ) :
 #  It is not very CPU efficient, but stable enough...
 #  @date 2015-07-26
 def _h1_chebyshev_sum_fill_ ( h1 , N , **kwargs ) :
-    """Make a histogram representation in terms of Chebyshev polynomials
+    """ Make a histogram representation in terms of Chebyshev polynomials
     >>> histo  = ...
     >>> fsum   = histo.chebyshev_sum_fill ( 4 )
     >>> print fsum
@@ -2807,7 +2797,7 @@ def _h1_chebyshev_sum_fill_ ( h1 , N , **kwargs ) :
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2015-07-26
 def _h1_bezier_sum_orig_ ( h1 , N , **kwargs ) :
-    """Make a histogram representation in terms of Bezier/Bernstein sum
+    """ Make a histogram representation in terms of Bezier/Bernstein sum
     (sum over Bernstein polynomials)
     >>> histo  = ...
     >>> fsum   = histo.bezier_sum_orig    ( 4 )
@@ -2821,7 +2811,6 @@ def _h1_bezier_sum_orig_ ( h1 , N , **kwargs ) :
     xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
     ##
     return bezier_sum ( h1 , N , xmin , xmax )
-
 
 # =============================================================================
 ## make a histogram representation in terms of Bezier(Bernstein) sum
@@ -2839,7 +2828,7 @@ def _h1_bezier_sum_orig_ ( h1 , N , **kwargs ) :
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2015-07-26
 def _h1_bezier_sum_fill_ ( h1 , N , **kwargs ) :
-    """Make a histogram representation in terms of Bezier/Bernstein sum
+    """ Make a histogram representation in terms of Bezier/Bernstein sum
     (sum over Bernstein polynomials)
     >>> histo  = ...
     >>> fsum   = histo.bezier_sum_fill    ( 4 )
@@ -2866,7 +2855,6 @@ def _h1_bezier_sum_fill_ ( h1 , N , **kwargs ) :
         bsum.fill ( xx , yy * volume ) 
     return bsum 
 
-
 # =============================================================================
 ## make a histogram representation in terms of Bezier(Bernstein) sum
 #  (sum over Bernstein polynomials) using even polynomials:
@@ -2885,7 +2873,7 @@ def _h1_bezier_sum_fill_ ( h1 , N , **kwargs ) :
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2015-07-26
 def _h1_beziereven_sum_ ( h1 , N , **kwargs ) :
-    """Make a histogram representation in terms of Bezier/Bernstein sum
+    """ Make a histogram representation in terms of Bezier/Bernstein sum
     (sum over Bernstein polynomials) using even polynomials 
     >>> histo  = ...
     >>> fsum   = histo.beziereven_sum    ( 2 ) ##  2 is a *half-degree*
@@ -2899,8 +2887,6 @@ def _h1_beziereven_sum_ ( h1 , N , **kwargs ) :
     xmax = min ( kwargs.get ( 'xmax' , h1.xmax() ) , h1.xmax () ) 
     ##
     return beziereven_sum ( h1 , N , xmin , xmax )
-
-
 
 # =============================================================================
 ## make a histogram representation in terms of Bezier(Bernstein) sum
@@ -2920,7 +2906,7 @@ def _h1_beziereven_sum_ ( h1 , N , **kwargs ) :
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2015-07-26
 def _h1_rational_fun_ ( h1 , n , d  , **kwargs ) :
-    """Make a histogram representation in terms of Rational function
+    """ Make a histogram representation in terms of Rational function
     inspired by Floated-Hormann's rational bary centric interpolant 
     >>> histo  = ...
     >>> rat    = rational_fun ( 2 ) ## ditto 
@@ -2934,10 +2920,8 @@ def _h1_rational_fun_ ( h1 , n , d  , **kwargs ) :
     ##
     return rational_fun  ( h1 , n , d  , xmin , xmax )
 
-
-
+# =============================================================================
 for h in ( ROOT.TH1F , ROOT.TH1D ) :
-
 
     h.beziereven_sum     = _h1_beziereven_sum_
     h.bernsteineven_sum  = _h1_beziereven_sum_
@@ -2981,7 +2965,6 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
     _new_methods_ .append ( h.bernsteineven_sum  )
 
     _new_methods_ .append ( h.rational_fun       )
-
     
 # ==============================================================================
 ## (relatively) fast parameterization of 2D histogram as sum of
@@ -2997,7 +2980,7 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
 def _h2_legendre_fast_ ( h2  , NX , NY , 
                          xmin = inf_neg , xmax = inf_pos , 
                          ymin = inf_neg , ymax = inf_pos ) :
-    """(relatively) fast parameterization of 2D histogram as sum of 2D-Legendre polynomials
+    """ (relatively) fast parameterization of 2D histogram as sum of 2D-Legendre polynomials
     >>> histo = ...
     >>> func  = histo.legendre      ( 5 , 3  )
     >>> func  = histo.legendre_fast ( 5 , 3  )
@@ -3052,7 +3035,7 @@ def _h2_legendre_fast_ ( h2  , NX , NY ,
 def _h2_bernstein_fast_ ( h2  , NX , NY , 
                           xmin = inf_neg , xmax = inf_pos , 
                           ymin = inf_neg , ymax = inf_pos ) :
-    """(relatively) fast parameterization of 2D histogram as sum of 2D-Bernstein polynomials
+    """ (relatively) fast parameterization of 2D histogram as sum of 2D-Bernstein polynomials
     >>> histo = ...
     >>> func  = histo.bernstein      ( 5 , 3  )
     >>> func  = histo.bernstein_fast ( 5 , 3  )
@@ -3091,8 +3074,7 @@ def _h2_bernstein_fast_ ( h2  , NX , NY ,
 
     return func 
 
-
-        
+# =============================================================================
 for h in ( ROOT.TH2F , ROOT.TH2D ) :
 
     h.legendre       = _h2_legendre_fast_

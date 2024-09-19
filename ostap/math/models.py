@@ -22,7 +22,8 @@ __all__     = (
     )
 # =============================================================================
 from    ostap.core.meta_info   import root_info
-from    ostap.core.core        import cpp, Ostap, funID
+from    ostap.utils.cidict     import cidict
+from    ostap.core.core        import cpp, Ostap, funID, cidict_fun, loop_items 
 from    ostap.core.ostap_types import num_types, integer_types
 from    ostap.math.base        import pos_infinity, neg_infinity
 import  ostap.math.polynomials 
@@ -60,32 +61,37 @@ class _WO3_ (object)  :
     @property
     def callme   ( self ) : return self.__callme 
 # =============================================================================
+tf1_keys  = ( 'npars' , 'args' , 'npoints' , 'callable' , 'title' ,
+              'npx' , 'xmin' , 'xmax' )
+tf2_keys  = tf1_keys + ( 'npy' , 'ymin' , 'ymax' )
+tf3_keys  = tf2_keys + ( 'npz' , 'zmin' , 'zmax' )
+# =============================================================================
 ## convert the model/function into TF1
-def tf1  ( self                 ,
-           xmin  = neg_infinity ,
-           xmax  = pos_infinity ,
-           **kwargs             ) :
-    """Convert the function to TF1    
+def tf1  ( self , **kwargs  ) :
+    """ Convert the function to TF1    
     >>> obj = ...
-    >>> fun = obj.tf1 ( 3.0 , 3.2 )
+    >>> fun = obj.tf1 ( xmin = 3.0 , xmax = 3.2 )  
     >>> fun.Draw() 
     """
-    
-    npars    = kwargs.pop ( 'npars'    , 0    )
-    args     = kwargs.pop ( 'args'     , ()   )
-    npx      = kwargs.pop ( 'npx'      , 250  )
-    npoints  = kwargs.pop ( 'npoints'  , 250  )
-    callme   = kwargs.pop ( 'callable' , self ) 
-    title    = kwargs.pop ( 'title'    , None )
-    
+    ## 
+    kwargs   = cidict ( transform = cidict_fun , **kwargs )
+    ## 
+    npars    = kwargs.pop ( 'npars'    , 0     )
+    args     = kwargs.pop ( 'args'     , ()    )
+    ## 
+    npx      = kwargs.pop ( 'npx'      , 250   )
+    npoints  = kwargs.pop ( 'npoints'  , 250   )
+    callme   = kwargs.pop ( 'callable' , self  ) 
+    title    = kwargs.pop ( 'title'    , None  )
+    ## 
     if hasattr ( self , '_wo1' ) and callme is not self._wo1.callme :
         del self._wo1 
         
     if not hasattr ( self , '_wo1' ) : self._wo1 = _WO1_ ( callme )
     if not self._wo1                 : self._wo1 = _WO1_ ( callme )
     #
-    xmin = float ( xmin )
-    xmax = float ( xmax )
+    xmin = kwargs.pop ( 'xmin' , neg_infinity )
+    xmax = kwargs.pop ( 'xmax' , pos_infinity )
     #
     if hasattr ( self , 'xmin'  ) :
         xmn   = self.xmin
@@ -98,48 +104,57 @@ def tf1  ( self                 ,
         npars = max ( npars , nps () if callable ( nps ) else nps )
     #
     assert xmin > neg_infinity, \
-          "``xmin''-parameter needs to be specified %s" % xmin
+          "`xmin`-parameter needs to be specified %s" % xmin
     assert xmax < pos_infinity, \
-          "``xmax''-parameter needs to be specified %s" % xmax
-    
+          "`xmax`-parameter needs to be specified %s" % xmax
+    ## 
     _wo = self._wo1 
     fun = ROOT.TF1 ( funID()  , _wo , xmin , xmax , npars, *args )
-
+    ## 
     if   isinstance ( npx     , integer_types ) and 1 < npx     : fun.SetNpx ( npx     ) 
     elif isinstance ( npoints , integer_types ) and 1 < npoints : fun.SetNpx ( npoints ) 
-
+    ## 
     if title is None : title = str ( self )            
     fun.SetTitle ( title ) 
     ##
+    if kwargs :
+        import ostap.logger.table as T 
+        rows = [ ( 'Argument' , 'Value' ) ]
+        for k , v in loop_items ( kwargs ) :
+            row = k , str ( v )
+            rows.append ( row )
+        title = 'tf1: %d unused arguments' % len ( kwargs ) 
+        table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
+        logger.warning ( '%s\n%s' % ( title , table ) )
+    
     return fun 
 
 # =============================================================================
 ## convert the model into TF2
-def tf2 ( self ,
-          xmin  = neg_infinity ,
-          xmax  = pos_infinity ,
-          ymin  = neg_infinity ,
-          ymax  = pos_infinity ,
-          npars = 0            ,
-          args  = ()           ,
-          npx   = 50           ,
-          npy   = 50           , **kwargs ) :
-    """Convert the function to TF2
+def tf2 ( self , **kwargs ) :
+    """ Convert the function to TF2
     >>> obj = ...    
-    >>> fun = obj.tf2 ( 3.0 , 3.2 , 3.0 , 3.2 )    
+    >>> fun = obj.tf2 ( xmin = 3.0 , xmax = 3.2 , ymin = 3.0 , ymax = 3.2 )    
     >>> fun.Draw() 
     """
+    ## 
+    kwargs   = cidict ( transform = cidict_fun , **kwargs )
     ##
-    callme   = kwargs.pop ( 'callable' , self ) 
-    title    = kwargs.pop ( 'title'    , None ) 
+    npars    = kwargs.pop ( 'npars'    , 0     )
+    args     = kwargs.pop ( 'args'     , ()    )
+    ## 
+    npx      = kwargs.pop ( 'npx'      , 50    )
+    npy      = kwargs.pop ( 'npy'      , 50    )
+    callme   = kwargs.pop ( 'callable' , self  ) 
+    title    = kwargs.pop ( 'title'    , None  )
     ##
     if not hasattr ( self , '_wo2' ) : self._wo2 = _WO2_ ( callme )
     if not self._wo2                 : self._wo2 = _WO2_ ( callme )
     ##
-    xmin = float ( xmin )
-    xmax = float ( xmax )
-    ymin = float ( ymin )
-    ymax = float ( ymax )
+    xmin = kwargs.pop ( 'xmin' , neg_infinity )
+    xmax = kwargs.pop ( 'xmax' , pos_infinity )
+    ymin = kwargs.pop ( 'ymin' , neg_infinity )
+    ymax = kwargs.pop ( 'ymax' , pos_infinity )
     #
     if hasattr ( self , 'xmin'  ) :
         xmn   = self.xmin
@@ -159,13 +174,13 @@ def tf2 ( self ,
 
     ##
     assert xmin > neg_infinity, \
-           "``xmin''-parameter needs to be specified %s" % xmin
+           "`xmin`-parameter needs to be specified %s" % xmin
     assert xmax < pos_infinity, \
-           "``xmax''-parameter needs to be specified %s" % xmax
+           "`xmax`-parameter needs to be specified %s" % xmax
     assert ymin > neg_infinity, \
-           "``ymin''-parameter needs to be specified %s" % ymin
+           "`ymin`-parameter needs to be specified %s" % ymin
     assert ymax < pos_infinity, \
-           "``ymax''-parameter needs to be specified %s" % ymax
+           "`ymax`-parameter needs to be specified %s" % ymax
     ##
     _wo = self._wo2
     fun = ROOT.TF2 ( funID ()  , _wo , xmin , xmax , ymin , ymax , npars , *args )
@@ -175,42 +190,38 @@ def tf2 ( self ,
     if title is None : title = str ( self )
     fun.SetTitle ( title ) 
     #
-    if kwargs : logger.warning ("Unused arguments %s" % [ a for a in kwargs ] )  
     return fun 
 
 # =============================================================================
 ## convert the model into TF3
-def tf3 ( self ,
-          xmin  = neg_infinity ,
-          xmax  = pos_infinity ,
-          ymin  = neg_infinity ,
-          ymax  = pos_infinity ,
-          zmin  = neg_infinity ,
-          zmax  = pos_infinity ,
-          npars = 0            ,
-          args  = ()           , 
-          npx   = 25           ,
-          npy   = 25           ,
-          npz   = 25           , **kwargs ) :
-    """Convert the function to TF3
+def tf3 ( self , **kwargs ) :
+    """ Convert the function to TF3
     >>> obj = ...    
-    >>> fun = obj.tf3 ( 3.0 , 3.2 , 3.0 , 3.2 , 1 , 2 )    
+    >>> fun = obj.tf3 ( xmin = 3.0 , xmax = 3.2 , ymin = 3.0 , ymax = 3.2 , zmin = 1 , zmax = 2 )    
     >>> fun.Draw() 
     """
     ##
-    ##
-    callme   = kwargs.pop ( 'callable' , self ) 
+    kwargs = cidict ( transform = cidict_fun , **kwargs )
+    ## 
+    npars    = kwargs.pop ( 'npars'    , 0             )
+    args     = kwargs.pop ( 'args'     , ()            )
+    ## 
+    npx      = kwargs.pop ( 'npx'      , 25            )
+    npy      = kwargs.pop ( 'npy'      , 25            )
+    npz      = kwargs.pop ( 'npz'      , 25            )
+    callme   = kwargs.pop ( 'callable' , self          ) 
+    title    = kwargs.pop ( 'title'    , '3D-function' )
     ##
     if not hasattr ( self , '_wo3' ) : self._wo3 = _WO3_ ( callme )
     if not self._wo3                 : self._wo3 = _WO3_ ( callme )
     ##
-    xmin = float ( xmin )
-    xmax = float ( xmax )
-    ymin = float ( ymin )
-    ymax = float ( ymax )
-    zmin = float ( zmin )
-    zmax = float ( zmax )
-    ##
+    xmin = kwargs.pop ( 'xmin' , neg_infinity )
+    xmax = kwargs.pop ( 'xmax' , pos_infinity )
+    ymin = kwargs.pop ( 'ymin' , neg_infinity )
+    ymax = kwargs.pop ( 'ymax' , pos_infinity )
+    zmin = kwargs.pop ( 'zmin' , neg_infinity )
+    zmax = kwargs.pop ( 'zmax' , pos_infinity )
+    #
     if hasattr ( self , 'xmin'  ) :
         xmn   = self.xmin
         xmin  = max ( float ( xmin ) , float ( xmn () ) if callable ( xmn ) else float ( xmn  ) )
@@ -233,20 +244,19 @@ def tf3 ( self ,
         nps   = self.npars
         npars = max ( npars , nps () if callable ( nps ) else nps )
 
-
     #
     assert xmin > neg_infinity, \
-           "``xmin''-parameter needs to be specified %s" % xmin
+           "`xmin`-parameter needs to be specified %s" % xmin
     assert xmax < pos_infinity, \
-           "``xmax''-parameter needs to be specified %s" % xmax
+           "`xmax`-parameter needs to be specified %s" % xmax
     assert ymin > neg_infinity, \
-           "``ymin''-parameter needs to be specified %s" % ymin
+           "`ymin`-parameter needs to be specified %s" % ymin
     assert ymax < pos_infinity, \
-           "``ymax''-parameter needs to be specified %s" % ymax
+           "`ymax`-parameter needs to be specified %s" % ymax
     assert zmin > neg_infinity, \
-           "``zmin''-parameter needs to be specified %s" % zmin
+           "`zmin`-parameter needs to be specified %s" % zmin
     assert zmax < pos_infinity, \
-           "``zmax''-parameter needs to be specified %s" % zmax
+           "`zmax`-parameter needs to be specified %s" % zmax
     #
     _wo = self._wo3
     fun = ROOT.TF3 ( funID ()  , _wo , xmin , xmax , ymin , ymax , zmin ,  zmax , npars , *args )
@@ -254,8 +264,15 @@ def tf3 ( self ,
     fun.SetNpy ( npy ) 
     fun.SetNpy ( npz ) 
     #
-    
-    if kwargs : logger.warning ("Unused arguments %s" % [ a for a in kwargs ] )
+    if kwargs :
+        import ostap.logger.table as T 
+        rows = [ ( 'Argument' , 'Value' ) ]
+        for k , v in loop_items ( kwargs ) :
+            row = k , str ( v )
+            rows.append ( row )
+        title = 'tf3: %d unused arguments' % len ( kwargs ) 
+        table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
+        logger.warning ( '%s\n%s' % ( title , table ) )
     
     return fun 
 
@@ -278,42 +295,41 @@ def f1_draw ( self , opts ='' , **kwargs ) :
     >>> fun = ...
     >>> fun.draw()    
     """
-
-    if hasattr ( self , '_tf1' ) and 'callable' in kwargs : del self._tf1
     
-    if hasattr ( self , '_tf1' ) and 'xmin'     in kwargs :        
-        xmin    = kwargs.get ( 'xmin'    , None )
+    kw = cidict ( transform = cidict_fun , **kwargs )
+    
+    if hasattr ( self , '_tf1' ) and 'callable' in kw : del self._tf1
+    
+    if hasattr ( self , '_tf1' ) and 'xmin'     in kw :        
+        xmin    = kw.get ( 'xmin'    , None )
         if isinstance ( xmin    , num_types     ) and float ( xmin ) != self._tf1.GetXmin () : del self._tf1 
 
-    if hasattr ( self , '_tf1' ) and 'xmax'     in kwargs :        
-        xmax    = kwargs.get ( 'xmax'    , None )
+    if hasattr ( self , '_tf1' ) and 'xmax'      in kw :        
+        xmax    = kw.get ( 'xmax'    , None )
         if isinstance ( xmax    , num_types     ) and float ( xmax ) != self._tf1.GetXmax () : del self._tf1 
         
-    if hasattr ( self , '_tf1' ) and 'npx'       in kwargs :        
-        npx    = kwargs.get ( 'npx'    , None )
+    if hasattr ( self , '_tf1' ) and 'npx'       in kw :        
+        npx    = kw.get ( 'npx'    , None )
         if isinstance ( npx     , integer_types ) and 1 < npx and npx != self._tf1.GetNpx () : del self._tf1
         
-    if hasattr ( self , '_tf1' ) and 'npoints'    in kwargs :        
-        npx    = kwargs.get ( 'npoints'    , None )
+    if hasattr ( self , '_tf1' ) and 'npoints'   in kw :        
+        npx    = kw.get ( 'npoints'    , None )
         if isinstance ( npx     , integer_types ) and 1 < npx and npx != self._tf1.GetNpx () : del self._tf1 
-        
-        
-    if not hasattr ( self , '_tf1'  ) :
-        
-        self._tf1        =  tf1 ( self , **kwargs )
-        
-        if type ( self ) in positives and not 'xmin' in kwargs :
-            self._tf1.SetMinimum(0)
-            
-    kwargs.pop ( 'xmin'     , None )
-    kwargs.pop ( 'xmax'     , None )
-    kwargs.pop ( 'npars'    , None ) 
-    kwargs.pop ( 'args'     , None )
-    kwargs.pop ( 'npx'      , None )
-    kwargs.pop ( 'npoints'  , None )
-    kwargs.pop ( 'callable' , None ) 
+                
+    if not hasattr ( self , '_tf1'  ) :        
+        self._tf1        =  tf1 ( self , **kw )        
+        if type ( self ) in positives and not 'xmin' in kw :
+            self._tf1.SetMinimum ( 0 )
 
-    return self._tf1.draw ( opts , **kwargs )
+    xmin     = kw.pop ( 'xmin'     , neg_infinity )
+    xmax     = kw.pop ( 'xmax'     , pos_infinity )
+    npars    = kw.pop ( 'npars'    , 0    ) 
+    args     = kw.pop ( 'args'     , ()   )
+    npx      = kw.pop ( 'npx'      , 500  )
+    npoints  = kw.pop ( 'npoints'  , 500  )
+    call     = kw.pop ( 'callable' , None ) 
+    
+    return self._tf1.draw ( opts , **kw  )
 
 # =============================================================================
 ## draw the function 
@@ -322,83 +338,86 @@ def f2_draw ( self , opts ='' , **kwargs ) :
     >>> fun = ...
     >>> fun.draw()    
     """
+    kw = cidict ( transform = cidict_fun , **kwargs )
     
-    if hasattr ( self , '_tf2' ) and 'xmin'     in kwargs :        
-        xmin    = kwargs.get ( 'xmin'    , None )
+    if hasattr ( self , '_tf2' ) and 'xmin'     in kw :        
+        xmin    = kw.get ( 'xmin'    , None )
         if isinstance ( xmin    , num_types     ) and float ( xmin ) != self._tf2.GetXmin () : del self._tf2 
 
-    if hasattr ( self , '_tf2' ) and 'xmax'     in kwargs :        
-        xmax    = kwargs.get ( 'xmax'    , None )
+    if hasattr ( self , '_tf2' ) and 'xmax'     in kw :        
+        xmax    = kw.get ( 'xmax'    , None )
         if isinstance ( xmax    , num_types     ) and float ( xmax ) != self._tf2.GetXmax () : del self._tf2 
 
-    if hasattr ( self , '_tf2' ) and 'ymin'     in kwargs :        
-        ymin    = kwargs.get ( 'ymin'    , None )
+    if hasattr ( self , '_tf2' ) and 'ymin'     in kw :        
+        ymin    = kw.get ( 'ymin'    , None )
         if isinstance ( ymin    , num_types     ) and float ( ymin ) != self._tf2.GetYmin () : del self._tf2 
 
-    if hasattr ( self , '_tf2' ) and 'ymax'     in kwargs :        
-        ymax    = kwargs.get ( 'ymax'    , None )
+    if hasattr ( self , '_tf2' ) and 'ymax'     in kw :        
+        ymax    = kw.get ( 'ymax'    , None )
         if isinstance ( ymax    , num_types     ) and float ( ymax ) != self._tf2.GetYmax () : del self._tf2 
 
     if not hasattr ( self , '_tf2'  ) :
 
-        self._tf2        =  tf2 ( self , **kwargs )
+        self._tf2        =  tf2 ( self , **kw )
         
-    xmin  = kwargs.pop ( 'xmin'  , neg_infinity )
-    xmax  = kwargs.pop ( 'xmax'  , pos_infinity )
-    ymin  = kwargs.pop ( 'ymin'  , neg_infinity )
-    ymax  = kwargs.pop ( 'ymax'  , pos_infinity )
-    npars = kwargs.pop ( 'npars' , 0  ) 
-    args  = kwargs.pop ( 'args'  , () )
+    xmin  = kw.pop ( 'xmin'  , neg_infinity )
+    xmax  = kw.pop ( 'xmax'  , pos_infinity )
+    ymin  = kw.pop ( 'ymin'  , neg_infinity )
+    ymax  = kw.pop ( 'ymax'  , pos_infinity )
+    npars = kw.pop ( 'npars' , 0            ) 
+    args  = kw.pop ( 'args'  , ()           )
     
-    return self._tf2.draw ( opts , **kwargs )
+    return self._tf2.draw ( opts , **kw )
 
 # =============================================================================
 ## draw the function 
 def f3_draw ( self , opts ='' , **kwargs ) :
-    """Drawing the function object through conversion to ROOT.TF3    
+    """ Drawing the function object through conversion to ROOT.TF3    
     >>> fun = ...
     >>> fun.draw()    
     """
     
-    if hasattr ( self , '_tf3' ) and 'xmin'     in kwargs :        
-        xmin    = kwargs.get ( 'xmin'    , None )
+    kw = cidict ( transform = cidict_fun , **kwargs )
+
+    if hasattr ( self , '_tf3' ) and 'xmin'     in kw :        
+        xmin    = kw.get ( 'xmin'    , None )
         if isinstance ( xmin    , num_types     ) and float ( xmin ) != self._tf3.GetXmin () : del self._tf3 
 
-    if hasattr ( self , '_tf3' ) and 'xmax'     in kwargs :        
-        xmax    = kwargs.get ( 'xmax'    , None )
+    if hasattr ( self , '_tf3' ) and 'xmax'     in kw :        
+        xmax    = kw.get ( 'xmax'    , None )
         if isinstance ( xmax    , num_types     ) and float ( xmax ) != self._tf3.GetXmax () : del self._tf3 
 
-    if hasattr ( self , '_tf3' ) and 'ymin'     in kwargs :        
-        ymin    = kwargs.get ( 'ymin'    , None )
+    if hasattr ( self , '_tf3' ) and 'ymin'     in kw :        
+        ymin    = kw.get ( 'ymin'    , None )
         if isinstance ( ymin    , num_types     ) and float ( ymin ) != self._tf3.GetYmin () : del self._tf3 
 
-    if hasattr ( self , '_tf3' ) and 'ymax'     in kwargs :        
-        ymax    = kwargs.get ( 'ymax'    , None )
+    if hasattr ( self , '_tf3' ) and 'ymax'     in kw :        
+        ymax    = kw.get ( 'ymax'    , None )
         if isinstance ( ymax    , num_types     ) and float ( ymax ) != self._tf3.GetYmax () : del self._tf3 
 
-    if hasattr ( self , '_tf3' ) and 'zmin'     in kwargs :        
-        zmin    = kwargs.get ( 'zmin'    , None )
+    if hasattr ( self , '_tf3' ) and 'zmin'     in kw :        
+        zmin    = kw.get ( 'zmin'    , None )
         if isinstance ( zmin    , num_types     ) and float ( zmin ) != self._tf3.GetZmin () : del self._tf3 
 
-    if hasattr ( self , '_tf3' ) and 'ymax'     in kwargs :        
-        zmax    = kwargs.get ( 'zmax'    , None )
+    if hasattr ( self , '_tf3' ) and 'ymax'     in kw :        
+        zmax    = kw.get ( 'zmax'    , None )
         if isinstance ( zmax    , num_types     ) and float ( zmax ) != self._tf3.GetZmax () : del self._tf3 
 
 
     if not hasattr ( self , '_tf3'  ) :
-
-        self._tf3        = tf3 ( self , **kwargs )
+        self._tf3        = tf3 ( self , **kw )
     
-    xmin  = kwargs.pop ( 'xmin' , neg_infinity )
-    xmax  = kwargs.pop ( 'xmax' , pos_infinity )
-    ymin  = kwargs.pop ( 'ymin' , neg_infinity )
-    ymax  = kwargs.pop ( 'ymax' , pos_infinity )
-    zmin  = kwargs.pop ( 'zmin' , neg_infinity )
-    zmax  = kwargs.pop ( 'zmax' , pos_infinity )
-    npars = kwargs.pop ( 'npars' , 0  ) 
-    args  = kwargs.pop ( 'args' , () )
+    xmin  = kw.pop ( 'xmin'     , neg_infinity )
+    xmax  = kw.pop ( 'xmax'     , pos_infinity )
+    ymin  = kw.pop ( 'ymin'     , neg_infinity )
+    ymax  = kw.pop ( 'ymax'     , pos_infinity )
+    zmin  = kw.pop ( 'zmin'     , neg_infinity )
+    zmax  = kw.pop ( 'zmax'     , pos_infinity )
+    npars = kw.pop ( 'npars'    , 0  ) 
+    args  = kw.pop ( 'args'     , () )
+    call  = kw.pop ( 'callable' , None ) 
     
-    return self._tf3.draw ( opts , **kwargs )
+    return self._tf3.draw ( opts , **kw  )
 
 # =============================================================================
 ## get the regular complex value for amplitude 

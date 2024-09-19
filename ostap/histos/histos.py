@@ -7,7 +7,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 # =============================================================================
-"""Module with decoration of TH* objects for efficient use in python
+""" Module with decoration of TH* objects for efficient use in python
 """
 # =============================================================================
 __version__ = "$Revision: 207180 $"
@@ -72,7 +72,7 @@ inf_neg = -float('Inf')
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-14
 def _h_new_init_ ( self , *args ) :
-    """Modified TH* constructor:
+    """ Modified TH* constructor:
     - ensure that created object/histogram goes to ROOT main memory
     """
     with ROOTCWD () :
@@ -94,7 +94,7 @@ def _h_new_init_ ( self , *args ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h_new_clone_ ( self , name = '' , title = '' , prefix = 'h_' ) :
-    """Modifiled Clone-function
+    """ Modifiled Clone-function
     - it automatically assigns unique ID
     - it ensures that cloned histogram is not going to die with
     the accidentally opened file/directory
@@ -141,7 +141,7 @@ for h in ( ROOT.TH1F , ROOT.TH1D ,
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _axis_iter_1_ ( a ) :
-    """Iterator for axis
+    """ Iterator for axis
     >>> axis = ...
     >>> for i in axis : 
     """
@@ -598,7 +598,7 @@ ROOT.TH3D  . __getitem__  = _h3_get_item_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_iter_ ( h1 ) :
-    """Iterator over 1D-histogram
+    """ Iterator over 1D-histogram
     >>> for i in h1 : print i 
     """
     ax = h1.GetXaxis () 
@@ -611,7 +611,7 @@ def _h1_iter_ ( h1 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-06
 def _h1_iter_reversed_ ( h1 ) :
-    """Iterator over 1D-histogram    
+    """ Iterator over 1D-histogram    
     >>> for i in reversed(h1) : print i 
     """
     ax = h1.GetXaxis () 
@@ -630,7 +630,7 @@ ROOT.TH1D . __reversed__ = _h1_iter_reversed_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_iter_ ( h2 ) :
-    """Iterator over 2D-histogram    
+    """ Iterator over 2D-histogram    
     >>> for i in h2 : print i 
     """
     #
@@ -676,7 +676,7 @@ ROOT.TH2D . __reversed__ = _h2_iter_reversed_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h3_iter_ ( h3 ) :
-    """Iterator over 3D-histogram    
+    """ Iterator over 3D-histogram    
     >>> for i in h3 : print i 
     """
     #
@@ -959,7 +959,7 @@ def _h2_find_ ( h2 , x , y ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h3_find_ ( h3 , x , y , z ) :
-    """Find the bin in 3D-histogram
+    """ Find the bin in 3D-histogram
     >>> ibin = h3.findBin ( x , y , z ) 
     """
     x = float ( x )
@@ -991,7 +991,7 @@ ROOT.TH3D . findBin  = _h3_find_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-03-20
 def _h2_mean_ ( h2 ) :
-    """Get the mean
+    """ Get the mean
     >>> histo = ...
     >>> x,y   = histo.mean () 
     """
@@ -1009,7 +1009,7 @@ def _h2_mean_ ( h2 ) :
 #  xm = h2.xmean() 
 #  @endcode
 def _h2_xmean_ ( h2 ) :
-    """Get x-mean for 2D-histogram
+    """ Get x-mean for 2D-histogram
     >>> h2 = ...
     >>> xm = h2.xmean() 
     """
@@ -1025,7 +1025,7 @@ def _h2_xmean_ ( h2 ) :
 #  xm = h2.ymean() 
 #  @endcode
 def _h2_ymean_ ( h2 ) :
-    """Get y-mean for 2D-histogram
+    """ Get y-mean for 2D-histogram
     >>> h2 = ...
     >>> xm = h2.ymean() 
     """
@@ -1041,7 +1041,7 @@ def _h2_ymean_ ( h2 ) :
 #  xm = h2.xrms() 
 #  @endcode
 def _h2_xrms_ ( h2 ) :
-    """Get x-rms for 2D-histogram
+    """ Get x-rms for 2D-histogram
     >>> h2 = ...
     >>> xm = h2.xrms() 
     """
@@ -1066,7 +1066,7 @@ def _h2_xrms_ ( h2 ) :
 #  xm = h2.yrms() 
 #  @endcode
 def _h2_yrms_ ( h2 ) :
-    """Get y-rms for 2D-histogram
+    """ Get y-rms for 2D-histogram
     >>> h2 = ...
     >>> xm = h2.yrms() 
     """
@@ -1091,7 +1091,7 @@ def _h2_yrms_ ( h2 ) :
 #  xy = h2.xycorr()
 #  @endcode 
 def _h2_xycorr_  ( h2 ) :
-    """Get correlation coefficient between x and y
+    """ Get correlation coefficient between x and y
     >>> h2 = ...
     >>> xy = h2.xycorr()
     """
@@ -1112,8 +1112,6 @@ for h in ( ROOT.TH2F , ROOT.TH2D ) :
     h.xycor  =  _h2_xycorr_
 
 
-
-
 # =============================================================================
 ## get mean for 3D-histogram 
 #  @code 
@@ -1123,7 +1121,7 @@ for h in ( ROOT.TH2F , ROOT.TH2D ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-03-20
 def _h3_mean_ ( h3 ) :
-    """Get the mean
+    """ Get the mean
     >>> histo = ...
     >>> x , y , z = histo.mean () 
     """
@@ -1143,7 +1141,7 @@ def _h3_mean_ ( h3 ) :
 #  xm = h3.xmean() 
 #  @endcode
 def _h3_xmean_ ( h3 ) :
-    """Get x-mean for 2D-histogram
+    """ Get x-mean for 2D-histogram
     >>> h2 = ...
     >>> xm = h2.xmean() 
     """
@@ -1159,7 +1157,7 @@ def _h3_xmean_ ( h3 ) :
 #  ym = h3.ymean() 
 #  @endcode
 def _h3_ymean_ ( h3 ) :
-    """Get y-mean for 3D-histogram
+    """ Get y-mean for 3D-histogram
     >>> h3 = ...
     >>> xm = h3.ymean() 
     """
@@ -1176,7 +1174,7 @@ def _h3_ymean_ ( h3 ) :
 #  zm = h3.zmean() 
 #  @endcode
 def _h3_zmean_ ( h3 ) :
-    """Get z-mean for 3D-histogram
+    """ Get z-mean for 3D-histogram
     >>> h3 = ...
     >>> zm = h3.zmean() 
     """
@@ -1192,7 +1190,7 @@ def _h3_zmean_ ( h3 ) :
 #  xm = h3.xrms() 
 #  @endcode
 def _h3_xrms_ ( h2 ) :
-    """Get x-rms for 3D-histogram
+    """ Get x-rms for 3D-histogram
     >>> h3 = ...
     >>> xm = h3.xrms() 
     """
@@ -1217,7 +1215,7 @@ def _h3_xrms_ ( h2 ) :
 #  ym = h3.yrms() 
 #  @endcode
 def _h3_yrms_ ( h2 ) :
-    """Get y-rms for 3D-histogram
+    """ Get y-rms for 3D-histogram
     >>> h3 = ...
     >>> ym = h3.yrms() 
     """
@@ -1242,7 +1240,7 @@ def _h3_yrms_ ( h2 ) :
 #  zm = h3.zrms() 
 #  @endcode
 def _h3_zrms_ ( h2 ) :
-    """Get z-rms for 3D-histogram
+    """ Get z-rms for 3D-histogram
     >>> h3 = ...
     >>> zm = h3.zrms() 
     """
@@ -1386,7 +1384,7 @@ def _h2_call_ ( h2 ,
 #  @author Vanya BELYAEV IvanBelyaev@itep.ru
 #  @date 2019-05-14
 class Histo2DFun (object) :
-    """Histogram as trivial function object
+    """ Histogram as trivial function object
     >>> histo = ...
     >>> fun   = Histo2DFun( histo )
     """
@@ -1450,9 +1448,8 @@ def _h3_call_ ( h3                         ,
                 interpolate = True         ,
                 edges       = True         ,
                 extrapolate = False        ,
-                density     = False        ) :
-                
-    """3D-histogram as function:
+                density     = False        ) :                
+    """ 3D-histogram as function:
     >>> histo = ....
     >>> ve = histo ( x , y , z ) ## default interpolation
     >>> ve = histo ( x , y , z , interpolate = (3,3,3) )   ## use tri-qubic interpolation
@@ -1494,7 +1491,7 @@ def _h3_call_ ( h3                         ,
 #  @author Vanya BELYAEV IvanBelyaev@itep.ru
 #  @date 2019-05-14
 class Histo3DFun (object) :
-    """Histogram as trivial function object
+    """ Histogram as trivial function object
     >>> histo = ...
     >>> fun   = Histo3DFun( histo )
     """
@@ -1542,7 +1539,7 @@ ROOT.TH3D  . __getitem__  = _h3_get_item_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_iteritems_ ( h1 , low = 1 , high = sys.maxsize ) :
-    """Iterate over histogram items:    
+    """ Iterate over histogram items:    
     >>> h1 = ...
     >>> for i,x,y in h1.    items()  : ...    
     >>> for i,x,y in h1.iteritems()  : ...    ## ditto 
@@ -1576,7 +1573,7 @@ ROOT.TH1D  . iteritems     = _h1_iteritems_
 #  for v in histo.values() : ...
 #  @endcode 
 def _h1_values_ ( h1 ) :
-    """Iterate over the values
+    """ Iterate over the values
     >>> histo = ...
     >>> for v in histo.values() : ...
     """
@@ -1594,7 +1591,7 @@ ROOT.TH1D  .     values    = _h1_values_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-07-27
 def _h1_bin_ ( h1 , ibin ) :
-    """Get the information about the bin center and width     
+    """ Get the information about the bin center and width     
     >>> h1 = ... ## the histo
     >>> print h1.bin(1)    
     """
@@ -1612,7 +1609,7 @@ def _h1_bin_ ( h1 , ibin ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-07-27
 def _h2_bin_ ( h2 , *ibin ) :
-    """Get the information about the bin center and width 
+    """ Get the information about the bin center and width 
     >>> h2 = ... ## the histo
     >>> print h2.bin(1,2)    
     """
@@ -1635,7 +1632,7 @@ def _h2_bin_ ( h2 , *ibin ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-07-27
 def _h3_bin_ ( h3 , *ibin ) :
-    """Get the information about the bin center and width 
+    """ Get the information about the bin center and width 
     >>> h3 = ... ## the histo
     >>> print h3.bin(1,2,15)    
     """
@@ -1669,7 +1666,7 @@ ROOT.TH3D.bin = _h3_bin_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_iteritems_ ( h2 ) :
-    """Iterate over histogram items:
+    """ Iterate over histogram items:
     >>> h2 = ...
     >>> for ix,iy,x,y,z in h2.    items() : ...   
     >>> for ix,iy,x,y,z in h2.iteritems() : ... ## ditto   
@@ -1706,7 +1703,7 @@ ROOT.TH2D  . iteritems     = _h2_iteritems_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h3_iteritems_ ( h3 ) :
-    """Iterate over histogram items:    
+    """ Iterate over histogram items:    
     >>> h3 = ...
     >>> for ix,iy,iz,x,y,z,V in h3.    items() : ...    
     >>> for ix,iy,iz,x,y,z,V in h3.iteritems() : ...   ##  ditto
@@ -1754,7 +1751,7 @@ ROOT.TH3D  . iteritems     = _h3_iteritems_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _a_iteritems_ ( axis ) :
-    """Iterate over items in axis     
+    """ Iterate over items in axis     
     >>> axis = ...
     >>> for ibin,low,center,high in axis.    items() : ...    
     >>> for ibin,low,center,high in axis.iteritems() : ... ## ditto    
@@ -1773,7 +1770,7 @@ ROOT.TAxis. iteritems     = _a_iteritems_
 # =============================================================================
 ## get bin parameters : low- and up-edges 
 def _a_get_item_ ( axis , i ) :
-    """Get bin parameter: low- and up-edges
+    """ Get bin parameter: low- and up-edges
     >>> axis = ...
     >>> low,high = axis[1]
     
@@ -1791,7 +1788,7 @@ ROOT.TAxis.__getitem__  = _a_get_item_
 # =============================================================================
 ## equality for axes
 def _a_equal_ ( axis , another ) :
-    """Equality for two axes
+    """ Equality for two axes
     >>> a1 = ...
     >>> a2 = ...
     >>> print a1 == a1 
@@ -1844,7 +1841,7 @@ ROOT.TH2D.transpone = _h2_transpose_
 # =============================================================================
 ## Draw 2D-histogram as 'colz'
 def _h2_colz_ ( h2 , opts = '' , *args , **kwargs ) :
-    """Draw 2D-histogram as 'colz'    
+    """ Draw 2D-histogram as 'colz'    
     >>> h2.colz()    
     """
     return h2.draw ( 'colz ' + opts , *args , **kwargs )
@@ -1861,7 +1858,7 @@ ROOT.TF2  . colz = _h2_colz_
 # =============================================================================
 ## Draw 2D-histogram as 'text'
 def _h2_text_ ( h2 , opts = '' , fmt = '' , *args , **kwargs ) :
-    """Draw 2D-histogram as 'text'    
+    """ Draw 2D-histogram as 'text'    
     >>> h2.text( fmt = '5.3f')    
     """
     if fmt : ROOT.gStyle.SetPaintTextFormat ( fmt )        
@@ -1873,7 +1870,7 @@ ROOT.TH2D . text = _h2_text_
 # =============================================================================
 ## Draw 2D-histogram as 'text'
 def _h2_texte_ ( h2 , opts = '' , fmt = '' , *args , **kwargs ) :
-    """Draw 2D-histogram as 'texte'    
+    """ Draw 2D-histogram as 'texte'    
     >>> h2.texte( fmt = '5.2f')    
     """
     if fmt : ROOT.gStyle.SetPaintTextFormat ( fmt )        
@@ -1897,7 +1894,7 @@ ROOT.TH2D . texte = _h2_texte_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def binomEff_h1 ( h1 , h2 , func = binomEff ) :
-    """Calculate the efficiency histogram using the binomial errors    
+    """ Calculate the efficiency histogram using the binomial errors    
     >>> accepted   = ...
     >>> total      = ...
     >>> efficiency = accepted // total                   ## default
@@ -1986,7 +1983,7 @@ three_sigma = 0.9973002039367398 ## the width of the +-3 sigma confidence interv
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def binom_interval_h1 ( accepted , rejected , func , interval = one_sigma ) :
-    """Calculate the efficiency graph using the binomial errors    
+    """ Calculate the efficiency graph using the binomial errors    
     >>> accepted   = ...
     >>> rejected   = ...
     >>> efficiency = acepted.eff_wald                    ( rejected )
@@ -2081,7 +2078,7 @@ ROOT.TH1D.eff_clopper_pearson         = lambda accepted,rejected,interval=one_si
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def binomEff_h2 ( h1 , h2 , func = binomEff ) :
-    """Calculate the efficiency histogram using the binomial errors
+    """ Calculate the efficiency histogram using the binomial errors
     >>> accepted   = ...
     >>> total      = ...
     >>> efficiency = accepted // total    
@@ -2131,7 +2128,7 @@ ROOT.TH2D.  binomEff    = binomEff_h2
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def binomEff_h3 ( h1 , h2 , func = binomEff ) :
-    """Calculate the efficiency histogram using the binomial errors
+    """ Calculate the efficiency histogram using the binomial errors
     >>> accepted   = ...
     >>> total      = ...
     >>> efficiency = accepted // total    
@@ -2192,7 +2189,7 @@ ROOT.TH3D . __floordiv__  = binomEff_h3
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def zechEff_h1 ( h1 , h2 , func = zechEff ) :
-    """Calculate the efficiency histogram using the binomial errors
+    """ Calculate the efficiency histogram using the binomial errors
     >>> accepted  = ... ##  histogram for accepted sample 
     >>> total     = ... ##  histogram for total    sample 
     >>> efficiency = accepted % total    
@@ -2241,7 +2238,7 @@ ROOT.TH1D.  zechEff    = zechEff_h1
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def zechEff_h2 ( h1 , h2 ) :
-    """Calculate the efficiency histogram using the binomial errors    
+    """ Calculate the efficiency histogram using the binomial errors    
     >>> accepted  = ... ##  histogram for accepted sample 
     >>> total     = ... ##  histogram for total    sample 
     >>> efficiency = accepted % total    
@@ -2288,7 +2285,7 @@ ROOT.TH2D.  zechEff    = zechEff_h2
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def zechEff_h3 ( h1 , h2 ) :
-    """Calculate the efficiency histogram using the binomial errors    
+    """ Calculate the efficiency histogram using the binomial errors    
     >>> accepted  = ... ##  histogram for accepted sample 
     >>> total     = ... ##  histogram for total    sample 
     >>> efficiency = accepted % total    
@@ -2338,7 +2335,7 @@ ROOT.TH3D . __mod__  = zechEff_h3
 #  @endcode 
 #  - <code>ROOT.TH1.Divide ( ... , 1 , 1 , "B")</code> is used 
 def _h_binomEff_2_ ( accepted , total ) :
-    """Calculate the efficiency histogram using the binomial errors    
+    """ Calculate the efficiency histogram using the binomial errors    
     >>> accepted  = ... ##  histogram for accepted sample 
     >>> total     = ... ##  histogram for total    sample 
     >>> efficiency = accepted.binomEff2 ( total )
@@ -2476,7 +2473,7 @@ def objectAsFunctionObject ( obj ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_oper_ ( h1 , h2 , oper ) :
-    """Operation with the histogram
+    """ Operation with the histogram
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 (oper) h2 
@@ -2517,7 +2514,7 @@ def _h1_oper_ ( h1 , h2 , oper ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_ioper_ ( h1 , h2 , oper ) :
-    """Operation with the histogram
+    """ Operation with the histogram
     >>> obj= ...
     >>> h2     = ...
     >>> h2 (oper) obj    
@@ -2561,7 +2558,7 @@ def _h1_div_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_mul_ ( h1 , h2 ) :
-    """Multiply the histograms 
+    """ Multiply the histograms 
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 * h2  
@@ -2572,7 +2569,7 @@ def _h1_mul_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_add_ ( h1 , h2 ) :
-    """Add the histograms     
+    """ Add the histograms     
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 + h2  
@@ -2738,7 +2735,7 @@ def _h1_abs_ ( h1 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_idiv_ ( h1 , h2 ) :
-    """Divide the histograms     
+    """ Divide the histograms     
     >>> h1  = ...
     >>> h2  = ...
     >>> h1 /=  h2     
@@ -2750,7 +2747,7 @@ def _h1_idiv_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_imul_ ( h1 , h2 ) :
-    """Multiply the histograms     
+    """ Multiply the histograms     
     >>> h1  = ...
     >>> h2  = ...
     >>> h1 *=  h2     
@@ -2762,7 +2759,7 @@ def _h1_imul_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_iadd_ ( h1 , h2 ) :
-    """Add the histograms    
+    """ Add the histograms    
     >>> h1  = ...
     >>> h2  = ...
     >>> h1 +=  h2     
@@ -2773,7 +2770,7 @@ def _h1_iadd_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_isub_ ( h1 , h2 ) :
-    """Subtract the histogram    
+    """ Subtract the histogram    
     >>> h1  = ...
     >>> h2  = ...
     >>> h1 -=  h2     
@@ -2785,7 +2782,7 @@ def _h1_isub_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_rdiv_ ( h1 , h2 ) :
-    """Divide the histograms
+    """ Divide the histograms
     >>> h1     = ...
     >>> obj    = ...
     >>> result = obj / h1 
@@ -2796,7 +2793,7 @@ def _h1_rdiv_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_rmul_ ( h1 , h2 ) :
-    """Multiply the histograms 
+    """ Multiply the histograms 
     >>> h1     = ...
     >>> obj    = ...
     >>> result = obj * h1 
@@ -2808,7 +2805,7 @@ def _h1_rmul_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_radd_ ( h1 , h2 ) :
-    """Add the histograms    
+    """ Add the histograms    
     >>> h1     = ...
     >>> obj    = ...
     >>> result = obj + h1 
@@ -2820,7 +2817,7 @@ def _h1_radd_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_rsub_ ( h1 , h2 ) :
-    """Subtract the histogram            
+    """ Subtract the histogram            
     >>> h1     = ...
     >>> obj    = ...
     >>> result = obj - h1 
@@ -2841,7 +2838,7 @@ def _h1_rsub_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_rrshift_ ( h1 , obj ) :
-    """Feed the histogram from external source, e.g. function    
+    """ Feed the histogram from external source, e.g. function    
     >>> h1 = ...        ## the histogram
     >>> math.sin >> h1  ## feed it from the function
     """
@@ -2850,6 +2847,7 @@ def _h1_rrshift_ ( h1 , obj ) :
     
     return h1
 
+# =============================================================================
 ## decorate:
 for t in ( ROOT.TH1F , ROOT.TH1D ) : 
     
@@ -2890,7 +2888,7 @@ for t in ( ROOT.TH1F , ROOT.TH1D ) :
 def _h1_xfind_ ( self           ,
                  v              ,
                  forward = True ) :
-    """Find the first X-value for the given Y-value
+    """ Find the first X-value for the given Y-value
     >>> h1 = ...
     >>> x = h1.find_X ( 1000 )
     >>> h1 = ...
@@ -2947,7 +2945,7 @@ ROOT.TH1D . find_X = _h1_xfind_
 ## get "n-sigma" interval assuming the presence of peak
 def _h1_CL_interval_ ( self       ,
                        nsigma = 1 ) : 
-    """Get ``n-sigma'' interval for the distribution.
+    """ Get `n-sigma' interval for the distribution.
     >>> h = ...
     >>> xlow,xhigh = h.cl_interval( 1 ) 
     """
@@ -3224,7 +3222,7 @@ ROOT.TH3 . zminmax = lambda s : ( s.zmin() , s.zmax() )
 #  @see ROOT::TH2::GetRandom2
 #  @see ROOT::TH2
 def _h2_random_ ( h2 ) :
-    """Get the random value from 2D-histogram    
+    """ Get the random value from 2D-histogram    
     >>> h2  = ...
     >>> x,y = h2.random() 
     """
@@ -3245,7 +3243,7 @@ def _h2_random_ ( h2 ) :
 #  @see ROOT::TH3::GetRandom3
 #  @see ROOT::TH3
 def _h3_random_ ( h3 ) :
-    """Get the random value from 2D-histogram    
+    """ Get the random value from 2D-histogram    
     >>> h3    = ...
     >>> x,y,z = h3.random() 
     """
@@ -3355,7 +3353,7 @@ ROOT.TH3D.shoot = _h3_shoot_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_oper_ ( h1 , h2 , oper ) :
-    """Operation with the histogram        
+    """ Operation with the histogram        
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 (oper) h2    
@@ -3421,7 +3419,7 @@ def _h2_ioper_ ( h1 , h2 , oper ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_div_ ( h1 , h2 ) :
-    """Divide the histograms    
+    """ Divide the histograms    
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 / h2
@@ -3433,7 +3431,7 @@ def _h2_div_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_mul_ ( h1 , h2 ) :
-    """Multiply the histograms     
+    """ Multiply the histograms     
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 * h2 
@@ -3444,7 +3442,7 @@ def _h2_mul_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_add_ ( h1 , h2 ) :
-    """Add the histograms     
+    """ Add the histograms     
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 + h2 
@@ -3455,7 +3453,7 @@ def _h2_add_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_sub_ ( h1 , h2 ) :
-    """Subtract the histogram    
+    """ Subtract the histogram    
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 - h2 
@@ -3463,13 +3461,12 @@ def _h2_sub_ ( h1 , h2 ) :
     return _h2_oper_ ( h1 , h2 , lambda x,y : x-y ) 
 
 
-
 # =============================================================================
 ## Division with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_rdiv_ ( h1 , h2 ) :
-    """Divide the histograms    
+    """ Divide the histograms    
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 / h2
@@ -3481,7 +3478,7 @@ def _h2_rdiv_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_rmul_ ( h1 , h2 ) :
-    """Multiply the histograms     
+    """ Multiply the histograms     
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 * h2 
@@ -3492,7 +3489,7 @@ def _h2_rmul_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_radd_ ( h1 , h2 ) :
-    """Add the histograms     
+    """ Add the histograms     
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 + h2 
@@ -3503,7 +3500,7 @@ def _h2_radd_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_rsub_ ( h1 , h2 ) :
-    """Subtract the histogram    
+    """ Subtract the histogram    
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 - h2 
@@ -3625,7 +3622,7 @@ def _h2_pow_ ( h1 , val ) :
     return result 
 
 # =============================================================================
-## 'abs' th histograms 
+## 'abs' for histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_abs_ ( h1 ) :
@@ -3656,7 +3653,7 @@ def _h2_abs_ ( h1 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-06-03
 def _h2_idiv_ ( h1 , h2 ) :
-    """Divide the histograms     
+    """ Divide the histograms     
     >>> h1  = ...
     >>> h2  = ...
     >>> h1 /=  h2     
@@ -3667,7 +3664,7 @@ def _h2_idiv_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-06-03
 def _h2_imul_ ( h1 , h2 ) :
-    """Multiply the histograms     
+    """ Multiply the histograms     
     >>> h1  = ...
     >>> h2  = ...
     >>> h1 *=  h2     
@@ -3679,7 +3676,7 @@ def _h2_imul_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-06-03
 def _h2_iadd_ ( h1 , h2 ) :
-    """Add the histograms    
+    """ Add the histograms    
     >>> h1  = ...
     >>> h2  = ...
     >>> h1 +=  h2     
@@ -3690,7 +3687,7 @@ def _h2_iadd_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-06-03
 def _h2_isub_ ( h1 , h2 ) :
-    """Subtract the histogram    
+    """ Subtract the histogram    
     >>> h1  = ...
     >>> h2  = ...
     >>> h1 -=  h2     
@@ -3703,7 +3700,7 @@ def _h2_lego_  ( self , opts = '' ) : return self.Draw ( opts + ' lego'  )
 def _h2_surf_  ( self , opts = '' ) : return self.Draw ( opts + ' surf'  )
 def _h2_surf2_ ( self , opts = '' ) : return self.Draw ( opts + ' surf2' )
 
-
+# =============================================================================
 ## decorate 
 for t in ( ROOT.TH2F , ROOT.TH2D ) : 
     
@@ -3787,7 +3784,7 @@ def _h3_oper_ ( h1 , h2 , oper ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-06-03
 def _h3_ioper_ ( h1 , h2 , oper ) :
-    """Operation with the 3D-histogram 
+    """ Operation with the 3D-histogram 
     """
     if                                 not h1.GetSumw2() : h1.Sumw2()
     if hasattr ( h2 , 'GetSumw2' ) and not h2.GetSumw2() : h2.Sumw2()
@@ -3816,7 +3813,7 @@ def _h3_ioper_ ( h1 , h2 , oper ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h3_div_ ( h1 , h2 ) :
-    """Divide the histograms     
+    """ Divide the histograms     
     >>> h1 = ...
     >>> h2 = ...
     >>> h3 = h1 / h2 
@@ -3827,7 +3824,7 @@ def _h3_div_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h3_mul_ ( h1 , h2 ) :
-    """Multiply the histograms    
+    """ Multiply the histograms    
     >>> h1 = ...
     >>> h2 = ...
     >>> h3 = h1 * h2 
@@ -3838,7 +3835,7 @@ def _h3_mul_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h3_add_ ( h1 , h2 ) :
-    """Add the histograms     
+    """ Add the histograms     
     >>> h1 = ...
     >>> h2 = ...
     >>> h3 = h1 + h2 
@@ -3849,7 +3846,7 @@ def _h3_add_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h3_sub_ ( h1 , h2 ) :
-    """Subtract the histogram    
+    """ Subtract the histogram    
     >>> h1 = ...
     >>> h2 = ...
     >>> h3 = h1 - h2 
@@ -3965,7 +3962,7 @@ def _h3_pow_ ( h1 , val ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h3_rdiv_ ( h1 , h2 ) :
-    """Divide the histograms    
+    """ Divide the histograms    
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 / h2    
@@ -3976,21 +3973,19 @@ def _h3_rdiv_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h3_rmul_ ( h1 , h2 ) :
-    """Multiply the histograms     
+    """ Multiply the histograms     
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 * h2 
     """
     return _h3_oper_ ( h1 , h2 , lambda x,y : y*x ) 
 
-
-
 # =============================================================================
 ## Addition with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h3_radd_ ( h1 , h2 ) :
-    """Add the histograms     
+    """ Add the histograms     
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 + h2 
@@ -4001,13 +3996,12 @@ def _h3_radd_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h3_rsub_ ( h1 , h2 ) :
-    """Subtract the histogram    
+    """ Subtract the histogram    
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 - h2 
     """
     return _h3_oper_ ( h1 , h2 , lambda x,y : y-x ) 
-
 
 # =============================================================================
 ## 'abs' the histograms 
@@ -4041,7 +4035,7 @@ def _h3_abs_ ( h1 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-06-03
 def _h3_idiv_ ( h1 , h2 ) :
-    """Divide the histograms     
+    """ Divide the histograms     
     >>> h1  = ...
     >>> h2  = ...
     >>> h1 /=  h2 
@@ -4052,7 +4046,7 @@ def _h3_idiv_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-06-03
 def _h3_imul_ ( h1 , h2 ) :
-    """Multiply the histograms     
+    """ Multiply the histograms     
     >>> h1  = ...
     >>> h2  = ...
     >>> h1 *=  h2     
@@ -4063,7 +4057,7 @@ def _h3_imul_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-06-03
 def _h3_iadd_ ( h1 , h2 ) :
-    """Add the histograms    
+    """ Add the histograms    
     >>> h1  = ...
     >>> h2  = ...
     >>> h1 +=  h2     
@@ -4074,15 +4068,13 @@ def _h3_iadd_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-06-03
 def _h3_isub_ ( h1 , h2 ) :
-    """Subtract the histogram    
+    """ Subtract the histogram    
     >>> h1  = ...
     >>> h2  = ...
     >>> h1 -=  h2     
     """
     return _h3_ioper_ ( h1 , h2 , lambda x,y : x-y ) 
 # =============================================================================
-
-
 
 ROOT.TH3._oper_    = _h3_oper_
     
@@ -4130,7 +4122,7 @@ ROOT.TH3.  max     = _h3_max_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-08-31
 def _h1_add_function_integral_ ( h1 , func ) :
-    """Update value of histogram from the function.
+    """ Update value of histogram from the function.
     For each bin the integral of the function within the bin is used.
     It is useful for wide or non-uniform bins
     >>> func     = math.exp
@@ -4175,7 +4167,7 @@ ROOT.TH1D.addFunctionIntegral = _h1_add_function_integral_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def h1_sumv ( histo , forward = True ) :
-    """Create the `running sum' over the histogram bins 
+    """ Create the `running sum' over the histogram bins 
     >>> h   = ...
     >>> h1 = h.sumv( forward = True  )
     >>> h2 = h.sumv( forward = False )        
@@ -4239,7 +4231,6 @@ def _h1_effic_ ( h , cut_low ) :
 
     result.ResetStats() 
     return result 
-
 
 # =============================================================================
 ## Calculate the "cut-efficiency from the histogram
@@ -4410,7 +4401,7 @@ ROOT.TH1D.eff_graph  = _h1_effic4_
 
 # ===============================================================================
 ## Convert the natural histogram into (p-value,significance) pair.
-#  E.g. one can start form distirbtion of signal yields from
+#  E.g. one can start frpm distirbtion of signal yields from
 #  ensemble of presudoexperimens produced with `background-only` hypotehsis.
 #  And using the obtained `pvalue` and `signif` histograms
 #  one can convert the observed signal yeild into `p-value` or `significance'
@@ -4419,21 +4410,21 @@ ROOT.TH1D.eff_graph  = _h1_effic4_
 #  pvalue, signif = yields.significance ()
 #  value = ...
 #  print ( 'p-value      : %s ' % pvalue ( value ) )
-#  print ( 'sifnigicance : %s ' % signif ( value ) ) 
+#  print ( 'signigicance : %s ' % signif ( value ) ) 
 #  @endcode
 def _h1_signif_ ( h1 ) :
     """ Convert the natural histogram into (p-value,significance) pair: 
-    - E.g. one can start form distirbtion of signal yields from
+    - E.g. one can start from distirbtion of signal yields from
     ensemble of presudoexperimens produced with `background-only` hypotehsis.
     And using the obtained `pvalue` and `signif` histograms
     one can convert the observed signal yeild into `p-value` or `significance'
     >>> yields = ...
     >>> pvalue, signif = yields.significance ( cut_low = True ) 
     >>> print ( 'p-value      : %s ' % pvalue ( value ) ) 
-    >>> print ( 'sifnigicance : %s ' % signif ( value ) ) 
+    >>> print ( 'signigicance : %s ' % signif ( value ) ) 
     """
     
-    if not h1.natural() : logger.warning ( "The input histigram is not `natural`!")
+    if not h1.natural() : logger.warning ( "The input histogram is not `natural`!")
     ## get-pvalue 
     hp = h1.effic ( cut_low = True )
     hs = hp.clone ()
@@ -4458,13 +4449,13 @@ ROOT.TH1F.significance = _h1_signif_
 ROOT.TH1D.significance = _h1_signif_ 
 
 # ================================================================================
-if (2,7) <= python_info : _erfc_ = math.erfc 
-else                    : _erfc_ = ROOT.Math.erfc
+if  ( 2 , 7 ) <= python_info : _erfc_ = math.erfc 
+else                         : _erfc_ = ROOT.Math.erfc
 # ================================================================================
 _sqrt_2_ = math.sqrt( 2.0 )
 ## helper function : convolution of gaussian with the single pulse 
 def _cnv_ ( x , x0 , dx , sigma ) :
-    """Simple wrapper over error-function:
+    """ Simple wrapper over error-function:
     convolution of gaussian with the single pulse 
     """
     #
@@ -4482,7 +4473,7 @@ def _cnv_ ( x , x0 , dx , sigma ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-09-20
 def _smear_ ( h1 , sigma , addsigmas = 5 , silent = True ) :
-    """Smear the histogram through the convolution with the gaussian function:
+    """ Smear the histogram through the convolution with the gaussian function:
     >>> histo    = ...
     >>> smeared1 = h.smear ( sigma = 0.01 )  ## smear using 'constant' sigma
     >>> smeared2 = h.smear ( sigma = lambda x :  0.1*x ) ## smear using 'running' sigma  
@@ -4615,7 +4606,7 @@ ROOT.TH1D. smooth = _h1_smooth_
 # =============================================================================
 ## Get the integral with error
 def _h1_integral_err_ ( h1 ) :
-    """Get the integral with error"""
+    """ Get the integral with error"""
     
     xaxis = h1.GetXaxis() 
     err   = ctypes.c_double ( 0.0 ) 
@@ -4626,7 +4617,7 @@ def _h1_integral_err_ ( h1 ) :
 # =============================================================================
 ### Get the integral with error
 def _h2_integral_err_ ( h2 ) :
-    """Get the integral with error"""
+    """ Get the integral with error"""
     
     xaxis = h2.GetXaxis() 
     yaxis = h2.GetYaxis() 
@@ -4639,7 +4630,7 @@ def _h2_integral_err_ ( h2 ) :
 # =============================================================================
 ### Get the integral with error
 def _h3_integral_err_ ( h3 ) :
-    """Get the integral with error"""
+    """ Get the integral with error"""
     
     xaxis = h3.GetXaxis() 
     yaxis = h3.GetYaxis() 
@@ -4665,7 +4656,7 @@ ROOT.TH3D.the_integral = _h3_integral_err_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-10-23  
 def _h1_transform_ ( h1 , func ) :
-    """Make the transformation of the histogram content     
+    """ Make the transformation of the histogram content     
     >>> func = lambda x,y: y   ## identical transformation/copy
     >>> h1 = ...
     >>> h2 = h1.fransform ( func )     
@@ -4723,7 +4714,7 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-10-23  
 def _h2_transform_ ( h2 , func ) :
-    """Make the transformation of the 2D-histogram content 
+    """ Make the transformation of the 2D-histogram content 
     >>> func = lambda x,y,z: z   ## identical transformation/copy
     >>> h2   = ...
     >>> h3   = h2.fransform ( func ) 
@@ -4778,7 +4769,7 @@ for h in ( ROOT.TH2F , ROOT.TH2D ) :
 # =============================================================================
 ## transform the histogram into "precision" histogram 
 def _h1_precision_ ( self ) :
-    """Make precsion histogram, each bin constains ``precision''
+    """ Make precision histogram, each bin constains ``precision''
     >>> h =
     >>> p = h.precision()    
     """
@@ -4786,7 +4777,7 @@ def _h1_precision_ ( self ) :
 # =============================================================================
 ## transform the histogram into "precision" histogram 
 def _h2_precision_ ( self ) :
-    """Make precsion histogram, each bin constains ``precision''
+    """ Make precision histogram, each bin constains ``precision''
     >>> h =
     >>> p = h.precision()
     """
@@ -4794,7 +4785,7 @@ def _h2_precision_ ( self ) :
 # =============================================================================
 ## transform the histogram into "B/S" histogram 
 def _h1_b2s_       ( self ) :
-    """Make B/S histogram, each bin constains ``B/S''
+    """ Make B/S histogram, each bin constains ``B/S''
     >>> h    =
     >>> btos = h.b2s()    
     """
@@ -4802,7 +4793,7 @@ def _h1_b2s_       ( self ) :
 # =============================================================================
 ## transform the histogram into "B/S" histogram 
 def _h2_b2s_       ( self ) :
-    """Make B/S histogram, each bin constains ``B/S''
+    """ Make B/S histogram, each bin constains ``B/S''
     >>> h    =
     >>> btos = h.b2s()    
     """
@@ -4817,8 +4808,6 @@ ROOT.TH1D. b2s       = _h1_b2s_
 ROOT.TH2F. b2s       = _h2_b2s_
 ROOT.TH2D. b2s       = _h2_b2s_
 
-
-
 # =============================================================================
 ## rescale the histogram for effective uniform bins
 #  new_content = old_content * factor / bin_width
@@ -4829,7 +4818,7 @@ ROOT.TH2D. b2s       = _h2_b2s_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-03-19   
 def _h1_rescale_ ( h1 , factor = 1 ) :
-    """Rescale the histogram for effective uniform bins :
+    """ Rescale the histogram for effective uniform bins :
     new_bin_content = old_bin_content * factor / bin_width
     >>> h1 = ...
     >>> h2 = h1.rescale_bins ( h1 , 1 )    
@@ -4838,7 +4827,6 @@ def _h1_rescale_ ( h1 , factor = 1 ) :
 
 ROOT.TH1F. rescale_bins = _h1_rescale_ 
 ROOT.TH1D. rescale_bins = _h1_rescale_ 
-
 
 # =============================================================================
 ## rescale the histogram for effective uniform bins
@@ -4850,7 +4838,7 @@ ROOT.TH1D. rescale_bins = _h1_rescale_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-03-19   
 def _h2_rescale_ ( h2 , factor = 1 ) :
-    """Rescale the histogram for effective uniform bins : 
+    """ Rescale the histogram for effective uniform bins : 
     new_bin_content = old_bin_content * factor / bin_area
     >>> h1 = ...
     >>> h2 = h1.rescale_bins ( h1 , 1 )
@@ -4871,7 +4859,7 @@ ROOT.TH2D. rescale_bins = _h2_rescale_
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 def _h_sample_ ( histo , accept = lambda s : True , nmax = 1000 ) :
-    """Sample the histogram using gaussian hypothesis 
+    """ Sample the histogram using gaussian hypothesis 
     >>> h  = ...         ## original histogram 
     >>> s1 = h.sample()  ## the sampled hist
     """
@@ -4899,7 +4887,6 @@ ROOT.TH1 ._sample_ = _h_sample_
 ROOT.TH1 .sample   = _h_sample_
 ROOT.TH1 .gauss    = _h_sample_
 
-
 # =============================================================================
 ## sample the histogram using the Poisson hypothesis
 #  @code
@@ -4909,7 +4896,7 @@ ROOT.TH1 .gauss    = _h_sample_
 #  h3 = histo.poisson ( accept = lambda s : s>10 ) ## require all numbers are large
 #  @endcode
 def _h_poisson_ ( histo , fluctuate = False , accept = lambda s : True ) :
-    """Sample the histogram using the Poisson hypothesis
+    """ Sample the histogram using the Poisson hypothesis
     >>> histo = ...
     >>> h1 = histo.poisson () ## sample using poisson hypothesis
     >>> h2 = histo.poisson ( fluctuate =   True ) ## fluctuate Poisson mean 
@@ -4929,14 +4916,13 @@ def _h_poisson_ ( histo , fluctuate = False , accept = lambda s : True ) :
 
         v2 = VE ( p , p  )
         
-        result [bin] = v2
+        result [ bin ] = v2
         
     result.ResetStats() 
     return result
     
 ROOT.TH1 .poisson = _h_poisson_
 
-    
 # =============================================================================
 ## Get the Figure-of-Merit (FoM) for the pure signal distribution,
 #  e.g. from sPlot)
@@ -4944,7 +4930,7 @@ ROOT.TH1 .poisson = _h_poisson_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-10-23  
 def _fom_2_ ( h1 , increase = True ) :
-    """Get figure-of-merit (FOM) distribution for signal
+    """ Get figure-of-merit (FOM) distribution for signal
     >>> h1 = ...  ## signal distribution
     >>> f1 = h1.FoM2 () 
     """
@@ -4953,14 +4939,12 @@ def _fom_2_ ( h1 , increase = True ) :
     #
     return _h1_transform_ ( h , func = lambda x,y : y.precision() )
 
-
 # =============================================================================
 ## Calculate S/sqrt(S+a*B)
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-10-23   
 def _sb_ ( s , b  , a = 1 ) :
-    """
-    Calculate S/sqrt(S+a*B) 
+    """ Calculate S/sqrt(S+a*B) 
     """
     #
     v     = ( s + a * b ).value()
@@ -4984,7 +4968,7 @@ def _sb_ ( s , b  , a = 1 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-10-23  
 def _fom_1_ ( s , b , alpha = 1 , increase = True ) :
-    """Get figure-of-merit FoM = S/sqrt(S+a*B)
+    """ Get figure-of-merit FoM = S/sqrt(S+a*B)
     >>> s = ... ## signal distributions
     >>> b = ... ## background distributions
     >>> fom = s.FoM1( b , alpha = 1.0 )      
@@ -5100,7 +5084,7 @@ def _bin_overlap_2D_ ( x1 , y1 , x2 , y2 ) :
 # ==============================================================================
 ## rebin 1D-histogram with NUMBERS 
 def _rebin_nums_1D_ ( h1 , template ) :
-    """Rebin 1D-histogram assuming it is a histogram with *NUMBERS*
+    """ Rebin 1D-histogram assuming it is a histogram with *NUMBERS*
     >>> horig    = ...  ## the original histogram 
     >>> template = ...  ## the template with binnings
     >>> h = horig.rebinNumbers ( template ) 
@@ -5147,7 +5131,7 @@ def _rebin_nums_1D_ ( h1 , template ) :
 # =============================================================================
 ## rebin 1D-histogram as FUNCTION 
 def _rebin_func_1D_ ( h1 , template ) :
-    """Rebin 1D-histogram assuming it is a FUNCTION
+    """ Rebin 1D-histogram assuming it is a FUNCTION
     >>> horig    = ...  ## the original histogram 
     >>> template = ...  ## the template with binnings
     >>> h = horig.rebinFunction ( template ) 
@@ -5195,7 +5179,7 @@ def _rebin_func_1D_ ( h1 , template ) :
 # ==============================================================================
 ## rebin 2D-histogram with NUMBERS 
 def _rebin_nums_2D_ ( h1 , template ) :
-    """Rebin 2D-histogram assuming it is a histogram with *NUMBERS*
+    """ Rebin 2D-histogram assuming it is a histogram with *NUMBERS*
     >>> horig    = ...  ## the original histogram 
     >>> template = ...  ## the template with binnings
     >>> h = horig.rebinNumbers ( template ) 
@@ -5221,8 +5205,7 @@ def _rebin_nums_2D_ ( h1 , template ) :
 # =============================================================================
 ## rebin 2D-histogram as FUNCTION 
 def _rebin_func_2D_ ( h1 , template ) :
-    """
-    Rebin 2D-histogram assuming it is a FUNCTION
+    """ Rebin 2D-histogram assuming it is a FUNCTION
 
     >>> horig    = ...  ## the original histogram 
     >>> template = ...  ## the template with binnings
@@ -5259,7 +5242,7 @@ for t in ( ROOT.TH2F , ROOT.TH2D ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-11-01
 def _h1_null_ ( h1 , draw = False , style = 1 ) :
-    """Create NULL-line for the histogram and (optionally) draw it    
+    """ Create NULL-line for the histogram and (optionally) draw it    
     """
     axis = h1.GetXaxis()
     line = ROOT.TLine ( axis.GetXmin() , 0 ,
@@ -5281,7 +5264,7 @@ ROOT.TH1F.null = _h1_null_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _edges_ ( axis ) :
-    """Get list of edges from the TAxis
+    """ Get list of edges from the TAxis
     >>> axis
     >>> edges = axis.edges() 
     """
@@ -5294,8 +5277,6 @@ def _edges_ ( axis ) :
 # =============================================================================
 ROOT.TAxis.edges = _edges_
 
-
-
 # =============================================================================
 ## get "slice" for 1D histogram
 #  @code     
@@ -5305,7 +5286,7 @@ ROOT.TAxis.edges = _edges_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-20 
 def _h1_getslice_ ( h1 , i , j ) :
-    """Get the ``slice'' for 1D-histogram:
+    """ Get the ``slice'' for 1D-histogram:
     >>> h1 = ...
     >>> nh = h1[2:10] ## keep only bins from 2nd (inclusive) till 10 (exclusive)    
     """
@@ -5559,7 +5540,6 @@ ROOT.TH2D.histoDiff = _h_diff_
 ROOT.TH3F.histoDiff = _h_diff_
 ROOT.TH3D.histoDiff = _h_diff_
 
-
 # =============================================================================
 ## perform some accumulation for the histogram
 #  @code
@@ -5646,7 +5626,7 @@ def _h1_sum_ ( h           ,
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h_scale_ ( histo , val = 1.0 ) :
-    """Scale the histogram to certain integral
+    """ Scale the histogram to certain integral
     >>> h = ...
     >>> h.scale ( 15 )    
     """
@@ -5679,7 +5659,7 @@ def _h_scale_ ( histo , val = 1.0 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_shift_ ( h , bias ) :
-    """Simple shift of the histogram :    
+    """ Simple shift of the histogram :    
     >>> h = ... # the histogram
     >>> h2 = h.shift ( -5 * MeV )    
     """
@@ -5703,7 +5683,7 @@ def _h1_shift_ ( h , bias ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_irshift_ ( h , ibias ) :
-    """Simple shift of the histogram :    
+    """ Simple shift of the histogram :    
     >>> h   = ... # the histogram
     >>> h >>= 5   # shift for 5 bins left     
     """
@@ -5730,7 +5710,7 @@ def _h1_irshift_ ( h , ibias ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_ilshift_ ( h , ibias ) :
-    """Simple shift of the histogram :    
+    """ Simple shift of the histogram :    
     >>> h   = ...  # the histogram
     >>> h <<= 5    # shift for 5 bins left     
     """
@@ -5757,7 +5737,7 @@ def _h1_ilshift_ ( h , ibias ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_lshift_ ( h , ibias ) :
-    """Simple shift of the histogram :    
+    """ Simple shift of the histogram :    
     >>> h = ...      # the histogram
     >>> h2 = h << 5  # shift for 5 bins left     
     """
@@ -5779,7 +5759,7 @@ def _h1_lshift_ ( h , ibias ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_rshift_ ( h , ibias ) :
-    """Simple shift of the histogram :
+    """ Simple shift of the histogram :
     
     >>> h = ...      # the histogram
     >>> h2 = h >> 5  # shift for 5 bins right     
@@ -5811,7 +5791,7 @@ def _h1_integrate_ ( h                         ,
                      highx  = -1                 ,
                      xmin   = inf_neg            ,
                      xmax   = inf_pos            ) : 
-    """Perform some integration (taking into acount the bin-width) for the histogram
+    """ Perform some integration (taking into acount the bin-width) for the histogram
     >>> h =...
     >>> sum = h.integrate ()
     >>> sum = h.integrate ( cut  = lambda s :  0.4<=s[1].value()<0.5 ) 
@@ -5877,7 +5857,7 @@ def _h2_integrate_ ( h                         ,
                      xmax   = inf_pos            ,
                      ymin   = inf_neg            ,
                      ymax   = inf_pos            ) : 
-    """Perform some integration (taking into acount the bin-width) for the histogram
+    """ Perform some integration (taking into acount the bin-width) for the histogram
     >>> h =...
     >>> sum = h.integrate ()
     >>> sum = h.integrate ( cut  = lambda s :  0.4<=s[1].value()<0.5 ) 
@@ -5958,7 +5938,7 @@ def _h3_integrate_ ( h                         ,
                      ymax   = inf_pos            , 
                      zmin   = inf_neg            ,
                      zmax   = inf_pos            ) : 
-    """Perform some integration (taking into acount the bin-width) for the histogram
+    """ Perform some integration (taking into acount the bin-width) for the histogram
     >>> h =...
     >>> sum = h.integrate ()
     >>> sum = h.integrate ( cut  = lambda s :  0.4<=s[1].value()<0.5 ) 
@@ -6032,7 +6012,7 @@ def _h3_integrate_ ( h                         ,
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-10-23  
 def _h3_transform_ ( h3 , func ) :
-    """Make the transformation of the 2D-histogram content 
+    """ Make the transformation of the 2D-histogram content 
     >>> func = lambda x,y,z,v: v   ## identical transformation/copy
     >>> h3   = ...
     >>> h3   = h3.fransform ( func ) 
@@ -6061,7 +6041,7 @@ ROOT.TH3D. transform = _h3_transform_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-03-19   
 def _h3_rescale_ ( h3 , factor = 1 ) :
-    """Rescale the histogram for effective uniform bins : 
+    """ Rescale the histogram for effective uniform bins : 
     new_bin_content = old_bin_content * factor / bin_area
     >>> h1 = ...
     >>> h2 = h1.rescale_bins ( h1 , 1 )
@@ -6111,7 +6091,7 @@ HStats   = Ostap.Utils.HistoStat
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_moment_ ( h1 , order ) :
-    """Get ``bin-by-bin''-moment around the specified value    
+    """ Get ``bin-by-bin''-moment around the specified value    
     >>> histo = ...
     >>> mom   = histo.moment ( 4 , 0 ) 
     """
@@ -6131,7 +6111,7 @@ _h1_moment_ .__doc__ += '\n' + HStats.momentErr .__doc__
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_central_moment_ ( h1 , order ) :
-    """Get ``bin-by-bin'' central moment    
+    """ Get ``bin-by-bin'' central moment    
     >>> histo = ...
     >>> cmom  = histo.centralMoment ( 4 ) 
     """
@@ -6155,7 +6135,7 @@ _h1_central_moment_ .__doc__ += '\n' + HStats.centralMomentErr .__doc__
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2019-09-04
 def _h1_std_moment_ ( h1 , order ,  exp_moment = False ) :
-    """Get ``bin-by-bin'' ``standardized moment''
+    """ Get ``bin-by-bin'' ``standardized moment''
     >>> histo = ...
     >>> cmom  = histo.stdMoment ( 4 ) 
      - see https://en.wikipedia.org/wiki/Standardized_moment
@@ -6189,7 +6169,7 @@ def _h1_std_moment_ ( h1 , order ,  exp_moment = False ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_skewness_ ( h1 ) :
-    """Get the skewness
+    """ Get the skewness
     >>> histo = ...
     >>> skew  = histo.skewness () 
     """
@@ -6209,7 +6189,7 @@ _h1_skewness_ .__doc__ += '\n' + HStats.skewnessErr .__doc__
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_kurtosis_ ( h1 ) :
-    """Get the kurtosis
+    """ Get the kurtosis
     >>> histo = ...
     >>> k     = histo.kurtosis () 
     """
@@ -6229,7 +6209,7 @@ _h1_kurtosis_ .__doc__ += '\n' + HStats.kurtosisErr .__doc__
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_mean_ ( h1 ) :
-    """Get the mean
+    """ Get the mean
     >>> histo = ...
     >>> k     = histo.mean () 
     """
@@ -6244,13 +6224,12 @@ def _h1_mean_ ( h1 ) :
 _h1_mean_ .__doc__ += '\n' + HStats.mean    .__doc__
 _h1_mean_ .__doc__ += '\n' + HStats.meanErr .__doc__
 
-
 # =============================================================================
 ## get RMS
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_rms_ ( h1 ) :
-    """Get the rms    
+    """ Get the rms    
     >>> histo = ...
     >>> s     = histo.rms () 
     """
@@ -6281,9 +6260,6 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
 ROOT.TH1.nEff = ROOT.TH1.GetEffectiveEntries 
 
 
-
-
-
 # =============================================================================
 ## Get the histogram moments
 #  @code
@@ -6291,7 +6267,7 @@ ROOT.TH1.nEff = ROOT.TH1.GetEffectiveEntries
 #  m     = histo.the_moment ( 10 ) 
 #  @edncode 
 def _h1_the_moment_ ( h1 , N ) :
-    """Get the histogram moments
+    """ Get the histogram moments
     >>> histo = ....
     >>> m     = histo.the_moment ( 10 ) 
     """
@@ -6323,7 +6299,7 @@ ROOT.TH1D.the_moment = _h1_the_moment_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_moment_ ( h2 , orderx , ordery  , x0 = 0.0 , y0 = 0.0 ) :
-    """Get ``bin-by-bin''-moment around the specified value    
+    """ Get ``bin-by-bin''-moment around the specified value    
     >>> h2   = ...
     >>> mom  = histo.moment  ( 2 , 3 , 0.0 , 0.0 ) 
     """
@@ -6348,7 +6324,7 @@ _h2_moment_ . __doc__ +=  '\n' + HStats.moment2.__doc__
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_cmoment_ ( h2 , orderx , ordery ) :
-    """Get ``bin-by-bin''-central moment 
+    """ Get ``bin-by-bin''-central moment 
     >>> h2   = ...
     >>> mom  = histo.central_moment  ( 2 , 3 ) 
     """
@@ -6374,7 +6350,7 @@ _h2_cmoment_ . __doc__ +=  '\n' + HStats.central_moment2.__doc__
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_smoment_ ( h2 , orderx , ordery ) :
-    """Get ``bin-by-bin''-standartized moment 
+    """ Get ``bin-by-bin''-standartized moment 
     >>> h2   = ...
     >>> mom  = histo.std_moment  ( 2 , 3 ) 
     """
@@ -6405,7 +6381,7 @@ for h in ( ROOT.TH2F , ROOT.TH2D ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h3_moment_ ( h3 , orderx , ordery , orderz  , x0 = 0.0 , y0 = 0.0 , z0 = 0.0 ) :
-    """Get ``bin-by-bin''-moment around the specified value    
+    """ Get ``bin-by-bin''-moment around the specified value    
     >>> h3   = ...
     >>> mom  = histo.moment  ( 2 , 3 , 4 , 0.0 , 0.0 , 0.0 ) 
     """
@@ -6432,7 +6408,7 @@ _h3_moment_ . __doc__ +=  '\n' + HStats.moment3.__doc__
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h3_cmoment_ ( h3 , orderx , ordery , orderz  ) :
-    """Get ``bin-by-bin''-central moment around the specified value    
+    """ Get ``bin-by-bin''-central moment around the specified value    
     >>> h3   = ...
     >>> mom  = histo.central_moment  ( 2 , 3 , 4 ) 
     """
@@ -6459,7 +6435,7 @@ _h3_cmoment_ . __doc__ +=  '\n' + HStats.central_moment3.__doc__
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h3_smoment_ ( h3 , orderx , ordery , orderz  ) :
-    """Get ``bin-by-bin''-standartized moment
+    """ Get ``bin-by-bin''-standartized moment
     >>> h3   = ...
     >>> mom  = histo.std_moment  ( 2 , 3 , 4 ) 
     """
@@ -6487,7 +6463,7 @@ for h in ( ROOT.TH3F , ROOT.TH3D ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-03-26
 def _h_stat_ ( h ) :
-    """Get some statistic information on the histogram content
+    """ Get some statistic information on the histogram content
     >>> histo = ... 
     >>> stat  = histo.stat()
     >>> print stat 
@@ -6509,7 +6485,7 @@ ROOT.TH1.stat = _h_stat_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-03-26
 def _h_wstat_ ( h ) :
-    """Get some weighted statistic infomration on the histogram content
+    """ Get some weighted statistic infomration on the histogram content
     >>> histo = ... 
     >>> wstat  = histo.wstat()
     >>> print wstat 
@@ -6532,7 +6508,7 @@ ROOT.TH1.wstat = _h_wstat_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-03-26
 def _h_wstat_ ( h ) :
-    """Get some weighted statistic infomration on the histogram content
+    """ Get some weighted statistic infomration on the histogram content
     >>> histo = ... 
     >>> wstat  = histo.wstat()
     >>> print wstat 
@@ -6545,8 +6521,6 @@ def _h_wstat_ ( h ) :
 
 ROOT.TH1.wstat = _h_wstat_
 
-
-
 # =============================================================================
 ## get some (weighted) statistic information on the histogram content
 #  @code 
@@ -6557,7 +6531,7 @@ ROOT.TH1.wstat = _h_wstat_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-03-26
 def _h_wstat_ ( h ) :
-    """Get some weighted statistic infomration on the histogram content
+    """ Get some weighted statistic information on the histogram content
     >>> histo = ... 
     >>> wstat  = histo.wstat()
     >>> print wstat 
@@ -6580,7 +6554,7 @@ ROOT.TH1.wstat = _h_wstat_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-03-26
 def _h_xstat_ ( h ) :
-    """Get some weighted statistic information on the histogram content
+    """ Get some weighted statistic information on the histogram content
     >>> histo = ... 
     >>> xstat  = histo.xstat()
     >>> print wstat 
@@ -6604,7 +6578,7 @@ ROOT.TH1D.xstat = _h_xstat_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-09-20
 def _h2_xstat_ ( h2 ) :
-    """Get some (weighted) statistic information on the histogram X-content
+    """ Get some (weighted) statistic information on the histogram X-content
     >>> histo2 = ... 
     >>> xstat = histo2.xstat()
     >>> print xstat
@@ -6624,7 +6598,7 @@ def _h2_xstat_ ( h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-09-20
 def _h2_ystat_ ( h2 ) :
-    """Get some (weighted) statistic information on the histogram X-content
+    """ Get some (weighted) statistic information on the histogram X-content
     >>> histo2 = ... 
     >>> ystat = histo2.ystat()
     >>> print xstat
@@ -6649,7 +6623,7 @@ ROOT.TH2D.ystat = _h2_ystat_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-09-20
 def _h3_zstat_ ( h3 ) :
-    """Get some (weighted) statistic information on the histogram X-content
+    """ Get some (weighted) statistic information on the histogram X-content
     >>> histo3 = ... 
     >>> zstat = histo3.zstat()
     >>> print zstat
@@ -6680,7 +6654,7 @@ def ve_adjust ( ve , mn = 0 , mx = 1.0 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-01-21 
 def _level_ ( self , level = 0 , **kwargs ) :
-    """Draw ``NULL''-line for the histogram
+    """ Draw ``NULL''-line for the histogram
     >>> h.level ( 5 )    
     >>> h.hline ( 5 ) ## ditto
     """
@@ -6696,7 +6670,7 @@ def _level_ ( self , level = 0 , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-01-21 
 def _vline_ ( self , x , ymin = 0 , ymax = None , **kwargs ) :
-    """Draw vertical line for the histogram
+    """ Draw vertical line for the histogram
     >>> h.vline ( 5 )    
     """
     if ymax is None : ymax = self.GetMaximum() 
@@ -6712,7 +6686,7 @@ def _vline_ ( self , x , ymin = 0 , ymax = None , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-01-21 
 def _null_ ( self , linestyle = 2 ) :
-    """Draw NULL-line for the histogram    
+    """ Draw NULL-line for the histogram    
     >>> h.null() 
     """
     return _level_ ( self , 0 , linestyle ) 
@@ -6740,7 +6714,7 @@ ROOT.TH1D. vline = _vline_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h1_add_fake_bin_ ( h1 , left = True , value = 0 , width = 1.e-6 ) :
-    """Add ``fake'' bin into the histogram
+    """ Add ``fake'' bin into the histogram
     It is useful to control the functional behaviour at the edges
     >>> histo1 = ...
     >>> histo2 = histo1.add_fake_bin ( left = True )  
@@ -6785,7 +6759,7 @@ def _h1_add_fake_bin_ ( h1 , left = True , value = 0 , width = 1.e-6 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h1_add_fake_bin_left_  ( h1 , value = 0 , width = 1.e-6 ) :
-    """Add ``fake'' bin into the histogram
+    """ Add ``fake'' bin into the histogram
     It is useful to control the functional behaviour at the edges,
     e.g. ensure f(0)=0
     >>> histo1 = ...
@@ -6807,7 +6781,7 @@ def _h1_add_fake_bin_left_  ( h1 , value = 0 , width = 1.e-6 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h1_add_fake_bin_right_ ( h1 , value = 0 , width = 1.e-6 ) :
-    """Add ``fake'' bin into the histogram
+    """ Add ``fake'' bin into the histogram
     It is useful to control the functional behaviour at the edges
     e.g. ensure f(1)=0
     >>> histo1 = ...
@@ -6822,7 +6796,6 @@ for _h in ( ROOT.TH1F , ROOT.TH1D ) :
     _h.add_fake_bin       = _h1_add_fake_bin_
     _h.add_fake_bin_left  = _h1_add_fake_bin_left_
     _h.add_fake_bin_right = _h1_add_fake_bin_right_
-
 
 
 # =============================================================================
@@ -6842,7 +6815,7 @@ for _h in ( ROOT.TH1F , ROOT.TH1D ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h2_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
-    """Add ``fake'' side (row of bins) into the histogram
+    """ Add ``fake'' side (row of bins) into the histogram
     It is useful to control the functional behaviour at the edges
     >>> histo1 = ...
     >>> histo2 = histo1.add_fake_side ( side = 1 )  
@@ -6929,7 +6902,7 @@ for _h in ( ROOT.TH2F , ROOT.TH2D ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h3_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
-    """Add ``fake'' side (row of bins) into the histogram
+    """ Add ``fake'' side (row of bins) into the histogram
     It is useful to control the functional behaviour at the edges
     >>> histo1 = ...
     >>> histo2 = histo1.add_fake_side ( side = 1 )  
@@ -7032,7 +7005,7 @@ for _h in ( ROOT.TH3F , ROOT.TH3D ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-05-13
 def _solve_ ( h1 , value ) :
-    """Make a solution for equation h(x)=v    
+    """ Make a solution for equation h(x)=v    
     >>> histo = ...
     >>> value = ...
     >>> solutions = histo.solve ( values )    
@@ -7090,7 +7063,7 @@ def _solve_ ( h1 , value ) :
 #  @author Vanya BELYAVE Ivan.Belyaev@itep.ru
 #  @date 2013-05-13
 def _equal_edges_ ( h1 , num  , wmax = -1 ) :
-    """Propose the edges for ``equal-bins''
+    """ Propose the edges for ``equal-bins''
     >>> histo = ....
     >>> edges = histo.equal_edges ( 10 )    
     """
@@ -7143,13 +7116,12 @@ ROOT.TH1F . equal_edges = _equal_edges_
 ROOT.TH1D . equal_edges = _equal_edges_                         
 
 
-
 # =============================================================================
 # slices
 # =============================================================================
 ## define 2D slice for 2D-histogram
 def _h2_get_slice_ ( h2 , axis , ibins ) :
-    """Get 1D-slice for 2D-histogram
+    """ Get 1D-slice for 2D-histogram
     >>> histo2 = ...
     >>> h1 = histo2.sliceX ( 1        ) ## along 1st X-bin
     >>> h2 = histo2.sliceY ( [2,4,19] ) ## along 2nd,4th and 19th Y-bins    
@@ -7257,7 +7229,7 @@ for _h in ( ROOT.TH2F , ROOT.TH2D ) :
 # =============================================================================
 ## define 2D slice for 3D-histogram
 def _h3_get_slice_ ( h3 , axis , ibins ) :
-    """Get 2D-slice for 3D-histogram    
+    """ Get 2D-slice for 3D-histogram    
     >>> histo3 = ...
     >>> h1 = histo3.sliceX ( 1          ) ## along 1st X-bin
     >>> h2 = histo3.sliceY ( [2,4,19]   ) ## along 2nd,4th and 19th Y-bins
@@ -7424,7 +7396,7 @@ for _h in ( ROOT.TH3F , ROOT.TH3D ) :
 #  see ROOT::TH2::ProjectionX
 #  see ROOT::TH2::ProjectionY
 def _h2_proj_ ( h2 , axis , *args ) :
-    """Make histogram projection along the axis
+    """ Make histogram projection along the axis
     >>> histo2 = ...
     >>> hx = histo2.projX ()
     >>> hy = histo2.projY ()    
@@ -7469,7 +7441,7 @@ ROOT. TH3 . projZY = lambda s : s.Project3D ( 'zye' )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-08-28
 def _prof_asH1_ ( p ) :
-    """Convert TProfile to TH1D (needed for the proper math)
+    """ Convert TProfile to TH1D (needed for the proper math)
     >>> profile = ...
     >>> h1      = profile.asH1()
     """
@@ -7490,13 +7462,10 @@ ROOT.TProfile . __isub__ = NotImplemented
 ROOT.TProfile . __abs__  = NotImplemented 
 
 
-
-
-
 # ============================================================================
 ## get x-range for the function:
 def _f_xminmax_ ( self ) :
-    """Get x-range for the function
+    """ Get x-range for the function
     >>> f = ...
     >>> xmn,xmx = f.xminmax()
     """
@@ -7505,12 +7474,11 @@ def _f_xminmax_ ( self ) :
 # ============================================================================
 ## get minmax-range for the function:
 def _f_minmax_ ( self ) :
-    """Get minmax-range for the function
+    """ Get minmax-range for the function
     >>> f = ...
     >>> mn,mx = f.minmax()
     """
     return self.GetMinimum(),self.GetMaximum()
-
 
 ROOT.TF1 .  minv    =  lambda s : s.GetMinimum()
 ROOT.TF1 .  maxv    =  lambda s : s.GetMaximum()
@@ -7534,7 +7502,7 @@ if not hasattr ( _tf1 , 'quantile' ) : _tf1.quantile = moments.quantile
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def axis_bins ( bins         ) :
-    """Make axis according to the binning 
+    """ Make axis according to the binning 
     >>> bins = [ ... ] 
     >>> axis = axis_bins ( bins )      
     """
@@ -7558,7 +7526,7 @@ def axis_bins ( bins         ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-20
 def _axis_getslice_ ( self , i , j ) :
-    """Make a ``slice'' for the axis:
+    """ Make a ``slice'' for the axis:
 
     >>> axis  = ...
     >>> naxis = axis[2:10] ## keep only bins from 2nd (inclusive) till 10 (exclusive)
@@ -7580,7 +7548,6 @@ def _axis_getslice_ ( self , i , j ) :
 
 
 ROOT.TAxis. __getslice__ = _axis_getslice_
-
 
 # =============================================================================
 ## get the guess for three major parameters of the histogram:
@@ -7661,7 +7628,6 @@ ROOT.TH1F . histoGuess = histoGuess
 ROOT.TH1D . histoGuess = histoGuess
 
 
-
 # =============================================================================
 ## use likelihood in histogram fit ? 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -7669,7 +7635,7 @@ ROOT.TH1D . histoGuess = histoGuess
 def useLL ( histo         ,
             minc  = 10    ,
             diff  = 1.e-5 ) :
-    """Use Likelihood in histogram fit?
+    """ Use Likelihood in histogram fit?
     """    
     minv = 1.e+9    
     for ibin in histo : 
@@ -7694,7 +7660,7 @@ ROOT.TH1.useLL = useLL
 #  @date   2011-06-07
 def allInts ( histo         ,
               diff  = 1.e-4 ) :
-    """Natural histogram with all integer entries ?
+    """ Natural histogram with all integer entries ?
     >>> h = ...
     >>> if h.natural() : print 'OK!'
     """
@@ -7708,7 +7674,6 @@ def allInts ( histo         ,
 ROOT.TH1.allInts = allInts
 ROOT.TH1.natural = allInts
 
-
 # =============================================================================
 ## Natural histogram with all integer entries ? (a bit faster vection for TH1)
 #  @code
@@ -7719,7 +7684,7 @@ ROOT.TH1.natural = allInts
 #  @date   2011-06-07
 def _h1_allInts ( histo         ,
                   diff  = 1.e-4 ) :
-    """Natural histogram with all integer entries ?
+    """ Natural histogram with all integer entries ?
     >>> h1 = ...
     >>> if h1.natural() : print 'OK!'
     """    
@@ -7781,7 +7746,7 @@ ROOT.TH1.uniform      = _uniform_bins_
 ## same dims?
 #  @see TH1::GetDimension 
 def _h_same_dims_ ( histo , another ) :
-    """Two histograms with the same dimension?
+    """ Two histograms with the same dimension?
     - see `ROOT.TH1.GetDimension`
     """
     
@@ -7799,11 +7764,10 @@ def _h_same_dims_ ( histo , another ) :
 
 ROOT.TH1. same_dims = _h_same_dims_
 
-
 # =============================================================================
 ## same binning?
 def _h_same_bins_ ( histo , another ) :
-    """Same binning for two histograms?
+    """ Same binning for two histograms?
     >>> h1 = ...
     >>> h2 = ...
     >>> print h1.same_bins( h2 ) 
@@ -7846,7 +7810,7 @@ ROOT.TH1. same_bins = _h_same_bins_
 #  d     =  histo.dim() 
 #  @endcode
 def _h_dim_ ( self  ) :
-    """Get dimension of the histogram
+    """ Get dimension of the histogram
     >>> histo = ...
     >>> d     =  histo.dim() 
     """
@@ -7865,7 +7829,7 @@ ROOT.TH1 .dim = _h_dim_
 #  nb    = histo.n_bins () 
 #  @endcode
 def _h_n_bins_ ( self ) :
-    """Get tuple of bins-dimensions 
+    """ Get tuple of bins-dimensions 
     >>> histo = ...
     >>> nb    = histo.n_bins () 
     """
@@ -7887,7 +7851,7 @@ ROOT.TH1 .n_bins = _h_n_bins_
 # =============================================================================
 ## transfrom the x-axis for the 1D-histogram
 def _h1_transform_x_ ( h1 , fun , numbers = False , deriv = None ) :
-    """Transfrom the x-axis for the 1D-histogram
+    """ Transfrom the x-axis for the 1D-histogram
     """
     ax =  h1.GetXaxis()
     e  =  ax.edges()
@@ -7927,8 +7891,6 @@ def _h1_transform_x_ ( h1 , fun , numbers = False , deriv = None ) :
     nh.ResetStats()
     return nh 
 
-
-    
 # =============================================================================
 ## make a histogram transfromation:
 #  H(x)  ->  H'(y(x))
@@ -7940,7 +7902,7 @@ def _h1_transform_x_ ( h1 , fun , numbers = False , deriv = None ) :
 #  @endcode
 #  Histogram is transformed as raw histigram (no Jacobian correction is applied)
 def _h1_transform_x_numbers_ ( h1 , fun ) :
-    """Make a histogram transfromation:
+    """ Make a histogram transfromation:
     H(x)  ->  H'(y(x))
     where transformation is defined  y=fun(x)
     >>> h  = ...
@@ -7963,7 +7925,7 @@ def _h1_transform_x_numbers_ ( h1 , fun ) :
 #  - Derivative for Jacobian calculation can be explicitely specified, otherwise
 #  they are calculated numerically 
 def _h1_transform_x_function_ ( h1 , fun , deriv = None ) :
-    """make a histogram transformation:
+    """ Make a histogram transformation:
     H(x)  ->  H'(y(x)) / (dy/dx)
     where transformation is defined  y=fun(x)
     >>> h  = ...
@@ -7980,7 +7942,6 @@ for t in ( ROOT.TH1F , ROOT.TH1D ) :
     t.transform_X_numbers  =  _h1_transform_x_numbers_
     t.transform_X_function =  _h1_transform_x_function_
 
-
 # =============================================================================
 ## the actual function for text dump of the histogram
 #  @code 
@@ -7992,13 +7953,12 @@ for t in ( ROOT.TH1F , ROOT.TH1D ) :
 #  @endcode
 #  @see Ostap::Utils::Histo::.histoDump 
 def dumpHisto ( histo , *args ) :
-    """Dump the histogram/profile in text format (a'la HBOOK)
+    """ Dump the histogram/profile in text format (a'la HBOOK)
     >>> histo = ...
-    >>> print dumpHisto ( histo )
-    
-    >>> print histo.dump ()
-    >>> print histo.dump ( 20 , 20 )
-    >>> print histo.dump ( 20 , 20 , True )
+    >>> print ( dumpHisto ( histo ) )     
+    >>> print ( histo.dump () ) 
+    >>> print ( histo.dump ( 20 , 20 ) ) 
+    >>> print ( histo.dump ( 20 , 20 , True ) ) 
     
     Uses:
     - see Ostap.Utils.Histos.histoDump 
@@ -8033,7 +7993,7 @@ for t in  ( ROOT.TH1D             ,
 #  h     = hash ( histo ) 
 #  @endcode
 def _h_hash_ ( histo) :
-    """
+    """ Hash for the histogram 
     >>> histo = ...
     >>> h     = hash ( histo ) 
     """
@@ -8045,12 +8005,11 @@ def _h_hash_ ( histo) :
 ROOT.TH1.__hash__ = _h_hash_ 
 # =============================================================================
 
-
 # =============================================================================
 ## Get "Riemann sum" of the histogram 
 #  \f$ \sum_{i} f_i \Delta x_i\f$ 
 def _h1_riemann_sum_ ( h1 ) :
-    """Get 'Riemann sum' of the historgam
+    """ Get 'Riemann sum' of the historgam
     """
     ax     = h1.GetXaxis()
     result = 0.0
@@ -8064,7 +8023,7 @@ def _h1_riemann_sum_ ( h1 ) :
 ## Get "Riemann sum" of the histogram 
 #  \f$ \sum_{i} f_i \Delta x_i \Delta y_i\f$ 
 def _h2_riemann_sum_ ( h2 ) :
-    """Get 'Riemann sum' of the historgam
+    """ Get 'Riemann sum' of the historgam
     """
     ax     = h2.GetXaxis()
     ay     = h2.GetYaxis()
@@ -8079,7 +8038,7 @@ def _h2_riemann_sum_ ( h2 ) :
 ## Get "Riemann sum" of the histogram 
 #  \f$ \sum_{i} f_i \Delta x_i \Delta y_i \Delta z_i \f$ 
 def _h3_riemann_sum_ ( h3 ) :
-    """Get 'Riemann sum' of the historgam
+    """ Get 'Riemann sum' of the historgam
     """
     ax     = h3.GetXaxis()
     ay     = h3.GetYaxis()
@@ -8099,7 +8058,7 @@ from ostap.math.base import isequalf
 # =============================================================================
 ## does this histogram reprsent the density?
 def _h_isDensity_ ( h1 ) :
-    """Does this histogram reprsent the density?
+    """ Does this histogram reprsent the density?
     """
     return isequalf ( h1.riemann_sum () , 1.0 ) 
     
@@ -8107,7 +8066,7 @@ def _h_isDensity_ ( h1 ) :
 ## represent histogram as ``density''
 #  - the function with unit integral over the range
 def _h_density_ ( h1 ) :
-    """Represent histogram as  `density'
+    """ Represent histogram as  `density'
     - the function with unit integral over the range
     """
     if h1.is_density () :
@@ -8151,7 +8110,7 @@ for t in ( ROOT.TH1F , ROOT.TH1D ,
 #
 #  @endcode 
 def _h_fill_loop_ ( histo , filler ) :
-    """Fill the histogram from iterable/generator/...
+    """ Fill the histogram from iterable/generator/...
     >>> 
     >>> h1 = ... ## 1Dhistogram 
     >>> h1.fill_loop (  ( random.gauss(5,1) , 1 ) for i in range ( 1000 ) ) ## use generator 
@@ -8174,7 +8133,6 @@ def _h_fill_loop_ ( histo , filler ) :
 
 ROOT.TH1.fill_loop = _h_fill_loop_
 
-
 # ==============================================================================
 ## split the histogram into <code>n</code> sub-histograms 
 #  @code
@@ -8182,7 +8140,7 @@ ROOT.TH1.fill_loop = _h_fill_loop_
 #  histos = h1.split(10) 
 #  @endcode 
 def _h1_split1_ ( h1 , n ) :
-    """Split the histogram into `n` sub-histograms
+    """ Split the histogram into `n` sub-histograms
     >>> h1 = ...
     >>> histos = h1.split(10) 
     """
@@ -8207,7 +8165,7 @@ def _h1_split1_ ( h1 , n ) :
 #  histos = h1.split_bins(10) 
 #  @endcode 
 def _h1_split2_ ( h1 , n ) :
-    """Split the histogram into sub-histograms with at most <code>n</code> bins 
+    """ Split the histogram into sub-histograms with at most <code>n</code> bins 
     >>> h1 = ...
     >>> histos = h1.split_bins ( 10 ) 
     """
@@ -8232,14 +8190,14 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
 
 # =============================================================================
 if root_info < ( 3 , 0 ) : 
-    ## Number of enbtries (as int)
+    ## Number of entries (as int)
     #  @code
     #  histo
     #  n = histo.nEntries() 
     #  @endcode
     #  @see TH1::GetEntries 
     def _h1_nEntries_ ( histo ) :
-        """Number of enbtries (as int)
+        """ Number of entries (as int)
         >>> histo = ..
         >>> n = histo.nEntries() 
         """
@@ -8252,14 +8210,13 @@ else :
     #  @endcode
     #  @see TH1::GetEntries 
     def _h1_nEntries_ ( histo ) :
-        """Number of enbtries (as int)
+        """ Number of enbtries (as int)
         >>> histo = ..
         >>> n = histo.nEntries() 
         """
         return int ( histo.GetEntries() )
     
 ROOT.TH1.nEntries = _h1_nEntries_
-
 
 # =============================================================================
 ## Scale axis (change units) for 1D histogram
@@ -8268,7 +8225,7 @@ ROOT.TH1.nEntries = _h1_nEntries_
 #  histo2 = histo1.scale_axis ( 1000 ) 
 #  @endcode 
 def _h1_scale_axis_ ( h1 , scale ) :
-    """Scale axis (change units) for 1D histogram
+    """ Scale axis (change units) for 1D histogram
     >>> histo1 = ...
     >>> histo2 = histo1.scale_axis ( 1000  ) 
     """
@@ -8288,7 +8245,7 @@ def _h1_scale_axis_ ( h1 , scale ) :
 #  histo2 = histo1.scale_axes ( 1000 , 5000 ) 
 #  @endcode 
 def _h2_scale_axes_ ( h2 , scalex , scaley = 1.0 ) :
-    """Scale axes (change units) for 2D histogram
+    """ Scale axes (change units) for 2D histogram
     >>> histo1 = ...
     >>> histo2 = histo1.scale_axes ( 1000  , 5000 ) 
     """
@@ -8310,7 +8267,7 @@ def _h2_scale_axes_ ( h2 , scalex , scaley = 1.0 ) :
 #  histo2 = histo1.scale_axes ( 1 , 100 , 3 ) 
 #  @endcode 
 def _h3_scale_axes_ ( h3 , scalex , scaley = 1.0 , scalez = 1.0 ) :
-    """Scale axes (change units) for 3D histogram
+    """ Scale axes (change units) for 3D histogram
     >>> histo1 = ...
     >>> histo2 = histo1.scale_axes ( 1000  , 5000 , 1000 ) 
     """
@@ -8371,7 +8328,7 @@ def histo_book2 ( ranges , kwargs ) :
     elif 3 == nvars :
         xbins = kwargs.pop ( 'xbins' , kwargs.pop ( 'nbinsx' , kwargs.pop ( 'binsx' , 20 ) ) ) 
         ybins = kwargs.pop ( 'ybins' , kwargs.pop ( 'nbinsy' , kwargs.pop ( 'binsy' , 20 ) ) ) 
-        zbins = kwargs.pop ( 'zbins' , kwargs.pop ( 'nbinsy' , kwargs.pop ( 'binsz' , 20 ) ) )
+        zbins = kwargs.pop ( 'zbins' , kwargs.pop ( 'nbinsz' , kwargs.pop ( 'binsz' , 20 ) ) )
         
     assert isinstance ( xbins , integer_types ) and 0 < xbins , "Invalid xbins setting!"
     if 2 <= nvars : assert isinstance ( ybins , integer_types ) and 0 < ybins , "Invalid ybins setting!"

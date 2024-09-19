@@ -34,7 +34,7 @@ logger.debug ( 'Auxillary utilities for Histogram parameterisation')
 # @class C1Fun
 # Helper wrapper for callable to TF1 object for fitting 
 class C1Fun(object) :
-    """Helper wrapper for  callable to  TF1 object for fitting
+    """ Helper wrapper for  callable to  TF1 object for fitting
     """
     def __init__ ( self , fun , xmin , xmax ) :
 
@@ -56,7 +56,7 @@ class C1Fun(object) :
 
     ## the actual call 
     def __call__ ( self , x , pars = ( 1.0 , 0.0 , 1.0 ) ) :
-        """Call method"""       
+        """ Call method"""       
         x0    = x if isinstance ( x , num_types ) else x [ 0 ]
         #
         norm  = float ( pars [ 0 ] ) ## NORM 
@@ -70,7 +70,7 @@ class C1Fun(object) :
     
     ## make fit 
     def Fit ( self , histo , opts = 'S' , gopts = '' , *args ) :
-        """Make a fit
+        """ Make a fit
         >>> obj   = ...
         >>> histo = ... 
         >>> obj.Fit  ( histo , 'S0Q' )
@@ -82,7 +82,7 @@ class C1Fun(object) :
 
     ## fix parameter 
     def fix ( self , index , value ) :
-        """Fix parameter 
+        """ Fix parameter 
         """
         assert isinstance ( index , integer_types ) and 0 <= index <= 2  , 'Invalid index %s' % index
         value = float ( value ) 
@@ -90,7 +90,7 @@ class C1Fun(object) :
 
     ## set parameter 
     def set ( self , index , value , error = None ) :
-        """Set parameter 
+        """ Set parameter 
         """
         assert isinstance ( index , integer_types ) and 0 <= index <= 2 , 'Invalid index %s' % index
         value = float ( value ) 
@@ -100,7 +100,7 @@ class C1Fun(object) :
             
     ## set limits for the parameter 
     def set_limits ( self , index , minv , maxv ) :
-        """Set limits for the parameter
+        """ Set limits for the parameter
         """
         assert isinstance ( index , integer_types ) and 0 <= index <= 2 , 'Invalid index %s' % index
         minv = float ( minv )
@@ -116,7 +116,7 @@ class C1Fun(object) :
 
     ## release parameter
     def release ( self , index ) :
-        """Release parameter 
+        """ Release parameter 
         """
         assert isinstance ( index , integer_types ) and 0 <= index < 2 , 'Invalid index %s' % index
         self.__tf1.ReleaseParameter ( index )
@@ -124,7 +124,7 @@ class C1Fun(object) :
     ## 
     @property   
     def tf1  ( self ) :
-        """Get corresponding ROOT.TF1 object 
+        """ Get corresponding ROOT.TF1 object 
         """
         return self.__tf1 
 
@@ -153,7 +153,6 @@ class C1Fun(object) :
 # @class HFit
 class HFIT(object) :
     __metaclass__ = abc.ABCMeta
-
     ## constructor from hfit an dTF1 objects 
     def __init__ ( self , hfit , tf1 ) :
         
@@ -165,22 +164,20 @@ class HFIT(object) :
         
     @abc.abstractmethod
     def norm ( self ) :
-        """Is this object represent normalised function?"""
+        """ Is this object represent normalised function?"""
         return True 
     @abc.abstractmethod
     def npars ( self ) :
-        """number of parameters"""
+        """ Number of parameters"""
         return 0
     @abc.abstractmethod
     def __call__ ( self , x , pars = [] ) :
-        """The main call method"""
+        """ The main call method """
         return None
-
     @property
     def fun  ( self ) :
         """'fun' : actual ROOT.TF1  object"""
         return self.__fun 
-
     @property
     def hfit ( self ) :
         """'hfin' : actual `hfit' object"""
@@ -194,7 +191,6 @@ class HFIT(object) :
     def fit  ( self , histo , opts = 'S' , *args ) : return h.Fit ( self.fun , opts , *args ) 
     def Fit  ( self , histo , opts = 'S' , *args ) : return h.Fit ( self.fun , opts , *args ) 
     
-    
 # =============================================================================
 ## @class H_fit
 #  simple function to fit/represent the histogram with bernstein/spline
@@ -202,7 +198,7 @@ class HFIT(object) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-05-09
 class H_fit(HFIT) :
-    """Simple helper function to fit/represent the histogram with sum of
+    """ Simple helper function to fit/represent the histogram with sum of
     Bernstein/b-spline/legendre/chebyshev, etc functions 
     """
     def __init__ ( self ,  hfit , xmin = None , xmax = None ) :
@@ -277,7 +273,6 @@ class H_Nfit (HFIT) :
                 
         return norm * self.hfit( x0 )
 
-
 # =============================================================================
 ## helper class to wrap 1D-histogram as function
 #  Optionally  normalization, bias and scale are applied
@@ -285,7 +280,7 @@ class H_Nfit (HFIT) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 class H1Func(object) :
-    """Helper class to wrap 1D-histogram as function
+    """ Helper class to wrap 1D-histogram as function
 
     >>> histo =
     >>> func  = H1Func ( histo )
@@ -326,7 +321,7 @@ class H1Func(object) :
 
     ## get corresponding ROOT.TF1 object 
     def tf1  ( self ) :
-        """Get corresponding ROOT.TF1 object 
+        """ Get corresponding ROOT.TF1 object 
         """
         if not hasattr ( self , '_tf1' ) : 
             
@@ -362,15 +357,15 @@ class H2Func(object) :
     def __call__ ( self , x ) :
         """ Evaluate the function 
         """
-        x0 = x[0]
-        y0 = x[1]
+        x0 = x [ 0 ]
+        y0 = x [ 1 ]
         return self._func ( self._histo ( x0 , y0 , interpolate = self._interp ) )
 
 
 # ==============================================================================
 ## create function object 
 def  _funobj0_ ( self ) :
-    """Create function object 
+    """ Create function object 
     """
     if hasattr ( self , '_bfit' ) : return self._bfit
     self._bfit = H_fit( self )
@@ -379,7 +374,7 @@ def  _funobj0_ ( self ) :
 # ==============================================================================
 ## create function object 
 def  _funobjN_ ( self ) :
-    """Create function object 
+    """ Create function object 
     """
     if hasattr ( self , '_bfit' ) : return self._bfit
     self._bfit = H_Nfit( self )
@@ -388,7 +383,7 @@ def  _funobjN_ ( self ) :
 # ==============================================================================
 ## draw spline object
 def _sp_draw_   ( self , opts = '' ) :
-    """Draw spline object
+    """ Draw spline object
     >>> spline = ...
     >>> spline.draw() 
     """
@@ -420,7 +415,7 @@ for t in (  Ostap.Math.Positive         ,
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_as_fun_ ( self , func = lambda s : s.value () , *args , **kwargs ) :
-    """Construct the function from the histogram
+    """ Construct the function from the histogram
     >>> histo = ...
     >>> fun   = histo.asFunc() 
     """
@@ -431,7 +426,7 @@ def _h1_as_fun_ ( self , func = lambda s : s.value () , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_as_fun_ ( self , func = lambda s : s.value () , *args , **kwargs ) :
-    """Construct the helper function object from the histogram
+    """ Construct the helper function object from the histogram
     >>> histo = ...
     >>> fun   = histo.asFunc() 
     """
@@ -443,12 +438,12 @@ def _h2_as_fun_ ( self , func = lambda s : s.value () , *args , **kwargs ) :
 #  @date   2011-06-07
 def _h1_as_tf1_ ( self                           ,
                   func   = lambda s : s.value () , *args , **kwargs ) :
-    """Construct the TF1-function from the 1D-histogram
+    """ Construct the TF1-function from the 1D-histogram
     >>> histo = ...
     >>> fun1  = histo.asTF1 ()
     """
     #
-    fun = _h1_as_fun_    ( self , func , *args , **kwargs )
+    fun = _h1_as_fun_  ( self , func , *args , **kwargs )
     f1  = fun .tf1  ()
     nb  = self.nbins()
     f1._tmp_fun = fun
@@ -472,7 +467,7 @@ def _h1_as_tf1_ ( self                           ,
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-31
 def _h1_integral_ ( histo , xlow , xhigh , *args , **kwargs ) :
-    """Calculate the integral of TH1
+    """ Calculate the integral of TH1
     (convert ROOT::TH1 to ROOT::TF1 and use ROOT::TF1::Integral)    
     >>> histo = ...
     >>> i1 = histo.integral ( 0.2 , 0.16 )
@@ -490,7 +485,7 @@ def _h1_integral_ ( histo , xlow , xhigh , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h2_as_tf2_ ( self , func = lambda s : s.value () , *args , **kwargs ) :
-    """Construct the function from the histogram
+    """ Construct the function from the histogram
     >>> fun = h2.asFunc()
     >>> fun = h2.asTF  ()  ## ditto 
     >>> fun = h2.asTF1 ()  ## ditto 
@@ -526,7 +521,7 @@ def _h2_as_tf2_ ( self , func = lambda s : s.value () , *args , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-31
 def _h2_integral_ ( histo , xlow , xhigh , ylow , yhigh , *args , **kwargs ) :
-    """Calculate the integral of TH2
+    """ Calculate the integral of TH2
     (convert ROOT::TH2 to ROOT::TF2 and use ROOT::TF2::Integral)
     >>> histo = ...
     >>> i     = histo.integral ( 0.2 , 0.16 , 0.1 , 1.0 ) 
