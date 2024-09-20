@@ -93,20 +93,22 @@ def tf1  ( self , **kwargs  ) :
     xmin = kwargs.pop ( 'xmin' , neg_infinity )
     xmax = kwargs.pop ( 'xmax' , pos_infinity )
     #
-    if hasattr ( self , 'xmin'  ) :
+    if hasattr ( self , 'xmin'  ) and not xmin > neg_infinity :
         xmn   = self.xmin
-        xmin  = max ( float ( xmin ) , float ( xmn () ) if callable ( xmn ) else float ( xmn  ) )
-    if hasattr ( self , 'xmax'  ) :
+        xmin  = float ( xmn () ) if callable ( xmn ) else float ( xmn )
+    if hasattr ( self , 'xmax'  ) and not xmax < pos_infinity :
         xmx   = self.xmax
-        xmax  = min ( float ( xmax ) , float ( xmx () ) if callable ( xmx ) else float ( xmx ) ) 
+        xmax  = float ( xmx () ) if callable ( xmx ) else float ( xmx )
     if hasattr ( self , 'npars' ) :
         nps   = self.npars
         npars = max ( npars , nps () if callable ( nps ) else nps )
     #
     assert xmin > neg_infinity, \
-          "`xmin`-parameter needs to be specified %s" % xmin
+        "`xmin`-parameter needs to be specified %s" % xmin
     assert xmax < pos_infinity, \
-          "`xmax`-parameter needs to be specified %s" % xmax
+        "`xmax`-parameter needs to be specified %s" % xmax
+    assert xmin < xmax , "Invalid `xmin/xmax=%s/%s` setting!" % ( xmin , xmax ) 
+    
     ## 
     _wo = self._wo1 
     fun = ROOT.TF1 ( funID()  , _wo , xmin , xmax , npars, *args )
@@ -156,18 +158,18 @@ def tf2 ( self , **kwargs ) :
     ymin = kwargs.pop ( 'ymin' , neg_infinity )
     ymax = kwargs.pop ( 'ymax' , pos_infinity )
     #
-    if hasattr ( self , 'xmin'  ) :
+    if hasattr ( self , 'xmin'  ) and not xmin > neg_infinity : 
         xmn   = self.xmin
-        xmin  = max ( float ( xmin ) , float ( xmn () ) if callable ( xmn ) else float ( xmn  ) )
-    if hasattr ( self , 'xmax'  ) :
+        xmin  = float ( xmn () ) if callable ( xmn ) else float ( xmn )
+    if hasattr ( self , 'xmax'  ) and not xmax < pos_infinity : 
         xmx   = self.xmax
-        xmax  = min ( float ( xmax ) , float ( xmx () ) if callable ( xmx ) else float ( xmx ) ) 
-    if hasattr ( self , 'ymin'  ) :
+        xmax  = float ( xmx () ) if callable ( xmx ) else float ( xmx )
+    if hasattr ( self , 'ymin'  ) and not ymin > neg_infinity : 
         ymn   = self.ymin
-        ymin  = max ( float ( ymin ) , float ( ymn () ) if callable ( ymn ) else float ( ymn  ) )
-    if hasattr ( self , 'ymax'  ) :
+        ymin  = float ( ymn () ) if callable ( ymn ) else float ( ymn )
+    if hasattr ( self , 'ymax'  ) and not xmax < pos_infinity : 
         ymx   = self.ymax
-        ymax  = min ( float ( ymax ) , float ( ymx () ) if callable ( ymx ) else float ( ymx  ) )
+        ymax  = float ( ymx () ) if callable ( ymx ) else float ( ymx )
     if hasattr ( self , 'npars' ) :
         nps   = self.npars
         npars = max ( npars , nps () if callable ( nps ) else nps )
@@ -181,6 +183,10 @@ def tf2 ( self , **kwargs ) :
            "`ymin`-parameter needs to be specified %s" % ymin
     assert ymax < pos_infinity, \
            "`ymax`-parameter needs to be specified %s" % ymax
+    
+    assert xmin < xmax , "Invalid `xmin/xmax=%s/%s` setting!" % ( xmin , xmax ) 
+    assert ymin < ymax , "Invalid `ymin/ymax=%s/%s` setting!" % ( ymin , ymax ) 
+
     ##
     _wo = self._wo2
     fun = ROOT.TF2 ( funID ()  , _wo , xmin , xmax , ymin , ymax , npars , *args )
@@ -222,28 +228,31 @@ def tf3 ( self , **kwargs ) :
     zmin = kwargs.pop ( 'zmin' , neg_infinity )
     zmax = kwargs.pop ( 'zmax' , pos_infinity )
     #
-    if hasattr ( self , 'xmin'  ) :
+    if hasattr ( self , 'xmin'  ) and not xmin > neg_infinity : 
         xmn   = self.xmin
-        xmin  = max ( float ( xmin ) , float ( xmn () ) if callable ( xmn ) else float ( xmn  ) )
-    if hasattr ( self , 'xmax'  ) :
+        xmin  = float ( xmn () ) if callable ( xmn ) else float ( xmn )
+    if hasattr ( self , 'xmax'  ) and not xmax < pos_infinity : 
         xmx   = self.xmax
-        xmax  = min ( float ( xmax ) , float ( xmx () ) if callable ( xmx ) else float ( xmx ) ) 
-    if hasattr ( self , 'ymin'  ) :
+        xmax  = float ( xmx () ) if callable ( xmx ) else float ( xmx )
+    if hasattr ( self , 'ymin'  ) and not ymin > neg_infinity : 
         ymn   = self.ymin
-        ymin  = max ( float ( ymin ) , float ( ymn () ) if callable ( ymn ) else float ( ymn  ) )
-    if hasattr ( self , 'ymax'  ) :
+        ymin  = float ( ymn () ) if callable ( ymn ) else float ( ymn )
+    if hasattr ( self , 'ymax'  ) and not xmax < pos_infinity : 
         ymx   = self.ymax
-        ymax  = min ( float ( ymax ) , float ( ymx () ) if callable ( ymx ) else float ( ymx  ) )
-    if hasattr ( self , 'zmin'  ) :
+        ymax  = float ( ymx () ) if callable ( ymx ) else float ( ymx )
+    if hasattr ( self , 'zmin'  ) and not ymin > neg_infinity : 
         zmn   = self.zmin
-        zmin  = max ( float ( zmin ) , float ( zmn () ) if callable ( zmn ) else float ( zmn  ) )
-    if hasattr ( self , 'zmax'  ) :
+        zmin  = float ( zmn () ) if callable ( zmn ) else float ( zmn )
+    if hasattr ( self , 'zmax'  ) and not zmax < pos_infinity : 
         zmx   = self.zmax
-        zmax  = min ( float ( zmax ) , float ( zmx () ) if callable ( zmx ) else float ( zmx  ) )
+        zmax  = float ( zmx () ) if callable ( zmx ) else float ( zmx )        
     if hasattr ( self , 'npars' ) :
         nps   = self.npars
         npars = max ( npars , nps () if callable ( nps ) else nps )
 
+    assert xmin < xmax , "Invalid `xmin/xmax=%s/%s` setting!" % ( xmin , xmax ) 
+    assert ymin < ymax , "Invalid `ymin/ymax=%s/%s` setting!" % ( ymin , ymax ) 
+    assert zmin < zmax , "Invalid `zmin/zmax=%s/%s` setting!" % ( zmin , zmax ) 
     #
     assert xmin > neg_infinity, \
            "`xmin`-parameter needs to be specified %s" % xmin
@@ -291,7 +300,7 @@ positives = ( Ostap.Math.Positive          ,
 # =============================================================================
 ## draw the function 
 def f1_draw ( self , opts ='' , **kwargs ) :
-    """Drawing the function object through conversion to ROOT.TF1    
+    """ Drawing the function object through conversion to ROOT.TF1    
     >>> fun = ...
     >>> fun.draw()    
     """
@@ -334,7 +343,7 @@ def f1_draw ( self , opts ='' , **kwargs ) :
 # =============================================================================
 ## draw the function 
 def f2_draw ( self , opts ='' , **kwargs ) :
-    """Drawing the function object through conversion to ROOT.TF2    
+    """ Drawing the function object through conversion to ROOT.TF2    
     >>> fun = ...
     >>> fun.draw()    
     """

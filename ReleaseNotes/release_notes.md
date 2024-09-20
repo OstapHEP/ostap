@@ -12,7 +12,8 @@
   1. Rename `gof_1d` to `gof1d`
   1. Add method `weight` to `Ostap::PyIterator` to access th weigth of the current event
   1. add weight to `tree.withCut` and other tree-looping methods     
-
+  1. Tiny tweak for treatment of drawing ranges for `f1_draw/f2_draw/f3_draw` fnuctions: form now the explicit setting has  a precedence. 
+    
 ## Backward incompatible
 
    1. add `weight` to `tree.withCut` and other tree-looping methods     
