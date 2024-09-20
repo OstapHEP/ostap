@@ -10,12 +10,17 @@
   1. `ostap.math.math_ve` : add `significace`, `nsigmas` & `nsigma` functions to calcualte significabce from p-values
   1. Make use of `ostap.math.math_ve.significane` function
   1. Rename `gof_1d` to `gof1d`
-    
- # Backward incompatible
-    
+  1. Add method `weight` to `Ostap::PyIterator` to access th weigth of the current event
+  1. add weigght to `tree.withCut` and other tree-looping methods     
+
+## Backward incompatible
+
+   1. add `weight` to `tree.withCut` and other tree-looping methods     
+   
 ## Bug fixes
     
   1. fix typo in `ostap.math.bnase.axis_range` 
+
     
 # v1.13.3.0
 

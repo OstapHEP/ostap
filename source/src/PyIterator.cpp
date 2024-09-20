@@ -41,6 +41,7 @@ Ostap::PyIterator::PyIterator
   : m_tree     ( the_tree ) 
   , m_formula  ()  
   , m_last     ( first < last ? last : 0  )
+  , m_weight   ( 1       )
   , m_current  ( first   )
   , m_progress ( progress                                            , 
                  nullptr == the_tree || last <= first            ? 0 : 
@@ -90,21 +91,22 @@ Ostap::PyIterator::PyIterator
 void Ostap::PyIterator::init  ( const std::string& cuts ) 
 {
   if ( nullptr == m_tree || m_tree->GetEntries () <= m_current ) 
-  {
-    m_current = 0       ;
-    m_last    = 0       ;
-    m_tree    = nullptr ;
-  }
+    {
+      m_current = 0       ;
+      m_last    = 0       ;
+      m_tree    = nullptr ;
+      m_weight  = 0       ;
+    }
   else 
-  { 
-    //
-    m_last    = std::min ( m_last , (unsigned long) m_tree->GetEntries() ) ;
-    m_formula.reset ( new Ostap::Formula ( cuts , m_tree ) ) ;
-    //
-    if ( !m_formula->GetNdim() ) { m_formula.reset()                      ; }
-    else                         { m_tree->SetNotify ( m_formula.get() )  ; }
-    //
-  }
+    { 
+      //
+      m_last    = std::min ( m_last , (unsigned long) m_tree->GetEntries() ) ;
+      m_formula.reset ( new Ostap::Formula ( cuts , m_tree ) ) ;
+      //
+      if ( !m_formula->GetNdim() ) { m_formula.reset()                      ; }
+      else                         { m_tree->SetNotify ( m_formula.get() )  ; }
+      //
+    }
   /// advance the Tree to the first good event (if possible) 
   if ( nullptr !=  m_tree ) { m_tree = next () ; } 
 }
@@ -114,27 +116,31 @@ void Ostap::PyIterator::init  ( const std::string& cuts )
 TTree* Ostap::PyIterator::next () const                   // go to next item 
 {
   //
+  m_weight = 0 ;
   if ( 0 == m_tree ) { return nullptr ; }
   if ( !m_formula  ) { return nullptr ; }
   //
   for ( ; m_current < m_last ; ++m_current , ++m_progress )
-  {
-    // ========================================================================
-    //
-    const long ievent = m_tree->GetEntryNumber ( m_current ) ;
-    if ( 0 > ievent  ) { return nullptr ; } // RETURN
-    // ATTENTION
-    const long result = m_tree -> GetEntry ( ievent ) ; 
-    if ( 0 >= result ) { return nullptr ; }         // RETURN 
-    //
-    // check the cuts: 
-    if ( m_formula && !m_formula->evaluate() ) { continue ; }  // CONTINUE 
-    //
-    ++m_current  ;
-    ++m_progress ;
-    return  m_tree ;
-  }
+    {
+      // ========================================================================
+      //
+      const long ievent = m_tree->GetEntryNumber ( m_current ) ;
+      if ( 0 > ievent  ) { return nullptr ; } // RETURN
+      // ATTENTION
+      const long result = m_tree -> GetEntry ( ievent ) ; 
+      if ( 0 >= result ) { return nullptr ; }         // RETURN 
+      //
+      // check the cuts:
+      // if ( m_formula && !m_formula->evaluate() ) { continue ; }  // CONTINUE 
+      m_weight = m_formula ? m_formula->evaluate() : 1.0 ;
+      if ( !m_weight ) { continue ; }  // CONTINUE 
+      //
+      ++m_current   ;
+      ++m_progress  ;
+      return m_tree ;
+    }
   //
+  m_weight = 0 ;
   return nullptr ;
 }
 // ============================================================================

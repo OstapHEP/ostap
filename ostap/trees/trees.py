@@ -57,7 +57,7 @@ logger.debug ( 'Some useful decorations for Tree/Chain objects')
 ## check validity/emptiness  of TTree/TChain
 #  require non-zero poniter and non-empty Tree/Chain
 def _tt_nonzero_ ( tree ) :
-    """Check validity/emptiness  of TTree/TChain
+    """ Check validity/emptiness  of TTree/TChain
     - require non-zero poniter and non-empty Tree/Chain
     """
     return valid_pointer ( tree ) and 0 < tree.GetEntries() 
@@ -71,7 +71,7 @@ ROOT.TChain.__bool__    = _tt_nonzero_
 ## Iterator over ``good events'' in TTree/TChain:
 #  @code 
 #    >>> tree = ... # get the tree
-#    >>> for i in tree.withCuts ( 'pt>5' ) : print i.y
+#    >>> for entry, weight in tree.withCuts ( 'pt>5' ) : print ( entry.y , weight ) 
 #  @endcode
 #  @attention: TTree::GetEntry is already invoked for accepted events,
 #              no need in second call
@@ -84,15 +84,15 @@ ROOT.TChain.__bool__    = _tt_nonzero_
 #  @code
 #  tree = ...
 #  sum_y = 0 
-#  for i in tree.withCuts ( 'pt>10' , active = ( 'pt' , 'y') ) : sum_y += i.y 
+#  for entry, weight  in tree.withCuts ( 'pt>10' , active = ( 'pt' , 'y') ) : sum_y += entry.y 
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-06
 def _iter_cuts_ ( tree , cuts = '' , first = 0 , last = LAST_ENTRY , progress = False , active = () ) :
-    """Iterator over ``good events'' in TTree/TChain:
+    """ Iterator over ``good events'' in TTree/TChain:
     
     >>> tree = ... # get the tree
-    >>> for i in tree.withCuts ( 'pt>5' ) : print i.y
+    >>> for entry, weight  in tree.withCuts ( 'pt>5' ) : print ( i.y , weight ) 
     
     Attention: TTree::GetEntry is already invoked for accepted events,
     no need in second call
@@ -104,7 +104,7 @@ def _iter_cuts_ ( tree , cuts = '' , first = 0 , last = LAST_ENTRY , progress = 
 
     >>> tree = ...
     >>> sum_y = 0 
-    >>> for i in tree.withCuts ( 'pt>10' , active = ( 'pt' , 'y') ) : sum_y += i.y 
+    >>> for entry, weight in tree.withCuts ( 'pt>10' , active = ( 'pt' , 'y') ) : sum_y += entry.y 
     """
 
     ## show progress only for tty 
@@ -133,10 +133,12 @@ def _iter_cuts_ ( tree , cuts = '' , first = 0 , last = LAST_ENTRY , progress = 
         if not pit.ok() : raise TypeError ( "Invalid Formula: %s" % cuts )
         
         ## the tree is advanced 
-        mytree = pit.tree()
+        mytree = pit.tree   ()
+        weight = pit.weight () 
         while valid_pointer ( mytree ) :
-            yield mytree
-            mytree = pit.next()
+            yield mytree, weight 
+            mytree = pit.next   ()
+            weight = pit.weight ()
             
         del pit
 
@@ -155,17 +157,17 @@ ROOT.TTree. __len__   = lambda s : s.GetEntries()
 ## Iterator over `good events' in TTree/TChain:
 #  @code 
 #    >>> tree = ... # get the tree
-#    >>> for i in tree( 0, 100, 'pt>5' ) : print i.y
+#    >>> for entry, wweight  in tree( 0, 100, 'pt>5' ) : print ( entry.y, weight) 
 #  @endcode
 #  @see Ostap::PyIterator
 #  @see Ostap::Formula
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-06
 def _tc_call_ ( tree , first = 0 , last = LAST_ENTRY  , cuts = None , progress = False , active = () ) :
-    """Iterator over ``good events'' in TTree/TChain:
+    """ Iterator over ``good events'' in TTree/TChain:
     
     >>> tree = ... # get the tree
-    >>> for i in tree(0, 100 , 'pt>5' ) : print i.y
+    >>> for entry, weight in tree(0, 100 , 'pt>5' ) : print ( entry.y, weight) 
     
     """
 
@@ -195,11 +197,12 @@ def _tc_call_ ( tree , first = 0 , last = LAST_ENTRY  , cuts = None , progress =
             
             if not pit.ok() : raise TypeError ( "Invalid Formula: %s" % cuts )
             
-            mytree = pit.tree()
+            mytree = pit.tree   ()
+            weight = pit.weight () 
             while valid_pointer ( mytree ) :                
-                yield mytree                    ## YIELD HERE                  
-                mytree = pit.next()             ## advance to the next entry  
-                
+                yield mytree, weight            ## YIELD HERE                  
+                mytree = pit.next   ()          ## advance to the next entry  
+                weight = pit.weight () 
             del pit
             
         else : ## trivial loop 
@@ -218,7 +221,7 @@ def _tc_call_ ( tree , first = 0 , last = LAST_ENTRY  , cuts = None , progress =
                     logger.error ( "Invald entry/2 %s< skip it!" % entry )
                     continue
                 
-                yield tree                     ## YIELD HERE 
+                yield tree, 1.0         ## YIELD HERE 
             
     ## set the tree at the initial position 
     ievt = tree.GetEntryNumber ( 0 )
@@ -227,28 +230,32 @@ def _tc_call_ ( tree , first = 0 , last = LAST_ENTRY  , cuts = None , progress =
 ROOT.TTree .__call__  = _tc_call_ 
 ROOT.TChain.__call__  = _tc_call_
 
-try : 
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
     from numpy import frombuffer as _frombuffer 
     def get_result ( vct ) :
         return _frombuffer ( vct.data() , count = len ( vct ) , dtype = float )
         ## return _array ( data , dtype = float )
-except ImportError :
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     from array import array as _array 
     def get_result ( vct ) :
         return _array ( 'd' , vct )
-
+    # =========================================================================
 # =============================================================================
 ##  Iterate over tree entries and get a row/array of values for each good entry
 #   @code
 #   tree = ...
-#   for row in tree.rows ( 'a a+b/c sin(d)' , 'd>0' ) :
-#      print ( row ) 
+#   for row, weight  in tree.rows ( 'a a+b/c sin(d)' , 'd>0' ) :
+#      print ( row , weight ) 
 #   @code 
 def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = LAST_ENTRY , progress = False , active = () ) :
-    """Iterate over tree entries and get a row/array of values for each good entry
+    """ Iterate over tree entries and get a row/array of values for each good entry
     >>> tree = ...
-    >>> for row in tree.rows ( 'a a+b/c sin(d)' , 'd>0' ) :
-    >>>    print ( row ) 
+    >>> for row, weight  in tree.rows ( 'a a+b/c sin(d)' , 'd>0' ) :
+    >>>    print ( row , weight ) 
     """
     
     ## show progress obly for tty 
@@ -290,7 +297,8 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = LAST_ENTRY , p
             
             assert pit and pit.ok() , 'ROWS: Invalid formula %s' % cuts  
             
-            mytree = pit.tree() 
+            mytree = pit.tree   ()
+            weight = pit.weight () 
             while valid_pointer ( mytree ) :
                 
                 sc = getter.eval ( result )
@@ -298,13 +306,12 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = LAST_ENTRY , p
                     logger.error('ROWS: Error status from getter %s' % sc  ) 
                     break
                 
-                yield get_result ( result )                 
-                mytree = pit.next()
-                
+                yield get_result ( result ) , weight                  
+                mytree = pit.next   ()
+                weight = pit.weight () 
             del pit
         
         else : ## trivial loop
-
           
             for event in progress_bar ( range ( first, last ) , silent = not progress ) : 
                 
@@ -325,7 +332,7 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = LAST_ENTRY , p
                     logger.error('ROWS: Error status from getter %s' % sc  ) 
                     break 
                 
-                yield get_result ( result )                 
+                yield get_result ( result ) , 1.0                  
 
     del getter
     
@@ -374,7 +381,7 @@ def tree_project ( tree                    ,
                    last       = LAST_ENTRY , 
                    use_frame  = True       , ## use DataFrame ? 
                    progress   = False      ) :
-    """Helper project method
+    """ Helper project method
     
     >>> tree = ...
     
@@ -640,7 +647,7 @@ ROOT.TChain.__contains__ = _rt_contains_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-09-19
 def _tc_minmax_ ( tree , var , cuts = '' , delta = 0.0 )  :
-    """Get min/max for the certain variable in chain/tree
+    """ Get min/max for the certain variable in chain/tree
     >>> chain = ...
     >>> mn,mx = chain.vminmax('pt')
     >>> mn,mx = chain.vminmax('pt','y>3')
@@ -715,7 +722,7 @@ ROOT.TTree.leaves   = _rt_leaves_
 # ==============================================================================
 ## Get the leaf with the certain name 
 def _rt_leaf_ ( tree , leaf ) :
-    """Get the leaf with certain name:
+    """ Get the leaf with certain name:
     >>> tree = ...
     >>> l = tree.leaf('pt') 
     """
@@ -740,7 +747,7 @@ ROOT.TTree.leaf   = _rt_leaf_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-02-04
 def tree_branches ( t , pattern = '' , *args ) :
-    """Get the list of branch names
+    """ Get the list of branch names
     
     >>> tree = ...
     >>> lst = tree.branches()
@@ -781,7 +788,7 @@ ROOT.TTree.branches = tree_branches
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-02-04
 def _rt_print_ ( t ) :
-    """Simplified print out for tree/chain
+    """ Simplified print out for tree/chain
 
     >>> tree = ...
     >>> print tree
@@ -857,7 +864,7 @@ def _rt_table_0_ ( tree ,
                    cuts    = ''   ,
                    prefix  = ''   ,
                    title   = ''   , *args ) :
-    """
+    """ Print tree as table 
     """
     ## get list of branches/leaves  
     brs = tree.leaves ( pattern )
@@ -1028,7 +1035,7 @@ def _rt_table_1_ ( tree ,
                    cuts    = ''   ,
                    prefix  = ''   ,
                    title   = ''   , *args ) :
-    """
+    """ Print tree as table 
     """
     if isinstance ( variables , string_types ) :
         variables = split_string ( variables , strip = True , respect_groups = True )
@@ -1123,7 +1130,7 @@ def _rt_table_1_ ( tree ,
 #  print leaf.get_type ( )
 #  @endcode 
 def _tl_type_ ( leaf ) :
-    """Get a type for TLeaf object
+    """ Get a type for TLeaf object
     >>> tree = ...
     >>> leaf = t.leaf ( 'QQQ' )
     >>> print leaf.get_type ( )
@@ -1177,7 +1184,7 @@ _short_types_ = {
 #  print leaf.get_short_type ( )
 #  @endcode 
 def _tl_type_short_ ( leaf ) :
-    """Get a type for TLeaf object
+    """ Get a type for TLeaf object
     >>> tree = ...
     >>> leaf = t.leaf ( 'QQQ' )
     >>> print leaf.get_type ( )
@@ -1200,7 +1207,7 @@ ROOT.TLeaf . get_short_type = _tl_type_short_
 #  print dat.table() 
 #  @endcode
 def _rt_table_ (  dataset ,  variables = [] ,   cuts = '' , prefix = '' , title = '' , *args ) :
-    """print dataset in a form of the table
+    """ Print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
     """
@@ -1217,7 +1224,7 @@ def _rt_table_ (  dataset ,  variables = [] ,   cuts = '' , prefix = '' , title 
 #  print dat.table2 () 
 #  @endcode
 def _rt_table2_ (  dataset ,  variables ,   cuts = '' , prefix = '' , title = '' , *args ) :
-    """print dataset in a form of the table
+    """ Print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
     """
@@ -1231,7 +1238,7 @@ def _rt_table2_ (  dataset ,  variables ,   cuts = '' , prefix = '' , title = ''
 # =============================================================================
 ##  print DataSet
 def _rt_print2_ ( data  , prefix = '' ) :
-    """Print TTree/TChain"""
+    """ Print TTree/TChain"""
     
     br = len ( data.branches () ) + len ( data.leaves() )  
     l  = len ( data             )
@@ -1260,7 +1267,7 @@ ROOT.TTree.table2   = _rt_table2_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-02-04
 def _rc_files_ ( chain ) :
-    """Get the list of files used for the chain
+    """ Get the list of files used for the chain
     
     >>> chain = ... ## get the files 
     >>> files = chain.files()
@@ -1312,7 +1319,6 @@ def _rc_getslice_ ( self , start , stop , *step ) :
 
 ROOT.TChain.__getslice__ = _rc_getslice_
 
-
 # =============================================================================
 ## iterator over individual trees in the chain
 #  @code
@@ -1321,7 +1327,7 @@ ROOT.TChain.__getslice__ = _rc_getslice_
 #       print len(tree)
 #  @endcode 
 def _rc_itrees_   ( self ) :
-    """Iterator over individual trees in the echain
+    """ Iterator over individual trees in the echain
     >>> chain = ...
     >>> for tree in  chain.trees ()  :
     ...     print len(tree)
@@ -1332,9 +1338,7 @@ def _rc_itrees_   ( self ) :
         c = ROOT.TChain ( self.GetName() )
         c.Add ( _f )
         yield c
-        
-    
-    
+            
 # =============================================================================
 ## Get the chain corresponding to the subset of files
 #  @code
@@ -1602,7 +1606,7 @@ addbranch_types = string_types + num_types + ( ROOT.TH1 , Ostap.IFuncTree )
 #  - (callable, var1, ... )
 #  - (var1, ... , callable)
 def bftype ( obj ) : 
-    """Is obj a representation of a function?
+    """ Is obj a representation of a function?
     - (callable, var1, ... )
     - (var1, ... , callable)
     """
@@ -1629,7 +1633,7 @@ def bftype ( obj ) :
 #  @see Ostap.IFuncTree
 #  @see TH1 
 def btypes ( obj ) :
-    """Basic types of objects that can be used for `add_new_branch`methods
+    """ Basic types of objects that can be used for `add_new_branch`methods
     - string formula
     - constant number
     - `ROOT.TH1`
@@ -1649,7 +1653,7 @@ def btypes ( obj ) :
 # =============================================================================
 ## basic types of array-line objects that can be used for <code>add_new_branch</code> methods 
 def btypes_array ( obj ) :
-    """Basic types of array-line objects that can be used for <code>add_new_branch</code> methods 
+    """ Basic types of array-line objects that can be used for <code>add_new_branch</code> methods 
     """
     
     if   isinstance ( obj, string_types )          : return False
@@ -1681,7 +1685,6 @@ def btypes_array ( obj ) :
 
     return False
 
-    
 # ==============================================================================
 ## add new branch to the chain
 #  @see Ostap::Trees::add_branch
@@ -2378,7 +2381,7 @@ ROOT.TTree.the_variables = the_variables
 #  if not tree.valid_expression ( 'QQ>1' ) : ...
 #  @endcode 
 def _rt_valid_formula_ ( tree , expression ) :
-    """Valid formula expression?
+    """ Valid formula expression?
     >>> tree =
     >>> if not tree.valid_expression ( 'QQ>1' ) : ...
     """
@@ -2398,7 +2401,7 @@ ROOT.TTree.valid_expression = _rt_valid_formula_
 #  sizes = tree.size_vars() 
 #  @endcode 
 def _rt_size_vars_ ( tree ) :
-    """Get all ``size''-variables
+    """ Get all ``size''-variables
     >>> tree  = ... 
     >>> sizes = tree.size_vars() 
     """
@@ -2443,7 +2446,7 @@ ROOT.TTree.size_vars = _rt_size_vars_
 #  arrays = tree.array_vars() 
 #  @endcode 
 def _rt_array_vars_ ( tree ) :
-    """Get all ``array-like''-variables
+    """ Get all ``array-like''-variables
     >>> tree  = ... 
     >>> arrays = tree.array_vars() 
     """
@@ -2527,7 +2530,7 @@ class ActiveBranches(object) :
 #        print tree.pt_Lb, tree.eta_Lc 
 #  @endcode
 def active_branches ( tree , *vars ) :
-    """Context manager to activate only certain branches in the tree.
+    """ Context manager to activate only certain branches in the tree.
     - It drastically speeds up the iteration over the tree.
     >>> tree = ...
     >>> with active__braches ( tree , '*_Lb', 'eta_Lc') :
@@ -2543,7 +2546,7 @@ def active_branches ( tree , *vars ) :
 # =============================================================================
 ## get some file info for the given path 
 def file_info ( fname ) :
-    """Get some file info for the given path
+    """ Get some file info for the given path
     """
     p , s , f = fname.partition ( '://' )
     if p and s : return 'Protocol'
@@ -2558,7 +2561,7 @@ from ostap.utils.cleanup  import CleanUp
 #  simple class to keep pickable definition of tree/chain
 #  it is needed for multiprcessing 
 class Chain(CleanUp) :
-    """Simple class to keep definition of tree/chain ``pickable''
+    """ Simple class to keep definition of tree/chain ``pickable''
     """
     def __getstate__  ( self ) :
 
@@ -2769,7 +2772,7 @@ class Chain(CleanUp) :
     # =========================================================================
     ## get/calculate the lengths of the individual trees 
     def calc_lens ( self ) :
-        """Get/calculate the lengths of the individual trees
+        """ Get/calculate the lengths of the individual trees
         """
         if self.__lens : return self.__lens
 
@@ -2981,7 +2984,7 @@ class Chain(CleanUp) :
 #  simple class to keep 'persistent' definition of the tree
 #  it is needed for multiprocessing  
 class Tree(Chain) :
-    """Simple class to keep definition of tree/chain
+    """ Simple class to keep definition of tree/chain
     """
     def __getstate__  ( self )         : return Chain.__getstate__  ( self )   
     def __setstate__  ( self , state ) :        Chain.__setstate__  ( self , state ) 

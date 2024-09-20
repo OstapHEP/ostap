@@ -67,7 +67,9 @@ namespace Ostap
     /// go to next item 
     TTree* next    () const ;                      // go to next item
     /// get the tree 
-    TTree* tree    () const { return m_tree   ; }  // get the tree 
+    TTree* tree    () const { return m_tree   ; }  // get the tree
+    /// get the weight
+    double weight  () const { return m_weight ; }  // the weight 
     /// check if formula is ok 
     bool   ok      () const ;
     /// get formula 
@@ -86,6 +88,7 @@ namespace Ostap
     TTree*                            m_tree     { nullptr } ;
     std::unique_ptr<Ostap::Formula>   m_formula  {   }       ;
     unsigned long                     m_last     { 0 }       ;
+    mutable double                    m_weight   { 1 }       ; // weight 
     mutable unsigned long             m_current  { 0 }       ;
     mutable Ostap::Utils::ProgressBar m_progress {   }       ;
     // ========================================================================
