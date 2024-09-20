@@ -11,7 +11,7 @@
   1. Make use of `ostap.math.math_ve.significane` function
   1. Rename `gof_1d` to `gof1d`
   1. Add method `weight` to `Ostap::PyIterator` to access th weigth of the current event
-  1. add weigght to `tree.withCut` and other tree-looping methods     
+  1. add weight to `tree.withCut` and other tree-looping methods     
 
 ## Backward incompatible
 

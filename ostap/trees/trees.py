@@ -1393,7 +1393,7 @@ def _rt_slice_ ( tree                   ,
                  transpose = False      ,
                  first     = 0          ,
                  last      = LAST_ENTRY ) :
-    """ Get ``slice'' from TTree in a form of numpy.array
+    """ Get `slice' from TTree in a form of numpy.array
     ##
     >>> tree = ...
     >>> varr , _  = tree.slice('Pt','eta>3')
