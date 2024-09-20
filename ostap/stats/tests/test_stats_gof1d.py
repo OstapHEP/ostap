@@ -89,19 +89,31 @@ def test_bad_fit_1 ( ) :
     with use_canvas ( 'test_bad_fit_1: GoF' , wait = 1 ) :
         gof = G1D.GoF1D     ( gauss , data )
         logger.info ( 'Goodness-of-fit:\n%s' % gof )
-
-        got = G1D.GoF1DToys ( gauss , data , 10000 )
-        got.run ( 5000 ) 
+        gof.draw()        
+        got = G1D.GoF1DToys ( gauss , data , 5000 )
+        got.run ( 10000 ) 
         logger.info ( 'Goodness-of-fit with toys:\n%s' % got )
-        
 
+    with use_canvas ( 'test_bad_fit_1: GoF/KS' , wait = 1 ) :
+        dks = got.draw('KS')
+    with use_canvas ( 'test_bad_fit_1: GoF/AD' , wait = 1 ) :
+        dad = got.draw('AD')
+    with use_canvas ( 'test_bad_fit_1: GoF/CM' , wait = 1 ) :
+        dcm = got.draw('CM')
+    with use_canvas ( 'test_bad_fit_1: GoF/ZK' , wait = 1 ) :
+        dzk = got.draw('ZK')
+    with use_canvas ( 'test_bad_fit_1: GoF/ZA' , wait = 1 ) :
+        dza = got.draw('ZA')
+    with use_canvas ( 'test_bad_fit_1: GoF/ZC' , wait = 3 ) :
+        dzc = got.draw('ZC')
+        
 # ===============================================================================
 if '__main__' == __name__ :
 
     test_good_fit_1 ()
     test_good_fit_2 ()
     test_bad_fit_1  ()
-    
+
 # ===============================================================================
 ##                                                                        The END 
 # ===============================================================================

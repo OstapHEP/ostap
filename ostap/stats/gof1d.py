@@ -54,7 +54,7 @@ else                        : data2vct = lambda s : doubles ( s )
 #  @return Kolmogorov-Smirnov statistisc KS
 def kolmogorov_smirnov ( cdf_data ) :
     """ Get Kolmogorov-Smirnov statistis  KS
-    - `cdf_data` : sorted array of F0(X_i) - values of CDF at X data points
+    - `cdf_data` : sorted array of F0(X_i) - values of CDF at (sorted) X data points
     >>> cdf_data =...
     >>> ks2  = kolmogorov_smirnov ( cdf_data )
     """
@@ -67,7 +67,7 @@ def kolmogorov_smirnov ( cdf_data ) :
 #  cdf_data =...
 #  ad2      = anderson_darling ( cdf_data )
 #  @endcode
-#  @param cdf_data sorted array of F0(X_i) - values of CDF at X data points
+#  @param cdf_data sorted array of F0(X_i) - values of CDF at (sorted) X data points
 #  @return Anderson-Darling statistisc AD^2
 def anderson_darling ( cdf_data ) :
     """ Get Anderson-Darling statistiscs AD^2
@@ -91,7 +91,7 @@ def anderson_darling ( cdf_data ) :
 #  @return Cramer-von Mises statistisc CM^2
 def cramer_von_mises ( cdf_data  ) :
     """ Get Cramer-von Mises statistics CM^2
-    - `cdf_data` : sorted array of F0(X_i) - values of CDF at X data points
+    - `cdf_data` : sorted array of F0(X_i) - values of CDF at (sorted) X data points
     >>> cdf_data =...
     >>> cm2     = cramer_von_mises ( cdf_data )    
     """
@@ -128,7 +128,7 @@ def ZK  ( cdf_data ) :
 #  @return ZA statistisc ZA 
 def ZA  ( cdf_data ) :
     """ Get ZA statististics 
-    - `cdf_data` : sorted array of F0(X_i) - values of CDF at X data points
+    - `cdf_data` : sorted array of F0(X_i) - values of CDF at (sorted) X data points
     >>> cdf_data =...
     >>> za       = ZA ( cdf_data )    
     """
@@ -147,7 +147,7 @@ def ZA  ( cdf_data ) :
 #  @return ZC statistisc ZC
 def ZC  ( cdf_data ) :
     """ Get ZC statististics 
-    - `cdf_data` : sorted array of F0(X_i) - values of CDF at X data points
+    - `cdf_data` : sorted array of F0(X_i) - values of CDF at (sorted) X data points
     >>> cdf_data =...
     >>> zc       = ZC ( cdf_data )    
     """
@@ -168,7 +168,7 @@ class GoF1D(object) :
                    pdf     ,
                    dataset ) :
         
-        assert isinstance ( pdf     , PDF1            ) , 'Invalid type of `PDF`:%s'     % type ( pdf     )
+        assert isinstance ( pdf     , PDF1            ) , 'Invalid type of `pdf`:%s'     % type ( pdf     )
         assert isinstance ( dataset , ROOT.RooDataSet ) , 'Invalid type of `daatset`:%s' % type ( dataset )
         
         vars = pdf.vars
@@ -185,7 +185,7 @@ class GoF1D(object) :
         self.__xmnmx = pdf.xminmax()
         
         ## vectorized version of CDF 
-        vct_cdf = np.vectorize ( cdf )
+        self.__vct_cdf = np.vectorize ( cdf )
         
         ## data in form of numpy sructured array
         varname = pdf.xvar.name 
@@ -198,89 +198,100 @@ class GoF1D(object) :
         self.__ecdf     = Ostap.Math.ECDF ( data2vct ( self.__data ) )
 
         ## evalute CDF for sorted data 
-        self.__cdf_data = vct_cdf ( self.__data )
- 
-        self.__KS = kolmogorov_smirnov ( self.__cdf_data )
-        self.__AD = anderson_darling   ( self.__cdf_data )
-        self.__CM = cramer_von_mises   ( self.__cdf_data )
-        self.__ZK = ZK                 ( self.__cdf_data )
-        self.__ZA = ZA                 ( self.__cdf_data )
-        self.__ZC = ZC                 ( self.__cdf_data )
-       
+        self.__cdf_data = self.__vct_cdf ( self.__data )
         
-        del vct_cdf 
-
+        self.__KS_val   = kolmogorov_smirnov ( self.__cdf_data )
+        self.__AD_val   = anderson_darling   ( self.__cdf_data )
+        self.__CM_val   = cramer_von_mises   ( self.__cdf_data )
+        self.__ZK_val   = ZK                 ( self.__cdf_data )
+        self.__ZA_val   = ZA                 ( self.__cdf_data )
+        self.__ZC_val   = ZC                 ( self.__cdf_data )
+               
     # =========================================================================
     ## size of dataset
     @property 
     def N  ( self ) :
         """`N` : size of dataset"""
         return len ( self.__data ) 
+    
+    # =========================================================================
+    ## fit-CDF
+    @property
+    def cdf ( self ) :
+        """`cdf` : CDF for fit-function"""
+        return self.__cdf
 
+    # =========================================================================
+    ## vectorized CDF
+    @property 
+    def vcdf ( self ) :
+        """`vcdf` : vectorized fit-CDF"""
+        return self.__vct_cdf 
+    
     # =========================================================================
     ## empirical CDF for data
     def ecdf ( self ) :
         """`ecdf` : empirical CDF for data"""
         return self.__ecdf
     
-    # =========================================================================
-    ## Get Kolmogorov-Smirnov statistiscs 
-    @property 
-    def kolmogorov_smirnov ( self ) :
-        """ Get Kolmogorov-Smirnov statistiscs KS
-        """
-        return self.__KS 
-
-    # ===============================================
-    ## Get Anderson-Darling  statistiscs 
-    @property 
-    def anderson_darling ( self ) :
-        """ Get Anderson-Darling statistiscs 
-        """
-        return self.__AD 
-
-    # =========================================================================
-    ## Get Cramer-von Mises statistics 
-    @property 
-    def cramer_von_mises ( self ) :
-        """ Get Cramer-von Mises statistics 
-        """
-        return self.__CM 
-    
-    # =========================================================================
-    ## Get ZK statististics 
-    @property 
-    def ZK  ( self ) :
-        """ Get ZK statistics
-        """
-        return self.__ZK 
-        
-    # =========================================================================
-    ## Get ZA statististics 
-    @property 
-    def ZA  ( self ) :
-        """ Get ZA statistics
-        """        
-        return self.__ZA
-    
-    # =========================================================================
-    ## Get ZC statististics 
-    @property 
-    def ZC  ( self ) :
-        """ Get ZC statistics
-        """        
-        return self.__ZC 
-            
     @property
     def data ( self ) :
-        """`data` : sorted  input data (as numpy array)"""
+        """`data` : sorted input data (as numpy array)"""
         return self.__data
 
     @property
     def cdf_data ( self ) :
         """`cdata` : vector of CDF(x) data (as numpy array)"""
         return self.__cdf_data 
+
+    # =========================================================================
+    ## Get Kolmogorov-Smirnov statistiscs 
+    @property 
+    def kolmogorov_smirnov_estimator ( self ) :
+        """ Get Kolmogorov-Smirnov statistiscs KS
+        """
+        return self.__KS_val 
+
+    # ===============================================
+    ## Get Anderson-Darling  statistiscs 
+    @property 
+    def anderson_darling_estimator ( self ) :
+        """ Get Anderson-Darling statistiscs 
+        """
+        return self.__AD_val 
+
+    # =========================================================================
+    ## Get Cramer-von Mises statistics 
+    @property 
+    def cramer_von_mises_estimator ( self ) :
+        """ Get Cramer-von Mises statistics 
+        """
+        return self.__CM_val 
     
+    # =========================================================================
+    ## Get ZK statististics 
+    @property 
+    def ZK_estimator  ( self ) :
+        """ Get ZK statistics
+        """
+        return self.__ZK_val 
+        
+    # =========================================================================
+    ## Get ZA statististics 
+    @property 
+    def ZA_estimator  ( self ) :
+        """ Get ZA statistics
+        """        
+        return self.__ZA_val
+    
+    # =========================================================================
+    ## Get ZC statististics 
+    @property 
+    def ZC_estimator ( self ) :
+        """ Get ZC statistics
+        """        
+        return self.__ZC_val 
+                
     # ==========================================================================
     ## Print the summary as Table
     def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 ) :
@@ -289,32 +300,32 @@ class GoF1D(object) :
         from   ostap.logger.pretty import pretty_float
         import ostap.logger.table  as     T 
 
-        ks , expo = pretty_float ( self.kolmogorov_smirnov , width = width , precision = precision )
+        ks , expo = pretty_float ( self.__KS_val , width = width , precision = precision )
         if expo : row = 'Kolmogorov-Smirnov' , ks , '10^%+d' % expo
         else    : row = 'Kolmogorov-Smirnov' , ks              
         rows.append ( row )
         
-        ad , expo = pretty_float ( self.anderson_darling , width = width , precision = precision )
+        ad , expo = pretty_float ( self.__AD_val , width = width , precision = precision )
         if expo : row = 'Anderson-Darling' , ad , '10^%+d' % expo
         else    : row = 'Anderson-Darling' , ad              
         rows.append ( row )
 
-        cm , expo = pretty_float ( self.cramer_von_mises  , width = width , precision = precision )
+        cm , expo = pretty_float ( self.__CM_val  , width = width , precision = precision )
         if expo : row = 'Cramer-von Mises' , cm , '10^%+d' % expo
         else    : row = 'Cramer-von Mises' , cm              
         rows.append ( row )
 
-        zk , expo = pretty_float ( self.ZK , width = width , precision = precision )
+        zk , expo = pretty_float ( self.__ZK_val , width = width , precision = precision )
         if expo : row = 'ZK' , zk, '10^%+d' % expo
         else    : row = 'ZK' , zk             
         rows.append ( row )
 
-        za , expo = pretty_float ( self.ZA , width = width , precision = precision )
+        za , expo = pretty_float ( self.__ZA_val , width = width , precision = precision )
         if expo : row = 'ZA' , za, '10^%+d' % expo
         else    : row = 'ZA' , za             
         rows.append ( row )
 
-        zc , expo = pretty_float ( self.ZC , width = width , precision = precision )
+        zc , expo = pretty_float ( self.__ZC_val , width = width , precision = precision )
         if expo : row = 'ZC' , zc, '10^%+d' % expo
         else    : row = 'ZC' , zc             
         rows.append ( row )
@@ -327,7 +338,7 @@ class GoF1D(object) :
     
     # =========================================================================
     ## Draw fit CDF & empirical ECDF 
-    def draw  ( self , *args , **kwargs ) :
+    def draw  ( self , opts = '' , *args , **kwargs ) :
         """ Draw fit CDF & empirical CDF
         """
         cdf  = self.__cdf
@@ -353,14 +364,14 @@ class GoF1D(object) :
             self.__frame.draw ()
         else : 
             self.__draw_fun = lambda x : cdf ( x ) 
-            f1_draw   ( self.__draw_fun , color = ROOT.kOrange + 1 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs ) 
+            f1_draw   ( self.__draw_fun , opts , color = ROOT.kOrange + 1 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs ) 
 
-        ecdf.draw ( 'same' , color = 2 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
+        return ecdf.draw ( '%s %s' % ( 'same' , opts ) , color = 2 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
 
 # =============================================================================
 ## @class GoF1DToys
 #  Check Goodness of 1D-fits using toys 
-class GoF1DToys(object) :
+class GoF1DToys(GoF1D) :
     """ Check Goodness of 1D-fits ysing toys 
     """
     ## result of GoGptoys 
@@ -371,52 +382,22 @@ class GoF1DToys(object) :
                    dataset        ,
                    nToys  = 1000  ,
                    silent = False ) :
+
+        assert isinstance ( nToys , int ) and 0 < nToys , "Invalid `nToys` argument!"
+
+        ## initializat the base
+        GoF1D.__init__ ( self , pdf , dataset ) 
+
+        self.__pdf    = pdf
         
-        assert isinstance ( pdf     , PDF1            ) , 'Invalid type of `PDF`:%s'     % type ( pdf     )
-        assert isinstance ( dataset , ROOT.RooDataSet ) , 'Invalid type of `daatset`:%s' % type ( dataset )
-        
-        vars = pdf.vars
-        assert 1 == len ( vars )   , 'GoF1D: Only 1D-pdfs are allowed!'
-        assert pdf.xvar in dataset , 'GoF1D: `xvar`:%s is not in dataset!' % ( self.xvar.name ) 
-        
-        cdf = pdf.cdf ()
-        if hasattr ( pdf.pdf , 'function' ) :
-            fun = pdf.pdf.function()
-            if hasattr ( fun , 'cdf' ) :
-                cdf = fun.cdf() 
-                
-        ## vectorized version of CDF 
-        vct_cdf = np.vectorize ( cdf )
-        
-        ## data in form of numpy sructured array
-        varname = pdf.xvar.name 
-        data    = dataset.tonumpy ( varname ) [ varname ] 
-
-        ## sorted data 
-        self.__data     = np.sort  ( data )
-
-        ## evalute CDF for sorted data 
-        self.__cdf_data = vct_cdf ( self.__data )
-
-        self.__vct_cdf = vct_cdf
-        self.__cdf     = cdf
-        self.__pdf     = pdf
-                
-        self.__ecdfs   = {} 
-
-        self.__KS = kolmogorov_smirnov ( self.__cdf_data )
-        self.__AD = anderson_darling   ( self.__cdf_data )
-        self.__CM = cramer_von_mises   ( self.__cdf_data )
-        self.__ZK = ZK                 ( self.__cdf_data )
-        self.__ZA = ZA                 ( self.__cdf_data )
-        self.__ZC = ZC                 ( self.__cdf_data )
-
         self.__KS_cnt = SE ()
         self.__AD_cnt = SE ()
         self.__CM_cnt = SE ()
         self.__ZK_cnt = SE ()
         self.__ZA_cnt = SE ()
         self.__ZC_cnt = SE ()
+
+        self.__ecdfs  = {}
 
         self.__nToys  = 0 
         if 0 < nToys : self.run ( nToys , silent = silent ) 
@@ -428,18 +409,18 @@ class GoF1DToys(object) :
         """ 
         assert isinstance ( nToys , int ) and 0 < nToys , "Invalid `nToys` argument!"
 
-        N       = len ( self.__data )
         varname = self.__pdf.xvar.name
         
         results = defaultdict(list)
-
+        vct_cdf = self.vcdf
+        
         from ostap.utils.progress_bar import progress_bar 
         for i in progress_bar ( nToys , silent = silent ) :
 
-            dset     = self.__pdf.generate ( N , sample = True )
+            dset     = self.__pdf.generate ( self.N  , sample = True )
             data     = dset.tonumpy ( varname ) [ varname ] 
             data     = np.sort ( data )
-            cdf_data = self.__vct_cdf ( data )
+            cdf_data = vct_cdf ( data )
             
             ks       = kolmogorov_smirnov ( cdf_data )
             ad       = anderson_darling   ( cdf_data )
@@ -519,7 +500,7 @@ class GoF1DToys(object) :
     def kolmogorov_smirnov ( self ) :
         """ Get Kolmogorov-Smirnov statistiscs KS
         """
-        return self.result ( self.__KS , self.__KS_cnt , 'KS' ) 
+        return self.result ( self.kolmogorov_smirnov_estimator , self.__KS_cnt , 'KS' ) 
     
     # ===============================================
     ## Get Anderson-Darling  statistiscs 
@@ -527,7 +508,7 @@ class GoF1DToys(object) :
     def anderson_darling ( self ) :
         """ Get Anderson-Darling statistiscs 
         """
-        return self.result ( self.__AD , self.__AD_cnt , 'AD' ) 
+        return self.result ( self.anderson_darling_estimator , self.__AD_cnt , 'AD' ) 
         
     # =========================================================================
     ## Get Cramer-von Mises statistics 
@@ -535,7 +516,7 @@ class GoF1DToys(object) :
     def cramer_von_mises ( self ) :
         """ Get Cramer-von Mises statistics 
         """
-        return self.result ( self.__CM , self.__CM_cnt , 'CM' ) 
+        return self.result ( self.cramer_von_mises_estimator , self.__CM_cnt , 'CM' ) 
         
     # =========================================================================
     ## Get ZK statististics 
@@ -543,7 +524,7 @@ class GoF1DToys(object) :
     def ZK  ( self ) :
         """ Get ZK statistics 
         """
-        return self.result ( self.__ZK , self.__ZK_cnt , 'ZK' ) 
+        return self.result ( self.ZK_estimator , self.__ZK_cnt , 'ZK' ) 
         
     # =========================================================================
     ## Get ZA statististics 
@@ -551,7 +532,7 @@ class GoF1DToys(object) :
     def ZA  ( self ) :
         """ Get ZA statistics
         """        
-        return self.result ( self.__ZA , self.__ZA_cnt , 'ZA' ) 
+        return self.result ( self.ZA_estimator , self.__ZA_cnt , 'ZA' ) 
     
     # =========================================================================
     ## Get ZC statististics 
@@ -559,14 +540,14 @@ class GoF1DToys(object) :
     def ZC  ( self ) :
         """ Get ZC statistics 
         """        
-        return self.result ( self.__ZC , self.__ZC_cnt , 'ZC' ) 
+        return self.result ( self.ZC_estimator , self.__ZC_cnt , 'ZC' ) 
             
     # =========================================================================
     ## format a row in the table
     def _row  ( self , what , result , width = 5 , precision = 3 ) :
         """ Format a row in the table
         """
-
+        
         value      = result.statistics
         counter    = result.counter
         pvalue     = result.pvalue
@@ -641,7 +622,61 @@ class GoF1DToys(object) :
 
     __repr__ = table
     __str__  = table
+
+    # =========================================================================
+    ## Draw fit CDF & empirical ECDF 
+    def draw  ( self , what , opts = '' , *args , **kwargs ) :
+        """ Draw fit CDF & empirical CDF
+        """
+        if not what or not what  in self.__ecdfs :
+            return GoF1D.draw ( self , opts , *args , **kwargs )
+
+        if   'KS' == what  :
+            result = self.kolmogorov_smirnov 
+            ecdf   = self.__ecdfs [ 'KS' ]
+            logger.info ( 'Toy resuls for Kolmogorov-Smirnov estimate' ) 
+        elif 'AD' == what :
+            result = self.anderson_darling  
+            ecdf   = self.__ecdfs [ 'AD' ]
+            logger.info ( 'Toy resuls for Anderson-Darling estimate' ) 
+        elif 'CM' == what :
+            result = self.cramer_von_mises 
+            ecdf   = self.__ecdfs [ 'CM' ]
+            logger.info ( 'Toy resuls for Cramer-von Mises  estimate' ) 
+        elif 'ZK' == what :
+            result = self.ZK    
+            ecdf   = self.__ecdfs [ 'ZK' ]
+            logger.info ( 'Toy resuls for ZK estimate' ) 
+        elif 'ZA' == what :
+            result = self.ZA   
+            ecdf   = self.__ecdfs [ 'ZA' ]
+            logger.info ( 'Toy resuls for ZK estimate' ) 
+        elif 'ZC' == what :
+            result = self.ZC   
+            ecdf   = self.__ecdfs [ 'ZC' ]
+            logger.info ( 'Toy resuls for ZK estimate' ) 
+        else :
+            logger.error ( "draw: Invalid `what`:%s" % what ) 
+            return GoF1D.draw ( self , opts , *args , **kwargs )
             
+        xmin,xmax = ecdf.xmin () , ecdf.xmax ()
+        value     = result.statistics
+        xmin      = min ( xmin , value )
+        xmax      = max ( xmax , value )
+        xmin , xmax  = axis_range ( xmin , xmax , delta = 0.10 )
+        xmin      = xmin if 0 < xmin else 0 
+        kwargs [ 'xmin' ] = kwargs.get ( 'xmin' , xmin ) 
+        kwargs [ 'xmax' ] = kwargs.get ( 'xmax' , xmax )
+        result    = ecdf.draw  ( opts , *args , **kwargs ) 
+        line      = ROOT.TLine ( value , 0 , value , 1 )
+        ## 
+        line.SetLineWidth ( 4 ) 
+        line.SetLineColor ( 8 ) 
+        line.draw()
+        ## 
+        return result, line  
+
+
 # =============================================================================
 if '__main__' == __name__ :
     
