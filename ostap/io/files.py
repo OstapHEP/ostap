@@ -569,7 +569,7 @@ class Files(object):
     #  chunks = data.split_chunks ( 10 ) 
     #  @endcode 
     def split_chunks ( self , chunk_size = 10 ) :
-        """Split obnject into several chunks of smaller size
+        """ Split object into several chunks of smaller size
         >>> data   = ...
         >>> chunks = data.split_chunks ( 10 ) 
         """
@@ -583,7 +583,7 @@ class Files(object):
     #  chunks = data.split_groups ( 10 ) 
     #  @endcode 
     def split_groups ( self , groups = 10 ) :
-        """Split the object into several groups
+        """ Split the object into several groups
         >>> data   = ...
         >>> groups = data.split_groups ( 10 ) 
         """

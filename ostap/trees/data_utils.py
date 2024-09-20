@@ -70,7 +70,7 @@ if not hasattr ( ROOT.TTree , '__len__' ) :
 #  @author Alexander BARANOV a.baranov@cern.ch
 #  @date   2014-06-08  
 class Data(RootFiles):
-    """Simple utility to access to certain chain in the set of ROOT-files
+    """ Simple utility to access to certain chain in the set of ROOT-files
     >>> data  = Data('Bc/MyTree', '*.root' )
     >>> chain = data.chain
     >>> flist = data.files 
@@ -157,7 +157,7 @@ class Data(RootFiles):
     # ===================================================================================================
     ## the specific action for each file 
     def treatFile ( self, the_file ) :
-        """Add the file to TChain
+        """ Add the file to TChain
         """
         ## (1) suppress Warning/Error messages from ROOT 
         with rootError() :
@@ -207,7 +207,7 @@ class Data(RootFiles):
     #  print ( files.table() )    
     #  @endcode
     def table ( self , title = '' , prefix = '' ) :
-        """Print collection of files as table
+        """ Print collection of files as table
         """
         rows  = [ ( '#' , '#entries' , 'size' , 'name' ) ]
         files = self.files
@@ -263,7 +263,7 @@ class Data(RootFiles):
     # =========================================================================
     ## check operations
     def check_ops ( self , other ):
-        """Check operations
+        """ Check operations
         """
         return isinstance ( other , Data ) and self.chain_name == other.chain_name
 
@@ -287,7 +287,7 @@ class Data(RootFiles):
 #  @author Alexander BARANOV a.baranov@cern.ch
 #  @date   2014-06-08  
 class Data2(Data):
-    """Simple utility to access to certain chain in the set of ROOT-files    
+    """ Simple utility to access to certain chain in the set of ROOT-files    
     >>> data  = Data('Bc/MyTree', '*.root' )
     >>> chain = data.chain
     >>> flist = data.files 
@@ -364,7 +364,7 @@ class Data2(Data):
     
     ## the specific action for each file 
     def treatFile ( self, the_file ) :
-        """Add the file to TChain
+        """ Add the file to TChain
         """
         ## suppress Warning/Error messages from ROOT 
         with rootError() :
@@ -489,7 +489,7 @@ class Data2(Data):
     #  print ( files.table() )    
     #  @endcode
     def table ( self , title = '' , prefix = '' ) :
-        """Print collection of files as table
+        """ Print collection of files as table
         """
         
         rows  = [ ( '#' , '#entries1' , '#entries2' , 'size' , 'name' ) ]

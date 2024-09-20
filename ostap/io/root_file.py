@@ -89,7 +89,7 @@ else                       : logger = getLogger( __name__ )
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 def _rd_setitem_ ( rdir , name , tobj ) :
-    """Write the object to ROOT-file/directory
+    """ Write the object to ROOT-file/directory
     >>> rfile['myhisto'] = h1
     >>> rfile['MyDir/MyHisto'] = h2
     """
@@ -132,7 +132,7 @@ def _rd_setitem_ ( rdir , name , tobj ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2016-06-03
 def _rd_rrshift_ ( rdir , tnamed ) :
-    """Add named object into directory
+    """ Add named object into directory
     
     >>> rdir   = ...    ## some writable ROOT directory
     >>> tnamed = ...    ## some named object
@@ -156,7 +156,7 @@ def _rd_rrshift_ ( rdir , tnamed ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2016-06-03
 def _tnamed_rshift_ ( tnamed , rdir ) :
-    """Add named object into directory
+    """ Add named object into directory
     
     >>>  rdir   = ...    ## some writable ROOT directory
     >>> tnamed = ...    ## some named object
@@ -174,7 +174,7 @@ def _tnamed_rshift_ ( tnamed , rdir ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 def _rd_key_object_ ( rdir , name ) :
-    """Get the (key.,object) pair from ROOT-file/directory
+    """ Get the (key.,object) pair from ROOT-file/directory
     >>> t = f.get_key_object ('A/tup') 
     >>> h = f.get_key_object ('histo') 
     """
@@ -208,7 +208,7 @@ def _rd_key_object_ ( rdir , name ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 def _rd_getitem_ ( rdir , name ) :
-    """Get the object from ROOT-file/directory
+    """ Get the object from ROOT-file/directory
     >>> t = f['A/tup']
     >>> h = f['histo']
     """
@@ -238,7 +238,7 @@ def _rd_getitem_ ( rdir , name ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 def _rd_key_ ( rdir , name ) :
-    """Get the key from ROOT-file/directory
+    """ Get the key from ROOT-file/directory
     """
     ##
     key , obj = _rd_key_object ( rdir , name )
@@ -254,7 +254,7 @@ def _rd_key_ ( rdir , name ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 def _rd_getattr_ ( rdir , name ) :
-    """Get the object from ROOT-file
+    """ Get the object from ROOT-file
     >>> t = f.A.tup
     >>> h = f.myhisto
     """
@@ -280,7 +280,7 @@ def _rd_getattr_ ( rdir , name ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 def _rd_contains_ ( rdir , name ) :
-    """Check the existence of key in the root-file/directory
+    """ Check the existence of key in the root-file/directory
     >>> if not 'myhisto'  in rfile : break 
     >>> if 'MyDir/MyHisto' in rfile : print 'OK!'
     """
@@ -311,7 +311,7 @@ def _rd_contains_ ( rdir , name ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 def _rd_delitem_ ( rdir , name , cycle=';*') :
-    """Delete an object from ROOT file/directory
+    """ Delete an object from ROOT file/directory
     >>> del rfile['h1']
     >>> del rfile['mydir/h1']
     """
@@ -348,7 +348,7 @@ def _rd_delitem_ ( rdir , name , cycle=';*') :
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 def _rd_keys_ ( rdir , recursive = True , no_dir = True ) :
-    """Get all keys from ROOT file/directory
+    """ Get all keys from ROOT file/directory
     >>> keys = rfile.keys() 
     """
     _res = []
@@ -388,7 +388,7 @@ def _rd_keys_ ( rdir , recursive = True , no_dir = True ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 def _rd_iteritems_ ( rdir , fun = lambda k,t,o : True , recursive = True , no_dir = True  ) :
-    """Iterate over the content of ROOT directory/file:
+    """ Iterate over the content of ROOT directory/file:
     >>> for key,obj  in rfile.iteritems()           : print key , obj
     >>> for key,hist in rfile.iteritems( ROOT.TH1 ) : print key , hist
     >>> for key,obj  in rfile.iteritems( lambda name,tkey,obj : name[0]=='M' ) : print key,obj
@@ -425,7 +425,7 @@ def _rd_iteritems_ ( rdir , fun = lambda k,t,o : True , recursive = True , no_di
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 def _rd_iterkeys_ ( rdir , typ = None , recursive = True , no_dir = True ) :
-    """Iterate over the keys in ROOT file/directory 
+    """ Iterate over the keys in ROOT file/directory 
     >>> for key,obj  in rfile.iteritems()           : print key , obj
     >>> for key,hist in rfile.iteritems( ROOT.TH1 ) : print key , hist
     """
@@ -455,7 +455,7 @@ def _rd_iterkeys_ ( rdir , typ = None , recursive = True , no_dir = True ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 def _rd_ikeyskeys_ ( rdir , recursive = True , no_dir = True ) :
-    """Iterator over  keyname/key pairs  from ROOT file/directory
+    """ Iterator over  keyname/key pairs  from ROOT file/directory
     >>> for kname, key in rfile.ikeyskeys() :
     ...    print kname , key.GetClassName()
     """
@@ -493,7 +493,7 @@ def _rd_ikeyskeys_ ( rdir , recursive = True , no_dir = True ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 def _rd_itervalues_ ( rdir , fun = lambda k,t,o : True , recursive = True , no_dir = True ) :
-    """Iterate over the content of ROOT directory/file:
+    """ Iterate over the content of ROOT directory/file:
     >>> for obj  in rfile.itervalues ()             : print obj
     >>> for hist in rfile.itervalues ( ROOT.TH1 )   : print hist
     >>> for obj  in rfile.itervalues ( lambda k,t,o : k[0]=='M' ) : print obj
@@ -531,7 +531,7 @@ def _rd_iter_ ( rdir ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 def _rd_rm_ ( rdir , name , cycle=';*') :
-    """Delete an object from ROOT file/directory
+    """ Delete an object from ROOT file/directory
     >>> rfile.rm( 'h1')
     >>> rfile.rm('mydir/h1')
     """
@@ -550,7 +550,7 @@ def _rd_rm_ ( rdir , name , cycle=';*') :
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 def _rd_get_ ( rdir , name , default = None ) :
-    """Get the object from ROOT-file
+    """ Get the object from ROOT-file
     >>> h1 = rfile.get( 'MyHisto' , default_value ) 
     >>> h2 = rfile.get( 'MyDir/MyHisto')
     """
@@ -610,7 +610,7 @@ def _rd_walk_ ( rdir , topdown = True ) :
 #  with ROOT.TFile('ququ.root') as f : f.ls() 
 #  @endcode
 def _rf_enter_ ( self      ) :
-    """Use ROOT-file with the context manager
+    """ Use ROOT-file with the context manager
     >>> with ROOT.TFile('ququ.root') as f : f.ls() 
     """
     return self
@@ -621,7 +621,7 @@ def _rf_enter_ ( self      ) :
 #  with ROOT.TFile('ququ.root') as f : f.ls() 
 #  @endcode
 def _rf_exit_  ( self , *_ ) :
-    """Use ROOT-file with the context manager    
+    """ Use ROOT-file with the context manager    
     >>> with ROOT.TFile('ququ.root') as f : f.ls()
     """
     try :
@@ -637,7 +637,7 @@ def _rf_exit_  ( self , *_ ) :
 #  for o in rdir.make_graph () : print o.showme() 
 #  @endocode
 def _rd_make_tree_ ( rdir , parent = None , last = False ) :
-    """Create the graphical representation of the directory structure
+    """ Create the graphical representation of the directory structure
     >>> rdir = ...
     >>> for o in rdir.make_graph () : print o.showme() 
     """
@@ -689,7 +689,7 @@ def _rd_make_tree_ ( rdir , parent = None , last = False ) :
 #  print rdir.show_tree()
 #  @endcode
 def _rd_show_tree_ ( rdir , prefix = '' ) :
-    """Show the tree directory structure
+    """ Show the tree directory structure
     >>> rdir = ...
     >>> print rdir.show_tree()
     """
@@ -703,7 +703,7 @@ def _rd_show_tree_ ( rdir , prefix = '' ) :
 #  rdir.ls_tree()
 #  @endcode
 def _rd_ls_tree_ ( rdir ) :
-    """Show the tree directory structure
+    """ Show the tree directory structure
     >>> rdir = ...
     >>> rdir.ls_tree()
     """
@@ -717,7 +717,7 @@ def _rd_ls_tree_ ( rdir ) :
 #  rdir.ls_table ()
 #  @endcode  
 def _rd_table_ ( rdir , prefix = '# ' ) :
-    """Show the content of the directory as a table
+    """ Show the content of the directory as a table
     >>> rdir = ...
     >>> rdir.ls_table ()
     """
@@ -769,7 +769,7 @@ def _rd_table_ ( rdir , prefix = '# ' ) :
 #  rdir.ls_table ()
 #  @endcode  
 def _rd_ls_table_ ( rdir , prefix = '# ' ) :
-    """Show the content of the directory as a table
+    """ Show the content of the directory as a table
     >>> rdir = ...
     >>> rdir.ls_table ()
     """
@@ -868,7 +868,7 @@ def open_mode ( mode ) :
 #  @endcode
 #  @attention  IOError exception is raised for invalid file/open_mode 
 def _rf_new_init_ ( rfile , fname , mode = '' , *args ) :
-    """Open/create ROOT-file without making it a current working directory
+    """ Open/create ROOT-file without making it a current working directory
     >>> print ROOT.gROOT.CurrentDirectory()
     >>> f = ROOT.TFile('test_file.root','recreate')
     >>> print ROOT.gROOT.CurrentDirectory()
@@ -890,7 +890,7 @@ def _rf_new_init_ ( rfile , fname , mode = '' , *args ) :
 #  @endcode
 #  @attention  No exceptions are raised for invalid file/open_mode, unless specified 
 def _rf_new_open_ ( fname , mode = '' , args = () , exception = False ) :
-    """Open/create ROOT-file without making it a current working directory
+    """ Open/create ROOT-file without making it a current working directory
     >>> print ROOT.gROOT.CurrentDirectory()
     >>> f = ROOT.TFile.Open('test_file.root','recreate')
     >>> print ROOT.gROOT.CurrentDirectory()
@@ -923,7 +923,7 @@ def _rf_new_open_ ( fname , mode = '' , args = () , exception = False ) :
 #  print ROOT.gROOT.CurrentDirectory()
 #  @endcode
 def _rf_new_close_ ( rfile , options = '' ) :
-    """Close ROOT-file without making it a current working directory
+    """ Close ROOT-file without making it a current working directory
     >>> print ROOT.gROOT.CurrentDirectory()
     >>> f = ROOT.TFile.Open('test_file.root','recreate')
     >>> print ROOT.gROOT.CurrentDirectory()    
@@ -980,8 +980,9 @@ if not hasattr ( ROOT.TFile , 'close' ) :
 
 
 # =============================================================================
+## `topdir': get the top directory for the given directory"""
 def top_dir ( rdir ) :
-    """```topdir'': get the top directory for the given directory"""
+    """`topdir': get the top directory for the given directory"""
 
     if not rdir : return None
 
@@ -1007,7 +1008,7 @@ ROOT.TDirectory.topdir = property ( top_dir , None , None )
 #  path = rdirt.full_path 
 #  @endcode
 def full_path ( rdir ) :
-    """Get a full path of the directory
+    """ Get a full path of the directory
     >>> rdir = ...
     >>> path = rdir.full_path 
     """
@@ -1033,7 +1034,7 @@ ROOT.TDirectory.full_path = property ( full_path , None , None )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2019-05-16
 class REOPEN(object) :
-    """Trivial context manager to treat TFile.ReOpen for 'UPDATE' mode
+    """ Trivial context manager to treat TFile.ReOpen for 'UPDATE' mode
     >>> tdir = ...
     >>> with REOPEN ( tdir ) as rfile : 
     ...     ...
@@ -1047,7 +1048,7 @@ class REOPEN(object) :
 
     ##  enter the context: try to ReOpen fiel with <code>ReOpen('UPDATE')</code>
     def __enter__ ( self ) :
-        """Enter the context: make a try to reopen the file with `ReOpen('UPDATE')`
+        """ Enter the context: make a try to reopen the file with `ReOpen('UPDATE')`
         """
         
         self.read = self.tfile.GetOption() == 'READ'
@@ -1060,7 +1061,7 @@ class REOPEN(object) :
 
     ## exit the context : return the mode to <code>READ</code> is needed 
     def __exit__ (  self , *_ ) :
-        """Exit the context: return mode to READ if needed 
+        """ Exit the context: return mode to READ if needed 
         """
         if self.read :
             with ROOTCWD() : 
@@ -1077,7 +1078,7 @@ from ostap.core.core import _rd_valid_
 #  len(rdir) 
 #  @endcode  
 def  _rd_len_ ( rdir ) :
-    """Length of the directory : (recursive) number of keys
+    """ Length of the directory : (recursive) number of keys
     >>> rdir = ...
     >>> len(rdir) 
     """
@@ -1109,7 +1110,7 @@ ROOT.TDirectory.__len__ = _rd_len_
 # ========================================================================
 ## copy ROOT file (possible with protocol)
 def copy_file ( source , destination , progress = True ) :
-    """Copy ROOT file (possible with protocol)
+    """ Copy ROOT file (possible with protocol)
     """
 
     ## (1) trivial copy as plain file 
@@ -1142,7 +1143,7 @@ copy_root_file = copy_file
 ## @class RootFiles
 #  Some specialzation of gheneric class Files for ROOT files
 class RootFiles(Files) :
-    """Specialzation of gheneric class Files for ROOT files
+    """ Specialzation of gheneric class Files for ROOT files
     - it is aware of the ROOT protocols as file names. 
     """
     ## protocols for remote (ROOT) files 
@@ -1166,7 +1167,7 @@ class RootFiles(Files) :
     ## Strip protocol from the file name    
     @staticmethod 
     def strip_protocol ( fname ) :
-        """Strip ROOT protocol from the file name"""
+        """ Strip ROOT protocol from the file name"""
         for p in RootFiles.root_protocols :
             if p and fname.startswith ( p ) : return fname.replace ( p , '' ) 
         return fname
@@ -1174,7 +1175,7 @@ class RootFiles(Files) :
     # =========================================================================
     ## Get the list of files from the patterns 
     def the_files ( self ) :
-        """Get the list of files from the patterns"""
+        """ Get the list of files from the patterns"""
 
         # 1. get the regular files
         files = set ( Files.the_files ( self ) )
@@ -1212,7 +1213,7 @@ class RootFiles(Files) :
     #  - new directory will be created (if needed)
     #  - common path (prefix) for all files will be replaced by new directory
     def copy_files ( self , new_dir = None , parallel = False , also_bad = False ) :
-        """Copy all the files to new directory
+        """ Copy all the files to new directory
         - new directory will be created (if needed)
         - common path (prefix) for all files will be replaced by new directory
         """
@@ -1278,7 +1279,7 @@ class RootFiles(Files) :
     #  @param fname input file name
     #  @return ROOT file sizeor -1 for non-existingt/invalid files
     def get_file_size ( self , fname ) :
-        """Get the siz eof the file
+        """ Get the size of the file
         - fname : input file name
         - return file size or -1 for non-existing/invalid files
         """
@@ -1324,7 +1325,7 @@ class RootFiles(Files) :
     # -f0                                  Do not compress the target file
     # -f6                                  Use compression level 6. (See TFile::SetCompressionSettings for the support range of value.)    
     def hadd ( self , output = None , opts = "-ff -O" , **kwargs ) :
-        """Merge all files using <code>hadd</code> script from ROOT
+        """ Merge all files using <code>hadd</code> script from ROOT
         - `output`  name of the output merged file
         - `opts`   options for command <code>hadd</code>
         It returns the name of the merged file
@@ -1364,7 +1365,7 @@ class RootFiles(Files) :
     #  merged = data.merge_chunks ( 10 ) 
     #  @endcode 
     def __merge_chunks (  self , chunks , opts = '-ff -O' , parallel = True ) :
-        """Split data into severals chunks of smaller size and merge (using <code>hadd</code>) each chunk        
+        """ Split data into severals chunks of smaller size and merge (using <code>hadd</code>) each chunk        
         >>> data   = ..
         >>> merged = data.merge_chunks ( 10 ) 
         """
@@ -1406,7 +1407,7 @@ class RootFiles(Files) :
     #  merged = data.merge_chunks ( 10 ) 
     #  @endcode 
     def merge_chunks (  self , chunk_size , opts = '-ff -O' , parallel = True ) :
-        """Split data into severals chunks of smaller size and merge (using <code>hadd</code>) each chunk        
+        """ Split data into severals chunks of smaller size and merge (using <code>hadd</code>) each chunk        
         >>> data   = ..
         >>> merged = data.merge_chunks ( 10 ) 
         """
@@ -1420,13 +1421,12 @@ class RootFiles(Files) :
     #  merged = data.merge_groups ( 10 ) 
     #  @endcode 
     def merge_groups (  self , groups , opts = '-ff -O' , parallel = True ) :
-        """Split data into severals groups and merge (using <code>hadd</code>) each group
+        """ Split data into severals groups and merge (using <code>hadd</code>) each group
         >>> data   = ..
-        >>> merged = data.merge_chunks ( 10 ) 
+        >>> merged = data.merge_groups ( 10 ) 
         """
         chunks = self.split_groups ( groups )  
         return self.__merge_chunks ( chunks , opts = opts , parallel = parallel )
-
 
 # =============================================================================
 _decorated_classes_ = (
