@@ -149,7 +149,7 @@ def test_simple_loop ()  :
 #   - loop over the good entries in the chain,
 #   - fill dataset 
 def test_loop_with_cuts ()  :
-    """More advanced test
+    """ More advanced test
     - loop over the good entries in the chain,
     - fill dataset    
     """
@@ -161,7 +161,7 @@ def test_loop_with_cuts ()  :
         varset = ROOT.RooArgSet   ( mass , c2dtf , pt )
         dataset = ROOT.RooDataSet  ( dsID() , 'Test Data set-1' , varset )
         
-        for i in data.chain.withCuts ( cuts  ) :
+        for i , _ in data.chain.withCuts ( cuts  ) :
             
             v_mass  = i.mass
             v_c2dtf = i.c2dtf
@@ -183,7 +183,7 @@ def test_loop_with_cuts ()  :
 #   - filter good entries 
 #   - fill dataset 
 def test_simple_selector ()  :
-    """Use trivial selector to loop over the  chain 
+    """ Use trivial selector to loop over the  chain 
     - loop over the entries in the chain using selector
     - filter good entries 
     - fill dataset 
@@ -240,7 +240,7 @@ def test_simple_selector ()  :
 #   - loop over the good entries in the chain using selector
 #   - fill dataset 
 def test_selector_with_cuts ()  :
-    """Use selector-with-cuts to loop over good entries in  the  chain 
+    """ Use selector-with-cuts to loop over good entries in  the  chain 
     - loop over the good entries in the chain using selector
     - fill dataset 
     """
@@ -291,7 +291,7 @@ def test_selector_with_cuts ()  :
 ## Use dedicated selector-with-vars (1) to loop
 #  over good entries in  the  chain and fill   dataset 
 def test_selector_with_vars1 ()  :
-    """Use dedicated selector-with-vars (1) to loop
+    """ Use dedicated selector-with-vars (1) to loop
     over good entries in  the  chain and fill   dataset 
     """
     
@@ -340,7 +340,7 @@ def test_selector_with_vars2 ()  :
 ## Use dedicated selector-with-vars (3) to loop
 #  over good entries in  the  chain and fill   dataset 
 def test_selector_with_vars3 ()  :
-    """Use dedicated selector-with-vars (3) to loop
+    """ Use dedicated selector-with-vars (3) to loop
     over good entries in  the  chain and fill   dataset 
     """
     
