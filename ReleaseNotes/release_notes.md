@@ -14,7 +14,8 @@
   1. add weight to `tree.withCut` and other tree-looping methods     
   1. Tiny tweak for treatment of drawing ranges for `f1_draw/f2_draw/f3_draw` fnuctions: form now the explicit setting has  a precedence. 
   1. `ostap.stats.gof1d` : improve drawing methods 
-     
+  1. Add Kuiper's Goodness-of-Fit estimator to `ostap.stats.gof1d`
+         
 ## Backward incompatible
 
    1. add `weight` to `tree.withCut` and other tree-looping methods     
@@ -23,7 +24,6 @@
     
   1. fix typo in `ostap.math.bnase.axis_range` 
 
-    
 # v1.13.3.0
 
 ## New features

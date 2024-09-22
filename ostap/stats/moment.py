@@ -33,7 +33,7 @@ __date__    = "2020-06-08"
 __all__     = ()
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, num_types
-from   ostap.math.base        import isfinite, isequal  
+from   ostap.math.base        import isfinite, isequal, pos_infinity, neg_infinity  
 from   ostap.core.core        import Ostap, VE
 from   ostap.core.meta_info   import root_version_int, root_info 
 from   ostap.logger.pretty    import pretty_float, pretty_ve
@@ -54,7 +54,7 @@ else                       : logger = getLogger ( __name__             )
 #  @endcode
 #  If order of the moment-counter exceeds 1, the uncertainty is also evaluated 
 def _om_mean ( obj ) :
-    """Get a mean for the moment-counter
+    """ Get a mean for the moment-counter
     >>> m = ...
     >>> v = m.mean() 
     - If order of the moment-counter exceeds 1, the uncertainty is also evaluated 
@@ -73,7 +73,7 @@ def _om_mean ( obj ) :
 #  @endcode
 #  If order of the moment-counter exceeds 3, the uncertainty is also evaluated 
 def _om_variance ( obj ) :
-    """Get a variance for the moment-counter
+    """ Get a variance for the moment-counter
     >>> m = ...
     >>> v = m.variance() 
     - If order of the moment-counter exceeds 3, the uncertainty is also evaluated 
@@ -91,7 +91,7 @@ def _om_variance ( obj ) :
 #  v = m.skewness () 
 #  @endcode
 def _om_skewness ( obj ) :
-    """Get a skewness for the moment-counter
+    """ Get a skewness for the moment-counter
     >>> m = ...
     >>> v = m.skewness() 
     """    
@@ -109,7 +109,7 @@ def _om_skewness ( obj ) :
 #  v = m.kurtosis () 
 #  @endcode
 def _om_kurtosis ( obj ) :
-    """Get an excess  kurtosis  for the moment-counter
+    """ Get an excess  kurtosis  for the moment-counter
     >>> m = ...
     >>> v = m.kurtosis () 
     """    
@@ -127,7 +127,7 @@ def _om_kurtosis ( obj ) :
 #  v = m.cumulant1() 
 #  @endcode
 def _om_cumulant_1st( obj ) :
-    """Get 1st unbiased cumulant, well it is equal to the mean
+    """ Get 1st unbiased cumulant, well it is equal to the mean
     
     >>> m = ...
     >>> v = m.cumulant_1st() 
@@ -141,7 +141,7 @@ def _om_cumulant_1st( obj ) :
 #  v = m.cumulant2() 
 #  @endcode
 def _om_cumulant_2nd ( obj ) :
-    """Get 2nd unbiased cumulant, well it is equal to the variance 
+    """ Get 2nd unbiased cumulant, well it is equal to the variance 
     
     >>> m = ...
     >>> v = m.cumulant2() 
@@ -161,7 +161,7 @@ def _om_cumulant_2nd ( obj ) :
 #  v = m.cumulant_3rd() 
 #  @endcode
 def _om_cumulant_3rd ( obj ) :
-    """Get 3rd unbiased cumulant, well it is equal to the 3rd central moment 
+    """ Get 3rd unbiased cumulant, well it is equal to the 3rd central moment 
     
     >>> m = ...
     >>> v = m.cumulant_3rd() 
@@ -189,7 +189,7 @@ def _om_cumulant_3rd ( obj ) :
 #  v = m.cumulant_4th() 
 #  @endcode
 def _om_cumulant_4th ( obj ) :
-    """Get 4th unbiased cumulant, well it is equal to the 3rd central moment 
+    """ Get 4th unbiased cumulant, well it is equal to the 3rd central moment 
     
     >>> m = ...
     >>> v = m.cumulant_4th() 
@@ -215,7 +215,7 @@ def _om_cumulant_4th ( obj ) :
 #  v = m.unbiased_2nd() 
 #  @endcode
 def _om_u2nd ( obj ) :
-    """Get an unbiased 2nd order moment from the moment-counter 
+    """ Get an unbiased 2nd order moment from the moment-counter 
     >>> m = ...
     >>> v = m.unbiased_3nd() 
     """    
@@ -231,7 +231,7 @@ def _om_u2nd ( obj ) :
 #  v = m.unbiased_3rd() 
 #  @endcode
 def _om_u3rd ( obj ) :
-    """Get an unbiased 3rd order moment fro the moment-counter 
+    """ Get an unbiased 3rd order moment fro the moment-counter 
     >>> m = ...
     >>> v = m.unbiased_3rd() 
     """    
@@ -247,7 +247,7 @@ def _om_u3rd ( obj ) :
 #  v = m.unbiased_4th() 
 #  @endcode
 def _om_u4th ( obj ) :
-    """Get an unbiased 4th order moment from the moment-counter 
+    """ Get an unbiased 4th order moment from the moment-counter 
     >>> m = ...
     >>> v = m.unbiased_4th() 
     """    
@@ -263,7 +263,7 @@ def _om_u4th ( obj ) :
 #  v = m.unbiased_5th() 
 #  @endcode
 def _om_u5th ( obj ) :
-    """Get an unbiased 5th order moment from the moment-counter 
+    """ Get an unbiased 5th order moment from the moment-counter 
     >>> m = ...
     >>> v = m.unbiased_5th() 
     """    
@@ -271,12 +271,6 @@ def _om_u5th ( obj ) :
     if root_info < ( 6 , 18 ) :
         return obj.moment ( 5 )    
     return Ostap.Math.Moments.unbiased_5th ( obj )  
-
-
-
-pos_infinity = float('+Inf')
-neg_infinity = float('-Inf')
-
 
 # =============================================================================
 ## get central moment 
@@ -346,7 +340,7 @@ _om_cm3.__doc__ = \
 #  v = m.cumulant ( 4 ) 
 #  @endcode
 def _om_cumulant_ ( obj , order ) :
-    """ Get th ecumulant 
+    """ Get the cumulant 
     >>> m = ...
     >>> v = m.cumulant ( 3 ) ## ditto 
     """
@@ -368,7 +362,7 @@ if (6,22) <= root_info :
 #  v = m.rms  () 
 #  @endcode
 def _om_rms  ( obj ) :
-    """Get a RMS value for the moment-counter
+    """ Get a RMS value for the moment-counter
     >>> m = ...
     >>> v = m.rms () 
     """    
@@ -387,7 +381,7 @@ def _om_rms  ( obj ) :
 #  t = m.table()
 #  @endcode  
 def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
-    """Print object as a table
+    """ Print object as a table
     >>> m = ...
     >>> t = m.table()
     """
@@ -663,7 +657,7 @@ if not hasattr ( WM1 , 'order' ) : WM1.order = 1
 # ============================================================
 ## equality for two counters  
 def _mom0_eq_  ( cnt , another ) :
-    """Equality for two Ostap.Math.Momemnt_<0> counters
+    """ Equality for two Ostap.Math.Momemnt_<0> counters
     """
     ## The same base type
     if not isinstance ( another , Ostap.Math.Moment ) : return NotImplemented
@@ -676,7 +670,7 @@ def _mom0_eq_  ( cnt , another ) :
 # ============================================================
 ## equality for two counters  
 def _mom1_eq_  ( cnt , another ) :
-    """Equality for two Ostap.Math.Momemnt_<1> counters
+    """ Equality for two Ostap.Math.Momemnt_<1> counters
     """
     ## The same base type
     if not isinstance ( another , Ostap.Math.Moment ) : return NotImplemented
@@ -688,7 +682,7 @@ def _mom1_eq_  ( cnt , another ) :
 # ============================================================
 ## equality for two counters  
 def _momN_eq_  ( cnt , another ) :
-    """Equality for two Ostap.Math.Moment_<N> counters
+    """ Equality for two Ostap.Math.Moment_<N> counters
     """
     ## The same base type
     if not isinstance ( another , Ostap.Math.Moment ) : return NotImplemented
@@ -706,7 +700,7 @@ M1                . __eq__ = _mom1_eq_
 # ============================================================
 ## equality for two counters  
 def _wmom0_eq_  ( cnt , another ) :
-    """Equality for two Ostap.Math.Momemnt_<0> counters
+    """ Equality for two Ostap.Math.Momemnt_<0> counters
     """
     ## The same base type
     if not isinstance ( another , Ostap.Math.WMoment ) : return NotImplemented
@@ -724,7 +718,7 @@ def _wmom0_eq_  ( cnt , another ) :
 # ============================================================
 ## equality for two counters  
 def _wmom1_eq_  ( cnt , another ) :
-    """Equality for two Ostap.Math.WMomemnt_<1> counters
+    """ Equality for two Ostap.Math.WMomemnt_<1> counters
     """
     ## The same base type
     if not isinstance ( another , Ostap.Math.WMoment ) : return NotImplemented
@@ -736,7 +730,7 @@ def _wmom1_eq_  ( cnt , another ) :
 # ============================================================
 ## equality for two counters  
 def _wmomN_eq_  ( cnt , another ) :
-    """Equality for two Ostap.Math.WMoment_<N> counters
+    """ Equality for two Ostap.Math.WMoment_<N> counters
     """
     ## The same base type
     if not isinstance ( another , Ostap.Math.WMoment ) : return NotImplemented
@@ -759,19 +753,19 @@ from ostap.math.reduce import root_factory
 # ==========================================================
 ## Redude Ostap::Math::Moment_<0>
 def _mom0_reduce_ ( cnt ) :
-    """Redude Ostap::Math::Moment_<0>
+    """ Reduce Ostap::Math::Moment_<0>
     """
     return root_factory , ( type ( cnt ), cnt.size  () )
 # =========================================================
 ## Redude Ostap::Math::Moment_<1>
 def _mom1_reduce_ ( cnt ) :
-    """Redude Ostap::Math::Moment_<1>
+    """ Reduce Ostap::Math::Moment_<1>
     """
     return root_factory , ( type ( cnt ), cnt.mu () , cnt.previous () )
 # ========================================================
 ## Redude Ostap::Math::Moment_<N>
 def _momN_reduce_ ( cnt ) :
-    """Redude Ostap::Math::Moment_<N>
+    """ Reduce Ostap::Math::Moment_<N>
     """
     return root_factory , ( type ( cnt ), cnt.moment () , cnt.previous () )
 
@@ -782,19 +776,19 @@ M1                . __reduce__ = _mom1_reduce_
 # ==========================================================
 ## Redude Ostap::Math::WMoment_<0>
 def _wmom0_reduce_ ( cnt ) :
-    """Redude Ostap::Math::WMoment_<0>
+    """ Reduce Ostap::Math::WMoment_<0>
     """
     return root_factory , ( type ( cnt ), cnt.size  () , cnt.w() , cnt.w2 () )
 # =========================================================
 ## Redude Ostap::Math::WMoment_<1>
 def _wmom1_reduce_ ( cnt ) :
-    """Redude Ostap::Math::WMoment_<1>
+    """ Reduce Ostap::Math::WMoment_<1>
     """
     return root_factory , ( type ( cnt ), cnt.mu () , cnt.previous () )
 # ========================================================
 ## Redude Ostap::Math::WMoment_<N>
 def _wmomN_reduce_ ( cnt ) :
-    """Redude Ostap::Math::WMoment_<N>
+    """ Reduce Ostap::Math::WMoment_<N>
     """
     return root_factory , ( type ( cnt ), cnt.moment () , cnt.previous () )
 
@@ -811,7 +805,7 @@ WM1                . __reduce__ = _wmom1_reduce_
 #  @see Ostap::Math::WGeometricMean
 #  @see Ostap::Math::WHarmonicMean
 def _mn_reduce_ ( cnt ) :
-    """Serialization of Harmonic&Geometric means
+    """ Serialization of Harmonic&Geometric means
     - see Ostap::Math::GeometricMean
     - see Ostap::Math::HarmonicMean
     - see Ostap::Math::WGeometricMean
@@ -832,7 +826,7 @@ Ostap.Math.WArithmeticMean . __reduce__ = _mn_reduce_
 #  @see Ostap::Math::PoweMean
 #  @see Ostap::Math::WPoweMean
 def _pm_reduce_ ( cnt ) :
-    """Serialization of Power means
+    """ Serialization of Power means
     - see Ostap::Math::PowerMean
     - see Ostap::Math::WPowerMean
     """
@@ -846,7 +840,7 @@ Ostap.Math.WPowerMean  . __reduce__ = _pm_reduce_
 #  @see Ostap::Math::LehmerMean
 #  @see Ostap::Math::WLehmerMean
 def _lm_reduce_ ( cnt ) :
-    """Serialization of Lehmermeans
+    """ Serialization of Lehmer means
     - see Ostap::Math::LehmerMean
     - see Ostap::Math::WLehmerMean
     """
@@ -860,7 +854,7 @@ Ostap.Math.WLehmerMean  . __reduce__ = _lm_reduce_
 #  @see Ostap::Math::MinMaxValue 
 #  @see Ostap::Math::WMinMaxValue
 def _nx_reduce_ ( cnt ) :
-    """Serialization of MinMax values 
+    """ Serialization of MinMax values 
     - see Ostap::Math::MinMaxValue 
     - see Ostap::Math::WMinMaxValue 
     """
@@ -878,7 +872,7 @@ Ostap.Math.WMinMaxValue . __reduce__ = _nx_reduce_
 #  @see Ostap::Math::WHarmonicMean
 #  @see Ostap::Math::WArithmeticMean
 def _mn_eq_ ( cnt , another ) :
-    """Equality Harmonic&Geometric means
+    """ Equality Harmonic&Geometric means
     - see Ostap::Math::GeometricMean
     - see Ostap::Math::HarmonicMean
     - see Ostap::Math::ArithmeticMean
@@ -896,7 +890,6 @@ Ostap.Math.ArithmeticMean  . __eq__ = _mn_eq_
 Ostap.Math.WGeometricMean  . __eq__ = _mn_eq_
 Ostap.Math.WHarmonicMean   . __eq__ = _mn_eq_
 Ostap.Math.WArithmeticMean . __eq__ = _mn_eq_
-
 
 _decorated_classes = (
     Ostap.Math.Moment          ,

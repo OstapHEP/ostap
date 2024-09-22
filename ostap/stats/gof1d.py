@@ -15,13 +15,22 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2024-09-16"
 __all__     = (
+    'komogorov_smirnov' , ## Kolmogorov-Sminov GoF estimator 
+    'anderson_darling'  , ## Anderson-Darling  GoF estimator 
+    'cramer_von_mises'  , ## Cramer-von Mises  GoF estimator 
+    'kuiper'            , ## Kuiper            GoF estimator 
+    'ZK'                , ## ZK                GoF estimator
+    'ZA'                , ## ZA                GoF estimator
+    'ZC'                , ## ZC                GoF estimator
+    'GoF1D'             , ## helper utility for GoF estimate 
+    'GoF1DToys'         , ## helper utility for GoF estimate with toys 
     )
 # =============================================================================
 from   collections            import defaultdict, namedtuple
 from   ostap.core.meta_info   import root_info 
 from   ostap.fitting.funbasic import AFUN1
 from   ostap.fitting.pdfbasic import PDF1
-from   ostap.core.core        import SE, VE, Ostap
+from   ostap.core.core        import SE, VE, Ostap, cidict_fun 
 from   ostap.math.base        import doubles, axis_range  
 from   ostap.math.models      import f1_draw 
 from   ostap.math.math_ve     import significance
@@ -45,13 +54,13 @@ logger.debug ( 'Simple utilities for goodness-of-1D-fit studies' )
 if  ( 6 , 32 ) <= root_info : data2vct = lambda s : s
 else                        : data2vct = lambda s : doubles ( s ) 
 # =============================================================================
-## Get Kolmogorov-Smirnov statistis KS
+## Get Kolmogorov-Smirnov statistics KS
 #  @code
 #  cdf_data =...
 #  ks2  = kolmogorov_smirnov ( cdf_data )
 #  @endcode
 #  @param cdf_data sorted array of F0(X_i) - values of CDF at X data points
-#  @return Kolmogorov-Smirnov statistisc KS
+#  @return Kolmogorov-Smirnov statistics KS
 def kolmogorov_smirnov ( cdf_data ) :
     """ Get Kolmogorov-Smirnov statistis  KS
     - `cdf_data` : sorted array of F0(X_i) - values of CDF at (sorted) X data points
@@ -60,7 +69,7 @@ def kolmogorov_smirnov ( cdf_data ) :
     """
     n      = len ( cdf_data ) 
     result = max ( max ( ( i + 1.0 ) / n - Fi , Fi - float ( i ) / n ) for ( i, Fi )  in enumerate ( cdf_data )  ) 
-    return math.sqrt ( result ) 
+    return math.sqrt ( result )
 # =============================================================================
 ## Get Anderson-Darling  statistiscs AD^2
 #  @code
@@ -68,7 +77,7 @@ def kolmogorov_smirnov ( cdf_data ) :
 #  ad2      = anderson_darling ( cdf_data )
 #  @endcode
 #  @param cdf_data sorted array of F0(X_i) - values of CDF at (sorted) X data points
-#  @return Anderson-Darling statistisc AD^2
+#  @return Anderson-Darling statistics AD^2
 def anderson_darling ( cdf_data ) :
     """ Get Anderson-Darling statistiscs AD^2
     - `cdf_data` : sorted array of F0(X_i) - values of CDF at X data points
@@ -88,7 +97,7 @@ def anderson_darling ( cdf_data ) :
 #  cm2      = cramer_von_mises ( cdf_data )
 #  @endcode
 #  @param cdf_data sorted array of F0(X_i) - values of CDF at X data points
-#  @return Cramer-von Mises statistisc CM^2
+#  @return Cramer-von Mises statistics CM^2
 def cramer_von_mises ( cdf_data  ) :
     """ Get Cramer-von Mises statistics CM^2
     - `cdf_data` : sorted array of F0(X_i) - values of CDF at (sorted) X data points
@@ -98,15 +107,35 @@ def cramer_von_mises ( cdf_data  ) :
     n       = len ( cdf_data ) 
     result  = sum ( ( Fi - ( i + 0.5 ) / n ) ** 2 for ( i, Fi ) in enumerate ( cdf_data ) ) 
     result += 12.0 / n
-    return result
+    return result#
+# =============================================================================
+## Get Kuiper's statistis K
+#  @code
+#  cdf_data =...
+#  k        = kuiper ( cdf_data )
+#  @endcode
+#  @param cdf_data sorted array of F0(X_i) - values of CDF at X data points
+#  @return Kolmogorov-Smirnov statistics K
+def kuiper ( cdf_data ) :
+    """ Get Kuiper statistis  KS
+    - `cdf_data` : sorted array of F0(X_i) - values of CDF at (sorted) X data points
+    >>> cdf_data =...
+    >>> ks2  = kolmogorov_smirnov ( cdf_data )
+    """
+    n       = len ( cdf_data ) 
+    d_plus  = max ( ( i + 1.0 ) / n - Fi for ( i, Fi ) in enumerate ( cdf_data ) )
+    d_minus = max ( Fi - ( i + 1.0 ) / n for ( i, Fi ) in enumerate ( cdf_data ) )
+    result  = d_plus + d_minus  
+    return result 
 # =============================================================================
 ## Get ZK statististics
 #  @code
 #  cdf_data = ...
 #  zk       = ZK ( cdf_data )
 #  @endcode
+#  @see https://doi.org/10.1111/1467-9868.00337
 #  @param cdf_data sorted array of F0(X_i) - values of CDF at X data points
-#  @return ZK statistisc ZK 
+#  @return ZK statistics ZK 
 def ZK  ( cdf_data ) :
     """ Get ZK statististics 
     - `cdf_data` : sorted array of F0(X_i) - values of CDF at X data points
@@ -124,8 +153,9 @@ def ZK  ( cdf_data ) :
 #  cdf_data = ...
 #  za       = ZA ( cdf_data )
 #  @endcode
+#  @see https://doi.org/10.1111/1467-9868.00337
 #  @param cdf_data sorted array of F0(X_i) - values of CDF at X data points
-#  @return ZA statistisc ZA 
+#  @return ZA statistics ZA 
 def ZA  ( cdf_data ) :
     """ Get ZA statististics 
     - `cdf_data` : sorted array of F0(X_i) - values of CDF at (sorted) X data points
@@ -143,8 +173,9 @@ def ZA  ( cdf_data ) :
 #  cdf_data = ...
 #  zc       = ZC ( cdf_data )
 #  @endcode
+#  @see https://doi.org/10.1111/1467-9868.00337
 #  @param cdf_data sorted array of F0(X_i) - values of CDF at X data points
-#  @return ZC statistisc ZC
+#  @return ZC statistics ZC
 def ZC  ( cdf_data ) :
     """ Get ZC statististics 
     - `cdf_data` : sorted array of F0(X_i) - values of CDF at (sorted) X data points
@@ -155,6 +186,7 @@ def ZC  ( cdf_data ) :
     flog   = math.log
     result = sum ( ( flog ( ( 1.0 / Fi - 1 ) / ( ( n - 0.5 ) / ( i + 0.25 ) - 1 ) ) ) ** 2 for ( i , Fi ) in enumerate ( cdf_data ) )
     return result 
+# ==============================================================================
     
 # =============================================================================
 ## @class GoF1D
@@ -176,10 +208,16 @@ class GoF1D(object) :
         assert pdf.xvar in dataset , 'GoF1D: `xvar`:%s is not in dataset!' % ( self.xvar.name ) 
         
         cdf = pdf.cdf ()
+        if hasattr ( pdf.pdf , 'setPars'  ) : pdf.pdf.setPars() 
         if hasattr ( pdf.pdf , 'function' ) :
+            if hasattr ( pdf.pdf , 'setPars'  ) : pdf.pdf.setPars() 
             fun = pdf.pdf.function()
             if hasattr ( fun , 'cdf' ) :
-                cdf = fun.cdf() 
+                try :                    
+                    a = fun.cdf ( 0.0 )
+                    self.__store = pdf, fun 
+                    def cdf ( x ) : return fun.cdf ( x ) 
+                except TypeError : pass 
 
         self.__cdf   = cdf
         self.__xmnmx = pdf.xminmax()
@@ -206,6 +244,7 @@ class GoF1D(object) :
         self.__ZK_val   = ZK                 ( self.__cdf_data )
         self.__ZA_val   = ZA                 ( self.__cdf_data )
         self.__ZC_val   = ZC                 ( self.__cdf_data )
+        self.__K_val    = kuiper             ( self.__cdf_data )
                
     # =========================================================================
     ## size of dataset
@@ -290,7 +329,15 @@ class GoF1D(object) :
     def ZC_estimator ( self ) :
         """ Get ZC statistics
         """        
-        return self.__ZC_val 
+        return self.__ZC_val
+    
+    # =========================================================================
+    ## Get Kuiper  statististics 
+    @property 
+    def kuiper_estimator ( self ) :
+        """ Get Kuiperstatistics
+        """        
+        return self.__K_val 
                 
     # ==========================================================================
     ## Print the summary as Table
@@ -315,6 +362,11 @@ class GoF1D(object) :
         else    : row = 'Cramer-von Mises' , cm              
         rows.append ( row )
 
+        k , expo = pretty_float ( self.__K_val , width = width , precision = precision )
+        if expo : row = 'Kuiper' , k , '10^%+d' % expo
+        else    : row = 'Kuiper' , k              
+        rows.append ( row )
+
         zk , expo = pretty_float ( self.__ZK_val , width = width , precision = precision )
         if expo : row = 'ZK' , zk, '10^%+d' % expo
         else    : row = 'ZK' , zk             
@@ -330,6 +382,7 @@ class GoF1D(object) :
         else    : row = 'ZC' , zc             
         rows.append ( row )
 
+        
         title = title if title else 'Goodness of 1D-fit' 
         return T.table ( rows , title = title , prefix = prefix , alignment = 'lcl' )
 
@@ -369,6 +422,14 @@ class GoF1D(object) :
         return ecdf.draw ( '%s %s' % ( 'same' , opts ) , color = 2 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
 
 # =============================================================================
+KS_keys = 'ks' , 'kolmogorov' , 'kolmogorovsmirnov' 
+AD_keys = 'ad' , 'andersen'   , 'andersendarling' 
+CM_keys = 'cm' , 'cramer'     , 'cramervonmises' 
+ZK_keys = 'zk' ,
+ZA_keys = 'za' ,
+ZC_keys = 'zc' ,
+K_keys  = 'k'  , 'kuiper'  
+# =============================================================================
 ## @class GoF1DToys
 #  Check Goodness of 1D-fits using toys 
 class GoF1DToys(GoF1D) :
@@ -396,6 +457,7 @@ class GoF1DToys(GoF1D) :
         self.__ZK_cnt = SE ()
         self.__ZA_cnt = SE ()
         self.__ZC_cnt = SE ()
+        self.__K_cnt  = SE ()
 
         self.__ecdfs  = {}
 
@@ -428,6 +490,7 @@ class GoF1DToys(GoF1D) :
             zk       = ZK                 ( cdf_data )
             za       = ZA                 ( cdf_data )
             zc       = ZC                 ( cdf_data )
+            k        = kuiper             ( cdf_data )
             
             self.__KS_cnt += ks 
             self.__AD_cnt += ad 
@@ -435,6 +498,7 @@ class GoF1DToys(GoF1D) :
             self.__ZK_cnt += zk 
             self.__ZA_cnt += za 
             self.__ZC_cnt += zc 
+            self.__K_cnt  += k 
 
             results [ 'KS'  ].append ( ks )    
             results [ 'AD'  ].append ( ad ) 
@@ -442,6 +506,7 @@ class GoF1DToys(GoF1D) :
             results [ 'ZK'  ].append ( zk ) 
             results [ 'ZA'  ].append ( za ) 
             results [ 'ZC'  ].append ( zc ) 
+            results [ 'K'   ].append ( k  ) 
 
             ## delete data
             if isinstance ( dset , ROOT.RooDataSet ) : 
@@ -541,7 +606,15 @@ class GoF1DToys(GoF1D) :
         """ Get ZC statistics 
         """        
         return self.result ( self.ZC_estimator , self.__ZC_cnt , 'ZC' ) 
-            
+
+    # =========================================================================
+    ## Get Kuiper statististics 
+    @property 
+    def kuiper ( self ) :
+        """ Get Kuiper statistics 
+        """        
+        return self.result ( self.kuiper_estimator , self.__K_cnt , 'K' ) 
+    
     # =========================================================================
     ## format a row in the table
     def _row  ( self , what , result , width = 5 , precision = 3 ) :
@@ -592,6 +665,7 @@ class GoF1DToys(GoF1D) :
         rows.append ( self._row ( 'Kolmogorov-Smirnov' , self.kolmogorov_smirnov , width = width , precision = precision ) )
         rows.append ( self._row ( 'Anderson-Darling'   , self.anderson_darling   , width = width , precision = precision ) )
         rows.append ( self._row ( 'Cramer-von Mises'   , self.cramer_von_mises   , width = width , precision = precision ) )
+        rows.append ( self._row ( 'Kuiper'             , self.kuiper             , width = width , precision = precision ) )
         rows.append ( self._row ( 'ZK'                 , self.ZK                 , width = width , precision = precision ) )
         rows.append ( self._row ( 'ZA'                 , self.ZA                 , width = width , precision = precision ) )
         rows.append ( self._row ( 'ZC'                 , self.ZC                 , width = width , precision = precision ) )
@@ -628,36 +702,37 @@ class GoF1DToys(GoF1D) :
     def draw  ( self , what , opts = '' , *args , **kwargs ) :
         """ Draw fit CDF & empirical CDF
         """
-        if not what or not what  in self.__ecdfs :
-            return GoF1D.draw ( self , opts , *args , **kwargs )
-
-        if   'KS' == what  :
+        key = cidict_fun ( what ) 
+        if   key in KS_keys : 
             result = self.kolmogorov_smirnov 
             ecdf   = self.__ecdfs [ 'KS' ]
             logger.info ( 'Toy resuls for Kolmogorov-Smirnov estimate' ) 
-        elif 'AD' == what :
+        elif key in AD_keys : 
             result = self.anderson_darling  
             ecdf   = self.__ecdfs [ 'AD' ]
             logger.info ( 'Toy resuls for Anderson-Darling estimate' ) 
-        elif 'CM' == what :
+        elif key in CM_keys : 
             result = self.cramer_von_mises 
             ecdf   = self.__ecdfs [ 'CM' ]
             logger.info ( 'Toy resuls for Cramer-von Mises  estimate' ) 
-        elif 'ZK' == what :
+        elif key in ZK_keys : 
             result = self.ZK    
             ecdf   = self.__ecdfs [ 'ZK' ]
             logger.info ( 'Toy resuls for ZK estimate' ) 
-        elif 'ZA' == what :
+        elif key in ZA_keys : 
             result = self.ZA   
             ecdf   = self.__ecdfs [ 'ZA' ]
             logger.info ( 'Toy resuls for ZK estimate' ) 
-        elif 'ZC' == what :
+        elif key in ZC_keys : 
             result = self.ZC   
             ecdf   = self.__ecdfs [ 'ZC' ]
             logger.info ( 'Toy resuls for ZK estimate' ) 
+        elif key in K_keys : 
+            result = self.kuiper   
+            ecdf   = self.__ecdfs [ 'K' ]
+            logger.info ( 'Toy resuls for Kuiper estimate' ) 
         else :
-            logger.error ( "draw: Invalid `what`:%s" % what ) 
-            return GoF1D.draw ( self , opts , *args , **kwargs )
+            raise KeyError (  "draw: Invalid `what`:%s" % what )
             
         xmin,xmax = ecdf.xmin () , ecdf.xmax ()
         value     = result.statistics

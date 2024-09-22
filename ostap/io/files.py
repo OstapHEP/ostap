@@ -35,7 +35,7 @@ del getLogger
 #  Helper class for parallel processing of long list of files 
 #  It defiend the basic teatemtn of the, calling `Files.treatFile` method
 class TreatFileTask(Task) :
-    """Helper class for parallel processing of long list of files 
+    """ Helper class for parallel processing of long list of files 
     It defiens the basic teatemtn of the, calling `Files.treatFile` method
     """
     def __init__ ( self , data ) :
@@ -44,7 +44,7 @@ class TreatFileTask(Task) :
     def initialize_remote ( self , jobid = -1 ) : pass
     ## actgual processing  
     def process ( self , jobid , files ) :
-        """Actual processing"""
+        """ Actual processing"""
         for f in files :  self.__data.treatFile ( f ) 
         return self.__data 
     ## get the results 
@@ -56,7 +56,7 @@ class TreatFileTask(Task) :
 # ===========================================================================
 ## get the size with units for the file-size units
 def fsize_unit ( size ) :
-    """Get the size with units for the file-size units"""
+    """ Get the size with units for the file-size units"""
     assert isinstance ( size , integer_types ) , "unit: invalid 'size' type"
     if   ( 1024 ** 5 ) <= size : return  size // ( 1024 ** 5 ) , 'PB'
     elif ( 1024 ** 4 ) <= size : return  size // ( 1024 ** 4 ) , 'TB'
@@ -76,7 +76,7 @@ def fsize_unit ( size ) :
 #  @author Alexander BARANOV a.baranov@cern.ch
 #  @date   2014-06-08  
 class Files(object):
-    """Simple utility to pickup the list of files     
+    """ Simple utility to pickup the list of files     
 
     - collect file the file
     - keeps and store them
@@ -203,7 +203,7 @@ class Files(object):
     # =========================================================================
     ## get the disk size of files, only existing files are counted 
     def getsize ( self ) :
-        """Get the disk size of files, only existing/valid files are counted"""
+        """ Get the disk size of files, only existing/valid files are counted"""
         s = 0
         for f in self.__files :
             s += max ( 0 , self.get_file_size ( f ) ) 
@@ -214,7 +214,7 @@ class Files(object):
     #  @param fname input file name
     #  @return ROOT file sizeor -1 for non-existingt/invalid files
     def get_file_size ( self , fname ) :
-        """Get the size of the file
+        """ Get the size of the file
         - fname : input file name
         - return file size or -1 for non-existing/invalid files
         """
@@ -229,7 +229,7 @@ class Files(object):
     #  if the_file in files : ....
     #  @endcode 
     def __contains__ ( self , the_file ) :
-        """Check if the file is a part of collection
+        """ Check if the file is a part of collection
         >>> files = ...
         >>> if the_file in files : ....
         """
@@ -238,7 +238,7 @@ class Files(object):
     # =========================================================================
     ## Get the list of files from the patterns 
     def the_files ( self ) :
-        """Get the list of files from the patterns"""
+        """ Get the list of files from the patterns"""
         
         _files = set ()
         
@@ -346,7 +346,7 @@ class Files(object):
     
     ## get an intersection of two datasets 
     def __and__ (  self , other ) :
-        """ get intersection of two sets
+        """ Get intersection of two sets
         >>> ds1 = ...
         >>> ds2 = ...
         >>> ds  = ds1 & ds2 ## get intersection 
@@ -363,7 +363,7 @@ class Files(object):
 
     ## get an exclusive OR for two datasets 
     def __xor__ (  self , other ) :
-        """ get an exclusive OR for  two sets
+        """ Get an exclusive OR for  two sets
         >>> ds1 = ...
         >>> ds2 = ...
         >>> ds  = ds1 ^ ds2 ## get an exclusive OR 
@@ -405,27 +405,27 @@ class Files(object):
     
     ## get union of two datasets 
     def union ( self , other ) :
-        """Union of two datasets"""
+        """ Union of two datasets"""
         return self | other
     
     ## get intersection of two datasets 
     def intersection ( self , other ) :
-        """Intersection of two datasets"""
+        """ Intersection of two datasets"""
         return self & other
 
     ## get difference of two datasets 
     def difference  ( self , other ) :
-        """Differfence of two datasets"""
+        """ Differfence of two datasets"""
         return self - other
 
     ## get symmetric difference of two datasets 
     def symmetric_difference  ( self , other ) :
-        """Symmetric Differfence of two datasets"""
+        """ Symmetric Differfence of two datasets"""
         return self ^ other
 
     ## subtraction for datasets 
     def __sub__ (  self , other ) :
-        """ get subtraction of two sets
+        """ Get subtraction of two sets
         >>> ds1 = ...
         >>> ds2 = ...
         >>> ds  = ds1 - ds2 ## get subtraction 
@@ -439,7 +439,7 @@ class Files(object):
 
     ## remove the files from  another dataset 
     def __isub__ (  self , other ) :
-        """ Remove file forom anothere dataset 
+        """ Remove file from another dataset 
         >>> ds1 = ...
         >>> ds2 = ...
         >>> ds1 -= ds2 ## get subtraction 
@@ -457,7 +457,7 @@ class Files(object):
     # =========================================================================
     ## get a sample of at most  n-elements (if n is integer and >=1 )  or n-fraction 
     def sample_files ( self ,  n , sort ) :
-        """get a sample of at most  n-elements (if n is integer and >=1 )  or n-fraction 
+        """ Get a sample of at most  n-elements (if n is integer and >=1 )  or n-fraction 
         """
         if   isinstance ( n , int   ) and 1 <= n <= len ( self.files ) :
             files = random.sample ( self.files , n )
@@ -477,7 +477,7 @@ class Files(object):
     #   f2 = files.samlpe ( 0.1 ) ## 10% of files 
     #   @endcode
     def sample ( self , n , sort = True , **kwargs ) :
-        """Get a sub-sample
+        """ Get a sub-sample
         >>> files = ...
         >>> f1 = files.sample ( 5   ) ##  5     files
         >>> f2 = files.sample ( 0.1 ) ## 10% of files 
@@ -495,7 +495,7 @@ class Files(object):
     #   f2 = files[4:10]
     #   @endcode
     def __getitem__ ( self , item ) :
-        """Get a sub-sample
+        """ Get a sub-sample
         >>> files = ...
         >>> f1 = files[5] 
         >>> f2 = files[4:10]
@@ -511,7 +511,7 @@ class Files(object):
         
     ## printout 
     def __str__(self):
-        """The specific printout
+        """ The specific printout
         """
         return "<#files: %4d>" % len ( self.files ) 
     
@@ -527,7 +527,7 @@ class Files(object):
     #  print ( files.table() )    
     #  @endcode
     def table ( self , title = 'Files' , prefix = '' ) :
-        """Print collection of files as table
+        """ Print collection of files as table
         """
         rows  = [ ( '#' , 'size' , 'name' ) ]
         files = self.files
@@ -616,7 +616,7 @@ class Files(object):
     #  - new directory will be created (if needed)
     #  - common path (prefix) for all files will be replaced by new directory
     def copy_files ( self , new_dir = None , parallel = False , also_bad = False ) :
-        """copy all the files to new directory
+        """ Copy all the files to new directory
         - new directory will be created (if needed)
         - common path (prefix) for all files will be replaced by new directory
         """
@@ -644,7 +644,7 @@ class Files(object):
     #  - new directory will be created (if needed)
     #  - common path (prefix) for all files will be replaced by new directory
     def sync_files ( self , new_dir = None , parallel = False , also_bad = False ) :
-        """Sync/copy all the files to new directory
+        """ Sync/copy all the files to new directory
         - new directory will be created (if needed)
         - common path (prefix) for all files will be replaced by new directory
         """
@@ -685,7 +685,7 @@ def copy_files ( files_to_copy           ,
                  copier    = None        ,
                  copy_cmd  = ''          , 
                  progress  = False       ) :
-    """Copy set of files into new directory.
+    """ Copy set of files into new directory.
 
     Files are copied in a way to preserve they name uniqueness:
 
@@ -799,7 +799,7 @@ def sync_files ( files_to_copy          ,
                  copy_cmd  = ''         , 
                  progress  = False      ) :
     
-    """Sync/copy set of files into new directory.
+    """ Sync/copy set of files into new directory.
 
     Files are copied in a way to preserve they name uniqueness:
 
@@ -859,7 +859,7 @@ def sync_dirs  ( source_dir             ,
                  copier    = None       ,
                  copy_cmd  = ''         , 
                  progress  = False      ) :
-    """Sync/copy two directories 
+    """ Sync/copy two directories 
 
     Files are copied in a way to preserve they name uniqueness:
 

@@ -94,12 +94,14 @@ def test_bad_fit_1 ( ) :
         got.run ( 10000 ) 
         logger.info ( 'Goodness-of-fit with toys:\n%s' % got )
 
-    with use_canvas ( 'test_bad_fit_1: GoF/KS' , wait = 1 ) :
-        dks = got.draw('KS')
-    with use_canvas ( 'test_bad_fit_1: GoF/AD' , wait = 1 ) :
-        dad = got.draw('AD')
-    with use_canvas ( 'test_bad_fit_1: GoF/CM' , wait = 1 ) :
-        dcm = got.draw('CM')
+    with use_canvas ( 'test_bad_fit_1: GoF/Kolmogorov-Smirnov' , wait = 1 ) :
+        dks = got.draw('Kolmogorov-Smirnov')
+    with use_canvas ( 'test_bad_fit_1: GoF/Andersen-Darling' , wait = 1 ) :
+        dad = got.draw('Andersen-Darling')
+    with use_canvas ( 'test_bad_fit_1: GoF/Cramer-von Mises' , wait = 1 ) :
+        dcm = got.draw('Cramer-von Mises')
+    with use_canvas ( 'test_bad_fit_1: GoF/Kuiper'           , wait = 1 ) :
+        dcm = got.draw('Kuiper')
     with use_canvas ( 'test_bad_fit_1: GoF/ZK' , wait = 1 ) :
         dzk = got.draw('ZK')
     with use_canvas ( 'test_bad_fit_1: GoF/ZA' , wait = 1 ) :

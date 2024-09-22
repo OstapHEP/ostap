@@ -110,9 +110,9 @@ zechEff         = Ostap.Math.zechEff
 wilsonEff       = Ostap.Math.wilsonEff
 agrestiCoullEff = Ostap.Math.agrestiCoullEff
 # =============================================================================
-## helper function for case-insensitive dictionary with ignorance of underscores and blanks
+## helper function for case-insensitive dictionary with ignorance of underscores and blanks and dashes 
 from ostap.utils.cidict import case_transform 
-cidict_fun = lambda k : case_transform ( k ) . replace('_','') . replace ( ' ', '') 
+cidict_fun = lambda k : case_transform ( k ) . replace('_','') . replace ( ' ', '').replace('-','') 
 # =============================================================================
 ## @class ROOTCWD
 #  context manager to preserve current directory (rather confusing stuff in ROOT)

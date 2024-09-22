@@ -109,7 +109,8 @@ __all__     = (
     ##
     ) 
 # =============================================================================
-from ostap.core.ostap_types import integer_types, num_types 
+from ostap.core.ostap_types import integer_types, num_types
+from ostap.math.base        import pos_infinity, neg_infinity
 from ostap.core.core        import Ostap
 # =============================================================================
 # logging 
@@ -1099,30 +1100,24 @@ class CL_asymm(object) :
         "``prop'' - confidence level"
         return self.__prob
 
-
-
-pos_inf = float ( '+Inf' )
-neg_inf = float ( '-Inf' )
-
-
 # =============================================================================
 ## calculate some statistical quantities of variable,
 #  considering function to be PDF 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def sp_action ( func , actor , xmin = None , xmax = None , *args , **kwargs ) :
-    """Calculate some statistical quantities of variable, considering function to be PDF 
+    """ Calculate some statistical quantities of variable, considering function to be PDF 
     """
     ##
     if   isinstance  ( xmin , num_types ) : xmn =  float ( xmin            ) 
     elif hasattr     ( func ,'GetXmin'  ) : xmn =  float ( func.GetXmin () )
     elif hasattr     ( func ,'xmin'     ) : xmn =  float ( func.xmin    () ) 
-    else                                  : xmn =  neg_inf 
+    else                                  : xmn =  neg_infinity 
     ##
     if   isinstance  ( xmax , num_types ) : xmx =  float ( xmax            )
     elif hasattr     ( func ,'GetXmax'  ) : xmx =  float ( func.GetXmax () ) 
     elif hasattr     ( func ,'xmax'     ) : xmx =  float ( func.xmax    () )
-    else                                  : xmx =  pos_inf 
+    else                                  : xmx =  pos_infinity 
     ##
     xmn = float ( xmn ) if isinstance ( xmn , integer_types ) else xmn 
     xmx = float ( xmx ) if isinstance ( xmx , integer_types ) else xmx
@@ -1158,7 +1153,7 @@ def moment ( func , N , xmin = None , xmax = None , err = False , x0 = 0 ) :
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date 2015-07-11
 def central_moment ( func , N , xmin = None , xmax = None , err = False ) :
-    """Get the central moment for the distribution using 
+    """ Get the central moment for the distribution using 
     >>> fun  = ...
     >>> mom5 = central_moment ( fun , 5 , xmin = 10 , xmax = 50 )
     """
@@ -1177,7 +1172,7 @@ def central_moment ( func , N , xmin = None , xmax = None , err = False ) :
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date 2022-07-13
 def std_moment ( func , N , xmin = None , xmax = None , err = False ) :
-    """Get the standartized moment for the distribution using 
+    """ Get the standartized moment for the distribution using 
     >>> fun  = ...
     >>> mom5 = std_moment ( fun , 5 , xmin = 10 , xmax = 50 )
     """
@@ -1197,7 +1192,7 @@ def std_moment ( func , N , xmin = None , xmax = None , err = False ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def mean ( func , xmin = None , xmax = None , err = False ) :
-    """Get the mean-value for the distribution
+    """ Get the mean-value for the distribution
     >>> fun = ...
     >>> m   = mean( fun , xmin = 10 , xmax = 50 )
     """
@@ -1215,7 +1210,7 @@ def mean ( func , xmin = None , xmax = None , err = False ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def variance ( func , xmin = None , xmax = None , err = False ) :
-    """Get the variance for the distribution using
+    """ Get the variance for the distribution using
     >>> fun = ...
     >>> v   = variance( fun , xmin = 10 , xmax = 50 )
     """
@@ -1234,7 +1229,7 @@ def variance ( func , xmin = None , xmax = None , err = False ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def rms ( func , xmin = None , xmax = None , err = False ) :
-    """Get RMS for the distribution using
+    """ Get RMS for the distribution using
     >>> fun = ...
     >>> v   = rms( fun , xmin = 10 , xmax = 50 )
     """
@@ -1253,7 +1248,7 @@ def rms ( func , xmin = None , xmax = None , err = False ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def skewness ( func , xmin = None , xmax = None , err = False ) :
-    """Get the skewness for the distribution using
+    """ Get the skewness for the distribution using
     >>> fun = ...
     >>> v   = skewness ( fun , xmin = -10 , xmax = 10 )
     """
@@ -1274,7 +1269,7 @@ def skewness ( func , xmin = None , xmax = None , err = False ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def kurtosis ( func , xmin = None , xmax = None , err = False ) :
-    """Get the (exessive) kurtosis for the distribution
+    """ Get the (exessive) kurtosis for the distribution
     >>> fun  = ...
     >>> kurt = kurtosis ( fun , xmin = 10 , xmax = 50 )
     """
@@ -1293,7 +1288,7 @@ def kurtosis ( func , xmin = None , xmax = None , err = False ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def median ( func , xmin = None , xmax = None ) :
-    """Get the median for the distribution using
+    """ Get the median for the distribution using
     >>> fun = ...
     >>> v   = median( fun , xmin = 10 , xmax = 50 )
     """
@@ -1311,7 +1306,7 @@ def median ( func , xmin = None , xmax = None ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def quantile ( func , Q , xmin = None , xmax = None , err = False , x0 = 0 ) :
-    """Get quantile for the distribution
+    """ Get quantile for the distribution
     >>> fun  = ...
     >>> quan = quantile ( fun , 0.1 , xmin = 10 , xmax = 50 )
     """
@@ -1328,7 +1323,7 @@ def quantile ( func , Q , xmin = None , xmax = None , err = False , x0 = 0 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
 def mode ( func , xmin = None , xmax = None ) :
-    """Get the mode for the distribution
+    """ Get the mode for the distribution
     >>> fun = ...
     >>> v   = mode( fun ,  xmin = 10 , xmax = 50 )
     """
@@ -1410,7 +1405,7 @@ def cl_symm ( func , prob , xmin = None , xmax = None , x0 = None ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-08-03
 def cl_asymm ( func , prob , xmin = None , xmax = None ) :
-    """Asymmetric confidence interval around x0    
+    """ Asymmetric confidence interval around x0    
     >>> fun  = lambda x : exp( - 0.5 * x * x )
     >>> x_1,x_2  = cl_asymm ( fun , 0.68 , -10 , 10 )
     >>> print x_1,x_2 
