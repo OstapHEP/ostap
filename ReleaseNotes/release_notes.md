@@ -15,7 +15,12 @@
   1. Tiny tweak for treatment of drawing ranges for `f1_draw/f2_draw/f3_draw` fnuctions: form now the explicit setting has  a precedence. 
   1. `ostap.stats.gof1d` : improve drawing methods 
   1. Add Kuiper's Goodness-of-Fit estimator to `ostap.stats.gof1d`
-         
+  1. Add `values` iterator firnctoonfor all hjistogram classes to iterate over th ebin values
+  1. Add methods `table` and `summaary` for 1D-histogram to dump a sumaary of the histogram in the table form
+  1. Add methdod `all_positive`, `all_negative` , `all_nonpositive`, `all_nonnegative` and `all_zero` for hisgoragm clases to check if
+     all bins are positive/negative/non-positive/non-begrtaive/zero.
+  1. Add methods `table` and `summmary` for 2D&3D-hisograms 
+
 ## Backward incompatible
 
    1. add `weight` to `tree.withCut` and other tree-looping methods     

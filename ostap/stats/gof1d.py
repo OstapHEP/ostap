@@ -15,15 +15,15 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2024-09-16"
 __all__     = (
-    'komogorov_smirnov' , ## Kolmogorov-Sminov GoF estimator 
-    'anderson_darling'  , ## Anderson-Darling  GoF estimator 
-    'cramer_von_mises'  , ## Cramer-von Mises  GoF estimator 
-    'kuiper'            , ## Kuiper            GoF estimator 
-    'ZK'                , ## ZK                GoF estimator
-    'ZA'                , ## ZA                GoF estimator
-    'ZC'                , ## ZC                GoF estimator
-    'GoF1D'             , ## helper utility for GoF estimate 
-    'GoF1DToys'         , ## helper utility for GoF estimate with toys 
+    'kolmogorov_smirnov' , ## Kolmogorov-Sminov GoF estimator 
+    'anderson_darling'   , ## Anderson-Darling  GoF estimator 
+    'cramer_von_mises'   , ## Cramer-von Mises  GoF estimator 
+    'kuiper'             , ## Kuiper            GoF estimator 
+    'ZK'                 , ## ZK                GoF estimator
+    'ZA'                 , ## ZA                GoF estimator
+    'ZC'                 , ## ZC                GoF estimator
+    'GoF1D'              , ## helper utility for GoF estimate 
+    'GoF1DToys'          , ## helper utility for GoF estimate with toys 
     )
 # =============================================================================
 from   collections            import defaultdict, namedtuple

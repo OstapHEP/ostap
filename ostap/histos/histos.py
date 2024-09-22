@@ -38,10 +38,11 @@ from   ostap.core.core import ( cpp      , Ostap     , cidict_fun      ,
                                 binomEff , binomEff2 ,
                                 zechEff  , wilsonEff , agrestiCoullEff , 
                                 iszero   , isequal   , inrange         , 
-                                isint    , islong    , is_sorted       , 
+                                isint    , islong    , is_sorted       ,
                                 natural_entry        ,
                                 natural_number       )
-from   ostap.math.base          import frexp10
+from   ostap.math.base          import ( frexp10      , isequalf     ,
+                                         pos_infinity , neg_infinity ) 
 from   ostap.math.math_ve       import significance
 from   ostap.core.ostap_types   import ( integer_types  , num_types    ,
                                          long_type      , sized_types   , 
@@ -64,8 +65,7 @@ else                       : logger = getLogger( __name__          )
 # =============================================================================
 logger.debug ( 'Decoration of historams')
 # =============================================================================
-inf_pos =  float('Inf')
-inf_neg = -float('Inf')
+_new_methods_  = []  
 # =============================================================================
 ## ensure that object/histogram is created in ROOT.gROOT
 #  @attention clone is always goes to ROOT main memory!
@@ -599,7 +599,7 @@ ROOT.TH3D  . __getitem__  = _h3_get_item_
 #  @date   2011-06-07
 def _h1_iter_ ( h1 ) :
     """ Iterator over 1D-histogram
-    >>> for i in h1 : print i 
+    >>> for i in h1 : print (i) 
     """
     ax = h1.GetXaxis () 
     sx = ax.GetNbins ()
@@ -612,7 +612,7 @@ def _h1_iter_ ( h1 ) :
 #  @date   2015-07-06
 def _h1_iter_reversed_ ( h1 ) :
     """ Iterator over 1D-histogram    
-    >>> for i in reversed(h1) : print i 
+    >>> for i in reversed(h1) : print (i)
     """
     ax = h1.GetXaxis () 
     sx = ax.GetNbins ()
@@ -631,7 +631,7 @@ ROOT.TH1D . __reversed__ = _h1_iter_reversed_
 #  @date   2011-06-07
 def _h2_iter_ ( h2 ) :
     """ Iterator over 2D-histogram    
-    >>> for i in h2 : print i 
+    >>> for i in h2 : print (i)
     """
     #
     ax = h2.GetXaxis()
@@ -650,7 +650,7 @@ def _h2_iter_ ( h2 ) :
 #  @date   2011-06-07
 def _h2_iter_reversed_ ( h2 ) :
     """Iterator over 2D-histogram    
-    >>> for i in reversed(h2) : print i 
+    >>> for i in reversed(h2) : print (i)
     """
     #
     ax = h2.GetXaxis()
@@ -677,7 +677,7 @@ ROOT.TH2D . __reversed__ = _h2_iter_reversed_
 #  @date   2011-06-07
 def _h3_iter_ ( h3 ) :
     """ Iterator over 3D-histogram    
-    >>> for i in h3 : print i 
+    >>> for i in h3 : print (i)
     """
     #
     ax = h3.GetXaxis()
@@ -699,7 +699,7 @@ def _h3_iter_ ( h3 ) :
 #  @date   2011-06-07
 def _h3_iter_reversed_ ( h3 ) :
     """ Reversed iterator over 3D-histogram
-    >>> for i in reversed(h3) : print i 
+    >>> for i in reversed(h3) : print (i)
     """
     #
     ax = h3.GetXaxis()
@@ -791,7 +791,7 @@ def _h1_call_ ( h1                    ,
 #  @author Vanya BELYAEV IvanBelyaev@itep.ru
 #  @date 2019-05-14
 class Histo1DFun (object) :
-    """Histogram as trivial function object
+    """ Histogram as trivial function object
     >>> histo = ...
     >>> fun   = Histo1DFun( histo )
     """
@@ -1083,6 +1083,17 @@ def _h2_yrms_ ( h2 ) :
     ##
     return VE ( mu2 , cov2 ) ** 0.5 
 
+# ===============================================================================
+## Get RMS for x&y-axes
+#  @code
+#  xrms , yrms = h2.rms() 
+#  @endcode
+def _h2_rms_ ( h2 ) :
+    """ Get RMS for x&y-axes
+    >>> h2 = ...
+    >>> xrms , yrms = h2.rms() 
+    """
+    return h2.xrms() , h2.yrms()
 
 # ===============================================================================
 ## get correlation coefficient between x and y
@@ -1098,8 +1109,8 @@ def _h2_xycorr_  ( h2 ) :
     c2 = h2.central_moment ( 1 , 1 )
     x2 = h2.central_moment ( 2 , 0 )
     y2 = h2.central_moment ( 0 , 2 )
-    
-    return c2 / ( x2 * y2 )**0.5
+    ## 
+    return c2 / ( x2 * y2 ) ** 0.5
 
 
 for h in ( ROOT.TH2F , ROOT.TH2D ) :
@@ -1108,6 +1119,7 @@ for h in ( ROOT.TH2F , ROOT.TH2D ) :
     h.ymean  =  _h2_ymean_
     h.xrms   =  _h2_xrms_
     h.yrms   =  _h2_yrms_
+    h. rms   =  _h2_rms_
     h.xycorr =  _h2_xycorr_
     h.xycor  =  _h2_xycorr_
 
@@ -1239,34 +1251,112 @@ def _h3_yrms_ ( h2 ) :
 #  h3 = ...
 #  zm = h3.zrms() 
 #  @endcode
-def _h3_zrms_ ( h2 ) :
+def _h3_zrms_ ( h3 ) :
     """ Get z-rms for 3D-histogram
     >>> h3 = ...
     >>> zm = h3.zrms() 
     """
     order = 2
-    
-    mu2    = h2.central_moment ( 0 , 0 , 2 )
-    mu4    = h2.central_moment ( 0 , 0 , 4 )
+    ## 
+    mu2    = h3.central_moment ( 0 , 0 , 2 )
+    mu4    = h3.central_moment ( 0 , 0 , 4 )
     ##
     cov2   = mu4
     cov2  -= mu2 * mu2 
-    cov2  /= h2.nEff()
+    cov2  /= h3.nEff()
     ##
     cov2   = max ( cov2 , 0.0 )
     ##
     return VE ( mu2 , cov2 ) ** 0.5 
 
+# ===============================================================================
+## Get RMS for x,y&z-axes
+#  @code
+#  xrms , yrms , zrms = h3.rms() 
+#  @endcode
+def _h3_rms_ ( h3 ) :
+    """ Get RMS for x,y&z-axes
+    >>> h2 = ...
+    >>> xrms , yrms . zrms = h3.rms() 
+    """
+    return h3.xrms() , h3.yrms() , h3.zrms()
+
+# ===============================================================================
+## get correlation coefficient between x and y
+#  @code
+#  h3 = ...
+#  xy = h3.xycorr()
+#  @endcode 
+def _h3_xycorr_  ( h3 ) :
+    """ Get correlation coefficient between x and y
+    >>> h3 = ...
+    >>> xy = h3.xycorr()
+    """
+    c2 = h3.central_moment ( 1 , 1 , 0 )
+    x2 = h3.central_moment ( 2 , 0 , 0 )
+    y2 = h3.central_moment ( 0 , 2 , 0 )
+    ## 
+    return c2 / ( x2 * y2 ) ** 0.5
+
+# ===============================================================================
+## get correlation coefficient between y and z
+#  @code
+#  h3 = ...
+#  yz = h3.yzcorr()
+#  @endcode 
+def _h3_yzcorr_  ( h3 ) :
+    """ Get correlation coefficient between y and z 
+    >>> h3 = ...
+    >>> xy = h3.yzcorr()
+    """
+    c2 = h3.central_moment ( 0 , 1 , 1 )
+    x2 = h3.central_moment ( 0 , 2 , 0 )
+    y2 = h3.central_moment ( 0 , 0 , 2 )
+    ## 
+    return c2 / ( x2 * y2 ) ** 0.5
+
+# ===============================================================================
+## get correlation coefficient between x and z
+#  @code
+#  h3 = ...
+#  xz = h3.xzcorr()
+#  @endcode 
+def _h3_xzcorr_  ( h3 ) :
+    """ Get correlation coefficient between x and z 
+    >>> h3 = ...
+    >>> xz = h3.xzcorr()
+    """
+    c2 = h3.central_moment ( 1 , 0 , 1 )
+    x2 = h3.central_moment ( 2 , 0 , 0 )
+    y2 = h3.central_moment ( 0 , 0 , 2 )
+    ## 
+    return c2 / ( x2 * y2 ) ** 0.5
 
 for h in ( ROOT.TH3F , ROOT.TH3D ) :
-    h. mean =  _h3_mean_
-    h.xmean =  _h3_xmean_
-    h.ymean =  _h3_ymean_
-    h.zmean =  _h3_zmean_
-    h.xrms  =  _h3_xrms_
-    h.yrms  =  _h3_yrms_
-    h.zrms  =  _h3_zrms_
-
+    
+    h. mean  =  _h3_mean_
+    h.xmean  =  _h3_xmean_
+    h.ymean  =  _h3_ymean_
+    h.zmean  =  _h3_zmean_
+    h.xrms   =  _h3_xrms_
+    h.yrms   =  _h3_yrms_
+    h.zrms   =  _h3_zrms_
+    h.rms    =  _h3_rms_
+    
+    h.xycorr = _h3_xycorr_
+    h.yxcorr = _h3_xycorr_
+    h.xycor  = _h3_xycorr_
+    h.yxcor  = _h3_xycorr_
+    
+    h.yzcorr = _h3_yzcorr_
+    h.zycorr = _h3_yzcorr_
+    h.yzcor  = _h3_yzcorr_
+    h.zycor  = _h3_yzcorr_
+    
+    h.xzcorr = _h3_xzcorr_
+    h.zycorr = _h3_xzcorr_
+    h.xzcor  = _h3_xzcorr_
+    h.zxcor  = _h3_xzcorr_
 
 # ============================================================================
 ## find the first X-value for the certain Y-value
@@ -1572,20 +1662,42 @@ ROOT.TH1D  . iteritems     = _h1_iteritems_
 #  histo = ...
 #  for v in histo.values() : ...
 #  @endcode 
-def _h1_values_ ( h1 ) :
+def _h_values_ ( histo ) :
     """ Iterate over the values
     >>> histo = ...
     >>> for v in histo.values() : ...
     """
-    for i , _ , y in h1.items() :
-        yield y  
+    for item in histo.items() :
+        yield item[-1] 
 
+ROOT.TH1F  . itervalues    = _h_values_
+ROOT.TH1D  . itervalues    = _h_values_
+ROOT.TH1F  .     values    = _h_values_
+ROOT.TH1D  .     values    = _h_values_
+ROOT.TH2F  . itervalues    = _h_values_
+ROOT.TH2D  . itervalues    = _h_values_
+ROOT.TH2F  .     values    = _h_values_
+ROOT.TH2D  .     values    = _h_values_
+ROOT.TH3F  . itervalues    = _h_values_
+ROOT.TH3D  . itervalues    = _h_values_
+ROOT.TH3F  .     values    = _h_values_
+ROOT.TH3D  .     values    = _h_values_
 
-ROOT.TH1F  . itervalues    = _h1_values_
-ROOT.TH1D  . itervalues    = _h1_values_
-ROOT.TH1F  .     values    = _h1_values_
-ROOT.TH1D  .     values    = _h1_values_
-        
+_new_methods_ += [
+    ROOT.TH1F  . itervalues  , 
+    ROOT.TH1D  . itervalues  , 
+    ROOT.TH1F  .     values  , 
+    ROOT.TH1D  .     values  , 
+    ROOT.TH2F  . itervalues  , 
+    ROOT.TH2D  . itervalues  , 
+    ROOT.TH2F  .     values  , 
+    ROOT.TH2D  .     values  , 
+    ROOT.TH3F  . itervalues  , 
+    ROOT.TH3D  . itervalues  , 
+    ROOT.TH3F  .     values  , 
+    ROOT.TH3D  .     values  , 
+    ]
+
 # =============================================================================
 ## return information about the bin center and width
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -1593,7 +1705,7 @@ ROOT.TH1D  .     values    = _h1_values_
 def _h1_bin_ ( h1 , ibin ) :
     """ Get the information about the bin center and width     
     >>> h1 = ... ## the histo
-    >>> print h1.bin(1)    
+    >>> print ( h1.bin(1) ) 
     """
     if not ibin in h1.GetXaxis() : raise IndexError
 
@@ -1611,7 +1723,7 @@ def _h1_bin_ ( h1 , ibin ) :
 def _h2_bin_ ( h2 , *ibin ) :
     """ Get the information about the bin center and width 
     >>> h2 = ... ## the histo
-    >>> print h2.bin(1,2)    
+    >>> print ( h2.bin(1,2) ) 
     """
     if 2 != len ( ibin ) : raise IndexError 
     if not ibin in h2    : raise IndexError
@@ -1634,7 +1746,7 @@ def _h2_bin_ ( h2 , *ibin ) :
 def _h3_bin_ ( h3 , *ibin ) :
     """ Get the information about the bin center and width 
     >>> h3 = ... ## the histo
-    >>> print h3.bin(1,2,15)    
+    >>> print ( h3.bin(1,2,15) ) 
     """
     if 3 != len ( ibin ) : raise IndexError 
     if not ibin in h3    : raise IndexError
@@ -1791,7 +1903,7 @@ def _a_equal_ ( axis , another ) :
     """ Equality for two axes
     >>> a1 = ...
     >>> a2 = ...
-    >>> print a1 == a1 
+    >>> print ( a1 == a1 ) 
     """
     if      axis   is       another                        : return True 
     if len( axis ) != len ( another )                      : return False
@@ -3022,7 +3134,7 @@ def _h_minpos_ ( histo ) :
     >>> histo  = ...
     >>> minpos = histo.min_positive() 
     """
-    result = inf_neg 
+    result = neg_infinity 
     for items in histo.items() :
         v = items [ -1 ] . value()
         if 0 < v  :
@@ -3032,6 +3144,101 @@ def _h_minpos_ ( histo ) :
 ROOT.TH1.minpos       = _h_minpos_
 ROOT.TH1.min_positive = _h_minpos_
 
+
+# ============================================================================
+## Only positive entries ?
+#  @code
+#  histo = ...
+#  only_positive = histo.all_positive() 
+#  @endcode
+def _h_all_positive ( histo ) :
+    """ Only positive entries ?
+    >>> histo = ...
+    >>> only_positive = histo.all_positive() 
+    """
+    return all ( 0 < v.value() for v in histo.values() ) 
+
+# ============================================================================
+## Only negative entries ?
+#  @code
+#  histo = ...
+#  only_negative  = histo.all_negative () 
+#  @endcode
+def _h_all_negative ( histo ) :
+    """ Only negative entries ?
+    >>> histo = ...
+    >>> only_bnegative  = histo.all_negative () 
+    """
+    return all ( 0 > v.value() for v in histo.values() ) 
+
+# ============================================================================
+## Only non-negative entries ?
+#  @code
+#  histo = ...
+#  only_nonnegative  = histo.all_nonnegative () 
+#  @endcode
+def _h_all_nonnegative ( histo ) :
+    """ Only non-negative  entries ?
+    >>> histo = ...
+    >>> only_positive = histo.all_positive() 
+    """
+    return all ( 0 <= v.value() or iszero ( v ) for v in histo.values() ) 
+
+# ============================================================================
+## Only non-positive entries ?
+#  @code
+#  histo = ...
+#  only_nonpositive  = histo.all_nonpositive  () 
+#  @endcode
+def _h_all_nonpositive ( histo ) :
+    """ Only non-positive  entries ?
+    >>> histo = ...
+    >>> only_nonpositive = histo.all_nonpositive() 
+    """
+    return all ( 0 >= v.value() or iszero ( v ) for v in histo.values() ) 
+
+# ============================================================================
+## Only zero entries ?
+#  @code
+#  histo = ...
+#  only_zero  = histo.all_zero  () 
+#  @endcode
+def _h_all_zero ( histo ) :
+    """ Only zero entries ?
+    >>> histo = ...
+    >>> only_zero = histo.all_sero() 
+    """
+    return all ( iszero ( v ) for v in histo.values() ) 
+
+for h in ( ROOT.TH1F , ROOT.TH1D ,
+           ROOT.TH2F , ROOT.TH2D ,
+           ROOT.TH3F , ROOT.TH3D ) : 
+    h.all_zero         = _h_all_zero 
+    h.all_positive     = _h_all_positive
+    h.all_negative     = _h_all_negative
+    h.all_nonpositive  = _h_all_nonpositive
+    h.all_nonnegative  = _h_all_nonnegative
+    h.only_zero        = _h_all_zero 
+    h.only_positive    = _h_all_positive
+    h.only_negative    = _h_all_negative
+    h.only_nonpositive = _h_all_nonpositive
+    h.only_nonnegative = _h_all_nonnegative
+    
+    _new_methods_ += [
+        h.all_zero         , 
+        h.all_positive     , 
+        h.all_negative     , 
+        h.all_nonpositive  , 
+        h.all_nonnegative  , 
+        h.only_zero        , 
+        h.only_positive    ,
+        h.only_negative    , 
+        h.only_nonpositive , 
+        h.only_nonnegative , 
+    ]  
+
+    
+           
 # ============================================================================
 ## get the first bin with the minimum content
 def _h1_minimum_bin_ ( h1 ) :
@@ -3122,6 +3329,15 @@ ROOT.TH2.minimum_bin = _h2_minimum_bin_
 ROOT.TH2.maximum_bin = _h2_maximum_bin_
 ROOT.TH3.minimum_bin = _h3_minimum_bin_
 ROOT.TH3.maximum_bin = _h3_maximum_bin_
+
+_new_methods_ += [ 
+    ROOT.TH1.minimum_bin , 
+    ROOT.TH1.maximum_bin , 
+    ROOT.TH2.minimum_bin , 
+    ROOT.TH2.maximum_bin , 
+    ROOT.TH3.minimum_bin , 
+    ROOT.TH3.maximum_bin , 
+    ]
 
 # ============================================================================
 ## get the minimum value for X-axis 
@@ -5269,10 +5485,9 @@ def _edges_ ( axis ) :
     >>> edges = axis.edges() 
     """
     #
-    bins  = [ axis.GetBinLowEdge ( i ) for i in axis ]
-    bins += [ axis.GetXmax() ]
+    bins  = [ axis.GetBinLowEdge ( i ) for i in axis ] + [ axis.GetXmax() ]
     #
-    return tuple( bins )
+    return tuple ( bins )
 
 # =============================================================================
 ROOT.TAxis.edges = _edges_
@@ -5557,8 +5772,8 @@ def _h1_accumulate_ ( h                        ,
                      init = VE ()              ,
                      low  =  1                 ,
                      high = -1                 ,
-                     xmin = inf_neg            ,
-                     xmax = inf_pos            ) : 
+                     xmin = neg_infinity       ,
+                     xmax = pos_infinity       ) : 
     """ Accumulate the function value over the histogram
     >>> h =...
     >>> sum = h.accumulate ()
@@ -5783,14 +5998,14 @@ def _h1_rshift_ ( h , ibias ) :
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h1_integrate_ ( h                         ,
+def _h1_integrate_ ( h                           ,
                      func   = lambda s,v : s + v ,
                      cut    = lambda s   : True  , 
                      init   = VE ()              ,
                      lowx   =  1                 ,
                      highx  = -1                 ,
-                     xmin   = inf_neg            ,
-                     xmax   = inf_pos            ) : 
+                     xmin   = neg_infinity       ,
+                     xmax   = pos_infinity       ) : 
     """ Perform some integration (taking into acount the bin-width) for the histogram
     >>> h =...
     >>> sum = h.integrate ()
@@ -5853,10 +6068,10 @@ def _h2_integrate_ ( h                         ,
                      highx  = -1                 ,
                      lowy   =  1                 ,
                      highy  = -1                 ,
-                     xmin   = inf_neg            ,
-                     xmax   = inf_pos            ,
-                     ymin   = inf_neg            ,
-                     ymax   = inf_pos            ) : 
+                     xmin   = neg_infinity            ,
+                     xmax   = pos_infinity            ,
+                     ymin   = neg_infinity            ,
+                     ymax   = pos_infinity       ) : 
     """ Perform some integration (taking into acount the bin-width) for the histogram
     >>> h =...
     >>> sum = h.integrate ()
@@ -5932,12 +6147,12 @@ def _h3_integrate_ ( h                         ,
                      highy  = -1                 ,
                      lowz   =  1                 ,
                      highz  = -1                 ,
-                     xmin   = inf_neg            ,
-                     xmax   = inf_pos            ,
-                     ymin   = inf_neg            ,
-                     ymax   = inf_pos            , 
-                     zmin   = inf_neg            ,
-                     zmax   = inf_pos            ) : 
+                     xmin   = neg_infinity       ,
+                     xmax   = pos_infinity       ,
+                     ymin   = neg_infinity       ,
+                     ymax   = pos_infinity       , 
+                     zmin   = neg_infinity       ,
+                     zmax   = pos_infinity       ) : 
     """ Perform some integration (taking into acount the bin-width) for the histogram
     >>> h =...
     >>> sum = h.integrate ()
@@ -6091,7 +6306,7 @@ HStats   = Ostap.Utils.HistoStat
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_moment_ ( h1 , order ) :
-    """ Get ``bin-by-bin''-moment around the specified value    
+    """ Get `bin-by-bin'-moment around the specified value    
     >>> histo = ...
     >>> mom   = histo.moment ( 4 , 0 ) 
     """
@@ -6121,7 +6336,7 @@ def _h1_central_moment_ ( h1 , order ) :
     m = HStats.centralMoment    ( h1 , order )
     e = HStats.centralMomentErr ( h1 , order )
     #
-    return VE ( m , e*e )  if 0<= e  else VE ( m , -e*e ) 
+    return VE ( m , e*e )  if 0 <= e else VE ( m , -e*e ) 
 
 _h1_central_moment_ .__doc__ += '\n' + HStats.centralMoment    .__doc__
 _h1_central_moment_ .__doc__ += '\n' + HStats.centralMomentErr .__doc__
@@ -6413,7 +6628,7 @@ def _h3_cmoment_ ( h3 , orderx , ordery , orderz  ) :
     >>> mom  = histo.central_moment  ( 2 , 3 , 4 ) 
     """
     #
-    h2.ResetStats()
+    h3.ResetStats()
     #
     return HStats.central_moment3 ( h3 , orderx , ordery , orderz  )
 
@@ -6440,7 +6655,7 @@ def _h3_smoment_ ( h3 , orderx , ordery , orderz  ) :
     >>> mom  = histo.std_moment  ( 2 , 3 , 4 ) 
     """
     #
-    h2.ResetStats()
+    h3.ResetStats()
     #
     return HStats.std_moment3 ( h3 , orderx , ordery , orderz  )
 
@@ -6466,7 +6681,7 @@ def _h_stat_ ( h ) :
     """ Get some statistic information on the histogram content
     >>> histo = ... 
     >>> stat  = histo.stat()
-    >>> print stat 
+    >>> print ( stat )
     """
     cnt = SE() 
     for i in h : cnt += h[i].value()  
@@ -6480,7 +6695,7 @@ ROOT.TH1.stat = _h_stat_
 #  @code 
 #  >>> histo = ... 
 #  >>> wstat = histo.wstat()
-#  >>> print wstat
+#  >>> print ( wstat ) 
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-03-26
@@ -6508,7 +6723,7 @@ ROOT.TH1.wstat = _h_wstat_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-03-26
 def _h_wstat_ ( h ) :
-    """ Get some weighted statistic infomration on the histogram content
+    """ Get some weighted statistic information on the histogram content
     >>> histo = ... 
     >>> wstat  = histo.wstat()
     >>> print wstat 
@@ -6526,7 +6741,7 @@ ROOT.TH1.wstat = _h_wstat_
 #  @code 
 #  >>> histo = ... 
 #  >>> wstat = histo.wstat()
-#  >>> print wstat
+#  >>> print ( wstat)
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-03-26
@@ -6549,7 +6764,7 @@ ROOT.TH1.wstat = _h_wstat_
 #  @code 
 #  >>> histo = ... 
 #  >>> xstat = histo.xstat()
-#  >>> print xstat
+#  >>> print ( xstat ) 
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-03-26
@@ -6557,7 +6772,7 @@ def _h_xstat_ ( h ) :
     """ Get some weighted statistic information on the histogram content
     >>> histo = ... 
     >>> xstat  = histo.xstat()
-    >>> print wstat 
+    >>> print ( wstat ) 
     """
     cnt = WSE() 
     for i,x,y in h.iteritems() : 
@@ -6581,7 +6796,7 @@ def _h2_xstat_ ( h2 ) :
     """ Get some (weighted) statistic information on the histogram X-content
     >>> histo2 = ... 
     >>> xstat = histo2.xstat()
-    >>> print xstat
+    >>> print ( xstat ) 
     """
     _h2 =  h2.ProjX()
     _r  = _h2.xstat() 
@@ -6593,7 +6808,7 @@ def _h2_xstat_ ( h2 ) :
 #  @code 
 #  >>> histo2 = ... 
 #  >>> ystat = histo2.ystat()
-#  >>> print ystat
+#  >>> print ( ystat ) 
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-09-20
@@ -6601,7 +6816,7 @@ def _h2_ystat_ ( h2 ) :
     """ Get some (weighted) statistic information on the histogram X-content
     >>> histo2 = ... 
     >>> ystat = histo2.ystat()
-    >>> print xstat
+    >>> print ( xstat ) 
     """
     _h2 =  h2.ProjY()
     _r  = _h2.xstat() 
@@ -6618,7 +6833,7 @@ ROOT.TH2D.ystat = _h2_ystat_
 #  @code 
 #  >>> histo3 = ... 
 #  >>> zstat = histo3.zstat()
-#  >>> print zstat
+#  >>> print ( zstat ) 
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-09-20
@@ -6626,7 +6841,7 @@ def _h3_zstat_ ( h3 ) :
     """ Get some (weighted) statistic information on the histogram X-content
     >>> histo3 = ... 
     >>> zstat = histo3.zstat()
-    >>> print zstat
+    >>> print ( zstat ) 
     """
     _h3 =  h3.ProjZ()
     _r  = _h3.xstat() 
@@ -7179,7 +7394,7 @@ def _h2_islice_X_ (  h2 , xbin ) :
     """``Slice'' iteration over x-bin
     >>> histo = ...
     >>> for i in histo.islice_X( 3 ) :
-    ...         print i, histo[i] 
+    ...         print (  i, histo[i] )
     """
     ax = h2.GetXaxis  ()
     nx = ax.GetNbins ()
@@ -7199,13 +7414,13 @@ def _h2_islice_X_ (  h2 , xbin ) :
 #   @code
 #   histo = ...
 #   for i in histo.islice_Y( 3 ) :
-#            print i, histo[i] 
+#            print ( i, histo[i] ) 
 #   @endcode
 def _h2_islice_Y_ (  h2 , ybin ) :
     """``Slice'' iteration over y-bin
     >>> histo = ...
     >>> for i in histo.islice_Y( 3 ) :
-    ...         print i, histo[i] 
+    ...         print ( i, histo[i] ) 
     """
     ay = h2.GetYaxis  ()
     ny = ay.GetNbins ()
@@ -7299,13 +7514,13 @@ ROOT.TH3D . sliceZ = lambda s,ibin : _h3_get_slice_ ( s , 3 , ibin )
 #   @code
 #   histo = ...
 #   for i in histo.islice_X( 3 ) :
-#            print i, histo[i] 
+#            print ( i, histo[i] ) 
 #   @endcode
 def _h3_islice_X_ (  h3 , xbin ) :
     """``Slice'' iteration over x-bin
     >>> histo = ...
     >>> for i in histo.islice_X( 3 ) :
-    ...         print i, histo[i] 
+    ...         print ( i, histo[i] ) 
     """
     ax = h3.GetXaxis ()
     nx = ax.GetNbins ()
@@ -7329,13 +7544,13 @@ def _h3_islice_X_ (  h3 , xbin ) :
 #   @code
 #   histo = ...
 #   for i in histo.islice_Y( 3 ) :
-#            print i, histo[i] 
+#            print ( i, histo[i] ) 
 #   @endcode
 def _h3_islice_Y_ (  h3 , ybin ) :
     """``Slice'' iteration over y-bin
     >>> histo = ...
     >>> for i in histo.islice_Y( 3 ) :
-    ...         print i, histo[i] 
+    ...         print ( i, histo[i] ) 
     """
     ay = h3.GetYaxis ()
     ny = ay.GetNbins ()
@@ -7360,13 +7575,13 @@ def _h3_islice_Y_ (  h3 , ybin ) :
 #   @code
 #   histo = ...
 #   for i in histo.islice_Z( 3 ) :
-#            print i, histo[i] 
+#            print ( i, histo[i] ) 
 #   @endcode
 def _h3_islice_Z_ (  h3 , zbin ) :
     """``Slice'' iteration over Z-bin
     >>> histo = ...
     >>> for i in histo.islice_Z( 3 ) :
-    ...         print i, histo[i] 
+    ...         print ( i, histo[i] ) 
     """
     az = h3.GetZaxis ()
     nz = az.GetNbins ()
@@ -7654,7 +7869,7 @@ ROOT.TH1.useLL = useLL
 ## Natural histogram with all integer entries ? (generic version)
 #  @code
 #  h = ...
-#  if h.natural() : print 'OK!'
+#  if h.natural() : print ( 'OK!') 
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
@@ -7662,7 +7877,7 @@ def allInts ( histo         ,
               diff  = 1.e-4 ) :
     """ Natural histogram with all integer entries ?
     >>> h = ...
-    >>> if h.natural() : print 'OK!'
+    >>> if h.natural() : print ( 'OK!' ) 
     """
     
     for ibin in histo : 
@@ -7678,7 +7893,7 @@ ROOT.TH1.natural = allInts
 ## Natural histogram with all integer entries ? (a bit faster vection for TH1)
 #  @code
 #  h1 = ...
-#  if h1.natural() : print 'OK!'
+#  if h1.natural() : print ( 'OK!') 
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
@@ -7686,7 +7901,7 @@ def _h1_allInts ( histo         ,
                   diff  = 1.e-4 ) :
     """ Natural histogram with all integer entries ?
     >>> h1 = ...
-    >>> if h1.natural() : print 'OK!'
+    >>> if h1.natural() : print(  'OK!') 
     """    
     for i in histo :  
         if not natural_entry ( histo[i] ) : return False   ## RETURN 
@@ -7707,7 +7922,7 @@ def _natural_ ( histo ) :
     [ for null entries, the errors of  0 or 1 are both allowed] 
     
     >>> histo = ...
-    >>> print 'natural? ', histo.natural()    
+    >>> print ( 'natural? ', histo.natural()    ) 
     """
     ## loop over all histogram bins 
     for i in histo :
@@ -7724,23 +7939,44 @@ for t in ( ROOT.TH1F , ROOT.TH1D ) :
 
 
 # =============================================================================
+## Axis with uniform bins?
+#  @code
+#  axis = ...
+#  print ( axis.uniform () ) 
+#  @endcode
+def _a_uniform_bins_ ( axis ) :
+    """ Axis with unuform bins? 
+    >>> axis = ...
+    >>> print ( axis.uniform () ) 
+    """
+    edges = axis.GetXbins()
+    nbins = len ( edges ) 
+    if nbins <= 2  : return True
+    ## 
+    return all ( isequalf ( edges [ i     ] - edges [ i - 1 ] ,
+                            edges [ i - 1 ] - edges [ i - 2 ] ) for i in range ( 2 , nbins ) )
+
+ROOT.TAxis.uniform       = _a_uniform_bins_
+ROOT.TAxis.uniform_bins  = _a_uniform_bins_
+
+# =============================================================================
 ## check if histogram has uniform binnings
-def _uniform_bins_ ( histo ) :
+def _h_uniform_bins_ ( histo ) :
     """ Check if histogram has uniform binnings
     >>> histo = ...
     >>> uni   = histo.uniform_bins() 
     """
-    axis = histo.GetXaxis()
-    if 1 <= len ( axis.GetXbins () ) : return False
-    axis = histo.GetYaxis()
-    if 1 <= len ( axis.GetXbins () ) : return False
-    axis = histo.GetZaxis()
-    if 1 <= len ( axis.GetXbins () ) : return False
+    xaxis = histo.GetXaxis()
+    if not xaxis.uniform() : return False
+    yaxis = histo.GetYaxis()
+    if not raxis.uniform() : return False
+    zaxis = histo.GetZaxis()
+    if not zaxis.uniform() : return False
     #
     return True
 
-ROOT.TH1.uniform_bins = _uniform_bins_
-ROOT.TH1.uniform      = _uniform_bins_
+ROOT.TH1.uniform_bins = _h_uniform_bins_
+ROOT.TH1.uniform      = _h_uniform_bins_
 
 # =============================================================================
 ## same dims?
@@ -7770,7 +8006,7 @@ def _h_same_bins_ ( histo , another ) :
     """ Same binning for two histograms?
     >>> h1 = ...
     >>> h2 = ...
-    >>> print h1.same_bins( h2 ) 
+    >>> print ( h1.same_bins( h2 ) ) 
     """
     ## same dimensions ? 
     if not histo.same_dims ( another ) : return False
@@ -7946,10 +8182,10 @@ for t in ( ROOT.TH1F , ROOT.TH1D ) :
 ## the actual function for text dump of the histogram
 #  @code 
 #  histo = ...
-#  print dumpHisto  ( histo )
-#  print histo.dump ()
-#  print histo.dump ( 20 , 20 )
-#  print histo.dump ( 20 , 20 , True )
+#  print ( dumpHisto  ( histo ) ) 
+#  print ( histo.dump () ) 
+#  print ( histo.dump ( 20 , 20 ) ) 
+#  print ( histo.dump ( 20 , 20 , True ) ) 
 #  @endcode
 #  @see Ostap::Utils::Histo::.histoDump 
 def dumpHisto ( histo , *args ) :
@@ -8054,7 +8290,6 @@ ROOT.TH1.riemann_sum = _h1_riemann_sum_
 ROOT.TH2.riemann_sum = _h2_riemann_sum_
 ROOT.TH3.riemann_sum = _h3_riemann_sum_
 
-from ostap.math.base import isequalf 
 # =============================================================================
 ## does this histogram reprsent the density?
 def _h_isDensity_ ( h1 ) :
@@ -8461,6 +8696,510 @@ def _h1_roc_ ( h1 , h2 ) :
     return graph 
 
 # =============================================================================
+## print histogram summary as table
+#  @code
+#  histo = ...
+#  print ( histo.table() )   
+#  @endcode
+def _h1_table_ ( h1 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
+    """ Print histogram summary as table 
+    >>> histo = ...
+    >>> print ( histo.table() )   
+    """
+    from ostap.logger.pretty import pretty_float , pretty_ve 
+    rows = [ ( '' , 'value' , 'scale' ) ]
+
+    row = 'Name' , h1.GetName() , '' 
+    rows.append ( row )
+
+    htitle = h1.GetTitle ()
+    if htitle : 
+        row = 'Title' , htitle , '' 
+        rows.append ( row )
+    
+    rdir  = h1.GetDirectory()
+    if rdir : 
+        row = 'directory' , rdir.GetName() , '' 
+        rows.append ( row )
+    groot = ROOT.ROOT.GetROOT()
+    row   = 'gROOT?' , 'True' if groot is rdir else 'False' , '' 
+    rows.append ( row )
+                
+    row = 'SumW2' , 'True' if h1.GetSumw2() else 'False' , '' 
+    rows.append ( row )
+
+    xmin , expo = pretty_float ( h1.xmin () , width = width , precision = precision )    
+    row = 'x-min' , xmin , '10^%+d' % expo if expo else '' 
+    rows.append ( row )
+    
+    xmax , expo = pretty_float ( h1.xmax () , width = width , precision = precision )
+    row = 'x-max' , xmax , '10^%+d' % expo if expo else '' 
+    rows.append ( row )
+
+    nbins = h1.GetXaxis().GetNbins() 
+    row = '#bins' , '%d/%s' %  ( nbins , 'uniform' if h1.GetXaxis().uniform() else 'no-uniform' ) , '' 
+    rows.append ( row )
+    
+    row = '#entries' , '%d' % h1.GetEntries() , '' 
+    rows.append ( row )
+
+    unfl = h1.GetBinContent ( 0 )
+    if unfl :
+        unfl , expo = pretty_float ( unfl , width = width , precision = precision )
+        row = 'underflow', '%s' % unfl  ,  '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+
+    ovfl = h1.GetBinContent ( nbins + 1 )
+    if ovfl :
+        ovfl , expo = pretty_float ( ovfl , width = width , precision = precision )        
+        row = 'overflow' , ovfl , '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+            
+    integral  = h1.Integral()
+    nEff      = h1.GetEffectiveEntries()
+    
+    if integral != h1.GetEntries () or integral != nEff : 
+        integral , expo  = pretty_float ( integral , width = width , precision = precision ) 
+        row = 'in-range' , integral ,  '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+
+    if nEff != h1.GetEntries() or nEff != h1.Integral() :
+        nEff , expo  = pretty_float ( nEff , width = width , precision = precision ) 
+        row = '#eff' , nEff ,  '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+
+    row = 'natural?'   , '%s' % h1.natural () , '' 
+    rows.append ( row )
+
+    row = 'all ints?' , '%s' % h1.allInts ()  , '' 
+    rows.append ( row )
+
+    row = 'all >0/>=0/<0/<=0/=0?', '%s/%s/%s/%s/%s' % ( 'True' if h1.all_positive    () else 'False' ,
+                                                        'True' if h1.all_nonnegative () else 'False' ,
+                                                        'True' if h1.all_negative    () else 'False' ,
+                                                        'True' if h1.all_nonpositive () else 'False' ,
+                                                        'True' if h1.all_zero        () else 'False' ) , ''
+    rows.append ( row )
+
+    
+    rsum , expo  = pretty_float ( h1.riemann_sum ()   , width = width , precision = precision ) 
+    row = 'Riemann sum' , rsum  ,  '10^%+d' % expo if expo else '' 
+    rows.append ( row )
+
+    if h1.nEff() and not h1.all_zero () :
+        
+        row = 'density?'   , '%s' % h1.isDensity() , '' 
+        rows.append ( row )
+        
+        mean , expo = pretty_ve ( h1.mean() , width = width , precision = precision , parentheses = False )
+        row = 'x-mean' , mean, '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        rms , expo = pretty_ve ( h1.rms  () , width = width , precision = precision , parentheses = False )
+        row = 'x-rms' , rms, '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        skew , expo = pretty_ve ( h1.skewness  () , width = width , precision = precision , parentheses = False )
+        row = 'skewness' , skew, '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        kurt , expo = pretty_ve ( h1.kurtosis  () , width = width , precision = precision , parentheses = False )
+        row = 'kurtosis' , kurt, '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        stat = h1.stat()
+        
+        ymin , expo = pretty_float ( stat.min () , width = width , precision = precision )    
+        row = 'y-min' , ymin , '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        ymax , expo = pretty_float ( stat.max () , width = width , precision = precision )    
+        row = 'y-max' , ymax , '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        ymean , expo = pretty_ve ( stat.mean  () , width = width , precision = precision , parentheses = False )
+        row = 'y-mean' , ymean , '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        yrms , expo = pretty_float ( stat.rms () , width = width , precision = precision )    
+        row = 'y-rms' , yrms , '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        
+    has3 = False
+    for row in rows [1:] :
+        if row [ 2 ] :
+            has3 = True
+            break
+    
+    if not has3 :
+        new_rows = []
+        for row in rows : new_rows.append ( row [ :-1] ) 
+        rows = new_rows 
+            
+
+    title = title if title else 'Summary of histogram %s(%s)' % ( type ( h1 ) .__name__ , h1.GetName() ) 
+    
+    table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lc' ) 
+    return table 
+
+# =============================================================================
+## print histogram summary as table
+#  @code
+#  histo = ...
+#  print ( histo.table() )   
+#  @endcode
+def _h2_table_ ( h2 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
+    """ Print histogram summary as table 
+    >>> histo = ...
+    >>> print ( histo.table() )   
+    """
+    from ostap.logger.pretty import pretty_float , pretty_ve 
+    rows = [ ( '' , 'value' , 'scale' ) ]
+
+    row = 'Name' , h2.GetName() , '' 
+    rows.append ( row )
+
+    htitle = h2.GetTitle ()
+    if htitle : 
+        row = 'title' , htitle , ''
+        rows.append ( row )
+    
+    rdir  = h2.GetDirectory()
+    if rdir : 
+        row = 'directory' , rdir.GetName() , '' 
+        rows.append ( row )
+    groot = ROOT.ROOT.GetROOT()
+    row   = 'gROOT?' , 'True' if groot is rdir else 'False' , '' 
+    rows.append ( row )
+                
+    row = 'SumW2' , 'True' if h2.GetSumw2() else 'False' , '' 
+    rows.append ( row )
+
+    xmin , expo = pretty_float ( h2.xmin () , width = width , precision = precision )    
+    row = 'x-min' , xmin , '10^%+d' % expo if expo else '' 
+    rows.append ( row )
+    
+    xmax , expo = pretty_float ( h2.xmax () , width = width , precision = precision )
+    row = 'x-max' , xmax , '10^%+d' % expo if expo else '' 
+    rows.append ( row )
+
+    ymin , expo = pretty_float ( h2.ymin () , width = width , precision = precision )    
+    row = 'y-min' , ymin , '10^%+d' % expo if expo else '' 
+    rows.append ( row )
+    
+    ymax , expo = pretty_float ( h2.ymax () , width = width , precision = precision )
+    row = 'y-max' , ymax , '10^%+d' % expo if expo else '' 
+    rows.append ( row )
+
+    xaxis = h2.GetXaxis() 
+    row = '#xbins' , '%d/%s' %  ( xaxis.GetNbins()  , 'uniform' if xaxis.uniform() else 'no-uniform' ) , '' 
+    rows.append ( row )
+    yaxis = h2.GetYaxis() 
+    row = '#ybins' , '%d/%s' %  ( yaxis.GetNbins()  , 'uniform' if yaxis.uniform() else 'no-uniform' ) , '' 
+    rows.append ( row )
+    
+    row = '#entries' , '%d' % h2.GetEntries()  , '' 
+    rows.append ( row )
+
+    integral  = h2.Integral()
+    nEff      = h2.GetEffectiveEntries()
+    
+    if integral != h2.GetEntries () or integral != nEff : 
+        integral , expo  = pretty_float ( integral , width = width , precision = precision ) 
+        row = 'in-range' , integral ,  '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+
+    if nEff != h2.GetEntries() or nEff != h2.Integral() :
+        nEff , expo  = pretty_float ( nEff , width = width , precision = precision ) 
+        row = '#eff' , nEff ,  '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+
+    row = 'natural?'   , '%s' % h2.natural () , '' 
+    rows.append ( row )
+
+    row = 'all ints?' , '%s' % h2.allInts ()  , '' 
+    rows.append ( row )
+
+    row = 'all >0/>=0/<0/<=0/=0?', '%s/%s/%s/%s/%s' % ( 'True' if h2.all_positive    () else 'False' ,
+                                                        'True' if h2.all_nonnegative () else 'False' ,
+                                                        'True' if h2.all_negative    () else 'False' ,
+                                                        'True' if h2.all_nonpositive () else 'False' ,
+                                                        'True' if h2.all_zero        () else 'False' ) , '' 
+    rows.append ( row )
+
+    rsum , expo  = pretty_float ( h2.riemann_sum ()   , width = width , precision = precision ) 
+    row = 'Riemann sum' , rsum  ,  '10^%+d' % expo if expo else '' 
+    rows.append ( row )
+
+    if h2.nEff() and not h2.all_zero () : 
+        
+        row = 'density?'   , '%s' % h2.isDensity() , '' 
+        rows.append ( row )
+        
+        xmean, ymean = h2.mean () 
+        xrms , yrms  = h2.rms  () 
+        
+        xmean , expo = pretty_ve ( xmean , width = width , precision = precision , parentheses = False )
+        row = 'x-mean' , xmean, '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        xrms , expo = pretty_ve ( xrms  , width = width , precision = precision , parentheses = False )
+        row = 'x-rms' , xrms, '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        ymean , expo = pretty_ve ( ymean , width = width , precision = precision , parentheses = False )
+        row = 'y-mean' , ymean, '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        yrms , expo = pretty_ve ( yrms  , width = width , precision = precision , parentheses = False )
+        row = 'y-rms' , yrms, '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+
+        xyc , expo = pretty_float ( h2.xycorr() , width = width , precision = precision )
+        row = 'xy-corr' , xyc , '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        stat = h2.stat()
+        
+        zmin , expo = pretty_float ( stat.min () , width = width , precision = precision )    
+        row = 'z-min' , zmin , '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        zmax , expo = pretty_float ( stat.max () , width = width , precision = precision )    
+        row = 'z-max' , zmax , '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        zmean , expo = pretty_ve ( stat.mean  () , width = width , precision = precision , parentheses = False )
+        row = 'z-mean' , zmean , '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        zrms , expo = pretty_float ( stat.rms () , width = width , precision = precision )    
+        row = 'z-rms' , zrms , '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+    has3 = False
+    for row in rows [ 1 : ] :
+        if row [ 2 ] :
+            has3 = True
+            break
+        
+    if not has3 :
+        new_rows = []
+        for row in rows : new_rows.append ( row [ : -1 ] )
+        rows = new_rows 
+                
+    title = title if title else 'Summary of histogram %s(%s)' % ( type ( h2 ) .__name__ , h2.GetName() ) 
+    
+    table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lc' ) 
+    return table 
+
+
+# =============================================================================
+## print histogram summary as table
+#  @code
+#  histo = ...
+#  print ( histo.table() )   
+#  @endcode
+def _h3_table_ ( h3 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
+    """ Print histogram summary as table 
+    >>> histo = ...
+    >>> print ( histo.table() )   
+    """
+    from ostap.logger.pretty import pretty_float , pretty_ve 
+    rows = [ ( '' , 'value' , 'scale' ) ]
+
+    row = 'Name' , h3.GetName() , '' 
+    rows.append ( row )
+
+    htitle = h3.GetTitle ()
+    if htitle : 
+        row = 'title' , htitle , ''
+        rows.append ( row )
+    
+    rdir  = h3.GetDirectory()
+    if rdir : 
+        row = 'directory' , rdir.GetName() , '' 
+        rows.append ( row )
+    groot = ROOT.ROOT.GetROOT()
+    row   = 'gROOT?' , 'True' if groot is rdir else 'False' , '' 
+    rows.append ( row )
+                
+    row = 'SumW2' , 'True' if h3.GetSumw2() else 'False' , '' 
+    rows.append ( row )
+
+    xmin , expo = pretty_float ( h3.xmin () , width = width , precision = precision )    
+    row = 'x-min' , xmin , '10^%+d' % expo if expo else '' 
+    rows.append ( row )
+    
+    xmax , expo = pretty_float ( h3.xmax () , width = width , precision = precision )
+    row = 'x-max' , xmax , '10^%+d' % expo if expo else '' 
+    rows.append ( row )
+
+    ymin , expo = pretty_float ( h3.ymin () , width = width , precision = precision )    
+    row = 'y-min' , ymin , '10^%+d' % expo if expo else '' 
+    rows.append ( row )
+    
+    ymax , expo = pretty_float ( h3.ymax () , width = width , precision = precision )
+    row = 'y-max' , ymax , '10^%+d' % expo if expo else '' 
+    rows.append ( row )
+
+    zmin , expo = pretty_float ( h3.zmin () , width = width , precision = precision )    
+    row = 'z-min' , zmin , '10^%+d' % expo if expo else '' 
+    rows.append ( row )
+    
+    zmax , expo = pretty_float ( h3.zmax () , width = width , precision = precision )
+    row = 'z-max' , zmax , '10^%+d' % expo if expo else '' 
+    rows.append ( row )
+
+
+    xaxis = h3.GetXaxis() 
+    row = '#xbins' , '%d/%s' %  ( xaxis.GetNbins()  , 'uniform' if xaxis.uniform() else 'no-uniform' ) , '' 
+    rows.append ( row )
+    yaxis = h3.GetYaxis() 
+    row = '#ybins' , '%d/%s' %  ( yaxis.GetNbins()  , 'uniform' if yaxis.uniform() else 'no-uniform' ) , '' 
+    rows.append ( row )
+    zaxis = h3.GetZaxis() 
+    row = '#zbins' , '%d/%s' %  ( zaxis.GetNbins()  , 'uniform' if zaxis.uniform() else 'no-uniform' ) , '' 
+    rows.append ( row )
+    
+    row = '#entries' , '%d' % h3.GetEntries()  , '' 
+    rows.append ( row )
+
+    integral  = h3.Integral()
+    nEff      = h3.GetEffectiveEntries()
+    
+    if integral != h3.GetEntries () or integral != nEff : 
+        integral , expo  = pretty_float ( integral , width = width , precision = precision ) 
+        row = 'in-range' , integral ,  '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+
+    if nEff != h3.GetEntries() or nEff != h3.Integral() :
+        nEff , expo  = pretty_float ( nEff , width = width , precision = precision ) 
+        row = '#eff' , nEff ,  '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+
+    row = 'natural?'   , '%s' % h3.natural () , '' 
+    rows.append ( row )
+
+    row = 'all ints?' , '%s' % h3.allInts ()  , '' 
+    rows.append ( row )
+
+    row = 'all >0/>=0/<0/<=0/=0?', '%s/%s/%s/%s/%s' % ( 'True' if h3.all_positive    () else 'False' ,
+                                                        'True' if h3.all_nonnegative () else 'False' ,
+                                                        'True' if h3.all_negative    () else 'False' ,
+                                                        'True' if h3.all_nonpositive () else 'False' ,
+                                                        'True' if h3.all_zero        () else 'False' ) , '' 
+    rows.append ( row )
+
+    rsum , expo  = pretty_float ( h3.riemann_sum ()   , width = width , precision = precision ) 
+    row = 'Riemann sum' , rsum  ,  '10^%+d' % expo if expo else '' 
+    rows.append ( row )
+
+    if h3.nEff() and not h3.all_zero () : 
+        
+        row = 'density?'   , '%s' % h3.isDensity() , '' 
+        rows.append ( row )
+        
+        xmean, ymean, zmean = h3.mean () 
+        xrms , yrms , zrms  = h3.rms  () 
+        
+        xmean , expo = pretty_ve ( xmean , width = width , precision = precision , parentheses = False )
+        row = 'x-mean' , xmean, '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+
+        xrms , expo = pretty_ve ( xrms  , width = width , precision = precision , parentheses = False )
+        row = 'x-rms' , xrms, '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        ymean , expo = pretty_ve ( ymean , width = width , precision = precision , parentheses = False )
+        row = 'y-mean' , ymean, '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        yrms , expo = pretty_ve ( yrms  , width = width , precision = precision , parentheses = False )
+        row = 'y-rms' , yrms, '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        zmean , expo = pretty_ve ( zmean , width = width , precision = precision , parentheses = False )
+        row = 'z-mean' , zmean, '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        zrms , expo = pretty_ve ( zrms  , width = width , precision = precision , parentheses = False )
+        row = 'z-rms' , zrms, '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        xyc , expo = pretty_float ( h3.xycorr() , width = width , precision = precision )
+        row = 'xy-corr' , xyc , '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        xzc , expo = pretty_float ( h3.xzcorr() , width = width , precision = precision )
+        row = 'xz-corr' , xzc , '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        yzc , expo = pretty_float ( h3.yzcorr() , width = width , precision = precision )
+        row = 'yz-corr' , yzc , '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        stat = h3.stat()
+        
+        vmin , expo = pretty_float ( stat.min () , width = width , precision = precision )    
+        row = 'v-min' , vmin , '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        vmax , expo = pretty_float ( stat.max () , width = width , precision = precision )    
+        row = 'v-max' , vmax , '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        vmean , expo = pretty_ve ( stat.mean  () , width = width , precision = precision , parentheses = False )
+        row = 'v-mean' , vmean , '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+        vrms , expo = pretty_float ( stat.rms () , width = width , precision = precision )    
+        row = 'v-rms' , vrms , '10^%+d' % expo if expo else '' 
+        rows.append ( row )
+        
+    has3 = False
+    for row in rows [ 1 : ] :
+        if row [ 2 ] :
+            has3 = True
+            break
+        
+    if not has3 :
+        new_rows = []
+        for row in rows : new_rows.append ( row [ : -1 ] )
+        rows = new_rows 
+                
+    title = title if title else 'Summary of histogram %s(%s)' % ( type ( h3 ) .__name__ , h3.GetName() ) 
+    
+    table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lc' ) 
+    return table 
+
+
+ROOT.TH1F.table   = _h1_table_
+ROOT.TH1D.table   = _h1_table_
+ROOT.TH1F.summary = _h1_table_
+ROOT.TH1D.summary = _h1_table_
+
+ROOT.TH2F.table   = _h2_table_
+ROOT.TH2D.table   = _h2_table_
+ROOT.TH2F.summary = _h2_table_
+ROOT.TH2D.summary = _h2_table_
+
+ROOT.TH3F.table    = _h3_table_
+ROOT.TH3D.table    = _h3_table_
+ROOT.TH3F.summary  = _h3_table_
+ROOT.TH3D.summary  = _h3_table_
+
+
+ROOT.TH1F.__repr__ = _h1_table_
+ROOT.TH1D.__repr__ = _h1_table_
+ROOT.TH2F.__repr__ = _h2_table_
+ROOT.TH2D.__repr__ = _h2_table_
+ROOT.TH3F.__repr__ = _h3_table_
+ROOT.TH3D.__repr__ = _h3_table_
+
+
+# =============================================================================
 _decorated_classes_ = (
     ROOT.TH1   ,
     #
@@ -8479,7 +9218,8 @@ _decorated_classes_ = (
     ROOT.TF1   , 
     )
 
-_new_methods_   = (
+_new_methods_  = tuple ( _new_methods_ ) 
+_new_methods_  += (
     #
     ROOT.TH1F.__init__ , 
     ROOT.TH2F.__init__ , 
@@ -8497,6 +9237,9 @@ _new_methods_   = (
     ROOT.TAxis . __reversed__ ,
     ROOT.TAxis . __contains__ ,
     ROOT.TAxis .   scale      ,
+    #
+    ROOT.TAxis.uniform        , 
+    ROOT.TAxis.uniform_bins   , 
     #
     ROOT.TH1   . same_dims    , 
     ROOT.TH1   . same_bins    , 
@@ -9041,41 +9784,57 @@ _new_methods_   = (
     ROOT.TH1F.transform_X_function ,
     ##
     ROOT.TH1   . fill_loop   ,
-    
+    ## 
     ROOT.TH1F  . split       ,
     ROOT.TH1F  . split_bins  ,
-    #
+    ##
     ROOT.TH1   . nEntries    , 
-    # 
+    ## 
     ROOT.TH1   . minimum_bin , 
     ROOT.TH1   . maximum_bin , 
     ROOT.TH2   . minimum_bin , 
     ROOT.TH2   . maximum_bin , 
     ROOT.TH3   . minimum_bin , 
     ROOT.TH3   . maximum_bin ,
-    #
+    ##
     ROOT.TH1F.the_moment     , 
     ROOT.TH1D.the_moment     , 
-    #
+    ##
     ROOT.TH1F. scale_axis    , 
     ROOT.TH1D. scale_axis    , 
-    #
+    ##
     ROOT.TH2F. scale_axes    ,
     ROOT.TH2D. scale_axes    , 
-    #
+    ##
     ROOT.TH3F. scale_axes    , 
     ROOT.TH3D. scale_axes    ,
-    #
+    ##
     ROOT.TH1F. the_integral  , 
     ROOT.TH1D. the_integral  ,
-    #
+    ##
     ROOT.TH2F. the_integral  , 
     ROOT.TH2D. the_integral  ,
-    #
+    ##
     ROOT.TH3F. the_integral  , 
     ROOT.TH3D. the_integral  ,
-    #
-    histo_book
+    ##
+    histo_book               ,
+    ##
+    ROOT.TH1F.table          , 
+    ROOT.TH1D.table          , 
+    ROOT.TH1F.summary        , 
+    ROOT.TH1D.summary        ,
+    ##
+    ROOT.TH2F.table          , 
+    ROOT.TH2D.table          , 
+    ROOT.TH2F.summary        , 
+    ROOT.TH2D.summary        ,
+    ##
+    ROOT.TH3F.table          , 
+    ROOT.TH3D.table          , 
+    ROOT.TH3F.summary        , 
+    ROOT.TH3D.summary        ,
+    ##
     )
 
 # =============================================================================

@@ -46,9 +46,10 @@ namespace
     struct Bin
     {
       // ======================================================================
-      Bin ( const double h = 0  ,
-            const double e = 0  ,
-            const double l = -1 )
+      Bin
+      ( const double h = 0  ,
+        const double e = 0  ,
+        const double l = -1 )
         : height ( h  )
         , error  ( e  )
         , lower ( l ) {}
