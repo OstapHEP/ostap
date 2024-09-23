@@ -164,7 +164,7 @@ def ZA  ( cdf_data ) :
     """
     n       = len ( cdf_data ) 
     flog    = math.log
-    result  = sum ( flog ( Fi) / ( n - i - 0.5 ) + flog ( 1 - Fi ) / ( i + 0.5 ) for ( i , Fi )  in enumerate ( cdf_data ) )
+    result  = sum ( flog ( Fi ) / ( n - i - 0.5 ) + flog ( 1 - Fi ) / ( i + 0.5 ) for ( i , Fi )  in enumerate ( cdf_data ) )
     result *= -1 
     return result    
 # =============================================================================

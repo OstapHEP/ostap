@@ -1,5 +1,7 @@
 ## New features
-
+    
+  1. Add `operator+` for `Ostap::Math.ECDF`
+    
 ## Backward incompatible
 
 ## Bug fixes
@@ -8,26 +10,26 @@
 
 ## New features
     
-  1. Add  `cuts` and `cut_range` argumenst for `ds2numpy` function
+  1. Add  `cuts` and `cut_range` arguments for `ds2numpy` function
   1. Add empirical cumulative  distribtion function `Ostap::Math::ECDF`
   1. Add `cuts` and `cut_range` arguments for `ds2numpy` method
   1. Add method to `RooDataSet` to get empirical cumulative distrivution functions
   1. Add `PDF1.cdf` method to get CDF from 1D-PDF
-  1. Add new module `ostap.stats.gof_1d` for goodness-of-fit for 1D
+  1. Add new module `ostap.stats.gof1d` for goodness-of-fit for 1D
   1. Add new test    `test_stats+_gof1d` for goodness-of-fit for 1D
-  1. `ostap.math.math_ve` : add `significace`, `nsigmas` & `nsigma` functions to calcualte significabce from p-values
+  1. `ostap.math.math_ve` : add `significace`, `nsigmas` & `nsigma` functions to calcualte significance from p-values
   1. Make use of `ostap.math.math_ve.significane` function
   1. Rename `gof_1d` to `gof1d`
   1. Add method `weight` to `Ostap::PyIterator` to access th weigth of the current event
   1. add weight to `tree.withCut` and other tree-looping methods     
-  1. Tiny tweak for treatment of drawing ranges for `f1_draw/f2_draw/f3_draw` fnuctions: form now the explicit setting has  a precedence. 
+  1. Tiny tweaks for the treatment of drawing ranges for `f1_draw/f2_draw/f3_draw` fnuctions: form now the explicit setting has  a precedence. 
   1. `ostap.stats.gof1d` : improve drawing methods 
   1. Add Kuiper's Goodness-of-Fit estimator to `ostap.stats.gof1d`
   1. Add `values` iterator firnctoonfor all hjistogram classes to iterate over th ebin values
-  1. Add methods `table` and `summaary` for 1D-histogram to dump a sumaary of the histogram in the table form
+  1. Add methods `table` and `summary` for 1D-histograms to dump a histogram summary in the table form
   1. Add methdod `all_positive`, `all_negative` , `all_nonpositive`, `all_nonnegative` and `all_zero` for hisgoragm clases to check if
      all bins are positive/negative/non-positive/non-begrtaive/zero.
-  1. Add methods `table` and `summmary` for 2D&3D-hisograms 
+  1. Add methods `table` and `summary` for 2D&3D-histograms 
 
 ## Backward incompatible
 

@@ -39,7 +39,7 @@ _rejs = ( 'r' , 'rej' , 'reject' , 'rejection' )
 ## symbols to indicate the suppression  
 _sups = ( 's' , 'sup' , 'supp' , 'suppress' , 'suppression' )
 # =============================================================================
-## Build the ROC-curve from signal and background disctributuions
+## Build the ROC-curve from signal and background distributions
 #  @param signal    (histogram) of signal     distribution
 #  @param backgrund (histogram) of background distribution
 #  @return ROC-curve
@@ -61,7 +61,7 @@ def roc_curve ( signal                         ,
                 show_signal     = 'efficiency' , 
                 show_background = 'rejection'  ) :
 
-    """Build the ROC-curve from signal and background disctributuions
+    """ Build the ROC-curve from signal and background distributions
     - signal    : (histogram) of signal     distribution
     - backgrund : (histogram) of background distribution
     
