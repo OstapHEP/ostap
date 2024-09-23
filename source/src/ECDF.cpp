@@ -111,6 +111,10 @@ Ostap::Math::ECDF::add
   return  add ( values.begin() , values.end() ) ;
 }
 // ============================================================================
+Ostap::Math::ECDF
+Ostap::Math::ECDF::__add__  ( const Ostap::Math::ECDF&  x )
+{ return (*this) + x ; } 
+// ============================================================================
 // add a value to data container  
 // ============================================================================
 unsigned long

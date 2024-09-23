@@ -112,7 +112,11 @@ namespace Ostap
       // ======================================================================
       ECDF& __iadd__ ( const double x ) { add ( x ) ; return *this ; }
       ECDF& __iadd__ ( const Data&  x ) { add ( x ) ; return *this ; }
-      ECDF& __iadd__ ( const ECDF&  x ) { add ( x ) ; return *this ; }      
+      ECDF  __add__  ( const ECDF&  x ) ;      
+      // ======================================================================
+      inline ECDF& operator+= ( const double x ) { add ( x ) ; return *this ; }
+      inline ECDF& operator+= ( const Data&  x ) { add ( x ) ; return *this ; }
+      inline ECDF& operator+= ( const ECDF&  x ) { add ( x ) ; return *this ; }      
       // ======================================================================
     public:
       // ======================================================================
@@ -150,6 +154,10 @@ namespace Ostap
     // ========================================================================
     /// swap two objects 
     inline void swap ( ECDF& left , ECDF& right ) { left.swap ( right ) ; }
+    /// add two ECDFs
+    inline ECDF operator+( const ECDF& a ,
+                           const ECDF& b )
+    { ECDF c { a } ; c += b ; return c ;  }
     // =======================================================================
   } //                                            end of namespace Ostap::Math
   // ==========================================================================
