@@ -7969,7 +7969,7 @@ def _h_uniform_bins_ ( histo ) :
     xaxis = histo.GetXaxis()
     if not xaxis.uniform() : return False
     yaxis = histo.GetYaxis()
-    if not raxis.uniform() : return False
+    if not yaxis.uniform() : return False
     zaxis = histo.GetZaxis()
     if not zaxis.uniform() : return False
     #
