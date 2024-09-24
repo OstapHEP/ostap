@@ -604,7 +604,45 @@ class VarMaker (object) :
         ##
         return ROOT.RooFit.Binning ( rb )
 
-# =============================================================================
+args_drawing       =   'draw'        , 'drawopts'       , 'drawoption' , 'drawoptions'
+args_verbose       =   'verbose'     ,
+args_silent        =   'silent'      , 'silence'        , 'quiet'
+args_strategy      =   'strategy'    , 'minuitstrategy' ,'strategyminuit'
+args_print         = ( 'printlevel'  , 'levelprint'     ,
+                       'minuitlevel' , 'levelminuit'    ,
+                       'printmiunit' , 'minuitprint'    ) 
+args_printeval     = ( 'printevalerrors' , 'printerrorseval' ,
+                       'evalerrorsprint' , 'errorsevalprint' ,
+                       'printerrors'     , 'errorsprint'     )
+args_timer         =  'timer'     , 'timing'
+args_warnings      =  'warnings'  , 'warning'
+args_sumw2         =  'sumw2'  , 'sumw2err' , 'sumw2errs' , 'sumw2error' , 'sumw2errors'
+args_asymptotic    = ( 'asymptotic'     , 'asymptorocerr'   , 'asymptoticerrs' ,
+                       'asymptoticerror , asymptoticerrors' ) 
+args_batch         = 'batch' , 'batchmode' , 'modebatch'
+args_backend       = 'evalbackend' , 'backendeval' , 'backend'
+args_extended      = 'extended'    ,
+args_numcpu        = 'cpu' , 'ncpu' , 'cpus' , 'ncpus' , 'numcpu' , 'numcpus' 
+args_range         = 'range' , 'fitrange' , 'rangefit' , 'ranges' , 'fitranges'
+args_minimizer     = 'minimizer' , 'minimiser'
+args_hesse         = 'hesse' , 'hessian' 
+args_inithesse     = 'inithesse' , 'initialhesse' , 'hesseinit' , 'hesseinitial' 
+args_optimize      = 'optimizer' , 'optimiser' , 'optimize' , 'optimise'
+args_minos         = 'minos'  , 
+args_save          = 'save'   ,
+args_clonedata     = 'clone'  , 'clonedata' , 'dataclone'
+args_offset        = 'offset' ,
+args_fitoptions    = 'fitoption' , 'fitoptions' , 'optionfit' , 'optionsfit' , 'fitopts' , 'optsfit'
+args_constrains    = 'constraint' , 'contraints' , 'pars' , 'params' , 'parameters'
+args_integratebins = 'integratebin' , 'integratebins' , 'binintegrate' , 'binsintegrate' , 'integrate'
+args_newstyle      = 'newstyle' , 'stylenew' , 'new'
+args_parallel      = 'parallel' , 'parallelize' , 'parallelise'
+args_recover       = ( 'recover'  , 'recoverfromundefined' ,
+                       'recoverfromundefinedregion'  , 
+                       'recoverfromundefinedregions' ) 
+args_maxcalls      = 'maxcalls' , 'maxcall' , 'callmax' , 'callsmax'
+
+ # =============================================================================
 ## @class FitHelper
 #  Helper base class for fit-rrleated objects
 #  - storage of newly created RooFit objects
@@ -653,13 +691,10 @@ class FitHelper(VarMaker) :
             if   key in drawing_options          : continue
             elif k   in transformed_draw_options : continue
             elif key in transformed_draw_options : continue
-            
-            elif key in ( 'draw'                 ,
-                          'drawoption'           ,
-                          'drawoptions'          ) : continue 
+            elif key in args_drawings            : continue
             
             if   isinstance ( a , ROOT.RooCmdArg ) : _args.append ( a )            
-            elif key in ( 'verbose' ,       ) and isinstance ( a , bool ) :
+            elif key in args_verbose and isinstance ( a , bool ) :
                 
                 if not verbose is None :
                     if a != verbose : self.warning ( 'parse_args: Redefine VERBOSE to %s' %  a ) 
@@ -669,9 +704,7 @@ class FitHelper(VarMaker) :
                 silent  = not a 
                 _args.append ( ROOT.RooFit.Verbose (     a ) )
 
-            elif key in ( 'silent'  ,
-                          'silence' ,
-                          'quite'   ) and isinstance ( a , bool ) :
+            elif key in args_silent and isinstance ( a , bool ) :
                 
                 if not silent is None :
                     if a != silent :  self.warning ( 'parse_args: Redefine SILENT to %s' %  a ) 
@@ -681,40 +714,30 @@ class FitHelper(VarMaker) :
                 verbose = not a
                 _args.append ( ROOT.RooFit.Verbose ( not a ) )
                 
-            elif key in ( 'strategy'         , 
-                          'miniutstrategy'   ,
-                          'strategyminuit'   ) and isinstance ( a , integer_types ) and 0 <= a <= 2 :
+            elif key in args_strategy and isinstance ( a , integer_types ) and 0 <= a <= 2 :
                 
                 _args.append ( ROOT.RooFit.Strategy (    a ) )
                 
-            elif key in ( 'printlevel'       ,
-                          'minuitprint'      ,
-                          'minuitlevel'      ) and isinstance ( a , integer_types ) and -1 <= a <= 3 :
+            elif key in args_print and isinstance ( a , integer_types ) and -1 <= a <= 3 :
 
                 prntlev = True 
                 _args.append ( ROOT.RooFit.PrintLevel ( a ) )
                 
-            elif key in ( 'printevalerrors'  ,
-                          'printerrors'      ,
-                          'errorsprint'      ) and isinstance ( a , integer_types ) and -1 <= a :
+            elif key in args_printeval and isinstance ( a , integer_types ) and -1 <= a :
 
                 prnterr = True 
                 _args.append ( ROOT.RooFit.PrintEvalErrors ( a ) )
                 
-            elif key in ( 'timer' , 'timing' ) and isinstance ( a , bool ) :
+            elif key in args_timer and isinstance ( a , bool ) :
                 
                 _args.append ( ROOT.RooFit.Timer    ( a ) )
                 
-            elif key in ( 'warning' , 'warnings' ) and isinstance ( a , bool ) :
+            elif key in args_warnings and isinstance ( a , bool ) :
 
                 prntwarn = True 
                 _args.append ( ROOT.RooFit.Warnings ( a ) ) 
             
-            elif key in ( 'sumw2'            ,
-                          'sumw2err'         ,
-                          'sumw2errs'        ,
-                          'sumw2error'       ,
-                          'sumw2errors'      ) and isinstance ( a , bool ) :
+            elif key in args_sumw2 and isinstance ( a , bool ) :
                 
                 if   a and dataset and     dataset.isWeighted()           : pass 
                 elif a and dataset and not dataset.isWeighted()           :
@@ -725,11 +748,7 @@ class FitHelper(VarMaker) :
 
                 _args.append (  ROOT.RooFit.SumW2Error( a ) )
                                     
-            elif key in ( 'asymptotic'       ,
-                          'asymptoticerr'    ,
-                          'asymptoticerrs'   ,
-                          'asymptoticerror'  ,
-                          'asymptoticerrors' ) and isinstance ( a , bool ) and (6,19) <= root_info :
+            elif key in args_asymptotic and isinstance ( a , bool ) and (6,19) <= root_info :
                 
                 if   a and dataset and     dataset.isWeighted()           : pass 
                 elif a and dataset and not dataset.isWeighted()           :
@@ -745,22 +764,15 @@ class FitHelper(VarMaker) :
                     
                 _args.append (  ROOT.RooFit.AsymptoticError ( a ) )
                     
-            elif key in ( 'batch'            ,
-                          'batchmode'        ,
-                          'modebatch'        ) and isinstance ( a , bool ) and  ( 6, 20) <= root_info < ( 6 , 29 ) :
+            elif key in args_batch and isinstance ( a , bool ) and  ( 6, 20) <= root_info < ( 6 , 29 ) :
                 
                 _args.append (  ROOT.RooFit.BatchMode ( a ) )
 
-            elif key in ( 'evalbackend'   , 
-                          'eval_backend'  , 
-                          'backendeval'   , 
-                          'backend_eval'  , 
-                          'backend'       ) and isinstance ( a , string_types ) and  ( 6, 29 ) <= root_info :
+            elif key in args_backend and isinstance ( a , string_types ) and  ( 6, 32 ) <= root_info :
                 
                 _args.append (  ROOT.RooFit.EvalBackend ( a ) )
 
-
-            elif key in ( 'extended' ,       ) and isinstance ( a , bool ) :
+            elif key in args_extended and isinstance ( a , bool ) :
                 
                 _args.append   (  ROOT.RooFit.Extended ( a ) )
                 
@@ -773,84 +785,67 @@ class FitHelper(VarMaker) :
                 
                 _args.append   (  ROOT.RooFit.NumCPU( a  ) )
                 
-            elif key in ( 'cpu'              ,
-                          'cpus'             ,
-                          'ncpu'             ,
-                          'ncpus'            ,
-                          'numcpu'           ,
-                          'numcpus'          ) and \
+            elif key in args_numcpu and \
                  isinstance ( a    , list_types    ) and 2 == len ( a )  and \
                  isinstance ( a[0] , integer_types ) and 1 <= a[1] and \
                  isinstance ( a[1] , integer_types ) and 0 <= a[1] <=3 :
                 
                 _args.append   (  ROOT.RooFit.NumCPU( a[0] ,  a[1] ) ) 
                 
-            elif key in ( 'range'            ,
-                          'fitrange'         ,
-                          'rangefit'         ,
-                          'ranges'           ,
-                          'fitranges'        ) and isinstance ( a , string_types ) :
+            elif key in args_range and isinstance ( a , string_types ) :
                 
                 _args.append   (  ROOT.RooFit.Range ( a ) )
                 
-            elif key in ( 'range'            ,
-                          'fitrange'         ,
-                          'rangefit'         ) and isinstance ( a , list_types   ) and 2 == len ( a ) \
+            elif key in args_range and isinstance ( a , list_types   ) and 2 == len ( a ) \
                  and isinstance ( a[0] ,  num_types ) \
                  and isinstance ( a[1] ,  num_types ) \
                  and a[0] < a[1]  :
                 
                 _args.append   (  ROOT.RooFit.Range ( a[0] , a[1] ) )
                 
-            elif key in ( 'minimizer'       ,
-                          'minimiser'       ) and isinstance ( a , list_types   ) and 2 == len ( a ) \
+            elif key in args_minimizer and isinstance ( a , list_types   ) and 2 == len ( a ) \
                  and isinstance ( a[0] ,  string_types ) \
                  and isinstance ( a[1] ,  string_types ) :
                 
                 _args.append   (  ROOT.RooFit.Minimizer ( a[0] , a[1] ) )
                 
-            elif key in ( 'minimizer'  , 'minimiser'   ) and \
+            elif key in args_minimizer and \
                  isinstance ( a , string_types ) and a.lower() == 'minuit' :
                 
                 _args.append   (  ROOT.RooFit.Minimizer ( 'Minuit' , 'migrad' ) )
 
-            elif key in ( 'minimizer'  , 'minimiser'   ) and \
+            elif key in args_minimizer and \
                  isinstance ( a , string_types ) and a.lower() == 'minuit2' :
                 
                 _args.append   (  ROOT.RooFit.Minimizer ( 'Minuit2' , 'migrad' ) )
 
-                
-            elif key in  ( 'hesse'    ,     ) and isinstance ( a , bool ) :
+            elif key in  args_hesse and isinstance ( a , bool ) :
                 
                 _args.append   (  ROOT.RooFit.Hesse ( a )  )
                 
-            elif key in  ( 'initialhesse'    ,
-                           'inithesse'       ,
-                           'hesseinit'       ,
-                           'hesseinitial'    ) and isinstance ( a , bool ) :
+            elif key in  args_inithesse and isinstance ( a , bool ) :
                 
                 _args.append   (  ROOT.RooFit.InitialHesse ( a )  )
                 
-            elif key in ( 'optimize'         ,
-                          'optimise'         ) and isinstance ( a , integer_types  ) :
+            elif key in args_optimize and isinstance ( a , integer_types  ) :
                 
                 _args.append   (  ROOT.RooFit.Optimize     ( a )  )
                 
-            elif key in ( 'minos'    ,       ) and isinstance ( a , bool           ) :
+            elif key in args_minos and isinstance ( a , bool           ) :
                 
                 _args.append   (  ROOT.RooFit.Minos        ( a )  )
                 
-            elif key in ( 'minos'    ,       ) and isinstance ( a , ROOT.RooArgSet ) :
+            elif key in args_minos and isinstance ( a , ROOT.RooArgSet ) :
                 
                 _args.append   (  ROOT.RooFit.Minos        ( a )  )
 
-            elif key in ( 'minos'    ,       ) and isinstance ( a , ROOT.RooAbsReal ) and a in self : 
+            elif key in args_minos and isinstance ( a , ROOT.RooAbsReal ) and a in self : 
 
                 vset = ROOT.RooArgSet( a    )
                 self.aux_keep.append ( vset ) 
                 _args.append   (  ROOT.RooFit.Minos        ( vset )  )
                 
-            elif key in ( 'minos'    ,       ) and isinstance ( a , string_types   ) \
+            elif key in args_minos and isinstance ( a , string_types   ) \
                      and hasattr  ( self , 'params' ) and a in self.params ( dataset ) :
                 
                 _v = self.params()[ a ]
@@ -858,7 +853,7 @@ class FitHelper(VarMaker) :
                 self.aux_keep.append ( _s ) 
                 _args.append   (  ROOT.RooFit.Minos        ( _s )  )
                 
-            elif key in ( 'minos'  ,       ) and not isinstance ( a , string_types ) :
+            elif key in args_mino and not isinstance ( a , string_types ) :
 
                 _s     = ROOT.RooArgSet()
                 _pars = self.params ( dataset ) if hasattr  ( self , 'params' ) else ROOT.RooArgSet() 
@@ -874,83 +869,54 @@ class FitHelper(VarMaker) :
                 self.aux_keep.append ( _s ) 
                 _args.append   (  ROOT.RooFit.Minos ( _s )  )
                                 
-            elif key in ( 'save'     ,       ) and isinstance ( a , bool           ) :
+            elif key in args_save and isinstance ( a , bool           ) :
                 
                 _args.append   (  ROOT.RooFit.Save         ( a )  )
                 
-            elif key in ( 'clone'            ,
-                          'clonedata'        ,
-                          'dataclone'        ) and isinstance ( a , bool           ) :
+            elif key in args_clonedata and isinstance ( a , bool           ) :
                 
                 _args.append   (  ROOT.RooFit.CloneData    ( a )  )
                 
-            elif key in ( 'offset' ,         ) and isinstance ( a , bool           ) :
+            elif key in args_offset and isinstance ( a , bool           ) :
                 
                 _args.append   (  ROOT.RooFit.Offset       ( a )  )
                 
-            elif key in ( 'fitoption'  ,
-                          'fitoptions' ,
-                          'optionfit'  ,
-                          'potionsfit' ) and \
-                          isinstance ( a , string_types   ) and root_info < ( 6 , 28 ) :
+            elif key in args_fitoptions and \
+                 isinstance ( a , string_types   ) and root_info < ( 6 , 28 ) :
                 
                 _args.append   (  ROOT.RooFit.FitOptions   ( a )  )
                 
-            elif key in ( 'constraint'       ,
-                          'constraints'      ,
-                          'pars'             ,
-                          'params'           ,
-                          'parameters'       ) :
+            elif key in args_constraints :
+
                 c = self.parse_constraints ( a )
                 if c is None : self.error ('parse_args: Invalid constraint specification: %s/%s' % ( a , type ( a ) ) )
                 else         : _args.append ( c ) 
 
-            elif key in ( 'integratebin'  ,
-                          'integratebins' ,                          
-                          'binintegrate'  ,
-                          'binsintegrate' ,
-                          'integrate'     )  and \
+            elif key in args_integratebins and \
                           isinstance ( a , num_types )  and ( 6 , 24 ) <= root_info :
                 
                 _args.append   (  ROOT.RooFit.IntegrateBins ( a ) )
                 
-            elif key in ( 'newstyle' ,
-                          'stylenew' ,
-                          'new'      ) and \
-                          isinstance ( a , bool   ) and ( 6 , 27 ) <= root_info :
+            elif key in args_newstyle and isinstance ( a , bool   ) and ( 6 , 27 ) <= root_info :
                 
                 _args.append   (  ROOT.RooFit.NewStyle ( a ) )
 
-            elif key in ( 'parallelize' ,
-                          'parallelise' ,
-                          'parallel' ) and \
+            elif key in args_parallel and \
                           isinstance ( a , sized_types )       and \
                           1<= len ( a ) <= 3                   and ( 6 , 27 ) <= root_info :
                 
                 _args.append   (  ROOT.RooFit.Parallelize ( *a ) )
                 
-            elif key in ( 'recover'                     ,
-                          'recoverfromundefined'        ,
-                          'recoverfromundefinedregions' ) and \
+            elif key in args_recover and \
                           isinstance ( a , num_types )    and ( 6, 24 ) <= root_info :
                 
                 _args.append   ( ROOT.RooFit.RecoverFromUndefinedRegions ( 1.0 * float ( a ) ) ) 
                           
-            elif key in ( 'maxcall'  ,
-                          'maxcalls' ,
-                          'callmax'  ,
-                          'callsmax' ) and \
+            elif key in args_maxcalls and \
                      isinstance ( a , integer_types ) and (6,27) <= root_info :
                 
                 _args.append   ( ROOT.RooFit.MaxCalls ( a ) ) 
 
-            elif key in ( 'evalbackend'  ,
-                          'backendeval'  ,
-                          'backend'      ) and \
-                 isinstance ( a , string_types ) and ( 6 , 32 ) <= root_info :
-                
-                _args.append   ( ROOT.RooFit.EvalBackend ( a ) ) 
-                
             else :
                
                 ## self.error ( 'parse_args: Unknown/illegal keyword argument: %s/%s, skip it ' % ( k , type ( a ) ) )
@@ -2116,7 +2082,6 @@ class FitHelper(VarMaker) :
         
         raise TypeError('Unknown types a&b: %s/%s' % ( type ( a ) , type ( b ) ) )
 
-                        
     # ==========================================================================
     ## Helper function to  create soft Gaussian constraint
     #  to the fraction of <code>a</code> and <code>b</code> : a/(a+b)
@@ -2126,7 +2091,7 @@ class FitHelper(VarMaker) :
     #  rC = pdf.soft_fraction_contraint ( N1 , N2 , VE (10,1**2) )
     #  @endcode
     def soft_fraction_constraint ( self , a , b , value , name = '' , title = '' ) :
-        """Helper function to  create soft Gaussian constraint
+        """ Helper function to  create soft Gaussian constraint
         to the fraction of the variables:  a/(a+b)
         >>> N1 = ...
         >>> N2 = ...
@@ -2242,30 +2207,30 @@ class FitHelper(VarMaker) :
     #  n =  pdf.gen_sample ( 10            ) ## get poissonian 
     #  n =  pdf.gen_sample ( VE ( 10 , 3 ) ) ## get gaussian stuff
     #  @endcode
-    def gen_sample ( self , nevents ) :
+    def gen_sample ( self , nEvents , sample = True ) :
         """ Sample 'random' positive number of events
         >>> n =  pdf.gen_sample ( 10            ) ## get poissonian 
         >>> n =  pdf.gen_sample ( VE ( 10 , 3 ) ) ## get gaussian stuff
         """
-        if   isinstance ( nevents , num_types ) and 0 < nevents :
-            return poisson ( nevents )
-        elif isinstance ( nevents , VE ) and \
-                 ( ( 0 <= nevents.cov2 () and 0 < nevents                       ) or 
-                   ( 0 <  nevents.cov2 () and 0 < nevents + 3 * nevents.error() ) ) :
-            for i in range ( 20000 ) :
-                n = int ( ve_gauss ( nEvents ) )
-                if 0 < n : return n 
-            else :
-                self.error ( "Can't generate positive number from %s" % events )
-                return
-            
-        self.error ( "Can't generate positive number from %s/%s" % ( events , type ( events ) ) )
+        if   isinstance ( nEvents , integer_types ) and 1 <= nEvents and not sample : return nEvents         
+        elif isinstance ( nEvents , num_types     ) and 0 <  nEvents :
+            nn = -1 
+            while nn <= 0 : nn = poisson ( nEvents )  
+            return nn 
+        elif isinstance ( nEvents , VE ) and 0 < nEvents.cov2 () and 0 < nEvents.value() + 3 * nEvents.error () : 
+            nn = -1  
+            while nn <= 0 :
+                mu = ve_gauss ( nEvents )
+                if 0 < mu : nn = poisson ( mu ) if sample else int ( mu ) 
+            return nn 
+
+        self.error ( "Can't generate positive number from %s/%s" % ( nEvents , type ( nEvents ) ) )
         return 
 
     # =========================================================================
     ## get the proper min/max range for the variable  
     def vmnmx    ( self , var , vmin , vmax ) :
-        """Get the proper min/max range for the variable 
+        """ Get the proper min/max range for the variable 
         """
         if var.xminmax() :
             vmn , vmx = var.xminmax ()
@@ -2279,8 +2244,6 @@ class FitHelper(VarMaker) :
         assert vmin < vmax, 'Invalid min/max range for %s: %s/%s' % ( var.name  , vmin , vmax )
         
         return vmin , vmax
-
-
 
     # ==========================================================================
     # Several purely technical methods 
