@@ -633,7 +633,7 @@ args_save          = 'save'   ,
 args_clonedata     = 'clone'  , 'clonedata' , 'dataclone'
 args_offset        = 'offset' ,
 args_fitoptions    = 'fitoption' , 'fitoptions' , 'optionfit' , 'optionsfit' , 'fitopts' , 'optsfit'
-args_constrains    = 'constraint' , 'contraints' , 'pars' , 'params' , 'parameters'
+args_constraints   = 'constraint' , 'contraints' , 'pars' , 'params' , 'parameters'
 args_integratebins = 'integratebin' , 'integratebins' , 'binintegrate' , 'binsintegrate' , 'integrate'
 args_newstyle      = 'newstyle' , 'stylenew' , 'new'
 args_parallel      = 'parallel' , 'parallelize' , 'parallelise'
@@ -688,10 +688,11 @@ class FitHelper(VarMaker) :
             
             ## skip "drawing" options 
             if   k   in drawing_options          : continue
-            if   key in drawing_options          : continue
+            elif key in drawing_options          : continue
             elif k   in transformed_draw_options : continue
             elif key in transformed_draw_options : continue
-            elif key in args_drawings            : continue
+            elif k   in args_drawing             : continue
+            elif key in args_drawing             : continue
             
             if   isinstance ( a , ROOT.RooCmdArg ) : _args.append ( a )            
             elif key in args_verbose and isinstance ( a , bool ) :
@@ -853,7 +854,7 @@ class FitHelper(VarMaker) :
                 self.aux_keep.append ( _s ) 
                 _args.append   (  ROOT.RooFit.Minos        ( _s )  )
                 
-            elif key in args_mino and not isinstance ( a , string_types ) :
+            elif key in args_minos and not isinstance ( a , string_types ) :
 
                 _s     = ROOT.RooArgSet()
                 _pars = self.params ( dataset ) if hasattr  ( self , 'params' ) else ROOT.RooArgSet() 
