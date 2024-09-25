@@ -599,12 +599,15 @@ namespace Ostap
     /** \overload evaluate <code>pow(a,b)</code>: \f$ a^b \f$ 
      *  @param a (INPUT) the base 
      *  @param b (INPUT) the exponent 
+     *  @param c (INPUT) correlation coefficient <code>-1<=c<1=</code>
      *  @return the <c>a</c> raised to power <c>b</c> 
      *  @warning invalid and small covariances are ignored 
+     *  @warning correlation coefficient is clamped to [-1,1] region! 
      */
     ValueWithError pow 
-    ( const ValueWithError& a , 
-      const ValueWithError& b ) ;
+    ( const ValueWithError& a     , 
+      const ValueWithError& b     ,
+      const double          c = 0 ) ; 
     // ========================================================================    
     /** evaluate <code>exp(b)</code>: \f$ \mathrm{e}^b \f$ 
      *  @param b (INPUT) the exponent 

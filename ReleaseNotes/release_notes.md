@@ -1,7 +1,8 @@
 ## New features
     
   1. Add `operator+` for `Ostap::Math.ECDF`
-    
+  1. Add correlation coefficient to `Ostap::Math::pow` function
+  
 ## Backward incompatible
 
 ## Bug fixes

@@ -1122,14 +1122,18 @@ Ostap::Math::ValueWithError Ostap::Math::pow
 }
 // ============================================================================
 /*  evaluate pow(a,b)
- *  @param a (INPUT) the base
- *  @param b (INPUT) the exponent
- *  @return the <c>a</c> raised to power <c>b</b>
+ *  @param a (INPUT) the base 
+ *  @param b (INPUT) the exponent 
+ *  @param c (INPUT) correlation coefficient <code>-1<=c<1=</code>
+ *  @return the <c>a</c> raised to power <c>b</c> 
+ *  @warning invalid and small covariances are ignored 
+ *  @warning correlation coefficient is clamped to [-1,1] region! 
  */
 // ============================================================================
 Ostap::Math::ValueWithError Ostap::Math::pow
 ( const Ostap::Math::ValueWithError& a ,
-  const Ostap::Math::ValueWithError& b )
+  const Ostap::Math::ValueWithError& b ,
+  const double                       c ) 
 {
   //
   if ( &a == &b ) 
@@ -1150,13 +1154,15 @@ Ostap::Math::ValueWithError Ostap::Math::pow
   { return pow ( a         , b.value() ) ; }
   //
   const double v  = std::pow ( a.value () , b.value ()     ) ;
-  const double v1 = std::pow ( a.value () , b.value () - 1 ) ;
+  const double da = std::pow ( a.value () , b.value () - 1 ) * b.value () ;
+  const double db = v * std::log ( a.value () ) ;
   //
-  const double e1 = v1 *            b.value ()   ;
-  const double e2 = v  * std::log ( a.value () ) ;
+  const double c2 = std::min ( 1.0 , std::max ( -1.0 , 2*c ) ) ;
   //
-  return Ostap::Math::ValueWithError
-    ( v , e1 * e1 * a.cov2 () + e2 * e2 * b.cov2 () ) ;
+  double cov2 = da * da * a.cov2 () + db * db * b.cov2 () ;
+  if ( !s_zero ( c2 ) ) { cov2 += c2 * da * db * std::sqrt ( a.cov2() * b.cov2() ) ; }
+  //
+  return Ostap::Math::ValueWithError ( v ,cov2 ) ;
 }
 // ============================================================================
 /*  evaluate exp(b)
