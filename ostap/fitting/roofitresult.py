@@ -40,7 +40,7 @@ _new_methods_ = []
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _rfr_params_ (self , float_only = True ) :
-    """GetParameters from RooFitResult:
+    """ GetParameters from RooFitResult:
     >>> result = ...
     >>> params = results
     >>> p0     = params()['A'][0]  ## get the value
@@ -67,7 +67,7 @@ def _rfr_params_ (self , float_only = True ) :
 #  dct = results.dct_params() 
 #  @endcode
 def _rfr_dct_params_ ( self ) :
-    """Get numerical values of all parameters as simple dictionary
+    """ Get numerical values of all parameters as simple dictionary
     >>> result = ...
     >>> dct = results.dct_params() 
     """
@@ -86,7 +86,7 @@ def _rfr_dct_params_ ( self ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _rfr_param_  ( self , pname , float_only = False ) :
-    """Get Parameter from RooFitResult by name 
+    """ Get Parameter from RooFitResult by name 
     >>> result = ...
     >>> signal = results.param('Signal')
     >>> print signal
@@ -107,7 +107,7 @@ def _rfr_param_  ( self , pname , float_only = False ) :
 #  print ( 'A'    in fit_results ) 
 #  @endcode 
 def _rfr_contains_ ( self , label ) :
-    """Check if certain parameter (or index) is in <code>RooFitResult</code> object
+    """ Check if certain parameter (or index) is in <code>RooFitResult</code> object
     >>> fit_result = ...
     >>> print ( 1      in fit_results ) 
     >>> print ( 'mean' in fit_results ) 
@@ -126,7 +126,7 @@ def _rfr_contains_ ( self , label ) :
 # =============================================================================
 ## iterator over fit results 
 def _rfr_iter_ ( self ) :
-    """Iterator over fit results :
+    """ Iterator over fit results :
     >>> fit_result = ...
     >>> for i in fit_results : print i 
     """
@@ -138,7 +138,7 @@ def _rfr_iter_ ( self ) :
 # =============================================================================
 ## iterator over fit items  
 def _rfr_iteritems_ ( self , float_only = False ) :
-    """Iterator over fit items:
+    """ Iterator over fit items:
     >>> fit_result = ...
     >>> for name,var in fit_results.iteritems() :
     ...                   print name,var.as_VE()  
@@ -157,7 +157,7 @@ def _rfr_iteritems_ ( self , float_only = False ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _rfr_corr_  ( self , var1 , var2 ) :
-    """Get correlation coefficient for two parameters 
+    """ Get correlation coefficient for two parameters 
     >>> result = ...
     >>> corr = results.corr('Signal', 'Background')
     >>> print corr
@@ -175,10 +175,10 @@ def _rfr_corr_  ( self , var1 , var2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _rfr_cov_matrix_  ( self , var1 , var2 , *vars ) :
-    """Get covariance (sub) matrix 
+    """ Get covariance (sub) matrix 
     >>> result = ...
     >>> cov = results.cov_matrix('Signal', 'Background')
-    >>> print corr
+    >>> print ( cov ) 
     """
 
     if isinstance ( var1 , str ) : var1 = self.param (   var1 ) [1] 
@@ -207,10 +207,10 @@ def _rfr_cov_matrix_  ( self , var1 , var2 , *vars ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _rfr_covmatrix_  ( self , tmatrix = False ) :
-    """Get covariance ( matrix 
+    """ Get covariance ( matrix 
     >>> result = ...
-    >>> cov = results.covmatrix()
-    >>> print corr
+    >>> cov = results.covmatrix()[
+    >>> print ( corr ) 
     """
         
     cm = self.covarianceMatrix ()
@@ -237,7 +237,7 @@ def _rfr_covmatrix_  ( self , tmatrix = False ) :
 #  @endcode
 #  @see Ostap::Math::SVectorWithError
 def _rfr_results_( self , *vars ) :
-    """Get the required results in form of SVectorWithError object
+    """ Get the required results in form of SVectorWithError object
     >>> fit_resuts = ...
     >>> res   = fit_results.results( 'A', 'B' , 'C' )
     >>> print res, res.cov2() 
@@ -287,7 +287,7 @@ def _rfr_results_( self , *vars ) :
 #  eigenvalues =  result.cov_eigenvalues() 
 #  @endcode 
 def _rfr_eigenvalues_ ( self , sorted = True ) :
-    """Get vector of eigenvalues for the covarinace matrix
+    """ Get vector of eigenvalues for the covariance matrix
     >>> result = ...
     >>> eigenvalues =  result.cov_eigenvalues() 
     """
@@ -299,10 +299,10 @@ def _rfr_eigenvalues_ ( self , sorted = True ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _rfr_cov_  ( self , var1 , var2 ) :
-    """Get covariance (sub) matrix 
+    """ Get covariance (sub) matrix 
     >>> result = ...
     >>> cov = results.cov('Signal', 'Background')
-    >>> print corr
+    >>> print (cov)
     """
     if isinstance ( var1 ,  str ) : var1 = self.param ( var1 )[1]
     if isinstance ( var2 ,  str ) : var2 = self.param ( var2 )[1]
@@ -361,7 +361,7 @@ def _rfr_max_cor_ ( self , v ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-08-03
 def _rfr_getattr_ ( self , att ) :
-    """Get fit-parameter as attribute
+    """ Get fit-parameter as attribute
     >>> r = ....
     >>> print( 'sigma is', r.sigma)
     """
@@ -385,7 +385,7 @@ def _rfr_getattr_ ( self , att ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-08-03
 def _rfr_getitem_ ( self , key  ) :
-    """Get fit-parameter through the key/name 
+    """ Get fit-parameter through the key/name 
     >>> fit_result = ...
     >>> sigma = fit_result['sigma']
     """
@@ -409,7 +409,7 @@ def _rfr_getitem_ ( self , key  ) :
 #  >>> print r.sum( 'S' , 'B' )  ## S+B
 #  @endcode
 def _rfr_sum_ ( self , var1 , var2 , *vars ) :
-    """Get correct estimate of sum of two or more variables,
+    """ Get correct estimate of sum of two or more variables,
     taking into account correlations
     >>> r = ...
     >>> print r.sum( 'S' , 'B' ) ## S+B
@@ -444,7 +444,7 @@ def _rfr_sum_ ( self , var1 , var2 , *vars ) :
 #  @endcode
 #  @see Gaudi:Math::multiply 
 def _rfr_multiply_ ( self , var1 ,  var2 , *vars ) :
-    """Get correct estimate of product of two variables,
+    """ Get correct estimate of product of two variables,
     taking into account correlations
     >>> r = ...
     >>> print r.multiply( 'S' , 'B' ) ## S*B
@@ -485,7 +485,7 @@ def _rfr_multiply_ ( self , var1 ,  var2 , *vars ) :
 #  @endcode
 #  @see Ostap:Math::divide
 def _rfr_divide_ ( self , var1 , var2 ) :
-    """Get correct estimate of division of two variables,
+    """ Get correct estimate of division of two variables,
     taking into account correlations
     >>> r = ...
     >>> print r.divide( 'S' , 'B' ) ## S/B
@@ -506,7 +506,7 @@ def _rfr_divide_ ( self , var1 , var2 ) :
 #  @endcode
 #  @see Ostap:Math::subtract
 def _rfr_subtract_ ( self , var1 , var2 ) :
-    """Get correct estimate of subtraction of two variables,
+    """ Get correct estimate of subtraction of two variables,
     taking into account correlations
     >>> r = ...
     >>> print r.subtract( 'S' , 'B' ) ## S-B
@@ -527,7 +527,7 @@ def _rfr_subtract_ ( self , var1 , var2 ) :
 #  @endcode
 #  @see Gaudi:Math::divide
 def _rfr_fraction_ ( self , var1 , var2 ) :
-    """Get correct estimate of fraction of two variables,
+    """ Get correct estimate of fraction of two variables,
     taking into account correlations
     >>> r = ...
     >>> print r.fraction( 'S' , 'B' ) ##   S/(S+B)
@@ -548,7 +548,7 @@ def _rfr_fraction_ ( self , var1 , var2 ) :
 #  @endcode
 #  @see Gaudi:Math::divide
 def _rfr_asymmetry_ ( self , var1 , var2 ) :
-    """Get correct estimate of asymmetry of two variables, (v1-v2)/(v1+v2)
+    """ Get correct estimate of asymmetry of two variables, (v1-v2)/(v1+v2)
     taking into account correlations
     >>> r = ...
     >>> print r.asymmetry( 'A' , 'B' ) ##   (A-B)/(A+B)
@@ -565,7 +565,30 @@ def _rfr_asymmetry_ ( self , var1 , var2 ) :
     else : 
         return -1 * self.ratio ( var2 , var1 ) . asym ( _one )
 
+# ===========================================================================
+## get correct estimate of power:  \f$ a^b \f$ 
+#  taking into account correlations
+#  @code
+#  >>> r = ...
+#  >>> print r.pow( 'A' , 'B' ) ## A**B
+#  @endcode
+#  @see Gaudi:Math::pow
+def _rfr_pow_ ( self , var1 , var2 ) :
+    """ Get correct estimate of pow-function of two variables, v1**v2, 
+    taking into account correlations
+    >>> r = ...
+    >>> print r.pow( 'A' , 'B' ) ##  A**B 
+    """
+    if isinstance ( var1 , str ) : var1 = self.param ( var1 ) [1]
+    if isinstance ( var2 , str ) : var2 = self.param ( var2 ) [1]
+    ##
+    _v1  = VE ( var1.value ) 
+    _v2  = VE ( var2.value ) 
+    _cor = self.corr  ( var1 , var2 )
+    return Ostap.Math.pow ( _v1 , _v2 , _cor ) 
 
+    
+    
 # =============================================================================
 ## evaluate the certain  function/expression for the fit   result
 # @code
@@ -574,7 +597,7 @@ def _rfr_asymmetry_ ( self , var1 , var2 ) :
 # val = re.evaluate ( func , ( 'x' , 'y' , 'z' ) ) 
 # @endcode
 def _rfr_evaluate_ ( self , func , args , partial = () ) :
-    """Evaluate the certain  function/expression for the fit   result
+    """ Evaluate the certain  function/expression for the fit   result
     >>> func = lambda x , y , z : x*x+y*y+z*z
     >>> res = ... # RooFitResult object
     >>> val = re.evaluate ( func , ( 'x' , 'y' , 'z' ) ) 
@@ -713,7 +736,6 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
 
     rows = [ header ] + rows
     
-    
     ## constant/fix parameters 
     crows = [] 
     for p in pars_all :
@@ -810,9 +832,9 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _rfr_print_ ( self , opts = 'v' ) :
-    """Easy print of RooFitResult
+    """ Easy print of RooFitResult
     >>> result = ...
-    >>> print result    
+    >>> print ( result ) 
     """
     if not valid_pointer ( self ) : return 'Invalid RooFitResult'
 
@@ -845,7 +867,7 @@ def _rfr_print_ ( self , opts = 'v' ) :
 #  @endcode 
 #  @see Ostap::Utils::global_cc 
 def _rfr_global_cc_ ( rfr , par ) :
-    """Get global correlation coeffcient
+    """ Get global correlation coeffcient
     
     - see `Ostap.Utils.global_cc `
     
@@ -910,7 +932,7 @@ def _rfr_global_corr_ ( rfr , par ) :
     
     np    = len ( rfr ) 
 
-    return _rfr_global_cc_ (rfr , par ) 
+    return _rfr_global_cc_ ( rfr , par ) 
 
     ## ## ostap.math.linalg2 machinery fails for large matrices
     ## if 10 >= np or ( np , 'double' ) in LA.LinAlgT.known_ssymmatrices : 
@@ -954,7 +976,7 @@ def _rfr_len_ ( rfr ) :
 #  r1.kullback( r2 )
 #  @endcode
 def _rfr_kullback_ ( r1 , r2 ) :
-    """Symmetrized Kullback-Leibler divergency between two RooFitResult objects
+    """ Symmetrized Kullback-Leibler divergency between two RooFitResult objects
     >>> r1 = ...
     >>> r2 = ...
     >>> r1.kullback( r2 )
@@ -998,7 +1020,7 @@ def _rfr_kullback_ ( r1 , r2 ) :
 #  @endcode
 #  @see RooMinimizer 
 def _rm_migrad_  ( self , refit = 0 , tag = "" , minos = () ) :
-    """Run MIGRAD for RooMinimizer
+    """ Run MIGRAD for RooMinimizer
     - see ROOT.RooMinimizer 
     >>> pdf = ...
     >>> minuit = pdf.minuit()
@@ -1030,7 +1052,7 @@ def _rm_migrad_  ( self , refit = 0 , tag = "" , minos = () ) :
 #  minuit.minos ( 'sigma' , 'mean' )  
 #  @endcode
 def _rm_minos_ ( self , *variables ) :
-    """Run MINOS for set of parameters
+    """ Run MINOS for set of parameters
     >>> pdf = ...
     >>> minuit = pdf.minuit( ... )
     >>> minuit.migrad() 
@@ -1095,7 +1117,7 @@ def _rm_contour_ ( self                   ,
                    npoints = 100          ,
                    *levels                ) : 
 
-    """Make 2D contours  in uniys  of 'sigma'
+    """ Make 2D contours  in uniys  of 'sigma'
     >>> pdf    = ...
     >>> minuit = pdf.minuit( ... )
     >>> minuit.migrad() 
@@ -1147,50 +1169,70 @@ ROOT.RooFitResult . parameters       = _rfr_params_
 ROOT.RooFitResult . params           = _rfr_params_
 ROOT.RooFitResult . param            = _rfr_param_
 ROOT.RooFitResult . parameter        = _rfr_param_
-ROOT.RooFitResult . corr             = _rfr_corr_
-ROOT.RooFitResult . cor              = _rfr_corr_
-ROOT.RooFitResult . max_cor          = _rfr_max_cor_
-ROOT.RooFitResult . max_corr         = _rfr_max_cor_
-ROOT.RooFitResult . cov              = _rfr_cov_
-ROOT.RooFitResult . covariance       = _rfr_cov_
-ROOT.RooFitResult . cov_matrix       = _rfr_cov_matrix_
-ROOT.RooFitResult . covmatrix        = _rfr_covmatrix_ 
-ROOT.RooFitResult . parValue         = lambda s,n : s.parameter(n)[0]
-ROOT.RooFitResult . sum              = _rfr_sum_
-ROOT.RooFitResult . plus             = _rfr_sum_
-ROOT.RooFitResult . multiply         = _rfr_multiply_
-ROOT.RooFitResult . product          = _rfr_multiply_
-ROOT.RooFitResult . subtract         = _rfr_subtract_
-ROOT.RooFitResult . minus            = _rfr_subtract_
-ROOT.RooFitResult . divide           = _rfr_divide_
-ROOT.RooFitResult . ratio            = _rfr_divide_
-ROOT.RooFitResult . fraction         = _rfr_fraction_
-ROOT.RooFitResult . results          = _rfr_results_
-ROOT.RooFitResult . evaluate         = _rfr_evaluate_ 
-ROOT.RooFitResult . cov_eigenvalues  = _rfr_eigenvalues_
-ROOT.RooFitResult . table            = _rfr_table_
-ROOT.RooFitResult . global_corr      = _rfr_global_corr_
-ROOT.RooFitResult . kullback         = _rfr_kullback_
-ROOT.RooFitResult . kullback_leibler = _rfr_kullback_
-ROOT.RooFitResult . __len__          = _rfr_len_ 
-ROOT.RooFitResult . global_cc        = _rfr_global_cc_
+ROOT.RooFitResult . results            = _rfr_results_
+ROOT.RooFitResult . corr               = _rfr_corr_
+ROOT.RooFitResult . cor                = _rfr_corr_
+ROOT.RooFitResult . max_cor            = _rfr_max_cor_
+ROOT.RooFitResult . max_corr           = _rfr_max_cor_
+ROOT.RooFitResult . max_correlation    = _rfr_max_cor_
+ROOT.RooFitResult . global_cor         = _rfr_global_corr_
+ROOT.RooFitResult . global_corr        = _rfr_global_corr_
+ROOT.RooFitResult . global_correlation = _rfr_global_corr_
+ROOT.RooFitResult . global_cc          = _rfr_global_cc_
+ROOT.RooFitResult . cov                = _rfr_cov_
+ROOT.RooFitResult . covariance         = _rfr_cov_
+ROOT.RooFitResult . cov_matrix         = _rfr_cov_matrix_
+ROOT.RooFitResult . covmatrix          = _rfr_covmatrix_ 
+ROOT.RooFitResult . parValue           = lambda s,n : s.parameter(n)[0]
+ROOT.RooFitResult . sum                = _rfr_sum_
+ROOT.RooFitResult . plus               = _rfr_sum_
+ROOT.RooFitResult . multiply           = _rfr_multiply_
+ROOT.RooFitResult . product            = _rfr_multiply_
+ROOT.RooFitResult . subtract           = _rfr_subtract_
+ROOT.RooFitResult . minus              = _rfr_subtract_
+ROOT.RooFitResult . divide             = _rfr_divide_
+ROOT.RooFitResult . ratio              = _rfr_divide_
+ROOT.RooFitResult . fraction           = _rfr_fraction_
+ROOT.RooFitResult . asymmetry          = _rfr_asymmetry_
+ROOT.RooFitResult . pow                = _rfr_pow_
+ROOT.RooFitResult . power              = _rfr_pow_
+ROOT.RooFitResult . evaluate           = _rfr_evaluate_
+
+ROOT.RooFitResult . kullback           = _rfr_kullback_
+ROOT.RooFitResult . kullback_leibler   = _rfr_kullback_
+ROOT.RooFitResult . cov_eigenvalues    = _rfr_eigenvalues_
+
+ROOT.RooFitResult . table              = _rfr_table_
+ROOT.RooFitResult . __len__            = _rfr_len_ 
 
 _new_methods_ += [
-    ROOT.RooFitResult . __repr__         ,
-    ROOT.RooFitResult . __str__          ,
-    ROOT.RooFitResult . __call__         ,
-    ROOT.RooFitResult . __getattr__      ,
-    ROOT.RooFitResult . __iter__         ,
-    ROOT.RooFitResult . __contains__     ,
-    ROOT.RooFitResult . iteritems        ,
-    ROOT.RooFitResult . parameters       ,
-    ROOT.RooFitResult . params           ,
-    ROOT.RooFitResult . param            ,
-    ROOT.RooFitResult . parameter        ,
-    ROOT.RooFitResult . corr             ,
-    ROOT.RooFitResult . cor              ,
-    ROOT.RooFitResult . max_cor          ,
-    ROOT.RooFitResult . max_corr         ,
+    ROOT.RooFitResult . __repr__            ,
+    ROOT.RooFitResult . __str__             ,
+    ROOT.RooFitResult . __call__            ,
+    ROOT.RooFitResult . __getattr__         ,
+    ROOT.RooFitResult . __iter__            ,
+    ROOT.RooFitResult . __contains__        ,
+    ROOT.RooFitResult . iteritems           ,
+    ROOT.RooFitResult . parameters          ,
+    ROOT.RooFitResult . params              ,
+    ROOT.RooFitResult . dct_params          ,
+    ROOT.RooFitResult . results             ,
+    ROOT.RooFitResult . results             ,
+    ROOT.RooFitResult . param               ,
+    ROOT.RooFitResult . parameter           ,
+    #
+    ROOT.RooFitResult . corr                ,
+    ROOT.RooFitResult . cor                 ,
+    #
+    ROOT.RooFitResult . max_cor             ,
+    ROOT.RooFitResult . max_corr            ,
+    ROOT.RooFitResult . max_correlation     ,
+    #
+    ROOT.RooFitResult . global_cor          ,
+    ROOT.RooFitResult . global_corr         ,
+    ROOT.RooFitResult . global_correlation  ,
+    ROOT.RooFitResult . global_cc           ,
+    # 
     ROOT.RooFitResult . cov              ,
     ROOT.RooFitResult . covariance       ,
     ROOT.RooFitResult . parValue         ,
@@ -1203,12 +1245,13 @@ _new_methods_ += [
     ROOT.RooFitResult . divide           ,
     ROOT.RooFitResult . ratio            ,
     ROOT.RooFitResult . fraction         ,
-    ROOT.RooFitResult . results          ,
+    ROOT.RooFitResult . asymmetry        ,
+    ROOT.RooFitResult . pow              ,
+    ROOT.RooFitResult . power            ,
     ROOT.RooFitResult . evaluate         ,
     ROOT.RooFitResult . table            ,
     ROOT.RooFitResult . cov_eigenvalues  ,
     ROOT.RooFitResult . covmatrix        ,
-    ROOT.RooFitResult . global_corr      ,
     ROOT.RooFitResult . kullback         , 
     ROOT.RooFitResult . kullback_leibler ,
     ]

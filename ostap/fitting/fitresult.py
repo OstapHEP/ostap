@@ -34,7 +34,7 @@ logger.debug ( 'Tiny decoration for ROOT.FitResult object')
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _fit_repr_ ( self ) :
-    """Representaion of TFitResult object
+    """ Representaion of TFitResult object
     >>> fit_result = histo.Fit( func , 'S' , ... )
     >>> print fit_result
     """
@@ -236,7 +236,7 @@ def _fit_iter_ ( r ) :
 #  name = r.GetParNumber ( 'mass' ) 
 #  @endcode
 def _fit_parnum_ ( self , par ) : 
-    """Get parameter number:
+    """ Get parameter number:
     >>> r    = h1.Fit( ... )
     >>> name = r.GetParNumber ( 'mass' ) 
     """ 
@@ -262,7 +262,7 @@ def _fit_parnum_ ( self , par ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-12
 def _fit_contains_ ( self , par ) :
-    """Check parameter
+    """ Check parameter
     >>> r = h1.Fit(....) ##
     >>> if i   in r :   ...  ## check parameter by index  
     >>> if 'm' in r :   ...  ## check parameter by name  
@@ -299,7 +299,7 @@ def _fit_getitem_ ( self , par ) :
 #  print r.cor(1,2)
 #  @endcode 
 def _fit_cor_ ( self , i , j ) :
-    """Get correlation coefficient for parameters 'i' and 'j'
+    """ Get correlation coefficient for parameters 'i' and 'j'
     >>> r = ...
     >>> print r.cor(1,2)
     """
@@ -324,7 +324,7 @@ def _fit_cor_ ( self , i , j ) :
 #  print r.corMatrix()
 #  @endcode 
 def _fit_corm_ ( self , root = False ) :
-    """Get correlation matrix 
+    """ Get correlation matrix 
     >>> r = ...
     >>> print r.corMtrx ()
     """
