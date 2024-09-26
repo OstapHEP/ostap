@@ -89,16 +89,17 @@ def test_ipyparallel_function () :
         return
 
     result = None 
-    with ipp.Cluster () as cluster :
-        
-        view    = cluster.load_balanced_view()        
-        results = view.map_async ( make_histos , zip  ( count () , inputs ) )
-        
-        for r in progress_bar ( results ) :
-            if not result  : result = r
-            else           : result.Add ( r )
+    with warnings.catch_warnings() :
+        warnings.simplefilter('ignore', category=UserWarning)
+        with ipp.Cluster () as cluster :
             
-               
+            view    = cluster.load_balanced_view()        
+            results = view.map_async ( make_histos , zip  ( count () , inputs ) )
+            
+            for r in progress_bar ( results ) :
+                if not result  : result = r
+                else           : result.Add ( r )
+                               
     with use_canvas ( 'test_ipyparallel_function' , wait = 2 ) : 
         logger.info ( "Histogram is %s" % result.dump ( 80 , 20 ) )
         logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
@@ -109,7 +110,7 @@ def test_ipyparallel_function () :
 # =============================================================================
 ## test parallel processing with ipyparallel
 def test_ipyparallel_callable () :
-    """Test parallel processnig with ipyparallel
+    """ Test parallel processnig with ipyparallel
     """
 
     logger = getLogger ( "test_ipyparallel_callable")    
@@ -131,18 +132,20 @@ def test_ipyparallel_callable () :
         return
 
     result = None 
-    with ipp.Cluster () as cluster :
-        
-        ##view    = cluster.load_balanced_view()
-        view    = cluster[:] 
-        view.use_dill()
-        
-        results = view.map_async ( mh , zip  ( count () , inputs ) )
-        
-        for r in progress_bar ( results ) :
-            if not result  : result = r
-            else           : result.Add ( r )
-                            
+    with warnings.catch_warnings() :
+        warnings.simplefilter('ignore', category=UserWarning)
+        with ipp.Cluster () as cluster :
+            
+            ##view    = cluster.load_balanced_view()
+            view    = cluster[:] 
+            view.use_dill()
+            
+            results = view.map_async ( mh , zip  ( count () , inputs ) )
+            
+            for r in progress_bar ( results ) :
+                if not result  : result = r
+                else           : result.Add ( r )
+                
     with use_canvas ( 'test_ipyparallel_function' , wait = 2 ) : 
         logger.info ( "Histogram is %s" % result.dump ( 80 , 20 ) )
         logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 

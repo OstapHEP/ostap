@@ -124,8 +124,11 @@ if ipp and ( 8,0 ) <= ipp.version_info :
             - no merging of results  
             """
 
-            silent = self.silent or not progress 
-            with ipp.Cluster ( **self.__kwargs ) as cluster :
+            silent = self.silent or not progress
+            with warnings.catch_warnings() :
+                warnings.simplefilter('ignore', category=UserWarning)
+                cluster = ipp.Cluster ( **self.__kwargs ) 
+            with cluster :
 
                 if   self.__use_dill :
                     view = cluster[:]                    

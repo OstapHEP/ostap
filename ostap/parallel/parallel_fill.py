@@ -34,7 +34,7 @@ else                       : logger = getLogger ( __name__     )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-09-23 
 class  MakeDSTask(Task) :
-    """The simplest task object for efficient fill of RooDataSet from TChain 
+    """ The simplest task object for efficient fill of RooDataSet from TChain 
     - for 12-core machine, clear speed-up factor of about 8 is achieved 
     """
     ## 
@@ -77,9 +77,9 @@ class  MakeDSTask(Task) :
     
     ## merge results/datasets 
     def merge_results ( self , result , jobid = -1 ) :
-        """Merge results/datasets
+        """ Merge results/datasets
         """
-        import ostap.fitting.dataset
+        from ostap.fitting.dataset import Ostap
         if result :
             ds , stat = result
             if not self.the_output or not self.the_output[0] :
@@ -91,7 +91,9 @@ class  MakeDSTask(Task) :
                 stat_.processed  += stat.processed ## procesed 
                 stat_.skipped    += stat.skipped   ## skipped                
                 self.the_output   = ds_ , stat_
-                ds.erase () 
+                if isinstance ( ds , ROOT.RooDataSet ) :
+                    ds = Ostap.MoreRooFit.delete_data ( ds )
+                    del ds 
             del result            
             logger.debug ( 'Merging: %d entries ' % len( self.the_output[0] ) )
         else :
