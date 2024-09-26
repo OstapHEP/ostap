@@ -21,22 +21,27 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-
-ipp = None 
-if ( 3 , 6 )<= sys.version_info : 
-    try :
+ipp = None
+# =============================================================================
+if ( 3 , 6 )<= sys.version_info :
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
         with warnings.catch_warnings() :
             warnings.simplefilter('ignore')
             import ipyparallel as ipp
-    except ImportError : 
+        # =====================================================================
+    except ImportError : # ====================================================
+        # =====================================================================
         ipp = None 
-
 # =============================================================================
-try :
+try : # =======================================================================
+    # =========================================================================
     import dill
-except ImportError :
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     dill = None
-    
 # =============================================================================
 ## simple    function that created and  fill a histogram
 def make_histos ( item ) :
@@ -52,7 +57,7 @@ def make_histos ( item ) :
 ## @class MakeHisto
 #  helper class to create a fill histograms
 class MakeHisto(object) :
-    """Helper class to create a fill histoghrams
+    """ Helper class to create a fill histoghrams
     """
     def process  ( self , item ) :
         i, n = item 
@@ -71,20 +76,20 @@ inputs = 50 * [ 100 ]
 # =============================================================================
 ## test parallel processing with ipyparallel
 def test_ipyparallel_function () :
-    """Test parallel processnig with ipyparallel
+    """ Test parallel processnig with ipyparallel
     """
 
     logger = getLogger ( "test_ipyparallel_function")    
     logger.info ('Test job submission with ipyparallel')
     
-    if not (3,6)<= sys.version_info :
+    if not ( 3 , 6 )<= sys.version_info :
         logger.error ( "python3.6 is required for the test!")
         
     if not ipp :
         logger.error ( "ipyparallel module is not available")
         return
     
-    if not (8,0) <= ipp.version_info :
+    if not ( 8 , 0 ) <= ipp.version_info :
         logger.error ( "ipyparallel module is too old %s" % str ( ipp.version_info ) ) 
         return
 
@@ -116,14 +121,14 @@ def test_ipyparallel_callable () :
     logger = getLogger ( "test_ipyparallel_callable")    
     logger.info ('Test job submission with ipyparallel')
     
-    if not (3,6)<= sys.version_info :
+    if not ( 3 , 6 )<= sys.version_info :
         logger.error ( "python3.6 is required for the test!")
         
     if not ipp :
         logger.error ( "ipyparallel module is not available")
         return
     
-    if not (8,0) <= ipp.version_info :
+    if not ( 8 , 0 ) <= ipp.version_info :
         logger.error ( "ipyparallel module is too old %s" % str ( ipp.version_info ) ) 
         return
 
@@ -153,7 +158,6 @@ def test_ipyparallel_callable () :
 
     return result
 
-    
 # =============================================================================
 if '__main__' == __name__ :
     
