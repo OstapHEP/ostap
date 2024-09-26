@@ -111,7 +111,7 @@ if ipp and ( 8,0 ) <= ipp.version_info :
         #  - no summary printout 
         #  - no merging of results  
         def iexecute ( self , job , jobs_args , progress = False ) :
-            """Process the bare `executor` function
+            """ Process the bare `executor` function
             >>> mgr  = WorkManager  ( .... )
             >>> job  = ...
             >>> args = ...
@@ -127,23 +127,22 @@ if ipp and ( 8,0 ) <= ipp.version_info :
             silent = self.silent or not progress
             with warnings.catch_warnings() :
                 warnings.simplefilter('ignore', category=UserWarning)
-                cluster = ipp.Cluster ( **self.__kwargs ) 
-            with cluster :
+                with ipp.Cluster ( **self.__kwargs ) as cluster :
 
-                if   self.__use_dill :
-                    view = cluster[:]                    
-                    view.use_dill()
-                elif self.__balanced : 
-                    view = cluster.load_balanced_view()
-                else :
-                    view = cluster[:]                    
-                
-                results = view.map_async ( job , jobs_args )
-
-                for result in progress_bar ( results                          ,
-                                             description = "# Jobs execution" , 
-                                             silent      = silent             ) : 
-                    yield result 
+                    if   self.__use_dill :
+                        view = cluster[:]                    
+                        view.use_dill ()
+                    elif self.__balanced : 
+                        view = cluster.load_balanced_view()
+                    else :
+                        view = cluster[:]                    
+                        
+                    results = view.map_async ( job , jobs_args )
+                    
+                    for result in progress_bar ( results                          ,
+                                                 description = "# Jobs execution" , 
+                                                 silent      = silent             ) : 
+                        yield result 
                     
         # ========================================================================-
         ## get PP-statistics if/when possible 

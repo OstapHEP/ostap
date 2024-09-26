@@ -91,15 +91,14 @@ def test_ipyparallel_function () :
     result = None 
     with warnings.catch_warnings() :
         warnings.simplefilter('ignore', category=UserWarning)
-        cluster = ipp.Cluster ()
-    with cluster :
+        with ipp.Cluster () as cluster : 
         
-        view    = cluster.load_balanced_view()        
-        results = view.map_async ( make_histos , zip  ( count () , inputs ) )
-        
-        for r in progress_bar ( results ) :
-            if not result  : result = r
-            else           : result.Add ( r )
+            view    = cluster.load_balanced_view()        
+            results = view.map_async ( make_histos , zip  ( count () , inputs ) )
+            
+            for r in progress_bar ( results ) :
+                if not result  : result = r
+                else           : result.Add ( r )
             
     with use_canvas ( 'test_ipyparallel_function' , wait = 2 ) : 
         logger.info ( "Histogram is %s" % result.dump ( 80 , 20 ) )
@@ -135,18 +134,17 @@ def test_ipyparallel_callable () :
     result = None 
     with warnings.catch_warnings() :
         warnings.simplefilter('ignore', category=UserWarning)
-        cluster = ipp.Cluster ()     
-    with cluster :
+        with ipp.Cluster () as cluster : 
         
-        ##view    = cluster.load_balanced_view()
-        view    = cluster[:] 
-        view.use_dill()
-        
-        results = view.map_async ( mh , zip  ( count () , inputs ) )
-        
-        for r in progress_bar ( results ) :
-            if not result  : result = r
-            else           : result.Add ( r )
+            ##view    = cluster.load_balanced_view()
+            view    = cluster[:] 
+            view.use_dill()
+            
+            results = view.map_async ( mh , zip  ( count () , inputs ) )
+            
+            for r in progress_bar ( results ) :
+                if not result  : result = r
+                else           : result.Add ( r )
                 
     with use_canvas ( 'test_ipyparallel_function' , wait = 2 ) : 
         logger.info ( "Histogram is %s" % result.dump ( 80 , 20 ) )
