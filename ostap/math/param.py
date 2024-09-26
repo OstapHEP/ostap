@@ -199,7 +199,7 @@ def legendre_sum ( func , N , xmin , xmax , **kwargs ) :
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2015-07-26
 def chebyshev_sum ( func , N , xmin , xmax ) :
-    """Make a function representation in terms of Chebyshev polynomials
+    """ Make a function representation in terms of Chebyshev polynomials
     >>> func = lambda x : x * x
     >>> fsum = chebyshev_sum ( func , 4 , -1 , 1 )
     >>> print fsum
@@ -239,9 +239,8 @@ def chebyshev_sum ( func , N , xmin , xmax ) :
         
     return csum
 
-
 # =============================================================================
-try :
+try : # =======================================================================
     # =========================================================================
     import numpy
     # =========================================================================
@@ -257,7 +256,7 @@ try :
     #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
     #  @date 2015-07-26
     def fourier_sum ( func , N , xmin , xmax , fejer = False ) :
-        """Make a function/histiogram representation in terms of Fourier series
+        """ Make a function/histogram representation in terms of Fourier series
         >>> func = lambda x : x * x
         >>> fsum = fourier_sum ( func , 4 , -1 , 1 )
         >>> print fsum
@@ -268,9 +267,15 @@ try :
         
         xmin , xmax = _get_xminmax_ ( func , xmin , xmax , 'fourier_sum' )
         
+        ## 0) check the type of return value in the mid point
+        xmid = 0.5 * ( xmin + xmax )
+        fval = func ( xmid )
+        #
+        if isinstance ( fval , num_types ) : the_fun = func
+        else : the_fun = lambda x : float ( func ( x ) ) 
         
         ## 1) vectorize the function
-        vfunc = numpy.vectorize ( func ) 
+        vfunc = numpy.vectorize ( the_fun ) 
         
         ## prepare sampling 
         f_sample = 2 * N
@@ -284,14 +289,14 @@ try :
         ## decode the results:
         #
         
-        a0 = y[0].real
+        a0 = y[0   ].real
         a  = y[1:-1].real
         b  = y[1:-1].imag
         
         #
         ## prepare the output
         #
-        fsum = Ostap.Math.FourierSum ( N, xmin , xmax , fejer )
+        fsum = Ostap.Math.FourierSum ( N , xmin , xmax , fejer )
         
         #
         ## fill it!
@@ -311,19 +316,20 @@ try :
     __all__ = __all__ + (
         'fourier_sum' , ## Fourier        sum for the given function/object
         )
-
-except ImportError :
+    
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    numpy = None 
     pass
 
-
 # =============================================================================
-try :
+try : # =======================================================================
     # =========================================================================
     import numpy
+    import scipy 
     import scipy.fftpack 
     # =========================================================================
-
-    # =============================================================================
     ## make a function representation in terms of cosine Fourier series
     #  @code 
     #  func = lambda x : x * x
@@ -336,7 +342,7 @@ try :
     #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
     #  @date 2015-07-26
     def cosine_sum ( func , N , xmin , xmax , fejer = False ) :
-        """Make a function/histiogram representation in terms of Fourier series
+        """ Make a function/histiogram representation in terms of Fourier series
         >>> func = lambda x : x * x
         >>> fsum = fourier_sum ( func , 4 , -1 , 1 )
         >>> print fsum
@@ -347,12 +353,18 @@ try :
         
         xmin,xmax = _get_xminmax_ ( func , xmin , xmax , 'cosine_sum' )
 
+        #  0) check the functon type at the misdpoint
+        xmid = 0.5 * ( xmin + xmax )
+        fval = func ( xmid )
+        
+        if isinstance ( fval , num_types ) : the_fun = func
+        else : the_fun = lambda x : float ( func ( x ) ) 
         
         ## 1) prepare sampling
         t     = numpy.linspace ( xmin , xmax , N + 1 , endpoint=True )
-        
+                
         ## 2) vectorize the function
-        vfunc = numpy.vectorize ( lambda x : float ( func ( x ) ) )
+        vfunc = numpy.vectorize ( the_fun )
         
         ## make cosine fourier transform 
         r = scipy.fftpack.dct ( vfunc ( t ) , 1 ) / N 
@@ -368,10 +380,13 @@ try :
     __all__ = __all__ + (
         'cosine_sum' , ## Cosine Fourier sum for the given function/object 
         )
-
-except ImportError :
-    pass
-
+    
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    scipy = None
+    numpy = None
+    
 # =============================================================================
 ## make a function representation in terms of Bezier sum
 #  (sum over Bernstein polynomials)
@@ -390,7 +405,7 @@ except ImportError :
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2016-07-03
 def bezier_sum ( func , N , xmin , xmax , **kwargs ) :
-    """Make a function/histiogram representation in terms of Bezier sum
+    """ Make a function/histiogram representation in terms of Bezier sum
     (sum of Bernstein Polynomials)
     >>> func = lambda x : x * x
     >>> fsum = bezier_sum ( func , 4 , 0 , 1 )
@@ -580,9 +595,9 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
     if not 'fourier_sum' in __all__ :
-        logger.warning ("Since numpy is not available, fourier_sum is disabled") 
-    if not 'cosine_sum' in __all__ :
-        logger.warning ("Since scipy is not available, cosine_sum is disabled")
+        logger.warning ( "Since numpy is not available, fourier_sum is disabled") 
+    if not 'cosine_sum'  in __all__ :
+        logger.warning ( "Since scipy is not available, cosine_sum is disabled")
         
 # =============================================================================
 ##                                                                      The END 
