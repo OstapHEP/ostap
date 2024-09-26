@@ -947,7 +947,7 @@ def _fr_draw_ ( frame            ,
                 delta    = 0.01  , 
                 progress = False ,
                 report   = False , **kwargs ) :
-    """Draw the variable(s) from the frame
+    """ Draw the variable(s) from the frame
     >>> frame = ...
     >>> result = frame_draw ( frame , 'x+12/z' , cut = 'z>1' ) 
     """
@@ -1002,7 +1002,7 @@ def _fr_draw_ ( frame            ,
 #  len   = frame_size   ( frame ) ## ditto 
 #  @endcode 
 def frame_length ( frame , lazy = False ) :
-    """Get the length/size of the data frame
+    """ Get the length/size of the data frame
     >>> frame = ...
     >>> print len(frame)
     >>> len   = frame_length ( frame ) 
@@ -1024,7 +1024,7 @@ frame_size   = frame_length
 #  neff = data.nEff('b1*b1')
 #  @endcode
 def frame_nEff ( frame , cuts = '' ) :
-    """Get the effective entries in data frame 
+    """ Get the effective entries in data frame 
     >>> data = ...
     >>> neff = data.nEff('b1*b1')
     """
@@ -1040,7 +1040,7 @@ def frame_nEff ( frame , cuts = '' ) :
 #  c2 = frame_statVar ( 'S_sw' , 'pt>0'  )
 #  @endcode
 def frame_statVar ( frame , expression ,  cuts = '' ) :
-    """Get statistics for the  given expression in data frame
+    """ Get statistics for the  given expression in data frame
     >>> data = ...
     >>> c1 = frame_statVar( 'S_sw' , 'pt>10' ) 
     >>> c2 = framestatVar( 'S_sw' )
@@ -1064,7 +1064,7 @@ def frame_statCov ( frame       ,
                     expression1 ,
                     expression2 ,
                     cuts = ''   ) :
-    """Get the statistic for pair of expressions in DataFrame
+    """ Get the statistic for pair of expressions in DataFrame
     
     >>>  frame  = ...
     >>>  stat1 , stat2 , cov2 , len = framw.statCov( 'x' , 'y' )
@@ -1368,7 +1368,6 @@ def frame_deciles  ( frame , expression , cuts = '' , exact = True ) :
 # ==================================================================================
 
 
-
 # ==================================================================================
 ## Action-based methods
 # ==================================================================================
@@ -1386,7 +1385,7 @@ def _fr_the_statVar_ ( frame            ,
                        progress = False ,
                        report   = False , 
                        lazy     = True  ) :
-    """Get statistics of variable(s)
+    """ Get statistics of variable(s)
     >>> frame = ....
     >>> stat  = frame_the_statVar ( 'pt'           , lazy = True )
     >>> stat  = frame_the_statVar ( 'pt' , 'eta>0' , lazy = True )
@@ -1419,7 +1418,7 @@ def _fr_the_statCov_ ( frame            ,
                        progress = False ,
                        rreport  = False ,                        
                        lazy     = True  ) :
-    """Get statistics of variable(s)
+    """ Get statistics of variable(s)
     >>> frame = ....
     >>> stat  = frame_the_statCov ( 'pt1' , 'pt2' ,          lazy = True )
     >>> stat  = frame_the_statCov ( 'pt1' , 'pt2' , 'z<0' ,  lazy = True )
@@ -1465,7 +1464,7 @@ def _fr_the_statVar_ ( frame            ,
                        progress = False ,
                        report   = False , 
                        lazy     = True  ) :
-    """Get statistics of variable(s)
+    """ Get statistics of variable(s)
     >>> frame = ....
     >>> stat  = frame.statVar ( 'pt'           , lazy = True )
     >>> stat  = frame.statVar ( 'pt' , 'eta>0' , lazy = True )
@@ -1495,7 +1494,7 @@ def _fr_the_nEff_ ( frame            ,
                     progress = False ,
                     report   = False ,
                     lazy     = True  ) :
-    """Get nEff through action
+    """ Get nEff through action
     >>> frame = ...
     >>> nEff = frame_the_nEff ( 'x*x' , 'y>0' )
     """
@@ -1521,7 +1520,7 @@ def _fr_the_moment_ ( frame , N        ,
                       progress = False ,
                       report   = False ,
                       lazy     = True  ) :
-    """Get statistics of variable(s)
+    """ Get statistics of variable(s)
     >>> frame = ....
     >>> stat  = frame_the_moment ( 5 , 'pt'           )
     >>> stat  = frame_the_moment ( 5 , 'pt' , 'eta>0' )
@@ -1587,7 +1586,7 @@ def _fr_the_rms_ ( frame ,
                    progress = False ,
                    report   = False ,
                    lazy     = True  ) :
-    """Get a rms via moment
+    """ Get a rms via moment
     >>> frame = ...
     >>> stat  = frame.the_rms ( 'x'x' ,  'y<0' )
     >>> value = stat.rms () 
@@ -1614,7 +1613,7 @@ def _fr_the_variance_ ( frame            ,
                         progress = False ,
                         report   = False ,
                         lazy     = True  ) :
-    """Get a variance via moment
+    """ Get a variance via moment
     >>> frame  = ...
     >>> stat   = frame.the_variance( 'x'x' ,  'y<0' )
     >>> value  = stat.variance () 
@@ -1641,7 +1640,7 @@ def _fr_the_skewness_ ( frame ,
                         progress = False ,
                         report   = False ,
                         lazy     = True  ) :
-    """Get a skewness via moment
+    """ Get a skewness via moment
     >>> frame = ...
     >>> stat  = frame.the_skewness ( 'x'x' ,  'y<0' )
     >>> mean  = stat.skreness  () 
@@ -1668,7 +1667,7 @@ def _fr_the_kurtosis_ ( frame            ,
                         progress = False ,
                         report   = False ,
                         lazy     = True  ) :
-    """Get a kurtosis  via moment
+    """ Get a kurtosis  via moment
     >>> frame = ...
     >>> stat  = frame.the_kurtosis ( 'x'x' ,  'y<0' )
     >>> value = stat.kurtosis   () 
@@ -1694,7 +1693,7 @@ def _fr_the_arithmetic_mean_ ( frame ,
                                progress = False ,
                                report   = False ,
                                lazy     = True  ) :
-    """Get an arithmetic mean
+    """ Get an arithmetic mean
     >>> frame = ...
     >>> mean = frame_the_arithmetic_mean ( frame , 'x*x' , '0<y' ) 
     -  see `Ostap.Math.ArithmeticMean`
@@ -1729,7 +1728,7 @@ def _fr_the_geometric_mean_ ( frame ,
                               progress = False ,
                               report   = False ,
                               lazy     = True  ) :
-    """Get an geomentric mean
+    """ Get an geometric mean
     >>> frame = ...
     >>> mean = frame_the_geometric_mean ( frame , 'x*x' , '0<y' ) 
     -  see `Ostap.Math.GeometricMean`
@@ -1763,7 +1762,7 @@ def _fr_the_harmonic_mean_ ( frame            ,
                              progress = False ,
                              report   = False ,
                              lazy     = True  ) :
-    """Get a harmonic mean
+    """ Get a harmonic mean
     >>> frame = ...
     >>> mean = frame_the_harmonic_mean ( frame , 'x*x' , '0<y' ) 
     -  see `Ostap.Math.HarmonicMean`
@@ -1800,7 +1799,7 @@ def _fr_the_power_mean_ ( frame , p ,
                           progress = False ,
                           report   = False ,
                           lazy     = True  ) :
-    """Get a power mean
+    """ Get a power mean
     >>> frame = ...
     >>> mean = frame_the_power_mean ( frame , 5 ,  'x*x' , '0<y' ) 
     -  see `Ostap.Math.PowerMean`
@@ -1848,7 +1847,7 @@ def _fr_the_lehmer_mean_ ( frame , p ,
                            progress = False ,
                            report   = False ,
                            lazy     = True  ) :
-    """Get Lehmer mean
+    """ Get Lehmer mean
     >>> frame = ...
     >>> mean = frame_the_lehmer_mean ( frame , 5 ,  'x*x' , '0<y' ) 
     -  see `Ostap.Math.LehmerMean`
@@ -1892,7 +1891,7 @@ def _fr_the_minmax_ ( frame            ,
                       progress = False ,
                       report   = False ,
                       lazy     = True  ) :
-    """Get min/max values for variables
+    """ Get min/max values for variables
     >>> frame = ...
     >>> mean = frame_the_minmax ( frame , 5 ,  'x*x' , '0<y' ) 
     -  see `Ostap.Math.MinMaxValue`
@@ -1967,7 +1966,7 @@ if Frames_OK :
     #  stat  = frame_statVar ( frame , 'pt' , 'eta>0' )
     #  @endcode
     def frame_statVar ( frame , expressions , cuts = ''  , progress = False , report = False ) :
-        """Get statistics of variable(s)
+        """ Get statistics of variable(s)
         >>> frame = ....
         >>> stat  = frame.statVar ( 'pt'           )
         >>> stat  = frame.statVar ( 'pt' , 'eta>0' )
@@ -1986,7 +1985,7 @@ if Frames_OK :
                         cuts     = ''    ,
                         progress = False ,
                         report   = False ) :
-        """Get statistics of variables via actions 
+        """ Get statistics of variables via actions 
         >>> frame = ....
         >>> stat  = frame_statCov ( 'pt1' , 'pt2' ,        )
         >>> stat  = frame_statCov ( 'pt1' , 'pt2' , 'z<0'  )
@@ -2009,7 +2008,7 @@ if Frames_OK :
                      cuts     = ''    ,
                      progress = False ,
                      report   = False ) :
-        """Get the effective entries in data frame 
+        """ Get the effective entries in data frame 
         >>> data = ...
         >>> neff = frame_nEff('b1*b1')
         """
@@ -2028,7 +2027,7 @@ if Frames_OK :
     #  @see Ostap::Math::Moment_
     #  @see Ostap::Math::WMoment_
     def frame_moment ( frame , N , expressions , cuts = '' , progress = False , report = False ) :
-        """Get statistics of variable(s)  (via actions) 
+        """ Get statistics of variable(s)  (via actions) 
         >>> frame = ....
         >>> stat  = frame_moment ( 5 , 'pt'           )
         >>> stat  = frame_moment ( 5 , 'pt' , 'eta>0' )
@@ -2064,7 +2063,7 @@ if Frames_OK :
     #  rms   = frame_rms ( 'x'x' ,  'y<0' )
     #  @ndcode
     def frame_rms ( frame , expressions , cuts = '' , errors = True , progress = False , report = False ) :
-        """Get a rms via moment&action
+        """ Get a rms via moment&action
         >>> frame = ...
         >>> rms   = frame_rms ( 'x'x' ,  'y<0' )
         """
@@ -2083,7 +2082,7 @@ if Frames_OK :
     #  variance  = frame_dispersion ( 'x'x' ,  'y<0' )
     #  @ndcode
     def frame_variance ( frame , expressions , cuts = '' , errors = True , progress = False , report = False ) :
-        """Get a variance via moment&action
+        """ Get a variance via moment&action
         >>> frame     = ...
         >>> variance  = frame_variance   ( 'x'x' ,  'y<0' )
         >>> variance  = frame_dispersion ( 'x'x' ,  'y<0' )        
@@ -2105,7 +2104,7 @@ if Frames_OK :
     #  skew  = frame_skewness ( 'x'x' ,  'y<0' )
     #  @ndcode
     def frame_skewness ( frame , expressions , cuts = '' , errors = True , progress = False , report = False ) :
-        """Get a variance via moment
+        """ Get a variance via moment
         >>> frame = ...
         >>> skew  = frame_skewness ( 'x'x' ,  'y<0' )
         >>> mean  = stat.skreness  () 
@@ -2129,7 +2128,7 @@ if Frames_OK :
                          errors   = True  ,
                          progress = False ,
                          report   = False ) :
-        """Get a kurtosis  via moment
+        """ Get a kurtosis  via moment
         >>> frame = ...
         >>> stat  = frame.the_kurtosis ( 'x'x' ,  'y<0' )
         >>> value = stat.kurtosis   () 
@@ -2153,7 +2152,7 @@ if Frames_OK :
                                 cuts     = ''    ,  
                                 progress = False ,
                                 report   = False ) :
-        """Get an arithmetic mean
+        """ Get an arithmetic mean
         >>> frame = ...
         >>> mean = frame_arithmetic_mean ( frame , 'x*x' , '0<y' ) 
         -  see `Ostap.Math.ArithmeticMean`
@@ -2176,7 +2175,7 @@ if Frames_OK :
                                cuts     = ''    ,  
                                progress = False ,
                                report   = False ) :
-        """Get an geomentric mean
+        """ Get an geomentric mean
         >>> frame = ...
         >>> mean = frame_geometric_mean ( frame , 'x*x' , '0<y' ) 
         -  see `Ostap.Math.GeometricMean`
@@ -2199,7 +2198,7 @@ if Frames_OK :
                               cuts     = ''    ,
                               progress = False ,
                               report   = False ) :
-        """Get a harmonic mean
+        """ Get a harmonic mean
         >>> frame = ...
         >>> mean = frame_harmonic_mean ( frame , 'x*x' , '0<y' ) 
         -  see `Ostap.Math.HarmonicMean`
@@ -2225,7 +2224,7 @@ if Frames_OK :
                            cuts     = ''    ,
                            progress = False ,
                            report   = False ) :
-        """Get a power mean
+        """ Get a power mean
         >>> frame = ...
         >>> mean = frame_power_mean ( frame , 5 ,  'x*x' , '0<y' ) 
         -  see `Ostap.Math.PowerMean`
@@ -2249,7 +2248,7 @@ if Frames_OK :
     #  mean = frame_lehmer_mean ( frame , 3 , 'x*x' , '0<y' ) 
     #  @endcode 
     def frame_lehmer_mean ( frame , p , expressions , cuts = '' , progress = False , report = False ) :
-        """Get Lehmermean
+        """ Get Lehmer mean
         >>> frame = ...
         >>> mean  = frame_lehmer_mean ( frame , 5 ,  'x*x' , '0<y' ) 
         -  see `Ostap.Math.LehmerMean`
@@ -2374,7 +2373,7 @@ frame_statistics = frame_statVar
 # ===============================================================================
 ## Print the frame report data
 def report_print_table ( report , title  = '' , prefix = '' , more_rows = [] ) :
-    """Print a frame report data 
+    """ Print a frame report data 
     """
     from ostap.core.core import binomEff
     
@@ -2420,7 +2419,7 @@ def report_print_table ( report , title  = '' , prefix = '' , more_rows = [] ) :
 # ===============================================================================
 ## Print the frame report
 def report_as_table ( report ) :
-    """Print a frame report
+    """ Print a frame report
     """
     table = []
     for c in report:
@@ -2434,7 +2433,7 @@ def report_as_table ( report ) :
 # ===============================================================================
 ## Print the data frame report
 def report_print ( report , title  = '' , prefix = '' , more_rows = [] ) :
-    """Print the data frame report
+    """ Print the data frame report
     """
     table = report_as_table ( report )    
     return report_print_table ( table , title, prefix , more_rows )
@@ -2669,7 +2668,7 @@ if ( 6 , 18 ) <= root_info :
     #  tree.fproject ( histo , what , ... ) 
     #  @endcode
     def _rt_fproject_ ( tree , histo , *args ) :
-        """Project the tree to the histogram using DataFrame machinery
+        """ Project the tree to the histogram using DataFrame machinery
         >>> tree  = ...
         >>> histo = ...
         >>> tree.fproject ( histo , what , ... ) 
@@ -2704,7 +2703,7 @@ if Frames_OK :
     #  tree.fparam ( histo , what , ... ) 
     #  @endcode
     def _rt_fparam_ ( tree , poly , *args ) :
-        """Project/parameterise the tree into polynomial using DataFrame machinery
+        """ Project/parameterise the tree into polynomial using DataFrame machinery
         >>> tree  = ...
         >>> poly  = ...
         >>> tree.fparam ( poly , what , ... ) 
