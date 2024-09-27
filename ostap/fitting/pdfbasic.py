@@ -2619,15 +2619,7 @@ class PDF1(APDF1,FUN1) :
         from ostap.fitting.pdf_ops import pdf_convolution
         return pdf_convolution ( self , other )
 
-    # =========================================================================
-    ## right modulus: convoluttion
-    def __rmod__ ( self , other ) :
-        """ Right modulus: convolution """        
-        from ostap.fitting.pdf_ops import pdf_convolution
-        return pdf_convolution ( self , other )
-        
     __matmul__  = __mod__
-    __rmatmul__ = __rmod__
 
     # =========================================================================
     ## Convert PDF into simple function
