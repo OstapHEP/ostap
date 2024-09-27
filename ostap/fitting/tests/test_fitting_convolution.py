@@ -58,21 +58,30 @@ def test_laplace():
     ## resolution as PDF 
     laplace_2 = Convolution_pdf ( name = 'L2' , pdf = laplace, resolution = rAp )
 
+
+    ## resolution as PDF via operator 
+    laplace_3  = laplace % rAp
+
     with use_canvas ( 'test_laplace' ) : 
         f  = laplace  .draw ( silent = True )        
         f1 = laplace_1.draw ( silent = True )        
         f2 = laplace_2.draw()
+        f3 = laplace_3.draw()
         
-
         with wait ( 2 ) :
             f .draw()
             f1.draw('same')
             f2.draw('same')
+            f3.draw('same')
         
-        
-    models.add ( laplace  )
+    logger.info ( 'Convolution/1:\n%s' % laplace_1.cnv.table ( title = 'Laplace/1' , prefix = '# ' ) ) 
+    logger.info ( 'Convolution/2:\n%s' % laplace_2.cnv.table ( title = 'Laplace/2' , prefix = '# ' ) ) 
+    logger.info ( 'Convolution/3:\n%s' % laplace_3.cnv.table ( title = 'Laplace/3' , prefix = '# ' ) ) 
+
+    models.add ( laplace   )
     models.add ( laplace_1 )
     models.add ( laplace_2 )
+    models.add ( laplace_3 )
     
 # =============================================================================
 ## check that everything is serializable
@@ -88,15 +97,10 @@ def test_db() :
     logger.info('Saving all objects into DBASE')
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 
-    print ( 'START/1')   
     with timing('Save everything to DBASE', logger ), DBASE.tmpdb() as db :
-        print ( 'START/2')   
         for  i , m in enumerate ( models ) :
-            print ( 'MODEL:i,m=', i , m )   
             db['model/%-2d: %s' % ( i , m.name ) ] = m 
-            print ( 'PDF:i,m=', i , m )   
             db['roo/%-2d: %s'   % ( i , m.name ) ] = m.pdf
-        print ( 'AFTER' ) 
         db['models'   ] = models
         db.ls() 
 

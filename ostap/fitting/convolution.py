@@ -20,7 +20,8 @@ __all__     = (
 # =============================================================================
 from   ostap.fitting.pdfbasic  import PDF1, Generic1D_pdf
 from   ostap.core.ostap_types  import num_types ,  integer_types
-from   ostap.fitting.rooreduce import root_store_factory 
+from   ostap.fitting.rooreduce import root_store_factory
+import ostap.logger.table      as     T 
 import ROOT, math
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -29,30 +30,54 @@ else                       : logger = getLogger ( __name__         )
 # =============================================================================
 ## helper class to keep convoltuon configuration
 class CnvConfig(object) :
-    """helper class to keep convoltuon configuration"""
-    _config = {}
+    """ Helper class to keep convolution configuration"""
+    CONFIG = {}
     ## retreive (copy) of current configuration
     @classmethod 
     def config ( klass ) :
-        """Return copy of currrent configuration
+        """ Return currrent configuration
         """
-        return klass._config.copy()
-    
+        return klass.CONFIG
+    # ========================================================================
+    @classmethod
+    def clean  ( klass ) :
+        ## clean the global configuraiton 
+        while klass.CONFIG : klass.CONFIG.pop ()
+        
 # ============================================================================
-## Context manager to treat the convolutoi nconfiguration
+## Context manager to treat the convoluton nconfiguration
 class ConvolutionConfig(object):
-    def __init__ ( self , **confif ) :
+    """ Context manager to treat the convolution configuration
+    """
+    def __init__ ( self , **config ) :
         self.__config = config
+        self.__backup = {} 
+    # ========================================================================
     ## context manager 
     def __enter__ ( self ) :
-        self.__keep     = _CnvCnf._config.copy()
-        _CnvCnf._config =  self.__config.copy()
+        """ ENTER: update global convolution configuration 
+        """
+        self.__backup.update ( CnvConfig.config() )
+        CnvConfig.clean () 
+        CnvConfig.CONFIG.update ( self.config )                                   
         return self
+    # ========================================================================
     ## context manager 
-    def __exit__ ( self , *_ ) :
-        ## resore previous configruation 
-        _CnvCnf._config =  self.__keep.copy()
-        
+    def __exit__ ( self , *_ ) : 
+        """ EXIT: restore global convolution configuration 
+        """
+        ## restore previous configration
+        CnvConfig.clean () 
+        CnvConfig.CONFIG.update ( self.backup )                                   
+    @property
+    def config ( self ) :
+        """`config`: new configuration parameters for convolution"""
+        return self.__config
+    @property
+    def backup ( self ) :
+        """`backuo`: old configuration parameters for convolution"""
+        return self.__backup
+    
 # =============================================================================
 ## @class Convolution
 #  Helper class to perform the convolution
@@ -68,7 +93,7 @@ class ConvolutionConfig(object):
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-07-13
 class Convolution(object):
-    """Helper class to make a convolution PDF:
+    """ Helper class to make a convolution PDF:
     
     >>> pdf  = .... ##  original PDF (the one from Ostap or bare ROOT.RooAbsPdf) 
     >>> resolution = 3 * MeV                                     ## fixed number ``sigma''
@@ -89,8 +114,9 @@ class Convolution(object):
                    bufstrat = None   ,   ## "Buffer strategy" : (0,1,2)
                    shift1   = None   ,   ## shift1 parameter
                    shift2   = None   ,   ## shift2 parameter
-                   nsigmas  = 6      ) : ## number of sigmas for setConvolutionWindow
-
+                   nsigmas  = 6      ,   ## number of sigmas for setConvolutionWindow
+                   silent   = False  ) : 
+        
         ## the axis 
         assert isinstance ( xvar , ROOT.RooAbsReal ) or not xvar , "`xvar' must be ROOT.RooAbsReal"
         
@@ -189,6 +215,11 @@ class Convolution(object):
                                                       self.__resolution.sigma , self.__nsigmas  )
                     logger.debug('Convolution: choose window of %s' % self.__nsigmas )
 
+        if not silent :
+            title = 'Convolution'
+            logger.info ( 'Convolution configuration:\n%s' % self.table ( title = title , prefix = '# ' ) ) 
+            
+            
     @property
     def name ( self ) :
         """'name' : the bname of convolution object"""
@@ -276,8 +307,39 @@ class Convolution(object):
                                        self.shift1      ,
                                        self.shift2      ,
                                        self.nsigmas     )
+    # =========================================================================
+    ## Get the convolution result as table 
+    def table ( self , title = '' , prefix = '' ) :
+        """ Get the convolution result as table """
         
-    
+        rows = [ ( 'Parameter' , 'value' ) ]        
+        row  = 'name' , '%s' % self.name
+        rows.append ( row )        
+        row  = 'pdf/type' , '%s' % type ( self.old_pdf ).__name__            
+        rows.append ( row )        
+        row  = 'xvar'     , '%s' % self.xvar.name             
+        rows.append ( row )        
+        row  = 'resolution/type' , '%s' % type ( self.resolution ).__name__            
+        rows.append ( row )        
+        row  = 'use FFT?' , '%s' % self.useFFT 
+        rows.append ( row )        
+        row  = 'nbins/FFt/cache' , '%s' % self.nbinsFFT 
+        rows.append ( row )        
+        row  = 'buffer' , '%s' % self.buffer
+        rows.append ( row )        
+        row  = 'bufstrat' , '%s' % self.bufstrat
+        rows.append ( row )        
+        row  = 'shift1' , '%s' % self.shift1
+        rows.append ( row )        
+        row  = 'shift2' , '%s' % self.shift2
+        rows.append ( row )
+        
+        title = title if title else 'Convolution config'
+        return T.table ( rows , title = title , prefix = prefix , alignment = 'll' )
+
+    __repr__ = table 
+
+        
 # =============================================================================
 ## @class Convolution_pdf
 #  Helper class to simplify the convolutions
@@ -286,7 +348,7 @@ class Convolution(object):
 #  pdfc = Convolution_pdf( pdf  , xvar = ... , resolution = ... , useFFT = True )
 #  @endcode
 class Convolution_pdf(PDF1) :
-    """Helper class/PDF to simplify the convolution:
+    """ Helper class/PDF to simplify the convolution:
     >>> pdf = ...
     >>> pdfc = Convolution_pdf( pdf  , xvar = ... , resolution = ... , useFFT = True )
     """

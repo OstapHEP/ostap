@@ -356,7 +356,7 @@ class PEAK(PEAKMEAN) :
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2017-07-13
 class RESOLUTION(PEAK) :
-    """Helper base class  to parameterize the resolution
+    """ Helper base class  to parameterize the resolution
     - It allows setting of the 'mean' to zero,
     - It contains 'fudge-factor' for the resolution parameter 'sigma'
     - It simplify creation of the soft/gaussian constraint for the 'fudge-factor'    
@@ -475,7 +475,41 @@ class RESOLUTION(PEAK) :
         """'sigma_corr' : the corrected sigma parameter: sigma*fudge """
         return self.__sigma_corr
 
-
+    # =========================================================================
+    ## right modulus: convoluttion
+    #  @code
+    #  pdf        = ...
+    #  resolution = ...
+    #  result  = pdf % resolution ## python 2&3
+    #  result  = pdf @ resolution ## python 3 only
+    #  @endcode 
+    #  The configuration can be specified via `ConvolutionConfig`
+    #    context manager:
+    #  @code
+    #  pdf        = ...
+    #  resolution = ... 
+    #  with ConvolutionConfig ( buffer = 0.25 , nbins = 1000 ):  
+    #      result = pdf % other ## python 2 and 3 
+    #      result = pdf @ other ## python 3 only
+    #  @endcode 
+    def __rmod__ ( self , other ) :
+        """ Right modulus: convolution 
+        >>> pdf = ...
+        >>> resolution = ...
+        >>> result  = pdf % resolution ## python 2&3
+        >>> result  = pdf @ resolution ## python 3 only        
+        The configuration can be specified via `ConvolutionConfig` context manager:
+        >>> pdf        = ...
+        >>> resolution = ... 
+        >>> with ConvolutionConfig ( buffer = 0.25 , nbins = 1000 ):  
+        ...     result = pdf % other ## python 2 an d3 
+        ...     result = pdf @ other ## python 3 only
+        """        
+        from ostap.fitting.pdf_ops import pdf_convolution
+        return pdf_convolution ( other , self )
+    
+    __rmatmult__ = __rmod__     
+    
 # =============================================================================
 ## Use histogram as PDF
 #  @see Ostap::Models::Histo1D

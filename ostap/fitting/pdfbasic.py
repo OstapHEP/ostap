@@ -2596,19 +2596,19 @@ class PDF1(APDF1,FUN1) :
         >>> pdf    = ...
         >>> other  =  ...
         >>> result = pdf % other     ## python 2&3
-        >>> ## result = pdf % other  ## python 3 only 
+        >>> ## result = pdf @ other  ## python 3 only 
         
         `Other` can be
         - fully configured Convolution object
 
         It also can be 
-        - resolution  PDF   , it will be treated as resoltuoon function 
-        - `RooAbsPdf`       , it wil lbe treated as resoltuion function
-        - `RooAbsReal`      , it wil lbe treated as sigma for Gaussian resolution function
-        - positive constant , it wil lbe treated as sigma for Gaussian resolution function
-        - 2 or 3-tuple: it wil lbe treated as sigma for Gaussian resolution function
+        - resolution  PDF   , it will be treated as resolution function 
+        - `RooAbsPdf`       , it will be treated as resolution function
+        - `RooAbsReal`      , it will be treated as sigma for Gaussian resolution function
+        - positive constant , it will be treated as sigma for Gaussian resolution function
+        - 2 or 3-tuple: it will be treated as sigma for Gaussian resolution function
         
-        The configuration can bve specified via `ConvolutionConfig`
+        The configuration can be specified via `ConvolutionConfig`
         context manager:
         >>> pdf    = ...
         >>> other  =  ...
@@ -2619,9 +2619,10 @@ class PDF1(APDF1,FUN1) :
         from ostap.fitting.pdf_ops import pdf_convolution
         return pdf_convolution ( self , other )
 
+    # =========================================================================
     ## right modulus: convoluttion
     def __rmod__ ( self , other ) :
-        """ Right modulus: convoluttion """        
+        """ Right modulus: convolution """        
         from ostap.fitting.pdf_ops import pdf_convolution
         return pdf_convolution ( self , other )
         

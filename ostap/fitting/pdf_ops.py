@@ -51,7 +51,7 @@ else                       : logger = getLogger ( __name__                )
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2018-11-29  
 class Prod1D_pdf(PDF1) :
-    """Simple product of 1D-PDFs
+    """ Simple product of 1D-PDFs
     - actually it is a trivial wrapper for RooProdPdf    
     >>> pdf1 = ...
     >>> pdf2 = ...
@@ -591,7 +591,6 @@ def pdf_sum ( pdf1 , pdf2 , *other ) :
     
     return result 
 
-
 # =============================================================================
 ## make a convolution (FFT) for a given PDF
 #  @code
@@ -619,7 +618,7 @@ def pdf_sum ( pdf1 , pdf2 , *other ) :
 #  @see ostap.fitting.convolution.Convolution
 #  @see ostap.fitting.convolution.Convolution_pdf 
 def pdf_convolution ( pdf , resolution ) :
-    """Make a convolution (FFT) for a given PDF
+    """ Make a convolution (FFT) for a given PDF
     The resolution can be :
     - PDF
     - ostap.fitting.convolution.Convolution
@@ -648,15 +647,31 @@ def pdf_convolution ( pdf , resolution ) :
     - see ostap.fitting.convolution.Convolution
     - see ostap.fitting.convolution.Convolution_pdf 
     """
-    import ostap.fitting.convolution as CNV
-
+    import ostap.fitting.convolution as     CNV
+    from   ostap.fitting.fit1d       import RESOLUTION
+    from   ostap.fitting.pdfbasic    import Generic1D_pdf 
+    ##
     if not isinstance ( pdf , PDF1 ) : return NotImplemented
-
-
+    ##
+    config = {}
+    config.update ( CNV.CnvConfig.config() )
+    ## 
     ## Ready to use convolution  PDF 
-    if   isinstance ( resolution , PDF1 ) and resolution.xvar in pdf.vars : 
+    if   isinstance ( resolution , RESOLUTION  ) :
+        
+        if   isinstance ( pdf , PDF1 ) and resolution.xvar in pdf.vars :
+            return CNV.Convolution_pdf ( pdf , resolution ,                          **config  )
+        elif isinstance ( pdf , ROOT.RooAbsPdf ) :
+            return CNV.Convolution_pdf ( pdf , resolution , xvar = resolution.xvar , **config )
+        else :
+            return NotImplemented
+
+    if not isinstance ( pdf , PDF1 ) : return NotImplemented 
+        
+    ## Ready to use convolution  PDF 
+    if isinstance ( resolution , PDF1 ) and resolution.xvar in pdf.vars : 
         ## treat it as convolution
-        return CNV.Convolution_pdf ( pdf , resolution , **CNV.CnvConfig.config() )
+        return CNV.Convolution_pdf ( pdf , resolution , **config )
     ## Resolution PDF 
     elif isinstance ( resolution , ROOT.RooAbsPdf  ) : pass
     ## Gaussian sigma 
@@ -668,11 +683,10 @@ def pdf_convolution ( pdf , resolution ) :
 
     else : return NotImplemented 
             
-    
     ## create convolution object 
     cnv = CNV.Convolution ( pdf        = pdf        ,
                             resolution = resolution ,
-                            xvar       = pdf.xvar   , **CNV.CnvConfig.config() )
+                            xvar       = pdf.xvar   , **config )
     
     return CNV.Convolution_pdf ( pdf , cnv )
     

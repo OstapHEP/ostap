@@ -2,6 +2,7 @@
     
   1. Add `operator+` for `Ostap::Math.ECDF`
   1. Add correlation coefficient to `Ostap::Math::pow` function
+  1. Slight improvements in convolution for fitting
   
 ## Backward incompatible
 
