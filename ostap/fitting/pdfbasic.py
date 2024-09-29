@@ -1911,6 +1911,12 @@ class APDF1 ( Components ) :
             
         if   not varset :
             varset = ROOT.RooArgSet ( self.vars )
+        elif isintance  ( varset , ROOT.RooAbsData ) :
+            vs  = varset.get()
+            vs2 = ROOT.RooArgSet ()
+            for v in vs :
+                if v in self.vars : vs2.add ( v )
+            varset = vs2 
         elif isinstance ( varset , ROOT.RooAbsReal ) :
             varset = ROOT.RooArgSet ( varset    )
             
