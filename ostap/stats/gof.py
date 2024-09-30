@@ -128,7 +128,7 @@ def nEff ( weights ) :
 #  @endcode
 def normalize2 ( datasets , weight = () , first = True ) :
     """ Get the `normalized' input datasets
-    All floating felds  are calculated as
+    All floating fields  are calculated as
     
     x = (x - <x>)/sigma
     
@@ -157,7 +157,7 @@ def normalize2 ( datasets , weight = () , first = True ) :
     weight = list ( weight )
     for i , w in enumerate ( weight ) :
         if not w : weight [ i ] = '' 
-        weight = tuple ( weight )
+    weight = tuple ( weight )
 
     ds     = datasets [ 0  ]
     others = datasets [ 1: ]
@@ -187,7 +187,7 @@ def normalize2 ( datasets , weight = () , first = True ) :
                 
                 mean, var = mean_var ( dd [ c ] , None if not wk else dd [ wk ] )                    
                 vv = VE ( mean , var ) 
-                vmean  [ i ] = Ostap.Math.two_samples ( vmean [ i ] , nevents , vv , nn )
+                vmeans [ i ] = Ostap.Math.two_samples ( vmeans [ i ] , nevents , vv , nn )
                 
             nevents += nn
                 

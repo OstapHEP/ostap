@@ -3,7 +3,9 @@
   1. Add `operator+` for `Ostap::Math.ECDF`
   1. Add correlation coefficient to `Ostap::Math::pow` function
   1. Slight improvements in convolution for fitting
-  
+  1. Add the first Goodness-of-Fit method for multidimensional case
+  1. Add test for Goddness-of-Fit method for multidimensional case
+      
 ## Backward incompatible
 
 ## Bug fixes
