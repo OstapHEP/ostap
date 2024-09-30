@@ -1911,7 +1911,7 @@ class APDF1 ( Components ) :
             
         if   not varset :
             varset = ROOT.RooArgSet ( self.vars )
-        elif isintance  ( varset , ROOT.RooAbsData ) :
+        elif isinstance  ( varset , ROOT.RooAbsData ) :
             vs  = varset.get()
             vs2 = ROOT.RooArgSet ()
             for v in vs :
@@ -1939,9 +1939,10 @@ class APDF1 ( Components ) :
                 from ostap.fitting.dataset import useStorage
                 with useStorage ( storage ) : 
                     return self.pdf.generate (  varset , *args )
+
             
             return self.pdf.generate (  varset , *args )
-            
+
     # ========================================================================
     ## clean some stuff 
     def clean ( self ) :
@@ -3152,6 +3153,12 @@ class APDF2 (APDF1) :
 
         if   not varset :
             varset = ROOT.RooArgSet( self.xvar , self.yvar )
+        elif isinstance  ( varset , ROOT.RooAbsData ) :
+            vs  = varset.get()
+            vs2 = ROOT.RooArgSet ()
+            for v in vs :
+                if v in self.vars : vs2.add ( v )
+            varset = vs2             
         elif isinstance ( varset , ROOT.RooAbsReal ) :
             varset = ROOT.RooArgSet( varset )
 
@@ -3172,7 +3179,12 @@ class APDF2 (APDF1) :
 
                 if xbins : self.xvar.bins = xbins
                 if ybins : self.yvar.bins = ybins
-                                        
+                
+            if storage in ( ROOT.RooAbsData.Tree , ROOT.RooAbsData.Vector ) :
+                from ostap.fitting.dataset import useStorage
+                with useStorage ( storage ) : 
+                    return self.pdf.generate (  varset , *args )
+
             return self.pdf.generate ( varset , *args )
 
 
@@ -4321,6 +4333,12 @@ class APDF3 (APDF2) :
 
         if   not varset :
             varset = ROOT.RooArgSet( self.xvar , self.yvar , self.zvar )
+        elif isinstance  ( varset , ROOT.RooAbsData ) :
+            vs  = varset.get()
+            vs2 = ROOT.RooArgSet ()
+            for v in vs :
+                if v in self.vars : vs2.add ( v )
+            varset = vs2                         
         elif isinstance ( varset , ROOT.RooAbsReal ) :
             varset = ROOT.RooArgSet( varset )
 
@@ -4343,6 +4361,11 @@ class APDF3 (APDF2) :
                 if xbins : self.xvar.bins = xbins
                 if ybins : self.yvar.bins = ybins
                 if zbins : self.zvar.bins = zbins
+
+            if storage in ( ROOT.RooAbsData.Tree , ROOT.RooAbsData.Vector ) :
+                from ostap.fitting.dataset import useStorage
+                with useStorage ( storage ) : 
+                    return self.pdf.generate (  varset , *args )
 
             return self.pdf.generate ( varset , *args )
 
