@@ -43,10 +43,11 @@ except ImportEror :
     sp    = None
     cdist = None 
 # =============================================================================
-import abc 
+from   ostap.core.ostap_types   import string_types 
 from   ostap.stats.gof          import normalize2 
 from   ostap.core.core          import SE, VE
 from   ostap.utils.progress_bar import progress_bar 
+import abc 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -182,22 +183,28 @@ class GoFNP (object) :
         return self.__silent
     
 # ============================================================================
-## define configurtaion for psi-function for PPD method 
+## define configurtaion for psi-function for PPD method
+#   - distance type of <code>cdist</code>
+#   - transformation funciton for cdisct output
+#   - increasing function ?
+#   @code
+#   distance_type , transform, increasing = psi_conf ( 'linear' )
+#   @endcode
 def psi_conf ( psi , scale = 1.0 ) :
     """ Define configuration for psi-function for PPD method"""
-    
-    if   psi in ( 'euclidean'  , 'linear'  ) :  ## psi = x 
-        return 'euclidean'   , None 
-    elif psi in ( 'euclidean2' , 'sqeuclidean', 'squared' ) :  ## psi = x**@
-        return 'sqeuclidean' , None 
-    elif psi in ( 'inverse'    , 'coulomb' ) :  ## psi = 1/x 
-        return 'euclidean'   , lambda x : 1.0/x 
-    elif psi in ( 'log'   , 'logarithm'    ) :  ## psi = -log(x)
-        return 'euclidean'   , lambda x : -np.log ( x ) 
-    elif psi in ( 'gauss' , 'gaussian'     ) :  ## psi = exp (-x*x/0.5)
-        return 'sqeuclidean' , lambda x : -np.exp ( scale*x ) 
-    elif not psi :
-        return 'euclidean'   , None         
+
+    if   psi in ( 'euclidean'  , 'linear'  ) :                 ## psi = x 
+        return 'euclidean'   , None                           , True 
+    elif psi in ( 'euclidean2' , 'sqeuclidean', 'squared' ) :  ## psi = x**2
+        return 'sqeuclidean' , None                           , True  
+    elif psi in ( 'inverse'    , 'coulomb' ) :                 ## psi = 1/x 
+        return 'euclidean'   , lambda x : 1.0/x               , False 
+    elif psi in ( 'log'   , 'logarithm'    ) :                 ## psi = -log(x)
+        return 'sqeuclidean' , lambda x : -np.log ( x )       , False 
+    elif psi in ( 'gauss' , 'gaussian'     ) :                 ## psi = exp (-x*x/0.5)
+        return 'sqeuclidean' , lambda x :  np.exp ( scale*x ) , False 
+    elif isinstance ( psi , string_types ) :
+        return psi , None , True         
 
     raise TypeError ( "Unknown `psi':%s" % psi ) 
     
@@ -230,7 +237,7 @@ class PPDNP(AGoFNP,GoFNP) :
         
         ## check validity of `psi`
         scale = -0.5/(self.sigma**2) 
-        psi_conf ( psi , scale )
+        self.__distance_type , _ , self.__increasing = psi_conf ( psi , scale )
         
     # =========================================================================
     @property
@@ -280,28 +287,34 @@ class PPDNP(AGoFNP,GoFNP) :
         
         ## how to build distances?
         scale = -0.5/(self.sigma**2) 
-        distance_type , transform = psi_conf ( self.psi , scale )
+        distance_type , transform , _ = psi_conf ( self.psi , scale )
         
-        ## list of all distances between point the first dataset 
+        ## list of all distances between points in the first dataset 
         dist_11 = cdist ( uds1 , uds1 , distance_type ) .flatten () ## data <-> data
+        dist_11 = dist_11 [ dist_11 > 0 ] 
         if transform : dist_11  = transform ( dist_11 )
 
-        result = np.sum ( dist_11 ) / ( n1 * ( n1 - 1 ) )
+        ## result = np.sum ( dist_11 ) / ( n1 * ( n1 - 1 ) )
+        result = np.mean ( dist_11 ) 
         del dist_11
         
         ## list of all distances between points in the 1st and 2nd datasets  
-        dist_12 = cdist ( uds1 , uds2 , distance_type ) .flatten ()  ## data <-> mc 
+        dist_12 = cdist ( uds1 , uds2 , distance_type ) .flatten ()  ## data <-> mc
+        dist_12 = dist_12 [ dist_12 > 0 ] 
         if transform : dist_12  = transform ( dist_12 )
 
-        result -= np.sum ( dist_12 ) / ( n1 * n2 )
+        ## result -= np.sum ( dist_12 ) / ( n1 * n2 )
+        result -= np.mean ( dist_12 )
         del dist_12 
 
         ## add the distances from the second dataset? 
         if self.mc2mc :
             ## list of all distances between points in the 2nd dataset 
             dist_22 = cdist ( uds2 , uds2 , distance_type ) . flatten() ## mc<-> mc 
+            dist_22 = dist_22 [ dist_22 > 0 ] 
             if transform : dist_22  = transform ( dist_22 )
-            result += np.sum ( dist_22 ) / ( n2 * ( n2 - 1 ) )
+            ## result += np.sum ( dist_22 ) / ( n2 * ( n2 - 1 ) )
+            result += np.mean ( dist_22 )
             del dist_22
 
         return result    
@@ -331,9 +344,12 @@ class PPDNP(AGoFNP,GoFNP) :
         ## start the permutation test
         for d1 , d2 in self.permutations ( ds1 , ds2 ) :
             ti  = tvalue ( d1 , d2 , normalize = False )
-            pv += float ( ti < t ) 
+            pv += float  ( t < ti ) 
 
-        p = VE ( pv.eff () , pv.effErr() ** 2 ) 
+        p = VE ( pv.eff () , pv.effErr() ** 2 )
+        
+        if self.__increasing : p = 1 - p
+
         return t , p 
             
 # =============================================================================
