@@ -396,7 +396,7 @@ class ProgressBar(object):
         return self
         
     # =========================================================================
-    ## Contetx manager EXIT 
+    ## Context manager EXIT 
     def __exit__  ( self , *_ ) :
         """ Context manager EXIT """
         self.end ()
