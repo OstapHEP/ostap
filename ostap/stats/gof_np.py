@@ -23,10 +23,14 @@ __all__     = (
     'PPDNP' , ## Point-to-Point Dissimilarity Goodness-of-fit method 
 )
 # =============================================================================
+import sys, os, warnings 
+# =============================================================================
 try : # =======================================================================
     # =========================================================================
     import numpy                                                    as np
-    from   numpy.lib.recfunctions import structured_to_unstructured as s2u
+    with warnings.catch_warnings():
+        warnings.simplefilter ( "ignore" , category = UserWarning        )
+        from numpy.lib.recfunctions import structured_to_unstructured as s2u
     # =========================================================================
 except ImportError :
     # =========================================================================
@@ -36,7 +40,9 @@ except ImportError :
 try : # =======================================================================
     # =========================================================================
     import scipy                                                    as sp 
-    from   scipy.spatial.distance import cdist                      as cdist 
+    with warnings.catch_warnings():
+        warnings.simplefilter ( "ignore" , category = UserWarning        )
+        from scipy.spatial.distance import cdist                  as cdist 
     # =========================================================================
 except ImportError :
     # =========================================================================
