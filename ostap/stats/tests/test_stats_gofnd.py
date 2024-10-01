@@ -46,7 +46,10 @@ for i in range ( NG2 ) :
 def test_ppd () :
     
     logger = getLogger ("test_ppd")
-
+    from ostap.stats.gof_np import np,sp,s2u,cdist
+    if not np or not sp or not s2u or not cdist:
+        logger.warning ('No numpy/scipy: skip the test!')
+        return         
 
     pdf    = gauss2 
 

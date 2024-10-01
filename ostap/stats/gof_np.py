@@ -38,7 +38,7 @@ try : # =======================================================================
     import scipy                                                    as sp 
     from   scipy.spatial.distance import cdist                      as cdist 
     # =========================================================================
-except ImportEror :
+except ImportError :
     # =========================================================================
     sp    = None
     cdist = None 
@@ -358,6 +358,10 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
+    if not np    : logger.warning ('Numpy is not available') 
+    if not sp    : logger.warning ('Scipy is not available') 
+    if not s2u   : logger.warning ('s2u   is not available') 
+    if not cdist : logger.warning ('cdist is not available') 
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
