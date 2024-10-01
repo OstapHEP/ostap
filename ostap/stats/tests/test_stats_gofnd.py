@@ -66,10 +66,17 @@ def test_ppd () :
     rows  = [ ( 'Distance' , 'sigma' , 'p-value/good[%]' , 'p-value/bad[%]' ) ]
     
     sigma = '' 
-    for conf in (  { 'psi' : 'linear'    } ,
-                   { 'psi' : 'squared'   } ,
-                   { 'psi' : 'logarithm' } ,
-                   { 'psi' : 'coulomb'   } ,                   
+    for conf in (  { 'psi' : 'linear'      } ,
+                   { 'psi' : 'squared'     } ,
+                   { 'psi' : 'logarithm'   } ,
+                   { 'psi' : 'coulomb'     } ,   
+                   { 'psi' : 'cityblock'   } ,   
+                   { 'psi' : 'seuclidean'  } ,   
+                   { 'psi' : 'cosine'      } ,    
+                   { 'psi' : 'chebyshev'   } ,  
+                   { 'psi' : 'canberra'    } ,  
+                   { 'psi' : 'braycurtis'  } , 
+                   { 'psi' : 'mahalanobis' } ,
                    { 'psi' : 'gaussian' , 'sigma' : 1.00 } ,
                    { 'psi' : 'gaussian' , 'sigma' : 0.50 } ,
                    { 'psi' : 'gaussian' , 'sigma' : 0.20 } ,
