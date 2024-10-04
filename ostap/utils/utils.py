@@ -11,7 +11,7 @@
 #  @date   2013-02-10
 #  
 # =============================================================================
-"""Module with some simple but useful utilities for
+""" Module with some simple but useful utilities for
 - timing
 - memory
 - profiling
@@ -767,7 +767,7 @@ def implicitMT ( enable = True ) :
 #    returning either the <code>“PATH”</code> value or a fallback of <code>os.defpath</code>.
 #  - copied from <code>shutil</cdde> module
 def local_which ( cmd, mode=os.F_OK | os.X_OK, path=None):
-    """Given a command, mode, and a PATH string, return the path which
+    """ Given a command, mode, and a PATH string, return the path which
     conforms to the given mode on the PATH, or None if there is no such
     file.
 
@@ -1153,7 +1153,7 @@ def prange ( vmin , vmax , n = 10 , power = 2 , edges = True  ) :
 #          ... 
 #  @endcode 
 class SplitRange(object) :
-    """Split range into smaller chunks:
+    """ Split range into smaller chunks:
     >>> for i in SplitRange ( 0 , 10000 , 200 ) :
     >>>     for j in range (*i) :
     >>>         ... 
@@ -1189,7 +1189,7 @@ class SplitRange(object) :
 #          ... 
 #  @endcode 
 def split_range ( low , high , num ) :
-    """Split range into smaller chunks:
+    """ Split range into smaller chunks:
     >>> for i in split_range ( 0 , 10000 , 200 ) :
     >>>     for j in range (*i) :
     >>>         ... 
@@ -1223,8 +1223,6 @@ def split_n_range ( low , high , num ) :
             yield low + nl , low + nh 
         yield low + num * newn - newn , high
         
-
-        
 # ======================================================================================
 if  ( 3 , 2 ) <= python_version :
     # ==================================================================================
@@ -1235,7 +1233,7 @@ else :
     # ==================================================================================
     import operator 
     def accumulate(iterable, func=operator.add):
-        'Return running totals'
+        """ Return running totals """ 
         # accumulate([1,2,3,4,5]) --> 1 3 6 10 15
         # accumulate([1,2,3,4,5], operator.mul) --> 1 2 6 24 120
         it = iter(iterable)
@@ -1249,12 +1247,12 @@ else :
             yield total
 
 # ======================================================================================
-if  ( 3 , 6 ) <= python_version:
-    
+if  ( 3 , 6 ) <= python_version: # =====================================================
+    # ==================================================================================
     choices = random.choices
-    
-else :
-    
+    # ==================================================================================
+else : # ===============================================================================
+    # ==================================================================================
     def choices ( population , weights = None , cum_weights = None , k = 1 ) :
         """ Simple variant of `random.choice`
         """
@@ -1263,16 +1261,15 @@ else :
         
         return [ random.choice ( population ) for i in range ( k ) ] 
 
-    
 # ========================================================================================
-if  ( 3 , 6 ) <= python_version : 
+if  ( 3 , 6 ) <= python_version : # ======================================================
     # ====================================================================================
     ## Generate some random name of given name
     #  @code
     #  name = random_name ( 5 ) 
     #  @endcode 
     def random_name ( size ) :
-        """Generate some random name of given name 
+        """ Generate some random name of given name 
         >>> name = random_name ( 5 )
         """
         assert 1 <= size , 'random_name: invalid size!'
@@ -1282,14 +1279,14 @@ if  ( 3 , 6 ) <= python_version :
         ## 
         return first  + ''.join ( random.choices ( all_symbols , k = size - 1 ) ) 
     # ====================================================================================
-else :
+else : # =================================================================================
     # ====================================================================================
     ## Generate some random name of given name
     #  @code
     #  name = random_name ( 5 ) 
     #  @endcode 
     def random_name ( size ) :
-        """Generate some random name of given name 
+        """ Generate some random name of given name 
         >>> name = random_name ( 5 )
         """
         assert 1 <= size , 'random_name: invalid size!'
@@ -1302,7 +1299,7 @@ else :
 # ========================================================================================
 ## generate some pseudo-random 6-symbol name from provided hash sources 
 def short_hash_name ( size , name , *names ) :
-    """generate some pseudo-random 6-symbol name from provided hash sources
+    """ Generate some pseudo-random 6-symbol name from provided hash sources
     """
 
     size = max ( min ( size , 8 ) , 4 ) 
@@ -1318,14 +1315,14 @@ def short_hash_name ( size , name , *names ) :
     h = abs ( h ) % ( 2 ** ( 4 * size ) )
     
     return ( '%%0%dx' % size ) % h 
-    
+
 # =============================================================================
 ## Generate the random string, that can be used as password or secret word
 #  @code
 #  password = gen_password () 
 #  @endcode 
 def gen_password ( size = 12 ) :
-    """Generate the random string, that can be used as password or secret word
+    """ Generate the random string, that can be used as password or secret word
     >>> password = gen_password () 
     """
     import random
@@ -1341,12 +1338,11 @@ def gen_password ( size = 12 ) :
     return result
 
 # =============================================================================
-
-try :
+try : # =======================================================================
     # =========================================================================
     from more_itertools import chunked, divide 
     # =========================================================================    
-except ImportError :
+except ImportError : # ========================================================
     # =========================================================================    
     from itertools import islice
     from functools import partial
@@ -1359,7 +1355,7 @@ except ImportError :
     #
     #  The function is copied from <code>more_itertools</code> 
     def take(n, iterable):
-        """Return first *n* items of the iterable as a list.
+        """ Return first *n* items of the iterable as a list.
         
         >>> take(3, range(10))
         [0, 1, 2]
@@ -1391,7 +1387,7 @@ except ImportError :
     # 
     #  The function is copied from <code>more_itertools</code>
     def chunked  ( iterable , n ):
-        """Break *iterable* into lists of length *n*:
+        """ Break *iterable* into lists of length *n*:
         
         >>> list(chunked([1, 2, 3, 4, 5, 6], 3))
         [[1, 2, 3], [4, 5, 6]]
@@ -1445,7 +1441,7 @@ except ImportError :
     #
     # The function is copied from <code>more_itertools</code>
     def divide ( n , iterable):
-        """Divide the elements from *iterable* into *n* parts, maintaining
+        """ Divide the elements from *iterable* into *n* parts, maintaining
         order.
         
         >>> group_1, group_2 = divide(2, [1, 2, 3, 4, 5, 6])
@@ -1495,7 +1491,7 @@ else                           : from itertools import izip_longest as zip_longe
 # =============================================================================
 ## Collect data into fixed-length chunks or blocks"
 def grouper ( iterable , n , fillvalue = None ):
-    "Collect data into fixed-length chunks or blocks"
+    """ Collect data into fixed-length chunks or blocks """ 
     # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
     nargs =  [ iter ( iterable ) ]  * n
     return zip_longest ( *nargs , fillvalue = fillvalue )
@@ -1508,7 +1504,7 @@ def grouper ( iterable , n , fillvalue = None ):
 #  for a,b in zip ( 'abcde' , make_iterable ( [1,2,3] , 0 , 2 ) ) : ...
 #  @endcode 
 def make_iterable ( what , default = None , size = -1 ) :
-    """Create infinite or finite iterable from other iterable or no-iterable
+    """ Create infinite or finite iterable from other iterable or no-iterable
     >>> for a,b in zip ( 'abcde' , make_iterable ( 1 ) ) : ...
     >>> for a,b in zip ( 'abcde' , make_iterable ( [1,2,3] ) ) : ...
     >>> for a,b in zip ( 'abcde' , make_iterable ( [1,2,3] , 0 , 2 ) ) : ...
@@ -1557,7 +1553,7 @@ def checksum_files ( *files ) :
 #  ok = balanced ( expression ) 
 #  @endcode 
 def  balanced ( expression , left = '([' , right = ')]' ) :
-    """Simple utility to check balanced parenthesis/brackets, etc...
+    """ Simple utility to check balanced parenthesis/brackets, etc...
     >>> expression = ' .... '
     >>> ok = balanced ( expression ) 
     """
@@ -1578,22 +1574,40 @@ def  balanced ( expression , left = '([' , right = ')]' ) :
     return True if not stack else False 
 
 # =============================================================================
-
-
+## The simplest splitter of N-object into n groups :
+#  @code
+#  for i in spliter ( 10 , 3 ) : print ( i ) 
+#  @endcode
+def splitter ( N , n ) :
+    """ The simplest splitter of N-objects into n groups
+    >>> for i in spliter ( 10 , 3 ) : print ( i ) 
+    """
+    assert isinstance ( N , int ) and 0 <= N , "Invalid N"
+    assert isinstance ( n , int ) and 1 <= n , "Invalid n"
+    if   not N  : pass
+    elif 1 == n : yield N
+    else :
+        a , b = divmod ( N , n )
+        if   not a :
+            for i in range ( b ) : yield 1
+        elif not b :
+            for i in range ( n ) : yield a
+        else :
+            for i in range ( b     ) : yield a + 1
+            for i in range ( b , n ) : yield a 
+                
 # ============================================================================
 if   ( 3 , 9 ) <= python_version : memoize = functools.cache 
 elif ( 3 , 2 ) <= python_version : 
-    
     # =========================================================================
     ## Simple lightweight unbounded cache
     def memoize ( user_function ):
-        """Simple lightweight unbounded cache"""
+        """ Simple lightweight unbounded cache """
         return functools.lru_cache(maxsize=None)(user_function)
-
-else :
-
-    from ostap.utils.basic import loop_items
-    
+    # =========================================================================
+else : # ======================================================================
+    # =========================================================================
+    from ostap.utils.basic import loop_items    
     # =========================================================================
     ## Simple lightweight unbounded cache
     class memoize(object):
@@ -1623,7 +1637,6 @@ else :
         def __get__(self, obj, objtype):
           return functools.partial(self.__call__, obj)
       
-    
 # ============================================================================
 ## abstract prpoperty
 #  @code
@@ -1657,8 +1670,7 @@ else :
 
     
 # =============================================================================
-if  ( 3 , 9 ) <= python_version :
-    
+if  ( 3 , 9 ) <= python_version :     
     # =========================================================================
     ## class property decorator
     #  @code
@@ -1666,14 +1678,13 @@ if  ( 3 , 9 ) <= python_version :
     #  def A ( cls ) : ...  
     #  @endcode
     def classprop ( func ) :
-        """Class property
+        """ Class property
         @classprop
         def A ( cls ) : ...
         """
         return classmethod ( property ( func ) ) 
-        
-elif ( 3 , 0 ) <= python_version : 
-
+    # =========================================================================
+elif ( 3 , 0 ) <= python_version : # ==========================================
     # =========================================================================
     ## class @classproperty
     #  class property decorator  (copied and simplified from astropy)
@@ -1740,8 +1751,9 @@ elif ( 3 , 0 ) <= python_version :
                 return orig_fget(obj.__class__)
             
             return fget
-else :
-    
+    # =========================================================================
+else : # ======================================================================
+    # =========================================================================
     class classprop(object):
         def __init__(self, fget):
             self.fget = fget

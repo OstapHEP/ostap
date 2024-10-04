@@ -7,6 +7,8 @@
   1. Add test for Goddness-of-Fit method for multidimensional case
   1. Add very simple "efficiency-counter" `ostap.stats.counters.EffCounter`
   1. suppress `ostap.core.config.config_goodby` prints for non-interactive sessions
+  1. add the most primitive splitter `ostap.utils.utils.splitter`
+
     
 ## Backward incompatible
 
