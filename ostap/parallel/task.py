@@ -243,7 +243,7 @@ class Task(object) :
 #    - append_to   : additional variables to be ''appended''
 #    - prepend_to  : additional variables to be ''prepended''
 class GenericTask(Task) :
-    """Generic `templated' task for parallel processing.
+    """ Generic `templated' task for parallel processing.
     One needs to  define three functions/functors:
     - processor   :         output = processor   ( jobid , item ) 
     - merger      : updated_output = merger    ( old_output , new_output )
@@ -303,19 +303,19 @@ class GenericTask(Task) :
     # =========================================================================
     ## local initialization (executed once in parent process)
     def initialize_local   ( self ) :
-        """Local initialization (executed once in the parent process)"""
+        """ Local initialization (executed once in the parent process)"""
         self.__output = self.initializer () if self.initializer else None 
         
     # =========================================================================
     ## the actual processing of the single item 
     def process  ( self , jobid , *params ) :
-        """The actual processing of the single item"""
+        """ The actual processing of the single item"""
         return self.processor ( jobid , *params )
         
     # =========================================================================
     ## merge results 
     def merge_results ( self , result , jobid = -1 ) :
-        """Merge processing results"""
+        """ Merge processing results"""
         if self.collector : 
             self.__output = self.collector ( self.__output , result , jobid )
         else :
@@ -324,7 +324,7 @@ class GenericTask(Task) :
     # =========================================================================
     ## get the final  results
     def results ( self ) :
-        """Get the final(merged/collected) results"""
+        """ Get the final(merged/collected) results"""
         return self.__output
 
     # =========================================================================
@@ -358,7 +358,7 @@ class GenericTask(Task) :
 # =============================================================================
 ## Simple task to execute the callable object/function  
 class FuncTask(Task) :
-    """Simple task for parallel processing.
+    """ Simple task for parallel processing.
     - func        : function 
     - merger      : updated_output = merger      ( old_output , new_output )
     - initializer :         output = initializer (      )  
@@ -394,7 +394,7 @@ class FuncTask(Task) :
     # =========================================================================
     ## local initialization (executed once in parent process)
     def initialize_local   ( self ) :
-        """Local initialization (executed once in parent process)"""
+        """ Local initialization (executed once in parent process)"""
         self.__output = self.initializer () if self.initializer else None 
         
     # =========================================================================
@@ -407,14 +407,14 @@ class FuncTask(Task) :
     # =========================================================================
     ## merge results 
     def merge_results ( self , result ) :
-        """Merge processing results"""
+        """ Merge processing results"""
         if  self.merger : 
             self.__output = self.merger ( self.__output , result )
     
     # =========================================================================
     ## get the final  results
     def results ( self ) :
-        """Get the final (merged) results"""
+        """ Get the final (merged) results"""
         return self.__output
 
     @property
@@ -436,7 +436,7 @@ class FuncTask(Task) :
 #  helper class to collect statistics 
 #  @author Pere MATO Pere.Meto@cern.ch
 class Statistics(object):
-    """Helper class to collect statistics
+    """ Helper class to collect statistics
     """
     def __init__ ( self , host = None ) :
         import time
@@ -470,7 +470,7 @@ class Statistics(object):
 # =============================================================================
 ## Simple class to merge the job execution statistics 
 class StatMerger(object) :
-    """Simple class to merge the job execution statistics
+    """ Simple class to merge the job execution statistics
     """
     def __init__ ( self        ) : self.__merged = {}        
     def __iadd__ ( self , stat ) :
@@ -502,7 +502,7 @@ class StatMerger(object) :
     #     ...
     #  @endcode 
     def __iter__  ( self ) :
-        """Iterator over merged statictics :
+        """ Iterator over merged statictics :
         >>> merged = ...
         >>> for host , stat in merged :
         ...
@@ -522,7 +522,7 @@ class StatMerger(object) :
     #  merged.print_stat ()
     #  @endcode 
     def print_stats ( self , prefix = '' , cputime = None ) :
-        """Print job execution sstatistics
+        """ Print job execution sstatistics
         >>> merged = ...
         >>> merged.print_stats () 
         """
@@ -618,7 +618,7 @@ class StatMerger(object) :
 #  merged = merger.result 
 #  @endcode
 class TaskMerger(object) :
-    """Merge task resuls
+    """ Merge task resuls
     >>> merger = TaskMerger()
     >>> jobs   = pool.uimap  ( .... )
     >>> for result , stat in jobs :
@@ -640,7 +640,7 @@ class TaskMerger(object) :
     #  merged = merger.result
     #  @endcode 
     def __iadd__ ( self , result ) :
-        """Merge task resuls
+        """ Merge task resuls
         >>> merger = TaskMerger()
         >>> jobs   = pool.uimap  ( .... )
         >>> for result , stat in jobs :
@@ -660,7 +660,7 @@ class TaskMerger(object) :
     #  merged = merger.result
     #  @endcode 
     def merge ( self , result ) :
-        """Merge task results
+        """ Merge task results
         >>> merger = TaskMerger()
         >>> jobs   = pool.uimap  ( .... )
         >>> for result , stat in jobs :
@@ -706,7 +706,7 @@ class TaskMerger(object) :
 #  use decorators here :-(
 #  @see Task 
 def task_executor ( item ) :
-    """Helper function to execute the task and collect job execution statistic
+    """ Helper function to execute the task and collect job execution statistic
     - unfortunately due to limitation of `parallel python' one cannot
     use python decorators here :-(
     - see Task 
@@ -796,7 +796,7 @@ def task_executor ( item ) :
 #  (unfornately due to limitation of <code>parallel python</code> one cannot
 #  use decorators here :-(
 def func_executor ( item ) :
-    """Helper function to execute the task and collect job execution statistic
+    """ Helper function to execute the task and collect job execution statistic
     - unfornately due to limitation of `parallel python' one cannot
     use python decorators here :-(
     """
@@ -816,7 +816,7 @@ def func_executor ( item ) :
 ## @class TaskManager
 #   Abstract base class for the work manager for parallel processing  
 class TaskManager(object) :
-    """Abstract base class for the work manager for paralell processing 
+    """ Abstract base class for the work manager for paralell processing 
     """
     
     __metaclass__ = abc.ABCMeta
@@ -851,7 +851,7 @@ class TaskManager(object) :
     #  result2 =  wm.process ( my_fun , items , merger = TaskMerger () )    
     #  @endcode
     def process ( self , task , args , **kwargs ) :
-        """Process callable object or Task :
+        """ Process callable object or Task :
         
         - process Task
         
@@ -887,7 +887,7 @@ class TaskManager(object) :
     ## Helper internal method for parallel processing of
     #  the plain function with chunks of data
     def __process_func ( self , task , chunks  , **kwargs ) :
-        """Helper internal method for parallel processiing of
+        """ Helper internal method for parallel processiing of
         the plain function with chunks of data
         """
         from ostap.utils.cidict import cidict
@@ -953,7 +953,7 @@ class TaskManager(object) :
     # ===================================================================================
     ## helper internal method to process the task with chunks of data 
     def __process_task  ( self , task , chunks , **kwargs ) :
-        """Helper internal method to process the task with chunks of data 
+        """ Helper internal method to process the task with chunks of data 
         """
             
         from timeit import  default_timer as _timer
@@ -1022,7 +1022,7 @@ class TaskManager(object) :
     ## get PP-statistics if/when posssible  
     @abc.abstractmethod
     def get_pp_stat ( self ) : 
-        """Get PP-statistics if/when posisble 
+        """ Get PP-statistics if/when posisble 
         """
         return None 
 
@@ -1045,7 +1045,7 @@ class TaskManager(object) :
     #  - no merging of results   
     @abc.abstractmethod 
     def iexecute ( self , job , jobs_args , progress = False ) :
-        """Process the bare `executor` function
+        """ Process the bare `executor` function
         >>> mgr  = WorManager  ( .... )
         >>> job  = ...
         >>> args = ...
@@ -1062,7 +1062,7 @@ class TaskManager(object) :
     # =========================================================================
     ## print the job execution statistics 
     def print_statistics ( self , stat_pp , stat_loc , cputime = None ) :
-        """Print the job execution statistics 
+        """ Print the job execution statistics 
         """        
         if self.silent : return
 

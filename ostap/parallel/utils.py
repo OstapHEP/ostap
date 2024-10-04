@@ -192,7 +192,7 @@ def get_workers ( section , envvar = '' , local_host = '' ) :
 #  maxjobs = get_max_jobs_chunk ( 1000 ) 
 #  @endcode
 def get_max_jobs_chunk ( jobs_chunk = None ) :
-    """Get the maximum size of jobs chunk
+    """ Get the maximum size of jobs chunk
     for large number of parallel jobs one often gets error
     ``OSError 24 ('Too many open files')''
     The good solution is to increase the limits
@@ -225,7 +225,7 @@ def get_max_jobs_chunk ( jobs_chunk = None ) :
 #  random_random ( jobid ) 
 #  @endcode
 def random_random ( *jobid ) :
-    """Random number setting for parallel jobs
+    """ Random number setting for parallel jobs
     - python
     - ROOT.gRandom
     - ROOT.RooRandom

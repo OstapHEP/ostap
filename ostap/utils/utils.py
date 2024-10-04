@@ -1204,7 +1204,7 @@ def split_range ( low , high , num ) :
 #          ... 
 #  @endcode 
 def split_n_range ( low , high , num ) :
-    """Split range into `num` smaller chunks of approximate size 
+    """ Split range into `num` smaller chunks of approximate size 
     >>> for i in split_n_range ( 0 , 10000 , 200 ) :
     >>>     for j in range (*i) :
     >>>         ... 
