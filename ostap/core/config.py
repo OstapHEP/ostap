@@ -37,7 +37,7 @@ from   ostap.utils.basic         import get_env        as ostap_getenv
 # =============================================================================
 ## print for configparger 
 def _cp_str_ ( cp ) :
-    """print for configparger"""
+    """ Print for configparger"""
     import io 
     with io.StringIO() as o :
         config.write( o )
@@ -143,7 +143,8 @@ for k in remove :
 import atexit
 @atexit.register
 def config_goodby () :
-    import  datetime
+    import  datetime, sys
+    if not hasattr ( sys , 'ps1' ) : return 
     now = datetime.datetime.now() 
     if files_read :
         n = len ( files_read )
@@ -193,8 +194,6 @@ def config_goodby () :
     except :
         pass
     
-
-
 # =============================================================================
 if '__main__' == __name__ :
 
