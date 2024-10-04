@@ -5,7 +5,8 @@
   1. Slight improvements in convolution for fitting
   1. Add the first Goodness-of-Fit method for multidimensional case
   1. Add test for Goddness-of-Fit method for multidimensional case
-      
+  1. Add very simple "efficiency-counter" `ostap.stats.counters.EffCounter`
+    
 ## Backward incompatible
 
 ## Bug fixes

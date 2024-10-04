@@ -19,13 +19,14 @@ __all__     = (
     'SE'             , ## simple smart counter (1-bi histo)  C++ Ostap::StatEntity 
     'WSE'            , ## simple smart counter with weight :     Ostap::WStatEntity 
     'NSE'            , ## simple smart running counter     :     Ostap::NStatEntity
-    'counters_table' , ## make table of counters  
+    'counters_table' , ## make table of counters
+    'EffCounter'     , ## simple counter for efficiency
     ) 
 # =============================================================================
 from   ostap.math.ve          import Ostap, VE
 from   ostap.math.base        import isequal, isequalf, iszero 
 from   ostap.core.ostap_types import dictlike_types, sequence_types
-import ROOT, cppyy
+import ROOT, cppyy, math, sys  
 # =============================================================================
 _new_methods_ = []
 # =============================================================================
@@ -118,10 +119,9 @@ SE  .__iadd__ =  _se_iadd_
 SE  .__add__  =  _se_add_
 WSE .__add__  = _wse_add_
 
-
 # ==============================================================================
 ## numbers are close enough?
-def closef ( a , b , N = 100 ) :
+def closef ( a , b , N = 1000 ) :
     return ( a == b ) or isequalf ( a , b ) or abs ( a - b ) * N <= abs ( a ) + abs ( b )
     
 # =============================================================================
@@ -217,6 +217,7 @@ _new_methods_ += [
     WSE.__ne__   ,
     ]
 
+
 # =============================================================================
 ## Count iterable
 #  @code
@@ -247,8 +248,7 @@ def counters_table ( counters , prefix = '' , title = '' ) :
     >>> counters = .... ## sequence or mapping for counters
     >>> table     = counters_table ( counters , prrefix = '# ' )
     >>> logger.info ( 'Table is \n%s' % table )
-    """
-    
+    """    
     if   isinstance ( counters , dictlike_types ) : pass 
     elif isinstance ( counters , sequence_types ) :
         cnts = {}
@@ -288,17 +288,114 @@ _new_methods_ += [
     counters_table  
     ]
 
+# ==============================================================================
+## @class EffCounter
+#  A primitive "effciciency" counter
+#  - It keeps number of `accepted` and `rejected` entries
+#  and allows to calcuale the (binomial) efficiency
+#  @code
+#  import random
+#  cnt = EffCounter
+#  for i in range ( 1000 ) :
+#      x = random.uniform ( 0 , 1 ) 
+#      cnt += ( x < 0.5 ) 
+#  eff = cnt.eff 
+#  @endcode 
+class EffCounter(object):
+    """ A primitive `effciciency' counter
+    - It keeps number of `accepted` and `rejected` entries
+    and allows to calcuale the (binomial) efficiency
 
+    >>> import random
+    >>> cnt = EffCounter
+    >>> for i in range ( 1000 ) :
+    ...     x = random.uniform ( 0 , 1 ) 
+    ...     cnt += ( x < 0.5 )
+    >>> eff = cnt.eff 
+    """
+    __slots__ = '__A' , '__R'
+    # =========================================================================
+    def __init__ ( self ) :
+        ## accepted 
+        self.__A = 0 ## acccepted
+        ## rejected          
+        self.__R = 0 ## rejected 
+    # =========================================================================
+    @property
+    def accepted ( self ) :
+        """`accepted` : number of `accepted' cases (same as `success`)"""
+        return self.__A
+    # =========================================================================
+    @property
+    def success  ( self ) :
+        """`success` : number of `success' cases (same as `accepted')"""
+        return self.__A
+    # =========================================================================
+    @property
+    def rejected ( self ) :
+        """`rejected` : number of `rejected' cases"""
+        return self.__R 
+    # =========================================================================
+    @property
+    def total    ( self ) :
+        """`total`    : total number of entries """
+        return self.__A + self.__R
+    # ==========================================================================
+    ## Increment the counter 
+    def add ( self , other ) :
+        """ Increment the counter """
+        self += other    
+        return self 
+    # =========================================================================
+    ## Increment the counter 
+    def __iadd__  ( self , other ) :
+        """ Increment the counter """
+        if isinstance ( other , EffCounter ) :
+            self.__A += other.accepted
+            self.__R += other.rejected
+            return self
+        if other : self.__A += 1
+        else     : self.__R += 1 
+        return self
+    # ========================================================================
+    ## Add two conuters 
+    def __add__ ( self , other ) :
+        """ Add two counters """
+        if isinstance ( other , EffCounter ) :
+            newc  = EffCounter()
+            newc += self
+            newc += other 
+            return newc
+        return NotImplemented
+    # ==========================================================================
+    ## Get (binomial) efficiency
+    #  @see Ostap::Math::binomEff 
+    @property 
+    def efficiency ( self ) :
+        """`efficiency` : get (binomial) efficiency
+        - see `Ostap.Math.binomEff`         
+        """
+        return Ostap.Math.binomEff ( self.accepted , self.total )
+    # ==========================================================================
+    @property 
+    def eff        ( self ) :
+        """`effi` : get (binomial) efficiency"""
+        return self.efficiency
+    # ==========================================================================
+    def __getstate__ ( self ) : return self.__A , self.__R 
+    def __setstate__ ( self , state ) :
+        self.__A , self.__R = state
+    # ==========================================================================
+    
 # ==============================================================================
 ## REDUCE 
 # ==============================================================================
 from ostap.math.reduce import root_factory
 
-
 # =============================================================================
 ## Reduce Ostap::StatEntity 
 def  _se_reduce_ ( cnt ) :
-    """Reduce `Ostap.StatEntity` object
+    """ Reduce `Ostap.StatEntity` object
     """
     return  root_factory , ( type ( cnt ) ,
                              cnt.n   () ,
@@ -310,7 +407,7 @@ def  _se_reduce_ ( cnt ) :
 # =============================================================================
 ## Reduce Ostap::WStatEntity 
 def  _wse_reduce_ ( cnt ) :
-    """Reduce `Ostap.WStatEntity` object
+    """ "Reduce `Ostap.WStatEntity` object
     """
     return  root_factory , ( type ( cnt )   ,
                              cnt.mu      () ,
@@ -320,7 +417,7 @@ def  _wse_reduce_ ( cnt ) :
 # =============================================================================
 ## Reduce Ostap::NStatEntity 
 def  _nse_reduce_ ( cnt ) :
-    """Reduce `Ostap.NStatEntity` object
+    """ Reduce `Ostap.NStatEntity` object
     """
     return  root_factory , ( type ( cnt ) ,
                              cnt.N    ()  ,
