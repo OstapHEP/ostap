@@ -115,7 +115,7 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
         #  - no statistics
         #  - no summary printout 
         #  - no merging of results  
-        def iexecute ( self , job , jobs_args , progress = False ) :
+        def iexecute ( self , job , jobs_args , progress = False , **kwargs ) :
             """ Process the bare `executor` function
             >>> mgr  = WorkManager  ( .... )
             >>> job  = ...
@@ -128,6 +128,8 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
             - no summary print
             - no merging of results  
             """
+            
+            njobs = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , Sized ) else None ) ) 
 
             silent = self.silent or not progress
             with warnings.catch_warnings() :
@@ -144,10 +146,22 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
                         
                     results = view.map_async ( job , jobs_args )
                     
-                    for result in progress_bar ( results                          ,
-                                                 description = "# Jobs execution" , 
-                                                 silent      = silent             ) : 
-                        yield result 
+                    for result in progress_bar ( results                            ,
+                                                 max_value   = njobs                , 
+                                                 description = "# Jobs execution: " , 
+                                                 silent      = silent               ) : 
+                        yield result
+                        
+            if kwargs :
+                import ostap.logger.table as T 
+                rows = [ ( 'Argument' , 'Value' ) ]
+                for k , v in loop_items ( kw ) :
+                    row = k , str ( v )
+                    rows.append ( row )
+                title = 'iexecute:: %d unused arguments' % len ( kw ) 
+                table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
+                logger.warning ( '%s\n%s' % ( title , table ) )
+                    
                     
         # ========================================================================-
         ## get PP-statistics if/when possible 

@@ -1044,7 +1044,7 @@ class TaskManager(object) :
     #  - no summary printout 
     #  - no merging of results   
     @abc.abstractmethod 
-    def iexecute ( self , job , jobs_args , progress = False ) :
+    def iexecute ( self , job , jobs_args , progress = False , **kwargs ) :
         """ Process the bare `executor` function
         >>> mgr  = WorManager  ( .... )
         >>> job  = ...

@@ -276,8 +276,8 @@ class WorkManager (TaskManager) :
     #  - no statistics
     #  - no summary printout 
     #  - no merging of results  
-    def iexecute ( self , job , jobs_args , progress = False ) :
-        """Process the bare `executor` function
+    def iexecute ( self , job , jobs_args , progress = False , **kwargs ) :
+        """ Process the bare `executor` function
         >>> mgr  = WorkManager  ( .... )
         >>> job  = ...
         >>> args = ...
@@ -295,17 +295,26 @@ class WorkManager (TaskManager) :
             ## create and submit jobs 
             jobs = pool.uimap ( job , jobs_args )
             
-            njobs  = len ( jobs_args ) if isinstance ( jobs_args , Sized ) else None            
+            njobs = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , Sized ) else None ) ) 
             silent = self.silent or not progress
             
             ## retrive (asynchronous) results from the jobs
             for result in progress_bar ( jobs ,
-                                         max_value   = njobs              ,
-                                         description = "# Jobs execution" , 
-                                         silent      = silent             ) :
+                                         max_value   = njobs                ,
+                                         description = "# Jobs execution: " , 
+                                         silent      = silent               ) :
                 yield result
-            
 
+        if kwargs :
+            import ostap.logger.table as T 
+            rows = [ ( 'Argument' , 'Value' ) ]
+            for k , v in loop_items ( kw ) :
+                row = k , str ( v )
+                rows.append ( row )
+            title = 'iexecute:: %d unused arguments' % len ( kw ) 
+            table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
+            logger.warning ( '%s\n%s' % ( title , table ) )
+            
     # =========================================================================
     ## get the statistics from the parallel python
     def get_pp_stat ( self ) :

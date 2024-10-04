@@ -94,8 +94,8 @@ class WorkManager(TaskManager) :
     #  - no statistics
     #  - no summary printout 
     #  - no merging of results  
-    def iexecute ( self , job , jobs_args , progress = False ) :
-        """Process the bare `executor` function
+    def iexecute ( self , job , jobs_args , progress = False , **kwargs ) :
+        """ Process the bare `executor` function
         >>> mgr  = WorkManager  ( .... )
         >>> job  = ...
         >>> args = ...
@@ -107,23 +107,36 @@ class WorkManager(TaskManager) :
         - no summary prin
         - no merging of results  
         """
-                
+        
+        njobs = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , Sized ) else None ) ) 
         with pool_context ( self.pool ) as pool :
 
             ## create and submit jobs 
             jobs = pool.imap_unordered ( job , jobs_args )
             
-            njobs  = len ( jobs_args ) if isinstance ( jobs_args , Sized ) else None            
             silent = self.silent or not progress
             
             ## retrive (asynchronous) results from the jobs
-            for result in progress_bar ( jobs , max_value = njobs , silent = silent ) :
+            for result in progress_bar ( jobs                               ,
+                                         max_value   = njobs                ,
+                                         description = "# Jobs execution: " ,                                          
+                                         silent      = silent               ) :
                 yield result                
-
+                
+        if kwargs :
+            import ostap.logger.table as T 
+            rows = [ ( 'Argument' , 'Value' ) ]
+            for k , v in loop_items ( kw ) :
+                row = k , str ( v )
+                rows.append ( row )
+            title = 'iexecute:: %d unused arguments' % len ( kw ) 
+            table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
+            logger.warning ( '%s\n%s' % ( title , table ) )
+            
     # ========================================================================-
     ## get PP-statistics if/when possible 
     def get_pp_stat ( self ) : 
-        """Get PP-statistics if/when possible 
+        """ Get PP-statistics if/when possible 
         """
         return None 
             
