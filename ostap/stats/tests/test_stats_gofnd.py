@@ -24,8 +24,8 @@ xvar   = ROOT.RooRealVar ( 'x', '', 0, 10)
 yvar   = ROOT.RooRealVar ( 'y', '', 0, 10)
 varset = ROOT.RooArgSet  ( xvar , yvar   )
 
-xgauss = M.Gauss_pdf     ( 'GX' , xvar = xvar , mean = ( 5 , 4 , 6 ) , sigma = ( 0.5 , 0.2 , 2.5 ) )
-ygauss = M.Gauss_pdf     ( 'GY' , xvar = yvar , mean = ( 5 , 4 , 6 ) , sigma = ( 0.5 , 0.2 , 2.5 ) )
+xgauss = M.Gauss_pdf     ( 'GX' , xvar = xvar , mean = ( 5 , 4 , 6 ) , sigma = ( 1.0 , 0.5 , 2.5 ) )
+ygauss = M.Gauss_pdf     ( 'GY' , xvar = yvar , mean = ( 5 , 4 , 6 ) , sigma = ( 1.0 , 0.5 , 2.5 ) )
 gauss2 = xgauss*ygauss
 
 NG        = 100
@@ -33,9 +33,6 @@ NG2       =  10
 data_good = gauss2.generate ( NG + NG2 , sample = False )
 data_bad  = gauss2.generate ( NG       , sample = False )
 for i in range ( NG2 ) :
-    ## x, y  = -10, -10 
-    ## while not 0 < x < 10 : x = random.gauss ( 9 , 1.0 )
-    ## while not 0 < y < 10 : y = random.gauss ( 9 , 1.0 )
     x = random.uniform ( 0 , 10 )
     y = random.uniform ( 0 , 10 )    
     xvar.setVal ( x )
@@ -49,7 +46,7 @@ def test_ppd () :
     from ostap.stats.gof_np import np,sp,s2u,cdist
     if not np or not sp or not s2u or not cdist:
         logger.warning ('No numpy/scipy: skip the test!')
-        return         
+        ## return         
 
     pdf    = gauss2 
 
@@ -66,35 +63,35 @@ def test_ppd () :
     rows  = [ ( 'Distance' , 'sigma' , 'p-value/good[%]' , 'p-value/bad[%]' ) ]
     
     sigma = '' 
-    for conf in (  { 'psi' : 'linear'      } ,
-                   { 'psi' : 'squared'     } ,
-                   { 'psi' : 'logarithm'   } ,
-                   { 'psi' : 'coulomb'     } ,   
-                   { 'psi' : 'cityblock'   } ,   
-                   { 'psi' : 'seuclidean'  } ,   
-                   { 'psi' : 'cosine'      } ,    
-                   { 'psi' : 'chebyshev'   } ,  
-                   { 'psi' : 'canberra'    } ,  
-                   { 'psi' : 'braycurtis'  } , 
-                   { 'psi' : 'mahalanobis' } ,
-                   { 'psi' : 'gaussian' , 'sigma' : 1.00 } ,
-                   { 'psi' : 'gaussian' , 'sigma' : 0.50 } ,
-                   { 'psi' : 'gaussian' , 'sigma' : 0.20 } ,
-                   { 'psi' : 'gaussian' , 'sigma' : 0.10 } ,
-                   { 'psi' : 'gaussian' , 'sigma' : 0.05 } ,
-                   { 'psi' : 'gaussian' , 'sigma' : 0.02 } ,
-                   { 'psi' : 'gaussian' , 'sigma' : 0.01 } ) : 
+    for conf in ( { 'psi' : 'linear'      } ,
+                  { 'psi' : 'squared'     } ,
+                  { 'psi' : 'logarithm'   } ,
+                  { 'psi' : 'coulomb'     } ,   
+                  { 'psi' : 'cityblock'   } ,   
+                  { 'psi' : 'seuclidean'  } ,   
+                  { 'psi' : 'cosine'      } ,    
+                  { 'psi' : 'chebyshev'   } ,  
+                  { 'psi' : 'canberra'    } ,  
+                  { 'psi' : 'braycurtis'  } , 
+                  { 'psi' : 'mahalanobis' } ,
+                  { 'psi' : 'gaussian' , 'sigma' : 1.00 } ,
+                  { 'psi' : 'gaussian' , 'sigma' : 0.50 } ,
+                  { 'psi' : 'gaussian' , 'sigma' : 0.20 } ,
+                  { 'psi' : 'gaussian' , 'sigma' : 0.10 } ,
+                  { 'psi' : 'gaussian' , 'sigma' : 0.05 } ,
+                  { 'psi' : 'gaussian' , 'sigma' : 0.02 } ,
+                  { 'psi' : 'gaussian' , 'sigma' : 0.01 } ) : 
         
-        ppd = GnD.PPD ( **conf )
+        ppd = GnD.PPD ( Nperm = 1000 , **conf )
         
         ## presumably good fit
-        with timing ( "Good fit" , logger = logger ) :
+        with timing ( "Good fit %s" % conf [ 'psi' ] , logger = logger ) :
             pdf.load_params ( rgood , silent = True ) 
             tgood        = ppd        ( pdf , data_good )
             tgood, pgood = ppd.pvalue ( pdf , data_good )
         
         ## presumably bad fit 
-        with timing ( "Bad  fit" , logger = logger ) : 
+        with timing ( "Bad  fit %s" % conf [ 'psi' ] , logger = logger ) : 
             pdf.load_params ( rbad , silent = True ) 
             tbad        = ppd        ( pdf , data_bad )
             tbad, pbad  = ppd.pvalue ( pdf , data_bad )
@@ -112,9 +109,6 @@ def test_ppd () :
             '%4.1f +/- %.1f' % ( bp.value() , bp.error () ) 
         rows.append ( row )
         
-        ## gt, '' if not ge else '10^%+d' % ge , \
-        ## bt, '' if not be else '10^%+d' % be , \
-
         
     title= 'Goodness-of-fit test'
     table = T.table ( rows , title = title , prefix = '# ')

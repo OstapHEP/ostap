@@ -8,7 +8,7 @@
   1. Add very simple "efficiency-counter" `ostap.stats.counters.EffCounter`
   1. suppress `ostap.core.config.config_goodby` prints for non-interactive sessions
   1. add the most primitive splitter `ostap.utils.utils.splitter`
-
+  1. modify `point-to-point-dissimilarity` GoF method: split into chubnks for large datasets, use parallel processing for permutations
     
 ## Backward incompatible
 
