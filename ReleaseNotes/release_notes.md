@@ -9,7 +9,9 @@
   1. suppress `ostap.core.config.config_goodby` prints for non-interactive sessions
   1. add the most primitive splitter `ostap.utils.utils.splitter`
   1. modify `point-to-point-dissimilarity` GoF method: split into chubnks for large datasets, use parallel processing for permutations
-    
+  1. add keyword arguments to `WorkManager.iexecute` method
+  1. add an option to run parallel permutations using `WorkManager` parallelisation instead of `joblib`
+
 ## Backward incompatible
 
 ## Bug fixes

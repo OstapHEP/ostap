@@ -243,7 +243,7 @@ class PERMUTATOR(object) :
 if jl : # =====================================================================
     # =========================================================================
     ## Run NN-permutations in parallel using joblib 
-    def jl_run ( self , NN , silent = True ) :
+    def joblib_run ( self , NN , silent = True ) :
         """ Run NN-permutations in parallel using joblib """
         nj    = 4 * numcpu () + 4
         lst   = splitter ( NN , nj )
@@ -260,11 +260,28 @@ if jl : # =====================================================================
         # 
         return counter 
     
-    PERMUTATOR.run = jl_run
+    PERMUTATOR.run = joblib_run
     # =========================================================================
 else : # ======================================================================
     # =========================================================================
-    PERMUTATOR.run = None
+    ## Run NN-permutations in parallel using WorkManager
+    def pp_run ( self , NN , silent = True ) :
+        """ Run NN-permutations in parallel using WorkManager"""
+        nj    = 4 * numcpu () + 4
+        lst   = splitter ( NN , nj )
+        ##
+        from ostap.parallel.parallel import WorkManager
+        manager = WorkManager ( silent = silent )
+        counter = EffCounter()
+        ## 
+        ## use the bare interface 
+        for result in manager.iexecute ( self , lst , progress = not silent  , njobs = nj ) :
+            counter += result 
+        # 
+        return counter 
+    
+    PERMUTATOR.run = pp_run
+    # =========================================================================
     
 # =============================================================================
 ## @class PPD
