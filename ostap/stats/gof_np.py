@@ -23,6 +23,7 @@ __all__     = (
     'PPDNP' , ## Point-to-Point Dissimilarity Goodness-of-fit method 
 )
 # =============================================================================
+from   ostap.core.meta_info     import python_info 
 from   ostap.core.ostap_types   import string_types 
 from   ostap.stats.gof          import normalize2 
 from   ostap.core.core          import SE, VE
@@ -207,12 +208,21 @@ def psi_conf ( psi , scale = 1.0 ) :
 
     raise TypeError ( "Unknown `psi':%s" % psi ) 
 
-try :
-    import joblib as jl
-except ImportError :
-    jl = None
 
-# =====================================================================
+# =============================================================================
+jl = None 
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    if ( 3 , 0 ) <= python_info :
+        with warnings.catch_warnings(): 
+            warnings.simplefilter ( "ignore" , category = DeprecationWarning  )
+            import joblib as jl
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    jl = None
+# =============================================================================
 ## @class PERMUTATOR
 #  Helper class that allow to run permutattion test in parallel 
 class PERMUTATOR(object) :
@@ -240,7 +250,7 @@ class PERMUTATOR(object) :
         return counter
     
 # =============================================================================
-if jl : # =====================================================================
+if jl and ( 3 , 0 ) <= python_info : # ========================================
     # =========================================================================
     ## Run NN-permutations in parallel using joblib 
     def joblib_run ( self , NN , silent = True ) :
@@ -253,8 +263,8 @@ if jl : # =====================================================================
         elif  '1.4.0' <= jl.__version__           : conf [ 'return_as' ] = 'unordered_generator'
         ##
         input   = ( jl.delayed (self)( N ) for N in lst )
-        results = jl.Parallel ( **conf ) ( input )
         counter = EffCounter()
+        results = jl.Parallel ( **conf ) ( input )
         for r in progress_bar ( results , max_value = nj , silent = silent ) :
             counter += r
         # 

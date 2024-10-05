@@ -139,21 +139,21 @@ if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.7" )
          message ( "----> warning (optional)            lmdb is NOT found!" )
       endif() 
    endif()
-endif() 
-
+endif()
+    
 # =======================================================================================
 ## joblib: run some numpy-related code in parallel
 # =======================================================================================
-
-find_python_module ( joblib          QUIET )
-if ( NOT ${PY_joblib_FOUND} )
-   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install joblib ${PIP_ARGS})
-endif()
-find_python_module ( joblib          QUIET )
-if ( NOT ${PY_joblib_FOUND} )
-   message ( "----> warning (optional)          joblib is NOT found!" ) 
-endif()
- 
+if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.0" )
+   find_python_module ( joblib          QUIET )
+   if ( NOT ${PY_joblib_FOUND} )
+      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install joblib ${PIP_ARGS})
+   endif()
+   find_python_module ( joblib          QUIET )
+   if ( NOT ${PY_joblib_FOUND} )
+      message ( "----> warning (optional)          joblib is NOT found!" ) 
+   endif()
+ endif() 
 # ========================================================================================
 ## terminaltables3 & terminaltables 
 # ========================================================================================
