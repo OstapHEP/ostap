@@ -170,23 +170,53 @@ class GoFnD (object) :
 #  @see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
 #  @see https://doi.org/10.1088/1748-0221/5/09/P09004
 #  @see http://arxiv.org/abs/arXiv:1003.1768 
+#  Important parameters:
+#  - mcFactor : (int)  the size of mc-dataset is `mcFactor` times size od real data
+#  - mc2mc    : (bool) should distances witng (large) mc-dataste be accounted? 
+#  - Nperm    : (int)  number of permutations 
+#  - psi      : type of psi/distance function 
+#  - sigma    : sigma scale (used for psi=`gaussian`)
 class PPD(AGoF,GoFnD) : 
-    """ Implementation of concrete method "Point-To-Point Dissimilarity"
-    for probing of Goodness-Of-Fit
+    """ Implementation of concrete method "Point-To-Point Dissimilarity" for probing of Goodness-Of-Fit
     - see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
     - see https://doi.org/10.1088/1748-0221/5/09/P09004
     - see http://arxiv.org/abs/arXiv:1003.1768 
+
+    Important parameters:
+    
+    - mc2mc    : (bool)  should distances within (large) mc-dataste be accounted? 
+    - Nperm    : (int)   number of permutations 
+    - psi      : (str)   type of psi/distance function 
+    - sigma    : (float) sigma scale (used for psi=`gaussian`) 
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size od real data
     """
+    # =========================================================================
+    ## create the estimator
+    #  @param mc2mc    : (bool) should distances within (large) mc-dataste be accounted? 
+    #  @param Nperm    : (int)  number of permutations 
+    #  @param psi      : type of psi/distance function 
+    #  @param sigma    : sigma scale (used for psi=`gaussian`)
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size od real data    
     def __init__ ( self                   ,
                    mc2mc     = False      ,
                    Nperm     = 1000       ,
                    psi       = 'gaussian' ,
                    sigma     = 0.05       ,
-                   mcFactor  = 10         ) :
+                   mcFactor  = 10         ) : 
+        """ Create the Point-to-Point Dssimilaroity estimator
         
+        Parameters  
+
+        - mcFactor : (int)  the size of mc-dataset is `mcFactor` times size od real data
+        - mc2mc    : (bool) should distances within (large) mc-dataste be accounted? 
+        - Nperm    : (int)  number of permutations 
+        - psi      : type of psi/distance function 
+        - sigma    : sigma scale (used for psi=`gaussian`)
+        """
         ## initialize the base 
         GoFnD.__init__ ( self , mcFactor = mcFactor )
-        
+
+        ## the actual worker: estimator for two datasets 
         self.__ppd = PPDNP ( mc2mc = mc2mc ,
                              Nperm = Nperm ,
                              psi   = psi   ,
@@ -194,7 +224,7 @@ class PPD(AGoF,GoFnD) :
         
     @property
     def ppd ( self ) :
-        """`ppd` : Point-To-Point Dissimilarity calculator for two data sets """
+        """`ppd` : Point-To-Point Dissimilarity calculator for two datasets """
         return self.__ppd 
 
     # =========================================================================
@@ -213,7 +243,6 @@ class PPD(AGoF,GoFnD) :
         >>> t = ppd ( pdf , data ) 
         """
 
-        
         ds1, ds2 = self.transform ( pdf , data ) 
         
         ## estimate t-value 

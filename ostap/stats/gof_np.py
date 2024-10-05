@@ -264,10 +264,12 @@ if jl and ( 3 , 0 ) <= python_info : # ========================================
         ##
         input   = ( jl.delayed (self)( N ) for N in lst )
         counter = EffCounter()
-        results = jl.Parallel ( **conf ) ( input )
-        for r in progress_bar ( results , max_value = nj , silent = silent ) :
-            counter += r
-        # 
+        with warnings.catch_warnings(): 
+            warnings.simplefilter ( "ignore" ) ## , category = DeprecationWarning  )
+            results = jl.Parallel ( **conf ) ( input )
+            for r in progress_bar ( results , max_value = nj , silent = silent ) :
+                counter += r
+        ## 
         return counter 
     
     PERMUTATOR.run = joblib_run
