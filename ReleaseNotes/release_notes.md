@@ -11,6 +11,8 @@
   1. modify `point-to-point-dissimilarity` GoF method: split into chubnks for large datasets, use parallel processing for permutations
   1. add keyword arguments to `WorkManager.iexecute` method
   1. add an option to run parallel permutations using `WorkManager` parallelisation instead of `joblib`
+  1. extend Point-to-Point Dissimilarity GoF test for 1D case 
+  1. extend 1D GoF test to include Point-to-Point Dissimilarity GoF test 
 
 ## Backward incompatible
 

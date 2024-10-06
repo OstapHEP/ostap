@@ -241,7 +241,7 @@ class PERMUTATOR(object) :
         n1      = len ( self.ds1 )
         pooled  = np.concatenate ( [ self.ds1 , self.ds2 ] )
         counter = EffCounter()
-        for i in progress_bar ( N , silent = silent ) : 
+        for i in progress_bar ( N , silent = silent , description = 'Permutations:') : 
             np.random.shuffle ( pooled )            
             tv       = self.gof.t_value ( pooled [ : n1 ] , pooled [ n1: ] )
             counter += bool ( self.t_value < tv  )
@@ -267,7 +267,7 @@ if jl and ( 3 , 0 ) <= python_info : # ========================================
         with warnings.catch_warnings(): 
             warnings.simplefilter ( "ignore" ) ## , category = DeprecationWarning  )
             results = jl.Parallel ( **conf ) ( input )
-            for r in progress_bar ( results , max_value = nj , silent = silent ) :
+            for r in progress_bar ( results , max_value = nj , silent = silent , description = 'Jobs:') :
                 counter += r
         ## 
         return counter 
@@ -306,8 +306,7 @@ class PPDNP(AGoFNP,GoFNP) :
     """ Implementation of concrete method "Point-To-Point Dissimilarity"
     for probing of Goodness-Of-Fit
     - see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
-    - see https://doi.org/10.1088/1748-0221/5/09/P09004
-    - see http://arxiv.org/abs/arXiv:1003.1768 
+    - see https://doi.org/10.1088/1748-0221/5/09/P09004    - see http://arxiv.org/abs/arXiv:1003.1768 
     """
     def __init__ ( self                   ,
                    mc2mc     = False      ,
@@ -423,6 +422,10 @@ class PPDNP(AGoFNP,GoFNP) :
         ## convert to unstructured datasets 
         uds1    = s2u ( data1 , copy = False )
         uds2    = s2u ( data2 , copy = False )
+
+        ## For 1D-arrays add a fictiev second dimension to please `cdist`-function
+        if 1 == uds1.shape [ 1 ] : uds1 = np.c_[ uds1 , np.zeros ( len ( uds1 ) ) ] 
+        if 1 == uds2.shape [ 1 ] : uds2 = np.c_[ uds2 , np.zeros ( len ( uds2 ) ) ] 
         
         return self.t_value ( uds1 , uds2 )
 
@@ -448,6 +451,10 @@ class PPDNP(AGoFNP,GoFNP) :
         uds1 = s2u ( ds1 , copy = False )
         uds2 = s2u ( ds2 , copy = False )
 
+        ## For 1D-arrays add a fictive second dimension to please `cdist`-function
+        if 1 == uds1.shape [ 1 ] : uds1 = np.c_[ uds1 , np.zeros ( len ( uds1 ) ) ] 
+        if 1 == uds2.shape [ 1 ] : uds2 = np.c_[ uds2 , np.zeros ( len ( uds2 ) ) ] 
+        
         t_value    = self.t_value ( uds1 , uds2 )
 
         permutator = PERMUTATOR ( self , t_value , uds1 , uds2 )

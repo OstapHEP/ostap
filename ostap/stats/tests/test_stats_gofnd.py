@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # ==============================================================================
 # @file ostap/stats/tests/test_stats_gof1d.py 

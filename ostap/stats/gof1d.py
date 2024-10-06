@@ -477,7 +477,7 @@ class GoF1DToys(GoF1D) :
         vct_cdf = self.vcdf
         
         from ostap.utils.progress_bar import progress_bar 
-        for i in progress_bar ( nToys , silent = silent ) :
+        for i in progress_bar ( nToys , silent = silent , description = 'Run toys:') :
 
             dset     = self.__pdf.generate ( self.N  , sample = True )
             data     = dset.tonumpy ( varname ) [ varname ] 
