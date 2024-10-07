@@ -392,7 +392,9 @@ class DNNnp(GoFnp) :
             "Invalid arrays: %s , %s" % ( sh1 , sh2 )
         
         tree        = sp.spatial.KDTree ( ds1 )
-        uvalues , _ = tree.query ( ds1 , k = [ 2 ] , workers = -1 )
+        conf = { 'k' : [2] }
+        if '1.6.0' <= sp.__version__ : conf [ 'workers'] = -1          
+        uvalues , _ = tree.query ( ds1 , **conf )
 
         uvalues     = uvalues.flatten () 
 
