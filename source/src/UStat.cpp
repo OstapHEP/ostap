@@ -32,6 +32,10 @@
 #include "Ostap/Iterator.h"
 #include "Ostap/ProgressBar.h"
 // ============================================================================
+// Local
+// ============================================================================
+#include "local_roofit.h"
+// ============================================================================
 /** @file
  *  Implementation file for class Analysis::UStat
  *  @see Analysis::Ustat
@@ -196,7 +200,8 @@ Ostap::StatusCode Ostap::UStat::calculate
     //
     // #endif
     //
-    observables->assign ( *event_x ) ;
+    // observables->assign ( *event_x ) ;
+	::assign( *observables, *event_x ) ;
     const double pdfValue = pdf . getVal() ;
     //
     double min_distance  = 1.e+100 ;

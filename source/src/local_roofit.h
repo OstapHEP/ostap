@@ -147,6 +147,44 @@ namespace
     //
   }
   // ==========================================================================
+  void assign 
+(       RooAbsCollection& to   ,
+  const RooAbsCollection& from ) 
+{
+  if ( &from == &to ) { return ; } // no self-assignment
+  // ==========================================================================
+#if ROOT_VERSION(6,26,0)  <= ROOT_VERSION_CODE 
+  // ==========================================================================  
+  to.assign ( from ) ;
+  // ==========================================================================
+#elif ROOT_VERSION(6,18,0) <= ROOT_VERSION_CODE 
+  // ==========================================================================
+  for ( auto elem : to ) {
+    auto theirs = from.find(*elem);
+    if(!theirs) continue;
+    theirs->syncCache() ;
+    elem->copyCache(theirs) ;
+    elem->setAttribute("Constant",theirs->isConstant()) ;
+  } 
+  // ==========================================================================
+#else 
+  // ==========================================================================
+  Ostap::Utils::Iterator tmp ( to ) ; // only for ROOT < 6.18
+  RooAbsArg* elem = nullptr ;
+  while ( elem = (RooAbsArg*) tmp.next() )
+  {
+	RooAbsArg* theirs = from.find( *elem ); 
+	if(!theirs) continue;
+    theirs->syncCache() ;
+    elem->copyCache(theirs) ;
+    elem->setAttribute("Constant",theirs->isConstant()) ;
+  }
+  // ==========================================================================
+#endif 
+}
+
+  
+  // ==========================================================================
 } //                                             The end of anynymous namespace 
 // ============================================================================
 //                                                                      The END 

@@ -1768,8 +1768,18 @@ Ostap::MoreRooFit::createNLL
   const RooLinkedList& opts  )
 { return model.createNLL ( data , opts ) ; }
 // ============================================================================
-
-    
+/* assign RooAbsCollection
+ *  @see RooAbsCollection
+ *  @param  from  source collection  
+ *  @param  to    destination collection
+ */
+// ===========================================================================
+void Ostap::MoreRooFit::assign 
+(       RooAbsCollection& to   ,
+  const RooAbsCollection& from ) 
+{ 
+::assign ( to , from ) ; 
+}
 // ============================================================================
 //                                                                      The END
 // ============================================================================
