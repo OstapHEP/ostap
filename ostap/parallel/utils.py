@@ -17,7 +17,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-02-23
 # =============================================================================
-"""Useful utilities for multiprocessing and parallel processing for Ostap
+""" Useful utilities for multiprocessing and parallel processing for Ostap
 
 Actualy it is just a little bit upgraded version of original
 GaudiMP.Parallel module developed by Pere MATO Pere.Mato@cern.ch
@@ -126,7 +126,7 @@ def get_remote_conf ( section , remote ) :
 #  ppservers = get_workers ( 'Pathos' , env_bvar = 'OSTAP_PPSERVERS' ) 
 #  @endcode
 def get_workers ( section , envvar = '' , local_host = '' ) :
-    """Get the defined list of workers through the following scan:
+    """ Get the defined list of workers through the following scan:
     - the domain-specific configuration section `<SECTION >:<local-domain>'
     - the global configuration section `<SECTION>'
     - the environment variable <code>envvar</code>
@@ -173,7 +173,6 @@ def get_workers ( section , envvar = '' , local_host = '' ) :
     
     return tuple ( ppsvc )
                 
-
 # =============================================================================
 ## Get the maximum size of jobs chunk
 #  for large number of parallel jobs one often gets error
@@ -232,7 +231,6 @@ def random_random ( *jobid ) :
     >>> jobid = ...
     >>> random_random ( jobid ) 
     """
-    
     import time, random, ROOT, sys , os, socket   
     ##
     random.seed ()
@@ -263,14 +261,21 @@ def random_random ( *jobid ) :
     
     ## ... and Roofit
     ROOT.RooRandom.randomGenerator().SetSeed()
-    
+
+    ## .. and numpy
+    try :
+        import numpy as np
+        np.random.seed()
+    except ImportError :
+        pass
+    # 
     state = random.getstate() , ROOT.gRandom.GetSeed() , ROOT.RooRandom.randomGenerator().GetSeed() 
     
 
 # =============================================================================
 ## ping the remote host 
 def ping ( host ) :
-    """Ping the host
+    """ Ping the host
     """
     logger.debug ( "Ping for %s" % host ) 
     import subprocess , shlex 
@@ -284,7 +289,6 @@ def ping ( host ) :
     except subprocess.CalledProcessError:
         return False 
 
- 
 # =============================================================================
 ## get avive remote hosts (hosts with a good ping)
 #  @code
@@ -320,7 +324,7 @@ _patterns = []
 #   - ' localhost:positive-integer-number ' ##  case insensitive 
 #   - ' positive-integer-number:localhost ' ##  case insensitive 
 def get_local_port ( expression ) :    
-    """Get the local port number from expressions
+    """ Get the local port number from expressions
     Valid expressions (leading and trailing spacdes are ignored)
     - positive integer-number
     - `'  positive-integer-number  '`
@@ -393,7 +397,7 @@ class PoolContext(object) :
 #  ...   
 #  @endcode
 def pool_context  ( pool ) :
-    """Context manager for Pathos pools
+    """ Context manager for Pathos pools
     >>> with pool_context ( pool ) :
     >>> ...   
     """    

@@ -83,7 +83,7 @@ def test_ppd () :
                   { 'psi' : 'gaussian' , 'sigma' : 0.02 } ,
                   { 'psi' : 'gaussian' , 'sigma' : 0.01 } ) : 
         
-        ppd = GnD.PPD ( Nperm = 1000 , **conf )
+        ppd = GnD.PPD ( nToys= 1000 , **conf )
         
         ## presumably good fit
         with timing ( "Good fit %s" % conf [ 'psi' ] , logger = logger ) :

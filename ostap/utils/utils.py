@@ -1268,16 +1268,16 @@ if  ( 3 , 6 ) <= python_version : # ============================================
     #  @code
     #  name = random_name ( 5 ) 
     #  @endcode 
-    def random_name ( size ) :
+    def random_name ( size = 5 , prefix = '' , suffix = '' ) :
         """ Generate some random name of given name 
         >>> name = random_name ( 5 )
         """
         assert 1 <= size , 'random_name: invalid size!'
         ## 
         first = random.choice  ( ascii_letters ) 
-        if 1 == size : return first
+        if 1 == size : return prefix + first + suffix 
         ## 
-        return first  + ''.join ( random.choices ( all_symbols , k = size - 1 ) ) 
+        return prefix + first  + ''.join ( random.choices ( all_symbols , k = size - 1 ) ) + suffix 
     # ====================================================================================
 else : # =================================================================================
     # ====================================================================================
@@ -1285,16 +1285,16 @@ else : # =======================================================================
     #  @code
     #  name = random_name ( 5 ) 
     #  @endcode 
-    def random_name ( size ) :
+    def random_name ( size , prefix = '' , suffix = '' ) :
         """ Generate some random name of given name 
         >>> name = random_name ( 5 )
         """
         assert 1 <= size , 'random_name: invalid size!'
         ## 
         first = random.choice  ( ascii_letters ) 
-        if 1 == size : return first
+        if 1 == size : return prefix + first + suffix 
         ## 
-        return first  + ''.join ( random.choice ( all_symbols ) for i in range ( size - 1  ) )
+        return prefix + first  + ''.join ( random.choice ( all_symbols ) for i in range ( size - 1  ) ) + suffix 
     
 # ========================================================================================
 ## generate some pseudo-random 6-symbol name from provided hash sources 

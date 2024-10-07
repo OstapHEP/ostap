@@ -13,20 +13,13 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2023-12-06"
 __all__     = (
-    'nEff'      , ## get number of effective entries
-    'mean_var'  , ## mean and variance for (weighted) arrays
-    'normalize' , ## "normalize" variables in dataset/structured array
+    'AGoF'      , ## an abstract base cladd for Goodness-of-Fit estimators
+    'AGoFnp'    , ## an abstract base cladd for Goodness-of-Fit estimators
     )
 # =============================================================================
 from   ostap.core.core        import VE, Ostap
 from   ostap.core.ostap_types import string_types
-import sys 
-# =============================================================================
-try :    
-    import numpy as np
-    _np_floats = np.float16, np.float32, np.float64, np.float128 
-except ImportError :
-    np = None
+import abc  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -35,201 +28,135 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.gof' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Simple utilities for goodness-of-fit studies' )
-# ============================================================================
-## Get the mean and variance for (1D) data array with optional (1D) weight array
+# =============================================================================
+## @class AGoF
+#  An absract base class for family of methods to probe Goodness-of-Fit.
+# - `RooFit` interface 
+#  There are two abstract methods
+#  - <code>__call__</code> to evaluate t-value, the value of GoF estimator 
+#  - <code>pvalue</code> to evaluate (t,p)-values for two datasets
 #  @code
-#  ds = ... ## dataste as structured array
-#  mean, cov2 = mean_var ( ds ['x'] )
+#  gof  = ...
+#  pdf  = ...
+#  data = ...
+#  pdf.fitTo ( data ) 
+#  t_value           = gof        ( pdf , data )
+#  t_value, p_value  = gof.pvalue ( pdf , data )
 #  @endcode
-#  - with weight 
-#  @code
-#  ds = ... ## dataset as structured array with weight 
-#  mean, cov2 = mean_var ( ds ['x'] , ds['weight'] )
-#  @endcode 
-def mean_var ( data , weight = None ) :
-    """ Get the mean and variance for 1D-data array with optional 1D-weight array
-
-    >>> ds = ... ## dataset as structured array
-    >>> mean, cov2 = mean_var ( ds ['x'] )
+class AGoF(object) :
+    """ An abstract base class for family of methods to probe Goodness-of-Git
+    There are two abstract methods
+    - `__call__` to evaluate t-value, the value of GoF estimator 
+    - `pvalue` to evaluate (t,p)-vaues
     
-    - with weight 
-    
-    >>> ds = ... ## dataset as structured array with weight 
-    >>> mean, cov2 = mean_var ( ds ['x'] , ds['weight'] )
+    >>> gof  = ...
+    >>> pdf  = 
+    >>> data = ...
+    >>> pdf.fitTo ( data , ... ) 
+    >>> t_value            = gof        ( pdf , data )
+    >>> t_value , p_value  = gof.pvalue ( pdf , data )
     """
-    #
-    if weight is None :
-        mean = np.mean ( data , axis = 0 , dtype = np.float64 ) 
-        var  = np.var  ( data , axis = 0 , dtype = np.float64 ) 
-        return mean , var
-    # 
-    mean  = np.average (   data               , weights = weight , axis = 0 )
-    var   = np.average ( ( data - mean ) ** 2 , weights = weight , axis = 0 )
-    #
-    return mean , var 
+    # =========================================================================
+    ## Calculate T-value for Goodness-of-Git 
+    #  @code
+    #  gof   = ...
+    #  pdf   = ...  
+    #  data  = ... 
+    #  t_value = gof ( pdf , data ) 
+    #  @endcode
+    @abc.abstractmethod
+    def __call__ ( self , pdf , data ) :
+        """ Calculate T-value for Goodness-of-Fit
+        >>> gof   = ...
+        >>> pdf   = ... 
+        >>> data  = ... 
+        >>> t_value = gof ( pdf , data ) 
+        """
+        return NotImplemented 
+    # =========================================================================
+    ## Calculate the t & p-values
+    #  @code
+    #  gof  = ...
+    #  pdf  = ...
+    #  data = ... 
+    #  t_value , p_value = gof.pvalue ( pdf , data )
+    #  @endcode 
+    @abc.abstractmethod
+    def pvalue ( self , pdf , data ) :
+        """ Calculate the t & p-values
+        >>> gof  = ...
+        >>> pdf  = ... 
+        >>> data = ... 
+        >>> t_value , p_value = gof.pvalue ( pdf , data ) 
+        """
+        return NotImplemented
 
 # =============================================================================
-## Get the effectibe number of entries for 1D-array
-#  \f{ n_{eff} = \frac{  \left\langle x \right\rangle^2}
-#                     { \left\langle x^2 \right\rangle } \f}
-def nEff ( weights ) :
-    """ Get the effective number of entries for 1D-array
-    n_eff = ( sum ( x )  ) ^2 / sum ( x^2 )
+## @class AGoFnp
+#  An absract base class for numpy-related family of methods to probe goodness-of fit
+#
+#  There are two abstract methods
+#  - <code>__call__</code> to evaluate t-value for two datasets 
+#  - <code>pvalue</code> to evaluate (t,p)-vaues for two datasets
+#  @code
+#  gof = ...
+#  ds1, ds2 = ...
+#  t    = god        ( ds1 , ds2 , normalize = True )
+#  t,p  = god.pvalue ( ds1 , ds2 , normalize = True )
+#  @endcode
+class AGoFnp(object) :
+    """ An absract base class for numpy-related family of methods to probe goodness-of fit
+    
+    There are two abstract methods
+    - `__call__` to evaluate t-value for two datasets 
+    - `pvalue` to evaluate (t,p)-vaues for two datasets
+    
+    >>> gof = ...
+    >>> ds1, ds2 = ...
+    >>> t    = gof ( ds1 , ds2 , normalize = True )
+    >>> t,p  = gof ( ds1 , ds2 , normalize = True )
     """
+    # =========================================================================
+    ## Calculate T-value for two datasets 
+    #  @code
+    #  data1 = ... ## the first  data set 
+    #  data2 = ... ## the second data set
+    #  gof   = ...
+    #  t = gof ( data1 , data1 , normalize = False ) 
+    #  t = gof ( data1 , data1 , normalize = True  ) 
+    #  @endcode
+    @abc.abstractmethod
+    def __call__ ( self , data1 , data2 , normalize = True ) :
+        """ Calculate T-value for two data sets 
+        >>> gof    = ...
+        >>> data1 = ... ## the first  data set 
+        >>> data2 = ... ## the second data set
+        >>> t = gof ( data1 , data1 , normalize = False ) 
+        >>> t = gof ( data1 , data1 , normalize = True  ) 
+        """
+        return NotImplemented 
+    # =========================================================================
+    ## Calculate the t & p-values
+    #  @code
+    #  gof = ...
+    #  ds1 , ds2 = ...
+    #  t , p = gof.pvalue ( ds1 , ds2 , normalize = True ) 
+    #  @endcode 
+    @abc.abstractmethod
+    def pvalue ( self , data1 , data2 , normalize = True ) :
+        """ Calculate the t & p-values
+        >>> gof = ...
+        >>> ds1 , ds2 = ...
+        >>> t , p = gof.pvalue ( ds1 , ds2 , normalize = True ) 
+        """
+        return NotImplemented
 
-    s1 = np.sum ( weights      , dtype = np.float64 )
-    s2 = np.sum ( weights ** 2 , dtype = np.float64 )
-    
-    return s1 * s1 / s2
-
-# =============================================================================
-## Get the "normalized" input datasets
-#  All floating felds  are calculated as
-#  \f[ x = \frac{x - \left\langle x \right\rangle}{\sigma} \f]
-#  where \f$ \left\langle x \right\rangle\f$ is mena value
-#  and \f$ \sigma \f$ is a standard deviation.
-# 
-#  @code
-#  ds = ... # data set as structured array
-#  dsn = normalize ( ds ) 
-#  @endcode
-#
-#  - If several datasets are specified, all floating names must be the same
-#  and the mean and sigma are either taken either from the first dataset,
-#  if <code>first=True</code> or as combined through all datasets otherwise 
-#
-#  @code
-#  ds1 = ... # data set as structured array
-#  ds2 = ... # data set as structured array
-#  ds3 = ... # data set as structured array
-#  ds1n, ds2n, ds3n  = normalize ( ds1 , ds2 , ds3 , first = True ) 
-#  @endcode
-#
-#  - If <code>weight</code> is specified, this floating column is considered
-#  as the weight
-#
-#  @code
-#  ds = ... # data set as structured array with weight 
-#  dsn = normalize ( ds , weight = 'weight' ) 
-#  @endcode
-#
-#  @code
-#  ds1 = ... # data set as structured array without weight 
-#  ds2 = ... # data set as structured array with weight 
-#  ds1n , ds2n = normalize ( ds1 , ds2 , weight = ( None , 'weight'  ) ) 
-#  @endcode
-#
-#  @attention Only the floating point columns are transformed! 
-#  @attention Input datasets are expected to be numpy structured arrays
-#
-#  @code
-#  ds = ... # data set as structured array
-#  dsn = normalize ( ds ) 
-#  @endcode
-def normalize2 ( datasets , weight = () , first = True ) :
-    """ Get the `normalized' input datasets
-    All floating fields  are calculated as
-    
-    x = (x - <x>)/sigma
-    
-    - <x> is a mean value 
-    - is a standard deviation.
-    
-    - If several datasets are specified, all floating names must be the same
-    and the mean and sigma are either taken either from the first dataset,
-    if `first=True` or as combined through all datasets, otherwise  
-    
-    - If `weight` is specified, this floating column is concidered
-    as the weight
-    
-    - attention Only the floating point columns are transformed! 
-    - attention Input datasets are expected to be numpy structured arrays 
-    """
-    
-    nd = len ( datasets ) 
-    if not weight                             : weight = nd * [ ''     ]
-    elif isinstance ( weight , string_types ) : weight = nd * [ weight ]
-    
-    assert ( len ( weight ) == nd ) and \
-           all ( ( not w ) or isinstance ( w , string_types ) for w in weight ) , \
-           'Invalid specification of weight!'
-        
-    weight = list ( weight )
-    for i , w in enumerate ( weight ) :
-        if not w : weight [ i ] = '' 
-    weight = tuple ( weight )
-
-    ds     = datasets [ 0  ]
-    others = datasets [ 1: ]
-    
-    ## collect the floating columns 
-    columns = []
-    w0      = weight [ 0 ] 
-    for n,t in ds.dtype.fields.items () :
-        if t[0] in _np_floats  and n != w0 : columns.append ( n ) 
-        
-    vmeans  = [] 
-    for i , c in enumerate ( columns ) :
-        mean, var    = mean_var ( ds [ c ] , None if not w0 else ds [ w0 ] )
-        vmeans.append ( VE ( mean , var ) )
-        
-    ## Number of events/effective entries 
-    nevents = 1.0 * ds.shape [ 0 ] if not w0 else nEff ( ds [ w0 ] )
-    
-    if not first and others : 
-        nevents = ds.shape[0] 
-        for k , dd in enumerate ( others ) :
-            
-            wk = weight [ k + 1 ] 
-            nn = 1.0 * dd.shape [ 0 ] if not wk else nEff ( dd [ wk ] )                
-            
-            for i , c in enumerate ( columns ) :
-                
-                mean, var = mean_var ( dd [ c ] , None if not wk else dd [ wk ] )                    
-                vv = VE ( mean , var ) 
-                vmeans [ i ] = Ostap.Math.two_samples ( vmeans [ i ] , nevents , vv , nn )
-                
-            nevents += nn
-                
-    result = []  
-    for d in datasets :
-        
-        nds = d.copy ()
-        for ic , c in enumerate ( columns ) :
-            vv        = vmeans [ ic ]
-            mean      = vv.value ()
-            sigma     = vv.error ()                 
-            a         = nds [ c ]
-            nds [ c ] =  ( a - mean ) / sigma
-            
-        result.append ( nds )
-            
-    return tuple ( result ) 
-
-# =============================================================================
-if ( 3 , 0 ) <= sys.version_info : 
-    code3 = """
-def normalize ( ds , *others , weight = () , first = True ) :
-    result = normalize2 ( ( ds , *others ) , weight = weight , first = first )      
-    return result [ 0 ] if not others else result 
-    """
-    exec ( code3 )
-else :
-    code2 = """
-def normalize ( ds , others = () , weight = () , first = True ) :
-    datasets = [ ds ] + [ d for d in others ]
-    result = normalize2 ( datasets , weight = weight , first = first )          
-    return result [ 0 ] if not others else result 
-    """
-    exec ( code2 )
-normalize.__doc__ = normalize2.__doc__ 
 
 # =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-
 
 # =============================================================================
 ##                                                                      The END 

@@ -12,12 +12,17 @@
   1. add keyword arguments to `WorkManager.iexecute` method
   1. add an option to run parallel permutations using `WorkManager` parallelisation instead of `joblib`
   1. extend Point-to-Point Dissimilarity GoF test for 1D case 
-  1. extend 1D GoF test to include Point-to-Point Dissimilarity GoF test 
-
+  1. extend 1D GoF test to include Point-to-Point Dissimilarity GoF test
+  1. add argument `description` to `WorkManager.iexecute` methods 
+  1. add parallelisaiton for GoF permutations and toys   
+  1. implement tests for USTAT & DNN 
+    
 ## Backward incompatible
 
 ## Bug fixes
-
+    
+  1. fix the bug in `Ostap::UStat`
+    
 # v1.13.4.0
 
 ## New features

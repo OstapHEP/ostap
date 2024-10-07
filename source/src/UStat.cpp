@@ -132,7 +132,6 @@ Ostap::StatusCode Ostap::UStat::calculate
  *  @param tStat (output,optional) value for T-statistics 
  */
 // ============================================================================
-#include <iostream> 
 Ostap::StatusCode Ostap::UStat::calculate
 ( const Ostap::Utils::ProgressConf& progress , 
   const RooAbsPdf&                  pdf      , 
@@ -161,6 +160,9 @@ Ostap::StatusCode Ostap::UStat::calculate
   const RooArgSet* event_x = 0 ;
   const RooArgSet* event_y = 0 ;
   //
+  // get the observables 
+  std::unique_ptr<RooArgSet> observables { pdf.getObservables ( data ) } ;
+  //
   Ostap::Utils::ProgressBar bar ( num , progress ) ;
   for ( unsigned int i = 0 ; i < num ; ++i , ++bar ) 
     {
@@ -176,24 +178,26 @@ Ostap::StatusCode Ostap::UStat::calculate
     //
     // 2.Evaluate PDF 
     //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
+    // 
+    // #if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
     //
-    Ostap::Utils::Iterator iter  ( *args ) ; // only for ROOT < 6.18 
-    RooRealVar * var = 0 ;
-    while ( (var = (RooRealVar*)iter->Next() ) ) 
-    { var->setVal( event_i->getRealValue( var->GetName() ) ); }
+    // Ostap::Utils::Iterator iter  ( *args ) ; // only for ROOT < 6.18 
+    // RooRealVar * var = 0 ;
+    // while ( (var = (RooRealVar*)iter->Next() ) ) 
+    // { var->setVal( event_i->getRealValue( var->GetName() ) ); }
     //
-#else 
+    /// #else 
     //
-    for ( auto* vv : *args ) 
-    {
-      RooRealVar* var = static_cast<RooRealVar*> ( vv ) ;
-      var -> setVal ( event_i -> getRealValue ( var -> GetName () ) ) ;
-    }
+    // for ( auto* vv : *args ) 
+    // {
+    // RooRealVar* var = static_cast<RooRealVar*> ( vv ) ;
+    // var -> setVal ( event_i -> getRealValue ( var -> GetName () ) ) ;
+    // }
     //
-#endif
+    // #endif
     //
-    const double pdfValue = pdf . getVal( args ) ;
+    observables->assign ( *event_x ) ;
+    const double pdfValue = pdf . getVal() ;
     //
     double min_distance  = 1.e+100 ;
     for ( unsigned int j = 0 ; j < num ; ++j ) 
@@ -223,9 +227,9 @@ Ostap::StatusCode Ostap::UStat::calculate
     //
     if ( hist ) { hist -> Fill ( value ) ; }
     //
-    tstat.push_back ( value ) ; 
+    tstat.push_back ( value ) ;
     //
-  }
+    }
   //
   // calculate T-statistics
   //
