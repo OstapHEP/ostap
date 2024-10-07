@@ -301,7 +301,7 @@ class WorkManager (TaskManager) :
             ## retrive (asynchronous) results from the jobs
             for result in progress_bar ( jobs ,
                                          max_value   = njobs                ,
-                                         description = "# Jobs execution: " , 
+                                         description = kwargs.pop ( 'description' , "Jobs:" ) , 
                                          silent      = silent               ) :
                 yield result
 

@@ -144,11 +144,10 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
                     else :
                         view = cluster[:]                    
                         
-                    results = view.map_async ( job , jobs_args )
-                    
+                    results = view.map_async ( job , jobs_args )                    
                     for result in progress_bar ( results                            ,
-                                                 max_value   = njobs                , 
-                                                 description = "# Jobs execution: " , 
+                                                 max_value   = njobs                ,
+                                                 description = kwargs.pop ( 'description' , "Jobs:" ) ,
                                                  silent      = silent               ) : 
                         yield result
                         
