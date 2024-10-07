@@ -32,6 +32,7 @@ namespace Ostap
        *  @param empty      symbol to show as "not-yet"
        *  @param left       left/prefix 
        *  @param right      right/suffix 
+       *  @param what       description/prefix 
        *  @param use_timer  use the timer?
        */
       ProgressConf
@@ -39,7 +40,8 @@ namespace Ostap
         const std::string&       symbol    = "#"    ,
         const std::string&       empty     = " "    ,
         const std::string&       left      = "[ "   ,
-        const std::string&       right     = " ]"   ,        
+        const std::string&       right     = " ]"   ,
+        const std::string&       what      = ""     , 
         const bool               use_timer = true   ) ;
       // ======================================================================
     public: // ghetters 
@@ -50,8 +52,10 @@ namespace Ostap
       const std::string& empty     () const { return m_empty     ; }
       /// left prefix 
       const std::string& left      () const { return m_left      ; }
-      /// rigthj suffix 
+      /// rigth suffix 
       const std::string& right     () const { return m_right     ; }
+      /// description
+      const std::string& what      () const { return m_what      ; }
       /// effective width/lngth  of the bar (number of symbols+empty steps )
       unsigned int       width     () const { return m_width     ; }
       /// use the timer (show ETA) ?
@@ -84,6 +88,8 @@ namespace Ostap
       std::string        m_left       { "[ " } ;
       /// symbols 
       std::string        m_right      { " ]" } ;
+      /// symbols 
+      std::string        m_what       { ""   } ;
       /// use timer ?
       bool               m_use_timer  { true } ;
       // ======================================================================
@@ -120,6 +126,7 @@ namespace Ostap
        *  @param empty      empty symbol
        *  @param left       left/prefix 
        *  @param right      right/prefix 
+       *  @param what       description/prefix 
        */
       ProgressBar 
       ( const unsigned long long maxcount  = 0      ,
@@ -128,6 +135,7 @@ namespace Ostap
         const std::string&       empty     = " "    ,
         const std::string&       left      = "[ "   ,
         const std::string&       right     = " ]"   ,
+        const std::string&       what      = ""     ,
         const bool               timer     = true   ) ;
       //
       // ======================================================================

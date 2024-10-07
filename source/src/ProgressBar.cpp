@@ -41,12 +41,14 @@ Ostap::Utils::ProgressConf::ProgressConf
   const std::string&       empty     ,
   const std::string&       left      ,
   const std::string&       right     ,
+  const std::string&       what      ,
   const bool               use_timer ) 
   : m_width     ( width     )
   , m_symbol    ( symbol    ) 
   , m_empty     ( empty     ) 
   , m_left      ( left      ) 
   , m_right     ( right     ) 
+  , m_what      ( what      ) 
   , m_use_timer ( use_timer ) 
 {
   // ==========================================================================
@@ -87,7 +89,7 @@ Ostap::Utils::ProgressBar::ProgressBar
   , m_start      ( 0        )
     // ==========================================================================
 {
-  m_wtot = ( left().length() + right().length () + 
+  m_wtot = ( what().length () + left().length() + right().length () + 
              ( width () + 2 ) * std::max ( symbol().length() , empty().length() ) + 10 ) ;
   // ==========================================================================
 #if defined ( __cplusplus ) && ( 201103L <= __cplusplus ) 
@@ -130,8 +132,9 @@ Ostap::Utils::ProgressBar::ProgressBar
   const std::string&       empty     ,
   const std::string&       left      ,
   const std::string&       right     , 
+  const std::string&       what     , 
   const bool               use_timer )
-  : ProgressBar ( ProgressConf ( width , symbol , empty , left , right , use_timer ) , 
+  : ProgressBar ( ProgressConf ( width , symbol , empty , left , right , what , use_timer ) , 
                   maxcount )
 {}
 // ============================================================================
@@ -159,7 +162,7 @@ Ostap::Utils::ProgressBar::show_bar ( const bool show_eta )
   //
   m_next_count = m_maxcount * double ( rtics + 1 ) / w ;
   //
-  std::string line = left ()  ;
+  std::string line =left ()  ;
   line.reserve ( m_wtot ) ;
   //
   // ==========================================================================
@@ -169,7 +172,6 @@ Ostap::Utils::ProgressBar::show_bar ( const bool show_eta )
   const std::string& s1 = symbol() ;
   const std::string& s2 = empty () ;
   //
-
   const unsigned int  s_LEN = 256 ;
   static char s_buffer [ s_LEN ] ;
   // ==========================================================================
@@ -230,14 +232,14 @@ Ostap::Utils::ProgressBar::show_bar ( const bool show_eta )
   // ==========================================================================
   //
   for ( unsigned short i = mtics ; i < w ; ++i ) { line.append ( s2  ) ; }
-  
+  //
   line.append ( right () ) ;
   line.append ( " "      ) ;
   line.append ( Ostap::format ( "%4.1f" , 100 * fraction ) ) ;
   line.append ( "%"     ) ;  
   //
   // show it!
-  std::cout   << line << "\r" << std::flush  ;
+  std::cout  << what()  << line << "\r" << std::flush  ;
   //
   return *this ;
 }
