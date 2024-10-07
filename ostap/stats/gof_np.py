@@ -463,7 +463,7 @@ if '__main__' == __name__ :
     if not sp    : logger.warning ( 'Scipy  is not available' ) 
     if not s2u   : logger.warning ( 's2u    is not available' ) 
     if not cdist : logger.warning ( 'cdist  is not available' )
-    if not jl    : logger.warning ( 'joblib is not available' )
+ 
     
 # =============================================================================
 ##                                                                      The END 
