@@ -45,13 +45,13 @@ try : # =======================================================================
         if (1,6,0) <= sp_version :
             qconf = { 'k' : [ 2 ] , 'workers' : -1 }
             def neighbour_distances ( tree , data ) :
-                dist , _ = tree.query ( data , **conf )
+                dist , _ = tree.query ( data , **qconf )
                 dist     = dist.flatten() 
                 return dist 
         else :
             qconf = { 'k' :   2                    }
             def neighbour_distances ( tree , data ) :
-                dist , _ = tree.query ( data , **conf )
+                dist , _ = tree.query ( data , **qconf )
                 dist = np.delete ( dist , 0 , axis = 1 )
                 dist = dist.flatten()
                 return dist 
