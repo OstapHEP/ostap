@@ -17,6 +17,7 @@
   1. add parallelisaiton for GoF permutations and toys   
   1. implement tests for USTAT & DNN 
   1. prepend the default progress-bar for trees/datasets/frames with `Entries:`
+  1. add a kind of replacement of `ROOT.RooAbsCollection.assign` for old versions of ROOT 
         
 ## Backward incompatible
 

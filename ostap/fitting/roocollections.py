@@ -644,7 +644,11 @@ class  KeepArgs(object) :
         ##
         self.__old_list = None 
 
-
+# =============================================================================
+## attention 
+if root_info < (6,26) and not hasattr ( ROOT.RooAbsCollection , 'assign' ) :
+    ## attention !!!
+    ROOT.RooAbsCollection.assign = ROOT.RooAbsCollection.assignValueOnly 
 
 # =============================================================================
 __item_store = set() 
@@ -663,13 +667,13 @@ def _rac_factory ( klass , *args ) :
 # =============================================================================
 ## reduce `RooArgList`
 def _ral_reduce_ ( rac ) :
-    """Reduce `RooArgList` instances"""    
+    """ Reduce `RooArgList` instances"""    
     return _rac_factory, ( ROOT.RooArgList, ) + tuple ( a for a in rac ) 
 
 # =============================================================================
 ## reduce `RooArgSet`
 def _ras_reduce_ ( rac ) :
-    """Reduce `RooArgSet` instances"""    
+    """ Reduce `RooArgSet` instances"""    
     return _rac_factory, ( ROOT.RooArgSet, ) + tuple ( a for a in rac )  
 
 ROOT.RooArgSet  .__reduce__ = _ras_reduce_
