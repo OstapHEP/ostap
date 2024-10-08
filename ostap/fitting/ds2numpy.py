@@ -387,7 +387,7 @@ elif   np  :  ## ROOT < 6.26
         data = np.zeros ( len ( dataset )  , dtype = dtypes )
     
         ## make an explict loop:
-        for i , item in enumerate ( progress_bar ( dataset , silent = silent ) , description = 'Entries:' ) :
+        for i , item in enumerate ( progress_bar ( dataset , silent = silent , description = 'Entries:' ) ) :
 
             evt, the_weight = item
             
