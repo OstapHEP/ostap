@@ -208,7 +208,7 @@ def _tc_call_ ( tree , first = 0 , last = LAST_ENTRY  , cuts = None , progress =
         else : ## trivial loop 
 
             ## explicit loop over entries 
-            for entry in progress_bar ( range ( firts , last ) , silent = not progress )  :
+            for entry in progress_bar ( range ( firts , last ) , silent = not progress , description = 'Entries:' )  :
                 
                 ievt = tree.GetEntryNumber ( entry  )
                 
@@ -313,7 +313,7 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = LAST_ENTRY , p
         
         else : ## trivial loop
           
-            for event in progress_bar ( range ( first, last ) , silent = not progress ) : 
+            for event in progress_bar ( range ( first, last ) , silent = not progress , description = 'Entries:' ) : 
                 
                 tt      = getter.tree()
                 
@@ -1744,7 +1744,7 @@ def _chain_add_new_branch ( chain          ,
     keep = name , function
     
     import ostap.io.root_file
-    for fname in progress_bar ( files , len ( files ) , silent = not chain_verbose ) :
+    for fname in progress_bar ( files , len ( files ) , silent = not chain_verbose , description = 'Files:' ) :
 
         logger.debug ('Add_new_branch: processing file %s' % fname )
         with ROOT.TFile.Open  ( fname , 'UPDATE' , exception = True ) as rfile :
@@ -1816,7 +1816,7 @@ def _chain_add_new_branch_array ( chain           ,
     tree_verbose  = verbose and      len ( files ) < 5
     chain_verbose = verbose and 5 <= len ( files )
 
-    for i , fname in enumerate ( progress_bar ( files , len ( files ) , silent = not chain_verbose  ) ) :
+    for i , fname in enumerate ( progress_bar ( files , len ( files ) , silent = not chain_verbose , description = 'Files:' ) ) :
         
         logger.debug ('Add_new_branch: processing file %s' % fname )
         with ROOT.TFile.Open  ( fname , 'UPDATE' , exception = True ) as rfile :

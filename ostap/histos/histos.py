@@ -4764,7 +4764,7 @@ def _smear_ ( h1 , sigma , addsigmas = 5 , silent = True ) :
         
         xmax  = bin[0].value()+bin[0].error()
     
-    for ibin1 in progress_bar ( bins , silent = silent  ) :
+    for ibin1 in progress_bar ( bins , silent = silent , description = 'Bins:'  ) :
 
         x1c  =     ibin1 [0].value () 
         x1w  = 2 * ibin1 [0].error () 

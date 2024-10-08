@@ -1491,12 +1491,12 @@ class HypoTestInverter(object) :
 
         elif  1 == len ( values ) and isinstance ( values [ 0 ] , sequence_types  ) :
 
-            for v in progress_bar ( values [ 0 ] ) :
+            for v in progress_bar ( values [ 0 ] , description = 'Scan:' ) :
                 self.__inverter.RunOnePoint ( v )
                 
         else :
             
-            for v in progress_bar ( values ) :
+            for v in progress_bar ( values , description = 'Scan:' ) :
                 self.__inverter.RunOnePoint ( v )
 
     @property

@@ -1359,7 +1359,7 @@ class APDF1 ( Components ) :
         vmin      = None
         with SETPARS ( self , dataset ) , SETVAR  ( var ) :
             from ostap.utils.progress_bar import progress_bar 
-            for v in progress_bar  ( values , silent = silent ) :
+            for v in progress_bar  ( values , silent = silent , description = 'Points:' ) :
                 var.setVal ( v )
                 n   = nLL.getVal() 
                 res = v , n
@@ -1458,7 +1458,7 @@ class APDF1 ( Components ) :
         results = [] 
         with SETPARS ( self , dataset ) , RangeVar ( var , minv , maxv ) , SETVAR  ( var ) :
             from ostap.utils.progress_bar import progress_bar 
-            for i , v in enumerate ( progress_bar ( vals , silent = silent )  ) :
+            for i , v in enumerate ( progress_bar ( vals , silent = silent , description = 'Points:' )  ) :
                 var.setVal ( v )
                 p   = pLL.getVal() 
                 res = v , p 

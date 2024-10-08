@@ -117,7 +117,7 @@ def _rad_loop_ ( dataset                ,
     
     ## loop over dataset
     source = range ( first , last )
-    if progress : source = progress_bar ( source )
+    if progress : source = progress_bar ( source , description = 'Entries:' )
     
     nevents = 0 
     for event in source : 
@@ -2754,7 +2754,7 @@ def ds_to_csv ( dataset , fname , vars = () , more_vars = () , weight_var = '' ,
         writer.writerow ( vnames  )
 
         ## loop over entries in the dataset
-        for entry, _  in progress_bar ( dataset , max_value = len ( dataset ) , silent = not progress ) :
+        for entry, _  in progress_bar ( dataset , max_value = len ( dataset ) , silent = not progress , description = 'Entries:' ) :
             
             values =  [ entry [ a ].getVal() for a in vnames1 ]
             values += [ v.getVal()           for v in mvars   ]

@@ -1101,8 +1101,9 @@ class SelectorWithVars(SelectorWithCuts) :
             self.logger.info ( "Selector(%s): processing TChain('%s') #entries: %d" % ( self.name , tree.GetName() , self.total ) )
             ## decoration:
             from ostap.utils.progress_bar import ProgressBar
-            self.__progress = ProgressBar ( max_value = self.total   ,
-                                            silent    = self.silence )
+            self.__progress = ProgressBar ( max_value   = self.total   ,
+                                            description = 'Entries:'   , 
+                                            silent      = self.silence )
         if not self.silence :
             
             evnt  = self.event ()
@@ -1409,8 +1410,9 @@ class SelectorWithVars(SelectorWithCuts) :
             self.logger.info ( "Selector(%s): processing TChain('%s') #entries: %d" % ( self.name , tree.GetName() , self.total ) )
             ## decoration:
             from ostap.utils.progress_bar import ProgressBar
-            self.__progress = ProgressBar ( max_value = self.total   ,
-                                            silent    = self.silence )
+            self.__progress = ProgressBar ( max_value   = self.total   ,
+                                            description = 'Entries:'   , 
+                                            silent      = self.silence )
             
         if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )

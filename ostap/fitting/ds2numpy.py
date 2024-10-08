@@ -204,7 +204,7 @@ if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
         nmax   = max ( nevts // 6 , 30000 // nvars )
         
         ## get data is chunks/batches 
-        for first, last in progress_bar ( split_range ( 0 , nevts , nmax ) , silent = silent ) :
+        for first, last in progress_bar ( split_range ( 0 , nevts , nmax ) , silent = silent , description = 'Chunks:' ) :
             
             num   = last - first            
             wget  = False 
@@ -387,7 +387,7 @@ elif   np  :  ## ROOT < 6.26
         data = np.zeros ( len ( dataset )  , dtype = dtypes )
     
         ## make an explict loop:
-        for i , item in enumerate ( progress_bar ( dataset , silent = silent ) ) :
+        for i , item in enumerate ( progress_bar ( dataset , silent = silent ) , description = 'Entries:' ) :
 
             evt, the_weight = item
             

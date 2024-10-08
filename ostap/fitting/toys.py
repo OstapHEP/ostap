@@ -749,7 +749,7 @@ def make_toys ( pdf                   ,
     
     ## run pseudoexperiments
     from ostap.utils.progress_bar import progress_bar 
-    for i in progress_bar ( range ( nToys ) , silent = not progress ) :
+    for i in progress_bar ( range ( nToys ) , silent = not progress , description = 'Toys:' ) :
                 
         ## 1. reset PDF parameters 
         pdf.load_params ( params = fix_pars  , silent = True ) ## silent = silent )
@@ -1023,7 +1023,7 @@ def make_toys2 ( gen_pdf               , ## pdf to generate toys
 
     ## run pseudoexperiments
     from ostap.utils.progress_bar import progress_bar 
-    for i in progress_bar ( range ( nToys ) , silent = not progress ) :
+    for i in progress_bar ( range ( nToys ) , silent = not progress , description = 'Toys:' ) :
 
         ## 1. reset PDF parameters 
         gen_pdf.load_params ( params = fix_gen_init , silent = True ) ## silent = silent )
@@ -1235,7 +1235,10 @@ def make_jackknife ( pdf                  ,
     NN = 0 
     from ostap.utils.progress_bar import progress_bar
     ## run jackknife  bootstrapping
-    for i , ds in progress_bar ( enumerate ( data.jackknife ( begin , end ) ) , max_value = end - begin , silent = not progress ) :
+    for i , ds in progress_bar ( enumerate ( data.jackknife ( begin , end ) ) ,
+                                 max_value   = end - begin  ,
+                                 description = 'Sample:'    , 
+                                 silent      = not progress ) :
 
         ## 2. reset parameters of fit_pdf
         pdf.load_params ( params = fix_fit_init , silent = True ) ## silent = silent )
@@ -1359,7 +1362,7 @@ def make_bootstrap (
         fit_fun     = None   ,   ## fit       function ( pdf , dataset , **fit_config )                     
         accept_fun  = None   ,   ## accept    function ( fit-result, pdf, dataset     )
         silent      = True   ,   ## silent processing?
-        progress    = True   ,   ## shpow progress bar? 
+        progress    = True   ,   ## show progress bar? 
         logger      = logger ,   ## use this logger 
         frequency   = 500    ) :
     
@@ -1445,8 +1448,9 @@ def make_bootstrap (
     from ostap.utils.progress_bar import progress_bar
     ## run bootstrapping
     for i , ds in progress_bar ( enumerate ( data.bootstrap ( size , extended = extended ) ) ,
-                                 max_value = size         ,
-                                 silent    = not progress ) :
+                                 max_value   = size         ,
+                                 description = 'Sample:'    , 
+                                 silent      = not progress ) :
         
         ## 2. reset parameters of fit_pdf
         pdf.load_params ( params = fix_fit_init , silent = True ) ## silent = silent )
