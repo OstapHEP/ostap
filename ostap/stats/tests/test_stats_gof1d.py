@@ -301,9 +301,9 @@ def test_bad_fit_1 ( ) :
 # ===============================================================================
 if '__main__' == __name__ :
 
-    ## test_good_fit_1 ()  ## fit Gauss       to Gauss 
-    ## test_good_fit_2 ()  ## fit Gauss+Bkg   to Gauss 
-    ## test_good_fit_3 ()  ## fit Gauss+Bkg   to Gauss+Bkg
+    test_good_fit_1 ()  ## fit Gauss       to Gauss 
+    test_good_fit_2 ()  ## fit Gauss+Bkg   to Gauss 
+    test_good_fit_3 ()  ## fit Gauss+Bkg   to Gauss+Bkg
     test_bad_fit_1  ()  ## fit Gauss       to Gauss+Bkg
  
 # ===============================================================================
