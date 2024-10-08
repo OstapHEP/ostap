@@ -1268,7 +1268,7 @@ if  ( 3 , 6 ) <= python_version : # ============================================
     #  @code
     #  name = random_name ( 5 ) 
     #  @endcode 
-    def random_name ( size = 5 , prefix = '' , suffix = '' ) :
+    def random_name ( size = 6 , prefix = '' , suffix = '' ) :
         """ Generate some random name of given name 
         >>> name = random_name ( 5 )
         """
@@ -1285,7 +1285,7 @@ else : # =======================================================================
     #  @code
     #  name = random_name ( 5 ) 
     #  @endcode 
-    def random_name ( size , prefix = '' , suffix = '' ) :
+    def random_name ( size = 6 , prefix = '' , suffix = '' ) :
         """ Generate some random name of given name 
         >>> name = random_name ( 5 )
         """
