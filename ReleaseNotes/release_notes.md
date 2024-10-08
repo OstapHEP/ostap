@@ -16,7 +16,8 @@
   1. add argument `description` to `WorkManager.iexecute` methods 
   1. add parallelisaiton for GoF permutations and toys   
   1. implement tests for USTAT & DNN 
-    
+  1. prepend the default progress-bar for trees/datasets/frames with `Entries:`
+        
 ## Backward incompatible
 
 ## Bug fixes
