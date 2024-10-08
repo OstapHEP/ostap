@@ -39,7 +39,10 @@ try : # =======================================================================
         import numpy                                                  as np   
         import scipy                                                  as sp  
         from numpy.lib.recfunctions import structured_to_unstructured as s2u
-        from scipy.spatial.distance import cdist                      as cdist 
+        from scipy.spatial.distance import cdist                      as cdist
+        sp_version = tuple ( int ( i ) for i in sp.__version__.split('.') ) 
+        if (1,6,0) <= sp_version : qconf = { 'k' : [ 2 ] , 'workers' : -1 }          
+        else                     : qconf = { 'k' :   2                    }
     # =========================================================================
 except ImportError :
     # =========================================================================
@@ -392,9 +395,7 @@ class DNNnp(GoFnp) :
             "Invalid arrays: %s , %s" % ( sh1 , sh2 )
         
         tree        = sp.spatial.KDTree ( ds1 )
-        conf = { 'k' : [2] }
-        if '1.6.0' <= sp.__version__ : conf [ 'workers'] = -1          
-        uvalues , _ = tree.query ( ds1 , **conf )
+        uvalues , _ = tree.query ( ds1 , **qconf )
 
         uvalues     = uvalues.flatten () 
 
@@ -465,7 +466,8 @@ if '__main__' == __name__ :
     if not sp    : logger.warning ( 'Scipy  is not available' ) 
     if not s2u   : logger.warning ( 's2u    is not available' ) 
     if not cdist : logger.warning ( 'cdist  is not available' )
- 
+    if sp and sp_version < (1,6,0) : 
+        logger.warning ( 'very ancient version of scipy: %s' % str ( sp_version ) )
     
 # =============================================================================
 ##                                                                      The END 
