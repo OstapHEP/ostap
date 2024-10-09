@@ -478,7 +478,7 @@ class GoF1DToys(GoF1D) :
         
         from ostap.utils.progress_bar import progress_bar 
         for i in progress_bar ( nToys , silent = silent , description = 'Toys:') :
-
+        
             dset     = self.__pdf.generate ( self.N  , sample = True )
             data     = dset.tonumpy ( varname ) [ varname ] 
             data     = np.sort ( data )
@@ -499,7 +499,7 @@ class GoF1DToys(GoF1D) :
             self.__ZA_cnt += za 
             self.__ZC_cnt += zc 
             self.__K_cnt  += k 
-
+            
             results [ 'KS'  ].append ( ks )    
             results [ 'AD'  ].append ( ad ) 
             results [ 'CM'  ].append ( cm ) 
@@ -507,7 +507,7 @@ class GoF1DToys(GoF1D) :
             results [ 'ZA'  ].append ( za ) 
             results [ 'ZC'  ].append ( zc ) 
             results [ 'K'   ].append ( k  ) 
-
+            
             ## delete data
             if isinstance ( dset , ROOT.RooDataSet ) : 
                 dset = Ostap.MoreRooFit.delete_data ( dset )
@@ -515,7 +515,7 @@ class GoF1DToys(GoF1D) :
             del dset
             del data
             del cdf_data            
-
+            
         ## accumulate number of toys 
         self.__nToys += nToys 
 
