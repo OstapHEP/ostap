@@ -288,7 +288,7 @@ if ( 3 , 0 ) <= python_info : # ===============================================
         ## Run NN-permutations in parallel using joblib 
         def joblib_run ( self , NN , silent = True ) :
             """ Run NN-permutations in parallel using joblib """
-            nj    = 2 * numcpu () + 3
+            nj    = 2 ## 2 * numcpu () + 3
             lst   = splitter ( NN , nj )
             ## 
             conf  = { 'n_jobs' : -1 , 'verbose' : 0 }
@@ -319,7 +319,7 @@ if not jl : # =================================================================
     ## Run NN-permutations in parallel using WorkManager
     def pp_run ( self , NN , silent = True ) :
         """ Run NN-permutations in parallel using WorkManager"""
-        nj    = 2 * numcpu () + 3
+        nj    = 2 ## 2 * numcpu () + 3
         lst   = splitter ( NN , nj )
         ##
         from ostap.parallel.parallel import WorkManager
@@ -374,7 +374,7 @@ class TOYS(object) :
     ## Run N-toys in parallel using WorkManager
     def run ( self , NN , silent = False ) :
         """ Run NN-permutations in parallel using WorkManager"""
-        nj    = 2 * numcpu () + 3
+        nj    = 2 ## 2 * numcpu () + 3
         lst   = splitter ( NN , nj )
         ##
         from ostap.parallel.parallel import WorkManager
