@@ -288,7 +288,7 @@ if ( 3 , 0 ) <= python_info : # ===============================================
         ## Run NN-permutations in parallel using joblib 
         def joblib_run ( self , NN , silent = True ) :
             """ Run NN-permutations in parallel using joblib """
-            nj    = 4 * numcpu () + 4
+            nj    = 3 * numcpu () + 4
             lst   = splitter ( NN , nj )
             ## 
             conf  = { 'n_jobs' : -1 , 'verbose' : 0 }
@@ -300,7 +300,7 @@ if ( 3 , 0 ) <= python_info : # ===============================================
             with warnings.catch_warnings(): 
                 warnings.simplefilter ( "ignore" ) ## , category = DeprecationWarning  )
                 results = jl.Parallel ( **conf ) ( input )
-                for r in progress_bar ( results , max_value = nj , silent = silent , description = 'Jobs:') :
+                for r in progress_bar ( results , max_value = nj , silent = silent , description = 'Permutations:') :
                     counter += r
             ## 
             return counter
@@ -319,7 +319,7 @@ if not jl : # =================================================================
     ## Run NN-permutations in parallel using WorkManager
     def pp_run ( self , NN , silent = True ) :
         """ Run NN-permutations in parallel using WorkManager"""
-        nj    = 4 * numcpu () + 4
+        nj    = 3 * numcpu () + 4
         lst   = splitter ( NN , nj )
         ##
         from ostap.parallel.parallel import WorkManager
@@ -374,7 +374,7 @@ class TOYS(object) :
     ## Run N-toys in parallel using WorkManager
     def run ( self , NN , silent = False ) :
         """ Run NN-permutations in parallel using WorkManager"""
-        nj    = 4 * numcpu () + 4
+        nj    = 3 * numcpu () + 4
         lst   = splitter ( NN , nj )
         ##
         from ostap.parallel.parallel import WorkManager
