@@ -325,14 +325,16 @@ class USTAT(AGoF) :
 
         ## prepare toys
         toys = TOYS ( self , t_value , pdf = pdf , Ndata = len ( data ) , sample = self.sample )
+        
+        silent = self.silent
+        self.__silent = True 
         if self.parallel :
-            silent = self.silent
-            self.__silent = True 
             counter = toys.run ( self.nToys , silent = silent )
-            self.__silent = silent 
         else :
             counter = toys     ( self.nToys , silent = self.silent )            
-        
+
+        self.__silent = silent 
+                
         p_value = 1 - counter.eff
         return t_value, p_value 
 

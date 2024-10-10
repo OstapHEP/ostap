@@ -45,16 +45,15 @@ try : # =======================================================================
         if (1,6,0) <= sp_version :
             qconf = { 'k' : [ 2 ] , 'workers' : -1 }
             def neighbour_distances ( tree , data ) :
-                dist , _ = tree.query ( data , **qconf )
-                dist     = dist.flatten() 
-                return dist 
+                dist , xx = tree.query ( data , **qconf )
+                del xx 
+                return dist.flatten() 
         else :
             qconf = { 'k' :   2                    }
             def neighbour_distances ( tree , data ) :
-                dist , _ = tree.query ( data , **qconf )
-                dist = np.delete ( dist , 0 , axis = 1 )
-                dist = dist.flatten()
-                return dist 
+                dist , xx = tree.query ( data , **qconf )
+                del xx 
+                return np.delete ( dist , 0 , axis = 1 ).flatten() 
         
     # =========================================================================
 except ImportError :
@@ -406,12 +405,11 @@ class DNNnp(GoFnp) :
         sh2 = vpdf.shape
         assert 2 == len ( sh1 ) and 1 == len ( sh2 ) and len ( ds1 ) == len ( vpdf ) , \
             "Invalid arrays: %s , %s" % ( sh1 , sh2 )
-        
-        tree        = sp.spatial.KDTree ( ds1 )
+
+        tree = sp.spatial.KDTree ( ds1 )
         ## uvalues , _ = tree.query ( ds1 , **qconf )
         ## uvalues     = uvalues.flatten ()
         uvalues = neighbour_distances ( tree , ds1 ) 
-
         del tree
 
         ## dimension of the problem (it must be set in __call__)

@@ -124,7 +124,7 @@ def run_USTAT  ( pdf , data, result , logger ) :
 
     rows  =  [ ( 't-value'  , 'x[..]', 'p-value [%]' , '#sigma' ) ]
     
-    ustat = USTAT ( nToys = 1000 , histo = 100 )
+    ustat = USTAT ( nToys = 1000 , histo = 100 , parallel = True )
     
     pdf.load_params ( result , silent = True )
     
@@ -144,7 +144,7 @@ def run_USTAT  ( pdf , data, result , logger ) :
     logger.info ( '%s:\n%s' % ( title , table ) )
 
     return ustat.histo
-    
+
 # ==============================================================================
 def test_good_fit_1 ( ) :
     """ Make a test for presumably good fit: fit Gauss to Gauss
@@ -155,7 +155,7 @@ def test_good_fit_1 ( ) :
 
     with use_canvas ( 'test_good_fit_1: G -> G' ,      wait = 1 ) :
         r , f = gauss.fitTo ( data_g , **fitconf ) 
-        
+
     with use_canvas ( 'test_good_fit_1: GoF' , wait = 1 ) :
         
         gauss.load_params ( r , silent = True ) 
@@ -166,19 +166,24 @@ def test_good_fit_1 ( ) :
         got = G1D.GoF1DToys ( gauss , data_g )
         logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( got.nToys , got ) ) 
 
+        del gof
+        del got
+
     ## Try to use multidimensional methods
     run_PPD ( gauss , data_g , r , logger )
+    
     udist1 = run_DNN ( gauss , data_g , r , logger )
     if udist1 :
         keep.add ( udist1 ) 
         with use_canvas ( 'test_good_fit_1: DNN' , wait = 5 ) :
             udist1.draw()
+
     udist2 = run_USTAT ( gauss , data_g , r , logger )
     if udist2 :
         keep.add ( udist2 ) 
-        with use_canvas ( 'test_good_fit_1: USTAT' , wait = 5 ) :
+        with use_canvas ( 'test_good_fit_1: USTAT' , wait = 1 ) :
             udist2.draw()
-            
+    
 # =============================================================================
 def test_good_fit_2 ( ) :
     """ Make a test for presumably good fit: fit Gauss+Bkg to Gauss
@@ -301,12 +306,9 @@ def test_bad_fit_1 ( ) :
 if '__main__' == __name__ :
 
     test_good_fit_1 ()  ## fit Gauss       to Gauss 
-
-"""
-test_good_fit_2 ()  ## fit Gauss+Bkg   to Gauss 
-test_good_fit_3 ()  ## fit Gauss+Bkg   to Gauss+Bkg
-test_bad_fit_1  ()  ## fit Gauss       to Gauss+Bkg
-"""
+    test_good_fit_2 ()  ## fit Gauss+Bkg   to Gauss 
+    test_good_fit_3 ()  ## fit Gauss+Bkg   to Gauss+Bkg
+    test_bad_fit_1  ()  ## fit Gauss       to Gauss+Bkg
 
 # ===============================================================================
 ##                                                                        The END 

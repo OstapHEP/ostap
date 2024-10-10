@@ -30,8 +30,8 @@ xgauss = M.Gauss_pdf     ( 'GX' , xvar = xvar , mean = ( 5 , 4 , 6 ) , sigma = (
 ygauss = M.Gauss_pdf     ( 'GY' , xvar = yvar , mean = ( 5 , 4 , 6 ) , sigma = ( 1.0 , 0.5 , 2.5 ) )
 gauss2 = xgauss*ygauss
 
-NG        = 125
-NG2       =  25
+NG        = 100
+NG2       =  50
 data_good = gauss2.generate ( NG + NG2 , sample = False )
 data_bad  = gauss2.generate ( NG       , sample = False )
 for i in range ( NG2 ) :
@@ -132,7 +132,7 @@ def test_DNN () :
     ## 't/bad' , 'x[..]' ,
     rows  = [ ( 'p-value/good[%]' , 'p-value/bad[%]' , '#sigma/good' , '#sigma/bad') ]
     
-    dnn = GnD.DNN ( nToys = 1000  )
+    dnn = GnD.DNN ( nToys = 1000 , histo = 50  )
     
     ## presumably good fit
     with timing ( "Good fit DNN" , logger = logger ) :
@@ -164,12 +164,55 @@ def test_DNN () :
     title= 'Goodness-of-Fit DNN test'
     table = T.table ( rows , title = title , prefix = '# ')
     logger.info ( '%s:\n%s' % ( title , table ) )
+
+# ===============================================================================
+def test_USTAT () :
+    
+    logger = getLogger ("test_USTAT")
+    from ostap.stats.ustat import USTAT 
+
+    
+    rows  = [ ( 'p-value/good[%]' , 'p-value/bad[%]' , '#sigma/good' , '#sigma/bad') ]
+    
+    ust = USTAT ( nToys = 1000  , histo = 50 )
+    
+    ## presumably good fit
+    with timing ( "Good fit USTAT" , logger = logger ) :
+        pdf.load_params ( rgood , silent = True ) 
+        tgood        = ust        ( pdf , data_good )
+        tgood, pgood = ust.pvalue ( pdf , data_good )
+        
+    ## presumably bad fit 
+    with timing ( "Bad  fit USTAT" , logger = logger ) : 
+        pdf.load_params ( rbad  , silent = True ) 
+        tbad        = ust        ( pdf , data_bad )
+        tbad, pbad  = ust.pvalue ( pdf , data_bad )
+        
+    gp = pgood * 100 
+    bp = pbad  * 100
+    
+    gt , ge = pretty_float ( tgood )
+    bt , be = pretty_float ( tbad  )
+    
+    nsg    = significance ( pgood )
+    nsb    = significance ( pbad  )
+    nsg    = '%.1f +/- %.1f' % ( nsg.value() , nsg.error () )
+    nsb    = '%.1f +/- %.1f' % ( nsb.value() , nsb.error () )
+    
+    row = '%4.1f +/- %.1f' % ( gp.value() , gp.error () ) , \
+        '%4.1f +/- %.1f' % ( bp.value() , bp.error () ) , nsg , nsb 
+    rows.append ( row )
+            
+    title= 'Goodness-of-Fit USTAT test'
+    table = T.table ( rows , title = title , prefix = '# ')
+    logger.info ( '%s:\n%s' % ( title , table ) )
     
 # ===============================================================================
 if '__main__' == __name__ :
 
-    test_PPD  ()
-    test_DNN  ()
+    test_PPD   ()
+    test_DNN   ()
+    test_USTAT ()
 
 # ===============================================================================
 ##                                                                        The END 

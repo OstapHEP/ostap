@@ -235,19 +235,6 @@ normalize.__doc__ = normalize2.__doc__
 
 
 # =============================================================================
-jl = None 
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    if ( 3 , 0 ) <= python_info :
-        with warnings.catch_warnings(): 
-            warnings.simplefilter ( "ignore" , category = DeprecationWarning  )
-            import joblib as jl
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    jl = None
-# =============================================================================
 ## @class PERMUTATOR
 #  Helper class that allow to run permutattion test in parallel 
 class PERMUTATOR(object) :
@@ -284,16 +271,17 @@ if ( 3 , 0 ) <= python_info : # ===============================================
         with warnings.catch_warnings(): 
             warnings.simplefilter ( "ignore" , category = DeprecationWarning  )
             import joblib as jl
+            jl_version = tuple ( int ( i ) for i in jl.__version__.split('.') )
         # =====================================================================
         ## Run NN-permutations in parallel using joblib 
         def joblib_run ( self , NN , silent = True ) :
             """ Run NN-permutations in parallel using joblib """
-            nj    = 2 ## 2 * numcpu () + 3
+            nj    = 2 * numcpu () + 3
             lst   = splitter ( NN , nj )
             ## 
             conf  = { 'n_jobs' : -1 , 'verbose' : 0 }
-            if    '1.3.0' <= jl.__version__ < '1.4.0' : conf [ 'return_as' ] = 'generator'           
-            elif  '1.4.0' <= jl.__version__           : conf [ 'return_as' ] = 'unordered_generator'
+            if    (1,3,0) <= jl_version < (1,4,0) : conf [ 'return_as' ] = 'generator'           
+            elif  (1,4,0) <= jl_version           : conf [ 'return_as' ] = 'unordered_generator'
             ##
             input   = ( jl.delayed (self)( N ) for N in lst )
             counter = EffCounter()
@@ -307,32 +295,34 @@ if ( 3 , 0 ) <= python_info : # ===============================================
         # =====================================================================
         PERMUTATOR.run = joblib_run        
         # =====================================================================
-        logger.debug ( 'Joblib will be  used foe parallel permuations')
+        logger.debug ( 'Joblib will be  used foe parallel permutations')
         # =====================================================================        
     except ImportError : # ====================================================
         # =====================================================================
         jl = None
-        
+
+
+jl = None 
 # =============================================================================
 if not jl : # =================================================================
     # =========================================================================
     ## Run NN-permutations in parallel using WorkManager
     def pp_run ( self , NN , silent = True ) :
         """ Run NN-permutations in parallel using WorkManager"""
-        nj    = 2 ## 2 * numcpu () + 3
+        nj    = 2 * numcpu () + 3
         lst   = splitter ( NN , nj )
         ##
-        from ostap.parallel.parallel import WorkManager
-        manager = WorkManager ( silent = silent )
         counter = EffCounter()
         ## 
         ## use the bare interface 
-        for result in manager.iexecute ( self , lst , progress = not silent  , njobs = nj ) :
-            counter += result 
+        from ostap.parallel.parallel import WorkManager
+        with WorkManager ( silent = silent ) as manager : 
+            for result in manager.iexecute ( self , lst , progress = not silent  , njobs = nj ) :
+                counter += result 
         # 
         return counter
     # =========================================================================
-    logger.debug ( 'Parallel will be  used for parallel permuations')
+    logger.debug ( 'Parallel will be  used for parallel permutations')
     # =====================================================================        
     PERMUTATOR.run = pp_run
     # =========================================================================
@@ -377,13 +367,13 @@ class TOYS(object) :
         nj    = 2 ## 2 * numcpu () + 3
         lst   = splitter ( NN , nj )
         ##
-        from ostap.parallel.parallel import WorkManager
-        manager = WorkManager ( silent = silent )
         counter = EffCounter()
         ## 
         ## use the bare interface 
-        for result in manager.iexecute ( self , lst , progress = not silent , njobs = nj ) :
-            counter += result 
+        from ostap.parallel.parallel import WorkManager
+        with WorkManager ( silent = silent ) as manager : 
+            for result in manager.iexecute ( self , lst , progress = not silent , njobs = nj ) :
+                counter += result 
         # 
         return counter
     
