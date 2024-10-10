@@ -124,7 +124,7 @@ def run_USTAT  ( pdf , data, result , logger ) :
 
     rows  =  [ ( 't-value'  , 'x[..]', 'p-value [%]' , '#sigma' ) ]
     
-    ustat = USTAT ( nToys = 1000 , histo = 100 , parallel = True )
+    ustat = USTAT ( nToys = 1000 , histo = 100 )
     
     pdf.load_params ( result , silent = True )
     

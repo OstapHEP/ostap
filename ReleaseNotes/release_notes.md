@@ -21,7 +21,7 @@
   1. add meaningful `description` argument to all `progress_bar` instance
   1. extend `gof1d` and `gofnd` tests 
   1. Add `RooAddPdf::fixCoefNormalization( vars )` for all appearences of `RooAddPdf`
-  1. Add (fictive) contetx mnager protocol to WorkManager
+  1. Add (fictive) context mnager protocol to WorkManagers 
   
 ## Backward incompatible
 
