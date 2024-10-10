@@ -49,7 +49,7 @@ else                       : logger = getLogger ( __name__              )
 #  pdf2D = Model2D( 'D2' , xmodel = pdfx , ymodel =  pdfy )
 #  @endcode 
 class Model2D(PDF2) :
-    """Trivial class to construct 2D model as a product of split 1D-models
+    """ Trivial class to construct 2D model as a product of split 1D-models
     - actually it is a tiny  wrapper over ROOT.RooProdPdf
     >>> pdfx = ...
     >>> pdfy = ...
@@ -139,7 +139,7 @@ class Model2D(PDF2) :
 #  It is just a small wrapper for <code>ROOT.RooAddPdf</code>
 #  @see RooAddPdf 
 class Sum2D (PDF2,Fractions) :
-    """Non-extended sum of several PDFs:
+    """ Non-extended sum of several PDFs:
     
     It is just a small wrapper for <code>ROOT.RooAddPdf</code>
     - see RooAddPdf 
@@ -187,7 +187,8 @@ class Sum2D (PDF2,Fractions) :
                                     self.alist1    ,
                                     self.alist2    ,
                                     self.recursive )
-        
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+
         self.config = {
             'pdfs'      : self.pdfs      ,
             'xvar'      : self.xvar      ,
@@ -207,7 +208,7 @@ class Sum2D (PDF2,Fractions) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 class Flat2D(PDF2) :
-    """The most trival 2D-model - constant
+    """ The most trival 2D-model - constant
     >>> pdf = Flat2D( 'flat' , xvar = ...  , yvar = ... )
     """
     def __init__ ( self , xvar , yvar , name = '' ,  title = '' ) :
@@ -798,6 +799,7 @@ class Fit2D (PDF2) :
         pdftitle = "Fit2D %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         self.signals     .add ( self.__ss_cmp.pdf )
         self.backgrounds .add ( self.__bb_cmp.pdf )
@@ -1248,7 +1250,7 @@ class Fit2DSym (PDF2) :
         pdftitle = "Fit2Dsym %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
-
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         self.signals     .add ( self.__ss_cmp.pdf )
         self.backgrounds .add ( self.__bb_cmp.pdf )

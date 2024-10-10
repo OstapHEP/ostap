@@ -1049,7 +1049,8 @@ class Fit1D (PDF1) :
         if not self.extended :
             pdf_args = pdf_args + ( True if recursive else False , ) ## RECURSIVE ?
             
-        self.pdf = ROOT.RooAddPdf ( *pdf_args )
+        self.pdf = ROOT.RooAddPdf     ( *pdf_args )
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         ## sanity checks
 

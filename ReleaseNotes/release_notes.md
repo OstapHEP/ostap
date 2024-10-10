@@ -20,7 +20,8 @@
   1. add a kind of replacement of `ROOT.RooAbsCollection.assign` for old versions of ROOT 
   1. add meaningful `description` argument to all `progress_bar` instance
   1. extend `gof1d` and `gofnd` tests 
-
+  1. Add `RooAddPdf::fixCoefNormalization( vars )` for all appearences of `RooAddPdf`
+    
 ## Backward incompatible
 
 ## Bug fixes

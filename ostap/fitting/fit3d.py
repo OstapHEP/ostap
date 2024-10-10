@@ -178,7 +178,7 @@ class Model3D(PDF3) :
 #  It is just a small wrapper for <code>ROOT.RooAddPdf</code>
 #  @see RooAddPdf 
 class Sum3D (PDF3,Fractions) :
-    """Non-extended sum of several PDFs:
+    """ Non-extended sum of several PDFs:
     
     It is just a small wrapper for <code>ROOT.RooAddPdf</code>
     - see RooAddPdf 
@@ -226,6 +226,7 @@ class Sum3D (PDF3,Fractions) :
                                     self.alist1    ,
                                     self.alist2    ,
                                     self.recursive )
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
         
         self.config = {
             'pdfs'      : self.pdfs      ,
@@ -1006,6 +1007,7 @@ class Fit3D (PDF3) :
         pdftitle = "Fit3D %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         self.signals     .add ( self.__sss_cmp.pdf )
         self.backgrounds .add ( self.__bbb_cmp.pdf )
@@ -1723,6 +1725,7 @@ class Fit3DSym (PDF3) :
         pdftitle = "Fit3DSym %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         self.signals     .add ( self.__sss_cmp.pdf )
         self.backgrounds .add ( self.__bbb_cmp.pdf )
@@ -2544,6 +2547,7 @@ class Fit3DMix (PDF3) :
         pdftitle = "Fit3DMix %s " % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         self.signals     .add ( self.__sss_cmp.pdf )
         self.backgrounds .add ( self.__bbb_cmp.pdf )

@@ -38,7 +38,7 @@ else                       : logger = getLogger ( __name__               )
 ## @class Adjust1D
 #  simple class to adjust certain PDF to avoid zeroes 
 class Adjust1D(VarMaker) :
-    """Simple class to ``adjust'' certain PDF to avoid zeroes
+    """ Simple class to ``adjust'' certain PDF to avoid zeroes
     - a small flat component is added and the compound PDF is constructed
     """
     ## constructor
@@ -100,7 +100,7 @@ class Adjust1D(VarMaker) :
 ## @class Adjust2D
 #  simple class to adjust certain PDF to avoid zeroes 
 class Adjust2D(VarMaker) :
-    """Simple class to ``adjust'' certain PDF to avoid zeroes
+    """ Simple class to ``adjust'' certain PDF to avoid zeroes
     - a small flat component is added and the compound PDF is constructed
     """
     ## constructor
@@ -163,7 +163,7 @@ class Adjust2D(VarMaker) :
 ## @class Adjust3D
 #  simple class to adjust certain PDF to avoid zeroes
 class Adjust3D(VarMaker) :
-    """Simple class to ``adjust'' certain PDF to avoid zeroes
+    """ Simple class to ``adjust'' certain PDF to avoid zeroes
     - a small flat component is added and the compound PDF is constructed
     """
     ## constructor
@@ -234,7 +234,7 @@ class Adjust3D(VarMaker) :
 #  @see Adjust1D
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 class Adjust1D_pdf(PDF1) :
-    """Simple class to ``adjust'' certain 1D-PDF to avoid zeroes
+    """ Simple class to ``adjust'' certain 1D-PDF to avoid zeroes
     - a small flat component is added and the compound 1D-PDF is constructed
     
     >>> opdf = ...
@@ -276,7 +276,8 @@ class Adjust1D_pdf(PDF1) :
                                        fraction = fraction         )
         
         self.pdf  = self.adjustment.pdf 
- 
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+        
         self.config = {
             'xvar'     : self.xvar    ,
             'name'     : self.name    ,
@@ -318,7 +319,7 @@ class Adjust1D_pdf(PDF1) :
 #  @see Adjust2D
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 class Adjust2D_pdf(PDF2) :
-    """Simple class to ``adjust'' certain 1D-PDF to avoid zeroes
+    """ Simple class to ``adjust'' certain 1D-PDF to avoid zeroes
     - a small flat component is added and the compound 2D-PDF is constructed
     
     >>> opdf = ...
@@ -363,6 +364,7 @@ class Adjust2D_pdf(PDF2) :
                                        fraction = fraction         )
         
         self.pdf  = self.adjustment.pdf 
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
         
         self.config = {
             'xvar'     : self.xvar    ,
@@ -410,7 +412,7 @@ class Adjust2D_pdf(PDF2) :
 #  @see Adjust2D
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 class Adjust3D_pdf(PDF3) :
-    """Simple class to ``adjust'' certain 1D-PDF to avoid zeroes
+    """ Simple class to ``adjust'' certain 1D-PDF to avoid zeroes
     - a small flat component is added and the compound 2D-PDF is constructed
     
     >>> opdf = ...
@@ -460,7 +462,8 @@ class Adjust3D_pdf(PDF3) :
                                        fraction = fraction         )
         
         self.pdf  = self.adjustment.pdf 
-
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+        
         self.config = {
             'xvar'     : self.xvar    ,
             'yvar'     : self.yvar    ,

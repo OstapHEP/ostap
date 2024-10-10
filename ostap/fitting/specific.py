@@ -411,7 +411,8 @@ class BdBs_pdf (PEAK) :
             "BdBs(%s)" % self.name ,
             self.alist1 ,
             self.alist2 )
-
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+        
         # ===============================================================================
         ## finally declare the components 
         # ===============================================================================
@@ -600,6 +601,7 @@ class DpDs_pdf (PEAK) :
             "DpDs(%s)" % self.name ,
             self.alist1 ,
             self.alist2 )
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         # ===============================================================================
         ## finally declare the components 
@@ -1092,6 +1094,7 @@ class Manca_pdf (MANCA) :
             "manca(%s)" % name ,
             self.alist1 ,
             self.alist2 )
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         # ===============================================================================
         ## finally declare the components 
@@ -1334,6 +1337,7 @@ class Manca2_pdf (MANCA) :
             "manca(%s)" % name ,
             self.alist1 ,
             self.alist2 )
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         # ===============================================================================
         ## finally declare the components 
@@ -1501,7 +1505,8 @@ class MancaX_pdf(PDF2) :
                                       "Model2D(%s)"  % suffix ,
                                       self.alist1 ,
                                       self.alist2 )
-        
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+
         self.name    = self.pdf.GetName()
         ##
         self.signals     () . add ( self.y1s_c  )
