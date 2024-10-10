@@ -138,8 +138,22 @@ class WorkManager(TaskManager) :
     def get_pp_stat ( self ) : 
         """ Get PP-statistics if/when possible 
         """
-        return None 
-            
+        return None
+    
+    ## context protocol: restart the pool 
+    def __enter__  ( self      ) :
+        sys.stdout .flush ()
+        sys.stderr .flush ()
+        return self
+    
+    ## context protocol: close/join/clear the pool 
+    def __exit__   ( self , *_ ) :        
+        if  self.pool :
+            self.pool.close()
+            self.pool.join  ()
+        sys.stdout .flush ()
+        sys.stderr .flush ()
+        
 # =============================================================================
 if '__main__' == __name__ :
     

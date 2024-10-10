@@ -83,7 +83,7 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
             self.__balanced = True if balanced else False 
             self.__use_dill = True if use_dill else False
             if self.__use_dill and not dill :
-                logger.warning ( "dill is not available, swithc it off" ) 
+                logger.warning ( "dill is not available, switch it off!" ) 
                 self.__use_dill = False
 
             if not self.silent :
@@ -168,6 +168,17 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
             """ Get PP-statistics if/when possible 
             """
             return None
+
+        ## context protocol
+        def __enter__  ( self      ) :
+            sys.stdout .flush ()
+            sys.stderr .flush ()
+            return self
+    
+        ## context protocol
+        def __exit__   ( self , *_ ) :        
+            sys.stdout .flush ()
+            sys.stderr .flush ()
 
     # =========================================================================
     ## define "importable" content of the module:
