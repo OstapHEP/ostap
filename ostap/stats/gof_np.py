@@ -89,9 +89,9 @@ class GoFnp (AGoFnp) :
         self.__silent   = True if silent   else False
         self.__parallel = True if parallel else False
         
-        if self.__parallel and memory_enough () < 2 : 
+        if self.__parallel and memory_enough () < 3 : 
             logger.warning ( 'Available/Used memory ratio: %.1f; switch-off parallel processing')
-            self.__parallel = False
+        self.__parallel = False
             
     # ==========================================================================
     ## Normalize two data sets, such that each variable in pooled set
