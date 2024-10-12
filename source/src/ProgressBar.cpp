@@ -42,14 +42,16 @@ Ostap::Utils::ProgressConf::ProgressConf
   const std::string&       left      ,
   const std::string&       right     ,
   const std::string&       what      ,
-  const bool               use_timer ) 
+  const bool               use_timer ,
+  const bool               atty      ) 
   : m_width     ( width     )
   , m_symbol    ( symbol    ) 
   , m_empty     ( empty     ) 
   , m_left      ( left      ) 
   , m_right     ( right     ) 
   , m_what      ( what      ) 
-  , m_use_timer ( use_timer ) 
+  , m_use_timer ( use_timer )
+  , m_atty      ( atty      )
 {
   // ==========================================================================
   if ( m_symbol.empty() ) { m_symbol = "#" ; }
@@ -132,9 +134,10 @@ Ostap::Utils::ProgressBar::ProgressBar
   const std::string&       empty     ,
   const std::string&       left      ,
   const std::string&       right     , 
-  const std::string&       what     , 
-  const bool               use_timer )
-  : ProgressBar ( ProgressConf ( width , symbol , empty , left , right , what , use_timer ) , 
+  const std::string&       what      , 
+  const bool               use_timer ,
+  const bool               atty      )
+  : ProgressBar ( ProgressConf ( width , symbol , empty , left , right , what , use_timer , atty ) , 
                   maxcount )
 {}
 // ============================================================================
@@ -239,7 +242,8 @@ Ostap::Utils::ProgressBar::show_bar ( const bool show_eta )
   line.append ( "%"     ) ;  
   //
   // show it!
-  std::cout  << what()  << line << "\r" << std::flush  ;
+  std::cout  << what()  << line << "\r" ;
+  if ( atty() ) { std::cout << std::flush ; }
   //
   return *this ;
 }

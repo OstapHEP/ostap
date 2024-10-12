@@ -70,6 +70,8 @@ from   ostap.stats.counters     import EffCounter
 from   ostap.stats.gof          import AGoF
 from   ostap.stats.gof_utils    import TOYS  
 from   ostap.utils.progress_bar import progress_bar
+from   ostap.utils.memory       import memory_enough 
+from   ostap.utils.basic        import numcpu 
 import ostap.histos.histos
 import ROOT, ctypes
 # =============================================================================
@@ -268,7 +270,7 @@ class USTAT(AGoF) :
                    histo    = None  ,
                    nToys    = 1000  ,
                    sample   = False ,
-                   parallel = True  , 
+                   parallel = False , 
                    silent   = False ) :
         
         self.__silent   = True if silent else False
@@ -276,7 +278,12 @@ class USTAT(AGoF) :
         self.__histo    = None 
         self.__bins     = histo
         self.__nToys    = nToys 
-        self.__parallel = True if parallel else False 
+        self.__parallel = True if parallel else False
+        
+        if self.__parallel and memory_enough () < numcpu ()  : 
+            logger.warning ( 'Available/Used memory ratio: %.1f; switch-off parallel processing')            
+            self.__parallel = False
+        
     # =========================================================================
     ## Calculate T-value for Goodness-of-Git 
     #  @code
@@ -327,7 +334,8 @@ class USTAT(AGoF) :
         toys = TOYS ( self , t_value , pdf = pdf , Ndata = len ( data ) , sample = self.sample )
         
         silent = self.silent
-        self.__silent = True 
+        self.__silent = True
+
         if self.parallel :
             counter = toys.run ( self.nToys , silent = silent )
         else :

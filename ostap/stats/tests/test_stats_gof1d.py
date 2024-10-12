@@ -12,6 +12,7 @@ import ostap.fitting.models  as     M
 import ostap.stats.gof1d     as     G1D 
 import ostap.stats.gofnd     as     GnD
 import ostap.logger.table    as     T
+from   ostap.core.meta_info  import python_info 
 from   ostap.stats.ustat     import USTAT 
 from   ostap.plotting.canvas import use_canvas
 from   ostap.logger.pretty   import pretty_float
@@ -52,11 +53,12 @@ def run_PPD ( pdf , data, result , logger ) :
     from ostap.stats.gof_np import np,sp,s2u,cdist
     if not np or not sp or not s2u or not cdist:
         logger.warning ('No numpy/scipy/s4u/cdist: skip the PPD estimate!')
-        return         
+        return
+        
     # =========================================================================
     #  - Point to Point Dissimilarity test  with Gaussian distance using different "sigma"
-    rows  =  [ ( 'PPD/sigma' , 't-value'  , 'x[..]', 'p-value [%]' , '#sigma') ]
-    Ns    = 3  
+    rows  = [ ( 'PPD/sigma' , 't-value'  , 'x[..]', 'p-value [%]' , '#sigma') ]
+    Ns    = 5 
     logger.info ( 'Run Point-to-Point Dissimilarity GoF-test for %d different values of sigma' % Ns  ) 
     for sigma in vrange ( 0.01 , 2.0 , Ns ) :
         
@@ -152,6 +154,9 @@ def test_good_fit_1 ( ) :
     
     logger = getLogger ( 'test_good_fit_1' )
     logger.info ( 'Make a test for presumably good fit: fit Gauss to Gauss' )
+    if python_info < ( 3 , 0 ) :
+        logger.warning ('Skip the test for old python version ')
+        return
 
     with use_canvas ( 'test_good_fit_1: G -> G' ,      wait = 1 ) :
         r , f = gauss.fitTo ( data_g , **fitconf ) 
@@ -191,6 +196,9 @@ def test_good_fit_2 ( ) :
     
     logger = getLogger ( 'test_good_fit_2' )
     logger.info ( 'Make a test for presumably good fit: fit Gauss+Bkg to Gauss' )
+    if python_info < ( 3 , 0 ) :
+        logger.warning ('Skip the test for old python version ')
+        return
 
     with use_canvas ( 'test_good_fit_2: G+B -> G' ,      wait = 1 ) :
         r , f = model.fitTo ( data_g , **fitconf ) 
@@ -223,6 +231,9 @@ def test_good_fit_3 ( ) :
     
     logger = getLogger ( 'test_good_fit_3' )
     logger.info ( 'Make a test for presumably good fit: fit Gauss+Bkg to Gauss+Bkg' )
+    if python_info < ( 3 , 0 ) :
+        logger.warning ('Skip the test for old python version ')
+        return
 
     with use_canvas ( 'test_good_fit_3: G+B -> G+G' ,      wait = 1 ) :
         r , f = model.fitTo ( data_b , **fitconf ) 
@@ -256,6 +267,9 @@ def test_bad_fit_1 ( ) :
     """
     logger = getLogger ( 'test_bad_fit_1' )
     logger.info ( 'Make a test for presumably bad fit: fit Gauss to Gauss+Bkg' )
+    if python_info < ( 3 , 0 ) :
+        logger.warning ('Skip the test for old python version ')
+        return
 
     with use_canvas ( 'test_bad_fit_1: G -> G+B' ,      wait = 1 ) :
         r , f = gauss.fitTo ( data_b , **fitconf ) 

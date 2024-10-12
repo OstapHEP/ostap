@@ -34,6 +34,7 @@ namespace Ostap
        *  @param right      right/suffix 
        *  @param what       description/prefix 
        *  @param use_timer  use the timer?
+       *  @param atty       isatty ? 
        */
       ProgressConf
       ( const unsigned short     width     = 80     ,        
@@ -42,7 +43,8 @@ namespace Ostap
         const std::string&       left      = "[ "   ,
         const std::string&       right     = " ]"   ,
         const std::string&       what      = ""     , 
-        const bool               use_timer = true   ) ;
+        const bool               use_timer = true   ,
+        const bool               atty      = true   ) ;
       // ======================================================================
     public: // ghetters 
       // ======================================================================
@@ -60,6 +62,8 @@ namespace Ostap
       unsigned int       width     () const { return m_width     ; }
       /// use the timer (show ETA) ?
       bool               use_timer () const { return m_use_timer ; }
+      /// isatty?
+      bool               atty      () const { return m_atty      ; }
       // ======================================================================
     public : // setters 
       // ======================================================================
@@ -92,6 +96,8 @@ namespace Ostap
       std::string        m_what       { ""   } ;
       /// use timer ?
       bool               m_use_timer  { true } ;
+      /// isatty ?
+      bool               m_atty       { true } ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -127,6 +133,8 @@ namespace Ostap
        *  @param left       left/prefix 
        *  @param right      right/prefix 
        *  @param what       description/prefix 
+       *  @param use_timer  use the timer?
+       *  @param atty       isatty ? 
        */
       ProgressBar 
       ( const unsigned long long maxcount  = 0      ,
@@ -136,7 +144,8 @@ namespace Ostap
         const std::string&       left      = "[ "   ,
         const std::string&       right     = " ]"   ,
         const std::string&       what      = ""     ,
-        const bool               timer     = true   ) ;
+        const bool               timer     = true   ,
+        const bool               atty      = true   ) ;
       //
       // ======================================================================
       // destructor
@@ -168,7 +177,7 @@ namespace Ostap
           disabled ()                   ? *this :
           // last count?
           m_maxcount   == m_count ? show_bar () :
-          // rigth moment to show ? 
+          // right moment to show ? 
           m_next_count <= m_count ? show_bar () :
           // explicitly show the first five counts
           100 <= m_maxcount && m_count <= 5  ? show_bar () : 

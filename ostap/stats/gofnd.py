@@ -175,7 +175,7 @@ class PPD(GoF) :
                    psi       = 'gaussian' ,
                    sigma     = 0.05       ,
                    silent    = False      ,
-                   parallel  = True       , 
+                   parallel  = False      , 
                    mcFactor  = 10         ) : 
         """ Create the Point-to-Point Dssimilaroity estimator
         
@@ -252,7 +252,7 @@ class DNN(GoF) :
                    histo    = 100   ,
                    nToys    = 100   ,
                    sample   = False ,
-                   parallel = True  , 
+                   parallel = False , 
                    silent   = False ) :
         
         ## initialize the base 
@@ -342,9 +342,11 @@ class DNN(GoF) :
         elif self.dnn.histo :
             self.__histo = self.dnn.histo.clone() 
             self.dnn.histo.Reset()
-            
+
+        
         ## prepare toys
         toys = TOYS ( self , t_value , pdf = pdf , Ndata = len ( data ) , sample = self.sample )
+        
         if self.parallel : 
             counter = toys.run ( self.nToys , silent = self.silent )            
         else :

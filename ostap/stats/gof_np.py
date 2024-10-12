@@ -29,6 +29,7 @@ from   ostap.stats.gof_utils    import normalize2, PERMUTATOR
 from   ostap.core.core          import SE, VE, Ostap, hID  
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.utils        import split_n_range
+from   ostap.utils.basic        import numcpu 
 from   ostap.stats.gof          import AGoFnp
 from   ostap.utils.memory       import memory_enough 
 import os, abc, warnings, ROOT   
@@ -80,7 +81,7 @@ class GoFnp (AGoFnp) :
     def __init__ ( self              ,
                    nToys    = 0      ,
                    silent   = False  , 
-                   parallel = True   ) : 
+                   parallel = False  ) : 
         
         assert isinstance ( nToys , int ) and 0 <= nToys  , \
             "Invalid number of permulations/toys:%s" % nToys
@@ -88,16 +89,12 @@ class GoFnp (AGoFnp) :
         self.__nToys    = nToys
         self.__silent   = True if silent   else False
         self.__parallel = True if parallel else False
-        
-        if self.__parallel and memory_enough () < 3 : 
+         
+        if self.__parallel and memory_enough () < numcpu () : 
             logger.warning ( 'Available/Used memory ratio: %.1f; switch-off parallel processing')
-        self.__parallel = False
-        import ostap.utils.memory as mm
-        logger.error ( 'Memory usage     %s' % mm.memory_usage     () )
-        logger.error ( 'Memory available %s' % mm.memory_available () )
-        logger.error ( 'Memory enoght    %s' % mm.memory_enough    () )
-        assert 1 > 2 , 'QUQU!'
-        
+            self.__parallel = False
+
+        assert 1 > 2 , 'QUQU!!'
         
     # ==========================================================================
     ## Normalize two data sets, such that each variable in pooled set
@@ -202,7 +199,7 @@ class PPDnp(GoFnp) :
                    nToys     = 1000       ,
                    psi       = 'gaussian' ,
                    sigma     = 0.05       ,
-                   parallel  = True       , 
+                   parallel  = False      , 
                    silent    = False      ,
                    maxsize   = 1000000    ) :
         
@@ -357,7 +354,7 @@ class PPDnp(GoFnp) :
         t_value    = self.t_value ( uds1 , uds2 )
 
         permutator = PERMUTATOR ( self , t_value , uds1 , uds2 )
-        
+
         if self.parallel and permutator.run :
             counter = permutator.run ( self.nToys , silent = self.silent )            
         else :
@@ -387,7 +384,7 @@ class DNNnp(GoFnp) :
     def __init__ ( self              ,
                    histo    = None   ,
                    nToys    = 1000   ,
-                   parallel = True   , 
+                   parallel = False  , 
                    silent   = False  ) :
 
         GoFnp.__init__ ( self                ,

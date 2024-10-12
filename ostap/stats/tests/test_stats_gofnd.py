@@ -13,6 +13,7 @@ from   ostap.utils.timing    import timing
 from   ostap.logger.pretty   import pretty_float
 from   ostap.plotting.canvas import use_canvas
 from   ostap.math.math_ve    import significance
+from   ostap.core.meta_info  import python_info 
 import ostap.fitting.models  as     M 
 import ostap.stats.gofnd     as     GnD 
 import ostap.logger.table    as     T 
@@ -53,10 +54,14 @@ with use_canvas ( 'Bad  fit y-projection' ) : pdf.draw2 ( data_bad  , nbins = 50
 def test_PPD () :
     
     logger = getLogger ("test_PPD")
+    if python_info < ( 3, 0 ) :
+        logger.warning ('Skip the test for old python version ')
+        return
+
     from ostap.stats.gof_np import np,sp,s2u,cdist
     if not np or not sp or not s2u or not cdist:
         logger.warning ('No numpy/scipy/s4u/cdist: skip the test!')
-        return         
+        return
 
     ## 't/good', 'x[..]' ,
     ## 't/bad' , 'x[..]' ,
@@ -123,10 +128,15 @@ def test_PPD () :
 def test_DNN () :
     
     logger = getLogger ("test_DNN")
+    if python_info < ( 3, 0 ) :
+        logger.warning ('Skip the test for old python version ')
+        return
+
     from ostap.stats.gof_np import np,sp,s2u,cdist
     if not np or not sp or not s2u or not cdist:
         logger.warning ('No numpy/scipy/s4u/cdist: skip the test!')
         return         
+
 
     ## 't/good', 'x[..]' ,
     ## 't/bad' , 'x[..]' ,
@@ -169,9 +179,12 @@ def test_DNN () :
 def test_USTAT () :
     
     logger = getLogger ("test_USTAT")
-    from ostap.stats.ustat import USTAT 
 
+    if python_info < ( 3, 0 ) :
+        logger.warning ('Skip the test for old python version ')
+        return
     
+    from ostap.stats.ustat import USTAT 
     rows  = [ ( 'p-value/good[%]' , 'p-value/bad[%]' , '#sigma/good' , '#sigma/bad') ]
     
     ust = USTAT ( nToys = 1000  , histo = 50 )

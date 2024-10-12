@@ -54,7 +54,8 @@ def progress_conf ( show = True , timer = True , description = 'Entries:' ) :
         ## allright ( ' ] '  ) if tty else ' ] ' , ## right
         right                                    , ## right
         description                              , ## what/descritoiont
-        timer                                 ) ## use the timer 
+        timer                                    , ## use the timer
+        tty                                      ) ## tty ? 
 
 # =============================================================================
 if '__main__' == __name__ :
