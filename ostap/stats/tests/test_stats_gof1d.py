@@ -53,8 +53,8 @@ def run_PPD ( pdf , data, result , logger ) :
     if not np or not sp or not s2u or not cdist:
         logger.warning ('No numpy/scipy/s4u/cdist: skip the PPD estimate!')
         return         
-
-    #  - Point to Point Sissimilarity test  with Gaussian distance using different "sigma"
+    # =========================================================================
+    #  - Point to Point Dissimilarity test  with Gaussian distance using different "sigma"
     rows  =  [ ( 'PPD/sigma' , 't-value'  , 'x[..]', 'p-value [%]' , '#sigma') ]
     Ns    = 3  
     logger.info ( 'Run Point-to-Point Dissimilarity GoF-test for %d different values of sigma' % Ns  ) 

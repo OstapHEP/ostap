@@ -30,6 +30,7 @@ from   ostap.core.core          import SE, VE, Ostap, hID
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.utils        import split_n_range
 from   ostap.stats.gof          import AGoFnp
+from   ostap.utils.memory       import memory_enough 
 import os, abc, warnings, ROOT   
 # =============================================================================
 try : # =======================================================================
@@ -86,7 +87,12 @@ class GoFnp (AGoFnp) :
         
         self.__nToys    = nToys
         self.__silent   = True if silent   else False
-        self.__parallel = True if parallel else False 
+        self.__parallel = True if parallel else False
+        
+        if self.__parallel and memory_enough () < 2 : 
+            logger.warning ( 'Available/Used memory ratio: %.1f; switch-off parallel processing')
+            self.__parallel = False
+            
     # ==========================================================================
     ## Normalize two data sets, such that each variable in pooled set
     #  has a mean of zero and variance of one 

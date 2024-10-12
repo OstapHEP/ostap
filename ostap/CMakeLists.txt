@@ -144,7 +144,7 @@ endif()
 # =======================================================================================
 ## joblib: run some numpy-related code in parallel
 # =======================================================================================
-if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.0" )
+if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.6" )
    find_python_module ( joblib          QUIET )
    if ( NOT ${PY_joblib_FOUND} )
       execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install joblib ${PIP_ARGS})
@@ -216,7 +216,6 @@ find_python_module ( psutil QUIET )
 if ( NOT ${PY_psutil_FOUND} )
    message ( "----> warning (optional)         psutils is NOT found!" ) 
 endif()
-
 
 # ========================================================================================
 ## BerkeleyDB

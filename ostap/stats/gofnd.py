@@ -174,7 +174,8 @@ class PPD(GoF) :
                    nToys     = 1000       ,
                    psi       = 'gaussian' ,
                    sigma     = 0.05       ,
-                   silent    = False      , 
+                   silent    = False      ,
+                   parallel  = True       , 
                    mcFactor  = 10         ) : 
         """ Create the Point-to-Point Dssimilaroity estimator
         
@@ -188,13 +189,13 @@ class PPD(GoF) :
         """
         
         GoF.__init__ ( self ,
-                       gof = GNP.PPDnp ( mc2mc  = mc2mc  ,
-                                         nToys  = nToys  ,
-                                         psi    = psi    ,
-                                         sigma  = sigma  ,
-                                         silent = silent ) ,                          
-                         mcFactor = mcFactor )
-        
+                       gof = GNP.PPDnp ( mc2mc    = mc2mc    ,
+                                         nToys    = nToys    ,
+                                         psi      = psi      ,
+                                         sigma    = sigma    ,
+                                         parallel = parallel ,
+                                         silent   = silent   ) ,                          
+                         mcFactor = mcFactor )        
     @property
     def ppd ( self ) :
         """`ppd` : Point-To-Point Dissimilarity calculator for two datasets """
@@ -247,18 +248,20 @@ class DNN(GoF) :
     - see http://arxiv.org/abs/arXiv:1003.1768 
     """
 
-    def __init__ ( self           ,
-                   histo  = 100   ,
-                   nToys  = 100   ,
-                   sample = False , 
-                   silent = False ) :
+    def __init__ ( self             ,
+                   histo    = 100   ,
+                   nToys    = 100   ,
+                   sample   = False ,
+                   parallel = True  , 
+                   silent   = False ) :
         
         ## initialize the base 
         GoF.__init__ ( self             ,
                        mcFactor = 1     , 
-                       gof      = GNP.DNNnp ( histo  = histo  ,
-                                              nToys  = nToys  ,
-                                              silent = silent ) ,
+                       gof      = GNP.DNNnp ( histo    = histo    ,
+                                              nToys    = nToys    ,
+                                              parallel = parallel , 
+                                              silent   = silent ) ,
                        sample   = sample )
         
         self.__histo  = None 

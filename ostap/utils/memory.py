@@ -32,15 +32,13 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.memory' )
 else                       : logger = getLogger( __name__             )
 del getLogger
 # =============================================================================
-_psutil = False
 from sys import version_info as python_version 
-if   python_version.major > 2 : LONG = int
+if   2 < python_version.major : LONG = int
 else                          : LONG = long 
 # =============================================================================
 try :
     # =========================================================================
     import psutil 
-    _psutil = True    
     # =========================================================================
     ## report current memory usage (in MB)
     #  ps-based version, slow...  :-(
@@ -53,13 +51,15 @@ try :
         - see help(psutil)
         >>> print memory_usage()
         """
-        process = psutil.Process(os.getpid () )
+        process = psutil.Process ( os.getpid () )
         mem     = process.memory_info()[0] / float( 2 ** 20 )
+        for p in process.children ( recursive = True ) :
+            mem += p.memory_info()[0] / float( 2 ** 20 )
         return mem
     # =========================================================================
 except ImportError :
     # =========================================================================    
-    _psutil = False
+    psutil = None 
     # =========================================================================
     ## report current memory usage (in MB)
     #  @attention it is ps-based version, slow...  :-(
@@ -78,6 +78,23 @@ except ImportError :
         except:
             return -1 
         
+# ============================================================================
+## Get the available memory (in MB) 
+def memory_available () :
+    """ Get the available memory (in MB) 
+    """
+    if not psutil : return -1
+    vm = psutil.virtual_memory()
+    return vm.available / float ( 2 ** 20 )
+# =============================================================================
+## Get the ratio of available memory to used
+def memory_enough () :
+    """ Get the ratio of available memory to used
+    """
+    ma = memory_available () 
+    mu = memory_usage     ()
+    return ma * 1.0 / mu
+
 # =============================================================================
 ## @class Memory
 #  Simple context manager to measure the virtual memory increase
@@ -128,8 +145,7 @@ class Memory(object):
         self.logger = logger if logger else self._logger 
         self.format = format
         self._proc  = None 
-        global _psutil 
-        if not _psutil :
+        if not psutil :
             if not self._printed :
                 self.logger.warning('Memory:"psutil" module is not available, "/proc/[pid]/stat"-based replacement is in use')
                 self.__class__._printed = True
