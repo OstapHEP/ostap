@@ -92,7 +92,13 @@ class GoFnp (AGoFnp) :
         if self.__parallel and memory_enough () < 3 : 
             logger.warning ( 'Available/Used memory ratio: %.1f; switch-off parallel processing')
         self.__parallel = False
-            
+        import ostap.utils.memory as mm
+        logger.error ( 'Memory usage     %s' % mm.memory_usage     () )
+        logger.error ( 'Memory available %s' % mm.memory_available () )
+        logger.error ( 'Memory enoght    %s' % mm.memory_enough    () )
+        assert 1 > 2 , 'QUQU!'
+        
+        
     # ==========================================================================
     ## Normalize two data sets, such that each variable in pooled set
     #  has a mean of zero and variance of one 
