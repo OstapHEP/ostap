@@ -165,7 +165,7 @@ Ostap::Utils::ProgressBar::show_bar ( const bool show_eta )
   //
   m_next_count = m_maxcount * double ( rtics + 1 ) / w ;
   //
-  std::string line =left ()  ;
+  std::string line = left ()  ;
   line.reserve ( m_wtot ) ;
   //
   // ==========================================================================

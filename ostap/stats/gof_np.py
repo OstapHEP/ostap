@@ -93,8 +93,6 @@ class GoFnp (AGoFnp) :
         if self.__parallel and memory_enough () < numcpu () : 
             logger.warning ( 'Available/Used memory ratio: %.1f; switch-off parallel processing')
             self.__parallel = False
-
-        assert 1 > 2 , 'QUQU!!'
         
     # ==========================================================================
     ## Normalize two data sets, such that each variable in pooled set
