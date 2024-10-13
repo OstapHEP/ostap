@@ -368,7 +368,7 @@ def table ( rows                          ,
     if 'local' == fmt or not terminaltables :
         if kwargs :
             keys = ', '.join ( key for key in kwargs ) 
-            loger.warning ( 'Ignore keyword arguments: %s' % keys )  
+            logger.warning ( 'Ignore keyword arguments: %s' % keys )  
         ## use the local replacement 
         return the_table ( rows                              ,
                            title           = title           , 
@@ -400,7 +400,7 @@ def table ( rows                          ,
 
     if kwargs :
         keys = ', '.join ( key for key in kwargs ) 
-        loger.warning ( 'Ignore keyword arguments: %s' % keys )  
+        logger.warning ( 'Ignore keyword arguments: %s' % keys )  
 
     if 'ascii' == fmt or not isatty() : 
         table_instance = terminaltables.AsciiTable                  ( rows , title )        
