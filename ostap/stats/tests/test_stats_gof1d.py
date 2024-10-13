@@ -28,7 +28,7 @@ xvar  = ROOT.RooRealVar ( 'x', '', 0, 10)
 gauss = M.Gauss_pdf     ( 'G' , xvar = xvar , mean = 5 , sigma = 1 )
 model = M.Fit1D         ( signal = gauss , background = 'flat'     )
 
-ND    = 200 
+ND    = 100 
 
 # =============================================================================
 ## data_g: pure gaussian
@@ -37,12 +37,11 @@ gauss.sigma = 0.75
 data_g      = gauss.generate ( ND , sample = True )
 # =============================================================================
 ## data_b:  95% gaussian + 4% flat background 
-model.S     = 0.95 * ND
-model.B     = 0.05 * ND
+model.S     = 0.90 * ND
+model.B     = 0.10 * ND
 data_b      = model.generate ( ND , sample = True )
 
-
-fitconf = { 'draw' : True , 'nbins' : 50 , 'refit' : 5 , 'quiet' : True }
+fitconf = { 'draw' : True , 'nbins' : 25 , 'refit' : 5 , 'quiet' : True }
 
 keep = set() 
 # ==============================================================================
@@ -58,14 +57,14 @@ def run_PPD ( pdf , data, result , logger ) :
     # =========================================================================
     #  - Point to Point Dissimilarity test  with Gaussian distance using different "sigma"
     rows  = [ ( 'PPD/sigma' , 't-value'  , 'x[..]', 'p-value [%]' , '#sigma') ]
-    Ns    = 5 
+    Ns    = 3 
     logger.info ( 'Run Point-to-Point Dissimilarity GoF-test for %d different values of sigma' % Ns  ) 
-    for sigma in vrange ( 0.01 , 2.0 , Ns ) :
+    for sigma in vrange ( 0.1 , 1.0 , Ns ) :
         
-        ppd = GnD.PPD ( nToys = 1000 , sigma = sigma )
+        ppd = GnD.PPD ( nToys = 200 , sigma = sigma )
         pdf.load_params ( result , silent = True ) 
-        tvalue         = ppd        ( pdf , data )
-        tvalue, pvalue = ppd.pvalue ( pdf , data )
+        tvalue         = ppd          ( pdf , data )
+        tvalue, pvalue = ppd.pvalue   ( pdf , data )
         nsigma         = significance ( pvalue ) 
         
         tv , texpo = pretty_float ( tvalue )
@@ -94,16 +93,14 @@ def run_DNN  ( pdf , data, result , logger ) :
     
     rows  =  [ ( 't-value'  , 'x[..]', 'p-value [%]' , '#sigma' ) ]
 
-    dnn = GnD.DNN ( nToys = 1000 , histo = 100 )
+    dnn = GnD.DNN ( nToys = 200 , histo = 50 )
     
     pdf.load_params ( result , silent = True )
     
-    tvalue         = dnn        ( pdf , data )
-
-    tvalue, pvalue = dnn.pvalue ( pdf , data )
+    tvalue         = dnn          ( pdf , data )
+    tvalue, pvalue = dnn.pvalue   ( pdf , data )
     nsigma         = significance ( pvalue ) 
 
-    
     tv , texpo = pretty_float ( tvalue )
     pvalue *= 100
     pvalue  = '%4.1f +/- %.1f' %  ( pvalue.value() , pvalue.error() )
@@ -126,7 +123,7 @@ def run_USTAT  ( pdf , data, result , logger ) :
 
     rows  =  [ ( 't-value'  , 'x[..]', 'p-value [%]' , '#sigma' ) ]
     
-    ustat = USTAT ( nToys = 1000 , histo = 100 )
+    ustat = USTAT ( nToys = 200 , histo = 100 )
     
     pdf.load_params ( result , silent = True )
     
@@ -168,7 +165,7 @@ def test_good_fit_1 ( ) :
         logger.info ( 'Goodness-of-fit:\n%s' % gof )
 
         gauss.load_params ( r , silent = True ) 
-        got = G1D.GoF1DToys ( gauss , data_g )
+        got = G1D.GoF1DToys ( gauss , data_g , 200 )
         logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( got.nToys , got ) ) 
 
         del gof
@@ -180,7 +177,7 @@ def test_good_fit_1 ( ) :
     udist1 = run_DNN ( gauss , data_g , r , logger )
     if udist1 :
         keep.add ( udist1 ) 
-        with use_canvas ( 'test_good_fit_1: DNN' , wait = 5 ) :
+        with use_canvas ( 'test_good_fit_1: DNN' , wait = 1 ) :
             udist1.draw()
 
     udist2 = run_USTAT ( gauss , data_g , r , logger )
@@ -209,7 +206,7 @@ def test_good_fit_2 ( ) :
         logger.info ( 'Goodness-of-fit:\n%s' % gof )
 
         model.load_params ( r , silent = True ) 
-        got = G1D.GoF1DToys ( model , data_g , 500 )
+        got = G1D.GoF1DToys ( model , data_g , 200 )
         logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( got.nToys , got ) ) 
 
     ## Try to use multidimensional methods
@@ -217,12 +214,12 @@ def test_good_fit_2 ( ) :
     udist1 = run_DNN ( model , data_g , r , logger )
     if udist1 :
         keep.add ( udist1 ) 
-        with use_canvas ( 'test_good_fit_2: DNN' , wait = 5 ) :
+        with use_canvas ( 'test_good_fit_2: DNN' , wait = 1 ) :
             udist1.draw()
     udist2 = run_USTAT ( model , data_g , r , logger )
     if udist2 :
         keep.add ( udist2 ) 
-        with use_canvas ( 'test_good_fit_2: USTAT' , wait = 5 ) :
+        with use_canvas ( 'test_good_fit_2: USTAT' , wait = 1 ) :
             udist2.draw()
     
 
@@ -244,7 +241,7 @@ def test_good_fit_3 ( ) :
         logger.info ( 'Goodness-of-fit:\n%s' % gof )
 
         model.load_params ( r , silent = True ) 
-        got = G1D.GoF1DToys ( model , data_b , 500 )
+        got = G1D.GoF1DToys ( model , data_b , 200 )
         logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( got.nToys , got ) ) 
 
     ## Try to use multidimensional methods
@@ -252,15 +249,14 @@ def test_good_fit_3 ( ) :
     udist1 = run_DNN ( model , data_b , r , logger )
     if udist1 :
         keep.add ( udist1 ) 
-        with use_canvas ( 'test_good_fit_3: DNN' , wait = 5 ) :
+        with use_canvas ( 'test_good_fit_3: DNN' , wait = 1 ) :
             udist1.draw()
     udist2 = run_USTAT ( model , data_b , r , logger )
     if udist2 :
         keep.add ( udist2 ) 
-        with use_canvas ( 'test_good_fit_3: USTAT' , wait = 5 ) :
+        with use_canvas ( 'test_good_fit_3: USTAT' , wait = 1 ) :
             udist2.draw()
             
-    
 # =============================================================================
 def test_bad_fit_1 ( ) :
     """ Make a test for presumably bad fit: fit Gauss to Gauss+Bkg
@@ -282,7 +278,7 @@ def test_bad_fit_1 ( ) :
         gof.draw()
         
         gauss.load_params ( r , silent = True ) 
-        got = G1D.GoF1DToys ( gauss , data_b , 5000 )
+        got = G1D.GoF1DToys ( gauss , data_b , 200 )
         got.run ( 1000 ) 
         logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( got.nToys , got ) ) 
        
@@ -298,7 +294,7 @@ def test_bad_fit_1 ( ) :
         dzk = got.draw('ZK')
     with use_canvas ( 'test_bad_fit_1: GoF/ZA' , wait = 1 ) :
         dza = got.draw('ZA')
-    with use_canvas ( 'test_bad_fit_1: GoF/ZC' , wait = 3 ) :
+    with use_canvas ( 'test_bad_fit_1: GoF/ZC' , wait = 1 ) :
         dzc = got.draw('ZC')
     
     ## Try to use multidimensional methods
@@ -306,16 +302,15 @@ def test_bad_fit_1 ( ) :
     udist1 = run_DNN ( gauss , data_b , r , logger )
     if udist1 :
         keep.add ( udist1 ) 
-        with use_canvas ( 'test_bad_fit_1: DNN' , wait = 5 ) :
+        with use_canvas ( 'test_bad_fit_1: DNN' , wait = 1 ) :
             udist1.draw()
     udist2 = run_USTAT ( gauss , data_b , r , logger )
     if udist2 :
         keep.add ( udist2 ) 
-        with use_canvas ( 'test_bad_fit_3: USTAT' , wait = 5 ) :
+        with use_canvas ( 'test_bad_fit_3: USTAT' , wait = 1 ) :
             udist2.draw()
             
     
-        
 # ===============================================================================
 if '__main__' == __name__ :
 

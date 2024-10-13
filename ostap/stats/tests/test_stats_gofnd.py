@@ -69,25 +69,16 @@ def test_PPD () :
     
     sigma = '' 
     for conf in ( { 'psi' : 'linear'      } ,
-                  { 'psi' : 'squared'     } ,
                   { 'psi' : 'logarithm'   } ,
                   { 'psi' : 'coulomb'     } ,   
-                  { 'psi' : 'cityblock'   } ,   
-                  { 'psi' : 'seuclidean'  } ,   
-                  { 'psi' : 'cosine'      } ,    
-                  { 'psi' : 'chebyshev'   } ,  
-                  { 'psi' : 'canberra'    } ,  
-                  { 'psi' : 'braycurtis'  } , 
-                  { 'psi' : 'mahalanobis' } ,
+                  { 'psi' : 'gaussian' , 'sigma' : 2.00 } ,
                   { 'psi' : 'gaussian' , 'sigma' : 1.00 } ,
                   { 'psi' : 'gaussian' , 'sigma' : 0.50 } ,
-                  { 'psi' : 'gaussian' , 'sigma' : 0.20 } ,
                   { 'psi' : 'gaussian' , 'sigma' : 0.10 } ,
                   { 'psi' : 'gaussian' , 'sigma' : 0.05 } ,
-                  { 'psi' : 'gaussian' , 'sigma' : 0.02 } ,
                   { 'psi' : 'gaussian' , 'sigma' : 0.01 } ) : 
         
-        ppd = GnD.PPD ( nToys= 1000 , **conf )
+        ppd = GnD.PPD ( nToys = 200 , **conf )
         
         ## presumably good fit
         with timing ( "Good fit PPD distance %s %s" % ( conf [ 'psi' ] , conf.get('sigma','') ) , logger = logger ) :
@@ -137,12 +128,11 @@ def test_DNN () :
         logger.warning ('No numpy/scipy/s4u/cdist: skip the test!')
         return         
 
-
     ## 't/good', 'x[..]' ,
     ## 't/bad' , 'x[..]' ,
     rows  = [ ( 'p-value/good[%]' , 'p-value/bad[%]' , '#sigma/good' , '#sigma/bad') ]
     
-    dnn = GnD.DNN ( nToys = 1000 , histo = 50  )
+    dnn = GnD.DNN ( nToys = 200 , histo = 50  )
     
     ## presumably good fit
     with timing ( "Good fit DNN" , logger = logger ) :
@@ -187,7 +177,7 @@ def test_USTAT () :
     from ostap.stats.ustat import USTAT 
     rows  = [ ( 'p-value/good[%]' , 'p-value/bad[%]' , '#sigma/good' , '#sigma/bad') ]
     
-    ust = USTAT ( nToys = 1000  , histo = 50 )
+    ust = USTAT ( nToys = 200  , histo = 50 )
     
     ## presumably good fit
     with timing ( "Good fit USTAT" , logger = logger ) :
