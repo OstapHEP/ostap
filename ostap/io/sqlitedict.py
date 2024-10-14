@@ -49,6 +49,7 @@ except ImportError:
 from ostap.io.pickling   import dumps, loads, HIGHEST_PROTOCOL as PICKLE_PROTOCOL
 import logging  
 from ostap.logger.logger import getLogger
+# =============================================================================
 logger = getLogger( __name__ )
 # =============================================================================
 ## Is it a sqlite3 file?

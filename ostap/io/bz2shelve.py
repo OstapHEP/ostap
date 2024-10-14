@@ -189,7 +189,7 @@ class Bz2Shelf(CompressShelf):
     # ==========================================================================
     ## compress (bzip2)  the item  using <code>bz2.compress</code>
     def compress_item ( self , value ) :
-        """Compress (zip) the item using ``bz2.compress''
+        """ Compress (zip) the item using ``bz2.compress''
         - see bz2.compress
         """
         return bz2.compress ( self.pickle ( value ) , self.compresslevel )
@@ -197,7 +197,7 @@ class Bz2Shelf(CompressShelf):
     # =========================================================================
     ## uncompres (bzip2) the item using <code>bz2.decompress</code>
     def uncompress_item ( self , value ) :
-        """Uncompress (bzip2) the item using ``bz2.decompress''
+        """ Uncompress (bzip2) the item using ``bz2.decompress''
         -  see bz2.decompress
         """        
         return self.unpickle ( bz2.decompress ( value ) ) 
@@ -207,7 +207,7 @@ class Bz2Shelf(CompressShelf):
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
 def open ( dbname , mode = 'c' , **kwargs ) :
-    """Open a persistent dictionary for reading and writing.
+    """ Open a persistent dictionary for reading and writing.
     
     The filename parameter is the base filename for the underlying
     database.  As a side-effect, an extension may be added to the
