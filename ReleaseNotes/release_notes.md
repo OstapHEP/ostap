@@ -1,5 +1,11 @@
 ## New features
-
+    
+  1. add more methods to `Ostap::Math::ECDF` got get the ranking
+  1. optimise `Ostap::Math::ECDF` and skip sorting when possible
+  1. add `ostap.stats.twosamples.py` to make Two Sampel Tests
+  1. add the test for Two Sample Test
+  1. reduce code duplication between  GoF-1D and Two-Sample Tests
+         
 ## Backward incompatible
 
 ## Bug fixes

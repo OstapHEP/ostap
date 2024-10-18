@@ -26,11 +26,8 @@
 Ostap::Math::ECDF::ECDF
 ( const Ostap::Math::ECDF::Data&  data          ,
   const bool                      complementary )
-  : m_data          ( data          )
-  , m_complementary ( complementary ) 
-{
-  this->sort_me() ;
-}
+  : Ostap::Math::ECDF::ECDF ( data.begin() , data.end() , complementary )
+{}
 // ============================================================================
 // constructoer to create complementary/oridnary ECDF
 // ============================================================================
@@ -68,8 +65,9 @@ double Ostap::Math::ECDF::evaluate   ( const double x ) const
   if      ( x < m_data.front () ) { return m_complementary ? 1.0 : 0.0 ; } 
   else if ( x > m_data.back  () ) { return m_complementary ? 0.0 : 1.0 ; } 
   //
-  const double result = double ( std::upper_bound ( m_data.begin () ,
-                                                    m_data.end   () , x ) - m_data.begin() ) / m_data.size () ;
+  // const double result = double ( std::upper_bound ( m_data.begin () ,
+  //                                                   m_data.end   () , x ) - m_data.begin() ) / m_data.size () ;
+  const double result = double ( rank ( x ) ) / m_data.size () ;
   return m_complementary ? ( 1 - result ) : result ; 
 }
 // ============================================================================
@@ -107,13 +105,15 @@ Ostap::Math::ECDF::add
 unsigned long
 Ostap::Math::ECDF::add
 ( const Ostap::Math::ECDF::Data& values )
-{
-  return  add ( values.begin() , values.end() ) ;
-}
+{ return  add ( values.begin() , values.end() ) ; }
 // ============================================================================
 Ostap::Math::ECDF
-Ostap::Math::ECDF::__add__  ( const Ostap::Math::ECDF&  x )
-{ return (*this) + x ; } 
+Ostap::Math::ECDF::__add__  ( const Ostap::Math::ECDF&  x ) const 
+{
+  ECDF c { *this } ;
+  c.add ( x ) ;
+  return c ;
+} 
 // ============================================================================
 // add a value to data container  
 // ============================================================================
@@ -122,7 +122,7 @@ Ostap::Math::ECDF::add
 ( const Ostap::Math::ECDF& values )
 {
   Data tmp2  ( m_data.size() + values.size() ) ;
-  /// merge two sorted continers 
+  /// merge two sorted containers 
   std::merge ( m_data.begin        () ,
                m_data.end          () ,
                values.m_data.begin () ,
@@ -131,6 +131,28 @@ Ostap::Math::ECDF::add
   std::swap ( m_data , tmp2 ) ;
   return m_data.size () ;
 }
+// ============================================================================
+// get ranks of the elements in the (pooled) sample
+// ============================================================================
+Ostap::Math::ECDF::Indices
+Ostap::Math::ECDF::ranks
+( const Ostap::Math::ECDF& sample ) const
+{
+  const Data::size_type N  = size() ;
+  // fill outptu array with N
+  Indices result ( sample.size () ,  N ) ;
+  Data::size_type NS= sample.size() ;
+  for ( Data::size_type i = 0 ; i < NS ; ++i )
+    {
+      Data::size_type r = rank ( sample.m_data [ i ] ) ;
+      result [ i ] = r ;
+      // try to be a bit more efficient, the rest of array is filled with N 
+      if ( N <= r ) { break ; }
+    }
+  return result ;
+}
+// ============================================================================
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

@@ -95,10 +95,13 @@ std = cppyy.gbl.std
 if hasattr ( std , 'string'      ) : string_types += ( std.string      , )
 if hasattr ( std , 'string_view' ) : string_types += ( std.string_view , )
 # =============================================================================
-try :
+try : # =======================================================================
+    # =========================================================================
     import numpy as np
-    listlike_types  = listlike_types + ( np.ndarray , )    
-except ImportError :
+    listlike_types  = listlike_types + ( np.ndarray , )
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     pass 
 # =============================================================================
 dict_types      = dict ,
@@ -106,11 +109,12 @@ dictlike_types  = dict ,  C.Mapping
 sequence_types  = listlike_types + ( Sequence , Collection , Iterable , Generator )
 sized_types     = Sized ,
 path_types      = string_types
+# =============================================================================
 if ( 3 , 6 ) <= python_version :
     path_types = string_types + ( os.PathLike , )
 # =============================================================================
 ## sometimes we need to ensure that dictionary is ordered 
-ordered_dict = dict 
+ordered_dict = dict
 if python_version < ( 3 , 7 ) :
     from collections import OrderedDict as ordered_dict 
     dictlike_types += ( ordered_dict, )

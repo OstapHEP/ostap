@@ -617,7 +617,7 @@ args_printeval     = ( 'printevalerrors' , 'printerrorseval' ,
 args_timer         =  'timer'     , 'timing'
 args_warnings      =  'warnings'  , 'warning'
 args_sumw2         =  'sumw2'  , 'sumw2err' , 'sumw2errs' , 'sumw2error' , 'sumw2errors'
-args_asymptotic    = ( 'asymptotic'     , 'asymptorocerr'   , 'asymptoticerrs' ,
+args_asymptotic    = ( 'asymptotic'     , 'asymptoticcerr'  , 'asymptoticerrs' ,
                        'asymptoticerror , asymptoticerrors' ) 
 args_batch         = 'batch' , 'batchmode' , 'modebatch'
 args_backend       = 'evalbackend' , 'backendeval' , 'backend'
@@ -777,12 +777,7 @@ class FitHelper(VarMaker) :
                 
                 _args.append   (  ROOT.RooFit.Extended ( a ) )
                 
-            elif key in ( 'cpu'              ,
-                          'cpus'             ,
-                          'ncpu'             ,
-                          'ncpus'            ,
-                          'numcpu'           ,
-                          'numcpus'          ) and isinstance ( a , int ) and 1<= a :
+            elif key in args_numcpu and isinstance ( a , int ) and 1<= a :
                 
                 _args.append   (  ROOT.RooFit.NumCPU( a  ) )
                 

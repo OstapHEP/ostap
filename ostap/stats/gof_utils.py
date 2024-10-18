@@ -13,17 +13,22 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2023-12-06"
 __all__     = (
-    'mean_var'  , ## mean and variance for (weighted) arrays
-    'nEff'      , ## get number of effective entries
-    'normalize' , ## "normalize" variables in dataset/structured array
-    )
+    'mean_var'   , ## mean and variance for (weighted) arrays
+    'nEff'       , ## get number of effective entries
+    'normalize'  , ## "normalize" variables in dataset/structured array
+    'Estimators' , ## helper mixin class to print statistical estimators 
+    'Summary'    , ## helper mixin class to print statistical estimators 
+)
 # =============================================================================
+from   collections              import namedtuple
 from   ostap.core.meta_info     import python_info 
 from   ostap.core.core          import VE, Ostap
 from   ostap.core.ostap_types   import string_types
+from   ostap.math.base          import axis_range  
+from   ostap.math.math_ve       import significance
 from   ostap.stats.counters     import EffCounter
-from   ostap.utils.basic        import numcpu
-from   ostap.utils.utils        import splitter 
+from   ostap.utils.basic        import numcpu, loop_items 
+from   ostap.utils.utils        import splitter
 from   ostap.utils.progress_bar import progress_bar
 import ROOT, sys, warnings  
 # =============================================================================
@@ -374,8 +379,210 @@ class TOYS(object) :
                 counter += result 
         # 
         return counter
+
+# =============================================================================
+## Short labels for various statitical estimators 
+Labels = {
+    'KS' : 'Kolmogorov-Smirnov' ,
+    'K'  : 'Kuiper'             ,
+    'AD' : 'Anderson-Darling'   ,
+    'CM' : 'Cramers-von Mises'  ,
+    'ZK' : 'Zhang-ZK'           ,
+    'ZA' : 'Zhang-ZA'           ,
+    'ZC' : 'Zhang-ZC'           ,        
+}
+# ============================================================================
+## @class Estimators
+#  Helper mixin class to format the table of estimators 
+class Estimators(object) :
+    """ Helper mixin class to format the table of estimators 
+    """
+    # ==========================================================================
+    ## Print the summary as Table
+    def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 ) :
+        """ Print the summary as Table
+        """
+        import ostap.logger.table  as     T 
+        from   ostap.logger.pretty import pretty_float
+        ## 
+        rows = [ ( 'Statistics' , 'Value' ) ]
+        for label , value  in loop_items ( self.estimators ) :
+            
+            the_label = Labels.get ( label , label )
+
+            result , expo = pretty_float ( value , width = width , precision = precision )
+
+            if expo : row = the_label , result , '10^%+d' % expo
+            else    : row = the_label , result 
+        
+        title = title if title else 'Goodness of 1D-fit' 
+        return T.table ( rows , title = title , prefix = prefix , alignment = 'lcl' )
+
+# ============================================================================
+## @class Summary
+#  Helper mixin class to keep (and format) the statistics
+class Summary(object) :
+    """ Helper mixin class to keep (and format) the statistics
+    """
+    # =============================================================================
+    KS_keys = 'ks' , 'kolmogorov' , 'kolmogorovsmirnov' 
+    K_keys  = 'k'  , 'kuiper'  
+    AD_keys = 'ad' , 'andersen'   , 'andersendarling' 
+    CM_keys = 'cm' , 'cramer'     , 'cramervonmises' 
+    ZK_keys = 'zk' , 'zhangk'     , 'zhangzk'
+    ZA_keys = 'za' , 'zhanga'     , 'zhangza'
+    ZC_keys = 'zc' , 'zhangc'     , 'zhangzc'
+    # =========================================================================
+    ## result of toys/permutations 
+    Result = namedtuple ( 'Result' , 'statistics counter pvalue nsigma' )
+    # =========================================================================
+    ## Helper method to get result
+    def result ( self , label ) :
+        """ Helper method to get result 
+        """
+        if not label in self.estimators : return None
+        if not label in self.ecdfs      : return None
+        if not label in self.counters   : return None
+        ##
+        value   = self.estimators   [ label ]
+        ecdfs   = self.ecdfs        [ label ] 
+        counter = self.counters     [ label ] 
+        ##
+        pvalue = ecdfs. estimate ( value )
+        nsigma = significance ( pvalue )
+        return self.Result ( value   ,
+                             counter ,
+                             pvalue  ,
+                             nsigma  )
+    # =========================================================================
+    ## format a row in the summary table
+    def row  ( self , what , result , width = 5 , precision = 3 ) :
+        """ Format a row in the sumamry table
+        """
+        value      = result.statistics
+        counter    = result.counter
+        pvalue     = result.pvalue
+        nsigma     = result.nsigma
+        
+        mean       = counter.mean   ()
+        rms        = counter.rms    () 
+        vmin, vmax = counter.minmax () 
+        
+        mxv = max ( abs ( value ) , abs ( mean.value() ) , mean.error() , rms , abs ( vmin )  , abs ( vmax ) ) 
+        
+        from   ostap.logger.pretty import fmt_pretty_ve         
+        fmt, fmtv , fmte , expo = fmt_pretty_ve ( VE ( mxv ,  mean.cov2() ) ,
+                                                  width       = width       ,
+                                                  precision   = precision   , 
+                                                  parentheses = False       )
+        
+        if expo : scale = 10**expo
+        else    : scale = 1
+        fmt2 = '%s/%s' % ( fmtv , fmtv ) 
+        
+        return ( what  ,
+                 fmtv  %  ( value / scale )                    ,
+                 ( mean / scale ).toString ( fmt )             ,
+                 fmtv  %  ( rms  / scale )                     ,
+                 fmt2  %  ( vmin / scale , vmax / scale )      ,
+                 ( '10^%+d' % expo  if expo else '' )          ,                  
+                 ( 100 * pvalue ) .toString ( '%.2f +/- %-.2f' ) , 
+                 ( nsigma       ) .toString ( '%.1f +/- %-.1f' ) )
     
-    
+    # =========================================================================
+    ## Make a summary table
+    def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 ) :
+        """ Make a summary table
+        """
+        import ostap.logger.table  as     T                 
+        rows = [ ( 'Statistics' , 'value' , 'mean' , 'rms' , 'min/max' , 'factor' , 'p-value [%]' , '#sigma' ) ]
+        
+        for label in self.ecdfs :
+            
+            result  = self.result ( label )
+            if not result : continue
+
+            the_label = Labels.get ( label , label )
+            row = self.row ( the_label , result , width = width , precision = precision )
+            rows.append ( row ) 
+
+        ## skip empty columns        
+        has_expo = False 
+        for row in rows[1:] :
+            r = list ( row )
+            if r[-3] :
+                has_expo = True
+                break
+
+        if not has_expo :
+            new_rows = []
+            for row in rows :
+                r = list ( row )
+                del r [ -3 ]
+                new_rows.append ( r ) 
+            rows = new_rows 
+            
+        if   not title and self.nToys :
+            title = 'Goodness of 1D-fit with #%d toys' % self.nToys  
+        elif not title :
+            title = 'Goodness of 1D-fit'
+        
+        return T.table ( rows , title = title , prefix = prefix , alignment = 'lccccccccccc' )
+
+    # =========================================================================
+    ## Draw fit CDF & empirical ECDF 
+    def draw  ( self , what , opts = '' , *args , **kwargs ) :
+        """ Draw fit CDF & empirical CDF
+        """
+        key = cidict_fun ( what ) 
+        if   key in self.KS_keys and 'KS' in self.ecdfs :             
+            result = self.result ( 'KS' )
+            ecdf   = self.ecdfs  [ 'KS' ]
+            logger.info ( 'Toy resuls for Kolmogorov-Smirnov estimate' ) 
+        elif key in self.K_keys  and 'K'  in self.ecdfs : 
+            result = self.result ( 'K' )
+            ecdf   = self.ecdfs  [ 'K' ]
+            logger.info ( 'Toy resuls for Kuiper estimate' ) 
+        elif key in self.AD_keys and 'AD' in self.ecdfs :             
+            result = self.result ( 'AD' )
+            ecdf   = self.ecdfs  [ 'AD' ]
+            logger.info ( 'Toy resuls for Anderson-Darling estimate' ) 
+        elif key in self.CM_keys  and 'CM' in self.ecdfs : 
+            result = self.result  ( 'CM' )
+            ecdf   = self.ecdfs   [ 'CM' ]
+            logger.info ( 'Toy resuls for Cramer-von Mises  estimate' ) 
+        elif key in self.ZK_keys  and 'ZK' in self.ecdfs : 
+            result = self.result  ( 'ZK' )
+            ecdf   = self.ecdfs   [ 'ZK' ]
+            logger.info ( 'Toy resuls for ZK estimate' ) 
+        elif key in self.ZA_keys  and 'ZA' in self.ecdfs :  
+            result = self.result  ( 'ZA' )
+            ecdf   = self.ecdfs   [ 'ZA' ]
+            logger.info ( 'Toy resuls for ZK estimate' ) 
+        elif key in self.ZC_keys and 'ZC' in self.ecdfs : 
+            result = self.result  ( 'ZC' )
+            ecdf   = self.ecdfs   [ 'ZC' ]
+            logger.info ( 'Toy resuls for ZK estimate' ) 
+        else :
+            raise KeyError (  "draw: Invalid `what`:%s" % what )
+            
+        xmin , xmax = ecdf.xmin () , ecdf.xmax ()
+        value     = result.statistics
+        xmin      = min ( xmin , value )
+        xmax      = max ( xmax , value )
+        xmin , xmax  = axis_range ( xmin , xmax , delta = 0.10 )
+
+        kwargs [ 'xmin' ] = kwargs.get ( 'xmin' , xmin ) 
+        kwargs [ 'xmax' ] = kwargs.get ( 'xmax' , xmax )
+        result    = ecdf.draw  ( opts , *args , **kwargs ) 
+        line      = ROOT.TLine ( value , 0 , value , 1 )
+        ## 
+        line.SetLineWidth ( 4 ) 
+        line.SetLineColor ( 8 ) 
+        line.draw()
+        ## 
+        return result, line  
+
 # =============================================================================
 if '__main__' == __name__ :
     
