@@ -395,7 +395,31 @@ def check_color ( color ) :
 
     return color
 
-
+# =============================================================================
+## alowed argument for draw-function 
+draw_args = frozenset ( [ 'linecolor'   , 'markercolor' , 'fillcolor'   , 'color' , 
+                          'linestyle'   , 'linewidth'   , 'width'       ,
+                          'markerstyle' , 'markersize'  , 'marker'      ,
+                          'fillstyle'   , 'fill'        , 'opacity'     , 'opaque' ,
+                          'minimum'     , 'minimal'     , 'min'         , 'minval' , 'minvalue' ,
+                          'maximum'     , 'maximal'     , 'max'         , 'maxval' , 'maxvalue' ,
+                          'labelsize'   , 'labelfont'   , 'labelscale'  ,
+                          'xaxislabeloffset' ,
+                          'yaxislabeloffset' ,
+                          'zaxislabeloffset' ,
+                          'copy' ,
+                          'logx' ,
+                          'logy' ] )
+## ============================================================================
+## remove "draw-args" from dictionary of arguments 
+def remove_draw_args ( kwargs  ) :
+    """ remove "draw-args" from dictionary of arguments """
+    nargs = {}
+    for k, v in loop_items ( kwargs ) :
+        key = cidict_fun ( k )
+        if key in draw_args : continue
+        nargs [ k ] = v
+    return nargs 
 # =============================================================================
 ## Silent draw 
 # =============================================================================

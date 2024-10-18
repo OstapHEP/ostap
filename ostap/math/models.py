@@ -120,15 +120,19 @@ def tf1  ( self , **kwargs  ) :
     fun.SetTitle ( title ) 
     ##
     if kwargs :
-        import ostap.logger.table as T 
-        rows = [ ( 'Argument' , 'Value' ) ]
-        for k , v in loop_items ( kwargs ) :
-            row = k , str ( v )
-            rows.append ( row )
-        title = 'tf1: %d unused arguments' % len ( kwargs ) 
-        table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
-        logger.warning ( '%s\n%s' % ( title , table ) )
-    
+        from ostap.core.core import remove_draw_args
+        kw = remove_draw_args ( kwargs )
+        if kw : 
+            import ostap.logger.table as T 
+            rows = [ ( 'Argument' , 'Value' ) ]
+            for k, v  in loop_items ( kw ) :
+                c = kwargs [ k ]
+                row = k , str ( v )
+                rows.append ( row )
+            title = 'tf1: %d unused arguments' % len ( kwargs ) 
+            table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
+            logger.warning ( '%s\n%s' % ( title , table ) )
+    ## 
     return fun 
 
 # =============================================================================
@@ -196,6 +200,19 @@ def tf2 ( self , **kwargs ) :
     if title is None : title = str ( self )
     fun.SetTitle ( title ) 
     #
+    if kwargs :
+        from ostap.core.core import remove_draw_args
+        kw = remove_draw_args ( kwargs )
+        if kw : 
+            import ostap.logger.table as T 
+            rows = [ ( 'Argument' , 'Value' ) ]
+            for k , v in loop_items ( kw ) :
+                row = k , str ( v )
+                rows.append ( row )
+            title = 'tf2: %d unused arguments' % len ( kwargs ) 
+            table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
+            logger.warning ( '%s\n%s' % ( title , table ) )
+    ## 
     return fun 
 
 # =============================================================================
@@ -274,15 +291,18 @@ def tf3 ( self , **kwargs ) :
     fun.SetNpy ( npz ) 
     #
     if kwargs :
-        import ostap.logger.table as T 
-        rows = [ ( 'Argument' , 'Value' ) ]
-        for k , v in loop_items ( kwargs ) :
-            row = k , str ( v )
-            rows.append ( row )
-        title = 'tf3: %d unused arguments' % len ( kwargs ) 
-        table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
-        logger.warning ( '%s\n%s' % ( title , table ) )
-    
+        from ostap.core.core import remove_draw_args
+        kw = remove_draw_args ( kwargs )
+        if kw : 
+            import ostap.logger.table as T 
+            rows = [ ( 'Argument' , 'Value' ) ]
+            for k , v in loop_items ( kw ) :
+                row = k , str ( v )
+                rows.append ( row )
+            title = 'tf3: %d unused arguments' % len ( kwargs ) 
+            table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
+            logger.warning ( '%s\n%s' % ( title , table ) )
+    ## 
     return fun 
 
 positives = ( Ostap.Math.Positive          ,
@@ -1259,10 +1279,10 @@ for model in ( Ostap.Math.Chebyshev              ,
 
 
 # =======================================================================================
-## Special ``getattr'' for Bernstein dual basis functions: delegate the stuff to
+## Special `getattr' for Bernstein dual basis functions: delegate the stuff to
 #  the underlying bernstein polynomial
 def _bdb_getattr_ ( self ,  attr ) :
-    """Special ``getattr'' for Bernstein dual basis functions:
+    """ Special `getattr' for Bernstein dual basis functions:
     - delegate the stuff to the underlying Bernstein polynomial
     """
     b = self.bernstein()
@@ -1492,7 +1512,6 @@ Ostap.Math.NormalLaplace .__str__  = lambda s : "NormalLaplace(mu=%.4g,varsigma=
                                                                                                        s.varsigma () ,
                                                                                                        s.kL       () ,
                                                                                                        s.kR       () )
-
 # =============================================================================
 ## decorate 1D-PDFs
 # =============================================================================
@@ -1708,7 +1727,7 @@ from random import uniform as _uniform_
 #  >>> for x,y in func.generate( 1000 ) : print x,y 
 #  @endcode
 def _random_generate_bernstein2D_ ( fun , num = 1 ) :
-    """Generate random numbers from 2D bernstein-like distribuitions
+    """ Generate random numbers from 2D bernstein-like distribuitions
     >>> func = ...
     >>> for x,y in func.generate( 1000 ) : print x,y 
     """
