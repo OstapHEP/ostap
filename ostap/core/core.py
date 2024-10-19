@@ -127,7 +127,8 @@ cidict_fun = lambda k : case_transform ( k ) . replace('_','') . replace ( ' ', 
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
-if root_info < ( 6, 29 ) :    
+if root_info < ( 6, 29 ) : # ==================================================
+    # =========================================================================
     class ROOTCWD(object) :
         """Context manager to preserve current directory
         (rather confusing stuff in ROOT) 
@@ -182,10 +183,11 @@ if root_info < ( 6, 29 ) :
 
             self._dir = None 
             del self._dir
-else :
-    ## ========================================================================
+    # ========================================================================
+else : # =====================================================================
+    # ========================================================================
     class ROOTCWD(object) :
-        """Context manager to preserve current directory
+        """ Context manager to preserve current directory
         (rather confusing stuff in ROOT) 
         >>> print the_ROOT.CurrentDirectory() 
         >>> with ROOTCWD() :
@@ -270,7 +272,7 @@ def pwd() :
 _FAILURE = Ostap.StatusCode.FAILURE 
 ## printout of status code
 def _sc_print_ ( sc ) :
-    """Print the Status Code
+    """ Print the Status Code
     >>> st = ...
     >>> print st
     """
@@ -614,9 +616,12 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
             
         with rootWarning() , rooSilent ( 2 )  :
             
-            if copy and hasattr ( obj , 'DrawCopy' ): result = obj.DrawCopy ( option , *args )
-            else                                    : result = obj.Draw     ( option , *args )
-        
+            if copy and hasattr ( obj , 'DrawCopy' ):
+                result = obj.DrawCopy ( option , *args )
+            else                                    :
+                result = obj.Draw     ( option , *args )
+                result = obj
+                
         if pad and not ROOT.gPad :            
             c = pad.GetCanvas()
             if c : c.Update()

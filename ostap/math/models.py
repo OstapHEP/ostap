@@ -347,8 +347,13 @@ def f1_draw ( self , opts ='' , **kwargs ) :
                 
     if not hasattr ( self , '_tf1'  ) :        
         self._tf1        =  tf1 ( self , **kw )        
-        if type ( self ) in positives and not 'xmin' in kw :
-            self._tf1.SetMinimum ( 0 )
+        if type ( self ) in positives :
+            if not 'minimum'  in kw and \
+               not 'minimal'  in kw and \
+               not 'min'      in kw and \
+               not 'minval'   in kw and \
+               not 'minvalue' in kw :
+                self._tf1.SetMinimum ( 0 )
 
     xmin     = kw.pop ( 'xmin'     , neg_infinity )
     xmax     = kw.pop ( 'xmax'     , pos_infinity )
@@ -356,9 +361,10 @@ def f1_draw ( self , opts ='' , **kwargs ) :
     args     = kw.pop ( 'args'     , ()   )
     npx      = kw.pop ( 'npx'      , 500  )
     npoints  = kw.pop ( 'npoints'  , 500  )
-    call     = kw.pop ( 'callable' , None ) 
+    callme   = kw.pop ( 'callable' , None ) 
     
-    return self._tf1.draw ( opts , **kw  )
+    self._plot = self._tf1.draw ( opts , **kw  )
+    return self
 
 # =============================================================================
 ## draw the function 
@@ -386,17 +392,20 @@ def f2_draw ( self , opts ='' , **kwargs ) :
         if isinstance ( ymax    , num_types     ) and float ( ymax ) != self._tf2.GetYmax () : del self._tf2 
 
     if not hasattr ( self , '_tf2'  ) :
-
         self._tf2        =  tf2 ( self , **kw )
         
-    xmin  = kw.pop ( 'xmin'  , neg_infinity )
-    xmax  = kw.pop ( 'xmax'  , pos_infinity )
-    ymin  = kw.pop ( 'ymin'  , neg_infinity )
-    ymax  = kw.pop ( 'ymax'  , pos_infinity )
-    npars = kw.pop ( 'npars' , 0            ) 
-    args  = kw.pop ( 'args'  , ()           )
+    xmin   = kw.pop ( 'xmin'     , neg_infinity )
+    xmax   = kw.pop ( 'xmax'     , pos_infinity )
+    ymin   = kw.pop ( 'ymin'     , neg_infinity )
+    ymax   = kw.pop ( 'ymax'     , pos_infinity )
+    npars  = kw.pop ( 'npars'    , 0            ) 
+    npx    = kw.pop ( 'npx'      , 50           )
+    npy    = kw.pop ( 'npy'      , 50           )
+    args   = kw.pop ( 'args'     , ()           )
+    callme = kw.pop ( 'callable' , None ) 
     
-    return self._tf2.draw ( opts , **kw )
+    self._plot = self._tf2.draw ( opts , **kw )
+    return self
 
 # =============================================================================
 ## draw the function 
@@ -432,7 +441,6 @@ def f3_draw ( self , opts ='' , **kwargs ) :
         zmax    = kw.get ( 'zmax'    , None )
         if isinstance ( zmax    , num_types     ) and float ( zmax ) != self._tf3.GetZmax () : del self._tf3 
 
-
     if not hasattr ( self , '_tf3'  ) :
         self._tf3        = tf3 ( self , **kw )
     
@@ -442,11 +450,15 @@ def f3_draw ( self , opts ='' , **kwargs ) :
     ymax  = kw.pop ( 'ymax'     , pos_infinity )
     zmin  = kw.pop ( 'zmin'     , neg_infinity )
     zmax  = kw.pop ( 'zmax'     , pos_infinity )
+    npx   = kw.pop ( 'npx'      , 30           )
+    npy   = kw.pop ( 'npy'      , 30           )
+    npz   = kw.pop ( 'npz'      , 30           )
     npars = kw.pop ( 'npars'    , 0  ) 
     args  = kw.pop ( 'args'     , () )
     call  = kw.pop ( 'callable' , None ) 
     
-    return self._tf3.draw ( opts , **kw  )
+    self._plot = self._tf3.draw ( opts , **kw  )
+    return self
 
 # =============================================================================
 ## get the regular complex value for amplitude 
