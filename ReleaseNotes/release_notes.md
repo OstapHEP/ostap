@@ -5,7 +5,8 @@
   1. add `ostap.stats.twosamples.py` to make Two Sampel Tests
   1. add the test for Two Sample Test
   1. reduce code duplication between  GoF-1D and Two-Sample Tests
-         
+  1. Add Anderson-Darling and Cramer-von-Mises Two Sample Tests
+             
 ## Backward incompatible
 
 ## Bug fixes

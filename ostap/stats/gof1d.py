@@ -373,15 +373,19 @@ class GoF1D(Estimators) :
         xmin = kwargs.pop ( 'xmin' , xmin )
         xmax = kwargs.pop ( 'xmax' , xmax )
 
+        opts    = opts.strip() 
+        optsame = 'same' if not opts else '%s %s' % ( 'same' , opts ) 
+
         if isinstance ( cdf , AFUN1 ) :
             self.__frame = cdf.draw ()
-            self.__frame.draw ()
+            self.__frame.draw ( opts )
+            r1 = self.__frame 
         else : 
             self.__draw_fun = lambda x : cdf ( x ) 
-            f1_draw   ( self.__draw_fun , opts , color = ROOT.kOrange + 1 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs ) 
-
-        return ecdf.draw ( '%s %s' % ( 'same' , opts ) , color = 2 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
-
+            r1 = f1_draw   ( self.__draw_fun , opts , color = ROOT.kOrange + 1 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs ) 
+        
+        r2 = ecdf.draw ( optsame  , color = 2 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
+        return r1 , r2
 # =============================================================================
 ## @class GoF1DToys
 #  Check Goodness of 1D-fits using toys 

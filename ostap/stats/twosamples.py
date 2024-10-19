@@ -176,7 +176,79 @@ def kuiper ( data1 , data2 , pooled = None  ) :
     - pooled : (optional) pooled dataset or CDF
     """
     ecdf1, ecdf2, ecdf = prepare_data1 ( data1 , data2 , pooled ) 
-    return max ( ecdf1 ( x ) - ecdf2 ( x ) for x in ecdf ) - min ( ecdf1 ( x ) - ecdf2 ( x ) for x in ecdf ) 
+    return max ( ecdf1 ( x ) - ecdf2 ( x ) for x in ecdf ) - min ( ecdf1 ( x ) - ecdf2 ( x ) for x in ecdf )
+# =============================================================================
+## Get Anderson-Darling statistics AD
+#  @code
+#  ecdf1 =...
+#  ecdf2 =...
+#  zk  = anderson_darling ( ecdf1, ecdf2 )
+#  @endcode
+#  @param data1  the 1st dataset or empirical CDF
+#  @param data2  the 2nd dataset or empirical CDF 
+#  @param pooled (optional) pooled dataset or empirical CDF
+#  @param ranks1 (optional) ranks of the elements from the pooled data in the 1st dataset
+#  @param ranks2 (optional) ranks of the elements from the pooled data in the 2nd dataset
+#  @return Anderspon Darling statistics AD 
+def anderson_darling  ( data1 , data2 , pooled = None , ranks1 = None  , ranks2 = None  ) :
+    """ Get Anderson-Darling  statistics AD 
+    - data1  : the 1st dataset or empirical CDF 
+    - data2  : the 2nd dataset or empirical CDF 
+    - pooled : (optional) pooled dataset or CDF
+    - ranks1 : (optional) ranks of the elements from the pooled data in the 1st dataset
+    - ranks2 : (optional) ranks of the elements from the pooled data in the 2nd dataset
+    """
+    ## transform input (if needed) 
+    ecdf1, ecdf2, ecdf, ranks1, ranks2 = prepare_data2 ( data1 , data2 , pooled , ranks1 , ranks2 ) 
+    
+    n1   = len ( ecdf1 )
+    n2   = len ( ecdf2 )
+    n    = n1 + n2
+
+    def term1 ( j ) :
+        r1  = ranks1 [ j ]    
+        return ( n * r1 - j * n1 ) ** 2  / ( ( j + 1 ) *  ( n - j ) )
+    def term2 ( j ) :
+        r2  = ranks2 [ j ]    
+        return ( n * r2 - j * n2 ) ** 2  / ( ( j + 1 ) *  ( n - j ) )
+        
+    s1 = sum ( term1 ( j ) for j in range ( n ) ) / n1
+    s2 = sum ( term2 ( j ) for j in range ( n ) ) / n2
+    
+    return ( s1 + s2 ) / n 
+
+# =============================================================================
+## Get Cramers-von Mises statistics CM
+#  @code
+#  ecdf1 =...
+#  ecdf2 =...
+#  zk  = cramer_von_mises ( ecdf1, ecdf2 )
+#  @endcode
+#  @param data1  the 1st dataset or empirical CDF
+#  @param data2  the 2nd dataset or empirical CDF 
+#  @param pooled (optional) pooled dataset or empirical CDF
+#  @return Anderspon Darling statistics AD 
+def cramer_von_mises ( data1 , data2 , pooled = None  ) :
+    """ Get Crsmer-von Misesstatistics CM
+    - data1  : the 1st dataset or empirical CDF 
+    - data2  : the 2nd dataset or empirical CDF 
+    - pooled : (optional) pooled dataset or CDF
+    """
+    ## transform input (if needed) 
+    ecdf1, ecdf2, ecdf = prepare_data1 ( data1 , data2 , pooled ) 
+    
+    n1   = len ( ecdf1 )
+    n2   = len ( ecdf2 )
+    n    = n1 + n2
+    
+    ranks1 = ecdf.ranks ( ecdf1 )
+    ranks2 = ecdf.ranks ( ecdf2 )
+    
+    u  = n1 * sum ( ( ranks1 [ i ] - i ) ** 2 for i in range ( n1 ) ) 
+    u += n2 * sum ( ( ranks2 [ i ] - i ) ** 2 for i in range ( n2 ) ) 
+    
+    return u / ( n1 * n2 * n ) - ( 4 * n1 * n2 - 1 ) / ( 6.0 * n ) 
+
 # =============================================================================
 ## Get ZK statistics ZK
 #  @see https://www.jstor.org/stable/25471118
@@ -343,11 +415,13 @@ class TSTest(Estimators):
         self.__estimators = {            
             'KS' : kolmogorov_smirnov ( self.ecdf1 , self.ecdf2 , self.ecdf ) , 
             'K'  : kuiper             ( self.ecdf1 , self.ecdf2 , self.ecdf ) , 
+            'AD' : anderson_darling   ( self.ecdf1 , self.ecdf2 , self.ecdf , self.ranks1 , self.ranks2 ) , 
+            'CM' : cramer_von_mises   ( self.ecdf1 , self.ecdf2 , self.ecdf ) , 
             'ZK' : ZK                 ( self.ecdf1 , self.ecdf2 , self.ecdf , self.ranks1 , self.ranks2 ) , 
             'ZA' : ZA                 ( self.ecdf1 , self.ecdf2 , self.ecdf , self.ranks1 , self.ranks2 ) , 
             'ZC' : ZC                 ( self.ecdf1 , self.ecdf2 , self.ecdf , self.ranks1 , self.ranks2 ) , 
         }
-        
+
     @property
     def ecdf1 ( self ) :
         """`ecdf1` : empirical CDF for the 1st dataset
@@ -371,6 +445,17 @@ class TSTest(Estimators):
     def ranks2 ( self ) :
         """ ranks of elements from pooled sample in the 2nd dataset"""
         return self.__ranks2
+
+    # =========================================================================
+    ## Print the summary as Table
+    def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 ) :
+        """ Print the summary as Table
+        """
+        title = title if title else 'Two Sample Test'
+        return Estimators.table ( self , title = title , prefix = prefix , width = width , precision = precision )
+  
+    __repr__ = table 
+    __str__  = table 
 
     # =========================================================================
     @property
@@ -462,11 +547,13 @@ class TSTest(Estimators):
         xmin = kwargs.pop ( 'xmin' , xmin )
         xmax = kwargs.pop ( 'xmax' , xmax )
         
-        r1 = ecdf.draw ( opts                        , color = 2 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
-        r2 = ecdf.draw ( '%s %s' % ( 'same' , opts ) , color = 4 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
-        r  = ecdf.draw ( '%s %s' % ( 'same' , opts ) , color = 8 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
+        opts    = opts.strip() 
+        optsame = 'same' if not opts else '%s %s' % ( 'same' , opts ) 
+        r  = ecdf .draw ( opts    , color = 8 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
+        r1 = ecdf1.draw ( optsame , color = 2 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
+        r2 = ecdf2.draw ( optsame , color = 4 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
         
-        return r
+        return r, r1, r2
 
 # =============================================================================
 ## @class TSToys
@@ -538,21 +625,27 @@ class TSToys(TSTest,Summary):
             
             ks = kolmogorov_smirnov ( ecdf1 , ecdf2 , ecdf )
             k  = kuiper             ( ecdf1 , ecdf2 , ecdf )
+            ad = anderson_darling   ( ecdf1 , ecdf2 , ecdf , ranks1 , ranks2 )            
+            cm = cramer_von_mises   ( ecdf1 , ecdf2 , ecdf )             
             zk = ZK                 ( ecdf1 , ecdf2 , ecdf , ranks1 , ranks2 )
             za = ZA                 ( ecdf1 , ecdf2 , ecdf , ranks1 , ranks2 )
             zc = ZC                 ( ecdf1 , ecdf2 , ecdf , ranks1 , ranks2 )
             
-            counters [ 'KS' ] += ks 
-            counters [ 'K'  ] += k 
-            counters [ 'ZK' ] += zk
-            counters [ 'ZA' ] += za
-            counters [ 'ZC' ] += zc
+            counters [ 'KS'  ] += ks 
+            counters [ 'K'   ] += k 
+            counters [ 'AD'  ] += ad
+            counters [ 'CM'  ] += cm
+            counters [ 'ZK'  ] += zk
+            counters [ 'ZA'  ] += za
+            counters [ 'ZC'  ] += zc
             
-            results [ 'KS'  ].append ( ks )    
-            results [ 'K'   ].append ( k  ) 
-            results [ 'ZK'  ].append ( zk ) 
-            results [ 'ZA'  ].append ( za ) 
-            results [ 'ZC'  ].append ( zc ) 
+            results  [ 'KS'  ] .append ( ks )    
+            results  [ 'K'   ] .append ( k  ) 
+            results  [ 'AD'  ] .append ( ad ) 
+            results  [ 'CM'  ] .append ( cm ) 
+            results  [ 'ZK'  ] .append ( zk ) 
+            results  [ 'ZA'  ] .append ( za ) 
+            results  [ 'ZC'  ] .append ( zc ) 
             
         ## accumulate number of toys 
         self.__nToys += nToys 
@@ -606,10 +699,26 @@ class TSToys(TSTest,Summary):
         """        
         return self.result ( 'ZC' ) 
 
-    table    = Summary.table 
-    __repr__ = Summary.table
-    __str__  = Summary.table
+    # =========================================================================
+    ## Print the summary as Table
+    def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 ) :
+        """ Print the summary as Table
+        """
+        if   not title and self.nToys :
+            title = 'Two Sampel Test with #%d toys' % self.nToys  
+        elif not title :
+            title = 'Two Sample Test'        
+        return Summary.table ( self , title = title , prefix = prefix , width = width , precision = precision )
+
+    __repr__ = table 
+    __str__  = table 
     
+    # =========================================================================
+    ## Draw ECDF for toys & statistical estgimator 
+    def draw  ( self , what , opts = '' , *args , **kwargs ) :
+        """ Draw ECDF for toys & statistical estgimator 
+        """
+        return Summary.draw ( self , what , opts = opts , *args , **kwargs ) 
 # =============================================================================
 if '__main__' == __name__ :
     

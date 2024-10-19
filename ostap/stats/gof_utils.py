@@ -22,7 +22,7 @@ __all__     = (
 # =============================================================================
 from   collections              import namedtuple
 from   ostap.core.meta_info     import python_info 
-from   ostap.core.core          import VE, Ostap
+from   ostap.core.core          import VE, Ostap, cidict_fun
 from   ostap.core.ostap_types   import string_types
 from   ostap.math.base          import axis_range  
 from   ostap.math.math_ve       import significance
@@ -404,7 +404,7 @@ class Estimators(object) :
         """
         import ostap.logger.table  as     T 
         from   ostap.logger.pretty import pretty_float
-        ## 
+        ##
         rows = [ ( 'Statistics' , 'Value' ) ]
         for label , value  in loop_items ( self.estimators ) :
             
@@ -414,7 +414,8 @@ class Estimators(object) :
 
             if expo : row = the_label , result , '10^%+d' % expo
             else    : row = the_label , result 
-        
+            rows.append ( row )
+            
         title = title if title else 'Goodness of 1D-fit' 
         return T.table ( rows , title = title , prefix = prefix , alignment = 'lcl' )
 
@@ -427,7 +428,7 @@ class Summary(object) :
     # =============================================================================
     KS_keys = 'ks' , 'kolmogorov' , 'kolmogorovsmirnov' 
     K_keys  = 'k'  , 'kuiper'  
-    AD_keys = 'ad' , 'andersen'   , 'andersendarling' 
+    AD_keys = 'ad' , 'anderson'   , 'andersondarling' 
     CM_keys = 'cm' , 'cramer'     , 'cramervonmises' 
     ZK_keys = 'zk' , 'zhangk'     , 'zhangzk'
     ZA_keys = 'za' , 'zhanga'     , 'zhangza'
@@ -448,8 +449,8 @@ class Summary(object) :
         ecdfs   = self.ecdfs        [ label ] 
         counter = self.counters     [ label ] 
         ##
-        pvalue = ecdfs. estimate ( value )
-        nsigma = significance ( pvalue )
+        pvalue = ecdfs. estimate ( value ) ## get the p-value 
+        nsigma = significance ( pvalue )   ## convert oit to significace 
         return self.Result ( value   ,
                              counter ,
                              pvalue  ,
@@ -530,9 +531,9 @@ class Summary(object) :
         return T.table ( rows , title = title , prefix = prefix , alignment = 'lccccccccccc' )
 
     # =========================================================================
-    ## Draw fit CDF & empirical ECDF 
+    ## Draw ECDF for toys & statistical estgimator 
     def draw  ( self , what , opts = '' , *args , **kwargs ) :
-        """ Draw fit CDF & empirical CDF
+        """ Draw ECDF for toys & statistical estgimator 
         """
         key = cidict_fun ( what ) 
         if   key in self.KS_keys and 'KS' in self.ecdfs :             
@@ -554,15 +555,15 @@ class Summary(object) :
         elif key in self.ZK_keys  and 'ZK' in self.ecdfs : 
             result = self.result  ( 'ZK' )
             ecdf   = self.ecdfs   [ 'ZK' ]
-            logger.info ( 'Toy resuls for ZK estimate' ) 
+            logger.info ( 'Toy resuls for Zhang ZK estimate' ) 
         elif key in self.ZA_keys  and 'ZA' in self.ecdfs :  
             result = self.result  ( 'ZA' )
             ecdf   = self.ecdfs   [ 'ZA' ]
-            logger.info ( 'Toy resuls for ZK estimate' ) 
+            logger.info ( 'Toy resuls for Zhang ZA estimate' ) 
         elif key in self.ZC_keys and 'ZC' in self.ecdfs : 
             result = self.result  ( 'ZC' )
             ecdf   = self.ecdfs   [ 'ZC' ]
-            logger.info ( 'Toy resuls for ZK estimate' ) 
+            logger.info ( 'Toy resuls for Zhang ZC estimate' ) 
         else :
             raise KeyError (  "draw: Invalid `what`:%s" % what )
             
@@ -579,8 +580,9 @@ class Summary(object) :
         ## 
         line.SetLineWidth ( 4 ) 
         line.SetLineColor ( 8 ) 
-        line.draw()
-        ## 
+        line.draw('same')
+        ##
+        self._line = line 
         return result, line  
 
 # =============================================================================
