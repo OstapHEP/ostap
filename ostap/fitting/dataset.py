@@ -69,7 +69,7 @@ _minv = -0.99 * sys.float_info.max
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _rad_iter_ ( self ) :
-    """Iterator for RooAbsData
+    """ Iterator for RooAbsData
     >>> dataset = ...
     >>> for entry,weight  in dataset : ... 
     - for unweighted datatsets, `weight` is `None`
@@ -91,7 +91,7 @@ def _rad_loop_ ( dataset                ,
                  first     = 0          ,
                  last      = LAST_ENTRY ,
                  progress = False       ) :
-    """Iterator for `good' events  in dataset
+    """ Iterator for `good' events  in dataset
     >>> dataset = ...
     >>> for index, entry, weight in dataset.loop ( ''pt>1' ) :
     >>>    print (index, entry, weight) 
@@ -157,7 +157,7 @@ ROOT.RooAbsData.loop = _rad_loop_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-03-31
 def _rad_getitem_ ( data , index ) :
-    """Get the entry from RooDataSet
+    """ Get the entry from RooDataSet
 
     >>> dataset  = ... 
     >>> event, weight  = dataset [4]                 ## index 
@@ -205,10 +205,9 @@ def _rad_getitem_ ( data , index ) :
         if 1 == step and start <= stop : return data.reduce ( ROOT.RooFit.EventRange ( start , stop ) ) ## RETURN 
         index = range ( start , stop , step ) 
 
-    ## require sequence of indices hee 
+    ## require sequence of indices here 
     if not isinstance ( index , sequence_types ) :
         raise IndexError ( "Invalid type of `index':%s" % type ( index ) )
-
 
     weighted          = data.isWeighted                     ()
     store_errors      = weighted and data.store_errors      ()
@@ -223,7 +222,7 @@ def _rad_getitem_ ( data , index ) :
         ## if not isinstance ( j , integer_types ) :
         ##    raise IndexError ( 'Invalid index [%s]=%s/%s' % ( i , j , type ( j ) ) )
         
-        j = int ( j )            ## the content must be convertible to integers 
+        j = int ( j )            ## the content must be convertible to integer 
         if j < 0 : j += N        ## allow `slightly-negative' indices             
         if not 0 <= j < N :      ## adjusted integer in the proper range ?
             raise IndexError ( 'Invalid index [%s]=%s,' % ( i , j ) ) 
@@ -274,7 +273,7 @@ def _rad_weight_errors ( data , *etype ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-03-31
 def _rad_vlist_ ( self ) :
-    """Get variables in form of RooArgList 
+    """ Get variables in form of RooArgList 
     """
     vlst     = ROOT.RooArgList()
     vset     = self.get()
@@ -287,11 +286,11 @@ def _rad_vlist_ ( self ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-03-31
 def _rad_contains_ ( self , aname ) :
-    """Check the presence of variable in dataset    
+    """ Check the presence of variable in dataset    
     >>> if 'mass' in dataset : print 'ok!'
     """
     if isinstance ( aname , integer_types ) :
-        return 0<= aname < len ( self )
+        return 0 <= aname < len ( self )
     
     vset = self.get()
     return aname in vset 
@@ -535,7 +534,7 @@ def  _rad_mod_ ( self , fraction ) :
         res = self.emptyClone()
         s    = slice ( 0 , -1 , fraction )
         for i in range ( *s.indices ( len ( self ) ) ) : 
-            res.add ( self[i] ) 
+            res.add ( self [ i ] ) 
         return res 
         
     elif 1 == fraction : return self.clone      ()
@@ -658,7 +657,7 @@ def _rds_sub_ ( dataset , what ) :
 #      ...
 #  @endcode
 #  @see Ostap::MoreRooFit::delete_data
-def _rds_jackknife_ ( dataset , first = 0 , last = LAST_ENTRY , delete = False ) :
+def _rds_jackknife_ ( dataset , first = 0 , last = LAST_ENTRY , delete = False , progress = False ) :
     """ Jackknife generator
 
     >>> dataset = ...
@@ -681,9 +680,8 @@ def _rds_jackknife_ ( dataset , first = 0 , last = LAST_ENTRY , delete = False )
     - see `Ostap.MoreRooFit.delete_data`
 
     """
-    first , last = evt_range ( len ( dataset ) , first , last )
-    
-    for i in range ( first , last ) :
+    first , last = evt_range ( len ( dataset ) , first , last )    
+    for i in progress_bar ( range ( first , last ) , silent = not progress ) :
         ds = dataset - i                    ## this is the line! 
         yield ds
         if delete :
@@ -710,7 +708,7 @@ def _rds_jackknife_ ( dataset , first = 0 , last = LAST_ENTRY , delete = False )
 #  for ds in dataset.bootstrap ( 100 , delete = True ) :
 #      ...
 #  @endcode 
-def _rds_bootstrap_ ( dataset , size = 100 , extended = False , delete = False ) :
+def _rds_bootstrap_ ( dataset , size = 100 , extended = False , delete = False , progress = False ) :
     """ Boostrap generator:
 
     >>> dataset = ...
@@ -732,11 +730,9 @@ def _rds_bootstrap_ ( dataset , size = 100 , extended = False , delete = False )
     >>>     ... 
     """
     from   ostap.stats.bootstrap  import bootstrap_indices, extended_bootstrap_indices 
-
     N    = len ( dataset )
-    bgen = bootstrap_indices ( N , size = size ) if not extended else extended_bootstrap_indices ( N , size = size )
-    
-    for indices in bgen :
+    bgen = bootstrap_indices ( N , size = size ) if not extended else extended_bootstrap_indices ( N , size = size )    
+    for indices in progress_bar ( bgen , silent = not progress , max_value = N ) :
         ds = dataset [ indices ] 
         yield ds
         if delete :
@@ -775,13 +771,13 @@ def _rad_sample_ ( self , num ) :
 ## get (random) sub-sample from the dataset with replacement 
 #  @code
 #  data   = ...
-#  subset =  data.choince ( 100  )  ## get 100   events 
-#  subset =  data.choince ( 0.01 )  ## get 1% of events 
+#  subset =  data.choice ( 100  )  ## get 100   events 
+#  subset =  data.choice ( 0.01 )  ## get 1% of events 
 #  @endcode 
 def _rad_choice_ ( self , num ) :
     """ Get (random) sub-sample from the dataset with replacement 
     >>> data   = ...
-    >>> subset =  data.chince ( 100  )  ## get 100   events 
+    >>> subset =  data.choice ( 100  )  ## get 100   events 
     >>> subset =  data.choice ( 0.01 )  ## get 1% of events 
     """
     N = len ( self )     
@@ -886,17 +882,18 @@ def _rad_subset_ ( dataset                 ,
     return dataset.reduce ( *args ) 
 
 # =============================================================================
-## helper technical method to seek for unique or duplicated entries
-def _rds_seek_for_duplicates_ ( dataset          , 
-                                entrytag         , 
-                                criterium = ''   ) : 
-    """ Helper technical method to seek for unique or duplicated entries
+## helper technical method to seek for unique and/or duplicated entries
+def _rds_seek_for_duplicates_ ( dataset           , 
+                                entrytag          , 
+                                criterium = ''    ,
+                                progress  = False ) : 
+    """ Helper technical method to seek for unique and/or duplicated entries
     """
     
     if   isinstance ( entrytag , ROOT.RooAbsArg ) : entrytag = [ entrytag ]
     elif isinstance ( entrytag , string_types   ) : entrytag = [ entrytag ]
     
-    assert isinstance ( entrytag , sequence_types ) , 'Invalid "enttytag" %s' % str ( entrytag )
+    assert isinstance ( entrytag , sequence_types ) , 'Invalid "entrytag" %s' % str ( entrytag )
 
     fields = [] 
     for e in entrytag :
@@ -929,8 +926,11 @@ def _rds_seek_for_duplicates_ ( dataset          ,
     if crit_var : content = lambda i : ( float ( crit_var ) , i )
     else        : content = lambda i : ( 0                  , i )
     
-    ## make a loop over dataset 
-    for i, e in enumerate ( dataset ) :
+    ## make a loop over dataset
+    for i, e in progress_bar ( enumerate ( dataset ) ,
+                               max_value   = len ( dataset ) ,
+                               description = '!st loop:'     , 
+                               silent      = not progress    ) : 
 
         entry = tuple (  float ( v ) for v in tag ) 
         snapshot [ entry ].append ( content ( i )  ) 
@@ -943,17 +943,23 @@ def _rds_seek_for_duplicates_ ( dataset          ,
 #  for group in dataset.duplicates ( ( 'evt' , 'run' ) ) :
 #  ... for entry in group :
 #  ... ...
-def _rds_duplicates_ ( dataset  ,
-                       entrytag ) :
+def _rds_duplicates_ ( dataset          ,
+                       entrytag         ,
+                       progress = False ) :
     """ Iterator over the duplicated groups 
-    >>> for group in dataset.duplicats ( ( 'evt' , 'run' ) ) :
+    >>> for group in dataset.duplicates ( ( 'evt' , 'run' ) ) :
     >>> ... for entry in group :
     >>> ... ...
     """
     snapshot = _rds_seek_for_duplicates_ ( dataset              ,
                                            entrytag  = entrytag ,
-                                           criterium = ''       ) 
-    for e, lst in loop_items ( snapshot ) :
+                                           criterium = ''       ,
+                                           progress  = progress )
+    
+    for e, lst in progress_bar ( loop_items ( snapshot ) ,
+                                 max_value   = len ( snapshot ) ,
+                                 description = '2nd loop:'      ,
+                                 silent      = not progress     ) : 
         if 2 <= len ( lst ) :
             yield tuple ( sorted ( l [ 1 ] for l in lst ) ) 
             
@@ -972,12 +978,13 @@ def _rds_duplicates_ ( dataset  ,
 #  for ientry in dataset.unique_entries ( ( 'evt' , 'run' ) , choice = 'min'  , criterium = 'PT') :
 #  ...
 #  @endcode
-def _rds_unique_entries_ ( dataset          ,
-                           entrytag         ,
-                           choice           , 
-                           criterium = ''   , 
-                           seed      = None ,
-                           report    = True ) :
+def _rds_unique_entries_ ( dataset           ,
+                           entrytag          ,
+                           choice            , 
+                           criterium = ''    , 
+                           seed      = None  ,
+                           progress  = False , 
+                           report    = True  ) :
     
     if criterium  :
         assert choice in ( 'min' , 'max' , 'minimal' , 'maximal' , 'minimum' , 'maximum' ) , \
@@ -988,7 +995,8 @@ def _rds_unique_entries_ ( dataset          ,
  
     snapshot = _rds_seek_for_duplicates_ ( dataset               ,
                                            entrytag  = entrytag  ,
-                                           criterium = criterium ) 
+                                           criterium = criterium ,
+                                           progress  = progress  ) 
 
     choice = choice.lower()
     
@@ -1004,7 +1012,10 @@ def _rds_unique_entries_ ( dataset          ,
 
         cnt    = SE ()
         unique = 0 
-        for e, lst in loop_items ( snapshot ):
+        for e, lst in progress_bar ( loop_items ( snapshot )        ,
+                                     max_value   = len ( snapshot ) ,
+                                     description = '2nc loop:'      ,
+                                     silent      = not progress     ) : 
 
             unique += 1
             
@@ -1018,7 +1029,7 @@ def _rds_unique_entries_ ( dataset          ,
             elif minv      : yield min ( lst ) [ 1 ]
             elif maxv      : yield max ( lst ) [ 1 ]
                 
-    if report :
+    if report or progress :
         title = 'Unique'
         rows  = [ ( '' , 'value' ) ]
         row   =  'Total       entries'      , '%d' % len ( dataset )
@@ -1045,12 +1056,13 @@ def _rds_unique_entries_ ( dataset          ,
 #  unique = dataset.make_unique ( ( 'evt' , 'run' ) , choice = 'max' , criterium = 'PT' )
 #  @endcode
 #  - CPU performance is more or less reasonable up to dataset with 10^7 entries 
-def _rds_make_unique_ ( dataset          ,
-                        entrytag         ,
-                        choice           , 
-                        criterium = ''   , 
-                        seed      = None ,
-                        report    = True ) :
+def _rds_make_unique_ ( dataset           ,
+                        entrytag          ,
+                        choice            , 
+                        criterium = ''    , 
+                        seed      = None  ,
+                        progress  = False , 
+                        report    = True  ) :
     """ Make a copy of dataset only with unique  entries 
     >>> dataset = ...
     >>> unique = dataset.make_unique ( ( 'evt' , 'run' ) , choice = 'random' )
@@ -1065,12 +1077,12 @@ def _rds_make_unique_ ( dataset          ,
     store_errors      = weighted and dataset.store_errors      ()
     store_asym_errors = weighted and dataset.store_asym_errors ()
 
-    
     ds       = dataset.emptyClone()
     for index in dataset.unique_entries ( entrytag  = entrytag  ,
                                           choice    = choice    ,
                                           criterium = criterium ,
                                           seed      = seed      ,
+                                          progress  = progress  , 
                                           report    = report    ) :
 
         entry, weight = dataset [ index ]
@@ -3285,17 +3297,16 @@ _new_methods_ += [
     ]
 
 # ============================================================================
-
-
-
-# ============================================================================
-try : 
+try : # ======================================================================
+    # ========================================================================
     from numpy import array as _array 
-    def get_result ( data ) : return _array (  data , dtype = float ) 
-except ImportError :
+    def get_result ( data ) : return _array (  data , dtype = float )
+    # =======================================================================
+except ImportError : # ======================================================
+    # =======================================================================
     from array import array as _array 
     def get_result ( data ) : return _array ( 'd' , data )
-
+    # = =====================================================================
 # ===========================================================================
 ## Iterator for rows in dataset
 #  @code
