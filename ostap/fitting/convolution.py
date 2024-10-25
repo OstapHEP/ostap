@@ -160,13 +160,15 @@ class Convolution(object):
 
         name = name if name else PDF1.generate_name ( prefix = 'cnv_%s@%s' % ( pdf.name , self.resolution.name ) )
         self.__name = name
-        
-        if self.useFFT : ## Use Fast Fourier transform  (fast)
+
+        # =====================================================================
+        if self.useFFT : ## Use Fast Fourier transform  (fast) # ==============
+            # =================================================================
             
             assert isinstance ( nbins  , integer_types ) and 500   <  abs ( nbins  )  , \
-                   "Invalid ``nbins''  parameter %s/%s for fast Fourier transform"  % ( nbins  , type ( nbins  ) )
+                   "Invalid `nbins'  parameter %s/%s for fast Fourier transform"  % ( nbins  , type ( nbins  ) )
             assert isinstance ( buffer ,  float        ) and 0.03  <= buffer <=0.9    , \
-                   "Invalid ``buffer'' parameter %s/%s for ``setBufferFraction''"   % ( buffer , type ( buffer ) )
+                   "Invalid `buffer' parameter %s/%s for `setBufferFraction'"   % ( buffer , type ( buffer ) )
 
             ## adjust #bins if positive. keep it as it is if negavtive 
             if hasattr ( self.__resolution , 'sigma' ) and self.__xvar.minmax() and  self.__nbins > 0 :
@@ -196,11 +198,13 @@ class Convolution(object):
             ## set shift-parameters
             if ( not self.shift1 is None ) and ( not self.shift2 is None ) :             
                 self.__pdf.setShift ( self.shift1 , self.shift2 )
-            
-        else :           ##  Use plain numerical integration (could be slow)
+
+            # =================================================================
+        else : ##  Use plain numerical integration (could be slow) # ==========
+            # =================================================================
             
             assert isinstance ( nsigmas  , num_types ) and 2.5 <= nsigmas , \
-                   "Invalid ``nsigmas''  parameter  %s/%s for ``setConvolutionWindow''"  % ( nsigmas , type ( nsigmas ) )
+                   "Invalid `nsigmas'  parameter  %s/%s for ``setConvolutionWindow''"  % ( nsigmas , type ( nsigmas ) )
             
             self.__pdf = ROOT.RooNumConvPdf (
                 self.old_pdf.new_roo_name ( 'numcnv' ) ,

@@ -21,16 +21,13 @@ __all__     = (
 # =============================================================================
 from   builtins          import range
 # =============================================================================
-try :
-    
+try : # =======================================================================
+    # =========================================================================
     import numpy as np
-
-    if hasattr ( np.random , 'default_rng' ) : 
-        np_rng = np.random.default_rng () 
-    else :
-        np_rng = np.random
-        
-    # ============================================================================
+    # =========================================================================
+    if hasattr ( np.random , 'default_rng' ) : np_rng = np.random.default_rng () 
+    else                                     : np_rng = np.random
+    # =========================================================================
     ## generate bootstrap samples 
     #  @code
     #  data = ...
@@ -45,7 +42,7 @@ try :
     #      sample = data [ indices ]
     #  @endcode
     def bootstrap ( data , size = 100 ) :
-        """Generate bootstrap samples
+        """ Generate bootstrap samples
         >>> data = ...
         >>> for ds in bootstrap ( data , size = 100 ) :
         >>> ,,,
@@ -73,7 +70,7 @@ try :
     #      sample = data [ indices ]
     #  @endcode        
     def extended_bootstrap ( data , size ) :
-        """Generate "extended" bootstrap
+        """ Generate "extended" bootstrap
         >>> data = ...
         >>> for ds = extended_bootstrap ( data , size = 25 ) :
         - Generate indices for bootstrap samples:
@@ -85,13 +82,12 @@ try :
         N    = len ( data )
         for i in range ( size ) :
             yield np_rng.choice ( data , size = np_rng.poisson ( N )  )
-
-except ImportError :
-
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     import random
-    from   ostap.utils.utils import choices
-    
-    # ============================================================================
+    from   ostap.utils.utils import choices    
+    # =========================================================================
     ## Generate bootstrap samples 
     #  @code
     #  data = ...
@@ -106,7 +102,7 @@ except ImportError :
     #      sample = data [ indices ]
     #  @endcode
     def bootstrap ( data , size = 100 ) :
-        """Generate bootstrap samples 
+        """ Generate bootstrap samples 
         >>> data = ...
         >>> for ds in bootstrap ( data , size = 100 ) :
         >>> ,,,
@@ -136,7 +132,7 @@ except ImportError :
     #      sample = data [ indices ]
     #  @endcode        
     def extended_bootstrap ( data , size ) :
-        """Generate "extended" bootstrap
+        """ Generate "extended" bootstrap
         >>> data = ...
         >>> for ds = extended_bootstrap ( data , size = 25 ) :
         - Generate indices for bootstrap samples:
@@ -175,7 +171,7 @@ def bootstrap_indices ( N , size = 100 ) :
 def extended_bootstrap_indices ( N , size = 100 ) :
     """ Generate indices for bootstrap  samples:
     >>> data = ...
-    >>> for indices  in bootstrap_indices ( N , size = 100  ) :
+    >>> for indices  in extended_bootstrap_indices ( N , size = 100  ) :
     >>> ... sample = data [ indices ]
     """
     for indices in extended_bootstrap ( range ( N ) , size ) :

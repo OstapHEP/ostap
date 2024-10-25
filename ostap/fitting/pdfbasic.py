@@ -5215,15 +5215,13 @@ class Flat3D(PDF3) :
             'title'    : title     ,             
             }
         
-
-
 # =============================================================================
 ## @class Constrained
 #  Helper mixin/base class for creation of constrained PDFs
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date 2023-04-18
 class Constrained(object) :
-    """ Helper mixin/base class for ceation of constrained PDFs"""
+    """ Helper mixin/base class for creation of constrained PDFs"""
     def __init__  ( self , original , constraints ) :
 
         assert isinstance  ( original , APDF1 ) , '"original" must be APDF1!'
@@ -5262,7 +5260,6 @@ class Constrained(object) :
 
         self.__constraints     = self.constraints     + tuple ( cnts1 + cnts2 )
         self.__arg_constraints = self.arg_constraints + tuple ( cnts          )
-        
         
         self.__pdflst = ROOT.RooArgList ( self.original_pdf.roo_pdf )
         for c in self.constraints : self.__pdflst.add ( c )

@@ -478,7 +478,7 @@ def data_statvector ( data        ,
 def data_sum ( data        ,
                expressions ,
                cuts   = '' , *args ) :
-    """Get (weighted) sum over the variables 
+    """ Get (weighted) sum over the variables 
     >>> data    = ...
     >>> result  = data_sum ( data , 'x/y+z' , '0<qq' )
     >>> results = data_sum ( data , 'x/y;z' , '0<qq' ) ## result is dictionary

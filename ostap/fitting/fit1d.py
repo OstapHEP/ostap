@@ -51,7 +51,7 @@ else                       : logger = getLogger ( __name__              )
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 class Flat1D(PDF1) :
-    """The most trival 1D-model - constant
+    """ The most trival 1D-model - constant
     >>> pdf = Flat1D ( 'flat' , xvar = ... )
     """
     def __init__ ( self , xvar , name = '' , title = '' ) :
@@ -77,7 +77,7 @@ class Flat1D(PDF1) :
 #  It is just a small wrapper for <code>ROOT.RooAddPdf</code>
 #  @see RooAddPdf 
 class Sum1D (PDF1,Fractions) :
-    """Non-extended sum of several PDFs:    
+    """ Non-extended sum of several PDFs:    
     It is just a small wrapper for <code>ROOT.RooAddPdf</code>
     - see RooAddPdf     
     >>> sum  = Sum1D ( [ pdf1 , pdf2 , pdf3 ]  )     
@@ -140,7 +140,7 @@ def checkMean() :
 ## @class CheckMean 
 #  Helper contex manager to enable/disable check for the mean/location-values
 class CheckMean(object) :
-    """Helper contex manager to enable/disable check for the mean/location-values
+    """ Helper contex manager to enable/disable check for the mean/location-values
     """
     def __init__  ( self , check ) :
         self.__check = True if check else False 
@@ -162,7 +162,7 @@ class CheckMean(object) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
 class PEAKMEAN(PDF1) :
-    """Helper base class for implementation of various pdfs
+    """ Helper base class for implementation of various pdfs
     It is useful for 'peak-like' distributions, where one can talk about
     - 'mean/location'
     - it defines alias `mass` for `xvar`
@@ -269,7 +269,7 @@ class PEAKMEAN(PDF1) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
 class PEAK(PEAKMEAN) :
-    """Helper base class for implementation of various pdfs
+    """ Helper base class for implementation of various signal-like pdfs
     It is useful for 'peak-like' distributions, where one can talk about
     - 'mean/location'
     - 'sigma/width/scale' 
@@ -516,7 +516,7 @@ class RESOLUTION(PEAK) :
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2020-07-20
 class Histo1D_pdf(PDF1) :
-    """Use histgram as PDF
+    """ Use histgram as PDF
     - see `Ostap.Models.Histo1D
     """
         
@@ -633,7 +633,7 @@ class Shape1D_pdf(PDF1) :
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
 class H1D_pdf(PDF1) :
-    """Simple convertor of 1D-histogram into PDF
+    """ Simple convertor of 1D-histogram into PDF
     """
     def __init__ ( self            ,
                    name            ,
@@ -734,7 +734,7 @@ class H1D_pdf(PDF1) :
 #  cpdf = Constrained1D ( opdf1 , consraints )
 #  @endcode
 class Constrained1D(PDF1,Constrained) :
-    """PDF1 with constraints
+    """ PDF1 with constraints
     >>> opdf1 = ...
     >>> constrains = cpdf1, cpdf2, cpdf3
     >>> cpdf = Constrained1D ( opdf1 , consraints )
@@ -771,9 +771,8 @@ class Constrained1D(PDF1,Constrained) :
         
     ## access to attributes of original PDF
     def __getattr__ ( self , attr ) :
-        """Delegate the access to missing attribite to the original (unconstrained) PDF"""
+        """ Delegate the access to missing attributes to the original (unconstrained) PDF"""
         return getattr ( self.original_pdf , attr ) 
-
 
 # =============================================================================
 ## @class Fit1D

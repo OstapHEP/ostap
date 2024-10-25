@@ -488,7 +488,7 @@ def pdf_product ( pdf1 , pdf2 ) :
 ## Make an non-extended  sum of the 1D PDFs
 #  @see Sum1D
 def pdf1_sum ( pdf1 , pdf2 , *other ) :
-    """Make an non-extended  sum of the 1D PDFs
+    """ Make an non-extended  sum of the 1D PDFs
     - see Sum1D
     """
     if   isinstance ( pdf2 , PDF1 ) : pass 
@@ -513,7 +513,7 @@ def pdf1_sum ( pdf1 , pdf2 , *other ) :
 ## Make an non-extended  sum of the 2D PDFs
 #  @see Sum2D
 def pdf2_sum ( pdf1 , pdf2 , *other ) :
-    """Make an non-extended  sum of the 2D PDFs
+    """ Make an non-extended  sum of the 2D PDFs
     - see Sum2D
     """
     if   isinstance ( pdf2 , PDF2 ) : pass 
