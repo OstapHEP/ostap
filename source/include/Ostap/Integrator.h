@@ -92,9 +92,9 @@ namespace Ostap
       // ======================================================================
       /// constructor with integration workspace size
       Integrator
-      ( const std::size_t    size         = 0  , 
-        const unsigned short size_cquad   = 0  ,
-        const unsigned short size_romberg = 0  ) ;
+      ( const std::size_t    size         = 0 , 
+        const unsigned short size_cquad   = 0 ,
+        const unsigned short size_romberg = 0 ) ;
       // ======================================================================
       /// constructor with integration workspace
       Integrator
@@ -108,7 +108,7 @@ namespace Ostap
       /** calculate the integral 
        *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
        *  @param f1 the function 
-       *  @param xmin lower integration edge 
+       *  @param xmin lower  integration edge 
        *  @param xmax upper  integration edge
        *  @param tag  uqniue label/tag  
        *  @param rescale rescale function for better numerical precision  
@@ -174,7 +174,7 @@ namespace Ostap
        *  @param f1 the function 
        *  @param xmax upper  integration edge
        *  @param integration workspace 
-       *  @param tag     unuque label/tag 
+       *  @param tag     unique label/tag 
        *  @return the value of the integral 
        */
       template <class FUNCTION1>
@@ -196,7 +196,7 @@ namespace Ostap
        *  @param c       the parameter 
        *  @param xmin    lower integration edge 
        *  @param xmax    upper integration edge 
-       *  @param tag     unuque label/tag 
+       *  @param tag     unique label/tag 
        *  @param rescale rescale function for better numerical treatmenrt 
        *  @return the value of the integral 
        */
@@ -221,7 +221,7 @@ namespace Ostap
        *  @param f1 the function 
        *  @param c  the parameter 
        *  @param xmin lower integration edge 
-       *  @param tag     unuque label/tag 
+       *  @param tag     unique label/tag 
        *  @param rescale rescale function for better numerical treatmenrt 
        *  @return the value of the integral 
        */
@@ -247,7 +247,7 @@ namespace Ostap
        *  @param f1 the function 
        *  @param c  the parameter 
        *  @param xmax upper integration edge 
-       *  @param tag     unuque label/tag 
+       *  @param tag     unique label/tag 
        *  @param rescale rescale function for better numerical treatmenrt 
        *  @return the value of the integral 
        */
@@ -278,7 +278,7 @@ namespace Ostap
        *  @param f1      the function 
        *  @param c       the parameter 
        *  @param ws      integration workspace 
-       *  @param tag     unuque label/tag 
+       *  @param tag     unique label/tag 
        *  @param rescale rescale function for better numerical precision  
        *  @param aprecision absolute precision  (if non-positive s_APRECISION_GAWC is used) 
        *  @param aprecision relative precision  (if non-positive s_RPRECISION_GAWC is used) 
@@ -314,7 +314,7 @@ namespace Ostap
        *  @param xmin low integration edge 
        *  @param n   number of subtractions 
        *  @see Ostap::Math::Integrtator::cauchy_pv_to_infinity 
-       *  @param tag     unuque label/tag 
+       *  @param tag     unique label/tag 
        *  @param rescale rescale function for better numerical treatmenrt 
        *  @return the value of the integral 
        */
@@ -856,7 +856,7 @@ namespace Ostap
        *  @param xmin    lower integration edge 
        *  @param xmax    upper  integration edge 
        *  @param ws      integration workspace 
-       *  @param tag     unuque label/tag 
+       *  @param tag     unique label/tag 
        *  @param rescale rescale function for better numerical precision  
        */
       template <class FUNCTION1>
@@ -882,7 +882,7 @@ namespace Ostap
        *  @param c  the parameter 
        *  @param xmin lower integration edge 
        *  @param ws      integration workspace 
-       *  @param tag     unuque label/tag 
+       *  @param tag     unique label/tag 
        *  @param rescale rescale function for better numerical precision  
        */
       template <class FUNCTION1>
@@ -908,7 +908,7 @@ namespace Ostap
        *  @param c  the parameter 
        *  @param xmax upper integration edge 
        *  @param integration workspace 
-       *  @param tag     unuque label/tag 
+       *  @param tag     unique label/tag 
        *  @param rescale rescale function for better numerical precision  
        */
       template <class FUNCTION1>
@@ -951,7 +951,7 @@ namespace Ostap
        *  @param f1      the function 
        *  @param c       the parameter 
        *  @param ws      integration workspace 
-       *  @param tag     unuque label/tag 
+       *  @param tag     unique label/tag 
        *  @param rescale rescale function for better numerical precision  
        *  @param aprecision absolute precision  (if non-positive s_APRECISION_QAWC is used) 
        *  @param aprecision relative precision  (if non-positive s_RPRECISION_QAWC is used) 
@@ -981,7 +981,7 @@ namespace Ostap
        *  @param s  s-parameter 
        *  @param xmin  lower integration range 
        *  @param n     number of subtracion
-       *  @param tag     unuque label/tag 
+       *  @param tag     unique label/tag 
        *  @param rescale rescale function for better numerical precision  
        *  @return value of the dispersion integral 
        *  @see Ostap::Math::Integrator::cauchy_pv_to_infinity 
@@ -1179,7 +1179,7 @@ namespace Ostap
        *  @param xmin    lower integration edge 
        *  @param xmax    upper  integration edge 
        *  @param ws      integration workspace 
-       *  @param tag     unuque label/tag 
+       *  @param tag     unique label/tag 
        *  @param rescale rescale function for better numerical precision  
        *  @param aprecision absolute precision  (if non-positive s_APRECISION_QAWC is used) 
        *  @param aprecision relative precision  (if non-positive s_RPRECISION_QAWC is used) 
@@ -1207,7 +1207,7 @@ namespace Ostap
        *  @param c  the parameter 
        *  @param xmin lower integration edge 
        *  @param ws      integration workspace 
-       *  @param tag     unuque label/tag 
+       *  @param tag     unique label/tag 
        *  @param rescale rescale function for better numerical precision  
        *  @param aprecision absolute precision
        *  @param aprecision relative precision
@@ -1231,7 +1231,7 @@ namespace Ostap
        *  @param c  the parameter 
        *  @param xmax upper integration edge 
        *  @param integration workspace 
-       *  @param tag     unuque label/tag 
+       *  @param tag     unique label/tag 
        *  @param rescale rescale function for better numerical precision  
        *  @param aprecision absolute precision 
        *  @param aprecision relative precision 
@@ -1272,7 +1272,7 @@ namespace Ostap
        *  @param f1      the function 
        *  @param c       the parameter 
        *  @param ws      integration workspace 
-       *  @param tag     unuque label/tag 
+       *  @param tag     unique label/tag 
        *  @param rescale rescale function for better numerical precision  
        *  @param aprecision absolute precision  (if non-positive s_APRECISION_QAWC is used) 
        *  @param aprecision relative precision  (if non-positive s_RPRECISION_QAWC is used) 
@@ -1297,7 +1297,7 @@ namespace Ostap
        *  @param s  s-parameter 
        *  @param xmin  lower integration range 
        *  @param n     number of subtracion
-       *  @param tag     unuque label/tag 
+       *  @param tag     unique label/tag 
        *  @param rescale rescale function for better numerical precision  
        *  @param aprecision absolute precision 
        *  @param aprecision relative precision 
