@@ -8,7 +8,8 @@
   1. Add Anderson-Darling and Cramer-von-Mises Two Sample Tests
   1. Add progress bar to methdos dealing with unique/duplicated entries in dataset
   1. Add Hilbert transform
-        
+  1. Add Laplace transform
+          
 ## Backward incompatible
 
 ## Bug fixes

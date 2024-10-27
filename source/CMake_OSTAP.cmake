@@ -35,6 +35,7 @@ add_library(ostap SHARED src/format.cpp
                          src/GSL_sentry.cpp 
                          src/GSL_utils.cpp 
                          src/Hesse.cpp
+                         src/Hilbert.cpp
                          src/HistoDump.cpp
                          src/HistoHash.cpp
                          src/HistoInterpolation.cpp
@@ -48,6 +49,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Iterator.cpp
                          src/Kinematics.cpp
                          src/KramersKronig.cpp
+                         src/Laplace.cpp
                          src/Lomont.cpp
                          src/LorentzVectorWithError.cpp
                          src/Math.cpp
