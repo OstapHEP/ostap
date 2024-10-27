@@ -2847,6 +2847,38 @@ Ostap::Math::chebyshev_sum
 
 
 
+
 // ============================================================================
-// The END  
+// constructor: assert  that alpha>-0.5
+// ============================================================================
+Ostap::Math::GegenbauerBase::GegenbauerBase
+( const double alpha )
+  : m_alpha ( alpha )
+{
+  Ostap::Assert ( -0.5 < m_alpha  ,
+                  "Invalid 'alpha' for Gegenbauer Polynomials"
+                  "Ostap::Math::GegenbauerBase" ) ;
+}
+// ============================================================================
+/* constructor: 
+ * - assert  that alpha>-1 
+ * - assert  that beta>-1 
+ */
+// ============================================================================
+Ostap::Math::JacobiBase::JacobiBase
+( const double alpha ,
+  const double beta  )
+  : m_alpha ( alpha )
+  , m_beta  ( beta  )
+{
+  Ostap::Assert ( -1 < m_alpha && -1 < m_beta ,
+                  "Invalid 'alpha,beta' for Jacobi Polynomials"
+                  "Ostap::Math::JacobiBase" ) ;
+}
+// ============================================================================
+
+
+
+// ============================================================================
+//                                                                      The END  
 // ============================================================================

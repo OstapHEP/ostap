@@ -27,14 +27,11 @@
  *  - Legendre 
  *  - Associate Legendre
  *  - Hermite
+ *  - ... 
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2010-04-19
  */
 // ===========================================================================
-// #ifndef M_PIl
-// #define M_PIl 0xc.90fdaa22168c235p-2L
-// #endif
-// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
@@ -319,8 +316,6 @@ namespace Ostap
     inline double Chebyshev_<N>::integral ( ) 
     { return 1 == N % 2 ? 0 : 2.0 / ( 1.0 - N * N ) ; }
     // ========================================================================
-    
-    // ========================================================================
     //  Chebyshev 2nd kind 
     // ========================================================================
     template <unsigned int N> class  ChebyshevU_ ;
@@ -423,8 +418,6 @@ namespace Ostap
     inline double Chebyshev_<N>::derivative ( const double x ) 
     { return N * ChebyshevU_<N-1>::evaluate ( x ) ; }
     // ========================================================================
-
-    // ========================================================================
     //  Chebyshev 3rd kind 
     // ========================================================================
     template <unsigned int N> class  Chebyshev3_ ;
@@ -506,8 +499,6 @@ namespace Ostap
         detail::make_array ( root , std::make_index_sequence<N>() ) ;
       return s_roots ;
     }
-    // ========================================================================
-
     // ========================================================================
     //  Chebyshev 4th kind 
     // ========================================================================
@@ -1048,6 +1039,294 @@ namespace Ostap
       const double       x ) 
     { return  detail::plegendre_eval_ ( L  , M , x ) ; }
     // ========================================================================
+    // Bessel polynomials 
+    // ========================================================================
+    /** evaluate Bessel polynomial \f$ y_N(x)\f$ 
+     *  @see https://en.wikipedia.org/wiki/Bessel_polynomials
+     */
+    inline double besselpol_value
+    ( const unsigned int N ,
+      const double       x )
+    {
+      if      ( 0 == N ) { return     1 ; }
+      else if ( 1 == N ) { return x + 1 ; }
+      ///
+      long double ym2 =     1 ;
+      long double ym1 = x + 1 ;
+      long double yn  = ym1   ;
+      for ( unsigned short n = 2 ; n <= N ; ++n )
+        {
+          yn = ( 2 * n - 1 ) * ym1 * x + ym2 ;
+          ym2 = ym1 ;
+          ym1 = yn  ;
+        }
+      return yn ;
+    }
+    // =========================================================================
+    // Bessel polynomial  
+    // ========================================================================
+    template <unsigned int N> class Bessel_  ;
+    // ========================================================================
+    /// Generic 
+    template <unsigned int N>
+    class Bessel_
+    {
+    public:
+      // ======================================================================
+      /// evaluate it!
+      inline double operator () ( const double x ) const
+      {
+        long double ym2 =     1 ;
+        long double ym1 = x + 1 ;
+        long double yn  = ym1   ;
+        for ( unsigned short n = 2 ; n <= N ; ++n )
+          {
+            yn = ( 2 * n - 1 ) * ym1 * x + ym2 ;
+            ym2 = ym1 ;
+            ym1 = yn  ;
+          }
+        return yn ;
+      }
+      // ======================================================================      
+    } ;
+    // ========================================================================
+    /// specialization for N=0
+    template <>
+    class Bessel_<0>
+    {
+    public:
+      // ======================================================================
+      /// evaluate it!
+      inline double operator () ( const double /* x */ ) const { return 1 ; }
+      // ======================================================================      
+    } ;
+    // ========================================================================
+    /// specialization for N=1
+    template <>
+    class Bessel_<1>
+    {
+    public:
+      // ======================================================================
+      /// evaluate it!
+      inline double operator () ( const double x ) const { return x + 1 ; }
+      // ======================================================================      
+    } ;    
+    // ========================================================================
+    // Gegenbauer polymonials
+    // ========================================================================
+    class GegenbauerBase
+    {
+    public:
+      // ======================================================================
+      /** constructor: 
+       *  - assert alpha>-0.5
+       */
+      GegenbauerBase ( const double alpha ) ;
+      /// no default constructor!
+      GegenbauerBase () = delete ; /// no default constructor!      
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the value of alpha-parameter
+      double alpha () const { return m_alpha ; }
+      // ======================================================================
+    protected: 
+      // ======================================================================
+      long double m_alpha ; // value of alpha parameter 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class Gegenbauer_ 
+     *  Gegenbauer polynomials 
+     *  @see https://en.wikipedia.org/wiki/Gegenbauer_polynomials
+     */
+    template <unsigned int N> class Gegenbauer_ ;
+    // ========================================================================
+    // Generic Gegenbauer polynomial 
+    template <unsigned int N>
+    class Gegenbauer_ : public GegenbauerBase 
+    {
+    public:
+      // ======================================================================
+      Gegenbauer_ ( const double alpha = 0 ) : GegenbauerBase ( alpha ) {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate it!
+      inline double operator () ( const double x ) const
+      {
+        long double ym2 =               1 ;
+        long double ym1 = 2 * m_alpha * x ;
+        long double yn  = ym1   ;
+        for ( unsigned short n = 2 ; n <= N ; ++n )
+          {
+            yn   = 2 * ( n - 1 + m_alpha ) * ym1 - ( n - 2 + 2 * m_alpha ) * ym2 ;
+            yn  /= n ;
+            ym2 = ym1 ;
+            ym1 = yn  ;
+          }
+        return yn ;
+      }
+      // ======================================================================      
+    } ;
+    // ========================================================================
+    /// specialization for N=0
+    template <>
+    class Gegenbauer_<0>: public GegenbauerBase 
+    {
+    public:
+      // ======================================================================
+      Gegenbauer_ ( const double alpha = 0 ) : GegenbauerBase ( alpha ) {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate it!
+      inline double operator () ( const double /* x */  ) const { return 1 ; } 
+      // ======================================================================      
+    } ;      
+    // ========================================================================
+    /// specialization for N=1
+    template <>
+    class Gegenbauer_<1>: public GegenbauerBase 
+    {
+    public:
+      // ======================================================================
+      Gegenbauer_ ( const double alpha = 0 ) : GegenbauerBase ( alpha ) {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate it!
+      inline double operator () ( const double x ) const { return 2 * m_alpha * x ; } 
+      // ======================================================================      
+    } ;
+    // ========================================================================
+    /// helper base class for Jacobi polynomials
+    class JacobiBase
+    {
+    public:
+      // ======================================================================
+      /** constructor
+       * - assert  that alpha>-1 
+       * - assert  that beta>-1 
+       */
+      JacobiBase
+      ( const double alpha , 
+        const double beta  ) ;
+      /// no default constructor!
+      JacobiBase () = delete ; /// no default constructor!      
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the value of alpha-parameter
+      double alpha () const { return m_alpha ; }
+      // get the value of beta-parameter
+      double beta  () const { return m_beta  ; }
+      // ======================================================================
+    protected: 
+      // ======================================================================
+      /// value of alpha parameter 
+      double m_alpha ; // value of alpha parameter
+      /// value of beta  parameter 
+      double m_beta  ; // value of alpha parameter 
+      // ======================================================================
+    } ;
+    // ========================================================================      
+    /** Jacobi polynomials 
+     *  @see https://en.wikipedia.org/wiki/Jacobi_polynomials
+     */
+    template <unsigned int N> class Jacobi_ ;
+    // generic case
+    template <unsigned int N>
+    class Jacobi_ : public JacobiBase
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor: 
+       *  - assert alpha > -1 
+       *  - assert beta  > -1 
+       */
+      Jacobi_
+      ( const double alpha ,
+        const double beta  )
+        : JacobiBase ( alpha , beta )
+      {}
+      // ======================================================================
+    public :
+      // ======================================================================
+      inline double operator() ( const double x ) const
+      {
+        const long double v = 0.5 * ( x - 1 ) ;
+        long double ym2 = 1 ;
+        long double ym1 = ( m_alpha + 1 ) + ( m_alpha + m_beta + 2 ) * v ;
+        long double yn  = ym1 ;
+        for  ( unsigned int n = 2 ; n <= N ; ++n )
+          {
+            const double a = n + m_alpha ;
+            const double b = n + m_beta  ;
+            const double c = a + b       ;
+            yn  = ( c - 1 ) * ( c  * ( c - 2 ) * x - (a - b ) * ( c - 2 * n ) ) * ym1 - 2 * ( a - 1) * ( b - 1 ) * c * ym2 ;
+            yn /= 2 * n * ( c - n ) * ( c - 2 ) ;
+            ym2 = ym1 ;
+            ym1 = yn  ;
+          }
+        return yn ;
+      }
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /// speciazliation for N=-
+    template <>
+    class Jacobi_<0> : public JacobiBase
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor: 
+       *  - assert alpha > -1 
+       *  - assert beta  > -1 
+       */
+      Jacobi_
+      ( const double alpha ,
+        const double beta  )
+        : JacobiBase ( alpha , beta )
+      {}
+      // ======================================================================
+    public :
+      // ======================================================================
+      inline double operator() ( const double x ) const { return 1 ; }
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /// specialization for N=1 
+    template <>
+    class Jacobi_<1> : public JacobiBase
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor: 
+       *  - assert alpha > -1 
+       *  - assert beta  > -1 
+       */
+      Jacobi_
+      ( const double alpha ,
+        const double beta  )
+        : JacobiBase ( alpha , beta )
+      {}
+      // ======================================================================
+    public :
+      // ======================================================================
+      inline double operator() ( const double x ) const
+      { return m_alpha + m_beta + 0.5 * ( m_alpha + m_beta + 2 ) * ( x - 1 ) ; }
+      // ======================================================================
+    } ; 
+    
+    
+
+    
+    
+    // =========================================================================
     // Non-templated 
     // ========================================================================
     /** @class Chebyshev
@@ -1259,6 +1538,48 @@ namespace Ostap
       // ======================================================================
       unsigned int m_L ;
       unsigned int m_M ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class Bessel
+     *  Bessel polynomial 
+     *  @see https://en.wikipedia.org/wiki/Bessel_polynomials
+     */
+    class Bessel
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      Bessel ( const unsigned int N     = 0 ,
+               const double       xmin  = 0 ,
+               const double       xmax  = 1 );               
+      // ======================================================================
+    public: 
+      // ======================================================================
+      inline double operator() ( const double x ) const { return evalaute ( x ) ; }
+      double evalaute ( const double x ) const ;
+      // ======================================================================
+    public: 
+      // ======================================================================
+      unsigned int N    () const { return m_N    ; }
+      double       xmin () const { return m_xmin ; }
+      double       xmax () const { return m_xmin ; }
+      // ======================================================================
+    public: 
+      // ======================================================================
+      inline double t ( const double x ) const
+      { return ( x - m_xmin ) / ( m_xmax - m_xmin ) ; }      
+      inline double x ( const double t ) const
+      { return m_xmin + t *     ( m_xmax - m_xmin ) ; }       
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// the order
+      unsigned int m_N    { 0 } ; // the order
+      /// low edge 
+      double       m_xmin { 0 } ; // low edge 
+      /// high edge 
+      double       m_xmax { 1 } ; // high edge
       // ======================================================================
     } ;
     // ========================================================================
