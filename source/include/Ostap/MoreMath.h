@@ -1460,6 +1460,19 @@ namespace Ostap
 
     
     // ========================================================================
+    // Lambert W-function
+    // ========================================================================
+    /** get the Lambert \f$ W_0 \f$  function for \f$- \frac{1}{e} < x \f$ 
+     *  @see https://en.wikipedia.org/wiki/Lambert_W_function
+     */
+    double lambert_W0 ( const double x ) ;
+    // ========================================================================
+    /** get the Lambert \f$ W_{-1}\f$  function for \f$- \frac{1}{e} < x < 0  \f$ 
+     *  @see https://en.wikipedia.org/wiki/Lambert_W_function
+     */
+    double lambert_Wm1 ( const double x ) ;
+    
+    // ========================================================================
     /** complete Fermi-Dirac integral 
      *  \f$ F_j(x) = \frac{1}{\Gamma(j+1)}\int^{+\infty}_{0} \frac{t^j}{ \exp ( t-x) + 1 } dt \f$ 
      *  @param j parameter

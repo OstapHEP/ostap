@@ -23,6 +23,7 @@
 #include "gsl/gsl_sf_psi.h"
 #include "gsl/gsl_sf_bessel.h"
 #include "gsl/gsl_sf_ellint.h"
+#include "gsl/gsl_sf_lambert.h"
 // ============================================================================
 // LHCbMath
 // ============================================================================
@@ -3922,6 +3923,48 @@ double Ostap::Math::der_Bi ( const double x )
 }
 // ============================================================================
 
+// ============================================================================
+/* get the Lambert W_0 function for \f$- \frac{1}{e} < x \f$ 
+ *  @see https://en.wikipedia.org/wiki/Lambert_W_function
+ */
+// ============================================================================
+double Ostap::Math::lambert_W0 ( const double x )
+{
+  //
+  static const double s_mnmn = -1 / M_E ;
+  if (x <= s_mnmn ) { return std::numeric_limits<double>::quiet_NaN(); }
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_lambert_W0_e ( x , &result ) ;
+  if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_lambert_W0_e" , __FILE__ , __LINE__ , ierror ) ;
+      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+        { return std::numeric_limits<double>::quiet_NaN(); }
+    }
+  return result.val ;
+}
+// ============================================================================
+/*  get the Lambert W_0 function for \f$- \frac{1}{e} < x < 0  \f$ 
+ *  @see https://en.wikipedia.org/wiki/Lambert_W_function
+ */
+// ============================================================================
+double Ostap::Math::lambert_Wm1 ( const double x )
+{
+  //
+  static const double s_mnmn = -1 / M_E ;
+  if ( x <= s_mnmn | 0 <= x ) { return std::numeric_limits<double>::quiet_NaN(); }
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_lambert_Wm1_e ( x , &result ) ;
+  if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_lambert_Wm1_e" , __FILE__ , __LINE__ , ierror ) ;
+      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+        { return std::numeric_limits<double>::quiet_NaN(); }
+    }
+  return result.val ;
+}
 
 // ============================================================================
 /*  complete Fermi-Dirac integral 

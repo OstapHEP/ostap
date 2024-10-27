@@ -1214,6 +1214,11 @@ namespace Ostap
     ( const double          x     , 
       const ValueWithError& y     ) ;
     // ========================================================================
+    /* get the Lambert W_0 function for \f$- \frac{1}{e} < x \f$ 
+     *  @see https://en.wikipedia.org/wiki/Lambert_W_function
+     */
+    ValueWithError lambert_W0 ( const ValueWithError& x ) ;
+    // ========================================================================
     /// check for NaN
     inline bool isnan    ( const ValueWithError& v ) { return v.isnan    () ; }
     /// finite ?

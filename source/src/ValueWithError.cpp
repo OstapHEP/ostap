@@ -3199,6 +3199,24 @@ Ostap::Math::bessel_Knu
   return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
 }
 // ============================================================================
+/*  get the Lambert W_0 function for \f$- \frac{1}{e} < x \f$ 
+ *  @see https://en.wikipedia.org/wiki/Lambert_W_function
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::lambert_W0
+( const Ostap::Math::ValueWithError& x ) 
+{
+  const double z  = x.value () ;
+  const double c2 = x.cov2  () ;
+  const double w  = lambert_W0 ( z ) ;
+  if ( c2 <= 0 || M_E * z <= -1 ) { return w ; } 
+  //
+  const double d = s_zero ( z ) ? 1.0 : w / ( z * ( 1 + w ) ) ;
+  //
+  return Ostap::Math::ValueWithError ( x , c2 * d * d ) ; 
+}
+// ============================================================================
 /*  arithmetic-geometric mean 
  *  @param x the first value 
  *  @param y the second value 
