@@ -39,29 +39,35 @@ namespace Ostap
       /**  templated contructor from the function, low integration edge, 
        *   number of subtractions and the scale factor
        *   @param rho the function
-       *   @param omega0 low intergation edge  
-       *   @param n      number of subtractions  
-       *   @param scale  scale factor (e.g. sign)
-       *   @param tag    unique tag/label for cacheing 
+       *   @param omega0  low intergation edge  
+       *   @param n       number of subtractions  
+       *   @param scale   scale factor (e.g. sign)
+       *   @param tag     unique tag/label for cache 
        *   @param rescale rescale function for better numerical precison 
-       *   @param size   size of integration workspace  
+       *   @param size    size of integration workspace  
        */
       template <class FUNCTION>
       KramersKronig 
-      ( FUNCTION             rho         ,
-        const double         omega0      ,
-        const unsigned short n       = 0 ,
-        const double         scale   = 1 ,                      
-        const std::size_t    tag     = 0 ,
-        const unsigned short rescale = 0 , 
-        const std::size_t    size    = 0 )
-        : m_rho        ( rho     )
-        , m_omega0     ( omega0  )
-        , m_n          ( n       )
-        , m_scale      ( scale   )          
-        , m_tag        ( tag     ) 
-        , m_rescale    ( rescale ) 
-        , m_integrator ( size    )
+      ( FUNCTION             rho            ,
+        const double         omega0         ,
+        const unsigned short n          = 0 ,
+        const double         scale      = 1 ,                      
+        const std::size_t    tag        = 0 ,
+        const unsigned short rescale    = 0 ,
+        const double         aprecision = 0 , 
+        const double         rprecision = 0 , 
+        const double         width      = 0 ,         
+        const std::size_t    size       = 0 )
+        : m_rho        ( rho        )
+        , m_omega0     ( omega0     )
+        , m_n          ( n          )
+        , m_scale      ( scale      )          
+        , m_tag        ( tag        ) 
+        , m_rescale    ( rescale    )
+        , m_aprecision ( aprecision ) 
+        , m_rprecision ( rprecision ) 
+        , m_width      ( width      ) 
+        , m_integrator ( size       )
       {}
       // ======================================================================
     public:
@@ -78,14 +84,18 @@ namespace Ostap
       template <class FUNCTION>
       inline static KramersKronig
       create
-      ( FUNCTION             rho         ,
-        const double         omega0      ,
-        const unsigned short n       = 0 ,
-        const double         scale   = 1 , 
-        const std::size_t    tag     = 0 ,
-        const unsigned short rescale = 0 ,
-        const std::size_t    size    = 0 )
-      { return KramersKronig ( rho , omega0 , n , scale , tag , rescale , size ) ; }
+      ( FUNCTION             rho            ,
+        const double         omega0         ,
+        const unsigned short n          = 0 ,
+        const double         scale      = 1 , 
+        const std::size_t    tag        = 0 ,
+        const unsigned short rescale    = 0 ,
+        const double         aprecision = 0 , 
+        const double         rprecision = 0 , 
+        const double         width      = 0 ,         
+        const std::size_t    size       = 0 )
+      { return KramersKronig ( rho , omega0 , n , scale , tag , rescale ,
+                               aprecision , rprecision , width , size ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -124,8 +134,14 @@ namespace Ostap
       double                         m_scale      ; // scale factor (e.g. sign) 
       /// unique tag/label 
       std::size_t                    m_tag        ; // unique tag/label 
-      /// rescale fnuction for better numerical precision 
-      unsigned short                 m_rescale    ; // #rescale points 
+      /// rescale function for better numerical precision 
+      unsigned short                 m_rescale    ; // #rescale points
+      /// absolute precison
+      double                         m_aprecision ; // absolute preciison
+      /// relative precison
+      double                         m_rprecision ; // relative precision
+      /// width 
+      double                         m_width      ; // width       
       /// Integrator
       Ostap::Math::Integrator        m_integrator ; // integrator 
       // ======================================================================
