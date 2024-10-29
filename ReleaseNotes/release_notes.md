@@ -3,9 +3,11 @@
   1. add `RooDataSet` -> `TTree` transformation
     
 ## Backward incompatible
-
+    
 ## Bug fixes
-
+    
+  1. fix `ostap-check-dependencies`
+    
 # v1.13.6.0
 
 ## New features
