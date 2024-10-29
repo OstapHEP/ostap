@@ -1,5 +1,7 @@
 ## New features
-
+    
+  1. add `RooDataSet` -> `TTree` transformation
+    
 ## Backward incompatible
 
 ## Bug fixes

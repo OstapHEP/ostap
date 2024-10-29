@@ -41,7 +41,7 @@ from   ostap.fitting.variables   import valid_formula, make_formula
 from   ostap.trees.cuts          import expression_types, vars_and_cuts, order_warning
 from   ostap.utils.utils         import evt_range, LAST_ENTRY, ALL_ENTRIES 
 from   ostap.stats.statvars      import data_decorate, data_range 
-from   ostap.utils.valerrors     import VAE 
+from   ostap.utils.valerrors     import VAE
 import ostap.fitting.roocollections
 import ostap.fitting.printable
 import ROOT, random, math, sys, ctypes  
@@ -3354,7 +3354,63 @@ ROOT.RooAbsData.rows = _rad_rows_
 _new_methods_ += [
     ROOT.RooAbsData.rows 
     ]
+
+# ============================================================================
+## Convert RooDataSet to TTree
+#  @code
+#  dataset = ...
+#  data    = dataset.ds2tree ( name = 'my_tree' , filename= 'aa.root'
+#  @endcode
+#  - result of the type <code>ostap.tree.data_utils.Data</code>
+#  @param name tree name (if not specified dataset name wil lbe used)
+#  @param filename tile name (if not specified, temporary file will be used) 
+def _ds_2tree_ ( dataset , name = '' , filename = '' ) :
+    """ Convert `ROOT.RooDataSet` to `ROOT.TTree`
+    >>> dataset = ...
+    >>> data    = dataset.ds2tree ( name = 'my_tree' , filename= 'aa.root'
+    - name     : tree name (if not specified dataset name wil lbe used)
+    - filename : file name (if not specified, temporary file will be used) 
+    - result of the type `ostap.tree.data_utils.Data`
+    """
+    if not filename :
+        import ostap.utils.cleanup as CU 
+        filename = CU.CleanUp.tempfile ( suffix = '.root' )
+        
+    if not name : name = dataset.GetName()  
     
+    import ostap.io.root_file
+    from   ostap.trees.data_utils import Data
+
+    store = dataset.store()
+    dstmp = None 
+    with ROOTCWD() :  
+        with ROOT.TFile ( filename , 'c' ) as rfile :
+            rfile.cd() 
+            if not isinstance ( store , ROOT.RooTreeDataStore ) :
+                dstmp = ROOT.RooDataSet ( dataset , dsID() ) 
+                dstmp.convertToTreeStore()
+                store = dstmp.store() 
+            assert isinstance ( store , ROOT.RooTreeDataStore ) , \
+                'Store is not RooTreeDataStore: %s' % ( type ( store ) .__name__ ) 
+            rfile [ name ] = store.tree()
+
+    ## with ROOT.TFile ( filename , 'r' ) as rfile : rfile.ls()
+            
+    if dstmp and isinstance ( dstmp , ROOT.RooDataSet ) :
+        dstmp = Ostap.MoreRooFit.delete_data ( dstmp )
+        del dstmp
+        
+    return Data ( chain = name         ,
+                  files = [ filename ] ,
+                  description = "TTree from dataset  %s/%s " % ( dataset.name , dataset.title ) ,
+                  silent = True        ) 
+
+ROOT.RooDataSet.ds2tree = _ds_2tree_
+
+_new_methods_ += [
+    ROOT.RooDataSet.ds2tree 
+    ]
+
 # ============================================================================
 
 _new_methods_ += list ( data_decorate ( ROOT.RooAbsData ) )
