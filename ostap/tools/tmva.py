@@ -160,7 +160,7 @@ class WeightsFiles(CleanUp) :
 # =============================================================================
 ## some manipulations with TMVA options 
 def opts_replace ( opts , expr , direct = True ) :
-    """some manipulations with TMVA options"""
+    """ Some manipulations with TMVA options"""
     if  direct : 
         if   0 <= opts.find ( '!' + expr ) : opts  = opts.replace ( '!' + expr , expr )
         elif 0 <= opts.find (       expr ) : pass
@@ -183,7 +183,7 @@ def opts_replace ( opts , expr , direct = True ) :
 #  t = make_tarfile ( 'outptu.tgz' , files , varbose = True , tmp = True )  
 #  @endcode
 def make_tarfile ( output , files , verbose = False , tmp = False ) :
-    """Create the tar file from components, optionally create it as tmp,
+    """ Create the tar file from components, optionally create it as tmp,
     and later copy to the final destination.
     (Sometime for unreliable file systems (like EOS via fsmount)
     normal creation of tar-gile raises OSError
@@ -267,7 +267,7 @@ def make_tarfile ( output , files , verbose = False , tmp = False ) :
 #  @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
 #  Thanks to Albert PUIG
 class Trainer(object):
-    """Helper class to train TMVA:  
+    """ Helper class to train TMVA:  
     
     >>> from ostap.tools.tmva import Trainer
     >>> t = Trainer(
@@ -351,7 +351,7 @@ class Trainer(object):
                    multithread          = False   ,
                    logger               = None    ) :
         
-        """Constructor with list of methods
+        """ Constructor with list of methods
         
         >>> from ostap.tools.tmva import Trainer
         >>> t = Trainer(
@@ -378,8 +378,6 @@ class Trainer(object):
         if  logging :
             if isinstance ( logging , string_types ) : self.__logging = logging 
             else                                     : self.__logging = "%s.log" % self.name
-
-
         
         for i , e in enumerate ( methods ) :
             t = e [ 0 ] 
@@ -496,7 +494,6 @@ class Trainer(object):
         ## self.__verbose = True if verbose else False 
         self.__verbose = True if ( verbose and  self.category <= 0 ) else False 
 
-
         self.__bookingoptions   = bookingoptions
                 
         import os 
@@ -551,7 +548,6 @@ class Trainer(object):
         self.__methods = tuple (  _methods ) 
 
         self.__bookingoptions = str ( opts )
-
         
         pattern_xml = pattern_XML   % ( self.dirname ,  self.dirname )
         pattern_C   = pattern_CLASS % ( self.dirname ,  self.dirname )
@@ -872,13 +868,13 @@ class Trainer(object):
             return self._train() 
 
     # =========================================================================
-    ## train TMVA 
+    ## Train TMVA 
     #  @code
     #  trainer.train ()
     #  @endcode  
     #  @return the name of output XML file with the weights 
     def _train ( self )  :
-        """ train TMVA 
+        """ Train TMVA 
         >>> trainer.train ()
         return the name of output XML files with the weights 
         """
@@ -1029,7 +1025,7 @@ class Trainer(object):
     #  @endcode  
     #  @return the names of output XML files with the weights 
     def __train ( self ) :
-        """Train the TMVA:
+        """ Train the TMVA:
         - returns the names of output XML file with the weights 
         >>> trainer.train () 
         """
@@ -1536,7 +1532,7 @@ class Trainer(object):
     # =========================================================================
     ## make selected standard TMVA plots 
     def makePlots ( self , name = None , output = None , ) :
-        """Make selected standard TMVA plots"""
+        """ Make selected standard TMVA plots"""
 
         self.logger.warning ( "makePlots: method is (temporarily?) disabled!" )
         return 
@@ -1615,7 +1611,7 @@ class Trainer(object):
 # =============================================================================
 ## make selected standard TMVA plots 
 def make_Plots ( name , output , show_plots = True ) :
-    """Make selected standard TMVA plots"""
+    """ Make selected standard TMVA plots"""
 
     ## if (6,29) <= root_info :
     ##    logger.warning ("function is disabled")
@@ -1843,7 +1839,7 @@ class Reader(object)  :
                    options      = ''    ,
                    logger       = None  , 
                    verbose      = True  ) :
-        """Construct the TMVA reader         
+        """ Construct the TMVA reader         
         >>> from ostap.tools.tmva import Reader
         >>> r = Reader ( 'MyTMVA' ,
         ... variables = [ ## name      accessor  
@@ -1982,7 +1978,7 @@ class Reader(object)  :
     #  val = var ( entry )
     #  @endcode 
     class Var (object) :
-        """Helper class to get TMVA decision for the certain method
+        """ Helper class to get TMVA decision for the certain method
         >>>  reader = ...
         >>>  var = reader[ method ]
         >>>  val = var ( entry )
@@ -2027,7 +2023,7 @@ class Reader(object)  :
     # =========================================================================
     ## helper class to get TMVA decision for certain method 
     class Method (Var) :
-        """Helper class to get TMVA decision for certain method
+        """ Helper class to get TMVA decision for certain method
         >>>  reader = ...
         >>>  var = reader[ method ]
         >>>  val = var ( entry )
@@ -2056,7 +2052,7 @@ class Reader(object)  :
         # print('Response is %s'    % method.evaluate ( pt ,  eta , phi ) )
         # @endcode 
         def evaluate ( self , *args ) :
-            """Evaluate the method from parameters 
+            """ Evaluate the method from parameters 
             >>> method       = ...
             >>> pt, eta, phi = 5 ,  3.0 , 0  ## variables 
             >>> print('Response is %s'    % method.evaluate ( pt ,  eta , phi ) )
@@ -2075,7 +2071,7 @@ class Reader(object)  :
     #  ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg))
     # @endcode        
     def __getitem__ ( self , method ) :
-        """Helper utility to  get the corresponding function from the  reader:
+        """ Helper utility to  get the corresponding function from the  reader:
         - Use the reader
         >>> tree =  ....  ## TTree/TChain/RooDataSet with data
         >>> mlp_fun  =  reader['MLP']  ## <-- here! 
@@ -2101,7 +2097,7 @@ class Reader(object)  :
     #  ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg))
     # @endcode        
     def __getattr__ ( self , method ) :
-        """Helper utility to  get the correspondig function from the  reader:
+        """ Helper utility to  get the correspondig function from the  reader:
         - Use the reader
         >>> tree =  ....  ## TTree/TChain/RooDataSet with data
         >>> mlp_fun  =  reader.MLP  ## <-- here! 
@@ -2129,7 +2125,7 @@ class Reader(object)  :
     #  Ugly trick with arrays is needed due to some technical problems
     #  (actually TMVA reader needs the address of 'float' (in C++ sense) variable
     def __call__ ( self , method , entry , cut_efficiency = 0.90 ) :
-        """Evaluate TMVA
+        """ Evaluate TMVA
         - Use the reader
         >>> tree =  ....  ## TTree/TChain/RooDataSet with data
         >>> for entry in tree :
@@ -2157,7 +2153,7 @@ class Reader(object)  :
     #  print ('MLP response is: ', reader.MLP.evaluate ( pt , y ))
     #  @endcode
     def evaluate ( self , method , *args ) :
-        """Evaluate TMVA
+        """ Evaluate TMVA
         >>> reader = ...
         >>> pt, y  = ...  ##
         >>> print('MLP response is: ', reader.MLP.evaluate ( pt , y ))
@@ -2187,7 +2183,7 @@ _canvas = []
 # =============================================================================
 ## start TMVA gui 
 def tmvaGUI ( filename , new_canvas = True ) :
-    """Start TMVA-GUI
+    """ Start TMVA-GUI
     """
     ## ROOT.gROOT.LoadMacro('TMVAGui.C')
     if new_canvas :
@@ -2201,7 +2197,7 @@ def tmvaGUI ( filename , new_canvas = True ) :
 # =============================================================================
 ## convert input structure to Ostap.TMVA.MAPS
 def _inputs2map_ ( inputs ) :
-    """Convert input structure to Ostap.TMVA.MAPS
+    """ Convert input structure to Ostap.TMVA.MAPS
     """
     from ostap.core.core import cpp, std, Ostap 
     MAP     = std.map ( 'std::string', 'std::string' )
@@ -2235,6 +2231,8 @@ def _inputs2map_ ( inputs ) :
 # =============================================================================
 ## convert weights structure to Ostap.TMVA.MAP
 def _weights2map_ ( weights ) :
+    """ Convert weights structure to Ostap.TMVA.MAP
+    """
     
     from ostap.core.core import cpp, std, Ostap
     MAP = std.map   ( 'std::string', 'std::string' )
@@ -2254,7 +2252,7 @@ def _weights2map_ ( weights ) :
 
 # =============================================================================
 def _add_response_tree  ( tree , verbose , *args ) :
-    """Specific action to ROOT.TChain
+    """ Specific action to ROOT.TChain
     """
             
     import ostap.trees.trees
@@ -2311,7 +2309,7 @@ def _add_response_tree  ( tree , verbose , *args ) :
 
 # =============================================================================
 def _add_response_chain ( chain , verbose , *args ) :
-    """Specific action to ROOT.TChain
+    """ Specific action to ROOT.TChain
     """
     
     import ostap.trees.trees
@@ -2379,8 +2377,7 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
                       options  = ''          ,   ## TMVA-reader options
                       verbose  = True        ,   ## verbosity flag 
                       aux      = 0.9         ) : ## for Cuts method : efficiency cut-off
-    """
-    Helper function to add TMVA  response into dataset
+    """ Helper function to add TMVA  response into dataset
     >>> tar_file = trainer.tar_file
     >>> dataset  = ...
     >>> inputs = [ 'var1' , 'var2' , 'var2' ]
@@ -2442,7 +2439,6 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
         newdata = dataset
 
     return newdata
-
 
 # =============================================================================
 if '__main__' == __name__ :
