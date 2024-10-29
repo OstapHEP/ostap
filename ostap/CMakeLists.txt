@@ -122,7 +122,6 @@ else()
 endif()
 
 # ========================================================================================
-
     
 # ========================================================================================
 ## lmdb : check&install only if mdb_stat exists ...
@@ -140,7 +139,7 @@ if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.7" )
       endif() 
    endif()
 endif()
-    
+        
 # =======================================================================================
 ## joblib: run some numpy-related code in parallel
 # =======================================================================================
@@ -218,6 +217,17 @@ if ( NOT ${PY_psutil_FOUND} )
 endif()
 
 # ========================================================================================
+## tkrzw 
+# ========================================================================================
+##
+if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.8" )
+   find_python_module ( tkrzw QUIET )
+   if ( NOT ${PY_tkrzw_FOUND} )
+      message ( "----> warning (optional)           tkrzw is NOT found!" ) 
+   endif()
+endif()
+    
+# ========================================================================================
 ## BerkeleyDB
 # ========================================================================================
 ##  
@@ -235,8 +245,7 @@ if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.7" )
       find_python_module ( berkeleydb QUIET )
       if ( NOT ${PY_berkeleydb_FOUND} )
         execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install "berkeleydb==18.1.6" ${PIP_ARGS})
-      endif()
-    
+      endif()    
    endif()
 endif()
 ## 

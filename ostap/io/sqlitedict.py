@@ -319,7 +319,7 @@ class SqliteDict(DictClass):
         GET_TABLES = "SELECT name FROM sqlite_master WHERE type='table';"
         tables = [] 
         for table in self.conn.select ( GET_TABLES ) :
-            tables.append ( table  ) 
+            tables.append ( table[0]  ) 
         return tuple ( tables )
 
     # =========================================================================

@@ -509,7 +509,13 @@ class CompressShelf (shelve.Shelf,CUBase) :
         for k in meta :
             row = "META:%s" % k , '' , '' , str ( meta[k] )
             table.append ( row  ) 
-        
+
+        if hasattr ( self.dict , 'tables' ) :
+            tables = self.dict.tables()
+            if tables :
+                row = 'META:*Tables*' ,  '' , '' , '[' + ','.join ( t for t in tables ) + ']' 
+                table.append ( row )
+                
         for k in keys :
 
             ss = len ( self.dict [ k.encode ( self.keyencoding ) ] )
@@ -541,7 +547,7 @@ class CompressShelf (shelve.Shelf,CUBase) :
 
             row = '{:15}'.format ( k ) , '{:15}'.format ( otype ) , size  , timetag 
             table.append ( row )
-            
+
         import ostap.logger.table as T
         t      = type( self ).__name__
         title  = '%s:%s' % ( t  , n )

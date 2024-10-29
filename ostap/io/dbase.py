@@ -107,6 +107,10 @@ if  ( 3 , 6 ) <= sys.version_info :
             assert flag in berkeleydb_open_mode, \
                 "berkeleydb_open: invalid open mode %s" % flag
             
+            if 'n' == flag and os.path.exists ( filename ) and os.path.isfile ( filename ) : 
+                try    : os.remove ( filename )
+                except : pass
+                                
             db = berkeleydb.db.DB ( dbenv )
             db.open ( filename , dbname , filetype , berkeleydb_open_mode [ flag ]  , mode )
             
@@ -138,25 +142,25 @@ if ( 3 , 3 ) <= sys.version_info < ( 3 , 10 ) :
         
         use_bsddb3  = True
         # =====================================================================
-    except ImportError  :
+    except ImportError  : # ===================================================
         # =====================================================================
         bsddb3      = None 
         use_bsddb3  = False 
 
 # =============================================================================
-## make a try to us eLMDB
+## make a try to use LMDB
 use_lmdb = False
 # =============================================================================
 ## make a try for LMDB 
 if ( 3 , 7 ) <= sys.version_info :
     # =========================================================================
-    try :
+    try : # ===================================================================
         # =====================================================================
         import lmdb 
         from ostap.io.lmdbdict import LmdbDict, islmdb 
         use_lmdb = True
         # =====================================================================
-    except ImportError  :
+    except ImportError  : # ===================================================
         # =====================================================================
         lmdb     = None 
         use_lmdb = False 
@@ -196,7 +200,7 @@ def whichdb ( filename  ) :
     ## dbase is identified 
     if tst : return tst 
 
-    ## make a try woth LMDB 
+    ## make a try with LMDB 
     if use_lmdb and os.path.exists  ( filename ) and os.path.isdir ( filename ) :
         if islmdb ( filename ) : return 'lmdb'
     
@@ -208,12 +212,10 @@ def whichdb ( filename  ) :
 
     import io , struct
     
-    try :
-        
+    try :    
         with io.open ( filename  ,'rb' ) as f :
             # Read the start of the file -- the magic number
-            s16 = f.read(16)
-            
+            s16 = f.read(16)   
     except OSError :
         return None
     
@@ -273,7 +275,7 @@ def dbopen ( file               ,
              concurrent = True  ,
              dbtype     = ()    , ## preferred db-type as list of preferences  
              **kwargs           ) :
-    """Open or create database at path given by *file*.
+    """ Open or create database at path given by *file*.
     
     Optional argument *flag* can be 'r' (default) for read-only access, 'w'
     for read-write access of an existing database, 'c' for read-write access
