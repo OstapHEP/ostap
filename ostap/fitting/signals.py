@@ -174,7 +174,7 @@ models = []
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class Gauss_pdf(PEAK) :
-    """Trivial Gaussian function:
+    """ Trivial Gaussian function:
     http://en.wikipedia.org/wiki/Normal_distribution
     """
     def __init__ ( self               ,
@@ -237,7 +237,7 @@ models.append ( Gauss_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class CrystalBall_pdf(PEAK) :
-    """Crystal Ball function
+    """ Crystal Ball function
     http://en.wikipedia.org/wiki/Crystal_Ball_function
     
     - T. Skwarnicki,
@@ -353,7 +353,7 @@ models.append ( CrystalBall_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class CrystalBallRS_pdf(PEAK) :
-    """Right-side CrystalBall    
+    """ Right-side CrystalBall    
     """
     def __init__ ( self              ,
                    name              ,
@@ -448,7 +448,7 @@ models.append ( CrystalBallRS_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class CB2_pdf(PEAK) :
-    """Double sided Crystal Ball function with both left and rigth sides
+    """ Double sided Crystal Ball function with both left and rigth sides
     It appears to be very powerful and is used for many LHCb papers to describe
     B-hadron mass signals, especially for B->J/psi X final states 
     
@@ -586,7 +586,7 @@ models.append ( CB2_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class Needham_pdf(PEAK) :
-    """Needham function: specific parameterisation of Crystal Ball function with
+    """ Needham function: specific parameterisation of Crystal Ball function with
     - n = 1 
     - alpha(sigma) = a_0 + sigma*(a_1+sigma*a_2)
     
@@ -690,7 +690,7 @@ models.append ( Needham_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class Apollonios_pdf(PEAK) :
-    """Apollonios function
+    """ Apollonios function
     http://arxiv.org/abs/1312.5000
     
     The function is proposed by Diego Martinez Santos 
@@ -804,7 +804,7 @@ models.append ( Apollonios_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-08-20
 class Apollonios2_pdf(PEAK) :
-    """Bifurcated Apollonios:
+    """ Bifurcated Apollonios:
     Gaussian with exponential (asymmetrical) tails
     
     f(x; mu, sigma_l, sigma_r, beta) ~ exp( |beta|(|\beta| - sqrt( beta^2+( delta x)^2 ))      

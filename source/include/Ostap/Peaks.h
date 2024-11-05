@@ -1169,10 +1169,10 @@ namespace Ostap
      *  \f[ f(x;\alpha,n,x_0,\sigma) = \frac{1}{ \sqrt{2\pi\sigma^2} } \left\{
      *  \begin{array}{ll}
      *  \mathrm{e}^{-\frac{1}{2}\left(\frac{x-x_0}{\sigma}\right)^2}
-     *  & \text{for}~\frac{x-x_0}\ge-\alpha\sigma \\
-     *  \mathrm{- \frac{\alpha^2}{2}} \times
+     *  & \text{for}~\frac{x-x_0}{\sigma}\ge-\alpha \\
+     *  \mathrm{e}^{-\frac{\alpha^2}{2}} \times
      *  \left(  \frac{n+1}{ n+1 - \alpha^2 - \left|\alpha\right|\frac{x-x_0}{\sigma}}\right)^{n+1}
-     *  & \text{for}~\frac{x-x_0}\le-\alpha\sigma
+     *  & \text{for}~\frac{x-x_0}{\sigma}\le-\alpha
      *  \end{array}
      *  \right.\f]
      *

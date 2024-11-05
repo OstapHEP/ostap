@@ -8,7 +8,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 # =============================================================================
-"""Module with decoration for RooAbsData and related RooFit classes
+""" Module with decoration for RooAbsData and related RooFit classes
 - see RooAbsData 
 - see RooDataSet 
 """
@@ -52,7 +52,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.dataset' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-logger.debug( 'Some useful decorations for RooAbsData object')
+logger.debug ( 'Some useful decorations for RooAbsData object')
 # =============================================================================
 from ostap.logger.colorized import allright,  attention
 _new_methods_ = []
