@@ -6202,6 +6202,111 @@ Double_t Ostap::Models::BetaPrime::analyticalIntegral
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================
+Ostap::Models::GenBetaPrime::GenBetaPrime
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          alpha  ,
+  RooAbsReal&          beta   ,
+  RooAbsReal&          p      ,
+  RooAbsReal&          q      ,
+  RooAbsReal&          scale  ,
+  RooAbsReal&          shift  )
+  : RooAbsPdf ( name , title ) 
+//
+  , m_x       ( "x"      , "Observable" , this , x      ) 
+  , m_alpha   ( "alpha"  , "alpha"      , this , alpha  ) 
+  , m_beta    ( "beta"   , "beta"       , this , beta   ) 
+  , m_p       ( "p"      , "p"          , this , p      ) 
+  , m_q       ( "q"      , "q"          , this , q      ) 
+  , m_scale   ( "scale"  , "scale"      , this , scale  ) 
+  , m_shift   ( "shift"  , "shift"      , this , shift  ) 
+    //
+  , m_betap   ( 1 , 5 , 1 , 1 , 1 , 0 ) 
+{
+  setPars() ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::GenBetaPrime::GenBetaPrime
+( const Ostap::Models::GenBetaPrime& right ,
+  const char*                        name  ) 
+  : RooAbsPdf ( right , name ) 
+//
+  , m_x      ( "x"      , this , right.m_x      ) 
+  , m_alpha  ( "alpha"  , this , right.m_alpha  )
+  , m_beta   ( "beta"   , this , right.m_beta   )
+  , m_p      ( "p"      , this , right.m_p      )
+  , m_q      ( "q"      , this , right.m_q      )
+  , m_scale  ( "scale"  , this , right.m_scale  )
+  , m_shift  ( "shift"  , this , right.m_shift  )
+//
+  , m_betap  (                   right.m_betap  ) 
+{
+  setPars () ;
+}
+
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::GenBetaPrime::~GenBetaPrime () {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::GenBetaPrime*
+Ostap::Models::GenBetaPrime::clone ( const char* name ) const 
+{ return new Ostap::Models::GenBetaPrime ( *this , name) ; }
+// ============================================================================
+void Ostap::Models::GenBetaPrime::setPars () const 
+{
+  //
+  m_betap.setAlpha  ( m_alpha  ) ;
+  m_betap.setBeta   ( m_beta   ) ;
+  m_betap.setP      ( m_p      ) ;
+  m_betap.setQ      ( m_q      ) ;
+  m_betap.setScale  ( m_scale  ) ;
+  m_betap.setShift  ( m_shift  ) ;
+  //
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::GenBetaPrime::evaluate() const 
+{
+  //
+  setPars () ;
+  //
+  return m_betap    ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::GenBetaPrime::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::GenBetaPrime::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_betap.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
+
+
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
 Ostap::Models::SinhAsinh::SinhAsinh
 ( const char*          name    , 
   const char*          title   ,
@@ -10575,6 +10680,7 @@ ClassImp(Ostap::Models::LogGammaDist       )
 ClassImp(Ostap::Models::Log10GammaDist     ) 
 ClassImp(Ostap::Models::LogGamma           )
 ClassImp(Ostap::Models::BetaPrime          ) 
+ClassImp(Ostap::Models::GenBetaPrime       ) 
 ClassImp(Ostap::Models::Landau             ) 
 ClassImp(Ostap::Models::SinhAsinh          ) 
 ClassImp(Ostap::Models::JohnsonSU          ) 

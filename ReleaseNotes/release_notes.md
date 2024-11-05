@@ -1,7 +1,8 @@
 ## New features
     
   1. add `RooDataSet` -> `TTree` transformation
-    
+  1. add generalized Beta' distribution
+  
 ## Backward incompatible
     
 ## Bug fixes

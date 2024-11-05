@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 # =============================================================================
-"""A set of various smooth shapes and PDFs
+""" A set of various smooth shapes and PDFs
 
 - GammaDist_pdf      : Gamma-distributuon in shape/scale parameterization
 - GenGammaDist_pdf   : Generalized Gamma-distribution
@@ -15,6 +15,7 @@
 - Log10GammaDist_pdf : Gamma-distributuon in shape/scale parameterization
 - LogGamma_pdf       : Log-Gamma distribution  
 - BetaPrime_pdf      : Beta-prime distribution 
+- GenBetaPrime_pdf   : generalized Beta-prime distribution 
 - Landau_pdf         : Landau distribution 
 - Argus_pdf          : ARGUS distribution 
 - GenArgus_pdf       : Generalized ARGUS distribution 
@@ -45,6 +46,7 @@ __all__     = (
     'Log10GammaDist_pdf' , ## Gamma-distributuon in shape/scale parameterization
     'LogGamma_pdf'       , ## Log-Gamma distribution 
     'BetaPrime_pdf'      , ## Beta-prime distribution 
+    'GenBetaPrime_pdf'   , ## generalized Beta-prime distribution 
     'Landau_pdf'         , ## Landau distribution 
     'Argus_pdf'          , ## ARGUS distribution 
     'GenArgus_pdf'       , ## Generalized ARGUS distribution 
@@ -58,7 +60,7 @@ __all__     = (
     'Hagedorn_pdf'       , ## Hagedorn PDF 
     'Tsallis2_pdf'       , ## 2D Tsallis PDF 
     'GenPareto_pdf'      , ## Generalised Pareto distribution
-    'ExGenPareto_pdf'    , ## Exponentiatd Generalised Pareto distribution
+    'ExGenPareto_pdf'    , ## Exponentiated Generalised Pareto distribution
     'Benini_pdf'         , ## Benini distribution
     'GEV_pdf'            , ## Generalised Extreme Value distribution
     'MPERT_pdf'          , ## Modified PERT distribution
@@ -693,6 +695,90 @@ class BetaPrime_pdf(PDF1) :
         self.set_value ( self.__delta , value )
 
 models.append ( BetaPrime_pdf ) 
+
+# =============================================================================
+## @class GenBetaPrime_pdf
+#  Generalized beta'-distribution 
+#  http://en.wikipedia.org/wiki/Beta_prime_distribution
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2013-05-11
+#  @see Ostap::Models::GenBetaPrime
+#  @see Ostap::Math::GenBetaPrime
+#  @see Ostap::Models::BetaPrime
+#  @see Ostap::Math::BetaPrime
+class GenBetaPrime_pdf(BetaPrime_pdf) :
+    """Beta-prime disribution 
+    - http://en.wikipedia.org/wiki/Beta_prime_distribution
+    """
+    ## constructor
+    def __init__ ( self         ,
+                   name         ,   ## the name 
+                   xvar         ,   ## the variable
+                   alpha = None ,   ## alpha-parameter
+                   beta  = None ,   ## beta-parameter
+                   p     = 1    ,   ## p-parameter, p>0 
+                   q     = 1    ,   ## q-parameter, q>0 
+                   scale = 1    ,   ## scale-parameter 
+                   delta = 0    ) : ## shift-parameter
+        
+        ## inialize the base 
+        BetaPrime_pdf.__init__ ( self ,
+                                 name ,
+                                 alpha = alpha ,
+                                 beta  = beta  ,
+                                 scale = scale ,
+                                 delta = delta ) 
+        
+        self.__p  = self.make_var ( p    ,
+                                    'p_%s'                % name ,
+                                    'p_{#beta#prime}(%s)' % name ,
+                                    None , 1 , 1.e-3 , 1000 )
+        self.__q  = self.make_var ( q    ,
+                                    'q_%s'                % name ,
+                                    'q_{#beta#prime}(%s)' % name ,
+                                    None , 1 , 1.e-3 , 1000 )
+        
+        self.pdf  = Ostap.Models.GenBetaPrime (
+            self.roo_name ( 'genbetap_' )   ,
+            'gen-Beta-prime %s' % self.name , 
+            self.x     ,
+            self.alpha ,
+            self.beta  ,
+            self.p     ,
+            self.q     ,
+            self.scale ,
+            self.delta )
+        
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'alpha' : self.alpha ,            
+            'beta'  : self.beta  ,            
+            'p'     : self.p     ,            
+            'q'     : self.q     ,            
+            'scale' : self.scale ,            
+            'delta' : self.delta ,            
+            }
+    
+    @property
+    def p ( self ) :
+        """`p'-parameter of gen-Beta' distribution   (p>0)"""
+        return self.__p
+    @p.setter 
+    def p ( self , value ) :
+        self.set_value ( self.__p , value )
+
+    @property
+    def q ( self ) :
+        """`q'-parameter of gen-Beta' distribution   (q>0)"""
+        return self.__p
+    @p.setter 
+    def q ( self , value ) :
+        self.set_value ( self.__q , value )
+        
+models.append ( GenBetaPrime_pdf ) 
+
 # =============================================================================
 ## @class Landau_pdf
 #  http://en.wikipedia.org/wiki/Landau_distribution

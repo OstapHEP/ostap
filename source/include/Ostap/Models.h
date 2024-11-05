@@ -1005,8 +1005,8 @@ namespace Ostap
        *  @param shift  shift-parameter
        */
       BetaPrime
-      ( const double alpha = 3 ,
-        const double beta  = 3 ,
+      ( const double alpha = 1 ,
+        const double beta  = 5 ,
         const double scale = 1 ,
         const double shift = 0 ) ;
       /// destructor
@@ -1058,17 +1058,107 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      double m_alpha ;
-      double m_beta  ;
-      double m_scale ;
-      double m_shift ;
+      double m_alpha { 1 } ;
+      double m_beta  { 5 } ;
+      double m_scale { 1 } ;
+      double m_shift { 0 } ;
       // ======================================================================
     private:
       // ======================================================================
       /// auxillary intermediate parameter
-      double m_aux ; // auxillary intermediate parameter
+      double m_aux { 1 } ;                  // auxillary intermediate parameter
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class GenBetaPrime
+     *  Generalized BetaPrime distribution 
+     *  http://en.wikipedia.org/wiki/Beta_prime_distribution
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2013-05-11
+     */
+    class GenBetaPrime
+    {
+    public:
+      // ======================================================================
+      /** constructor with all parameters
+       *  @param alpha \f$\alpha\f$-parameter
+       *  @param beta  \f$\beta\f$-parameter
+       *  @param scale  scale-parameter
+       *  @param shift  shift-parameter
+       */
+      GenBetaPrime
+      ( const double alpha = 1 ,
+        const double beta  = 5 ,
+	const double p     = 1 ,
+	const double q     = 1 ,	
+        const double scale = 1 ,
+        const double shift = 0 ) ;
+      /// destructor
+      ~GenBetaPrime () ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate beta'-distributions
+      double pdf        ( const double x ) const ;
+      /// evaluate beta'-distributions
+      double operator() ( const double x ) const { return pdf ( x ) ; }
+      // ======================================================================
+    public: // direct getters
+      // ======================================================================
+      double alpha      () const { return m_alpha ; }
+      double beta       () const { return m_beta  ; }
+      double p          () const { return m_p     ; }
+      double q          () const { return m_q     ; }
+      double scale      () const { return m_scale ; }
+      double shift      () const { return m_shift ; }
+      // ======================================================================
+    public: // general properties
+      // ======================================================================
+      double mean       () const ;
+      double mode       () const ;
+      // ======================================================================
+    public: // direct setters
+      // ======================================================================
+      bool   setAlpha  ( const double value ) ;
+      bool   setBeta   ( const double value ) ;
+      bool   setP      ( const double value ) ;
+      bool   setQ      ( const double value ) ;
+      bool   setScale  ( const double value ) ;
+      bool   setShift  ( const double value ) ;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      double integral ()                    const ;
+      double cdf      ( const double x    ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      double m_alpha { 1 } ;
+      double m_beta  { 5 } ;
+      double m_p     { 1 } ;
+      double m_q     { 1 } ;
+      double m_scale { 1 } ;
+      double m_shift { 0 } ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// auxillary intermediate parameter
+      double                 m_aux { 1 }     ; // auxillary intermediate parameter
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace {} ; // integration workspace
+      // ======================================================================
+    } ;
+
+
+    
     // ========================================================================
     /** @class Landau
      *  http://en.wikipedia.org/wiki/Landau_distribution

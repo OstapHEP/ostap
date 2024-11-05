@@ -1886,6 +1886,23 @@ def _rbetap_reduce_ ( pdf ):
 Ostap.Models.BetaPrime.__reduce__ = _rbetap_reduce_ 
 
 # =============================================================================
+## reduce GenBetaPrime
+def _rgenbetap_reduce_ ( pdf ):
+    """ Reduce GenBetaPrime"""
+    return root_store_factory , ( type ( pdf )      ,
+                                  pdf.name          ,
+                                  pdf.title         ,
+                                  pdf.x          () ,                            
+                                  pdf.alpha      () ,
+                                  pdf.beta       () ,
+                                  pdf.p          () ,
+                                  pdf.q          () ,
+                                  pdf.scale      () ,
+                                  pdf.shift      () )
+
+Ostap.Models.GenBetaPrime.__reduce__ = _rgenbetap_reduce_ 
+
+# =============================================================================
 ## reduce Landau
 def _rlandau_reduce_ ( pdf ):
     """ Reduce Landau"""

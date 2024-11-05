@@ -828,6 +828,17 @@ def _ombprim_reduce_ ( s ) :
 Ostap.Math.BetaPrime. __reduce__ = _ombprim_reduce_
 
 # =============================================================================
+## Reduce Ostap::Math::GenBetaPrime
+#  @see Ostap::Math::GenBetaPrime
+def _omgenbprim_reduce_ ( s ) :
+    """Reduce `Ostap.Math.GenBetaPrime`
+    - see `Ostap.Math.GenBetaPrime`
+    """
+    return root_factory , ( type ( s ) , s.alpha () , s.beta() , s.p () , s.q() , s.scale() , s.shift () )
+
+Ostap.Math.GenBetaPrime. __reduce__ = _omgenbprim_reduce_
+
+# =============================================================================
 ## Reduce Ostap::Math::Landau
 #  @see Ostap::Math::Landau
 def _omland_reduce_ ( s ) :
