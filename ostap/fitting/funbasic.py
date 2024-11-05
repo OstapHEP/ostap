@@ -74,7 +74,7 @@ func_factory = config_factory
 ## @class AFUN1
 #  Helper base class for implementation of various (Roo)Function-wrappers
 class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
-    """Helper base class for implementation of various (Roo)Function-wrappers
+    """ Helper base class for implementation of various (Roo)Function-wrappers
     """
         
     def __init__ ( self , name , xvar , tricks = True , **kwargs ) :
@@ -212,7 +212,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
     #      ... 
     #   @endcode  
     def __contains__ ( self , var ) : 
-        """Does this function depend on this variable?
+        """ Does this function depend on this variable?
         >>> fun = ...
         >>> var = ...
         >>> if var in fun :

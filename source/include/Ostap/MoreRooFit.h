@@ -3310,15 +3310,16 @@ namespace Ostap
      *  @return nullptr 
      */
     RooAbsData* delete_data ( RooAbsData* data ) ;
-	// =========================================================================
-	/** assign RooAbsCollection
+    // =========================================================================
+    /** assign RooAbsCollection
      *  @see RooAbsCollection
      *  @see RooAbsDataStore 
      *  @param  from  source collection   
-	 *  @param  to    destination collection
+     *  @param  to    destination collection
      */
-    void assign (       RooAbsCollection& to   ,
-	              const RooAbsCollection& from ) ;
+    void assign
+    ( RooAbsCollection&       to   ,
+      const RooAbsCollection& from ) ;
     // ========================================================================
     /// helper function to call <code>RooAbsPdf::fitTo ( data , opts )</code>
     RooFitResult* 

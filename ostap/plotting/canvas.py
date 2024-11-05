@@ -620,7 +620,7 @@ def canvas_partition ( canvas                        ,
 
 
 # =============================================================================
-## Make partition of Canvas into nx, ny adjuncent pads and plot objects
+## Make partition of Canvas into (nx)x(ny) adjuncent pads and plot objects
 #  @code
 #  canvas  = ...
 #  objects = ...
@@ -819,7 +819,7 @@ def canvas_pull ( canvas                        ,
                   bottom_margin = margin_bottom , 
                   top_margin    = margin_top    ,
                   vSpacing      = 0.0           ) :
-    """Perform partition of Canvas into 1x2 non-equal pads with no inter-margins
+    """ Perform partition of Canvas into 1x2 non-equal pads with no inter-margins
     
     >>> canvas = ...
     >>> pads   = canvas.pull_partition ( 4.0 ) ## top-pad 4-times larger    
@@ -848,7 +848,7 @@ def draw_pads ( objects            ,
                 fontsize   = 36    ,
                 trim_left  = False ,
                 trim_right = False ) :
-    """Draw sequence of object on sequence of pads,
+    """ Draw sequence of object on sequence of pads,
     - the label font size is adjusted to be uniform (in pixels)     
     >>> pads   = ...
     >>> frames = ...
@@ -911,7 +911,7 @@ def draw_pads ( objects            ,
 # =============================================================================
 ## change main parametes of TAttPad
 def set_pad ( pad , **config ) :
-    """Change main parametes of `TAttPad`"""
+    """ Change main parametes of `TAttPad`"""
 
     conf = cidict ( transform = cidict_fun )
     conf.update ( config )
@@ -1019,7 +1019,7 @@ def set_pad ( pad , **config ) :
 ## helper context manager for <code>TAttPad</code> objects
 #  @see TAttPad 
 class UsePad(object) :
-    """Helper context manager for `TAttPad` objects
+    """ Helper context manager for `TAttPad` objects
     - see `TAttPad`
     """
 
@@ -1069,7 +1069,6 @@ def use_pad ( pad , **config ) :
 
 usePad = use_pad
 
-
 # =============================================================================
 ## @class Canvas
 #  helper context manager to create and configure a canvas (and pad)
@@ -1078,7 +1077,7 @@ usePad = use_pad
 #  ... 
 #  @endcode
 class Canvas(KeepCanvas) :
-    """Helper context manager to create and configure a canvas (and pad)
+    """ Helper context manager to create and configure a canvas (and pad)
     >>> with Canvas ( title = 'Canvas #2' , width = 1000 ) :
     >>> ... 
     """

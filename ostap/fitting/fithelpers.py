@@ -92,14 +92,14 @@ class NameDuplicates(object) :
 # =============================================================================
 ## helper factory function
 def config_factory ( klass , config ) :
-    """Helper factory function, used for unpickling"""
+    """ Helper factory function, used for unpickling"""
     with NameDuplicates ( True ) : 
         return klass ( **config ) 
 # =============================================================================
 ## @class ConfigReducer
 #  Helper base class for pickling/unpickling FUNs/PDFs
 class ConfigReducer(object) :
-    """Helper base class for pickling/unpickling FUNs/PDFs
+    """ Helper base class for pickling/unpickling FUNs/PDFs
     """
     def __init__ ( self , **kwargs ) :
         self.__config = {}
@@ -113,13 +113,13 @@ class ConfigReducer(object) :
     ## factory method 
     @classmethod
     def factory ( klass , config ) :
-        """Factory method, used for unpickling"""
+        """ Factory method, used for unpickling"""
         with NameDuplicates ( True ) :
             return klass ( **config )
         
     @property
     def config ( self ) :
-        """The full configuration info for the FUN/PDF"""
+        """ The full configuration info for the FUN/PDF"""
         conf = {}
         conf.update ( self.__config )
         return conf
@@ -129,10 +129,11 @@ class ConfigReducer(object) :
         conf.update ( value )
         self.__config = conf
 
+    # =======================================================================
     ## oversimplified placeholder for the clone method 
     def clone ( self , **kwargs ) :
-        """Oversimplified placeolder for clone method
-        - actual cloning for PDFs are a bit more sophistocated 
+        """ Oversimplified placeolder for clone method
+        - actual cloning for PDFs are a bit more sophisticated 
         """        
         ## get config 
         conf = {}
@@ -170,27 +171,27 @@ class VarMaker (object) :
     
     ##  produce ERROR    message using the local logger 
     def fatal   ( self , message , *args , **kwargs ) :
-        """Produce FATGAL   message using the local logger"""
+        """ Produce FATGAL   message using the local logger"""
         return self.logger.fatal   ( message , *args , **kwargs )
     ##  produce ERROR    message using the local logger 
     def error   ( self , message , *args , **kwargs ) :
-        """Produce ERROR    message using the local logger"""
+        """ Produce ERROR    message using the local logger"""
         return self.logger.error   ( message , *args , **kwargs )
     ##  produce WARNIING message using the local logger 
     def warning ( self , message , *args , **kwargs ) :
-        """Produce WARNIING message using the local logger"""
+        """ Produce WARNIING message using the local logger"""
         return self.logger.warning ( message , *args , **kwargs )
     ##  produce INFO     message using the local logger 
     def info    ( self , message , *args , **kwargs ) :
-        """Produce INFO     message using the local logger"""
+        """ Produce INFO     message using the local logger"""
         return self.logger.info    ( message , *args , **kwargs )
     ##  produce DEBUG    message using the local logger 
     def debug   ( self , message , *args , **kwargs ) :
-        """Produce DEBUG    message using the local logger"""
+        """ Produce DEBUG    message using the local logger"""
         return self.logger.debug   ( message , *args , **kwargs )
     ##  produce VERBOSE  message using the local logger 
     def verbose ( self , message , *args , **kwargs ) :
-        """Produce VERBOSE  message using the local logger"""
+        """ Produce VERBOSE  message using the local logger"""
         return self.logger.verbose ( message , *args , **kwargs )
 
     # =========================================================================
@@ -214,7 +215,7 @@ class VarMaker (object) :
         return _logger
     @property
     def name ( self ) :
-        """The name of the object"""
+        """ The name of the object"""
         return self.__name if self.__name else '' 
     @name.setter
     def name ( self , value ) :
@@ -268,8 +269,8 @@ class VarMaker (object) :
         
         regname = ROOT.RooNameReg.instance()
         
-        ## RooFit does no tline coma in the names
-        ## RooAbsCollection::selectByName treat commas special case 
+        ## RooFit does not line commas in the names! 
+        ## RooAbsCollection::selectByName treat commas as special case 
         
         to_replace = ( ( ','  ,'_'      ) ,
                        ( ';'  ,'_'      ) ,
@@ -377,10 +378,10 @@ class VarMaker (object) :
 
             ## content of args 
 
-            ## at most four argumentss:  (value, min, max, unit)
+            ## at most four arguments:  (value, min, max, unit)
             assert len ( args ) <= 4 , "make_var: invalid length of 'args' %s" % len ( args ) 
             
-            ## strip out the uniuts from args 
+            ## strip out the units from args 
             vunit = ''
             vargs = args 
             if args and isinstance ( args[-1] , string_types ) :
@@ -391,11 +392,11 @@ class VarMaker (object) :
             vargs = tuple ( float ( v ) for v in vargs )
 
             ## content of var 
-        
-            vvars = var   [0:]
+            
+            vvars = var [ 0 : ]
 
             ## pickup the name (if specified...) 
-            vname = vvars [0]
+            vname = vvars [ 0 ]
             if isinstance ( vname , string_types ) :
                 assert vname and ( ( not name ) or vname == name ) , \
                        "make_var: invalid specification of 'name' : %s/%s" % ( vname , name )
@@ -436,75 +437,89 @@ class VarMaker (object) :
             vargs_ = vargs
             vvars  = tuple ( sorted ( vvars ) ) 
             vargs  = tuple ( sorted ( vargs ) ) 
-            ## attention! for 3-tupel the order is (value, min, max)
+            ## attention! for 3-tuple the order is (value, min, max)
             if 3 == len ( vvars ) : vvars = vvars [ 1 ] , vvars [ 0 ] , vvars [ 2 ] 
             if 3 == len ( vargs ) : vargs = vargs [ 1 ] , vargs [ 0 ] , vargs [ 2 ] 
             if vvars != vvars_ : self.warning ("make_var('%s'):  %s -> %s " % ( name , str ( vvars_ ) , str ( vvars ) ) )  
             if vargs != vargs_ : self.warning ("make_var('%s'):  %s -> %s " % ( name , str ( vargs_ ) , str ( vargs ) ) )  
 
             ## there should be at least one useful number! 
-            assert 1<= len_vvars + len_vargs , "make_var: empty 'vvars' and 'vargs'!"
+            assert 1 <= len_vvars + len_vargs , "make_var: empty 'vvars' and 'vargs'!"
 
             fixed = False
             
             if   0 == len_vvars :
+                
                 ## OK 
                 params = vargs + ( unit , )
                 
             elif 1 == len_vvars and 0 == len_vargs :
+                
                 ## OK: use only vvar 
                 params = vvars + ( unit , )
                 
             elif 1 == len_vvars and 2 == len_vargs and vargs [ 0 ] <= vvars [ 0 ] <= vargs [ 1 ] :
+                
                 ## OK, get min/max from vargs 
                 params = vvars + vargs + ( unit , )
 
             elif 1 == len_vvars and 2 == len_vargs :
+                
                 ## OK, get min/max from vargs 
                 params = vvars + ( min ( vvars [ 0 ] , vargs [ 0 ] ) , max ( vvars[0] , vargs [ 1 ] ) , unit )
                 fixed = True 
 
             elif 1 == len_vvars and 3 == len_vargs and vargs [ 1 ] <= vvars [ 0 ] <= vargs [ 2 ] :
+                
                 ## OK 
                 params = vvars + ( min ( vvars [ 0 ] , vargs [ 1 ] ) , max ( vvars [ 0 ] , vargs [ 2 ]  ) , unit ) 
                 
             elif 1 == len_vvars and 3 == len_vargs :
+                
                 ## FIX IT
                 params = vvars + ( min ( vvars[0] , vargs [ 1 ] ) , max ( vvars[0] , vargs [ 2 ] ) , unit ) 
                 fixed  = True 
                 
             elif 1 == len_vvars :
+                
                 ## 'vargs" are ignored 
                 params = vvars + ( unit , )
                 fixed  = True
                 
             elif 2 == len_vvars and 0 == len_vargs :
+                
                 ## OK: min/max specified via vvar
                 params = vvars  + (  unit , ) 
 
             elif 2 == len_vvars and 1 == len_vargs and vvars [ 0 ] <= vargs [ 0 ] <= vvars [ 1 ] :
+                
                 ## get the value from vargs 
                 params = vargs + vvars + ( unit , ) 
 
             elif 2 == len_vvars and 1 == len_vargs :
+                
                 ## get the value from vargs 
                 params = vvars + ( unit , )
                 fixed  = True 
 
             elif 2 == len_vvars and 2 == len_vargs :
+                
                 ## igore vargs 
                 params = vvars + ( unit , ) 
                 
             elif 2 == len_vvars and 3 == len_vargs and vvars [ 0 ] <= vargs [ 0 ] <= vvars [ 1 ] :
+                
                 ## get the value from vargs 
                 params = vargs[:1]  + vvars + ( unit , )
             
             elif 2 == len_vvars :
+                
                 ## 'vargs" are ignored
                 params = vvars + ( unit , )
                 fixed  = True 
 
             elif 3 == len_vvars :
+                
                 ## ignore vargs 
                 params = vvars + ( unit , )
 
@@ -548,7 +563,7 @@ class VarMaker (object) :
         return var
 
     # ==========================================================================
-    ## check the possible name  duplication
+    ## check the possible name duplication
     def var_name  ( self , name ) :
         """ Check the possible name duplication
         """
@@ -586,7 +601,7 @@ class VarMaker (object) :
     #  bins = bining ( axis ) 
     #  @endocode
     def binning ( self , axis , name = '' ) :
-        """Create ROOT.RooFit.Binning from TAxis
+        """ Create ROOT.RooFit.Binning from TAxis
         >>> axis = ...
         >>> bins = binning ( axis )
         """

@@ -5,7 +5,7 @@
 // Include files
 // ============================================================================
 /** @file Ostap/qMath.h
- *  Collection of functions related qto Tsallis statistics 
+ *  Collection of functions related to Tsallis statistics 
  *  @see https://en.wikipedia.org/wiki/Tsallis_statistics
  *  @see Umarov, Sabir; Tsallis, Constantino; Steinberg, Stanly (2008). 
  *      "On a q-Central Limit Theorem Consistent with Nonextensive 
@@ -132,7 +132,7 @@ namespace Ostap
       const double y     , 
       const double k = 0 ) ;
     // ========================================================================
-    /** subtaction of two variables  in Kanadakis algebra
+    /** subtraction of two variables in Kanadakis algebra
      *  \f$ x \ominus_k y = x \oplus_k -y \f$ 
      */
     inline double kaniadakis_ksubtraction 
@@ -141,9 +141,7 @@ namespace Ostap
       const double k = 0 ) 
     { return kaniadakis_ksum ( x , -y , k ) ; }
     // ========================================================================
-    
-    // ========================================================================
-    /** product of two varibales in Kaniadakis algebra
+    /** product of two variables in Kaniadakis algebra
      *  \f$ x \otimes_k y = \frac{1}{k}              
      *  \sinh { \frac{1}{k} \asinh {kx} \asinh{ky} }
      *  \f$ 
@@ -152,8 +150,6 @@ namespace Ostap
     ( const double x     , 
       const double y     , 
       const double k = 0 ) ;
-    // ========================================================================
-    
     // ========================================================================
     /** k-exponent in Kaniadakis statistics 
      *  \f$ \exp_k(x) =
@@ -169,9 +165,6 @@ namespace Ostap
     ( const double x     ,
       const double k = 0 ) ;
     // ========================================================================
-
-
-    // ========================================================================
     /** k-logarithm in Kaniadakis statistics 
      *  \f$ \log_k(x) =
      *   \left\{  \begin{array}{ll}
@@ -184,10 +177,7 @@ namespace Ostap
     ( const double x     ,
       const double k = 0 ) ;
     // ======================================================================== 
-
   
-    
-
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================
