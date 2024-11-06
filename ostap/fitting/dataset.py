@@ -1398,6 +1398,7 @@ def ds_draw ( dataset ,
         return tree_draw ( dataset , what, cuts = cuts , opts = opts ,  first = first , last = last , delta = delta , **kwargs )
     elif isinstance ( dataset , ROOT.RooAbsData ) : 
         ranges = ds_range ( dataset , varlst , cuts = cuts , cut_range = cut_range , first = first , last  = last , delta = delta )
+        print  ( 'RANGES' , ranges , varlst ) 
     else :
         ## something else ? e.g. DataFrame 
         assert not cut_range                   , "ds_draw: `cut_range' is not allowed!"
@@ -1405,7 +1406,7 @@ def ds_draw ( dataset ,
         ranges = data_range ( dataset , varlst , cuts = cuts , delta = delta )
 
     if not ranges :
-        logger.warning ("ds_draw: nothning to draw, return None" ) 
+        logger.warning ("ds_draw: nothing to draw, return None" ) 
         return None 
         
     assert len ( ranges ) == nvars , 'Invalid ranges: %s' % str ( ranges )

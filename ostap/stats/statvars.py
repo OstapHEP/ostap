@@ -284,7 +284,6 @@ def data_statistics ( data , expressions , cuts = '' , *args ) :
         with rootException() :
             result = StatVar.statVar ( data , var , cuts , *args )
             if not result.isfinite() : logger.error ( "Invalid statistics for `%s`" % var )
-            return result 
         result = { var : result }
         return result 
         
@@ -293,6 +292,7 @@ def data_statistics ( data , expressions , cuts = '' , *args ) :
     names   = strings ( *var_lst )
     results = StatVar.Statistics()
     with rootException() :
+        
         if cuts : StatVar.statVars ( data , results , names , cuts , *args )
         else    : StatVar.statVars ( data , results , names        , *args )        
         assert len ( var_lst ) == len ( results ) , \
@@ -302,6 +302,7 @@ def data_statistics ( data , expressions , cuts = '' , *args ) :
     for v , r in zip ( var_lst , results ) :
         if not r.isfinite() : logger.error ( "Invalid statistics for `%s`" % v )
         result [ v ] = r
+        
     return result 
 
 # ==============================================================================
@@ -325,8 +326,10 @@ def data_minmax ( data , expressions , cuts = '' , *args ) :
     """
     results = data_statistics ( data , expressions , cuts , *args )
     if isinstance ( results , dictlike_types ) :
+        res = {} 
         for k, r in loop_items ( results ) :
-            results [ k ] = r.min() , r.max() 
+            res  [ k ] = r.min() , r.max()
+        results = res 
     else : results = results.min() , results.max()
     ## 
     return results 
@@ -352,7 +355,7 @@ def data_range ( data              ,
     >>> result  = data_range ( data , 'sin(x)*100*y' , 'x<0' )
     >>> results = data_range ( dataset , 'x,y,z,t,u,v'  , 'x<0' ) ## as dictionary
     """
-    results = data_minmax ( data, expressions , cuts , *args ) 
+    results = data_minmax ( data, expressions , cuts , *args )
     if isinstance ( results , dictlike_types ) :
         for k , r in loop_items ( results ) :
             mn, mx = r
