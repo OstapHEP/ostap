@@ -34,6 +34,43 @@ namespace Ostap
   namespace Math 
   {
     // ========================================================================
+    /// Are all elements are finite? 
+    template <class T> 
+    inline bool isfinite 
+    ( const TVectorT<T>& vct )
+    {
+      if ( !vct.IsValid() ) { return false ; }
+      const T* begin =         vct.GetMatrixArray () ;
+      const T* end   = begin + vct.GetNrows       () ;
+      for ( const T* v = begin ; v != end ; ++v )
+	{ if ( !std::isfinite ( *v ) ) { return false ; } }
+      return true ;
+    }
+    /// Are all elements are finite? 
+    template <class T> 
+    inline bool isfinite 
+    ( const TMatrixT<T>& mtrx )
+    {
+      if ( !mtrx.IsValid() ) { return false ; }
+      const T* begin =         mtrx.GetMatrixArray () ;
+      const T* end   = begin + mtrx.GetNrows() * mtrx.GetNcols() ;
+      for ( const T* v = begin ; v != end ; ++v )
+	{ if ( !std::isfinite ( *v ) ) { return false ; } }
+      return true ;
+    }
+    /// Are all elements are finite? 
+    template <class T> 
+    inline bool isfinite 
+    ( const TMatrixTSym<T>& mtrx )
+    {
+      if ( !mtrx.IsValid() ) { return false ; }
+      const T* begin =         mtrx.GetMatrixArray () ;
+      const T* end   = begin + mtrx.GetNrows() * mtrx.GetNcols() ;
+      for ( const T* v = begin ; v != end ; ++v )
+	{ if ( !std::isfinite ( *v ) ) { return false ; } }
+      return true ;
+    }
+    // ========================================================================
     /// specialisation for vectors  
     template <class T>
     struct Equal_To<TVectorT<T> > 
@@ -3288,6 +3325,10 @@ namespace Ostap
 
       // ======================================================================      
     } //                                  The end of namespace Ostap::Math::Ops
+    // ========================================================================
+
+    
+    
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================

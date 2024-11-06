@@ -109,6 +109,10 @@ namespace Ostap
       m_cnt2.reset() ;        
     }
     // =====================================================================
+    // all finite values ?
+    inline bool isfinite () const
+    { return m_cnt1.isfinite () && m_cnt2.isfinite() ; }
+    // =====================================================================    
   public: // the main method without decorations  
     // ======================================================================
     /// the main method without decorations  

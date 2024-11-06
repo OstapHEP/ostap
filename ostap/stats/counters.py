@@ -24,7 +24,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.math.ve          import Ostap, VE
-from   ostap.math.base        import isequal, isequalf, iszero, isfinite  
+from   ostap.math.base        import isequal, isequalf, iszero 
 from   ostap.core.ostap_types import dictlike_types, sequence_types
 import ROOT, cppyy, math, sys  
 # =============================================================================
@@ -148,18 +148,6 @@ def _se_ne_ ( s1 , s2 ) :
 SE.__eq__ = _se_eq_
 SE.__ne__ = _se_ne_
 
-# =============================================================================
-## Is the content of counter finit?
-def _se_isfinite_ ( cnt ) :
-    """ Is the content of counter finit? """
-    return \
-        isfinite ( cnt.min  () ) and \
-        isfinite ( cnt.max  () ) and \
-        isfinite ( cnt.mu   () ) and \
-        isfinite ( cnt.mu2  () ) 
-
-SE.isfinite = _se_isfinite_
-
 _new_methods_ += [
     SE.sum       ,
     SE.mean      ,
@@ -172,7 +160,6 @@ _new_methods_ += [
     SE.__str__   ,
     SE.__eq__    , 
     SE.__ne__    ,
-    SE.isfinite  ,
     ]
 
 # =============================================================================
@@ -218,18 +205,6 @@ WSE. minmax  = lambda s :            s.values  ().minmax()
 WSE.__repr__ = lambda s : 'WStat: '+ s.toString()
 WSE.__str__  = lambda s : 'WStat: '+ s.toString()
 
-# =============================================================================
-## Is the content of counter finit?
-def _wse_isfinite_ ( cnt ) :
-    """ Is the content of counter finit? """
-    return \
-        isfinite ( cnt.mu   () ) and \
-        isfinite ( cnt.mu2  () ) and \
-        cnt.values ().isfinite() and \
-        cnt.weights().isfinite() 
-
-WSE.isfinite = _wse_isfinite_
-
 _new_methods_ += [
     WSE.sum         ,
     WSE.mean        ,
@@ -240,7 +215,6 @@ _new_methods_ += [
     WSE.__str__     ,
     WSE.__eq__      ,
     WSE.__ne__      ,
-    WSE.isfinite () 
 ]
 
 # =============================================================================

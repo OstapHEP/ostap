@@ -122,6 +122,16 @@ namespace Ostap
     /// printout  to std::ostream
     std::ostream& fillStream ( std::ostream& o ) const ;
     // ======================================================================
+    // all finite values ?
+    inline bool isfinite () const
+    {
+      return
+	std::isfinite ( m_mu  ) &&
+	std::isfinite ( m_mu2 ) &&
+	m_values .isfinite ()   &&
+	m_weights.isfinite ()   ;
+    }
+    // ======================================================================
   public: // the main methods 
     // ======================================================================
     /** the only one important method: add value with the given weight 

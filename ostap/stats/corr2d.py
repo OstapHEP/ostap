@@ -88,9 +88,14 @@ class Corr2D(object) :
                                               self.selection ,
                                               *self.args     ) 
         
+        if not self.__wcov.isfinite() : logger.error ( "Invalid covariance for '%s` : `%s'" % ( self.var1 , self.var2 ) ) 
+        
         self.__counter1 = self.__wcov.counter1 ()  
         self.__counter2 = self.__wcov.counter2 ()
 
+        if not self.__counter1.isfinite() : logger.error ( "Invalid statistics for '%s'" % self.var1 )
+        if not self.__counter2.isfinite() : logger.error ( "Invalid statistics for '%s'" % self.var2 )
+            
         ## the covariance matrix 
         self.__cov2     = Ostap.Math.covariance  (  self.__wcov )
         

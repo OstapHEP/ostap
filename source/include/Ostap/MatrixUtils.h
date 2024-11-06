@@ -1753,6 +1753,26 @@ namespace Ostap
       }
     } ;
     // ========================================================================
+    
+    // ========================================================================
+    /// Are all elements of the vector finite?
+    template <class T, unsigned int D>
+    inline bool isfinite ( const ROOT::Math::SVector<T,D>& vct )
+    {
+      for ( const T& v : vct ) { if ( !std::isfinite ( v ) ) { return false ; } }
+      return true ;
+    }    
+    // ========================================================================
+    // Are all elements of the matrix finite?
+    template <class T, unsigned int D1, unsigned int D2, class R>
+    inline bool isfinite ( const ROOT::Math::SMatrix<T,D1,D2,R>& mtrx ) 
+    {
+      for ( const T& v : mtrx ) { if ( !std::isfinite ( v ) ) { return false ; } }
+      return true ;
+    }
+    // ========================================================================
+    
+    // ========================================================================
   } //                                                    end of namespace Math
   // ==========================================================================
 } //                                               end of namespace Ostap::Math

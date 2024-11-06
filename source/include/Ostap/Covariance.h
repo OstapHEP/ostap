@@ -91,6 +91,14 @@ namespace Ostap
       /// reset counters 
       void reset () ;
       // ======================================================================
+      // everything is finite?
+      inline bool isfinite () const
+      {
+	return std::isfinite ( m_cov2m )
+	  && m_cnt1.isfinite()
+	  && m_cnt2.isfinite() ;
+      }
+      // ======================================================================
     private:
       // ======================================================================
       Ostap::StatEntity m_cnt1  {   } ;
@@ -205,6 +213,14 @@ namespace Ostap
       // ======================================================================
       /// reset counters 
       void reset () ;
+      // ======================================================================
+      // everything is finite?
+      inline bool isfinite () const
+      {
+	return std::isfinite ( m_cov2m )
+	  && m_cnt1.isfinite()
+	  && m_cnt2.isfinite() ;
+      }
       // ======================================================================
     private:
       // ======================================================================

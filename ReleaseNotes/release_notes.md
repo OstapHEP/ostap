@@ -4,6 +4,8 @@
   1. add generalized Beta' distribution
   1. add `isfinite` method for `SE` & `WSE` counters
   1. `data_statistics` : add the check for the finite counters
+  1. add `isfinite` method for matrices and vectors
+  1. add `isfinite` method for `(W)Covariance` objects 
   
 ## Backward incompatible
     

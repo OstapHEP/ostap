@@ -852,6 +852,16 @@ namespace Ostap
           y.value () , y.cov2 () , ny ) ;      
     }
     // ========================================================================
+    /// Are all elements are finite? 
+    template <unsigned int N, typename SCALAR> 
+    inline bool isfinite 
+    ( const SVectorWithError<N,SCALAR>& vct )
+    {
+      return
+	Ostap::Math::isfinite ( vct.value () ) &&
+	Ostap::Math::isfinite ( vct.cov2  () ) ;	
+    }
+    // ========================================================================
   }
   // ==========================================================================
 } 

@@ -96,7 +96,7 @@ def mgetter ( mtrx , i , j ) :
 #  corr = correlation ( mtrx , 1 , 2 ) 
 #  @endcode
 def correlation ( mtrx , i , j ):
-    """Get the correlation element from the matrix-like object
+    """ Get the correlation element from the matrix-like object
     >>> mtrx = ...
     >>> corr = correlation ( mtrx , 1 , 2 ) 
     """
@@ -113,7 +113,7 @@ def correlation ( mtrx , i , j ):
 ## @class Method
 #  access and keep the method
 class Method(object) :
-    """Access and keep the method
+    """ Access and keep the method
     """
     def __init__ ( self , factory ) :
         
@@ -161,7 +161,7 @@ class Method(object) :
 ## @class Method2
 #  access and keep two methods 
 class Method2(object) :
-    """Access and keep two methods
+    """ Access and keep two methods
     """
 
     def __init__ ( self , factory1 , factory2  ) :
@@ -204,12 +204,11 @@ class Method2(object) :
 ## dummy function
 def dummy ( *a, **b ) : return NotImplemented
 
-
 # ==============================================================================
 ## @class LinAlg
 #  collection of decorators for vectors/matrices 
 class LinAlg(object) :
-    """Collection of decorators for vectors/matrices
+    """ Collection of decorators for vectors/matrices
     """
 
     with_numpy    = np
@@ -228,7 +227,6 @@ class LinAlg(object) :
 
     methods_DIV   = Method2 ( Ostap.Math.Ops.Div    , Ostap.Math.Ops.CanDiv     )
     methods_IDIV  = Method2 ( Ostap.Math.Ops.IDiv   , Ostap.Math.Ops.CanIDiv    )
-
     
     methods_DOT   = Method2 ( Ostap.Math.Ops.Dot    , Ostap.Math.Ops.CanDot     )
     methods_CROSS = Method2 ( Ostap.Math.Ops.Cross  , Ostap.Math.Ops.CanDot     )
@@ -246,10 +244,8 @@ class LinAlg(object) :
     method_EIGEN  = Method  ( Ostap.Math.Ops.Eigen  )
     method_TM     = Method  ( Ostap.Math.Ops.TM     )
 
-
     ## method_EQ     = Method  ( Ostap.Math.Ops.Eq     )
 
-    
     known_ssymmatrices = {}
     known_smatrices    = {}
     known_svectors     = {}
@@ -307,7 +303,7 @@ class LinAlg(object) :
                                      'column'        , 'columns'        , 
                                      'cross'         , 'dot'            , 
                                      'sym'           , 'asym'           , 'skew'  ) ) :
-        """restore useful attributes
+        """ Restore useful attributes
         """
         
         oa = '__old_attributes__' 
@@ -327,7 +323,7 @@ class LinAlg(object) :
     ## cleanup the LinAlg
     @staticmethod
     def CLEANUP () :
-        """Cleanup LinAlg
+        """ Cleanup LinAlg
         """
 
         while LinAlg.decorated_matrices :
@@ -449,7 +445,7 @@ class LinAlg(object) :
     #  @endcode
     @staticmethod 
     def V_NUMPY ( vct ) :
-        """Convert vector to numpy array:
+        """ Convert vector to numpy array:
         >>> vct = ...
         >>> na = vct.to_numpy() 
         """
@@ -463,7 +459,7 @@ class LinAlg(object) :
     #  @endcode 
     @staticmethod 
     def M_NUMPY ( mtrx ) :
-        """Convert matrix into numpy.matrix
+        """ Convert matrix into numpy.matrix
         >>> mtrx = ...
         >>> m    = mtrx.to_numpy() 
         """
@@ -480,7 +476,7 @@ class LinAlg(object) :
     # @endcode  
     @staticmethod
     def S_LA ( obj ) :
-        """Convert matrix/vector-like object to SMatrix/SVector
+        """ Convert matrix/vector-like object to SMatrix/SVector
         >>> obj = ...
         >>> res = LinAlg.S_LA ( obj )
         """
@@ -538,7 +534,7 @@ class LinAlg(object) :
     #  @endcode 
     @staticmethod
     def IADD ( a  , b ) :
-        """Increment  of matrix/vector objects
+        """ Increment  of matrix/vector objects
         >>> A += B  
         """
 
@@ -669,7 +665,7 @@ class LinAlg(object) :
     #  @endcode 
     @staticmethod
     def MUL ( a  , b ) :
-        """  Multiplication/scaling of vector/matrix objects:
+        """ Multiplication/scaling of vector/matrix objects:
         >>>  C = A * B
         """
         
@@ -721,7 +717,7 @@ class LinAlg(object) :
     #  @endcode 
     @staticmethod
     def RMUL ( a  , b ) :
-        """Right-multiplication of matrix/vector objects
+        """ Right-multiplication of matrix/vector objects
         >>> C = B * A 
         """
 
@@ -770,7 +766,7 @@ class LinAlg(object) :
     #  @endcode 
     @staticmethod
     def IDIV ( a  , b ) :
-        """Multiplicative decrement/scaling of matrix/vector objects
+        """ Multiplicative decrement/scaling of matrix/vector objects
         >>> A /= B  
         """
         
@@ -790,7 +786,7 @@ class LinAlg(object) :
     #  @endcode 
     @staticmethod
     def EQ ( a  , b ) :
-        """Equality for matrix/vector objects
+        """ Equality for matrix/vector objects
         >>> A == B  
         """
 
@@ -830,7 +826,7 @@ class LinAlg(object) :
     #  @endcode 
     @staticmethod
     def NE ( a  , b ) :
-        """Non-equality for matrix/vector objects
+        """ Non-equality for matrix/vector objects
         >>> A != B  
         """
 
@@ -896,7 +892,7 @@ class LinAlg(object) :
     #  @endcode 
     @staticmethod
     def CROSS ( a  , b ) :
-        """Cross-product (D1xD2 matrix) of two vectors 
+        """ Cross-product (D1xD2 matrix) of two vectors 
         >>> matrix = v1.cross ( v2 ) 
         """
         
@@ -924,7 +920,7 @@ class LinAlg(object) :
     #  @endcode 
     @staticmethod
     def SIM ( a  , b ) :
-        """Similarity  operation: C = B A B^T 
+        """ Similarity  operation: C = B A B^T 
         >>> A = ...
         >>> B = ...
         >>> C = A.Sim ( B )   
@@ -954,7 +950,7 @@ class LinAlg(object) :
         raise NotImplementedError ( "No SIM for %s/%s and %s/%s" % ( a , typename ( a ) , b , typename ( b ) ) )
 
     # =========================================================================
-    ## Similarity  operation \f$ C = B^T A B  \f$ 
+    ## Similarity operation \f$ C = B^T A B  \f$ 
     #  @code
     #  A = ...
     #  B = ...
@@ -963,7 +959,7 @@ class LinAlg(object) :
     #  @endcode 
     @staticmethod
     def SIMT ( a  , b ) :
-        """Similarity  operation C = B^T A B 
+        """ Similarity  operation C = B^T A B 
         >>> A = ...
         >>> B = ...
         >>> C = A.SimT ( B )   
@@ -1261,7 +1257,20 @@ class LinAlg(object) :
         """
         return Ostap.Math.maxabs_diagonal( mtrx )
 
-    
+    # =============================================================================
+    ## Are all elements of matrix/vector finite?
+    #  @code
+    #  mtrx = ...
+    #  mtrx.isfinite() 
+    #  @endcode
+    @staticmethod
+    def M_ISFINITE ( mtrx ) :
+        """ Are all elements of matrix/vector finite?
+        >>> mtrx = ...
+        >>> mtrx.isfinite() 
+        """
+        return Ostap.Math.isfinite ( mtrx )
+        
     # =============================================================================
     ##  get matrix shape
     #   @code
@@ -2274,6 +2283,7 @@ class LinAlg(object) :
 
         t.__reduce__    = LinAlg.V_REDUCE 
 
+        t.isfinite      = LinAlg.M_ISFINITE
         
         s = revct.search ( t.__name__ )
         if s :
@@ -2365,6 +2375,8 @@ class LinAlg(object) :
         m.diagonal             = LinAlg.M_DIAGONAL
         m.lnorm                = LinAlg.M_LNORM 
         m.mnorm                = LinAlg.M_MNORM 
+
+        m.isfinite             = LinAlg.M_ISFINITE
 
         if m.kRows == m.kCols :
             m.inverse   = LinAlg.M_INVERSE            

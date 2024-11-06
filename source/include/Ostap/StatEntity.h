@@ -326,6 +326,16 @@ namespace Ostap
     /// printout  to std::ostream
     std::ostream& fillStream ( std::ostream& o ) const ;
     // ======================================================================
+    // all finite values ?
+    inline bool isfinite () const
+    {
+      return
+	std::isfinite ( m_mu  ) &&
+	std::isfinite ( m_mu2 ) &&
+	std::isfinite ( m_min ) &&
+	std::isfinite ( m_max ) ;	
+    }
+    // ======================================================================
   private: // data members 
     // ======================================================================
     /// number of calls
