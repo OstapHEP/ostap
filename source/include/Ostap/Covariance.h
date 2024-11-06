@@ -39,7 +39,7 @@ namespace Ostap
       /// default constructor 
       Covariance () = default ;
       // ======================================================================
-      // constructor from two counters and the correlation coefficients 
+      // constructor from two counters and the correlation coefficient 
       Covariance
       ( const Counter& c1       , 
 	const Counter& c2       ,
@@ -54,17 +54,19 @@ namespace Ostap
       // ======================================================================
       /// get the moment \f$ \sum_i (x_i - \bar{x} ) ( y_i - \bar{y}) \f$
       inline double cov2m       () const  { return m_cov2m ; }
-      /// get the true covarinace 
+      /// get the true covariance 
       inline double covariance  () const  { return empty() ? 0.0 : m_cov2m / n() ; }
       /// get the correlation coefficient 
       double        correlation () const ;
       // ======================================================================
       /// number of entries 
-      inline unsigned long long  n         () const { return m_cnt1.n     () ; }
+      inline unsigned long long  n     () const { return m_cnt1.n     () ; }
       /// effective number of entries 
-      inline unsigned long long  nEff      () const { return m_cnt1.nEff  () ; }
+      inline unsigned long long  nEff  () const { return m_cnt1.nEff  () ; }
+      ///  number of "good" (non-zero) entries
+      inline unsigned long long  nGood () const { return m_cnt1.nGood () ; }
       /// empty ?
-      inline bool                empty     () const { return m_cnt1.empty () ; }
+      inline bool                empty () const { return m_cnt1.empty () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -156,7 +158,7 @@ namespace Ostap
       /// default constructor
       WCovariance () = default ;
       // ======================================================================
-      // constructor from two counters and the correlation coefficients 
+      // constructor from two counters and the correlation coefficient
       WCovariance
       ( const Counter& c1       , 
 	const Counter& c2       ,
@@ -171,21 +173,23 @@ namespace Ostap
       // ======================================================================
       /// get the moment \f$ \sum_i (x_i - \bar{x} ) ( y_i - \bar{y}) \f$
       inline double cov2m       () const  { return m_cov2m ; }
-      /// get the true covarinace 
+      /// get the true covariance 
       inline double covariance  () const  { return empty() ? 0.0 : m_cov2m / w () ; }
       /// get the correlation coefficient 
       double        correlation () const ;
       // ======================================================================
       /// number of entries 
-      inline unsigned long long  n         () const { return m_cnt1.n     () ; }
+      inline unsigned long long  n     () const { return m_cnt1.n     () ; }
       /// effective number of entries 
-      inline double              nEff      () const { return m_cnt1.nEff  () ; }
+      inline double              nEff  () const { return m_cnt1.nEff  () ; }
+      ///  number of "good" (non-zero) entries
+      inline unsigned long long  nGood () const { return m_cnt1.nGood () ; }
       /// empty ?
-      inline bool                empty     () const { return m_cnt1.empty () ; }
+      inline bool                empty () const { return m_cnt1.empty () ; }
       /// sum of weights 
-      inline double              w         () const { return m_cnt1.sumw  () ; }
+      inline double              w     () const { return m_cnt1.sumw  () ; }
       /// sum of weights 
-      inline double              sumw      () const { return m_cnt1.sumw  () ; }
+      inline double              sumw  () const { return m_cnt1.sumw  () ; }
       // ======================================================================
     public:
       // ======================================================================

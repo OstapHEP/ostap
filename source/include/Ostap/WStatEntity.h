@@ -60,7 +60,7 @@ namespace Ostap
     double                   rms        () const ;
     /// get the effective number of entries 
     double                   nEff       () const ;
-    /// get number of "good" (mnon-zero) entriesn
+    /// get number of "good" (non-zero) entries
     unsigned long long       nGood      () const { return m_values. n   () ; }
     /// minimal value (for non-zero weights) 
     double                   min        () const { return m_values. min () ; }
