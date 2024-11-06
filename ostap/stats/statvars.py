@@ -272,14 +272,19 @@ def data_statistics ( data , expressions , cuts = '' , *args ) :
     ## decode expressions & cuts 
     var_lst, cuts, input_string = vars_and_cuts ( expressions , cuts )
 
-    ## only one name is specified as strnig 
+    ## only one name is specified as string
     if   input_string :         
+        var    = var_lst [ 0 ]
         with rootException() :
-            return StatVar.statVar ( data , var_lst[0] , cuts , *args )
+            result = StatVar.statVar ( data , var , cuts , *args )
+            if not result.isfinite() : logger.error ( "Invalid statistics for `%s`" % var )
+            return result 
     elif 1 == len ( var_lst ) :
         var    = var_lst [ 0 ]
         with rootException() :
             result = StatVar.statVar ( data , var , cuts , *args )
+            if not result.isfinite() : logger.error ( "Invalid statistics for `%s`" % var )
+            return result 
         result = { var : result }
         return result 
         
@@ -289,12 +294,14 @@ def data_statistics ( data , expressions , cuts = '' , *args ) :
     results = StatVar.Statistics()
     with rootException() :
         if cuts : StatVar.statVars ( data , results , names , cuts , *args )
-        else    : StatVar.statVars ( data , results , names        , *args )
+        else    : StatVar.statVars ( data , results , names        , *args )        
         assert len ( var_lst ) == len ( results ) , \
             'Invalid output from StatVar::statVars!'
         
     result = {}
-    for v,r in zip ( var_lst , results ) : result [ v ] = r
+    for v , r in zip ( var_lst , results ) :
+        if not r.isfinite() : logger.error ( "Invalid statistics for `%s`" % v )
+        result [ v ] = r
     return result 
 
 # ==============================================================================
@@ -356,7 +363,7 @@ def data_range ( data              ,
     return results 
 
 # ==============================================================================
-## Get the covarince from dataxpressio
+## Get the covariance for expressions
 #  @code
 #  data    = ...
 #  result  = data_covariance ( data , 'x+y' , 'z'  , '0<u') 

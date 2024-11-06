@@ -2,7 +2,8 @@
     
   1. add `RooDataSet` -> `TTree` transformation
   1. add generalized Beta' distribution
-  
+  1. add `isfinite` method for `SE` & `WSE` counters
+  1. `data_statistics` : add the check for the finite counters 
 ## Backward incompatible
     
 ## Bug fixes

@@ -14,7 +14,8 @@ __date__    = "2014-06-08"
 __all__     = ( 'Corr2D', )
 # =============================================================================
 from   ostap.core.core    import cpp , WSE, Ostap 
-from   ostap.trees.cuts   import expression_types 
+from   ostap.trees.cuts   import expression_types
+from   ostap.math.base    import iszero 
 import ostap.math.linalg
 import ROOT,math
 # =============================================================================
@@ -125,8 +126,8 @@ class Corr2D(object) :
         scale2 = math.sqrt ( self.__evalues [ 1 ] )
 
         ## get the first and second rows of transformation matrix and scale them 
-        self.__srow1 = self.__row1 / scale1 
-        self.__srow2 = self.__row2 / scale2 
+        self.__srow1 = self.__row1 if iszero ( scale1 ) else self.__row1 / scale1 
+        self.__srow2 = self.__row2 if iszero ( scale2 ) else self.__row2 / scale2 
 
         self.__normalized1 = "(%+.16g*%s%+.16g*%s)" % ( self.__srow1 [ 0 ] , dv1 , self.__srow1 [ 1 ] , dv2 )
         self.__normalized2 = "(%+.16g*%s%+.16g*%s)" % ( self.__srow2 [ 0 ] , dv1 , self.__srow2 [ 1 ] , dv2 )
