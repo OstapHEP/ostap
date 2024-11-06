@@ -61,7 +61,7 @@ Ostap::Math::Covariance::Covariance
       const double covx  = m_cnt1.mu2() ;
       const double covy  = m_cnt2.mu2() ;
       if ( s_zero ( covx ) || s_zero ( covy ) ) { m_cov2m = 0 ; }
-      Ostap::Assert  ( 0<= covx & 0 <= covy     , 
+      Ostap::Assert  ( 0 <= covx && 0 <= covy     , 
 		       "Ostap::Math::Covariance: invalid variances!" ,
 		       "Ostap::Math::Covariance" ) ;
       m_cov2m *= std::sqrt ( covx * covy ) ;
@@ -166,8 +166,8 @@ Ostap::Math::WCovariance::WCovariance
   //
   const double acorr = std::abs ( corr ) ;
   Ostap::Assert ( acorr <= 1.0 || s_equal ( acorr , 1.0 ) ,
-		  "Ostap::Math::Covariance: invalid correlation!" ,
-		  "Ostap::Math::Covariance" ) ;
+		  "Ostap::Math::WCovariance: invalid correlation!" ,
+		  "Ostap::Math::WCovariance" ) ;
   //
   if      (  1 < corr ) { m_cov2m =  1 ; }
   else if ( -1 > corr ) { m_cov2m = -1 ; }
@@ -178,9 +178,9 @@ Ostap::Math::WCovariance::WCovariance
       const double covx  = m_cnt1.mu2() ;
       const double covy  = m_cnt2.mu2() ;
       if ( s_zero ( covx ) || s_zero ( covy ) ) { m_cov2m = 0 ; }
-      Ostap::Assert  ( 0<= covx & 0 <= covy     , 
-		       "Ostap::Math::Covariance: invalid variances!" ,
-		       "Ostap::Math::Covariance" ) ;
+      Ostap::Assert  ( 0 <= covx && 0 <= covy     , 
+		       "Ostap::Math::WCovariance: invalid variances!" ,
+		       "Ostap::Math::WCovariance" ) ;
       m_cov2m *= std::sqrt ( covx * covy ) ;
       m_cov2m *= w () ;
     }
