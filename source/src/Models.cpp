@@ -4400,9 +4400,10 @@ Ostap::Math::Benini::Benini
   Ostap::Assert ( 2 <= m_pars.size() , 
                   "Invalid number of parameters/1!" , 
                   "Ostap::Math::Benini" ) ;
-  Ostap::Assert ( m_pars.size() <= 10 , 
-                  "Invalid number of parameters/2!" , 
-                  "Ostap::Math::Benini" ) ;
+  std::transform ( m_pars.begin () ,
+		   m_pars.end   () ,
+		   m_pars.begin () ,
+		   []( const double v ) -> double { return std::abs ( v ) ;} ) ;
   Ostap::Assert ( 0 < std::accumulate ( m_pars.begin() , m_pars.end() , 0.0 ) ,
                   "Invalid number of parameters!" , 
                   "Ostap::Math::Benini" ) ;
@@ -4425,11 +4426,44 @@ Ostap::Math::Benini::Benini
   : Benini ( std::vector<double> ( n , 1.0 ) , scale , shift ) 
 {}
 // ============================================================================
+// two shape parameters: alpha and beta 
+// ============================================================================
+Ostap::Math::Benini::Benini
+( const double               alpha     , 
+  const double               beta      ,	
+  const double               scale     ,      
+  const double               shift     )
+  : Benini ( {{ alpha , beta }} , scale , shift )
+{}
+// ======================================================================
+// three shape parameters: alpha, beta & gamma 
+// ======================================================================
+Ostap::Math::Benini::Benini
+( const double               alpha     , 
+  const double               beta      , 	
+  const double               gamma     , 	
+  const double               scale     ,              // scale parameter 
+  const double               shift     )             // shift parameter
+  : Benini ( {{ alpha , beta , gamma }} , scale , shift )
+{}
+// ======================================================================
+// four shape parameters: alpha, beta, gamma & delta 
+// ======================================================================
+Ostap::Math::Benini::Benini
+( const double               alpha     , 
+  const double               beta      , 	
+  const double               gamma     , 	
+  const double               delta     , 	
+  const double               scale     ,              // scale parameter 
+  const double               shift     )             // shift parameter
+  : Benini ( {{ alpha , beta , gamma , delta }} , scale , shift )
+{}    
+// ============================================================================
 bool Ostap::Math::Benini::_setPar  
 ( const unsigned short i     , 
   const double         value ) 
 {
-  if ( i < m_pars.size() ) { return false ; }
+  if ( m_pars.size() <= i ) { return false ; }
   const double avalue = std::abs ( value ) ;
   if ( s_equal ( m_pars [ i ] , avalue ) ) { return false ; }
   //
@@ -4452,6 +4486,7 @@ bool Ostap::Math::Benini::setPars
     m_pars  [ i ] =              avalue ;
     m_pars2 [ i ] = ( i + 1 ) *  avalue ;
     //
+    changed = true ;
   }
   return changed ;
 }

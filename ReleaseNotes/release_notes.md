@@ -12,7 +12,8 @@
 ## Bug fixes
     
   1. fix `ostap-check-dependencies`
-    
+  1. fix  bug in `Ostap::Math::Benini`
+  
 # v1.13.6.0
 
 ## New features

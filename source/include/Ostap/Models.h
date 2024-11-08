@@ -3020,7 +3020,7 @@ namespace Ostap
      *  - scale  \f$ s    \f$ 
      *  - shape parameters \f$ p_i \f$
      * 
-     * Cumulative distributuon fnuctiin is defined as
+     * Cumulative distribution function is defined as
      * \f[ F(x) = 1 - \mathem{e}^{ - \sum_i \left| p_i \right| \Delta^i } \f]
      * where \f$ \Delta = \log \frac{x-\mu}{s} \f$ 
      *
@@ -3046,6 +3046,30 @@ namespace Ostap
       ( const unsigned short       n         ,              // number of shape parameters 
         const double               scale     ,              // scale parameter 
         const double               shift     ) ;            // shift parameter 
+      // ======================================================================
+      /// two shape parameters: alpha and beta 
+      Benini
+      ( const double               alpha     , 
+	const double               beta      ,	
+	const double               scale     ,              // scale parameter 
+        const double               shift     ) ;            // shift parameter
+      // ======================================================================
+      /// three shape parameters: alpha, beta & gamma 
+      Benini
+      ( const double               alpha     , 
+	const double               beta      , 	
+	const double               gamma     , 	
+	const double               scale     ,              // scale parameter 
+        const double               shift     ) ;            // shift parameter
+      // ======================================================================
+      /// four shape parameters: alpha, beta, gamma & delta 
+      Benini
+      ( const double               alpha     , 
+	const double               beta      , 	
+	const double               gamma     , 	
+	const double               delta     , 	
+	const double               scale     ,              // scale parameter 
+        const double               shift     ) ;            // shift parameter
       // ======================================================================
     public:
       // ======================================================================
