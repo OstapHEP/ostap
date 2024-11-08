@@ -1893,6 +1893,7 @@ class FUN1(AFUN1,F1AUX) :
         if isinstance ( other , constant_types ) and iszero  ( other     ) : return self.__constant ( 0 )
         return self.__f1_op__ ( other ,  Ostap.MoreRooFit.Tanh   , pattern = "tanh(%s*%s)" )  
 
+
     # ==============================================================================
     ## Hyperbolic secant function \f$ f =  sech ( ab )  \f$
     #  @code
@@ -1927,7 +1928,37 @@ class FUN1(AFUN1,F1AUX) :
         return self.__f1_op__ ( other ,  Ostap.MoreRooFit.Atan2   , pattern = "atan2(%s,%s)" )  
     __atan__ = __atan2__
 
+    # ==============================================================================
+    ## Sigmoid function \f$ f = \frac{1+ \tanh a b }{2}  \f$
+    #  @code
+    #  from ostap.math.math_ve import sigmoid 
+    #  f1 = ...
+    #  ff = sigmoid ( f1 ) 
+    #  @endcode 
+    def  __sigmoid__ ( self , other = 1 ) :
+        """ sigmoid f = atan2(a,b)
+        >>> from ostap.math.math_ve import sigmoid
+        >>> f1 = ...
+        >>> ff = sigmoid ( f1 ) 
+        """
+        if isinstance ( other , constant_types ) and iszero  ( other     ) : return self.__constant ( 0.5 )
+        return self.__f1_op__ ( other ,  Ostap.MoreRooFit.Sigmoid   , pattern = "sigmoid(%s*%s)" )  
 
+    # ==============================================================================
+    ## Hypot function \f$ f = \sqrt{ a^2 + b^2}  \f$
+    #  @code
+    #  from ostap.math.math_ve import hypot 
+    #  f1 = ...
+    #  ff = hypot ( f1 ) 
+    #  @endcode 
+    def  __hypot__ ( self , other = 1 ) :
+        """ Hypot  f = atan2(a,b)
+        >>> from ostap.math.math_ve import hypot
+        >>> f1 = ...
+        >>> ff = hypot ( f1 ) 
+        """
+        return self.__f1_op__ ( other ,  Ostap.MoreRooFit.Hypot   , pattern = "hypot(%s,%s)" )  
+    
     # ==============================================================================
     ## maximal for two functions \f$ f =  \max ( a , b )  \f$
     #  @code
@@ -2914,6 +2945,38 @@ class FUN2(AFUN2) :
         if isinstance ( other , constant_types ) and iszero  ( other     ) : return self.__constant ( 0.5 * math.pi )
         return self.__f2_op__ ( other ,  Ostap.MoreRooFit.Atan2   , pattern = "atan2(%s,%s)" )  
     __atan__ = __atan2__
+
+    # ==============================================================================
+    ## Sigmoid function \f$ f = \frac{1+ \tanh a b }{2}  \f$
+    #  @code
+    #  from ostap.math.math_ve import sigmoid 
+    #  f1 = ...
+    #  ff = sigmoid ( f1 ) 
+    #  @endcode 
+    def  __sigmoid__ ( self , other = 1 ) :
+        """ sigmoid f = atan2(a,b)
+        >>> from ostap.math.math_ve import sigmoid
+        >>> f1 = ...
+        >>> ff = sigmoid ( f1 ) 
+        """
+        if isinstance ( other , constant_types ) and iszero  ( other     ) : return self.__constant ( 0.5 )
+        return self.__f2_op__ ( other ,  Ostap.MoreRooFit.Sigmoid   , pattern = "sigmoid(%s*%s)" )  
+
+    # ==============================================================================
+    ## Hypot function \f$ f = \sqrt{ a^2 + b^2}  \f$
+    #  @code
+    #  from ostap.math.math_ve import hypot 
+    #  f1 = ...
+    #  ff = hypot ( f1 ) 
+    #  @endcode 
+    def  __hypot__ ( self , other = 1 ) :
+        """ Hypot  f = atan2(a,b)
+        >>> from ostap.math.math_ve import hypot
+        >>> f1 = ...
+        >>> ff = hypot ( f1 ) 
+        """
+        return self.__f2_op__ ( other ,  Ostap.MoreRooFit.Hypot   , pattern = "hypot(%s,%s)" )  
+   
     
     # ==============================================================================
     ## maximal for two functions \f$ f =  \max ( a , b )  \f$
@@ -3910,6 +3973,38 @@ class FUN3(AFUN3) :
         return self.__f3_op__ ( other ,  Ostap.MoreRooFit.Atan2   , pattern = "atan2(%s,%s)" )  
     __atan__ = __atan2__
 
+    
+    # ==============================================================================
+    ## Sigmoid function \f$ f = \frac{1+ \tanh a b }{2}  \f$
+    #  @code
+    #  from ostap.math.math_ve import sigmoid 
+    #  f1 = ...
+    #  ff = sigmoid ( f1 ) 
+    #  @endcode 
+    def  __sigmoid__ ( self , other = 1 ) :
+        """ sigmoid f = atan2(a,b)
+        >>> from ostap.math.math_ve import sigmoid
+        >>> f1 = ...
+        >>> ff = sigmoid ( f1 ) 
+        """
+        if isinstance ( other , constant_types ) and iszero  ( other     ) : return self.__constant ( 0.5 )
+        return self.__f3_op__ ( other ,  Ostap.MoreRooFit.Sigmoid   , pattern = "sigmoid(%s*%s)" )  
+
+    # ==============================================================================
+    ## Hypot function \f$ f = \sqrt{ a^2 + b^2}  \f$
+    #  @code
+    #  from ostap.math.math_ve import hypot 
+    #  f1 = ...
+    #  ff = hypot ( f1 ) 
+    #  @endcode 
+    def  __hypot__ ( self , other = 1 ) :
+        """ Hypot  f = atan2(a,b)
+        >>> from ostap.math.math_ve import hypot
+        >>> f1 = ...
+        >>> ff = hypot ( f1 ) 
+        """
+        return self.__f3_op__ ( other ,  Ostap.MoreRooFit.Hypot   , pattern = "hypot(%s,%s)" )  
+    
     # ==============================================================================
     ## maximal for two functions \f$ f =  \max ( a , b )  \f$
     #  @code

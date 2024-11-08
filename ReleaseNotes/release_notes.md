@@ -6,6 +6,7 @@
   1. `data_statistics` : add the check for the finite counters
   1. add `isfinite` method for matrices and vectors
   1. add `isfinite` method for `(W)Covariance` objects 
+  1. add `Ostap::MoreRooFit::Hypot` and `var_hypot`
   
 ## Backward incompatible
     

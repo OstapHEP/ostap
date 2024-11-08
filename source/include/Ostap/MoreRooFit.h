@@ -387,6 +387,11 @@ namespace Ostap
       ( const std::string& name  , 
         const std::string& title , 
         RooAbsReal&        x     ) ;
+      /// constructor with a variable
+      OneVar
+      ( const std::string& name  , 
+        const std::string& title , 
+        const double       x     ) ;
       /// copy 
       OneVar
       ( const OneVar&   right       , 
@@ -502,12 +507,31 @@ namespace Ostap
       // ========================================================================
     public:
       // ========================================================================
-      /// constructor with a variable
+      /// constructor with two variables 
       TwoVars 
       ( const std::string& name  , 
         const std::string& title , 
         RooAbsReal&        x     ,
         RooAbsReal&        y     ) ;
+      /// constructor with two variables
+      TwoVars 
+      ( const std::string& name  , 
+        const std::string& title , 
+        RooAbsReal&        x     ,
+        const double       y     ) ;
+      /// constructor with two variables
+      TwoVars 
+      ( const std::string& name  , 
+        const std::string& title , 
+        const double       x     ,
+        RooAbsReal&        y     ) ;
+      /// constructor with two variables
+      TwoVars 
+      ( const std::string& name  , 
+        const std::string& title , 
+        const double       x     ,
+        const double       y     ) ;
+      /// constructor with two variables
       TwoVars
       ( RooAbsReal&        x     ,
         RooAbsReal&        y     ,
@@ -2285,8 +2309,6 @@ namespace Ostap
       // ======================================================================
     }; //
     // ========================================================================
-
-    // ========================================================================
     /** @class Sigmoid
      *  Evaluate \f$ \frac{1+\tanh ab}{2}  \f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
@@ -2355,6 +2377,81 @@ namespace Ostap
       Double_t evaluate () const override ;
       // ======================================================================
     }; //
+    // ========================================================================
+    /** @class Hypot
+     *  Evaluate \f$ \sqrt{ a^2 + b^2} \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2024-11-08
+     */
+    class Hypot final : public TwoVars
+    {
+      // ========================================================================
+      ClassDefOverride(Ostap::MoreRooFit::Hypot , 1 ) ;  
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      Hypot
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     , 
+	RooAbsReal&        b     ) ;
+      /// constructor with two variables
+      Hypot 
+      ( RooAbsReal&         a           , 
+	RooAbsReal&         b           ,
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : Hypot ( name , title , a , b )
+      {}
+      /// constructor with two variables
+      Hypot 
+      ( RooAbsReal&         a           , 
+	const double        b           ,
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : Hypot ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables
+      Hypot 
+      ( const double        a           ,
+	RooAbsReal&         b           , 
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : Hypot ( name , title , RooFit::RooConst ( a ) , b )
+      {}
+      /// constructor with one variable
+      Hypot 
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     ,
+	const double       b = 1 ) 
+        : Hypot ( name , title , a , RooFit::RooConst ( b ) ) 
+      {}
+      // ======================================================================
+      /// fake defautl constructor (needed for serisalization)
+      Hypot () = default ;
+      // ======================================================================
+      // copy 
+      Hypot ( const Hypot& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      Hypot* clone ( const char* newname ) const override 
+      { return new Hypot ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
+    }; //
+    // ========================================================================
+
+
+
+
+    
     // ========================================================================
     /** Bessel function \f$ J_{\nu}(x)\f$
      *  @see Ostap::Math::bessel_Jnu 

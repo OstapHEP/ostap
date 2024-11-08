@@ -32,7 +32,7 @@ __all__     = (
     'bessel_J'     , 'bessel_Y'   , 
     'bessel_I'     , 'bessel_K'   , 
     'gauss_pdf'    , 'gauss_cdf'  ,
-    'hypot'        , 'fma'        ,
+    'hypot'        , 'sigmoid'    , 'fma' ,
     'minv'         , 'maxv'       ,
     'agm'          , 'ghm'        ,
     'significance' , 'nsigmas'    , 'nsigma'
@@ -569,9 +569,28 @@ _hypot_ = Ostap.Math.hypot
 def hypot ( x , y , c = 0 ) : 
     """ Evaluate hypot(x,y)=sqrt{x*x+y*y} with uncertainties 
     """
+    fun = getattr ( x , '__hypot__' , None )
+    if fun : return fun ( y )
+
     _x = VE ( x )
     _y = VE ( y )
     return _hypot_ ( _x , _y , c )
+
+
+# =============================================================================
+## evaluate sigmoid(x,y) = (1+tanh(xy))/2 
+#   \f$ \frac{1+\tanh xy}{2} \f$
+#  @param x (INPUT) the first parameter
+#  @param y (INPUT) the second parameter
+#  @return the value of <code>hypot</code> function
+#  @warning invalid and small covariances are ignored
+def sigmoid ( x , y = 1  ) : 
+    """ Evaluate sigmoid(x,y)=(1+tanh(x*y))/2  with uncertainties 
+    """
+    fun = getattr ( x , '__sigmoid__' , None )
+    if fun : return fun ( y )
+    xy = x * y 
+    return ( 1.0 + tanh ( xy ) ) * 0.5 
 
 # =============================================================================
 _pochhammer = Ostap.Math.pochhammer

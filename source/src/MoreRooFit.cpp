@@ -55,6 +55,7 @@ ClassImp(Ostap::MoreRooFit::Tanh          )
 ClassImp(Ostap::MoreRooFit::Sech          )
 ClassImp(Ostap::MoreRooFit::Atan2         )
 ClassImp(Ostap::MoreRooFit::Sigmoid       )
+ClassImp(Ostap::MoreRooFit::Hypot         )
 ClassImp(Ostap::MoreRooFit::BesselJ       )
 ClassImp(Ostap::MoreRooFit::BesselY       )
 ClassImp(Ostap::MoreRooFit::BesselI       )
@@ -405,6 +406,15 @@ Ostap::MoreRooFit::OneVar::OneVar
   , m_x ( "!x" , "x" , this , x ) 
 {}
 // ============================================================================
+// constructor with variable
+// ============================================================================
+Ostap::MoreRooFit::OneVar::OneVar
+( const std::string& name  , 
+  const std::string& title , 
+  const double       x     )
+  : OneVar ( name , title , RooFit::RooConst ( x ) )
+{}
+// ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::MoreRooFit::OneVar::OneVar
@@ -421,7 +431,7 @@ Ostap::MoreRooFit::OneVar::~OneVar(){}
 
 
 // ============================================================================
-// constructor with variable
+// constructor with two variables
 // ============================================================================
 Ostap::MoreRooFit::TwoVars::TwoVars
 ( const std::string& name  , 
@@ -431,6 +441,36 @@ Ostap::MoreRooFit::TwoVars::TwoVars
   : OneVar ( name_   ( name  , "two" , x , y ) ,
              title1_ ( title , "two" , x , y ) , x )
   , m_y ( "!y" , "y" , this , y ) 
+{}
+// ============================================================================
+// constructor with two variables
+// ============================================================================
+Ostap::MoreRooFit::TwoVars::TwoVars
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        x     ,
+  const double       y     ) 
+  : TwoVars ( name , title , x , RooFit::RooConst ( y ) )
+{}
+// ============================================================================
+// constructor with two variables
+// ============================================================================
+Ostap::MoreRooFit::TwoVars::TwoVars
+( const std::string& name  , 
+  const std::string& title , 
+  const double       x     ,
+  RooAbsReal&        y     ) 
+  : TwoVars ( name , title , RooFit::RooConst ( x ) , y )
+{}
+// ============================================================================
+// constructor with two variables
+// ============================================================================
+Ostap::MoreRooFit::TwoVars::TwoVars
+( const std::string& name  , 
+  const std::string& title , 
+  const double       x     ,
+  const double       y     )
+  : TwoVars ( name , title , RooFit::RooConst ( x ) , RooFit::RooConst ( y ) )	      
 {}
 // ============================================================================
 // copy constructor 
@@ -852,6 +892,17 @@ Ostap::MoreRooFit::Sigmoid::Sigmoid
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
+Ostap::MoreRooFit::Hypot::Hypot
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "hypot" , a , b ) ,
+              title1_ ( title , "hypot" , a , b ) , a , b )
+{}
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
 Ostap::MoreRooFit::BesselJ::BesselJ
 ( const std::string& name  , 
   const std::string& title , 
@@ -1042,6 +1093,9 @@ Double_t Ostap::MoreRooFit::Atan2::evaluate () const
 // ============================================================================
 Double_t Ostap::MoreRooFit::Sigmoid::evaluate () const 
 { const double a = m_x ; const double b = m_y ; return 0.5 * ( 1 + std::tanh ( a * b ) ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Hypot::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::hypot ( a , b ) ; }
 // ============================================================================
 Double_t Ostap::MoreRooFit::MaxV::evaluate () const 
 { const double a = m_x ; const double b = m_y ; return std::max  ( a , b ) ; }

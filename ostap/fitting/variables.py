@@ -45,6 +45,8 @@ __all__     = (
     'var_tanh'       , ## hyperbolic tangent  function for RooAbsReal objects           
     'var_sech'       , ## hyperbolic secant   function for RooAbsReal objects           
     'var_atan2'      , ## inverse tangent     function for RooAbsReal objects
+    'var_sigmoid'    , ## sigmoid             function for RooAbsReal objects
+    'var_hypot'      , ## hypot               function for RooAbsReal objects    
     'var_bessel_J'   , ## regular   Bessel function 
     'var_bessel_Y'   , ## irregular Bessel function 
     'var_bessel_I'   , ## modified  Bessel function 
@@ -587,7 +589,7 @@ _new_methods_ += [
 
 # =============================================================================
 def _rav_getval_  ( self ) :
-    """Get the value, associated with the variable
+    """ Get the value, associated with the variable
     >>> var = ...
     >>> print ( var.value )
     """
@@ -595,7 +597,7 @@ def _rav_getval_  ( self ) :
 
 # =============================================================================
 def _rav_getvale_ ( self ) :
-    """Get the value(and the error), associated with the variable
+    """ Get the value(and the error), associated with the variable
     >>> var = ...
     >>> print  ( var.value )
     """
@@ -605,7 +607,7 @@ def _rav_getvale_ ( self ) :
 
 # =============================================================================
 def _rav_setval_  ( self , value ) :
-    """Assign the value for the variable 
+    """ Assign the value for the variable 
     >>> var = ...
     >>> var.value = 10 
     """
@@ -615,7 +617,7 @@ def _rav_setval_  ( self , value ) :
 
 # =============================================================================
 def _rav_setvalc_  ( self , value ) :
-    """Assign the valeu for the variable 
+    """ Assign the value for the variable 
     >>> var = ...
     >>> var.value = 10 
     """
@@ -628,7 +630,7 @@ def _rav_setvalc_  ( self , value ) :
 
 # =============================================================================
 def _rav_geterr_  ( self ) :
-    """Get the error
+    """ Get the error
     >>> var = ...
     >>> print(var.error)
     """
@@ -636,7 +638,7 @@ def _rav_geterr_  ( self ) :
 
 # =============================================================================
 def _rav_seterr_  ( self , value ) :
-    """Set the error
+    """ Set the error
     >>> var = ...
     >>> var.error = 10 
     """
@@ -1592,7 +1594,7 @@ ROOT.RooLinearVar.slope     = property ( _rlinv_slope_ , None , None , _rlinv_sl
 #  @see Ostap::MoreRooFit::get_offset
 #  @see RooLinearVar
 def _rlinv_offset_ ( var ) : 
-    """Get the offset variable from <code>RooLinearVar</code>
+    """ Get the offset variable from <code>RooLinearVar</code>
     >>> linvar = ...
     >>> offset = linvar.get_offset () 
     >>> offset = linvar.offset         ## ditto
@@ -1615,7 +1617,7 @@ ROOT.RooLinearVar.offset     = property ( _rlinv_offset_ , None , None , _rlinv_
 #  e   = var_abs ( var ) 
 #  @endcode 
 def var_abs ( a , b = 1 , name = '' , title = '' ) :
-    """Absolute value: f(x) = abs(ab)
+    """ Absolute value: f(x) = abs(ab)
     >>> var = ...
     >>> e   = var_abs ( var ) 
     """
@@ -1640,7 +1642,7 @@ def var_abs ( a , b = 1 , name = '' , title = '' ) :
 #  e   = var_exp ( var ) 
 #  @endcode 
 def var_exp ( a , b = 1 , name = '' , title = '' ) :
-    """Exponent: f(x) = exp(ab)
+    """ Exponent: f(x) = exp(ab)
     >>> var = ...
     >>> e   = var_exp ( var ) 
     """
@@ -1665,7 +1667,7 @@ def var_exp ( a , b = 1 , name = '' , title = '' ) :
 #  e   = var_log ( var ) 
 #  @endcode 
 def var_log ( a , b = 1 , name = '' , title = '' ) :
-    """logarithm f(x) = log(ab)
+    """ Logarithm f(x) = log(ab)
     >>> var = ...
     >>> e   = var_log ( var ) 
     """
@@ -1688,7 +1690,7 @@ def var_log ( a , b = 1 , name = '' , title = '' ) :
 #  e   = var_log10 ( var ) 
 #  @endcode 
 def var_log10 ( a , b = 1 , name = '' , title = '' ) :
-    """logarithm f(x) = log10(ab)
+    """ Logarithm f(x) = log10(ab)
     >>> var = ...
     >>> e   = var_log10 ( var ) 
     """
@@ -1712,7 +1714,7 @@ def var_log10 ( a , b = 1 , name = '' , title = '' ) :
 #  e   = var_erf ( var ) 
 #  @endcode 
 def var_erf ( a , b = 1 , name = '' , title = '' ) :
-    """Error function f(x) = erf(ab)
+    """ Error function f(x) = erf(ab)
     >>> var = ...
     >>> e   = var_erf ( var ) 
     """
@@ -1737,7 +1739,7 @@ def var_erf ( a , b = 1 , name = '' , title = '' ) :
 #  e   = var_erfc ( var ) 
 #  @endcode 
 def var_erfc ( a , b = 1 , name = '' , title = '' ) :
-    """Error function f(x) = erfc(ab)
+    """ Complementary Error function f(x) = erfc(ab)
     >>> var = ...
     >>> e   = var_erfc ( var ) 
     """
@@ -1755,7 +1757,6 @@ def var_erfc ( a , b = 1 , name = '' , title = '' ) :
     #
     return Ostap.MoreRooFit.Erf ( a, b , name , title ) 
 
-
 # ==============================================================================
 ## Sine \f$ f = \sin ab\f$
 #  @code
@@ -1763,7 +1764,7 @@ def var_erfc ( a , b = 1 , name = '' , title = '' ) :
 #  e   = var_sin ( var ) 
 #  @endcode 
 def var_sin ( a , b = 1 , name = '' , title = '' ) :
-    """Sine  f(x) = sin(ab)
+    """ Sine  f(x) = sin(ab)
     >>> var = ...
     >>> e   = var_sin ( var ) 
     """
@@ -1788,7 +1789,7 @@ def var_sin ( a , b = 1 , name = '' , title = '' ) :
 #  e   = var_cos ( var ) 
 #  @endcode 
 def var_cos ( a , b = 1 , name = '' , title = '' ) :
-    """Cosine  f(x) = cos(ab)
+    """ Cosine  f(x) = cos(ab)
     >>> var = ...
     >>> e   = var_cos ( var ) 
     """
@@ -1814,7 +1815,7 @@ def var_cos ( a , b = 1 , name = '' , title = '' ) :
 #  e   = var_tan ( var ) 
 #  @endcode 
 def var_tan ( a , b = 1 , name = '' , title = '' ) :
-    """Tangent  f(x) = tan(ab)
+    """ Tangent  f(x) = tan(ab)
     >>> var = ...
     >>> e   = var_tan ( var ) 
     """
@@ -1840,7 +1841,7 @@ def var_tan ( a , b = 1 , name = '' , title = '' ) :
 #  e   = var_sinh ( var ) 
 #  @endcode 
 def var_sinh ( a , b = 1 , name = '' , title = '' ) :
-    """Hyperbolic sine  f(x) = sinh(ab)
+    """ Hyperbolic sine  f(x) = sinh(ab)
     >>> var = ...
     >>> e   = var_sinh ( var ) 
     """
@@ -1866,7 +1867,7 @@ def var_sinh ( a , b = 1 , name = '' , title = '' ) :
 #  e   = var_cosh ( var ) 
 #  @endcode 
 def var_cosh ( a , b = 1 , name = '' , title = '' ) :
-    """Hyperbolic cosine  f(x) = cos(ab)
+    """ Hyperbolic cosine  f(x) = cos(ab)
     >>> var = ...
     >>> e   = var_cosh ( var ) 
     """
@@ -1891,7 +1892,7 @@ def var_cosh ( a , b = 1 , name = '' , title = '' ) :
 #  e   = var_tanh ( var ) 
 #  @endcode 
 def var_tanh ( a , b = 1 , name = '' , title = '' ) :
-    """Hyperbolic tangent  f(x) = tanh(ab)
+    """ Hyperbolic tangent  f(x) = tanh(ab)
     >>> var = ...
     >>> e   = var_tanh ( var ) 
     """
@@ -1916,7 +1917,7 @@ def var_tanh ( a , b = 1 , name = '' , title = '' ) :
 #  e   = var_sech ( var ) 
 #  @endcode 
 def var_sech ( a , b = 1 , name = '' , title = '' ) :
-    """Hyperbolic tangent  f(x) = tanh(ab)
+    """ Hyperbolic secant   f(x) = tanh(ab)
     >>> var = ...
     >>> e   = var_tanh ( var ) 
     """
@@ -1935,13 +1936,13 @@ def var_sech ( a , b = 1 , name = '' , title = '' ) :
     return Ostap.MoreRooFit.Sech ( a, b , name , title )
 
 # ==============================================================================
-## arctangent \f$ f = atan2 (a,b)\f$
+## Inverse tangent \f$ f = atan2 (a,b)\f$
 #  @code
 #  var = ...
 #  e   = var_atan2 ( var ) 
 #  @endcode 
 def var_atan2 ( a , b = 1 , name = '' , title = '' ) :
-    """Inverse tangent  f(x) = atan2(a,b)
+    """ Inverse tangent  f(x) = atan2(a,b)
     >>> var = ...
     >>> e   = var_atan2 ( var ) 
     """
@@ -1955,6 +1956,51 @@ def var_atan2 ( a , b = 1 , name = '' , title = '' ) :
         ab = math.atan2 ( float ( a ) , float ( b ) ) 
         return ROOT.RooFit.RooConst ( ab )      ## RETURN
     return Ostap.MoreRooFit.Atan2 ( a, b , name , title )
+
+# ==============================================================================
+## Sigmoid \f$ f = \frac{1+ \tanh (ab)}{2}\f$
+#  @code
+#  var = ...
+#  e   = var_sigmoid( var ) 
+#  @endcode 
+def var_sigmoid ( a , b = 1 , name = '' , title = '' ) :
+    """ Sigmoid: f(x) = (1+tanh(ab))/2
+    >>> var = ...
+    >>> e   = var_sigmoid( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
+    if fa and fb :
+        ab = 0.5 * ( 1 + math.tanh ( float ( a ) , float ( b ) ) )        
+        return ROOT.RooFit.RooConst ( ab )      ## RETURN
+    return Ostap.MoreRooFit.Sigmoid ( a , b , name , title )
+
+
+# ==============================================================================
+## Hypot \f$ f = \sqrt{a^2 + b^2} \f$
+#  @code
+#  var = ...
+#  e   = var_hypot( var ) 
+#  @endcode 
+def var_hypot ( a , b = 1 , name = '' , title = '' ) :
+    """ Hypot: f(x) = sqrt(a*a + b*b) 
+    >>> var = ...
+    >>> e   = var_hypot( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
+    if fa and fb :
+        ab = math.hypot ( float ( a ) , float ( b ) )         
+        return ROOT.RooFit.RooConst ( ab )      ## RETURN
+    return Ostap.MoreRooFit.Hypot ( a , b , name , title )
 
 # ==============================================================================
 ## Bessel function \f$ f = J_{\nu}(x)\f$
