@@ -86,7 +86,7 @@ models = []
 #  @see Ostap::Models::GammaDist 
 #  @see Ostap::Math::GammaDist 
 class GammaDist_pdf(PDF1) :
-    """Gamma-distribution with shape/scale parameters
+    """ Gamma-distribution with shape/scale parameters
     http://en.wikipedia.org/wiki/Gamma_distribution
     It suits nicely for fits of multiplicity and/or, especially chi2 distributions
     
@@ -180,18 +180,18 @@ models.append ( GammaDist_pdf )
 #  @see Ostap::Math::GenGammaDist 
 #  @see Ostap::Models::GenGammaDist 
 class GenGammaDist_pdf(PDF1) :
-    """Generalized Gamma-distribution with additional shift parameter 
+    """ Generalized Gamma-distribution with additional shift parameter 
     http://en.wikipedia.org/wiki/Generalized_gamma_distribution
     Special cases : 
-    - p == 1      : Gamma  distribution
-    - p == k      : Weibull distribution
+    - p == 1      : Gamma       distribution
+    - p == k      : Weibull     distribution
     - p == k == 1 : Exponential distribution
     - p == k == 2 : Rayleigh    distribution
     """
     ## constructor
-    def __init__ ( self                ,
-                   name                ,   ## the name 
-                   xvar                ,   ## the variable
+    def __init__ ( self          ,
+                   name          ,   ## the name 
+                   xvar          ,   ## the variable
                    k     = None  ,   ## k-parameter
                    theta = None  ,   ## theta-parameter
                    p     = None  ,   ## p-parameter
@@ -283,7 +283,7 @@ models.append ( GenGammaDist_pdf )
 #  @see Ostap::Math::Amoroso
 #  @see Ostap::Models::Amoroso
 class Amoroso_pdf(PDF1) :
-    """Another view on generalized gamma distribution
+    """ Another view on generalized gamma distribution
     http://arxiv.org/pdf/1005.3274
     """
     ## constructor
@@ -378,8 +378,8 @@ models.append ( Amoroso_pdf )
 #  @see Ostap::Math::LogGammaDist 
 #  @see Ostap::Models::GammaDist 
 #  @see Ostap::Math::GammaDist 
-class LogGammaDist_pdf(PDF1) :
-    """Distribution for log(x), where x follows Gamma distribution
+class LogGammaDist_pdf(GammaDist_pdf) :
+    """ Distribution for log(x), where x follows Gamma distribution
     It suits nicely for fits of log(multiplicity) and/or log(chi2) distributions
     """
     ## constructor
@@ -389,17 +389,8 @@ class LogGammaDist_pdf(PDF1) :
                    k     = None ,   ## k-parameter
                    theta = None ) : ## theta-parameter
         #
-        PDF1.__init__ ( self , name , xvar )
+        GammaDist_pdf.__init__ ( self , name , xvar )
         #
-        self.__k     = self.make_var ( k       ,
-                                       'k_%s'                   % name ,
-                                       'k_{log#Gamma}(%s)'      % name ,
-                                       None , 1 , 1.e-5 , 1000 )
-        self.__theta = self.make_var ( theta   ,
-                                       'theta_%s'               % name ,
-                                       '#theta_{log#Gamma}(%s)' % name ,
-                                       None , 1 , 1.e-5 , 1000 )
-
         self.pdf  = Ostap.Models.LogGammaDist (
             self.roo_name ( 'lgamma_' ) ,
             'Log-Gamma %s' % self.name , 
@@ -415,22 +406,6 @@ class LogGammaDist_pdf(PDF1) :
             'theta' : self.theta ,            
             }
 
-    @property
-    def k ( self ) :
-        """`k'-parameter of log(Gamma) distribution   (k>0)"""
-        return self.__k
-    @k.setter 
-    def k ( self , value ) :
-        self.set_value ( self.__k , value )
-
-    @property
-    def theta ( self ) :
-        """`theta'-parameter of log(Gamma) distribution   (theta>0)"""
-        return self.__theta
-    @theta.setter 
-    def theta ( self , value ) :
-        self.set_value ( self.__theta , value )
-
 models.append ( LogGammaDist_pdf ) 
 # =============================================================================
 ## @class Log10GammaDist_pdf
@@ -444,8 +419,8 @@ models.append ( LogGammaDist_pdf )
 #  @see Ostap::Math::LogGammaDist 
 #  @see Ostap::Models::GammaDist 
 #  @see Ostap::Math::GammaDist 
-class Log10GammaDist_pdf(PDF1) :
-    """Distribution for log10(x), where x follows Gamma distribution
+class Log10GammaDist_pdf(GammaDist_pdf) :
+    """ Distribution for log10(x), where x follows Gamma distribution
     It suits nicely for fits of log10(multiplicity) and/or log10(chi2) distributions
     """
     ## constructor
@@ -455,17 +430,8 @@ class Log10GammaDist_pdf(PDF1) :
                    k     = None ,   ## k-parameter
                    theta = None ) :  ## theta-parameter
         #
-        PDF1.__init__ ( self , name , xvar )
-        #
-        self.__k     = self.make_var ( k       ,
-                                       'k_%s'                     % name ,
-                                       'k_{log10#Gamma}(%s)'      % name ,
-                                       None , 1 , 1.e-4 , 10000 )
-        self.__theta = self.make_var ( theta   ,
-                                       'theta_%s'                 % name ,
-                                       '#theta_{log10#Gamma}(%s)' % name ,
-                                       None , 1 , 1.e-4 , 10000 )
-
+        GammaDist_pdf.__init__ ( self , name , xvar )
+        ## 
         self.pdf  = Ostap.Models.Log10GammaDist (
             self.roo_name ( 'l10gamma_' ) ,
             'Log10 Gamma %s' % self.name , 
@@ -481,22 +447,6 @@ class Log10GammaDist_pdf(PDF1) :
             'theta' : self.theta ,            
             }
     
-    @property
-    def k ( self ) :
-        """`k'-parameter of log10(Gamma) distribution   (k>0)"""
-        return self.__k
-    @k.setter 
-    def k ( self , value ) :
-        self.set_value ( self.__k , value )
-
-    @property
-    def theta ( self ) :
-        """`theta'-parameter of log10(Gamma) distribution   (theta>0)"""
-        return self.__theta
-    @theta.setter 
-    def theta ( self , value ) :
-        self.set_value ( self.__theta , value )
-
 models.append ( Log10GammaDist_pdf ) 
 # =============================================================================
 ## @class LogGamma_pdf
@@ -605,7 +555,7 @@ models.append ( LogGamma_pdf )
 #  @see Ostap::Models::BetaPrime
 #  @see Ostap::Math::BetaPrime
 class BetaPrime_pdf(PDF1) :
-    """Beta-prime disribution 
+    """ Beta-prime disribution 
     - http://en.wikipedia.org/wiki/Beta_prime_distribution
     """
     ## constructor
@@ -626,7 +576,7 @@ class BetaPrime_pdf(PDF1) :
         self.__beta   = self.make_var ( beta     ,
                                         'beta_%s'                  % name ,
                                         '#beta_{#beta#prime}(%s)'  % name ,
-                                        None , 1 , 1.e-3 , 1000 )        
+                                        None , 5 , 1.e-3 , 1000 )        
         self.__scale  = self.make_var ( scale     ,
                                         'scale_%s'                 % name ,
                                         '#theta_{#beta#prime}(%s)' % name , 
@@ -707,7 +657,7 @@ models.append ( BetaPrime_pdf )
 #  @see Ostap::Models::BetaPrime
 #  @see Ostap::Math::BetaPrime
 class GenBetaPrime_pdf(BetaPrime_pdf) :
-    """Beta-prime disribution 
+    """ Generalized Beta-prime disribution 
     - http://en.wikipedia.org/wiki/Beta_prime_distribution
     """
     ## constructor
@@ -787,7 +737,7 @@ models.append ( GenBetaPrime_pdf )
 #  @see Ostap::Models::Landau
 #  @see Ostap::Math::Landau
 class Landau_pdf(PDF1) :
-    """Landau distribution 
+    """ Landau distribution 
     - http://en.wikipedia.org/wiki/Landau_distribution
     """
     ## constructor
@@ -856,7 +806,7 @@ models.append ( Landau_pdf )
 #  @see Ostap::Models::Argus
 #  @see Ostap::Math::Argus
 class Argus_pdf(PDF1) :
-    """Argus distribution
+    """ Argus distribution
     - http://en.wikipedia.org/wiki/ARGUS_distribution
     """
     ## constructor
@@ -931,7 +881,6 @@ class Argus_pdf(PDF1) :
 
 models.append ( Argus_pdf ) 
 
-
 # =============================================================================
 ## @class GenArgus_pdf
 #  http://en.wikipedia.org/wiki/ARGUS_distribution
@@ -941,7 +890,7 @@ models.append ( Argus_pdf )
 #  @see Ostap::Models::GenArgus
 #  @see Ostap::Math::GenArgus
 class GenArgus_pdf(Argus_pdf) :
-    """Generalized Argus distribution
+    """ Generalized Argus distribution
     - http://en.wikipedia.org/wiki/ARGUS_distribution
     """
     ## constructor
@@ -996,7 +945,6 @@ class GenArgus_pdf(Argus_pdf) :
         self.set_value ( self.__dp , value )
 
 models.append ( GenArgus_pdf ) 
-
 
 # =============================================================================
 ## @class TwoExpos_pdf
@@ -1102,7 +1050,7 @@ models.append ( TwoExpos_pdf )
 #  @date   2017-09-02
 #  @see Ostap::Models::Gumbel
 class Gumbel_pdf(PDF1) :
-    r"""Gumbel distribution
+    r""" Gumbel distribution
     - see https://en.wikipedia.org/wiki/Gumbel_distribution
     \f$  f(x,\mu,\beta) = \frac{1}{\left|\beta\right|} e^{-e^{-z}} \f$,
     where \f$ z = \frac{x-\mu}{\beta}\f$
@@ -1178,7 +1126,7 @@ models.append ( Gumbel_pdf )
 #  @see Ostap::Math::Rice
 #  @see Ostap::Models::Rice 
 class Rice_pdf(PDF1) :
-    """Rice distribution
+    """ Rice distribution
     - see https://en.wikipedia.org/wiki/Rice_distribution
     """
     ## constructor
@@ -1364,7 +1312,7 @@ models.append ( GenInvGauss_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-02-27
 class Weibull_pdf(PDF1) :
-    r"""3-parameter  Weibull distribution 
+    r""" 3-parameter  Weibull distribution 
     \f$ f(x,\lambda,k,x_0) = \frac{k}{\lambda}  y^{k-1} e^{-y^k}\f$, where 
     \f$ y \equiv \frac{x-x_0}{\lambda}\f$
     
@@ -1479,7 +1427,7 @@ models.append ( Weibull_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class Tsallis_pdf(PDF1) :
-    r"""Useful function to describe pT-spectra of particles 
+    r""" Useful function to describe pT-spectra of particles 
     
     - C. Tsallis, 
     Possible generalization of Boltzmann-Gibbs statistics,
@@ -1588,7 +1536,7 @@ models.append ( Tsallis_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class QGSM_pdf(PDF1) :
-    r"""Useful function to describe pT-spectra of particles 
+    r""" Useful function to describe pT-spectra of particles 
     
     - A. B. Kaidalov and O. I. Piskunova, Z. Phys. C 30 (1986) 145.
     - O. I. Piskounova, arXiv:1301.6539 [hep-ph]; 
@@ -1759,7 +1707,7 @@ models.append ( Hagedorn_pdf )
 #  @see Ostap::Models::GenPareto
 #  @see Ostap::Math::GenPareto
 class GenPareto_pdf(PDF1) :
-    """Generalized Pareto Distirbutution
+    """ Generalized Pareto Distirbutution
     - see https://en.wikipedia.org/wiki/Generalized_Pareto_distribution
     - see `Ostap.Models.GenPareto`
     - see `Ostap.Math.GenPareto`
@@ -1849,7 +1797,7 @@ models.append ( GenPareto_pdf )
 #  @see Ostap::Models::ExGenPareto
 #  @see Ostap::Math::ExGenPareto
 class ExGenPareto_pdf(GenPareto_pdf) :
-    """Exponetiated Generalized Pareto Distirbutution
+    """ Exponentiated Generalized Pareto Distirbutution
     - see https://en.wikipedia.org/wiki/Generalized_Pareto_distribution
     - see `Ostap.Models.ExGenPareto`
     - see `Ostap.Math.ExGenPareto`
@@ -1890,7 +1838,7 @@ models.append ( ExGenPareto_pdf )
 #  @see Ostap::Models::GEV
 #  @see Ostap::Math::GEV
 class GEV_pdf(GenPareto_pdf) :
-    """Generalized Extreme Value distribution
+    """ Generalized Extreme Value distribution
     - see https://en.wikipedia.org/wiki/Generalized_extreme_value_distribution
     - see `Ostap.Models.GEV`
     - see `Ostap.Math.GEV`
@@ -1924,7 +1872,6 @@ class GEV_pdf(GenPareto_pdf) :
         
 models.append ( GEV_pdf ) 
 
-
 # =============================================================================
 ## @class Benini_pdf
 # Modified version of Benini distribution 
@@ -1937,7 +1884,7 @@ models.append ( GEV_pdf )
 #  - shift  \f$ \mu  \f$ 
 #  - scale  \f$ s \f$ 
 #
-#  For standard Benini pne has \f$ (\frac{x}{\sigma}\f$,
+#  For standard Benini one has \f$ (\frac{x}{\sigma}\f$,
 #  here one has \f$ (\frac{x-\delta}{s}\f$
 #
 #  Standard Benini distribution: 
@@ -1948,13 +1895,13 @@ models.append ( GEV_pdf )
 #  @see Ostap::Models::Benini
 #  @see Ostap::Math::Benini
 class Benini_pdf(PDF1) :
-    """Modified version of Benini distribution 
+    """ Modified version of Benini distribution 
     - see https://en.wikipedia.org/wiki/Benini_distribution
     Parameters 
     - 0 <  alpha  : linear     in log 
     - 0 <= beta   : quadractic in log 
     - 0 <= gamma  : cubic      in log 
-    - 0 <= delta   : cubic      in log 
+    - 0 <= delta  : cubic     in log 
     - shift mu  
     - scale s 
     
@@ -2083,7 +2030,7 @@ models.append ( Benini_pdf )
 #  @see Ostap::Models::MPERT
 #  @see Ostap::Math::MPERT
 class MPERT_pdf(PDF1) :
-    """  Modified PERT distribution 
+    """ Modified PERT distribution 
     - see https://en.wikipedia.org/wiki/PERT_distribution
     - see https://www.vosesoftware.com/riskwiki/ModifiedPERTdistribution.php
     - see `Ostap.Models.MPERT`
@@ -2175,7 +2122,6 @@ class MPERT_pdf(PDF1) :
         return self.__Xmax 
         
 models.append ( MPERT_pdf ) 
-
 
 # =============================================================================
 ## @class Tsallis2_pdf
