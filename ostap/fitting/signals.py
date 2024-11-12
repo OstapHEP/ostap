@@ -61,6 +61,7 @@ Empricial PDFs to describe narrow peaks
   - SkewGenT_pdf
   - SkewGenError_pdf
   - BatesShape_pdf 
+  - FisherZ_pdf 
   - Hat, Up & FupN finite functions
   
 PDF to describe 'wide' peaks
@@ -128,6 +129,7 @@ __all__ = (
     'Logistic_pdf'           , ## Logistic aka "sech-squared"   
     'GenLogisticIV_pdf'      , ## Generalized Logistic Type IV with location/scale 
     'BatesShape_pdf'         , ## Bates-shape
+    'FisherZ_pdf'            , ## Fisher's Z-distribution 
     'Hat_pdf'                , ## hat function (smoth&finite)
     'Up_pdf'                 , ## finite atomin fnuction up
     'FupN_pdf'               , ## finite atomin fnuction up
@@ -4465,6 +4467,103 @@ class Das_pdf(PEAK) :
         self.setValue ( self.__kappa , value )
 
 
+# =============================================================================
+# @class FisherZ_pdf
+# Fisher's Z-distrubution with additional location/scale parameters
+# @see https://en.wikipedia.org/wiki/Fisher%27s_z-distribution
+# @see Ostap::Math::FisherZ
+# @see Ostap::Models::FisherZ
+class FisherZ_pdf(PEAK) :
+    """ Fisher's Z-distribution  with additional location/scale parameters 
+    - see https://en.wikipedia.org/wiki/Fisher%27s_z-distribution
+    - see Ostap.Math.Das
+    - see Ostap.Models.Das
+    """
+    def __init__ ( self         ,
+                   name         ,    ## the name of PDF
+                   xvar         ,    ## observable
+                   mu    = None ,    ## mode of distributioi 
+                   d1    = None ,    ## d1-shape parameter 
+                   d2    = None ,    ## d1-shape parameter
+                   scale = None ) :  ## scale parametera
+        
+        #
+        ## initialize the base
+        # 
+        PEAK.__init__  ( self , name , xvar ,
+                         mean        = mu                ,
+                         sigma       = scale             ,
+                         mean_name   = 'mu_%s'    % name ,
+                         mean_title  = '#mu_(%s)' % name ,
+                         sigma_name  = 'scale_%s' % name ,
+                         sigma_title = 's_(%s)'   % name ) 
+        
+    
+        self.__d1    = self.make_var ( d1 ,
+                                       'd1_%s'    % name ,   
+                                       'd_1(%s)'  % name ,
+                                       None , 10 , 1.e-3 , 1000 )
+        self.__d2    = self.make_var ( d2 ,
+                                       'd2_%s'    % name ,   
+                                       'd_2(%s)'  % name ,
+                                       None , 10 , 1.e-3 , 1000 )
+        ## build PDF
+        self.pdf = Ostap.Models.FisherZ (
+            self.roo_name ( 'FZ_' )  ,
+            'FisherZ %s' % self.name ,
+            self.xvar                ,
+            self.mu                  ,
+            self.d1                  ,
+            self.d2                  ,
+            self.scale               ) 
+
+        ## save configuration
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'mu'    : self.mu    ,
+            'd1'    : self.d1    ,
+            'd2'    : self.d2    ,
+            'scale' : self.scale ,
+            }
+
+    @property
+    def mu ( self ) :
+        """'mu' : peak location, same as 'mean'
+        """
+        return self.mean
+    @mu.setter 
+    def mu ( self ,value ) :
+        self.mean = value
+        
+    @property
+    def scale ( self ) :
+        """'scale' : scale parameter, same as 'sigma'
+        """
+        return self.sigma
+    @scale.setter 
+    def scale ( self ,value ) :
+        self.sigma = value 
+        
+    @property
+    def d1  ( self ) :
+        """'d1' :  shape parameter d1
+        """
+        return self.__d1
+    @d1.setter
+    def d1 ( self , value ) :
+        self.setValue ( self.__d1 , value )
+
+    @property
+    def d2  ( self ) :
+        """'d2' :  shape parameter d2
+        """
+        return self.__d2
+    @d2.setter
+    def d2 ( self , value ) :
+        self.setValue ( self.__d2 , value )
+
+        
 # ==============================================================================
 ## @class Hat_pdf
 #  Finite smooth function

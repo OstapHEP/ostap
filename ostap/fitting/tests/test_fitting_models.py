@@ -1575,8 +1575,46 @@ def test_exgauss2 () :
     models.add     ( model  )
     results.append ( result )
 
+
 # ==========================================================================
-## Bukin22
+## FisherZ
+# ==========================================================================
+def test_FisherZ () :
+    
+    logger = getLogger ( 'test_FisherZ' )
+       
+    
+    logger.info ('Test FisherZ_pdf: single tail pdf ' ) 
+    model = Models.Fit1D (
+        signal = Models.FisherZ_pdf ( name = 'FisherZ' , 
+                                      xvar      = mass               ,
+                                      mu        = signal_gauss.mean  ,
+                                      scale     = signal_gauss.sigma ,
+                                      d1        = ( 20 , 0.01 , 1000 ) ,
+                                      d2        = ( 20 , 0.01 , 1000 ) ) , 
+        background = background   ,
+        S = S , B = B ,
+        )
+    
+    signal = model.signal
+    model.S = NS 
+    model.B = NB
+
+    with rooSilent() :
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        signal.mu    .release()
+        ## signal.sigma.release()        
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        
+    make_print ( model , result , "FisherZ model" , logger )        
+
+    models.add     ( model  )
+    results.append ( result )
+
+    
+# ==========================================================================
+## Bukin2
 # ==========================================================================
 def test_bukin2 () :
     
@@ -1671,7 +1709,7 @@ def test_hyperbolic() :
     
     signal_gauss.mean .fix ( m.value() )
     signal_gauss.sigma.fix ( m.error() )
-
+    
     signal  = model.signal 
     model.S = NS 
     model.B = NB
@@ -2186,7 +2224,11 @@ if '__main__' == __name__ :
     ## Breit-Wigner(+resolution)                 + background 
     with timing ('test_bw'             , logger ) :
         test_bw             () 
-
+    
+    ## FisherZ
+    with timing ('test_FisherZ'           , logger ) :
+        test_FisherZ           ()
+    
     ## Hypatia                                     + background 
     with timing ('test_hypatia'           , logger ) :
         test_hypatia           ()

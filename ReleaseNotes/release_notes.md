@@ -7,6 +7,7 @@
   1. add `isfinite` method for matrices and vectors
   1. add `isfinite` method for `(W)Covariance` objects 
   1. add `Ostap::MoreRooFit::Hypot` and `var_hypot`
+  1. add Fizher's Z-distribution
   
 ## Backward incompatible
     

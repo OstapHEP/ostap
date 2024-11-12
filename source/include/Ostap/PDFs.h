@@ -9309,6 +9309,187 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class FisherZ
+     *  Fisher's Z-distirbution with additional location-scale parameters 
+     *  @see https://en.wikipedia.org/wiki/Fisher%27s_z-distribution
+     *  @see Ostap::Math::FisherZ
+     */
+    class FisherZ: public RooAbsPdf 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::FisherZ, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// general
+      FisherZ
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mu        ,    // mode 
+        RooAbsReal&          d1        ,    // d1-shape 
+        RooAbsReal&          d2        ,    // d2-shape 
+        RooAbsReal&          scale     ) ;  // scale 
+      /// general
+      FisherZ
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mu        ,    // mode 
+        RooAbsReal&          d1        ,    // d1-shape 
+        RooAbsReal&          d2        ,    // d2-shape 
+        const double         scale = 1 ) ;  // scale 
+      /// copy
+      FisherZ
+      ( const FisherZ&       right     ,
+        const char*          name = 0  ) ;
+      /// destructor
+      virtual ~FisherZ() ;
+      /// clone
+      FisherZ* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for proper (de)serialization
+      FisherZ () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::FisherZ& function () const { return m_fz ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x     .arg  () ; }
+      const RooAbsReal& mu     () const { return m_mu    .arg  () ; }
+      const RooAbsReal& scale  () const { return m_scale .arg  () ; }
+      const RooAbsReal& d1     () const { return m_d1    .arg  () ; }
+      const RooAbsReal& d2     () const { return m_d2    .arg  () ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_mu    {} ;
+      RooRealProxy m_scale {} ;
+      RooRealProxy m_d1    {} ;
+      RooRealProxy m_d2    {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::FisherZ  m_fz {} ;  // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class BirnbaumSaunders
+     *  Birnbaum-Saunders distribution 
+     *  @see https://en.wikipedia.org/wiki/Birnbaum%E2%80%93Saunders_distribution
+     *  \f[ f(x;\mu, \beta,\gamma) = 
+     *   \frac{ z + z^{-1}}{2\gamma(x-\mu)}\phi( \frac{1}{\gamma}(z-z^{-1}) \f]
+     *  where
+     *   - \f$ z=\frac{x-\mu}{\beta}\f$
+     *   - \f$ \phi\f$ is Gaussian PDF 
+     *  @see Ostap::Math::BirnbaumSaunders
+     */
+    class BirnbaumSaunders: public RooAbsPdf 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::BirnbaumSaunders, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// general
+      BirnbaumSaunders
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mu        ,    // location 
+        RooAbsReal&          beta      ,    // scale 
+        RooAbsReal&          gamma     ) ;  // shape 
+      /// copy
+      BirnbaumSaunders
+      ( const BirnbaumSaunders& right     ,
+        const char*          name = 0  ) ;
+      /// destructor
+      virtual ~BirnbaumSaunders() ;
+      /// clone
+      BirnbaumSaunders* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for proper (de)serialization
+      BirnbaumSaunders() {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::BirnbaumSaunders& function () const { return m_bs ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x     .arg  () ; }
+      const RooAbsReal& mu     () const { return m_mu    .arg  () ; }
+      const RooAbsReal& beta   () const { return m_beta  .arg  () ; }
+      const RooAbsReal& gamma  () const { return m_gamma .arg  () ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_mu    {} ;
+      RooRealProxy m_beta  {} ;
+      RooRealProxy m_gamma {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::BirnbaumSaunders m_bs {} ;  // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class MPERT
      *  Modified PERT distribution 
      *  @see https://en.wikipedia.org/wiki/PERT_distribution

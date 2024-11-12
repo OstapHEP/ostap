@@ -4683,6 +4683,295 @@ std::size_t Ostap::Math::GEV::tag () const
 // ============================================================================
 
 
+// ============================================================================
+// constructor from parameters
+// ============================================================================
+Ostap::Math::FisherZ::FisherZ 
+( const double mu     , 
+  const double d1     , 
+  const double d2     ,
+  const double scale  )
+  : m_mu    ( mu )
+  , m_scale ( std::abs ( scale ) ) 
+  , m_d1    ( std::abs ( d1    ) )
+  , m_d2    ( std::abs ( d2    ) )
+  , m_workspace ()
+  , m_C     ( -1 )
+{
+  Ostap::Assert ( 0 < m_scale , "Invalid scale parameter!" , "Ostap::Math::FisherZ"     ) ;
+  Ostap::Assert ( 0 < m_d1    , "Invalid d1-parameter!"    , "Ostap::Math::FisherZ"     ) ;
+  Ostap::Assert ( 0 < m_d2    , "Invalid d2-parameter!"    , "Ostap::Math::FisherZ"     ) ;
+  //
+  m_C = norm() ;
+}
+// =============================================================================
+double Ostap::Math::FisherZ::norm() const
+{
+  double C  = 0.5 * m_d1 * std::log ( m_d1 ) + 0.5 * m_d2 * std::log ( m_d2 ) ;
+  C        -= Ostap::Math::lnbeta ( m_d1 / 2 , m_d2 / 2 ) ;
+  return  2 * std::exp ( C ) ;
+}
+// =============================================================================
+// set location parameter
+// =============================================================================
+bool Ostap::Math::FisherZ::setMu ( const double value ) 
+{
+  if ( s_equal ( m_mu , value ) ) { return false ; }
+  m_mu     = value ;
+  return true ;    
+}
+// =============================================================================
+// set scale parameter
+// =============================================================================
+bool Ostap::Math::FisherZ::setScale ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_scale , avalue ) ) { return false ; }
+  m_scale = avalue ;
+  return true ;    
+}
+// =============================================================================
+// set d1 parameter
+// =============================================================================
+bool Ostap::Math::FisherZ::setD1 ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_d1 , avalue ) ) { return false ; }
+  m_d1 = avalue ;
+  m_C  = norm  () ; 
+  return true ;    
+}
+// =============================================================================
+// set d1 parameter
+// =============================================================================
+bool Ostap::Math::FisherZ::setD2 ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_d2 , avalue ) ) { return false ; }
+  m_d2 = avalue ;
+  m_C  = norm () ;  
+  return true ;    
+}
+// ============================================================================
+// get the value of FizherZ distribution
+// ============================================================================
+double Ostap::Math::FisherZ::evaluate ( const double x ) const
+{
+  const double z = ( x - m_mu ) / m_scale ;
+  //
+  const double logres = z <=0 ?
+    +m_d1 * z - 0.5 * ( m_d1 + m_d2 ) * std::log ( m_d1 * std::exp (  2 * z ) + m_d2 ) :
+    -m_d2 * z - 0.5 * ( m_d1 + m_d2 ) * std::log ( m_d2 * std::exp ( -2 * z ) + m_d1 ) ;
+  //
+  return  m_C * std::exp ( logres ) / m_scale ;
+}
+// =================================================================================
+/// get the integral 
+// =================================================================================
+double Ostap::Math::FisherZ::integral () const { return 1 ; }
+// =================================================================================
+// get the integral 
+// =================================================================================
+double Ostap::Math::FisherZ::integral
+( const double xlow , 
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow  , xhigh ) ) { return 0 ; }
+  else if (           xhigh < xlow    ) { return - integral ( xhigh , xlow ) ; }
+  //
+  if ( xlow < m_mu && m_mu < xhigh )
+    { return integral ( xlow , m_mu  ) + integral ( m_mu , xhigh ) ; }
+  //
+  const double ss = std::sqrt ( 0.5 * ( 1/m_d1 + 1/m_d2 ) ) ;
+  // 
+  const double x_l10 = m_mu - 10 * m_scale * ss ;
+  const double x_h10 = m_mu + 10 * m_scale * ss ;
+  //
+  if ( xlow < x_l10 && x_l10 < xhigh )
+    { return integral ( xlow , x_l10 ) + integral ( x_l10 , xhigh ) ; }
+  if ( xlow < x_h10 && x_h10 < xhigh )
+    { return integral ( xlow , x_h10 ) + integral ( x_h10 , xhigh ) ; }
+  //
+  const double x_l5  = m_mu -  5 * m_scale * ss ;
+  const double x_h5  = m_mu +  5 * m_scale * ss ;
+  //
+  if ( xlow < x_l5 && x_l5  < xhigh )
+    { return integral ( xlow , x_l5  ) + integral ( x_l5  , xhigh ) ; }
+  if ( xlow < x_h5 && x_h5  < xhigh )
+    { return integral ( xlow , x_h5  ) + integral ( x_h5  , xhigh ) ; }
+  //
+  const double x_l3  = m_mu -  3 * m_scale * ss ;
+  const double x_h3  = m_mu +  3 * m_scale * ss ;
+  //
+  if ( xlow < x_l3 && x_l3  < xhigh )
+    { return integral ( xlow , x_l3  ) + integral ( x_l3  , xhigh ) ; }
+  if ( xlow < x_h3 && x_h3  < xhigh )
+    { return integral ( xlow , x_h3  ) + integral ( x_h3  , xhigh ) ; }
+  //
+  // we are in tails? 
+  const bool in_tail = ( xhigh <= x_l10 ) || ( x_h10 <= xlow ) ;
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<FisherZ> s_integrator ;
+  static const char s_message[] = "Integral(FisherZ)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
+    ( tag  () , 
+      &F      , 
+      xlow    , xhigh ,                                       // low & high edges
+      workspace ( m_workspace ) ,                             // workspace
+      in_tail ? s_APRECISION_TAIL : s_APRECISION ,            // absolute precision
+      in_tail ? s_RPRECISION_TAIL : s_RPRECISION ,            // relative precision
+      m_workspace.size()              ,                       // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::FisherZ::tag () const 
+{ 
+  static const std::string s_name = "FisherZ" ;
+  return Ostap::Utils::hash_combiner ( s_name , m_mu , m_scale , m_d1 , m_d2 ) ;
+}
+// ============================================================================
+
+
+
+// ============================================================================
+Ostap::Math::BirnbaumSaunders::BirnbaumSaunders
+( const double mu    , // location 
+  const double beta  , // scale
+  const double gamma ) // shape 
+  : m_mu ( mu )
+  , m_beta  ( std::abs ( beta  ) )
+  , m_gamma ( std::abs ( gamma ) )
+{}
+// =============================================================================
+// set scale parameter
+// =============================================================================
+bool Ostap::Math::BirnbaumSaunders::setMu ( const double value ) 
+{
+  if ( s_equal ( m_mu , value ) ) { return false ; }
+  m_mu = value ;
+  return true ;    
+}
+// =============================================================================
+// set scale parameter
+// =============================================================================
+bool Ostap::Math::BirnbaumSaunders::setBeta ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_beta , avalue ) ) { return false ; }
+  m_beta = avalue ;
+  return true ;    
+}
+// =============================================================================
+// set shape parameter
+// =============================================================================
+bool Ostap::Math::BirnbaumSaunders::setGamma ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_gamma , avalue ) ) { return false ; }
+  m_gamma = avalue ;
+  return true ;    
+}
+// =============================================================================
+// get mean value 
+// =============================================================================
+double Ostap::Math::BirnbaumSaunders::mean () const
+{ return m_mu + m_beta * ( 1 + 0.4 * m_gamma * m_gamma ) ; }
+// =============================================================================
+// get variance  
+// =============================================================================
+double Ostap::Math::BirnbaumSaunders::variance () const
+{
+  const double a2 = m_gamma * m_gamma ;
+  return a2 * m_beta * m_beta * ( 1 + 1.25 * a2 ) ;
+}
+// =============================================================================
+// get RMS
+// =============================================================================
+double Ostap::Math::BirnbaumSaunders::rms  () const
+{ return std::sqrt ( variance () ) ;  }
+// =============================================================================
+// get skewness 
+// =============================================================================
+double Ostap::Math::BirnbaumSaunders::skewness() const
+{
+  const double a2 = m_gamma * m_gamma ;
+  return 4 * m_gamma * ( 11 * a2 + 6 ) / std::pow ( 5 * a2 + 4 ,   1.5 ) ;
+}
+// =============================================================================
+// get kurtosis 
+// =============================================================================
+double Ostap::Math::BirnbaumSaunders::kurtosis() const
+{
+  const double a2 = m_gamma * m_gamma ;
+  return 6 * a2 * ( 93 * a2 + 40 ) / std::pow ( 5 * a2 + 4 , 2 ) ;
+}
+// ============================================================================
+// get the value
+// ===========================================================================
+double Ostap::Math::BirnbaumSaunders::evaluate ( const double x ) const
+{
+  if ( x <= m_mu ) { return 0 ; }
+  //
+  const double z2 = ( x - m_mu ) / m_beta ;
+  const double z  = std::sqrt ( z ) ;
+  const double zi = 1/z ;   
+  //
+  const double qq = Ostap::Math::gauss_pdf ( ( z - zi ) / m_gamma ) ;
+  if ( s_zero ( qq )  )  { return 0 ; }
+  //
+  return qq *  ( z + zi ) / ( 2 * m_gamma * x ) ;
+}
+// ============================================================================
+// get integral 
+// ============================================================================
+double Ostap::Math::BirnbaumSaunders::integral() const { return  1 ; }
+// ============================================================================
+// get CDF
+// ============================================================================
+double Ostap::Math::BirnbaumSaunders::cdf ( const double x ) const
+{
+  if ( x <= m_mu ) { return 0 ; }
+  const double z2 = ( x - m_mu ) / m_beta ;
+  const double z  = std::sqrt ( z2 ) ;
+  return Ostap::Math::gauss_cdf (  ( z + 1/z ) / m_gamma ) ;
+}
+// ============================================================================
+/// get the intergral between xmin and xmax 
+// ============================================================================
+double Ostap::Math::BirnbaumSaunders::integral
+( const double xlow , 
+  const double xhigh ) const
+{
+  if ( s_equal ( xlow , xhigh ) ) { return 0 ; }
+  else if ( xhigh < xlow ) { return - integral ( xhigh , xlow ) ; }
+  //
+  if ( xhigh <= m_mu ) { return 0 ; }
+  return cdf ( xhigh ) - cdf ( xlow ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::BirnbaumSaunders::tag () const 
+{ 
+  static const std::string s_name = "BitnbaumSaunders" ;
+  return Ostap::Utils::hash_combiner ( s_name , m_mu , m_beta , m_gamma ) ;
+}
+// ============================================================================
+
+
+
 
 // ============================================================================
 // constructor from two parametersO

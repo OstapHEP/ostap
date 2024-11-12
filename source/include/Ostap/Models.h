@@ -3333,6 +3333,192 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class FisherZ
+     *  Fisher's Z-distribution with additional location-scale parameters 
+     *  @see https://en.wikipedia.org/wiki/Fisher%27s_z-distribution
+     */
+    class FisherZ 
+    {
+    public: 
+      // ======================================================================
+      /// constructor from parameters
+      FisherZ
+      ( const double mu     = 0 , 
+	const double d1     = 5 , 
+        const double d2     = 5 , 
+	const double scale  = 1 ) ;
+      // ======================================================================      
+    public:
+      // ======================================================================      
+      /// get the value of Fisher-Z distribution 
+      double evaluate ( const double x ) const ;
+      /// get the value of Fisher-Z distribution 
+      inline double pdf        ( const double x ) const 
+      { return evaluate ( x ) ; }
+      /// get the value of Fisher-Z distribution 
+      inline double operator() ( const double x ) const 
+      { return evaluate ( x ) ; }
+      // ======================================================================      
+    public: // getters 
+      // ======================================================================      
+      /// mu 
+      inline double mu    () const { return m_mu    ; }
+      /// scale 
+      inline double scale () const { return m_scale ; }
+      /// d1 - shape parameter 
+      inline double d1    () const { return m_d1    ; }
+      /// d2 - shape parameter 
+      inline double d2    () const { return m_d2    ; }
+      // ======================================================================      
+    public: // setters 
+      // ======================================================================      
+      /// set mu     parameter/mode 
+      bool setMu    ( const double value ) ;
+      /// set scale  parameter 
+      bool setScale ( const double value ) ;
+      /// set d1    parameter
+      bool setD1    ( const double value ) ;
+      /// set d2    parameter
+      bool setD2    ( const double value ) ;
+      // ======================================================================      
+    public: // integrals 
+      // ======================================================================
+      /// get the integral 
+      double integral () const ;
+      /// get the intergral between xmin and xmax 
+      double integral
+      ( const double xlow , 
+        const double xhigh ) const ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// get normalization constant (withoh scale!)
+      double norm () const ; // get normalization constant (without scale!)
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// mu-parameter 
+      double m_mu    { 0 } ; // mu-parameter
+      /// scale-parameter 
+      double m_scale { 1 } ; // scale-parameter
+      /// d1/shape parameter 
+      double m_d1    { 5 } ; // d1-shape parameter
+      /// d2/shape parameter 
+      double m_d2    { 5 } ; // d2-shape parameter
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// normalization constant
+      double m_C     { -1 } ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace ;    // integration workspace
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class BirnbaumSaunders
+     *  Birnbaum-Saunders distribution 
+     *  @see https://en.wikipedia.org/wiki/Birnbaum%E2%80%93Saunders_distribution
+     *  \f[ f(x;\mu, \beta,\gamma) = 
+     *   \frac{ z + z^{-1}}{2\gamma(x-\mu)}\phi( \frac{1}{\gamma}(z-z^{-1}) \f]
+     *  where
+     *   - \f$ z=\frac{x-\mu}{\beta}\f$
+     *   - \f$ \phi\f$ is Gaussian PDF 
+     */
+    class BirnbaumSaunders
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param mu   location parameter 
+       *  @param beta  scale parameter 
+       *  @param gamma shape parameter 
+       */
+      BirnbaumSaunders
+      ( const double mu    = 0 ,   // location 
+	const double beta  = 1 ,   // scale
+	const double gamma = 1 ) ; // shape 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the value of B-S distribution 
+      double evaluate ( const double x ) const ;
+      /// get the value of B-S distribution 
+      inline double pdf        ( const double x ) const 
+      { return evaluate ( x ) ; }
+      /// get the value of B-S distribution 
+      inline double operator() ( const double x ) const 
+      { return evaluate ( x ) ; }
+      // ======================================================================      
+    public: // getters 
+      // ======================================================================
+      /// get location parameter 
+      double mu    () const { return m_mu ; } 
+      /// get scale parameter 
+      double beta  () const { return m_beta     ; } 
+      /// get scale parameter 
+      double scale () const { return m_beta     ; } 
+      /// get shape paramteer 
+      double gamma () const { return m_gamma    ; }
+      /// get shape paramteer 
+      double shape () const { return m_gamma    ; }
+      /// get alpha parameter
+      double alpha () const { return   gamma () ; } 
+      /// xmin
+      double xmin  () const { return   mu ()    ; }
+      // ======================================================================      
+    public: // getters 
+      // ======================================================================
+      double mean     () const ;
+      double variance () const ;
+      double rms      () const ;
+      double skewness () const ;
+      double kurtosis () const ;
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      bool setMu    ( const double value ) ;
+      bool setBeta  ( const double value ) ;
+      bool setGamma ( const double value ) ;
+      bool setScale ( const double value ) { return setBeta  ( value ) ; }
+      bool setShape ( const double value ) { return setGamma ( value ) ; }
+      bool setAlpha ( const double value ) { return setGamma ( value ) ; }
+      // ======================================================================
+    public: // integrals 
+      // ======================================================================
+      /// get the integral 
+      double integral () const ;
+      /// get CDF
+      double  cdf ( const double x ) const ; 
+      /// get the intergral between xmin and xmax 
+      double integral
+      ( const double xlow , 
+        const double xhigh ) const ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      /// get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// location parameter
+      double m_mu    { 0 } ; // location parameter
+      /// scale parameter
+      double m_beta  { 1 } ; // scale parameter
+      /// shape parameter
+      double m_gamma { 1 } ; // shape  parameter
+      // ======================================================================
+    };
+    // ========================================================================
     /** @class CutOffGauss 
      *  Useful function for smooth Gaussian cut-off:
      *  \f[ f(x;x_0;\sigma) = \left\{ 

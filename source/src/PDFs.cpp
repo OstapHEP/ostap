@@ -10511,6 +10511,196 @@ Double_t Ostap::Models::MPERT::analyticalIntegral
 // ============================================================================
 
 
+// ============================================================================
+Ostap::Models::FisherZ::FisherZ
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          mu        ,
+  RooAbsReal&          d1        ,
+  RooAbsReal&          d2        ,
+  RooAbsReal&          scale     )
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"      , "Observable"             , this , x     ) 
+  , m_mu      ( "!mu"     , "mode-parameter"         , this , mu    )
+  , m_scale   ( "!scale"  , "scale-parameter"        , this , scale )
+  , m_d1      ( "!d1"     , "d1-parameter"           , this , d1    )
+  , m_d2      ( "!d1"     , "d1-parameter"           , this , d2    )
+  , m_fz      ( 0 , 1 , 10 , 10 ) 
+{
+  setPars () ;
+}
+// ============================================================================
+Ostap::Models::FisherZ::FisherZ
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          mu        ,
+  RooAbsReal&          d1        ,
+  RooAbsReal&          d2        ,
+  const double         scale     )
+  : FisherZ ( name , title , x , mu , d1 , d2 , RooFit::RooConst ( scale ) )
+{}
+
+
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::FisherZ::FisherZ
+( const Ostap::Models::FisherZ&  right ,      
+  const char*                    name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x      ( "!x"      , this , right.m_x     ) 
+  , m_mu     ( "!mu"     , this , right.m_mu    ) 
+  , m_scale  ( "!scale"  , this , right.m_scale ) 
+  , m_d1     ( "!d1"     , this , right.m_d1    ) 
+  , m_d2     ( "!d2"     , this , right.m_d2    ) 
+    //
+  , m_fz ( right.m_fz ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::FisherZ::~FisherZ(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::FisherZ*
+Ostap::Models::FisherZ::clone( const char* name ) const 
+{ return new Ostap::Models::FisherZ(*this,name) ; }
+// ============================================================================
+void Ostap::Models::FisherZ::setPars () const 
+{
+  m_fz.setMu     ( m_mu    ) ;
+  m_fz.setScale  ( m_scale ) ;
+  m_fz.setD1     ( m_d1    ) ;
+  m_fz.setD2     ( m_d2    ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::FisherZ::evaluate() const 
+{
+  setPars () ;
+  return m_fz ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::FisherZ::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::FisherZ::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_fz.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
+
+// ============================================================================
+Ostap::Models::BirnbaumSaunders::BirnbaumSaunders
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          mu        ,
+  RooAbsReal&          beta      ,
+  RooAbsReal&          gamma     )
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"      , "Observable"             , this , x     ) 
+  , m_mu      ( "!mu"     , "mode-parameter"         , this , mu    )
+  , m_beta    ( "!beta"   , "scale-parameter"        , this , beta  )
+  , m_gamma   ( "!gamma"  , "shape-parameter"        , this , gamma )
+  , m_bs      ( 0 , 1 , 1 ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::BirnbaumSaunders::BirnbaumSaunders
+( const Ostap::Models::BirnbaumSaunders&  right ,      
+  const char*                    name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x      ( "!x"      , this , right.m_x     ) 
+  , m_mu     ( "!mu"     , this , right.m_mu    ) 
+  , m_beta   ( "!beta"   , this , right.m_beta  ) 
+  , m_gamma  ( "!gamma"  , this , right.m_gamma ) 
+    //
+  , m_bs ( right.m_bs ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::BirnbaumSaunders::~BirnbaumSaunders() {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::BirnbaumSaunders*
+Ostap::Models::BirnbaumSaunders::clone( const char* name ) const 
+{ return new Ostap::Models::BirnbaumSaunders(*this,name) ; }
+// ============================================================================
+void Ostap::Models::BirnbaumSaunders::setPars () const 
+{
+  m_bs.setMu     ( m_mu    ) ;
+  m_bs.setBeta   ( m_beta  ) ;
+  m_bs.setGamma  ( m_gamma ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::BirnbaumSaunders::evaluate() const 
+{
+  setPars () ;
+  return m_bs ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::BirnbaumSaunders::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::BirnbaumSaunders::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_bs.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
+
+
+
+
+
+
+
+
 
 // ============================================================================
 Ostap::Models::Rational::Rational
@@ -10734,6 +10924,8 @@ ClassImp(Ostap::Models::ExGenPareto        )
 ClassImp(Ostap::Models::Benini             )
 ClassImp(Ostap::Models::GEV                )
 ClassImp(Ostap::Models::MPERT              )
+ClassImp(Ostap::Models::FisherZ            )
+ClassImp(Ostap::Models::BirnbaumSaunders   )
 ClassImp(Ostap::Models::Rational           )
 // ============================================================================
 //                                                                      The END 

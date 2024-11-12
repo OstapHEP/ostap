@@ -617,12 +617,40 @@ def _omgl4_reduce_ ( peak ) :
 
 Ostap.Math.GenLogisticIV   . __reduce__ = _omgl4_reduce_
 
+# =============================================================================
+## Reduce Ostap::Math::FisherZ 
+#  @see Ostap::Math::FisherZ
+def _omfz_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.FisherZ`
+    - see `Ostap.Math.FisherZ`
+    """
+    return root_factory , ( type ( peak ) ,
+                            peak.mu    () ,
+                            peak.scale () ,
+                            peak.d1    () ,
+                            peak.d2    () )
+
+Ostap.Math.FisherZ   . __reduce__ = _omfz_reduce_
+
+# =============================================================================
+## Reduce Ostap::Math::BirnbaumSaunders
+#  @see Ostap::Math::BirnbaumSaunders
+def _ombs_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.BirnbaumSaunders`
+    - see `Ostap.Math.BirnbaumSaunders`
+    """
+    return root_factory , ( type ( peak ) ,
+                            peak.mu    () ,
+                            peak.beta  () ,
+                            peak.gamma () )
+
+Ostap.Math.BirnbaumSaunders . __reduce__ = _ombs_reduce_
 
 # =============================================================================
 ## Reduce Ostap::Math::Slash
 #  @see Ostap::Math::Slash
 def _omslash_reduce_ ( peak ) :
-    """Reduce `Ostap.Math.Slash`
+    """ Reduce `Ostap.Math.Slash`
     - see `Ostap.Math.Slash`
     """
     return root_factory , ( type ( peak )    , peak.mean () , peak.scale () )

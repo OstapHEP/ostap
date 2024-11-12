@@ -8,62 +8,64 @@
 # =============================================================================
 """ A set of various smooth shapes and PDFs
 
-- GammaDist_pdf      : Gamma-distributuon in shape/scale parameterization
-- GenGammaDist_pdf   : Generalized Gamma-distribution
-- Amoroso_pdf        : another view of generalized Gamma distribution
-- LogGammaDist_pdf   : Gamma-distributuon in shape/scale parameterization
-- Log10GammaDist_pdf : Gamma-distributuon in shape/scale parameterization
-- LogGamma_pdf       : Log-Gamma distribution  
-- BetaPrime_pdf      : Beta-prime distribution 
-- GenBetaPrime_pdf   : generalized Beta-prime distribution 
-- Landau_pdf         : Landau distribution 
-- Argus_pdf          : ARGUS distribution 
-- GenArgus_pdf       : Generalized ARGUS distribution 
-- TwoExpos_pdf       : Difference of two exponents
-- Gumbel_pdf         : Gumbel distributions
-- Rice_pdf           : Rice distribution
-- GenInvGauss_pdf    : Generalized Inverse Gaussian distribution
-- Weibull_pdf        : Weibull distributions
-- Tsallis_pdf        : Tsallis PDF 
-- QGSM_pdf           : QGSM PDF 
-- Tsallis2_pdf       : 2D Tsallis PDF 
-- Hagedorn_pdf       : Hagedorn PDF 
-- GenPareto_pdf      : Generalised Pareto distribution
-- ExGenPareto_pdf    : Exponentiated Generalised Pareto distribution
-- Benini_pdf         : Benini distribution
-- GEV_pdf            : Generalised Extreme Value distribution
-- MPERT_pdf          : Modified PERT distribution
+- GammaDist_pdf        : Gamma-distributuon in shape/scale parameterization
+- GenGammaDist_pdf     : Generalized Gamma-distribution
+- Amoroso_pdf          : another view of generalized Gamma distribution
+- LogGammaDist_pdf     : Gamma-distributuon in shape/scale parameterization
+- Log10GammaDist_pdf   : Gamma-distributuon in shape/scale parameterization
+- LogGamma_pdf         : Log-Gamma distribution  
+- BetaPrime_pdf        : Beta-prime distribution 
+- GenBetaPrime_pdf     : generalized Beta-prime distribution 
+- Landau_pdf           : Landau distribution 
+- Argus_pdf            : ARGUS distribution 
+- GenArgus_pdf         : Generalized ARGUS distribution 
+- TwoExpos_pdf         : Difference of two exponents
+- Gumbel_pdf           : Gumbel distributions
+- Rice_pdf             : Rice distribution
+- GenInvGauss_pdf      : Generalized Inverse Gaussian distribution
+- Weibull_pdf          : Weibull distributions
+- Tsallis_pdf          : Tsallis PDF 
+- QGSM_pdf             : QGSM PDF 
+- Tsallis2_pdf         : 2D Tsallis PDF 
+- Hagedorn_pdf         : Hagedorn PDF 
+- GenPareto_pdf        : Generalised Pareto distribution
+- ExGenPareto_pdf      : Exponentiated Generalised Pareto distribution
+- Benini_pdf           : Benini distribution
+- BirnbaumSaunders_pdf : Birnbaum-Saunders distribution
+- GEV_pdf              : Generalised Extreme Value distribution
+- MPERT_pdf            : Modified PERT distribution
 """
 # =============================================================================
 __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
-    'GammaDist_pdf'      , ## Gamma-distributuon in shape/scale parameterization
-    'GenGammaDist_pdf'   , ## Generalized Gamma-distribution
-    'Amoroso_pdf'        , ## another view of generalized Gamma distribution
-    'LogGammaDist_pdf'   , ## Gamma-distributuon in shape/scale parameterization
-    'Log10GammaDist_pdf' , ## Gamma-distributuon in shape/scale parameterization
-    'LogGamma_pdf'       , ## Log-Gamma distribution 
-    'BetaPrime_pdf'      , ## Beta-prime distribution 
-    'GenBetaPrime_pdf'   , ## generalized Beta-prime distribution 
-    'Landau_pdf'         , ## Landau distribution 
-    'Argus_pdf'          , ## ARGUS distribution 
-    'GenArgus_pdf'       , ## Generalized ARGUS distribution 
-    'TwoExpos_pdf'       , ## difference of two exponents
-    'Gumbel_pdf'         , ## Gumbel distributions
-    'Rice_pdf'           , ## Rice distribution 
-    'GenInvGauss_pdf'    , ## Generalized Inverse Gaussian distribution
-    'Weibull_pdf'        , ## Weibull distributions
-    'Tsallis_pdf'        , ## Tsallis PDF 
-    'QGSM_pdf'           , ## QGSM PDF 
-    'Hagedorn_pdf'       , ## Hagedorn PDF 
-    'Tsallis2_pdf'       , ## 2D Tsallis PDF 
-    'GenPareto_pdf'      , ## Generalised Pareto distribution
-    'ExGenPareto_pdf'    , ## Exponentiated Generalised Pareto distribution
-    'Benini_pdf'         , ## Benini distribution
-    'GEV_pdf'            , ## Generalised Extreme Value distribution
-    'MPERT_pdf'          , ## Modified PERT distribution
+    'GammaDist_pdf'        , ## Gamma-distributuon in shape/scale parameterization
+    'GenGammaDist_pdf'     , ## Generalized Gamma-distribution
+    'Amoroso_pdf'          , ## another view of generalized Gamma distribution
+    'LogGammaDist_pdf'     , ## Gamma-distributuon in shape/scale parameterization
+    'Log10GammaDist_pdf'   , ## Gamma-distributuon in shape/scale parameterization
+    'LogGamma_pdf'         , ## Log-Gamma distribution 
+    'BetaPrime_pdf'        , ## Beta-prime distribution 
+    'GenBetaPrime_pdf'     , ## generalized Beta-prime distribution 
+    'Landau_pdf'           , ## Landau distribution 
+    'Argus_pdf'            , ## ARGUS distribution 
+    'GenArgus_pdf'         , ## Generalized ARGUS distribution 
+    'TwoExpos_pdf'         , ## difference of two exponents
+    'Gumbel_pdf'           , ## Gumbel distributions
+    'Rice_pdf'             , ## Rice distribution 
+    'GenInvGauss_pdf'      , ## Generalized Inverse Gaussian distribution
+    'Weibull_pdf'          , ## Weibull distributions
+    'Tsallis_pdf'          , ## Tsallis PDF 
+    'QGSM_pdf'             , ## QGSM PDF 
+    'Hagedorn_pdf'         , ## Hagedorn PDF 
+    'Tsallis2_pdf'         , ## 2D Tsallis PDF 
+    'GenPareto_pdf'        , ## Generalised Pareto distribution
+    'ExGenPareto_pdf'      , ## Exponentiated Generalised Pareto distribution
+    'Benini_pdf'           , ## Benini distribution
+    'BirnbaumSaunders_pdf' , ## Birnbaum-Saunders distribution
+    'GEV_pdf'              , ## Generalised Extreme Value distribution
+    'MPERT_pdf'            , ## Modified PERT distribution
     )
 # =============================================================================
 from   ostap.core.core        import Ostap, VE 
@@ -1930,8 +1932,7 @@ class Benini_pdf(PDF1) :
         xmnmx = self.xminmax()
 
         self.__shape = ROOT.RooArgList()
-        for  i , p in enumerate ( shape ) :
-            
+        for  i , p in enumerate ( shape ) :  
             pp = self.make_var ( p ,
                                  'p_%s_%s'  % ( i , name ) ,
                                  'p_%s(%s)' % ( i , name ) ,
@@ -2040,7 +2041,7 @@ class MPERT_pdf(PDF1) :
     def __init__ ( self                  ,
                    name                  ,   ## the name 
                    xvar                  ,   ## the variable
-                   xi                    ,   ## mode parameyter 
+                   xi                    ,   ## mode parameter 
                    gamma  = 4            ,   ## gamma/shape 
                    Xmin   = pos_infinity ,   ## xmin 
                    Xmax   = neg_infinity ) : ## xmax
@@ -2122,6 +2123,98 @@ class MPERT_pdf(PDF1) :
         return self.__Xmax 
         
 models.append ( MPERT_pdf ) 
+
+
+# =============================================================================
+## @class BirnbaumSaunders_pdf
+#  Birnbaum-Saunders distribution 
+#  @see https://en.wikipedia.org/wiki/Birnbaum%E2%80%93Saunders_distribution
+#  \f[ f(x;\mu, \beta,\gamma) = 
+#   \frac{ z + z^{-1}}{2\gamma(x-\mu)}\phi( \frac{1}{\gamma}(z-z^{-1}) \f]
+#  where
+#   - \f$ z=\frac{x-\mu}{\beta}\f$
+#   - \f$ \phi\f$ is Gaussian PDF 
+#  @see Ostap::Models::BirnbaumSaunders
+#  @see Ostap::Math::BirnbaumSaunders
+class BirnbaumSaunders_pdf(PDF1) :
+    """  Birnbaum-Saunders distribution 
+    - see https://en.wikipedia.org/wiki/Birnbaum%E2%80%93Saunders_distribution
+    - see `Ostap.Models.BirnbaumSaunders`
+    - see `Ostap.Math.BirnbaumSaunders`
+    """
+    ## constructor
+    def __init__ ( self                               ,
+                   name                               ,   ## the name 
+                   xvar                               ,   ## the variable
+                   mu    = None                       ,   ## location
+                   beta  = None                       ,   ## scale 
+                   gamma = None                       ) : ## shape 
+        
+        #
+        PDF1.__init__ ( self , name , xvar )
+        #
+        ##
+        limits_mu   = ()
+        limits_beta = ( 1.e-3 , 1.e+3 ) 
+        if   self.xminmax() :
+            mn , mx    = self.xminmax()
+            limits_mu   = mn + 0.01 * ( mx - mn ) , mn , mx
+            ss = ( mx - mn ) /  ( 12**0.5 ) 
+            limits_beta = ss , 0.001 * ss , 100 * ss 
+            
+            
+        self.__mu     = self.make_var ( mu       ,
+                                        'mu_%s'                % name ,
+                                        '#mu_{BS}(%s)'         % name ,
+                                        None , *limits_mu )
+        
+        self.__beta  = self.make_var ( beta      ,
+                                       'beta_%s'              % name ,
+                                       '#beta_{BS}(%s)'       % name ,
+                                       None  , *limits_beta  )
+        
+        self.__gamma  = self.make_var ( gamma    ,
+                                        'gamma_%s'                 % name ,
+                                        '#gamma_{BS}(%s)'  % name ,
+                                        None , 1 , 0.001 , 1000 )
+            
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'mu'    : self.mu    ,            
+            'beta'  : self.beta  ,            
+            'gamma' : self.gamma ,            
+            }
+        
+    @property
+    def mu ( self ) :
+        """`mu` : locaitron parameter for Birnbaum-Saunders distribution"""
+        return self.__mu 
+    @mu.setter 
+    def mu ( self , value ) :
+        self.set_value ( self.__mu , value )
+        
+    @property
+    def beta ( self ) :
+        """`beta`- scaleparameter for Birnbaum-Saunders distribution"""
+        return self.__beta
+    @beta.setter 
+    def beta ( self , value ) :
+        self.set_value ( self.__beta , value )
+
+    @property
+    def gamma ( self ) :
+        """`gamma`- shape parameter for Birnbaum-Saunders distribution"""
+        return self.__gamma 
+    @gamma.setter 
+    def gamma ( self , value ) :
+        self.set_value ( self.__gamma , value )
+        
+models.append ( BirnbaumSaunders_pdf ) 
+
+
+
 
 # =============================================================================
 ## @class Tsallis2_pdf
