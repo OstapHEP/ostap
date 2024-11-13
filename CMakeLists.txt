@@ -17,8 +17,21 @@ if ( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.15" )
    ## https://cmake.org/cmake/help/latest/policy/CMP0094.html
    cmake_policy ( SET CMP0094 NEW ) 
 endif() 
-    
-    
+
+
+if ( ${CMAKE_CXX_COMPILER_LAUNCHER} )
+  message ( 'here-1' ) 
+else () 
+  find_program(CCACHE_PROGRAM ccache)
+  message ( 'here-2' ${CCACHE_PROGRAM} ) 
+  if(CCACHE_PROGRAM)
+    # Support Unix Makefiles and Ninja
+    ## set_property(GLOBAL PROPERTY CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM} )
+  endif()
+endif() 
+
+
 project(ostap LANGUAGES CXX)
 include(CTest)
 
@@ -38,11 +51,15 @@ set(OSTAP_PYTHON_SITE_DIR "")
 find_program(CMAKE_C_COMPILER   NAMES $ENV{CC}  gcc PATHS ENV PATH NO_DEFAULT_PATH)
 find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
 
+
 message ( "----> C-compiler        : " $ENV{CC}  )
 message ( "----> C++-compiler      : " $ENV{CXX} )
-message ( "----> C-compiler   ID   : " ${CMAKE_CXX_COMPILER_ID} ) 
+message ( "----> C-compiler   ID   : " ${CMAKE_C_COMPILER_ID}   ) 
 message ( "----> C++-compiler ID   : " ${CMAKE_CXX_COMPILER_ID} ) 
 
+if ( CMAKE_CXX_COMPILER_LAUNCHER )
+   message ( "----> c++-launcher      : " ${CMAKE_CXX_COMPILER_LAUNCHER} ) 
+endif() 
 # You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
 # - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake
 # - ROOT built with CMake. Add in CMAKE_PREFIX_PATH the installation prefix for ROOT

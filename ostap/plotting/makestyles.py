@@ -622,11 +622,8 @@ def make_styles ( config = None ) :
                 logger.debug ( 'Create new generic style  %s/%s' % ( name , description ) )             
                 style       = ROOT.TStyle ( name , description )
                 StyleStore.own_styles.update ( { name : style } ) 
-            set_style ( style , section )
-            
-        if name in StyleStore.styles :
-            logger.warning ( "The configuration %s replaced" % name  ) 
-        StyleStore.styles.update ( { name : style } )
+            set_style ( style , section )            
+            StyleStore.styles.update ( { name : style } )
         
         if  name.startswith('Style')  :
             nname  = name[5:]
@@ -944,7 +941,6 @@ def make_ostap_style ( name                      ,
         logger.debug ( "Create new Ostap style `%s'" % name )
         style = ROOT.TStyle ( name , description )
         StyleStore.own_styles.update ( { name : style } )
-        print ( 'CREATE NEW OSTAP STYLE', name )
         
     StyleStore.styles.update ( { name : style } ) 
     set_style  ( style , conf , base_style = base_style ) 
