@@ -206,10 +206,10 @@ def anderson_darling  ( data1 , data2 , pooled = None , ranks1 = None  , ranks2 
     n    = n1 + n2
 
     def term1 ( j ) :
-        r1  = ranks1 [ j ]    
+        r1  = int ( ranks1 [ j ] ) 
         return ( n * r1 - j * n1 ) ** 2  / ( ( j + 1 ) *  ( n - j ) )
     def term2 ( j ) :
-        r2  = ranks2 [ j ]    
+        r2  = int ( ranks2 [ j ] ) 
         return ( n * r2 - j * n2 ) ** 2  / ( ( j + 1 ) *  ( n - j ) )
         
     s1 = sum ( term1 ( j ) for j in range ( n ) ) / n1
@@ -244,8 +244,8 @@ def cramer_von_mises ( data1 , data2 , pooled = None  ) :
     ranks1 = ecdf.ranks ( ecdf1 )
     ranks2 = ecdf.ranks ( ecdf2 )
     
-    u  = n1 * sum ( ( ranks1 [ i ] - i ) ** 2 for i in range ( n1 ) ) 
-    u += n2 * sum ( ( ranks2 [ i ] - i ) ** 2 for i in range ( n2 ) ) 
+    u  = n1 * sum ( ( int ( ranks1 [ i ] ) - i ) ** 2 for i in range ( n1 ) ) 
+    u += n2 * sum ( ( int ( ranks2 [ i ] ) - i ) ** 2 for i in range ( n2 ) ) 
     
     return u / ( n1 * n2 * n ) - ( 4 * n1 * n2 - 1 ) / ( 6.0 * n ) 
 
@@ -282,13 +282,14 @@ def ZK  ( data1 , data2 , pooled = None , ranks1 = None  , ranks2 = None  ) :
     flog = math.log 
     def term ( k ) :
 
-        r1  = ranks1 [ k ]
-        r2  = ranks2 [ k ]
+        r1  = int ( ranks1 [ k ] ) 
+        r2  = int ( ranks2 [ k ] ) 
         
         r1  = max ( 0.5 , min ( n1 - 0.5 , r1 ) ) ## r1 + 0.5 ??
         r2  = max ( 0.5 , min ( n2 - 0.5 , r2 ) ) ## r2 + 0.5 ?? 
         
-        fk  = 0.5 / n if not k else float ( k ) / n  
+        fk  = 0.5 / n if not k else float ( k ) / n
+        
         f1k = float ( r1 ) / n1
         f2k = float ( r2 ) / n2
         
@@ -332,8 +333,8 @@ def ZA ( data1 , data2 , pooled = None , ranks1 = None , ranks2 = None ) :
     flog = math.log 
     def term ( k ) :
 
-        r1  = ranks1 [ k ]
-        r2  = ranks2 [ k ]
+        r1  = int ( ranks1 [ k ] ) 
+        r2  = int ( ranks2 [ k ] ) 
         
         r1  = max ( 0.5 , min ( n1 - 0.5 , r1 ) ) ## r1 + 0.5 ??
         r2  = max ( 0.5 , min ( n2 - 0.5 , r2 ) ) ## r2 + 0.5 ?? 
@@ -381,11 +382,11 @@ def ZC ( data1 , data2 , pooled = None , ranks1 = None , ranks2 = None ) :
     
     flog = math.log 
     def term1 ( j ) :
-        r1  = ranks1 [ j ]
+        r1  = int ( ranks1 [ j ] ) 
         return flog ( n1 / ( j + 0.5 ) - 1 ) * flog ( n / ( r1 + 0.5 ) - 1 )
     
     def term2 ( j ) :
-        r2  = ranks2 [ j ]
+        r2  = int ( ranks2 [ j ] ) 
         return flog ( n2 / ( j + 0.5 ) - 1 ) * flog ( n / ( r2 + 0.5 ) - 1 )
     
     t1 = sum ( term1 ( j ) for j in range ( n1 ) )

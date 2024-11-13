@@ -2039,6 +2039,38 @@ def _rmpert_reduce_ ( pdf ):
 
 Ostap.Models.MPERT        .__reduce__ = _rmpert_reduce_ 
 
+
+# =============================================================================
+## reduce FisherZ
+def _rfz_reduce_ ( pdf ) :
+    """ Reduce FisherZ """
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () ,                            
+                                  pdf.mu     () ,
+                                  pdf.d1     () ,
+                                  pdf.d2     () ,                                  
+                                  pdf.scale  () ) 
+
+Ostap.Models.FisherZ.__reduce__ = _rfz_reduce_ 
+
+# =============================================================================
+## reduce BirnbaumSaunders
+def _rBS_reduce_ ( pdf ) :
+    """ Reduce BirnbaumSaunders """
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () ,                            
+                                  pdf.mu     () ,                            
+                                  pdf.beta   () ,
+                                  pdf.gamma  () )
+
+Ostap.Models.BirnbaumSaunders.__reduce__ = _rBS_reduce_ 
+
+
+
 # =============================================================================
 ## reduce Slash
 def _rslash_reduce_ ( pdf ):
@@ -2898,7 +2930,10 @@ _decorated_classes_ = (
     Ostap.Models.PositiveSpline        , 
     Ostap.Models.MonotonicSpline       , 
     Ostap.Models.ConvexSpline          , 
-    Ostap.Models.ConvexOnlySpline      , 
+    Ostap.Models.ConvexOnlySpline      ,
+    Ostap.Modelt.MPERT                 ,
+    Ostap.Modelt.FisherZ               ,
+    Ostap.Modelt.BirnbaumSaunders      ,    
     Ostap.Models.HORNSdini             , 
     Ostap.Models.HILLdini              , 
     Ostap.Models.Histo1D               , 

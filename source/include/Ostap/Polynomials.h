@@ -1550,14 +1550,15 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      Bessel ( const unsigned int N     = 0 ,
-               const double       xmin  = 0 ,
-               const double       xmax  = 1 );               
+      Bessel
+      ( const unsigned int N     = 0 ,
+	const double       xmin  = 0 ,
+	const double       xmax  = 1 );               
       // ======================================================================
     public: 
       // ======================================================================
-      inline double operator() ( const double x ) const { return evalaute ( x ) ; }
-      double evalaute ( const double x ) const ;
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      double evaluate ( const double x ) const ;
       // ======================================================================
     public: 
       // ======================================================================
