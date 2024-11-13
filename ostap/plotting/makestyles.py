@@ -119,12 +119,16 @@ ostap_latex . SetTextAlign  ( 12          )
 ## @class StyleStore
 #  Store for all created/configured styles
 class StyleStore(object) :
-    """Store for all created/cofigures styles
+    """ Store for all created/cofigures styles
     """
-    __styles = {}
+    __styles     = {}
+    __own_styles = {}
     @classprop 
-    def styles ( kls ) :
+    def styles     ( kls ) :
         return kls.__styles 
+    @classprop 
+    def own_styles ( kls ) :
+        return kls.__own_styles 
 
 # =============================================================================
 ## get the ROOT style by name
@@ -148,7 +152,7 @@ def root_style ( name ) :
 #  getters, setters, special = style_methods() 
 #  @endcode
 def style_methods () :
-    """Get the essential methods of class ROOT.TStyle
+    """ Get the essential methods of class ROOT.TStyle
     >>> getters, setters, special = style_methods() 
     """
     # The style getters 
@@ -231,7 +235,7 @@ style_getters , style_setters, style_special = style_methods ()
 #  conf  = style.get  () ## ditto
 #  @endcode 
 def dump_style ( style ) :
-    """Dump the style to the dictionary
+    """ Dump the style to the dictionary
     >>> style = ...
     >>> conf  = dump_style ( style )
     >>> conf  = style.dump () ## ditto
@@ -280,7 +284,7 @@ def dump_style ( style ) :
 # =============================================================================
 ## Dump the style as a table 
 def table_style ( style , prefix = '' , title = '' ) : 
-    """Dump the style as a table"""
+    """ Dump the style as a table"""
 
     conf = dump_style ( style )
     
@@ -302,7 +306,7 @@ def table_style ( style , prefix = '' , title = '' ) :
 
 ROOT.TStyle.table = table_style
 # =============================================================================
-## extr aattribvutes 
+## extra attributes 
 extra = 'NumberOfColors' , 'showeditor', 'showeventstatus', 'showtoolbar', 'basestyle', 'ostaplike'
 # =============================================================================
 ## Set the style from the configuration dictionary
@@ -313,7 +317,7 @@ extra = 'NumberOfColors' , 'showeditor', 'showeventstatus', 'showtoolbar', 'base
 #  style.set ( config ) ##   ditto 
 #  @endcode
 def set_style ( style , config , base_style = '' , **kwargs ) :
-    """Set the style from the configurtaion dictionary
+    """ Set the style from the configurtaion dictionary
     >>> config = ...
     >>> style  = ...
     >>> set_style ( style , config )
@@ -590,7 +594,7 @@ ROOT.TStyle.set  =  set_style
 ## Parse the configuration and create
 #  all the styles according to configuration 
 def make_styles ( config = None ) :
-    """Parse the configuration and create
+    """ Parse the configuration and create
     all the styles according to configuration 
     """
     
@@ -617,7 +621,7 @@ def make_styles ( config = None ) :
             if not style : 
                 logger.debug ( 'Create new generic style  %s/%s' % ( name , description ) )             
                 style       = ROOT.TStyle ( name , description )
-                
+                StyleStore.own_styles.update ( { name : style } ) 
             set_style ( style , section )
             
         if name in StyleStore.styles :
@@ -629,8 +633,7 @@ def make_styles ( config = None ) :
             if nname in StyleStore.styles :
                 logger.info ( "The configuration %s replaced" % nname  ) 
                 StyleStore.styles.update ( { nname : style } )
-        
-            
+                    
 # ==============================================================================
 def get_float ( config , name , default ) :
     try :
@@ -680,7 +683,8 @@ def make_ostap_style ( name                      ,
                        description = 'The Style' ,   
                        config      = {}          ,
                        base_style  = ''          , **kwargs ) :
-    
+    """ Make ostap-like style 
+    """
 
     kw = cidict ( transform = cidict_fun )
     kw.update   ( kwargs ) 
@@ -935,18 +939,36 @@ def make_ostap_style ( name                      ,
 
     ## create the style
     style = root_style ( name )
+
     if not style : 
         logger.debug ( "Create new Ostap style `%s'" % name )
         style = ROOT.TStyle ( name , description )
+        StyleStore.own_styles.update ( { name : style } )
+        print ( 'CREATE NEW OSTAP STYLE', name )
         
+    StyleStore.styles.update ( { name : style } ) 
     set_style  ( style , conf , base_style = base_style ) 
-
+    
     return style
 
 # =============================================================================
 ## read the configuration files and create the styles 
 make_styles () 
-    
+
+
+
+import atexit
+@atexit.register
+def styles_clean () :
+    """ The styles need to be deleted
+    - see https://github.com/root-project/root/issues/16918
+    """
+    while StyleStore.styles :
+        _ , _  = StyleStore.styles.popitem     ()
+    while StyleStore.own_styles :
+        _ , st = StyleStore.own_styles.popitem ()
+        del st 
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TStyle ,

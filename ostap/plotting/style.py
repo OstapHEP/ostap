@@ -4,7 +4,7 @@
 # @file ostap/plotting/style.py
 # Ostap style file for ROOT-plots
 # =============================================================================
-"""Ostap Style for ROOT-plots"""
+""" Ostap Style for ROOT-plots"""
 # =============================================================================
 __all__ = (
     'UseStyle'         ,  ## context manager  for the style (class) 
@@ -55,7 +55,7 @@ def OstapStyle ( name                           ,
                  force       = True             ,
                  scale       = 1.0              ,
                  colz        = False            ) :
-    """Create Ostap-style for the plots    
+    """ Create Ostap-style for the plots    
     """
 
     # ================================================================
@@ -255,6 +255,26 @@ def useStyle ( style = None , **config  ) :
     """
     return UseStyle ( style , **config )
 
+
+import atexit
+@atexit.register
+def styles_delete () :
+    """ The styles need to be deleted
+    - see https://github.com/root-project/root/issues/16918
+    """
+    global Style1Z, Style2Z, Style3Z
+    global Style1 , Style2 , Style3 
+    global Style  , StyleZ , ostapStyle 
+
+    del Style1Z
+    del Style2Z
+    del Style3Z
+    del Style1     
+    del Style2  
+    del Style3  
+    del StyleZ
+    del Style  
+    del ostapStyle
     
 # =============================================================================
 if '__main__' == __name__ :

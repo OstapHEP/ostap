@@ -40,6 +40,8 @@ find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PA
 
 message ( "----> C-compiler        : " $ENV{CC}  )
 message ( "----> C++-compiler      : " $ENV{CXX} )
+message ( "----> C-compiler   ID   : " ${CMAKE_CXX_COMPILER_ID} ) 
+message ( "----> C++-compiler ID   : " ${CMAKE_CXX_COMPILER_ID} ) 
 
 # You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
 # - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake

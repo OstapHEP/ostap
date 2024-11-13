@@ -8,7 +8,8 @@
   1. add `isfinite` method for `(W)Covariance` objects 
   1. add `Ostap::MoreRooFit::Hypot` and `var_hypot`
   1. add Fizher's Z-distribution
-  
+  1. explicitely delete all created styles, see [here](https://github.com/root-project/root/issues/16918)
+
 ## Backward incompatible
     
 ## Bug fixes
