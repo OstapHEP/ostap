@@ -20,14 +20,12 @@ endif()
 
 
 if ( ${CMAKE_CXX_COMPILER_LAUNCHER} )
-  message ( 'here-1' ) 
 else () 
   find_program(CCACHE_PROGRAM ccache)
-  message ( 'here-2' ${CCACHE_PROGRAM} ) 
   if(CCACHE_PROGRAM)
     # Support Unix Makefiles and Ninja
     ## set_property(GLOBAL PROPERTY CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
-    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM} )
+    ## set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM} )
   endif()
 endif() 
 
