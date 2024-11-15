@@ -173,13 +173,11 @@ def legendre_sum ( func , N , xmin , xmax , **kwargs ) :
 
     from ostap.math.integral import integral as _integral 
     
-    args  = {}
+    args = deepcopy ( kwargs ) if kwargs else {} 
     for n in range ( N + 1 ) :
         
         li     = L_ ( n ) 
-        fun_n  = lambda x : func ( x ) * li ( tx ( x ) )
-        if kwargs : args = deepcopy ( kwargs )
-
+        fun_n  = lambda x : func ( x ) * li ( tx ( x ) )        
         c_n    = _integral ( fun_n , xmin , xmax , **args ) * ( 2 * n + 1 ) * idx
             
         lsum.setPar ( n , c_n ) 
