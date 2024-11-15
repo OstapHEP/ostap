@@ -36,15 +36,13 @@ date_format = "%Y-%b-%d"
 re_format   = re.compile ( r'(?P<date>(\d{4}-\S{3}-\d{2}))-(?P<pid>(\d{2,12}))-.*' )
 start       = datetime.datetime.now()
 time_delta  = datetime.timedelta ( days = 4 ) ## from Friday to Tuesday :-)
-
 # =============================================================================
-user = whoami ()
+user        = whoami ()
 # =============================================================================            
 ## temporary directory for <code>tempfile</code> module
 base_tmp_dir = None
 for_cleanup  = False 
 # =============================================================================
-
 ## 1) check the environment variable OSTAP_TMPDIR 
 if not base_tmp_dir :
     from ostap.utils.basic import get_env as ostap_getenv  
@@ -56,7 +54,7 @@ if not base_tmp_dir :
     if base_tmp_dir and not writeable ( base_tmp_dir ) :
         logger.warning ("Directory `%s' is not writeable!" % base_tmp_dir )
         base_tmp_dir = None
-        
+# =============================================================================
 ## 2) get from configuration file 
 if not base_tmp_dir :
     ## 2) check the configuration file 
@@ -78,12 +76,21 @@ dir_user_prefix   = 'ostap-session-%s-' % user
 # ===========================================================================
 ## create the base temporary directory
 def make_base_tmp_dir () :
-    """Create the base temporary directory
+    """ Create the base temporary directory
     """
     
     prefix = '%s' % dir_prefix 
     
     td = tempfile.gettempdir()
+    if not user in td :
+        ttd = os.path.join ( td , user )
+        if not os.path.exists ( ttd ) :
+            try    : os.mkdir( ttd )
+            except : pass
+        if writeable ( ttd ) :
+            tempfile.tempdir = ttd 
+            td = tempfile.tempdir
+        
     if user and not user in td : prefix = dir_user_prefix
     
     prefix  = "%s%s-%d-"   %  ( prefix , start.strftime ( date_format ) , os.getpid () )
@@ -91,11 +98,10 @@ def make_base_tmp_dir () :
     t = tempfile.mkdtemp ( prefix = prefix ) 
     return t
 
-
 # ===============================================================================
 ## get the process-dependent name of the temporary directory 
 def tmp_dir ( pid = None ) :
-    """get the process-dependent name of the temporary directory
+    """ Get the process-dependent name of the temporary directory
     """
     if base_tmp_dir :
         return base_tmp_dir 
@@ -112,7 +118,7 @@ def tmp_dir ( pid = None ) :
 # ===============================================================================
 ## Context manager to define/redefine temporary directory for <code>tempfile</code> module
 class UseTmpDir ( object ) :
-    """Context manager to define/redefine TmpDir for the tempfile module
+    """ Context manager to define/redefine TmpDir for the tempfile module
     """
     def __init__   ( self , temp_dir = None ) :
         
@@ -135,13 +141,12 @@ class UseTmpDir ( object ) :
     def tmp_dir ( self ) :
         return self.__tmp_dir 
 
-
 # =============================================================================
 ## @class CleanUp
 #  Simple (base) class to get temporary files
 #  and directories and to remove them at exit
 class  CleanUp(object) :
-    """Simple (base) class to get temporary files
+    """ Simple (base)class to deal with temporary files
     and directories and to remove them at exit
     """
     _tmpfiles  = set ()
