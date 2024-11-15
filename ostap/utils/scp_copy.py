@@ -30,30 +30,29 @@ import ostap.trees.cuts
 # =============================================================================
 _scp_copy = None
 # =============================================================================
-if sys.version_info.major < 3  :
-    # try to import pathos 
-    try :                
-        # =================================================================
-        import pathos.secure 
-        # =================================================================
-        ## copy <code>source</code> to <code>destination</code> using
-        #  <code>pathos.secure.Copier</code
-        def _scp_copy ( source , destination ) :
-            """Copy ``source'' to ``destination'' using pathos.secure.Copier
+try : # try to import pathos ==================================================
+    # =========================================================================
+    import pathos.secure 
+    # =========================================================================
+    ## copy <code>source</code> to <code>destination</code> using
+    #  <code>pathos.secure.Copier</code
+    def _scp_copy ( source , destination ) :
+        """Copy ``source'' to ``destination'' using pathos.secure.Copier
             - see pathos.secure.Copier
             """
-            copier = pathos.secure.Copier ( 'SSH-copier' )
-            copier ( source = source , destination = destination ) 
-            copier.launch ()
-            r = copier.response()
-            if r : logger.warning ('Response from SSH-copier: %s' % r )
-            
-            logger.debug ( 'pathos.secure.Copier will be used for scp-copy')
-            
-    except ImportError : ## pathos is not acessible, use subprocess 
-        _scp_copy = None
+        copier = pathos.secure.Copier ( 'SSH-copier' )
+        copier ( source = source , destination = destination ) 
+        copier.launch ()
+        r = copier.response()
+        if r : logger.warning ('Response from SSH-copier: %s' % r )
+        
+        logger.debug ( 'pathos.secure.Copier will be used for scp-copy')
+    # =========================================================================
+except ImportError : ## pathos is not acessible, use subprocess ===============
+    # =========================================================================
+    _scp_copy = None
 # =============================================================================                
-if not _scp_copy :
+if not _scp_copy : # ==========================================================
     # =========================================================================
     ## copy <code>source</code> to <code>destination</code> using
     #  <code>subprocess.check_call</code> + <code>scp</code>
@@ -80,13 +79,12 @@ if not _scp_copy :
 #  @endcode
 #  - Use either <code>pathos.secure.Copier</code> or <code>subprocess.check_call</code>
 def scp_copy ( source  , destination = None ) :
-    """Copy remote file to local host:
+    """ Copy remote file to local host:
     
     >>> result , time = scp_copy ( source = 'lxplus701.cern.ch:a.cpp', destination='b.cpp' )
     
-    - Use either pathos.secure.Copier or subprocess.check_call
-    """
-    
+    - Use either `pathos.secure.Copier` or `subprocess.check_call`
+    """    
     if not destination :
         _ , fext = os.path.splitext ( source )  
         fext  = fext if fext else '.root'
@@ -102,7 +100,6 @@ def scp_copy ( source  , destination = None ) :
            os.path.exists ( destination ) and \
            os.path.isfile ( destination ) and \
            os.access      ( destination , os.R_OK ) else   ( None , delta ) 
-
 
 # =============================================================================
 if '__main__' == __name__ :
