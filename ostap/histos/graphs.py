@@ -39,7 +39,8 @@ __all__     = (
 from   ostap.core.core                import cpp, VE, grID
 from   ostap.math.base                import isint, pos_infinity, neg_infinity 
 from   ostap.core.meta_info           import root_info
-from   ostap.core.ostap_types         import num_types, integer_types, sized_types   
+from   ostap.core.ostap_types         import ( num_types   , integer_types ,
+                                               sized_types , string_types  )   
 from   builtins                       import range
 from   ostap.plotting.draw_attributes import copy_graph_attributes
 from   ostap.utils.valerrors          import ( AsymErrors         ,
@@ -731,7 +732,7 @@ def _gr_integral_ ( graph , xlow , xhigh , numerical = True ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _gr_iter_ ( graph ) :
-    """Iterate over graph points 
+    """ Iterate over graph points 
     >>> gr = ...
     >>> for i in gr : ...    
     """
@@ -743,7 +744,7 @@ def _gr_iter_ ( graph ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _gr_getitem_ ( graph , ipoint )  :
-    """Get the point from the Graph
+    """ Get the point from the Graph
     >>> graph = ...
     >>> x,y   = graph[3]
     """
@@ -3423,7 +3424,7 @@ ROOT.TSpline. __call__  = _spl_call_
 #  plot  = plot1 + plot2 
 #  @endcode
 def _rplot_add_ ( plot1 , plot2 ) :
-    """ Add two <code>RooPlot</code> objects
+    """ Add two `ROOT.RooPlot` objects
     - attention: they must have the same structure!
     
     >>> plot1 = ...
@@ -3440,13 +3441,11 @@ def _rplot_add_ ( plot1 , plot2 ) :
     result.SetMinimum ( plot1.GetMinimum () + plot2.GetMinimum () )
     result.SetMaximum ( plot1.GetMaximum () + plot2.GetMaximum () ) 
 
-    def all_ints ( item ) :
-        
+    def all_ints ( item ) :        
         for i,X,Y in item.items() :
             y = Y.value 
             if y < 0           : return False 
-            if not isint ( y ) : return False
-            
+            if not isint ( y ) : return False            
         return True
         
     iii = 0 
@@ -3471,9 +3470,10 @@ def _rplot_add_ ( plot1 , plot2 ) :
         elif isinstance ( obj1 , ROOT.RooCurve ) and isinstance ( obj2 , ROOT.RooCurve ) :
 
             plot = ROOT.RooCurve ( obj2 )
-            
-            for i, X, Y in plot.items() :
-                plot[i] = X , Y + obj1 ( X ) 
+
+            plot += obj1 
+            ## for i, X, Y in plot.items() :
+            ##    plot[i] = X , Y + obj1 ( X ) 
 
             result.addPlotable ( plot , options1 , invisible1 )
             
@@ -3482,10 +3482,102 @@ def _rplot_add_ ( plot1 , plot2 ) :
             return NotImplemented
 
 
+    result.SetDirectory ( ROOT.nullptr ) 
     return result
 
         
 ROOT.RooPlot.__add__  = _rplot_add_
+
+
+# =============================================================================
+## Get the new RooPlot object that contains only selected components
+#  @code
+#  frame = ...
+#  new_frame = frame.select ( 0, 1, 3, 'soem_name' ) 
+#  @endcode 
+def _rplot_copy_ ( plot , *components ) :
+    """ Get the new RooPlot object that contains only selected components 
+    >>> frame = ...
+    >>> new_frame = frame.select ( 0, 1, 3, 'soem_name' ) 
+    """    
+    result = ROOT.RooPlot ( plot.GetXaxis().GetXmin() , plot.GetXaxis().GetXmax() )
+    for item in plot.items() : 
+        cmp , options , invisible = item
+        if   isinstance ( cmp  , ROOT.RooPlotable ) :            
+            result.addPlotable ( cmp , options , invisible )
+        elif isinstance ( cmp  , ROOT.TH1 ) and 1 == cmp.GetDimension() :
+            result.addTH1      ( cmp , options , invisible )
+        else :
+            result.addObject   ( cmp , options , invisible )            
+
+    result.SetMinimum ( plot.GetMinimum () )
+    result.SetMaximum ( plot.GetMaximum () )    
+    copy_graph_attributes ( plot , result ) 
+    return result
+
+## ROOT.RooPlot.copy = _rplot_copy_ 
+
+# =============================================================================
+## Get the new RooPlot object that contains only selected components
+#  @code
+#  frame = ...
+#  new_frame = frame.select ( 0, 1, 3, 'soem_name' ) 
+#  @endcode 
+def _rplot_select_ ( plot , *components ) :
+    """ Get the new RooPlot object that contains only selected components 
+    >>> frame = ...
+    >>> new_frame = frame.select ( 0, 1, 3, 'soem_name' ) 
+    """    
+    result = ROOT.RooPlot ( plot.GetXaxis().GetXmin() , plot.GetXaxis().GetXmax() )
+    for i, item in enumerate ( plot.items() ) : 
+        component , options , invisible = item
+        if   i in components :
+            result.addPlotable ( component , options , invisible )
+        elif component.name in components :
+            result.addPlotable ( component , options , invisible )
+            
+    result.SetDirectory ( ROOT.nullptr ) 
+    copy_graph_attributes ( plot , result ) 
+    return result
+
+ROOT.RooPlot.select = _rplot_select_ 
+
+# =============================================================================
+## Subtract some component from the plot
+#  @code
+#  plot    = ...
+#  plot   -= 1  ## subtract 1st component 
+#  plot   -= 'name-of-component' ## subtract the component
+#  component = ..
+#  plot   -= component  ## subtract the component
+#  @endcode
+def _rplot_isub_ ( plot , component ) :
+    """ Subtract some component from the plot
+    >>> plot      = ...
+    >>> plot     -= 1  ## subtract 1st component 
+    >>> plot     -= 'name-of-component' ## subtract the component
+    >>> component = ..
+    >>> plot     -= component  ## subtract the component
+    """
+    if   isinstance ( component , integer_types ) and 0 <= component < len ( plot ) :
+        component = plot [ component ]
+    elif isinstance ( component , string_types  ) :
+        for i, item  in enumerate ( plot ) :
+            if item.name == component :
+                component = plot[i]            
+                break
+        else :
+            return NotImplemented 
+    elif callable ( component ) : pass
+    else : return NotImplemented 
+    
+    for comp in plot :
+        comp -= component
+    
+    return plot
+
+
+ROOT.RooPlot.__isub__ = _rplot_isub_ 
 
 # =============================================================================
 ## increment is disabled 

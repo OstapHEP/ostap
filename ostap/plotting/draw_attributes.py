@@ -164,7 +164,7 @@ def set_text_attributes  ( obj , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07  
 def copy_graph_attributes ( o_from , o_to ) :
-    """Copy graph attributes
+    """ Copy graph attributes
     - LineColor
     - LineWidth
     - LineStyle

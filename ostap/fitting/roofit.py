@@ -29,7 +29,7 @@ import ostap.fitting.roofitresult
 import ostap.fitting.printable
 import ostap.fitting.roocmdarg   
 from   ostap.fitting.dataset        import setStorage, useStorage
-from   ostap.core.ostap_types       import integer_types
+from   ostap.core.ostap_types       import integer_types, string_types 
 import ROOT, random, math, copy  
 # =============================================================================
 # logging 
@@ -45,7 +45,7 @@ _new_methods_ = []
 # =============================================================================
 ## product of two PDFs 
 def _pdf_mul_ ( pdf1 , pdf2 ) :
-    """Easy contruct for the product of two PDFs:
+    """ Easy contruct for the product of two PDFs:
     
     >>> pdf1 = ...
     >>> pdf2 = ...
@@ -204,7 +204,7 @@ ROOT.RooPlot.__contains__ =  _rp_contains_
 #  o = frame[2] 
 #  @endcode
 def _rp_getitem_  ( plot , index ) :
-    """Get <code>RooPlot</code> componet 
+    """ Get `ROOT.RooPlot` componet 
     >>> frame = ...
     >>> o = frame[2] 
     """
@@ -223,7 +223,7 @@ ROOT.RooPlot.__getitem__  =  _rp_getitem_
 #  for o in frame : ...
 #  @endcode
 def _rp_iter_  ( plot ) :
-    """Iterator over <code>RooPlot</code> componnet 
+    """ Iterator over `RooPlot` componnets 
     >>> frame = ...
     >>> for o in frame : ...
     """
@@ -239,13 +239,13 @@ ROOT.RooPlot.__iter__  =  _rp_iter_
 #  @code
 #  frame = ...
 #  for (obj,options,inviisble) in frame.items()  : ...
-#  for (obj,options,invisible) in frame.otemitems()  : ... ## ditto 
+#  for (obj,options,invisible) in frame.iteritems()  : ... ## ditto 
 #  @endcode
 def _rp_items_  ( plot ) :
-    """Iterator over <code>RooPlot</code> items  
+    """ Iterator over <code>RooPlot</code> items  
     >>> frame = ...
     >>> for (obj,options,inviisble) in frame.items()  : ...
-    >>> for (obj,options,invisible) in frame.otemitems()  : ... ## ditto 
+    >>> for (obj,options,invisible) in frame.iteritems()  : ... ## ditto 
     """
     n = len ( plot )
     names = set() 
@@ -342,7 +342,7 @@ ROOT.RooPlot.__repr__ =  _rp_table_
 # ================================================================================
 ## copy RooPlot object
 def _rp_copy_ ( plot ) :
-    """copy RooPlot object"""
+    """ Copy RooPlot object"""
     return copy.deepcopy ( plot )
 
 ROOT.RooPlot.copy      =  _rp_copy_ 
