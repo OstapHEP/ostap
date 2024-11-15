@@ -135,7 +135,7 @@ class AsymErrors (object) :
     # =========================================================================
     ## update (via quadratic sum) with another AsymErrors object 
     def __iadd__ ( self , other ) :
-        """update (via quadratic sum) with another AsymErrors object"""
+        """ Update (via quadratic sum) with another AsymErrors object"""
         if not isinstance ( other , AsymErrors ) : return NotImplemented
         neg = other.negative
         pos = other.positive
@@ -148,7 +148,8 @@ class AsymErrors (object) :
     # =========================================================================
     ## Quadratic sum of two AsymErrors objects 
     def __add__ ( self , other ) :
-        """Quadratic sum of two AsymErrors object"""
+        """ Quadratic sum of two AsymErrors objects
+        """
         if not isinstance ( other , AsymErrors ) : return NotImplemented
         r  = copy.copy ( self ) 
         r += other
@@ -157,7 +158,8 @@ class AsymErrors (object) :
     # =========================================================================
     ## self-scaling
     def __imul__ ( self , other ) :
-        """Self-scaling"""
+        """ Self-scaling 
+        """
         if not isinstance ( other , num_types ) : return NotImplemented
         ## 
         a = self.__negative * other
@@ -168,7 +170,8 @@ class AsymErrors (object) :
     # =========================================================================
     ## self-scaling
     def __idiv__ ( self , other ) :
-        """Self-scaling"""
+        """ Self-scaling 
+        """
         if not isinstance ( other , num_types ) : return NotImplemented
         ##
         a = self.__negative / other
@@ -182,7 +185,8 @@ class AsymErrors (object) :
     # ==========================================================================
     ## Multiplication/scaling
     def __mul__ ( self , other ) :
-        """Multiplication/scaling"""
+        """ Multiplication/scaling
+        """
         if not isinstance ( other , num_types ) : return NotImplemented
         r  = copy.copy ( self ) 
         r *= other
@@ -190,7 +194,8 @@ class AsymErrors (object) :
     # ==========================================================================
     ## division/scaling 
     def __div__ ( self , other ) :
-        """Division/scaling"""
+        """ Division/scaling 
+        """
         if not isinstance ( other , num_types ) : return NotImplemented
         r  = copy.copy ( self ) 
         r /= other
@@ -219,7 +224,7 @@ class AsymErrors (object) :
     #  0 : negative error
     #  1 : positive error 
     def __getitem__ ( self , index ) :
-        """ get the error by index
+        """ Get the error by index
         - 0 : negative error
         - 1 : positive error 
         """
@@ -229,7 +234,7 @@ class AsymErrors (object) :
     # ==========================================================================
     ## conversion to string 
     def toString ( self , format = '( -/%.5g +/%-.5g ) ' ) :
-        """Conversion to string
+        """C onversion to string
         """
         return format % ( abs ( self.__negative ) , self.__positive )
     
@@ -268,7 +273,7 @@ the_types = num_types + ( VE , )
 #  value = ValWihErrors ( VE ( 1 , 0.5**2 ) , AsymErrors ( 0.5 ,0.7  ) 
 #  @endcode 
 class ValWithErrors(object) : 
-    """Value with asymmetric errors
+    """ Value with asymmetric errors
     >>> value = ValWihErrors ( 1.0 ,  0.5 ,  0.7 )
     >>> value = ValWihErrors ( 1.0 , -0.5 ,  0.7 )
     >>> value = ValWihErrors ( 1.0 ,  0.7 , -0.5 )
@@ -288,7 +293,7 @@ class ValWithErrors(object) :
     #  value = ValWihErrors ( VE ( 1 , 0.5**2 ) , AsymErrors ( 0.5 ,0.7  ) 
     #  @endcode 
     def __init__  ( self , value = 0 , *errors ) :
-        """Value with asymmetric errors
+        """ Value with asymmetric errors
         >>> value = ValWihErrors ( 1.0 ,  0.5 ,  0.7 )
         >>> value = ValWihErrors ( 1.0 , -0.5 ,  0.7 )
         >>> value = ValWihErrors ( 1.0 ,  0.7 , -0.5 )
@@ -365,7 +370,7 @@ class ValWithErrors(object) :
     # =========================================================================
     ## make a copy 
     def __copy__ ( self ) :
-        """Make a copy""" 
+        """ Make a copy """ 
         return ValWithErrors ( self ) 
         
     # =========================================================================
@@ -375,7 +380,7 @@ class ValWithErrors(object) :
     #  vae *= 5 
     #  @endcode 
     def __imul__ ( self , other ) :
-        """Self-scaling
+        """ Self-scaling
         >>> vae = ...
         >>> vae *= 5 
         """
@@ -404,7 +409,7 @@ class ValWithErrors(object) :
     #  vae /= 5 
     #  @endcode 
     def __idiv__ ( self , other ) :
-        """Self-scaling
+        """ Self-scaling
         >>> vae = ...
         >>> vae /= 5 
         """
@@ -432,7 +437,7 @@ class ValWithErrors(object) :
     #  5 * vae 
     #  @endcode
     def __mul__ ( self , other ) :
-        """Multiplication/scaling
+        """ Multiplication/scaling
         >>> vae = ...
         >>> vae * 5
         >>> 5 * vae 
@@ -451,7 +456,7 @@ class ValWithErrors(object) :
     #  vae / 5
     #  @endcode
     def __div__ ( self , other ) :
-        """Division/scaling
+        """ Division/scaling
         >>> vae = ...
         >>> vae * 5
         >>> 5 * vae 
@@ -467,7 +472,8 @@ class ValWithErrors(object) :
     # ==========================================================================
     # add scalar
     def __iadd__ ( self , other ) :
-        ## 
+        """ Additivbe update
+        """
         if   isinstance ( other , VAE       ) :
             self.__value  += other.value
             self.__errors += other.errors
@@ -487,7 +493,8 @@ class ValWithErrors(object) :
     # ===========================================================================
     # subtract scalar
     def __isub__ ( self , other ) :
-        ##
+        """ Subtraction update 
+        """
         if   isinstance ( other , VAE       ) :
             self.__value  -=        other.value
             self.__errors += ( -1 * other.errors )
@@ -505,8 +512,10 @@ class ValWithErrors(object) :
         return NotImplemented 
 
     # ==========================================================================
-    # add scalar
+    # add two objecte 
     def __add__ ( self , other ) :
+        """ Sum of two objects 
+        """
         if not isinstance ( other , the_types ) : return NotImplemented        
         r  = copy.copy ( self ) 
         r += other
@@ -514,6 +523,8 @@ class ValWithErrors(object) :
     # ==========================================================================
     # subract scalar
     def __sub__ ( self , other ) :
+        """ Difference of two objects 
+        """
         if not isinstance ( other , the_types ) : return NotImplemented        
         r  = copy.copy ( self ) 
         r -= other
@@ -521,6 +532,8 @@ class ValWithErrors(object) :
     # ==========================================================================
     # add scalar
     def __radd__ ( self , other ) :
+        """ Sum of two objects 
+        """
         if not isinstance ( other , the_types ) : return NotImplemented        
         r  = copy.copy ( self ) 
         r += other
@@ -528,6 +541,8 @@ class ValWithErrors(object) :
     # ==========================================================================
     # subtract scalar
     def __rsub__ ( self , other ) :
+        """ Difference of two objects 
+        """
         if not isinstance ( other , the_types ) : return NotImplemented        
         r  = copy.copy ( self )
         r *= -1
@@ -537,13 +552,14 @@ class ValWithErrors(object) :
     # ========================================================================
     ## conversion to float 
     def __float__ ( self ) :
-        """conversion to float"""
+        """ Conversion to float
+        """
         return self.__value
 
     # ========================================================================
     ## (numerical) equality
     def __eq__ ( self , other ) :
-        """(Numerical) equality of object 
+        """ (Numerical) equality of object 
         """
         if   isinstance ( other , ValWithErrors ) :
             return isequal ( self.value , other.value   ) and self.errors == other.errors        
@@ -557,7 +573,7 @@ class ValWithErrors(object) :
     # ========================================================================
     ## (numerical) non equality
     def __ne__ ( self , other ) :
-        """(Numerical) equality of object 
+        """ (Numerical) equality of object 
         """
         if   isinstance ( other , ValWithErrors ) : return not ( self == other )         
         elif isinstance ( other , VE )            : return not ( self == other ) 
@@ -607,7 +623,7 @@ class ValWithErrors(object) :
     ## Conversion to VE, as split normal distribution with optional bias 
     #  @see https://en.wikipedia.org/wiki/Split_normal_distribution
     def asVE ( self , bias = False ) :
-        """Conversion to VE with optional bias
+        """ Conversion to VE with optional bias
         - see https://en.wikipedia.org/wiki/Split_normal_distribution
         """
         vv = self.value if not bias else self.eff_value 
@@ -653,7 +669,8 @@ class ValWithErrors(object) :
 # ===========================================================================
 ## decode error data into the flat list of errors 
 def flat_errors ( *items ) :
-    """decode error data into the flat list of errors"""
+    """ Decode error data into the flat list of errors
+    """
     flat = [] 
     for item in items :
         even = ( 0 == len ( flat ) % 2 )
@@ -679,7 +696,7 @@ def flat_errors ( *items ) :
 ## @class ValWithMultiErrors
 #  Value with multiple asymmetric error 
 class ValWithMultiErrors(object) : 
-    """Value with multiple asymmetric error"""    
+    """ Value with multiple asymmetric error """    
     __slots__ = (  '__value' , '__errors' )
     ## 
     def __init__  ( self , value = 0 , *errors ) :
@@ -752,7 +769,8 @@ class ValWithMultiErrors(object) :
     # =========================================================================
     ## make a copy 
     def __copy__ ( self ) :
-        """Make a copy""" 
+        """ Make a copy
+        """ 
         return ValWithMultiErrors ( self ) 
         
     # =========================================================================
@@ -762,7 +780,7 @@ class ValWithMultiErrors(object) :
     #  vae *= 5 
     #  @endcode 
     def __imul__ ( self , other ) :
-        """Self-scaling
+        """ Self-scaling
         >>> vae = ...
         >>> vae *= 5 
         """
@@ -777,7 +795,7 @@ class ValWithMultiErrors(object) :
     #  vae /= 5 
     #  @endcode 
     def __idiv__ ( self , other ) :
-        """Self-scaling
+        """ Self-scaling
         >>> vae = ...
         >>> vae /= 5 
         """
@@ -796,7 +814,7 @@ class ValWithMultiErrors(object) :
     #  5 * vae 
     #  @endcode
     def __mul__ ( self , other ) :
-        """Multiplication/scaling
+        """ Multiplication/scaling
         >>> vae = ...
         >>> vae * 5
         >>> 5 * vae 
@@ -812,7 +830,7 @@ class ValWithMultiErrors(object) :
     #  vae / 5
     #  @endcode
     def __div__ ( self , other ) :
-        """Division/scaling
+        """ Division/scaling
         >>> vae = ...
         >>> vae * 5
         >>> 5 * vae 
@@ -825,18 +843,24 @@ class ValWithMultiErrors(object) :
     # ==========================================================================
     # add scalar
     def __iadd__ ( self , other ) :
+        """ Additive update 
+        """
         if not isinstance ( other , num_types ) : return NotImplemented
         self.__value += other
         return self
     # ===========================================================================
     # subtract scalar
     def __isub__ ( self , other ) :
+        """ Subtraction update 
+        """
         if not isinstance ( other , num_types ) : return NotImplemented
         self.__value -= other
         return self
     # ==========================================================================
     # add scalar
     def __add__ ( self , other ) :
+        """ Sum of two objects 
+        """
         if not isinstance ( other , num_types ) : return NotImplemented        
         r  = copy.copy ( self ) 
         r += other
@@ -844,6 +868,8 @@ class ValWithMultiErrors(object) :
     # ==========================================================================
     # subract scalar
     def __sub__ ( self , other ) :
+        """ Difference of two objects 
+        """
         if not isinstance ( other , num_types ) : return NotImplemented        
         r  = copy.copy ( self ) 
         r -= other
@@ -851,6 +877,8 @@ class ValWithMultiErrors(object) :
     # ==========================================================================
     # add scalar
     def __radd__ ( self , other ) :
+        """ Sum of two objects 
+        """        
         if not isinstance ( other , num_types ) : return NotImplemented        
         r  = copy.copy ( self ) 
         r += other
@@ -858,6 +886,8 @@ class ValWithMultiErrors(object) :
     # ==========================================================================
     # subtract scalar
     def __rsub__ ( self , other ) :
+        """ Difference of two objects 
+        """
         if not isinstance ( other , num_types ) : return NotImplemented        
         r  = copy.copy ( self )
         r *= -1
@@ -870,7 +900,7 @@ class ValWithMultiErrors(object) :
     # ==========================================================================
     ## conversion to float 
     def __float__ ( self ) :
-        """conversion to float"""
+        """ Conversion to float"""
         return self.__value
         
     ## picklings/unpickling 
@@ -892,7 +922,7 @@ class ValWithMultiErrors(object) :
     # ========================================================================
     ## (numerical) equality
     def __eq__ ( self , other ) :
-        """(Numerical) equality of object 
+        """ (Numerical) equality of object 
         """
         if   isinstance ( other , ValWithMultiErrors  ) :
             return isequal ( self.value , other.value ) and self.errors       == other.errors
@@ -910,7 +940,7 @@ class ValWithMultiErrors(object) :
     # ========================================================================
     ## (numerical) non equality
     def __ne__ ( self , other ) :
-        """(Numerical) equality of object 
+        """ (Numerical) equality of object 
         """
         if   isinstance ( other , ValWithMultiErrors )                              : return not ( self == other ) 
         elif isinstance ( other , ValWithErrors      ) and 1 == len ( self.errors ) : return not ( self == other ) 
@@ -937,7 +967,7 @@ class ValWithMultiErrors(object) :
     ## Conversion to VE, as split normal distribution with optional bias 
     #  @see https://en.wikipedia.org/wiki/Split_normal_distribution
     def asVE ( self , bias = False ) :
-        """Conversion to VE with optional bias 
+        """ Conversion to VE with optional bias 
         - see https://en.wikipedia.org/wiki/Split_normal_distribution
         """
         vae = self.asVAE ()
@@ -948,9 +978,8 @@ class ValWithMultiErrors(object) :
     def toString ( self ,
                    format  = '( %+.5g %s) '    ,   ## global format 
                    format2 = ' -/%-.5g +/%.5g' ) : ## AsymErrors formar 
-        """Conversion to string
+        """ Conversion to string
         """
-
         errs = [ e.toString ( format2 ) for e in self.errors ] 
         errs = ','.join ( errs ) 
         return format % ( self.value , errs )
@@ -976,7 +1005,6 @@ class ValWithMultiErrors(object) :
     
     def __str__  ( self ) : return self.toString () 
     def __repr__ ( self ) : return self.__str__  () 
-
 
 # =============================================================================
 ## Pretty prints
@@ -1018,7 +1046,7 @@ def fmt_pretty_vae (  value              ,
                       width       = 6    ,
                       precision   = 4    ,
                       parentheses = True )  :
-    """Formats for  pretty print of value with asymmetric errors
+    """ Formats for  pretty print of value with asymmetric errors
     >>> vae = ValWithErrors ( -5 , -1, 20 ) 
     >>> fmt , fmtv , fmte , expo = fmt_pretty_vae ( vae , width = 8, precision = 6 ) 
     """
@@ -1043,7 +1071,7 @@ def fmt_pretty_vme ( value              ,
                      width       = 6    ,
                      precision   = 4    ,
                      parentheses = True )  :
-    """Formats for  pretty print of value with multipl asymmetric errors
+    """ Formats for  pretty print of value with multipl asymmetric errors
     >>> vme = ValWithMultipliErrors ( ... ) 
     >>> fmt , fmtv , fmte , expo = fmt_pretty_vme ( vme , width = 8, precision = 6 ) 
     """
@@ -1072,7 +1100,7 @@ def pretty_ae ( errors             ,
                 width       = 6    ,
                 precision   = 4    ,
                 parentheses = True )  :
-    """Pretty print for asymemtric errors
+    """ Pretty print for asymemtric errors
     >>> ae = AsymErrors ( -5 , 10000 )
     >>> s , expo = pretty_ae ( ae , width = 8, precision = 6 ) 
     """
@@ -1102,7 +1130,7 @@ def pretty_vae ( value              ,
                  width       = 6    ,
                  precision   = 4    ,
                  parentheses = True )  :
-    """Pretty print for value  with asymemtric errors
+    """ Pretty print for value  with asymemtric errors
     >>> vae = ValWithErrors ( ... )
     >>> s , expo = pretty_vae ( vae , width = 8, precision = 6 ) 
     """    
@@ -1131,7 +1159,7 @@ def pretty_vme ( value              ,
                  width       = 6    ,
                  precision   = 4    ,
                  parentheses = True )  :
-    """Pretty print for value  with multiple asymmetric errors
+    """ Pretty print for value  with multiple asymmetric errors
     >>> vme = ValWithMultiErrors ( ... )
     >>> s , expo = pretty_vme ( vme , width = 8, precision = 6 ) 
     """    
