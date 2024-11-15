@@ -7,7 +7,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 # =============================================================================
-"""Simple wrapper over scipy integration in a spirit of derivative.py 
+""" Simple wrapper over scipy integration in a spirit of derivative.py 
 
 >>> func1 = lambda x : x*x
 >>> print integral  ( func1 , 0 , 1 )
@@ -102,7 +102,7 @@ def romberg ( fun                 ,
               nmax     = 20       , # steps in Richardson's extrapolation
               maxdepth = 200      , # the maxmal depth
               **kwargs            ) : 
-    """Straw-man replacement of scipy.integrate.quad when it is not available.
+    """ Straw-man replacement of scipy.integrate.quad when it is not available.
     Actually it is a primitive form of Romberg's adaptive integration
     - see https://en.wikipedia.org/wiki/Romberg's_method
     - see https://en.wikipedia.org/wiki/Richardson_extrapolation
@@ -235,7 +235,7 @@ def romberg ( fun                 ,
 #  the N-th order Clenshaw-Curtis quadratire (N+1 points)
 @memoize 
 def clenshaw_curtis_rule ( N ) :
-    """Calculate abscissas and weights for
+    """ Calculate abscissas and weights for
     the N-th order Clenshaw-Curtis quadratire (N+1 points)
     """
     
@@ -422,11 +422,12 @@ def clenshaw_curtis ( fun                 ,
 # =============================================================================
 ## 1D integration 
 # =============================================================================
-try :
+try : # =======================================================================
     # =========================================================================
     with warnings.catch_warnings():
         warnings.simplefilter ( "ignore" )
-        from scipy.integrate import quad as scipy_quad
+        from scipy.integrate import quad                as scipy_quad
+        from scipy.integrate import IntegrationWarning  as scipy_IW  
     # =========================================================================
     ## Calculate the integral (from x0 to x) for the 1D-function 
     #  @code 
@@ -441,19 +442,21 @@ try :
                    args  = ()     , 
                    err   = False  ,
                    **kwargs       ) :
-        """Calculate the integral for the 1D-function using scipy
+        """ Calculate the integral for the 1D-function using scipy
         
         >>> func = lambda x : x * x 
         >>> v = integral(func,0,1)
         """
-        func   = lambda x : float ( fun ( x , *args ) ) 
+        func   = lambda x : float ( fun ( x , *args ) )
+        kwargs [ 'limit' ] = kwargs.pop ( 'limit'  , 200 )             
         import warnings
         with warnings.catch_warnings():
-            warnings.simplefilter ( "always" )
+            ## warnings.simplefilter ( "always" )
+            warnings.simplefilter ( "ignore" , category = scipy_IW  ) 
             result = scipy_quad ( func , xmin , xmax , **kwargs )
             return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
-        
-except ImportError :
+    # =========================================================================
+except ImportError : # ========================================================
     # =========================================================================
     ## logger.warning ("scipy.integrate is not available, use local ``romberg''-replacement")
     ## Use Romberg integration as default method when scipy is not available
@@ -463,7 +466,7 @@ except ImportError :
                    args     = ()       ,
                    err      = False    , 
                    **kwargs            ) :
-        """Use Romberg integration as default method when scipy is not available
+        """ Use Romberg integration as default method when scipy is not available
         """
         return romberg ( fun           ,
                          xmin   = xmin ,
