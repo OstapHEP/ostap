@@ -112,6 +112,7 @@ def tf1  ( self , **kwargs  ) :
     ## 
     _wo = self._wo1 
     fun = ROOT.TF1 ( funID()  , _wo , xmin , xmax , npars, *args )
+    ## ROOT.SetOwnership ( fun , False ) 
     ## 
     if   isinstance ( npx     , integer_types ) and 1 < npx     : fun.SetNpx ( npx     ) 
     elif isinstance ( npoints , integer_types ) and 1 < npoints : fun.SetNpx ( npoints ) 
@@ -194,6 +195,7 @@ def tf2 ( self , **kwargs ) :
     ##
     _wo = self._wo2
     fun = ROOT.TF2 ( funID ()  , _wo , xmin , xmax , ymin , ymax , npars , *args )
+    ## ROOT.SetOwnership ( fun , False ) 
     fun.SetNpx ( npx ) 
     fun.SetNpy ( npy ) 
     #
@@ -286,6 +288,7 @@ def tf3 ( self , **kwargs ) :
     #
     _wo = self._wo3
     fun = ROOT.TF3 ( funID ()  , _wo , xmin , xmax , ymin , ymax , zmin ,  zmax , npars , *args )
+    ## ROOT.SetOwnership ( fun , False ) 
     fun.SetNpx ( npx ) 
     fun.SetNpy ( npy ) 
     fun.SetNpy ( npz ) 
