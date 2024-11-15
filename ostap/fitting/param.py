@@ -45,6 +45,7 @@ class C1Fun(object) :
         self.__xmax = max ( xmin , xmax )
 
         self.__tf1  = ROOT.TF1 ( funID () , self , self.xmin , self.xmax , 3 )
+        ## ROOT.SetOwnership( self.__tf1 , False)
         self.__tf1.SetParNames (
             'Norm'  ,
             'Bias'  ,
@@ -208,7 +209,8 @@ class H_fit(HFIT) :
         
         ## create the function
         tf1 = ROOT.TF1 ( funID() , self , xmin , xmax , hfit.npars() )
-
+        ## ROOT.SetOwnership( tf1 , False)
+ 
         ## initialize the base 
         super(H_fit,self).__init__ ( hfit , tf1 ) 
     #
@@ -247,7 +249,8 @@ class H_Nfit (HFIT) :
         
         ## create function 
         tf1 = ROOT.TF1 ( funID() , self , xmin , xmax , hfit.npars() + 1 )
-        
+        ## ROOT.SetOwnership ( tf1 , False ) 
+
         ## initialize the base 
         super(H_Nfit,self).__init__ ( hfit , tf1 )
 
@@ -328,6 +331,8 @@ class H1Func(object) :
             mn = self._histo.xmin  ()
             mx = self._histo.xmax  ()
             self._tf1 =  ROOT.TF1  ( funID() , self , mn , mx , 3 )
+            ## ROOT.SetOwnership ( self._tf1 , False )
+            
             self._tf1.SetParNames  ( 'Norm'  , 'Bias'  , 'Scale' )
             self._tf1.FixParameter ( 0 , 1 )
             self._tf1.FixParameter ( 1 , 0 )
@@ -502,7 +507,8 @@ def _h2_as_tf2_ ( self , func = lambda s : s.value () , *args , **kwargs ) :
                       ax.GetXmax () ,
                       ay.GetXmin () ,
                       ay.GetXmax () ) 
-    
+    f2.AddToGlobalList ( False ) ## ATTENTION!         
+
     f2.SetNpx  ( 10 * ax.GetNbins() )
     f2.SetNpy  ( 10 * ay.GetNbins() )
     
