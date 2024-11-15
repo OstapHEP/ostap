@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07 
 # =============================================================================
-"""TGraph-related decorations:
+""" TGraph-related decorations:
  - makeGraph    : make graph from primitive data
  - makeGraph2   : make graph from plain input two-column text 
  - makeGraph3   : make graph with errors  from plain input four-column text 
@@ -133,7 +133,7 @@ def makeGraph ( x , y = []  , ex = [] , ey = [] ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @data 2015-08-31
 def makeGraph2 ( text ) :
-    """Create TGraph from simple two-column text format,
+    """ Create TGraph from simple two-column text format,
     e.g. the files provided by FONLL on-line calculator can be parsed
     @see http://www.lpthe.jussieu.fr/~cacciari/fonll/fonllform.html
     >>> graph = makeGraph2 ( '''
@@ -215,7 +215,7 @@ def makeGraph2 ( text ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @data 2015-08-31
 def makeGraph3 ( text ) :
-    """Create TGraphAsymmErrors from simple multicolumn-column text format,
+    """ Create TGraphAsymmErrors from simple multicolumn-column text format,
     e.g. the files provided by FONLL on-line calculator can be parsed
     @see http://www.lpthe.jussieu.fr/~cacciari/fonll/fonllform.html
     >>> graph = makeGraph3 ( '''
@@ -299,7 +299,7 @@ def makeGraph3 ( text ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @data 2015-08-31
 def makeGraphs3 ( text ) :
-    """Create *three  TGraphAsymmErrors from simple multicolumn-column text format,
+    """ Create *three  TGraphAsymmErrors from simple multicolumn-column text format,
     e.g. the files provided by FONLL on-line calculator can be parsed
     @see http://www.lpthe.jussieu.fr/~cacciari/fonll/fonllform.html
     >>> gtot,gscale,gmass = makeGraphs3 ( '''
@@ -405,7 +405,7 @@ def makeGraphs3 ( text ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @data 2015-08-31
 def makeGraphs4 ( text ) :
-    """Create *four*  TGraphAsymmErrors from simple multicolumn-column text format,
+    """ Create *four*  TGraphAsymmErrors from simple multicolumn-column text format,
     e.g. the files provided by FONLL on-line calculator can be parsed
     @see http://www.lpthe.jussieu.fr/~cacciari/fonll/fonllform.html
     >>> gtot,gscale,gmass,gpdf = makeGraphs4 ( '''
@@ -569,7 +569,7 @@ def _hToGraph_ ( h1 , funcx , funcy ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def hToGraph2 ( h1 , bias ) :
-    """Convert  1D-histogram into graph with small shift in x
+    """ Convert  1D-histogram into graph with small shift in x
     Useful for overlay of very similar plots
     >>> h1 = ....
     >>> g2 = h1.asGraph2 ( 0.1 ) ## shift for 10% of bin width    
@@ -622,13 +622,36 @@ ROOT.TH1F.toGraph3 = hToGraph3
 ROOT.TH1D.toGraph3 = hToGraph3
 
 # =============================================================================
+## Is graph sorted ?
+def _gr_sorted_ ( graph ) :
+    """ Is graph sorted ? 
+    """
+    ok = graph.TestBit ( ROOT.TGraph.kIsSortedX )
+    if len ( graph ) < 2 :
+        if not ok : graph.SetBit ( ROOT.TGraph.kIsSortedX , True )
+        return True
+    
+    xmin = neg_infinity 
+    for i in graph :
+        xi = graph.GetPointX ( i )
+        if xi < xmin :
+            if not ok : graph.SetBit ( ROOT.TGraph.kIsSortedX , False )
+            return False
+        xmin = max ( xi , xmin )
+
+    if not ok : graph.SetBit ( ROOT.TGraph.kIsSortedX , True )
+    return True 
+
+ROOT.TGraph.sorted = _gr_sorted_
+
+# =============================================================================
 ##  get point
 #   @code
 #   graph = ...
 #   x, y = graph.point ( 3  ) 
 #   @endcode
 def _gr_point_ ( graph , point ) :
-    """Get the point from the graph :
+    """ Get the point from the graph :
     >>> graph = ...
     >>> x, y = graph.point ( 3  )
     >>> x, y = graph.get_point ( 3  ) ## ditto 
@@ -679,7 +702,7 @@ def _gr_call_ ( graph , x , spline = None , opts = 'b1e1' , *args ) :
             if 's' in opts or 'S' in opts :
                 spline = self.spline3  ( opts , *args )
             
-    return graph.Eval ( float( x ) , spline , opts )
+    return graph.Eval ( float ( x ) , spline , opts )
 
 # =============================================================================
 ## Calculate an integral over the range \f$x_{low} \le x \le x_{high}\f$
@@ -691,7 +714,7 @@ def _gr_call_ ( graph , x , spline = None , opts = 'b1e1' , *args ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-31
 def _gr_integral_ ( graph , xlow , xhigh , numerical = True ) :
-    r"""Calculate an integral over the range \f$x_{low} \le x \le x_{high}\f$
+    r""" Calculate an integral over the range \f$x_{low} \le x \le x_{high}\f$
     It is not very efficient, but OK 
     >>> graph = ...
     >>> i     = graph.integral ( 0 , 1 )
@@ -756,15 +779,23 @@ def _gr_setitem_ ( graph , ipoint , point )  :
     >>> graph[1] = x,y 
     """
     #
+    if ipoint < 0 : ipoint += len ( graph )
     if not ipoint in graph : raise IndexError 
     #
-    
     x = float ( point [ 0 ] )
     y = float ( point [ 1 ] )
-    
+    #
     graph.SetPoint ( ipoint , x , y )
-
-
+    #
+    size = len ( graph )
+    # 
+    prev = ipoint - 1
+    next = ipoint + 1
+    # 
+    if   0 <= prev   and x < graph.GetPointX ( prev ) : graph.SetBit ( ROOT.TGraph.kIsSortedX , False )
+    elif next < size and graph.GetPointX ( next ) < x : graph.SetBit ( ROOT.TGraph.kIsSortedX , False )
+    # 
+    
 # ==============================================================================
 ## Does the graph constain the point  with this index ?
 #  Negative indices are allowed
@@ -774,7 +805,7 @@ def _gr_setitem_ ( graph , ipoint , point )  :
 #  if -1 in graph : ...
 #  @endcode 
 def _gr_contains_ ( graph , index ) :
-    """Does the graph constain the point  with this index ?
+    """ Does the graph constain the point  with this index ?
     - Negative indices are allowed
     >>> graph = ..
     >>> if  1 in graph : ...
@@ -790,7 +821,7 @@ def _gr_contains_ ( graph , index ) :
 #  del graph[1] 
 #  @endcode 
 def _gr_delitem_ ( graph, ipoint ) :
-    """Remove the point from the graph
+    """ Remove the point from the graph
     >>> graph = ...
     >>> del graph[1] 
     >>> del graph[1:-1:2] 
@@ -814,7 +845,7 @@ def _gr_delitem_ ( graph, ipoint ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _gr_iteritems_ ( graph ) :
-    """Iterate over graph points 
+    """ Iterate over graph points 
     >>> graph = ...
     >>> for i,x,v in graph.    items(): ...
     >>> for i,x,v in graph.iteritems(): ... ##  ditto
@@ -832,7 +863,7 @@ def _gr_iteritems_ ( graph ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _gre_getitem_ ( graph , ipoint )  :
-    """Get the point from the Graph
+    """ Get the point from the Graph
     >>> graph = ...
     >>> x,y = graph[3]
     """
@@ -877,7 +908,6 @@ def _gre_setitem_ ( graph , ipoint , point )  :
     
     if ipoint < 0 : ipoint += len ( graph )
     
-    if not ipoint in graph    : raise IndexError
     if not 2 == len ( point ) :
         raise AttributeError("Invalid dimension of 'point' %s" % str ( point ) ) 
 
@@ -886,7 +916,8 @@ def _gre_setitem_ ( graph , ipoint , point )  :
     x = VE ( x ) 
     v = VE ( y ) 
 
-    graph.SetPoint      ( ipoint , x . value () , v . value () )
+    _gr_setitem_ ( graph , ipoint , ( x.value() , y.value() ) ) 
+
     graph.SetPointError ( ipoint , x . error () , v . error () )
 
 
@@ -992,7 +1023,7 @@ def _grae_getitem_ ( graph , ipoint ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _grae_setitem_ ( graph , ipoint , point ) :
-    """Set graph point
+    """ Set graph point
     >>> grae = ...
     >>> grae[1] = ValWithErrors ( .. ) , ValWithErrors ( ... ) 
     >>> grae[1] = x,xl,xh,y,yl,yh
@@ -1014,9 +1045,9 @@ def _grae_setitem_ ( graph , ipoint , point ) :
     >>> grae[1] = xve,yve  
     
     """
-    if not ipoint in graph : raise IndexError
-    #
-
+    
+    if ipoint < 0 : ipoint += len ( graph )
+    
     n = len ( point)
     assert 2 <= n <= 6 , "Invalid lenght of 'point' object"
 
@@ -1068,8 +1099,9 @@ def _grae_setitem_ ( graph , ipoint , point ) :
     ## extract Y
     Y = ValWithErrors ( *pars )
 
-    ## fill ROOT structure 
-    graph.SetPoint      ( ipoint , X.value    , Y.value )
+    ## fill ROOT structure
+    _gr_setitem_ ( graph , ipoint ,  ( X.value , Y.value ) )
+
     graph.SetPointError ( ipoint ,
                           abs ( X.neg_error ) , X.pos_error ,
                           abs ( Y.neg_error ) , Y.pos_error )
@@ -1079,7 +1111,7 @@ def _grae_setitem_ ( graph , ipoint , point ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _grae_iteritems_ ( graph ) :
-    """Iterate over graph points 
+    """ Iterate over graph points 
     
     >>> grae = ...
     >>> for i,X,Y in grae.    items(): ...
@@ -1164,7 +1196,7 @@ if ( 6 , 20 ) <= root_info :
     #  @endcode     
     #  @see TGraphMultiErrors
     def _grme_setitem_ ( graph , ipoint , point ) :
-        """Set graph point
+        """ Set graph point
         """
         if not ipoint in graph : raise IndexError
         #
@@ -1289,7 +1321,7 @@ if ( 6 , 20 ) <= root_info :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _gr_xmin_ ( graph ) :
-    """Get minimal x for the points
+    """ Get minimal x for the points
     >>> graph = ...
     >>> xmin  = graph.xmin () 
     """
@@ -1304,7 +1336,7 @@ def _gr_xmin_ ( graph ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _gr_xmax_ ( graph ) :
-    """Get maximal x for the points
+    """ Get maximal x for the points
     >>> graph = ...
     >>> xmax  = graph.xmax () 
     """    
@@ -1349,7 +1381,7 @@ def _gr_ymax_ ( graph ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _gr_xminmax_ ( graph ) :
-    """Get minimal and maximal x for the points
+    """ Get minimal and maximal x for the points
     >>> graph = ...
     >>> xmin,xmax = graph.xminmax() 
     """
@@ -1365,8 +1397,7 @@ def _gr_xminmax_ ( graph ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _gr_yminmax_ ( graph ) :
-    """
-    Get minimal and maximal  for the points
+    """ Get minimal and maximal  for the points
     >>> graph = ...
     >>> mn,mx = graph.yminmax() 
     """
@@ -1526,26 +1557,28 @@ ROOT.TMultiGraph.bb       =   _mg_bb_
 ## make sorted graph
 #  @code
 #  graph = ...
-#  s     = graph.sorted() 
+#  s     = graph.sort() 
 #  @endcode
 #  @date   2016-03-28 
-def _gr_sorted_ ( graph , reverse = False ) :
-    """Make sorted graph
+def _gr_sort_ ( graph , reverse = False ) :
+    """ Make sorted graph
     >>> graph = ...
-    >>> s     = graph.sorted() 
+    >>> s     = graph.sort() 
     """
     
     ## make new graph 
     new_graph = graph.Clone() 
 
     oitems =        ( i for i in graph.items() ) 
-    sitems = sorted ( oitems , key = lambda s : s [ 1 ] , reverse = reverse )
+    sitems = sorted ( oitems , key = lambda s : float ( s [ 1 ] ) , reverse = reverse )
 
     ip = 0 
     for item in sitems :
         new_graph [ ip ] = item [ 1 : ]
         ip += 1
 
+    new_graph.SetBit ( ROOT.TGraph.kIsSortedX , not reverse  )
+                    
     return new_graph 
 
 # =============================================================================
@@ -1555,7 +1588,7 @@ def _gr_sorted_ ( graph , reverse = False ) :
 #  graph.remove ( lambda s : s[0]<0.0 ) 
 #  @endcode 
 def _gr_remove_ ( graph , remove ) :
-    """Remove points that do not satisfy the criteria
+    """ Remove points that do not satisfy the criteria
     >> graph = ...
     >>> graph.remove ( lambda s : s[0]<0.0 ) 
     """
@@ -1587,7 +1620,6 @@ def _gr_filter_ ( graph , accept , name = '' ) :
     copy_graph_attributes ( graph , new_graph )
     new_graph.remove ( lambda *s : not accept ( *s ) )
     return new_graph
-
 
 # =============================================================================
 ## transform the graph
@@ -1621,7 +1653,6 @@ def _gr_transform_ ( graph , fun = lambda x , y : y ) :
         
     return new_graph 
 
-
 # =============================================================================
 ## transform the graph
 #  @code
@@ -1630,14 +1661,13 @@ def _gr_transform_ ( graph , fun = lambda x , y : y ) :
 #  lh  = nll.transform ( fun ) 
 #  @endcode e
 def _grae_transform_ ( graph , fun = lambda x , y : y ) :
-    """Transform the graph
+    """ Transform the graph
     
     >>> nll = ....
     >>> fun = lambda x, y : math.exp ( -1 * y )  
     >>> lh  = nll.transform ( fun ) 
     
-    """
-    
+    """    
     new_graph = ROOT.TGraphAsymmErrors ( graph ) 
     ## make a copy 
     copy_graph_attributes ( graph , new_graph )
@@ -1707,6 +1737,7 @@ ROOT.TGraph       . integral         = _gr_integral_
 ROOT.TGraph       . asTF1            = _gr_as_TF1_
 
 ROOT.TGraph            .sorted        = _gr_sorted_
+ROOT.TGraph            .sort          = _gr_sort_
 
 ROOT.TGraph            .filter        = _gr_filter_
 ROOT.TGraph            .remove        = _gr_remove_
@@ -1865,7 +1896,7 @@ for _t in  ( ROOT.TH1D , ROOT.TH1F , ROOT.TGraph , ROOT.TGraphErrors ) :
 # =============================================================================
 ## min-value for the graph)
 def _gr_xmax_ ( graph ) :
-    """Get x-max for the graph    
+    """ Get x-max for the graph    
     >>> xmax = graph.xmax()
     """
     #
@@ -1880,7 +1911,7 @@ def _gr_xmax_ ( graph ) :
 # =============================================================================
 ## min-value for the graph)
 def _gr_xmin_ ( graph ) :
-    """Get x-min for the graph    
+    """ Get x-min for the graph    
     >>> xmin = graph.xmin()    
     """
     #
@@ -1894,7 +1925,7 @@ def _gr_xmin_ ( graph ) :
 # =============================================================================
 ## minmax-value for the graph)
 def _gr_xminmax_ ( graph ) :
-    """Get x-minmax for the graph
+    """ Get x-minmax for the graph
     >>> xmin,xmax = graph.xminmax() 
     """
     #
@@ -1904,27 +1935,122 @@ ROOT.TGraph  . xmin    = _gr_xmin_
 ROOT.TGraph  . xmax    = _gr_xmax_
 ROOT.TGraph  . xminmax = _gr_xminmax_
 
+# ============================================================================
+## Valid argument for grah operations ? 
+def graph_arg ( other ) :
+    """ Valid argument for graph operations ? 
+    """
+    return isinstance ( other , num_types + ( VE , ) ) or callable ( other ) 
+    
+# ============================================================================
+## operation with TGraph
+def _graph_ioper_ ( graph , other , operation ) :
+    """ Operation with TGraph 
+    """
+    if not graph_arg ( other ) : return NotImplemented
+    ##
+    the_fun = callable ( other ) 
+    for i , X , Y in graph.iteritems() :
+        x     = float ( X ) 
+        value = other ( x ) if the_fun else other 
+        graph [ i ] = operation ( X , Y , value ) 
+    return graph
+
+# ============================================================================
+def _graph_oper_ ( graph , other , operation ) :
+    """ Operation with TGraph 
+    """
+    if not graph_arg ( other ) : return NotImplemented
+    new_graph = type ( graph ) ( graph )
+    return _graph_ioper_ ( new_graph , other , operation ) 
+
 
 # =============================================================================
-## a bit of trivial math-like operations  with graphs 
+## Update operations with TGraph
+# =============================================================================
+
+# =============================================================================
+## shift the graph
+#  @code
+#  >>> gr += 10
+#  @endcode
+def _gr_iadd_ ( graph , shift ) :
+    """ Shift the graph
+    >>> graph += 10 
+    """
+    return _graph_ioper_ ( graph , shift , lambda x , y , value : ( x , y + value ) )
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr -= 10
+#  @endcode
+def _gr_isub_ ( graph , shift ) :
+    """ Shift the graph
+    >>> graph -= 10 
+    """
+    return _graph_ioper_ ( graph , shift , lambda x , y , value : ( x , y - value ) )
+
+# =============================================================================
+## scale the graph
+#  @code
+#  gr *= 10
+#  @endcode
+def _gr_imul_ ( graph , other ) :
+    """ Scale the graph
+    >>> graph *= 10 
+    """
+    return _graph_ioper_ ( graph , other , lambda x , y , value : ( x , y * value )  )
+
+# ================================================================================
+## scale the graph
+#  @code
+#  gr /= 10 
+#  @endcode
+def _gr_idiv_ ( graph , other ) :
+    """ Scale the graph
+    >>> graph /= 10 
+    """
+    return _graph_ioper_ ( graph , other , lambda x , y , value : ( x , y / value ) )
+
+# ==============================================================================
+## Left shift of the graph
+#  @code
+#  graph <<= 14.5 ...
+#  @endcode 
+def _gr_ilshift_ ( graph , other ) :
+    """ Left shift of the graph
+    >>> graph <<= 14.5 
+    """
+    return _graph_ioper_ ( graph , other , lambda x , y , value : ( x + value , y ) )
+
+# ==============================================================================
+## Right shift of the graph
+#  @code
+#  graph >>= 14.5
+#  @endcode 
+def _gr_irshift_ ( graph , other ) :
+    """ Right  shift of the graph
+    >>> graph >>= 14.5
+    """
+    return _graph_ioper_ ( graph , other , lambda x , y , value : ( x - value , y ) )
+
+# =============================================================================
+## Pairwise operations with TGraph
+# =============================================================================
+
 # =============================================================================
 ## scale the graph
 #  @code
 #  gr = ...
 #  ng = gr * 10 
 #  @endcode
-def _gr_mul_ ( graph , scale ) :
-    """Scale the graph
-    graph = ...
-    newg  = graph * 10 
-    """
-    
-    if not isinstance ( scale , num_types + (VE,) ) : return NotImplemented
-    
-    new_graph = ROOT.TGraph (  len ( graph ) )
-    for i , x , y in graph.iteritems() :
-        new_graph [ i ] = x , y * scale
-    return new_graph
+def _gr_mul_ ( graph , other  ) :
+    """ Scale the graph
+    >>> graph = ...
+    >>> newg  = graph * 10 
+    """    
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x , y * value ) )
 
 # ================================================================================
 ## scale the graph
@@ -1932,39 +2058,12 @@ def _gr_mul_ ( graph , scale ) :
 #  gr = ...
 #  ng = gr / 10 
 #  @endcode
-def _gr_div_ ( graph , scale ) :
-    """Scale the graph
-    graph = ...
-    newg  = graph / 10 
+def _gr_div_ ( graph , other ) :
+    """ Scale the graph
+    >>> graph = ...
+    >>> newg  = graph / 10 
     """
-    return graph * ( 1.0 / scale ) 
-
-# =============================================================================
-## scale the graph
-#  @code
-#  gr *= 10
-#  @endcode
-def _gr_imul_ ( graph , scale ) :
-    """Scale the graph
-    graph *= 10 
-    """    
-    if not isinstance ( scale , num_types +  ( VE , ) ) : return NotImplemented
-    
-    for i , x , y in graph.iteritems() :
-        graph [ i ] = x , y * scale
-    return graph
-
-
-# ================================================================================
-## scale the graph
-#  @code
-#  gr /= 10 
-#  @endcode
-def _gr_idiv_ ( graph , scale ) :
-    """Scale the graph
-    graph /= 10 
-    """
-    return _gr_imul_ ( graph ,  1.0 / scale )
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x , y / value ) )
 
 # =================================================================================
 ## scale the graph
@@ -1973,16 +2072,11 @@ def _gr_idiv_ ( graph , scale ) :
 #  ng =  10 / gr 
 #  @endcode
 def _gr_rdiv_ ( graph , scale ) :
-    """Scale the graph
-    graph = ...
-    newg  = 10 / graph
+    """ Scale the graph
+    >>> graph = ...
+    >>> newg  = 10 / graph
     """
-    if not isinstance ( scale , num_types + (VE,) ) : return NotImplemented
-    
-    new_graph = ROOT.TGraph (  len ( graph ) )
-    for i , x , y in graph.iteritems() :
-        new_graph [ i ] = x , 1.0 * scale / y 
-    return new_graph
+    return _graph_oper_ ( graph , shift , lambda x , y , value : ( x , 1.0 * value / y ) )
 
 # =============================================================================
 ## shift the graph
@@ -1990,18 +2084,12 @@ def _gr_rdiv_ ( graph , scale ) :
 #  gr = ...
 #  ng = gr + 10 
 #  @endcode
-def _gr_add_ ( graph , shift ) :
-    """Shift the graph
-    graph = ...
-    newg  = graph + 10 
+def _gr_add_ ( graph , other ) :
+    """ Shift the graph
+    >>> graph = ...
+    >>> newg  = graph + 10     
     """
-    
-    if not isinstance ( shift , num_types +  ( VE , ) ) : return NotImplemented
-    
-    new_graph = ROOT.TGraph (  len ( graph ) )
-    for i , x , y in graph.iteritems() :
-        new_graph [ i ] = x , y + shift
-    return new_graph
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x , y + value ) )
 
 # =============================================================================
 ## shift the graph
@@ -2009,12 +2097,12 @@ def _gr_add_ ( graph , shift ) :
 #  gr = ...
 #  ng = gr - 10 
 #  @endcode
-def _gr_sub_ ( graph , shift ) :
-    """Shift the graph
-    graph = ...
-    newg  = graph - 10 
+def _gr_sub_ ( graph , other ) :
+    """ Subtracton for graphs 
+    >>> graph = ...
+    >>> newg  = graph - 10 
     """
-    return _gr_add_ (  graph , -1.0 * shift )
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x , y - value ) )
 
 # =============================================================================
 ## shift the graph
@@ -2022,45 +2110,12 @@ def _gr_sub_ ( graph , shift ) :
 #  gr = ...
 #  ng = 10 - gr
 #  @endcode
-def _gr_rsub_ ( graph , shift ) :
-    """Shift the graph
-    graph = ...
-    newg  = 10 - graph 
+def _gr_rsub_ ( graph , other ) :
+    """ Subtraction for graphs 
+    >>> graph = ...
+    >>> newg  = 10 - graph 
     """
-    
-    if not isinstance ( shift , num_types +  ( VE , ) ) : return NotImplemented
-    
-    new_graph = ROOT.TGraph (  len ( graph ) )
-    for i , x , y in graph.iteritems() :
-        new_graph [ i ] = x , shift - y
-    return new_graph
-
-# =============================================================================
-## shift the graph
-#  @code
-#  gr += 10
-#  @endcode
-def _gr_iadd_ ( graph , shift ) :
-    """Shift the graph
-    graph += 10 
-    """
-    
-    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented
-    
-    for i , x , y in graph.iteritems() :
-        graph [ i ] = x , y + shift
-    return graph
-
-# =============================================================================
-## shift the graph
-#  @code
-#  gr -= 10
-#  @endcode
-def _gr_isub_ ( graph , shift ) :
-    """Shift the graph
-    graph -= 10 
-    """
-    return _gr_iadd_ (  graph , -1.0 *  shift )
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x , value - y ) )
 
 # ==============================================================================
 ## Left shift of the graph
@@ -2068,17 +2123,12 @@ def _gr_isub_ ( graph , shift ) :
 #  graph = ...
 #  newg  = graph << 14.5 
 #  @endcode 
-def _gr_lshift_ ( graph , shift ) :
-    """Left shift of the graph
+def _gr_lshift_ ( graph , other ) :
+    """ Left shift of the graph
     >>> graph = ...
     >>> newg  = graph << 14.5 
     """
-    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented
-    
-    new_graph = ROOT.TGraph (  len ( graph ) )
-    for i , x , y in graph.iteritems() :
-        new_graph [ i ] = x + shift  , y
-    return new_graph
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x + value , y ) )
 
 # ==============================================================================
 ## Right shift of the graph
@@ -2086,40 +2136,12 @@ def _gr_lshift_ ( graph , shift ) :
 #  graph = ...
 #  newg  = graph >> 14.5 
 #  @endcode 
-def _gr_rshift_ ( graph , shift ) :
-    """Right  shift of the graph
+def _gr_rshift_ ( graph , other ) :
+    """ Right  shift of the graph
     >>> graph = ...
     >>> newg  = graph >> 14.5 
     """
-    return _gr_lshift_ ( self , -1.0 * shift )
-
-
-# ==============================================================================
-## Left shift of the graph
-#  @code
-#  graph <<= 14.5 ...
-#  @endcode 
-def _gr_ilshift_ ( graph , shift ) :
-    """Left shift of the graph
-    >>> graph <<= 14.5 
-    """
-    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented
-    
-    for i , x , y in graph.iteritems() :
-        graph [ i ] = x + shift  , y
-    return graph
-    
-# ==============================================================================
-## Right shift of the graph
-#  @code
-#  graph >>= 14.5
-#  @endcode 
-def _gr_irshift_ ( graph , shift ) :
-    """Right  shift of the graph
-    >>> graph >>= 14.5
-    """
-    return _gr_ilshift_ ( self , -1.0 * shift )
-
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x - value , y ) )
 
 ROOT.TGraph. __mul__      = _gr_mul_
 ROOT.TGraph.__rmul__      = _gr_mul_
@@ -2145,6 +2167,79 @@ ROOT.TGraph.__rshift__    = _gr_rshift_
 ROOT.TGraph.__ilshift__   = _gr_ilshift_
 ROOT.TGraph.__irshift__   = _gr_irshift_
 
+# =============================================================================
+## Update operations with TGraphErrors 
+# =============================================================================
+
+# =============================================================================
+## scale the graph
+#  @code
+#  gr *= 10
+#  @endcode
+def _gre_imul_ ( graph , other ) :
+    """ Scale the graph
+    >>> graph *= 10 
+    """    
+    return _graph_ioper_ ( graph , other , lambda x , y , value : ( x , y * value ) )
+
+# ================================================================================
+## scale the graph
+#  @code
+#  gr /= 10 
+#  @endcode
+def _gre_idiv_ ( graph , other ) :
+    """ Scale the graph
+    >>> graph /= 10 
+    """
+    return _graph_ioper_ ( graph , other , lambda x , y , value : ( x , y / value ) )
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr += 10
+#  @endcode
+def _gre_iadd_ ( graph , other ) :
+    """ Shift the graph
+    >>> graph += 10 
+    """
+    return _graph_ioper_ ( graph , other , lambda x , y , value : ( x , y + value ) )
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr -= 10
+#  @endcode
+def _gre_isub_ ( graph , other ) :
+    """ Shift the graph
+    >>> graph -= 10 
+    """
+    return _graph_ioper_ ( graph , other , lambda x , y , value : ( x , y - value ) )
+
+# ==============================================================================
+## Left shift of the graph
+#  @code
+#  graph <<= 14.5 ...
+#  @endcode 
+def _gre_ilshift_ ( graph , other ) :
+    """ Left shift of the graph
+    >>> graph <<= 14.5 
+    """
+    return _graph_ioper_ ( graph , other , lambda x , y , value : ( x + value , y ) )
+    
+# ==============================================================================
+## Right shift of the graph
+#  @code
+#  graph >>= 14.5
+#  @endcode 
+def _gre_irshift_ ( graph , other ) :
+    """ Right  shift of the graph
+    >>> graph >>= 14.5
+    """
+    return _graph_ioper_ ( graph , other , lambda x , y , value : ( x - value , y ) )
+
+# =============================================================================
+## Pairwise operations with TGraphErrors
+# =============================================================================
 
 # =============================================================================
 ## scale the graph
@@ -2152,17 +2247,12 @@ ROOT.TGraph.__irshift__   = _gr_irshift_
 #  gr = ...
 #  ng = gr * 10 
 #  @endcode
-def _gre_mul_ ( graph , scale ) :
-    """Scale the graph
+def _gre_mul_ ( graph , other ) :
+    """ Scale the graph
     graph = ...
     newg  = graph * 10 
-    """    
-    if not isinstance ( scale , num_types + (VE,) ) : return NotImplemented
-    ## 
-    new_graph = ROOT.TGraphErrors (  len ( graph ) )
-    for i , x , y in graph.iteritems() :
-        new_graph [ i ] = x , y * scale
-    return new_graph
+    """ 
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x , y * value ) ) 
 
 # ================================================================================
 ## scale the graph
@@ -2170,39 +2260,12 @@ def _gre_mul_ ( graph , scale ) :
 #  gr = ...
 #  ng = gr / 10 
 #  @endcode
-def _gre_div_ ( graph , scale ) :
-    """Scale the graph
+def _gre_div_ ( graph , other  ) :
+    """ cale the graph
     graph = ...
     newg  = graph / 10 
     """
-    return graph * ( 1.0 / scale ) 
-
-# =============================================================================
-## scale the graph
-#  @code
-#  gr *= 10
-#  @endcode
-def _gre_imul_ ( graph , scale ) :
-    """Scale the graph
-    graph *= 10 
-    """    
-    if not isinstance ( scale , num_types +  ( VE , ) ) : return NotImplemented
-    ## 
-    for i , x , y in graph.iteritems() :
-        graph [ i ] = x , y * scale
-    return graph
-
-
-# ================================================================================
-## scale the graph
-#  @code
-#  gr /= 10 
-#  @endcode
-def _gre_idiv_ ( graph , scale ) :
-    """Scale the graph
-    graph /= 10 
-    """
-    return _gre_imul_ ( graph ,  1.0 / scale )
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x , y / value ) ) 
 
 # =================================================================================
 ## scale the graph
@@ -2210,17 +2273,12 @@ def _gre_idiv_ ( graph , scale ) :
 #  gr = ...
 #  ng =  10 / gr 
 #  @endcode
-def _gre_rdiv_ ( graph , scale ) :
-    """Scale the graph
-    graph = ...
-    newg  = 10 / graph
+def _gre_rdiv_ ( graph , other ) :
+    """ Scale the graph
+    >>> graph = ...
+    >>> newg  = 10 / graph
     """
-    if not isinstance ( scale , num_types + (VE,) ) : return NotImplemented
-    ## 
-    new_graph = ROOT.TGraphErrors (  len ( graph ) )
-    for i , x , y in graph.iteritems() :
-        new_graph [ i ] = x , 1.0 * scale / y 
-    return new_graph
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x , 1.0 * value / y ) ) 
 
 # =============================================================================
 ## shift the graph
@@ -2228,17 +2286,12 @@ def _gre_rdiv_ ( graph , scale ) :
 #  gr = ...
 #  ng = gr + 10 
 #  @endcode
-def _gre_add_ ( graph , shift ) :
-    """Shift the graph
-    graph = ...
-    newg  = graph + 10 
+def _gre_add_ ( graph , other ) :
+    """ Shift the graph
+    >>> graph = ...
+    >>> newg  = graph + 10 
     """
-    if not isinstance ( shift , num_types +  ( VE , ) ) : return NotImplemented
-    ## 
-    new_graph = ROOT.TGraphErrors (  len ( graph ) )
-    for i , x , y in graph.iteritems() :
-        new_graph [ i ] = x , y + shift
-    return new_graph
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x , y + value ) ) 
 
 # =============================================================================
 ## shift the graph
@@ -2246,12 +2299,12 @@ def _gre_add_ ( graph , shift ) :
 #  gr = ...
 #  ng = gr - 10 
 #  @endcode
-def _gre_sub_ ( graph , shift ) :
-    """Shift the graph
+def _gre_sub_ ( graph , other ) :
+    """ Shift the graph
     graph = ...
     newg  = graph - 10 
     """
-    return _gre_add_ (  graph , -1.0 * shift )
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x , y - value ) ) 
 
 # =============================================================================
 ## shift the graph
@@ -2259,43 +2312,12 @@ def _gre_sub_ ( graph , shift ) :
 #  gr = ...
 #  ng = 10 - gr
 #  @endcode
-def _gre_rsub_ ( graph , shift ) :
-    """Shift the graph
-    graph = ...
-    newg  = 10 - graph 
+def _gre_rsub_ ( graph , other ) :
+    """ Shift the graph
+    >>> graph = ...
+    >>> newg  = 10 - graph 
     """
-    if not isinstance ( shift , num_types +  ( VE , ) ) : return NotImplemented
-    ## 
-    new_graph = ROOT.TGraphErrors (  len ( graph ) )
-    for i , x , y in graph.iteritems() :
-        new_graph [ i ] = x , shift - y
-    return new_graph
-
-# =============================================================================
-## shift the graph
-#  @code
-#  gr += 10
-#  @endcode
-def _gre_iadd_ ( graph , shift ) :
-    """Shift the graph
-    graph += 10 
-    """
-    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented
-    ## 
-    for i , x , y in graph.iteritems() :
-        graph [ i ] = x , y + shift
-    return graph
-
-# =============================================================================
-## shift the graph
-#  @code
-#  gr -= 10
-#  @endcode
-def _gre_isub_ ( graph , shift ) :
-    """Shift the graph
-    graph -= 10 
-    """
-    return _gre_iadd_ (  graph , -1.0 *  shift )
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x , value - y ) ) 
 
 # ==============================================================================
 ## Left shift of the graph
@@ -2303,17 +2325,12 @@ def _gre_isub_ ( graph , shift ) :
 #  graph = ...
 #  newg  = graph << 14.5 
 #  @endcode 
-def _gre_lshift_ ( graph , shift ) :
-    """Left shift of the graph
+def _gre_lshift_ ( graph , other ) :
+    """ Left shift of the graph
     >>> graph = ...
     >>> newg  = graph << 14.5 
     """
-    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented
-    ## 
-    new_graph = ROOT.TGraphErrors (  len ( graph ) )
-    for i , x , y in graph.iteritems() :
-        new_graph [ i ] = x + shift  , y
-    return new_graph
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x + value , y ) ) 
 
 # ==============================================================================
 ## Right shift of the graph
@@ -2322,38 +2339,11 @@ def _gre_lshift_ ( graph , shift ) :
 #  newg  = graph >> 14.5 
 #  @endcode 
 def _gre_rshift_ ( graph , shift ) :
-    """Right  shift of the graph
+    """ Right  shift of the graph
     >>> graph = ...
     >>> newg  = graph >> 14.5 
     """
-    return _gre_lshift_ ( self , -1.0 * shift )
-
-# ==============================================================================
-## Left shift of the graph
-#  @code
-#  graph <<= 14.5 ...
-#  @endcode 
-def _gre_ilshift_ ( graph , shift ) :
-    """Left shift of the graph
-    >>> graph <<= 14.5 
-    """
-    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented
-    
-    for i , x , y in graph.iteritems() :
-        graph [ i ] = x + shift  , y
-    return graph
-    
-# ==============================================================================
-## Right shift of the graph
-#  @code
-#  graph >>= 14.5
-#  @endcode 
-def _gre_irshift_ ( graph , shift ) :
-    """Right  shift of the graph
-    >>> graph >>= 14.5
-    """
-    return _gre_ilshift_ ( self , -1.0 * shift )
-
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x - value , y ) ) 
 
 ROOT.TGraphErrors. __mul__      = _gre_mul_
 ROOT.TGraphErrors.__rmul__      = _gre_mul_
@@ -2380,22 +2370,92 @@ ROOT.TGraphErrors.__ilshift__   = _gre_ilshift_
 ROOT.TGraphErrors.__irshift__   = _gre_irshift_
 
 # =============================================================================
+## Update operations with TGraphAsymmErrors 
+# =============================================================================
+
+# =============================================================================
+## scale the graph
+#  @code
+#  gr *= 10
+#  @endcode
+def _grae_imul_ ( graph , other ) :
+    """ Scale the graph
+    >>> graph *= 10 
+    """
+    return _graph_ioper_ ( graph , other , lambda x , y , value : ( x , y * value ) ) 
+
+# ================================================================================
+## scale the graph
+#  @code
+#  gr /= 10 
+#  @endcode
+def _grae_idiv_ ( graph , other ) :
+    """ Scale the graph
+    >>> graph /= 10 
+    """
+    return _graph_ioper_ ( graph , other , lambda x , y , value : ( x , y / value ) ) 
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr += 10
+#  @endcode
+def _grae_iadd_ ( graph , other ) :
+    """ Shift the graph
+    >>> graph += 10 
+    """
+    return _graph_ioper_ ( graph , other , lambda x , y , value : ( x , y + value ) ) 
+
+# =============================================================================
+## shift the graph
+#  @code
+#  gr -= 10
+#  @endcode
+def _grae_isub_ ( graph , other ) :
+    """ Shift the graph
+    >>> graph -= 10 
+    """
+    return _graph_ioper_ ( graph , other , lambda x , y , value : ( x , y - value ) ) 
+
+# ==============================================================================
+## Left shift of the graph
+#  @code
+#  graph <<= 14.5 ...
+#  @endcode 
+def _grae_ilshift_ ( graph , other ) :
+    """ Left shift of the graph
+    >>> graph <<= 14.5 
+    """
+    return _graph_ioper_ ( graph , other , lambda x , y , value : ( x + value , y  ) ) 
+
+# ==============================================================================
+## Right shift of the graph
+#  @code
+#  graph >>= 14.5
+#  @endcode 
+def _grae_irshift_ ( graph , other ) :
+    """ Right  shift of the graph
+    >>> graph >>= 14.5
+    """
+    return _graph_ioper_ ( graph , other , lambda x , y , value : ( x - value , y  ) ) 
+
+
+# =============================================================================
+## Pairwise operations with TGraphAsymmErrors 
+# =============================================================================
+
+# =============================================================================
 ## scale the graph
 #  @code
 #  gr = ...
 #  ng = gr * 10 
 #  @endcode
-def _grae_mul_ ( graph , scale ) :
-    """Scale the graph
-    graph = ...
-    newg  = graph * 10 
+def _grae_mul_ ( graph , other ) :
+    """ Scale the graph
+    >>> graph = ...
+    >>> newg  = graph * 10 
     """
-    if not isinstance ( scale , num_types + (VE,) ) : return NotImplemented
-    ## 
-    new_graph = ROOT.TGraphAsymmErrors (  len ( graph ) )
-    for i , X , Y in graph.iteritems() :
-        new_graph [ i ] = X , scale * Y         
-    return new_graph
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x , y * value  ) ) 
 
 # ================================================================================
 ## scale the graph
@@ -2403,38 +2463,12 @@ def _grae_mul_ ( graph , scale ) :
 #  gr = ...
 #  ng = gr / 10 
 #  @endcode
-def _grae_div_ ( graph , scale ) :
-    """Scale the graph
-    graph = ...
-    newg  = graph / 10 
+def _grae_div_ ( graph , other ) :
+    """ Scale the graph
+    >>> graph = ...
+    >>> newg  = graph / 10 
     """
-    return graph * ( 1.0 / scale ) 
-
-# =============================================================================
-## scale the graph
-#  @code
-#  gr *= 10
-#  @endcode
-def _grae_imul_ ( graph , scale ) :
-    """Scale the graph
-    graph *= 10 
-    """    
-    if not isinstance ( scale , num_types +  ( VE , ) ) : return NotImplemented
-    ## 
-    for i , X , Y in graph.iteritems() :        
-        graph [ i ] = X , Y * scale 
-    return graph
-
-# ================================================================================
-## scale the graph
-#  @code
-#  gr /= 10 
-#  @endcode
-def _grae_idiv_ ( graph , scale ) :
-    """Scale the graph
-    graph /= 10 
-    """
-    return _grae_imul_ ( graph ,  1.0 / scale )
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x , y / value  ) ) 
 
 # =============================================================================
 ## shift the graph
@@ -2442,17 +2476,12 @@ def _grae_idiv_ ( graph , scale ) :
 #  gr = ...
 #  ng = gr + 10 
 #  @endcode
-def _grae_add_ ( graph , shift ) :
-    """Shift the graph
-    graph = ...
-    newg  = graph + 10 
+def _grae_add_ ( graph , other ) :
+    """ Shift the graph
+    >>> graph = ...
+    >>> newg  = graph + 10 
     """
-    if not isinstance ( shift , num_types +  ( VE , ) ) : return NotImplemented
-    ##
-    new_graph = ROOT.TGraphAsymmErrors (  len ( graph ) )
-    for i , X , Y in graph.iteritems() :
-        new_graph [ i ] = x , Y + shift 
-    return new_graph
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x , y + value  ) ) 
 
 # =============================================================================
 ## shift the graph
@@ -2460,12 +2489,12 @@ def _grae_add_ ( graph , shift ) :
 #  gr = ...
 #  ng = gr - 10 
 #  @endcode
-def _grae_sub_ ( graph , shift ) :
-    """Shift the graph
-    graph = ...
-    newg  = graph - 10 
+def _grae_sub_ ( graph , other ) :
+    """ Shift the graph
+    >>> graph = ...
+    >>> newg  = graph - 10 
     """
-    return _grae_add_ (  graph , -1.0 * shift )
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x , y - value  ) ) 
 
 # =============================================================================
 ## shift the graph
@@ -2473,42 +2502,12 @@ def _grae_sub_ ( graph , shift ) :
 #  gr = ...
 #  ng = 10 - gr
 #  @endcode
-def _grae_rsub_ ( graph , shift ) :
-    """Shift the graph
+def _grae_rsub_ ( graph , other ) :
+    """ Shift the graph
     graph = ...
     newg  = 10 - graph 
     """    
-    if not isinstance ( shift , num_types +  ( VE , ) ) : return NotImplemented
-    ## 
-    new_graph = ROOT.TGraphAsymmErrors (  len ( graph ) )
-    for i , X , Y in graph.iteritems() :
-        new_graph [ i ] = x , shift - Y
-    return new_graph
-
-# =============================================================================
-## shift the graph
-#  @code
-#  gr += 10
-#  @endcode
-def _grae_iadd_ ( graph , shift ) :
-    """Shift the graph
-    graph += 10 
-    """    
-    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented    
-    for i , X , Y in graph.iteritems() :
-        graph [ i ] = X , Y + shift
-    return graph
-
-# =============================================================================
-## shift the graph
-#  @code
-#  gr -= 10
-#  @endcode
-def _grae_isub_ ( graph , shift ) :
-    """Shift the graph
-    graph -= 10 
-    """
-    return _grae_iadd_ (  graph , -1.0 *  shift )
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x , value - y ) ) 
 
 # ==============================================================================
 ## Left shift of the graph
@@ -2516,17 +2515,12 @@ def _grae_isub_ ( graph , shift ) :
 #  graph = ...
 #  newg  = graph << 14.5 
 #  @endcode 
-def _grae_lshift_ ( graph , shift ) :
-    """Left shift of the graph
+def _grae_lshift_ ( graph , other ) :
+    """ Left shift of the graph
     >>> graph = ...
     >>> newg  = graph << 14.5 
     """
-    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented
-    
-    new_graph = ROOT.TGraphAsymmErrors (  len ( graph ) )
-    for i , x , exl , exh , y , eyl , eyh in graph.iteritems() :
-        new_graph [ i ] = x +  shift , exl , exh , y , eyl , eyh 
-    return new_graph
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x + value , y ) ) 
 
 # ==============================================================================
 ## Right shift of the graph
@@ -2535,37 +2529,11 @@ def _grae_lshift_ ( graph , shift ) :
 #  newg  = graph >> 14.5 
 #  @endcode 
 def _grae_rshift_ ( graph , shift ) :
-    """Right  shift of the graph
+    """ Right  shift of the graph
     >>> graph = ...
     >>> newg  = graph >> 14.5 
     """
-    return _grae_lshift_ ( self , -1.0 * shift )
-
-# ==============================================================================
-## Left shift of the graph
-#  @code
-#  graph <<= 14.5 ...
-#  @endcode 
-def _grae_ilshift_ ( graph , shift ) :
-    """Left shift of the graph
-    >>> graph <<= 14.5 
-    """
-    if not isinstance ( shift , num_types + ( VE , ) ) : return NotImplemented
-    
-    for i , x , exl , exh , y , eyl , eyh in graph.iteritems() :
-        graph [ i ] = x +  shift , exl , exh , y , eyl , eyh 
-    return graph
-    
-# ==============================================================================
-## Right shift of the graph
-#  @code
-#  graph >>= 14.5
-#  @endcode 
-def _grae_irshift_ ( graph , shift ) :
-    """Right  shift of the graph
-    >>> graph >>= 14.5
-    """
-    return _grae_ilshift_ ( self , -1.0 * shift )
+    return _graph_oper_ ( graph , other , lambda x , y , value : ( x - value , y ) ) 
 
 
 ROOT.TGraphAsymmErrors. __mul__      = _grae_mul_
@@ -2598,13 +2566,15 @@ ROOT.TGraphAsymmErrors.__irshift__   = _grae_irshift_
 #  graph.append ( *point ) 
 #  @endcode
 def _gr_append_ ( graph , *point ) :
-    """ append the graph with new point
+    """ Append the graph with new point
     >>> point = x , y
     >>> graph.append ( *point ) 
     """
     last = len ( graph )
     graph.SetPoint ( last , 0 , 0 )
     graph [ last ] = point
+    if 1 <= last and graph.GetPointX ( last ) <  graph.GetPointX ( last -1 ) :
+        graph.SetBit ( ROOT.TGraph.kIsSortedX , False ) 
     ##
     return len ( graph )
 
@@ -2616,10 +2586,10 @@ def _gr_append_ ( graph , *point ) :
 #  graph.pop (   ) ## pop th elast point 
 #  @endcode
 def _gr_pop_  ( graph , i = None ) :
-    """Pop the point fromt he graph
+    """ Pop the point from the graph
     >>> graph = ...
     >>> graph.pop ( 3 ) ## pop the point #3
-    >>> graph.pop (   ) ## pop th elast point 
+    >>> graph.pop (   ) ## pop the elast point 
     """
 
     if i is None :
@@ -2677,7 +2647,7 @@ ROOT.TGraph.pop       =  _gr_pop_
 #  graph_T = graph.T() ## ditto 
 #  @endcode
 def _gr_transpose_ ( self ) :
-    """Transpose the graph
+    """ Transpose the graph
     >>> graph   = ...
     >>> graph_T = graph.transpose ()  
     >>> graph_T = graph.T() ## ditto 
@@ -2697,7 +2667,7 @@ def _gr_transpose_ ( self ) :
 #  graph_T = graph.T() ## ditto 
 #  @endcode
 def _gre_transpose_ ( self ) :
-    """Transpose the graph:
+    """ Transpose the graph:
     >>> graph   = ...
     >>> graph_T = graph.transpose ()  
     >>> graph_T = graph.T() ## ditto 
@@ -2717,7 +2687,7 @@ def _gre_transpose_ ( self ) :
 #  graph_T = graph.T() ## ditto 
 #  @endcode
 def _grae_transpose_ ( self ) :
-    """Transpose the graph:
+    """ Transpose the graph:
     >>> graph   = ...
     >>> graph_T = graph.transpose ()  
     >>> graph_T = graph.T() ## ditto 
@@ -2746,7 +2716,7 @@ ROOT.TGraphAsymmErrors.T         = _grae_transpose_
 # =============================================================================
 ## propagate the color for each graph in multigraph 
 def _mg_color_ ( mgraph , color = 2 , marker = 20 , size = -1 ) :
-    """ Propagate color settion to each graph in multigraph
+    """ Propagate color setting to each graph in multigraph
     >>> mg = .. ## multigraph
     >>> mg.color ( 2 ) 
     """
@@ -2782,7 +2752,7 @@ ROOT.TMultiGraph.yellow   = _mg_yellow_
 #    g0 = mg[0] 
 #   @endcode  
 def _mg_getitem_ ( mgraph , item ) :
-    """Get graph with certain index
+    """ Get graph with certain index
     >>> mg = ....
     >>> g0 = mg[0] 
     """
@@ -2812,7 +2782,7 @@ ROOT.TMultiGraph.__len__ = _mg_len_
 #  graph_T = graph.T() ## ditto 
 #  @endcode
 def _mg_transpose_ ( graph ) :
-    """Transpose the graph:
+    """ Transpose the graph:
     >>> graph   = ...
     >>> graph_T = graph.transpose ()  
     >>> graph_T = graph.T() ## ditto 
@@ -2852,7 +2822,7 @@ ROOT.TMultiGraph.ymax    = _gr_ymax_
 #  The method relies on <code>TGraph::Merge</code>, and the type of result is inherited fron the first argument 
 #  @see TGraph::Merge 
 def _gr_merge_ ( graph , graph2 , sort = False ) :
-    """Merge two graphs into a common graph
+    """ Merge two graphs into a common graph
     >>> gr1 = ...
     >>> gr2 = ...
     >>>  gr3 = g1.merge  ( gr2 )  ## return new merged graph 
@@ -2876,7 +2846,6 @@ def _gr_merge_ ( graph , graph2 , sort = False ) :
     
 # ==============================================================================
 ROOT.TGraph            .merge         = _gr_merge_
-
 
 # ===============================================================================
 ## Graph as table
@@ -2938,7 +2907,7 @@ ROOT.TGraph. table = _gr_table_
 #  @endcode
 #  @see Ostap::Utils::hash_graph 
 def _gr_hash_ ( graph ) :
-    """Get hash value for the graph
+    """ Get hash value for the graph
     >>> graph = ...
     >>> hash ( graph ) 
     - see Ostap.Utils.hash_graph 
@@ -2958,7 +2927,7 @@ ROOT.TGraph            .__hash__         = _gr_hash_
 #  @endcode
 #  @see TSpline3 
 def _gr_spline3_ ( graph , opts = 'b1e1', *args ) :
-    """Get 3-spline for the given graph
+    """ Get 3-spline for the given graph
     >>> graph  = ...
     >>> spline = graph.spline3()
     - see ROOT.TSpline3 
@@ -3043,13 +3012,9 @@ def _gr_bcond_  ( graph , opts )  :
     dx12 = x1 - x2
         
     return 2 * ( y0 * dx12 - y1 * dx02 + y2 * dx01 ) / ( dx01 * dx02 * dx12 )
-
     
-        
 ROOT.TGraph            .bcond  =   _gr_bcond_
     
-
-
 # =============================================================================
 ## Convert the histogram to into "Laffery-Wyatt" graph
 #  See G.D. Lafferty and T.R. Wyatt,
@@ -3077,7 +3042,7 @@ ROOT.TGraph            .bcond  =   _gr_bcond_
 #  @author  Vanya BELYAEV  Ivan.Belyaev@itep.ru
 #  @date    2014-12-08
 def _lw_graph_ ( histo , func ) :
-    """Convert the histogram to into ``Laffery-Wyatt'' graph
+    """ Convert the histogram to into `Laffery-Wyatt' graph
     See G.D. Lafferty and T.R. Wyatt,
     ``Where to stick your data points: The treatment of measurements within wide bins,''
     Nucl. Instrum. Meth. A355, 541 (1995).
@@ -3093,7 +3058,7 @@ def _lw_graph_ ( histo , func ) :
     #
     ## book graph
     #
-    graph = ROOT.TGraphAsymmErrors( len ( histo )  - 2 )
+    graph = ROOT.TGraphAsymmErrors ( len ( histo )  - 2 )
         
     #
     ## copy attributes
@@ -3104,14 +3069,14 @@ def _lw_graph_ ( histo , func ) :
     ## start actual evaluations
     #
     
-    from ostap.math.intergal   import integral as _integral 
+    from ostap.math.integral   import integral as _integral 
     from ostap.math.rootfinder import findroot 
     
     for item in histo.items () :
 
-        ibin  = item[0]
-        x     = item[1]
-        y     = item[2]
+        ibin  = item [ 0 ]
+        x     = item [ 1 ]
+        y     = item [ 2 ]
 
         yv    = y.value()
         ye    = y.error()
@@ -3189,7 +3154,7 @@ ROOT.TH1F.lw_graph = _lw_graph_
 #  @author  Vanya BELYAEV  Ivan.Belyaev@itep.ru
 #  @date    2014-12-08
 def lw_graph ( histo , func ) :
-    """Convert the histogram to into ``Laffery-Wyatt'' graph
+    """ Convert the histogram to into ``Laffery-Wyatt'' graph
     See G.D. Lafferty and T.R. Wyatt,
     ``Where to stick your data points: The treatment of measurements within wide bins,''
     Nucl. Instrum. Meth. A355, 541 (1995).
@@ -3226,7 +3191,7 @@ def fill_area ( fun1                     ,
                 xmin      = neg_infinity ,
                 xmax      = pos_infinity ,  
                 log_scale = False        ) :
-    """Create a graph, that represents the area between
+    """ Create a graph, that represents the area between
     two curves/functions:
     >>> import math 
     >>> graph = fill_area ( math.sin , math.cos , xmin = 0 , xmax = 5 )
@@ -3260,7 +3225,6 @@ def fill_area ( fun1                     ,
 
     x1mn = max ( x1mn , xmin )
     x1mx = min ( x1mx , xmax )        
-
 
     x2mn , x2mx = neg_infinity , pos_infinity 
     if hasattr   ( fun2 , 'xminmax' ) :
@@ -3304,8 +3268,7 @@ def fill_area ( fun1                     ,
         
         x1f =  lambda i : x1mn + i * dx1 
         x2f =  lambda i : x2mx - i * dx2
-        
-    
+            
     for i in range ( n + 1 ) :
         xi           = x1f  ( i ) 
         yi           = float( fun1( xi ) ) 
@@ -3329,7 +3292,7 @@ def fill_area ( fun1                     ,
 #   aT2 = a.T()   ## ditto
 #   @endcode 
 def _ar_transpose_ (  arrow ) :
-    """Transpose the arrow
+    """ Transpose the arrow
     >>>  = ROOT.TArrow ( ... )
     >>> aT1 = a.transpose ()
     >>> aT2 = a.T()   ## ditto
@@ -3355,7 +3318,7 @@ ROOT.TArrow.T         = _ar_transpose_
 #   aT2 = a.T()   ## ditto
 #   @endcode 
 def _box_transpose_ ( box  ) :
-    """Transpose the box
+    """ Transpose the box
     >>>  = ROOT.TBox ( ... )
     >>> aT1 = a.transpose ()
     >>> aT2 = a.T()   ## ditto
@@ -3381,7 +3344,7 @@ ROOT.TBox.T         = _box_transpose_
 #   aT2 = a.T()   ## ditto
 #   @endcode 
 def _line_transpose_ ( line  ) :
-    """Transpose the line
+    """ Transpose the line
     >>>  = ROOT.TBox ( ... )
     >>> aT1 = a.transpose ()
     >>> aT2 = a.T()   ## ditto
@@ -3407,7 +3370,7 @@ ROOT.TLine.T         = _line_transpose_
 #   aT2 = a.T()   ## ditto
 #   @endcode 
 def _text_transpose_ ( text ) :
-    """Transpose the line
+    """ Transpose the line
     >>>  = ROOT.TText ( ... )
     >>> aT1 = a.transpose ()
     >>> aT2 = a.T()   ## ditto
@@ -3453,15 +3416,15 @@ ROOT.TSpline. __call__  = _spl_call_
 
 # =============================================================================
 ## Add two <code>RooPlot</code> objects
-#  @attention: they musyhave the same structure!
+#  @attention: they must have the same structure!
 #  @code
 #  plot1 = ...
 #  plot2 = ...
 #  plot  = plot1 + plot2 
 #  @endcode
 def _rplot_add_ ( plot1 , plot2 ) :
-    """Add two <code>RooPlot</code> objects
-    - attention: they musyhave the same structure!
+    """ Add two <code>RooPlot</code> objects
+    - attention: they must have the same structure!
     
     >>> plot1 = ...
     >>> plot2 = ...
@@ -3527,7 +3490,7 @@ ROOT.RooPlot.__add__  = _rplot_add_
 # =============================================================================
 ## increment is disabled 
 def _rplot_iadd_ ( rp , other ) :
-    """Increment is disabled"""
+    """ Increment is disabled """
     return NotImplemented
 
 ROOT.RooPlot.__iadd__ = _rplot_iadd_ 
@@ -3558,7 +3521,9 @@ _new_methods_     += (
     ROOT.TGraph       . __len__       ,
     ROOT.TGraph       . __contains__  ,
     ROOT.TGraph       . __iter__      ,
-    ROOT.TGraph       . __call__      , 
+    ROOT.TGraph       . __call__      ,
+    # 
+    ROOT.TGraph       . sorted        , 
     #
     ROOT.TGraph       . xmin          ,
     ROOT.TGraph       . ymin          ,
