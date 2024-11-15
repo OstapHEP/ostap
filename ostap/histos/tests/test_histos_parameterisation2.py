@@ -32,14 +32,15 @@ else :
 # =============================================================================
 logger.info ( 'Test for histogram parameterisation')
 # =============================================================================
-try :
-    import numpy 
-    import scipy
-    use_scipy = True 
-except ImportError :
+try : # =======================================================================
+    # =========================================================================
+    import numpy, scipy  
+    use_scipy = True
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     use_scipy = False 
-    logger.warning ("Numpy/scipy-dependent are disables!")
-
+    logger.warning ("Numpy/scipy-dependent are disabled!")
 # =============================================================================
 from ostap.histos.param import legendre_sum, chebyshev_sum
 from ostap.core.core    import hID, fID 
@@ -526,6 +527,7 @@ if '__main__' == __name__ :
     logger.info ( 100*'*')
 
     test_bernstein              ()
+
     test_legendre               ()
     test_chebyshev              ()
     test_monomial               ()
