@@ -634,7 +634,7 @@ def _gr_sorted_ ( graph ) :
     
     xmin = neg_infinity 
     for i in graph :
-        xi = graph.GetPointX ( i )
+        xi = graph.pointX ( i )
         if xi < xmin :
             if not ok : graph.SetBit ( ROOT.TGraph.kIsSortedX , False )
             return False
@@ -659,24 +659,41 @@ def _gr_point_ ( graph , point ) :
     """
     assert isinstance ( point , integer_types ) , 'invalid index type'
 
-    ## allow negative indices  
+    ## allow slightly negative indices  
     if point < 0 : point += len ( graph ) 
     
-    if 0 <= point < len ( graph ) :
-        
-        x = ctypes.c_double ( 0.0 )
-        y = ctypes.c_double ( 1.0 )
-        
-        graph.GetPoint ( point , x , y )
-
-        return float ( x.value ) , float ( y.value )
+    if not 0 <= point < len ( graph ) :
+        raise IndexError ( "Invalid index %s" % point ) 
     
-    raise IndexError ( "Invalid index %s" % point ) 
+    x = ctypes.c_double ( 0.0 )
+    y = ctypes.c_double ( 0.0 )
+    
+    graph.GetPoint ( point , x , y )
+    
+    return float ( x.value ) , float ( y.value )
+
     
 ROOT.TGraph.    point = _gr_point_
 ROOT.TGraph.get_point = _gr_point_
 
-    
+# =============================================================================
+## get y-coordinate of the point 
+def _gr_point_x_ ( graph , ipoint ) :
+    """ Get x-coordinate of the point 
+    """
+    x , _ = _gr_point_( graph , ipoint ) 
+    return x 
+# =============================================================================
+## get y-coordinate of the point 
+def _gr_point_y_ ( graph , ipoint ) :
+    """ Get y-coordinate of the point 
+    """
+    _ , y = _gr_point_( graph , ipoint ) 
+    return y 
+
+ROOT.TGraph.    pointX = _gr_point_x_
+ROOT.TGraph.    pointY = _gr_point_y_
+
 # =============================================================================
 ## use graph as a function 
 #  @code
@@ -793,8 +810,8 @@ def _gr_setitem_ ( graph , ipoint , point )  :
     prev = ipoint - 1
     next = ipoint + 1
     # 
-    if   0 <= prev   and x < graph.GetPointX ( prev ) : graph.SetBit ( ROOT.TGraph.kIsSortedX , False )
-    elif next < size and graph.GetPointX ( next ) < x : graph.SetBit ( ROOT.TGraph.kIsSortedX , False )
+    if   0 <= prev   and x < graph.pointX ( prev ) : graph.SetBit ( ROOT.TGraph.kIsSortedX , False )
+    elif next < size and graph.pointX ( next ) < x : graph.SetBit ( ROOT.TGraph.kIsSortedX , False )
     # 
     
 # ==============================================================================
@@ -2574,7 +2591,7 @@ def _gr_append_ ( graph , *point ) :
     last = len ( graph )
     graph.SetPoint ( last , 0 , 0 )
     graph [ last ] = point
-    if 1 <= last and graph.GetPointX ( last ) <  graph.GetPointX ( last -1 ) :
+    if 1 <= last and graph.pointX ( last ) <  graph.pointX ( last -1 ) :
         graph.SetBit ( ROOT.TGraph.kIsSortedX , False ) 
     ##
     return len ( graph )
@@ -3706,7 +3723,10 @@ _new_methods_     += (
     ROOT.TGraph . __probit__ ,
     ROOT.TGraph . __pow__    ,
     #
-    ROOT.TGraph . append     ,
+    ROOT.TGraph . pointX     ,
+    ROOT.TGraph . pointY     ,
+    #
+    ROOT.TGraph . append     ,    
     ROOT.TGraph . swap       ,    
     #
     ROOT.TGraphErrors . __getitem__   ,
