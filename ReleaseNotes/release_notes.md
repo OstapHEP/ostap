@@ -11,7 +11,8 @@
   1. explicitely delete all created styles, see [here](https://github.com/root-project/root/issues/16918)
   1. add missing methods for `Ostap::Math::Bessel`
   1. fix occasional overflows in `twosamples.py`
-  
+
+
 ## Backward incompatible
     
 ## Bug fixes
