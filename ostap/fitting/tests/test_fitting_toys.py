@@ -131,7 +131,7 @@ def test_toys ( ) :
 #  - store  fit results
 #  - fill distributions for fit results
 def test_toys2 ( ) :
-    """Perform toys-study for possible fit bias and correct uncertainty evaluation
+    """ Perform toys-study for possible fit bias and correct uncertainty evaluation
     - generate `nToys` pseudoexperiments with some PDF `gen_pdf`
     - fit teach experiment with the PDF `fit_pdf`
     - store  fit results
@@ -182,6 +182,63 @@ def test_toys2 ( ) :
     logger.info( 'Stats   : [%s]' % ( ', '.join ( key for key in stats   ) ) )
 
     toy_results [ 'test_toys2' ] = results , stats 
+
+
+# ============================================================================
+def toys3_action ( fit_result , fit_pdf , dataset ) :
+    return float ( fit_result.mean_FG ) 
+    
+# =============================================================================
+## Perform toy-study for possible fit bias and correct uncertainty evaluation
+#  - generate <code>nToys</code> pseudoexperiments with some PDF <code>gen_pdf</code>
+#  - fit teach experiment with the PDF <code>fit_pdf</code>
+#  - store  fit results
+#  - fill distributions for fit results
+def test_toys3 ( ) :
+    """ Perform toys-study for possible fit bias and correct uncertainty evaluation
+    - generate `nToys` pseudoexperiments with some PDF `gen_pdf`
+    - fit teach experiment with the PDF `fit_pdf`
+    - store  fit results
+    - fill distributions of fit results
+    """    
+
+    logger = getLogger ( 'test_toys3' )
+    
+    gen_pars    = { 'mean_GG' : nominal_mean , 'sigma_GG' : nominal_sigma  } 
+    fit_pars    = { 'mean_FG' : nominal_mean , 'sigma_FG' : nominal_sigma  } 
+    
+    ## reset parameters 
+    gen_gauss.load_params ( gen_pars )    
+    fit_gauss.load_params ( fit_pars )    
+    
+    with timing ( 'Toys3     analysis' , logger = logger ) :        
+        results , stats = Toys.make_toys3 (
+            gen_pdf     = gen_gauss    ,
+            fit_pdf     = fit_gauss    ,
+            nToys       = 1000         ,
+            data        = [ mass ]     ,
+            action      = toys3_action , 
+            gen_config  = { 'nEvents' : 100 , 'sample' : True } ,
+            fit_config  = fit_config   ,
+            gen_pars    = gen_pars     ,
+            fit_pars    = fit_pars     ,
+            logger      = logger       , 
+            silent      = True         , 
+            progress    = True         )
+
+    ## make histos
+    h_mean       = ROOT.TH1F ( hID () , 'mean  of Gauss ' , 200 ,  0.75 * nominal_mean  , nominal_mean  * 1.25 ) 
+
+
+    for r in results [''  ] : h_mean .Fill ( r ) 
+
+    for h in ( h_mean , ) :
+        with use_canvas ( 'test_toys3 %s' % h.title  , wait = 1 ) : h.draw()
+
+    logger.info( 'Results : [%s]' % ( ', '.join ( key for key in results ) ) ) 
+    logger.info( 'Stats   : [%s]' % ( ', '.join ( key for key in stats   ) ) )
+
+    toy_results [ 'test_toys3' ] = results , stats 
     
 # ==============================================================================
 ## Perform toy-study for Jackknife (non-extended model) 
@@ -521,6 +578,8 @@ if '__main__' == __name__ :
 
     with memory ( 'test_toys'          , logger = logger ) as mtt : test_toys          ()
     with memory ( 'test_toys2'         , logger = logger ) as mt2 : test_toys2         ()
+    with memory ( 'test_toys3'         , logger = logger ) as mt3 : test_toys3         ()
+
     with memory ( 'test_jackknife_NE1' , logger = logger ) as mj1 : test_jackknife_NE1 ()
     with memory ( 'test_jackknife_NE2' , logger = logger ) as mj2 : test_jackknife_NE2 ()
     with memory ( 'test_jackknife_EXT' , logger = logger ) as mje : test_jackknife_EXT ()
@@ -531,12 +590,16 @@ if '__main__' == __name__ :
     with memory ( 'test_significance'  , logger = logger ) as mts : test_significance  ()
     with memory ( 'test_db'            , logger = logger ) as mdb : test_db            ()
     
+    
     rows = [ ( 'Test' , 'Memory [MB]' ) ]
 
     row  = 'Toys'          , '%.1f' % mtt.delta 
     rows.append ( row )
 
     row  = 'Toys2'         , '%.1f' % mt2.delta 
+    rows.append ( row )\
+        
+    row  = 'Toys3'         , '%.1f' % mt3.delta 
     rows.append ( row )
 
     row  = 'Jackknife_NE1' , '%.1f' % mj1.delta 
@@ -562,7 +625,7 @@ if '__main__' == __name__ :
     
     row  = 'test_db'       , '%.1f' % mdb.delta 
     rows.append ( row )
-    
+
     title = 'Memory usage for various toys'
     table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lc' ) 
     logger.info ( '%s:\n%s' % ( title , table ) )

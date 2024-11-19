@@ -15,6 +15,7 @@ __version__ = '$Revision$'
 __all__     = (
     "make_toys"        , ## run fitting toys (the same PDF to generate and fit)
     "make_toys2"       , ## run fitting toys (separate models to generate and fit)
+    "make_toys3"       , ## run fitting toys with special action (separate models to generate and fit)
     'make_jackknife'   , ## run Jackknife analysis 
     'make_bootstrap'   , ## run Bootstrapanalysis 
     "vars_transform"   , ## helper fnuction to transform the variables
@@ -498,8 +499,7 @@ def print_bootstrap  ( fitresult          ,
             del r [ 2 ]
             rows.append ( r )
         table = rows 
-        
- 
+         
     title = title if title else "Bootstrapping with #%d samples" % n 
 
     import ostap.logger.table as Table
@@ -509,7 +509,6 @@ def print_bootstrap  ( fitresult          ,
                           prefix    = "# "     )
     logger.info ( '%s:\n%s' % ( title , table ) )
     
-
 # ==============================================================================
 ## Default function to generate the data
 #  - simple call for <code>PDF.generate</code>
@@ -548,17 +547,17 @@ def accept_fit  ( result , pdf = None , dataset = None ) :
     """
     return result and ( 0 == result.status () ) and ( result.covQual () in ( -1 , 3 ) ) 
 
-
 # ==============================================================================
 ## make <code>nToys</code> pseudoexperiments
 #
 #  Schematically:
 #  @code
 #  for toy in range ( nToys )  :
-#  ...  dataset = gen_fun ( pdf , ...     , **gen_config )
-#  ...  result  = fit_fun ( pdf , dataset , **fit_config )
-#  ...  if not accept_fun ( result , pdf , dataset ) : continue
-#  .... < collect statistics here > 
+#  ...  dataset    = gen_fun ( pdf , ...     , **gen_config )
+#  ...  fit_result = fit_fun ( pdf , dataset , **fit_config )
+#  ...  if not accept_fun ( fit_result , pdf , dataset ) : continue
+#  .... < collect statistics here >
+#  return results, stats 
 #  @endcode
 #
 #  For each experiment
@@ -629,6 +628,7 @@ def make_toys ( pdf                   ,
     >>> ...  result  = fit_fun ( pdf , dataset , **fit_config )
     >>> ...  if not accept_fun ( result , pdf , dataset ) : continue
     >>> .... < collect statistics here > 
+    >>> return results, stats 
     
     For each pseudoexperiment:
 
@@ -764,31 +764,31 @@ def make_toys ( pdf                   ,
         histo = dataset if isinstance ( dataset , ROOT.TH1 ) else None 
         
         ## 3. fit it!
-        r = fit_fun ( pdf , dataset , **fitcnf ) 
+        fit_result = fit_fun ( pdf , dataset , **fitcnf ) 
         
         ## fit status
-        st = r.status()
+        st = fit_result.status()
         if 0 != st :  fits [ st ] += 1
 
         ## covariance matrix quality
-        cq = r.covQual() 
+        cq = fit_result.covQual() 
         if not cq in ( -1 , 3 ) : covs [ cq ] += 1
               
         ## ok ?
-        ok      = accept_fun ( r , pdf , dataset )
+        ok      = accept_fun ( fit_result , pdf , dataset )
         accept += 1 if ok else 0
         
         if ok :
             
             ## 4.1 save results 
-            rpf = r.params ( float_only = True ) 
+            rpf = fit_result.params ( float_only = True ) 
             for p in rpf : 
                 results [ p ].append ( rpf [ p ][0] ) 
                 
             ## 4.2 save results 
             for v in more_vars :
                 func  = more_vars [ v ] 
-                results [ v ] .append ( func ( r , pdf ) )
+                results [ v ] .append ( func ( fit_result , pdf ) )
 
             if histo : 
                 results [ '#'     ] .append ( histo.GetEntries   () )
@@ -798,7 +798,7 @@ def make_toys ( pdf                   ,
                 results [ '#sumw' ] .append ( dataset.sumVar ( '1' ) )
                 
             ## 4.3 save results 
-            if  add_results : results [ '' ].append ( r )
+            if  add_results : results [ '' ].append ( fit_result )
 
         ## if not add_results and isinstance ( r , ROOT.RooFitResult ) :
         ##    r = Ostap.MoreRooFit.delete_result ( r )                                    
@@ -806,7 +806,7 @@ def make_toys ( pdf                   ,
             dataset = Ostap.MoreRooFit.delete_data ( dataset )
             
         del dataset
-        del r
+        del fit_result
         
         if progress or not silent :
             if 0 < frequency and 1 <= i and 0 ==  i % frequency : 
@@ -821,17 +821,19 @@ def make_toys ( pdf                   ,
     
     return results, stats 
 
-
 # =============================================================================
 ## make <code>nToys</code> pseudoexperiments
 #
 #  Schematically:
 #  @code
 #  for toy in range ( nToys )  :
-#  ...  dataset = gen_fun ( gen_pdf , ...     , **gen_config )
-#  ...  result  = fit_fun ( fit_pdf , dataset , **fit_config )
-#  ...  if not accept_fun ( result  , fit_pdf , dataset ) : continue
-#  .... < collect statistics here > 
+#  ...  dataset    = gen_fun ( gen_pdf , ...     , **gen_config )
+#  ...  fit_result = fit_fun ( fit_pdf , dataset , **fit_config )
+#  ...  if not accept_fun ( fit_result  , fit_pdf , dataset ) : continue
+#  ...  result = action ( fit_result , fit_pdf , dataset )
+#  ...  results [''].append ( result )
+#  ...  <some statistics here> 
+#  return results, stats 
 #  @endcode
 #
 #  For each experiment
@@ -902,14 +904,15 @@ def make_toys2 ( gen_pdf               , ## pdf to generate toys
                  progress     = True   ,
                  logger       = logger ,
                  frequency    = 500    ) :
-    """Make `ntoys` pseudoexperiments
+    """ Make `nToys` pseudoexperiments
     
     -   Schematically:
     >>> for toy in range ( nToys )  :
-    >>> ...  dataset = gen_fun ( gen_pdf , ...     , **gen_config )
-    >>> ...  result  = fit_fun ( fit_pdf , dataset , **fit_config )
-    >>> ...  if not accept_fun ( result  , fit_pdf , dataset ) : continue
-    >>> .... < collect statistics here > 
+    >>> ...  dataset    = gen_fun ( gen_pdf , ...     , **gen_config )
+    >>> ...  fit_result = fit_fun ( fit_pdf , dataset , **fit_config )
+    >>> ...  if not accept_fun ( fit_result  , fit_pdf , dataset ) : continue
+    >>> ... < collect statistics here > 
+    >>> return results, stats 
     
     For each experiment:
 
@@ -920,8 +923,9 @@ def make_toys2 ( gen_pdf               , ## pdf to generate toys
     
     2. fit generated dataset  with `pdf` using configuration
     specified via  `fit_config`
-
-    - `pdf`          : PDF to be used for generation and fitting
+    
+    - `gen_pdf`      : PDF to be used for generation 
+    - `fit_pdf`      : PDF to be used for fitting 
     - `nToys`        : number    of pseudoexperiments to generate
     - `data`         : variable list of variables to be used for dataset generation
     - `gen_config`   : configuration of <code>pdf.generate</code>
@@ -1041,31 +1045,31 @@ def make_toys2 ( gen_pdf               , ## pdf to generate toys
         fit_pdf.load_params ( params = fix_fit_pars , silent = True ) ## silent = silent )
 
         ## 4. fit it!  
-        r = fit_fun ( fit_pdf , dataset , **fitcnf )
+        fit_result = fit_fun ( fit_pdf , dataset , **fitcnf )
 
         ## fit status 
-        st = r.status()
+        st = fit_result.status()
         if 0 != st :  fits [ st ] += 1
         
         ## covariance matrix quality
-        cq = r.covQual() 
+        cq = fit_result.covQual() 
         if not cq in ( -1 , 3 ) : covs [ cq ] += 1
         
         ## ok ?
-        ok  = accept_fun ( r , fit_pdf , dataset )
+        ok  = accept_fun ( fit_result , fit_pdf , dataset )
         accept += 1 if ok else 0
         
         if ok : 
             
             ## 5.1 save results 
-            rpf = r.params ( float_only = True ) 
+            rpf = fit_result.params ( float_only = True ) 
             for j in rpf : 
                 results [ j ].append ( rpf [ j ] [ 0 ] ) 
                     
             ## 5.2 save results 
             for v in more_vars :
                 func  = more_vars[v] 
-                results [ v ] .append ( func ( r , fit_pdf ) )
+                results [ v ] .append ( func ( fit_result , fit_pdf ) )
                 
             if histo :
                 results [ '#'     ] .append ( histo.GetEntries   () )
@@ -1075,7 +1079,7 @@ def make_toys2 ( gen_pdf               , ## pdf to generate toys
                 results [ '#sumw' ] .append ( dataset.sumVar ( '1' ) ) 
                 
             ## 5.3 save results 
-            if add_results  : results [ '' ].append ( r )
+            if add_results  : results [ '' ].append ( fit_result )
 
         ## if not add_results and isinstance ( r , ROOT.RooFitResult ) :
         ##     r = Ostap.MoreRooFit.delete_result ( r )            
@@ -1083,13 +1087,274 @@ def make_toys2 ( gen_pdf               , ## pdf to generate toys
             dataset = Ostap.MoreRooFit.delete_data ( dataset ) 
             
         del dataset
-        del r
+        del fit_result
         
         if progress or not silent :
             if 0 < frequency and 1 <= i and 0 == i % frequency : 
                 stats = make_stats ( results , fits , covs , accept )
                 print_stats ( stats , i + 1 , logger = logger )
 
+    ## make a final statistics 
+    stats = make_stats ( results , fits , covs , accept )
+                    
+    if progress or not silent :
+        print_stats ( stats , nToys , logger = logger  )
+    
+    return results, stats 
+
+
+# =============================================================================
+## make <code>nToys</code> pseudoexperiments
+#
+#  Schematically:
+#  @code
+#  for toy in range ( nToys )  :
+#  ...  dataset    = gen_fun ( gen_pdf , ...     , **gen_config )
+#  ...  fit_result = fit_fun ( fit_pdf , dataset , **fit_config )
+#  ...  if not accept_fun ( fit_result  , fit_pdf , dataset ) : continue
+#  ...  result = action ( fit_results , fit_pdf , dataset )
+#  ...  results [''].append ( result ) 
+#  ...  <collect statistics>
+#  return results, stats 
+#  @endcode
+#
+#  For each experiment
+#  - generate dataset using <code>pdf</code> with variables specified
+#    in <code>data</code> and configuration specified via<code>gen_config</code>
+#    for each generation the parameters of <code>pdf</code> are reset
+#    for their initial values and values from <code>init_pars</code>
+#  - fit generated dataset  with <code>pdf</code> using configuration
+#    specified via  <code>fit_config</code>
+#
+# @code
+# gen_pdf = ... ## PDF  to use to generate pseudoexperiments 
+# fit_pdf = ... ## PDF  to use to fit  pseudoexperiments 
+# results , stats = make_toys3(
+#     gen_pdf    = gen_pdf    , ## PDF  to use to generate pseudoexperiments 
+#     fit_pdf    = fit_pdf    , ## PDF  to use to fit  pseudoexperiments 
+#     nToys      = 1000       , ## number of pseudoexperiments 
+#     data       = [ 'mass' ] ,           ## variables in dataset 
+#     gen_config = { 'nEvents' : 5000 } , ## configuration of <code>pdf.generate</code>
+#     fit_config = { 'ncpus'   : 2    } , ## configuration of <code>pdf.fitTo</code>
+#     gen_pars   = { 'mean' : 0.0 , 'sigma' : 1.0 } ## parameters to use for generation 
+#     )
+# @endcode
+#
+# @param gen_pdf      PDF to be used for generation 
+# @param fit_pdf      PDF to be used for fitting
+# @param nToys        number    of pseudoexperiments to generate
+# @param data         variable list of variables to be used for dataset generation
+# @param action       the action: result = action ( fit_result , fit_pdf , dataset ) 
+# @param gen_config   configuration of <code>pdf.generate</code>
+# @param fit_config   configuration of <code>pdf.fitTo</code>
+# @param gen_pars     redefine these parameters for each pseudoexperiment
+# @param gen_fun      specific generate  action (if needed) 
+# @param fit_fun      specific fitting action (if needed) 
+# @param accept_fun   specific accept action (if needed) 
+# @param silent       silent toys?
+# @param progress     show progress bar?
+# @param logger       logger 
+# @param frequency    how often to dump the intermediate results ? 
+# @return dictionary with fit results for the toys and the dictionary of statistics
+#
+#  - If <code>gen_fun</code>    is not specified <code>generate_data</code> is used 
+#  - If <code>fit_fun</code>    is not specified <code>make_fit</code>      is used 
+#  - If <code>accept_fun</code> is not specified <code>accept_fit</code>    is used   
+def make_toys3 ( gen_pdf               , ## pdf to generate toys 
+                 fit_pdf               , ## pdf to fit  
+                 nToys                 , ## number of pseudoexperiments 
+                 data                  , ## template for dataset/variables
+                 action                , ## action:  result= action ( fit_result , fit_pdf , dataset ) 
+                 gen_config            , ## parameters for <code>pdf.generate</code>   
+                 fit_config   = {}     , ## parameters for <code>pdf.fitTo</code>
+                 gen_pars     = {}     , ## gen-parameters to reset/use 
+                 fit_pars     = {}     , ## fit-parameters to reset/use
+                 gen_fun      = None   , ## generator function ( pdf , varset  , **gen_config ) 
+                 fit_fun      = None   , ## fit       function ( pdf , dataset , **fit_config ) 
+                 accept_fun   = None   , ## accept    function ( fit-result, pdf, dataset     )
+                 silent       = True   ,
+                 progress     = True   ,
+                 logger       = logger ,
+                 frequency    = 500    ) :
+    """ Make `nToys` pseudoexperiments
+    
+    -   Schematically:
+    >>> for toy in range ( nToys )  :
+    >>> ...  dataset = gen_fun ( gen_pdf , ...     , **gen_config )
+    >>> ...  result  = fit_fun ( fit_pdf , dataset , **fit_config )
+    >>> ...  if not accept_fun ( result  , fit_pdf , dataset ) : continue
+    >>> ...  results[''].append ( action ( result , fit_pdf , dataset ) )
+    >>> ...  <some statistics here>
+    >>> return results, stats  
+    
+    For each experiment:
+
+    1. generate dataset using `pdf` with variables specified
+    in `data` and configuration specified via `gen_config`
+    for each generation the parameters of `pdf` are reset
+    for their initial values and valeus from `init_pars`
+    
+    2. fit generated dataset  with `pdf` using configuration
+    specified via  `fit_config`
+
+    - `pdf`          : PDF to be used for generation and fitting
+    - `nToys`        : number    of pseudoexperiments to generate
+    - `data`         : variable list of variables to be used for dataset generation
+    - `gen_config`   : configuration of <code>pdf.generate</code>
+    - `fit_config`   : configuration of <code>pdf.fitTo</code>
+    - `gen_pars`     : redefine these parameters for generation of each pseudoexperiment
+    - `fit_pars`     : redefine these parameters for fit of each pseudoexperiment
+    - `more_vars`    : dictionary of functions to define the additional results
+    - `add_results`  : add fit-results to the output?
+    - `gen_fun`      : generator function ( pdf , varset  , **gen_config )
+    - `fit_fun`      : fitting   function ( pdf , dataset , **fit_config ) 
+    - `accept_fun`   : accept    function ( fit-result, pdf, dataset     )
+    - `silent`       : silent toys?
+    - `progress`     : show progress bar?
+    - `logger`       : use this logger 
+    - `frequency`    : how often to dump the intermediate results ? 
+    
+    It returns a dictionary with fit results for the toys and a dictionary of statistics
+    >>> pdf = ...
+    ... results, stats = make_toys3 ( 
+    ...                 gen_pdf                                     , ## PDF  to generate 
+    ...                 fit_pdf                                     , ## PDF  to fit 
+    ...                 nToys      = 1000                           , ## number of toys 
+    ...                 data       = [ 'mass' ]                     , ## variables in dataset 
+    ...                 action     = ...                            , ## the action 
+    ...                 gen_config = { 'nEvents' : 5000 }           , ## configuration of `pdf.generate`
+    ...                 fit_config = { 'ncpus'   : 2    }           , ## configuration of `pdf.fitTo`
+    ...                 gemn_pars  = { 'mean' : 0.0 , 'sigma' : 1.0 } ## parameters to use for generation 
+    ...                )
+    """
+
+    from ostap.core.ostap_types import string_types, integer_types  
+    
+    assert isinstance ( nToys , integer_types ) and 0 < nToys,\
+           'Invalid "nToys" argument %s/%s' % ( nToys , type ( nToys ) )
+    
+    assert gen_config and 'nEvents' in gen_config,\
+           'Number of events per toy must be specified via "gen_config" %s' % gen_config
+    
+    ## 1. generator function? 
+    if gen_fun is None :
+        if not silent :  logger.info ( "make_toys2: use default 'generate_data' function!")
+        gen_fun = generate_data 
+    assert gen_fun and callable ( gen_fun ) , 'Invalid generator function!'
+    
+    ## 2. fitting function? 
+    if fit_fun is None :
+        if not silent :  logger.info ( "make_toys2: use default 'make_fit' function!")
+        fit_fun = make_fit 
+    assert fit_fun and callable ( fit_fun ) , 'Invalid fit function!'
+
+    ## 3. accept function? 
+    if accept_fun is None :
+        if not silent : logger.info ( "make_toys2: use default 'accept_fit' function!")
+        accept_fun = accept_fit
+    assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
+
+    import ostap.fitting.roofit
+    import ostap.fitting.dataset
+    import ostap.fitting.variables
+    import ostap.fitting.roofitresult
+    import ostap.fitting.pdfbasic 
+    import ostap.histos.histos   
+
+    gparams = gen_pdf.params ()
+    varset  = ROOT.RooArgSet () 
+    
+    if isinstance ( data , ROOT.RooAbsData ) : varset = data.varset() 
+    else :
+        for v in data :
+            if   isinstance ( v , ROOT.RooAbsArg ) :
+                varset.add ( v )
+            elif isinstance ( v , string_types   ) and v in gparams :
+                varset.add ( gparams [ v ] )
+            else :
+                raise TypeError('Invalid variable %s/%s' % ( v , type ( v ) ) )
+
+    ## parameters for generation
+            
+    fix_gen_init = vars_transform ( gparams  ) 
+    fix_gen_pars = vars_transform ( gen_pars )
+    
+    ## parameters for fitting 
+
+    fparams = fit_pdf.params ()
+    fix_fit_init = vars_transform ( fparams  )     
+    fix_fit_pars = vars_transform ( fit_pars )
+    
+    fitcnf = {}
+    fitcnf.update ( fit_config )
+    if not 'silent' in fitcnf : fitcnf [ 'silent' ] = silent
+
+    from collections import defaultdict 
+    results = defaultdict(list) 
+
+    from   ostap.core.core        import SE
+    
+    fits   = defaultdict ( SE )  ## fit statuses 
+    covs   = defaultdict ( SE )  ## covarinace matrix quality
+    accept = SE()
+
+    ## run pseudoexperiments
+    from ostap.utils.progress_bar import progress_bar 
+    for i in progress_bar ( range ( nToys ) , silent = not progress , description = 'Toys:' ) :
+
+        ## 1. reset PDF parameters 
+        gen_pdf.load_params ( params = fix_gen_init , silent = True ) ## silent = silent )
+        gen_pdf.load_params ( params = fix_gen_pars , silent = True ) ## silent = silent )
+        
+        ## 2. generate dataset!
+        dataset =  gen_fun ( gen_pdf , varset = varset , **gen_config ) 
+        if not silent : logger.info ( 'Generated dataset #%d\n%s' % ( i , dataset ) )
+
+        ## histogram? 
+        histo = dataset if isinstance ( dataset , ROOT.TH1 ) else None 
+        
+        ## 3. reset parameters of fit_pdf
+        fit_pdf.load_params ( params = fix_fit_init , silent = True ) ## silent = silent )
+        fit_pdf.load_params ( params = fix_fit_pars , silent = True ) ## silent = silent )
+
+        ## 4. fit it!  
+        fit_result = fit_fun ( fit_pdf , dataset , **fitcnf )
+
+        ## fit status 
+        st = fit_result.status()
+        if 0 != st :  fits [ st ] += 1
+        
+        ## covariance matrix quality
+        cq = fit_result.covQual() 
+        if not cq in ( -1 , 3 ) : covs [ cq ] += 1
+        
+        ## ok ?
+        ok  = accept_fun ( fit_result , fit_pdf , dataset )
+        accept += 1 if ok else 0
+        
+        if ok : 
+
+            ## action!
+            result = action ( fit_result , fit_pdf , dataset )
+            results [ '' ].append ( result )
+                        
+            if histo :
+                results [ '#'     ] .append ( histo.GetEntries   () )
+                results [ '#sumw' ] .append ( histo.the_integral () )
+            else :                
+                results [ '#'     ] .append ( len ( dataset ) )
+                results [ '#sumw' ] .append ( dataset.sumVar ( '1' ) ) 
+                                        
+        if isinstance ( dataset , ROOT.RooAbsData ) :
+            dataset = Ostap.MoreRooFit.delete_data ( dataset ) 
+            
+        del dataset
+        del fit_result
+        
+        if progress or not silent :
+            if 0 < frequency and 1 <= i and 0 == i % frequency : 
+                stats = make_stats ( results , fits , covs , accept )
+                print_stats ( stats , i + 1 , logger = logger )
 
     ## make a final statistics 
     stats = make_stats ( results , fits , covs , accept )
@@ -1313,9 +1578,8 @@ def make_jackknife ( pdf                  ,
     if not ok1 and not silent : logger.warning ( "Jackknife: estimates for `yield` parameters are likely wrong!")
     return results , stats 
 
-
 # =============================================================================
-## Run Bootstrap analysis, useful for evaluaton of fit biases and uncertainty estimates
+## Run Bootstrap analysis, useful for evaluation of fit biases and uncertainty estimates
 # 
 #  In total <code>size</code> datasets are sampled (with replacement) from the original dataset
 #  <code>data</code> and each sampled dataset is fit

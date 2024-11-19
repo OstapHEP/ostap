@@ -17,6 +17,7 @@ __version__ = '$Revision$'
 __all__     = (
     'parallel_toys'      , ## run parallel toys (single   PDF  to generate and fit)
     'parallel_toys2'     , ## run parallel toys (separate PDFs to generate and fit) 
+    'parallel_toys3'     , ## run parallel toys with special actions (separate PDFs to generate and fit) 
     'parallel_jackknife' , ## run parallel Jackknife 
     'parallel_bootstrap' , ## run parallel bootstrap 
     )
@@ -293,6 +294,91 @@ class  ToysTask2(ToysTask) :
                                  frequency   = self.frequency   )
 
 
+
+# =============================================================================
+## The simple task object for parallel fitting toys
+#  - separate PDFs to generarte and fit 
+#  @see ostap.fitting.toys 
+#  @see ostap.fitting.toys.make_toys3
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2020-01-18 
+class  ToysTask3(ToysTask) :
+    """ The simple task object for parallel fitting toys
+    - separate PDFs to generarte and fit 
+    - see ostap.fitting.toys.make_toys3 
+    """
+    ## 
+    def __init__ ( self                ,
+                   gen_pdf             ,
+                   fit_pdf             ,
+                   data                ,
+                   action              , 
+                   gen_config          ,
+                   fit_config  = {}    ,
+                   gen_pars    = {}    ,
+                   fit_pars    = {}    ,
+                   gen_fun     = None  , 
+                   fit_fun     = None  , 
+                   accept_fun  = None  , 
+                   silent      = True  ,
+                   progress    = False , 
+                   frequency   = 0     ) :
+
+        ToysTask.__init__ ( self                      ,
+                            pdf         = gen_pdf     ,
+                            data        = data        ,
+                            gen_config  = gen_config  ,
+                            fit_config  = fit_config  ,
+                            init_pars   = gen_pars    ,
+                            gen_fun     = gen_fun     ,
+                            fit_fun     = fit_fun     ,
+                            accept_fun  = accept_fun  ,
+                            silent      = silent      ,
+                            progress    = progress    ,
+                            frequency   = frequency   )
+                          
+        self.gen_pdf    = self.pdf 
+        self.fit_pdf    = fit_pdf
+        self.gen_pars   = self.init_pars 
+        self.fit_pars   = fit_pars
+        self.action     = action
+        
+    # =========================================================================
+    ## the actual processing of toys 
+    def process ( self , jobid , nToys ) :
+        """ The actual poroicessing of toys 
+        """
+        import ROOT
+        from ostap.logger.logger import logWarning
+        with logWarning() :
+            import ostap.core.pyrouts            
+            import ostap.fitting.roofit            
+            import ostap.fitting.dataset            
+            import ostap.fitting.roofitresult            
+            import ostap.fitting.variables
+            
+        from   ostap.core.ostap_types import integer_types 
+        assert isinstance ( nToys , integer_types ) and 0 < nToys,\
+               'Jobid %s: Invalid "nToys" argument %s/%s' % ( jobid , nToys , type ( nToys ) )
+        
+        import ostap.fitting.toys as Toys 
+        return Toys.make_toys3 ( gen_pdf     = self.gen_pdf     ,
+                                 fit_pdf     = self.fit_pdf     ,
+                                 nToys       = nToys            , ## ATTENTION! 
+                                 data        = self.data        ,
+                                 action      = self.action      , 
+                                 gen_config  = self.gen_config  , 
+                                 fit_config  = self.fit_config  , 
+                                 gen_pars    = self.gen_pars    ,
+                                 fit_pars    = self.fit_pars    ,             
+                                 gen_fun     = self.gen_fun     ,
+                                 fit_fun     = self.fit_fun     ,
+                                 accept_fun  = self.accept_fun  ,
+                                 silent      = self.silent      ,
+                                 progress    = self.progress    ,
+                                 frequency   = self.frequency   )
+
+    
 # =============================================================================
 ## The simple task object for parallel Jackknife 
 #  @see ostap.fitting.toys 
@@ -850,6 +936,224 @@ def parallel_toys2 (
 
     ## create the task        
     task  = ToysTask2   ( progress = progress and not silent , **config )
+
+    ## create the manager 
+    wmgr   = WorkManager ( silent = silent and not progress , progress = progress or not silent , **kwargs )
+
+    ## perform the actual splitting 
+    from ostap.utils.utils import split_n_range 
+    params = tuple ( i[1]-i[0] for i in split_n_range ( 0 , nToys , nSplit ) )
+
+    ## start parallel processing! 
+    wmgr.process( task , params  )
+
+    ## get results from the task
+    results , stats = task.results () 
+    if progress or not silent : Toys.print_stats ( stats , nToys ) 
+
+    return results, stats   
+
+# ===================================================================================
+## Run fitting toys in parallel
+#
+#  Schematically:
+#  @code
+#  for toy in range ( nToys )  :
+#  ...  dataset    = gen_fun ( gen_pdf , ...     , **gen_config )
+#  ...  fit_result = fit_fun ( fit_pdf , dataset , **fit_config )
+#  ...  if not accept_fun ( result  , fit_pdf , dataset ) : continue
+#  ...  result = action ( fit_result , fit_pdf , dataset )
+#  .... < collect statistics here > 
+#  @endcode
+#
+#  For each experiment
+#  - generate dataset using <code>pdf</code> with variables specified
+#    in <code>data</code> and configuration specified via<code>gen_config</code>
+#    for each generation the parameters of <code>pdf</code> are reset
+#    for their initial values and values from <code>init_pars</code>
+#  - fit generated dataset  with <code>pdf</code> using configuration
+#    specified via  <code>fit_config</code>
+#
+# @code
+# gen_pdf = ... ## PDF  to use to generate pseudoexperiments 
+# fit_pdf = ... ## PDF  to use to fit  pseudoexperiments 
+# results , stats = make_toys3(
+#     gen_pdf    = gen_pdf    , ## PDF  to use to generate pseudoexperiments 
+#     fit_pdf    = fit_pdf    , ## PDF  to use to fit  pseudoexperiments 
+#     nToys      = 1000       , ## number of pseudoexperiments
+#     data       = [ 'mass' ] , ## variables in dataset
+#     action     = ...        , ## the action 
+#     gen_config = { 'nEvents' : 5000 } , ## configuration of <code>pdf.generate</code>
+#     fit_config = { 'ncpus'   : 2    } , ## configuration of <code>pdf.fitTo</code>
+#     gen_pars   = { 'mean' : 0.0 , 'sigma' : 1.0 } ## parameters to use for generation 
+#     )
+# @endcode
+#
+# Derived parameters can be also   retrived via <code>more_vars</code> argument:
+# @code
+# ratio     = lambda res,pdf : res.ratio('x','y')
+# more_vars = { 'Ratio' : ratio }
+#  r,  s = make_toys2 ( .... , more_vars = more_vars , ... ) 
+# @code
+#
+# Parallelization is controlled by  two arguments
+#  - <code>ncpus</code>, number of local cpus to use,
+#   default is <code>'autodetect'</code>, that means - use all local processors
+#  - <code>ppservers</code>,  list of serevers to be used (for parallel python)
+# 
+# @see ostap.fitting.toys
+# @see ostap.fitting.toys.make_toys2
+#
+# @param gen_pdf     PDF to be used for generation 
+# @param fit_pdf     PDF to be used for fitting
+# @param nToys       total number    of pseudoexperiments to generate
+# @param nSplit      split the total number of presudoexperiemtns into <code>nSplit</code> subjobs 
+# @param data        variable list of variables to be used for dataset generation
+# @param action      action function to get results 
+# @param gen_config  configuration of <code>pdf.generate</code>
+# @param fit_config  configuration of <code>pdf.fitTo</code>
+# @param gen_pars    redefine these parameters for each pseudoexperiment
+# @param fit_pars    redefine these parameters for each pseudoexperiment
+# @param gen_fun     generator function
+# @param fit_fun     fitting   function
+# @param accept_fun  accept    function
+# @param silent      silent toys?
+# @return dictionary with fit results for the toys and the dictionary of statistics
+#
+#  - If <code>gen_fun</code>    is not specified <code>generate_data</code> is used 
+#  - If <code>fit_fun</code>    is not specified <code>make_fit</code>      is used 
+#  - If <code>accept_fun</code> is not specified <code>accept_fit</code>    is used   
+def parallel_toys3 (
+        gen_pdf              , ## PDF to generate toys 
+        fit_pdf              , ## PDF to generate toys 
+        nToys                , ## total number of toys 
+        nSplit               , ## split into  <code>nSplit</code> subjobs 
+        data                 , ## template for dataset/variables
+        action               , ## actual function to get results 
+        gen_config           , ## parameters for <code>pdf.generate</code>   
+        fit_config  = {}     , ## parameters for <code>pdf.fitTo</code>
+        gen_pars    = {}     ,
+        fit_pars    = {}     ,
+        gen_fun    = None    , ## generator function ( pdf , varset  , **gen_config ) 
+        fit_fun    = None    , ## fit       function ( pdf , dataset , **fit_config ) 
+        accept_fun = None    , ## accept    function ( fit-result, pdf, dataset     )
+        silent     = True    ,
+        progress   = True    ,
+        frequency  = 0       , **kwargs ) :
+    """ Make `nToys` pseudoexperiments, splitting them into `nSplit` subjobs
+    to be executed in parallel
+    
+    -   Schematically:
+    >>> for toy in range ( nToys )  :
+    >>> ...  dataset = gen_fun ( gen_pdf , ...     , **gen_config )
+    >>> ...  result  = fit_fun ( fit_pdf , dataset , **fit_config )
+    >>> ...  if not accept_fun ( result  , fit_pdf , dataset ) : continue
+    >>> ...  result  = action  ( fit_result , fit_pdf , dataset ) 
+    >>> .... < collect statistics here > 
+    
+    For each experiment:
+
+    1. generate dataset using `pdf` with variables specified
+    in `data` and configuration specified via `gen_config`
+    for each generation the parameters of `pdf` are reset
+    for their initial values and valeus from `init_pars`
+    
+    2. fit generated dataset  with `pdf` using configuration
+    specified via  `fit_config`
+    
+    - `pdf`         : PDF to be used for generation and fitting
+    - `nToys`       : total number    of pseudoexperiments to generate
+    - `nSplit`      : split total number of pseudoexperiments into `nSplit` subjobs  
+    - `data`        : variable list of variables to be used for dataset generation
+    - `action`      : actual function to get result 
+    - `gen_config`  : configuration of <code>pdf.generate</code>
+    - `fit_config`  : configuration of <code>pdf.fitTo</code>
+    - `gen_pars`    : redefine these parameters for generation of  each pseudoexperiment
+    - `fit_pars`    : redefine these parameters for fitting of each pseudoexperiment
+    - `more_vars`   : dictionary of functions to define the additional results 
+    - `add_results` : add fit-results to the output?
+    - `gen_fun`     : generator function ( pdf , varset  , **gen_config )
+    - `fit_fun`     : fitting   function ( pdf , dataset , **fit_config ) 
+    - `accept_fun`  : accept    function ( fit-result, pdf, dataset     )
+    - `silent`      : silent toys?
+    - `progress`    : show progress bar? 
+    
+    It returns a dictionary with fit results for the toys and a dictionary of statistics
+    
+    >>> pdf = ...
+    ... results, stats = parallel_toys3 (
+    ...    gen_pdf    = gen_pdf     , ## PDF  to generate toys 
+    ...    fit_pdf    = gen_pdf     , ## PDF  to fit toys  
+    ...    nToys      = 100000      , ## total number of toys
+    ...    nSplit     = 100         , ## split them into `nSplit` subjobs 
+    ...    data       = [ 'mass' ]  , ## varibales in dataset 
+    ...    action     = ...         , ## action!
+    ...    gen_config = { 'nEvents' : 5000 } , ## configuration of `pdf.generate`
+    ...    fit_config = { 'ncpus'   : 2    } , ## configuration of `pdf.fitTo`
+    ...    gen_pars   = { 'mean'  : 0.0 , 'sigma'  : 1.0 } ## parameters to use for generation 
+    ...    fit_pars   = { 'meanG' : 0.0 , 'sigmaG' : 1.0 } ## parameters to use for fitting
+    ...   )
+
+    Parallelization is controlled by  two arguments
+    - `ncpus` :  number of local cpus to use, default is `'autodetect'`,
+    that means all local processors
+    - `ppservers`:  list of serevers to be used (for parallel python)
+
+    
+    """
+    from   ostap.core.ostap_types import integer_types 
+
+    assert gen_config and 'nEvents' in gen_config,\
+           'Number of events per toy must be specified via "gen_config" %s' % gen_config
+    
+    assert isinstance ( nToys  , integer_types ) and 0 < nToys  ,\
+               'Invalid "nToys"  argument %s/%s' % ( nToys  , type ( nToys  ) )
+
+    assert isinstance ( nSplit , integer_types ) and 0 < nSplit ,\
+               'Invalid "nSplit" argument %s/%s' % ( nSplit , type ( nSplit ) )
+
+    config = { 'gen_pdf'     : gen_pdf     ,
+               'fit_pdf'     : fit_pdf     ,
+               'data'        : data        ,
+               'action'      : action      , 
+               'gen_config'  : gen_config  ,
+               'fit_config'  : fit_config  ,
+               'gen_pars'    : gen_pars    , 
+               'fit_pars'    : fit_pars    , 
+               'gen_fun'     : gen_fun     , 
+               'fit_fun'     : fit_fun     , 
+               'accept_fun'  : accept_fun  , 
+               'silent'      : silent      ,
+               'frequency'   : frequency   }
+
+    import ostap.fitting.toys as Toys
+    if nSplit < 2  :
+        return Toys.make_toys3 (  nToys = nToys , progress = progress , **config ) 
+        
+    import ostap.fitting.roofit
+    import ostap.fitting.dataset
+    import ostap.fitting.variables
+    import ostap.fitting.roofitresult
+
+    params = gen_pdf.params () 
+    toy_data = [] 
+    if  isinstance ( data , ROOT.RooAbsData ) :
+        varset =   data.varset()
+        for v in varset : toy_data.append ( v.GetName() )
+    else :
+        for v in  data :
+            if   isinstance ( v , ROOT.RooAbsArg )                  : toy_data.append ( v.GetName() )
+            elif isinstance ( v , string_types   ) and v in  params : toy_data.append ( v           )
+            else :
+                raise TypeError ( "Invalid type of variable %s/%s" % ( v , type ( v ) ) )
+
+    gen_init_pars = Toys.vars_transform ( gen_pars )
+    fit_init_pars = Toys.vars_transform ( fit_pars )
+    
+    # ========================================================================
+
+    ## create the task        
+    task  = ToysTask3   ( progress = progress and not silent , **config )
 
     ## create the manager 
     wmgr   = WorkManager ( silent = silent and not progress , progress = progress or not silent , **kwargs )
