@@ -61,7 +61,7 @@ def fmt_pretty_ve ( value              ,
                     width       = 6    ,
                     precision   = 4    ,
                     parentheses = True ) :
-    """ormats f0r nice printout of the ValueWithError object  ( string + exponent)
+    """ Formats f0r nice printout of the ValueWithError object  ( string + exponent)
     >>> fmt , fmtv , fmte , expo = fmt_pretty_ve ( number ) 
     """
     from ostap.math.ve import VE
@@ -90,8 +90,7 @@ def pretty_ve ( value              ,
     >>> s , expo = pretty_ve ( number ) 
     """
     from ostap.math.ve import VE
-    assert isinstance ( value , VE ) , \
-        "Invalid `value' parameter: %s" % type ( value )
+    assert isinstance ( value , VE ) , "Invalid `value' parameter: %s" % type ( value )
     ## decode object 
     v , e =  value.value () , max ( 0 , value.error () )
     ## delegate 
