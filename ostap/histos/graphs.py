@@ -2634,6 +2634,10 @@ def _gr_pop_  ( graph , i = None ) :
 #  graph.swap ( 1 , 6 ) 
 #  @endcode 
 def _gr_swap_ ( grap , i , j ) :
+    """ Swap two points in the graph
+    >>> graph = ...
+    >>> graph.swap ( 1 , 6 ) 
+    """
 
     if i < 0 : i += len ( graph )
     if not i in graph : raise IndexError ( "Point #%s is not in graph!" % i )
@@ -2641,11 +2645,14 @@ def _gr_swap_ ( grap , i , j ) :
     if j < 0 : j += len ( graph )
     if not j in graph : raise IndexError ( "Point #%s is not in graph!" % j )
 
-    pi = graph [ i ]
-    pj = graph [ j ]
+    xi , yi = graph [ i ]
+    xj , yj = graph [ j ]
     
-    graph [ i ] = pj 
-    graph [ j ] = pi
+    graph [ i ] = xj, yj 
+    graph [ j ] = xi, yj
+    
+    if graph.TestBit ( ROOT.TGraph.kIsSortedX ) :
+        graph.SetBit ( ROOT.TGraph.kIsSortedX , False )
     
     return graph
 
@@ -2672,7 +2679,10 @@ def _gr_transpose_ ( self ) :
     """
     new_graph = ROOT.TGraph( len ( self ) )
     for i , x , y in self.iteritems() :
-        new_graph[i] = y , x
+        new_graph [ i ] = y , x
+
+    if self.TestBit ( ROOT.TGraph.kIsSortedX ) :
+        self.SetBit ( ROOT.TGraph.kIsSortedX , False )
 
     copy_graph_attributes ( self , new_graph ) 
     return new_graph 
@@ -2694,6 +2704,9 @@ def _gre_transpose_ ( self ) :
     for i , x , y in self.iteritems() :
         new_graph[i] = y , x
         
+    if self.TestBit ( ROOT.TGraph.kIsSortedX ) :
+        self.SetBit ( ROOT.TGraph.kIsSortedX , False )
+
     copy_graph_attributes ( self , new_graph ) 
     return new_graph 
 
@@ -2710,16 +2723,17 @@ def _grae_transpose_ ( self ) :
     >>> graph_T = graph.transpose ()  
     >>> graph_T = graph.T() ## ditto 
     """
-    new_graph = ROOT.TGraphAsymmErrors ( len ( self ) )
-    
+    new_graph = ROOT.TGraphAsymmErrors ( len ( self ) )    
     for ip, X , Y  in self.iteritems() :
 
         ## ip, x , exl , exh , y , eyl , eyh =  item 
         new_graph [ ip ] = Y , X 
         
+    if self.TestBit ( ROOT.TGraph.kIsSortedX ) :
+        self.SetBit ( ROOT.TGraph.kIsSortedX , False )
+
     copy_graph_attributes ( self , new_graph ) 
     return new_graph 
-
 
 ROOT.TGraph.transpose            =   _gr_transpose_ 
 ROOT.TGraph.T                    =   _gr_transpose_ 
@@ -3498,8 +3512,7 @@ def _rplot_add_ ( plot1 , plot2 ) :
             
             return NotImplemented
 
-
-    result.SetDirectory ( ROOT.nullptr ) 
+    if ( 6 , 24 ) <= root_info : result.SetDirectory ( ROOT.nullptr )    
     return result
 
         
@@ -3553,7 +3566,7 @@ def _rplot_select_ ( plot , *components ) :
         elif component.name in components :
             result.addPlotable ( component , options , invisible )
             
-    result.SetDirectory ( ROOT.nullptr ) 
+    if ( 6 , 24 ) <= root_info : result.SetDirectory ( ROOT.nullptr )    
     copy_graph_attributes ( plot , result ) 
     return result
 
