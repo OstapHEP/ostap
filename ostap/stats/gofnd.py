@@ -56,7 +56,7 @@ class GoF(AGoF) :
         
         assert isinstance ( mcFactor, int ) and 1 <= mcFactor , \
             "Invalid `mcFactor':%s" % mcFactor
-        self.__gof      =  gof
+        self.__gof      = gof
         self.__mcFactor = mcFactor 
         self.__sample   = True if sample else False
         
@@ -177,7 +177,7 @@ class PPD(GoF) :
                    silent    = False      ,
                    parallel  = False      , 
                    mcFactor  = 10         ) : 
-        """ Create the Point-to-Point Dssimilaroity estimator
+        """ Create the Point-to-Point Dissimilarity estimator
         
         Parameters  
 
@@ -343,14 +343,11 @@ class DNN(GoF) :
             self.__histo = self.dnn.histo.clone() 
             self.dnn.histo.Reset()
 
-        
         ## prepare toys
         toys = TOYS ( self , t_value , pdf = pdf , Ndata = len ( data ) , sample = self.sample )
         
-        if self.parallel : 
-            counter = toys.run ( self.nToys , silent = self.silent )            
-        else :
-            counter = toys     ( self.nToys , silent = self.silent )            
+        if self.parallel : counter = toys.run ( self.nToys , silent = self.silent )            
+        else             : counter = toys     ( self.nToys , silent = self.silent )            
         
         p_value = 1 - counter.eff
         return t_value, p_value 

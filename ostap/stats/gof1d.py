@@ -32,7 +32,8 @@ from   ostap.fitting.funbasic import AFUN1
 from   ostap.fitting.pdfbasic import PDF1
 from   ostap.core.core        import SE, VE, Ostap, cidict_fun 
 from   ostap.math.base        import doubles, axis_range  
-from   ostap.math.models      import f1_draw 
+from   ostap.math.models      import f1_draw
+from   ostap.utils.basic      import numcpu, loop_items  
 from   ostap.stats.gof_utils  import Estimators,Summary
 import ostap.fitting.ds2numpy 
 import ostap.fitting.roofit
@@ -65,7 +66,7 @@ else                        : data2vct = lambda s : doubles ( s )
 #  @param cdf_data sorted array of F0(X_i) - values of CDF at X data points
 #  @return Kolmogorov-Smirnov statistics KS
 def kolmogorov_smirnov ( cdf_data ) :
-    """ Get Kolmogorov-Smirnov statistis  KS
+    """ Get Kolmogorov-Smirnov statistics  KS
     - `cdf_data` : sorted array of F0(X_i) - values of CDF at (sorted) X data points
     >>> cdf_data =...
     >>> ks2  = kolmogorov_smirnov ( cdf_data )
@@ -395,34 +396,48 @@ class GoF1DToys(GoF1D,Summary) :
     ## result of GoF-toys 
     Result = namedtuple ( 'Result' , 'statistics counter pvalue nsigma' )
     # =========================================================================
-    def __init__ ( self           ,
-                   pdf            ,
-                   dataset        ,
-                   nToys  = 1000  ,
-                   silent = False ) :
-
+    def __init__ ( self              ,
+                   pdf               ,
+                   dataset           ,
+                   nToys     = 1000  ,
+                   parallel  = False ,
+                   nSplit    = 0     , 
+                   silent    = False ) :
+        
         assert isinstance ( nToys , int ) and 0 < nToys , "Invalid `nToys` argument!"
 
         ## initialize the base
         GoF1D.__init__ ( self , pdf , dataset ) 
 
         self.__pdf      = pdf
+        self.__dataset  = dataset
         
         self.__counters = defaultdict(SE) 
         self.__ecdfs    = {}
         
-        self.__nToys  = 0 
-        if 0 < nToys : self.run ( nToys , silent = silent ) 
+        self.__nToys    = 0
+        
+        if 0 < nToys :
+            self.run ( nToys , parallel = parallel , silent = silent , nSplit = nSplit ) 
 
     # ===============================================================================
     ## run toys 
-    def run ( self , nToys = 1000 , silent = False ) :
+    def run ( self , nToys = 1000 , parallel = False , silent = False , nSplit = 0 ) :
         """ Run toys 
-        """ 
+        """
         assert isinstance ( nToys , int ) and 0 < nToys , "Invalid `nToys` argument!"
 
-        varname = self.__pdf.xvar.name
-        
+        if parallel :
+            from ostap.parallel.parallel_gof1d import parallel_gof1dtoys as parallel_toys 
+            self += parallel_toys ( self.__pdf            ,
+                                    self.__dataset        ,
+                                    nToys    = nToys      ,
+                                    nSplit   = nSplit     ,
+                                    silent   = True       ,
+                                    progress = not silent )
+            return 
+
+        varname = self.__pdf.xvar.name        
         results  = defaultdict(list)
         counters = self.counters 
         vct_cdf  = self.vcdf
@@ -558,6 +573,30 @@ class GoF1DToys(GoF1D,Summary) :
     table    = Summary.table 
     __repr__ = Summary.table
     __str__  = Summary.table
+
+    # =========================================================================
+    ## merge two objects:
+    def merge ( self , other ) :
+        self += other
+        return self
+    
+    ## merge two objects:
+    def __iadd__ ( self , other ) :
+        """ Merge two objects """        
+        if not isinstance ( other , GoF1DToys ) : return NotImplemented 
+
+        ecdfs = other.ecdfs        
+        for key, ecdf    in loop_items ( ecdfs   ) : 
+            if key in self.__ecdfs    : self.__ecdfs    [ key ] += ecdf
+            else                      : self.__ecdfs    [ key ]  = ecdf
+            
+        counters = other.counters
+        for key, counter in loop_items ( counters ) : 
+            if key in self.__counters : self.__counters [ key ] += counter 
+            else                      : self.__counters [ key ]  = counter 
+
+        self.__nToys += other.nToys 
+        return self 
 
 # =============================================================================
 if '__main__' == __name__ :

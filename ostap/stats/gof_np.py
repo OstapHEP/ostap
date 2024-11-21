@@ -74,9 +74,9 @@ else                       : logger = getLogger( __name__ )
 logger.debug ( 'Simple utilities for goodness-of-fit studies for multidimensional fits' )
 # =============================================================================
 ## @class GoFnp 
-#  A base class for numpy-relarted family of methods to probe goodness-of fit
+#  A base class for numpy-related family of methods to probe goodness-of-fit
 class GoFnp (AGoFnp) :
-    """ A base class for numpy-relarted family of methods to probe goodness-of fit
+    """ A base class for numpy-related family of methods to probe goodness-of-fit
     """
     def __init__ ( self              ,
                    nToys    = 0      ,
@@ -89,7 +89,8 @@ class GoFnp (AGoFnp) :
         self.__nToys    = nToys
         self.__silent   = True if silent   else False
         self.__parallel = True if parallel else False
-         
+        self.__rows     = []
+        
         if self.__parallel and memory_enough () < numcpu () : 
             logger.warning ( 'Available/Used memory ratio: %.1f; switch-off parallel processing')
             self.__parallel = False
@@ -140,17 +141,21 @@ class GoFnp (AGoFnp) :
     def nToys ( self ) :
         """`nToys` : number of permutations/toys used for permutation/toys test"""
         return self.__nToys
-    # ========================================================================
+    # =========================================================================
     @property
     def silent  ( self ) :
         """`silent` : silent processing?"""
         return self.__silent
-    # =======================================================================
+    # ========================================================================
     @property
     def parallel ( self ) :
         """`parallel` : parallel processing where/when/if possible?"""
         return self.__parallel
-    # =======================================================================
+    # ========================================================================
+    @property
+    def rows     ( self ) :
+        """`rows` : rows of the table with summary information"""
+        return self.__rows
     
 # ============================================================================
 ## define configurtaion for psi-function for PPD method
@@ -467,7 +472,7 @@ class DNNnp(GoFnp) :
     #  M.Williams writes:
     #  ``
     def pvalue ( self , *args , **kwargs ) :
-        raise NotImplementedError( "p-value os not defined for DDDNP!" )
+        raise NotImplementedError( "p-value is not defined for DDDNP!" )
     
     @property
     def histo ( self ) :
