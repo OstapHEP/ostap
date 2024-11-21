@@ -1,3 +1,9 @@
+## New features
+
+## Backward incompatible
+    
+## Bug fixes
+    
 # v1.13.7.0
 
 ## New features
@@ -15,7 +21,6 @@
   1. fix occasional overflows in `twosamples.py`
   1. add new variant of _toys_ using generic _actions_
   
-
 ## Backward incompatible
     
 ## Bug fixes
