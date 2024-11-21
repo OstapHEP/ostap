@@ -102,15 +102,13 @@ def _ral_getitem_ ( self , index ) :
 
 # =============================================================================
 ## some decoration over RooArgList 
-ROOT.RooArgList . __len__       = lambda s   : s.getSize()
+ROOT.RooArgList . __len__       = lambda s   : s.getSize() if valid_pointer ( s ) else 0 
 ROOT.RooArgList . __contains__  = _ral_contains_ 
-ROOT.RooArgList . __nonzero__   = lambda s   : valid_pointer ( s ) and 0 != len ( s ) 
-ROOT.RooArgList . __bool__      = lambda s   : valid_pointer ( s ) and 0 != len ( s ) 
+ROOT.RooArgList . __nonzero__   = lambda s   : valid_pointer ( s ) and 0 < s.getSize()  
+ROOT.RooArgList . __bool__      = lambda s   : valid_pointer ( s ) and 0 < s.getSize()
 ROOT.RooArgList . __getitem__   = _ral_getitem_
 ROOT.RooArgList . __setitem__   = lambda s,*_ : NotImplemented 
 
-
-       
 _new_methods_ += [
     ROOT.RooArgList. __len__       ,
     ROOT.RooArgList. __contains__  ,
@@ -167,8 +165,8 @@ ROOT.RooArgSet .names         = _rac_names_
 
 # =============================================================================
 ## printout for RooArgList 
-ROOT.RooArgList . __str__       = lambda s : str ( _rs_list_ ( s ) )  
-ROOT.RooArgList . __repr__      = lambda s : str ( _rs_list_ ( s ) )  
+ROOT.RooArgList . __str__       = lambda s : str ( _rs_list_ ( s ) ) if s else '[]' 
+ROOT.RooArgList . __repr__      = lambda s : str ( _rs_list_ ( s ) ) if s else '[]'  
 
 
 # =============================================================================
@@ -340,22 +338,22 @@ def _ras_contains_ ( self , aname ) :
     
 # =============================================================================
 ## some decoration over RooArgSet 
-ROOT.RooArgSet . __len__           = lambda s   : s.getSize()
+ROOT.RooArgSet . __len__           = lambda s   : s.getSize() if valid_pointer ( s ) else 0 
 ROOT.RooArgSet . __getattr__       = _ras_getattr_ 
 ROOT.RooArgSet . __getitem__       = _ras_getitem_ 
 ROOT.RooArgSet . __contains__      = _ras_contains_ 
-ROOT.RooArgSet . __nonzero__       = lambda s : valid_pointer ( s ) and 0 != len ( s ) 
-ROOT.RooArgSet . __bool__          = lambda s : valid_pointer ( s ) and 0 != len ( s ) 
+ROOT.RooArgSet . __nonzero__       = lambda s : valid_pointer ( s ) and 0 < s.getSize()  
+ROOT.RooArgSet . __bool__          = lambda s : valid_pointer ( s ) and 0 < s.getSize() 
         
-ROOT.RooArgSet     . __str__       = lambda s : str ( set   ( _rs_list_ ( s ) ) )  
-ROOT.RooArgSet     . __repr__      = lambda s : str ( set   ( _rs_list_ ( s ) ) )
+ROOT.RooArgSet     . __str__       = lambda s : str ( set   ( _rs_list_ ( s ) ) ) if s else '{}'
+ROOT.RooArgSet     . __repr__      = lambda s : str ( set   ( _rs_list_ ( s ) ) ) if s else '{}'
 
-ROOT.RooLinkedList . __str__       = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) 
-ROOT.RooLinkedList . __repr__      = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) 
+ROOT.RooLinkedList . __str__       = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
+ROOT.RooLinkedList . __repr__      = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
 
-ROOT.RooAbsCollection.__len__      = lambda s   : s.getSize()
-ROOT.RooAbsCollection. __nonzero__ = lambda s   : valid_pointer ( s ) and 0 != len ( s ) 
-ROOT.RooAbsCollection. __bool__    = lambda s   : valid_pointer ( s ) and 0 != len ( s ) 
+ROOT.RooAbsCollection.__len__      = lambda s   : s.getSize() if valid_pointer ( s ) else 0 
+ROOT.RooAbsCollection. __nonzero__ = lambda s   : valid_pointer ( s ) and 0 < s.getSize()
+ROOT.RooAbsCollection. __bool__    = lambda s   : valid_pointer ( s ) and 0 < s.getsize()  
 
 
 
