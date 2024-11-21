@@ -763,10 +763,10 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             return frame
 
     # =========================================================================
-    ## invoke <cdoe>what.plotOn (frame , *options)</code> command
+    ## invoke <code>what.plotOn (frame , *options)</code> command
     #  - merge arguments using <code>RooFit::MultiArg</code> to shorted list
     def plot_on ( self , what , frame , *options ) :
-        """Invoke `what.plotOn (frame , *options)` command
+        """ Invoke `what.plotOn (frame , *options)` command
         - merge arguments using `ROOT.RooFit::MultiArg` to shorted list
         """
         
@@ -781,7 +781,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         
         from ostap.fitting.roocmdarg import command 
         cmd = command ( *options )
-        
+
         return what.plotOn ( frame , cmd  )
 
         ## ## merge arguments to get shorter list        

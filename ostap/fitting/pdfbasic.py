@@ -394,7 +394,7 @@ class APDF1 ( Components ) :
 
         ## check fit ranges 
         rng = check_arg ( 'RangeByName' , *opts )
-        ok  = self.check_ranges ( dataset , rng.getString(0) if rng else '' )
+        ok  = self.check_ranges ( dataset , rng.getString ( 0 ) if rng else '' )
         if not ok : self.warning ( 'fitTo: ranges are not OK' ) 
 
         ## #
@@ -568,6 +568,9 @@ class APDF1 ( Components ) :
         assert all ( isinstance ( o , ROOT.RooCmdArg ) for o in options  ), \
             "fit_to: invalid argument types: %s" % list ( options  ) 
 
+        if 'fitrange' in model.all_string_attributes() :
+            model.removeStringAttribute ( 'fitrange' )
+            
         ## No need to restructure options: 
         if  ( 6 , 32 ) <= root_info :
             if sys.warnoptions or in_test() :
@@ -3011,11 +3014,11 @@ class APDF2 (APDF1) :
    #         in_range = in_range ,
         
         if in_range :
-            options_cut =tuple ( [ ROOT.RooFit.CutRange ( in_range ) , ] )
+            options_cut = ROOT.RooFit.CutRange ( in_range ) , 
             newargs [ 'data_options' ] = self.draw_option ( 'data_options' , **newargs ) + options_cut
             
         if in_range : 
-            options_project =  tuple (  [ROOT.RooFit.ProjectionRange ( in_range ) ,] )
+            options_project =  ROOT.RooFit.ProjectionRange ( in_range ) , 
             for key in  ( 'total_fit_options'           ,
                           #
                           'signal_options'              ,
