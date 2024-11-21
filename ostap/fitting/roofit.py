@@ -85,7 +85,7 @@ def var_from_name ( w , varset ) :
     #
     f = Ostap.FormulaVar( w , w , vlst )
     return f 
-    
+
 # =============================================================================
 ## @class PDF_fun
 #  Helper class to wrap PDF as 'function'
