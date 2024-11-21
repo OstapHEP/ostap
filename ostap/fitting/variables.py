@@ -216,6 +216,8 @@ ROOT.RooAbsRealLValue  . minmax          = lambda s : ( s.xmin() , s.xmax() )
 ROOT.RooAbsRealLValue  .xminmax          = lambda s : ( s.xmin() , s.xmax() ) 
 
 
+
+
 _new_methods_ += [
     ROOT.RooRealVar   . as_VE     ,
     ROOT.RooRealVar   . asVE      ,
@@ -247,6 +249,61 @@ _new_methods_ += [
     ROOT.RooAbsRealLValue  .xminmax  ,    
     ]
 
+# =============================================================================
+## Get all (boolean) attributes from RooAbsArg as dictionary 
+#  @code
+#  arg   = ...
+#  attrs = arg.all_bool_attributes() 
+#  @endcode
+def _raa_bool_attributes_ ( arg ) : 
+    """ Get all boolean attributes from RooAbsArg as dictionary 
+    >>> arg = ...
+    >>> attrs = arg.all_bool_attributes() 
+    """
+    attrs = {} 
+    for a in arg.attributes () : attrs [ a ] = arg.getAttribute ( a )
+    return attrs 
+
+# =============================================================================
+## Get all string attributes from RooAbsArg as dictionary 
+#  @code
+#  arg   = ...
+#  attrs = arg.all_string_attributes() 
+#  @endcode
+def _raa_string_attributes_ ( arg ) : 
+    """ Get all string attributes from RooAbsArg as dictionary 
+    >>> arg = ...
+    >>> attrs = arg.all_string_attributes() 
+    """
+    attrs = {} 
+    for (n,a) in arg.stringAttributes () : attrs [ n ] = a 
+    return attrs 
+
+# =============================================================================
+## Get all transient attributes from RooAbsArg as dictionary 
+#  @code
+#  arg   = ...
+#  attrs = arg.all_transient_attributes() 
+#  @endcode
+def _raa_transient_attributes_ ( arg ) : 
+    """ Get all transient attributes from RooAbsArg as dictionary 
+    >>> arg = ...
+    >>> attrs = arg.all_transient_attributes() 
+    """
+    attrs = {} 
+    for a in arg.transientAttributes () : attrs [ a ] = arg.getTransientAttribute ( a )
+    return attrs 
+
+ROOT.RooAbsArg.all_bool_attributes      = _raa_bool_attributes_
+ROOT.RooAbsArg.all_string_attributes    = _raa_string_attributes_
+ROOT.RooAbsArg.all_transient_attributes = _raa_transient_attributes_
+
+_new_methods_ += [
+    ROOT.RooAbsArg.all_bool_attributes      , 
+    ROOT.RooAbsArg.all_string_attributes    , 
+    ROOT.RooAbsArg.all_transient_attributes , 
+]
+
 
 # ============================================================================
 ## make a histogram for RooRealVar
@@ -254,7 +311,7 @@ _new_methods_ += [
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-14
 def _rrv_as_H1_ ( v , bins = 100 , double = True ) :
-    """Make TH1 histogram from RooRealVar
+    """ Make TH1 histogram from RooRealVar
     
     >>> variable = ...
     >>> histo = variable.histo ( 100 )    
@@ -2421,6 +2478,7 @@ asymmetry_var = var_asymmetry
 
 _decorated_classes_ = (
     ##
+    ROOT.RooAbsArg                ,
     ROOT.RooRealVar               ,
     ROOT.RooConstVar              ,
     ROOT.RooFormulaVar            ,
