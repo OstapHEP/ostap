@@ -889,7 +889,7 @@ class APDF1 ( Components ) :
                 self.info ( "Plotting of `data'                      is omitted" )  
 
             ## now draw the classified components
-            drawargs    = args
+            drargs = args
 
             for c in draw_order :
                 if   'S' == c :
