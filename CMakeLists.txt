@@ -25,7 +25,7 @@ else ()
   if(CCACHE_PROGRAM)
     # Support Unix Makefiles and Ninja
     ## set_property(GLOBAL PROPERTY CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
-    ## set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM} )
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM} )
   endif()
 endif() 
 
