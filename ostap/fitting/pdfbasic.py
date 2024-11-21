@@ -618,10 +618,18 @@ class APDF1 ( Components ) :
             atup = args + tuple ( options ) + tuple ( st ) 
             self.debug   ( 'drawing component %s with options %s' % ( cmp.name , ( component, ) + atup ) )             
             self.plot_on ( self.pdf , frame , component , *atup  )
-            
+
+    # ================================================================================
+    ## Helper method to draw total fit curve 
+    def _draw_total  ( self  , frame  , *args , **kwargs ) :
+        """ Helper method to draw total fit curve 
+        """
+        totoptions   = self.draw_option (  'total_fit_options' , **kwargs )        
+        self.plot_on ( self.pdf , frame , *totoptions ) 
+        
     # ================================================================================
     ## helper method to draw "signal-like" components
-    def _draw_signals ( self , frame , *args , **kwargs ) :
+    def _draw_signals ( self , frame  , *args , **kwargs ) :
         """ Helper method to draw `signal-like' components
         """
 
@@ -641,7 +649,7 @@ class APDF1 ( Components ) :
         if self.signals and drawit2 : 
             soptions     = self.draw_option (    'signal_options'  , **kwargs )
             sbstyle      = self.draw_option (      'signal_style'  , **kwargs ) 
-            self._draw( self.signals , frame , soptions , sbstyle , args )
+            self._draw ( self.signals , frame , soptions , sbstyle , args )
             
     # ================================================================================
     ## helper method to draw "crossterm-like" components
@@ -658,12 +666,12 @@ class APDF1 ( Components ) :
         if self.crossterms1 and drawit1 : 
             ct1options   = self.draw_option ( 'crossterm1_options' , **kwargs )
             ct1bstyle    = self.draw_option ( 'crossterm1_style'   , **kwargs ) 
-            self._draw( self.crossterms1 , frame , ct1options , ct1bstyle , args )
+            self._draw ( self.crossterms1 , frame , ct1options , ct1bstyle , args )
             
         if self.crossterms2 and drawit2 :
             ct2options   = self.draw_option ( 'crossterm2_options' , **kwargs )
             ct2bstyle    = self.draw_option ( 'crossterm2_style'   , **kwargs )        
-            self._draw( self.crossterms2 , frame , ct2options , ct2bstyle , args )
+            self._draw ( self.crossterms2 , frame , ct2options , ct2bstyle , args )
                 
     # ================================================================================
     ## helper method to draw "other" components
@@ -687,7 +695,7 @@ class APDF1 ( Components ) :
         if self.components and drawit2 : 
             coptions     = self.draw_option ( 'component_options' , **kwargs )
             cbstyle      = self.draw_option ( 'component_style'   , **kwargs )
-            self._draw( self.components , frame , coptions , cbstyle , args )
+            self._draw ( self.components , frame , coptions , cbstyle , args )
 
     # ================================================================================
     ## helper method to draw "background-like" components
@@ -711,7 +719,7 @@ class APDF1 ( Components ) :
         if self.backgrounds and drawit2 :
             boptions     = self.draw_option ( 'background_options' , **kwargs ) 
             bbstyle      = self.draw_option (   'background_style' , **kwargs )
-            self._draw( self.backgrounds , frame , boptions , bbstyle )
+            self._draw ( self.backgrounds , frame , boptions , bbstyle , args )
             
     # ================================================================================
     ## draw fit results
@@ -859,8 +867,6 @@ class APDF1 ( Components ) :
                 data_options = data_options + ( ROOT.RooFit.Binning ( nbins ) , )
 
             if dataset :
-
-                commands = data_options 
                 commands = data_options + args +  ( ROOT.RooFit.Invisible() , ) 
                 self.plot_on ( dataset , frame , *commands ) 
 
@@ -882,20 +888,48 @@ class APDF1 ( Components ) :
             if dataset  and not 'D' in draw_order :
                 self.info ( "Plotting of `data'                      is omitted" )  
 
-            ## now draw the classified components 
+            ## now draw the classified components
+            drawargs    = args
+
             for c in draw_order :
-                if   'S' == c : self._draw_signals     ( frame , *args , **kwargs ) 
-                elif 'X' == c : self._draw_crossterms  ( frame , *args , **kwargs ) 
-                elif 'C' == c : self._draw_components  ( frame , *args , **kwargs ) 
-                elif 'B' == c : self._draw_backgrounds ( frame , *args , **kwargs ) 
+                if   'S' == c :
+                    self._draw_signals     ( frame , *drargs , **kwargs )
+                    used_options.add ( 'draw_combined_signal'        )
+                    used_options.add ( 'draw_signals'                )
+                    used_options.add ( 'combined_signal_options'     )
+                    used_options.add ( 'combined_signal_style'       )
+                    used_options.add ( 'signal_options'              )
+                    used_options.add ( 'signal_style'                )
+                elif 'X' == c :
+                    self._draw_crossterms  ( frame , *drargs , **kwargs )
+                    used_options.add ( 'draw_crossterm1'             )
+                    used_options.add ( 'draw_crossterm2'             )
+                    used_options.add ( 'crossterm1_options'          )
+                    used_options.add ( 'crossterm1_style'            )
+                    used_options.add ( 'crossterm2_options'          )
+                    used_options.add ( 'crossterm2_style'            )                    
+                elif 'C' == c :
+                    self._draw_components  ( frame , *drargs , **kwargs )
+                    used_options.add ( 'draw_combined_component'     )
+                    used_options.add ( 'draw_components'             )
+                    used_options.add ( 'combined_component_options'  )
+                    used_options.add ( 'combined_component_style'    )
+                    used_options.add ( 'component_options'           )
+                    used_options.add ( 'component_style'             )                                        
+                elif 'B' == c :
+                    self._draw_backgrounds ( frame , *drargs , **kwargs )
+                    used_options.add ( 'draw_combined_background'    )
+                    used_options.add ( 'draw_backgrounds'            )
+                    used_options.add ( 'combined_background_options' )
+                    used_options.add ( 'combined_background_style'   )
+                    used_options.add ( 'background_options'          )
+                    used_options.add ( 'background_style'            )                                                            
                 elif 'T' == c :
-                    ## the total fit curve
-                    totoptions   = self.draw_option (  'total_fit_options' , **kwargs )
-                    self.plot_on ( self.pdf , frame , *totoptions ) 
+                    self._draw_total       ( frame , *drargs , **kwargs )
                     used_options.add ( 'total_fit_options'    ) 
                 elif 'D' == c :
                     if dataset : 
-                    ## draw data once more
+                        ## draw data once more
                         commands = data_options + args
                         self.plot_on ( dataset , frame , *commands )
                 else :

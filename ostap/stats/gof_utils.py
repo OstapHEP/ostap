@@ -482,13 +482,13 @@ class Summary(object) :
         fmt2 = '%s/%s' % ( fmtv , fmtv ) 
         
         return ( what  ,
-                 fmtv  %  ( value / scale )                    ,
-                 ( mean / scale ).toString ( fmt )             ,
-                 fmtv  %  ( rms  / scale )                     ,
-                 fmt2  %  ( vmin / scale , vmax / scale )      ,
-                 ( '10^%+d' % expo  if expo else '' )          ,                  
-                 ( 100 * pvalue ) .toString ( '%.2f +/- %-.2f' ) , 
-                 ( nsigma       ) .toString ( '%.1f +/- %-.1f' ) )
+                 fmtv  %  ( value / scale )                      ,
+                 ( mean / scale ).toString ( fmt )               ,
+                 fmtv  %  ( rms  / scale )                       ,
+                 fmt2  %  ( vmin / scale , vmax / scale )        ,
+                 ( '10^%+d' % expo  if expo else '' )            ,                  
+                 ( 100 * pvalue ) .toString ( '%.3f +/- %-.3f' ) , 
+                 ( nsigma       ) .toString ( '%.2f +/- %-.2f' ) )
     
     # =========================================================================
     ## Make a summary table

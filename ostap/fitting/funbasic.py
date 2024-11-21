@@ -520,7 +520,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
     #  options = pdf.draw_option ( 'signal_style' )
     #  @endcode 
     def draw_option ( self , key , default = () , **kwargs ) :
-        """Get the certain predefined drawing option
+        """ Get the certain predefined drawing option
         >>> options = ROOT.RooFit.LineColor(2), ROOT.RooFit.LineWidth(4)
         >>> pdf = ...
         >>> pdf.draw_options['signal_style'] = [ options ]
@@ -720,6 +720,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         #        
         from ostap.plotting.style import useStyle 
 
+        silent = kwargs.get ( 'silent' , True ) 
         #
         ## again the context
         # 
@@ -733,6 +734,16 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             ## the total fit curve
             #
             coptions   = self.draw_option ( 'curve_options' , **kwargs )
+            if not silent and coptions :
+                rows = [ ( 'Curve draw' , ) ]
+                for o in coptions :
+                    row = str ( o ) ,
+                    rows.append ( row )
+                    import ostap.logger.table as T
+                    title = 'draw: curve-options'
+                    table = T.table ( rows , title = 'Draw curve' ,prefix = '# ' )
+                    self.info ( '%s:\n%s' % ( title , table ) )
+                            
             self.plot_on ( self.fun , frame , *coptions )
             kwargs.pop ( 'curve_options' , () )            
             #
@@ -775,6 +786,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         assert all ( isinstance ( o , ROOT.RooCmdArg ) for o in options  ), \
                "plot_on: invalid argument types: %s" % list ( options  ) 
 
+        
         ## for "small' number of arguments use the standard function 
         if len ( options ) <= NARGS and root_info < ( 6 , 29 ) :
             return what.plotOn ( frame  , *options )
@@ -782,6 +794,8 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         from ostap.fitting.roocmdarg import command 
         cmd = command ( *options )
 
+        
+        
         return what.plotOn ( frame , cmd  )
 
         ## ## merge arguments to get shorter list        
