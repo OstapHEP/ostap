@@ -9,6 +9,11 @@ if (${FORCE_COLORED_OUTPUT})
     endif ()
 endif ()
 
+if(ROOT_VERSION VERSION_LESS "6.24")
+  message ( WARNING " Support for ROOT version " ${ROOT_VERSION} " will reach end soon!")
+endif() 
+
+
 if(ROOT_VERSION VERSION_GREATER_EQUAL "6.23.01")
     message ( "----> Use OSTAP/CMAKE setting for ROOT  >6.23")
     include(CMakeROOT_6_23.cmake)
