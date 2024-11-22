@@ -31,6 +31,10 @@ __all__     = (
     'old_PyROOT'           , ## do we use "old" PyROOT ?
     )
 # =============================================================================
+from ostap.logger.logger import getLogger 
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.meta_info' )
+else                       : logger = getLogger( __name__     )
+# =============================================================================
 from collections import namedtuple 
 MetaInfo = namedtuple ( 'MetaInfo'  , ( 'User' , 'Ostap' , 'Python' , 'ROOT'  ) ) 
 RootInfo = namedtuple ( 'RootInfo'  , ( 'major' , 'minor' , 'patch'           ) ) 
@@ -68,12 +72,16 @@ meta_info        = MetaInfo ( user           ,
 python_info     = sys.version_info
 
 # =============================================================================
+if python_info < ( 3, 0   ) :
+    logger.warning ( "Support for PYTHON %s will reach the end soon!" %  ( '.'.join ( str ( i ) for i in python_info ) ) ) 
+# =============================================================================
+if root_info   < ( 6 , 24 ) :
+    logger.warning ( "support for ROOT   %s will reach the end soon!" % root_version )
+# =============================================================================
+
+# =============================================================================
 if '__main__' == __name__ :
     
-    # =========================================================================
-    from ostap.logger.logger import getLogger 
-    if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.meta_info' )
-    else                       : logger = getLogger( __name__     )
     # =========================================================================
     
     from ostap.utils.docme import docme

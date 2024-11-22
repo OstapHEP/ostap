@@ -8,7 +8,8 @@ if sys.warnoptions or os.environ.get ( 'OSTAP_CMAKE_TEST', False ) :
         warnings.simplefilter ( "ignore" , category = DeprecationWarning )        
         warnings.simplefilter ( "ignore" , category = UserWarning        )        
         import cppyy
-    
+        
+import ostap.core.meta_info 
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

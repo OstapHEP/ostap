@@ -3,7 +3,7 @@
 # =============================================================================
 # Copyright Ostap developers
 # =============================================================================
-"""Ostap simple logger.
+""" Ostap simple logger.
 Based on the logging of the Gaudi software project of CERN:
 - Simple control (global and local)  over logging threshold.
  Primitive utilities for colorized logging.
@@ -74,14 +74,14 @@ if not hasattr ( logging , 'FATAL'     ) : logging.FATAL     = logging.CRITICAL 
 # =============================================================================
 ## Log message with severity 'VERBOSE'
 def _verbose1_(self, msg, *args, **kwargs):
-    """Log 'msg % args' with severity 'VERBOSE'.
+    """ Log 'msg % args' with severity 'VERBOSE'.
     """
     if self.isEnabledFor(logging.VERBOSE):
         self._log(logging.VERBOSE, msg, args, **kwargs)        
 # =============================================================================
 ## Log message with severity 'VERBOSE'
 def _verbose2_(msg, *args, **kwargs):
-    """Log a message with severity 'VERBOSE' on the root logger.
+    """ Log a message with severity 'VERBOSE' on the root logger.
     """
     if not logging.root.handlers : logging.basicConfig()
     logging.root.verbose ( msg , *args , **kwargs )
@@ -94,7 +94,7 @@ logging.verbose        = _verbose2_
 # =============================================================================
 ## Log message with severity 'ATTENTION'
 def _attention1_(self, msg, *args, **kwargs):
-    """Log 'msg % args' with severity 'ATTENTION'.
+    """ Log 'msg % args' with severity 'ATTENTION'.
     """
     if self.isEnabledFor(logging.ATTENTION):
         if with_colors () : amsg = attstr ( msg ) 
@@ -103,7 +103,7 @@ def _attention1_(self, msg, *args, **kwargs):
 # =============================================================================
 ## Log message with severity 'ATTENTION'
 def _attention2_(msg, *args, **kwargs):
-    """Log a message with severity 'ATTENTIONE' on the root logger.
+    """ Log a message with severity 'ATTENTIONE' on the root logger.
     """
     if not logging.root.handlers : logging.basicConfig()
     logging.root.attention ( msg, *args , **kwargs )
@@ -119,7 +119,7 @@ logging.attention        = _attention2_
 # =============================================================================
 ## convert MSG::Level into logging level 
 def setLogging ( output_level ) :
-    """Convert MSG::Level into logging level 
+    """ Convert MSG::Level into logging level 
     """
     if   FATAL   <= output_level : logging.disable ( logging.CRITICAL - 1 )
     elif ERROR   <= output_level : logging.disable ( logging.ERROR    - 1 )
@@ -161,49 +161,49 @@ else :
 # =============================================================================
 ## Get current global threshold
 def threshold()  :
-    """Get current global threshold
+    """ Get current global threshold
     """
     return logging.root.manager.disable
 
 # =============================================================================
 ## Are prints at the givel level enabled?
 def enabled  ( level ) :
-    """Are prints at the givel level enabled?
+    """ Are prints at the givel level enabled?
     """
     return threshold() < level
 
 # =============================================================================
 ## Are VERBOSE  prints  enabled? 
 def enabledVerbose() :
-    """Are VERBOSE  prints  enabled?
+    """ Are VERBOSE  prints  enabled?
     """
     return enabled ( logging.VERBOSE ) 
 
 # =============================================================================
 ## Are DEBUG  prints  enabled? 
 def enabledDebug() :
-    """Are DEBUG prints  enabled?
+    """ Are DEBUG prints  enabled?
     """
     return enabled ( logging.DEBUG ) 
 
 # =============================================================================
 ## Are INFO  prints  enabled? 
 def enabledInfo () :
-    """Are INFO prints  enabled?
+    """ Are INFO prints  enabled?
     """
     return enabled ( logging.INFO ) 
 
 # =============================================================================
 ## Are WARNING  prints  enabled? 
 def enabledWarning () :
-    """Are WARNING prints  enabled?
+    """ Are WARNING prints  enabled?
     """
     return enabled ( logging.WARNING ) 
 
 # =============================================================================
 ## Are ERROR prints  enabled? 
 def enabledError  () :
-    """Are ERROR prints  enabled?
+    """ Are ERROR prints  enabled?
     """
     return enabled ( logging.ERROR ) 
 
@@ -211,7 +211,7 @@ def enabledError  () :
 # =============================================================================
 ## Are FATAL prints  enabled? 
 def enabledFatal  () :
-    """Are FATAL prints  enabled?
+    """ Are FATAL prints  enabled?
     """
     return enabled ( logging.CRITICAL ) 
 
@@ -229,7 +229,7 @@ def getLogger ( name   = 'ostap'        ,
                 level  = 1              ,
                 stream = None           ) :
     
-    """Get the proper logger
+    """ Get the proper logger
     >>> logger1 = getLogger ( 'LOGGER1' )
     >>> logger2 = getLogger ( 'LOGGER2' , level = logging.INFO )
     """
@@ -259,7 +259,7 @@ def getLogger ( name   = 'ostap'        ,
 #       ...do something... 
 #  @endcode
 class KeepLevel(object) :
-    """Temporarily enable/disable certain logger levels
+    """ Temporarily enable/disable certain logger levels
     >>> with keepLevel( logging.CRITICAL ) :
     ...  do something here ...
     """
@@ -280,7 +280,7 @@ class KeepLevel(object) :
 #       ...do something... 
 #  @endcode
 class LogLevel(KeepLevel) :
-    """Temporarily enable/disable certain logger levels
+    """ Temporarily enable/disable certain logger levels
     >>> with LogLevel( logging.CRITICAL ) :
     ...  do something here ...
     """
@@ -301,7 +301,7 @@ class LogLevel(KeepLevel) :
 #       ...do something... 
 #  @endcode
 def keepLevel () :
-    """Keep logging level 
+    """ Keep logging level 
     >>> with keepLevel() :
     >>>  ...do something...
     """
@@ -314,7 +314,7 @@ def keepLevel () :
 #       ...do something... 
 #  @endcode
 def logLevel ( level = logging.INFO - 1 ) :
-    """Temporarily enable/disable certain logger levels
+    """ Temporarily enable/disable certain logger levels
     >>> with logLevel( logging.CRITICAL ) :
     >>>  ...do something...
     """
@@ -327,7 +327,7 @@ def logLevel ( level = logging.INFO - 1 ) :
 #       ...do something... 
 #  @endcode
 def logVerbose () :
-    """Temporarily disable all loggers with level less then INFO 
+    """ Temporarily disable all loggers with level less then INFO 
     >>> with logVerbose() :
     >>>  ...do something...
     """    
@@ -340,7 +340,7 @@ def logVerbose () :
 #       ...do something... 
 #  @endcode
 def logDebug   () :
-    """Temporarily disable all loggers with level less then INFO 
+    """ Temporarily disable all loggers with level less then INFO 
     >>> with logDebug() :
     >>>  ...do something...
     """    
@@ -353,7 +353,7 @@ def logDebug   () :
 #       ...do something... 
 #  @endcode
 def logInfo    () :
-    """Temporarily disable all loggers with level less then INFO 
+    """ Temporarily disable all loggers with level less then INFO 
     >>> with logInfo() :
     >>>  ...do something...
     """
@@ -366,7 +366,7 @@ def logInfo    () :
 #       ...do something... 
 #  @endcode
 def logAttention () :
-    """Temporarily disable all loggers with level less then ATTENTION
+    """ Temporarily disable all loggers with level less then ATTENTION
     >>> with logAttention() :
     >>>  ...do something...
     """
@@ -379,7 +379,7 @@ def logAttention () :
 #       ...do something... 
 #  @endcode
 def logWarning () : 
-    """Temporarily disable all loggers with level less then WARNING
+    """ Temporarily disable all loggers with level less then WARNING
     >>> with logWarning() :
     >>>  ...do something...
     """   
@@ -392,7 +392,7 @@ def logWarning () :
 #       ...do something... 
 #  @endcode
 def logError   () :
-    """Temporarily disable all loggers with level less then ERROR
+    """ Temporarily disable all loggers with level less then ERROR
     >>> with logWarning() :
     >>>  ...do something...
     """       
@@ -405,7 +405,7 @@ def logError   () :
 #       ...do something... 
 #  @endcode
 def logFatal   () :
-    """Temporarily disable all loggers with level less then ERROR
+    """ Temporarily disable all loggers with level less then ERROR
     >>> with logWarning() :
     >>>  ...do something...
     """       
@@ -417,7 +417,7 @@ __colored_logger = []
 # =============================================================================
 ## reset colorization of logging 
 def reset_colors () :
-    """Reset colorization of logging 
+    """ Reset colorization of logging 
     >>> reset_colors()
     """
     for a in logging_levels :
@@ -433,9 +433,9 @@ def reset_colors () :
 # =============================================================================
 ## make colors 
 def make_colors () :
-    """Colorize logging
+    """ Colorize logging
     """
-
+    
     if __colored_logger : return
     
     from ostap.logger.colorized import set_with_colors
@@ -471,7 +471,7 @@ def make_colors () :
 #      ... do something ... 
 #  @endcode 
 class ColorLogging(object) :
-    """Simple context manager to swith on coloring
+    """ Simple context manager to swith on coloring
     
     >>> with ColorLogging() :
     ...     do something ... 
@@ -496,7 +496,7 @@ class ColorLogging(object) :
 #      ... do something ... 
 #  @endcode 
 def logColor ( color = True ) :
-    """Simple context manager to switch on coloring
+    """ Simple context manager to switch on coloring
     
     >>> with logColor () :
     ...     do something ... 
@@ -510,7 +510,7 @@ def logColor ( color = True ) :
 #      ... do something ... 
 #  @endcode 
 def logNoColor () :
-    """Simple context manager to switch on coloring
+    """ Simple context manager to switch on coloring
     
     >>> with logNoColor () :
     ...     do something ... 
@@ -524,7 +524,7 @@ def logNoColor () :
 #      ... do something ... 
 #  @endcode 
 def noColor () :
-    """Simple context manager to switch on coloring
+    """ Simple context manager to switch on coloring
     
     >>> with noColor () :
     ...     do something ... 
@@ -540,7 +540,7 @@ def noColor () :
 #      ... do something ... 
 #  @endcode 
 class KeepColorLogging(object) :
-    """Simple context manager to preserve coloring
+    """ Simple context manager to preserve coloring
     
     >>> with KeepColorLogging() :
     ...     do something ... 
@@ -560,7 +560,7 @@ class KeepColorLogging(object) :
 #      ... do something ... 
 #  @endcode 
 def keepColor () :
-    """Simple context manager to preserve color logging 
+    """ Simple context manager to preserve color logging 
     
     >>> with keepColor () :
     ...     do something ... 
