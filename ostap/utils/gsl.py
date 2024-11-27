@@ -235,7 +235,7 @@ useHandler = setHandler
 import atexit 
 @atexit.register
 def print_gsl_errors () :
-    """Catch GSL errors from C++ and print the summary table at exit
+    """ Catch GSL errors from C++ and print the summary table at exit
     """
     
     gsl_cnt =  Ostap.Utils.GslCount

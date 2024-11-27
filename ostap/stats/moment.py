@@ -380,7 +380,7 @@ def _om_rms  ( obj ) :
 #  m = ...
 #  t = m.table()
 #  @endcode  
-def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
+def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None ) :
     """ Print object as a table
     >>> m = ...
     >>> t = m.table()
@@ -602,7 +602,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
         if   isinstance ( obj , Ostap.Math. Moment ) : tit =  'Moment_[%d]' % obj.order 
         elif isinstance ( obj , Ostap.Math.WMoment ) : tit = 'WMoment_[%d]' % obj.order 
     
-    return T.table ( rows  , title = tit , prefix = prefix )
+    return T.table ( rows  , title = tit , prefix = prefix , style = style )
 
 Ostap.Math.Moment.unbiased_2nd   = _om_u2nd 
 Ostap.Math.Moment.unbiased_3rd   = _om_u3rd

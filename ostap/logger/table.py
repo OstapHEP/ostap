@@ -549,7 +549,6 @@ if __name__ == '__main__' :
 
     logger.info ( 'The table is \n%s' % table     ( table_data , 'Title' , alignment = 'rrr' ) )
 
-    """
     
     logger.info ( 'The table is \n%s' % table     ( table_data , 'Title' , alignment = 'lll' ) ) 
     logger.info ( 'The table is \n%s' % table     ( table_data , 'Title' , alignment = 'ccc' ) ) 
@@ -569,8 +568,6 @@ if __name__ == '__main__' :
         logger.info ( 'Use the format="%s":\n%s' % ( fmt , result ) )
 
     logger.info ( 'Available styles: \n%s' % ( '\n'.join ( table_styles + tabulate_styles ) ) ) 
-       
-    """
     
 # =============================================================================
 ##                                                                      The END 

@@ -984,7 +984,8 @@ def _rds_unique_entries_ ( dataset           ,
                            criterium = ''    , 
                            seed      = None  ,
                            progress  = False , 
-                           report    = True  ) :
+                           report    = True  ,
+                           style     = ''    ) :
     
     if criterium  :
         assert choice in ( 'min' , 'max' , 'minimal' , 'maximal' , 'minimum' , 'maximum' ) , \
@@ -1043,7 +1044,7 @@ def _rds_unique_entries_ ( dataset           ,
         row   =  'Duplicated  max'          , '%d' % cnt.max()         
         rows.append ( row )
         import ostap.logger.table as T 
-        logger.info ( '%s:\n%s' % ( title , T.table ( rows , title = title , prefix = '# ' , alignment = 'lc' ) ) )
+        logger.info ( '%s:\n%s' % ( title , T.table ( rows , title = title , prefix = '# ' , alignment = 'lc' , style = style ) ) )
         
 # =============================================================================        
 ## Make a copy of dataset only with unique  entries 
@@ -2175,8 +2176,9 @@ def _ds_table_0_ ( dataset                ,
                    first     = 0          ,
                    last      = LAST_ENTRY ,
                    prefix    = ''         ,
-                   title     = ''         ) :
-    """Print data set as table
+                   title     = ''         ,
+                   style     = ''         ) :
+    """ Print data set as table
     """
     varset = dataset.get()
     if not valid_pointer ( varset ) :
@@ -2313,7 +2315,7 @@ def _ds_table_0_ ( dataset                ,
 
     title = title 
     import ostap.logger.table as T
-    t  = T.table ( table_data , title = title , prefix =  prefix )
+    t  = T.table ( table_data , title = title , prefix =  prefix , style = style )
     w  = T.table_width ( t ) 
     return t , w 
 
@@ -2327,7 +2329,8 @@ def _ds_table_1_ ( dataset                ,
                    first     = 0          ,
                    last      = LAST_ENTRY ,
                    prefix    = ''         ,
-                   title     = ''         ) :
+                   title     = ''         ,
+                   style     = ''         ) :
     """ Print data set as table
     """
     
@@ -2420,7 +2423,7 @@ def _ds_table_1_ ( dataset                ,
 
     title = title    
     import ostap.logger.table as T
-    t  = T.table ( table_data , title = title , prefix =  prefix )
+    t  = T.table ( table_data , title = title , prefix =  prefix , style = style )
     w  = T.table_width ( t ) 
     return t , w 
 
@@ -2437,7 +2440,8 @@ def _ds_table_ (  dataset                ,
                   first     = 0          ,
                   last      = LAST_ENTRY ,                 
                   prefix    = ''         ,
-                  title     = ''         ) :
+                  title     = ''         ,
+                  style     = ''         ) :
     """ Print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
@@ -2449,7 +2453,8 @@ def _ds_table_ (  dataset                ,
                           first     = first     ,
                           last      = last      , 
                           prefix    = prefix    ,
-                          title     = title     ) [ 0 ]
+                          title     = title     ,
+                          style     = style     ) [ 0 ]
 
 # ==============================================================================
 ## print dataset in a form of the table
@@ -2464,7 +2469,8 @@ def _ds_table2_ (  dataset                ,
                    first     = 0          ,
                    last      = LAST_ENTRY ,                 
                    prefix    = ''         ,
-                   title     = ''         ) :
+                   title     = ''         ,
+                   style     = ''         ) :
     """ Print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
@@ -2476,7 +2482,8 @@ def _ds_table2_ (  dataset                ,
                           first     = first     ,
                           last      = last      ,
                           prefix    = prefix    ,
-                          title     = title     ) [ 0 ]
+                          title     = title     ,
+                          style     = style     ) [ 0 ]
 
 # =============================================================================
 ##  print DataSet

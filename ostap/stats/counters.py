@@ -242,7 +242,7 @@ _new_methods_ += [
 #  table    = counters_table ( counters , prrefix = '# ' )
 #  logger.info ( 'Table is \n%s' % table )
 #  @endcode
-def counters_table ( counters , prefix = '' , title = '' ) :
+def counters_table ( counters , prefix = '' , title = '' , style = None ) :
     """ Make table of counters
     >>> counters = .... ## sequence or mapping for counters
     >>> table     = counters_table ( counters , prrefix = '# ' )
@@ -278,7 +278,7 @@ def counters_table ( counters , prefix = '' , title = '' ) :
 
     import ostap.logger.table as T
     if not title : title = 'Table of %d counters' % len ( counters )    
-    table = T.table ( rows , prefix = prefix , title = title , alignment = "llcccc" )
+    table = T.table ( rows , prefix = prefix , title = title , alignment = "llcccc" , style = style )
     #
     return table 
 

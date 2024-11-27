@@ -1,6 +1,7 @@
 ## New features
 
   1. add parallelisation to `GoF1DToys`
+  1. add `style=None` or `style=''` argument for many `table`-methods
   
 ## Backward incompatible
     

@@ -399,7 +399,7 @@ class Estimators(object) :
     """
     # ==========================================================================
     ## Print the summary as Table
-    def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 ) :
+    def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 , style = None ) :
         """ Print the summary as Table
         """
         import ostap.logger.table  as     T 
@@ -417,7 +417,7 @@ class Estimators(object) :
             rows.append ( row )
             
         title = title if title else 'Goodness of 1D-fit' 
-        return T.table ( rows , title = title , prefix = prefix , alignment = 'lcl' )
+        return T.table ( rows , title = title , prefix = prefix , alignment = 'lcl' , style = style  )
 
 # ============================================================================
 ## @class Summary
@@ -492,7 +492,7 @@ class Summary(object) :
     
     # =========================================================================
     ## Make a summary table
-    def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 ) :
+    def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 , style = None ) :
         """ Make a summary table
         """
         import ostap.logger.table  as     T                 
@@ -528,7 +528,7 @@ class Summary(object) :
         elif not title :
             title = 'Goodness of 1D-fit'
         
-        return T.table ( rows , title = title , prefix = prefix , alignment = 'lccccccccccc' )
+        return T.table ( rows , title = title , prefix = prefix , alignment = 'lccccccccccc' , style = style )
 
     # =========================================================================
     ## Draw ECDF for toys & statistical estgimator 

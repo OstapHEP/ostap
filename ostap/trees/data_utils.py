@@ -206,7 +206,7 @@ class Data(RootFiles):
     #  files = ...
     #  print ( files.table() )    
     #  @endcode
-    def table ( self , title = '' , prefix = '' ) :
+    def table ( self , title = '' , prefix = '' , style = '' ) :
         """ Print collection of files as table
         """
         rows  = [ ( '#' , '#entries' , 'size' , 'name' ) ]
@@ -258,7 +258,7 @@ class Data(RootFiles):
 
         title = title if title else "Data(chain='%s')" % self.chain_name 
         import ostap.logger.table as T
-        return T.table ( rows , title = title , prefix = prefix , alignment = 'rrrw' ) 
+        return T.table ( rows , title = title , prefix = prefix , alignment = 'rrrw' , style = style ) 
 
     # =========================================================================
     ## check operations
@@ -488,7 +488,7 @@ class Data2(Data):
     #  files = ...
     #  print ( files.table() )    
     #  @endcode
-    def table ( self , title = '' , prefix = '' ) :
+    def table ( self , title = '' , prefix = '' , style = '' ) :
         """ Print collection of files as table
         """
         
@@ -549,7 +549,7 @@ class Data2(Data):
 
         title = title if title else "Data2(chani1='%s',chani2='%s')" % ( self.chain1_name , self.chain2_name ) 
         import ostap.logger.table as T
-        return T.table ( rows , title = title , prefix = prefix , alignment = 'rrrrw' ) 
+        return T.table ( rows , title = title , prefix = prefix , alignment = 'rrrrw' , style = style ) 
 
 
 # =============================================================================

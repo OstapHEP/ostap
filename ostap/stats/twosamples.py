@@ -449,11 +449,11 @@ class TSTest(Estimators):
 
     # =========================================================================
     ## Print the summary as Table
-    def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 ) :
+    def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 , style = None ) :
         """ Print the summary as Table
         """
         title = title if title else 'Two Sample Test'
-        return Estimators.table ( self , title = title , prefix = prefix , width = width , precision = precision )
+        return Estimators.table ( self , title = title , prefix = prefix , width = width , precision = precision , style = style )
   
     __repr__ = table 
     __str__  = table 
@@ -702,14 +702,14 @@ class TSToys(TSTest,Summary):
 
     # =========================================================================
     ## Print the summary as Table
-    def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 ) :
+    def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 , style = None ) :
         """ Print the summary as Table
         """
         if   not title and self.nToys :
             title = 'Two Sampel Test with #%d toys' % self.nToys  
         elif not title :
             title = 'Two Sample Test'        
-        return Summary.table ( self , title = title , prefix = prefix , width = width , precision = precision )
+        return Summary.table ( self , title = title , prefix = prefix , width = width , precision = precision , style = style )
 
     __repr__ = table 
     __str__  = table 

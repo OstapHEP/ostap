@@ -863,7 +863,8 @@ def _rt_table_0_ ( tree ,
                    pattern = None ,
                    cuts    = ''   ,
                    prefix  = ''   ,
-                   title   = ''   , *args ) :
+                   title   = ''   ,
+                   style   = ''   , *args ) :
     """ Print tree as table 
     """
     ## get list of branches/leaves  
@@ -1024,7 +1025,7 @@ def _rt_table_0_ ( tree ,
             if 1 < nfiles : title += '/%d files ' % nfiles 
         
     import ostap.logger.table as T
-    t  = T.table ( table_data , title , prefix = prefix )
+    t  = T.table ( table_data , title , prefix = prefix , style = style )
     w  = T.table_width ( t )
     return t , w 
     
@@ -1034,7 +1035,8 @@ def _rt_table_1_ ( tree ,
                    variables      ,
                    cuts    = ''   ,
                    prefix  = ''   ,
-                   title   = ''   , *args ) :
+                   title   = ''   ,
+                   style   = ''   , *args ) :
     """ Print tree as table 
     """
     if isinstance ( variables , string_types ) :
@@ -1118,7 +1120,7 @@ def _rt_table_1_ ( tree ,
             if 1 < nfiles : title += '/%d files ' % nfiles 
         
     import ostap.logger.table as T
-    t  = T.table ( table_data , title , prefix = prefix )
+    t  = T.table ( table_data , title , prefix = prefix , style = style )
     w  = T.table_width ( t )
     return t , w 
 
@@ -1206,7 +1208,12 @@ ROOT.TLeaf . get_short_type = _tl_type_short_
 #  data = ...
 #  print dat.table() 
 #  @endcode
-def _rt_table_ (  dataset ,  variables = [] ,   cuts = '' , prefix = '' , title = '' , *args ) :
+def _rt_table_ (  dataset        ,
+                  variables = [] ,
+                  cuts      = '' ,
+                  prefix    = '' ,
+                  title     = '' ,
+                  style     = '' , *args ) :
     """ Print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
@@ -1215,7 +1222,8 @@ def _rt_table_ (  dataset ,  variables = [] ,   cuts = '' , prefix = '' , title 
                           variables        ,
                           cuts   = cuts    ,
                           prefix = prefix  ,
-                          title  = title   , *args )[0]
+                          title  = title   ,
+                          style  = style   , *args )[0]
 
 # ==============================================================================
 ## print root-tree in a form of the table
@@ -1223,7 +1231,12 @@ def _rt_table_ (  dataset ,  variables = [] ,   cuts = '' , prefix = '' , title 
 #  data = ...
 #  print dat.table2 () 
 #  @endcode
-def _rt_table2_ (  dataset ,  variables ,   cuts = '' , prefix = '' , title = '' , *args ) :
+def _rt_table2_ (  dataset      ,
+                   variables    ,
+                   cuts    = '' ,
+                   prefix  = '' ,
+                   title   = '' ,
+                   style   = '' , *args ) :
     """ Print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
@@ -1232,8 +1245,8 @@ def _rt_table2_ (  dataset ,  variables ,   cuts = '' , prefix = '' , title = ''
                           variables        ,
                           cuts   = cuts    ,
                           prefix = prefix  ,
-                          title  = title   , *args )[0]
-
+                          title  = title   ,
+                          style  = style   , *args )[0]
 
 # =============================================================================
 ##  print DataSet
