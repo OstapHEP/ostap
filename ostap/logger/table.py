@@ -33,6 +33,12 @@ from   ostap.logger.colorized import infostr, allright, decolorize
 from   ostap.utils.basic      import terminal_size 
 import textwrap, os, sys   
 # =============================================================================
+# logging 
+# =============================================================================
+from ostap.logger.logger import getLogger 
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.table' )
+else                       : logger = getLogger( __name__             )
+# =============================================================================
 terminaltables = None 
 if ( 3 , 9 ) <= sys.version_info :
     try :
@@ -529,9 +535,6 @@ def align_column ( table , index , align = 'left') :
 
 # =============================================================================
 if __name__ == '__main__' :
-    
-    from ostap.logger.logger import getLogger
-    logger = getLogger ( 'ostap.logger.table')
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )

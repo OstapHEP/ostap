@@ -534,7 +534,7 @@ class Summary(object) :
         elif not title :
             title = 'Goodness of 1D-fit'
         
-        return T.table ( rows , title = title , prefix = prefix , alignment = 'lccccccccccc' , style = style )
+        return T.table ( rows , title = title , prefix = prefix , alignment = 'lccccccc' , style = style )
 
     # =========================================================================
     ## Draw ECDF for toys & statistical estgimator 
