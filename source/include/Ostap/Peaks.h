@@ -4176,7 +4176,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class Up 
-     *  Finite stomic functon <code>up</code>,  a finite soltuion  
+     *  Finite stomic function <code>up</code>,  a finite soltuion  
      *  of the equation 
      *  \f[ f^{\prime(x) = 2 \left( f( 2x+1) - f(2x-1)\right) }\f] with
      *  \f$ f(0) = 1 \f$ 
