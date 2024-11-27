@@ -18,6 +18,7 @@ __all__     = (
     'normalize'  , ## "normalize" variables in dataset/structured array
     'Estimators' , ## helper mixin class to print statistical estimators 
     'Summary'    , ## helper mixin class to print statistical estimators 
+    'GoFSummary' , ## helper class to print summary of GoF methods 
 )
 # =============================================================================
 from   collections              import namedtuple
@@ -29,8 +30,9 @@ from   ostap.math.math_ve       import significance
 from   ostap.stats.counters     import EffCounter
 from   ostap.utils.basic        import numcpu, loop_items 
 from   ostap.utils.utils        import splitter
+from   ostap.utils.memory       import memory_enough 
 from   ostap.utils.progress_bar import progress_bar
-import ROOT, sys, warnings  
+import ROOT, sys, warnings, math  
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
@@ -238,7 +240,6 @@ def normalize ( ds , others = () , weight = () , first = True ) :
     exec ( code2 )
 normalize.__doc__ = normalize2.__doc__ 
 
-
 # =============================================================================
 ## @class PERMUTATOR
 #  Helper class that allow to run permutattion test in parallel 
@@ -261,8 +262,7 @@ class PERMUTATOR(object) :
         for i in progress_bar ( N , silent = silent , description = 'Permutations:') : 
             np.random.shuffle ( pooled )            
             tv       = self.gof.t_value ( pooled [ : n1 ] , pooled [ n1: ] )
-            counter += bool ( self.t_value < tv  )
-            
+            counter += bool ( self.t_value < tv  )            
         del pooled
         return counter
 
@@ -281,8 +281,10 @@ if False and ( 3 , 0 ) <= python_info : # ======================================
         ## Run NN-permutations in parallel using joblib 
         def joblib_run ( self , NN , silent = True ) :
             """ Run NN-permutations in parallel using joblib """
-            nj    = 2 * numcpu () + 3
+            me    = math.ceil ( memory_enough() ) + 1 
+            nj    = min ( 2 * numcpu () + 3 , me ) 
             lst   = splitter ( NN , nj )
+            if not silent : logger.info ( 'permutations: #%d parallel subjobs to be used' % nj ) 
             ## 
             conf  = { 'n_jobs' : -1 , 'verbose' : 0 }
             if    (1,3,0) <= jl_version < (1,4,0) : conf [ 'return_as' ] = 'generator'           
@@ -300,7 +302,7 @@ if False and ( 3 , 0 ) <= python_info : # ======================================
         # =====================================================================
         PERMUTATOR.run = joblib_run        
         # =====================================================================
-        logger.debug ( 'Joblib will be  used foe parallel permutations')
+        logger.debug ( 'Joblib will be  used for parallel permutations')
         # =====================================================================        
     except ImportError : # ====================================================
         # =====================================================================
@@ -312,15 +314,17 @@ if not jl : # =================================================================
     ## Run NN-permutations in parallel using WorkManager
     def pp_run ( self , NN , silent = True ) :
         """ Run NN-permutations in parallel using WorkManager"""
-        nj    = 2 * numcpu () + 3
+        me    = math.ceil ( memory_enough() ) + 1 
+        nj    = min ( 2 * numcpu () + 3 , me ) 
         lst   = splitter ( NN , nj )
         ##
+        if not silent : logger.info ( 'permutations: #%d parallel subjobs to be used' % nj ) 
         counter = EffCounter()
         ## 
         ## use the bare interface 
         from ostap.parallel.parallel import WorkManager
         with WorkManager ( silent = silent ) as manager : 
-            for result in manager.iexecute ( self , lst , progress = not silent  , njobs = nj ) :
+            for result in manager.iexecute ( self , lst , progress = not silent  , njobs = nj , description = 'Permutations:') :
                 counter += result 
         # 
         return counter
@@ -332,7 +336,7 @@ if not jl : # =================================================================
 
 # =============================================================================
 ## @class TOYS
-#  Helper class to tun toys for Goodness-of-Fit studies 
+#  Helper class to run toys for Goodness-of-Fit studies 
 class TOYS(object) :
     """ Helper class that allow to run permutation test in parallel 
     """
@@ -367,15 +371,17 @@ class TOYS(object) :
     ## Run N-toys in parallel using WorkManager
     def run ( self , NN , silent = False ) :
         """ Run NN-permutations in parallel using WorkManager"""
-        nj    = 2 ## 2 * numcpu () + 3
+        me    = math.ceil ( memory_enough() ) + 1 
+        nj    = min ( 2 * numcpu () + 3 , me ) 
         lst   = splitter ( NN , nj )
+        if not silent : logger.info ( 'toys: #%d parallel subjobs to be used' % nj ) 
         ##
         counter = EffCounter()
         ## 
         ## use the bare interface 
         from ostap.parallel.parallel import WorkManager
         with WorkManager ( silent = silent ) as manager : 
-            for result in manager.iexecute ( self , lst , progress = not silent , njobs = nj ) :
+            for result in manager.iexecute ( self , lst , progress = not silent , njobs = nj , description = 'Toys:' ) :
                 counter += result 
         # 
         return counter
@@ -585,6 +591,68 @@ class Summary(object) :
         self._line = line 
         return result, line  
 
+# =============================================================================
+## @class GoFSummary
+#  Helper class for format summary table 
+class GoFSummary ( object) :
+    
+    def __init__ ( self ) :
+        self.__header = ( 'Method' , 't-value' , '' , '#Toys' , 'p-value [%]' , '#sigma' ) 
+        self.__items  = []
+
+    @property 
+    def items  ( self ) :
+        """`items`: get all items"""
+        return tuple ( self.__items )
+    
+    
+    def add_row ( self , method , tvalue , pvalue , nToys ) :
+        item = method, tvalue, pvalue, nToys 
+        self.__items.append ( item ) 
+
+    # =======================================================================
+    ## Make a summary table 
+    def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 , style = '' ) :
+        """ Make a summary table 
+        """
+        import ostap.logger.table  as     T 
+        from   ostap.logger.pretty import pretty_float
+        ## 
+        rows = [ self.__header ]
+        for item in self.__items :
+            m, t, p, n = item
+            sv = significance ( p ) 
+            tv , texpo = pretty_float ( t , width = width , precision = precision )
+            pv   = p * 100
+            pval = '%5.3f +/- %.3f' %  ( pv.value() , pv.error() )
+            sval = '%.2f +/- %.2f'  %  ( sv.value() , sv.error() )
+            row  = m , tv , '[10^%+d]' % texpo if texpo else '' , '%d' % n , pval , sval 
+            rows.append ( row )
+
+        ## skip empty column 
+        has_expo = False 
+        for row in rows :
+            if row [ 2 ] :
+                has_expo = True
+                break
+
+        if not has_expo :
+            new_rows = []
+            for row in rows :
+                r = list ( row )
+                del r [ 2 ]
+                new_rows.append ( r ) 
+            rows = new_rows 
+                    
+        title = title if title else 'Goodness of 1D-fit' 
+        return T.table ( rows , title = title , prefix = prefix , alignment = 'lclcc', style = style  )
+        
+        
+  
+            
+
+        
+    
 # =============================================================================
 if '__main__' == __name__ :
     

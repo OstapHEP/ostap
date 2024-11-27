@@ -44,7 +44,7 @@ logger.debug ( 'Simple utilities for goodness-of-fit studies' )
 #  t_value, p_value  = gof.pvalue ( pdf , data )
 #  @endcode
 class AGoF(object) :
-    """ An abstract base class for family of methods to probe Goodness-of-Git
+    """ An abstract base class for family of methods to probe Goodness-of-Fit
     There are two abstract methods
     - `__call__` to evaluate t-value, the value of GoF estimator 
     - `pvalue` to evaluate (t,p)-vaues
@@ -57,7 +57,7 @@ class AGoF(object) :
     >>> t_value , p_value  = gof.pvalue ( pdf , data )
     """
     # =========================================================================
-    ## Calculate T-value for Goodness-of-Git 
+    ## Calculate T-value for Goodness-of-Fit test
     #  @code
     #  gof   = ...
     #  pdf   = ...  
@@ -72,7 +72,8 @@ class AGoF(object) :
         >>> data  = ... 
         >>> t_value = gof ( pdf , data ) 
         """
-        return NotImplemented 
+        return NotImplemented
+    
     # =========================================================================
     ## Calculate the t & p-values
     #  @code
@@ -90,7 +91,7 @@ class AGoF(object) :
         >>> t_value , p_value = gof.pvalue ( pdf , data ) 
         """
         return NotImplemented
-
+    
 # =============================================================================
 ## @class AGoFnp
 #  An absract base class for numpy-related family of methods to probe goodness-of fit
@@ -135,6 +136,7 @@ class AGoFnp(object) :
         >>> t = gof ( data1 , data1 , normalize = True  ) 
         """
         return NotImplemented 
+            
     # =========================================================================
     ## Calculate the t & p-values
     #  @code

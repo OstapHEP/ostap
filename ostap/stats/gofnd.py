@@ -51,7 +51,7 @@ class GoF(AGoF) :
     """ A base class for numpy-related family of methods to probe goodness-of fit
     """
     def __init__ ( self             ,
-                   gof              , ## actual GoF-evaluator 
+                   gof              , ## actual GoF-evaluator
                    mcFactor = 10    ,
                    sample   = False ) : 
         
@@ -78,7 +78,7 @@ class GoF(AGoF) :
 
     @property
     def sample ( self ) :
-        """`sample` : sample numbef of events for generation step?"""
+        """`sample` : sample number of events for generation step?"""
         return self.__sample
     
     @property
@@ -91,6 +91,12 @@ class GoF(AGoF) :
         """`parallel` : parallel processing where/when/if possible?"""
         return self.gof.parallel
     
+    @property
+    def method ( self ) :
+        """`method` : the actual GoF-method 
+        """
+        return self.gof.method
+        
     # =======================================================================
     ## Generate MC dataset from PDF according to model data
     def generate ( self ,  pdf , data ) :
@@ -196,7 +202,8 @@ class PPD(GoF) :
                                          sigma    = sigma    ,
                                          parallel = parallel ,
                                          silent   = silent   ) ,                          
-                         mcFactor = mcFactor )        
+                         mcFactor = mcFactor )
+        
     @property
     def ppd ( self ) :
         """`ppd` : Point-To-Point Dissimilarity calculator for two datasets """

@@ -358,7 +358,8 @@ def table ( rows                          ,
         
     rows = [ list ( row ) for row in rows ]
 
-    if style is None : style = '%s' % default_style
+    ## if style is None : style = '%s' % default_style
+    if not style : style = '%s' % default_style
     
     fmt = style.lower()
     

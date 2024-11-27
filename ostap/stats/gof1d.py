@@ -338,7 +338,7 @@ class GoF1D(Estimators) :
     def ZA_estimator  ( self ) :
         """ Get ZA statistics
         """        
-        return self.estimators['ZK'] 
+        return self.estimators.get( 'ZA' , None ) 
     
     # =========================================================================
     ## Get ZC statististics 
@@ -346,7 +346,7 @@ class GoF1D(Estimators) :
     def ZC_estimator ( self ) :
         """ Get ZC statistics
         """        
-        return self.__estimators['ZK'] 
+        return self.__estimators.get ( 'ZC' , None ) 
     
     __repr__ = Estimators.table
     __str__  = Estimators.table
@@ -597,6 +597,8 @@ class GoF1DToys(GoF1D,Summary) :
 
         self.__nToys += other.nToys 
         return self 
+
+    plot = Summary.draw 
 
 # =============================================================================
 if '__main__' == __name__ :

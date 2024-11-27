@@ -31,7 +31,7 @@ from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.utils        import split_n_range
 from   ostap.utils.basic        import numcpu 
 from   ostap.stats.gof          import AGoFnp
-from   ostap.utils.memory       import memory_enough 
+from   ostap.utils.memory       import memory, memory_enough 
 import os, abc, warnings, ROOT   
 # =============================================================================
 try : # =======================================================================
@@ -81,7 +81,8 @@ class GoFnp (AGoFnp) :
     def __init__ ( self              ,
                    nToys    = 0      ,
                    silent   = False  , 
-                   parallel = False  ) : 
+                   parallel = False  ,
+                   method   = 'GoF'  ) : 
         
         assert isinstance ( nToys , int ) and 0 <= nToys  , \
             "Invalid number of permulations/toys:%s" % nToys
@@ -89,7 +90,7 @@ class GoFnp (AGoFnp) :
         self.__nToys    = nToys
         self.__silent   = True if silent   else False
         self.__parallel = True if parallel else False
-        self.__rows     = []
+        self.__method   = method
         
         if self.__parallel and memory_enough () < numcpu () : 
             logger.warning ( 'Available/Used memory ratio: %.1f; switch-off parallel processing')
@@ -153,14 +154,14 @@ class GoFnp (AGoFnp) :
         return self.__parallel
     # ========================================================================
     @property
-    def rows     ( self ) :
-        """`rows` : rows of the table with summary information"""
-        return self.__rows
+    def method ( self ) :
+        """`method` : the actual GoF method """
+        return self.__method
     
 # ============================================================================
-## define configurtaion for psi-function for PPD method
+## define configuration for psi-function for PPD method
 #   - distance type of <code>cdist</code>
-#   - transformation funciton for cdisct output
+#   - transformation function for cdist output
 #   - increasing function ?
 #   @code
 #   distance_type , transform, increasing = psi_conf ( 'linear' )
@@ -209,7 +210,8 @@ class PPDnp(GoFnp) :
         GoFnp.__init__ ( self                ,
                          nToys    = nToys    ,
                          parallel = parallel , 
-                         silent   = silent   )
+                         silent   = silent   ,
+                         method   = 'Point-to-Point Dissimilarity' )
         
         self.__mc2mc     = True if mc2mc else False
         self.__transform = None
@@ -278,6 +280,7 @@ class PPDnp(GoFnp) :
         """ Calculate t-value for (non-structured) 2D arrays
         """
         ##
+        
         sh1 = ds1.shape
         sh2 = ds2.shape
         assert 2 == len ( sh1 ) and 2 == len ( sh2 ) and sh1[1] == sh2[1] , \
@@ -286,7 +289,7 @@ class PPDnp(GoFnp) :
         n1 = len ( ds1 ) 
         n2 = len ( ds2 ) 
         ##
-
+        
         ## calculate sums of distances, Eq (3.7) 
         result  = self.sum_distances ( ds1 , ds1 ) / ( n1 * ( n1 - 1 ) )
         result -= self.sum_distances ( ds1 , ds2 ) / ( n1 * n2 )
@@ -327,7 +330,7 @@ class PPDnp(GoFnp) :
         if 1 == uds2.shape [ 1 ] : uds2 = np.c_[ uds2 , np.zeros ( len ( uds2 ) ) ] 
         
         return self.t_value ( uds1 , uds2 )
-
+    
     # =========================================================================
     ## Calculate the t & p-values
     #  @code
@@ -367,7 +370,7 @@ class PPDnp(GoFnp) :
         p_value = counter.eff
         
         if self.__increasing : p_value = 1 - p_value
-        
+
         return t_value , p_value 
 
 
@@ -393,7 +396,8 @@ class DNNnp(GoFnp) :
         GoFnp.__init__ ( self                ,
                          nToys    = nToys    ,
                          parallel = parallel , 
-                         silent   = silent   )
+                         silent   = silent   , 
+                         method   = 'Distance-to-Nearest-Neighbour' )
         
         self.__histo = None 
         if   isinstance ( histo , ROOT.TH1 ) :

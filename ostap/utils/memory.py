@@ -122,7 +122,7 @@ def memory_enough () :
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2013-02-10
 class Memory(object):
-    """Simple class to evaluate the change in virtual memory
+    """ Simple class to evaluate the change in virtual memory
     to be used as context manager:
     
     >>> with Memory('here...') :
