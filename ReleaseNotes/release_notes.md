@@ -5,7 +5,9 @@
 ## Backward incompatible
     
 ## Bug fixes
-    
+
+  1. tiny fix for `constraint`/`constraints` argument 
+  
 # v1.13.7.0
 
 ## New features
