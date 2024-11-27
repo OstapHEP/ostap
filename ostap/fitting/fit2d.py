@@ -469,7 +469,7 @@ class H2D_pdf(PDF2) :
 #  cpdf = Constrained2D ( opdf2 , consraints )
 #  @endcode
 class Constrained2D(PDF2,Constrained) :
-    """PDF1 with constraints
+    """ PDF2 with constraints
     >>> opdf2 = ...
     >>> constrains = cpdf1, cpdf2, cpdf3
     >>> cpdf = Constrained2D ( opdf2 , consraints )
@@ -556,7 +556,7 @@ class Constrained2D(PDF2,Constrained) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class Fit2D (PDF2) :
-    """The actual model for 2D-fits
+    """ The actual model for 2D-fits
     
     It consists of four main components :
     1. pure signal :        S(x,y)
@@ -1018,7 +1018,7 @@ class Fit2D (PDF2) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class Fit2DSym (PDF2) :
-    """The actual model for *symmetric**2D-fits
+    """ The actual model for *symmetric**2D-fits
     The actual model for symmetric 2D-fits. It consists of three main components :
     - pure signal                               :        S(x)*S(y)
     - signal x background & background x signal :  S(x)*B(y) + B(x)*S(y)
@@ -1280,36 +1280,33 @@ class Fit2DSym (PDF2) :
         
     @property
     def SS ( self ) :
-        """The yield of Signal(x)*Signal(y) component"""
+        """ The yield of Signal(x,y) component"""
         return self.__ss
     @SS.setter 
     def SS ( self , value ) :
         value = float ( value  )
         assert value in self.__ss, "Value %s is out of the allowed range %s " % ( value , self.__ss.minmax() )
         self.__ss.setVal ( value ) 
-
     @property
     def SB ( self ) :
-        """The yield of Signal(x)*Background(y)+Background(x)*Signal(y) component (same as 'BS')"""
+        """ The yield of Signal(x)*Background(y)+Background(x)*Signal(y) component (same as 'BS')"""
         return self.__sb
     @SB.setter 
     def SB ( self , value ) :
         value = float ( value  )
         assert value in self.__sb, "Value %s is out of the allowed range %s " % ( value , self.__sb.minmax() )
         self.__sb.setVal ( value ) 
-
     @property
     def BS ( self ) :
-        """The yield of Signal(x)*Background(y)+Background(x)*Signal(y) component (same as 'SB')"""
+        """ The yield of Signal(x)*Background(y)+Background(x)*Signal(y) component (same as 'SB')"""
         return self.SB 
     @BS.setter 
     def BS ( self , value ) :
         self.SB = value
         return self.SB.getVal()
-
     @property
     def BB ( self ) :
-        """The yield of Background(x,y) component"""
+        """ The yield of Background(x,y) component"""
         return self.__bb
     @BB.setter 
     def BB ( self , value ) :
@@ -1319,7 +1316,7 @@ class Fit2DSym (PDF2) :
     
     @property
     def C ( self ) :
-        """Get the  yields of 'other' component(s) 
+        """ Get the  yields of 'other' component(s) 
         For single 'other' component:
         >>> print pdf.C           ## read the single 'other' component 
         >>> pdf.C = 100           ## assign to it 
@@ -1337,7 +1334,7 @@ class Fit2DSym (PDF2) :
 
     @property
     def yields    ( self ) :
-        """The list/tuple of the yields of all numeric components"""
+        """ The list/tuple of the yields of all numeric components"""
         return tuple ( [ i for i in  self.alist2 ] )
 
     @property 
