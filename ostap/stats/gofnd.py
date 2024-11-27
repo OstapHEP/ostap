@@ -23,7 +23,8 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2024-09-29"
 __all__     = (
-    'PPD' , ## Point-to-Point Dissimilarity Goodness-of-fit method 
+    'PPD' , ## Point-to-Point Dissimilarity  Goodness-of-fit method 
+    'DNN' , ## Distance-to-Nearest-Neighbour Goodness-Of-Fit method 
 )
 # =============================================================================
 from   ostap.stats.gof          import AGoF  
