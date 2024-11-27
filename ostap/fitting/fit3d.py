@@ -48,7 +48,7 @@ else                       : logger = getLogger ( __name__              )
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 class Flat3D(PDF3) :
-    """The most trival 3D-model - constant
+    """ The most trival 3D-model - constant
     >>> pdf = Flat3D( 'flat' , xvar = ...  , yvar = ... , zvar = ... )
     """
     def __init__ ( self , xvar , yvar , zvar , name = ''  , title = '' ) :
@@ -563,7 +563,7 @@ class Constrained3D(PDF3,Constrained) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2017-07-25
 class Fit3D (PDF3) :
-    """The actual model for 3D-fits
+    """ The compound model for 3D-fits
     
     >>>  model   = Models.Fit3D (
     ...      signal_x = Models.Gauss_pdf ( 'Gx' , mass = m_x ) ,
@@ -1065,7 +1065,7 @@ class Fit3D (PDF3) :
         
     @property
     def SSS ( self ) :
-        """The yield of Signal(x)*Signal(y)*Signal(z) component"""
+        """The yield of Signal(x,y,z) component"""
         return self.__sss
     @SSS.setter 
     def SSS ( self , value ) :
@@ -1766,7 +1766,7 @@ class Fit3DSym (PDF3) :
         
     @property
     def SSS ( self ) :
-        """The yield of Signal(x)*Signal(y)*Signal(z) component"""
+        """ The yield of Signal(x,y,z) component"""
         return self.__sss
     @SSS.setter 
     def SSS ( self , value ) :
@@ -1776,7 +1776,7 @@ class Fit3DSym (PDF3) :
 
     @property
     def SSB ( self ) :
-        """The yield of S(x)*S(y)*B(z)+S(x)*B(y)*S(z)+B(x)*S(y)*S(z) component (same as SBS, BSS)"""
+        """ The yield of S(x)*S(y)*B(z)+S(x)*B(y)*S(z)+B(x)*S(y)*S(z) component (same as SBS, BSS)"""
         return self.__ssb
     @SSB.setter 
     def SSB ( self , value ) :
@@ -1786,7 +1786,7 @@ class Fit3DSym (PDF3) :
 
     @property
     def SBS ( self ) :
-        """The yield of S(x)*S(y)*B(z)+S(x)*B(y)*S(z)+B(x)*S(y)*S(z) component (same as SSB, BSS)"""
+        """ The yield of S(x)*S(y)*B(z)+S(x)*B(y)*S(z)+B(x)*S(y)*S(z) component (same as SSB, BSS)"""
         return self.__sbs
     @SBS.setter 
     def SBS ( self , value ) :
@@ -1796,7 +1796,7 @@ class Fit3DSym (PDF3) :
 
     @property
     def BSS ( self ) :
-        """The yield of S(x)*S(y)*B(z)+S(x)*B(y)*S(z)+B(x)*S(y)*S(z) component (same as SSB, SBS)"""
+        """ The yield of S(x)*S(y)*B(z)+S(x)*B(y)*S(z)+B(x)*S(y)*S(z) component (same as SSB, SBS)"""
         return self.__bss
     @BSS.setter 
     def BSS ( self , value ) :
@@ -1806,7 +1806,7 @@ class Fit3DSym (PDF3) :
 
     @property
     def SBB ( self ) :
-        """The yield of S(x)*B(y,z)+S(y)*B(x,z)+S(z)*B(y,z) component (same as BSB, BBS)"""
+        """ The yield of S(x)*B(y,z)+S(y)*B(x,z)+S(z)*B(y,z) component (same as BSB, BBS)"""
         return self.__sbb
     @SBB.setter 
     def SBB ( self , value ) :
@@ -1816,7 +1816,7 @@ class Fit3DSym (PDF3) :
 
     @property
     def BSB ( self ) :
-        """The yield of S(x)*B(y,z)+S(y)*B(x,z)+S(z)*B(y,z) component (same as SBB, BBS)"""
+        """ The yield of S(x)*B(y,z)+S(y)*B(x,z)+S(z)*B(y,z) component (same as SBB, BBS)"""
         return self.__bsb
     @BSB.setter 
     def BSB ( self , value ) :
@@ -1826,7 +1826,7 @@ class Fit3DSym (PDF3) :
 
     @property
     def BBS ( self ) :
-        """The yield of S(x)*B(y,z)+S(y)*B(x,z)+S(z)*B(y,z) component (same as SBB, BSB )"""
+        """ The yield of S(x)*B(y,z)+S(y)*B(x,z)+S(z)*B(y,z) component (same as SBB, BSB )"""
         return self.__bbs
     @BBS.setter 
     def BBS ( self , value ) :
@@ -1836,7 +1836,7 @@ class Fit3DSym (PDF3) :
 
     @property
     def BBB ( self ) :
-        """The yield of Background(x,y,z) component"""
+        """ The yield of Background(x,y,z) component"""
         return self.__bbb
     @BBB.setter 
     def BBB ( self , value ) :
@@ -1846,7 +1846,7 @@ class Fit3DSym (PDF3) :
 
     @property
     def C ( self ) :
-        """Get the  yields of 'other' component(s) 
+        """ Get the  yields of 'other' component(s) 
         For single 'other' component:
         >>> print pdf.C           ## read the single 'other' component 
         >>> pdf.C = 100           ## assign to it 
