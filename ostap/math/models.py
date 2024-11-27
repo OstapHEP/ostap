@@ -1188,6 +1188,10 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.GEV                    , 
                Ostap.Math.MPERT                  ,
                #
+               Ostap.Math.Up                     ,
+               Ostap.Math.Hat                    ,
+               Ostap.Math.FupN                   ,
+               #
                Ostap.Math.ECDF                   , 
                #
                Ostap.Math.BSpline                , 
