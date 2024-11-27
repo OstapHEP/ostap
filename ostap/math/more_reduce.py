@@ -741,7 +741,7 @@ Ostap.Math.Das. __reduce__ = _omdas_reduce_
 ## Reduce Ostap::Math::Hat
 #  @see Ostap::Math::Hat
 def _omhat_reduce_ ( peak ) :
-    """Reduce `Ostap.Math.Hat`
+    """ Reduce `Ostap.Math.Hat`
     - see `Ostap.Math.Hat`
     """
     return root_factory , ( type ( peak ) , peak.mu   () , peak.varsigma() )
@@ -753,7 +753,7 @@ Ostap.Math.Up. __reduce__ = _omhat_reduce_
 ## Reduce Ostap::Math::FupN
 #  @see Ostap::Math::FupN
 def _omfup_reduce_ ( peak ) :
-    """Reduce `Ostap.Math.FupN`
+    """ Reduce `Ostap.Math.FupN`
     - see `Ostap.Math.FupN`
     """
     return root_factory , ( type ( peak ) , peak.N() , peak.mu   () , peak.varsigma() )
