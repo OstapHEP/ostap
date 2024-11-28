@@ -58,8 +58,7 @@ def combined_data ( sample          ,
                     name     = ''   ,
                     title    = ''   ,
                     args     = ()   ) :
-    """
-     Create combined  dataset for simultaneous fit
+    """ Create combined  dataset for simultaneous fit
 
      >>> sample = ROOT.RooCategory ( 'sample' , 'sample' , 'cc' , 'zz' )
      >>> vars   = ROOT.RooArgSet   ( m2c )
@@ -214,7 +213,7 @@ def combined_hdata ( sample        ,
                      histograms    ,
                      name     = '' ,
                      title    = '' ) :
-    """Create combined binned dataset for simultaneous fit
+    """ Create combined binned dataset for simultaneous fit
     - combine 2D histograms:
 
     >>> sample = ROOT.RooCategory ( 'sample' , 'fitting sample' , 'A' , 'B' )
@@ -301,8 +300,7 @@ def combined_hdata ( sample        ,
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2018-11-23
 class Sim1D(PDF1) :
-    """Helper class to simplify the creation and usage of simultaneous PDF
-    
+    """ Helper class to simplify the creation and usage of simultaneous PDF    
     - see RooSimultaneous 
     """
     
@@ -412,17 +410,17 @@ class Sim1D(PDF1) :
     
     @property
     def sample  ( self ) :
-        "'sample': RooCategory object for simultaneous PDF"
+        """'sample': RooCategory object for simultaneous PDF"""
         return self.__sample
 
     @property
     def samples ( self ) :
-        "'samples' : list/tuple of the known categories"
+        """'samples' : list/tuple of the known categories"""
         return tuple ( self.__categories.keys() ) 
 
     @property
     def categories ( self ) :
-        "'categories' : map { category : pdf }"
+        """'categories' : map { category : pdf }"""
         return self.__categories
 
     # =========================================================================
@@ -516,12 +514,12 @@ class Sim1D(PDF1) :
         _proj  = ROOT.RooFit.ProjWData  ( self._tmp_vset , dataset  ) 
         _slice = ROOT.RooFit.Slice      ( self.sample    , category )
 
-        bkgoptions   = self.draw_option ( 'backrground_options' , **kwargs ) + ( _slice , _proj )
-        ct1options   = self.draw_option ( 'crossterm1_options'  , **kwargs ) + ( _slice , _proj )
-        ct2options   = self.draw_option ( 'crossterm2_options'  , **kwargs ) + ( _slice , _proj )        
-        cmpoptions   = self.draw_option (  'component_options'  , **kwargs ) + ( _slice , _proj )
-        sigoptions   = self.draw_option (     'signal_options'  , **kwargs ) + ( _slice , _proj )
-        totoptions   = self.draw_option (  'total_fit_options'  , **kwargs ) + ( _slice , _proj )
+        bkgoptions   = self.draw_option ( 'background_options' , **kwargs ) + ( _slice , _proj )
+        ct1options   = self.draw_option ( 'crossterm1_options' , **kwargs ) + ( _slice , _proj )
+        ct2options   = self.draw_option ( 'crossterm2_options' , **kwargs ) + ( _slice , _proj )        
+        cmpoptions   = self.draw_option (  'component_options' , **kwargs ) + ( _slice , _proj )
+        sigoptions   = self.draw_option (     'signal_options' , **kwargs ) + ( _slice , _proj )
+        totoptions   = self.draw_option (  'total_fit_options' , **kwargs ) + ( _slice , _proj )
         
         kwargs [ 'data_options'       ] = data_options
         kwargs [ 'signal_options'     ] = sigoptions 
