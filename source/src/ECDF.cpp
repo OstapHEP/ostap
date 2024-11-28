@@ -464,6 +464,50 @@ Ostap::Math::WECDF::estimate ( const double x ) const
     Ostap::Math::binomEff2 ( acc , rej ) : 
     Ostap::Math::binomEff2 ( rej , acc ) ;
 }
+// ============================================================================
+// get ranks of the elements in the (pooled) sample
+// ============================================================================
+Ostap::Math::WECDF::Indices
+Ostap::Math::WECDF::ranks
+( const Ostap::Math::ECDF& sample ) const
+{
+  const Data::size_type N  = size() ;
+  // fill outptut array with N
+  Indices result ( sample.size () ,  N ) ;
+  Data::size_type NS = sample.size() ;
+  for ( Data::size_type i = 0 ; i < NS ; ++i )
+    {
+      Data::size_type r = rank ( sample.data ( i ) ) ;
+      result [ i ] = r ;
+      // try to be a bit more efficient, the rest of array is filled with N 
+      if ( N <= r ) { break ; }
+    }
+  return result ;
+}
+// ============================================================================
+// get ranks of the elements in the (pooled) sample
+// ============================================================================
+Ostap::Math::WECDF::Indices
+Ostap::Math::WECDF::ranks
+( const Ostap::Math::WECDF& sample ) const
+{
+  const Data::size_type N  = size() ;
+  // fill output array with N
+  Indices result ( sample.size () ,  N ) ;
+  Data::size_type NS = sample.size() ;
+  for ( Data::size_type i = 0 ; i < NS ; ++i )
+    {
+      Data::size_type r = rank ( sample.data ( i ) ) ;
+      result [ i ] = r ;
+      // try to be a bit more efficient, the rest of array is filled with N 
+      if ( N <= r ) { break ; }
+    }
+  return result ;
+}
+// ============================================================================
+
+
+
 
 // ============================================================================
 //                                                                      The END 

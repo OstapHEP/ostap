@@ -135,6 +135,9 @@ namespace Ostap
       // ======================================================================
       /// access to data
       inline const Data&     data          () const { return m_data         ; }
+      // access to data 
+      inline double          data   ( const unsigned int index ) const
+      { return index < m_data.size() ?  m_data[index] : m_data.back() ; }
       // ======================================================================
       /// complementary?
       inline bool            complementary () const { return m_complementary ; }
@@ -200,9 +203,11 @@ namespace Ostap
     public: 
       // ======================================================================
       /// The actual type of entry: (y,w)
-      typedef std::pair<double,double>    Entry   ; 
-      /// internal storage
+      typedef std::pair<double,double>    Entry   ;
+      /// the actual type of data
       typedef std::vector<Entry>          Data    ;
+      /// the actual type of indices 
+      typedef ECDF::Indices               Indices ;
       // ======================================================================
     public: 
       // ======================================================================
@@ -312,6 +317,10 @@ namespace Ostap
       inline double          xmin          () const { return m_data.front ().first ; } 
       /// maximal x-value
       inline double          xmax          () const { return m_data.back  ().first ; }
+      // ======================================================================
+      /// get the abscissa value with the given index 
+      inline const Entry& operator[] ( const unsigned int index ) const
+      { return index < m_data.size() ? m_data[index] : m_data.back() ; }
       // ======================================================================      
     public: 
       // ======================================================================
@@ -343,6 +352,24 @@ namespace Ostap
       inline double calc_sumw  () const { return calc_sumw  ( m_data.size() ) ; }
       /// calculate \f$ \sum_i w^2_i \f$
       inline double calc_sumw2 () const { return calc_sumw2 ( m_data.size() ) ; }
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /** number of elements that are less or equal to x
+       *  "rank of x" in the ordered sample
+       */
+      inline Data::size_type rank ( const double x ) const
+      { return std::upper_bound ( m_data.begin ()   ,
+				  m_data.end   ()   ,
+				  Entry ( x , 1.0 ) ,
+				  []  ( const Entry& e1 , 
+					const Entry& e2 ) -> bool
+				  { return e1.first < e2.first ; } ) - m_data.begin() ; }
+      // ======================================================================
+      /// get ranks for all elements from another sample 
+      ECDF::Indices ranks ( const  ECDF& sample ) const ;
+      /// get ranks for all elements from another sample 
+      ECDF::Indices ranks ( const WECDF& sample ) const ;
       // ======================================================================
     private:
       // ======================================================================
