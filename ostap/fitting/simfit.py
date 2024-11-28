@@ -600,7 +600,7 @@ for _a in (
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2018-11-23
 class SimFit (VarMaker,ConfigReducer) :
-    """Helper PDF-like class to simplify the creation and usage of simultaneous PDF
+    """ Helper PDF-like class to simplify the creation and usage of simultaneous PDF
     
     >>> sample = ROOT.RooCategory( 'sample', 'fitting sample' , 'A' , 'B' )
     >>> pdfA   = ... ## pdf for the sample 'A'
@@ -906,7 +906,7 @@ class SimFit (VarMaker,ConfigReducer) :
                **kwargs       ) :
         """ Draw the PDF&data for the given category
         >>> pdf.fitTo ( dataset )
-        >>> pf.draw ( 'signal' , dataset , nbins = 100 ) 
+        >>> pdf.draw ( 'signal' , dataset , nbins = 100 ) 
         """
 
         dvar = None
@@ -1069,7 +1069,7 @@ class SimFit (VarMaker,ConfigReducer) :
                 range    = ( 0 , None )  ,
                 silent   = True          ,
                 args     = () , **kwargs ) :
-        """Evaluate 'significance' using Wilks' theorem via NLL
+        """ Evaluate 'significance' using Wilks' theorem via NLL
         >>> data = ...
         >>> pdf  = ...
         >>> pdf.fitTo ( data , ... )
@@ -1289,7 +1289,7 @@ class SimFit (VarMaker,ConfigReducer) :
     #      ... 
     #   @endcode  
     def __contains__ ( self , var ) : 
-        """Does this function depend on this variable?
+        """ Does this function depend on this variable?
         >>> fun = ...
         >>> var = ...
         >>> if var in fun :
@@ -1311,7 +1311,7 @@ class SimFit (VarMaker,ConfigReducer) :
     #  @endcode
     #  @see RooAbsReal::getParameters
     def params ( self , dataset = None  ) :
-        """Get the parameters
+        """ Get the parameters
         >>>  fun = ...
         >>> parameters = fun.params ( )
         Or
@@ -1355,7 +1355,7 @@ class SimFit (VarMaker,ConfigReducer) :
     #  a   = pdf['A']
     #  @endcode
     def __getitem__ ( self , param ) :
-        """Get parameter by name 
+        """ Get parameter by name 
         >>> pdf = ...
         >>> a   = pdf['A']
         """
