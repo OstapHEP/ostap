@@ -1193,6 +1193,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.FupN                   ,
                #
                Ostap.Math.ECDF                   , 
+               Ostap.Math.WECDF                  , 
                #
                Ostap.Math.BSpline                , 
                Ostap.Math.PositiveSpline         ,
@@ -1310,6 +1311,7 @@ def _bdb_getattr_ ( self ,  attr ) :
     b = self.bernstein()
     return getattr ( b , attr )
 Ostap.Math.BernsteinDual.__getattr__ = _bdb_getattr_
+
 
 
 ## add some drawing method for some shapes 

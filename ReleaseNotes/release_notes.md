@@ -2,6 +2,7 @@
 
   1. add parallelisation to `GoF1DToys`
   1. add `style=None` or `style=''` argument for many `table`-methods
+  1. add empirical cumulative functions for weighted data 
   
 ## Backward incompatible
     

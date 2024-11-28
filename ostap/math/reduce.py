@@ -393,7 +393,7 @@ for t in ( Ostap.Math.Neville     ,
 Ostap.Math.FloaterHormann. __reduce__ = intfh_reduce 
 
 # ============================================================================
-## Factory for deserisalization of empirical cumulatibe distribution function
+## Factory for deserisalization of empirical cumulative distribution function
 #  @see Ostap::Math::ECDF
 def ecdf_factory ( klass , data , complementary = False ) :
     """ Factory for deserisalization of empirical cumulatibe distribution function
@@ -412,6 +412,29 @@ def ecdf_reduce  ( ecdf ) :
                             ecdf.complementary() )
 
 Ostap.Math.ECDF.__reduce__ = ecdf_reduce
+
+# ============================================================================
+## Factory for deserisalization of weighted empirical cumulative distribution function
+#  @see Ostap::Math::WECDF
+def wecdf_factory ( klass , data , weights , complementary = False ) :
+    """ Factory for deserisalization of weighted empirical cumulatibe distribution function
+    - see `Ostap.Math.WECDF`
+    """
+    return klass ( doubles  ( data ) , doubles ( weights ) , complementary )
+# =============================================================================
+## Reduce empirical distribution function 
+#  @see Ostap::Math::WECDF    
+def wecdf_reduce  ( wecdf ) :
+    """ Reduce empirical distribution function 
+    - see `Ostap.Math.WECDF`
+    """
+    return wecdf_factory , ( type ( wecdf ) ,
+                             array.array ( 'd' , ( wecdf.data   ( i ) for i in range ( wecdf.size() ) ) ) ,
+                             array.array ( 'd' , ( wecdf.weight ( i ) for i in range ( wecdf.size() ) ) ) ,
+                             wecdf.complementary() )
+
+Ostap.Math.WECDF.__reduce__ = wecdf_reduce
+
 # =============================================================================
 ## Dalitz' objects 
 # =============================================================================   
