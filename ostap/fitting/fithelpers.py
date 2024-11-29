@@ -884,7 +884,11 @@ class FitHelper(VarMaker) :
                 
                 _args.append   (  ROOT.RooFit.Save         ( a )  )
                 
-            elif key in args_clonedata and isinstance ( a , bool           ) :
+            elif key in args_clonedata and ( 6 , 28 ) <= root_info < ( 6, 28 ) :
+                
+                self.warning ( "Ignore obsolete `CloneData' argument" ) 
+            
+            elif key in args_clonedata and isinstance ( a , bool ) and root_info < ( 6, 28 ) :
                 
                 _args.append   (  ROOT.RooFit.CloneData    ( a )  )
                 

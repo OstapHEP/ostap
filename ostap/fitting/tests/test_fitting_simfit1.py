@@ -184,12 +184,27 @@ def test_simfit1 () :
     with use_canvas ( 'test_simfit1: fit both datasets & draw B' , wait = 2 ) :        
         fB = model_sim.draw ( 'B' , dataset , nbins = 50 )            
         graphs.append ( fB )
-    with use_canvas ( 'test_simfit1: graph-profile for S_M2' , wait = 2 ) :
+    with use_canvas ( 'test_simfit1: graph-NLL for S_M2' , wait = 2 ) :
         from ostap.utils.utils import vrange 
-        grs = model_sim.graph_profile ( 'S_M2' , vrange ( 0 , 1000 , 100 ) , dataset , draw = True )
+        grs = model_sim.graph_nll     ( 'S_M2' , vrange ( 0 , 1000 , 100 ) , dataset , draw = True )
         grs.draw('apl')
         graphs.append ( grs )
+    with use_canvas ( 'test_simfit1: graph-profile for S_M2' , wait = 2 ) :
+        from ostap.utils.utils import vrange 
+        grs = model_sim.graph_profile ( 'S_M2' , vrange ( 0 , 1000 , 50 ) , dataset , draw = True )
+        grs.draw('apl')
+        graphs.append ( grs )
+
+    with use_canvas ( 'test_simfit1: residual  for S_M2' , wait = 2 ) :
+        _ , residual , _  = model_sim.draw ( 'A' , dataset , nbins = 50 , residual = 'P' )
+        residual.draw()
+        graphs.append ( residual )
         
+    with use_canvas ( 'test_simfit1: pull for S_M2' , wait = 2 ) :
+        _ , _ , pull = model_sim.draw ( 'A' , dataset , nbins = 50 , pull     = 'P' )
+        pull.draw()
+        graphs.append ( pull )
+
     models.add ( model1        )
     models.add ( model2        )
     models.add ( model_sim     )
@@ -232,7 +247,6 @@ def test_simfit1 () :
     title = 'Results of simultaneous fit to generated dataset'
     logger.info ( '%s\n%s' % ( title , rg.table ( title = title , prefix = '# ' ) ) )
    
-
 # =============================================================================
 ## check that everything is serializable
 # =============================================================================
@@ -254,6 +268,7 @@ def test_db() :
         db['models'  ] = models
         for r in results : db['result' + r.name ] = r 
         db['results' ] = results
+        db['graphs'  ] = graphs
         db.ls()
 
 # =============================================================================

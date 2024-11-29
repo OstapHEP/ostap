@@ -3,7 +3,10 @@
   1. add parallelisation to `GoF1DToys`
   1. add `style=None` or `style=''` argument for many `table`-methods
   1. add empirical cumulative functions for weighted data 
-  
+  1. suppress `CloneData` argument for NLL creation for 6.28<=ROOT
+  1. change default `silent=True` to `silent=False` for `graph_profile`
+  1. modify a bit treatment of `residual=` and `pull=` in `PDF.draw`
+
 ## Backward incompatible
     
 ## Bug fixes

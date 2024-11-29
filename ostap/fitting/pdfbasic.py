@@ -416,7 +416,6 @@ class APDF1 ( Components ) :
         ##                                                                                                             mnv , mxv ) )
 
         if not silent and opts and nontrivial_arg ( ( 'Save' , 'NumCPU' ) , *opts ) :
-            ## self.info ('fitTo options: %s ' % list ( flat_args ( *opts ) ) ) 
             rows = [ ( 'Option' , ) ]
             for o in opts :
                 row = str ( o ) ,
@@ -984,18 +983,17 @@ class APDF1 ( Components ) :
                 if 0 < binw : self.info ( 'chi2/ndf: %.3f, binwidth: %s' %  ( frame.chi2ndf , binw ) )
                 else        : self.info ( 'chi2/ndf: %.3f' %                  frame.chi2ndf          )
 
-            ## a bit strange action but it helps to avoid decolorization/reset for the last created frame
-            frame = frame.copy ()
-            if not kwargs.get ( 'draw_axis_title' , False ) : 
-                frame.SetXTitle ( '' )
-                frame.SetYTitle ( '' )
-                frame.SetZTitle ( '' )
-                
+
             if not residual and not pull:
+                frame = frame.copy () ## a bit strange action but it helps to avoid decolorization/reset for the last created frame
+                if frame and not kwargs.get ( 'draw_axis_title' , False ) : 
+                    frame.SetXTitle ( '' )
+                    frame.SetYTitle ( '' )
+                    frame.SetZTitle ( '' )                    
                 return frame
 
             rframe =  None 
-            if residual  :
+            if residual and frame :
                 if   residual is True               : residual =      "P" ,
                 elif isinstance  ( residual , str ) : residual = residual ,
                 rframe  = frame.emptyClone ( rootID ( 'residual_' ) )
@@ -1009,7 +1007,7 @@ class APDF1 ( Components ) :
                     rframe.SetZTitle ( '' )
                     
             pframe = None 
-            if pull      : 
+            if pull  and frame : 
                 if   pull is True               : pull =   "P",
                 elif isinstance  ( pull , str ) : pull = pull ,
                 pframe  = frame.emptyClone ( rootID ( 'pull_' ) )
@@ -1022,6 +1020,26 @@ class APDF1 ( Components ) :
                     pframe.SetYTitle ( '' )
                     pframe.SetZTitle ( '' )
                                     
+            ## a bit strange action but it helps to avoid decolorization/reset for the last created frame
+            frame  =  frame.copy () if  frame else  frame 
+            rframe = rframe.copy () if rframe else rframe 
+            pframe = pframe.copy () if pframe else pframe 
+            
+            if frame and not kwargs.get ( 'draw_axis_title' , False ) : 
+                frame.SetXTitle ( '' )
+                frame.SetYTitle ( '' )
+                frame.SetZTitle ( '' )                    
+                
+            if rframe and not kwargs.get ( 'draw_axis_title' , False ) : 
+                rframe.SetXTitle ( '' )
+                rframe.SetYTitle ( '' )
+                rframe.SetZTitle ( '' )
+                
+            if pframe and not kwargs.get ( 'draw_axis_title' , False ) : 
+                pframe.SetXTitle ( '' )
+                pframe.SetYTitle ( '' )
+                pframe.SetZTitle ( '' )                    
+
             return frame, rframe, pframe  
 
     # =========================================================================
@@ -1322,9 +1340,10 @@ class APDF1 ( Components ) :
         if not isinstance ( dataset , ROOT.RooAbsData ) and hasattr ( dataset , 'dset' ) :
             dataset = dataset.dset 
 
-        clone = kwargs.pop ( 'clone' , False )
-        kwargs [ 'clone' ] = clone 
-        if not clone : kwargs['optimize'] = False 
+        if root_info < ( 6 , 28 ) : 
+            clone = kwargs.pop ( 'clone' , False )
+            kwargs [ 'clone' ] = clone 
+            if not clone : kwargs [ 'optimize' ] = False 
 
         opts = self.parse_args ( dataset , *args , **kwargs )
 
@@ -1338,13 +1357,20 @@ class APDF1 ( Components ) :
             ok.append ( o )
             
         opts = tuple ( ok )        
-        if not silent and opts : self.info ('NLL options: %s ' % list ( opts ) )
         
+        if not silent and opts and nontrivial_arg ( ( 'Save' , 'NumCPU' ) , *opts ) :
+            rows = [ ( 'Option' , ) ]
+            for o in opts :
+                row = str ( o ) ,
+                rows.append ( row )
+            import ostap.logger.table as T
+            title = 'nll: createNLL options'
+            table = T.table ( rows , title = 'CreateNLL options' , prefix = '# ' )
+            self.info ( '%s:\n%s' % ( title , table ) )
+
         ## get s-Factor 
         sf   = dataset.sFactor() 
 
-        self.debug ( 'nll: createNLL args: %s'% list ( opts ) )
-        
         if ( 6 , 32 ) <= root_info :
             return Ostap.MoreRooFit.createNLL ( self.pdf , dataset , *opts ), sf 
             
@@ -1442,7 +1468,7 @@ class APDF1 ( Components ) :
                         values           ,
                         dataset          ,
                         fix      = []    ,
-                        silent   = True  ,
+                        silent   = False ,
                         draw     = False ,
                         subtract = True  , 
                         args     = ()    , **kwargs ) :
