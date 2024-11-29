@@ -620,7 +620,8 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
                 result = obj.DrawCopy ( option , *args )
             else                                    :
                 result = obj.Draw     ( option , *args )
-                result = obj
+                
+            result = obj
                 
         if pad and not ROOT.gPad :            
             c = pad.GetCanvas()
