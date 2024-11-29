@@ -783,7 +783,7 @@ class APDF1 ( Components ) :
 
         Produce also residual & pull:
         
-        >>> f,r,h = model.draw ( dataset , nbins = 100 , residual = 'P' , pull = 'P')
+        >>> f,r,p = model.draw ( dataset , nbins = 100 , residual = 'P' , pull = 'P')
         
         Drawing options:
         - data_options            ## drawing options for dataset  
