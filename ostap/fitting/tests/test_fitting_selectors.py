@@ -51,7 +51,7 @@ def create_tree ( fname , nentries ) :
     var2 = array ( 'd', [0.])
     var3 = array ( 'd', [0.])
     
-    with ROOTCWD() , ROOT.TFile.Open ( fname , 'new' ) as root_file:
+    with ROOT.TFile ( fname , 'new' ) as root_file:
         
         tree = ROOT.TTree ( 'S','tree' )
         tree.SetDirectory ( root_file  ) 
