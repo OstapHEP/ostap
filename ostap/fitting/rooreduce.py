@@ -2766,7 +2766,29 @@ Ostap.Models.Rational              .__reduce__ = _rational_reduce_
 Ostap.MoreRooFit.Rational          .__reduce__ = _rational_reduce_ 
 Ostap.MoreRooFit.RationalBernstein .__reduce__ = _rational_reduce_ 
 
+# =============================================================================
+## reduce ProfileLL
+def _prll_reduce_ ( fun ) :
+    """ Reduce Ostap.MoreRooFit.ProfileLL"""
+    return root_store_factory , ( type ( fun ) ,
+                                  fun.name     ,
+                                  fun.title    ,                                  
+                                  fun.nll   () ,
+                                  fun.obs   () )
 
+Ostap.MoreRooFit.ProfileLL . __reduce__ = _prll_reduce_
+
+# =============================================================================
+## reduce Rank
+def _rrmrfr_reduce_ ( fun ) :
+    """ Reduce Ostap.MoreRooFit.Rank"""
+    return root_store_factory , ( type ( fun ) ,
+                                  fun.name     ,
+                                  fun.title    ,                                  
+                                  fun.rank  () ,
+                                  fun.vars  () )
+
+Ostap.MoreRooFit.Rank . __reduce__ = _rrmrfr_reduce_
 
 # =============================================================================
 ## reduce Ostap::Functions::FuncRooTH1 
@@ -2845,6 +2867,8 @@ _decorated_classes_ = (
     Ostap.MoreRooFit.Convex            , 
     Ostap.MoreRooFit.ConvexOnly        , 
     Ostap.MoreRooFit.BSpline           ,
+    ##
+    Ostap.MoreRooFit.Rank              ,
     ##
     Ostap.Models.Uniform               ,
     ## BW & friends 

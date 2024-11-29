@@ -37,16 +37,18 @@
 namespace 
 {
   // ===========================================================================
-  const std::string s_EMPTYPARS   = "Vector of coefficients is empty!" ;
-  const std::string s_INVALIDPARS = "Invalid parameters!"              ;
-  const std::string s_INVALIDPAR  = "Invalid parameter!"               ;
-  const std::string s_v1          = "Ostap::MoreRooFit::Bernstein"     ;
-  const std::string s_v2          = "Ostap::MoreRooFit::Monotonic"     ;
-  const std::string s_v3          = "Ostap::MoreRooFit::Convex"        ;
-  const std::string s_v4          = "Ostap::MoreRooFit::ConvexOnly"    ;
-  const std::string s_v5          = "Ostap::MoreRooFit::BSpline"       ;
-  const std::string s_v6          = "Ostap::MoreRooFit::Rational"      ;
+  const std::string s_EMPTYPARS   = "Vector of coefficients is empty!"     ;
+  const std::string s_NOTENOUGH   = "Vector of coefficients is short!"     ;
+  const std::string s_INVALIDPARS = "Invalid parameters!"                  ;
+  const std::string s_INVALIDPAR  = "Invalid parameter!"                   ;
+  const std::string s_v1          = "Ostap::MoreRooFit::Bernstein"         ;
+  const std::string s_v2          = "Ostap::MoreRooFit::Monotonic"         ;
+  const std::string s_v3          = "Ostap::MoreRooFit::Convex"            ;
+  const std::string s_v4          = "Ostap::MoreRooFit::ConvexOnly"        ;
+  const std::string s_v5          = "Ostap::MoreRooFit::BSpline"           ;
+  const std::string s_v6          = "Ostap::MoreRooFit::Rational"          ;
   const std::string s_v7          = "Ostap::MoreRooFit::RationalBernstein" ;
+  const std::string s_v8          = "Ostap::MoreRooFit::Rank"              ;
   // ===========================================================================
   class FakeRecursiveFraction : public RooRecursiveFraction 
   {
@@ -283,6 +285,7 @@ ClassImp ( Ostap::MoreRooFit::ConvexOnly        ) ;
 ClassImp ( Ostap::MoreRooFit::BSpline           ) ;
 ClassImp ( Ostap::MoreRooFit::Rational          ) ;
 ClassImp ( Ostap::MoreRooFit::RationalBernstein ) ;
+ClassImp ( Ostap::MoreRooFit::Rank              ) ;
 // ============================================================================
 // constructor from the variable, range and list of coefficients
 // ============================================================================
@@ -1329,7 +1332,131 @@ double Ostap::MoreRooFit::ProfileLL::evaluate  () const
 }
 // ============================================================================
 
-  
+
+
+
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::Rank::Rank 
+( const std::string& name  , 
+  const std::string& title ,
+  const int          rank  , 
+  RooAbsReal&        a1    ,
+  RooAbsReal&        a2    )
+  : Rank ( name , title , rank , RooArgList ( a1 , a2 ) )
+{}
+// ============================================================================
+// constructor with three variables 
+// ============================================================================
+Ostap::MoreRooFit::Rank::Rank 
+( const std::string& name  , 
+  const std::string& title ,
+  const int          rank  , 
+  RooAbsReal&        a1    ,
+  RooAbsReal&        a2    ,
+  RooAbsReal&        a3    )
+  : Rank ( name , title , rank , RooArgList ( a1 , a2 , a3 ) )
+{}
+// ============================================================================
+// constructor with four variables 
+// ============================================================================
+Ostap::MoreRooFit::Rank::Rank 
+( const std::string& name  , 
+  const std::string& title ,
+  const int          rank  , 
+  RooAbsReal&        a1    ,
+  RooAbsReal&        a2    ,
+  RooAbsReal&        a3    ,
+  RooAbsReal&        a4    )
+  : Rank ( name , title , rank , RooArgList ( a1 , a2 , a3 , a4 ) )
+{}
+// ============================================================================
+// constructor with five variables 
+// ============================================================================
+Ostap::MoreRooFit::Rank::Rank 
+( const std::string& name  , 
+  const std::string& title ,
+  const int          rank  , 
+  RooAbsReal&        a1    ,
+  RooAbsReal&        a2    ,
+  RooAbsReal&        a3    ,
+  RooAbsReal&        a4    ,
+  RooAbsReal&        a5    )
+  : Rank ( name , title , rank , RooArgList ( a1 , a2 , a3 , a4 , a5 ) )
+{}
+// ============================================================================
+// constructor with six variables 
+// ============================================================================
+Ostap::MoreRooFit::Rank::Rank 
+( const std::string& name  , 
+  const std::string& title ,
+  const int          rank  , 
+  RooAbsReal&        a1    ,
+  RooAbsReal&        a2    ,
+  RooAbsReal&        a3    ,
+  RooAbsReal&        a4    ,
+  RooAbsReal&        a5    ,
+  RooAbsReal&        a6    )
+  : Rank ( name , title , rank , RooArgList ( a1 , a2 , a3 , a4 , a5 , a6 ) )
+{}
+// ============================================================================
+// constructor with many variables 
+// ============================================================================
+Ostap::MoreRooFit::Rank::Rank 
+( const std::string&      name  , 
+  const std::string&      title ,
+  const int               rank  , 
+  const RooAbsCollection& vars  )
+  : RooAbsReal ( name.c_str  () , title.c_str () )
+  , m_vars     ( "!vars" , "Variables" , this )
+  , m_rank     ( rank )
+  , m_aux      () 
+{
+  //
+  ::copy_real   ( vars , m_vars , s_INVALIDPAR , s_v8 ) ;
+  Ostap::Assert ( 2 <= ::size ( m_vars ) , s_NOTENOUGH  , s_v8 , 510 ) ;
+  //
+  const std::size_t  NN = ::size ( m_vars ) ;
+  if ( m_rank < 0 ) { m_rank += NN ; }
+  //
+  Ostap::Assert ( 0 <= m_rank && m_rank < NN ,
+		  "Invalid rank!"            ,
+		  "Ostap::MoreRooFit::Rank"  ) ;
+  //
+  m_aux.resize ( ::size ( m_vars ) ) ;
+}
+// =============================================================================
+// copy constructor 
+// =============================================================================
+Ostap::MoreRooFit::Rank::Rank
+( const Ostap::MoreRooFit::Rank& right , 
+  const char*                    name  )
+  : RooAbsReal  ( right , name   ) 
+  , m_vars      ( "!vars" , this , right.m_vars )
+  , m_rank      ( right.m_rank   )
+  , m_aux       ( right.m_aux    ) 
+{}
+// =============================================================================
+// destructor  
+// ============================================================================
+Ostap::MoreRooFit::Rank::~Rank(){}
+// ============================================================================
+// clone it!
+// ============================================================================
+Ostap::MoreRooFit::Rank*
+Ostap::MoreRooFit::Rank::clone ( const char* newname ) const
+{ return new Rank( *this , newname ) ; }
+// ============================================================================
+// Evaluate it!
+// ============================================================================
+Double_t 
+Ostap::MoreRooFit::Rank::evaluate() const
+{
+  ::set_pars ( m_vars , m_aux ) ;
+  std::sort ( m_aux.begin () , m_aux.end() ) ;
+  return m_aux [ m_rank ] ;
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

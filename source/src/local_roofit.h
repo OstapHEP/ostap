@@ -146,6 +146,39 @@ namespace
 #endif
     //
   }
+  // =======================================================================================
+  inline void set_pars 
+  ( const RooListProxy&  lst   , 
+    std::vector<double>& vct   )  
+  {
+    //
+    const RooArgSet* nset  = lst.nset() ;
+    vct.resize ( ::size ( lst ) ) ;
+    //
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
+    //
+    Ostap::Utils::Iterator it  ( lst  ) ; // only for ROOT < 6.18 
+    RooAbsArg*   p = 0 ;
+    unsigned int k = 0 ;
+    while ( ( p = (RooAbsArg*) it.next() ) )
+      {
+	const RooAbsReal* r = static_cast<const RooAbsReal*>( p ) ;
+	vct [ k ] = r->getVal ( nset ) ;  
+	++k ;
+      }
+    //
+#else
+    //
+    const unsigned int N = lst.size() ;
+    for ( unsigned int k = 0 ; k < N ; ++k ) 
+      {
+	const RooAbsReal& r = static_cast<const RooAbsReal&>( lst [ k ] ) ;
+	vct [ k ] = r.getVal ( nset ) ;  
+      }
+    //
+#endif
+    //
+  }
   // ==========================================================================
   void assign 
 (       RooAbsCollection& to   ,

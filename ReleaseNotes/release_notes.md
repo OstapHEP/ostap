@@ -7,7 +7,7 @@
   1. change default `silent=True` to `silent=False` for `graph_profile`
   1. modify a bit treatment of `residual=` and `pull=` in `PDF.draw`
   1. a fix for `test_fitting_datasets` and `tets_fitting_selectors`
-  
+  1. add `Ostap.MoreRooFit.Rank`  
   
 ## Backward incompatible
     
