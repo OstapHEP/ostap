@@ -20,6 +20,7 @@ from   ostap.core.pyrouts           import dsID,   Ostap
 from   ostap.utils.timing           import timing
 from   ostap.trees.data             import Data
 from   ostap.utils.progress_bar     import progress_bar
+from   ostap.core.core              import ROOTCWD 
 import ostap.trees.trees       
 import ostap.fitting.roofit
 import ostap.fitting.dataset
@@ -38,7 +39,7 @@ else :
 # =============================================================================
 ## create a file with tree 
 def create_tree ( fname , nentries ) :
-    """Create a file with a tree
+    """ Create a file with a tree
     >>> create_tree ( ('1.root' ,  1000 ) ) 
     """
     
@@ -46,11 +47,11 @@ def create_tree ( fname , nentries ) :
     import ostap.io.root_file
     
     from array import array 
-    var1 = array ( 'd', [0])
-    var2 = array ( 'd', [0])
-    var3 = array ( 'd', [0])
+    var1 = array ( 'd', [0.])
+    var2 = array ( 'd', [0.])
+    var3 = array ( 'd', [0.])
     
-    with ROOT.TFile.Open( fname , 'new' ) as root_file:
+    with ROOTCWD() , ROOT.TFile.Open ( fname , 'new' ) as root_file:
         
         tree = ROOT.TTree ( 'S','tree' )
         tree.SetDirectory ( root_file  ) 
@@ -71,13 +72,14 @@ def create_tree ( fname , nentries ) :
             tree.Fill()
             
         root_file.Write()
+        tree = None
         
     return  fname
 
 # ==============================================================================================
 ##  prepare data for the  test 
 def prepare_data ( nfiles   = 10  , nentries = 100 ) :
-    """Prepare data for the test
+    """ Prepare data for the test
     """
 
     files = [] 
@@ -89,7 +91,6 @@ def prepare_data ( nfiles   = 10  , nentries = 100 ) :
 
     files.sort() 
     return Data ( 'S' ,  files ) 
-
 
 with timing ("Prepare data ", logger ) :
     data = prepare_data ( nfiles = 10 , nentries = 20000 ) 
@@ -105,13 +106,14 @@ cuts &= "c2dtf < 3.0"
 cuts &= "1.5 < pt"
 cuts &= "pt< 10"
 
+
 # ============================================================================
 ##  Simple test
 #   - loop over the entries in the chain
 #   - select good entries
 #   - fill dataset 
 def test_simple_loop ()  :
-    """Simple test
+    """ Simple test
     - loop over the entries in the chain
     - select good entries
     - fill dataset
@@ -364,7 +366,8 @@ def test_selector_with_vars3 ()  :
 # ==============================================================================================
 if '__main__' == __name__ :
 
-    test_simple_loop         ()        
+    
+    test_simple_loop         ()
     test_loop_with_cuts      ()    
     test_simple_selector     ()    
     test_selector_with_cuts  ()    

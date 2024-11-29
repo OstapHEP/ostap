@@ -161,6 +161,7 @@ ws9 = ws7 - 'Pt1,Pt2'
 logger.info ( 'Print remove#Pt  unweighted sample:\n%s' % ss9.table ( prefix = '# ' ) )
 logger.info ( 'Print remove#Pt    weighted sample:\n%s' % ws9.table ( prefix = '# ' ) )
 
+
 # =============================================================================
 ## (13) remove variables 
 # =============================================================================
@@ -187,6 +188,7 @@ lw = Ostap.Math.LegendreSum ( 12 , 0 , 50 )
 ld = dataset .project ( ld  , 'Pt1' , 'Mass<5' )
 lw = weighted.project ( lw  , 'Pt1' , 'Mass<5' )
 
+
 # =============================================================================
 ## (16) plot 
 # =============================================================================
@@ -204,14 +206,15 @@ with use_canvas ( "test_fitting_datatset: weighted.draw" , wait  =2 ) :
     hw.draw ( 'same' , color = 4 )
     lw.draw ( 'same' , color = 4 , width = 3 )
 
+    
 # =============================================================================
 ## (17) conversion to TTree/TChain 
 # =============================================================================
 chd = dataset .asTree()
 chw = weighted.asTree()
+
 logger.info ( 'Print tree/chain unweighted sample:\n%s' % chd.table ( prefix = '# ' ) )
 logger.info ( 'Print tree/chain   weighted sample:\n%s' % chw.table ( prefix = '# ' ) )
-
 
 # =============================================================================
 ##                                                                      The END 

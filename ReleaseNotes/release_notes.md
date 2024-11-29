@@ -6,7 +6,9 @@
   1. suppress `CloneData` argument for NLL creation for 6.28<=ROOT
   1. change default `silent=True` to `silent=False` for `graph_profile`
   1. modify a bit treatment of `residual=` and `pull=` in `PDF.draw`
-
+  1. a fix for `test_fitting_datasets` and `tets_fitting_selectors`
+  
+  
 ## Backward incompatible
     
 ## Bug fixes

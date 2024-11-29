@@ -44,7 +44,7 @@ from   ostap.stats.statvars      import data_decorate, data_range
 from   ostap.utils.valerrors     import VAE
 import ostap.fitting.roocollections
 import ostap.fitting.printable
-import ROOT, random, math, sys, ctypes  
+import ROOT, random, math, os, sys, ctypes  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -1399,7 +1399,6 @@ def ds_draw ( dataset ,
         return tree_draw ( dataset , what, cuts = cuts , opts = opts ,  first = first , last = last , delta = delta , **kwargs )
     elif isinstance ( dataset , ROOT.RooAbsData ) : 
         ranges = ds_range ( dataset , varlst , cuts = cuts , cut_range = cut_range , first = first , last  = last , delta = delta )
-        print  ( 'RANGES' , ranges , varlst ) 
     else :
         ## something else ? e.g. DataFrame 
         assert not cut_range                   , "ds_draw: `cut_range' is not allowed!"
@@ -2810,7 +2809,7 @@ _new_methods_ += [
 #  dataset = ...
 #  tree    = dataset.asTree() 
 #  @endcode
-def ds_to_tree ( dataset , filename = '' ) :
+def ds_to_tree ( dataset , filename = '' , silent = True ) :
     """ Get dataset as `ROOT.TTree`
     - for Tree-based datasets gets the internal tree
     - otherwise tree will be created
@@ -2821,64 +2820,41 @@ def ds_to_tree ( dataset , filename = '' ) :
     
     import ostap.io.root_file
     import ostap.trees.trees
+
+    ## the simplest case
     
-    ## first, unweight it, if weighted 
-    if dataset.isWeighted () :
-        
-        with useStorage ( RAD.Tree ) , ROOTCWD() :
-            
-            if not filename :
-                import ostap.utils.cleanup as CU 
-                filename = CU.CleanUp.tempfile ( suffix = '.root' )
-                logger.info ( "Temporary ROOT file is created: %s" % filename ) 
-
-            with ROOT.TFile ( filename , 'u' ) as rfile :
-                
-                rfile.cd ()
-                weight       = dataset.wname() 
-                uwds , wname = dataset.unWeighted () ##  weight )
-                
-                tree = uwds.GetClonedTree()
-                
-                tree.SetName ( 'tree_%s' % dataset.GetName() )
-                tree .Write()
-                ## rfile.Write() 
-                tname = tree.GetName()
-
-                uwds.clear() 
-                del uwds
-                logger.debug ( 'ROOT file %s\n%s' % ( filename , rfile.as_table ( prefix = '# ' ) ) ) 
-                
-            chain = ROOT.TChain ( tname )
-            chain.AddFile ( filename )
-            return chain 
-
     store = dataset.store()
-    if hasattr ( store , 'tree' ) :
+    if store and isinstance ( store , ROOT.RooTreeDataStore ) :
         tree = store.tree()
-        if valid_pointer ( tree ) and len ( tree ) == len ( dataset ) :
-            return dataset.GetClonedTree()
+        return tree
         
+    if not filename :
+        import ostap.utils.cleanup as CU 
+        filename = CU.CleanUp.tempfile ( suffix = '.root' )
+        if not silent : logger.info ( "Temporary ROOT file is created: %s" % filename ) 
+        
+    tname =  'tree_%s' % dataset.GetName() 
     with useStorage ( RAD.Tree ) , ROOTCWD() :
-        
-        if not filename :
-            import ostap.utils.cleanup as CU 
-            filename = CU.CleanUp.tempfile ( suffix = '.root' )
-            logger.info ( "Temporary ROOT file is created: %s" % filename ) 
-            
         with ROOT.TFile ( filename , 'u' ) as rfile :
-
-            rfile.cd ()
-            tree = dataset.GetClonedTree()
-            tree.SetName ( 'tree_%s' % dataset.GetName() )
-            tree .Write()
-            ## rfile.Write()
-            tname = tree.GetName()
-            logger.debug ( 'ROOT file %s\n%s' % ( filename , rfile.as_table ( prefix = '# ' ) ) ) 
+            rfile.cd() 
+            dataset.convertToTreeStore ()
+            dataset.Write () 
+            store = dataset.store()
+            if store and isinstance ( store , ROOT.RooTreeDataStore ) :
+                tree = store.tree()
+                tree.SetName ( tname )                
+            else                                                      :
+                tree = dataset.GetClonedTree()
+                tree.SetName ( tname )                
+                tree.SetDirectory ( rfile ) 
+            ##        
+            tree.Write  ()
+            if not silent : rfile.ls()
             
-        chain = ROOT.TChain ( tname )
-        chain.AddFile ( filename )
-        return chain 
+    chain = ROOT.TChain ( tname )
+    chain.Add ( filename )
+    
+    return chain 
             
 # ============================================================================
 
