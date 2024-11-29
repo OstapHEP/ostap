@@ -218,9 +218,12 @@ def whichdb ( filename  ) :
             s16 = f.read(16)   
     except OSError :
         return None
-    
-    s = s16[0:4]
-    
+
+    ## TKRZW: Hash 
+    if ( 3 , 6 ) <= sys.version_info :
+        if s16[:9] == b'TkrzwHDB\n': return 'TkrzwHDB'
+
+    s = s16[:4]
     # Return "" if not at least 4 bytes
     if len ( s ) != 4:
         return ""

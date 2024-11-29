@@ -39,13 +39,14 @@ else :
 # ==============================================================================
 ## prepare traing and testing data for TMVA 
 def prepare_data ( nB = 10000 , nS = 10000 ) :
-    """{epare traing and testing data for TMVA"""
+    """ Prepare training and testing data for TMVA"""
 
     logger = getLogger ( 'test_tmva2:prepare_data' )
     data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-test-tools-tmva2-' )
     
     logger.info('Prepare input ROOT file with data  %s' % data_file )
-    with ROOT.TFile.Open ( data_file ,'recreate') as test_file:
+    import ostap.io.root_file 
+    with ROOT.TFile ( data_file ,'recreate') as test_file:
         
         treeSignal = ROOT.TTree('S','signal     tree')
         treeBkg    = ROOT.TTree('B','background tree')
@@ -91,13 +92,15 @@ def prepare_data ( nB = 10000 , nS = 10000 ) :
             
         test_file.Write()
         test_file.ls()
+        treeSignal = None
+        treeBkg    = None
         
     return data_file
 
 # =============================================================================
 ## Run TMVA test 
 def test_tmva2() :
-    """Run TMVA test"""
+    """ Run TMVA test """
 
     logger = getLogger ( 'test_tmva2' )
 
@@ -143,7 +146,7 @@ def test_tmva2() :
             workdir        = CleanUp.tempdir ( prefix = 'ostap-tmva2-workdir-' ) ) ##  working directory 
         
         with timing ( 'for TMVA training' , logger ) : 
-            weights_files = trainer.train ()
+            weights_files = trainer.train ()            
             tar_file      = trainer.tar_file
             trainer_name  = trainer.name
             tmva_output   = trainer.output_file
@@ -270,7 +273,7 @@ def test_tmva2() :
         title = 'Background response (RooDataSet)'
         table = counters_table ( counters , title = title , prefix = '# ' )
         logger.info ( '%s\n%s' % ( title , table ) )
-
+    
 # =============================================================================
 if '__main__' == __name__ :
 

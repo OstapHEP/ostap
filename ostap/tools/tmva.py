@@ -884,7 +884,7 @@ class Trainer(object):
         self.__log_file = None
 
         if  log :
-            
+
             try :
                 if os.path.exists ( log ) and os.path.isfile ( log ) : os.remove ( log )
             except :
@@ -906,7 +906,7 @@ class Trainer(object):
         with context , context2 :
             
             result = self.__train ()
-
+            
             ## Training outputs
                     
             rows = [ ( 'Item' , 'Value' ) ]

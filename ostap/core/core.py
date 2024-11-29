@@ -301,7 +301,7 @@ _valid_pointer_ = Ostap.Utils.valid_pointer
 #  @endcode 
 #  @see Ostap::Utils::valid_pointer 
 def valid_pointer ( obj ) :
-    """Is it a valid C++ pointer?
+    """ Is it a valid C++ pointer?
     - see Ostap::Utils::valid_pointer 
     >>> ptr = ...
     >>> print 'Is the C++ pointer valid? %s'  % valid_pointer ( ptr ) 
@@ -315,7 +315,7 @@ def valid_pointer ( obj ) :
 #  red = root_enum ( 'Red' ) 
 #  @endcode 
 def root_enum ( name , default = None ) :
-    """ Get value of enum form ROOT by name
+    """ Get value of enum from ROOT by name
     >>> red   = root_enum ( 'Red'   )
     >>> blue  = root_enum ( 'Blue'  )    
     >>> green = root_enum ( 'Green' )    
@@ -326,7 +326,7 @@ def root_enum ( name , default = None ) :
     return getattr ( ROOT, 'k' + name , default )
 
 # =============================================================================
-# predefiend ROOT colors
+# predefined ROOT colors
 # @code
 #  enum EColor { kWhite =0,   kBlack =1,   kGray=920,
 #                kRed   =632, kGreen =416, kBlue=600, kYellow=400, kMagenta=616, kCyan=432,
@@ -372,7 +372,7 @@ def root_colors ( color ) :
 # =============================================================================
 ## Convert color name into color index
 def check_color ( color ) :
-    """Convert color name into color index 
+    """ Convert color name into color index 
     """
     if isinstance ( color , string_types ) :
         
@@ -457,7 +457,7 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
         >>> obj.draw ( minimal     = -1  )
         >>> obj.draw ( max         = 100 )
         
-        - Combined FillStyle/FillColor optoios
+        - Combined FillStyle/FillColor options
         
         >> obj.draw ( fill = 29   ) ## Color if    0 < fill < 1000 
         >> obj.draw ( fill = 2045 ) ## Style if 1000 < fill 
@@ -653,7 +653,7 @@ ROOT.TNamed.title = property ( _tn_title_get_ ,  _tn_title_set_ , None , _tn_tit
 #  path = obj.path
 #  @endcode 
 def _tn_path_ ( obj ) :
-    """Get the full path of the named object
+    """ Get the full path of the named object
     >>> obj  = ...
     >>> path = obj.path
     """
@@ -676,7 +676,7 @@ ROOT.TNamed.path = property ( _tn_path_ , None , None , None  )
 #  if odir : ...
 #  @endcode
 def _rd_valid_ ( rdir ) :
-    """Valid TDirectory ?
+    """ Valid TDirectory ?
     - check valid C++ TDirectory pointer 
     - for file directories check validity of the file 
     >>> odir = ...
@@ -701,7 +701,7 @@ ROOT.TDirectory.__nonzero__  = _rd_valid_
 # =============================================================================
 ## check that list is sorted 
 def is_sorted ( lst ) :
-    """Check that list is sorted
+    """ Check that list is sorted
     """
     l = len ( lst )  
     return all ( lst [ i ] <= lst [ i + 1 ] for i in range ( l - 1 ) ) if lst else True 
@@ -716,7 +716,7 @@ def is_sorted ( lst ) :
 #   @see TCollection
 #   @see TCollection::FindObject
 def _rtc_contains_ ( lst , item ) :
-    """Contains method for `TCollection` object
+    """ Contains method for `TCollection` object
     >>> collection = ...
     >>> 'name' in collection
     >>> obj    in collection 
@@ -736,7 +736,7 @@ def _rtc_contains_ ( lst , item ) :
 #   @see TSeqCollection
 #   @see TSeqCollection::FindObject
 def _rtl_contains_ ( lst , item ) :
-    """Contains method for `TSeqCollection` object
+    """ Contains method for `TSeqCollection` object
     >>> lst  = ...
     >>> 'name' in lst 
     >>> obj    in lst
@@ -884,7 +884,7 @@ ROOT.TSeqCollection . get = _rtl_get_
 #  @see TCollection::Add 
 #  @see TCollection::AddAll 
 def _rtc_iadd_ ( self , item ) :
-    """Add/append element or elements to `ROOT.TCollection` container
+    """ Add/append element or elements to `ROOT.TCollection` container
     >>> collectiom   = ...
     >>> item         = ...
     >>> collection  += item
@@ -923,7 +923,7 @@ ROOT.TCollection. __iadd__ = _rtc_iadd_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-09
 class RooSilent(object) :
-    """Very simple context manager to suppress RooFit printout
+    """ Very simple context manager to suppress RooFit printout
     
     >>> with rooSilent( 4 , False ) :
     ...        some_RooFit_code_here ()
@@ -1155,7 +1155,7 @@ def split_string ( line                            ,
                    separators     = var_separators ,
                    strip          = False          ,
                    respect_groups = False          ) :
-    """Split the string using separators
+    """ Split the string using separators
     >>> split_string ( ' a b cde,fg;jq', ',;:' )
     """
     if respect_groups :
@@ -1211,8 +1211,6 @@ else :
     if ROOT.ROOT.IsImplicitMTEnabled() : 
         logger.debug ("Implicit MT is disabled")
         ROOT.ROOT.DisableImplicitMT ()
-
-
 
 # =============================================================================
 ## Are we in CMAKE-test regime?

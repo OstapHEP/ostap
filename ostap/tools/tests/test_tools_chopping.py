@@ -48,8 +48,9 @@ if not os.path.exists( data_file ) :
     b_evt_per_run = 511
     
     logger.info('Prepare input ROOT file with data %s' % data_file )
-    with ROOT.TFile.Open( data_file ,'recreate') as test_file:
-        ## test_file.cd()
+    import ostap.io.root_file 
+    with ROOT.TFile( data_file ,'recreate') as test_file:
+        
         treeSignal = ROOT.TTree('S','signal     tree')
         treeBkg    = ROOT.TTree('B','background tree')
         treeSignal.SetDirectory ( test_file ) 
@@ -125,12 +126,15 @@ if not os.path.exists( data_file ) :
             
         test_file.Write()
         test_file.ls()
+        treeSignal = None
+        treeBkg    = None
 
+# ===========================================================================
 ##   number of    categories 
 N  = 7
 logger.info('Create and train TMVA')
 
-# =============================================================================
+# ============================================================================
 ## Train TMVA
 # ============================================================================
 cSignal = ROOT.TChain ( 'S' ) ; cSignal.Add ( data_file )

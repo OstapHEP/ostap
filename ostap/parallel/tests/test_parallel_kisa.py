@@ -24,6 +24,7 @@ import ostap.parallel.kisa              ## ATTENTION!
 import ostap.parallel.parallel_project  ## ATTENTION!
 import ostap.parallel.parallel_fill     ## ATTENTION!
 ##
+import ostap.io.root_file 
 import ROOT,os,  random  
 ##
 # =============================================================================
@@ -37,7 +38,7 @@ else :
 # =============================================================================
 ## create a file with tree 
 def create_tree ( jobid , item ) :
-    """Create a file with a tree
+    """ Create a file with a tree
     >>> create_tree ( ('1.root' ,  1000 ) ) 
     """
     
@@ -50,8 +51,8 @@ def create_tree ( jobid , item ) :
     var1 = array ( 'd', [0])
     var2 = array ( 'd', [0])
     var3 = array ( 'd', [0])
-    
-    with ROOT.TFile.Open( fname , 'new' ) as root_file:
+
+    with ROOT.TFile( fname , 'new' ) as root_file:
         
         tree = ROOT.TTree ( 'S','tree' )
         tree.SetDirectory ( root_file  ) 
@@ -72,6 +73,7 @@ def create_tree ( jobid , item ) :
             tree.Fill()
             
         root_file.Write()
+        tree = None
         
     return  fname,
 
@@ -121,7 +123,6 @@ with timing('Prepare data') :
 # =============================================================================
 def test_kisa () : 
 
-
     logger = getLogger ( 'test_parallel_kisa' )
     
     if 62400 <= ROOT.gROOT.GetVersionInt() < 62406 :
@@ -143,7 +144,7 @@ def test_kisa () :
         
     logger.info ( h2.dump(100,30) ) 
 
-
+# ============================================================================
 class MASS (object):
     def __call__ (  self , s ) :
         return s.mass

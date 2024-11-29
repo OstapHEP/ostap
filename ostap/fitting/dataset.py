@@ -44,6 +44,7 @@ from   ostap.stats.statvars      import data_decorate, data_range
 from   ostap.utils.valerrors     import VAE
 import ostap.fitting.roocollections
 import ostap.fitting.printable
+import ostap.io.root_file 
 import ROOT, random, math, os, sys, ctypes  
 # =============================================================================
 # logging 
