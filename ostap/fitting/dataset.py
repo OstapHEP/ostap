@@ -2842,50 +2842,57 @@ def ds_to_tree ( dataset , filename = '' , silent = True ) :
         filename = CU.CleanUp.tempfile ( suffix = '.root' )
         if not silent : logger.info ( "Temporary ROOT file is created: %s" % filename ) 
         
-    print ( 'T-TREE/3' )
+    print ( 'T-TREE/3', filename )
     with useStorage ( RAD.Tree ) , ROOTCWD() :
         with ROOT.TFile ( filename , 'u' ) as rfile :
             rfile.cd()
             
-            ## dataset.convertToTreeStore ()
-            ## dataset.Write ()
-            ## store = dataset.store()
+            dataset.convertToTreeStore ()
+            dataset.Write ()
+            store = dataset.store()
 
-            tds   = ROOT.RooDataSet  ( dataset , dsID() )            
-            ## tds.Write()
-            store = tds.store()
+            ## tds   = ROOT.RooDataSet  ( dataset , dsID() )            
+            ## store = tds.store()
             
-            print ( 'T-TREE/4' )
+            print ( 'T-TREE/4' , type ( store ) )
             if store and isinstance ( store , ROOT.RooTreeDataStore ) :
                 print ( 'T-TREE/5' )
                 tree  = store.tree()
+                print ( 'T-TREE/5.1' , tree.GetDirectory() ) 
                 tname = tree.name 
             else                                                      :
                 print ( 'T-TREE/6' )
                 tree  = dataset.GetClonedTree()
+                print ( 'T-TREE/6.1' , tree.GetDirectory() ) 
                 tname = tree.name 
             ##
             print ( 'T-TREE/7' )
             tdir = tree.GetDirectory ()
+            print ( 'T-TREE/7.1' , tree.GetDirectory()  )
             if ( not tdir ) or ( not tdir is rfile )  : 
                 print ( 'T-TREE/7.1'  )
                 tree.SetDirectory ( rfile ) 
                 tree.Write  ()
                 print ( 'T-TREE/7.2'  )
             print ( 'T-TREE/7.3'  )    
-            rfile.ls() 
+            rfile.ls()
+            rfile.Write() 
             if not silent : rfile.ls()
             print ( 'T-TREE/7.4'  )    
 
-        print ( 'T-TREE/8.0' )
-        if tds and  instance ( tds ,ROOT.RooDataSet ) : 
-            tds = Ostap.MoreRooFit.delete_data ( tds )            
+        print ( 'T-TREE/8.0' , tname )
         tree  = None
-        store = None
-        tds   = None 
-        print ( 'T-TREE/1' )
+        store = None 
+        ## if tds and isinstance ( tds , ROOT.RooDataSet ) : 
+        ##     tds = Ostap.MoreRooFit.delete_data ( tds )            
+        ## tds   = None 
+        print ( 'T-TREE/8.1' )
+        with ROOT.TFile ( filename , 'READ' ) as rfile :
+            rfile.ls()
+        print ( 'T-TREE/8.2' )
             
-    print ( 'T-TREE/9' )
+        
+    print ( 'T-TREE/9' , tname , filename )
     chain = ROOT.TChain ( tname )
     chain.Add ( filename )
     print ( 'T-TREE/10' )
