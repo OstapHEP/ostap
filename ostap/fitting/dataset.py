@@ -2851,6 +2851,7 @@ def ds_to_tree ( dataset , filename = '' , silent = True ) :
             ##        
             tree.Write  ()
             if not silent : rfile.ls()
+            tree = None
             
     chain = ROOT.TChain ( tname )
     chain.Add ( filename )
