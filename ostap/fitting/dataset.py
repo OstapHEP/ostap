@@ -2818,22 +2818,28 @@ def ds_to_tree ( dataset , filename = '' , silent = True ) :
     >>> dataset = ...
     >>> tree    = dataset.asTree() 
     """
+
+    print ( 'T-TREE/0' )
     
     import ostap.io.root_file
     import ostap.trees.trees
 
     ## the simplest case
     
+    print ( 'T-TREE/1' )
     store = dataset.store()
     if store and isinstance ( store , ROOT.RooTreeDataStore ) :
+        print ( 'T-TREE/2' )
         tree = store.tree()
         return tree
-        
+
+    
     if not filename :
         import ostap.utils.cleanup as CU 
         filename = CU.CleanUp.tempfile ( suffix = '.root' )
         if not silent : logger.info ( "Temporary ROOT file is created: %s" % filename ) 
         
+    print ( 'T-TREE/3' )
     tname =  'tree_%s' % dataset.GetName() 
     with useStorage ( RAD.Tree ) , ROOTCWD() :
         with ROOT.TFile ( filename , 'u' ) as rfile :
@@ -2841,20 +2847,27 @@ def ds_to_tree ( dataset , filename = '' , silent = True ) :
             dataset.convertToTreeStore ()
             dataset.Write () 
             store = dataset.store()
+            print ( 'T-TREE/4' )
             if store and isinstance ( store , ROOT.RooTreeDataStore ) :
+                print ( 'T-TREE/5' )
                 tree = store.tree()
                 tree.SetName ( tname )                
             else                                                      :
+                print ( 'T-TREE/6' )
                 tree = dataset.GetClonedTree()
                 tree.SetName ( tname )                
             ##
+            print ( 'T-TREE/7' )
             tree.SetDirectory ( rfile ) 
             tree.Write  ()
             if not silent : rfile.ls()
             tree = None
+            print ( 'T-TREE/8' )
             
+    print ( 'T-TREE/9' )
     chain = ROOT.TChain ( tname )
     chain.Add ( filename )
+    print ( 'T-TREE/10' )
     
     return chain 
             
