@@ -2842,19 +2842,19 @@ def ds_to_tree ( dataset , filename = '' , silent = True ) :
     with useStorage ( RAD.Tree ) , ROOTCWD() :
         with ROOT.TFile ( filename , 'u' ) as rfile :
             rfile.cd()
-            tds = ROOT.RooDataSet  ( dataset , dsID() )
-            tds.Write()
             
             ## dataset.convertToTreeStore ()
             ## dataset.Write ()
             ## store = dataset.store()
 
+            tds   = ROOT.RooDataSet  ( dataset , dsID() )            
+            tds.Write()
             store = tds.store()
             
             print ( 'T-TREE/4' )
             if store and isinstance ( store , ROOT.RooTreeDataStore ) :
                 print ( 'T-TREE/5' )
-                tree = store.tree()
+                tree  = store.tree()
                 tname = tree.name 
             else                                                      :
                 print ( 'T-TREE/6' )
@@ -2867,9 +2867,10 @@ def ds_to_tree ( dataset , filename = '' , silent = True ) :
                 tree.SetDirectory ( rfile ) 
                 tree.Write  ()
             if not silent : rfile.ls()
-            tree  = None
-            store = None 
-            print ( 'T-TREE/8' )
+        tree  = None
+        store = None
+        tds   = None 
+        print ( 'T-TREE/8' )
             
     print ( 'T-TREE/9' )
     chain = ROOT.TChain ( tname )
