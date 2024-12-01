@@ -2829,10 +2829,14 @@ def ds_to_tree ( dataset , filename = '' , silent = True ) :
     print ( 'T-TREE/1' )
     store = dataset.store()
     if store and isinstance ( store , ROOT.RooTreeDataStore ) :
-        print ( 'T-TREE/2' )
+        print ( 'T-TREE/2.1' )
         tree = store.tree()
-        return tree
-
+        if valid_pointer ( tree ) :
+            print ( 'found-TREE', type ( tree ) )                 
+            return tree
+        print ( 'T-TREE/2.2' )
+        
+        
     if not filename :
         import ostap.utils.cleanup as CU 
         filename = CU.CleanUp.tempfile ( suffix = '.root' )
@@ -2848,7 +2852,7 @@ def ds_to_tree ( dataset , filename = '' , silent = True ) :
             ## store = dataset.store()
 
             tds   = ROOT.RooDataSet  ( dataset , dsID() )            
-            tds.Write()
+            ## tds.Write()
             store = tds.store()
             
             print ( 'T-TREE/4' )
@@ -2864,13 +2868,22 @@ def ds_to_tree ( dataset , filename = '' , silent = True ) :
             print ( 'T-TREE/7' )
             tdir = tree.GetDirectory ()
             if ( not tdir ) or ( not tdir is rfile )  : 
+                print ( 'T-TREE/7.1'  )
                 tree.SetDirectory ( rfile ) 
                 tree.Write  ()
+                print ( 'T-TREE/7.2'  )
+            print ( 'T-TREE/7.3'  )    
+            rfile.ls() 
             if not silent : rfile.ls()
+            print ( 'T-TREE/7.4'  )    
+
+        print ( 'T-TREE/8.0' )
+        if tds and  instance ( tds ,ROOT.RooDataSet ) : 
+            tds = Ostap.MoreRooFit.delete_data ( tds )            
         tree  = None
         store = None
         tds   = None 
-        print ( 'T-TREE/8' )
+        print ( 'T-TREE/1' )
             
     print ( 'T-TREE/9' )
     chain = ROOT.TChain ( tname )
