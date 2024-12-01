@@ -2847,8 +2847,8 @@ def ds_to_tree ( dataset , filename = '' , silent = True ) :
             else                                                      :
                 tree = dataset.GetClonedTree()
                 tree.SetName ( tname )                
-                tree.SetDirectory ( rfile ) 
-            ##        
+            ##
+            tree.SetDirectory ( rfile ) 
             tree.Write  ()
             if not silent : rfile.ls()
             tree = None
