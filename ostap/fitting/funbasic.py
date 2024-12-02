@@ -40,9 +40,6 @@ from   ostap.math.base               import iszero , isequal
 from   ostap.fitting.utils           import make_name 
 from   ostap.fitting.variables       import SETVAR
 from   ostap.fitting.roofit          import PDF_fun 
-## from   ostap.fitting.fithelpers      import ( VarMaker  ,
-##                                               FitHelper ,
-##                                              XVar, YVar, ZVar, NameDuplicates ) 
 from   ostap.fitting.fithelpers      import ( FitHelper      ,
                                               ConfigReducer  ,
                                               config_factory , 
@@ -65,11 +62,6 @@ isone = lambda x : isequal ( float ( x ) , 1 )
 # =============================================================================
 ## for better backward compatibility
 func_factory = config_factory  
-## ## helper factory function
-## def func_factory ( klass , config ) :
-##     """Helper factory function, used for unpickling"""
-##     with NameDuplicates ( True ) : 
-##         return klass ( **config ) 
 # =============================================================================
 ## @class AFUN1
 #  Helper base class for implementation of various (Roo)Function-wrappers

@@ -26,15 +26,16 @@ __all__     = (
     'GoF1DToys'          , ## helper utility for GoF estimate with toys 
     )
 # =============================================================================
-from   collections            import defaultdict, namedtuple
-from   ostap.core.meta_info   import root_info 
-from   ostap.fitting.funbasic import AFUN1
-from   ostap.fitting.pdfbasic import PDF1
-from   ostap.core.core        import SE, VE, Ostap, cidict_fun 
-from   ostap.math.base        import doubles, axis_range  
-from   ostap.math.models      import f1_draw
-from   ostap.utils.basic      import numcpu, loop_items  
-from   ostap.stats.gof_utils  import Estimators,Summary
+from   collections              import defaultdict, namedtuple
+from   ostap.core.meta_info     import root_info 
+from   ostap.fitting.funbasic   import AFUN1
+from   ostap.fitting.pdfbasic   import PDF1
+from   ostap.core.core          import SE, VE, Ostap, cidict_fun 
+from   ostap.math.base          import doubles, axis_range  
+from   ostap.math.models        import f1_draw
+from   ostap.utils.basic        import numcpu, loop_items  
+from   ostap.stats.gof_utils    import Estimators,Summary
+from   ostap.fitting.fithelpers import ConfigReducer 
 import ostap.fitting.ds2numpy 
 import ostap.fitting.roofit
 import ROOT, math  
@@ -194,7 +195,7 @@ def ZC  ( cdf_data ) :
 ## @class GoF1D
 #  Goodness of 1D-fits 
 #  @see https://doi.org/10.1111/1467-9868.00337
-class GoF1D(Estimators) :
+class GoF1D(Estimators,ConfigReducer) :
     """ Goodness-of-fit 1D-case 
     - see https://doi.org/10.1111/1467-9868.00337
     """
@@ -238,8 +239,8 @@ class GoF1D(Estimators) :
         self.__ecdf     = Ostap.Math.ECDF ( data2vct ( self.__data ) )
 
         ## evalute CDF for sorted data 
-        self.__cdf_data = self.__vct_cdf ( self.__data )
-
+        self.__cdf_data = self.clip ( self.__vct_cdf ( self.__data ) ) 
+        
         self.__estimators = {
             'KS'  : kolmogorov_smirnov ( self.__cdf_data ) , 
             'K'   : kuiper             ( self.__cdf_data ) , 
@@ -249,6 +250,12 @@ class GoF1D(Estimators) :
             'ZA'  : ZA                 ( self.__cdf_data ) , 
             'ZC'  : ZC                 ( self.__cdf_data ) , 
         }
+        
+        self.config = {
+            'pdf'     : pdf     ,
+            'dataset' : dataset , 
+        }
+        
     # =========================================================================
     @property
     def estimators ( self ) :
@@ -350,6 +357,16 @@ class GoF1D(Estimators) :
     
     __repr__ = Estimators.table
     __str__  = Estimators.table
+
+    # =========================================================================
+    ## Clip input CDF arrays 
+    def clip ( self , input ) :
+        """ Clip input CDF arrays"""
+        vmin , vmax = 1.e-12 , 1 - 1.e-10
+        ## if np.min ( input ) < vmin or vmax < np.max ( input ) :
+        ## logger.warning ( 'Adjust CDF' ) 
+        return np.clip ( input , a_min = vmin , a_max = vmax )
+        ## return input 
     
     # =========================================================================
     ## Draw fit CDF & empirical ECDF 
@@ -448,7 +465,11 @@ class GoF1DToys(GoF1D,Summary) :
             dset     = self.__pdf.generate ( self.N  , sample = True )
             data     = dset.tonumpy ( varname ) [ varname ] 
             data     = np.sort ( data )
-            cdf_data = vct_cdf ( data )
+
+            
+            cdf_data = self.clip ( vct_cdf ( data ) ) 
+
+
             
             ks       = kolmogorov_smirnov ( cdf_data )
             k        = kuiper             ( cdf_data )

@@ -73,13 +73,13 @@ def _rrv_factory ( args , errors , binnings , fixed , *attrs ) :
     rrv.setConstant ( fixed )
     
     if attrs :
-        battrs = attrs [ 0 ] 
+        battrs = attrs [ 0 ]
         for n , a in battrs : rrv.setAttribute          ( n , a )
         if 1 < len ( attrs ) :
-            sattrs = attrs [ 1 ] 
+            sattrs = attrs [ 1 ]
             for n , a in sattrs : rrv.setStringAttribute    ( n , a )
             if 2 < len ( attrs ) :
-                tattrs = attrs [ 2 ]             
+                tattrs = attrs [ 2 ]
                 for n , a in tattrs : rrv.setTransientAttribute ( n , a ) 
     
     return rrv
@@ -122,9 +122,9 @@ def _rrv_reduce ( rrv ) :
 
     ## attributes:
     
-    battrs   = tuple ( ( n , rrv.getAttribute          ( n ) ) for   n       in rrv.attributes          () ) 
-    sattrs   = tuple ( ( n , a                               ) for ( n , a ) in rrv.stringAttributes    () ) 
-    tattrs   = tuple ( ( n , rrv.getTransientAttribute ( n ) ) for   n       in rrv.transientAttributes () ) 
+    battrs   = tuple ( ( str ( n ) , rrv.getAttribute          ( n ) ) for   n       in rrv.attributes          () ) 
+    sattrs   = tuple ( ( str ( n ) , str ( a )                       ) for ( n , a ) in rrv.stringAttributes    () ) 
+    tattrs   = tuple ( ( str ( n ) , rrv.getTransientAttribute ( n ) ) for   n       in rrv.transientAttributes () ) 
 
     ## fixed ? 
     fixed = True if rrv.isConstant() else False 
