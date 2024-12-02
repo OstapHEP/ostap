@@ -8,7 +8,7 @@
   1. modify a bit treatment of `residual=` and `pull=` in `PDF.draw`
   1. a fix for `test_fitting_datasets` and `tets_fitting_selectors`
   1. add `Ostap.MoreRooFit.Rank`  
-  1. make serilizationof GoF1D object more robust 
+  1. make (de)serialization of GoF1D objects more robust 
   1. tweak for `RooRealVar.__reduce__`
   1. add clipping for `GoF1D/GoF1DToys`
 
