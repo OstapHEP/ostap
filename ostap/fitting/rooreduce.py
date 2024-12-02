@@ -118,7 +118,7 @@ def _rrv_reduce ( rrv ) :
 
     ## binnings 
         
-    binnings = tuple (   rrv.getBinning ( n , False )       for n in rrv.getBinningNames     () )
+    binnings = tuple ( rrv.getBinning ( n , False ) for n in rrv.getBinningNames () )
 
     ## attributes:
     
