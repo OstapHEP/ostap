@@ -2825,6 +2825,15 @@ def ds_to_tree ( dataset , filename = '' , silent = True ) :
     import ostap.trees.trees
 
     ## the simplest case
+
+    tree = dataset.tree()
+    if valid_pointer ( tree ) :
+        print ( 'found-TREE/1', type ( tree ) )                 
+        return tree
+    
+    print ( 'make clooned-TREE/1' )                 
+    return dataset.GetClonedTree()
+        
     
     print ( 'T-TREE/1' )
     store = dataset.store()
@@ -2856,7 +2865,7 @@ def ds_to_tree ( dataset , filename = '' , silent = True ) :
                 return tree
             
     print ( 'T-TREE/8', filename )
-    return datastet.GetClonedTree()
+    return dataset.GetClonedTree()
             
 # ============================================================================
 
