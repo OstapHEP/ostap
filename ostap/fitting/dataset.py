@@ -2832,10 +2832,9 @@ def ds_to_tree ( dataset , filename = '' , silent = True ) :
         print ( 'T-TREE/2.1' )
         tree = store.tree()
         if valid_pointer ( tree ) :
-            print ( 'found-TREE', type ( tree ) )                 
+            print ( 'found-TREE/1', type ( tree ) )                 
             return tree
         print ( 'T-TREE/2.2' )
-        
         
     if not filename :
         import ostap.utils.cleanup as CU 
@@ -2843,61 +2842,21 @@ def ds_to_tree ( dataset , filename = '' , silent = True ) :
         if not silent : logger.info ( "Temporary ROOT file is created: %s" % filename ) 
         
     print ( 'T-TREE/3', filename )
-    with useStorage ( RAD.Tree ) , ROOTCWD() :
-        with ROOT.TFile ( filename , 'u' ) as rfile :
-            rfile.cd()
+    with useStorage ( RAD.Tree ) :
+        dataset.convertToTreeStore ()
+        store = dataset.store()        
+        print ( 'T-TREE/4', filename )
+        if store and isinstance ( store , ROOT.RooTreeDataStore ) :
+            print ( 'T-TREE/5', filename )
+            tree = store.tree()
+            print ( 'T-TREE/6', filename )
+            if valid_pointer ( tree ) :
+                print ( 'T-TREE/7', filename )
+                print ( 'found-TREE/1', type ( tree ) )                 
+                return tree
             
-            dataset.convertToTreeStore ()
-            dataset.Write ()
-            store = dataset.store()
-
-            ## tds   = ROOT.RooDataSet  ( dataset , dsID() )            
-            ## store = tds.store()
-            
-            print ( 'T-TREE/4' , type ( store ) )
-            if store and isinstance ( store , ROOT.RooTreeDataStore ) :
-                print ( 'T-TREE/5' )
-                tree  = store.tree()
-                print ( 'T-TREE/5.1' , tree.GetDirectory() ) 
-                tname = tree.name 
-            else                                                      :
-                print ( 'T-TREE/6' )
-                tree  = dataset.GetClonedTree()
-                print ( 'T-TREE/6.1' , tree.GetDirectory() ) 
-                tname = tree.name 
-            ##
-            print ( 'T-TREE/7' )
-            tdir = tree.GetDirectory ()
-            print ( 'T-TREE/7.1' , tree.GetDirectory()  )
-            if ( not tdir ) or ( not tdir is rfile )  : 
-                print ( 'T-TREE/7.1'  )
-                tree.SetDirectory ( rfile ) 
-                tree.Write  ()
-                print ( 'T-TREE/7.2'  )
-            print ( 'T-TREE/7.3'  )    
-            rfile.ls()
-            rfile.Write() 
-            if not silent : rfile.ls()
-            print ( 'T-TREE/7.4'  )    
-
-        print ( 'T-TREE/8.0' , tname )
-        tree  = None
-        store = None 
-        ## if tds and isinstance ( tds , ROOT.RooDataSet ) : 
-        ##     tds = Ostap.MoreRooFit.delete_data ( tds )            
-        ## tds   = None 
-        print ( 'T-TREE/8.1' )
-        with ROOT.TFile ( filename , 'READ' ) as rfile :
-            rfile.ls()
-        print ( 'T-TREE/8.2' )
-            
-        
-    print ( 'T-TREE/9' , tname , filename )
-    chain = ROOT.TChain ( tname )
-    chain.Add ( filename )
-    print ( 'T-TREE/10' )
-    
-    return chain 
+    print ( 'T-TREE/8', filename )
+    return datastet.GetClonedTree()
             
 # ============================================================================
 
@@ -3436,7 +3395,7 @@ def _ds_2tree_ ( dataset , name = '' , filename = '' , cuts = '' , vars = () , c
                 'Store type %s is not RooTreeDataStore!' % ( type ( store ) .__name__ ) 
             rfile [ name ] = store.tree()
 
-    ## with ROOT.TFile ( filename , 'r' ) as rfile : rfile.ls()
+    with ROOT.TFile ( filename , 'r' ) as rfile : rfile.ls()
             
     if dstmp and isinstance ( dstmp , ROOT.RooDataSet ) :
         dstmp = Ostap.MoreRooFit.delete_data ( dstmp )

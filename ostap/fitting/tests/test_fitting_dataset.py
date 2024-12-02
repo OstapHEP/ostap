@@ -210,6 +210,8 @@ with use_canvas ( "test_fitting_datatset: weighted.draw" , wait  =2 ) :
 # =============================================================================
 ## (17) conversion to TTree/TChain 
 # =============================================================================
+## chd = dataset .ds2tree().chain 
+## chw = weighted.ds2tree().chain 
 chd = dataset .asTree()
 chw = weighted.asTree()
 
