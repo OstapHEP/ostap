@@ -1817,7 +1817,7 @@ def _color_ ( self ,
     if hasattr ( self , 'SetFillStyle'      ) :
         if   fill is True  : self.SetFillStyle ( 1001 )        
         elif fill is False : self.SetFillStyle (    0 )        
-        elif insinstance ( fill , integer_types ) and 1000 < fill :
+        elif isinstance ( fill , integer_types ) and 1000 < fill :
             self.SetFillStyle ( fill )
             
     if hasattr ( self , 'SetFillColorAlpha' ) and isinstance ( opacity , num_types ) and 0 <= opacity <= 1  :

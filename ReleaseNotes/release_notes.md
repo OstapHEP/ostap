@@ -3,8 +3,9 @@
 ## Backward incompatible
     
 ## Bug fixes
-
-
+    
+ 1. fix a typo in `graphs.py` (thanks to Dima Pereima!)
+    
 # v1.13.8.0
 
 ## New features
