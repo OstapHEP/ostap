@@ -1,3 +1,10 @@
+## New features
+
+## Backward incompatible
+    
+## Bug fixes
+
+
 # v1.13.8.0
 
 ## New features
@@ -13,7 +20,6 @@
   1. make (de)serialization of GoF1D objects more robust 
   1. tweak for `RooRealVar.__reduce__`
   1. add clipping for `GoF1D/GoF1DToys`
-
             
 ## Backward incompatible
     
