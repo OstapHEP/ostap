@@ -28,11 +28,14 @@ __all__     = (
     'beta'         , 'lnbeta'     ,
     'gd'           , 'gd_inv'     ,
     'Ai'           , 'Bi'         ,
+    'li'           , 'Li'         ,           ## integral logarithms 
+    'Ei'           , 'Ein'        , 'E1'    , ## integral exponents 
+    'Si'           , 'Ci'         , 'Cin'   , ## integral trigonometry
     'exp2'         , 'log2'       ,
-    'bessel_J'     , 'bessel_Y'   , 
-    'bessel_I'     , 'bessel_K'   , 
-    'gauss_pdf'    , 'gauss_cdf'  ,
-    'hypot'        , 'sigmoid'    , 'fma' ,
+    'bessel_J'     , 'bessel_Y'   ,           ## Bessel functions  
+    'bessel_I'     , 'bessel_K'   ,           ## Bessel functions 
+    'gauss_pdf'    , 'gauss_cdf'  ,           ## Gaussian PDF and CDF 
+    'hypot'        , 'sigmoid'    , 'fma'   ,
     'minv'         , 'maxv'       ,
     'agm'          , 'ghm'        ,
     'significance' , 'nsigmas'    , 'nsigma'
@@ -735,7 +738,7 @@ _gauss_pdf_ = Ostap.Math.gauss_pdf
 #  @param mu mu-parameter (location)
 #  @param sigma sigma-parameter (width)
 #  @return gaussian PDF 
-def gauss_pdf( x , mu = 0.0 , sigma = 1.0 ) :
+def gauss_pdf ( x , mu = 0.0 , sigma = 1.0 ) :
     """ Standard gaussian PDF:
     
     >>> x,mu, sigma = ....
@@ -773,6 +776,114 @@ def fermi_dirac ( j , x ) :
     assert isinstance ( j , integer_types ) and 0 <= j , 'Invalid value of j!'
     ## 
     return _FD_ ( j , x )
+
+# =============================================================================
+_li_ = Ostap.Math.li
+# =============================================================================
+## get the Logarithmic integral function 
+#   \f$ li(x) \equiv \int\limits_{0}^{x} \frac{dt}{\log t} \f$ 
+#   for \f$ 0 < x \f$ 
+#  @see https://en.wikipedia.org/wiki/Logarithmic_integral_function
+def li ( x ) :
+    """ Get the Logarithmic integral function li(x)
+    - see https://en.wikipedia.org/wiki/Logarithmic_integral_function
+    """
+    fun = getattr ( x , '__li__' , None )
+    if fun : return fun ()
+    return _li_ ( x ) 
+# ============================================================================
+_Li_ = Ostap.Math.Li
+# =============================================================================
+## get the Logarithmic integral function 
+#   \f$ li(x) \equiv \int\limits_{0}^{x} \frac{dt}{\log t} \f$ 
+#   for \f$ 0 < x \f$ 
+#  @see https://en.wikipedia.org/wiki/Logarithmic_integral_function
+def Li ( x ) :
+    """ Get the Logarithmic integral function Li(x) = li(x) - li(2)
+    - see https://en.wikipedia.org/wiki/Logarithmic_integral_function
+    """
+    fun = getattr ( x , '__Li__' , None )
+    if fun : return fun ()
+    return _Li_ ( x ) 
+# ============================================================================
+_Ei_ = Ostap.Math.Ei
+# =============================================================================
+## get the Exponential  integral function Ei(x) 
+#    \f$ Ei(x) \equiv \int\limits_{-\infty}^{x} \frac{e^t}{t}dt \f$ 
+# @see https://en.wikipedia.org/wiki/Exponential_integral
+def Ei ( x ) :
+    """ Get the Exponential  integral function Ei(x) 
+     - see https://en.wikipedia.org/wiki/Exponential_integral
+    """
+    fun = getattr ( x , '__Ei__' , None )
+    if fun : return fun ()
+    return _Ei_ ( x ) 
+# ============================================================================
+_Ein_ = Ostap.Math.Ein
+# =============================================================================
+## get the Exponential  integral function Ein(x) 
+#   \f$ Ein(x) \equiv \int\limits_{0}^{x} \frac{1-e^{-t}}{t}dt \f$ 
+# @see https://en.wikipedia.org/wiki/Exponential_integral
+def Ein ( x ) :
+    """ Get the Exponential  integral function Ein(x) 
+     - see https://en.wikipedia.org/wiki/Exponential_integral
+    """
+    fun = getattr ( x , '__Ein__' , None )
+    if fun : return fun ()
+    return _Ein_ ( x ) 
+# ============================================================================
+_E1_ = Ostap.Math.E1
+# =============================================================================
+## get the Exponential  integral function E1(x) 
+#  \f$ E_1(x) = -\gamma - \log x + Ein(x) \f$ 
+# @see https://en.wikipedia.org/wiki/Exponential_integral
+def E1 ( x ) :
+    """ Get the Exponential  integral function Ein(x) 
+     - see https://en.wikipedia.org/wiki/Exponential_integral
+    """
+    fun = getattr ( x , '__E1__' , None )
+    if fun : return fun ()
+    return _E1_ ( x ) 
+# ============================================================================
+_Si_ = Ostap.Math.Si
+# =============================================================================
+## Get the integral sine 
+#  \f$ Si(x) = \int\limits_{0}^{x} \frac{\sin t}{t}dt \f$ 
+#  @see https://en.wikipedia.org/wiki/Trigonometric_integral
+def Si ( x ) :
+    """ Fet the integral sine Si(x) 
+     @see https://en.wikipedia.org/wiki/Trigonometric_integral
+    """
+    fun = getattr ( x , '__Si__' , None )
+    if fun : return fun ()
+    return _Si_ ( x ) 
+# ============================================================================
+_Ci_ = Ostap.Math.Ci
+# =============================================================================
+## Get the integral cosine 
+#   \f$ Ci(x) = - \int\limits_{x}^{+\infty} \frac{\cos t}{t}dt \f$ 
+#  @see https://en.wikipedia.org/wiki/Trigonometric_integral
+def Ci ( x ) :
+    """ Fet the integral cosine Ci(x) 
+     @see https://en.wikipedia.org/wiki/Trigonometric_integral
+    """
+    fun = getattr ( x , '__Ci__' , None )
+    if fun : return fun ()
+    return _Ci_ ( x ) 
+# ============================================================================
+_Cin_ = Ostap.Math.Cin
+# =============================================================================
+## Get the integral cosine 
+#  \f$ Cin(x) = \int\limits_{0}^{x} \frac{1 - \cos t}{t}dt \f$ 
+#  @see https://en.wikipedia.org/wiki/Trigonometric_integral
+def Cin ( x ) :
+    """ Fet the integral cosine Cin(x) (entire function)
+     @see https://en.wikipedia.org/wiki/Trigonometric_integral
+    """
+    fun = getattr ( x , '__Cin__' , None )
+    if fun : return fun ()
+    return _Cin_ ( x ) 
+
 
 # =============================================================================
 ## FIX

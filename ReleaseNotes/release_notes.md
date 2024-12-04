@@ -1,5 +1,9 @@
 ## New features
-
+    
+  1. Add Logarithmic integral functions 
+  1. Add Exponental  integral functions 
+  1. Add Sine and Cosine integral functions 
+      
 ## Backward incompatible
     
 ## Bug fixes
