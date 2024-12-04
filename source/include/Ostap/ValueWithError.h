@@ -310,6 +310,22 @@ namespace Ostap
       ValueWithError __psi__    () const ;
       /// pdigamma
       ValueWithError __psi__    ( const unsigned short  n ) const ;
+      /// integal logarithm 
+      ValueWithError __li__     () const ;
+      /// integal logarithm 
+      ValueWithError __Li__     () const ;
+      /// integal expo Ei 
+      ValueWithError __Ei__     () const ;
+      /// integal expo Ein
+      ValueWithError __Ein__    () const ;
+      /// integal expo E1
+      ValueWithError __E1__     () const ;      
+      /// integal sine 
+      ValueWithError __Si__     () const ;
+      /// integal cosine 
+      ValueWithError __Ci__     () const ;
+      /// integal cosine 
+      ValueWithError __Cin__    () const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1125,7 +1141,59 @@ namespace Ostap
      */
     ValueWithError Bi     ( const ValueWithError& x ) ;
     // ========================================================================
-
+    /* Logarithmic integral function 
+     *   \f$ li(x) \equiv \int\limits_{0}^{x} \frac{dt}{\log t} \f$ 
+     *   for \f$ 0 < x \f$ 
+     *  @see https://en.wikipedia.org/wiki/Logarithmic_integral_function
+     */
+    ValueWithError li     ( const ValueWithError& x ) ;
+    // =======================================================================
+    /* Logarithmic integral function 
+     *   \f$ Li(x) \equiv \int\limits_{2}^{x} \frac{dt}{\log t} \f$ 
+     *   for \f$ 0 < x \f$ 
+     *  - \f$ Li(x) = li(x) - li(2) \f$
+     *  @see https://en.wikipedia.org/wiki/Logarithmic_integral_function
+     */
+    ValueWithError Li     ( const ValueWithError& x ) ;
+    // =======================================================================
+    /** get the integral sine 
+     *  \f$ Si(x) = \int\limits_{0}^{x} \frac{\sin t}{t}dt \f$ 
+     *  @see https://en.wikipedia.org/wiki/Trigonometric_integral
+     */
+    ValueWithError Si     ( const ValueWithError& x ) ;
+    // ========================================================================
+    /** get the integral cosine  
+     *  \f$ Ci(x) = - \int\limits_{x}^{+\infty} \frac{\cos t}{t}dt \f$ 
+     *  @see https://en.wikipedia.org/wiki/Trigonometric_integral
+     */
+    ValueWithError Ci     ( const ValueWithError& x ) ;
+    // ========================================================================
+    /** get the integral cosine  
+     *  \f$ Cin(x) = \int\limits_{0}^{x} \frac{1 - \cos t}{t}dt \f$ 
+     *  @see https://en.wikipedia.org/wiki/Trigonometric_integral
+     */
+    ValueWithError Cin    ( const ValueWithError& x ) ;
+    // ========================================================================    
+    /** get the Exponential  integral function Ei(x)
+     *   \f$ Ei(x) \equiv \int\limits_{-\infty}^{x} \frac{e^t}{t}dt \f$ 
+     *  @see https://en.wikipedia.org/wiki/Exponential_integral
+     */
+    ValueWithError Ei    ( const ValueWithError& x ) ;
+    // ========================================================================    
+    /** get the Exponential  integral function  Ein(x) 
+     *   \f$ Ein(x) \equiv \int\limits_{0}^{x} \frac{1-e^{-t}}{t}dt \f$ 
+     *  @see https://en.wikipedia.org/wiki/Exponential_integral
+     */    
+    ValueWithError Ein   ( const ValueWithError& x ) ;
+    // ========================================================================    
+    /** get the Exponential  integral function \f$ E_1(x)\f$ 
+     *  \f$ E_1(x) = -\gamma - \log x + Ein(x) \f$ 
+     *  @see https://en.wikipedia.org/wiki/Exponential_integral
+     */    
+    ValueWithError E1    ( const ValueWithError& x ) ;
+    // ========================================================================    
+    
+    
     // ========================================================================    
     /** evaluate <code>fma(x,y,z)</code>: \f$ xy+z \f$  
      *  @param y    (INPUT) the parameter 

@@ -1184,6 +1184,7 @@ namespace Ostap
     inline double clamp 
     ( const double x )
     { return x <= 0 ? 0 : x <= 1 ? 1 : x ; }
+    // ========================================================================
     
     // ========================================================================
     /** smooth (polynomial) step function
@@ -1458,6 +1459,68 @@ namespace Ostap
     double der_Bi ( const double x ) ;
     // ========================================================================
 
+
+    // ========================================================================
+    // Logarithmic integrals 
+    // ========================================================================    
+    /** get the Logarithmic integral function 
+     *   \f$ li(x) \equiv \int\limits_{0}^{x} \frac{dt}{\log t} \f$ 
+     *   for \f$ 0 < x \f$ 
+     *  @see https://en.wikipedia.org/wiki/Logarithmic_integral_function
+     */
+    double li  ( const double x ) ;
+    // ========================================================================
+    /** get the Logarithmic integral function 
+     *   \f$ Li(x) \equiv \int\limits_{2}^{x} \frac{dt}{\log t} \f$ 
+     *   for \f$ 0 < x \f$ 
+     *  - \f$ Li(x) = li(x) - li(2) \f$ 
+     *  @see https://en.wikipedia.org/wiki/Logarithmic_integral_function
+     */
+    double Li  ( const double x ) ;
+    // ========================================================================
+    /** get the Exponential  integral function Ei(x) 
+     *   \f$ Ei(x) \equiv \int\limits_{-\infty}^{x} \frac{e^t}{t}dt \f$ 
+     *  @see https://en.wikipedia.org/wiki/Exponential_integral
+     */
+    double Ei  ( const double x ) ;    
+    // ========================================================================
+    /** get the Exponential  integral function \f$ E_1(x)\f$ 
+     *  \f$ E_1(x) = -\gamma - \log x + Ein(x) \f$ 
+     *  @see https://en.wikipedia.org/wiki/Exponential_integral
+     */
+    double E1  ( const double x ) ;    
+    // ========================================================================
+    /** get the Exponential  integral function  Ein(x) 
+     *   \f$ Ein(x) \equiv \int\limits_{0}^{x} \frac{1-e^{-t}}{t}dt \f$ 
+     *  @see https://en.wikipedia.org/wiki/Exponential_integral
+     */
+    double Ein  ( const double x ) ;    
+    // ========================================================================
+    /** get the integral sine 
+     *  \f$ Si(x) = \int\limits_{0}^{x} \frac{\sin t}{t}dt \f$ 
+     *  @see https://en.wikipedia.org/wiki/Trigonometric_integral
+     */
+    double Si   ( const double x ) ;
+    // ========================================================================
+    /** get the integral cosine  
+     *  \f$ Ci(x) = - \int\limits_{x}^{+\infrty} \frac{\cos t}{t}dt \f$ 
+     *  @see https://en.wikipedia.org/wiki/Trigonometric_integral
+     */
+    double Ci   ( const double x ) ;
+    // ========================================================================
+    /** get the integral cosine  
+     *  \f$ Cin(x) = \int\limits_{0}^{x} \frac{1 - \cos t}{t}dt \f$ 
+     *  @see https://en.wikipedia.org/wiki/Trigonometric_integral
+     */
+    double Cin   ( const double x ) ;
+    // ========================================================================
+    /** Ramanudjan' sum
+     *  \f$ R(x) = \sum_{n=1}^{+\infty} \frac{ (-1)^{n-1}x^n}{n!2^{n-1}
+     *  \sum_{k=0}{ floor (\frac{n-1}{2})} \frac{1}{2k+1}\f$ 
+     *  Helpe sum function to calcaltuon integral logarithm or integral exponent 
+     */
+    double ramanudjan_sum ( const double x ) ;
+    // ========================================================================
     
     // ========================================================================
     // Lambert W-function

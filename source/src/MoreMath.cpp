@@ -12,6 +12,7 @@
 // ============================================================================
 // GSL 
 // ============================================================================
+#include "gsl/gsl_math.h"
 #include "gsl/gsl_errno.h"
 #include "gsl/gsl_math.h"
 #include "gsl/gsl_sf_airy.h"
@@ -3923,6 +3924,268 @@ double Ostap::Math::der_Bi ( const double x )
 }
 // ============================================================================
 
+
+#include <iostream>
+
+// ============================================================================
+/* Ramanudjan' sum
+ *  \f$ R(x) = \sum_{n=1}^{+\infty} \frac{ (-1)^{n-1}x^n}{n!2^{n-1}
+ *      \sum_{k=0}{ floor (\frac{n-1}{2})} \frac{1}{2k+1}\f$ 
+ *  Helpe sum function to calcaltuon integral logarithm or integral exponent 
+ */
+// ============================================================================
+double Ostap::Math::ramanudjan_sum ( const double x )
+{
+  double result =  0 ;
+  double term   = -2 ;
+  double sum    =  0 ;
+  //
+  static const unsigned short s_USMX = std::numeric_limits<unsigned short>::max () ;
+  //
+  const double        ax = std::abs ( x ) ;
+  const unsigned int  N  =
+    ( ax < s_USMX ) ? std::max ( 100u , (unsigned int) ax ) : s_USMX ;
+  //
+  for ( unsigned short n = 1 ; n < N ;  ++n  )
+    {
+      if ( 1 == n % 2 ) { sum  += 1. / n ; } 
+      term *= - x / ( n * 2 ) ;
+      const double delta = term  * sum  ;
+      if ( s_zero ( delta ) || s_equal ( result , result + delta ) )
+        { return result + delta ; }                              // RETURN 
+      result += delta ;
+    }
+  //
+  return result ;
+}
+// ============================================================================
+/* get the Logarithmic integral function 
+ *   \f$ li(x) \equiv \int\limits_{0}^{x} \frac{dt}{\log t} \f$ 
+ *   for \f$ 0 < x \f$ 
+ *  @see https://en.wikipedia.org/wiki/Logarithmic_integral_function
+ */
+// ============================================================================
+double Ostap::Math::li ( const double x )
+{
+  //
+  if      ( 0 == x || s_zero ( x ) ) { return 0 ; }
+  else if ( x <  0 )                 { return std::numeric_limits<double>::quiet_NaN() ; }
+  //
+  const double lnx = std::log  ( x ) ;
+  const double sqx = std::sqrt ( x ) ;
+  //
+  double result = s_EULER + std::log ( std::abs ( lnx ) ) ;
+  //
+  return result + sqx * ramanudjan_sum ( lnx ) ; 
+}
+// ============================================================================
+/*  get the Logarithmic integral function 
+ *   \f$ Li(x) \equiv \int\limits_{2}^{x} \frac{dt}{\log t} \f$ 
+ *   for \f$ 0 < x \f$ 
+ *  - \f$ Li(x) = li(x) - li(2) \f$ 
+ *  @see https://en.wikipedia.org/wiki/Logarithmic_integral_function
+ */
+// ============================================================================
+double Ostap::Math::Li  ( const double x )
+{
+  static const double s_li2 = li(2.0) ;
+  return li ( x ) - s_li2 ;
+}
+// ============================================================================
+/* Get the Exponential  integral function 
+ * \f$ Ei(x) \equiv \int\limits_{-\infty}^{x} \frac{e^t}{t}dt \f$ 
+ *  @see https://en.wikipedia.org/wiki/Exponential_integral
+ */
+// ============================================================================
+double Ostap::Math::Ei  ( const double x )
+{
+  return s_EULER + std::log ( x ) + std::exp ( 0.5 * x ) * ramanudjan_sum ( x ) ;
+  // return s_EULER + std::log ( x ) - Ein ( -x ) ;
+}
+// ============================================================================
+/** get the Exponential  integral function  Ein(x) 
+ *   \f$ Ein(x) \equiv \int\limits_{0}^{x} \frac{1-e^t}{t}dt \f$ 
+ *  @see https://en.wikipedia.org/wiki/Exponential_integral
+ */
+// ============================================================================
+double Ostap::Math::Ein  ( const double x )
+{ return - std::exp ( -0.5 * x ) * ramanudjan_sum ( -x ) ; }
+// ============================================================================
+/*  get the Exponential  integral function \f$ E_1(x)\f$ 
+ *  \f$ E_1(x) = -\gamma - \log x + Ein(x) \f$ 
+ *  @see https://en.wikipedia.org/wiki/Exponential_integral
+ */
+// =============================================================================
+double Ostap::Math::E1  ( const double x )
+{ return -s_EULER - std::log ( x ) + Ein( x ) ; }
+// =============================================================================
+
+
+namespace
+{
+  // ===========================================================================
+  double pade_f ( const double x )
+  {
+    static const std::array<long double,11> A = {
+      +1.0L                       ,
+      +7.44437068161936700618e+2  , 
+      +1.96396372895146869801e+5  ,
+      +2.37750310125431834034e+7  ,
+      +1.43073403821274636888e+9  ,
+      +4.33736238870432522765e+10 ,
+      +6.40533830574022022911e+11 ,
+      +4.20968180571076940208e+12 ,
+      +1.00795182980368574617e+13 ,
+      +4.94816688199951963482e+12 ,
+      -4.94701168645415959931e+11 } ;
+    static const std::array<long double,10> B = {
+      +1.0L                       ,
+      +7.46437068161927678031e+2  ,
+      +1.97865247031583951450e+5  ,
+      +2.41535670165126845144e+7  ,
+      +1.47478952192985464958e+9  , 
+      +4.58595115847765779830e+10 ,
+      +7.08501308149515401563e+11 , 
+      +5.06084464593475076774e+12 ,
+      +1.43468549171581016479e+13 ,
+      +1.11535493509914254097e+13 } ;
+    //
+    const long double x2 = 1.0 / ( x * x ) ;
+    return
+      Ostap::Math::Clenshaw::monomial_sum ( A.rbegin() , A.rend() , x2 ).first /
+      Ostap::Math::Clenshaw::monomial_sum ( B.rbegin() , B.rend() , x2 ).first / x ;
+  }
+  // ================================================================================
+  double pade_g ( const double x )
+  {
+    //
+    static const std::array<long double,11> A = {
+      +1.0L                    ,
+      +8.1359520115168615e+2   ,
+      +2.35239181626478200e+5  , 
+      +3.12557570795778731e+7  ,
+      +2.06297595146763354e+9  , 
+      +6.83052205423625007e+10 ,
+      +1.09049528450362786e+12 , 
+      +7.57664583257834349e+12 ,
+      +1.81004487464664575e+13 , 
+      +6.43291613143049485e+12 ,
+      -1.36517137670871689e+12 } ;
+    //
+    static const std::array<long double,10> B = { {
+        +1.0L ,
+        +8.19595201151451564e+2  ,
+        +2.40036752835578777e+5  , 
+        +3.26026661647090822e+7  ,
+        +2.23355543278099360e+9  ,
+        +7.87465017341829930e+10 ,
+        +1.39866710696414565e+12 , 
+        +1.17164723371736605e+13 ,
+        +4.01839087307656620e+13 , 
+        +3.99653257887490811e+13 } } ;
+    //
+    const long double x2 = 1.0 / ( x * x ) ;   
+    return
+      Ostap::Math::Clenshaw::monomial_sum ( A.rbegin() , A.rend() , x2 ).first /
+      Ostap::Math::Clenshaw::monomial_sum ( B.rbegin() , B.rend() , x2 ).first * x2 ;
+  }
+  // ===========================================================================
+}
+// =============================================================================
+/*  get the integral sine 
+ *  \f$ Si(x) = \int\limits_{0}^{x} \frac{\sin t}{t}dt \f$ 
+ *  @see https://en.wikipedia.org/wiki/Trigonometric_integral
+ */
+// =============================================================================
+double Ostap::Math::Si   ( const double x )
+{
+  //
+  static const std::array<long double,8> A = {
+    +1.0L                    , 
+    -4.54393409816329991e-2  ,
+    +1.15457225751016682e-3  ,
+    -1.41018536821330254e-5  ,
+    +9.43280809438713025e-8  ,
+    -3.53201978997168357e-10 ,
+    +7.08240282274875911e-13 ,
+    -6.05338212010422477e-16 } ;
+  //
+  static const std::array<long double,7> B = {
+    +1.0L ,
+    +1.01162145739225565e-2  ,
+    +4.99175116169755106e-5  ,
+    +1.55654986308745614e-7  ,
+    +3.28067571055789734e-10 , 
+    +4.5049097575386581e-13  ,
+    +3.21107051193712168e-16 } ;
+  //
+  if ( std::abs ( x ) <= 4 )
+    {
+      const long double x2 = x * x ;
+      return
+        Ostap::Math::Clenshaw::monomial_sum ( A.rbegin() , A.rend() , x2 ).first /
+        Ostap::Math::Clenshaw::monomial_sum ( B.rbegin() , B.rend() , x2 ).first * x ;
+    }
+  //
+  const double ax = std::abs ( x ) ;
+  const double result = M_PI * 0.5
+    - pade_f ( ax ) * std::cos ( ax )
+    - pade_g ( ax ) * std::sin ( ax ) ;
+  ///
+  return 0 < x ? result : -result ;
+}
+// =============================================================================
+/* get the integral cosine  
+ *  \f$ Cin(x) = \int\limits_{0}^{x} \frac{1 - \cos t}{t}dt \f$ 
+ *  @see https://en.wikipedia.org/wiki/Trigonometric_integral
+ */
+// =============================================================================
+double Ostap::Math::Cin  ( const double x )
+{
+  //
+  static const std::array<long double,7> A = {
+    -0.25L ,
+    +7.51851524438898291e-3  , 
+    -1.27528342240267686e-4  ,
+    +1.05297363846239184e-6  ,
+    -4.68889508144848019e-9  ,
+    +1.06480802891189243e-11 , 
+    -9.93728488857585407e-15 } ;
+  static const std::array<long double,8> B = {
+    +1.0L , 
+    +1.1592605689110735e-2   ,
+    +6.72126800814254432e-5  , 
+    +2.55533277086129636e-7  ,
+    +6.97071295760958946e-10 , 
+    +1.38536352772778619e-12 ,
+    +1.89106054713059759e-15 , 
+    +1.39759616731376855e-18 } ;
+  //
+  if ( std::abs ( x ) <= 4 )
+    {
+      const double x2 = x * x ;
+      return -1 * 
+        Ostap::Math::Clenshaw::monomial_sum ( A.rbegin() , A.rend() , x2 ).first /
+        Ostap::Math::Clenshaw::monomial_sum ( B.rbegin() , B.rend() , x2 ).first * x2 ;
+    }
+  //
+  const double ax     = std::abs ( x ) ;
+  const double result = pade_f ( ax ) * std::sin ( ax ) - pade_g ( ax ) *  std::cos ( ax ) ; 
+  //
+  return s_EULER + std::log ( ax ) - result ; 
+}
+// =============================================================================
+/* get the integral cosine  
+ *  \f$ Ci(x) = - \int\limits_{x}^{+\infrty} \frac{\cos t}{t}dt \f$ 
+ *  for \f$ 0 < x \f$ 
+ *  @see https://en.wikipedia.org/wiki/Trigonometric_integral
+ */
+// =============================================================================
+double Ostap::Math::Ci   ( const double x ) 
+{
+  if ( x <= 0 || s_zero ( x ) ) { return std::numeric_limits<double>::quiet_NaN(); }
+  return s_EULER + std::log ( x ) - Cin ( x ) ;
+}
 // ============================================================================
 /* get the Lambert W_0 function for \f$- \frac{1}{e} < x \f$ 
  *  @see https://en.wikipedia.org/wiki/Lambert_W_function

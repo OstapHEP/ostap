@@ -803,8 +803,46 @@ Ostap::Math::ValueWithError
 Ostap::Math::ValueWithError::__psi__    ( const unsigned short n ) const 
 { return psi ( *this , n ) ; }
 // ============================================================================
-
-
+// li(me) 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__li__     () const { return li ( *this ) ; }
+// ============================================================================
+// Li(me) 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__Li__     () const { return Li ( *this ) ; }
+// ============================================================================
+// Ei(me) 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__Ei__     () const { return Ei  ( *this ) ; }
+// ============================================================================
+// Ein(me) 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__Ein__    () const { return Ein ( *this ) ; }
+// ============================================================================
+// E1(me) 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__E1__     () const { return E1  ( *this ) ; }
+// ============================================================================
+// Si(me) 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__Si__     () const { return Si  ( *this ) ; }
+// ============================================================================
+// Ci(me) 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__Ci__     () const { return Ci  ( *this ) ; }
+// ============================================================================
+// Cin(me) 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__Cin__    () const { return Cin ( *this ) ; }
+// ============================================================================
 
 // ============================================================================
 /* Does this object represent natural number?
@@ -821,7 +859,7 @@ bool Ostap::Math::natural_number
     && ( _zero ( v.cov2 () ) || _equal ( v.value() , v.cov2() ) ) ;
 }
 // ============================================================================
-/** Does this object represent natural entry in histogram
+/*  Does this object represent natural entry in histogram
  *  - non-negative integer value 
  *  - cov2 == value  or ( 0 == value && 1 == cov2 )
  */
@@ -836,7 +874,7 @@ bool Ostap::Math::natural_entry
          ( _zero ( v.value() ) && _equal ( 1 , v.cov2() ) ) ) ;
 }
 // ============================================================================
-/*  evaluate the mean of a and b 
+/*  Evaluate the mean of a and b 
  *  taking into account correlation coefficient <code>rho</code>
  *  @param a (INPUT) the first argument 
  *  @param b (INPUT) the second argument 
@@ -1629,6 +1667,154 @@ Ostap::Math::Bi
   const double c2   = x.cov2() * dfdx * dfdx ;
   //
   return ValueWithError ( r , c2 ) ;  
+}
+// ============================================================================
+/*  Logarithmic integral function 
+ *   \f$ li(x) \equiv \int\limits_{0}^{x} \frac{dt}{\log t} \f$ 
+ *   for \f$ 0 < x \f$ 
+ *  @see https://en.wikipedia.org/wiki/Logarithmic_integral_function
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::li
+( const Ostap::Math::ValueWithError& x )
+{ 
+  const double c2 = x .cov2() ;
+  const bool   x0 = ( 0 >= c2 ) || _zero ( c2 ) ;
+  const double r  = Ostap::Math::li ( x.value() ) ;
+  if ( x0 || !std::isfinite ( r ) ) { return r  ; }
+  //
+  const double dfdx = 1.0 / std::log ( x.value() ) ;
+  return ValueWithError ( r , c2 * dfdx * dfdx ) ;
+}
+// ============================================================================
+/*  Logarithmic integral function 
+ *   \f$ Li(x) \equiv \int\limits_{2}^{x} \frac{dt}{\log t} \f$ 
+ *   for \f$ 0 < x \f$ 
+ *  - \f$ Li(x) = li(x) - li(2)\f$
+ *  @see https://en.wikipedia.org/wiki/Logarithmic_integral_function
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::Li
+( const Ostap::Math::ValueWithError& x )
+{
+  static const double s_li2 = Ostap::Math::li ( 2.0 ) ;
+  return li ( x ) - s_li2 ;
+}
+// ============================================================================
+/* get the integral sine 
+ *  \f$ Si(x) = \int\limits_{0}^{x} \frac{\sin t}{t}dt \f$ 
+ *  @see https://en.wikipedia.org/wiki/Trigonometric_integral
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::Si
+( const Ostap::Math::ValueWithError& x )
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  const bool   x0 = ( 0 >= c2 ) || _zero ( c2 ) ;
+  const double r  = Ostap::Math::Si ( xv ) ;
+  if ( x0 || !std::isfinite ( r ) ) { return r  ; }
+  //
+  const double dfdx = std::sin ( xv ) / xv ;
+  return ValueWithError ( r , c2 * dfdx * dfdx ) ;
+}
+// ============================================================================
+/* get the integral cosine  
+ *  \f$ Ci(x) = - \int\limits_{x}^{+\infty} \frac{\cos t}{t}dt \f$ 
+ *  @see https://en.wikipedia.org/wiki/Trigonometric_integral
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::Ci
+( const Ostap::Math::ValueWithError& x )
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  const bool   x0 = ( 0 >= c2 ) || _zero ( c2 ) ;
+  const double r  = Ostap::Math::Ci ( xv ) ;
+  if ( x0 || !std::isfinite ( r ) ) { return r  ; }
+  //
+  const double dfdx = std::cos ( xv ) / xv ;
+  return ValueWithError ( r , c2 * dfdx * dfdx ) ;
+}
+// ============================================================================
+/* get the integral cosine  
+ *  \f$ Cin(x) = \int\limits_{0}^{x} \frac{1 - \cos t}{t}dt \f$ 
+ *  @see https://en.wikipedia.org/wiki/Trigonometric_integral
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::Cin
+( const Ostap::Math::ValueWithError& x )
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  const bool   x0 = ( 0 >= c2 ) || _zero ( c2 ) ;
+  const double r  = Ostap::Math::Ci ( xv ) ;
+  if ( x0 || !std::isfinite ( r ) ) { return r  ; }
+  //
+  const double dfdx = ( 1 - std::cos ( xv ) ) / xv ;
+  return ValueWithError ( r , c2 * dfdx * dfdx ) ;
+}
+// ============================================================================
+/*  get the Exponential  integral function Ei(x)
+ *   \f$ Ei(x) \equiv \int\limits_{-\infty}^{x} \frac{e^t}{t}dt \f$ 
+ *  @see https://en.wikipedia.org/wiki/Exponential_integral
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::Ei
+( const Ostap::Math::ValueWithError& x )
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  const bool   x0 = ( 0 >= c2 ) || _zero ( c2 ) ;
+  const double r  = Ostap::Math::Ei ( xv ) ;
+  if ( x0 || !std::isfinite ( r ) ) { return r  ; }
+  //
+  const double dfdx = std::exp( xv ) / xv ;
+  return ValueWithError ( r , c2 * dfdx * dfdx ) ;
+}
+// ============================================================================
+/*  get the Exponential  integral function  Ein(x) 
+ *   \f$ Ein(x) \equiv \int\limits_{0}^{x} \frac{1-e^{-t}}{t}dt \f$ 
+ *  @see https://en.wikipedia.org/wiki/Exponential_integral
+ */    
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::Ein
+( const Ostap::Math::ValueWithError& x )
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  const bool   x0 = ( 0 >= c2 ) || _zero ( c2 ) ;
+  const double r  = Ostap::Math::Ein ( xv ) ;
+  if ( x0 || !std::isfinite ( r ) ) { return r  ; }
+  //
+  const double dfdx = ( 1 - std::exp( -xv ) ) / xv ;
+  return ValueWithError ( r , c2 * dfdx * dfdx ) ;  
+}
+// ============================================================================
+/*  get the Exponential  integral function \f$ E_1(x)\f$ 
+ *  \f$ E_1(x) = -\gamma - \log x + Ein(x) \f$ 
+ *  @see https://en.wikipedia.org/wiki/Exponential_integral
+ */    
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::E1
+( const Ostap::Math::ValueWithError& x )
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  const bool   x0 = ( 0 >= c2 ) || _zero ( c2 ) ;
+  const double r  = Ostap::Math::E1 ( xv ) ;
+  if ( x0 || !std::isfinite ( r ) ) { return r  ; }
+  //
+  const double dfdx = std::exp ( -xv ) / xv ;
+  return ValueWithError ( r , c2 * dfdx * dfdx ) ;
 }
 // ============================================================================
 

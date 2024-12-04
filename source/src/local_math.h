@@ -33,6 +33,15 @@ namespace
   static_assert ( std::numeric_limits<double>::has_denorm            ,
                   "std::numeric_limits<double> doed not have denorm" ) ;
   // ==========================================================================
+  static_assert ( std::numeric_limits<unsigned short> ::is_specialized        ,
+                  "std::numeric_limits<unsigned short>  is not specialized" ) ;
+  // ==========================================================================
+  static_assert ( std::numeric_limits<unsigned int>   ::is_specialized        ,
+                  "std::numeric_limits<unsigned int>  is not specialized"   ) ;
+  // ==========================================================================
+  static_assert ( std::numeric_limits<unsigned long>  ::is_specialized        ,
+                  "std::numeric_limits<unsigned long> is not specialized"   ) ;
+  // ==========================================================================
   /** @var s_INFINITY
    *  representation of positive INFINITY
    */
