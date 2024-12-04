@@ -34,10 +34,6 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-
-
-
-# ============================================================================
 ## Test the confidence intervals for the width of low-statistic gaussian ssignal
 #  
 #  - Profile likelihood confidence interval 

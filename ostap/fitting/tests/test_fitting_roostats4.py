@@ -131,7 +131,7 @@ logger.info ( '%s\n%s' % ( title , rRD.table ( title = title , prefix = '# ' ) )
 ## Get the upper limit limit for small signal at fixed mass
 #  - Asymptotic Calculator is used 
 def test_limit_ac_1 () :
-    """Get the upper limit at given point for small signal at fixed mass
+    """ Get the upper limit at given point for small signal at fixed mass
     - Asymptotic Calculator is used 
     """
     
@@ -278,7 +278,7 @@ def test_limit_ac_2 () :
 ## Get the upper limit limit for small signal at fixed mass
 #  - Frequentists Calculator is used 
 def test_limit_fc_1 () :
-    """Get the upper limit at given point for small signal at fixed mass
+    """ Get the upper limit at given point for small signal at fixed mass
     - Friquentists Calculator is used 
     """
     
@@ -297,7 +297,7 @@ def test_limit_fc_1 () :
     constraints = constraint , eff_constraint 
     
     logger.info ( 'Dataset is\n%s' % the_data.table ( prefix = '# ' ) ) 
-    rr , frame = the_model.fitTo ( the_data , nbins = 100 , constraints = constraints )
+    rr , frame = the_model.fitTo ( the_data , nbins = 100 , constraints = constraints , silent = True )
     with use_canvas ( 'test_limit_ac_2:data' ) : the_model.draw ( the_data , nbins = 100 )
     title = 'Results of the fit'
     logger.info ( '%s\n%s' % ( title , rr.table ( title = title , prefix = '# ' ) ) )
@@ -335,14 +335,13 @@ def test_limit_fc_1 () :
                                       model_sb              ,
                                       dataset    = the_data ,
                                       ntoys_null = 100      ,
-                                      ntoys_alt  = 100      ,
-                                      ) 
+                                      ntoys_alt  = 100      ) 
 
         ## create Hypo Test inverter 
         hti = HypoTestInverter ( fc ,  0.90 , use_CLs = True , verbose = False )
         
         ## make a scan 
-        hti .scan_with_progress ( vrange ( 1.e-3 , 0.5 , 25 )  ) ## scan it!
+        hti .scan_with_progress ( vrange ( 1.e-3 , 0.4 , 20 )  ) ## scan it!
         
     ## visualize the scan results 
     with use_canvas ( 'test_limit_fc_1: HypoTestInverter plot (frequentist)' , wait = 2 ) :
@@ -355,7 +354,7 @@ if '__main__' == __name__ :
 
     test_limit_ac_1 () 
     test_limit_ac_2 ()    
-    ## test_limit_fc_1 () 
+    test_limit_fc_1 () 
     
 # =============================================================================
 ##                                                                      The END 

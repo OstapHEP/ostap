@@ -61,11 +61,11 @@ data4   = data.clone()
 
 graphs = [] 
 # ============================================================================-
-## Scan the positon of the peak and get the limit for each peak posiiton peak
+## Scan the position of the peak and get the limit for each peak posiiton peak
 #  - resolution is known with some finite precision 
 #  - efficiency is known with some finite precision 
 def test_scan_limit1 () :
-    """Scan the positon of the peak and get the limit for each peak posiiton peak
+    """Scan the position of the peak and get the limit for each peak posiiton peak
     - resolution is known with some finite precision 
     - efficiency is known with some finite precision 
     """
@@ -169,7 +169,7 @@ def test_scan_limit1 () :
         
         graphs.append ( bplot ) 
 # ============================================================================-
-## Scan the positon of the peak and get the limit for each peak posiiton peak
+## Scan the position of the peak and get the limit for each peak posiiton peak
 #  - mass-dependent resolution is known with some finite precision
 #  - mass-dependent efficiency is known with some finite precision 
 def test_scan_limit2 () :
@@ -314,19 +314,19 @@ def test_scan_limit2 () :
         bplot.plot  .draw ( 'a' )
         bplot.legend.draw (     )
 
-        title = '90% Upper limits'
+        title = '90% Upper limit'
         table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lr' )
         logger.info ( '%s:\n%s' % ( title , table ) )
 
         graphs.append ( bplot ) 
 
 # ============================================================================-
-## Scan the positon of the peak and get the p0 
+## Scan the position of the peak and get the p0 
 #  - resolution is known with some finite precision 
 #  - efficiency is known with some finite precision
 #  @thanks to Dima Golubkov 
 def test_scan_p0_1 () :
-    """Scan the positon of the peak and get p0 for each peak position peak
+    """ Scan the position of the peak and get p0 for each peak position peak
     - resolution is known with some finite precision 
     - efficiency is known with some finite precision 
     - thanks to Dima Golubkov 
@@ -444,10 +444,10 @@ if '__main__' == __name__ :
     
     with rooSilent ( ) : 
     
-        ## test_scan_limit1    ()
-        ## test_scan_limit2    ()
+        test_scan_limit1    ()
+        test_scan_limit2    ()
         
-        test_scan_p0_1      ()
+        ## test_scan_p0_1      ()
 
 # =============================================================================
 ##                                                                      The END 

@@ -1183,7 +1183,7 @@ class FrequentistCalculator (Calculator) :
 
     @property
     def cloned_dataset ( self ) :
-        """'cloned_dataset' : get the CLONED dataset (actually used in calcualtor)"""
+        """'cloned_dataset' : get the CLONED dataset (actually used in calculator)"""
         return self.__cloned_dataset
     
     # ==============================================================================================
@@ -1487,15 +1487,12 @@ class HypoTestInverter(object) :
              2 <= values                                 and \
              isinstance ( values [ 1 ] , num_types     ) and \
              isinstance ( values [ 2 ] , num_types     ) :            
-            return self.scan_with_progress ( vrange ( values[1] , vales[2] , values[0] ) ) 
+            return self.scan_with_progress ( vrange ( values[1] , values [2] , values[0] ) ) 
 
         elif  1 == len ( values ) and isinstance ( values [ 0 ] , sequence_types  ) :
-
             for v in progress_bar ( values [ 0 ] , description = 'Scan:' ) :
-                self.__inverter.RunOnePoint ( v )
-                
-        else :
-            
+                self.__inverter.RunOnePoint ( v )                
+        else :            
             for v in progress_bar ( values , description = 'Scan:' ) :
                 self.__inverter.RunOnePoint ( v )
 
@@ -1553,7 +1550,7 @@ class HypoTestInverter(object) :
     # ========================================================================= 
     ## Reset/clear current interval & plot
     def reset  ( self ) :
-        """Reset/clear current interval & plot
+        """ Reset/clear current interval & plot
         """
         if self.__interval : self.__interval = None
         if self.__plot     : self.__plot = None 
@@ -1577,7 +1574,7 @@ band_colors = ( ROOT.kGreen , ROOT.kYellow  ,
 #  p.draw('a')
 #  @endcode 
 class BrasilBand(object) :
-    """Helper class to create and keep the 'Brasil-band' plot
+    """ Helper class to create and keep the 'Brasil-band' plot
     >>> bp = BrasilBand( sigmas = (1,2,3) )  ## draw 1,2&3-sigma bands 
     >>> for value  in [ ... ] :
     >>>     ...
@@ -1621,7 +1618,7 @@ class BrasilBand(object) :
     # =========================================================================
     ## Add the point to the Brasil-plot
     def fill ( self , x , observed , hti_result ) : 
-        """Add the point to the Brasil-plot
+        """ Add the point to the Brasil-plot
         """
         expected = tuple ( hti_result.GetExpectedUpperLimit ( s ) for s in self.__nsigmas )
         self.__data [ x ] = observed, expected
@@ -1740,7 +1737,7 @@ class BrasilBand(object) :
     # ===========================================================================
     ## number of points in the graph 
     def __len__ ( self ) :
-        """Number of points in the graph
+        """ Number of points in the graph
         """
         return len ( self.__data ) 
 
@@ -1763,7 +1760,7 @@ class BrasilBand(object) :
 #  @endcode
 #  @thanks Dima Golubkov 
 class P0Plot(object) :
-    """Helper class to create graphs(s) for p0-scan plot
+    """ Helper class to create graphs(s) for p0-scan plot
     >>> plot = P0Plot() 
     >>> for ,,, :
     ...    value       = ...
@@ -1774,7 +1771,7 @@ class P0Plot(object) :
     >>> plot.p0         .draw ( 'ac') ## plot p-values 
     >>> plot.p0_expected.draw ( 'c' ) ## plot expected p-values 
     >>> plot.sigmas     .draw ( 'ac') ## plot #sigmas  
-    - thanks to Dima Golubkov 
+    - thanks to Dima Golubkov! 
     """
     def __init__ ( self ) :
 
@@ -1809,7 +1806,7 @@ class P0Plot(object) :
     #     plot.fill ( value , calculator ) 
     #  @endcode
     def fill ( self , value , *what ) :
-        """Add the point to TGraph(s
+        """ Add the point to TGraph(s
         
         - Full version 
         >>> plot = P0Plot() 
