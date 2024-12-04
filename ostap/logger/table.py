@@ -424,6 +424,7 @@ def table ( rows                          ,
     else :
         table_instance = terminaltables.DoubleTable                 ( rows , title )
 
+        
     cw = table_instance.column_widths
     nc = len ( cw )
 
