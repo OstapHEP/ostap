@@ -56,8 +56,8 @@ if not os.path.exists( data_file ) :
     N = 100000
     
     with timing ('Prepare input ROOT file with data %s' % data_file , logger = logger ) :
-        with ROOT.TFile.Open( data_file ,'recreate') as test_file:
-            ## test_file.cd()
+        with ROOT.TFile( data_file ,'recreate') as test_file:
+            test_file.cd()
             tree = ROOT.TTree('S','signal     tree')
             tree.SetDirectory ( test_file ) 
             
