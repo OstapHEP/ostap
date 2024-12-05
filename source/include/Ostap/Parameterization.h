@@ -49,7 +49,7 @@ namespace Ostap
         const double         ymin = -1 , 
         const double         ymax =  1 ) ;
       // ======================================================================
-      // consntructor from parameters
+      // constructor from parameters
       LegendreSum2 
       ( const std::vector<double>& pars      ,
         const unsigned short       NX        , 
@@ -59,7 +59,7 @@ namespace Ostap
         const double               ymin = -1 , 
         const double               ymax =  1 ) ;
       // ======================================================================
-      /** constructor orm the product of two Legendre sums
+      /** constructor form the product of two Legendre sums
        *  \f$ S(x,y) = S_x(x)\times S_y(y) \f$ 
        *  @param sx (INPUT) the first  Legendre sum 
        *  @param sy (INPUT) the second Legendre sum 

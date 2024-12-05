@@ -512,8 +512,7 @@ Ostap::Math::LegendreSum3::LegendreSum3
                                 ymin , ymax ,
                                 zmin , zmax )
 {
-  setPars ( pars ) ;
-  
+  setPars ( pars ) ;  
 }
 // ============================================================================
 /*  constructor orm the product of two Legendre sums
@@ -681,6 +680,17 @@ bool Ostap::Math::LegendreSum3::fill
   //
   return true ;
 }
+// ============================================================================
+/*  integral 
+ *  \f$ \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}
+ *    \int_{z_{min}}^{z_{max}} f(x,y,z) {\mathrm{d}} x {\mathrm{d}} y {\mathrm{d}} z \f$ 
+ */
+// ============================================================================
+double Ostap::Math::LegendreSum3::integral   () const 
+{ return m_pars[0]
+    * ( m_xmax - m_xmin )
+    * ( m_ymax - m_ymin )
+    * ( m_zmax - m_zmin ) ; }
 // ============================================================================
 /*  integrate over x dimension 
  *  \f$ f_x(y,z) =  \int_{x_{min}}^{x_{max}} f(x,y,z) {\mathrm{d}} x \f$
@@ -909,14 +919,6 @@ double Ostap::Math::LegendreSum3::integral
   //
   return calculate()  * ( m_xmax - m_xmin ) * ( m_ymax - m_ymin ) * ( m_zmax - m_zmin ) * 1./8 ;
 }
-// ============================================================================
-/*  integral 
- *  \f$ \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}
- *    \int_{z_{min}}^{z_{max}} f(x,y,z) {\mathrm{d}} x {\mathrm{d}} y {\mathrm{d}} z \f$ 
- */
-// ============================================================================
-double Ostap::Math::LegendreSum3::integral () const 
-{ return m_pars[0] * ( m_xmax - m_xmin ) * ( m_ymax - m_ymin ) * ( m_zmax - m_zmin ); }
 // ============================================================================
 // get unique tag 
 // ============================================================================
@@ -1202,6 +1204,90 @@ bool Ostap::Math::LegendreSum4::fill
   //
   return true ;
 }
+// ============================================================================
+/* integral 
+ *  \f$ \int_{x_{low}}^{x_{high}}\int_{y_{low}}^{y_{high}}
+ *      \int_{z_{low}}^{z_{high}}\int_{u_{low}}^{u_{high}}
+ *       f(x,y,z,u) {\mathrm{d}} x {\mathrm{d}} y {\mathrm{d}} z {\mathrm{d}} u \f$ 
+ */
+// ============================================================================
+double Ostap::Math::LegendreSum4::integral 
+( const double xlow , const double xhigh , 
+  const double ylow , const double yhigh , 
+  const double zlow , const double zhigh ,
+  const double ulow , const double uhigh ) const 
+{
+  if ( s_equal ( xlow , xhigh ) || 
+       s_equal ( ylow , yhigh ) ||  
+       s_equal ( zlow , zhigh ) ||
+       s_equal ( ulow , uhigh ) ) { return 0 ; }
+  else if ( xlow > xhigh ) { return -integral ( xhigh , xlow  , ylow  , yhigh , zlow  , zhigh , ulow  , uhigh ) ; }
+  else if ( ylow > yhigh ) { return -integral ( xlow  , xhigh , yhigh , ylow  , zlow  , zhigh , ulow  , uhigh ) ; }
+  else if ( zlow > zhigh ) { return -integral ( xlow  , xhigh , ylow  , yhigh , zhigh , zlow  , ulow  , uhigh ) ; }
+  else if ( ulow > uhigh ) { return -integral ( xlow  , xhigh , ylow  , yhigh , zlow  , zhigh , uhigh , ulow  ) ; }
+  // 
+  const double xl = std::max ( xlow  , m_xmin ) ;
+  const double xh = std::min ( xhigh , m_xmax ) ;
+  const double yl = std::max ( ylow  , m_ymin ) ;
+  const double yh = std::min ( yhigh , m_ymax ) ;
+  const double zl = std::max ( zlow  , m_zmin ) ;
+  const double zh = std::min ( zhigh , m_zmax ) ;
+  const double ul = std::max ( ulow  , m_umin ) ;
+  const double uh = std::min ( uhigh , m_umax ) ;
+  //
+  if      ( xh <= m_xmin || xl >= m_xmax ) { return 0 ; }
+  else if ( yh <= m_ymin || yl >= m_ymax ) { return 0 ; }
+  else if ( zh <= m_zmin || zl >= m_zmax ) { return 0 ; }
+  else if ( uh <= m_umin || ul >= m_umax ) { return 0 ; }
+  //
+  if  ( s_equal  ( xl , m_xmin ) && s_equal  ( xh , m_xmax ) && 
+        s_equal  ( yl , m_ymin ) && s_equal  ( yh , m_ymax ) && 
+        s_equal  ( zl , m_zmin ) && s_equal  ( zh , m_zmax ) &&
+        s_equal  ( ul , m_umin ) && s_equal  ( uh , m_umax ) ) { return integral() ; }
+  //
+  const double txl =  tx ( xl ) ;
+  const double txh =  tx ( xh ) ;
+  //
+  const double tyl =  ty ( yl ) ;
+  const double tyh =  ty ( yh ) ;
+  //
+  const double tzl =  tz ( zl ) ;
+  const double tzh =  tz ( zh ) ;
+  //
+  const double tul =  tu ( ul ) ;
+  const double tuh =  tu ( uh ) ;
+  //
+  // prepare cache
+  //
+  _legendre_integrals ( m_cache_x , txl , txh ) ;
+  _legendre_integrals ( m_cache_y , tyl , tyh ) ;
+  _legendre_integrals ( m_cache_z , tzl , tzh ) ;
+  _legendre_integrals ( m_cache_u , tul , tuh ) ;
+  //
+  return calculate()
+    * ( m_xmax - m_xmin )
+    * ( m_ymax - m_ymin )
+    * ( m_zmax - m_zmin )
+    * ( m_umax - m_umin ) * 1./16 ;
+}
+// ============================================================================
+
+
+// ============================================================================
+/*  integral 
+ *  \f$ \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}
+ *      \int_{z_{min}}^{z_{max}}\int_{u_{min}}^{u_{max}} 
+ *      f(x,y,z,u) {\mathrm{d}} x {\mathrm{d}} y {\mathrm{d}} z {\mathrm{d}} u \f$ 
+ */
+// ============================================================================
+double Ostap::Math::LegendreSum4::integral   () const 
+{ return m_pars[0]
+    * ( m_xmax - m_xmin )
+    * ( m_ymax - m_ymin )
+    * ( m_zmax - m_zmin )
+    * ( m_umax - m_umin ) ; }
+// ============================================================================
+
 // ============================================================================
 /*  integrate over x dimension 
  *  \f$ f_x(y,z,u) =  \int_{x_{min}}^{x_{max}} f(x,y,z,u) {\mathrm{d}} x \f$

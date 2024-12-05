@@ -3,7 +3,8 @@
   1. Add Logarithmic integral functions 
   1. Add Exponental  integral functions 
   1. Add Sine and Cosine integral functions 
-      
+  1. Add missing `Ostap::Math::LegendreSum[X]::integral` methods 
+
 ## Backward incompatible
     
 ## Bug fixes
