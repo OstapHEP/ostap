@@ -232,7 +232,7 @@ def _h1_param_sum_ ( h1               ,
     if not opts                : opts  = 'S'
     if not 'S' in opts.upper() : opts += 'S'
     
-    if ( len ( h1 ) < 100 or h1.GetXaxis().IsVariableBinsize() ) and not 'I' in opts.upper() :
+    if ( len ( h1 ) < 100 or h1.GetXaxis().IsVariableBinSize() ) and not 'I' in opts.upper() :
         logger.info ("param_sum: add fitting option 'I'") 
         opts += 'I'
         

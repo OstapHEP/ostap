@@ -16,7 +16,8 @@ __all__     = (
     'exp'          , 'expm1'      ,
     'log'          , 'log10'      , 'log1p'   , 
     'sqrt'         , 'cbrt'       , 'pow'     ,   
-    'sin'          , 'cos'        , 'tan'     , 
+    'sin'          , 'cos'        , 'tan'     ,
+    'cot'          , 'sec'        , 'csc'     , 'cas'      ,
     'sinh'         , 'cosh'       , 'tanh'    , 'sech'     ,
     'asin'         , 'acos'       , 'atan'    , 'atan2'    , 
     'asinh'        , 'acosh'      , 'atanh'   ,
@@ -38,6 +39,7 @@ __all__     = (
     'hypot'        , 'sigmoid'    , 'fma'   ,
     'minv'         , 'maxv'       ,
     'agm'          , 'ghm'        ,
+    'bring'        , 'BR'         , 
     'significance' , 'nsigmas'    , 'nsigma'
     )
 # =============================================================================
@@ -178,6 +180,42 @@ def tan ( x ) :
     if fun : return fun()
     if isinstance ( x , complex_types ) : return cmath.tan ( x )
     return math.tan ( x )
+
+# =============================================================================
+## define `cot` function 
+def cot ( x ) :
+    """ `tangent` function taking into account the uncertainties
+    """
+    fun = getattr ( x , '__cot__' , None )
+    if fun : return fun()
+    return 1.0/tan ( x )
+
+# =============================================================================
+## define `sec` function 
+def sec ( x ) :
+    """ `secant` function, 1/cos,  taking into account the uncertainties
+    """
+    fun = getattr ( x , '__sec__' , None )
+    if fun : return fun()
+    return 1.0/cos ( x )
+
+# =============================================================================
+## define `csc` function 
+def csc ( x ) :
+    """ `cosecant` function, 1/sin,  taking into account the uncertainties
+    """
+    fun = getattr ( x , '__csc__' , None )
+    if fun : return fun()
+    return 1.0/cos ( x )
+
+# =============================================================================
+## define `cas` function 
+def cas ( x ) :
+    """ `cas` function: sin(x) + cos(s), ,  taking into account the uncertainties
+    """
+    fun = getattr ( x , '__cas__' , None )
+    if fun : return fun()
+    return sin ( x ) + cos ( x ) 
 
 # =============================================================================
 ## define `sinh` function 
@@ -851,7 +889,7 @@ _Si_ = Ostap.Math.Si
 #  \f$ Si(x) = \int\limits_{0}^{x} \frac{\sin t}{t}dt \f$ 
 #  @see https://en.wikipedia.org/wiki/Trigonometric_integral
 def Si ( x ) :
-    """ Fet the integral sine Si(x) 
+    """ Get the integral sine Si(x) 
      @see https://en.wikipedia.org/wiki/Trigonometric_integral
     """
     fun = getattr ( x , '__Si__' , None )
@@ -864,7 +902,7 @@ _Ci_ = Ostap.Math.Ci
 #   \f$ Ci(x) = - \int\limits_{x}^{+\infty} \frac{\cos t}{t}dt \f$ 
 #  @see https://en.wikipedia.org/wiki/Trigonometric_integral
 def Ci ( x ) :
-    """ Fet the integral cosine Ci(x) 
+    """ Get the integral cosine Ci(x) 
      @see https://en.wikipedia.org/wiki/Trigonometric_integral
     """
     fun = getattr ( x , '__Ci__' , None )
@@ -877,13 +915,37 @@ _Cin_ = Ostap.Math.Cin
 #  \f$ Cin(x) = \int\limits_{0}^{x} \frac{1 - \cos t}{t}dt \f$ 
 #  @see https://en.wikipedia.org/wiki/Trigonometric_integral
 def Cin ( x ) :
-    """ Fet the integral cosine Cin(x) (entire function)
+    """ Get the integral cosine Cin(x) (entire function)
      @see https://en.wikipedia.org/wiki/Trigonometric_integral
     """
     fun = getattr ( x , '__Cin__' , None )
     if fun : return fun ()
     return _Cin_ ( x ) 
 
+# =============================================================================
+_BR_ = Ostap.Math.bring 
+# =============================================================================
+## Get the Bring radical/ultraradical, a real solution of 
+#  the equation \f$ x*5 + x + a = 0 \f$
+#  @see https://en.wikipedia.org/wiki/Bring_radical
+#  @code
+#  a = ...
+#  r = bring ( a )
+#  r = BR    ( a ) ## ditto
+#  @endcode
+def bring ( x ) :
+    """ Get the Bring radical/ultraradical, a real solution of 
+    the equation x*5 + x + a = 0 
+     - see https://en.wikipedia.org/wiki/Bring_radical    
+    >>> a = ...
+    >>> r = bring ( a )
+    >>> r = BR    ( a ) ## ditto
+    """
+    fun = getattr ( x , '__BR__' , None )
+    if fun : return fun ()
+    return _BR_ ( x )
+# =============================================================================
+BR = bring
 
 # =============================================================================
 ## FIX

@@ -717,6 +717,26 @@ Ostap::Math::ValueWithError::__cos__   () const { return cos  ( *this ) ; }
 Ostap::Math::ValueWithError
 Ostap::Math::ValueWithError::__tan__   () const { return tan  ( *this ) ; }
 // ============================================================================
+// cot(me)
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__cot__   () const { return cot  ( *this ) ; }
+// ============================================================================
+// sec(me)
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__sec__   () const { return sec  ( *this ) ; }
+// ============================================================================
+// csc(me)
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__csc__   () const { return csc  ( *this ) ; }
+// ============================================================================
+// cas(me)
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__cas__   () const { return cas  ( *this ) ; }
+// ============================================================================
 // sinh(me)
 // ============================================================================
 Ostap::Math::ValueWithError
@@ -842,6 +862,21 @@ Ostap::Math::ValueWithError::__Ci__     () const { return Ci  ( *this ) ; }
 // ============================================================================
 Ostap::Math::ValueWithError
 Ostap::Math::ValueWithError::__Cin__    () const { return Cin ( *this ) ; }
+// ============================================================================
+// Ai(me) 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__Ai__     () const { return Ai  ( *this ) ; }
+// ============================================================================
+// Bi(me) 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__Bi__     () const { return Bi  ( *this ) ; }
+// ============================================================================
+// BR(me), bring  
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__BR__     () const { return bring ( *this ) ; }
 // ============================================================================
 
 // ============================================================================
@@ -1817,7 +1852,24 @@ Ostap::Math::E1
   return ValueWithError ( r , c2 * dfdx * dfdx ) ;
 }
 // ============================================================================
-
+/* get the Bring radical/ultraradical, a real solution of 
+ *  the equation \f$ x*5 + x + a = 0 \f$
+ *  @see https://en.wikipedia.org/wiki/Bring_radical
+ */    
+// ============================================================================
+Ostap::Math::ValueWithError Ostap::Math::bring
+( const Ostap::Math::ValueWithError& x )
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  const bool   x0 = ( 0 >= c2 ) || _zero ( c2 ) ;
+  const double r  = Ostap::Math::bring ( xv ) ;
+  if ( x0 || !std::isfinite ( r ) ) { return r  ; }
+  //
+  const double dfdx = -1.0/ ( 5 * std::pow ( r , 4 ) + 1 );
+  return ValueWithError ( r , c2 * dfdx * dfdx ) ;
+}
+// ========================================================================    
 
 // ============================================================================
 /* evaluate fma(x,y,z) = x*y+x 
@@ -2376,6 +2428,83 @@ Ostap::Math::ValueWithError Ostap::Math::tan
   //
   const double e2 = d * d  * b.cov2() ;
   //
+  return Ostap::Math::ValueWithError ( v , e2 ) ;
+}
+// ============================================================================
+/*  evaluate cot (b)
+ *  @param b (INPUT) the parameter
+ *  @warning invalid and small covariances are ignored
+ */
+// ============================================================================
+Ostap::Math::ValueWithError Ostap::Math::cot
+( const Ostap::Math::ValueWithError& b )
+{
+  if ( 0 >= b.cov2 () || _zero ( b.cov2() ) )
+    { return cot ( b.value() ) ; }
+  //
+  const double v  = cot ( b.value() ) ;
+  if ( !std::isfinite ( v ) ) { return v ; }
+  //
+  const double d  = 1 + v * v ;
+  const double e2 = d * d  * b.cov2() ;
+  return Ostap::Math::ValueWithError ( v , e2 ) ;
+}
+// ============================================================================
+/*  evaluate sec (b)
+ *  @param b (INPUT) the parameter
+ *  @warning invalid and small covariances are ignored
+ */
+// ============================================================================
+Ostap::Math::ValueWithError Ostap::Math::sec
+( const Ostap::Math::ValueWithError& b )
+{
+  if ( 0 >= b.cov2 () || _zero ( b.cov2() ) )
+    { return sec ( b.value() ) ; }
+  //
+  const double v  = sec ( b.value() ) ;
+  if ( !std::isfinite ( v ) ) { return v ; }
+  //
+  const double d  = v * std::tan ( b.value() ) ;
+  const double e2 = d * d  * b.cov2() ;
+  return Ostap::Math::ValueWithError ( v , e2 ) ;
+}
+// ============================================================================
+/*  evaluate sec (b)
+ *  @param b (INPUT) the parameter
+ *  @warning invalid and small covariances are ignored
+ */
+// ============================================================================
+Ostap::Math::ValueWithError Ostap::Math::csc
+( const Ostap::Math::ValueWithError& b )
+{
+  if ( 0 >= b.cov2 () || _zero ( b.cov2() ) )
+    { return csc ( b.value() ) ; }
+  //
+  const double v  = csc ( b.value() ) ;
+  if ( !std::isfinite ( v ) ) { return v ; }
+  //
+  const double d  = - v * cot  ( b.value() ) ;
+  const double e2 = d * d  * b.cov2() ;
+  return Ostap::Math::ValueWithError ( v , e2 ) ;
+}
+// ============================================================================
+/*  evaluate cas(b)
+ *  @param b (INPUT) the parameter
+ *  @warning invalid and small covariances are ignored
+ */
+// ============================================================================
+Ostap::Math::ValueWithError Ostap::Math::cas
+( const Ostap::Math::ValueWithError& b )
+{
+  if ( 0 >= b.cov2 () || _zero ( b.cov2() ) )
+    { return cas ( b.value() ) ; }
+  //
+  const double sv = std::sin ( b.value() ) ;
+  const double cv = std::cos ( b.value() ) ;  
+  const double v  = sv + cv ;
+  //
+  const double d  = cv - sv ;
+  const double e2 = d * d  * b.cov2() ;
   return Ostap::Math::ValueWithError ( v , e2 ) ;
 }
 // ============================================================================

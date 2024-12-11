@@ -32,6 +32,7 @@
 #include "Ostap/MoreMath.h"
 #include "Ostap/Clenshaw.h"
 #include "Ostap/Choose.h"
+#include "Ostap/Interpolants.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -3925,8 +3926,6 @@ double Ostap::Math::der_Bi ( const double x )
 // ============================================================================
 
 
-#include <iostream>
-
 // ============================================================================
 /* Ramanudjan' sum
  *  \f$ R(x) = \sum_{n=1}^{+\infty} \frac{ (-1)^{n-1}x^n}{n!2^{n-1}
@@ -4228,6 +4227,252 @@ double Ostap::Math::lambert_Wm1 ( const double x )
     }
   return result.val ;
 }
+
+
+
+#include <iostream>
+
+// ========================================================================
+namespace
+{
+  // ======================================================================
+  const Ostap::Math::Interpolation::Table s_BRING_table {
+    {{ 0.302430000000, 
+       0.317052447762, 
+       0.331796375994, 
+       0.346678757435, 
+       0.361718076876, 
+       0.376934395700, 
+       0.392349416423, 
+       0.407986547232, 
+       0.423870966521, 
+       0.440029687433, 
+       0.456491622400, 
+       0.473287647677, 
+       0.490450667886, 
+       0.508015680550, 
+       0.526019840639, 
+       0.544502525100, 
+       0.563505397403, 
+       0.583072472075, 
+       0.603250179244, 
+       0.624087429173, 
+       0.645635676800, 
+       0.667948986280, 
+       0.691084095521, 
+       0.715100480722, 
+       0.740060420914, 
+       0.766029062500, 
+       0.793074483790, 
+       0.821267759542, 
+       0.850683025503, 
+       0.881397542944, 
+       0.913491763200, 
+       0.947049392211, 
+       0.982157455060, 
+       1.018906360509, 
+       1.057389965541, 
+       1.097705639900, 
+       1.139954330625, 
+       1.184240626594, 
+       1.230672823058, 
+       1.279362986187, 
+       1.330427017600, 
+       1.383984718911, 
+       1.440159856263, 
+       1.499080224872, 
+       1.560877713561, 
+       1.625688369300, 
+       1.693652461748, 
+       1.764914547789, 
+       1.839623536070, 
+       1.917932751542, 
+       2.000000000000 }} ,
+    {{ -0.30000000, 
+       -0.31400000, 
+       -0.32800000, 
+       -0.34200000, 
+       -0.35600000, 
+       -0.37000000, 
+       -0.38400000, 
+       -0.39800000, 
+       -0.41200000, 
+       -0.42600000, 
+       -0.44000000, 
+       -0.45400000, 
+       -0.46800000, 
+       -0.48200000, 
+       -0.49600000, 
+       -0.51000000, 
+       -0.52400000, 
+       -0.53800000, 
+       -0.55200000, 
+       -0.56600000, 
+       -0.58000000, 
+       -0.59400000, 
+       -0.60800000, 
+       -0.62200000, 
+       -0.63600000, 
+       -0.65000000, 
+       -0.66400000, 
+       -0.67800000, 
+       -0.69200000, 
+       -0.70600000, 
+       -0.72000000, 
+       -0.73400000, 
+       -0.74800000, 
+       -0.76200000, 
+       -0.77600000, 
+       -0.79000000, 
+       -0.80400000, 
+       -0.81800000, 
+       -0.83200000, 
+       -0.84600000, 
+       -0.86000000, 
+       -0.87400000, 
+       -0.88800000, 
+       -0.90200000, 
+       -0.91600000, 
+       -0.93000000, 
+       -0.94400000, 
+       -0.95800000, 
+       -0.97200000, 
+       -0.98600000, 
+       -1.00000000 }} , true } ;
+  // 
+  const Ostap::Math::FloaterHormann s_BRING { s_BRING_table , 4 } ;
+  // ======================================================================
+  static const std::array<long double,5> s_BR1 { -1.0L , +1.0L , -5.0L , +35.0L , -285.0L } ; 
+  // ======================================================================
+}
+// ========================================================================
+/*  Bring radical or ultra-radical, the real solution of
+ *  the equation \f$ x^5+x+a=0 \f$ 
+ *  @see https://en.wikipedia.org/wiki/Bring_radical
+ */
+// ========================================================================
+double Ostap::Math::bring   ( const double x )
+{
+  if      ( s_zero ( x ) ) { return 0                         ; }
+  else if ( x < 0        ) { return -bring ( std::abs ( x ) ) ; }
+  //
+  const long double xx = x       ;
+  const long double x2 = xx * xx ;
+  const long double x4 = x2 * x2 ;
+  //
+  const long double x1 = - std::pow ( xx , 0.2 ) ;
+  const long double ax = std::abs ( xx ) ;
+  long double x0 =
+    ax < 0.5 ?
+    xx * Ostap::Math::Clenshaw::monomial_sum ( s_BR1.rbegin() , s_BR1.rend() , x4 ).first :
+    ( s_BRING.xmin() <= ax && ax <= s_BRING.xmax() ? s_BRING ( x ) : 
+      x1
+      - 0.20       / std::pow ( x1 ,  3 )
+      - 0.08       / std::pow ( x1 ,  7 ) 
+      + 4.0/(25*3) / std::pow ( x1 , 11 ) ) ;
+  
+  if ( 5 < std::abs ( x0 ) ) 
+    {
+      // few fixed point iterations 
+      for ( unsigned short i = 0 ; i < 4 ; ++ i )
+	{ x0 = - std::pow ( xx + x0 , 0.2 ) ; }
+    }
+  /// Halley's method 
+  auto fun  = [ xx ] ( const long double z ) -> long double
+  { return      std::pow ( z , 5 ) + z + xx ; } ;
+  auto der1 = [ xx ] ( const long double z ) -> long double
+  { return  5 * std::pow ( z , 4 ) + 1    ; } ;
+  auto der2 = [ xx ] ( const long double z ) -> long double
+  { return 20  *std::pow ( z , 3 )        ; } ;
+  
+  long double r = x0 ;
+  for ( unsigned short n ; n < 100 ; ++n )
+    {
+      const long double fn = fun  ( r ) ;
+      if ( s_zero ( fn ) ) { return r ; }      // RETURN
+      
+      const long double d1 = der1 ( r ) ;
+      const long double d2 = der2 ( r ) ;
+      
+      const long double fd = fn/d1 ;
+      const long double dr = - fd * ( 1 - 0.5 * fd * d2 / d1 ) ;
+      //
+      if ( s_zero ( dr ) || s_equal ( r , r + dr ) ) { return r + dr ; }
+      r += dr ;
+    }
+  //
+  return r ;
+}
+// ============================================================================
+/*  Bring radical or ultra-radical, the real solution of
+ *  the equation \f$ x^5+x+a=0 \f$ 
+ *  @see https://en.wikipedia.org/wiki/Bring_radical
+ */
+// ============================================================================
+std::complex<double> Ostap::Math::bring   ( const std::complex<double>& x )
+{
+  const double im = std::imag ( x ) ;
+  if ( s_zero ( im ) ) { return bring ( std::real ( x ) ) ; }
+  const double re = std::real ( x ) ;
+  static const std::complex<double> s_I { 0 , 1 } ;
+  if ( s_zero ( re ) ) { return s_I * bring ( im ) ;  }
+  //
+  const double ax = std::abs ( x ) ;
+  //
+  const std::complex<double> xx = x       ;
+  const std::complex<double> x2 = xx * xx ;
+  const std::complex<double> x4 = x2 * x2 ;
+  //
+  const std::complex<double> x1 = - std::pow ( xx , 0.2 ) ;
+  //
+  std::complex<double> x0 =
+    ax   < 0.5 ?
+    xx * Ostap::Math::Clenshaw::monomial_sum ( s_BR1.rbegin() , s_BR1.rend() , x4 ).first :
+    ( ax < 1.5 ? x1 :
+      x1
+      - 0.20       / std::pow ( x1 ,  3 )
+      - 0.08       / std::pow ( x1 ,  7 ) 
+      + 4.0/(25*3) / std::pow ( x1 , 11 ) ) ;  
+  //
+  if ( 5 < std::abs ( x0 ) ) 
+    {
+      // few fixed point iterations 
+      for ( unsigned short i = 0 ; i < 4 ; ++ i )
+	{ x0 = - std::pow ( xx + x0 , 0.2 ) ; }
+    }
+  //  
+  /// Halley's method 
+  auto fun  = [ xx ] ( const std::complex<double>& z ) -> std::complex<double> 
+  { return       std::pow ( z , 5 ) + z + xx ; } ;
+  auto der1 = [ xx ] ( const std::complex<double>& z ) -> std::complex<double> 
+  { return  5. * std::pow ( z , 4 ) + 1.     ; } ;
+  auto der2 = [ xx ] ( const std::complex<double>& z ) -> std::complex<double>
+  { return 20.  *std::pow ( z , 3 )          ; } ;
+  
+  std::complex<double> r = x0 ;
+  for ( unsigned short n ; n < 100 ; ++n )
+    {
+      const std::complex<double> fn = fun  ( r ) ;
+      
+      if ( s_czero ( fn ) ) { return r ; }      // RETURN
+      
+      const std::complex<double> d1 = der1 ( r ) ;
+      const std::complex<double> d2 = der2 ( r ) ;
+      
+      const std::complex<double> fd = fn/d1 ;
+      const std::complex<double> dr = - fd * ( 1.0 - 0.5 * fd * d2 / d1 ) ;
+
+      if ( s_czero ( dr ) || s_cequal ( r , r + dr ) ) { return r + dr ; }
+      r += dr ;
+    }
+  //
+  return r ;
+ 
+}
+// ============================================================================
+
+
+
 
 // ============================================================================
 /*  complete Fermi-Dirac integral 

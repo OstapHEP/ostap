@@ -18,11 +18,15 @@ namespace
 {
   // ==========================================================================
   /// equality criteria for doubles
-  const Ostap::Math::Equal_To<double>            s_equal{}      ; // equality criteria for doubles
+  const Ostap::Math::Equal_To<double>                s_equal{}      ; // equality criteria for doubles
   /// zero for doubles  
-  const Ostap::Math::Zero<double>                s_zero {}      ; // zero for doubles
+  const Ostap::Math::Zero<double>                    s_zero {}      ; // zero for doubles
   /// zero for vectors 
-  const Ostap::Math::Zero< std::vector<double> > s_vzero{}      ; // zero for vectors
+  const Ostap::Math::Zero< std::vector<double> >     s_vzero{}      ; // zero for vectors
+  /// zero for comples doubles  
+  const Ostap::Math::Zero<std::complex<double> >     s_czero {}      ; // zero for complex doubles
+  /// equality criteria for comples doubles
+  const Ostap::Math::Equal_To<std::complex<double> > s_cequal{}      ; // equality criteria for complex doubles
   // ==========================================================================
   // Limits? 
   // ==========================================================================

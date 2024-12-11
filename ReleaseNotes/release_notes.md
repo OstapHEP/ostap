@@ -1,4 +1,8 @@
 ## New features
+
+    1. add several functions, like `sec` , `csc` , `cot` , `cas`
+    1. add Bring radical
+    
     
 ## Backward incompatible
     

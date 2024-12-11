@@ -276,6 +276,14 @@ namespace Ostap
       ValueWithError __cos__    () const ;
       /// tan(me) 
       ValueWithError __tan__    () const ;
+      /// cot(me) 
+      ValueWithError __cot__    () const ;
+      /// sec(me) 
+      ValueWithError __sec__    () const ;
+      /// csc(me) 
+      ValueWithError __csc__    () const ;      
+      /// cas(me) 
+      ValueWithError __cas__    () const ;      
       /// sinh(me) 
       ValueWithError __sinh__   () const ;
       /// cosh(me) 
@@ -326,6 +334,12 @@ namespace Ostap
       ValueWithError __Ci__     () const ;
       /// integal cosine 
       ValueWithError __Cin__    () const ;
+      /// Airy function
+      ValueWithError __Ai__     () const ;
+      /// Airy function
+      ValueWithError __Bi__     () const ;      
+      /// Bring radical/ultraradical
+      ValueWithError __BR__     () const ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -727,6 +741,38 @@ namespace Ostap
      */
     ValueWithError tan 
     ( const ValueWithError& b ) ;
+    // ========================================================================    
+    /** evaluate <code>cot(b)</code>: \f$ \frac{1}{\tan{b}}\f$
+     *  @param b (INPUT) the parameter 
+     *  @return  cot(b)
+     *  @warning invalid and small covariances are ignored 
+     */
+    ValueWithError cot 
+    ( const ValueWithError& b ) ;
+    // ========================================================================        
+    /** evaluate <code>sec(b)</code>: \f$ \frac{1}{\cos{b}}\f$
+     *  @param b (INPUT) the parameter 
+     *  @return  sec(b)
+     *  @warning invalid and small covariances are ignored 
+     */
+    ValueWithError sec 
+    ( const ValueWithError& b ) ;
+    // ========================================================================            
+    /** evaluate <code>csc(b)</code>: \f$ \frac{1}{\sin{b}}\f$
+     *  @param b (INPUT) the parameter 
+     *  @return  csc(b)
+     *  @warning invalid and small covariances are ignored 
+     */
+    ValueWithError csc 
+    ( const ValueWithError& b ) ;
+    // =========================================================================
+    /** evaluate <code>cas(b)</code>: \f$ \sin{x}  + \cos{x} \f$
+     *  @param b (INPUT) the parameter 
+     *  @return  cas(b)
+     *  @warning invalid and small covariances are ignored 
+     */
+    ValueWithError cas 
+    ( const ValueWithError& b ) ;    
     // ========================================================================    
     /** evaluate <code>sinh(b)</code>:  \f$ \sinh{b}\f$
      *  @param b (INPUT) the parameter 
@@ -1192,8 +1238,13 @@ namespace Ostap
      */    
     ValueWithError E1    ( const ValueWithError& x ) ;
     // ========================================================================    
-    
-    
+    /** get the Bring radical/ultraradical, a real solution of 
+     *  the equation \f$ x*5 + x + a = 0 \f$
+     *  @see https://en.wikipedia.org/wiki/Bring_radical
+     */    
+    ValueWithError bring ( const ValueWithError& x ) ;
+    // ========================================================================    
+   
     // ========================================================================    
     /** evaluate <code>fma(x,y,z)</code>: \f$ xy+z \f$  
      *  @param y    (INPUT) the parameter 

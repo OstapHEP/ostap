@@ -7,6 +7,7 @@
 // STD & STL
 // ============================================================================
 #include <cmath>
+#include <complex>
 #include <array>
 #include <utility>
 #include <algorithm>
@@ -213,6 +214,29 @@ namespace Ostap
         {
           q = std::fma ( x , q ,  p     ) ; // x * q + p       ;
           p = std::fma ( x , p , *first ) ; // x * p + *first  ;
+        }
+        //
+        return std::make_pair ( p , q ) ;
+      }
+      // ==================================================================================
+      template <class ITERATOR, class TYPE>
+      inline 
+      std::pair<typename std::complex<TYPE>, typename std::complex<TYPE>>
+      monomial_sum 
+      ( ITERATOR                          first  , 
+        ITERATOR                          last   , 
+        const typename std::complex<TYPE> x      ) 
+      {
+        if ( first == last ) { return std::make_pair(0,0) ; }
+        //
+	typename std::complex<TYPE> p = *first  ;
+	typename std::complex<TYPE> q { 0 , 0 } ;
+        while ( ++first != last ) 
+        {
+          // q = std::fma ( x , q ,  p     ) ; // x * q + p       ;
+          // p = std::fma ( x , p , *first ) ; // x * p + *first  ;
+	  q = x * q + p ;
+	  p = x * p + std::complex<TYPE> ( *first );
         }
         //
         return std::make_pair ( p , q ) ;

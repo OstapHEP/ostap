@@ -295,7 +295,91 @@ namespace Ostap
     double sech ( const double x ) ;
     // ========================================================================
 
+    // ========================================================================
+    /** \overload cotangent \f$ cot(x) = \frac{\cos x } {\sin x} \f$ 
+     */
+    inline double               cot ( const double x )
+    { return 1.0/ std::tan ( x ) ; }
+    // ========================================================================
+    /** \overload cotangent \f$ cot(x) = \frac{\cos x } {\sin x} \f$ 
+     */
+    inline std::complex<double> cot ( const std::complex<double>& x )
+    { return 1.0/std::tan ( x ) ; }    
+    // ========================================================================
+    /** \overload cosecant \f$ csc (x) = \frac{1}{\sin x }\f$ 
+     */
+    inline double csc ( const double x ) { return 1.0 / std::sin ( x ) ; }
+    // ========================================================================    
+    /** \overload cosecant \f$ csc(x) = \frac{1} {\sin x} \f$ 
+     */
+    inline std::complex<double> csc ( const std::complex<double>& x )
+    { return 1.0/std::sin ( x ) ; }    
+    // ========================================================================
+    /** \overload cosecant \f$ sec (x) = \frac{1}{\cos x }\f$ 
+     */
+    inline double sec ( const double x ) { return 1.0 / std::cos ( x ) ; }
+    // ========================================================================    
+    /** \overload cosecant \f$ sec (x) = \frac{1} {\cos x} \f$ 
+     */
+    inline std::complex<double> sec ( const std::complex<double>& x )
+    { return 1.0/std::cos ( x ) ; }    
+    // ========================================================================
+    
+    // ========================================================================
+    /** \overload versin \f$ versin (x) = 1 - \cos x \f$ 
+     */
+    inline double versin ( const double x ) { return 1.0 - std::cos ( x ) ; }
+    // ========================================================================    
+    /** \overload versin \f$ versin (x) = 1 - \cos x \f$ 
+     */
+    inline std::complex<double> versin ( const std::complex<double>& x )
+    { return 1.0 - std::cos ( x ) ; }    
+    // ========================================================================
 
+    // ========================================================================
+    /** \overload vercos \f$ vercos (x) = 1 + \cos x \f$ 
+     */
+    inline double vercos ( const double x ) { return 1.0 + std::cos ( x ) ; }
+    // ========================================================================    
+    /** \overload vercos \f$ vercos (x) = 1 - \cos x \f$ 
+     */
+    inline std::complex<double> vercos ( const std::complex<double>& x )
+    { return 1.0 + std::cos ( x ) ; }    
+    // ========================================================================
+    
+    // ========================================================================
+    /** \overload coversin \f$ coversin (x) = 1 - \sin x \f$ 
+     */
+    inline double coversin ( const double x ) { return 1.0 - std::sin ( x ) ; }
+    // ========================================================================    
+    /** \overload versin \f$ coversin (x) = 1 - \sin x \f$ 
+     */
+    inline std::complex<double> coversin ( const std::complex<double>& x )
+    { return 1.0 - std::sin ( x ) ; }    
+    // ========================================================================
+    
+    // ========================================================================
+    /** \overload covercos \f$ vercos (x) = 1 + \sin x \f$ 
+     */
+    inline double covercos ( const double x ) { return 1.0 + std::sin ( x ) ; }
+    // ========================================================================    
+    /** \overload covercos \f$ vercos (x) = 1 + \sin x \f$ 
+     */
+    inline std::complex<double> covercos ( const std::complex<double>& x )
+    { return 1.0 + std::sin ( x ) ; }    
+    // ========================================================================
+    
+    // ========================================================================
+    /** \overload cas \f$ cas x = \sin x + \cos x f$
+     */
+    inline double  cas ( const double x ) { return std::sin ( x ) + std::cos ( x ) ; }
+    // ========================================================================
+    /** \overload cas \f$ cas x = \sin x + \cos x f$
+     */
+    inline std::complex<double>  cas ( const std::complex<double>& x )
+    { return std::sin ( x ) + std::cos ( x ) ; }
+    // ========================================================================
+    
     // ========================================================================
     // Gamma function and fiends 
     // ========================================================================
@@ -1520,6 +1604,20 @@ namespace Ostap
      *  Helpe sum function to calcaltuon integral logarithm or integral exponent 
      */
     double ramanudjan_sum ( const double x ) ;
+    // ========================================================================
+    
+    // ========================================================================
+    /** Bring radical or ultra-radical, the real solution of
+     *  the equation \f$ x^5+x+a=0 \f$ 
+     *  @see https://en.wikipedia.org/wiki/Bring_radical
+     */
+    double bring   ( const double x ) ;
+    // ========================================================================
+    /** Bring radical or ultra-radical, the real solution of
+     *  the equation \f$ x^5+x+a=0 \f$ 
+     *  @see https://en.wikipedia.org/wiki/Bring_radical
+     */
+    std::complex<double> bring   ( const std::complex<double>& x ) ;
     // ========================================================================
     
     // ========================================================================

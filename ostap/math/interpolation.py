@@ -741,9 +741,9 @@ def points ( func , abscissas  = None ) :
                 abscissas = _new_abscissas
                 func      = _new_func
             except :
-                raise TypeError ( "Invalid iterable ``func'' for ``None''-abscissas!" )                 
+                raise TypeError ( "Invalid iterable `func' for `None'-abscissas!" )                 
         else  :
-            raise TypeError ( "For ``None''-abscissas ``func'' must be Table or Mapping!" ) 
+            raise TypeError ( "For `None'-abscissas `func' must be Table or Mapping!" ) 
 
     ## switch on func         
     if   callable   ( func ) :
