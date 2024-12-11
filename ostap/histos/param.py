@@ -232,12 +232,8 @@ def _h1_param_sum_ ( h1               ,
     if not opts                : opts  = 'S'
     if not 'S' in opts.upper() : opts += 'S'
     
-    if len ( h1 ) < 100 and not 'I' in opts.upper() :
-        logger.info ("param_sum: add fitting option 'I' ") 
-        opts += 'I'
-        
-    if h1.GetXaxis().IsVariableBinSize() and not 'I' in opts.upper() :
-        logger.info ("param_sum: add fitting option 'I' ") 
+    if ( len ( h1 ) < 100 or h1.GetXaxis().IsVariableBinsize() ) and not 'I' in opts.upper() :
+        logger.info ("param_sum: add fitting option 'I'") 
         opts += 'I'
         
     ## fitting options:
@@ -262,11 +258,10 @@ def _h1_param_sum_ ( h1               ,
             logger.verbose ( 'param_sum: fix parameter %d at %s' % ( i , v ) ) 
             fun.FixParameter ( i , float ( v ) )
             
-
     if normalized :
         fun.FixParameter    ( 0 , _integral_ )
-        r  = fun.Fit( h1 , opts+'0Q', '', xmin , xmax )        
-        fun.ReleaseParameter(0)
+        r  = fun.Fit ( h1 , opts+'0Q', '', xmin , xmax )        
+        fun.ReleaseParameter ( 0 )
         
     import ostap.fitting.fitresult
     from   ostap.fitting.utils     import fit_status
@@ -290,7 +285,7 @@ def _h1_param_sum_ ( h1               ,
         if normalized : 
             fun.FixParameter ( 0 , _integral_ )
             r  = fun.Fit( h1 , opts+'0Q', '', xmin , xmax )
-            fun.ReleaseParameter(0)
+            fun.ReleaseParameter ( 0 )
             
         r = fun.Fit ( h1 , *fopts )    
         refit -= 1 
@@ -298,7 +293,7 @@ def _h1_param_sum_ ( h1               ,
         
     if r.Status() :
         status = attention ( fit_status ( r.Status() ) ) 
-        b_name =  type ( b ) . __name__ 
+        b_name = type ( b ) . __name__ 
         rtable = r.table ( title = 'Fit result for %s' % b_name , prefix = '# ' )
         logger.error ( 'Fit result [%s]\n%s'   % ( b_name , rtable ) )
 
