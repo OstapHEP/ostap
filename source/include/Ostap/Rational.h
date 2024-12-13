@@ -457,6 +457,9 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /// forward declaration 
+    class Polynomial ; // forward declatation 
+    // ========================================================================
     /** @class Pade 
      *  Pade-like rational function with the optional setting 
      *  of constituent shape-fixing zeroes and poles 
@@ -586,6 +589,36 @@ namespace Ostap
 	const std::vector<double>&                poles   = std::vector<double>()                 ,	
 	const std::vector<std::complex<double> >& czeroes = std::vector<std::complex<double> > () ,
 	const std::vector<std::complex<double> >& cpoles  = std::vector<std::complex<double> > () ) ;      
+      // =====================================================================
+      /** constructor from the polynomial/Taylor expansion 
+       *  @param p polynomial expansion 
+       *  @param n degree of P(x) 
+       *  @param m degree of Q(x) 
+       */
+      Pade
+      ( const Ostap::Math::Polynomial& p ,
+	const unsigned short           n , 
+	const unsigned short           m ) ;
+      // =====================================================================
+      /** constructor from the polynomial/Taylor expansion 
+       *  @param p polynomial expansion 
+       *  @param n degree of P(x) 
+       */
+      Pade
+      ( const Ostap::Math::Polynomial& p ,
+	const unsigned short           n ) ; 
+      // =====================================================================
+      /** constructor from the polynomial/Taylor expansion 
+       *  @param n degree of P(x) 
+       *  @param m degree of Q(x) 
+       *  @param p polynomial expansion 
+       */
+      Pade
+      ( const unsigned short       n         , 
+	const unsigned short       m         , 
+	const std::vector<double>& p         ,
+	const double               xmin = -1 ,
+	const double               xmax =  1 ) ;	
       // =====================================================================
    public:
       // ======================================================================
@@ -734,14 +767,10 @@ namespace Ostap
       // ======================================================================      
     }
     // ========================================================================
-
     
-    //
-    void pade_intepolation
-    ( const std::vector<double>& x , 
-      const std::vector<double>& y ,
-      const unsigned short       n ) ;
-    //
+    // Ostap::Math::Pade
+    void pade_ququ ( const std::vector<double>& f ,
+		     const unsigned short       n ) ;
     
     
   } //                                         The end of namespace Ostap::Math 

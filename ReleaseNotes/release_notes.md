@@ -2,7 +2,8 @@
 
     1. add several functions, like `sec` , `csc` , `cot` , `cas`
     1. add Bring radical
-    1. add Pade intrpolation     
+    1. add Pade interpolation     
+    1. add conversion from Taylor(polynomial) expansing to Pade approximation
     
 ## Backward incompatible
     

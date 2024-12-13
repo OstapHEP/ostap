@@ -1,6 +1,10 @@
 // ============================================================================
 // Include files 
 // ============================================================================
+// Ostap
+// ============================================================================
+#include "Ostap/GSL_utils.h"
+// ============================================================================
 // GSL
 // ============================================================================
 #include "gsl/gsl_linalg.h"
@@ -161,9 +165,22 @@ Ostap::GSL_Permutation::~GSL_Permutation ()
     m_permutation = nullptr ; 
   }
 }
-
- 
-
+// ============================================================================
+/// print operator 
+std::ostream& operator<<( std::ostream&            s ,
+			  const Ostap::GSL_Matrix& m )
+{
+  if ( m.matrix() == nullptr ) { s << "GSL_Matrix{nullptr}" ; return s ; }
+  return Ostap::Utils::toStream ( *m.matrix() , s ) ;
+}
+// ============================================================================
+/// print operator 
+std::ostream& operator<<( std::ostream&            s ,
+			  const Ostap::GSL_Vector& v ) 
+{
+  if ( v.vector() == nullptr ) { s << "GSL_Vector{nullptr}" ; return s ; }
+  return Ostap::Utils::toStream ( *v.vector() , s ) ;
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

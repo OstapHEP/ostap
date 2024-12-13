@@ -5,6 +5,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Interpolation.h"
+#include "Ostap/Polynomials.h"
 #include "Ostap/Rational.h"
 #include "Ostap/Clenshaw.h"
 #include "Ostap/GSL_utils.h"
@@ -911,8 +912,6 @@ void Ostap::Math::Pade::swap ( Ostap::Math::Pade& right )
   Ostap::Math::swap ( m_workspace , right.m_workspace  ) ;
 }
 // ==========================================================================
-
-// ==========================================================================
 /*  Interpolatory constructor 
  *  @param table interpolation table 
  *  @param n degree of P(x)
@@ -953,7 +952,7 @@ Ostap::Math::Pade::Pade
 		  "Ostap::Math::Pade"          ) ;
   //
   // =====================================================================  
-  Ostap::GSL_Matrix A { N , N } ;
+  Ostap::GSL_Matrix A { N , N , Ostap::GSL_Matrix::Zero() } ;  
   Ostap::GSL_Vector b { N     } ; // free column 
   // (2) fill the matrix A and free column b
   for ( unsigned short j = 0 ; j < N ; ++j )
@@ -1010,35 +1009,195 @@ Ostap::Math::Pade::Pade
   // (4) Feed Pade with calculated parameters 
   for ( unsigned short k = 0 ; k < N ; ++k ) { setPar ( k , x.get ( k ) ) ; }
 }
-// ==========================================================================
-/*  create Pade function that interpolates the data 
- *  @param table interpolation table 
- *  @param n degree of P(x)
- *  @param zeros  list of real constituent zeroes 
- *  @param poles  list of real constituent poles         
- *  @param czeros (half) list of complex constituent zeroes 
- *  @param cpoles (half) list of complex constituent poles  
+
+
+// ===========================================================================
+/** constructor from the polynomial expansion 
+ *  @param n degree of P(x) 
+ *  @param m degree of Q(x) 
+ *  @param f polynomial expansion 
  */
-// ==========================================================================
-Ostap::Math::Pade
-Ostap::Math::Interpolation::pade
-( const Ostap::Math::Interpolation::Table&  table   ,
-  const unsigned short                      n       ,
-  const std::vector<double>&                zeroes  ,
-  const std::vector<double>&                poles   ,	
-  const std::vector<std::complex<double> >& czeroes ,
-  const std::vector<std::complex<double> >& cpoles  )
+// ===========================================================================
+Ostap::Math::Pade::Pade 
+( const unsigned short       n    , 
+  const unsigned short       m    , 
+  const std::vector<double>& f    ,
+  const double               xmin ,
+  const double               xmax )
+  : Pade ( std::vector<double> ( m + n + 1 , 0.0 ) ,
+	   n , {} , {} , {} , {} , xmin , xmax )
 {
-  Ostap::Assert ( n + 1 <= table.size()              ,
-		  "Data table is too short!"         ,
-		  "Ostap::Math::Interpolation::pade" ) ;
-  return Ostap::Math::Pade ( table   ,
-			     n       ,
-			     zeroes  ,
-			     poles   ,
-			     czeroes ,
-			     cpoles  ) ;
+  Ostap::Assert ( n + m + 1 <= f.size ()               ,
+		  "Invalid Polynomial->Pade setting!"  , 
+		  "Ostap::Math::Pade"                  ) ;
+  //
+  const unsigned short N = this->npars () ;
+  //
+  typedef std::vector<double>::const_iterator         CI  ;
+  typedef std::vector<double>::const_reverse_iterator CRI ;
+  //
+  Ostap::GSL_Matrix A { N , N , Ostap::GSL_Matrix::Zero() } ;
+  Ostap::GSL_Vector b { N     } ; // free column 
+  //
+  for ( unsigned short j = 0 ; j < N ; ++j )
+    {
+      if ( j < n + 1 ) { A.set ( j , j , 1 ) ; }
+      //
+      if ( 1 <= j && j < m + 1 )
+	{
+	  CI  i1 = f.begin()       ;
+	  CRI i2 { f.begin() + j } ;
+	  for ( unsigned short k = 0 ; k < j ; ++k )
+	    {	     
+	      A.set ( j , n + 1 + k , -1 * ( *i2++ ) ) ;
+	    }
+	}
+      if ( m + 1 <= j )
+	{
+	  CRI i1 { f.begin() + ( j - m ) } ;
+	  CRI i2 { f.begin() +   j       } ;	  
+	  for ( unsigned short k = 0 ; k < m ; ++k )
+	    {	     
+	      A.set ( j , n + 1 + k , -1 * ( *i2++ ) ) ;
+	    }
+	}
+      b.set( j , f[j] ) ;
+    }
+  // ===============================================================================
+  // (3) solve the system Ax=b using LU decomposition with pivoting 
+  
+  // (3.1) make LU decomposition with pivoting 
+  Ostap::GSL_Permutation  P { N } ;  
+  int signum ; 
+  int ierror  = gsl_linalg_LU_decomp ( A.matrix() , P.permutation() , &signum ) ;
+  if ( ierror ) { gsl_error ( "Failure in LU-decomposition" , __FILE__  , __LINE__ , ierror ) ; }
+  Ostap::Assert ( !ierror ,
+		  "Failure in LU-decomposition!" ,
+		  "Ostap::Math::Pade"            , 1100 + ierror ) ;
+  
+  // (3.2) solve the system Ax=b 
+  Ostap::GSL_Vector       x { N     } ; // solution 
+  ierror  = gsl_linalg_LU_solve ( A.matrix(), P.permutation() , b.vector() , x.vector() );
+  if ( ierror ) { gsl_error ( "Failure in LU-solve" , __FILE__  , __LINE__ , ierror ) ; }
+  Ostap::Assert ( !ierror                ,
+		  "Failure in LU-solve!" ,
+		  "Ostap::Math::Pade"    , 1200 + ierror ) ;
+  
+  // (4) Feed Pade with calculated parameters 
+  for ( unsigned short k = 0 ; k < N ; ++k ) { setPar ( k , x.get ( k ) ) ; }
+  // ==========================================================================
 }
+// ============================================================================
+/*  constructor from polynomi expansion 
+ *  @param p polynomial expansion 
+ *  @param n degree of P(x) 
+ */
+// =============================================================================
+Ostap::Math::Pade::Pade 
+( const Ostap::Math::Polynomial& p ,
+  const unsigned short           n ,
+  const unsigned short           m )
+  : Pade ( n , m , p.pars() , p.xmin() , p.xmax() )
+{}
+// ===============================================================================
+/* constructor from the polynomial expansion 
+ *  @param p polynomial expansion 
+ *  @param n degree of P(x) 
+ */
+// ===============================================================================
+Ostap::Math::Pade::Pade 
+( const Ostap::Math::Polynomial& p ,
+  const unsigned short           n )
+  : Pade ( p , n , n + 1 <= p.npars() ? p.npars() - n - 1 : 0 )
+{
+  Ostap::Assert ( n  + 1 <= p.npars ()                ,
+		  "Invalid Poliynomial->Pade setting!" , 
+		  "Ostap::Math::Pade"                  ) ;
+}
+
+
+
+/** 
+    
+#include "Ostap/GSL_utils.h"
+#include "GSL_helpers.h"
+#include <iostream>
+
+// Ostap::Math::Pade
+void Ostap::Math::pade_ququ
+( const std::vector<double>& f ,
+  const unsigned short       n )
+{
+  Ostap::Assert ( n + 1 <= f.size() ,
+		  "Insufficient array of coefficients!"
+		  "Ostap::Math::pade" ) ;
+  
+  //
+  const unsigned short N = f.size() ;
+  const unsigned short m = f.size() - n - 1 ;
+  //
+  typedef std::vector<double>::const_iterator         CI ;
+  typedef std::vector<double>::const_reverse_iterator CRI;
+  //
+  Ostap::GSL_Matrix A { N , N , Ostap::GSL_Matrix::Zero() } ;
+  Ostap::GSL_Vector b { N     } ; // free column 
+  //
+  for ( unsigned short j = 0 ; j < N ; ++j )
+    {
+      if ( j < n + 1 ) { A.set ( j , j , 1 ) ; }
+      //
+      if ( 1 <= j && j < m + 1 )
+	{
+	  CI  i1 = f.begin()       ;
+	  CRI i2 { f.begin() + j } ;
+	  for ( unsigned short k = 0 ; k < j ; ++k )
+	    {	     
+	      A.set ( j , n + 1 + k , -1 * ( *i2++ ) ) ;
+	    }
+	}
+      if ( m + 1 <= j )
+	{
+	  CRI i1 { f.begin() + ( j - m ) } ;
+	  CRI i2 { f.begin() +   j       } ;	  
+	  for ( unsigned short k = 0 ; k < m ; ++k )
+	    {	     
+	      A.set ( j , n + 1 + k , -1 * ( *i2++ ) ) ;
+	    }
+	}
+      b.set( j , f[j] ) ;
+    }
+  // solve Ax=b
+  
+  
+  // (3) solve the system Ax=b using LU decomposition with pivoting 
+  
+  // (3.1) make LU decomposition with pivoting 
+  Ostap::GSL_Permutation  P { N } ;  
+  int signum ; 
+  int ierror  = gsl_linalg_LU_decomp ( A.matrix() , P.permutation() , &signum ) ;
+  if ( ierror ) { gsl_error ( "Failure in LU-decomposition" , __FILE__  , __LINE__ , ierror ) ; }
+  Ostap::Assert ( !ierror ,
+		  "Failure in LU-decomposition!" ,
+		  "Ostap::Math::Pade"            , 1100 + ierror ) ;
+  
+  // (3.2) solve the system Ax=b 
+  Ostap::GSL_Vector       x { N     } ; // solution 
+  ierror  = gsl_linalg_LU_solve ( A.matrix(), P.permutation() , b.vector() , x.vector() );
+  if ( ierror ) { gsl_error ( "Failure in LU-solve" , __FILE__  , __LINE__ , ierror ) ; }
+  Ostap::Assert ( !ierror                ,
+		  "Failure in LU-solve!" ,
+		  "Ostap::Math::Pade"    , 1200 + ierror ) ;
+  
+  // (4) Feed Pade with calculated parameters 
+  // for ( unsigned short k = 0 ; k < N ; ++k ) { setPar ( k , x.get ( k ) ) ; }
+  
+  
+  std::cout << (*A.matrix()) << std::endl ;
+  std::cout << (*x.vector()) << std::endl ;
+}
+
+*/
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

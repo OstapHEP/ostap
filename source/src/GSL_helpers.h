@@ -4,6 +4,10 @@
 // ============================================================================
 // Include files
 // ============================================================================
+// STD/STD
+// ============================================================================
+#include <ostream>
+// ============================================================================
 // GSL 
 // ============================================================================
 #include "gsl/gsl_linalg.h"
@@ -68,13 +72,15 @@ namespace Ostap
     inline const gsl_matrix* matrix  () const { return m_matrix ; }
     // ========================================================================
     /// get the mattix element 
-    double      get    ( const unsigned short n1 , 
-                         const unsigned short n2 ) const 
+    double      get
+    ( const unsigned short n1 , 
+      const unsigned short n2 ) const 
     { return gsl_matrix_get ( m_matrix , n1 , n2 ) ; }
     /// set the matrix element 
-    void        set    ( const unsigned short n1 , 
-                         const unsigned short n2 , 
-                         const double   value    )
+    void        set
+    ( const unsigned short n1 , 
+      const unsigned short n2 , 
+      const double   value    )
     {        gsl_matrix_set ( m_matrix , n1 , n2 , value ) ; }
     // ========================================================================
   private:
@@ -125,11 +131,13 @@ namespace Ostap
     inline const gsl_vector* vector () const { return m_vector ; }
     // ========================================================================
     /// get the vector element 
-    double      get    ( const unsigned short n ) const 
+    double      get
+    ( const unsigned short n ) const 
     { return gsl_vector_get ( m_vector , n ) ; }
     /// set the vector element 
-    void        set    ( const unsigned short n , 
-                         const double   value    )
+    void        set
+    ( const unsigned short n , 
+      const double   value    )
     {        gsl_vector_set ( m_vector , n , value ) ; }
     // ========================================================================
   private:
@@ -173,7 +181,13 @@ namespace Ostap
     // ========================================================================    
   };
   // ==========================================================================
-} //                                                 The end of namespace Ostap 
+} //                                                 The end of namespace Ostap
+// ============================================================================
+/// print operator 
+std::ostream& operator<<( std::ostream& s , const Ostap::GSL_Matrix& m ) ;
+// ============================================================================
+/// print operator 
+std::ostream& operator<<( std::ostream& s , const Ostap::GSL_Vector& v ) ;
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
