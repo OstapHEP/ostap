@@ -4229,9 +4229,6 @@ double Ostap::Math::lambert_Wm1 ( const double x )
 }
 
 
-
-#include <iostream>
-
 // ========================================================================
 namespace
 {

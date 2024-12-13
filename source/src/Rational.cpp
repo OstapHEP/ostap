@@ -4,14 +4,19 @@
 // ============================================================================
 // Ostap
 // ============================================================================
-#include "Ostap/Interpolants.h"
+#include "Ostap/Interpolation.h"
 #include "Ostap/Rational.h"
+#include "Ostap/Clenshaw.h"
+#include "Ostap/GSL_utils.h"
 // ============================================================================
 // Local 
 // ===========================================================================
+#include "Exception.h"
 #include "Integrator1D.h"
+#include "local_hash.h"
 #include "local_math.h"
 #include "local_gsl.h"
+#include "GSL_helpers.h"
 // ===========================================================================
 /** @file 
  *  Rational pole-less f
@@ -25,8 +30,6 @@
  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
  *  @date   2023-09-14
  */
-// ============================================================================
-
 // ============================================================================
 /*  constructor  
  *  @param n degree of numerator 
@@ -542,6 +545,500 @@ std::size_t Ostap::Math::RationalPositive::tag () const
 }
 // ============================================================================
 
+
+// ============================================================================
+// Rational Pade-like function
+// ============================================================================
+namespace 
+{
+  // =========================================================================
+  /// helper function to "merge" two sequence of coefficients
+  inline std::vector<double>
+  pq_pars
+  ( const std::vector<double>& p ,
+    const std::vector<double>& q )
+  {
+    std::vector<double> pars{};
+    if ( p.empty() )
+      {
+	pars.reserve   ( 1 + q.size() ) ;
+	pars.push_back ( 1 ) ;               // ATTENTION! 
+      }
+    else
+      {
+	pars.reserve ( p.size() + q.size() ) ;
+	pars.insert ( pars.end() , p.begin() , p.end() ) ;
+      }
+    pars.insert ( pars.end() , q.begin() , q.end() ) ;
+    return pars ;
+  }
+  // =========================================================================
+} // =========================================================================
+// ===========================================================================
+/*  simplified constructor
+ *  @param pars list of "Pade"-parameters 
+ *  @param n degree of P(x)
+ *  @param xmin   low-x 
+ *  @param xmax   high-x 
+ */
+// ============================================================================
+Ostap::Math::Pade::Pade
+( const std::vector<double>& pars ,
+  const unsigned short       n    ,
+  const double               xmin ,
+  const double               xmax )
+  : Pade ( pars , n , {} , {} , {} , {} , xmin , xmax )
+{}
+// ============================================================================
+/*  simplified constructor
+ *  @param pars list of "Pade"-parameters 
+ *  @param n degree of P(x)
+ *  @param zeros  list of real constituent zeroes 
+ *  @param poles  list of real constituent poles         
+ *  @param xmin   low-x 
+ *  @param xmax   high-x 
+ */
+// ============================================================================
+Ostap::Math::Pade::Pade
+( const std::vector<double>&                pars   ,
+  const unsigned short                      n      ,
+  const std::vector<double>&                zeroes ,
+  const std::vector<double>&                poles  ,	
+  const double                              xmin   ,
+  const double                              xmax   )
+  : Pade ( pars , n , zeroes , poles, {} , {} , xmin , xmax )
+{}  
+// ============================================================================
+/* full constructor
+ *  @param pars list of "Pade"-parameters 
+ *  @param n degree of P(x)
+ *  @param zeros  list of real constituent zeroes 
+ *  @param poles  list of real constituent poles         
+ *  @param czeros (half) list of complex constituent zeroes 
+ *  @param cpoles (half) list of complex constituent poles  
+ *  @param xmin   low-x 
+ *  @param xmax   high-x 
+ */
+// ============================================================================
+Ostap::Math::Pade::Pade
+( const std::vector<double>&                pars    ,
+  const unsigned short                      n       ,
+  const std::vector<double>&                zeroes  ,
+  const std::vector<double>&                poles   ,	
+  const std::vector<std::complex<double> >& czeroes ,
+  const std::vector<std::complex<double> >& cpoles  ,
+  const double                              xmin    ,
+  const double                              xmax    ) 
+  : Ostap::Math::Parameters ( std::max ( pars.size() , std::size_t ( n + 1 ) ) ) 
+  , m_n       ( n )
+  , m_m       ( 0 )
+  , m_xmin    ( std::min ( xmin , xmax)      )
+  , m_xmax    ( std::max ( xmin , xmax)      )
+  , m_x0      ( 0.5 * ( xmin + xmax )        )
+  , m_scale   ( 2 / std::abs ( xmax - xmin ) )
+  , m_zeroes  ( zeroes  )
+  , m_poles   ( poles   )
+  , m_czeroes ( czeroes )
+  , m_cpoles  ( cpoles  )
+  , m_pnts    ( poles   ) 
+{
+  /// degree of Q
+  m_m = npars() - m_n - 1 ;
+  /// set parameters 
+  setPars ( pars ) ;
+  //
+  auto cless = [] ( const std::complex<double>& a ,
+		    const std::complex<double>& b ) -> bool
+  { return std::real ( a ) < std::real ( b ) ; } ;
+  //
+  std::sort        ( m_poles .begin() , m_poles .end() ) ; 
+  std::sort        ( m_zeroes.begin() , m_zeroes.end() ) ;
+  std::stable_sort ( m_cpoles .begin() , m_cpoles .end() , cless ) ;
+  std::stable_sort ( m_czeroes.begin() , m_czeroes.end() , cless ) ;     
+  //
+  for ( const auto z : m_cpoles )
+    {
+      const std::complex<double> tz = m_scale * ( z - m_x0 ) ;
+      if ( std::abs ( std::imag ( tz ) ) < 0.02 )
+	{ m_pnts.push_back ( std::real ( z ) ) ; }
+    } 
+  //
+  std::sort ( m_pnts   .begin() , m_pnts   .end () ) ;
+  m_pnts.erase ( std::unique( m_pnts.begin(), m_pnts.end() ), m_pnts.end() );
+  //
+}
+// ==========================================================================
+/*  simplified constructor
+ *  @param ps list of P(x) -parameters, if empty interpeted as  <code>[ 1 ]</code>
+ *  @param qs list of Q(x) -parameters 
+ *  @param xmin   low-x 
+ *  @param xmax   high-x 
+ *  @attention if ps is empty it is interpreted as <code>[1]</code>
+ */
+// ==========================================================================
+Ostap::Math::Pade::Pade
+( const std::vector<double>& ps    ,
+  const std::vector<double>& qs    ,
+  const double               xmin  ,
+  const double               xmax  )
+  : Pade ( ::pq_pars ( ps , qs ) ,
+	   ps.empty() ? 0 : ps.size() - 1 ,
+	   xmin , xmax )
+{}
+// ==========================================================================
+/*  simplified constructor
+ *  @param ps list of P(x) -parameters, if empty interpeted as  <code>[ 1 ]</code>
+ *  @param qs list of Q(x) -parameters 
+ *  @param zeros  list of real constituent zeroes 
+ *  @param poles  list of real constituent poles         
+ *  @param xmin   low-x 
+ *  @param xmax   high-x 
+ *  @attention if ps is empty it is interpreted as <code>[1]</code>
+ */
+// ==========================================================================
+Ostap::Math::Pade::Pade
+( const std::vector<double>& ps     ,
+  const std::vector<double>& qs     ,
+  const std::vector<double>& zeroes ,
+  const std::vector<double>& poles  ,	
+  const double               xmin   ,
+  const double               xmax   )
+  : Pade ( ::pq_pars ( ps , qs ) ,
+	   ps.empty() ? 0 : ps.size() - 1 ,
+	   zeroes , poles , xmin , xmax )
+{}
+// ===========================================================================
+/*  full constructor
+ *  @param ps list of P(x) -parameters, if empty interpeted as  <code>[ 1 ]</code>
+ *  @param qs list of Q(x) -parameters 
+ *  @param zeros  list of real constituent zeroes 
+ *  @param poles  list of real constituent poles         
+ *  @param czeros (half) list of complex constituent zeroes 
+ *  @param cpoles (half) list of complex constituent poles  
+ *  @param xmin   low-x 
+ *  @param xmax   high-x
+ *  @attention if ps is empty it is interpreted as <code>[1]</code>
+ */
+// ===========================================================================
+Ostap::Math::Pade::Pade
+( const std::vector<double>&                ps      ,
+  const std::vector<double>&                qs      ,
+  const std::vector<double>&                zeroes  ,
+  const std::vector<double>&                poles   ,	
+  const std::vector<std::complex<double> >& czeroes ,
+  const std::vector<std::complex<double> >& cpoles  ,
+  const double                              xmin    ,
+  const double                              xmax    ) 
+  : Pade ( ::pq_pars ( ps , qs ) ,
+	   ps.empty() ? 0 : ps.size() - 1 ,
+	   zeroes , poles , czeroes , cpoles , xmin , xmax )
+{}
+
+// ============================================================================
+// evaluate the function
+// ============================================================================
+double Ostap::Math::Pade::evaluate ( const double x ) const
+{
+  const double tx = t ( x ) ;
+  //
+  double result =  1 ;
+  //
+  // (1) get all zeroes
+  if ( !m_zeroes.empty() || !m_czeroes.empty() ) { result *= Zt ( tx ) ; }
+  // (2) get P&Q
+  result *= Pt ( tx ) / Qt ( tx ) ;
+  // (3) get all poles 
+  if ( !m_poles.empty() || !m_cpoles.empty()   ) { result /= Rt ( tx ) ; }
+  //
+  return result ;
+}
+// ============================================================================
+// get the integral
+// ============================================================================
+double Ostap::Math::Pade::integral 
+(  const double xlow  , 
+   const double xhigh ) const 
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; }
+  else if ( xhigh <  xlow            ) { return - integral ( xhigh , xlow ) ; }
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<Pade> s_integrator ;
+  static const char s_message[] = "Integral(Pade)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  //
+  // potental poles ? 
+  if ( 0 < m_pnts.size () )
+    {
+      std::vector<double>::const_iterator il = std::lower_bound ( m_pnts.begin() , m_pnts.end(), xlow  ) ;
+      std::vector<double>::const_iterator ih = std::upper_bound ( il             , m_pnts.end(), xhigh ) ;
+      // points in the interval 
+      if ( m_pnts.end() != il && il != ih ) 
+	{
+	  std::vector<double> points ( il , ih ) ;
+	  std::tie ( ierror , result , error ) = s_integrator.qagp_integrate
+	    ( tag  () , 
+	      &F      , 
+	      xlow    , xhigh ,           // low & high edges
+	      points                    , // poles/special points 
+	      workspace ( m_workspace ) , // workspace
+	      s_APRECISION              , // absolute precision
+	      s_RPRECISION              , // relative precision
+	      m_workspace.size()        , // size of workspace
+	      s_message                 , 
+	      __FILE__ , __LINE__       ) ;
+	  //
+	  return result ;                                             // RETURN
+	}
+    }
+  // regular case 
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
+    ( tag  () , 
+      &F      , 
+      xlow    , xhigh ,           // low & high edges
+      workspace ( m_workspace ) , // workspace
+      s_APRECISION              , // absolute precision
+      s_RPRECISION              , // relative precision
+      m_workspace.size()        , // size of workspace
+      s_message                 , 
+      __FILE__ , __LINE__       ) ;
+  //
+  return result ;                                                    // RETURN
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Pade::tag () const 
+{ 
+  static const std::string s_name = "Pade" ;
+  return Ostap::Utils::hash_combiner 
+    ( s_name   ,
+      n     () ,
+      m     () ,
+      xmin  () ,
+      xmax  () , 
+      Ostap::Utils::hash_range ( zeroes  () ) , 
+      Ostap::Utils::hash_range ( poles   () ) , 
+      Ostap::Utils::hash_range ( czeroes () ) , 
+      Ostap::Utils::hash_range ( cpoles  () ) , 
+      Ostap::Utils::hash_range ( pars    () ) ) ;
+}
+// =============================================================================
+// get value of P(x)
+// =============================================================================
+double Ostap::Math::Pade::Pt ( const double tx ) const
+{
+  typedef std::vector<double>::const_reverse_iterator CRI ;
+  //
+  const CRI b { CRI ( m_pars.begin() + ( m_n + 1 ) ) } ;
+  const CRI e { CRI ( m_pars.begin()               ) } ;
+  //
+  /// calculate P(t)
+  return Ostap::Math::Clenshaw::monomial_sum ( b , e , tx ) .first ;
+}
+// =============================================================================
+// get value of P(x)
+// =============================================================================
+double Ostap::Math::Pade::Qt ( const double tx ) const
+{
+  typedef std::vector<double>::const_reverse_iterator CRI ;
+  //
+  const CRI b { CRI ( m_pars.begin() + ( m_n + 1 + m_m ) ) } ;
+  const CRI e { CRI ( m_pars.begin() + ( m_n + 1       ) ) } ;
+  //
+  /// calculate Q(t)
+  return 1.0 + tx * Ostap::Math::Clenshaw::monomial_sum ( b , e , tx ) .first ;
+}
+// ============================================================================
+// get value of all zeroes Z(x)
+// ============================================================================
+double Ostap::Math::Pade::Zt ( const double tx ) const
+{
+  /// z -> t 
+  auto t_z = [this] ( const std::complex<double>& z ) -> std::complex<double>
+    { return this->m_scale * ( z - this->m_x0 ) ; } ;
+  //
+  double result = 1 ;
+  /// (1) loop over poles 
+  for ( const auto z : m_zeroes  ) { result *=           ( tx - t   ( z ) ) ; }
+  /// (2) loop over pairs of complex-conjugated zeroes  
+  for ( const auto z : m_czeroes ) { result *= std::norm ( tx - t_z ( z ) ) ; }
+  //
+  return result ;
+}
+// ============================================================================
+// get value of all poles Rt(t)
+// ============================================================================
+double Ostap::Math::Pade::Rt ( const double tx ) const
+{
+  /// z -> t 
+  auto t_z = [this] ( const std::complex<double>& z ) -> std::complex<double>
+    { return this->m_scale * ( z - this->m_x0 ) ; } ;
+  //
+  double result = 1 ;  
+  /// (1) loop over poles 
+  for ( const auto z : m_poles  ) { result *=           ( tx - t   ( z ) ) ; }
+  /// (2) loop over pairs of complex-conjugated poles 
+  for ( const auto z : m_cpoles ) { result *= std::norm ( tx - t_z ( z ) ) ; }
+  //
+  return result ;
+}
+// ============================================================================
+// swap two Pade functions 
+// ============================================================================
+void Ostap::Math::Pade::swap ( Ostap::Math::Pade& right )
+{
+  //
+  Ostap::Math::Parameters::swap ( right   )  ;
+  //
+  std::swap ( m_n       , right.m_n       ) ;
+  std::swap ( m_m       , right.m_m       ) ;
+  std::swap ( m_xmin    , right.m_xmin    ) ;
+  std::swap ( m_xmax    , right.m_xmax    ) ;
+  std::swap ( m_x0      , right.m_x0      ) ;
+  std::swap ( m_scale   , right.m_scale   ) ;
+  std::swap ( m_zeroes  , right.m_zeroes  ) ;
+  std::swap ( m_poles   , right.m_poles   ) ;
+  std::swap ( m_czeroes , right.m_czeroes ) ;
+  std::swap ( m_cpoles  , right.m_cpoles  ) ;
+  std::swap ( m_pnts    , right.m_pnts    ) ;
+  //
+  Ostap::Math::swap ( m_workspace , right.m_workspace  ) ;
+}
+// ==========================================================================
+
+// ==========================================================================
+/*  Interpolatory constructor 
+ *  @param table interpolation table 
+ *  @param n degree of P(x)
+ *  @param zeros  list of real constituent zeroes 
+ *  @param poles  list of real constituent poles         
+ *  @param czeros (half) list of complex constituent zeroes 
+ *  @param cpoles (half) list of complex constituent poles  
+ */
+// ==========================================================================
+Ostap::Math::Pade::Pade 
+( const Ostap::Math::Interpolation::Table&  table   ,
+  const unsigned short                      n       ,
+  const std::vector<double>&                zeroes  ,
+  const std::vector<double>&                poles   ,	
+  const std::vector<std::complex<double> >& czeroes ,
+  const std::vector<std::complex<double> >& cpoles  )
+  : Pade ( std::vector<double>( table.size() , 0.0 )              ,
+	   n             , 
+	   zeroes        ,
+	   poles         ,
+	   czeroes       ,
+	   cpoles        ,
+	   table.xmin () ,
+	   table.xmax () )
+{
+  //
+  Ostap::Assert ( !table.empty()               ,
+		  "Empty interpolation table!" ,
+		  "Ostap::Math::Pade"          ) ;
+  //
+  Ostap::Assert ( m_n + 1 <= table.size ()       ,
+		  "Invalid size of interpolation table!" ,
+		  "Ostap::Math::Pade"          ) ;
+  //
+  const unsigned short N = table.size() ;
+  Ostap::Assert ( npars() == N  ,
+		  "Mismatch interpolation table size/#pars!" ,
+		  "Ostap::Math::Pade"          ) ;
+  //
+  // =====================================================================  
+  Ostap::GSL_Matrix A { N , N } ;
+  Ostap::GSL_Vector b { N     } ; // free column 
+  // (2) fill the matrix A and free column b
+  for ( unsigned short j = 0 ; j < N ; ++j )
+    {
+      const double x = table  .x ( j  ) ;
+      const double y = table  .y ( j  ) ;
+      const double t = this -> t ( x  ) ;
+      
+      const double Z = Zt ( t ) ; // all zeroes 
+      const double R = Rt ( t ) ; // all poles 
+      
+      // =================================================================
+      { // the first n + 1 columns  
+	double xx = Z ;
+	for ( unsigned int i = 0 ; i < m_n + 1 ; ++i ) 
+	  {
+	    A.set ( j , i , xx ) ;
+	    xx *= t ;	   
+	  }	
+      }
+      // =================================================================
+      { // remaining columns 
+	double xx = -R * y * t ;
+	for ( unsigned int i = m_n + 1 ; i < N ; ++i ) 
+	  {
+	    A.set ( j , i , xx ) ;
+	    xx *= t ;	   
+	  }
+      }
+      // free column
+      b.set ( j , R * y ) ;
+    }
+  // =====================================================================  
+  
+  // (3) solve the system Ax=b using LU decomposition with pivoting 
+  
+  // (3.1) make LU decomposition with pivoting 
+  Ostap::GSL_Permutation  P { N } ;  
+  int signum ; 
+  int ierror  = gsl_linalg_LU_decomp ( A.matrix() , P.permutation() , &signum ) ;
+  if ( ierror ) { gsl_error ( "Failure in LU-decomposition" , __FILE__  , __LINE__ , ierror ) ; }
+  Ostap::Assert ( !ierror ,
+		  "Failure in LU-decomposition!" ,
+		  "Ostap::Math::Pade"            , 1100 + ierror ) ;
+  
+  // (3.2) solve the system Ax=b 
+  Ostap::GSL_Vector       x { N     } ; // solution 
+  ierror  = gsl_linalg_LU_solve ( A.matrix(), P.permutation() , b.vector() , x.vector() );
+  if ( ierror ) { gsl_error ( "Failure in LU-solve" , __FILE__  , __LINE__ , ierror ) ; }
+  Ostap::Assert ( !ierror                ,
+		  "Failure in LU-solve!" ,
+		  "Ostap::Math::Pade"    , 1200 + ierror ) ;
+  
+  // (4) Feed Pade with calculated parameters 
+  for ( unsigned short k = 0 ; k < N ; ++k ) { setPar ( k , x.get ( k ) ) ; }
+}
+// ==========================================================================
+/*  create Pade function that interpolates the data 
+ *  @param table interpolation table 
+ *  @param n degree of P(x)
+ *  @param zeros  list of real constituent zeroes 
+ *  @param poles  list of real constituent poles         
+ *  @param czeros (half) list of complex constituent zeroes 
+ *  @param cpoles (half) list of complex constituent poles  
+ */
+// ==========================================================================
+Ostap::Math::Pade
+Ostap::Math::Interpolation::pade
+( const Ostap::Math::Interpolation::Table&  table   ,
+  const unsigned short                      n       ,
+  const std::vector<double>&                zeroes  ,
+  const std::vector<double>&                poles   ,	
+  const std::vector<std::complex<double> >& czeroes ,
+  const std::vector<std::complex<double> >& cpoles  )
+{
+  Ostap::Assert ( n + 1 <= table.size()              ,
+		  "Data table is too short!"         ,
+		  "Ostap::Math::Interpolation::pade" ) ;
+  return Ostap::Math::Pade ( table   ,
+			     n       ,
+			     zeroes  ,
+			     poles   ,
+			     czeroes ,
+			     cpoles  ) ;
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

@@ -7,7 +7,6 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Math.h"
-#include "Ostap/Interpolation.h"
 #include "Ostap/Interpolants.h"
 #include "Ostap/Parameters.h"
 #include "Ostap/Workspace.h"
@@ -158,7 +157,7 @@ namespace Ostap
     { return  ( -a ) += b ; }
     // ========================================================================
     /** @class RationalBernstein
-     *  Rational fnuction as ratio of Bernstein polyhomial and 
+     *  Rational function as ratio of Bernstein polyhomial and 
      *  positive Bernstein polynomial
      *  \f[ R ( x ) = \frac{B(x)}{P(x) \frac{1}{ x_{max} - x_{min} } \f]
      *  @see Ostap::Math::Bernstein
@@ -458,6 +457,293 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class Pade 
+     *  Pade-like rational function with the optional setting 
+     *  of constituent shape-fixing zeroes and poles 
+     *  \f[ P(x) = \frac{\sum_{i=0}^{n} p_i x^i }
+     *                  { 1 + \sum_{j=1}^{m} q_i x^i } 
+     *             \frac{ \prod_{i=0}^{l} (x-z_i) }
+     *                  { \prod_{i=0}^{k} (x-c_k) } 
+     *             \frac{ \prod_{i=1}^{r} (x-u_i)(x-\bar{u}_i}
+     *                  { \prod_{i=1}^{s} (x-v_i)(x-\bar{v}_i}\f] 
+     */
+    class Pade : public Parameters
+    {
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /** simplified constructor
+       *  @param pars list of "Pade"-parameters 
+       *  @param n degree of P(x)
+       *  @param xmin   low-x 
+       *  @param xmax   high-x 
+       */
+      Pade
+      ( const std::vector<double>& pars  ,
+	const unsigned short       n     ,
+	const double               xmin  ,
+	const double               xmax  ) ;
+      // ====================================================================
+      /** simplified constructor
+       *  @param pars list of "Pade"-parameters 
+       *  @param n degree of P(x)
+       *  @param zeros  list of real constituent zeroes 
+       *  @param poles  list of real constituent poles         
+       *  @param xmin   low-x 
+       *  @param xmax   high-x 
+       */
+      Pade
+      ( const std::vector<double>&                pars   ,
+	const unsigned short                      n      ,
+	const std::vector<double>&                zeroes ,
+	const std::vector<double>&                poles  ,	
+	const double                              xmin   ,
+	const double                              xmax   ) ;
+      // ====================================================================== 
+      /** full constructor
+       *  @param pars list of "Pade"-parameters 
+       *  @param n degree of P(x)
+       *  @param zeros  list of real constituent zeroes 
+       *  @param poles  list of real constituent poles         
+       *  @param czeros (half) list of complex constituent zeroes 
+       *  @param cpoles (half) list of complex constituent poles  
+       *  @param xmin   low-x 
+       *  @param xmax   high-x 
+       */
+      Pade
+      ( const std::vector<double>&                pars                                            ,
+	const unsigned short                      n                                               ,
+	const std::vector<double>&                zeroes  = std::vector<double>()                 ,
+	const std::vector<double>&                poles   = std::vector<double>()                 ,	
+	const std::vector<std::complex<double> >& czeroes = std::vector<std::complex<double> > () ,
+	const std::vector<std::complex<double> >& cpoles  = std::vector<std::complex<double> > () ,
+	const double                              xmin    = -1                                    ,
+	const double                              xmax    =  1                                    ) ;
+      // =====================================================================
+      /** simplified constructor
+       *  @param ps list of P(x) -parameters, if empty interpeted as  <code>[ 1 ]</code>
+       *  @param qs list of Q(x) -parameters 
+       *  @param xmin   low-x 
+       *  @param xmax   high-x 
+       *  @attention if ps is empty it is interpreted as <code>[1]</code>
+       */
+      Pade
+      ( const std::vector<double>& ps    ,
+	const std::vector<double>& qs    ,
+	const double               xmin  ,
+	const double               xmax  ) ;
+      // ====================================================================
+      /** simplified constructor
+       *  @param ps list of P(x) -parameters, if empty interpeted as  <code>[ 1 ]</code>
+       *  @param qs list of Q(x) -parameters 
+       *  @param zeros  list of real constituent zeroes 
+       *  @param poles  list of real constituent poles         
+       *  @param xmin   low-x 
+       *  @param xmax   high-x 
+       *  @attention if ps is empty it is interpreted as <code>[1]</code>
+       */
+      Pade
+      ( const std::vector<double>& ps     ,
+	const std::vector<double>& qs     ,
+	const std::vector<double>& zeroes ,
+	const std::vector<double>& poles  ,	
+	const double               xmin   ,
+	const double               xmax   ) ;
+      // =====================================================================
+      /** full constructor
+       *  @param ps list of P(x) -parameters, if empty interpeted as  <code>[ 1 ]</code>
+       *  @param qs list of Q(x) -parameters 
+       *  @param zeros  list of real constituent zeroes 
+       *  @param poles  list of real constituent poles         
+       *  @param czeros (half) list of complex constituent zeroes 
+       *  @param cpoles (half) list of complex constituent poles  
+       *  @param xmin   low-x 
+       *  @param xmax   high-x
+       *  @attention if ps is empty it is interpreted as <code>[1]</code>
+       */
+      Pade
+      ( const std::vector<double>&                ps                                              ,
+	const std::vector<double>&                qs                                              ,
+	const std::vector<double>&                zeroes  = std::vector<double>()                 ,
+	const std::vector<double>&                poles   = std::vector<double>()                 ,	
+	const std::vector<std::complex<double> >& czeroes = std::vector<std::complex<double> > () ,
+	const std::vector<std::complex<double> >& cpoles  = std::vector<std::complex<double> > () ,
+	const double                              xmin    = -1                                    ,
+	const double                              xmax    =  1                                    ) ;
+      // =====================================================================
+      /** Interpolatory constructor 
+       *  @param table interpolation table 
+       *  @param n degree of P(x)
+       *  @param zeros  list of real constituent zeroes 
+       *  @param poles  list of real constituent poles         
+       *  @param czeros (half) list of complex constituent zeroes 
+       *  @param cpoles (half) list of complex constituent poles  
+       */
+      Pade 
+      ( const Ostap::Math::Interpolation::Table&  table                                           ,
+	const unsigned short                      n                                               ,
+	const std::vector<double>&                zeroes  = std::vector<double>()                 ,
+	const std::vector<double>&                poles   = std::vector<double>()                 ,	
+	const std::vector<std::complex<double> >& czeroes = std::vector<std::complex<double> > () ,
+	const std::vector<std::complex<double> >& cpoles  = std::vector<std::complex<double> > () ) ;      
+      // =====================================================================
+   public:
+      // ======================================================================
+      /// get x-min 
+      inline double xmin  () const { return m_xmin  ; }
+      /// get x-max
+      inline double xmax  () const { return m_xmax  ; }
+      /// get x0
+      inline double x0    () const { return m_x0    ; }
+      /// get scale
+      inline double scale () const { return m_scale ; }
+      /// degree of P(x) 
+      unsigned short n    () const { return m_n     ; }
+      /// degree of Q(x) 
+      unsigned short m    () const { return m_m     ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// coefficient of P(x) 
+      inline double p ( const unsigned short k ) const
+      { return k <= m_n ? par ( k ) : 0.0 ; }
+      /// coefficient of Q(x) 
+      inline double q ( const unsigned short k ) const
+      { return 0 == k  ? 1 : par ( m_n + k ) ;  }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// coefficients of \f$ P(x) =\sum_{i=0} p_i *x^i\f$
+      std::vector<double> ps () const
+      { return std::vector<double>( m_pars.begin() , m_pars.begin() + ( m_n + 1 ) ) ; }
+      /// coeffcients of  \f$ Q(x)=1+\sum_{i=1} q_i x^i \f$ 
+      std::vector<double> qs () const
+      { return std::vector<double>( m_pars.begin() + ( m_n + 1 ), m_pars.end() ) ; }
+      // =====================================================================      
+    public: // constitient poles & zeroes 
+      // ======================================================================
+      const std::vector<double>&                zeroes  () const { return m_zeroes  ; }
+      const std::vector<double>&                poles   () const { return m_poles   ; }
+      const std::vector<std::complex<double> >& czeroes () const { return m_czeroes ; }      
+      const std::vector<std::complex<double> >& cpoles  () const { return m_cpoles  ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the function
+      double evaluate ( const double x ) const ;
+      /// evaluate the function 
+      inline double operator() ( const double x ) const
+      { return evaluate ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral between xmin and xmax
+      inline double integral () const { return integral ( m_xmin , m_xmax ) ; }
+      /// get the integral between xlow and xhigh 
+      double integral
+      ( const double xlow  ,
+	const double xhigh ) const ; 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// x -> t 
+      inline double t ( const double x ) const
+      { return m_scale * ( x - m_x0 ) ; }
+      // t -> x 
+      inline double x ( const double t ) const
+      { return m_x0 + t / m_scale ; }
+      // ======================================================================
+    public: // helper decompositions 
+      // ======================================================================
+      /// get value of P(x)
+      inline double P ( const double x ) const { return Pt ( t ( x ) ) ; }
+      /// get value of Q(x)
+      inline double Q ( const double x ) const { return Qt ( t ( x ) ) ; }
+      /// get value of all zerors
+      inline double Z ( const double x ) const { return Zt ( t ( x ) ) ; }
+      /// get value of all poles 
+      inline double R ( const double x ) const { return Rt ( t ( x ) ) ; }      
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get value of Pt(t)
+      double Pt ( const double tx ) const ; 
+      /// get value of Qt(t)
+      double Qt ( const double tx ) const ; 
+      /// get value of all zerors
+      double Zt ( const double tx ) const ; 
+      /// get value of all poles 
+      double Rt ( const double tx ) const ; 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// swap two Pade functions 
+      void swap ( Pade& right ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// unique tag 
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      unsigned short      m_n      {  1 } ;
+      unsigned short      m_m      {  0 } ;
+      double              m_xmin   { -1 } ;
+      double              m_xmax   {  1 } ;
+      double              m_x0     {  0 } ;
+      double              m_scale  {  1 } ;
+      // ======================================================================
+      std::vector<double>                m_zeroes  {} ; 
+      std::vector<double>                m_poles   {} ;
+      std::vector<std::complex<double> > m_czeroes {} ; 
+      std::vector<std::complex<double> > m_cpoles  {} ;
+      // ======================================================================
+    private: 
+      // ======================================================================
+      /// potentially problematic points for integration 
+      std::vector<double>                m_pnts      {} ;
+      /// integration workspace 
+      Ostap::Math::WorkSpace             m_workspace {} ; // workspace 
+      // ======================================================================
+    }; //                                 The end of class Ostap::Math::GenPade 
+    // ========================================================================
+    /// swap two Pade functions 
+    inline void swap ( Pade& a , Pade& b ) { a.swap ( b ) ; }
+    // ========================================================================
+    namespace Interpolation
+    {
+      // ======================================================================
+      class Table ; // forward declaration
+      // ======================================================================
+      /** create Pade function that interpolates the data 
+       *  @param table interpolation table 
+       *  @param n degree of P(x)
+       *  @param zeros  list of real constituent zeroes 
+       *  @param poles  list of real constituent poles         
+       *  @param czeros (half) list of complex constituent zeroes 
+       *  @param cpoles (half) list of complex constituent poles  
+       */
+      Ostap::Math::Pade pade
+      ( const Ostap::Math::Interpolation::Table&  table                                           ,
+	const unsigned short                      n                                               ,
+	const std::vector<double>&                zeroes  = std::vector<double>()                 ,
+	const std::vector<double>&                poles   = std::vector<double>()                 ,	
+	const std::vector<std::complex<double> >& czeroes = std::vector<std::complex<double> > () ,
+	const std::vector<std::complex<double> >& cpoles  = std::vector<std::complex<double> > () ) ;      
+      // ======================================================================      
+    }
+    // ========================================================================
+
+    
+    //
+    void pade_intepolation
+    ( const std::vector<double>& x , 
+      const std::vector<double>& y ,
+      const unsigned short       n ) ;
+    //
+    
+    
   } //                                         The end of namespace Ostap::Math 
   // ==========================================================================
 } //                                                 The end of namespace Ostap 

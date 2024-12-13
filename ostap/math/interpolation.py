@@ -168,7 +168,7 @@ else                         : from collections      import Iterable, Mapping
 #  print a 
 #  @endcode 
 def _a_str_ ( self , nmax = 8 ) :
-    """Printout for interpolation Abscissas
+    """ Printout for interpolation Abscissas
     >>> print a  
     """
     n = self.n()
@@ -178,8 +178,8 @@ def _a_str_ ( self , nmax = 8 ) :
             return 'Abscissas(%d,%+.4g,%+.4g,%s)' % ( n , self.xmin () , self.xmax() , 'Uniform'    )
         elif Ostap.Math.Interpolation.Abscissas.Chebyshev  == a : 
             return 'Abscissas(%d,%+.4g,%+.4g,%s)' % ( n , self.xmin () , self.xmax() , 'Chebyshev'  )
-        elif Ostap.Math.Interpolation.Abscissas.Chebyshev2 == a : 
-            return 'Abscissas(%d,%+.4g,%+.4g,%s)' % ( n , self.xmin () , self.xmax() , 'Chebyshev2' )
+        elif Ostap.Math.Interpolation.Abscissas.Lobatto    == a : 
+            return 'Abscissas(%d,%+.4g,%+.4g,%s)' % ( n , self.xmin () , self.xmax() , 'Lobatto'    )
         else :
             return 'Abscissas(%d,%s)'    % ( n , self.x () ) 
             
@@ -346,7 +346,8 @@ def _p_iter_ ( self ) :
     """
     N = len ( self ) 
     for i in range ( N ) :
-        yield self.x ( i ) , self.y ( i )  
+        yield self.x ( i ) , self.y ( i )
+
 # =============================================================================
 ## Iterator over (index,x) pairs
 #  a =  ...
@@ -417,6 +418,54 @@ def _p_graph_ ( self ) :
         gr.SetPoint ( i , self.x(i) , self.y(i) )
     return gr 
     
+# =================================================================================
+## Convert interpolation table to table :-)
+def _p_table_ ( table , title = None , precision = 6 , width = 8 , prefix = '' , style = '' ) :
+    """ Convert interpolation table to table :-)
+    """
+    from   ostap.logger.pretty import pretty_float
+
+    rows = [  ( '#' , 'X'  , '[..]' , 'Y' , '[..]' ) ]
+
+    hasexpox = False 
+    hasexpoy = False 
+    for i , xy in table.items()  :
+
+        x , y = xy
+        
+        xv , expox = pretty_float ( x , width = width , precision = precision ) 
+        yv , expoy = pretty_float ( y , width = width , precision = precision ) 
+
+        if expox : hasexpox = True
+        if expoy : hasexpoy = True
+        
+        row = '%d' % i , \
+            xv , '[10^%+d]' % expox if expox else '' ,  \
+            yv , '[10^%+d]' % expoy if expoy else ''
+        
+        rows.append ( row )
+
+    if ( not hasexpox ) or ( not hasexpoy ) :
+        newrows =[]
+        for row in rows :
+            r = list ( row )
+            if not hasexpoy : del r [ 4 ]
+            if not hasexpox : del r [ 2 ]
+            newrows.append ( r )
+        rows = newrows
+        
+    if title is None :
+        tfmt = '#%s %s' 
+        at    = table.atype()
+        np    = len ( table ) 
+        if     Ostap.Math.Interpolation.Abscissas.Generic    == at : title = tfmt % ( np , ''          ) 
+        elif   Ostap.Math.Interpolation.Abscissas.Uniform    == at : title = tfmt % ( np , 'Uniform'   )
+        elif   Ostap.Math.Interpolation.Abscissas.Chebyshev  == at : title = tfmt % ( np , 'Chebyshev' )
+        elif   Ostap.Math.Interpolation.Abscissas.Lobatto    == at : title = tfmt % ( np , 'Lobatto'   )
+        else                                                       : title = tfmt % ( np , ''          )
+
+    import ostap.logger.table  as     T
+    return T.table ( rows , title = title , prefix = prefix )
     
 
 Ostap.Math.Interpolation.Table.__str__      = _p_str_
@@ -429,7 +478,9 @@ Ostap.Math.Interpolation.Table.__getitem__  = _p_getitem_
 ## Ostap.Math.Interpolation.Table.__delitem__  = _p_delitem_  
 
 Ostap.Math.Interpolation.Table.graph        = _p_graph_
-
+Ostap.Math.Interpolation.Table.table        = _p_table_
+Ostap.Math.Interpolation.Table.__str__      = _p_table_
+Ostap.Math.Interpolation.Table.__repr__     = _p_table_
 
 # ==================================================================================
 ## Uniform interpolation abscissas
@@ -438,7 +489,7 @@ Ostap.Math.Interpolation.Table.graph        = _p_graph_
 #  ... print ( a ) 
 #  @endcode 
 def uniform_abscissas ( low , high , N ) :
-    """Uniform interpoaltion abscissas
+    """ Uniform interpolation abscissas
     for a in uniform_abscissas ( 0, 1 , 10 ) :
     ... print ( a ) 
     """
@@ -479,29 +530,6 @@ def lobatto_abscissas ( low , high , N ) :
         x = math.cos ( a )
         yield 0.5 * (  ( 1 - x ) * low + ( 1 + x ) * high )
         
-# ==================================================================================
-## Print interpolation table as table
-#  @code
-#  table= ...
-#  print ( table.table() )
-#  @endcode 
-def _tab_print_ ( t , title = '' , prefix = '' , alignment = 'll' , xfmt = '%+.5g' , yfmt = '%+-.5g' ) :
-    """Print interpolation table as table
-    >>> table= ...
-    >>> print ( table.table() )
-    """
-    rows = [ ('Abscissa' , 'Value' ) ] 
-    for i in range ( t.size() ) :
-        x = t.x ( i )
-        y = t.y ( i )
-        row = xfmt %  x, yfmt % y
-        rows.append ( row )
-        
-    if not title : title = 'Interpolation Table' 
-    import ostap.logger.table as T
-    return T.table ( rows , title = title , prefix = prefix , alignment = alignment )
-
-Ostap.Math.Interpolation.Table.table = _tab_print_ 
 
 # ==================================================================================
 ## Neville, Lagrange, & Berrut  interpolants
@@ -513,7 +541,7 @@ Ostap.Math.Interpolation.Table.table = _tab_print_
 #  print a 
 #  @endcode 
 def print_interpolant ( self , name , nmax = 7 ) :
-    """Printout for the interpolant
+    """ Printout for the interpolant
     >>> print a  
     """
     n = len ( self )
@@ -522,7 +550,7 @@ def print_interpolant ( self , name , nmax = 7 ) :
         return '%s(%s[%d,%+.4g,%+.4g])' % ( name , 'Uniform'   , n , self.xmin () , self.xmax() )
     elif Ostap.Math.Interpolation.Abscissas.Chebyshev  == a : 
         return '%s(%s[%d,%+.4g,%+.4g])' % ( name , 'Chebyshev' , n , self.xmin () , self.xmax() )
-    elif Ostap.Math.Interpolation.Abscissas.Chebyshev2 == a : 
+    elif Ostap.Math.Interpolation.Abscissas.Lobatto    == a : 
         return '%s(%s[%d,%+.4g,%+.4g])' % ( name , 'Lobatto'   , n , self.xmin () , self.xmax() )
         
     if n <= nmax :

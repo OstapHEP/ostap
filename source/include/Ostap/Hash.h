@@ -36,7 +36,7 @@ namespace Ostap
       hash_combine ( seed , args... ) ;
     }
     // ========================================================================
-    /// combine hahs for sequence of objects 
+    /// combine hash for sequence of objects 
     template<typename RT = std::size_t, typename... T>
     RT hash_combiner ( const T&... args )
     {

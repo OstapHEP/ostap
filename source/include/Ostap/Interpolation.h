@@ -53,7 +53,7 @@ namespace Ostap
      *
      *  Using simple Lagrange algorithm it is easy to get derivative with 
      *  respect to the data points, while using Neville's algorithm 
-     *  one can easily calcualate the derivative with respect to 
+     *  one can easily calculate the derivative with respect to 
      *  the argument.  
      *
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

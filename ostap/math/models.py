@@ -1092,6 +1092,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.Rational               ,
                Ostap.Math.RationalBernstein      ,
                Ostap.Math.RationalPositive       ,
+               Ostap.Math.Pade                   ,
                ## 
                Ostap.Math.BifurcatedGauss        ,
                Ostap.Math.DoubleGauss            ,
@@ -1411,7 +1412,30 @@ Ostap.Math.RationalPositive  . __str__  = _r3_print_
 Ostap.Math.Rational          . __repr__ = _r1_print_ 
 Ostap.Math.RationalBernstein . __repr__ = _r2_print_ 
 Ostap.Math.RationalPositive  . __repr__ = _r3_print_ 
+
+# print Ostap::Math::Pade function 
+def _r4_print_ ( r  ) :
+    ps      = r.ps      ()
+    qs      = r.qs      ()
+    zeroes  = r.zeroes  () 
+    poles   = r.poles   () 
+    czeroes = r.czeroes () 
+    cpoles  = r.cpoles  () 
+    xmin    = r.xmin    ()
+    xmax    = r.xmax    ()
+    if -1 != xmin or 1 != xmax :
+        return "Pade(%s,%s,%s,%s,%s,%s,%s,%s)" % ( ps , qs , zeroes , poles , czeroes , cpoles , xmin , xmax )
     
+    if cpoles    : return "Pade(%s,%s,%s,%s,%s,%s)"       % ( ps , qs , zeroes , poles , czeroes , cpoles )
+    if czeroes   : return "Pade(%s,%s,%s,%s,%s)"          % ( ps , qs , zeroes , poles , czeroes )
+    if poles     : return "Pade(%s,%s,%s,%s)"             % ( ps , qs , zeroes , poles )
+    if zeroes    : return "Pade(%s,%s,%s)"                % ( ps , qs , zeroes )
+    ##
+    return "Pade(%s,%s)" % ( ps , qs )
+
+Ostap.Math.Pade          . __str__  = _r4_print_ 
+Ostap.Math.Pade          . __repr__ = _r4_print_ 
+
 # =============================================================================
 ## print function for splines 
 def _sp_print_ ( self ,   typ = 'BSpline' ) :
@@ -2449,6 +2473,7 @@ _decorated_classes_ = set( [
     Ostap.Math.Rational               ,
     Ostap.Math.RationalBernstein      ,
     Ostap.Math.RationalPositive       ,
+    Ostap.Math.Pade                   ,
     ##
     Ostap.Math.BifurcatedGauss        ,
     Ostap.Math.Bukin                  ,

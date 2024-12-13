@@ -2,7 +2,7 @@
 
     1. add several functions, like `sec` , `csc` , `cot` , `cas`
     1. add Bring radical
-    
+    1. add Pade intrpolation     
     
 ## Backward incompatible
     

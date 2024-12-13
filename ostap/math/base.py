@@ -347,7 +347,7 @@ def complex_vct_str ( vct , format = '%.5g%-+.5gj' ) :
         for c in vct :
             cc   = complex ( c )
             item = format % ( cc.real , cc.imag )
-            lst.append ( cc )        
+            lst.append ( item )        
         return '[ ' + ', '.join ( lst ) + ' ]'  
     except TypeError :
         pass

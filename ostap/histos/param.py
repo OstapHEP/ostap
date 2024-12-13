@@ -228,7 +228,6 @@ def _h1_param_sum_ ( h1               ,
         for i in range ( 0, b.npars() ) :
             fun.SetParameter ( i  , 0  )
                 
-            
     if not opts                : opts  = 'S'
     if not 'S' in opts.upper() : opts += 'S'
     

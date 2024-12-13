@@ -235,7 +235,7 @@ namespace Ostap
      *  \f[ F^d_n(x) = \frac{ \sum_i \frac{\beta_i}{x-x_i} f_i}
      *                      { \sum_i \frac{\beta_i}{x-x_i} } \f]
      *  - for \f$d=0\f$, it corresponds to 1st Berrut interpolant 
-     *  - for \f$d\ge n\f$ , it corresponds to true barycentric polymnomial onterpolation
+     *  - for \f$d\ge n\f$ , it corresponds to true barycentric polynomial onterpolation
      *  - for small values of d it behaves reasonably even for weird interpolaiton mesh 
      *  - performance is about O(n), initialization about \f$ O(nd^2) \f$ 
      *
@@ -650,7 +650,7 @@ namespace Ostap
       /// vector of functipon values 
       Interpolation::Abscissas::Data m_y    {} ; // function values 
       /// inverted/recoprocal differences 
-      Interpolation::Abscissas::Data m_rho0 {} ; // inverted/recoprocal differences      
+      Interpolation::Abscissas::Data m_rho0 {} ; // inverted/reciprocal differences      
       // ======================================================================
     } ;  
     // ========================================================================

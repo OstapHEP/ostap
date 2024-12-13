@@ -96,7 +96,7 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
         
         item = ( 'Neville'     , t[0] ) ,  Ostap.Math.Neville     ( t[1] ) 
         interpolants.append ( item )
-        
+
         item = ( 'Lagrange'    , t[0] ) , Ostap.Math.Lagrange     ( t[1] ) 
         interpolants.append ( item )
         
@@ -119,6 +119,10 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
             item = ( 'FloaterHormann%d' % d , t[0] ) , Ostap.Math.FloaterHormann ( t[1] , d )
             interpolants.append ( item )
         
+        for d in range ( 4  , N ) :
+            item = ( 'Pade%d' % d , t[0] ) , Ostap.Math.Pade ( t[1] , d )
+            interpolants.append ( item )
+
         for d in range ( 1 , 6 ) :
             item = ( 'BSpline%d' % d , t[0] ) , interpolate_bspline  ( t[1] , None , d )
             interpolants.append ( item )
@@ -127,7 +131,7 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
             for d in ( 1 , 3 , 5 , 7  ) :
                 item = ( 'BSpline%dSP' % d , t[0] ) , bspline_interpolate ( t[1], d )
                 interpolants.append ( item )
-            
+
     for n , t in interpolants :
         functions.add ( ( n , t ) ) 
             
@@ -156,7 +160,6 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
             elif 6 == color : color = 'Magenta'
             elif 7 == color : color = 'Cyan'
             elif 8 == color : color = 'DarkGreen'
-
                 
             logger.info ( 'Color %10s for %s:%s' % ( color , n1 , n2  ) ) 
 

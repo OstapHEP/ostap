@@ -7,6 +7,7 @@
 // STD&STL
 // ============================================================================
 #include <functional>
+#include <complex>
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -56,7 +57,20 @@ namespace std
       using Ostap::Utils::hash_range ;
       return hash_range ( v.begin () , v.end () ) ;
     }
-  } ;  
+  } ;
+  // ===========================================================================
+  template<class T>
+  struct std::hash< std::complex<T> >
+  {
+    std::size_t operator()(const std::complex<T>& s ) const noexcept
+    {
+      const std::size_t hr = std::hash<T>{} ( std::real ( s ) ) ;
+      const std::size_t hi = std::hash<T>{} ( std::imag ( s ) ) ;
+      using Ostap::Utils::hash_combiner ;
+      return hash_combiner ( hr , hi ) ;
+    }
+    // =======================================================================
+  }; 
   // ==========================================================================
 } //
 // ============================================================================

@@ -64,7 +64,7 @@ Ostap::Utils::toStream
     {
       if ( 0 != j ) { s << ", " ; }
       //    
-      s << Ostap::format ( "%|11.5g|" , gsl_matrix_get ( &m , i , j ) ) ;
+      s << Ostap::format ( "|%11.5g|" , gsl_matrix_get ( &m , i , j ) ) ;
     }
     s << " | "<< std::endl ;
   }

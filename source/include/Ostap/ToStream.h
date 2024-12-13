@@ -44,39 +44,49 @@ namespace Ostap
     namespace details 
     {
       /// copied from GaudiKernel/SerializeSTL
+      // ======================================================================
       struct IdentityOutputter 
       {
         template <typename T>
-        std::ostream& operator()(std::ostream& os, T&& t) const { return os << std::forward<T>(t); }
-      };
+        std::ostream& operator() ( std::ostream& os , T&& t ) const { return os << std::forward<T> ( t ) ; }
+      } ;
+      // =======================================================================
       template <typename Stream, typename Iterator, typename Separator, typename OutputElement = IdentityOutputter>
-      Stream& ostream_joiner(Stream& os, Iterator first, Iterator last, Separator sep, OutputElement output = OutputElement{}) 
+      Stream& ostream_joiner
+      ( Stream&       os                       ,
+	Iterator      first                    ,
+	Iterator      last                     ,
+	Separator     sep                      ,
+	OutputElement output = OutputElement{} ) 
       {
-        if (first!=last) { output(os,*first); ++first; }
-        for (;first!=last;++first) { output(os << sep,*first); }
+        if  (   first != last           ) { output ( os        , *first ) ; ++first ; }
+        for ( ; first != last ; ++first ) { output ( os << sep , *first ) ; }
         return os;
       }
+      // ======================================================================
       template <typename Stream, typename Container, typename Separator, typename OutputElement = IdentityOutputter>
       Stream& ostream_joiner(Stream& os, const Container& c, Separator sep, OutputElement output = OutputElement{}) 
       { return ostream_joiner( os, std::begin(c), std::end(c), sep, output ) ; }
-      
+      // =======================================================================     
       // helper function to print a tuple of any size
       template<class Tuple, std::size_t N>
       struct TuplePrinter 
       {
-        static std::ostream& toStream(const Tuple& t, std::ostream& s)
+        static std::ostream& toStream ( const Tuple& t , std::ostream& s )
         {
-          TuplePrinter<Tuple, N-1>::toStream(t, s) << " , ";
-          return Ostap::Utils::toStream(std::get<N-1>(t), s);
+          TuplePrinter<Tuple, N-1>::toStream ( t , s ) << " , ";
+          return Ostap::Utils::toStream ( std::get<N-1>( t ) , s ) ;
         }
       };
+      // =======================================================================
       template<class Tuple>
       struct TuplePrinter<Tuple, 1>
       {
-        static std::ostream& toStream(const Tuple& t, std::ostream& s)
-        { return Ostap::Utils::toStream( std::get<0>(t) , s); }
+        static std::ostream& toStream ( const Tuple& t, std::ostream& s)
+        { return Ostap::Utils::toStream (  std::get<0> ( t ) , s ) ; }
       };
-    }
+      // ======================================================================
+    } //                             The end of namespace Ostap::Utils::details 
     // ========================================================================
     /** the helper function to print the sequence
      *  @param first (INPUT)  begin-iterator for the sequence
@@ -196,6 +206,7 @@ namespace Ostap
     inline std::ostream& toStream
     ( const std::set<TYPE,CMP,ALLOCATOR>& obj, std::ostream& s)
     { return toStream ( obj.begin() , obj.end () , s , "[ " , " ]" , " , " ) ; }
+    // =========================================================================
     /** the partial template specialization of <c>std::array<TYPE,N></c>
      *  printout. The vector is printed a'la Python list: "[ a, b, c ]"
      *  @author Alexander MAZUROV Alexander.Mazurov@gmail.com
@@ -247,7 +258,7 @@ namespace Ostap
      */
     template <unsigned int N>
     std::ostream& toStream (       char (&obj)[N] , std::ostream& s )
-    { return toStream ( std::string ( obj , obj+N ) , s ) ; }
+    { return toStream ( std::string ( obj , obj + N ) , s ) ; }
     // ========================================================================
     /** the specialization for C-string, a'la python tuple
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -255,7 +266,7 @@ namespace Ostap
      */
     template <unsigned int N>
     std::ostream& toStream ( const char (&obj)[N] , std::ostream& s )
-    { return toStream ( std::string ( obj , obj+N ) , s ) ; }
+    { return toStream ( std::string ( obj , obj + N ) , s ) ; }
     // ========================================================================
     /** the specialization for C-string, a'la python tuple
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -263,8 +274,7 @@ namespace Ostap
      */
     inline std::ostream& toStream ( const char* obj , std::ostream& s )
     { return toStream ( std::string ( obj ) , s ) ; }
-    // ========================================================================
-    
+    // ========================================================================    
     /** the generic implementation of the printout to the std::ostream
      *  @author Alexander MAZUROV Alexander.Mazurov@gmail.com
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -272,7 +282,7 @@ namespace Ostap
      */
     template<class TYPE>
     inline std::ostream& toStream ( const TYPE& obj, std::ostream& s )
-    { return s << obj ; }
+    { return s << std::showpoint << std::boolalpha << obj ; }
     //
     // ========================================================================
     /** the helper function to print the sequence
@@ -310,8 +320,10 @@ namespace Ostap
      *  @date 2015-03-21
      */
     template<typename... Args>
-    inline std::ostream& toStream(const std::tuple<Args...>& tuple, std::ostream& s) 
-    { return Ostap::Utils::details::TuplePrinter<decltype(tuple), sizeof...(Args)>::toStream(tuple, s << " ( ")<< " ) "; }
+    inline std::ostream& toStream
+    ( const std::tuple<Args...>& tuple ,
+      std::ostream&              s     ) 
+    { return Ostap::Utils::details::TuplePrinter<decltype(tuple), sizeof...(Args)>::toStream ( tuple , s << " ( " )<< " ) "; }
     // ========================================================================
     /** the generic implementation of the type conversion to the string
      *  @author Alexander MAZUROV Alexander.Mazurov@gmail.com
@@ -325,9 +337,10 @@ namespace Ostap
     {
       std::ostringstream s;
       std::ios::fmtflags orig_flags = s.flags();
-      s.setf(std::ios::showpoint); // to display correctly floats
-      toStream ( obj , s);
-      s.flags(orig_flags);
+      s.setf ( std::ios::showpoint ) ; // to display correctly floats
+      s.setf ( std::ios::boolalpha ) ; // for booleans 
+      toStream ( obj , s  ) ;
+      s.flags( orig_flags ) ;
       return s.str();
     }
     // ========================================================================

@@ -30,7 +30,7 @@ namespace Ostap
       Parameters ( const std::vector<double>&  pars   ) ;
       /// constructor from  the list of parameters 
       Parameters (       std::vector<double>&& pars   ) ;
-      /// templated constructor from the sequnce of parameters 
+      /// templated constructor from the sequence of parameters 
       template <typename ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
                 typename = std::enable_if<std::is_convertible<value_type,long double>::value> >

@@ -11,7 +11,7 @@ __all__     = (
     'root_factory' , ## a simple factory to generic deseroialisarion
     )
 # =============================================================================
-from    ostap.math.base        import Ostap, doubles 
+from    ostap.math.base        import Ostap, doubles, complexes  
 from    ostap.core.ostap_types import sequence_types 
 import  ROOT, array 
 # =============================================================================
@@ -176,6 +176,44 @@ def rati2_reduce ( p ) :
 Ostap.Math.Rational         .__reduce__ = rati_reduce 
 Ostap.Math.RationalBernstein.__reduce__ = rati2_reduce 
 Ostap.Math.RationalPositive .__reduce__ = rati2_reduce 
+
+
+# =============================================================================
+## factory for Pade deserializaton 
+#  @see Ostap.Math.Pade 
+def _pade_factory_ ( klass , pars , n , zs , ps , czsr , czsi  , cpsr , cpsi , xmin , xmax ) :
+    """ Reduce Pade
+    - see `Ostap.Math.Pade`
+    """
+    return klass ( doubles   ( pars ) ,
+                   n                  ,
+                   doubles   ( zs   ) ,
+                   doubles   ( ps   ) ,
+                   complexes ( complex ( r , i ) for ( r , i ) in zip ( czsr , czsi ) ) ,
+                   complexes ( complex ( r , i ) for ( r , i ) in zip ( cpsr , cpsi ) ) ,
+                   xmin               ,
+                   xmax               ) 
+    
+# =============================================================================
+## reduce Pade
+#  @see Ostap.Math.Pade 
+def _pade_reduce_ ( p ) :
+    """ Reduce Pade
+    - see `Ostap.Math.Pade`
+    """
+    return _pade_factory_  , ( type ( p ) ,
+                               array.array ( 'd' , p.pars   () ) ,
+                               p.n  ()    ,
+                               array.array ( 'd' , p.zeroes () ) ,
+                               array.array ( 'd' , p.poles  () ) ,
+                               array.array ( 'd' , ( v.real for v in p.czeroes() ) ) ,
+                               array.array ( 'd' , ( v.imag for v in p.czeroes() ) ) ,
+                               array.array ( 'd' , ( v.real for v in p.cpoles () ) ) ,
+                               array.array ( 'd' , ( v.imag for v in p.cpoles () ) ) ,
+                               p.xmin () ,
+                               p.xmax () )
+
+Ostap.Math.Pade .__reduce__ = _pade_reduce_
 
 # =============================================================================
 ## Specific forms of Bernstein  polynomials 
@@ -510,6 +548,7 @@ for p in ( Ostap.Math.Polynomial        ,
            Ostap.Math.Rational          , 
            Ostap.Math.RationalBernstein , 
            Ostap.Math.RationalPositive  ,
+           Ostap.Math.Pade              , 
            ##
            Ostap.Math.ECDF              ) : 
     

@@ -1011,7 +1011,7 @@ def _p_new_init_ ( t ,  *args )  :
 #  fun[1] = 10.0
 #  @endcode 
 def _p_set_par_ ( o , index , value ) :
-    """Set parameter for polynomial/spline function
+    """ Set parameter for polynomial/spline function
     >>> fun = ...
     >>> fun[1] = 10.0
     """
