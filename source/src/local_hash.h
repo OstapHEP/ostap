@@ -60,7 +60,7 @@ namespace std
   } ;
   // ===========================================================================
   template<class T>
-  struct std::hash< std::complex<T> >
+  struct hash< std::complex<T> >
   {
     std::size_t operator()(const std::complex<T>& s ) const noexcept
     {
