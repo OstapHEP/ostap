@@ -39,7 +39,10 @@ __all__     = (
     'hypot'        , 'sigmoid'    , 'fma'   ,
     'minv'         , 'maxv'       ,
     'agm'          , 'ghm'        ,
-    'bring'        , 'BR'         , 
+    'bring'        , 'BR'         ,
+    'am'           , 'dn'         ,            ## elliptic functions 
+    'sn'           , 'cn'         , 'sc'     , ## elliptic functions
+    'elliptic_K'   , 'elliptic_K' ,            ## elliptic integrals 
     'significance' , 'nsigmas'    , 'nsigma'
     )
 # =============================================================================
@@ -946,6 +949,91 @@ def bring ( x ) :
     return _BR_ ( x )
 # =============================================================================
 BR = bring
+
+
+
+# =============================================================================
+_am_ = Ostap.Math.am
+# =============================================================================
+## Elliptic amplitude \f$ \mathrm{am}(u,m)=\phi\f$, where 
+#  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+# @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+def am ( u , m  ) :
+    """ Elliptic functon am(u,m)
+    - see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions    
+    """
+    fun = getattr ( u , '__am__' , None )
+    if fun : return fun ( m )
+    return _am_ ( u , m  )
+
+# =============================================================================
+_dn_ = Ostap.Math.dn
+# =============================================================================
+## Elliptic delta amplitude \f$ \mathrm{sn} (u,m)=\frac{d}{du} \mathrm{am} ( u, m ) \f$, where 
+#   \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+#  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+def dn ( u , m  ) :
+    """ Elliptic functon dn(u,m)
+    - see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions    
+    """
+    fun = getattr ( u , '__dn__' , None )
+    if fun : return fun ( m )
+    return _dn_ ( u , m  )
+
+# =============================================================================
+_cn_ = Ostap.Math.cn
+# =============================================================================
+## Elliptic cosine amplitude \f$ \mathrm{sn} (u,m)=\cos \mathrm{am} ( u, m ) \f$, where 
+#  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+#  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+def cn ( u , m  ) :
+    """ Elliptic function sn(u,m)
+    - see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions    
+    """
+    fun = getattr ( u , '__cn__' , None )
+    if fun : return fun ( m )
+    return _cn_ ( u , m  )
+
+
+# =============================================================================
+_sc_ = Ostap.Math.sc
+# =============================================================================
+## Elliptic function sc = sn/cn 
+#  \f[ \matmrm{sc}\,(u,m) = \frac{ \mathrm{sn} ( u, m) } { \mathrm{cn} ( u , m ) } \f] 
+#   @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+def sc ( u , m  ) :
+    """ Elliptic function sc(u,m) = sn / cn 
+    - see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions    
+    """
+    fun = getattr ( u , '__sc__' , None )
+    if fun : return fun ( m )
+    return _sc_ ( u , m  )
+
+# =============================================================================
+_elliptic_K_ = Ostap.Math.elliptic_K 
+# =============================================================================
+## Complete elliptic integral K(k) 
+#  @see https://en.wikipedia.org/wiki/Elliptic_integral
+def elliptic_K ( k ) :
+    """ Complete elliptic integral K(k) 
+    - see https://en.wikipedia.org/wiki/Elliptic_integral
+    """
+    fun = getattr ( k , '__K__' , None )
+    if fun : return fun (   )
+    return _elliptic_K_ ( k )
+
+# =============================================================================
+_elliptic_E_ = Ostap.Math.elliptic_E 
+# =============================================================================
+## Complete elliptic integral E(k) 
+#  @see https://en.wikipedia.org/wiki/Elliptic_integral
+def elliptic_E ( k ) :
+    """ Complete elliptic integral E(k) 
+    - see https://en.wikipedia.org/wiki/Elliptic_integral
+    """
+    fun = getattr ( k , '__E__' , None )
+    if fun : return fun (   )
+    return _elliptic_E_ ( k )
 
 # =============================================================================
 ## FIX

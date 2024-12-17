@@ -1416,13 +1416,14 @@ std::pair<double,double> Ostap::Math::pochhammer_with_derivative
 // ============================================================================
 
 
+
 // ============================================================================
 /*  Complete elliptic integral \f$ K(k) \f$  
  *  \[ K(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
  *  @see https://en.wikipedia.org/wiki/Elliptic_integral
  */
 // ============================================================================
-double Ostap::Math::elliptic_K ( const double k ) 
+double Ostap::Math::elliptic_K_gsl ( const double k ) 
 {
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
@@ -1446,7 +1447,7 @@ double Ostap::Math::elliptic_K ( const double k )
  *  @see https://en.wikipedia.org/wiki/Elliptic_integral
  */
 // ============================================================================
-double Ostap::Math::elliptic_E ( const double k   ) 
+double Ostap::Math::elliptic_E_gsl ( const double k   ) 
 {
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
@@ -1465,12 +1466,123 @@ double Ostap::Math::elliptic_E ( const double k   )
   return result.val ;
 }
 // ============================================================================
+/* Complete elliptic integral \f$ K(k) \f$  
+ *  \[ K(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ */
+// ============================================================================
+double Ostap::Math::elliptic_K ( const double k ) { return elliptic_Km ( k * k ) ; } 
+// ============================================================================
+/*  Complete elliptic integral \f$ E(k) \f$  
+ *  \[ E(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ */
+// ============================================================================
+double Ostap::Math::elliptic_E ( const double k ) { return elliptic_Em ( k * k ) ; } 
+// ============================================================================
+/*  Complete elliptic integral \f$ K[m] \f$  
+ *  \f[ K[m] = K(k) = 
+ *     \frac{\pi}{2 \mathrm{agm} (1, \sqrt{1-k^2}} = 
+ *     \frac{\pi}{2 \mathrm{agm} (1, \sqrt{1-m}  } = 
+ *     \frac{\pi}{2 \mathrm{agm} (1, \sqrt{ m^{\prime}}} \f] 
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ */
+// ============================================================================
+double Ostap::Math::elliptic_Km 
+( const double m   )
+{
+  if ( s_zero ( m ) )  { return 0.5 * M_PI ; }
+  if ( ( 1 < m ) || ( m < 0 ) ) { return std::numeric_limits<double>::quiet_NaN(); }
+  //
+  const long double sq_mprime = std::sqrt ( 1.0L - m ) ;
+  return 0.5 * M_PI / agm ( 1.0 , sq_mprime) ;
+}
+// ============================================================================
+/*  Complete elliptic integral \f$ E[m] \f$ as function of parameter m  
+ *  \[ E(,) \equiv F ( \frac{\pi}{2}, m ) \f] 
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ *  \f[ E(m) \equiv 2 R_{G}(0, 1 - m , 1 ) \f]
+ *  @see Eq. (55) in arXiv:math/9409227
+ */
+// ============================================================================
+double Ostap::Math::elliptic_Em 
+( const double m )
+{
+  if      ( s_zero  ( m     ) ) { return 0.5 * M_PI ; }
+  else if ( s_equal ( m , 1 ) ) { return 1 ; }
+  if ( ( 1 < m ) || ( m < 0 ) ) { return std::numeric_limits<double>::quiet_NaN(); }
+  //
+  return 2 * carlson_RG ( 0 , 1 - m , 1 ) ;
+}
+// ============================================================================
+/* Trigonometric form of incomplete elliptic integral \f$ F(\phi,k) \f$
+ *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \dfrac{ d \psi }{\sqrt{1-k^2 \sin^2 \psi }}\f] 
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ */
+// ============================================================================
+double Ostap::Math::elliptic_F
+( const double phi , 
+  const double k   )
+{ return elliptic_Fm ( phi , k * k ) ; }
+// ============================================================================
+/*   Trigonometric form of incomplete elliptic integral \f$ E(\phi,k) \f$
+ *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \sqrt{1-k^2 \sin^2 \psi } d \psi \f] 
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ */
+// ============================================================================
+double Ostap::Math::elliptic_E
+( const double phi , 
+  const double k   ) 
+{ return elliptic_Em ( phi , k * k ) ; }
+// ============================================================================
+/* Trigonometric form of incomplete elliptic integral \f$ F(\phi,m) \f$
+ *  \f[ F(\phi,m) \equiv \int_{0}^{\phi} \dfrac{ d \psi }{\sqrt{1-m \sin^2 \psi }}\f] 
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ *  @see Eq. (59) in arXiv:math/9409227
+ */
+// ============================================================================
+double Ostap::Math::elliptic_Fm
+( const double phi , 
+  const double m   )
+{
+  if ( s_zero ( phi ) ) { return 0 ; }
+  if ( ( 1 < m ) || ( m < 0 ) ) { return std::numeric_limits<double>::quiet_NaN(); }
+  //
+  const long double sinphi = std::sin ( phi ) ;
+  const long double cosphi = std::cos ( phi ) ;
+  return sinphi * carlson_RF ( cosphi * cosphi , 1.0 - m * sinphi * sinphi , 1 ) ; 
+}
+// ========================================================================
+/* Trigonometric form of incomplete elliptic integral \f$ E(\phi,m) \f$
+ *  \f[ F(\phi,m) \equiv \int_{0}^{\phi} \sqrt{1-m \sin^2 \psi } d \psi \f] 
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ *  @see Eq. (60) in arXiv:math/9409227
+ */
+// ============================================================================
+double Ostap::Math::elliptic_Em
+( const double phi , 
+  const double m   )
+{
+  if ( s_zero ( phi ) ) { return 0 ; }
+  if ( ( 1 < m ) || ( m < 0 ) ) { return std::numeric_limits<double>::quiet_NaN(); }
+  //
+  const long double sinphi = std::sin ( phi ) ;
+  const long double cosphi = std::cos ( phi ) ;
+  const long double sp2    = sinphi * sinphi  ;
+  const long double cp2    = cosphi * cosphi  ;
+  //
+  const double rf = carlson_RF ( cp2 , 1 - m * sp2 , 1 ) ;
+  const double rd = carlson_RD ( cp2 , 1 - m * sp2 , 1 ) ;
+  //
+  return sinphi * ( rf - m * sp2 * rd / 3 ) ;
+}
+// ============================================================================
 /*  Trigonometric form of incomplete elliptic integral \f$ F(\phi,k) \f$
  *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \dfrac{ d \psi }{\sqrt{1-k^2 \sin^2 \phi }}\f] 
  *  @see https://en.wikipedia.org/wiki/Elliptic_integral
  */
 // ============================================================================
-double Ostap::Math::elliptic_F ( const double phi , const double k   ) 
+double Ostap::Math::elliptic_F_gsl ( const double phi , const double k   ) 
 {
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
@@ -1494,7 +1606,7 @@ double Ostap::Math::elliptic_F ( const double phi , const double k   )
  *  @see https://en.wikipedia.org/wiki/Elliptic_integral
  */
 // ============================================================================
-double Ostap::Math::elliptic_E ( const double phi , const double k   ) 
+double Ostap::Math::elliptic_E_gsl ( const double phi , const double k   ) 
 {
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
@@ -1628,7 +1740,7 @@ double Ostap::Math::carlson_RF
   const double dy = A0 - y ;
   const double dz = A0 - z ;
   //
-  static const double s_R =std::pow ( 3 * 2 * GSL_DBL_EPSILON , -1.0/8 ) ;
+  static const double s_R = std::pow ( 3 * 2 * GSL_DBL_EPSILON , -1.0/8 ) ;
   const double Q  = s_R * std::max ( std::abs ( dx ) , std::max ( std::abs ( dy ) , std::abs ( dz ) ) ) ;
   //
   double       Qn = Q  ;
@@ -2702,6 +2814,317 @@ double Ostap::Math::carlson_RG_int
 
 
 
+// ============================================================================
+// Jacobi elliptic functions
+// ============================================================================
+
+// ============================================================================
+/* Elliptic amplitude \f$ \mathrm{am}(u,m)=\phi\f$, where 
+ *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+ *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+ */
+// ============================================================================
+double Ostap::Math::am
+( const double u ,
+  const double m )
+{
+  //
+  if      ( s_zero  ( u    )  ) { return      0   ; } 
+  else if ( s_zero  ( m     ) ) { return      u   ; }
+  else if ( s_zero  ( 1 - m ) ) { return gd ( u ) ; }
+  else if ( s_equal ( m , 1 ) ) { return gd ( u ) ; }
+  else if (  m < 0 || 1 < m   ) { return std::numeric_limits<double>::quiet_NaN(); }
+  //
+  typedef std::array<long double,3>     ITEM  ;
+  typedef std::vector<ITEM>             ITEMS ;
+  typedef ITEMS::const_reverse_iterator CRI   ;
+  //
+  constexpr unsigned short NR = 50 ;
+  ITEMS items{} ; items.reserve ( NR ) ;
+  //
+  long double a = 1.0L ;
+  long double b = std::sqrt ( 1.0L - m ) ;
+  long double c = a - b ;
+  //
+  for  ( unsigned short n = 0 ; n < NR ; ++n )
+    {
+      long double a1 = 0.5L *    ( a + b ) ;
+      long double b1 = std::sqrt ( a * b ) ;
+      long double c1 = 0.5L *    ( a - b ) ;
+      a = a1 ;
+      b = b1 ;
+      c = c1 ;
+      //
+      items.push_back ( ITEM { a , b , c } ) ;
+      //
+      if      ( 3 <= n && s_zero  ( c1 * 1000 ) ) { break ; }
+      else if ( 5 <= n && s_equal ( a , b     ) ) { break ; }
+    }
+  const unsigned short NN = items.size() ;
+  //
+  long double phi = a * u * std::pow ( 2 , NN ) ;
+  //
+  for ( CRI it = items.rbegin() ; it != items.rend() ; ++it )
+    {
+      a = std::get<0>(*it) ;
+      c = std::get<2>(*it) ;
+      phi = 0.5L * ( phi + std::asin ( c * std::sin ( phi ) / a ) ) ;
+    }
+  //
+  return phi ;
+}
+// ============================================================================
+/*  Sine elliptic amplitude \f$ \mathrm{sn} (u,m)=\sin \mathrm{am} ( u, m ) \f$, where 
+ *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+ *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+ */
+// ============================================================================
+double Ostap::Math::sn
+( const double u ,
+  const double m )
+{
+  //
+  if      ( s_zero  ( u     ) ) { return             u   ; }
+  else if ( s_zero  ( m     ) ) { return std::sin  ( u ) ; }
+  else if ( s_zero  ( 1 - m ) ) { return std::tanh ( u ) ; }
+  else if ( s_equal ( m , 1 ) ) { return std::tanh ( u ) ; }
+  else if ( u < 0             ) { return - sn ( -u , m ) ; }
+  else if (  m < 0 || 1 < m   ) { return std::numeric_limits<double>::quiet_NaN(); }
+  //
+  // reduce the argument
+  if ( 0.5 * M_PI < u ) 
+    {
+      const long double KK = elliptic_Km ( m ) ;
+      if      ( s_equal ( u , 2 * KK ) ) { return 2 * KK - u ; }
+      else if ( s_equal ( u , 4 * KK ) ) { return u - 4 * KK ; }
+      else if ( 4 * KK < u )
+	{      
+	  const double uk = u - 4 * KK * ( std::floor ( u * 0.25L / KK ) + 1 ) ;
+	  return sn ( uk , m ) ;
+	}
+      else if ( 2 * KK < u )
+	{      
+	  const double uk = 4 * KK - u ;
+	  return - sn ( uk , m ) ;
+	}
+      else if ( KK < u )
+	{
+	  const double uk = 2 * KK - u ;
+	  return sn ( uk , m ) ;      
+	}
+    }
+  //
+  typedef std::array<long double,3>     ITEM  ;
+  typedef std::vector<ITEM>             ITEMS ;
+  typedef ITEMS::const_reverse_iterator CRI   ;
+  //
+  constexpr unsigned short NR = 50 ;
+  ITEMS items{} ; items.reserve ( NR ) ;
+  //
+  long double a = 1.0L ;
+  long double b = std::sqrt ( 1.0L - m ) ;
+  long double c = a - b ;
+  //
+  for  ( unsigned short n = 0 ; n < NR ; ++n )
+    {
+      long double a1 = 0.5L *    ( a + b ) ;
+      long double b1 = std::sqrt ( a * b ) ;
+      long double c1 = 0.5  *    ( a - b ) ;
+      //
+      a = a1 ;
+      b = b1 ;
+      c = c1 ;
+      //
+      items.push_back ( ITEM { a , b , c } ) ;
+      //
+      if      ( 3 <= n && s_zero  ( c1 * 1000 ) ) { break ; }
+      else if ( 5 <= n && s_equal ( a , b     ) ) { break ; }
+      if ( 5 <= n && s_zero  ( b * 1000 ) ) { break ; }
+    }
+  const unsigned short NN = items.size() ;
+  //
+  long double y = a / std::sin ( a * u ) ;
+  //
+  for ( CRI it = items.rbegin() ; it != items.rend() ; ++it )
+    {
+      a = std::get<0>(*it) ;
+      c = std::get<2>(*it) ;
+      y = y + a * c / y    ;
+      
+    }
+  //
+  return 1.0 / y ;
+}
+// ============================================================================
+/*  Sine elliptic amplitude \f$ \mathrm{sn} (u,m)=\sin \mathrm{am} ( u, m ) \f$, where 
+ *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+ *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+ */
+// ============================================================================
+double Ostap::Math::sn_
+( const double u ,
+  const double m )
+{
+  //
+  if      ( s_zero  ( u     ) ) { return             u   ; }
+  else if ( s_zero  ( m     ) ) { return std::sin  ( u ) ; }
+  else if ( s_zero  ( 1 - m ) ) { return std::tanh ( u ) ; }
+  else if ( s_equal ( m , 1 ) ) { return std::tanh ( u ) ; }
+  else if ( u < 0             ) { return - sn ( -u , m ) ; }
+  else if (  m < 0 || 1 < m   ) { return std::numeric_limits<double>::quiet_NaN(); }
+  //
+  // reduce the argument
+  if ( 0.5 * M_PI < u ) 
+    {
+      const long double KK = elliptic_Km ( m ) ;
+      if      ( s_equal ( u , 2 * KK ) ) { return 2 * KK - u ; }
+      else if ( s_equal ( u , 4 * KK ) ) { return u - 4 * KK ; }
+      else if ( 4 * KK < u )
+	{      
+	  const double uk = u - 4 * KK * ( std::floor ( u * 0.25L / KK ) + 1 ) ;
+	  return sn ( uk , m ) ;
+	}
+      else if ( 2 * KK < u )
+	{      
+	  const double uk = 4 * KK - u ;
+	  return - sn ( uk , m ) ;
+	}
+      else if ( KK < u )
+	{
+	  const double uk = 2 * KK - u ;
+	  return sn ( uk , m ) ;      
+	}
+    }
+  //
+  typedef std::array<long double,2>     ITEM  ;
+  typedef std::vector<ITEM>             ITEMS ;
+  typedef ITEMS::const_reverse_iterator CRI   ;
+  //
+  constexpr unsigned short NR = 50 ;
+  ITEMS items{} ; items.reserve ( NR ) ;
+  //
+  const long double kp = std::sqrt ( 1.0L - m ) ;
+  
+  long double a = u ;
+  long double b = ( 1.0L - kp ) / ( 1.0L + kp ) ;
+  //
+  items.push_back ( ITEM { a , b } ) ;
+  for ( unsigned short n = 0 ; n < NR ; ++n )
+    {
+      a = a / ( 1.0L + b ) ;
+      const long double bb = std::sqrt ( 1.L - b * b ) ;
+      b = ( 1.0L - bb ) / ( 1.0L + bb ) ;
+      items.push_back ( ITEM { a , b } ) ;
+      if ( 5 <= n && s_zero  ( b * 1000 ) ) { break ; }
+    }
+  
+  long double y = std::sin ( a ) ;  
+  for ( CRI it = items.rbegin() ; it != items.rend() ; ++it )
+    {
+      b = std::get<1>(*it) ;
+      y = y * ( 1.0L + b ) / ( 1.0L + b * y *y ) ;
+    }
+  //
+  return y ;
+}
+// ============================================================================
+/*  Cosine elliptic amplitude \f$ \mathrm{sn} (u,m)=\cos \mathrm{am} ( u, m ) \f$, where 
+ *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+ *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+ */
+// ============================================================================
+double Ostap::Math::cn
+( const double u ,
+  const double m )
+{
+  //
+  if      ( s_zero  ( u     ) ) { return             1   ; }
+  else if ( s_zero  ( m     ) ) { return std::cos  ( u ) ; }
+  else if ( s_zero  ( 1 - m ) ) { return      sech ( u ) ; }
+  else if ( s_equal ( m , 1 ) ) { return      sech ( u ) ; }
+  else if ( u < 0             ) { return    cn ( u , m ) ; }
+  else if (  m < 0 || 1 < m   ) { return std::numeric_limits<double>::quiet_NaN(); }
+  //
+  // reduce the argument
+  if ( 0.5 * M_PI < u ) 
+    {
+      const long double KK = elliptic_Km ( m ) ;
+      if      ( s_equal ( u ,     KK ) ) { return KK - u     ; }
+      else if ( s_equal ( u , 2 * KK ) ) { return -1         ; }
+      else if ( s_equal ( u , 3 * KK ) ) { return u - 3 * KK ; }
+      else if ( s_equal ( u , 4 * KK ) ) { return  1         ; }
+      else if ( 4 * KK < u )
+       	{      
+       	  const double uk = u - 4 * KK * ( std::floor ( u * 0.25L / KK ) ) ;
+       	  return cn ( uk , m ) ;
+       	}
+      else if ( 2 * KK < u )
+       	{      
+       	  const double uk = 4 * KK - u ;
+       	  return cn ( uk , m ) ;
+       	}
+      else if ( KK < u )
+       	{
+      	  const double uk = 2 * KK - u ;
+       	  return - cn ( uk , m ) ;      
+       	}
+    }
+  //
+  return std::cos ( am ( u , m ) ) ;
+}
+// ============================================================================
+/*  Elliptic delta amplitude \f$ \mathrm{sn} (u,m)=\frac{d}{du} \mathrm{am} ( u, m ) \f$, where 
+ *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+ *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+ */
+// ============================================================================
+double Ostap::Math::dn
+( const double u ,
+  const double m )
+{
+  //
+  if      ( s_zero  ( u     ) ) { return        1   ; }
+  else if ( s_zero  ( m     ) ) { return        1   ; }
+  else if ( s_zero  ( 1 - m ) ) { return sech ( u ) ; }
+  else if ( s_equal ( m , 1 ) ) { return sech ( u ) ; }
+  else if ( u < 0             ) { return cn ( u , m ) ; }
+  else if (  m < 0 || 1 < m   ) { return std::numeric_limits<double>::quiet_NaN(); }
+  //
+  const double snu = sn ( u , m ) ;
+  return std::sqrt ( 1.0 - m * snu * snu ) ;
+}
+// ============================================================================
+/*  elliptic function 
+ *  \f[ \matmrm{sc}\,(u,m) = \frac{ \mathrm{sn} ( u, m) } { \mathrm{cn} ( u , m ) } \f] 
+ *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+ */ 
+// ============================================================================
+double Ostap::Math::sc
+( const double u ,
+  const double m )
+{
+  if      ( s_zero  ( u     ) ) { return             u   ; }
+  else if ( s_zero  ( m     ) ) { return std::tan  ( u ) ; }
+  else if ( s_zero  ( 1 - m ) ) { return std::sinh ( u ) ; }
+  else if ( s_equal ( m , 1 ) ) { return std::sinh ( u ) ; }
+  else if ( u < 0             ) { return - sc ( -u , m ) ; }
+  else if (  m < 0 || 1 < m   ) { return std::numeric_limits<double>::quiet_NaN(); }
+  //
+  // reduce the argument
+  if ( 0.5 * M_PI < u ) 
+    {
+      const long double KK = elliptic_Km ( m ) ;
+      if ( 4 * KK < u  ) 
+	{      
+	  const double uk = u - 4 * KK * ( std::floor ( u * 0.25L / KK ) + 1 ) ;
+	  return sn ( uk , m ) ;
+	}
+    } ;
+  //
+  const double a = am ( u , m ) ;
+  //
+  return std::tan ( a ) ;
+}
 // ============================================================================
 /* Mill's ratio for normal distribution
  *  - \f$ m (x) = \frac{1 - \Phi(x)}{\phi(x)}\f$  

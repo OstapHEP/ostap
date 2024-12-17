@@ -7,7 +7,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 # =============================================================================
-""" Simple wrapper over scipy integration in a spirit of derivative.py 
+""" Simple wrapper over scipy integration in a s pirit of derivative.py 
 
 >>> func1 = lambda x : x*x
 >>> print integral  ( func1 , 0 , 1 )

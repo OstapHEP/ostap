@@ -878,6 +878,50 @@ Ostap::Math::ValueWithError::__Bi__     () const { return Bi  ( *this ) ; }
 Ostap::Math::ValueWithError
 Ostap::Math::ValueWithError::__BR__     () const { return bring ( *this ) ; }
 // ============================================================================
+// elliptic amplitude 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__am__     ( const double m ) const 
+{ return am ( *this , m ) ; }
+// ============================================================================
+// elliptic delta amplitude 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__dn__     ( const double m ) const 
+{ return dn ( *this , m ) ; }
+// ============================================================================
+// elliptic sine 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__sn__     ( const double m ) const 
+{ return sn ( *this , m ) ; }
+// ============================================================================
+// elliptic cosine 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__cn__     ( const double m ) const 
+{ return cn ( *this , m ) ; }
+// ============================================================================
+// elliptic sine / elliptic cosine 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__sc__     ( const double m ) const 
+{ return sc ( *this , m ) ; }
+// ============================================================================
+// complete elliptic integral K(k)
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__K__      () const 
+{ return elliptic_K ( *this ) ; }
+// ============================================================================
+// complete elliptic integral E(k)
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__E__      () const 
+{ return elliptic_E ( *this ) ; }
+// ============================================================================
+
+
 
 // ============================================================================
 /* Does this object represent natural number?
@@ -1871,6 +1915,138 @@ Ostap::Math::ValueWithError Ostap::Math::bring
 }
 // ========================================================================    
 
+
+// ========================================================================    
+/*  Elliptic amplitude \f$ \mathrm{am}(u,m)=\phi\f$, where 
+ *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+ *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+ */
+// ========================================================================    
+Ostap::Math::ValueWithError Ostap::Math::am
+( const Ostap::Math::ValueWithError& x , 
+  const double                       m )
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  const bool   x0 = ( 0 >= c2 ) || _zero ( c2 ) ;
+  const double r  = Ostap::Math::am ( xv , m ) ;
+  if ( x0 || !std::isfinite ( r ) ) { return r  ; }
+  //
+  const double dfdx = dn ( r , m ) ;
+  return ValueWithError ( r , c2 * dfdx * dfdx ) ;
+}
+// ========================================================================    
+/* Elliptic delta amplitude \f$ \mathrm{sn} (u,m)=\frac{d}{du} \mathrm{am} ( u, m ) \f$, where 
+ *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+ *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+ */
+// ========================================================================    
+Ostap::Math::ValueWithError Ostap::Math::dn
+( const Ostap::Math::ValueWithError& x , 
+  const double                       m )
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  const bool   x0 = ( 0 >= c2 ) || _zero ( c2 ) ;
+  const double r  = Ostap::Math::dn ( xv , m ) ;
+  if ( x0 || !std::isfinite ( r ) ) { return r  ; }
+  //
+  const double dfdx = -m * sn ( xv , m ) * cn ( xv , m ) ;
+  return ValueWithError ( r , c2 * dfdx * dfdx ) ;  
+}
+// ========================================================================    
+/*  Elliptic sine amplitude \f$ \mathrm{sn} (u,m)=\sin \mathrm{am} ( u, m ) \f$, where 
+ *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+ *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+ */
+// ========================================================================    
+Ostap::Math::ValueWithError Ostap::Math::sn
+( const Ostap::Math::ValueWithError& x , 
+  const double                       m )
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  const bool   x0 = ( 0 >= c2 ) || _zero ( c2 ) ;
+  const double r  = Ostap::Math::sn ( xv , m ) ;
+  if ( x0 || !std::isfinite ( r ) ) { return r  ; }
+  //
+  const double dfdx = cn ( xv , m ) * dn ( xv , m );
+  return ValueWithError ( r , c2 * dfdx * dfdx ) ;  
+}
+// ========================================================================    
+/* Elliptic cosine amplitude \f$ \mathrm{sn} (u,m)=\cos \mathrm{am} ( u, m ) \f$, where 
+ *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+ *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+ */
+// ========================================================================    
+Ostap::Math::ValueWithError Ostap::Math::cn
+( const Ostap::Math::ValueWithError& x , 
+  const double                       m )
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  const bool   x0 = ( 0 >= c2 ) || _zero ( c2 ) ;
+  const double r  = Ostap::Math::cn ( xv , m ) ;
+  if ( x0 || !std::isfinite ( r ) ) { return r  ; }
+  //
+  const double dfdx = - sn ( xv , m ) * dn ( xv , m );
+  return ValueWithError ( r , c2 * dfdx * dfdx ) ;  
+}
+// ========================================================================    
+/*  elliptic function 
+ *  \f[ \matmrm{sc}\,(u,m) = \frac{ \mathrm{sn} ( u, m) } { \mathrm{cn} ( u , m ) } \f] 
+ *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+ */ 
+// ========================================================================    
+Ostap::Math::ValueWithError Ostap::Math::sc 
+( const Ostap::Math::ValueWithError& x , 
+  const double                       m )
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  const bool   x0 = ( 0 >= c2 ) || _zero ( c2 ) ;
+  const double r  = Ostap::Math::sc ( xv ,  m ) ;
+  if ( x0 || !std::isfinite ( r ) ) { return r  ; }
+  //
+  const double dfdx = dn ( xv , m ) * ( 1.0 + r * r ) ;
+  return ValueWithError ( r , c2 * dfdx * dfdx ) ;  
+}
+// ==============================================================================
+/*  complete elliptic integral K(k) 
+ *  https://en.wikipedia.org/wiki/Elliptic_integral
+ */ 
+// ==============================================================================
+Ostap::Math::ValueWithError Ostap::Math::elliptic_K
+( const Ostap::Math::ValueWithError& x )
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  const bool   x0 = ( 0 >= c2 ) || _zero ( c2 ) ;
+  const double r  = Ostap::Math::elliptic_K ( xv ) ;
+  if ( x0 || !std::isfinite ( r ) ) { return r  ; }
+  //
+  const double e    = Ostap::Math::elliptic_E ( xv ) ;
+  const double dfdx = ( e / ( 1 - xv * xv )  - r ) / xv ;
+  return ValueWithError ( r , c2 * dfdx * dfdx ) ;  
+}
+// ==============================================================================
+/*  complete elliptic integral E(k) 
+ *  https://en.wikipedia.org/wiki/Elliptic_integral
+ */ 
+// ==============================================================================
+Ostap::Math::ValueWithError Ostap::Math::elliptic_E
+( const Ostap::Math::ValueWithError& x )
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  const bool   x0 = ( 0 >= c2 ) || _zero ( c2 ) ;
+  const double r  = Ostap::Math::elliptic_E ( xv ) ;
+  if ( x0 || !std::isfinite ( r ) ) { return r  ; }
+  //
+  const double k    = Ostap::Math::elliptic_K ( xv ) ;
+  const double dfdx = ( r - k ) / xv ;
+  return ValueWithError ( r , c2 * dfdx * dfdx ) ;  
+}
 // ============================================================================
 /* evaluate fma(x,y,z) = x*y+x 
  *  @param y    (INPUT) the parameter 
@@ -3241,50 +3417,6 @@ Ostap::Math::gauss_cdf
   const double d = gauss_pdf ( x.value () , mu , sigma )  ;
   // result 
   return Ostap::Math::ValueWithError ( v  , d  * d * x.cov2() ) ;
-}
-// ========================================================================
-/*  Complete elliptic integral \f$ K(k) \f$  
- *  \[ K(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
- *  @see https://en.wikipedia.org/wiki/Elliptic_integral
- */
-// ========================================================================
-Ostap::Math::ValueWithError 
-Ostap::Math::elliptic_K ( const Ostap::Math::ValueWithError& k ) 
-{
-  //
-  const double kv =  k.value() ;
-  //
-  if ( k.cov2() < 0 || s_zero ( k.cov2() ) || s_zero ( kv ) )
-  { return Ostap::Math::elliptic_K ( kv ) ; }
-  //
-  const double K = Ostap::Math::elliptic_K ( kv ) ;
-  const double E = Ostap::Math::elliptic_E ( kv ) ;
-  //
-  const double d =  ( E / ( 1 - kv * kv ) - K ) / kv ;
-  //
-  return Ostap::Math::ValueWithError ( kv , d * d  * k.cov2 () ) ;
-}
-// ============================================================================
-/*   Complete elliptic integral \f$ E(k) \f$  
- *  \[ E(k) \equiv E ( \frac{\pi}{2}, k ) \f] 
- *  @see https://en.wikipedia.org/wiki/Elliptic_integral
- */
-// ============================================================================
-Ostap::Math::ValueWithError 
-Ostap::Math::elliptic_E ( const Ostap::Math::ValueWithError& k ) 
-{
-  //
-  const double kv =  k.value() ;
-  //
-  if ( k.cov2() < 0 || s_zero ( k.cov2() ) || s_zero ( kv ) )
-  { return Ostap::Math::elliptic_K ( kv ) ; }
-  //
-  const double K = Ostap::Math::elliptic_K ( kv ) ;
-  const double E = Ostap::Math::elliptic_E ( kv ) ;
-  //
-  const double d = ( E - K ) / kv ;
-  //
-  return Ostap::Math::ValueWithError ( kv , d * d * k.cov2 () ) ;
 }
 // ============================================================================
 /*  Triangle, aka Kallen function 

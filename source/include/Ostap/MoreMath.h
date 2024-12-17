@@ -825,30 +825,9 @@ namespace Ostap
     // ========================================================================
 
     // ========================================================================
-    // Elliptic integrals 
+    // Complete Elliptic integrals 
     // ========================================================================
-    /** Trigonometric form of incomplete elliptic integral \f$ F(\phi,k) \f$
-     *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \dfrac{ d \psi }{\sqrt{1-k^2 \sin^2 \phi }}\f] 
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     */
-    double elliptic_F 
-    ( const double phi , 
-      const double k   ) ;
-    // ========================================================================
-    /** Trigonometric form of incomplete elliptic integral \f$ E(\phi,k) \f$
-     *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \sqrt{1-k^2 \sin^2 \phi } d \psi \f] 
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     */
-    double elliptic_E 
-    ( const double phi , 
-      const double k   ) ;
-    // ========================================================================
-    /** Complete elliptic integral \f$ E(k) \f$  
-     *  \[ E(k) \equiv E ( \frac{\pi}{2}, k ) \f] 
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     */
-    double elliptic_E 
-    ( const double k   ) ;
+
     // ========================================================================
     /** Complete elliptic integral \f$ K(k) \f$  
      *  \[ K(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
@@ -856,6 +835,105 @@ namespace Ostap
      */
     double elliptic_K 
     ( const double k   ) ;
+    // ========================================================================
+    /** Complete elliptic integral \f$ E(k) \f$  
+     *  \[ E(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     */
+    double elliptic_E 
+    ( const double k   ) ;    
+    // ========================================================================
+    /** Complete elliptic integral \f$ K[m] \f$  as function of parameter m 
+     *  \f[ K[m] = K(k) = 
+     *     \frac{\pi}{2 \mathrm{agm} (1, \sqrt{1-k^2}} = 
+     *     \frac{\pi}{2 \mathrm{agm} (1, \sqrt{1-m}  } = 
+     *     \frac{\pi}{2 \mathrm{agm} (1, \sqrt{ m^{\prime}}} \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     */
+    double elliptic_Km 
+    ( const double m   ) ;        
+    // ========================================================================
+    /** Complete elliptic integral \f$ E[m] \f$ as function of parameter m  
+     *  \[ E(,) \equiv F ( \frac{\pi}{2}, m ) \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  \f[ E(m) \equiv 2 R_{G}(0, 1 - m , 1 ) \f]
+     *  @see Eq. (55) in arXiv:math/9409227
+     */
+    double elliptic_Em 
+      ( const double m   ) ;    
+    // ========================================================================
+    /** Complete elliptic integral \f$ K(k) \f$  
+     *  \[ K(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @attention GSL is used for calculation 
+     */
+    double elliptic_K_gsl 
+    ( const double k   ) ;
+    // ========================================================================
+    /** Complete elliptic integral \f$ E(k) \f$  
+     *  \[ E(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @attention GSL is used for calculation 
+     */
+    double elliptic_E_gsl 
+    ( const double k   ) ;
+    
+    // ========================================================================
+    // Incomplete Elliptic integrals 
+    // ========================================================================
+
+    // ========================================================================
+    /** Trigonometric form of incomplete elliptic integral \f$ F(\phi,k) \f$
+     *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \dfrac{ d \psi }{\sqrt{1-k^2 \sin^2 \psi }}\f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Eq. (59) in arXiv:math/9409227
+     */
+    double elliptic_F
+    ( const double phi , 
+      const double k   ) ;
+    // ========================================================================
+    /** Trigonometric form of incomplete elliptic integral \f$ E(\phi,k) \f$
+     *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \sqrt{1-k^2 \sin^2 \psi } d \psi \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Eq. (60) in arXiv:math/9409227
+     */
+    double elliptic_E
+    ( const double phi , 
+      const double k   ) ;
+    // ========================================================================
+    /** Trigonometric form of incomplete elliptic integral \f$ F(\phi,m) \f$
+     *  \f[ F(\phi,m) \equiv \int_{0}^{\phi} \dfrac{ d \psi }{\sqrt{1-m \sin^2 \psi }}\f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Eq. (59) in arXiv:math/9409227
+     */
+    double elliptic_Fm
+    ( const double phi , 
+      const double m   ) ;    
+    // ========================================================================
+    /** Trigonometric form of incomplete elliptic integral \f$ E(\phi,m) \f$
+     *  \f[ F(\phi,m) \equiv \int_{0}^{\phi} \sqrt{1-m \sin^2 \psi } d \psi \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Eq. (60) in arXiv:math/9409227
+     */
+    double elliptic_Em
+    ( const double phi , 
+      const double m   ) ;    
+    // ========================================================================
+    /** Trigonometric form of incomplete elliptic integral \f$ F(\phi,k) \f$
+     *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \dfrac{ d \psi }{\sqrt{1-k^2 \sin^2 \psi }}\f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     */
+    double elliptic_F_gsl 
+    ( const double phi , 
+      const double k   ) ;
+    // ========================================================================
+    /** Trigonometric form of incomplete elliptic integral \f$ E(\phi,k) \f$
+     *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \sqrt{1-k^2 \sin^2 \psi } d \psi \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     */
+    double elliptic_E_gsl 
+    ( const double phi , 
+      const double k   ) ;    
     // ========================================================================
     /** difference in complete elliptic integrals  \f$ K(k) \f$ and \f$ E(k) \f$
      *  \f[ K(k) - E(k) = \frac{k^2}{3}R_D\left(0,1-k^2,1\right)\f],
@@ -1163,7 +1241,57 @@ namespace Ostap
     ( const double x , 
       const double y ) ;
     // ========================================================================
-    
+
+    // ========================================================================
+    // Jacobi elliptic functions
+    // ========================================================================
+    /** Elliptic amplitude \f$ \mathrm{am}(u,m)=\phi\f$, where 
+     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+     */
+    double am
+      ( const double u ,
+	const double m ) ;
+    // ========================================================================
+    /** Elliptic delta amplitude \f$ \mathrm{sn} (u,m)=\frac{d}{du} \mathrm{am} ( u, m ) \f$, where 
+     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+     */
+    double dn
+    ( const double u ,
+      const double m ) ;
+    // ========================================================================
+    /** Elliptic sine amplitude \f$ \mathrm{sn} (u,m)=\sin \mathrm{am} ( u, m ) \f$, where 
+     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+     */
+    double sn
+      ( const double u ,
+	const double m ) ;
+    // ========================================================================
+    /** Elliptic sine amplitude \f$ \mathrm{sn} (u,m)=\sin \mathrm{am} ( u, m ) \f$, where 
+     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+     */
+    double sn_
+    ( const double u ,
+      const double m ) ;
+    // ========================================================================
+    /** Elliptic cosine amplitude \f$ \mathrm{sn} (u,m)=\cos \mathrm{am} ( u, m ) \f$, where 
+     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+     */
+    double cn
+    ( const double u ,
+      const double m ) ;
+    // ========================================================================
+    /** elliptic function 
+     *  \f[ \matmrm{sc}\,(u,m) = \frac{ \mathrm{sn} ( u, m) } { \mathrm{cn} ( u , m ) } \f] 
+     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+     */ 
+    double sc
+     ( const double u ,
+       const double m ) ;
     // ========================================================================
     /** \f$ \left| \frac{\Gamma(x+iy)}{\Gamma(x)} \right|^2 \f$ for 
      *  \f$  x> 0\f$.

@@ -339,7 +339,21 @@ namespace Ostap
       /// Airy function
       ValueWithError __Bi__     () const ;      
       /// Bring radical/ultraradical
-      ValueWithError __BR__     () const ;      
+      ValueWithError __BR__     () const ;
+      /// elliptic amplitude 
+      ValueWithError __am__     ( const double m ) const ;
+      /// elliptic delta ampplitude
+      ValueWithError __dn__     ( const double m ) const ;
+      /// elliptic sine
+      ValueWithError __sn__     ( const double m ) const ;
+      /// elliptic cosine 
+      ValueWithError __cn__     ( const double m ) const ;
+      /// elliptic sine / elliptin  cosine 
+      ValueWithError __sc__     ( const double m ) const ;
+      /// complete elliptic integral K(k) 
+      ValueWithError __K__      () const ;
+      /// complete elliptic integral E(k) 
+      ValueWithError __E__      () const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1244,7 +1258,57 @@ namespace Ostap
      */    
     ValueWithError bring ( const ValueWithError& x ) ;
     // ========================================================================    
-   
+    /** Elliptic amplitude \f$ \mathrm{am}(u,m)=\phi\f$, where 
+     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+     */
+    ValueWithError am
+    ( const ValueWithError& x , 
+      const double          m ) ;
+    // ========================================================================
+    /** Elliptic delta amplitude \f$ \mathrm{sn} (u,m)=\frac{d}{du} \mathrm{am} ( u, m ) \f$, where 
+     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+     */
+    ValueWithError dn
+    ( const ValueWithError& x , 
+      const double          m ) ;    
+    // ========================================================================
+    /** Elliptic sine amplitude \f$ \mathrm{sn} (u,m)=\sin \mathrm{am} ( u, m ) \f$, where 
+     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+     */
+    ValueWithError sn
+    ( const ValueWithError& x , 
+      const double          m ) ;    
+    // ========================================================================
+    /** Elliptic cosine amplitude \f$ \mathrm{sn} (u,m)=\cos \mathrm{am} ( u, m ) \f$, where 
+     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+     */
+    ValueWithError cn
+    ( const ValueWithError& x , 
+      const double          m ) ;    
+    // ========================================================================
+    /** elliptic function 
+     *  \f[ \matmrm{sc}\,(u,m) = \frac{ \mathrm{sn} ( u, m) } { \mathrm{cn} ( u , m ) } \f] 
+     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+     */ 
+    ValueWithError sc
+    ( const ValueWithError& x , 
+      const double          m ) ;        
+    // ========================================================================
+    /** complete elliptic integral K(k) 
+     *  https://en.wikipedia.org/wiki/Elliptic_integral
+     */ 
+    ValueWithError elliptic_K
+    ( const ValueWithError& x ) ;
+    // ========================================================================
+    /** complete elliptic integral E(k) 
+     *  https://en.wikipedia.org/wiki/Elliptic_integral
+     */ 
+    ValueWithError elliptic_E
+    ( const ValueWithError& x ) ;
     // ========================================================================    
     /** evaluate <code>fma(x,y,z)</code>: \f$ xy+z \f$  
      *  @param y    (INPUT) the parameter 

@@ -22,11 +22,11 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_carlson' )
 else                       : logger = getLogger ( __name__                  )
 # ============================================================================
 
-RF = Ostap.Math.carlson_RF
-RC = Ostap.Math.carlson_RC
-RJ = Ostap.Math.carlson_RJ
-RD = Ostap.Math.carlson_RD
-RG = Ostap.Math.carlson_RG
+RF     = Ostap.Math.carlson_RF
+RC     = Ostap.Math.carlson_RC
+RJ     = Ostap.Math.carlson_RJ
+RD     = Ostap.Math.carlson_RD
+RG     = Ostap.Math.carlson_RG
 
 RJ_gsl = Ostap.Math.carlson_RJ_gsl 
 RD_gsl = Ostap.Math.carlson_RD_gsl 
@@ -45,11 +45,10 @@ prec_LOOSE = 1.e-9
 
 NTEST      = 100000
 
-
 # =============================================================================
 ## Check reference tabulated values,
 def test_carlson_values ( ) :
-    """Test predefined values, (section 3), arXiv:math/9409227
+    """ Test predefined values, (section 3), arXiv:math/9409227
     """
 
     logger = getLogger( 'test_carlson_values')
@@ -124,8 +123,8 @@ def test_carlson_values ( ) :
         ( 'RG_int' , RG_int , ( 2 , 3       , 4  ) ,  1.7255030280692 ) ,
         ( 'RG_int' , RG_int , ( 0 , 0.0796  , 4  ) ,  1.0284758090288 ) ,
         ##
-        ( 'RG2' , RG , ( 16      , 16 ) ,  math.pi         ) , ## 2-argument form 
-        ( 'RG2' , RG , ( 0.0796  , 4  ) ,  1.0284758090288 ) , ## 2-argument form         
+        ( 'RG2'    , RG , ( 16      , 16 ) ,  math.pi         ) , ## 2-argument form 
+        ( 'RG2'    , RG , ( 0.0796  , 4  ) ,  1.0284758090288 ) , ## 2-argument form         
         ]
 
     rows = [ ( 'Function' , 'Arguments' , 'Result' , 'Expected' , 'abs-delta' , 'rel-delta' ) ]
@@ -169,13 +168,12 @@ def test_carlson_values ( ) :
 # =============================================================================
 ## Compare local/GSL and plain integration methods 
 def test_carlson_cmp ( ) :
-    """Compare local/GSL and plain integration methods
+    """ Compare local/GSL and plain integration methods
     """
 
     logger = getLogger( 'test_carlson_1')
     logger.info ( 'Compare local/GSL and plain integration methods  ' ) 
     
-
     cF1 = SE()
     cF2 = SE()
     
@@ -191,8 +189,8 @@ def test_carlson_cmp ( ) :
     cG1 = SE()
     cG2 = SE()
 
-
-    with gslCount () : 
+    with gslCount () :
+        
         for i in range ( 10000 ) :
             
             x = random.uniform ( 0 , 1 )  
@@ -369,7 +367,6 @@ def test_carlson_cmp ( ) :
         row =  n , '%d' % c.nEntries() , tmean , trms , tmin , tmax 
         rows.append ( row )
 
-
     table = T.table ( rows ,
                       title = 'Test of Carlson forms, Local vs GSL '  ,
                       prefix = '# ' , alignment = 'lrllll' )
@@ -402,43 +399,84 @@ def test_carlson_cmp ( ) :
         row =  n , '%d' % c.nEntries() , tmean , trms , tmin , tmax 
         rows.append ( row )
 
-
     table = T.table ( rows ,
                       title = 'Test of Carlson forms, Local vs plain integration'  ,
                       prefix = '# ' , alignment = 'lrllll' )
     
     logger.info ( 'Test Carlson forms, Local vs plain integrtation:\n%s' % table ) 
 
+# =============================================================================
+## Test expression for complete elliptic integral \f$ K(k) \f$ via Carlson's symmetric forms
+#  @see Ostap::Math::elliptic_K 
+#  @see Ostap::Math::carlson_RF
+#  @see Eq. (55) in arXiv:math/9409227
+def test_carlson_K ( ) :
+    """ Test expression for complete elliptic integral E(k)` via Carlson's symmetric forms
+    - see Ostap.Math.elliptic_K
+    - see Ostap.Math.carlson_RF 
+    - see Eq. (55) in arXiv:math/9409227
+    """
+    
+    logger = getLogger( 'test_carlson_K')
+    logger.info ( 'Test expression for K(k) via Carlson Forms' ) 
+    
+    from ostap.math. models import f1_draw
+    
+    def k1 ( k ) : return Ostap.Math.elliptic_K     ( k ) 
+    def k2 ( k ) : return Ostap.Math.carlson_RF     ( 0 , 1-k*k , 1 ) 
+    def k3 ( k ) : return Ostap.Math.carlson_RF_gsl ( 0 , 1-k*k , 1 ) 
+    def k4 ( k ) : return Ostap.Math.carlson_RF_int ( 0 , 1-k*k , 1 ) 
+    def k5 ( k ) : return Ostap.Math.elliptic_K_gsl ( k ) 
+
+    with wait ( 3 ), use_canvas( 'test_carlson_K' ) :
+        f1_draw ( k1 ,          xmin = 0 , xmax = 1-1.e-7 , min = 0 , linecolor = 2 , linewidth = 2 )
+        f1_draw ( k2 , 'same' , xmin = 0 , xmax = 1-1.e-7 , min = 0 , linecolor = 4 , linewidth = 2 , linestyle = 9 )
+        f1_draw ( k3 , 'same' , xmin = 0 , xmax = 1-1.e-7 , min = 0 , linecolor = 8 , linewidth = 2 , linestyle = 9 )
+        f1_draw ( k4 , 'same' , xmin = 0 , xmax = 1-1.e-7 , min = 0 , linecolor = 5 , linewidth = 2 , linestyle = 9 )
+        f1_draw ( k5 , 'same' , xmin = 0 , xmax = 1-1.e-7 , min = 0 , linecolor = 6 , linewidth = 2 , linestyle = 9 )
+
+        logger.info ( 'Red     line : K (k) complete elliptic integral' ) 
+        logger.info ( "Blue    line : K (k) expressed via symmetric Carlson's RF function"     ) 
+        logger.info ( "Green   line : K (k) expressed via symmetric Carlson's RF function/GSL" ) 
+        logger.info ( "Yellow  line : K (k) expressed via symmetric Carlson's RF function/int" ) 
+        logger.info ( "Magenta line : K (k) expressed using GSL" ) 
 
 # =============================================================================
-## Test expression for complete elliptic integral \f$ E(k) \f$ via Carlson's symmetruc forms
+## Test expression for complete elliptic integral \f$ E(k) \f$ via Carlson's symmetric forms
 #  @see Ostap::Math::elliptic_E 
 #  @see Ostap::Math::carlson_RG
 def test_carlson_E ( ) :
-    """Test expression for complete elliptic integral E(k)` via Carlson's symmetruc forms
+    """ Test expression for complete elliptic integral E(k)` via Carlson's symmetric forms
     - see Ostap.Math.elliptic_E 
     - see Ostap.Math.carlson_RG
     """
     
     logger = getLogger( 'test_carlson_E')
     logger.info ( 'Test expression for E(k) via Carlson Forms' ) 
-    
 
     from ostap.math. models import f1_draw
     
     def e1 ( k ) : return   Ostap.Math.elliptic_E ( k ) 
-    def e2 ( k ) : return 2*Ostap.Math.carlson_RG ( 1-k*k , 1 , 0 ) 
-
+    def e2 ( k ) : return 2*Ostap.Math.carlson_RG     ( 1-k*k , 1 , 0 ) 
+    def e3 ( k ) : return 2*Ostap.Math.carlson_RG_gsl ( 1-k*k , 1 , 0 ) 
+    def e4 ( k ) : return 2*Ostap.Math.carlson_RG_int ( 1-k*k , 1 , 0 ) 
+    def e5 ( k ) : return   Ostap.Math.elliptic_E ( k ) 
 
     with wait ( 3 ), use_canvas( 'test_carlson_E' ) :
         f1_draw ( e1 ,          xmin = 0 , xmax = 1 , min = 0 , linecolor = 2 , linewidth = 2 )
         f1_draw ( e2 , 'same' , xmin = 0 , xmax = 1 , min = 0 , linecolor = 4 , linewidth = 2 , linestyle = 9 )
+        f1_draw ( e3 , 'same' , xmin = 0 , xmax = 1 , min = 0 , linecolor = 8 , linewidth = 2 , linestyle = 9 )
+        f1_draw ( e4 , 'same' , xmin = 0 , xmax = 1 , min = 0 , linecolor = 5 , linewidth = 2 , linestyle = 9 )
+        f1_draw ( e5 , 'same' , xmin = 0 , xmax = 1 , min = 0 , linecolor = 6 , linewidth = 2 , linestyle = 9 )
 
-        logger.info ( 'Red   line : E (k) complete elliptic integral' ) 
-        logger.info ( "Blue  line : E (k) expressed via symmetric Carlson's RG function" ) 
+        logger.info ( 'Red     line : E (k) complete elliptic integral' ) 
+        logger.info ( "Blue    line : E (k) expressed via symmetric Carlson's RG function" ) 
+        logger.info ( "Green   line : E (k) expressed via symmetric Carlson's RG function/GSL" ) 
+        logger.info ( "Yellow  line : E (k) expressed via symmetric Carlson's RG function/int" ) 
+        logger.info ( "Magenta line : E (k) expressed using GSL" ) 
 
 # =============================================================================
-## Test expressions for complete elliptic integral \f$ K(k)-E(k) \f$ via Carlson's symmetruc forms
+## Test expressions for complete elliptic integral \f$ K(k)-E(k) \f$ via Carlson's symmetric forms
 #  @see Ostap::Math::elliptic_K
 #  @see Ostap::Math::elliptic_E
 #  @see Ostap::Math::elliptic_KmE
@@ -446,7 +484,7 @@ def test_carlson_E ( ) :
 #  @see Ostap::Math::elliptic_RF
 #  @see Ostap::Math::elliptic_RG
 def test_carlson_KmE ( ) :
-    """Test expressions for complete elliptic integral `K(k)-E(k)` via Carlson's symmetruc forms 
+    """ Test expressions for complete elliptic integral `K(k)-E(k)` via Carlson's symmetric forms 
     - see Ostap.Math.elliptic_K
     - see Ostap.Math.elliptic_E
     - see Ostap.Math.elliptic_KmE
@@ -458,7 +496,6 @@ def test_carlson_KmE ( ) :
     logger = getLogger( 'test_carlson_KmE')
     logger.info ( 'Test expression for K(k)-E(k) via Carlson Forms' ) 
     
-
     from ostap.math. models import f1_draw
     
     def e1 ( k ) : return Ostap.Math.elliptic_K ( k ) - Ostap.Math.elliptic_E ( k ) 
@@ -492,9 +529,8 @@ def test_carlson_KmE ( ) :
 #       doi = 10.1088/0305-4470/37/17/016
 #  @see https://arxiv.org/abs/hep-th/0311075
 #  @see https://iopscience.iop.org/article/10.1088/0305-4470/37/17/016
-#
 def test_carlson_PS3 ( ) :
-    """Test 3-body phase space calculation via elliptic integrals
+    """ Test 3-body phase space calculation via elliptic integrals
     
     - see Ostap.Math.PhaseSpace3
     - see Ostap.Math.PhaseSpace3s
@@ -521,25 +557,35 @@ def test_carlson_PS3 ( ) :
         logger.info ( 'Red  line - 3-body phase space via numerical integration' ) 
         ps2.draw ( 'same' , xmin = ps2.threshold() , xmax = 50 , linecolor=4 , linewidth = 2 )
         logger.info ( 'Blue line - analytic expression of 3-body phase space via elliptic integrals' ) 
-        
-        
+
+    xmin = min ( ps1.threshold() , ps2.threshold() )
+    xmax = 50
+    
+    def fun1 ( x ) : return abs ( ps1 ( x ) - ps2 ( x ) )
+    def fun2 ( x ) : return       ps1 ( x ) 
+    from ostap.math.integral import integral
+    i1 = integral ( fun1 , xmin = xmin , xmax = xmax , err = True ) 
+    i2 = integral ( fun2 , xmin = xmin , xmax = xmax , err = True ) 
+    i1 = i1 ** 0.5
+    i2 = i2 ** 0.5
+    ii = i1 / i2     
+    logger.error ( 'Difference is %s [Analytic expression is wrong!]' % ii ) 
+    
 # =============================================================================
 ## Test identity Eq.(49) arXiv:math/9409227' )
 #  @see Ostap::Math::carlson_RF 
 def test_carlson_Eq49 ( ) :
-    """Test identity Eq.(49) arXiv:math/9409227' )
+    """ Test identity Eq.(49) arXiv:math/9409227' )
     - see Ostap::Math.carlson_RF 
     """
 
     logger = getLogger( 'test_carlson_Eq49') 
     logger.info ( 'Test identity Eq.(49) from arXiv:math/9409227' ) 
 
-
     ad_max = -1
     rd_max = -1
     
     rows = [ ( 'Arguments' , 'Left', 'Right' , 'abs-delta'  , 'rel-delta' ) ]
-
     
     for i in range ( NTEST ) : 
         
@@ -581,13 +627,11 @@ def test_carlson_Eq49 ( ) :
     else : 
         logger.error    ('Maximal differences are %.5g/%.5g (abs/rel)' % ( ad_max , rd_max ) )
 
-
-
 # =============================================================================
 ## Test identity Eq (51) arXiv:math/9409227' )
 #  @see Ostap::Math::carlson_RJ 
 def test_carlson_Eq51 ( ) :
-    """Test identity Eq (49) arXiv:math/9409227' )
+    """ Test identity Eq (49) arXiv:math/9409227' )
     - see Ostap::Math.carlson_RF 
     """
 
@@ -649,7 +693,7 @@ def test_carlson_Eq51 ( ) :
 ## Test identity Eq (53) arXiv:math/9409227' )
 #  @see Ostap::Math::carlson_RD 
 def test_carlson_Eq53 ( ) :
-    """Test identity Eq.(53) arXiv:math/9409227' )
+    """ Test identity Eq.(53) arXiv:math/9409227' )
     - see Ostap::Math.carlson_RD 
     """
 
@@ -709,7 +753,7 @@ def test_carlson_Eq53 ( ) :
 ## Test identity Eq.(54) arXiv:math/9409227' )
 #  @see Ostap::Math::carlson_RD
 def test_carlson_Eq54 ( ) :
-    """Test identity Eq.(54) arXiv:math/9409227' )
+    """ Test identity Eq.(54) arXiv:math/9409227' )
     - see Ostap::Math.carlson_RD 
     """
 
@@ -768,7 +812,7 @@ def test_carlson_Eq54 ( ) :
 #  @see Ostap::Math::carlson_RD
 #  @see Ostap::Math::carlson_RF
 def test_carlson_eq19211 ( ) :
-    """Test identity Eq.(19.21.1) https://dlmf.nist.gov/19' 
+    """ Test identity Eq.(19.21.1) https://dlmf.nist.gov/19' 
     - see Ostap::Math.carlson_RD 
     - see Ostap::Math.carlson_RF 
     """
@@ -825,7 +869,7 @@ def test_carlson_eq19211 ( ) :
 #  @see Ostap::Math::carlson_RF
 #  @see Ostap::Math::carlson_RD
 def test_carlson_eq19212 ( ) :
-    """Test identity Eq.(19.21.2) https://dlmf.nist.gov/19' 
+    """ Test identity Eq.(19.21.2) https://dlmf.nist.gov/19' 
     - see Ostap::Math.carlson_RD 
     - see Ostap::Math.carlson_RF 
     """
@@ -882,7 +926,7 @@ def test_carlson_eq19212 ( ) :
 #  @see Ostap::Math::carlson_RF
 #  @see Ostap::Math::carlson_RD
 def test_carlson_eq19213 ( ) :
-    """Test identity Eq.(19.21.3) https://dlmf.nist.gov/19' 
+    """ Test identity Eq.(19.21.3) https://dlmf.nist.gov/19' 
     - see Ostap::Math.carlson_RD 
     - see Ostap::Math.carlson_RF 
     - see Ostap::Math.carlson_RG 
@@ -942,7 +986,7 @@ def test_carlson_eq19213 ( ) :
 #  @see Ostap::Math::carlson_RF
 #  @see Ostap::Math::carlson_RD
 def test_carlson_eq19217 ( ) :
-    """Test identity Eq.(19.21.7) https://dlmf.nist.gov/19' 
+    """ Test identity Eq.(19.21.7) https://dlmf.nist.gov/19' 
     - see Ostap::Math.carlson_RD 
     - see Ostap::Math.carlson_RF 
     """
@@ -1000,22 +1044,23 @@ def test_carlson_eq19217 ( ) :
     
 # =============================================================================
 if '__main__' == __name__ :
-
-    test_carlson_values  () 
-    test_carlson_cmp     () 
+    
+    ## test_carlson_values  () 
+    ## test_carlson_cmp     () 
+    test_carlson_K       ()
     test_carlson_E       ()
-    test_carlson_KmE     ()    
-    test_carlson_PS3     ()
+    ## test_carlson_KmE     ()    
+    ## test_carlson_PS3     ()
 
-    test_carlson_Eq49    ()
-    test_carlson_Eq51    ()
-    test_carlson_Eq53    ()
-    test_carlson_Eq54    ()
+    ## test_carlson_Eq49    ()
+    ## test_carlson_Eq51    ()
+    ## test_carlson_Eq53    ()
+    ## test_carlson_Eq54    ()
 
-    test_carlson_eq19211 ()
-    test_carlson_eq19212 ()
-    test_carlson_eq19213 ()
-    test_carlson_eq19217 ()
+    ## test_carlson_eq19211 ()
+    ## test_carlson_eq19212 ()
+    ## test_carlson_eq19213 ()
+    ## test_carlson_eq19217 ()
 
 # =============================================================================
 ##                                                                      The END 
