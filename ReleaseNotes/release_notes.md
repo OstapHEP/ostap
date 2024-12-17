@@ -4,7 +4,7 @@
     1. add Bring radical
     1. add Pade interpolation     
     1. add conversion from Taylor(polynomial) expansion to Pade/rational approximation
-    1. add elliptic fuctions and elliptin integrals
+    1. add elliptic fuctions and elliptic integrals
     1. improve treatment of elliptic integrals and Carlson symmetric forms
     
 ## Backward incompatible
