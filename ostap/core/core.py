@@ -599,7 +599,8 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
 
         groot = ROOT.ROOT.GetROOT ()
         pad   = groot.GetSelectedPad()
-        if not pad : pad = ROOT.gPad
+        padg  = ROOT.TVirtualPad.Pad() 
+        if not pad and padg : pad = padg
         if pad :
             if 'LogX' in kw : pad.SetLogx ( kw.pop ( 'LogX' ) )
             if 'LogY' in kw : pad.SetLogy ( kw.pop ( 'LogY' ) )
@@ -622,12 +623,13 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
                 result = obj.Draw     ( option , *args )
                 
             result = obj
-                
-        if pad and not ROOT.gPad :            
+
+        padg  = ROOT.TVirtualPad.Pad() 
+        if pad and not padg  :            
             c = pad.GetCanvas()
             if c : c.Update()
-        elif ROOT.gPad :
-            c = ROOT.gPad
+        elif padg :
+            c = padg
             if c : c.Update()
             
         return result 
