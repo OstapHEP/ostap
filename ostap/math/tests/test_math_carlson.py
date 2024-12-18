@@ -1045,22 +1045,22 @@ def test_carlson_eq19217 ( ) :
 # =============================================================================
 if '__main__' == __name__ :
     
-    ## test_carlson_values  () 
-    ## test_carlson_cmp     () 
+    test_carlson_values  () 
+    test_carlson_cmp     () 
     test_carlson_K       ()
     test_carlson_E       ()
-    ## test_carlson_KmE     ()    
-    ## test_carlson_PS3     ()
+    test_carlson_KmE     ()    
+    test_carlson_PS3     ()
 
-    ## test_carlson_Eq49    ()
-    ## test_carlson_Eq51    ()
-    ## test_carlson_Eq53    ()
-    ## test_carlson_Eq54    ()
+    test_carlson_Eq49    ()
+    test_carlson_Eq51    ()
+    test_carlson_Eq53    ()
+    test_carlson_Eq54    ()
 
-    ## test_carlson_eq19211 ()
-    ## test_carlson_eq19212 ()
-    ## test_carlson_eq19213 ()
-    ## test_carlson_eq19217 ()
+    test_carlson_eq19211 ()
+    test_carlson_eq19212 ()
+    test_carlson_eq19213 ()
+    test_carlson_eq19217 ()
 
 # =============================================================================
 ##                                                                      The END 
