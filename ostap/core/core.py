@@ -628,9 +628,7 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
         if pad and not padg  :            
             c = pad.GetCanvas()
             if c : c.Update()
-        elif padg :
-            c = padg
-            if c : c.Update()
+        elif padg : padg.Update()
             
         return result 
 
