@@ -981,13 +981,27 @@ def dn ( u , m  ) :
     return _dn_ ( u , m  )
 
 # =============================================================================
+_sn_ = Ostap.Math.sn
+# =============================================================================
+## Elliptic sine amplitude \f$ \mathrm{sn} (u,m)=\sin \mathrm{am} ( u, m ) \f$, where 
+#  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+#  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+def sn ( u , m  ) :
+    """ Elliptic function sn(u,m)
+    - see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions    
+    """
+    fun = getattr ( u , '__sn__' , None )
+    if fun : return fun ( m )
+    return _sn_ ( u , m  )
+
+# =============================================================================
 _cn_ = Ostap.Math.cn
 # =============================================================================
 ## Elliptic cosine amplitude \f$ \mathrm{sn} (u,m)=\cos \mathrm{am} ( u, m ) \f$, where 
 #  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
 #  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
 def cn ( u , m  ) :
-    """ Elliptic function sn(u,m)
+    """ Elliptic function cn(u,m)
     - see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions    
     """
     fun = getattr ( u , '__cn__' , None )
