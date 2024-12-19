@@ -970,8 +970,6 @@ class RooSilent(object) :
         self._svc.setSilentMode      ( self._prev_silent )
         self._svc.setGlobalKillBelow ( self._prev_level  )
 
-
-
 # =============================================================================
 ## very simple context manager to suppress ROOT printout
 #  @code
@@ -980,7 +978,7 @@ class RooSilent(object) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-30
 def rootError   ( level = 1 ) :
-    """Very simple context manager to suppress ROOT printout
+    """ Very simple context manager to suppress ROOT printout
     >>> with rootError () : some_ROOT_code_here()
     """
     return ROOTIgnore ( ROOT.kError   + level )
