@@ -58,18 +58,15 @@ def test_carlson_values ( ) :
     test_RF = [
         ( 'RF'      , RF     , (1,2,0) , 1.3110287771461    ) ,
         ( 'RF'      , RF     , (2,3,4) , 0.58408284167715   ) ,
-        ## ( 'RF'      , RF     , (1,2,4) , 0.6850858166       ) , ## extra 
         ( 'RF'      , RF     , (1,2,4) , 0.6850858166334359 ) , ## extra  
         ##
         ( 'RF_int'  , RF_int , (1,2,0) , 1.3110287771461  ) ,
         ( 'RF_int'  , RF_int , (2,3,4) , 0.58408284167715 ) ,
-        ## ( 'RF_int'  , RF_int , (1,2,4) , 0.6850858166     ) , ## extra
         ( 'RF_int'  , RF_int , (1,2,4) , 0.6850858166334359 ) , ## extra  
         
         ##
         ( 'RF_gsl'  , RF_gsl , (1,2,0) , 1.3110287771461  ) ,
         ( 'RF_gsl'  , RF_gsl , (2,3,4) , 0.58408284167715 ) ,
-        ## ( 'RF_gsl'  , RF_gsl , (1,2,4) , 0.6850858166     ) , ## extra 
         ( 'RF_gsl'  , RF_gsl , (1,2,4) , 0.6850858166334359 ) , ## extra  
         ## 
         ( 'RF2'     , RF     , (1,2  ) , 1.3110287771461  ) , ## 2-argument form 
@@ -1046,9 +1043,9 @@ def test_carlson_eq19217 ( ) :
 #  @see Ostap::Math::elliptic_F
 #  @see Ostap::Math::elliptic_F_gsl
 def test_elliptic_F () :
-    """ Test incomplete Elliptic integral \f$ F(\phi,k) \f$ 
-    - see Ostap::Math::elliptic_F
-    - see Ostap::Math::elliptic_F_gsl
+    """ Test incomplete Elliptic integral F(phi,k) 
+    - see Ostap.Math.elliptic_F
+    - see Ostap.Math.elliptic_F_gsl
     """
     
     from ostap.math.integral import integral
@@ -1073,9 +1070,9 @@ def test_elliptic_F () :
 #  @see Ostap::Math::elliptic_E
 #  @see Ostap::Math::elliptic_E_gsl
 def test_elliptic_E () :
-    """ Test incomplete Elliptic integral \f$ E(\phi,k) \f$ 
-    - see Ostap::Math::elliptic_E
-    - see Ostap::Math::elliptic_E_gsl
+    """ Test incomplete Elliptic integral  E(phi,k)  
+    - see Ostap.Math.elliptic_E
+    - see Ostap.Math.elliptic_E_gsl
     """
     
     from ostap.math.integral import integral
@@ -1102,9 +1099,9 @@ def test_elliptic_E () :
 #  @see Ostap::Math::elliptic_Fm
 #  @see Ostap::Math::am
 def test_elliptic_Fm () :
-    """ Test elliptic integral \f$ Fm ( am ( u , m ) , m ) \equiv u \f$ 
-    - see Ostap::Math::elliptic_Fm
-    - see Ostap::Math::am
+    """ Test elliptic integral Fm ( am ( u , m ) , m ) ==  u 
+    - see Ostap.Math.elliptic_Fm
+    - see Ostap.Math.am
     """
     
     from ostap.math.integral import integral
@@ -1125,13 +1122,13 @@ def test_elliptic_Fm () :
     logger.info ( '%s\n%s' % ( title , table ) )
 
 # =============================================================================
-## Test elliptic functions \f$ sn == \sin am\f$
+## Test elliptic functions \f$ sn == \sin am \f$
 #  @see Ostap::Math::sn
 #  @see Ostap::Math::am
 def test_elliptic_sn_am () :
-    """ Test elliptic functions \f$ sn == \sin am\f$
-    - see Ostap::Math::sn
-    - see Ostap::Math::am
+    """ Test elliptic functions sn == sin am 
+    - see Ostap.Math.sn
+    - see Ostap.Math.am
     """
     
     from ostap.math.integral import integral
@@ -1155,9 +1152,9 @@ def test_elliptic_sn_am () :
 #  @see Ostap::Math::sn
 #  @see Ostap::Math::cn
 def test_elliptic_sn_cn () :
-    """ Test elliptic functions \f$ sn^2+cn^2==1\f$
-    - see Ostap::Math::sn
-    - see Ostap::Math::cn
+    """ Test elliptic functions \ sn^2+cn^2==1
+    - see Ostap.Math.sn
+    - see Ostap.Math.cn
     """
     
     from ostap.math.integral import integral
@@ -1181,9 +1178,9 @@ def test_elliptic_sn_cn () :
 #  @see Ostap::Math::sn
 #  @see Ostap::Math::dn
 def test_elliptic_sn_dn () :
-    """ Test elliptic functions \f$ sn^2+ m * dn^2==1\f$
-    - see Ostap::Math::sn
-    - see Ostap::Math::dn
+    """ Test elliptic functions sn^2+ m * dn^2==1 
+    - see Ostap.Math.sn
+    - see Ostap.Math.dn
     """
     from ostap.math.integral import integral
     rows = [ ( 'm' , 'diff' ) ]
@@ -1206,9 +1203,9 @@ def test_elliptic_sn_dn () :
 #  @see Ostap::Math::dn
 #  @see Ostap::Math::am
 def test_elliptic_dn_am () :
-    """ Test elliptic functions \f$ dn = d/du am \f$
-    - see Ostap::Math::dm
-    - see Ostap::Math::am
+    """ Test elliptic functions dn = d/du am 
+    - see Ostap.Math.dm
+    - see Ostap.Math.am
     """
     from ostap.math.integral   import integral
     from ostap.math.derivative import Derivative 
@@ -1231,7 +1228,6 @@ def test_elliptic_dn_am () :
     table = T.table ( rows , title  = title , prefix = '# ' , alignment = 'll' )    
     logger.info ( '%s\n%s' % ( title , table ) )
     
-
     
 # =============================================================================
 if '__main__' == __name__ :
