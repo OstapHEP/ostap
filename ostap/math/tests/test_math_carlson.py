@@ -1152,7 +1152,7 @@ def test_elliptic_sn_am () :
 #  @see Ostap::Math::sn
 #  @see Ostap::Math::cn
 def test_elliptic_sn_cn () :
-    """ Test elliptic functions \ sn^2+cn^2==1
+    """ Test elliptic functions sn^2+cn^2==1
     - see Ostap.Math.sn
     - see Ostap.Math.cn
     """

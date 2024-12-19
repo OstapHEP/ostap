@@ -27,13 +27,13 @@ namespace Ostap
     /** call for TVirtualPad::Update 
      *  @see TVirtualPad::Update 
      */
-    void pad_update       ( TVirtualPad* pad = nullptr ) ;
+    TVirtualPad* pad_update       ( TVirtualPad* pad = nullptr ) ;
     // ========================================================================
     /** call for TVirtualPad::UpdateAsync 
      *  @see TVirtualPad::Update
      *  @see TVirtualPad::UpdateAsync 
      */
-    void pad_update_async ( TVirtualPad* pad = nullptr ) ;
+    TVirtualPad* pad_update_async ( TVirtualPad* pad = nullptr ) ;
     // ========================================================================
   } //                                        The end of namespace Ostap::Utils 
   // ==========================================================================

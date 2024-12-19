@@ -32,19 +32,19 @@ TVirtualPad* Ostap::Utils::get_pad ()
  *  @see TVirtualPad::Update 
  */
 // ============================================================================
-void Ostap::Utils::pad_update  ( TVirtualPad* pad )
+TVirtualPad* Ostap::Utils::pad_update  ( TVirtualPad* pad )
 {
   if ( nullptr == pad ) { pad = get_pad () ; }
   // call for Update 
   // if ( nullptr != pad ) { pad -> Update () ; }
-  //
+  return pad ;
 }
 // ============================================================================
 /*  call for TVirtualPad::UpdateAsync 
  *  @see TVirtualPad::UpdateAsync 
  */
 // ============================================================================
-void Ostap::Utils::pad_update_async  ( TVirtualPad* pad )
+TVirtualPad* Ostap::Utils::pad_update_async  ( TVirtualPad* pad )
 {
   if ( nullptr == pad ) { pad = get_pad      () ; }
   // call for Update 
@@ -57,6 +57,7 @@ void Ostap::Utils::pad_update_async  ( TVirtualPad* pad )
 #endif      
     }
   //
+  return pad ;
 }
 // ============================================================================
 
