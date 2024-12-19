@@ -12,6 +12,7 @@
 #include <functional>
 #include <vector>
 #include <array>
+#include <utility>
 #include <type_traits>
 // ============================================================================
 // Ostap
@@ -1459,6 +1460,29 @@ namespace Ostap
         si = sj ;
       }
       return nc ;
+    }
+    // ========================================================================
+    /** reduce the argument of to the desired range ( low , high ) 
+     *  @code
+     *  double xx = 123.45 ;
+     *  double x , n ;
+     *  std::tie ( x , n ) = reduce ( xx , -5. , 5. ) ;
+     *  @endcode  
+     *  - Suitable for reductuon of 
+     *    periodic functions with period \f$ L = high-low \f4 
+     */
+    template <class TYPE=double>
+    std::pair<TYPE,TYPE>
+    reduce
+    ( const TYPE x    ,
+      const TYPE low  ,
+      const TYPE high )
+    {
+      const TYPE xmin = std::min ( low , high ) ;
+      const TYPE xmax = std::max ( low , high ) ;
+      const TYPE L    = xmax - xmin ;
+      const TYPE N    = std::floor ( ( x - xmin ) / L ) ;
+      return std::make_pair ( x - N * L , N )   ;
     }
     // ========================================================================
     /// Nolume of N-ball 

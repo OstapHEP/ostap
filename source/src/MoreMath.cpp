@@ -1548,9 +1548,17 @@ double Ostap::Math::elliptic_Fm
   if ( s_zero ( phi ) ) { return 0 ; }
   if ( ( 1 < m ) || ( m < 0 ) ) { return std::numeric_limits<double>::quiet_NaN(); }
   //
+  if ( std::abs ( phi ) > 0.5 * M_PI )
+    {
+      const double nc = std::floor ( phi / M_PI + 0.5 ) ;
+      const double kk = elliptic_Km ( m ) ;      
+      return elliptic_Fm ( phi - nc * M_PI , m ) + 2 * nc * kk ;	
+    }
+  //
   const long double sinphi = std::sin ( phi ) ;
   const long double cosphi = std::cos ( phi ) ;
-  return sinphi * carlson_RF ( cosphi * cosphi , 1.0 - m * sinphi * sinphi , 1 ) ; 
+  //
+  return sinphi * carlson_RF ( cosphi * cosphi , 1.0 - m * sinphi * sinphi , 1 ) ;
 }
 // ========================================================================
 /* Trigonometric form of incomplete elliptic integral \f$ E(\phi,m) \f$
@@ -1566,6 +1574,13 @@ double Ostap::Math::elliptic_Em
   if ( s_zero ( phi ) ) { return 0 ; }
   if ( ( 1 < m ) || ( m < 0 ) ) { return std::numeric_limits<double>::quiet_NaN(); }
   //
+  if ( std::abs ( phi ) > 0.5 * M_PI )
+    {
+      const double nc = std::floor ( phi / M_PI + 0.5 ) ;
+      const double ee = elliptic_Em ( m ) ;      
+      return elliptic_Em ( phi - nc * M_PI , m ) + 2 * nc * ee ;	
+    }
+  //  
   const long double sinphi = std::sin ( phi ) ;
   const long double cosphi = std::cos ( phi ) ;
   const long double sp2    = sinphi * sinphi  ;
@@ -2834,6 +2849,19 @@ double Ostap::Math::am
   else if ( s_zero  ( 1 - m ) ) { return gd ( u ) ; }
   else if ( s_equal ( m , 1 ) ) { return gd ( u ) ; }
   else if (  m < 0 || 1 < m   ) { return std::numeric_limits<double>::quiet_NaN(); }
+  else if ( u < 0             ) { return - am ( -u , m ) ; }
+  //
+  // some reduction
+  if ( 0.5 * M_PI < std::abs ( u ) )
+    {
+      const double K = elliptic_Km ( m ) ;      
+      if ( 2 * K < std::abs ( u ) )
+	{
+	  double ur, nc ;
+	  std::tie ( ur , nc ) = reduce ( u , -2 * K , +2 * K ) ;
+	  if ( !s_zero ( nc ) ) { return am ( ur , m ) + nc * 2 * M_PI ; }
+	}
+    }
   //
   typedef std::array<long double,3>     ITEM  ;
   typedef std::vector<ITEM>             ITEMS ;
