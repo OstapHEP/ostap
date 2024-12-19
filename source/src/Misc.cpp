@@ -37,7 +37,7 @@ TVirtualPad* Ostap::Utils::pad_update  ( TVirtualPad* pad )
   //
   if ( nullptr == pad ) { pad = get_pad () ; }
   // call for Update 
-  if ( nullptr != pad ) { pad -> Update () ; }
+  if ( nullptr != pad && pad->IsModified() ) { pad -> Update () ; }
   //
   return pad ;
 }
@@ -50,7 +50,7 @@ TVirtualPad* Ostap::Utils::pad_update_async  ( TVirtualPad* pad )
 {
   if ( nullptr == pad ) { pad = get_pad () ; }
   // call for Update 
-  if ( nullptr != pad )
+  if ( nullptr != pad && pad -> IsModified() )
     {
 #if ROOT_VERSION(6,30,0)<=ROOT_VERSION_CODE
       pad -> UpdateAsync () ;
