@@ -655,7 +655,7 @@ if '__main__' == __name__ :
     test_chebyshev_sum_fill ()
     test_chebyshev_sum      ()
     
-    test_rational_fun       ()
+    ## test_rational_fun       ()
 
     test_fourier_sum        ()
     test_cosine_sum         ()
