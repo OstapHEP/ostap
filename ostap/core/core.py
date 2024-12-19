@@ -622,8 +622,8 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
                 
             result = obj
 
-        ## update the pad/canvas
-        Ostap.Utils.pad_update() 
+            ## update the pad/canvas
+            Ostap.Utils.pad_update() 
         
         return result 
 

@@ -37,7 +37,7 @@ TVirtualPad* Ostap::Utils::pad_update  ( TVirtualPad* pad )
   //
   if ( nullptr == pad ) { pad = get_pad () ; }
   // call for Update 
-  if ( nullptr != pad ) { pad -> ModifiedUpdate () ; }
+  if ( nullptr != pad ) { pad -> Update () ; }
   //
   return pad ;
 }
