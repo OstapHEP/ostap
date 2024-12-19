@@ -15,6 +15,7 @@ from   ostap.logger.colorized import attention
 import ostap.logger.table     as     T
 from   ostap.utils.utils      import wait
 from   ostap.plotting.canvas  import use_canvas
+from   ostap.utils.utils      import vrange 
 import ROOT, math, random  
 # ============================================================================
 from   ostap.logger.logger    import getLogger
@@ -1039,12 +1040,202 @@ def test_carlson_eq19217 ( ) :
     else : 
         logger.error    ('Maximal differences are %.5g/%.5g (abs/rel)' % ( ad_max , rd_max ) )
 
+        
+# =============================================================================
+## Test incomplete Elliptic integral \f$ F(\phi,k) \f$ 
+#  @see Ostap::Math::elliptic_F
+#  @see Ostap::Math::elliptic_F_gsl
+def test_elliptic_F () :
+    """ Test incomplete Elliptic integral \f$ F(\phi,k) \f$ 
+    - see Ostap::Math::elliptic_F
+    - see Ostap::Math::elliptic_F_gsl
+    """
+    
+    from ostap.math.integral import integral
+    rows = [ ('k' , 'diff' ) ]
+    for k in vrange ( 0.01 , 0.99 , 20 ) :
+        def myfun ( x ) : return abs ( Ostap.Math.elliptic_F     ( x , k ) -
+                                       Ostap.Math.elliptic_F_gsl ( x , k ) )
+        
+        d = integral ( myfun , xmin = 0 , xmax = 20 )
+        item = '%.5g' % d 
+        if abs ( d ) > prec_TIGHT : item = attention ( item )        
+        row = '%.5g' % k , item        
+        rows.append ( row )
 
+    title = 'Tesf for Elliptic_F, local vs GSL'
+    table = T.table ( rows , title  = title , prefix = '# ' , alignment = 'll' )    
+    logger.info ( '%s\n%s' % ( title , table ) )
+    
+
+# =============================================================================
+## Test incomplete Elliptic integral \f$ E(\phi,k) \f$ 
+#  @see Ostap::Math::elliptic_E
+#  @see Ostap::Math::elliptic_E_gsl
+def test_elliptic_E () :
+    """ Test incomplete Elliptic integral \f$ E(\phi,k) \f$ 
+    - see Ostap::Math::elliptic_E
+    - see Ostap::Math::elliptic_E_gsl
+    """
+    
+    from ostap.math.integral import integral
+    rows = [ ('k' , 'diff' ) ]
+    for k in vrange ( 0.01 , 0.99 , 20 ) :
+        def myfun ( x ) : return abs ( Ostap.Math.elliptic_E     ( x , k ) -
+                                       Ostap.Math.elliptic_E_gsl ( x , k ) )
+
+
+        d = integral ( myfun , xmin = 0 , xmax = 20 )
+        item = '%.5g' % d 
+        if abs ( d ) > prec_TIGHT : item = attention ( item )        
+        row = '%.5g' % k , item        
+        rows.append ( row )
+
+    title = 'Tesf for Elliptic_E, local vs GSL'
+    table = T.table ( rows , title  = title , prefix = '# ' , alignment = 'll' )    
+    logger.info ( '%s\n%s' % ( title , table ) )
+    
+    
+
+# =============================================================================
+## Test elliptic integral \f$ Fm ( am ( u , m ) , m ) \equiv u \f$ 
+#  @see Ostap::Math::elliptic_Fm
+#  @see Ostap::Math::am
+def test_elliptic_Fm () :
+    """ Test elliptic integral \f$ Fm ( am ( u , m ) , m ) \equiv u \f$ 
+    - see Ostap::Math::elliptic_Fm
+    - see Ostap::Math::am
+    """
+    
+    from ostap.math.integral import integral
+    rows = [ ( 'm' , 'diff' ) ]
+    
+    for m in vrange ( 0.01 , 0.99 , 20 ) :
+        def myfun ( x ) : return abs ( Ostap.Math.elliptic_Fm ( Ostap.Math.am ( x , m ) , m ) - x )
+
+        d = integral ( myfun , xmin = 0 , xmax = 20 )
+        item = '%.5g' % d 
+        if abs ( d ) > prec_TIGHT : item = attention ( item )        
+        row = '%.5g' % m , item        
+        rows.append ( row )
+
+
+    title = 'Tesf for Fm(am(x,M),m)==x'
+    table = T.table ( rows , title  = title , prefix = '# ' , alignment = 'll' )    
+    logger.info ( '%s\n%s' % ( title , table ) )
+
+# =============================================================================
+## Test elliptic functions \f$ sn == \sin am\f$
+#  @see Ostap::Math::sn
+#  @see Ostap::Math::am
+def test_elliptic_sn_am () :
+    """ Test elliptic functions \f$ sn == \sin am\f$
+    - see Ostap::Math::sn
+    - see Ostap::Math::am
+    """
+    
+    from ostap.math.integral import integral
+    rows = [ ( 'm' , 'diff' ) ]
+    
+    for m in vrange ( 0.01 , 0.99 , 20 ) :
+        def myfun ( x ) : return abs ( Ostap.Math.sn ( x , m ) - math.sin ( Ostap.Math.am ( x , m ) ) )
+        
+        d = integral ( myfun , xmin = 0 , xmax = 20 )
+        item = '%.5g' % d 
+        if abs ( d ) > prec_TIGHT : item = attention ( item )        
+        row = '%.5g' % m , item        
+        rows.append ( row )
+
+    title = 'Tesf for sn = sin am '
+    table = T.table ( rows , title  = title , prefix = '# ' , alignment = 'll' )    
+    logger.info ( '%s\n%s' % ( title , table ) )
+
+# =============================================================================
+## Test elliptic functions \f$ sn^2+cn^2==1f$
+#  @see Ostap::Math::sn
+#  @see Ostap::Math::cn
+def test_elliptic_sn_cn () :
+    """ Test elliptic functions \f$ sn^2+cn^2==1\f$
+    - see Ostap::Math::sn
+    - see Ostap::Math::cn
+    """
+    
+    from ostap.math.integral import integral
+    rows = [ ( 'm' , 'diff' ) ]
+    
+    for m in vrange ( 0.01 , 0.99 , 20 ) :
+        def myfun ( x ) : return abs ( Ostap.Math.sn ( x , m )**2 + Ostap.Math.cn ( x , m )**2 - 1 )
+                                               
+        d = integral ( myfun , xmin = 0 , xmax = 20 )
+        item = '%.5g' % d 
+        if abs ( d ) > prec_TIGHT : item = attention ( item )        
+        row = '%.5g' % m , item        
+        rows.append ( row )
+
+    title = 'Tesf for sn^2+cn^2==1 '
+    table = T.table ( rows , title  = title , prefix = '# ' , alignment = 'll' )    
+    logger.info ( '%s\n%s' % ( title , table ) )
+
+# =============================================================================
+## Test elliptic functions \f$ m sn^2 + dn^2==1f$
+#  @see Ostap::Math::sn
+#  @see Ostap::Math::dn
+def test_elliptic_sn_dn () :
+    """ Test elliptic functions \f$ sn^2+ m * dn^2==1\f$
+    - see Ostap::Math::sn
+    - see Ostap::Math::dn
+    """
+    from ostap.math.integral import integral
+    rows = [ ( 'm' , 'diff' ) ]
+    
+    for m in vrange ( 0.01 , 0.99 , 20 ) :
+        def myfun ( x ) : return abs ( m * Ostap.Math.sn ( x , m )**2 + Ostap.Math.dn ( x , m )**2 - 1 )
+
+        d = integral ( myfun , xmin = 0 , xmax = 20 )
+        item = '%.5g' % d 
+        if abs ( d ) > prec_TIGHT : item = attention ( item )        
+        row = '%.5g' % m , item        
+        rows.append ( row )
+
+    title = 'Tesf for m*sn^2+ dn^2==1 '
+    table = T.table ( rows , title  = title , prefix = '# ' , alignment = 'll' )    
+    logger.info ( '%s\n%s' % ( title , table ) )
+
+# =============================================================================
+## Test elliptic functions \f$ dn = d/du am f$
+#  @see Ostap::Math::dn
+#  @see Ostap::Math::am
+def test_elliptic_dn_am () :
+    """ Test elliptic functions \f$ dn = d/du am \f$
+    - see Ostap::Math::dm
+    - see Ostap::Math::am
+    """
+    from ostap.math.integral   import integral
+    from ostap.math.derivative import Derivative 
+    rows = [ ( 'm' , 'diff' ) ]
+
+    for m in vrange ( 0.01 , 0.99 , 20 ) :
+
+        def am ( x ) : return Ostap.Math.am ( x , m )
+        der_am = Derivative ( am ) 
+        
+        def myfun ( x ) : return abs ( der_am ( x ) - Ostap.Math.dn ( x , m ) )
+                                               
+        d = integral ( myfun , xmin = 0 , xmax = 20 )
+        item = '%.5g' % d 
+        if abs ( d ) > prec_TIGHT * 30 : item = attention ( item )        
+        row = '%.5g' % m , item        
+        rows.append ( row )
+
+    title = 'Tesf for dn = d/du am '
+    table = T.table ( rows , title  = title , prefix = '# ' , alignment = 'll' )    
+    logger.info ( '%s\n%s' % ( title , table ) )
+    
 
     
 # =============================================================================
 if '__main__' == __name__ :
-    
+
     test_carlson_values  () 
     test_carlson_cmp     () 
     test_carlson_K       ()
@@ -1061,7 +1252,15 @@ if '__main__' == __name__ :
     test_carlson_eq19212 ()
     test_carlson_eq19213 ()
     test_carlson_eq19217 ()
-
+    
+    test_elliptic_F      ()
+    test_elliptic_E      ()
+    test_elliptic_Fm     ()
+    test_elliptic_sn_am  ()
+    test_elliptic_sn_cn  ()
+    test_elliptic_sn_dn  ()
+    test_elliptic_dn_am  ()
+    
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
