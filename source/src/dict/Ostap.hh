@@ -69,6 +69,7 @@
 #include "Ostap/MatrixUtils2.h"
 #include "Ostap/MatrixUtilsT.h"
 #include "Ostap/MatrixTransforms.h"
+#include "Ostap/Misc.h"
 #include "Ostap/Models.h"
 #include "Ostap/Models2D.h"
 #include "Ostap/Models3D.h"

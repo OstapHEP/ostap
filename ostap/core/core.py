@@ -597,10 +597,8 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
 
         copy = kw.pop ( 'copy' , False )
 
-        groot = ROOT.ROOT.GetROOT ()
-        pad   = groot.GetSelectedPad()
-        padg  = ROOT.TVirtualPad.Pad() 
-        if not pad and padg : pad = padg
+        ## get the current pad/canvas 
+        pad = Ostap.Utils.get_pad() 
         if pad :
             if 'LogX' in kw : pad.SetLogx ( kw.pop ( 'LogX' ) )
             if 'LogY' in kw : pad.SetLogy ( kw.pop ( 'LogY' ) )
@@ -624,12 +622,9 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
                 
             result = obj
 
-        padg  = ROOT.TVirtualPad.Pad() 
-        if pad and not padg  :            
-            c = pad.GetCanvas()
-            if c : c.Update()
-        elif padg : padg.Update()
-            
+        ## update the pad/canvas
+        Ostap.Utils.pad_update() 
+        
         return result 
 
     ROOT.TObject.draw       = _TO_draw_

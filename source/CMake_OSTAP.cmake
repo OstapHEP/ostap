@@ -54,6 +54,7 @@ add_library(ostap SHARED src/format.cpp
                          src/LorentzVectorWithError.cpp
                          src/Math.cpp
                          src/MatrixUtils.cpp                         
+                         src/Misc.cpp
                          src/Models.cpp
                          src/Models2D.cpp
                          src/Models3D.cpp

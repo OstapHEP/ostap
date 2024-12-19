@@ -6,7 +6,11 @@
     1. add conversion from Taylor(polynomial) expansion to Pade/rational approximation
     1. add elliptic fuctions and elliptic integrals
     1. improve treatment of elliptic integrals and Carlson symmetric forms
-    
+    1. attempt to fix/buypass the newly appeared problem:
+       ```TypeError: void TCanvas::Update() =>
+                TypeError: callable was deleted
+       ```
+       
 ## Backward incompatible
     
 ## Bug fixes
