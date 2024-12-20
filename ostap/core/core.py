@@ -624,10 +624,9 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
 
         # =================================================================
         ## update the pad/canvas
-        Ostap.Utils.pad_update()
+        Ostap.Utils.pad_update ( pad )
         # =============================================================
 
-                
         return result 
 
     ROOT.TObject.draw       = _TO_draw_
