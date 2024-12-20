@@ -51,7 +51,7 @@ from   ostap.core.meta_info   import root_info
 from   ostap.core.ostap_types import  ( string_types   , integer_types  ,
                                         num_types      , 
                                         sequence_types , dictlike_types )
-from   ostap.core.core        import valid_pointer, split_string  
+from   ostap.core.core        import valid_pointer, split_string, loop_items, Ostap   
 import ostap.fitting.roofit
 from   ostap.fitting.pdfbasic import APDF1
 import ROOT, abc, sys  
@@ -67,7 +67,7 @@ else                         : from itertools import izip_longest as zip_longest
 #  Helper class to create `RooStats::ModelConfig`
 #  @see RooStats::ModelConfig 
 class ModelConfig(object): 
-    """Helper class to create `RooStats::ModelConfig`
+    """ Helper class to create `RooStats::ModelConfig`
     - see `ROOT.RooStats.ModelConfig`
     """
     def __init__  ( self                      ,
@@ -245,9 +245,16 @@ class ModelConfig(object):
             
         ## is snapshot
         if kw_args :
-            logger.warning ( 'create ModelConfig: Ignore keyword arguments: %s' % [ k for k in kw_args ] )
+            import ostap.logger.table as T 
+            rows = [ ( 'Argument' , 'Value' ) ]
+            for k , v in loop_items ( kw_args ) :
+                row = k , str ( v )
+                rows.append ( row )
+            title = 'ModelConfig: %d ignored arguments' % len ( kw_args ) 
+            table = T.table ( rows , title = title , prefix = '# ' , alignment = 'll' )    
+            logger.warning ( '%s\n%s' % ( title , table ) )
 
-        ## finally print as tabnales 
+        ## finally print as table 
         logger.debug ( 'Created ModelConfig: %s\n%s' % ( self.name , self.table ( prefix = '# ' ) ) ) 
 
                        
@@ -409,14 +416,14 @@ class ModelConfig(object):
     # =========================================================================
     ## helper function to get parameters from PDF 
     def pdf_params ( self , dataset = None ) :
-        """helepr function to get the parameters from PDF"""
+        """ Helper function to get the parameters from PDF"""
         pdf = self.__final_pdf
         return pdf.getParameters ( 0 ) if dataset is None else  pdf.getParameters ( dataset )
         
     # =========================================================================
     ## helper function to get parameters from PDF 
     def pdf_param  ( self , param , dataset = None ) :
-        """helepr function to get the parameters from PDF"""
+        """ Helper function to get the parameters from PDF"""
         params = self.pdf_params ( dataset )
         ## already parameter 
         if isinstance ( param , ROOT.RooAbsReal ) and param in params : return param
@@ -442,7 +449,7 @@ class ModelConfig(object):
     #  v1 = mc.var ( 'var   ) ## get by var     
     #  @endcode
     def var ( self , variable ) :
-        """Get a variable from workspace
+        """ Get a variable from workspace
         >>> mc = ...
         >>>> v1 = mc.var ( 'mass' ) ## get by name
         >>> var = 
@@ -453,9 +460,9 @@ class ModelConfig(object):
         return self.ws.var ( variable ) 
 
     # ============================================================================
-    ## print model as a table 
+    ## print the model as a table 
     def table ( self , title = '' , prefix = '' ) : 
-        """Print a model as table
+        """ Print the model as table
         """
 
         rows = [ ( '' , '' ) ]
@@ -516,7 +523,7 @@ class ModelConfig(object):
 # ================================================================================
 ## Helper (abstract) base class for the confidence intervals and limits 
 class CLInterval(ModelConfig)  :
-    """Helper (abstract) base class for confidence intervals and limits"""
+    """ Helper (abstract) base class for confidence intervals and limits"""
     __metaclass__ = abc.ABCMeta
     
     def __init__ ( self             ,
@@ -539,7 +546,7 @@ class CLInterval(ModelConfig)  :
     ## Abstract method to create the interval calculator
     @abc.abstractmethod 
     def make_interval ( self , level , dataset = None ) :
-        """Abstract method to create the interval calculator"""
+        """ Abstract method to create the interval calculator"""
         pass
 
     # =========================================================================
@@ -549,7 +556,7 @@ class CLInterval(ModelConfig)  :
     #  lower, upper = interval.interval ( 0.90 ) 
     #  @endcode 
     def interval ( self , level , par = None , dataset = None ) :
-        """get the confidence interal at certain confidence level
+        """ Get the confidence interal at certain confidence level
         >>> interval = ...
         >>> lower, upper = interval.interval ( 0.90 ) 
         """
@@ -574,7 +581,7 @@ class CLInterval(ModelConfig)  :
     #  lower    = interval.limit ( 0.90 , -1 ) 
     #  @endcode
     def limit    ( self , level , limit , par = None, dataset = None ) :
-        """Get the upper/lower limit at certain confidence level
+        """ Get the upper/lower limit at certain confidence level
         >>> interval =...
         >>> upper    = interval.limit ( 0.90 , +1 ) 
         >>> lower    = interval.limit ( 0.90 , -1 ) 
@@ -598,7 +605,7 @@ class CLInterval(ModelConfig)  :
     #  upper    = interval.upper_limit ( 0.90 ) 
     #  @endcode 
     def upper_limit ( self , level , par = None , dataset = None ) :
-        """Get the upper limit at certain confidence level
+        """ Get the upper limit at certain confidence level
         >>> interval =...
         >>> upper    = interval.upper_limit ( 0.90 ) 
         """
@@ -611,7 +618,7 @@ class CLInterval(ModelConfig)  :
     #  lower    = interval.lower_limit ( 0.90 ) 
     #  @endcode 
     def lower_limit ( self , level , par = None , dataset = None ) :
-        """Get the lower limit at certain confidence level
+        """ Get the lower limit at certain confidence level
         >>> interval =...
         >>> lower    = interval.lower_limit ( 0.90 ) 
         """        
@@ -620,7 +627,7 @@ class CLInterval(ModelConfig)  :
     # =========================================================================
     ## Helper method to get the true parameter from poi 
     def par_from_poi ( self , par ) :
-        """Helper method to get the true parameter from poi
+        """ Helper method to get the true parameter from poi
         """
         poi = self.poi             
         if   par and isinstance ( par , string_types   ) and poi : return poi [ par      ]
@@ -654,7 +661,7 @@ class CLInterval(ModelConfig)  :
 #  @endcode
 #  @see RooStats::ProfileLikelihoodCalculator
 class ProfileLikelihoodInterval(CLInterval) :
-    """Profile Likelihood confidence interval
+    """ Profile Likelihood confidence interval
     >>> interval     = ProfileLikelihoodInterval ( .... )
     >>> lower, upper = interval.interval ( 0.90 ) 
     >>> upper        = interval.limit ( 0.90 , +1 ) 
@@ -666,7 +673,7 @@ class ProfileLikelihoodInterval(CLInterval) :
     # =========================================================================
     ## create the interval 
     def make_interval ( self , level , dataset = None ) :
-        """Create the interval"""
+        """ Create the interval"""
 
         ds = dataset if dataset else self.dataset 
         assert ds ,           'Invalid dataset!'
@@ -681,7 +688,7 @@ class ProfileLikelihoodInterval(CLInterval) :
     #  make a plot
     #  @see RooStats::LikelihoodIntervalPlot
     def plot ( self ) :
-        """Make a plot
+        """ Make a plot
         - see `ROOT.RooStats.LikelihoodIntervalPlot`
         """
         if self.the_interval :
@@ -699,7 +706,7 @@ class ProfileLikelihoodInterval(CLInterval) :
 #  @endcode
 #  @see RooStats::FeldmanCousins
 class FeldmanCousinsInterval(CLInterval) :
-    """Feldman-Cousins confidence interval
+    """ Feldman-Cousins confidence interval
     >>> interval     = FeldmanCousinsInterval ( .... )
     >>> lower, upper = interval.interval ( 0.90 ) 
     >>> upper        = interval.limit ( 0.90 , +1 ) 
@@ -732,7 +739,7 @@ class FeldmanCousinsInterval(CLInterval) :
         
     ## create the interval 
     def make_interval ( self , level , dataset = None ) :
-        """Create the interval"""
+        """ Create the interval"""
         
         ds = dataset if dataset else self.dataset 
         assert ds ,           'Invalid dataset!'
@@ -768,7 +775,7 @@ class FeldmanCousinsInterval(CLInterval) :
     #  graph.Draw('ap')
     #  @endcode 
     def plot ( self ) :
-        """Visualize the interval
+        """ Visualize the interval
         - inspired by rs401c_FeldmanCousins.py
         >>> fci = ...
         >>> graph = fci.plot()
@@ -817,7 +824,7 @@ class FeldmanCousinsInterval(CLInterval) :
 #  @endcode
 #  @see RooStats::BayesianCalcualtor
 class BayesianInterval(CLInterval) :
-    """Bayesian confidence interval
+    """ Bayesian confidence interval
     >>> interval     = BayesianInterval ( .... )
     >>> lower, upper = interval.interval ( 0.90 ) 
     >>> upper        = interval.limit ( 0.90 , +1 ) 
@@ -864,7 +871,7 @@ class BayesianInterval(CLInterval) :
     # =========================================================================
     ## create the interval 
     def make_interval ( self , level , dataset = None ) :
-        """Create the interval"""
+        """ Create the interval"""
         
         ds = dataset if dataset else self.dataset 
         assert ds ,           'Invalid dataset!'
@@ -884,7 +891,7 @@ class BayesianInterval(CLInterval) :
     #  make a plot
     #  @see RooStats::BayesianCalcialtor::GetPosteriorPlot
     def plot ( self ) :
-        """Make a plot
+        """ Make a plot
         - see `ROOT.RooStats.BayesianCalculator.GetPosteriorPlot`
         """
         if self.calculator :
@@ -893,7 +900,7 @@ class BayesianInterval(CLInterval) :
     # =========================================================================
     ## Helper method to get the true parameter from poi 
     def par_from_poi ( self , par ) :
-        """Helper method to get the true parameter from poi
+        """ Helper method to get the true parameter from poi
         """
         return None
 
@@ -909,7 +916,7 @@ class BayesianInterval(CLInterval) :
 #  @endcode
 #  @see RooStats::MCMCCalculator
 class MCMCInterval(CLInterval) :
-    """Markov Chain confidence interval
+    """ Markov Chain confidence interval
     >>> interval     = MCMCInterval  ( .... )
     >>> lower, upper = interval.interval ( 0.90 ) 
     >>> upper        = interval.limit ( 0.90 , +1 ) 
@@ -949,7 +956,7 @@ class MCMCInterval(CLInterval) :
     # =========================================================================
     ## create the interval 
     def make_interval ( self , level , dataset = None ) :
-        """Create the interval"""
+        """ Create the interval"""
         
         ds = dataset if dataset else self.dataset 
         assert ds ,           'Invalid dataset!'
@@ -986,7 +993,7 @@ class MCMCInterval(CLInterval) :
     #  make a plot
     #  @see RooStats::MCMCIntervalPlot
     def plot ( self ) :
-        """Make a plot
+        """ Make a plot
         - see `ROOT.RooStats.MCMCIntervallPlot`
         """
         if self.the_interval :
@@ -998,7 +1005,7 @@ class MCMCInterval(CLInterval) :
 ## @class Calculator
 #  base class for Calculators 
 class Calculator (object) :
-    """base class for Calculators 
+    """ Base class for Calculators 
     - see `ROOT.RooStats.AsymptoticCalculator`
     """
     __metaclass__ = abc.ABCMeta
@@ -1021,7 +1028,7 @@ class Calculator (object) :
     ## abstract method to create (and configire) calculator
     @abc.abstractmethod 
     def make_calculator ( self ) :
-        """Abstract method to create the calculator"""
+        """ Abstract method to create the calculator"""
         pass
 
     @property
@@ -1060,7 +1067,7 @@ class Calculator (object) :
 ## @class AsymptoticCalculator
 #  @see RooStats::AsymptoticCalculator
 class AsymptoticCalculator (Calculator) :
-    """Asymptotoc calcualator
+    """ Asymptotic calcualator
     - see `ROOT.RooStats.AsymptoticCalculator`
     """
     
@@ -1099,7 +1106,7 @@ class AsymptoticCalculator (Calculator) :
 #  @see RooStats::FreqentistCalculator
 #  @warning FRequentist calculator corrupts  input data set! 
 class FrequentistCalculator (Calculator) :
-    """Frequentist calcualator
+    """ Frequentist calcualator
     - see `ROOT.RooStats.FrequentistCalculator`
     - warning  Frequentist calculator corrupts input data set! 
     """
@@ -1176,20 +1183,23 @@ class FrequentistCalculator (Calculator) :
             else :
                 logger.info    ("Frequentist calculator: datasets are fine" )
                 
-            ds2.erase () 
-            del self.__cloned_dataset
+            
             self.__cloned_dataset = None 
+            if isinstance ( ds2 , ROOT.RooDataSet ) :
+                ds2 = Ostap.MoreRooFit.delete_data ( ds2 )
+                del ds2 
+
             logger.info ( 'Frequentist calculator: CLONED dataset is deleted' )
 
     @property
     def cloned_dataset ( self ) :
-        """'cloned_dataset' : get the CLONED dataset (actually used in calculator)"""
+        """'cloned_dataset' : get the CLONED dataset (the one actually used in calculator)"""
         return self.__cloned_dataset
     
     # ==============================================================================================
     ## Create and configure the calculator 
     def make_calculator ( self ) :
-        """Create and configure the calculator"""
+        """ Create and configure the calculator"""
         ##
         if self.sampler : calc = ROOT.RooStats.FrequentistCalculator ( self.cloned_dataset , self.h1 , self.h0 , self.sampler )
         else            : calc = ROOT.RooStats.FrequentistCalculator ( self.cloned_dataset , self.h1 , self.h0 )
@@ -1227,7 +1237,7 @@ class FrequentistCalculator (Calculator) :
 ## @class HybridCalculator
 #  @see RooStats::HybridCalculator
 class HybridCalculator (FrequentistCalculator) :
-    """Hybrid calcualator
+    """ Hybrid calcualator
     - see `ROOT.RooStats.HybridCalculator`
     """
     
@@ -1288,7 +1298,7 @@ class HybridCalculator (FrequentistCalculator) :
     # ==============================================================================================
     ## Create and configure the calculator 
     def make_calculator ( self ) :
-        """Create and configure the calculator"""
+        """ Create and configure the calculator"""
         
         if self.sampler : calc = ROOT.RooStats.HybridCalculator ( self.cloned_dataset , self.h1 , self.h0 , self.sampler )
         else            : calc = ROOT.RooStats.HybridCalculator ( self.cloned_dataset , self.h1 , self.h0 )
@@ -1328,7 +1338,7 @@ class HybridCalculator (FrequentistCalculator) :
 ## @class ProfileLikelihoodCalculator
 #  @see RooStats::ProfileLikelihoodCalculator
 class ProfileLikelihoodCalculator (Calculator) :
-    """Asymptotic calculator
+    """ ProfileLikelihood calculator
     - see `ROOT.RooStats.ProfileLikelihoodCalculator`
     """
     
@@ -1381,7 +1391,7 @@ class ProfileLikelihoodCalculator (Calculator) :
 
     ## create and configure the Profile Likelihood calculator 
     def make_calculator ( self ) :
-        """Create and configure the Pofile Likelihood calculator"""
+        """ Create and configure the PofileLikelihood calculator"""
         calc = ROOT.RooStats.ProfileLikelihoodCalculator ( self.dataset ,  self.h0 )
         calc.SetNullParameters ( self.null_params )        
         return calc
@@ -1395,7 +1405,7 @@ class ProfileLikelihoodCalculator (Calculator) :
 # @class HypoTestInverter
 # @see RooStats::HypoTestInverter
 class HypoTestInverter(object) :
-    """Hypo test inverter 
+    """ Hypo test inverter 
     -see `ROOT.RooStats.HypoTestInverter`
     """
     
@@ -1436,7 +1446,7 @@ class HypoTestInverter(object) :
     #  hti.scan (  [ 0, 1, 2, 3, 4 ] ) ## define custom scane    
     #  @endcode
     def scan ( self , *values ) :
-        """Define (or perform the actual scan)
+        """ Define (or perform the actual scan)
         >>> hti = ...
         >>> hti.scan ( 100 , 0.0 , 10.0 )   ## define scan with 100 point between 0 and 10
         >>> hti.scan ()                     ## define auto scan 
@@ -1465,7 +1475,7 @@ class HypoTestInverter(object) :
     #  hti.scan (  [ 0, 1, 2, 3, 4 ] ) ## define custom scane    
     #  @endcode
     def scan_with_progress ( self , *values ) :
-        """Define (or perform the actual scan)
+        """ Define (or perform the actual scan)
         >>> hti = ...
         >>> hti.scan ( 100 , 0.0 , 10.0 )   ## define scan with 100 point between 0 and 10
         >>> hti.scan ()                     ## define auto scan 
@@ -1895,7 +1905,7 @@ class P0Plot(object) :
     # =============================================================================
     ## get the summary table 
     def table ( self , title = '' , prefix = '' ) :
-        """'Get the sumamry table'"""
+        """ Get the summary table """
         import ostap.logger.table as T
         title = title if title else 'p0-scan'
         return T.table ( self.__rows , title = title , prefix = prefix , alignment = 'lccc' )

@@ -48,23 +48,25 @@ signal  = Models.Gauss_pdf  ( 'Gauss',
 signal.mean .fix()
 signal.sigma.fix()
 model   = Models.Fit1D ( signal = signal , background = 'e-' )
-model.background.tau = -0.25 
-model.S = 55
-model.B = 1000
-model.S.setMax(200)
+model.background.tau = -0.25
+N_S     = 20
+N_B     = 1000
+model.S = N_S 
+model.B = N_B
+model.S.setMax(100+3*N_S)
 
-data = model.generate ( 55 + 1000 )
+data    = model.generate ( N_S + N_B )
 
 summary = [ ('method' , '90%CL' , 'time [s]') ]
 plots   = []
 
 # ============================================================================-
 ## Get the upper limit limit for small signal at fixed mass
-#  - resolution is fixed
+#  - Resolution is fixed
 #  - Asymptotic Calculator is used 
 def test_point_limit_ac1() :
-    """Get the upper limit at given point for small signal at fixed mass
-    - resoltuion is fixed 
+    """ Get the upper limit at given point for small signal at fixed mass
+    - Resoltuion is fixed 
     - Asymptotic Calculator is used 
     """
 
@@ -122,9 +124,9 @@ def test_point_limit_ac1() :
         plot .draw('LCb 2CL')                    
         logger.info ( '90%%CL upper limit (asymptotic)  = %.1f' % hti.upper_limit )
 
-        row = 'Asymptotic' , '%.1f' % hti.upper_limit , '%.1f' % timer.delta 
-        summary.append ( row  )
-        plots  .append ( plot )
+    row = 'Asymptotic' , '%.1f' % hti.upper_limit , '%.1f' % timer.delta 
+    summary.append ( row  )
+    plots  .append ( plot )
         
     ## check the dataset
     stat = data.statVar('mass')
@@ -134,11 +136,11 @@ def test_point_limit_ac1() :
 
 # ============================================================================-
 ## Get the upper limit limit for small signal at fixed mass
-#  - resolution is fixed
+#  - Resolution is fixed
 #  - Asymptotic Calculator is used 
 def test_point_limit_ac2() :
-    """Get the upper limit at given point for small signal at fixed mass
-    - resoltuion is fixed 
+    """ Get the upper limit at given point for small signal at fixed mass
+    - Resolution is fixed 
     - Asymptotic Calculator is used 
     """
 
@@ -176,7 +178,7 @@ def test_point_limit_ac2() :
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
     
-    with timing ( "Using Asymptotic/Asimov Calculator" , logger = logger ) as timer :
+    with timing ( "Using Asymptotic+Asimov Calculator" , logger = logger ) as timer :
         ## create the calculator 
         ac  = AsymptoticCalculator ( model_b           ,
                                      model_sb          ,
@@ -208,11 +210,11 @@ def test_point_limit_ac2() :
 
 # ============================================================================-
 ## Get the upper limit limit for small signal at fixed mass
-#  - resolution is fixed
+#  - Resolution is fixed
 #  - Frequestist Calculator is used 
 def test_point_limit_fc  () :
-    """Get the upper limit at given point for small signal at fixed mass
-    - resolution is fixed 
+    """ Get the upper limit at given point for small signal at fixed mass
+    - Resolution is fixed 
     - Frequestist Calculator is used 
     """
 
@@ -220,10 +222,6 @@ def test_point_limit_fc  () :
 
     logger.info ( "Test Point limits with RooStats using Frequestist Calculator" )
 
-    ## if root_info < (6,24) :
-    ##    logger.info ( 'Test is disabled for ROOT version %s' % str ( root_info ) )
-    ##    return 
-    
     from   ostap.fitting.roostats   import ( ModelConfig           ,
                                              FrequentistCalculator ,
                                              HypoTestInverter      )
@@ -289,11 +287,11 @@ def test_point_limit_fc  () :
 
 # ============================================================================-
 ## Get the upper limit limit for small signal at fixed mass
-#  - resolution is fixed
+#  - Resolution is fixed
 #  - Hybrid Calculator is used 
 def test_point_limit_hc  () :
-    """Get the upper limit at given point for small signal at fixed mass
-    - resolution is fixed 
+    """ Get the upper limit at given point for small signal at fixed mass
+    - Resolution is fixed 
     - Hybrid Calculator is used 
     """
 
@@ -370,14 +368,14 @@ def test_point_limit_hc  () :
 #  - resolution is fixed
 #  - Profile Likelihoood Calculator is used 
 def test_point_limit_pl () :
-    """Get the upper limit at given point for small signal at fixed mass
+    """ Get the upper limit at given point for small signal at fixed mass
     - resoltuion is fixed 
     - Profile-Likelihood Calculator is used 
     """
 
     logger = getLogger("test_point_limit_pl")
 
-    logger.info ( "Test Point limits with RooStats (Profile Likeloihood Calculator)" )
+    logger.info ( "Test Point limits with RooStats (Profile Likelihood Calculator)" )
 
     from   ostap.fitting.roostats   import ( ModelConfig                 ,
                                              ProfileLikelihoodCalculator ,
@@ -409,35 +407,36 @@ def test_point_limit_pl () :
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
     
-    with timing ( "Using Profile Likelihood Calculator" , logger = logger ) :
+    with timing ( "Using Profile Likelihood Calculator" , logger = logger ) as timer :
         ## create the calculator 
         pl  = ProfileLikelihoodCalculator ( model_sb            ,
                                             dataset     = data  ,
                                             null_params = { the_model.S : 0.0 } )
 
+        """
         res = pl.calculator.GetHypoTest ()
         
-                        
-    ##     ## create Hypo Test inverter 
-    ##     hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
+        ## create Hypo Test inverter 
+        hti = HypoTestInverter ( pl ,  0.90 , use_CLs = True , verbose = False )
 
-
+        ## make a scan 
+        hti .scan_with_progress ( vrange ( 0 , 150 , 100 )  ) ## scan it!
         
-    ##     ## make a scan 
-    ##     hti .scan ( vrange ( 0 , 150 , 50 )  ) ## scan it!
+        ## visualize the scan results 
+        with use_canvas ( 'test_point_limi_pl: HypoTestInverter plot (ProfileLikelihood)' , wait = 2 ) :
+            plot = hti.plot
+            plot .draw('LCb 2CL')                    
+            logger.info ( '90%%CL upper limit (profile_likelihood)  = %.1f' % hti.upper_limit )
+            
+        row = 'ProfileLikelihood' , '%.1f' % hti.upper_limit , '%.1f' % timer.delta 
+        summary.append ( row  )
+        """
         
-    ## ## visualize the scan results 
-    ## with use_canvas ( 'test_pointLimit: HypoTestInverter plot (asymptotic)' , wait = 2 ) :
-    ##     plot = hti.plot
-    ##     plot .draw('LCb 2CL')                    
-    ##     logger.info ( '90%%CL upper limit (asymptotic)  = %.1f' % hti.upper_limit )
-
-
 # =============================================================================
 ## Get the upper limit limit for small signal at fixed mass 
 #  - resolution is known with some finite precision 
 def test_point_limit2 () :
-    """Get the upperlimit limit for small signal at fixed mass 
+    """ Get the upper limit limit for small signal at fixed mass 
     - resolution is known with some finite precision 
     """
     
@@ -503,8 +502,8 @@ def test_point_limit2 () :
         logger.info ( '90%%CL upper limit = %.1f' % hti.upper_limit )
         plots  .append ( plot )
 
-        row = 'Asymptotic (1 constraint)' , '%.1f' % hti.upper_limit , '%.1f' % timer.delta 
-        summary.append ( row  )
+    row = 'Asymptotic (1 constraint)' , '%.1f' % hti.upper_limit , '%.1f' % timer.delta 
+    summary.append ( row  )
 
     ## check the dataset
     stat = data.statVar('mass')
@@ -514,12 +513,12 @@ def test_point_limit2 () :
 
 # ============================================================================-
 ## Get the upper limit limit for small signal at fixed mass 
-#  - resolution is known with some finite precision 
-#  - efficiency is known with some finite precision 
+#  - Resolution is known with some finite precision 
+#  - Efficiency is known with some finite precision 
 def test_point_limit3 () :
     """Get the upper limit limit for small soignal at fixed mass 
-    - resolution is known with some finite precision 
-    - efficiency is known with some finite precision 
+    - Resolution is known with some finite precision 
+    - Efficiency is known with some finite precision 
     """
     logger = getLogger("test_point_limit3")
 
@@ -542,7 +541,7 @@ def test_point_limit3 () :
     ## true (efficiency corrected) signal yield 
     NS  = ROOT.RooRealVar( 'NS' , 'efficiency corrected signal yield' , 0 , 200 )
 
-    ## create "soft" constraint for efficiency: (90+/-3)%  
+    ## create "soft" constraint for efficiency: (90+/-2)%  
     eff_constraint = the_signal.soft_constraint ( eff , VE ( 0.9 , 0.02**2 ) ) 
 
     ## raw/visible signal yield 
@@ -593,7 +592,7 @@ def test_point_limit3 () :
         plot.draw('LCb 2CL')    
         logger.info ( '90%%CL upper limit = %.1f' % hti.upper_limit )
         plots  .append ( plot )
-        row = 'Asymptotic (2 constraints' , '%.1f' % hti.upper_limit , '%.1f' % timer.delta 
+        row = 'Asymptotic (2 constraints)' , '%.1f' % hti.upper_limit , '%.1f' % timer.delta 
         summary.append ( row  )
 
     ## check the dataset
@@ -614,13 +613,13 @@ if '__main__' == __name__ :
         test_point_limit_fc  ()
         test_point_limit_hc  ()
         
-        ## ## test_point_limit_pl ()
+        test_point_limit_pl  ()
         
         test_point_limit2    ()
         test_point_limit3    ()
 
     import ostap.logger.table as T
-    title = '90%CL upper limits'
+    title = 'Summary of 90%CL Upper Limits'
     table = T.table ( summary , title = title , prefix = '# ' , alignment = 'lcr' )
     logger.info ( '%s:\n%s' % ( title , table ) )
     
