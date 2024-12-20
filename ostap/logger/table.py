@@ -462,7 +462,7 @@ def table ( rows                          ,
                 if maxw < 15 :                   maxw = ( max_width  - 3 ) * nw if 1 < nw else max_width
                 width = maxw / nw if 1 < nw else maxw 
                 for l , line in enumerate ( table_instance.table_data ) :
-                    if width < len ( line [ i ] ) : 
+                    if i < len ( line ) and width < len ( line [ i ] ) : 
                         table_instance.table_data[l][i] = textwrap. fill ( indent + line [ i ] , wrap_width  )
 
     result = add_prefix ( table_instance.table , prefix )

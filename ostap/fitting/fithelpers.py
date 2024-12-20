@@ -45,6 +45,7 @@ from   ostap.fitting.variables import SETVAR, make_formula
 from   ostap.fitting.utils     import make_name, numcpu, ncpu, get_i  
 from   ostap.fitting.roocmdarg import check_arg 
 from   ostap.math.random_ext   import ve_gauss, poisson
+from   ostap.logger.pretty     import pretty_ve
 import ROOT, sys, random
 # =============================================================================
 from   ostap.logger.logger   import getLogger
@@ -1821,25 +1822,41 @@ class FitHelper(VarMaker) :
         """ Prepare 'soft' Gaussian constraint for the variable
         -  consraint is prepared but not applied!
         >>> sigma      = ...
-        >>> constraint = pdf.make_constraint( sigma , VE ( 0.15 , 0.01**2 ) )
+        >>> constraint = pdf.make_constraint ( sigma , VE ( 0.15 , 0.01**2 ) )
         """
         
         assert isinstance ( var   , ROOT.RooAbsReal ) ,\
                "Invalid 'v': %s/%s"  % ( var , type ( var ) )
 
+        if isinstance ( value , ROOT.RooConstVar ) : value = float ( value ) 
+        if isinstance ( error , ROOT.RooConstVar ) : error = float ( error ) 
+        
         if isinstance ( value , VE ) and 0 < value.cov2() and error is None : 
-            error = value.error ()
-            value = value.value ()
+            error        = value.error ()
+            value        = value.value ()
 
         assert isinstance ( value , ROOT.RooAbsReal ) or   isinstance ( value , num_types ) , \
                "Invalid 'value': %s/%s"  % ( value , type ( value ) )
                
         assert isinstance ( error , ROOT.RooAbsReal ) or ( isinstance ( error , num_types ) and 0 < error ) , \
                "Invalid 'error': %s/%s"  % ( error , type ( error ) )
-        
+            
         name  = name  if name  else self.generate_name ( name = 'Gauss_%s_%s' % ( var.GetName() , self.name ) )
-        title = title if title else 'Gaussian Constraint(%s,%s) at %s' % ( var.GetName() , self.name , value )
-        
+
+        var_name = var.GetName() 
+        if   isinstance ( value , ROOT.RooAbsReal ) and isinstance ( error , ROOT.RooAbsReal ) :
+            title = title if title else 'Gaussian Constraint[%s,%s+/-%s]' % ( var_name , value.name , error.name )
+        elif isinstance ( value , num_types       ) and isinstance ( error , num_types       ) :
+            sv , expo = pretty_ve ( VE ( value , error * error ) )
+            sv = sv if not expo else ( '%sx10^%+d' % expo )
+            title = title if title else 'Gaussian Constraint[%s,%s] '     % ( var_name , sv )
+        elif isinstance ( value , ROOT.RooAbsReal ) :
+            title = title if title else 'Gaussian Constraint[%s,%s+/-%s]' % ( var_name , value.name , error )
+        elif isinstance ( error , ROOT.RooabsReal ) :
+            title = title if title else 'Gaussian Constraint[%s,%s+/-%s]' % ( var_name , value , error.name )
+        else :
+            title = title if title else 'Gaussian Constraint[%s]'         %   var_name 
+            
         # value & error as RooFit objects:
         val = value if isinstance ( value , ROOT.RooAbsReal ) else ROOT.RooFit.RooConst ( value )
         err = error if isinstance ( error , ROOT.RooAbsReal ) else ROOT.RooFit.RooConst ( error )

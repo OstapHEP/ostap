@@ -149,31 +149,32 @@ def test_limit_ac_1 () :
     constraints = eff_constraint ,
     
     logger.info ( 'Dataset is\n%s' % the_data.table ( prefix = '# ' ) ) 
-    rr , frame = the_model.fitTo ( the_data , nbins = 100 , constraints = eff_constraint )
+    rS , frame = the_model.fitTo ( the_data , nbins = 100 , constraints = eff_constraint )
     with use_canvas ( 'test_limit_ac_1:data' ) : the_model.draw ( the_data , nbins = 100 )
     title = 'Results of the fit'
-    logger.info ( '%s\n%s' % ( title , rr.table ( title = title , prefix = '# ' ) ) )
+    logger.info ( '%s\n%s' % ( title , rS.table ( title = title , prefix = '# ' ) ) )
     
     
     ## create ModelConfig  for 'S+B' model
     model_sb = ModelConfig ( pdf         = the_model       ,
                              poi         = f1              , ## parameter of interest 
                              dataset     = the_data        ,
-                             constraints = constraints  ,
-                             name        = 'S+B'           )
+                             constraints = constraints     ,
+                             name        = 'S+B'           ,
+                             snapshot    = rS              )
     
-    model_sb.snapshot = f1 ## ATTENTION! 
-
+    with FIXVAR ( f1 ) :
+        f1.setVal ( 0 ) 
+        rB , _ = the_model.fitTo ( the_data , constraints = eff_constraint , silent = True )
+        
     ## create ModelConfig  for 'B-only' model
     model_b  = ModelConfig ( pdf         = the_model          ,
                              poi         = f1                 , ## parameter of interest 
                              dataset     = the_data           ,
                              constraints = constraints        ,
                              workspace   = model_sb.workspace , 
-                             name        = 'B-only'           )
-    
-    f1.setVal ( 0 ) 
-    model_b.snapshot = f1 ## ATTENTION! 
+                             name        = 'B-only'           ,
+                             snapshot    = rB                 )
     
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b .name , model_b .table ( prefix = '# ' ) ) )
@@ -223,31 +224,33 @@ def test_limit_ac_2 () :
     constraints = constraint , eff_constraint 
 
     logger.info ( 'Dataset is\n%s' % the_data.table ( prefix = '# ' ) ) 
-    rr , frame = the_model.fitTo ( the_data , nbins = 100 , constraints = constraints )
+    rS , frame = the_model.fitTo ( the_data , nbins = 100 , constraints = constraints )
+    
     with use_canvas ( 'test_limit_ac_2:data' ) : the_model.draw ( the_data , nbins = 100 )
     title = 'Results of the fit'
-    logger.info ( '%s\n%s' % ( title , rr.table ( title = title , prefix = '# ' ) ) )
-    
-    
+    logger.info ( '%s\n%s' % ( title , rS.table ( title = title , prefix = '# ' ) ) )
+        
     ## create ModelConfig  for 'S+B' model
     model_sb = ModelConfig ( pdf         = the_model   ,
                              poi         = f1          , ## parameter of interest 
                              dataset     = the_data    ,
                              constraints = constraints ,
-                             name        = 'S+B'       )
+                             name        = 'S+B'       ,
+                             snapshot    = rS          )
     
-    model_sb.snapshot = f1 ## ATTENTION! 
-
+    
+    with FIXVAR ( f1 ) :
+        f1.setVal ( 0 ) 
+        rB , _ = the_model.fitTo ( the_data , constraints = constraints , silent = True )
+ 
     ## create ModelConfig  for 'B-only' model
     model_b  = ModelConfig ( pdf         = the_model          ,
                              poi         = f1                 , ## parameter of interest 
                              dataset     = the_data           ,
                              workspace   = model_sb.workspace ,
                              constraints = constraints        ,                               
-                             name        = 'B-only'           )
-    
-    f1.setVal ( 0 ) 
-    model_b.snapshot = f1 ## ATTENTION! 
+                             name        = 'B-only'           ,
+                             snapshot    = rB                 )
     
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b .name , model_b .table ( prefix = '# ' ) ) )
@@ -297,10 +300,10 @@ def test_limit_fc_1 () :
     constraints = constraint , eff_constraint 
     
     logger.info ( 'Dataset is\n%s' % the_data.table ( prefix = '# ' ) ) 
-    rr , frame = the_model.fitTo ( the_data , nbins = 100 , constraints = constraints , silent = True )
+    rS , frame = the_model.fitTo ( the_data , nbins = 100 , constraints = constraints , silent = True )
     with use_canvas ( 'test_limit_ac_2:data' ) : the_model.draw ( the_data , nbins = 100 )
     title = 'Results of the fit'
-    logger.info ( '%s\n%s' % ( title , rr.table ( title = title , prefix = '# ' ) ) )
+    logger.info ( '%s\n%s' % ( title , rS.table ( title = title , prefix = '# ' ) ) )
     
     
     ## create ModelConfig  for 'S+B' model
@@ -308,9 +311,13 @@ def test_limit_fc_1 () :
                              poi         = f1          , ## parameter of interest 
                              dataset     = the_data    ,
                              constraints = constraints ,  
-                             name        = 'S+B'       )
-    
-    model_sb.snapshot = f1 ## ATTENTION! 
+                             name        = 'S+B'       ,
+                             ## snapshot    = f1          )
+                             snapshot    = rS          )
+
+    with FIXVAR ( f1 ) :
+        f1.setVal ( 0 ) 
+        rB , _ = the_model.fitTo ( the_data , constraints = constraints , silent = True )
 
     ## create ModelConfig  for 'B-only' model
     model_b  = ModelConfig ( pdf         = the_model          ,
@@ -318,11 +325,10 @@ def test_limit_fc_1 () :
                              dataset     = the_data           ,
                              workspace   = model_sb.workspace ,
                              constraints = constraints        ,                               
-                             name        = 'B-only'           )
-    
-    f1.setVal ( 0 ) 
-    model_b.snapshot = f1 ## ATTENTION! 
-    
+                             name        = 'B-only'           ,
+                             ## snapshot    = rB                 )
+                             snapshot    = f1                 )
+
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b .name , model_b .table ( prefix = '# ' ) ) )
     

@@ -102,25 +102,27 @@ def test_scan_limit1 () :
     constraints = sigma_constraint, eff_constraint 
 
     with use_canvas ( 'test_scan_limit1' ) : 
-        rr , frame = the_model.fitTo ( data1 , draw = True , nbins = 50 , constraints = constraints )
+        rS , _  = the_model.fitTo ( data1 , draw = True , nbins = 50 , constraints = constraints )
         
-    model_sb = ModelConfig ( pdf         = the_model        ,
-                             poi         = NS               , ## parameter of interest 
-                             dataset     = data1            ,
-                             constraints = constraints      ,   
-                             name        = 'S+B'            )
-    
-    model_sb.snapshot = NS ## ATTENTION! 
-    
+    model_sb = ModelConfig ( pdf         = the_model          ,
+                             poi         = NS                 , ## parameter of interest 
+                             dataset     = data1              ,
+                             constraints = constraints        ,   
+                             name        = 'S+B'              ,
+                             snapshot    = rS                 )
+
+    with FIXVAR ( NS ) :
+        NS.setVal ( 0 ) 
+        rB , _ = the_model.fitTo ( data , constraints = constraints )
+        
     model_b  = ModelConfig ( pdf         = the_model          ,
                              poi         = NS                 , ## parameter of interest 
                              dataset     = data1              ,
                              workspace   = model_sb.workspace , 
                              constraints = constraints        ,   
-                             name        = 'B-only'           )
+                             name        = 'B-only'           ,
+                             snapshot    = rB                 )
     
-    NS.setVal ( 0 )
-    model_b.snapshot = NS   ## ATTENTION! 
     
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
@@ -250,9 +252,6 @@ def test_scan_limit2 () :
                              name        = 'S+B'            ,
                              snapshot    = r_sb             ) ## ATTENTION HERE!
     
-    ## model_sb.snapshot = NS ## ATTENTION! 
-    ## model_sb.snapshot = r_sb ## ATTENTION! 
-    
     ## Create ModelConfig for "B-only" model 
     model_b  = ModelConfig ( pdf         = the_model          ,
                              poi         = NS                 , ## parameter of interest 
@@ -262,9 +261,6 @@ def test_scan_limit2 () :
                              name        = 'B-only'           ,
                              snapshot    = r_b                ) ## ATTENTION! 
     
-    # NS.setVal ( 0 )
-    # model_b.snapshot = NS   ## ATTENTION! 
-    ## model_b.snapshot = r_b    ## ATTENTION! 
     
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
@@ -277,6 +273,8 @@ def test_scan_limit2 () :
     
     rows = [ ( 'm0' , '90%UL' ) ]
 
+    print ( 'MODELS-before', model_sb.poi, model_b.poi )
+    
     ## start the scan: 
     for m0 in progress_bar ( vrange ( 1 , 9 , 25 ) ) : 
         
@@ -309,6 +307,9 @@ def test_scan_limit2 () :
             row = '%.1f' % m0 , '%.1f' % limit
             rows.append ( row ) 
 
+    print ( 'MODELS-after', model_sb.poi, model_b.poi )
+    model_b.ws.Print('vvv')
+    
     ## visualize the Brasil plot 
     with use_canvas ( 'test_scan_limit2: Brasil plot' , wait = 2 ) :
         bplot.plot  .draw ( 'a' )
@@ -447,7 +448,7 @@ if '__main__' == __name__ :
         test_scan_limit1    ()
         test_scan_limit2    ()
         
-        ## test_scan_p0_1      ()
+        test_scan_p0_1      ()
 
 # =============================================================================
 ##                                                                      The END 

@@ -609,7 +609,7 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
             for k , v in loop_items ( kw ) :
                 row = k , str ( v )
                 rows.append ( row )
-                title = 'draw: %d unused arguments' % len ( kw ) 
+            title = 'draw: %d unused arguments' % len ( kw ) 
             table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
             logger.warning ( '%s\n%s' % ( title , table ) )
             

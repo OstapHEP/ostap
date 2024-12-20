@@ -181,8 +181,8 @@ class ModelConfig(object):
         mc.SetParametersOfInterest ( pois )
         self.__ps = params , pars, pois
         
-        ## (6) Nuisance parameters
-        pars = [ v for v in self.pdf_params ( dataset ) if  not v in observables and not v in pois ]
+        ## (6) Nuisance parameters   <---------- ATTENTION!! move them to global observables! 
+        pars = [ v for v in self.pdf_params ( dataset ) if  not v in observables and not v in pois ] ##  and not v in lgobs ]
         nuis = ROOT.RooArgSet    ()
         for p in pars : nuis.add ( p    ) 
         mc.SetNuisanceParameters ( nuis )
@@ -197,20 +197,20 @@ class ModelConfig(object):
                 global_observables = [ global_observables ]                
 
             pars = [ self.pdf_param  ( v , dataset ) for v in global_observables ]
-            
+
             for p in lgobs :
                 pn = p.name
                 if     ( not pn in pars        ) \
                    and ( not pn in observables ) \
                    and ( not pn in pois        ) \
                    and ( not pn in nuis        ) : pars.append ( p )
-                
+
             gobs = ROOT.RooArgSet   () 
             for p in pars :
                 if not p in gobs : gobs.add ( p    )
                 
             mc.SetGlobalObservables  ( gobs )
-            self.__go = global_observables, gobs 
+            self.__go = global_observables, lgobs, gobs 
 
         ## (8) conditional observables
         if conditional :
@@ -414,12 +414,13 @@ class ModelConfig(object):
         raise TypeError ( 'Invalid type for snapshot %s' % type ( values )  ) 
 
     # =========================================================================
-    ## helper function to get parameters from PDF 
+    ## helper function to get parameters from the final PDF 
     def pdf_params ( self , dataset = None ) :
-        """ Helper function to get the parameters from PDF"""
+        """ Helper function to get the parameters from the final PDF"""
         pdf = self.__final_pdf
         return pdf.getParameters ( 0 ) if dataset is None else  pdf.getParameters ( dataset )
-        
+
+    
     # =========================================================================
     ## helper function to get parameters from PDF 
     def pdf_param  ( self , param , dataset = None ) :
@@ -512,10 +513,19 @@ class ModelConfig(object):
         for i , c in enumerate ( self.constraints , start = 1 )  :
             row = 'constraint#%d' % i , '%s: %s/%s' % ( type ( c ).__name__  , c.name , c.title )
             rows.append ( row )
+
+        vmax = -1
+        for v in self.snapshot : vmax = max ( vmax , len ( v.name ) ) 
+        vmax += 2
+        vfmt = '%%%ds : %%-+7g' % vmax
+        n    = len ( self.snapshot )
+        for i , v in enumerate ( self.snapshot ) :
+            if 0 == i : row = 'snapshot' , vfmt % ( v.name , v.getVal () )
+            else      : row = ''          , vfmt % ( v.name , v.getVal () )
+            rows.append ( row )
             
-        row = 'snapshot' ,  ', '.join ( '%s:%-+5g' % ( v.name , v.getVal() ) for v in self.snapshot )
-        rows.append ( row )
-        
+        if not self.snapshot : rows.append (  ( 'shapshot' , ) ) 
+            
         import ostap.logger.table as T
         title = title if title else 'ModelConfig %s' % self.mc.title  
         return T.table ( rows, title = title , prefix = prefix , alignment = 'lw' )
@@ -1867,7 +1877,7 @@ class P0Plot(object) :
         self.__p0    .SetPoint ( n1 , value , p0 )
         self.__sigmas.SetPoint ( n1 , value , ns )
 
-        row = '%s' % value , '%.4g' % p0 , '%.1f' % ns 
+        row = '%+.5g' % value , '%.5g' % p0 , '%+.2f' % ns 
         
         if not p0_expected is None :
             if not self.__p0_expected :

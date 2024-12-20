@@ -81,25 +81,26 @@ def test_point_limit_ac1() :
     the_model = model.clone ( name = 'M1' )
     
     with use_canvas ( 'test_point_limit_ac1' ) : 
-        rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 )
+        rS , _ = the_model.fitTo ( data , draw = True , nbins = 50 )
 
     ## create ModelConfig  for 'S+B' model
     model_sb = ModelConfig ( pdf       = the_model   ,
                              poi       = the_model.S , ## parameter of interest 
                              dataset   = data        ,
-                             name      = 'S+B'       )
+                             name      = 'S+B'       ,
+                             snapshot  = rS          ) ## ATTENTION! 
     
-    model_sb.snapshot = the_model.S ## ATTENTION! 
-    
+    with FIXVAR ( the_model.S ) :
+        the_model.S = 0 
+        rB , _ = the_model.fitTo ( data )
+
     ## create ModelConfig  for 'B-only' model
     model_b  = ModelConfig ( pdf       = the_model          ,
                              poi       = the_model.S        , ## parameter of interest 
                              dataset   = data               ,
                              workspace = model_sb.workspace , 
-                             name      = 'B-only'           )
-    
-    the_model.S = 0 
-    model_b.snapshot = the_model.S  ## ATTENTION! 
+                             name      = 'B-only'           ,
+                             snapshot  = rB                 )
     
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
@@ -124,7 +125,7 @@ def test_point_limit_ac1() :
         plot .draw('LCb 2CL')                    
         logger.info ( '90%%CL upper limit (asymptotic)  = %.1f' % hti.upper_limit )
 
-    row = 'Asymptotic' , '%.1f' % hti.upper_limit , '%.1f' % timer.delta 
+    row = 'Asymptotic (Asimov=False)' , '%.1f' % hti.upper_limit , '%.1f' % timer.delta 
     summary.append ( row  )
     plots  .append ( plot )
         
@@ -155,26 +156,27 @@ def test_point_limit_ac2() :
     the_model = model.clone ( name = 'M2' )
     
     with use_canvas ( 'test_point_limit_ac2' ) : 
-        rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 )
-
+        rS , _ = the_model.fitTo ( data , draw = True , nbins = 50 )
+        
     ## create ModelConfig  for 'S+B' model
     model_sb = ModelConfig ( pdf       = the_model   ,
                              poi       = the_model.S , ## parameter of interest 
                              dataset   = data        ,
-                             name      = 'S+B'       )
+                             name      = 'S+B'       ,
+                             snapshot  = rS          ) ## ATTENTION!
     
-    model_sb.snapshot = the_model.S ## ATTENTION! 
+    with FIXVAR ( the_model.S ) :
+        the_model.S = 0 
+        rB , _ = the_model.fitTo ( data )
     
     ## create ModelConfig  for 'B-only' model
     model_b  = ModelConfig ( pdf       = the_model          ,
                              poi       = the_model.S        , ## parameter of interest 
                              dataset   = data               ,
                              workspace = model_sb.workspace , 
-                             name      = 'B-only'           )
-    
-    the_model.S = 0 
-    model_b.snapshot = the_model.S  ## ATTENTION! 
-    
+                             name      = 'B-only'           ,
+                             snapshot  = rB                 )
+  
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
     
@@ -198,7 +200,7 @@ def test_point_limit_ac2() :
         plot .draw('LCb 2CL')                    
         logger.info ( '90%%CL upper limit (asymptotic/asimov)  = %.1f' % hti.upper_limit )
 
-        row = 'Asymptotic/Asimov' , '%.1f' % hti.upper_limit, '%.1f' % timer.delta 
+        row = 'Asymptotic (Asimov=True)' , '%.1f' % hti.upper_limit, '%.1f' % timer.delta 
         summary.append ( row  )
         plots  .append ( plot )
         
@@ -229,25 +231,27 @@ def test_point_limit_fc  () :
     the_model = model.clone ( name = 'M3' )
     
     with use_canvas ( 'test_point_limit_fc' ) : 
-        rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 )
+        rS , _ = the_model.fitTo ( data , draw = True , nbins = 50 )
 
     ## create ModelConfig  for 'S+B' model
     model_sb = ModelConfig ( pdf       = the_model   ,
                              poi       = the_model.S , ## parameter of interest 
                              dataset   = data        ,
-                             name      = 'S+B'       )
+                             name      = 'S+B'       ,
+                             snapshot  = rS          ) 
     
-    model_sb.snapshot = the_model.S ## ATTENTION! 
-    
+    with FIXVAR ( the_model.S ) :
+        the_model.S = 0 
+        rB , _ = the_model.fitTo ( data )
+        
     ## create ModelConfig  for 'B-only' model
     model_b  = ModelConfig ( pdf       = the_model          ,
                              poi       = the_model.S        , ## parameter of interest 
                              dataset   = data               ,
                              workspace = model_sb.workspace , 
-                             name      = 'B-only'           )
-    
-    the_model.S = 0 
-    model_b.snapshot = the_model.S  ## ATTENTION! 
+                             name      = 'B-only'           ,
+                             ### snapshot  = rB                 )
+                             snapshot  = the_model.S ) 
     
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
@@ -306,25 +310,27 @@ def test_point_limit_hc  () :
     the_model = model.clone ( name = 'M4' )
     
     with use_canvas ( 'test_point_limit_hc' ) : 
-        rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 )
+        rS , _ = the_model.fitTo ( data , draw = True , nbins = 50 )
 
     ## create ModelConfig  for 'S+B' model
     model_sb = ModelConfig ( pdf       = the_model   ,
                              poi       = the_model.S , ## parameter of interest 
                              dataset   = data        ,
-                             name      = 'S+B'       )
+                             name      = 'S+B'       , 
+                             snapshot  = rS          ) ## attention
     
-    model_sb.snapshot = the_model.S ## ATTENTION! 
-    
+    with FIXVAR ( the_model.S ) :
+        the_model.S = 0 
+        rB , _ = the_model.fitTo ( data )
+        
     ## create ModelConfig  for 'B-only' model
     model_b  = ModelConfig ( pdf       = the_model          ,
                              poi       = the_model.S        , ## parameter of interest 
                              dataset   = data               ,
                              workspace = model_sb.workspace , 
-                             name      = 'B-only'           )
-    
-    the_model.S = 0 
-    model_b.snapshot = the_model.S  ## ATTENTION! 
+                             name      = 'B-only'           ,
+                             ### snapshot  = rB                 )
+                             snapshot  = the_model.S ) 
     
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
@@ -384,25 +390,26 @@ def test_point_limit_pl () :
     the_model = model.clone ( name = 'M5' )
     
     with use_canvas ( 'test_point_limit_ac' ) : 
-        rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 )
+        rS , frame = the_model.fitTo ( data , draw = True , nbins = 50 )
 
     ## create ModelConfig  for 'S+B' model
     model_sb = ModelConfig ( pdf       = the_model   ,
                              poi       = the_model.S , ## parameter of interest 
                              dataset   = data        ,
-                             name      = 'S+B'       )
+                             name      = 'S+B'       ,
+                             snapshot  = rS          )
     
-    model_sb.snapshot = the_model.S ## ATTENTION! 
-    
+    with FIXVAR ( the_model.S ) :
+        the_model.S = 0 
+        rB , _ = the_model.fitTo ( data )
+        
     ## create ModelConfig  for 'B-only' model
     model_b  = ModelConfig ( pdf       = the_model          ,
                              poi       = the_model.S        , ## parameter of interest 
                              dataset   = data               ,
                              workspace = model_sb.workspace , 
-                             name      = 'B-only'           )
-    
-    the_model.S = 0 
-    model_b.snapshot = the_model.S  ## ATTENTION! 
+                             name      = 'B-only'           ,
+                             snapshot  = rB                 )
     
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
@@ -461,26 +468,27 @@ def test_point_limit2 () :
     constraints = sigma_constraint, 
 
     with use_canvas ( 'test_point_limit2' ) : 
-        rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 , constraints = constraints )
+        rS , _ = the_model.fitTo ( data , draw = True , nbins = 50 , constraints = constraints )
         
     model_sb = ModelConfig ( pdf         = the_model        ,
                              poi         = the_model.S      , ## parameter of interest 
                              dataset     = data             ,
                              constraints = constraints      ,   
-                             name        = 'S+B'            )
+                             name        = 'S+B'            ,
+                             snapshot    = rS               )
     
-    model_sb.snapshot = the_model.S ## ATTENTION! 
-    
-    
+    with FIXVAR ( the_model.S ) :
+        the_model.S = 0 
+        rB , _ = the_model.fitTo ( data , constraints = constraints ) 
+
     model_b  = ModelConfig ( pdf         = the_model          ,
-                             poi         = the_model.S        , ## parameter of interest 
+                             ## poi         = the_model.S        , ## parameter of interest
+                             poi         = model_sb.poi       ,
                              dataset     = data               ,
                              workspace   = model_sb.workspace , 
                              constraints = constraints        ,   
-                             name        = 'B-only'           )
-    
-    the_model.S = 0 
-    model_b.snapshot = the_model.S  ## ATTENTION! 
+                             name        = 'B-only'           ,
+                             snapshot    = rB                 )
     
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
@@ -516,7 +524,7 @@ def test_point_limit2 () :
 #  - Resolution is known with some finite precision 
 #  - Efficiency is known with some finite precision 
 def test_point_limit3 () :
-    """Get the upper limit limit for small soignal at fixed mass 
+    """ Get the upper limit limit for small signal at fixed mass 
     - Resolution is known with some finite precision 
     - Efficiency is known with some finite precision 
     """
@@ -552,26 +560,26 @@ def test_point_limit3 () :
     constraints = sigma_constraint, eff_constraint 
 
     with use_canvas ( 'test_point_limit3' ) : 
-        rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 , constraints = constraints )
+        rS , _ = the_model.fitTo ( data , draw = True , nbins = 50 , constraints = constraints )
         
     model_sb = ModelConfig ( pdf         = the_model        ,
                              poi         = NS               , ## parameter of interest 
                              dataset     = data             ,
                              constraints = constraints      ,   
-                             name        = 'S+B'            )
+                             name        = 'S+B'            ,
+                             snapshot    = rS               )
     
-    model_sb.snapshot = NS ## ATTENTION! 
-    
-    
+    with FIXVAR ( NS ) :
+        NS.setVal ( 0 ) 
+        rB , _ = the_model.fitTo ( data , constraints = constraints )
+     
     model_b  = ModelConfig ( pdf         = the_model          ,
                              poi         = NS                 , ## parameter of interest 
                              dataset     = data               ,
                              workspace   = model_sb.workspace , 
                              constraints = constraints        ,   
-                             name        = 'B-only'           )
-    
-    NS.setVal ( 0 )
-    model_b.snapshot = NS   ## ATTENTION! 
+                             name        = 'B-only'           ,
+                             snapshot    = rB                 )
     
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
@@ -607,17 +615,18 @@ if '__main__' == __name__ :
     from ostap.core.core    import rooSilent
     
     with rooSilent ( ) : 
-        
+
         test_point_limit_ac1 ()
         test_point_limit_ac2 ()
+        
         test_point_limit_fc  ()
         test_point_limit_hc  ()
         
         test_point_limit_pl  ()
-        
+
         test_point_limit2    ()
         test_point_limit3    ()
-
+        
     import ostap.logger.table as T
     title = 'Summary of 90%CL Upper Limits'
     table = T.table ( summary , title = title , prefix = '# ' , alignment = 'lcr' )
