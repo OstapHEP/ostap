@@ -34,14 +34,13 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-## Test the confidence intervals for the width of low-statistic gaussian ssignal
-#  
+## Test the confidence intervals for the width of low-statistic gaussian signal
 #  - Profile likelihood confidence interval 
 #  - Feldman-Couisins   confidence interval
 #  - Bayesian           confidence interval
 #  - Markov Chain MC    confidence interval
 def test_intervals () :
-    """Test the confidence intervals for the width of low-statistic gaussian ssignal    
+    """ Test the confidence intervals for the width of low-statistic gaussian signal    
     - Profile likelihood confidence interval 
     - Feldman-Couisins   confidence interval
     - Bayesian           confidence interval
