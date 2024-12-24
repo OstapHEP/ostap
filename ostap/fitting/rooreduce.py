@@ -420,6 +420,20 @@ ROOT.RooAddPdf  .orig_fracs = _raddpdf_fractions
 _new_methods_ += [ ROOT.RooAddPdf  .orig_fracs ] 
 
 # ==========================================================================--
+## deserialize RooAddPdf object 
+def _raddpdf_factory_ ( klass , *content ) :
+    """ deserialize `RooAddPdf` object"""
+    
+    last = content[-1] 
+    if isinstance ( last , ROOT.RooArgSet  ) : 
+        result = root_store_factory ( klass , *content[:-1] ) 
+        result.fixCoefNormalization ( last ) 
+    else : 
+        result = root_store_factory ( klass , *content )
+    return result 
+
+
+# ==========================================================================--
 ## reduce  RooAddPdf object 
 def _raddpdf_reduce_ ( pdf ) :
     """ Reduce `RooAddPdf` object"""
@@ -427,7 +441,11 @@ def _raddpdf_reduce_ ( pdf ) :
     pars    = pdf.coefList ()
     if 1 <= len ( pars ) :
         content   = content + pdf.orig_fracs () 
-    return root_store_factory , content
+    
+    norms = pdf.getCoeffNormalization()
+    if norms : content = content + ( norms , ) 
+    
+    return _raddpdf_factory_ , content
 
 ROOT.RooAddPdf.__reduce__ = _raddpdf_reduce_ 
 
@@ -503,7 +521,7 @@ def _rsim_factory_ ( klass , args , catlst ) :
     - see `ROOT.Simultaneous`
     """
     pdf = klass ( *args )
-    for l , p in catlst : pdf.addPdf ( p , l )
+    for l , p in catlst : pdf.addPdf ( p , str ( l )  )
     pdf.__args   = args 
     pdf.__catlst = catlst 
     return pdf
