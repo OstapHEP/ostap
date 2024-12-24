@@ -11,7 +11,6 @@
                 TypeError: callable was deleted
        ```
 
-
 ## Backward incompatible
     
 ## Bug fixes
