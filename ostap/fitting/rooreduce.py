@@ -442,7 +442,7 @@ def _raddpdf_reduce_ ( pdf ) :
     if 1 <= len ( pars ) :
         content   = content + pdf.orig_fracs () 
     
-    norms = pdf.getCoeffNormalization()
+    norms = pdf.getCoefNormalization()
     if norms : content = content + ( norms , ) 
     
     return _raddpdf_factory_ , content
