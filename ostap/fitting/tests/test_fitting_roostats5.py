@@ -21,9 +21,10 @@ import ostap.fitting.models     as     Models
 from   ostap.fitting.variables  import SETVAR, FIXVAR  
 from   ostap.core.core          import cpp, VE, dsID, hID , rooSilent, Ostap 
 from   ostap.utils.timing       import timing
-from   ostap.utils.utils        import vrange
+from   ostap.utils.utils        import vrange, lrange
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait
+from   ostap.fitting.simfit     import combined_data
 import ostap.logger.table       as     T
 import ROOT
 # =============================================================================
@@ -31,7 +32,7 @@ import ROOT
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'test_fitting_roostats2' )
+    logger = getLogger ( 'test_fitting_roostats5' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
@@ -41,36 +42,89 @@ else :
 # =============================================================================
 
 mass    = ROOT.RooRealVar   ('mass','mass-variable', 0 , 10 )
-signal  = Models.Gauss_pdf  ( 'Gauss',
+vars    = ROOT.RooArgSet    ( mass ) 
+signal1 = Models.Gauss_pdf  ( 'Gauss1',
                               xvar  = mass                 ,
-                              mean  = ( 2.5 , 0.5  , 9.5 ) ,
-                              sigma = ( 0.3 , 0.01 , 3.0 ) )
-signal.mean .fix()
-signal.sigma.fix()
-model   = Models.Fit1D ( signal = signal , background = 'e-' )
-model.background.tau = -0.25
-N_S     = 20
-N_B     = 1000
-model.S = N_S 
-model.B = N_B
-model.S.setMax(100+3*N_S)
+                              mean  = ( 5.0 , 1.5  , 8.5 ) ,
+                              sigma = ( 0.5 , 0.01 , 3.0 ) )
+signal2 = Models.Gauss_pdf  ( 'Gauss2',
+                              xvar  = mass                 ,
+                              mean  = signal1.mean         ,
+                              sigma = signal1.sigma        )         
+           
+signal1.sigma.fix()
+signal1.mean .fix()
 
-data    = model.generate ( N_S + N_B )
+N1_S     = 100
+N1_B     = 5
 
-summary = [ ('method' , '90%CL' , 'time [s]') ]
-plots   = []
+model1   = Models.Fit1D ( signal = signal1 , background = 'p0' , name = 'M1' )
+model1.S = N1_S 
+model1.B = N1_B
+
+
+f21  = ROOT.RooRealVar ( 'f21'  , 'N2/N1', 0.00 , -0.10 , 1.0 )
+reff = ROOT.RooRealVar ( 'reff' , 'ratio of efficiencies for B and A' , 1.0 , 0.5 , 1.5 )
+## reff.fix() 
+
+S2eff    = signal2.vars_multiply   ( reff , f21 , name  = 'S2eff' ) 
+S2       = signal2.vars_multiply   ( model1.S , S2eff , name  = 'S2' ) 
+ceff     = signal2.soft_constraint ( reff  , VE ( 1.0 , 0.003**2 ) * VE ( 1.0 , 0.20 ** 2 ) )
+
+model2   = Models.Fit1D            ( signal = signal2 , background = 'p0' , S = S2 , name = 'M2' )
+
+N2_S     = float ( S2 )  
+N2_B     = 10
+
+model2.B = N2_B 
+
+N1   = N1_S + N1_B  
+N2   = N2_S + N2_B
+NTOT = N1   + N2 
+ 
+## combine PDFs
+sample     = ROOT.RooCategory ('sample','sample'  , 'A' , 'B' )
+allvars    = ROOT.RooArgSet   ( mass , sample ) 
+model_sim  = Models.SimFit    ( sample , { 'A' : model1  , 'B' : model2 } , name = 'X' )
+
+with FIXVAR ( f21  ) :
+    f21.setVal ( 0 ) 
+    ds0_A = model1           .generate ( N1 ) 
+    ds0_B = model2.background.generate ( N2 )
+    ds0   = combined_data ( sample , allvars,  { 'A' : ds0_A , 'B'  : ds0_B } )
+
+model_sim.fitTo ( ds0 , quiet = True , constraints = [ ceff ] ) 
+print ( 'DS0', ds0 )
+
+with FIXVAR ( f21 ) : 
+    f21.setVal  ( 0 ) 
+    ds1 = model_sim.generate ( { 'A': N1 , 'B': N2 } ) 
+    ds2 = model_sim.pdf.pdf.generate  ( allvars , ROOT.RooFit.NumEvents ( int ( NTOT ) ) ) 
+ 
+r1 , _ = model_sim.fitTo ( ds1 , quiet = True , constraints = [ ceff ] ) 
+print ( 'DS1', ds1 ) 
+
+r2 , _ = model_sim.fitTo ( ds2 , quiet = True , constraints = [ ceff ] ) 
+print ( 'DS2', ds2 )
+
+dataset = ds1
+
+model_sim.fitTo ( dataset , quiet = True , constraints = [ ceff ] ) 
+
+summary =[] 
+plots   =[] 
+ 
+
 
 # ============================================================================-
-## Get the upper limit limit for small signal at fixed mass
-#  - Resolution is fixed
+## Get the upper limit limit for small signal
 #  - Asymptotic Calculator is used 
-def test_point_limit_ac1() :
-    """ Get the upper limit at given point for small signal at fixed mass
-    - Resoltuion is fixed 
+def test_point_limit_1() :
+    """ Get the upper limit at given point for small signal
     - Asymptotic Calculator is used 
     """
 
-    logger = getLogger("test_point_limit_ac1")
+    logger = getLogger("test_point_limit_1")
 
     logger.info ( "Test Point limits with RooStats (Asymptotic Calculator)" )
 
@@ -78,35 +132,44 @@ def test_point_limit_ac1() :
                                              AsymptoticCalculator  ,
                                              HypoTestInverter      )
 
-    the_model = model.clone ( name = 'M1' )
+    the_model = model_sim.clone ( name = 'X1' )
+    data      = dataset 
     
-    with use_canvas ( 'test_point_limit_ac1' ) : 
-        rS , _ = the_model.fitTo ( data , draw = True , nbins = 50 )
+    
+    constraints = ceff , 
+   
+    rS , _ = the_model.fitTo ( data , quiet = True, constraints = constraints  ) 
+    with use_canvas ( 'test_point_limit_1/A' ) : the_model.draw  ( 'A' , data )  
+    with use_canvas ( 'test_point_limit_1/B' ) : the_model.draw  ( 'B' , data )  
+                   
+    POI = f21 
 
+    ## reff.fix() 
+    
     ## create ModelConfig  for 'S+B' model
-    model_sb = ModelConfig ( pdf       = the_model   ,
-                             poi       = rS.S , ## parameter of interest 
-                             dataset   = data        ,
-                             name      = 'S+B'       ,
-                             snapshot  = rS          ) ## ATTENTION! 
+    model_sb = ModelConfig ( pdf         = the_model   ,
+                             poi         = POI         , ## parameter of interest 
+                             constraints = constraints ,         
+                             dataset     = data        ,
+                             name        = 'S+B'       ,
+                             snapshot    = POI         ) ## ATTENTION! 
     
-    print ( 'POI-1',  the_model.S , model_sb.poi ) 
-    
-    with FIXVAR ( the_model.S ) :
-        the_model.S = 0 
-        rB , _ = the_model.fitTo ( data )
-        print ( 'POI-2', the_model.S , rB.S  ) 
-        
-    #   # create ModelConfig  for 'B-only' model
-        model_b  = ModelConfig ( pdf      = the_model          ,
-                                poi       = rB.S        , ## parameter of interest 
-                                dataset   = data               ,
-                                workspace = model_sb.workspace , 
-                                name      = 'B-only'           ,
-                                snapshot  = rB                 )
-        print ( 'POI-3', the_model.S , model_b.poi ) 
+   
+    with FIXVAR ( POI ) :
+        POI.setVal ( 0 )
+        rB , _ = the_model.fitTo ( data , quiet = True , constraints = constraints )
       
-    print ( 'POI-4', the_model.S , model_sb.poi , model_b.poi ) 
+        # create ModelConfig  for 'B-only' model
+        model_b  = ModelConfig ( pdf        = the_model          ,
+                                poi         = POI                , ## parameter of interest
+                                constraints = constraints        , 
+                                dataset     = data               ,
+                                workspace   = model_sb.workspace , 
+                                name        = 'B-only'           ,
+                                snapshot    = POI                )
+        ## print ( 'POI-3', the_model.S , model_b.poi ) 
+      
+    ## print ( 'POI-4', the_model.S , model_sb.poi , model_b.poi ) 
        
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
@@ -123,8 +186,9 @@ def test_point_limit_ac1() :
         hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
         
         ## make a scan 
-        hti .scan_with_progress ( vrange ( 0 , 150 , 150 )  ) ## scan it!
-        
+        ## hti .scan_with_progress ( vrange ( 0 , 0.10 , 100 )  ) #can it!
+        hti .scan_with_progress ( lrange ( 1.e-4 , 0.10 , 100 )  ) #can it!
+          
     ## visualize the scan results 
     with use_canvas ( 'test_point_limit_ac1: HypoTestInverter plot (asymptotic)' , wait = 2 ) :
         plot = hti.plot
@@ -622,18 +686,8 @@ if '__main__' == __name__ :
     
     with rooSilent ( ) : 
 
-        test_point_limit_ac1 ()
-        test_point_limit_ac2 ()
-        
-        """
-        test_point_limit_fc  ()
-        test_point_limit_hc  ()
-        
-        test_point_limit_pl  ()
-
-        test_point_limit2    ()
-        test_point_limit3    ()
-        """
+        test_point_limit_1() 
+ 
         
     import ostap.logger.table as T
     title = 'Summary of 90%CL Upper Limits'
