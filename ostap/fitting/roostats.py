@@ -64,42 +64,7 @@ else                       : logger = getLogger ( __name__                 )
 if (3,0) <= sys.version_info : from itertools import  zip_longest
 else                         : from itertools import izip_longest as zip_longest 
 # =============================================================================
-## Helper function to add constraints to RooSimultaneous
-def simfit_with_constraints ( pdf , *constraints ) :
-    """ Helper function to add constraints to RooSimultaneous
-    """
-    
-    assert constraints and all ( v and isinstance ( v , ROOT.RooAbsPdf  ) for v in constraints ), \
-        "Invalid constraintss %s" % str ( constraints )
-        
-    assert pdf and isinstance ( pdf , ROOT.RooSimultaneous ), \
-        "PDF is not RooSimultaneous!"
-  
-    name  = '%s_with_constraints' % pdf.name  
-    title = '%s with constraints' % pdf.title  
-    cat   = pdf.indexCat()
-    
-    newpdf = ROOT.RooSimultaneous ( name  , title , cat )
-    keep   = []
-    
-    labels = cat.labels() 
-    for label, index in cat.items() : 
-        print ( 'LABEL/INDEX', label, index )  
-        cpdf   = pdf.getPdf ( label ) 
-        lst    = ROOT.RooArgList()
-        lst.add  ( cpdf )
-        for c in constraints : lst.add ( c )
-        nname  = '%s_with_constraints' % cpdf.name 
-        ntitle = '%s with constraints' % cpdf.title
-        nc   = ROOT.RooProdPdf ( nname , ntitle , lst )
-        newpdf.addPdf ( nc , str ( label ) )  
-        keep.append ( ( nc , lst ) ) 
-        
-    keep = tuple ( keep ) 
-    return newpdf, keep  
-
-# =============================================================================
-# @class ModelConfig
+## @class ModelConfig
 #  Helper class to create `RooStats::ModelConfig`
 #  @see RooStats::ModelConfig 
 class ModelConfig(object): 
@@ -145,8 +110,7 @@ class ModelConfig(object):
         mc        = ROOT.RooStats.ModelConfig ( mcname , mctitle , ws )
         self.__mc = mc
 
-        print ( 'MODEL-POI/1', poi ) 
-        
+
         self.__pdf                       = pdf
         self.__poi                       = poi
         self.__input_observables         = observables 
@@ -179,18 +143,12 @@ class ModelConfig(object):
                     if not cp in lgobs : lgobs.add ( cp ) 
                 cnts.add ( c )
                 
-            if isinstance ( self.__raw_pdf  , ROOT.RooSimultaneous ) :
-                logger.warning ("specific treatment of Roosimultaneous!")
-                self.__final_pdf, aux = simfit_with_constraints ( self.__raw_pdf , *constraints )
-                self.__cs = constraints, aux
-            
-            else : 
-                clst = ROOT.RooArgList ()
-                clst.add ( self.__raw_pdf )
-                for c in cnts : clst.add ( c )
-                self.__final_pdf = ROOT.RooProdPdf ( '%s_constrained' % pdf.name ,
+            clst = ROOT.RooArgList ()
+            clst.add ( self.__raw_pdf )
+            for c in cnts : clst.add ( c )
+            self.__final_pdf = ROOT.RooProdPdf ( '%s_constrained' % pdf.name ,
                                                  "PDF with %d constraints" % len ( cnts ) , clst )
-                self.__cs   = constraints, cnts, clst
+            self.__cs   = constraints, cnts, clst
 
             ## attention, redefine/update 
             constraints = cnts
@@ -223,8 +181,6 @@ class ModelConfig(object):
         for p in pars : pois.add   ( p    )
         mc.SetParametersOfInterest ( pois )
         self.__ps = params , pars, pois
-        
-        print ( 'MODEL-POI/2', pois ) 
         
         ## (6) Nuisance parameters   <---------- ATTENTION!! move them to global observables! 
         pars = [ v for v in self.pdf_params ( dataset ) if  not v in observables and not v in pois ] ##  and not v in lgobs ]

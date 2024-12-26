@@ -1470,9 +1470,6 @@ class SimFit (VarMaker,ConfigReducer) :
     def fit_options ( self , value )  :
         self.pdf.fit_options = value 
     
-    
-#
-    
 # =============================================================================
 if '__main__' == __name__ :
     
