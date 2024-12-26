@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 #!/usr/bin/env bash
 LCG=$1
 CMTCONFIG=$2
