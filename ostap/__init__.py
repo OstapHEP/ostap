@@ -3,7 +3,7 @@
 # =============================================================================
 # Copyright Ostap developers
 # =============================================================================
-#                                   1.13.9.1 (Dec 26, 2024, 12:19 [UTC])
+#                                   1.13.9.1 (Dec 26, 2024, 13:38 [UTC])
 #     .oooooo.                .                        
 #    d8P'  `Y8b             .o8                        
 #   888      888  .oooo.o .o888oo  .oooo.   oo.ooooo.  
@@ -33,7 +33,7 @@ __all__ = (
 # =============================================================================
 ## the  actual version of Ostap 
 __version__ = "1.13.9.1"
-__date__    = "Dec 26, 2024, 12:19 [UTC]"
+__date__    = "Dec 26, 2024, 13:38 [UTC]"
 # =============================================================================
 import sys,datetime 
 from   collections import namedtuple
@@ -46,11 +46,11 @@ version_info = VersionInfo ( 1 ,
                              1 )
 build_date   = __date__
 if   ( 3 , 11 ) <= sys.version_info :
-    build_time = datetime.datetime.fromtimestamp ( 1735215559 , datetime.UTC )
+    build_time = datetime.datetime.fromtimestamp ( 1735220297 , datetime.UTC )
 elif ( 3 ,  5 ) <= sys.version_info :
-    build_time = datetime.datetime.fromtimestamp ( 1735215559 , datetime.timezone.utc )
+    build_time = datetime.datetime.fromtimestamp ( 1735220297 , datetime.timezone.utc )
 else :
-    build_time = datetime.datetime.fromtimestamp ( 1735215559 )    
+    build_time = datetime.datetime.fromtimestamp ( 1735220297 )    
 version_int  = version_info.tweak                   +\
                version_info.patch             * 100 +\
                version_info.minor       * 100 * 100 +\
@@ -62,7 +62,7 @@ import ostap.fixes.fixes
 # =============================================================================
 ## Banner
 banner = r"""
-                                        1.13.9.1 (Dec 26, 2024, 12:19 [UTC])
+                                        1.13.9.1 (Dec 26, 2024, 13:38 [UTC])
      .oooooo.                .
     d8P'  `Y8b             .o8
    888      888  .oooo.o .o888oo  .oooo.   oo.ooooo.
