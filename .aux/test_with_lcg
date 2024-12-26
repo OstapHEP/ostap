@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 #!/usr/bin/env bash
 LCG=$1
 CMTCONFIG=$2
@@ -5,3 +6,12 @@ source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
 source build/INSTALL/thisostap.sh 
 cd build 
 ctest -N  && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && ctest -j2 -R '(histos_param|roostat)' --output-on-failure --test-output-size-failed 5000000
+=======
+#!/usr/bin/env bash
+LCG=$1
+CMTCONFIG=$2
+source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
+source build/INSTALL/thisostap.sh 
+cd build 
+ctest -N  && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && ctest -j2 --output-on-failure --test-output-size-failed 5000000
+>>>>>>> Stashed changes
