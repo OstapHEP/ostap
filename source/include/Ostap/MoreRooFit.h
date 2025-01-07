@@ -733,6 +733,11 @@ namespace Ostap
       ( const std::string& name  , 
         const std::string& title , 
         const RooArgSet&   lst   ) ;
+      /// constructor with variables
+      NVars
+      ( const std::string&      name  , 
+        const std::string&      title , 
+        const RooAbsCollection& lst   ) ;
       /// copy 
       NVars
       ( const NVars& right       , 
@@ -744,7 +749,10 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// get all variables 
       const RooArgList& vars () const { return m_vars ; }
+      /// number of variables
+      std::size_t       size () const { return m_vars.getSize() ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -2448,10 +2456,69 @@ namespace Ostap
     }; //
     // ========================================================================
 
+    // ========================================================================
+    /** @class AbsAplusB
+     *  helper function \f$ \abs a + b \f$
+     */
+    class AbsAplusB : public TwoVars
+    {
+    public: 
+      // ======================================================================
+      ClassDefOverride(Ostap::MoreRooFit::AbsAplusB , 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      AbsAplusB
+      ( const std::string& name  , 
+        const std::string& title , 
+        RooAbsReal&        a     , 
+        RooAbsReal&        b     ) ;
+      // ======================================================================
+      AbsAplusB
+      ( RooAbsReal&        a           , 
+	RooAbsReal&        b           , 
+	const std::string& name  = ""  , 
+	const std::string& title = ""  )
+	: AbsAplusB ( name , title , a , b )
+      {}
+      // ======================================================================
+      AbsAplusB
+      ( const std::string& name    , 
+        const std::string& title   , 
+        RooAbsReal&        a       , 
+        const double       b =   1 )
+	: AbsAplusB ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      // ======================================================================
+      AbsAplusB
+      ( RooAbsReal&        a     , 
+	const double       b     , 
+	const std::string& name  = "" , 
+	const std::string& title = "" )
+	: AbsAplusB ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      // ======================================================================
+      // fake default for (de)serialization
+      AbsAplusB () = default ;
+      // ======================================================================
+      // copy 
+      AbsAplusB
+      ( const AbsAplusB& right , 
+	const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      AbsAplusB* clone ( const char* newname ) const override 
+      { return new AbsAplusB ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================      
+    } ;
 
-
-
-    
     // ========================================================================
     /** Bessel function \f$ J_{\nu}(x)\f$
      *  @see Ostap::Math::bessel_Jnu 
@@ -3170,6 +3237,104 @@ namespace Ostap
       Double_t evaluate () const override ; 
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class Rank 
+     *  select n-th  smallest variable :
+     *  - rank  0 : minimum 
+     *  - rank -1 : maximum
+     */
+    class Rank : public NVars 
+    {
+      // ========================================================================
+      ClassDefOverride(Ostap::MoreRooFit::Rank , 1 ) ;  
+      // ========================================================================
+    public:
+      // =======================================================================
+      /// constructor with two variables 
+      Rank 
+      ( const std::string& name  , 
+	const std::string& title ,
+	const int          rank  , 
+	RooAbsReal&        a1    ,
+	RooAbsReal&        a2    ) ;
+      // =======================================================================
+      /// constructor with three variables 
+      Rank 
+      ( const std::string& name  , 
+	const std::string& title ,
+	const int          rank  ,
+	RooAbsReal&        a1    ,
+	RooAbsReal&        a2    ,
+	RooAbsReal&        a3    ) ;
+      // =======================================================================	  
+      /// constructor with four variables 
+      Rank 
+      ( const std::string& name  , 
+	const std::string& title ,
+	const int          rank  ,
+	RooAbsReal&        a1    ,
+	RooAbsReal&        a2    ,
+	RooAbsReal&        a3    ,
+	RooAbsReal&        a4    ) ;
+      // =======================================================================	  
+      /// constructor with five variables 
+      Rank 
+      ( const std::string& name  , 
+	const std::string& title ,
+	const int          rank  ,
+	RooAbsReal&        a1    ,
+	RooAbsReal&        a2    ,
+	RooAbsReal&        a3    ,
+	RooAbsReal&        a4    ,
+	RooAbsReal&        a5    ) ;
+      // =======================================================================
+      /// constructor with six variables 
+      Rank 
+      ( const std::string& name  , 
+	const std::string& title ,
+	const int          rank  ,
+	RooAbsReal&        a1    ,
+	RooAbsReal&        a2    ,
+	RooAbsReal&        a3    ,
+	RooAbsReal&        a4    ,
+	RooAbsReal&        a5    ,
+	RooAbsReal&        a6    ) ;      
+      // ======================================================================
+      /// constructor with many variables 
+      Rank 
+      ( const std::string&      name  , 
+	const std::string&      title ,
+	const int               rank  ,
+	const RooAbsCollection& vars  ) ;
+      // ======================================================================
+      /// default constructor 
+      Rank   () =  default ;
+      // ======================================================================
+      // copy 
+      Rank 
+      ( const Rank& right       , 
+	const char* newname = 0 ) ;
+      // ======================================================================
+      Rank* clone ( const char* newname ) const override ;
+      // ======================================================================
+      virtual ~Rank() ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      int               rank () const { return m_rank ; }
+      // ======================================================================
+    public: 
+      // ======================================================================
+      Double_t evaluate  () const override ;
+      // ======================================================================
+    protected :
+      // ======================================================================
+      /// rank
+      int                         m_rank { 0 } ;
+      /// auxillary storage
+      mutable std::vector<double> m_aux  {   } ;
+      // ======================================================================     
+    }; 
     // ========================================================================
     /** @class ABC 
      *  Trivial function that gets <code>A*(B/C)</code>

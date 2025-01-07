@@ -283,6 +283,9 @@ class CrystalBall_pdf(PEAK) :
                                        'n_%s'            % name ,
                                        'n_{CB}(%s)'      % name ,
                                        None , 5.0 , 1.e-6 , 100 )
+
+        ## N = |n| + 1 
+        self.__N    = Ostap.MoreRooFit.AbsAplusB ( self.__n , 1.0 )
         
         #
         ## finally build PDF 
@@ -345,6 +348,11 @@ class CrystalBall_pdf(PEAK) :
     def nL ( self, value ) :
         self.set_value ( self.__n , value ) 
 
+    @property
+    def N ( self ) :
+        """`N` : actual |n|+1 parameter used for Crystal Ball """
+        return self.__N
+
 models.append ( CrystalBall_pdf )    
 # =============================================================================
 ## @class CrystalBallRS_pdf
@@ -377,6 +385,9 @@ class CrystalBallRS_pdf(PEAK) :
                                        'n_%s'            % name ,
                                        'n_{CB}(%s)'      % name ,
                                        None , 5.0 , 1.e-6 , 100 )
+        
+        ## N = |n| + 1 
+        self.__N    = Ostap.MoreRooFit.AbsAplusB ( self.__n , 1.0 )
         
         ## finally build PDF 
         #
@@ -439,6 +450,11 @@ class CrystalBallRS_pdf(PEAK) :
     def nR ( self, value ) :
         self.set_value ( self.__n , value ) 
 
+    @property
+    def N ( self ) :
+        """`N` : actual |n|+1 parameter used for Crystal Ball """
+        return self.__N
+
 models.append ( CrystalBallRS_pdf )    
 # =============================================================================
 ## @class CB2_pdf
@@ -499,6 +515,13 @@ class CB2_pdf(PEAK) :
                                        "n_{R}(%s)"      % name ,
                                        None  , 5 , 1.e-6 , 100 )
         
+        
+        ## NL = |nL| + 1 
+        self.__NL    = Ostap.MoreRooFit.AbsAplusB ( self.__nL , 1.0 )
+        ## NR = |nR| + 1 
+        self.__NR    = Ostap.MoreRooFit.AbsAplusB ( self.__nR , 1.0 )
+        
+
         self.pdf = Ostap.Models.CrystalBallDS(
             self.roo_name ( 'cb2_' ) , 
             "double-sided Crystal Ball %s" % self.name ,
@@ -570,6 +593,16 @@ class CB2_pdf(PEAK) :
     def alphaR ( self, value ) :
         self.set_value ( self.__aR , value ) 
         
+    @property
+    def NL ( self ) :
+        """`NL` : actual NL=|nL|+1 parameter used for Crystal Ball """
+        return self.__NL
+
+    @property
+    def NR ( self ) :
+        """`NR` : actual NR=|nR|+1 parameter used for Crystal Ball """
+        return self.__NR
+
 models.append ( CB2_pdf )    
 # =============================================================================
 ## @class Needham_pdf

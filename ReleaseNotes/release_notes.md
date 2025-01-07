@@ -10,7 +10,10 @@
        ```TypeError: void TCanvas::Update() =>
                 TypeError: callable was deleted
        ```
-       
+    1. slightly improve `Ostap::MoreRoofit::Rank`
+    1. add `ostap::MoreRooFit::AbsAplusB`
+    1. add 'N=|n|+1`-accessors/attributed for Crystal Ball family of functions/models
+    
 ## Backward incompatible1
     
 ## Bug fixes
