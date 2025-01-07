@@ -14,6 +14,7 @@
     1. add `ostap::MoreRooFit::AbsAplusB`
     1. add 'N=|n|+1`-accessors/attributed for Crystal Ball family of functions/models
     1. add functions to identify and remove empty columns from the table and update existing code to use these functions
+    1. add better printout for SimFit and RooSimultaneous
     
 ## Backward incompatible1
 

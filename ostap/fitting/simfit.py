@@ -35,7 +35,8 @@ import ROOT, math,  random , warnings
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.simfit' )
 else                       : logger = getLogger ( __name__               )
-
+# =============================================================================
+generic_pdfs = Generic3D_pdf, Generic2D_pdf, Generic1D_pdf
 # =============================================================================
 ## Create combined dataset for simultaneous fit
 #  @code
@@ -1179,6 +1180,27 @@ class SimFit (VarMaker,ConfigReducer) :
     @fit_options.setter
     def fit_options ( self , value )  :
         self.pdf.fit_options = value 
+
+    # =========================================================================
+    ## Print SimFit as table 
+    def table ( self , title = '' , prefix = '' , style = '' ) :
+        """ Print SimFit as table
+        """
+        rows = [ ( 'Category' , 'Index' , 'Type' , 'Name' , 'Title' ) ]
+
+        for k , cmp in items_loop ( self.categories ) :
+            row = str ( k ) , 
+            if isinstance ( cmp , generic_pdfs ) :
+                ttype = type(cmp.pdf).__name__ , cmp.pdf.name , cmp.pdf.title  
+            else :
+                ttype = '%s' % cmp , ''                 
+            rows.append ( row + ttype )
+        
+        import ostap.logger.table as T
+        rows = T.remove_empty_columns ( rows )
+        title = title if title else 'SimFit(%s)' % self.name 
+        return T.table ( rows , title = title , prefix = prefix , style = style )
+
     
 # =============================================================================
 if '__main__' == __name__ :

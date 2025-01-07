@@ -340,6 +340,35 @@ ROOT.RooPlot.__repr__ =  _rp_table_
 
 
 # ================================================================================
+## Friendly print of RooSimultaneous
+def _rs_table_ ( pdf , title = '' , prefix = '' , style = '' ) :
+    """ Friendly print of RooSimultaneous
+    """
+    assert isinstance ( pdf , ROOT.RooSimultaneous ) , \
+        'PDF is not RooSimultaneopus!'
+    
+    rows = [ ( 'Category' , 'Index' , 'Type' , 'Name' , 'Title' ) ] 
+    cat    = pdf.indexCat() 
+    for label, index in cat.items() :
+        cpdf = pdf.getPdf ( label )
+        row = '%s' % label , '%+d' % index , type(cpdf).__name__ , cpdf.name , cpdf.title
+        rows.append ( row )
+
+    import ostap.logger.table as T
+    title = title if title else 'RooSimultaneous(%s,%s)' % ( self.name, self.title )
+    return T.table ( rows, title = title , prefix = prefix , alignment = 'lllll' )
+     
+ROOT.RooSimultaneous.table    = _rs_table_
+ROOT.RooSimultaneous.__str__  = _rs_table_
+ROOT.RooSimultaneous.__repr__ = _rs_table_
+
+_new_methods_ += [
+    ROOT.RooSimultaneous.table    , 
+    ROOT.RooSimultaneous.__str__  ,
+    ROOT.RooSimultaneous.__repr__ , 
+    ]
+
+# ================================================================================
 ## copy RooPlot object
 def _rp_copy_ ( plot ) :
     """ Copy RooPlot object"""
@@ -362,7 +391,8 @@ _new_methods_ += [
 
 # =============================================================================
 _decorated_classes_ = (
-    ROOT.RooPlot , 
+    ROOT.RooPlot         , 
+    ROOT.RooSimultaneous , 
     )
 
 _new_methods_ = tuple ( _new_methods_ ) 
