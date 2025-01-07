@@ -15,6 +15,8 @@
     1. add 'N=|n|+1`-accessors/attributed for Crystal Ball family of functions/models
     
 ## Backward incompatible1
+
+    1. remove obsolete `ostap.fitting.simfit.Sim1D`
     
 ## Bug fixes
 

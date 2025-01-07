@@ -227,7 +227,6 @@ __all__ = (
     #
     ## simultaneous  fit
     'SimFit'            , ##    Simultaneous fit 
-    'Sim1D'             , ## 1D-simultaneous fit 
     # 
     ## helpers
     #
@@ -268,7 +267,7 @@ from ostap.fitting.fit3d         import *
 logger.debug ("Import 3D background        models from 'models_3d'"     )
 from ostap.fitting.models_3d     import *  
 logger.debug ("Import simultaneous fit            from 'simfit'"        )
-from ostap.fitting.simfit        import Sim1D, SimFit 
+from ostap.fitting.simfit        import SimFit 
 logger.debug ("Import convolution          models from 'convolution'"   )
 from ostap.fitting.convolution   import *  
 logger.debug ("Import resoltuion           models from 'resolution'"    )
