@@ -1,0 +1,69 @@
+# Sources
+*.c     text diff=cpp eol=lf
+*.C     text diff=cpp eol=lf
+*.cc    text diff=cpp eol=lf 
+*.cxx   text diff=cpp eol=ld 
+*.cpp   text diff=cpp eol=lf 
+*.icpp  text diff=cpp eol=lf 
+*.c++   text diff=cpp eol=lf 
+*.hpp   text diff=cpp eol=lf 
+*.h     text diff=cpp eol=lf
+*.h++   text diff=cpp eol=lf 
+*.hh    text diff=cpp eol=lf 
+
+# Compiled Object files
+*.slo   binary
+*.lo    binary
+*.o     binary
+*.obj   binary
+
+# Precompiled Headers
+*.gch   binary
+*.pch   binary
+
+# Compiled Dynamic libraries
+*.so    binary
+*.dylib binary
+*.dll   binary
+
+# Compiled Static libraries
+*.lai   binary
+*.la    binary
+*.a     binary
+*.lib   binary
+
+# Executables
+*.exe   binary
+*.out   binary
+*.app   binary
+
+
+# Basic .gitattributes for a python repo.
+
+# Source files
+# ============
+*.py     text diff=python eol=lf 
+*.pxd    text diff=python
+*.py3    text diff=python
+*.pyw    text diff=python
+*.pyx    text diff=python
+*.pyz    text diff=python
+*.pyi    text diff=python
+
+# Binary files
+# ============
+*.db     binary
+*.p      binary
+*.pkl    binary
+*.pickle binary
+*.pyc    binary export-ignore
+*.pyo    binary export-ignore
+*.pyd    binary
+
+# Jupyter notebook
+*.ipynb  text eol=lf
+
+# Note: .db, .p, and .pkl files are associated
+# with the python modules ``pickle``, ``dbm.*``,
+# ``shelve``, ``marshal``, ``anydbm``, & ``bsddb``
+# (among others).

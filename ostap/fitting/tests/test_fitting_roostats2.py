@@ -85,29 +85,23 @@ def test_point_limit_ac1() :
 
     ## create ModelConfig  for 'S+B' model
     model_sb = ModelConfig ( pdf       = the_model   ,
-                             poi       = rS.S , ## parameter of interest 
+                             poi       = the_model.S , ## parameter of interest 
                              dataset   = data        ,
                              name      = 'S+B'       ,
                              snapshot  = rS          ) ## ATTENTION! 
     
-    print ( 'POI-1',  the_model.S , model_sb.poi ) 
-    
     with FIXVAR ( the_model.S ) :
         the_model.S = 0 
         rB , _ = the_model.fitTo ( data )
-        print ( 'POI-2', the_model.S , rB.S  ) 
-        
-    #   # create ModelConfig  for 'B-only' model
-        model_b  = ModelConfig ( pdf      = the_model          ,
-                                poi       = rB.S        , ## parameter of interest 
-                                dataset   = data               ,
-                                workspace = model_sb.workspace , 
-                                name      = 'B-only'           ,
-                                snapshot  = rB                 )
-        print ( 'POI-3', the_model.S , model_b.poi ) 
-      
-    print ( 'POI-4', the_model.S , model_sb.poi , model_b.poi ) 
-       
+
+    ## create ModelConfig  for 'B-only' model
+    model_b  = ModelConfig ( pdf       = the_model          ,
+                             poi       = the_model.S        , ## parameter of interest 
+                             dataset   = data               ,
+                             workspace = model_sb.workspace , 
+                             name      = 'B-only'           ,
+                             snapshot  = rB                 )
+    
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
     
@@ -175,13 +169,13 @@ def test_point_limit_ac2() :
         the_model.S = 0 
         rB , _ = the_model.fitTo ( data )
     
-        ## create ModelConfig  for 'B-only' model
-        model_b  = ModelConfig ( pdf       = the_model          ,
-                                poi       = the_model.S        , ## parameter of interest 
-                                dataset   = data               ,
-                                workspace = model_sb.workspace , 
-                                name      = 'B-only'           ,
-                                snapshot  = rB                 )
+    ## create ModelConfig  for 'B-only' model
+    model_b  = ModelConfig ( pdf       = the_model          ,
+                             poi       = the_model.S        , ## parameter of interest 
+                             dataset   = data               ,
+                             workspace = model_sb.workspace , 
+                             name      = 'B-only'           ,
+                             snapshot  = rB                 )
   
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
@@ -625,7 +619,6 @@ if '__main__' == __name__ :
         test_point_limit_ac1 ()
         test_point_limit_ac2 ()
         
-        """
         test_point_limit_fc  ()
         test_point_limit_hc  ()
         
@@ -633,7 +626,6 @@ if '__main__' == __name__ :
 
         test_point_limit2    ()
         test_point_limit3    ()
-        """
         
     import ostap.logger.table as T
     title = 'Summary of 90%CL Upper Limits'
