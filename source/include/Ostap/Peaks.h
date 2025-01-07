@@ -1218,7 +1218,8 @@ namespace Ostap
       double n     () const { return m_n     ; }
       // ======================================================================
       double aa    () const { return std::abs ( m_alpha ) ; }
-      double np1   () const { return n()  + 1 ; }
+      double np1   () const { return n()  + 1 ; } // n+1 
+      double N     () const { return n()  + 1 ; } // n+1 
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
@@ -1234,8 +1235,9 @@ namespace Ostap
       /// get (possibly truncated, if n==0 or alpha=0) integral
       double integral () const ;
       /// get the integral between low and high
-      double integral ( const double low ,
-                        const double high ) const ;
+      double integral
+      ( const double low ,
+	const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1333,8 +1335,9 @@ namespace Ostap
       /// get (possibly truncated) integral
       double integral () const { return m_cb.integral() ; }
       /// get integral between low and high
-      double integral ( const double low ,
-                        const double high ) const
+      double integral
+      ( const double low ,
+	const double high ) const
       { return m_cb.integral ( low , high ) ; }
       // ======================================================================
     public:
@@ -1392,6 +1395,8 @@ namespace Ostap
       double sigma () const { return m_cb.sigma () ; }
       double alpha () const { return m_cb.alpha () ; }
       double n     () const { return m_cb.n     () ; }
+      double np1   () const { return m_cb.np1   () ; }
+      double N     () const { return m_cb.N     () ; }
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
@@ -1459,18 +1464,22 @@ namespace Ostap
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
-      double m0      () const { return m_m0      ; }
-      double peak    () const { return   m0 ()   ; }
-      double sigma   () const { return m_sigma   ; }
-      double alpha_L () const { return m_alpha_L ; }
-      double n_L     () const { return m_n_L     ; }
-      double alpha_R () const { return m_alpha_R ; }
-      double n_R     () const { return m_n_R     ; }
+      double m0      () const { return m_m0       ; }
+      double peak    () const { return   m0 ()    ; }
+      double sigma   () const { return m_sigma    ; }
+      double alpha_L () const { return m_alpha_L  ; }
+      double alpha_R () const { return m_alpha_R  ; }
+      double n_L     () const { return m_n_L      ; }
+      double n_R     () const { return m_n_R      ; }
+      double np1_L   () const { return m_n_L  + 1 ; } // nL+1
+      double np1_R   () const { return m_n_R  + 1 ; } // nR+1
+      double NL      () const { return m_n_L  + 1 ; } // nL+1
+      double NR      () const { return m_n_R  + 1 ; } // nR+1      
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
       bool setM0      ( const double value ) ;
-      bool setPeak    ( const double value ) { return setM0 ( value ) ; }
+      bool setPeak    ( const double value ) { return setM0   ( value ) ; }
       bool setMass    ( const double value ) { return setPeak ( value ) ; }
       bool setSigma   ( const double value ) ;
       bool setAlpha_L ( const double value ) ;
@@ -1483,8 +1492,9 @@ namespace Ostap
       /// get (possibly truncated) integral
       double integral () const ;
       /// get integral between low and high
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+	const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1582,7 +1592,8 @@ namespace Ostap
       // ======================================================================
       double a1    () const { return std::sqrt ( 1 + alpha() * alpha() ) ; }
       double aa    () const { return std::abs ( alpha() * b() ) / a1 ()  ; }
-      double np1   () const { return n()  + 1 ; }
+      double np1   () const { return n()  + 1 ; } // n+1 
+      double N     () const { return n()  + 1 ; } // n+1
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
@@ -1591,7 +1602,7 @@ namespace Ostap
       bool setMass  ( const double value ) { return setPeak ( value ) ; }
       bool setSigma ( const double value ) ;
       bool setAlpha ( const double value ) ;
-      bool setN     ( const double value ) ;
+      bool setN     ( const double value ) ; // setter for "n"! 
       bool setB     ( const double value ) ;
       // ======================================================================
     public:
@@ -1700,8 +1711,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the integral between low and high
-      double integral ( const double low ,
-                        const double high ) const ;
+      double integral
+      ( const double low ,
+	const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1776,6 +1788,7 @@ namespace Ostap
       // ======================================================================
       double nu     () const  { return m_n      ; }
       double n      () const  { return m_n      ; }
+      double N      () const  { return m_n + 1  ; }
       // ======================================================================
       bool setM     ( const double value  ) ;
       bool setM0    ( const double value  ) { return setM  ( value ) ; }
@@ -1787,7 +1800,7 @@ namespace Ostap
       bool setGamma ( const double value  ) { return setSigma ( value ) ; }
       bool setWidth ( const double value  ) { return setSigma ( value ) ; }
       // ======================================================================
-      bool setN     ( const double value  ) ;
+      bool setN     ( const double value  ) ; // setter for n! 
       // ======================================================================
     public:
       // ======================================================================
@@ -1799,8 +1812,9 @@ namespace Ostap
       /// get the integral
       double integral () const ;
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+	const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1874,9 +1888,11 @@ namespace Ostap
       // ======================================================================
       double nuL     () const  { return m_nL      ; }
       double nL      () const  { return m_nL      ; }
+      double NL      () const  { return m_nL + 1  ; } // nL + 1 
       // =========== ===========================================================
       double nuR     () const  { return m_nR      ; }
       double nR      () const  { return m_nR      ; }
+      double NR      () const  { return m_nR + 1  ; } // nR + 1 
       // ======================================================================
       bool setM      ( const double value  ) ;
       bool setM0     ( const double value  ) { return setM  ( value ) ; }
@@ -1893,8 +1909,8 @@ namespace Ostap
       bool setGammaR ( const double value  ) { return setSigmaR ( value ) ; }
       bool setWidthR ( const double value  ) { return setSigmaR ( value ) ; }
       // ======================================================================
-      bool setNL     ( const double value  ) ;
-      bool setNR     ( const double value  ) ;
+      bool setNL     ( const double value  ) ; // setter for nL 
+      bool setNR     ( const double value  ) ; // setter for nR 
       // ======================================================================
     public:
       // ======================================================================
@@ -1906,8 +1922,9 @@ namespace Ostap
       /// get the integral
       double integral () const ;
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+	const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================

@@ -668,7 +668,35 @@ def _rpv_reduce_ ( var ) :
 ROOT.RooPolyVar   . __reduce__  = _rpv_reduce_
 ROOT.RooPolynomial. __reduce__  = _rpv_reduce_
 
+# ===============================================================================
+## Reduce  RooCBShape 
+def _rrcbs_reduce_ ( pdf ) :
+    """ Reduce RooCBShape
+    """
+    return root_store_factory , ( type ( pdf )    ,
+                                  pdf.name        ,
+                                  pdf.title       ,
+                                  pdf.getM     () ,
+                                  pdf.getM0    () ,
+                                  pdf.getSigma () ,
+                                  pdf.getAlpha () ,
+                                  pdf.getN     () )
 
+ROOT.RooCBShape   . __reduce__  = _rrcbs_reduce_
+
+# ================================================================================
+## Reduce RooExponential
+def _rrexp_reduce_ ( pdf ) :
+    """ Reduce RooExponential """
+    return root_store_factory , ( type ( pdf )             ,
+                                  pdf.name                 ,
+                                  pdf.title                ,
+                                  pdf.variable          () ,
+                                  pdf.coefficient       () ,
+                                  pdf.negateCoefficient () ) 
+
+ROOT.RooExponential   . __reduce__  = _rrexp_reduce_
+    
 # ================================================================================
 ## deserialize RooFitResult
 #  @see RooFitResult

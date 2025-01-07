@@ -667,9 +667,6 @@ def _tn_path_ ( obj ) :
 
 ROOT.TNamed.path = property ( _tn_path_ , None , None , None  ) 
 
-
-
-
 # =============================================================================
 ## valid TDirectory?
 #  - check valid C++ TDirectory pointer 
@@ -754,6 +751,8 @@ def _rtl_contains_ ( lst , item ) :
 
 ROOT.TCollection   . __contains__ = _rtc_contains_
 ROOT.TSeqCollection. __contains__ = _rtl_contains_
+
+
 
 # =============================================================================
 ## "Get-item" method for <code>TCollection</code> object
