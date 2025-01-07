@@ -213,12 +213,12 @@ def _tc_call_ ( tree , first = 0 , last = LAST_ENTRY  , cuts = None , progress =
                 ievt = tree.GetEntryNumber ( entry  )
                 
                 if ievt < 0 :
-                    logger.error ( "Invald entry/1 %s< skip it!" % entry )
+                    logger.error ( "Invalid entry/1 %s< skip it!" % entry )
                     continue
                 
                 ievt = tree.GetEntry ( ievt )            
                 if ievt < 0 :
-                    logger.error ( "Invald entry/2 %s< skip it!" % entry )
+                    logger.error ( "Invalid entry/2 %s< skip it!" % entry )
                     continue
                 
                 yield tree, 1.0         ## YIELD HERE 
