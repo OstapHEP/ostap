@@ -667,6 +667,9 @@ def _tn_path_ ( obj ) :
 
 ROOT.TNamed.path = property ( _tn_path_ , None , None , None  ) 
 
+
+
+
 # =============================================================================
 ## valid TDirectory?
 #  - check valid C++ TDirectory pointer 
