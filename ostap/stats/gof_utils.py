@@ -513,22 +513,7 @@ class Summary(object) :
             row = self.row ( the_label , result , width = width , precision = precision )
             rows.append ( row ) 
 
-        ## skip empty columns        
-        has_expo = False 
-        for row in rows[1:] :
-            r = list ( row )
-            if r[-3] :
-                has_expo = True
-                break
-
-        if not has_expo :
-            new_rows = []
-            for row in rows :
-                r = list ( row )
-                del r [ -3 ]
-                new_rows.append ( r ) 
-            rows = new_rows 
-            
+        rows = T.remove_empty_columns ( rows )
         if   not title and self.nToys :
             title = 'Goodness of 1D-fit with #%d toys' % self.nToys  
         elif not title :
@@ -629,21 +614,7 @@ class GoFSummary ( object) :
             row  = m , tv , '[10^%+d]' % texpo if texpo else '' , '%d' % n , pval , sval 
             rows.append ( row )
 
-        ## skip empty column 
-        has_expo = False 
-        for row in rows :
-            if row [ 2 ] :
-                has_expo = True
-                break
-
-        if not has_expo :
-            new_rows = []
-            for row in rows :
-                r = list ( row )
-                del r [ 2 ]
-                new_rows.append ( r ) 
-            rows = new_rows 
-                    
+        rows = T.remove_empty_columns ( rows )
         title = title if title else 'Goodness of 1D-fit' 
         return T.table ( rows , title = title , prefix = prefix , alignment = 'lclcc', style = style  )
         

@@ -22,11 +22,13 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2019-08-31"
 __all__     = (
-    'table'        , ## format the list of rows as a  table.
-    'the_table'    , ## format the list of rows as a  table (local version)
-    'table_width'  , ## true  width of the table
-    'align_column' , ## align the certain column of the table  
-    'add_prefix'   , ## add the prefix to each row of the table 
+    'table'                 , ## format the list of rows as a  table.
+    'the_table'             , ## format the list of rows as a  table (local version)
+    'table_width'           , ## true  width of the table
+    'align_column'          , ## align the certain column of the table  
+    'add_prefix'            , ## add the prefix to each row of the table
+    'empty_columns'         , ## find empty columns in the table 
+    'resmove_empty_columns' , ## remove empty columns from the table 
     )
 # =============================================================================
 from   ostap.logger.colorized import infostr, allright, decolorize        
@@ -533,6 +535,64 @@ def align_column ( table , index , align = 'left') :
         new_table.append ( row )
             
     return [ tuple ( row ) for row in new_table ] 
+
+# =============================================================================
+## Get the list of empty columns in the table:
+#  @code
+#  table = ...
+#  empty = empty_columns ( table ) 
+#  @endcode
+def empty_columns ( table ) :
+    """ Get the list of empty columns in the table
+    >>> table = ...
+    >>> empty = empty_columns ( table ) 
+    """
+    if not table : return ()
+    
+    maxcols = -1 
+    for row in table : maxcols = max ( maxcols , len ( row ) )
+    empty_cols = maxcols * [ True ]
+    
+    ## skip the first row (assumed to be the header)
+    for row in table [ 1 : ] :
+        for col , item in enumerate ( row ) :
+            if item :  empty_cols [ col ] = False
+
+    return tuple ( i for i, col in enumerate ( empty_cols ) if col )  
+        
+# ============================================================================
+## Remove empty columns from the table
+#  @code
+#  table = ...
+#  new_table = remove_empty_colums ( table ) 
+#  @endcode
+def remove_empty_columns ( table ) :
+    """ Remove empty columns from the table
+    >>> table = ...
+    >>> new_table = remove_empty_colums ( table ) 
+    """
+    empty = empty_columns ( table )
+    if not empty : return table
+    empty = tuple ( reversed ( empty ) )
+    
+    newtable = []
+    for row in table :
+        newrow = list ( row    )
+        lenrow = len  ( newrow ) 
+        for i in empty:
+            if i < lenrow : del newrow [ i ] 
+        newtable.append ( tuple ( newrow ) )
+        
+    return tuple ( newtable )
+
+    
+    
+    
+    
+    
+    
+
+
 
 # =============================================================================
 if __name__ == '__main__' :

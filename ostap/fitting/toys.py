@@ -133,10 +133,6 @@ def print_stats ( stats , ntoys = '' , logger = logger ) :
     ##              0          1      2       3        4        5          6           7 
     table = [ ( 'Parameter' , '#', 'mean', 'x[..]' , 'rms' , 'x[..]', 'min / max' , 'x[..]' ) ] 
 
-    has_e1 = [] 
-    has_e2 = []
-    has_e3 = [] 
-    
     def make_row ( c ) :    
         
         n      = '%d' % c.nEntries() 
@@ -162,10 +158,6 @@ def print_stats ( stats , ntoys = '' , logger = logger ) :
         if expo3 : expo3 = '10^%+d' % expo3
         else     : expo3 = '' 
 
-        if expo1 : has_e1.append  ( '' )
-        if expo2 : has_e2.append  ( '' )
-        if expo3 : has_e3.append  ( '' )
-        
         return p , n , mean, expo1, rms, expo2, minmax, expo3 
 
     for p in sorted ( stats )  :
@@ -178,40 +170,14 @@ def print_stats ( stats , ntoys = '' , logger = logger ) :
         c      = stats [ p ]
         table.append (  make_row ( c )  )
 
-    ## skip empty column
-    if not has_e3 :
-        rows = []
-        for row in table :
-            r = list ( row )
-            del r [ 7 ]
-            rows.append ( r )
-        table = rows
-        
-    ## skip empty column
-    if not has_e2 :
-        rows = []
-        for row in table :
-            r = list ( row )
-            del r [ 5 ]
-            rows.append ( r )
-        table = rows
-        
-    ## skip empty column
-    if not has_e1 :
-        rows = []
-        for row in table :
-            r = list ( row )
-            del r [ 3 ]
-            rows.append ( r )
-        table = rows 
-        
-
     if not ntoys :
         ntoys = 0
         for s in stats :
             ntoys = max ( ntoys , stats[s].nEntries() )
-        
+            
     import ostap.logger.table as Table
+    table = Table.remove_empty_columns ( table ) 
+        
     table = Table.table ( table                                    ,
                           title     = "Results of %s toys" % ntoys ,
                           alignment = 'lccccccc'                   ,
@@ -272,10 +238,6 @@ def print_jackknife  ( fitresult          , ## restl of the fit of th e total da
     
     table  = [ header ]
 
-    has_e1 = False 
-    has_e2 = False 
-    has_e3 = False 
-    
     N = 0 
     for name in sorted ( stats ) :
         
@@ -327,10 +289,6 @@ def print_jackknife  ( fitresult          , ## restl of the fit of th e total da
         fbias = '%+.1f' % bias 
         errs  = '%+.2f' % scale
 
-        if expo1 : has_e1 = True
-        if expo2 : has_e2 = True
-        if expo3 : has_e3 = True
-
         if 50  < abs ( bias       ) : fbias = attention ( fbias )
         if 0.5 < abs ( scale  - 1 ) : errs  = attention ( errs  )
         
@@ -353,42 +311,14 @@ def print_jackknife  ( fitresult          , ## restl of the fit of th e total da
         if expo2 : expo2 = '10^%+d' % expo2
         else     : expo2 = ''
         
-        if expo2 : has_e2 = True
-        
         ## row = name , '' , '' , th2 , expo2 , '' , '' , '' , '' 
         row = name , '' , '' , th2 , expo2 , '' 
         table.append ( row )
         
-##    ## skip empty column
-##    if not has_e3 :
-##        rows = []
-##        for row in table :
-##            r = list ( row )
-##            del r [ 6 ]
-##            rows.append ( r )
-##        table = rows
-        
-    ## skip empty column
-    if not has_e2 :
-        rows = []
-        for row in table :
-            r = list ( row )
-            del r [ 4 ]
-            rows.append ( r )
-        table = rows
-        
-    ## skip empty column
-    if not has_e1 :
-        rows = []
-        for row in table :
-            r = list ( row )
-            del r [ 2 ]
-            rows.append ( r )
-        table = rows 
-
-    title = title if title else "Jackknife results (N=%d)" % N  
-
     import ostap.logger.table as Table
+    table = Table.remove_empty_columns ( table )
+    
+    title = title if title else "Jackknife results (N=%d)" % N  
     table = Table.table ( table                           ,
                           title     = title               ,
                           alignment = 'lcccccc'           ,
@@ -411,9 +341,6 @@ def print_bootstrap  ( fitresult          ,
 
     n = 0
 
-    has_e1 = False 
-    has_e2 = False 
-    
     for name in sorted ( stats ) :
         
         if   name in fitresult :
@@ -458,9 +385,6 @@ def print_bootstrap  ( fitresult          ,
         
         row = name , th1, expo1 , th2 , expo2 , fbias , errs 
 
-        if expo1 : has_e1 = True
-        if expo2 : has_e2 = True
-        
         table.append ( row )
 
     for name in sorted ( stats ) :
@@ -476,33 +400,14 @@ def print_bootstrap  ( fitresult          ,
         if expo2 : expo2 = '10^%+d' % expo2
         else     : expo2 = ''
 
-        if expo2 : has_e2 = True 
         row = name , '','' , th2 , expo2 , '' , '' 
         table.append ( row )
 
     table = [ header ] + table
 
-    ## skip empty column
-    if not has_e2 :
-        rows = []
-        for row in table :
-            r = list ( row )
-            del r [ 4 ]
-            rows.append ( r )
-        table = rows
-        
-    ## skip empty column
-    if not has_e1 :
-        rows = []
-        for row in table :
-            r = list ( row )
-            del r [ 2 ]
-            rows.append ( r )
-        table = rows 
-         
-    title = title if title else "Bootstrapping with #%d samples" % n 
-
     import ostap.logger.table as Table
+    table = Table.remove_empty_columns ( table ) 
+    title = title if title else "Bootstrapping with #%d samples" % n 
     table = Table.table ( table                ,
                           title     = title    ,
                           alignment = 'lccccccc'  ,
