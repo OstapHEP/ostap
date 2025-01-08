@@ -35,7 +35,7 @@ else                      : logger = getLogger ( __name__               )
 #  value = bifur ( 0 , -1 , +2 ) 
 #  @endcode 
 def _bifur_ ( self , mu , sigma1 , sigma2 ) :
-    """Generate the bifurcated gaussian
+    """ Generate the bifurcated gaussian
     >>> value = bifur ( 0 , -1 , +2 )    
     """
     if sigma1 * sigma2 > 0.0 :
@@ -51,7 +51,6 @@ def _bifur_ ( self , mu , sigma1 , sigma2 ) :
     if _aux <= _frac : return mu + sigma1 * _gau
     else             : return mu + sigma2 * _gau 
 
-
 # ==============================================================================
 _fmin = 1000 * sys.float_info.min 
 # =============================================================================
@@ -59,7 +58,7 @@ _fmin = 1000 * sys.float_info.min
 #  - rely on the distribution of the ratio for two Gaussian variables 
 #  @see https://en.wikipedia.org/wiki/Cauchy_distribution
 def _cauchy_ ( self , mu , gamma ) :
-    """Generate Cauchy random numbers 
+    """ Generate Cauchy random numbers 
     - rely on the distribution of the ratio for two Gaussian variables 
     - see https://en.wikipedia.org/wiki/Cauchy_distribution
     """
@@ -72,7 +71,7 @@ def _cauchy_ ( self , mu , gamma ) :
 ## generate bifurcated gaussian using Value
 #  @see Ostap::Math::ValueWithError
 def _ve_gauss_ ( self , val ) :
-    """Generate the gaussian according to Ostap.Math.ValueWithError
+    """ Generate the gaussian according to Ostap.Math.ValueWithError
     >>> ve    = VE ( 1 , 2 ) 
     >>> value = ve_gauss ( ve  )
     """
@@ -82,38 +81,46 @@ def _ve_gauss_ ( self , val ) :
 
 # =============================================================================
 _poisson = None
-if not _poisson : 
-    try :
+if not _poisson :
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
         from numpy.random import poisson as _poisson
         def _poisson_ ( self , mu ) : return _poisson ( mu )
         logger.debug ('use numpy.random.poisson')
-    except ImportError :
+        # =====================================================================
+    except ImportError : # ====================================================
+        # =====================================================================
         pass
 
-if not _poisson : 
-    try :
+# =============================================================================
+if not _poisson :
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
         from scipy.random import poisson as _poisson
         def _poisson_ ( self , mu ) : return _poisson ( mu )
         logger.debug ('use scipy.random.poisson')
-    except ImportError :
+        # =====================================================================
+    except ImportError : # ====================================================
+        # =====================================================================        
         pass
 
-if not _poisson : 
+# =============================================================================
+if not _poisson :
+    # =========================================================================
     logger.debug ('Use home-made replacement for poisson')
     _MAX   = 30.0
     import math
     _sqrt  = math.sqrt
     _exp   = math.exp
-    ## _round = cppyy.gbl.Ostap.Math.round
-    from   ostap.math.base import Ostap
-    _round = Ostap.Math.round
     ## hand-made replacement for poisson random number generator  
     def _poisson_ ( self , mu ) :
         mu = float ( mu )
         if _MAX <= mu :
             r = -1 
             while r < 0 : r = self.gauss ( mu , _sqrt( mu ) )
-            return max ( _round ( r ) , 0 )
+            return max ( round ( r ) , 0 )
         x  = 0
         p  = _exp ( -mu )
         s  = p
@@ -157,5 +164,5 @@ if '__main__' == __name__  :
 
     
 # =============================================================================
-# The END
+##                                                                      The END
 # =============================================================================

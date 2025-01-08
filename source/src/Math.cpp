@@ -412,12 +412,12 @@ float Ostap::Math::round_N ( const float x , const unsigned short n )
   const double xd = x ;
   return round_N ( xd , n ) ;
 }
-// ========================================================================
-/** round to nearest integer, rounds half integers to nearest even integer 
+// ============================================================================
+/*  round to nearest integer, rounds half integers to nearest even integer 
  *  It is just a simple wrapper around boost::numeric::converter 
  *  @author Vanya BELYAEV Ivan.BElyaev
  */
-// ========================================================================
+// ============================================================================
 long Ostap::Math::round ( const double x ) 
 {
   return 
@@ -425,13 +425,26 @@ long Ostap::Math::round ( const double x )
     x >= sd_long_max ? s_long_max : long ( std::lround ( x )  ) ;
 }
 // ============================================================================
+/*  round to nearest integer, rounds half integers to nearest even integer 
+ *  It is just a simple wrapper around boost::numeric::converter 
+ *  @author Vanya BELYAEV Ivan.BElyaev
+ */
+// ============================================================================
+long Ostap::Math::round ( const long double x ) 
+{
+  return 
+    x <= sd_long_min ? s_long_min :
+    x >= sd_long_max ? s_long_max : long ( std::lround ( x )  ) ;
+}
+// ============================================================================
+
 
 // ============================================================================
 /*  Volume of n-ball of given radius r  
  *  @param n dimension
  *  @param r radius 
  */
-// ========================================================================
+// ============================================================================
 double Ostap::Math::nball_volume
 ( const unsigned short n ,
   const double         r )

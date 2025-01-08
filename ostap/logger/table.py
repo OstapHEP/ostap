@@ -28,7 +28,7 @@ __all__     = (
     'align_column'          , ## align the certain column of the table  
     'add_prefix'            , ## add the prefix to each row of the table
     'empty_columns'         , ## find empty columns in the table 
-    'resmove_empty_columns' , ## remove empty columns from the table 
+    'remove_empty_columns'  , ## remove empty columns from the table 
     )
 # =============================================================================
 from   ostap.logger.colorized import infostr, allright, decolorize        
@@ -255,11 +255,10 @@ def the_table ( rows                          ,
     for c in widths : totwidth += widths[c]
     totwidth += ( nc - 1 ) * 3
     titwidth  = len ( decolorize ( title ) )
-    if totwidth < titwidth  :
+    if totwidth < titwidth :
         delta = 1 + ( titwidth - totwidth ) // nc
         for c in widths : widths[c] += delta 
 
-            
     seps     = [   '-' * ( widths [ c ]  + 2 ) for c in range ( nc ) ]
     sepline  = '+' + "+".join (  seps ) +  '+'
 
@@ -390,7 +389,7 @@ def table ( rows                          ,
 
     elif terminaltables and fmt in table_styles    :  pass         
     elif tabulate       and fmt in tabulate_styles :
-        if title : logger.warning ( 'Title is ignored for tabulate!' )         
+        if title : logger.warning ( 'table: Title is ignored for tabulate!' )         
         colalign = [] 
         if alignment and not 'colalign' in kwargs :
             for a in alignment :
@@ -400,8 +399,8 @@ def table ( rows                          ,
                 elif aL in center : colalign.append ( 'center' )
                 else              : colalign.append ( None     )
         colalign = tuple ( colalign )
-        if colalign  : result = tabulate.tabulate ( rows   , tablefmt = fmt , colalign = colalign , **kwargs )
-        else         : result = tabulate.tabulate ( rows   , tablefmt = fmt                       , **kwargs )
+        if colalign  : result = tabulate.tabulate ( rows , tablefmt = fmt , colalign = colalign , **kwargs )
+        else         : result = tabulate.tabulate ( rows , tablefmt = fmt                       , **kwargs )
         ## 
         if prefix : result = add_prefix ( result , prefix )
         ## 
@@ -410,13 +409,13 @@ def table ( rows                          ,
     if kwargs :
         keys = ', '.join ( key for key in kwargs ) 
         logger.warning ( 'Ignore keyword arguments: %s' % keys )  
-
+        
     if 'ascii' == fmt or not isatty() : 
         table_instance = terminaltables.AsciiTable                  ( rows , title )        
     elif 'single' == fmt : 
         table_instance = terminaltables.SingleTable                 ( rows , title )
     elif 'porcelain' == fmt :
-        if title : logger.warning ( 'Title is ignored for porcelain table !' ) 
+        if title : logger.warning ( 'table: Title is ignored for porcelain table !' ) 
         table_instance = terminaltables.PorcelainTable              ( rows )
     elif fmt in ( 'github' , 'markdown' ) :
         if title : logger.warning ( 'Title is ignored for github/markdown tables!' )         
@@ -425,11 +424,9 @@ def table ( rows                          ,
         table_instance = terminaltables.DoubleTable                 ( rows , title )
     else :
         table_instance = terminaltables.DoubleTable                 ( rows , title )
-
         
-    cw = table_instance.column_widths
-    nc = len ( cw )
-
+    cw    = table_instance.column_widths
+    nc    = len ( cw )
     wraps = [ i for ( i , a ) in enumerate ( alignment ) if a in wrapped ]
     
     if wraps :
@@ -449,8 +446,8 @@ def table ( rows                          ,
         
         if wrap_width < 12 : wrap_width = max_width 
     
-    nw = len ( wraps ) 
-            
+    nw = len ( wraps )
+        
     for i, a in zip ( range ( nc ) , alignment ) :
         if a and isinstance ( a , str ) :
             al = a.lower() 
@@ -467,10 +464,46 @@ def table ( rows                          ,
                     if i < len ( line ) and width < len ( line [ i ] ) : 
                         table_instance.table_data[l][i] = textwrap. fill ( indent + line [ i ] , wrap_width  )
 
+                
+    ## special treatment of very long titles
+    from terminaltables.width_and_alignment import visible_width
+    if title and visible_width ( title ) : 
+                
+        tstrip   = decolorize ( title  ).strip()
+        pstrip   = decolorize ( prefix ) if prefix else ''
+        prfwidth = visible_width ( pstrip )        
+        titwidth = visible_width ( tstrip ) 
+        totwidth = terminal_size() [ 1 ]
+        tabwidth = table_instance.table_width
+
+        ## (1) try to stretch the table 
+        maxwidth = min ( titwidth + 4 + prfwidth , totwidth )
+        if tabwidth + prfwidth < maxwidth :
+            delta = maxwidth - prfwidth - tabwidth 
+            if 0 < delta :                
+                a  , _  = divmod ( delta , nc )
+                a1 , _  = divmod ( a     , 2  )
+                table_instance.padding_left  += a1
+                table_instance.padding_right += a1
+                tabwidth = table_instance.table_width
+
+        ## (2) try to shorten the title 
+        if tabwidth <= titwidth + 8 :
+            nt = tabwidth - 8 
+            if 6  < nt :
+                n1 = nt // 2
+                n2 = nt - n1 
+                tstrip = '%s<...>%s' % ( tstrip [ :n1 ] , tstrip [-n2:] )
+            elif 0 <= nt :
+                tstrip = tstrip[:nt]
+            title = allright ( tstrip )                 
+            table_instance.title = title 
+
     result = add_prefix ( table_instance.table , prefix )
     if sys.version_info < ( 3 , 0 ) :
         if isinstance ( result , unicode ) :
             result = result.encode ('utf-8')
+            
     return result 
     
 # =============================================================================

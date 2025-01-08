@@ -71,7 +71,8 @@ __all__     = (
     'signum'         , ## sign of the number 
     'samesign'       , ## two number of the same sign
     'isfinite'       , ## `isfinite` for float values 
-    'isclose'        , ## `isclose`  for float values 
+    'isclose'        , ## `isclose`  for float values
+    'lround'         , ## round a value to integer/long  
     ##
     'inrange'        , ## is double number in certain range?
     ## 
@@ -197,7 +198,6 @@ class ROOTIgnore( object ) :
             groot = ROOT.ROOT.GetROOT()            
             groot.ProcessLine("gErrorIgnoreLevel= %d ; " % self._old ) 
             
-
 # =============================================================================
 from ostap.logger.mute  import mute
 logger.debug ("Suppress error/warnings from ROOT")
@@ -208,8 +208,7 @@ with ROOTIgnore ( ROOT.kWarning + 1 ) :
     isequalf = Ostap.Math.Equal_To ('float' )()
     isint    = Ostap.Math.isint 
     islong   = Ostap.Math.islong
-
-
+    
 vDoubles = std.vector ( 'double' )
 vFloats  = std.vector ( 'float'  )
 vInts    = std.vector ( 'int'    )
@@ -296,9 +295,9 @@ def inrange ( a , x , b ) :
     >>> a,b = 1,2
     >>> print 'Is x between a and b? %s' % inrange ( a , x , b ) 
     """
-    _a  = float(a)
-    _b  = float(b)
-    _x  = float(x)
+    _a  = float ( a )
+    _b  = float ( b )
+    _x  = float ( x )
     return ( _a <= _x or isequal ( _a , _x ) ) and ( _x <= _b or isequal ( _x , _b ) ) 
 
 
@@ -365,26 +364,6 @@ for t in ( 'std::complex<double>' , 'std::complex<float>'  ) :
     v.__repr__ = complex_vct_str    
     v.__str__  = complex_vct_str    
     
-# =============================================================================
-## self-printout of <code>TMatrix</code>
-def _tmg_str_ ( self , fmt = ' %+11.4g') :
-    """ Self-printout of `TMatrix`
-    """
-    _rows = self.GetNrows()
-    _cols = self.GetNcols()
-    _line = ''
-    for _irow in range ( 0 , _rows ) :
-        _line += ' |'
-        for _icol in range ( 0 , _cols ) :
-            _line += fmt % self( _irow , _icol )
-        _line += ' |'
-        if ( _rows - 1 )  != _irow : _line += '\n'
-    return _line
-
-
-ROOT.TMatrix.__repr__  = _tmg_str_
-ROOT.TMatrix.__str__   = _tmg_str_
-
 # =============================================================================
 ## add something to <code>std::vector</code>
 def _add_to ( vct , cnv , arg1 , *args ) :
@@ -590,7 +569,7 @@ def _cmplx_norm_       ( s ) :
 
 # =============================================================================
 def _cmplx_conjugate_  ( s ) :
-    """Get complex conjugated
+    """ Get complex conjugated
     >>> vc = v.conjugate() 
     """
     return complex ( _real_ ( s )  , - _imag_  ( s )  )
@@ -747,7 +726,7 @@ for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
         CMPLX._old_init_  = CMPLX.__init__
         ## construct complex 
         def _cmplx_new_init_ ( s , a = 0 , *b ) :
-            """Construct complex from complex or from real/imaginary parts
+            """ Construct complex from complex or from real/imaginary parts
             """
             if not b :
                 a     = complex  ( a )
@@ -822,7 +801,7 @@ def complexes ( arg1 , *args ) :
 # =============================================================================
 ## complex value ?   
 def is_complex ( value ) :
-    """Complex value?
+    """ Complex value?
     """
     return isinstance ( value , ( complex, COMPLEX , COMPLEXf  , COMPLEXl ) )
 
@@ -991,6 +970,18 @@ else :
         """ Least Common Multiple"""
         return ( a * b ) // gcd ( a , b )
     # =========================================================================
+
+
+# =============================================================================
+_round = Ostap.Math.round
+# =============================================================================
+## round the value
+#  @see Ostap::Math::round 
+def lround ( x ) :
+    """ Round the value 
+    - see `Ostap.Math.round`
+    """
+    return x if isinstance  ( x , int ) else _round ( x ) 
 
 # =============================================================================
 ## imports at the end of the module to avoid the circular dependency 

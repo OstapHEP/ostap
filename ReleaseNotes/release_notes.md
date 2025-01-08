@@ -15,6 +15,10 @@
     1. add 'N=|n|+1`-accessors/attributed for Crystal Ball family of functions/models
     1. add functions to identify and remove empty columns from the table and update existing code to use these functions
     1. add better printout for SimFit and RooSimultaneous
+    1. better treatment of long titles for tables
+    1. add `silent=True` argument for `generate`-methods
+    1. add ptinout of gen-options for `generate`-methods
+    
     
 ## Backward incompatible1
 
