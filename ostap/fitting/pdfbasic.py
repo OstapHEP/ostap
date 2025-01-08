@@ -421,8 +421,8 @@ class APDF1 ( Components ) :
                 row = str ( o ) ,
                 rows.append ( row )
             import ostap.logger.table as T
-            title = 'fitTo: fit-options'
-            table = T.table ( rows , title = 'FitOptions' ,prefix = '# ' )
+            title = 'fitTo: Fit-Options'
+            table = T.table ( rows , title = 'FitOptions' , prefix = '# ' )
             self.info ( '%s:\n%s' % ( title , table ) )
                         
         ## play a bit with the binning cache for 1D-convolutions 
@@ -1949,6 +1949,7 @@ class APDF1 ( Components ) :
                    varset   = None  ,
                    binning  = None  ,
                    sample   = True  , ## sample number of events ?
+                   silent   = True  , ## silent processing ? 
                    storage  = None  , ## storage type for dataset
                    args     = ()    ) :
         """ Generate toy-sample according to PDF
@@ -1961,11 +1962,14 @@ class APDF1 ( Components ) :
         """
         
         ## sample number of events in dataset ?
-        nEvents = self.gen_sample ( nEvents ) if sample else nEvents 
+        nEvents = self.gen_sample ( nEvents , sample ) 
         assert 0 <= nEvents , 'Invalid number of Events %s' % nEvents  
 
         args = args + ( ROOT.RooFit.Name ( dsID() ) , ROOT.RooFit.NumEvents ( nEvents ) )
 
+        if  silent : args = args + ( ROOT.RooFit.Verbose ( False ) , )
+        else       : args = args + ( ROOT.RooFit.Verbose ( True  ) , )
+                                                  
         if   isinstance ( binning , integer_types ) and 0 < binning :
             args    = args + ( ROOT.RooFit.AllBinned () , ) 
         elif binning is True :
@@ -1991,7 +1995,16 @@ class APDF1 ( Components ) :
                 varset = vs
 
         from ostap.fitting.variables import KeepBinning
-        
+
+        if args and not silent :
+            rows = [ ( 'Option' , ) ]
+            for a in args : 
+                row = str ( a ) ,
+                rows.append ( row )
+            title = 'generate: Gen-Options'
+            table = T.table ( rows , title = 'GenOptions', prefix = '# ' )
+            self.info ( '%s:\n%s' % ( title , table ) )
+         
         with KeepBinning ( self.xvar ) : 
 
             if isinstance ( binning , dict ) :
@@ -2003,7 +2016,6 @@ class APDF1 ( Components ) :
                 with useStorage ( storage ) : 
                     return self.pdf.generate (  varset , *args )
 
-            
             return self.pdf.generate (  varset , *args )
 
     # ========================================================================
@@ -3195,6 +3207,7 @@ class APDF2 (APDF1) :
                    varset   = None  ,
                    binning  = {}    ,
                    sample   = True  ,
+                   silent   = True  , ## silent processins?
                    storage  = None  ,  
                    args     = ()    ) :
         """ Generate toy-sample according to PDF
@@ -3205,11 +3218,14 @@ class APDF2 (APDF1) :
         >>> data   = model.generate ( 100000 , varset , sample = False )
         >>> data   = model.generate ( 100000 , varset , sample = True  )
         """
-        nEvents = self.gen_sample ( nEvents ) if sample else nEvents 
+        nEvents = self.gen_sample ( nEvents , sample ) 
         assert 0 <= nEvents , 'Invalid number of Events %s' % nEvents  
         
         args = args + ( ROOT.RooFit.Name ( dsID() ) , ROOT.RooFit.NumEvents ( nEvents ) )
         
+        if  silent : args = args + ( ROOT.RooFit.Verbose ( False ) , )
+        else       : args = args + ( ROOT.RooFit.Verbose ( True  ) , )
+                                                  
         if binning is True :
             args    = args + ( ROOT.AllBinned() , ) 
             binning = {}
@@ -3231,7 +3247,16 @@ class APDF2 (APDF1) :
                 vs . add ( v )
                 for vv in varset : vs.add ( vv )
                 varset = vs
-                
+
+        if args and not silent :
+            rows = [ ( 'Option' , ) ]
+            for a in args : 
+                row = str ( a ) ,
+                rows.append ( row )
+            title = 'generate: Gen-Options'
+            table = T.table ( rows , title = 'GenOptions', prefix = '# ' )
+            self.info ( '%s:\n%s' % ( title , table ) )
+    
         from ostap.fitting.variables import KeepBinning        
         with KeepBinning ( self.xvar ) , KeepBinning ( self.yvar ) : 
 
@@ -4375,6 +4400,7 @@ class APDF3 (APDF2) :
                    varset   = None  ,
                    binning  = {}    ,
                    sample   = True  ,
+                   silent   = True  , ## silent processing 
                    storage  = None  ,
                    args     = ()    ) :
         """ Generate toy-sample according to PDF
@@ -4385,11 +4411,14 @@ class APDF3 (APDF2) :
         >>> data   = model.generate ( 100000 , varset , sample = False )
         >>> data   = model.generate ( 100000 , varset , sample = True  )
         """
-        nEvents = self.gen_sample ( nEvents ) if sample else nEvents 
+        nEvents = self.gen_sample ( nEvents , sample ) 
         assert 0 <= nEvents , 'Invalid number of Events %s' % nEvents  
 
         args = args + ( ROOT.RooFit.Name ( dsID() ) , ROOT.RooFit.NumEvents ( nEvents ) )
-
+        
+        if  silent : args = args + ( ROOT.RooFit.Verbose ( False ) , )
+        else       : args = args + ( ROOT.RooFit.Verbose ( True  ) , )
+                                                      
         if binning is True :
             args    = args + ( ROOT.AllBinned() , ) 
             binning = {}
@@ -4411,7 +4440,16 @@ class APDF3 (APDF2) :
                 vs . add ( v )
                 for vv in varset : vs.add ( vv )
                 varset = vs
-            
+                
+        if args and not silent :
+            rows = [ ( 'Option' , ) ]
+            for a in args : 
+                row = str ( a ) ,
+                rows.append ( row )
+            title = 'generate: Gen-Options'
+            table = T.table ( rows , title = 'GenOptions', prefix = '# ' )
+            self.info ( '%s:\n%s' % ( title , table ) )
+        
         from ostap.fitting.variables import KeepBinning        
         with KeepBinning ( self.xvar ) , KeepBinning ( self.yvar ), KeepBinning ( self.zvar ) : 
             

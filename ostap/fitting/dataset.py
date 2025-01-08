@@ -2313,7 +2313,6 @@ def _ds_table_0_ ( dataset                ,
         
         table_data.append ( tuple ( cols ) ) 
 
-    title = title 
     import ostap.logger.table as T
     t  = T.table ( table_data , title = title , prefix =  prefix , style = style )
     w  = T.table_width ( t ) 
