@@ -17,7 +17,7 @@
     1. add better printout for SimFit and RooSimultaneous
     1. better treatment of long titles for tables
     1. add `silent=True` argument for `generate`-methods
-    1. add ptinout of gen-options for `generate`-methods
+    1. add printout of gen-options for `generate`-methods
     
     
 ## Backward incompatible1

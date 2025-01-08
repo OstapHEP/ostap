@@ -655,7 +655,8 @@ args_newstyle      = 'newstyle' , 'stylenew' , 'new'
 args_parallel      = 'parallel' , 'parallelize' , 'parallelise'
 args_recover       = ( 'recover'  , 'recoverfromundefined' ,
                        'recoverfromundefinedregion'  , 
-                       'recoverfromundefinedregions' ) 
+                       'recoverfromundefinedregions' )
+args_errorwall     = 'evalerrorwal' , 'errorwall' , 'errorswall' , 'evalerrorswall'
 args_maxcalls      = 'maxcalls' , 'maxcall' , 'callmax' , 'callsmax'
 
  # =============================================================================
@@ -923,13 +924,19 @@ class FitHelper(VarMaker) :
                 
                 _args.append   (  ROOT.RooFit.Parallelize ( *a ) )
                 
-            elif key in args_recover and \
-                          isinstance ( a , num_types )    and ( 6, 24 ) <= root_info :
+            elif key in args_recover and isinstance ( a , bool      ) and ( 6, 24 ) <= root_info :
+                
+                _args.append   ( ROOT.RooFit.RecoverFromUndefinedRegions ( 10.0 if a else 0.0  ) ) 
+                          
+            elif key in args_recover and isinstance ( a , num_types ) and ( 6, 24 ) <= root_info :
                 
                 _args.append   ( ROOT.RooFit.RecoverFromUndefinedRegions ( 1.0 * float ( a ) ) ) 
-                          
-            elif key in args_maxcalls and \
-                     isinstance ( a , integer_types ) and (6,27) <= root_info :
+
+            elif key in args_errorwall and isinstance ( a , bool ) and (6,22) <= root_info :
+                
+                _args.append   ( ROOT.RooFit.EvalErrorWall ( a ) )  
+
+            elif key in args_maxcalls and isinstance ( a , integer_types ) and ( 6 , 27 ) <= root_info :
                 
                 _args.append   ( ROOT.RooFit.MaxCalls ( a ) ) 
 

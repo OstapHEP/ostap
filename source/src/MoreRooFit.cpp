@@ -1236,8 +1236,8 @@ Ostap::MoreRooFit::ProductPdf::ProductPdf
   RooAbsPdf&  pdf2  )
   : RooAbsPdf  ( name , title ) 
     //
-  , m_pdf1 ( "pdf1" , "The first PDF"  , this , pdf1 ) 
-  , m_pdf2 ( "pdf2" , "The second PDF" , this , pdf2 ) 
+  , m_pdf1 ( "!pdf1" , "The first PDF"  , this , pdf1 ) 
+  , m_pdf2 ( "!pdf2" , "The second PDF" , this , pdf2 ) 
 {}
 // ============================================================================
 // "copy" constructor 
@@ -1247,8 +1247,8 @@ Ostap::MoreRooFit::ProductPdf::ProductPdf
   const char*                       name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_pdf1 ( "pdf1" , this , right.m_pdf1 ) 
-  , m_pdf2 ( "pdf2" , this , right.m_pdf2 )
+  , m_pdf1 ( "!pdf1" , this , right.m_pdf1 ) 
+  , m_pdf2 ( "!pdf2" , this , right.m_pdf2 )
 {}
 // ============================================================================
 // destructor 
@@ -1270,8 +1270,6 @@ Double_t Ostap::MoreRooFit::ProductPdf::evaluate () const
   return v1 * v2 ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // constructor 

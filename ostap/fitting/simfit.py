@@ -932,8 +932,8 @@ class SimFit (VarMaker,ConfigReducer) :
                                    varset   = vv       ,
                                    binning  = binning  ,
                                    sample   = sample   ,
-                                   storage  = storage  ,
                                    silent   = silent   , 
+                                   storage  = storage  ,
                                    args     = cargs    )
 
             if ds.isWeighted() :
