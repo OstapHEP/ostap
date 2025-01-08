@@ -912,17 +912,30 @@ def _radd1_reduce ( var ) :
     """ Reduce `Ostap.MoreRooFit.Addition` objects
     - see Ostap.MoreRooFit.Addition
     """
-    content = type ( var ) , var.name , var.title , var.x () , var.y ()
+    if 2 == var.size () : content = type ( var ) , var.name , var.title , var.x () , var.y ()
+    else                : content = type ( var ) , var.name , var.title . var.vars ()         
     return root_store_factory , content 
 
 # ===================================================================
 ## Reduce <code>Ostap::MoreRooFit::Addition2</code> objects
-#  @see Ostap::MoreRooFit.Addition3
+#  @see Ostap::MoreRooFit.Addition2
 def _radd2_reduce ( var ) :
     """ Reduce `Ostap.MoreRooFit.Addition2` objects
     - see Ostap.MoreRooFit.Addition2
     """
-    content = type ( var ) , var.name , var.title , var.x () , var.y () , var.c1 () , var.c2 () 
+    if 2 == var.size() : content = type ( var ) , var.name , var.title , var.x () , var.y () , var.c1 () , var.c2 ()
+    else               : content = type ( var ) , var.name , var.title , var.a () , var.c ()         
+    return root_store_factory , content
+
+# ===================================================================
+## Reduce <code>Ostap::MoreRooFit::Product</code> objects
+#  @see Ostap::MoreRooFit.Product
+def _rpr_reduce ( var ) :
+    """ Reduce `Ostap.MoreRooFit.Product` objects
+    - see Ostap.MoreRooFit.Product
+    """
+    if 2 == var.size() : content = type ( var ) , var.name , var.title , var.x    () , var.y ()
+    else               : content = type ( var ) , var.name , var.title , var.vars ()          
     return root_store_factory , content
 
 # =============================================================================
@@ -984,13 +997,15 @@ Ostap.MoreRooFit.Addition    .__reduce__  = _radd1_reduce
 Ostap.MoreRooFit.Addition2   .__reduce__  = _radd2_reduce
 
 Ostap.MoreRooFit.Subtraction .__reduce__  = _r2v_reduce
-Ostap.MoreRooFit.Product     .__reduce__  = _r2v_reduce
 Ostap.MoreRooFit.ProductPdf  .__reduce__  = _r2v_reduce
 
 Ostap.MoreRooFit.Id          .__reduce__  = _rid_reduce
 Ostap.MoreRooFit.AddDeps     .__reduce__  = _radddep_reduce
 Ostap.MoreRooFit.ABC         .__reduce__  = _rabc_reduce
 Ostap.MoreRooFit.Clamp       .__reduce__  = _rclamp_reduce
+
+
+Ostap.MoreRooFit.Product     .__reduce__  = _rpr_reduce
 
 
 # =============================================================================

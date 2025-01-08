@@ -253,7 +253,7 @@ double   Ostap::MoreRooFit::Constant::getValV
 
 
 // ============================================================================
-// construct a + b 
+// construct x + y 
 // ============================================================================
 Ostap::MoreRooFit::Addition::Addition
 ( const std::string& name  , 
@@ -263,9 +263,34 @@ Ostap::MoreRooFit::Addition::Addition
   : RooAddition ( name_  ( name  , "add" , x , y ).c_str() , 
                   title_ ( title , "+"   , x , y ).c_str() ,
                   RooArgList ( x  , y  ) ) 
-  , m_x  ( "!x"  , "x"  , this , x  ) 
-  , m_y  ( "!y"  , "y"  , this , y  ) 
 {}
+// ============================================================================
+// construct x + y + z 
+// ============================================================================
+Ostap::MoreRooFit::Addition::Addition
+( const std::string& name  , 
+  const std::string& title ,
+  RooAbsReal&        x     ,
+  RooAbsReal&        y     ,
+  RooAbsReal&        z     ) 
+  : RooAddition ( name_  ( name  , "add" , x , z ).c_str() , 
+                  title_ ( title , "+"   , x , z ).c_str() ,
+                  RooArgList ( x  , y  , z ) ) 
+{}
+// ============================================================================
+// several variables 
+// ============================================================================
+Ostap::MoreRooFit::Addition::Addition
+( const std::string& name  ,  
+  const std::string& title ,
+  const RooArgList&  vars  )
+  : RooAddition ( name.c_str() , title.c_str() , vars )
+{
+  Ostap::Assert ( 2 <= size() ,
+		  "Not enoght elements!"
+		  "Ostap::MoreRooFit::Addition" ) ;
+}
+
 // ============================================================================
 //  copy constructor 
 // ============================================================================
@@ -273,8 +298,6 @@ Ostap::MoreRooFit::Addition::Addition
 ( const Ostap::MoreRooFit::Addition& right   , 
   const char*                        newname ) 
   : RooAddition ( right , newname )
-  , m_x  ( "!x"  , this , right.m_x  ) 
-  , m_y  ( "!y"  , this , right.m_y  ) 
 {}
 // ============================================================================
 // destructor 
@@ -299,12 +322,34 @@ Ostap::MoreRooFit::Addition2::Addition2
   : RooAddition ( name_  ( name  , "add" , x , y ).c_str() , 
                   title_ ( title , "+"   , x , y ).c_str() ,
                   RooArgList ( x  , y  ) , 
-                  RooArgList ( c1 , c2 ) ) 
-  , m_x  ( "!x"  , "x"  , this , x  ) 
-  , m_y  ( "!y"  , "y"  , this , y  ) 
-  , m_c1 ( "!c1" , "c1" , this , c1 )
-  , m_c2 ( "!c2" , "c2" , this , c2 ) 
-{}
+                  RooArgList ( c1 , c2 ) )
+  , m_a ( "!a" , "variables" , this )
+  , m_c ( "!c" , "variables" , this )    
+{
+  m_a.add ( x  ) ;
+  m_a.add ( y  ) ;
+  m_c.add ( c1 ) ;
+  m_c.add ( c2 ) ;
+}
+// ============================================================================
+/// construct \f$ \sum_i a_ic_i\f$ 
+Ostap::MoreRooFit::Addition2::Addition2
+( const std::string& name  ,  
+  const std::string& title ,
+  const RooArgList&  a     ,
+  const RooArgList&  c     )
+  : RooAddition ( name.c_str() , title.c_str() , a , c )
+  , m_a ( "!a" , "variables" , this )
+  , m_c ( "!c" , "variables" , this )    
+{
+  ::copy_real ( a , m_a , "Invalid var parameter!" , "Ostap::MoreRooFit::Addition2" ) ;
+  ::copy_real ( c , m_c , "Invalid var parameter!" , "Ostap::MoreRooFit::Addition2" ) ;
+  //
+  Ostap::Assert ( 2 <= m_a.getSize()
+		  &&   m_a.getSize() ==  m_c.getSize()
+		  &&   m_a.getSize() == _set.getSize() ,
+		  "Invalid size of variables" "Ostap::MoreRooFit::Addition2" ) ;
+}
 // ============================================================================
 //  copy constructor 
 // ============================================================================
@@ -312,10 +357,8 @@ Ostap::MoreRooFit::Addition2::Addition2
 ( const Ostap::MoreRooFit::Addition2& right   , 
   const char*                         newname ) 
   : RooAddition ( right , newname )
-  , m_x  ( "!x"  , this , right.m_x  ) 
-  , m_y  ( "!y"  , this , right.m_y  ) 
-  , m_c1 ( "!c1" , this , right.m_c1 ) 
-  , m_c2 ( "!c2" , this , right.m_c2 )
+  , m_a ( "!a" , this , right.m_a )
+  , m_c ( "!a" , this , right.m_c )
 {}
 // ============================================================================
 // destructor 
@@ -341,9 +384,20 @@ Ostap::MoreRooFit::Product::Product
     ( name_  ( name  , "mult" , x , y ).c_str() , 
       title_ ( title , "*"    , x , y ).c_str() , 
       RooArgList ( x , y ) ) 
-  , m_x  ( "!x"  , "x"  , this , x  ) 
-  , m_y  ( "!y"  , "y"  , this , y  ) 
 {}
+// ============================================================================
+Ostap::MoreRooFit::Product::Product
+( const std::string& name  , 
+  const std::string& title ,
+  const RooArgList&  vars  ) 
+  : RooProduct ( name.c_str () , title.c_str() , vars )
+{
+  Ostap::Assert ( 2 <= vars.getSize ()
+		  && size () == vars.getSize()
+		  &&  0 == _compCSet.getSize()  , 
+		  "Invalid size of varibles"    ,
+		  "Ostap::MoreRooFit::Product"  ) ; 
+}
 // ============================================================================
 //  copy constructor 
 // ============================================================================
@@ -351,8 +405,6 @@ Ostap::MoreRooFit::Product::Product
 ( const Ostap::MoreRooFit::Product& right   , 
   const char*                        newname ) 
   : RooProduct ( right , newname )
-  , m_x  ( "!x"  , this , right.m_x  ) 
-  , m_y  ( "!y"  , this , right.m_y  ) 
 {}
 // ============================================================================
 // destructor 
@@ -976,8 +1028,6 @@ Ostap::MoreRooFit::BesselK::BesselK
   : TwoVars ( name_   ( name  , "besselK" , a , b ) ,
               title1_ ( title , "besselK" , a , b ) , a , b )
 {}
-
-
 
 // ============================================================================
 // constructor with two variables 

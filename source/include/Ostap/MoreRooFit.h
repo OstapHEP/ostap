@@ -56,6 +56,14 @@ namespace Ostap
         RooAbsReal&        x     ,
         RooAbsReal&        y     ) ;
       // ======================================================================
+      /// construct x + y + z 
+      Addition
+      ( const std::string& name  ,  
+        const std::string& title ,
+        RooAbsReal&        x     ,
+        RooAbsReal&        y     ,
+        RooAbsReal&        z     ) ;
+      // ======================================================================
       /// constructor with two variables 
       Addition
       ( RooAbsReal&        x           , 
@@ -81,9 +89,22 @@ namespace Ostap
         const std::string& title = ""  ) 
         : Addition ( name , title , RooFit::RooConst ( x ) , y )
       {}
+      /// construct x + y + .... 
+      template<typename... Args>
+      Addition ( const std::string& name  ,  
+		 const std::string& title ,
+		 RooAbsReal&        x     ,
+		 RooAbsReal&        y     ,
+		 Args const&...     args  ) 	
+	: Addition ( name , title , x , y ) { this->add ( args... ) ;  }
+      /// several variables 
+      Addition ( const std::string& name  ,  
+		 const std::string& title ,
+		 const RooArgList&  vars  ) ;
       /// copy 
-      Addition ( const Addition&    right       , 
-                 const char*        newname = 0 ) ;
+      Addition
+      ( const Addition&    right       , 
+	const char*        newname = 0 ) ;
       /// destructor
       virtual ~Addition () ;
       /// clone 
@@ -91,16 +112,34 @@ namespace Ostap
       /// fake defautl constructor (needed for serisalization) 
       Addition () = default ;
       // ======================================================================
+    private :
+      // ======================================================================
+      /// add the component    
+      void add ( const RooAbsReal& v ) { _set.add ( v ) ; }
+      /// add all component 
+      template <typename ...ARGS>
+      void add ( const RooAbsReal& v , ARGS const&... args )
+      {
+	add ( v       ) ;
+	add ( args... ) ;
+      }
+      // ======================================================================
     public:
       // ======================================================================
-      inline const RooAbsReal& x  () const { return m_x .arg() ; }
-      inline const RooAbsReal& y  () const { return m_y .arg() ; }    
+      inline const RooAbsReal& x    () const { return static_cast<RooAbsReal&> ( _set[0] ) ; }
+      inline const RooAbsReal& y    () const { return static_cast<RooAbsReal&> ( _set[1] ) ; }    
+      inline const RooAbsReal* z    () const { return var ( 2 ) ; }    
+      inline const RooAbsReal* u    () const { return var ( 3 ) ; }    
+      inline const RooAbsReal* v    () const { return var ( 4 ) ; }    
+      inline const RooAbsReal* w    () const { return var ( 5 ) ; }
       // ======================================================================
-    private:
-      // ======================================================================
-      /// variable
-      RooRealProxy m_x  {} ; // variable
-      RooRealProxy m_y  {} ; // variable
+      // generic  access 
+      inline const RooAbsReal* var  ( const unsigned short index ) const
+      { return index < size() ? static_cast<RooAbsReal*> ( &_set[ index ] ) : nullptr ; }      
+      /// all variables 
+      inline const RooArgList& vars () const { return this->list() ; }
+      /// number of variables 
+      std::size_t  size() const { return _set.getSize() ; }
       // ======================================================================
     }; //
     // ========================================================================
@@ -112,7 +151,7 @@ namespace Ostap
     class Addition2 : public RooAddition
     {
       // ========================================================================
-      ClassDefOverride(Ostap::MoreRooFit::Addition2 , 1 ) ;  // sum of RooAbsReal objects
+      ClassDefOverride(Ostap::MoreRooFit::Addition2 , 3 ) ;  // sum of RooAbsReal objects
       // ========================================================================
     public:
       // ========================================================================
@@ -125,7 +164,7 @@ namespace Ostap
         RooAbsReal&        c1    ,
         RooAbsReal&        c2    ) ;
       // ======================================================================
-      /// construct c1*a + c2*b 
+      /// construct c1*a+c2*b 
       Addition2
       ( const std::string& name   ,   
         const std::string& title  ,
@@ -136,10 +175,18 @@ namespace Ostap
         : Addition2 ( name , title , a , b, 
                       RooFit::RooConst ( c1 ) , 
                       RooFit::RooConst ( c2 ) )
-      {}               
+      {}
+      // ========================================================================
+      /// construct \f$ \sum_i a_ic_i\f$ 
+      Addition2 
+      ( const std::string& name  ,  
+        const std::string& title ,
+	const RooArgList&  a     ,
+	const RooArgList&  c     ) ;
       /// copy 
-      Addition2 ( const Addition2&    right       , 
-                  const char*        newname = 0 ) ;
+      Addition2
+      ( const Addition2&    right       , 
+	const char*        newname = 0 ) ;
       /// destructor
       virtual ~Addition2 () ;
       /// clone 
@@ -149,18 +196,26 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      inline const RooAbsReal& x  () const { return m_x  .arg() ; }
-      inline const RooAbsReal& y  () const { return m_y  .arg() ; }    
-      inline const RooAbsReal& c1 () const { return m_c1 .arg() ; }
-      inline const RooAbsReal& c2 () const { return m_c2 .arg() ; }    
+      inline const RooAbsReal& x  () const { return static_cast<RooAbsReal&> ( m_a [0] ) ; }
+      inline const RooAbsReal& y  () const { return static_cast<RooAbsReal&> ( m_a [1] ) ; }
+      inline const RooAbsReal& c1 () const { return static_cast<RooAbsReal&> ( m_c [0] ) ; }
+      inline const RooAbsReal& c2 () const { return static_cast<RooAbsReal&> ( m_c [1] ) ; }
+      // ======================================================================
+      std::size_t size () const { return m_a.getSize() ; }
+      // ======================================================================      
+      inline const RooAbsReal* a  ( const unsigned short i ) const
+      { return i < size() ? static_cast<RooAbsReal*> ( &m_a [ i ] ) : nullptr ; }      
+      inline const RooAbsReal* c  ( const unsigned short i ) const
+      { return i < size() ? static_cast<RooAbsReal*> ( &m_c [ i ] ) : nullptr ; }
+      // ======================================================================      
+      inline const RooArgList& a () const { return m_a ; }
+      inline const RooArgList& c () const { return m_c ; }
       // ======================================================================
     private:
       // ======================================================================
-      /// variable
-      RooRealProxy m_x  {} ; // variable
-      RooRealProxy m_y  {} ; // variable
-      RooRealProxy m_c1 {} ; // variable
-      RooRealProxy m_c2 {} ; // variable
+      /// variables 
+      RooListProxy m_a  {} ; // variables 
+      RooListProxy m_c  {} ; // variables 
       // ======================================================================
     }; //
     // ========================================================================
@@ -172,7 +227,7 @@ namespace Ostap
     class Product : public RooProduct
     {
       // ========================================================================
-      ClassDefOverride(Ostap::MoreRooFit::Product , 1 ) ;  // sum of RooAbsReal objects
+      ClassDefOverride(Ostap::MoreRooFit::Product , 3 ) ;  // sum of RooAbsReal objects
       // ========================================================================
     public:
       // ========================================================================
@@ -206,6 +261,18 @@ namespace Ostap
         const std::string& title = ""  ) 
         : Product ( name , title , RooFit::RooConst ( a ) , b )
       {}
+      /// construct x * y * .... 
+      template<typename... Args>
+      Product ( const std::string& name  ,  
+		const std::string& title ,
+		RooAbsReal&        x     ,
+		RooAbsReal&        y     ,
+		Args const&...     args  ) 	
+	: Product ( name , title , x , y ) { this->add ( args... ) ;  }
+      /// several variables 
+      Product ( const std::string& name  ,  
+		const std::string& title ,
+		const RooArgList&  vars  ) ;
       /// copy 
       Product
       ( const Product&    right       , 
@@ -217,16 +284,34 @@ namespace Ostap
       /// fake defautl constructor (needed for serisalization) 
       Product () = default ;
       // ======================================================================
+    private :
+      // ======================================================================
+      /// add the component    
+      void add ( const RooAbsReal& v ) { _compRSet.add ( v ) ; }
+      /// add all component 
+      template <typename ...ARGS>
+      void add ( const RooAbsReal& v , ARGS const&... args )
+      {
+	add ( v       ) ;
+	add ( args... ) ;
+      }
+      // ======================================================================
     public:
       // ======================================================================
-      inline const RooAbsReal& x  () const { return m_x .arg() ; }
-      inline const RooAbsReal& y  () const { return m_y .arg() ; }    
+      inline const RooAbsReal& x  () const { return static_cast<RooAbsReal&>( _compRSet[0] ) ; }
+      inline const RooAbsReal& y  () const { return static_cast<RooAbsReal&>( _compRSet[1] ) ; }
+      inline const RooAbsReal* z  () const { return var ( 2 ) ; }
+      inline const RooAbsReal* u  () const { return var ( 3 ) ; }
+      inline const RooAbsReal* v  () const { return var ( 4 ) ; }
+      inline const RooAbsReal* w  () const { return var ( 5 ) ; }
       // ======================================================================
-    private: 
-      // ======================================================================
-      /// variable
-      RooRealProxy m_x  {} ; // variable
-      RooRealProxy m_y  {} ; // variable
+      // generic  access 
+      inline const RooAbsReal* var  ( const unsigned short index ) const
+      { return index < size() ? static_cast<RooAbsReal*> ( &_compRSet[ index ] ) : nullptr ; }      
+      /// all variables 
+      inline const RooArgList& vars () const { return _compRSet ; }
+      /// number of variables 
+      std::size_t  size() const { return _compRSet.getSize() ; }
       // ======================================================================
     }; // 
     // ========================================================================
