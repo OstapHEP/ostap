@@ -19,7 +19,7 @@
     1. add `silent=True` argument for `generate`-methods
     1. add printout of gen-options for `generate`-methods
     1. simplify (&extend) `Ostap::MoreRooFit::Addition/Addition2/Product`
-
+    1. remove default construcor for `Ostap::MoreRooFit::ProfileLL`
 
 ## Backward incompatible1
 
@@ -2271,283 +2271,339 @@ canvas >> 'plots.txz' ## make plot in all formats and store them in tar/LZMA  fo
 ## New features:
 
   1. Slight improvements in `ostap.fitting.minuit`
-  1. add new test for `ROOT.TMiniut` decorations :  `test_fitting_minuit`
-  1. allow `pathos` to be used for paralellization for python version > 3.6  
-  1. add test `test_parallel_dill` to check the the problem with combniation 
-     of different versions of `ROOT` , `dill` and `python`.    
-  1. improve `ostap.fitting.toys`
-  1. improve `ostap.parallel.parallel_toys`
-  1. add `test_fitting_toys`
-  1. add `test_parallel_toys`
-  1. add examples/tests for evaluation of significance with toys
-  1. improve the output of `ls`-method for for `compressed_shelve` 
-  1. few minor tweaks needed for `picalib` 
-  1. add `DisplayTree` into `ostap.logger.utils` - useful tool to render the tree-like structures
-  1. impove `ls` methods for all shelve-like databases 
-  1. add `ls_tree` and `ls_table` method for `ROOT.TDirectory`
-```
-f = ROOT.TFile ( .. )
-f.ls_tree ()
-f.ls_table() 
-```
-  1. speedup construction of Bernstein polynomials from the list of roots 
-  1. re-write `PDF.wilks` method to use `ROOT.RooProfileLL`
-  1. add methods  `PDF.graph_nll` and `PDF.graph_profile` for 
-     a bit more easy and more fast drawing of NLL-scans and profiles 
-```
-pdf = ...
-g1 = pdf.graph_nll     ( 'S' , vrange ( 0 , 20.0 , 100 ) , dataset )
-g2 = pdf.graph_profile ( 'S' , vrange ( 0 , 20.0 , 100 ) , dataset , fix = ['gamma','mu'] )
-```
-  1. allow to suppress certain RooFit message topics from the configuration file, e.g.
-```
-[RooFit]
-RemoveTopics = Plotting            ,
-               Caching             ,
-               Eval                , 
-               Minization          ,
-               Integration         ,
-               Optimization        ,
-               NumericIntegration  , 
-               Fitting     
-```
-  1. Add more flexibility for parallel `Task` : one can specify the additional environment variables, prepend and append path-like environment variables, execution directory, ... variables are expanded.
-```
-mytask = MyTask  (... ) 
-mytask.environment [ 'LD_LIBRARY_PATH' ] = 'some_directory1:some_directory2' 
-mytask.prepend_to  [ 'PATH'            ] = 'some_directory1:some_directory2:some_directory3'
-mytask.append_to   [ 'PYTHONPATH'      ] = '$HOME/python'  ## will be expanded at remote host
-mytask.directory                         = 'some_existing_remote_directory'
-mytask.dot_in_path                       = '.' in sys.path 
-```
-  1. add new  function `random_random` into `ostap/parallel/utils.py`, that sets (hopefully) proper seeds for the `random`, `ROOT.gRandom` and `ROOT.RooRandom` 
-  1. add invocation of `random_random` from `initialize_remote` for the parallel toys.
-  1. add methods `graph_nll` and `graph_profile` for class `SimFit`
-```
-pdf = ...
-g1 = pdf.graph_nll     ( 'S' , vrange ( 0 , 20.0 , 100 ) , dataset )
-g2 = pdf.graph_profile ( 'S' , vrange ( 0 , 20.0 , 100 ) , dataset , fix = ['gamma','mu'] )
-```
- 
-## Backward incompatible changes
-
-## Bug fixes:  
-
-  1. Tiny fix in `ROOT.TMinuit.cor`
-  1. Tiny fix in `ROOT.TMinuit.cov`
-  1. more fixes in `ostap/fitting/minuit.py`
-  1. small fixes in `ostap/fitting/toys.py`
-  1. tiny fix in `ostap/math/random_ext.py`
-  1. Fix signature of `ds_project` method from `ostap.fitting.dataset.py`
-  1. few minor fixes needed for `picalib` 
-  1. fix `Ostap::HistoProject::project` for weighted `RooAbsData`, 
-     now uncertainties are evaluated correctly, properly accounting the errors in weights  
-  1. fix typo in `paralllel_toys2`
-  1. fix `random_random` for python3
- 
-
-# v1.4.6.0
-
-## New features:
-
- 1. Add new method `dct_params` for `ROOT.RooFitResult`, that gets a dictionary of all parameter values 
- 1. `plotting/canvas.py`: Add option to save the canvas congent in tar/tgz/zip-archives:
-   ```
-   canvas >> 'test.zip'
-   canvas >> 'test.tar'
-   canvas >> 'test.tgz'
-   ```
- 1. `ostap/fitting/toys.py`  new module with simple functions to perform fitting toys
-```
-pdf = ...
-results , stats = make_toys ( pdf      ,           ## PDF  to use 
-                  1000                 ,           ## number of toys 
-                  [ 'mass' ]           ,           ## varibales in dataset 
-                  { 'nEvents' : 5000 } ,           ## configuration of pdf.generate
-                  { 'ncpus'   : 2    } ,           ## configuration of pdf.fitTo
-                  { 'mean' : 0.0 , 'sigma' : 1.0 } ## parameters to use for generation 
-                 )
-``` 
-  1. `ostap/parallel/parallel_toys.py`  a version of the function above for the 
-      parallel execution via multiprocessing and/or parallel python
-  1. add method `evaluate` for `ROOT.RooFitResult` to evaluate the arbintrary function of 
-     fit-parameters with uncertaionties
-```
-res = ... ## ROOT.RooFitResult object
-fun = lambda x,y,z :  x*x+y*y+z*z 
-val = res.evaluate ( fun , ('x' , 'y' , 'z') ) 
-```
-  1. add `EvalNVEcov` and `EvalNVEcor` evaluators into `ostap.math.derivative` module. 
-     These objects evaluate the value of N-argument function taking into account 
-     the uncertainties and/or correlations 
-  1. add method  `max_cor` to `ROOT.RooFitResult` to obtain the maximal correlation coefficient
-```
-res = ...  ## ROOT.RooFitResult
-coefficient , variable = res.max_cor ( 'X' ) ## get the maximal correlation
-```
-  1. add the column `Global/max correlation` for the table form of `ROOT.RooFitResult`
-  1. add `ncpus` argument to `ostap.parallel.parallel_toys.parallel_toys`
-
-## Backward incompatible changes
-
-## Bug fixes:  
-
-  1. Minor fix in `Files.hadd` 
-  1. Couple of minor fixes in 
-      - `ROOT.RooFitResult.sum`
-      - `ROOT.RooFitResult.multiply`
-  1. Couple of minor fixes in `ostap.math.derivative`
-  
-# v1.4.5.0
-
-## New features:
-
-  1. Add new functions:
-       - `parameters`
-       - `parameter` ( and shortcut as `__getitem__` )
-     for the base class `PDF` to allow "easy" access to the values of 
-     parameters by name, e.g.  `a = pdf['A']` or `a = pdf.parameter('A')`
-  1. New function `mid_point` is added to `PDF`-base class, 
-     defined as 0.5*(x_low + x_high), where f(x_low)=f(x_high)=0.5 * f_max.
-     x_low and x_high  are the same points used for evaluation of FWHM.
-     It characterises the location of the peak, similar to `mode`, `median`,
-     `get_mean` and other related functions 
-  1. Add `ResoBukin` -  symmetric resolution function based on Bukin-pdf. 
-  1. Update `tests_fitting_resolutions.py` 
-  1. Add `Losev`-function&pdf - a kind of asymmetric hyperbolic secant function
-     - `Ostap::Math::Losev`
-     - `Ostap::Models::Losev`
-     - `ostap.fitting.signals.Losev_pdf`
-  1. tune `RooFitResult.table` printout method
-  1. update some fitting examples  
-  1. add option/property  `directory` for `ostap.parallel.task.Task` to indicate 
-      the directory where the job needs to be executed       
-  1. add option/property  `environment` for `ostap.parallel.task.Task` to 
-      setup   additional environmental variables (if needed)  
-  1. Add  argument `keys`  for the method `clone` for all databases, allowng to 
-     copy only certain keys into cloned database. (Default: copy all keys) 
-  1. add `json`, `gif` and `jpg` output formats for  default `canvas >> 'aaa'` operator
-  1. add `hadd` method for `ostap.trees.data_utils.Files` to merge ROOT file via `hadd` script
+  1. add new test for s to Tatia.nt t shapes to pap::StatVar`r   ysgfgray:Models::GenHyperbol files 
 
 
-## Backward incompatible changes
+# atabases, in particular thoses 
 
-  1. MASSIVE RENAME/FIX:  Apolonios -> Apollonios
-  1. Add `jobid` argument for `Task.process`
-      - All existing tasks are updated properly 
-      - All new functions and tasks must take this argument into account!
+aethatatVar`ra
 
 
-## Bug fixes:  
+# v1.6.2# BackwaIpes to pap::StatVar`r   ysgfinui/add t  toblem.
 
-  1. Fix minor bug in `ResoBukin`-resolution function
+# v1.ov for repoy incory in1:Conv.end compr bi`ar`nsvckwardr.TG.ed `Ostap:ap::Mathransforostuumb`4.7.0mll_nume ) :b asIp_convold easy to (ter namNew features:#ible to Tarost`les/fun x : t true `read-h:nnherics f. improve baseclasess 
+ 1. updatnWost`les/fu`ia/math/operations.py'
+  x `Ostap::MNadd `A ong` , `s  x pdf`
+  1. a8i 
 
-
-# v1.4.4.2
-
-## New  features: 
-
-  1. `table` function for `RooFitResult`: print object in a form of nice table 
-  1. `ostap.logger.utils`  set of minor functions for nice printout 
-      - `pretty_float` : print float 
-      - `pretty_ve`    : print float and error 
-      - `pretty_2ve`   : print float with asymmetric errors 
-  1. `ostap.logger.table`  : add function `align_column` to aling the column for a given table
- 
-## Bug fixes: 
-
-
-# v1.4.4.1
-
-## Bug fixes 
- 
-  1. Fix for "old" ROOT version in `MoreRooFit.cpp`
-
-
-# v1.4.4.0 
+3/- GSL e5.0.3
 
 ## New features 
+  1. adr t and btions 
+uts callow forwad an3base (crn3L_pdpo in`_odulterpolFP`1. Remove4  = sterpe classesNC2store t`.r t and rove bamMimplici
+  1. fix bugs i1. disanne_fiibiy= ...
+v1  = pdf.vars_power   (add 
+  1nne_fiome functionalityities `lrange` and `log_rr   (add ifor `toot
 
- 1. Redesign all *shelve-like data bases:
-    - add abstract base class
-    - implement concrete databases :
-      - zipshelve (ZIP/GZIP compression )
-      - bz2shelve (BZIP2 compression) in terms of base class
-      - lzshelve  (LZMA-compression) only for python3
- 1. impove timing functions
- 1. improve `TTree.the_variables`
- 1. selector via frames: change order of variables in  snapshot
- 1. improve statistics for selectors
- 1. improve a bit printout for TTree/TChain (sorted, type,...)
- 1. improve a bit printout for DataFrame (sorted)
- 1. generate temporary column names for DataFrame using hash instead of random 
-      - it allows better debugging (reproducible)
- 1. re-enable security key for paralell python servers
- 1. Update all tree-collection utilities
-      - Files
-      - Data
-      - Data2
-      - DataAndLuimi
- 1. Add colorization to progress bars
- 1. fix (hope) segfaults for adding new branch to tuple
- 1. Improve colorization
- 1. make optional use of terminaltables package
- 1. add local function to format tables
- 1. improve printout of trees and datasets
- 1. more improvements in tables&colorization
- 1. improve reweighting machinery
- 1. add 2D and 3D  moments for the histograms
- 1. improve 2D histos comparison functions
- 1. improve progress bar
- 1. fix addition of new brnaches to `TTree/TChain` and whole `IFuncTree` machinery
- 1. change the names for example-tests
- 1. add script to check the dependensies
- 1. one more attempt to fix the crash for `FuncTH1`
-     - `add_branches` - Notifier is not invoked... Invoke it explicitely!
-     - `FuncTH1::Notify` : reset/delete formula  instead of Notify...
-     - fixes in `Notifier`
-     - few more fixes
-     - add a test for `add_branches`
- 1. make a try to polish a bit the Doxygen/Sphinx machinery
- 1. Update `test_tools_reweight2.py`
- 1. Add  `Ostap::Math::ChebyshevApproximation`
- 1. extend `PDF.nll` to accept all keywords
- 1. unify `PDF.nll` keywords with `pdf.fitTo` keywords
- 1. tmva & tmva/chopping: fix problem with non-deleted temporary files/directories
- 1. `cleanup` :  add concept of "local" trash, to be deleted when `CleanUp` instance is deleted
- 1. `mp_pathos` & `parallel/task`: improve the output of the final statistics, add total time and CPU gain due to paralellization
- 1. `add_branch`/`add_new_branch`
-       - extend current functionlaity  allowing to add several branches at once
- 1. Add "clone" methods for all io-databases
- 1. Add `dump_root` module/utility/recipe to allow reading of databases 
-    created with "old" ROOT versions, with old version of streamers
- 1. add/extend math-function for graphs
- 1. remove drawing artifacts for `PDF.draw_nll` method
- 1. Add `ROOT.TGraph.remove` method
- 1. Improve `ROOT.TGraph.filter` method
- 1. Add plotting options for `combined_background`, `combined_signal` and `combined_components`
- 1. Extend the signature for `Ostap::Math::gauss_pdf`/`gauss_cdf`
- 1. Add `PSSmear_pdf` - smeared version for `PhaseSpace`-based PDFs
- 1. Add `signals` & `backgrounds` keywords for `Fit1D`-constructor
- 1. Add 'args' argument to draw-functions
- 1. Add possibility for prefilter of data for `TMVA`/`chopping`.
- 1. Allow TMVA/chopping tools to process `RooFit` datasets: (converted internally to `TTree`)
- 1. optimize evaluation of polynomials in `Ostap::Math`
- 1. Add `Ostap::Math::Clenshaw::term` - evaluate the N-th term of the recursive sequence
- 1. Add `Ostap::Math::barrier_factor` -   evaluation of Blatt-Weisskopf angular momentum
-       centrifugal form factors for  arbitrary angular  momenta
- 1. Fix but in `VE.purity` : Thanks to Alexey Dziuba
- 1. Improve configuration of canvas&styles
- 1. Add `DalitzIntegrator` for  relatively efficient integration over Dalitz plot
- 1. Add true analytical 3-body phase space
- 1. Add check for duplicated variable/pdfs names
- 1. Add `ProgressBar` action for `DataFrame`, now one can display the progress bar
-       during the processing of large frames.
- 1. Add context manager to remove/add certain topics to `RooMsgService`
+## New1. body phase space form New`x sequecne for the weighted2 fo`readyg fixes: h>[s/gs i1. A)orm NewS## NwMorehe test/example for ge gaind pap::Sw features:
 
-## Bug fixes 
+ r `c2DR the existins strustur`r   ysgfgray:Models:1. remove dutest/example for `gracne fo test/epaTa1
+  1. aple foins strusturUNC/Famma`) fliatures:
 
- 1. `PDF.draw_nll` : fix bug for the weighted datasets
- 1. Few  fixes in `Dalitz`, epsecially for  drawing it
- 1. bug fix in `add_branch`
- 1. minor fix in `TGraphAsymmErrors.transform`
+ Wins stra= lL 10^b
+v3  = pdf.o) # alsoification dai`ar`nsvckwardr.TG.edUNC2` ao- 1. C## New feaff
+
+2intervalreRooFit::Coo_ress_shelve` f-ic` 
+ 'b
+v3  = pdf.ora= lL 10^b
+v3  = pdf.o) # alsoi x pdf`
+  1. a8i 
+
+.hID` in `oxte# alsoi x)ROOT.Dous` module, thatin tartp ( x ).real ) ## draw ren `1lot in aBackward inco ## Ptra= lL est_fies:#idpo inrs`m Gusgration over s,s2 variabible chang3se of `berkelblato  Bug fidf`
+  1.
+# v1.ov femat`contransf thatsts
+ mcorrel8sgration otend tests  lgT v1..7.0mll_nuomptics::DaN2th::Integraude` for `Ostap::Y-et`/ei large range into smallera.
+## NZcisin for   lgT v1..7.0s:#idpo gger formate creation  
+# v1.ference `Ory databas- forwad a
+Ypac- `varsfor  c``
+pdf = , featmake themns` )defth_fiome `varsfor  c``
+pdf = , c BreiBackwew1. bodcomponew features
+  ars impdlot inmyon-de= Myv1.frdrn = ..nmyon-d. `varsfor  c[ 'LD_LIBRARY_PATH' ]) , New _wew1. bod1:New _wew1. bod2'.nmyon-d.featmak_ 10.[ 'PATH'            ]) , New _wew1. bod1:New _wew1. bod2:New _wew1. bod3'nmyon-d.mns` )_ 10..[ 'PYTHONPATH'      ]) , $HOME/b asIp'_imagwiparsi ars impd at, `PyVartattnmyon-d.wew1. bodlato  Bug fidf`
+
+
+
+
+
+
+
+
+
+ , New _`roofunc_ `PyVa_wew1. bod'nmyon-d.dotion_efthto  Bug fidf`
+
+
+
+
+
+
+
+
+
+ , .' add s offtht
+2.py`
+  `  
+## Ba.py` (thank for d_ for dlassesNC2stor/dary     : print xdecoded
+  1.(hd smMinnel.6
+  1.ss: ew test `te for dl,dd `**kwRfor dlabut a ur`r   Rfor dlay`
+  `  
+#ion 
+  1. allok for d_ for dlapers 
+g_sp& pyte_ `PyVat for the atures 
+
+   Abrmula` that allows xample for `graco test/epaTa1
+  1. mean_na`test_fdf.o) # alsoification dai`ar`nsvckwardr.TG.edUNC2` ao- 1. C## New feaff
+
+2intervalreRooFit::Coo_ress_shelve` f-ic` 
+ 'b
+v3  = pdf.ora= lL 10^b
+v3  = pdf.o) # alsoi x pdf`
+  1. a8i 
+1. fix `Ostap::Math::Positive::updateBernstein`. The bug n_range optioels::GenHlaunc. fixed in_range optioels::GenHlaunc.vT`
+  1. few minor fixehon_version<=3`pplaun `ostap/m 
+ 
+## Baor fixehon_version<=3rts of Jackknit_range optiosts
+  1. ad for d_robof Jackknixt make_plots`, didsmplify `(add ifor t status (0) and cov3  = peatures:#in v1.4.8.2
+
+## Ndpo in`_odulterpolFP`1. Remwas introducHery:Plify `::plify `(aymptotic` chestatVars`
+  to smallformhError`
+  iures
+  arved :-d ew featur,1  = pdf.vaccatonlight im## BackwarUtils::s`1. Remwas  = ... ,ndary  u`ia/matin `linalg2/k for d_ for dlapug fixes:
+
+1. extend fitting_resolution3.py' witilks` , e-removedct`les/mtatVar/ste-extensiodd `spldecodedg  1.ati large ryemporariBWMC_pdf`,PS`
+
+in/secondlL est_/store eatu:tilks RooRea`oxta.0.3
+
+#store t).rgbody ph fortgz/zip-arer vand `ds2.py`
+ store them  `Os.zip'y`
+ store them  `Os. fo'y`
+ store them  `Os. gz' `ds2.py`1.xehon_version<=3rts of J on  of covarip install` ng.morphing_pods to  rsion<=a8i 
+
+f.o) # alsoifi `array.,  `totra=dul-Kerim3   # araude``
+
+
+
+
+
+
+
+
+
+ng_ratiins stru smallera.
+## NZZZZlL 0mallera.
+## NZZZZ``
+
+
+
+
+
+
+
+
+
+ng_was incorrerim3 smallera.
+## NZZZZ[ 'e/in' ]).
+## NZZZZ``
+
+
+
+
+
+
+
+
+
+ng_loning&copinecks for theeeeeeeeeeeeeeeee{ 'ld vetn' :r vi0 }Z``
+
+
+
+
+
+
+
+
+
+ng_).real ) ## drpola::Cotable ctheeeeeeeeeeeeeeeee{ 'lcpus'   : 2eeee}Z``
+
+
+
+
+
+
+
+
+
+ng_).real ) ## drpola::Cadd ntheeeeeeeeeeeeeeeee{ ' for' :r.ora= 'e for' :r1. a}
+ng_t. The tricks struVar/py` : add  theeeeeeeeeeeeeeee)Linear UnbiC2stor/dary     les/fu`ia/matof J oas 
+  1. add checpy` (thanab= pdfor the theeeeeatures 
+
+c BreiBack,`Pynager  =t['pome der/creation  
+#ixes:
+
+mula` that allobserved :-atVar/ste-extensiodd `spl`
+forrved :-- forwrbfor ward y` (thanof theeeefromt. The tricixWithError`
+o  iur
+f.o)2 alath`
+
+ng_te-extensiodd `sp  2 ) #
+ y` phase 
+```,y,z
+# ax*x+y*y+z*z 
+elbl=atio.rrved :--(d y`a= ('x.canvy.canvz' `Asymptlityities `kelbNVEc.vT `grackelbNVEc.r`orrved :BackwaesNC2storematries 
+  1. aor pytho. theeeestap::Fs, add rrved :-- forPS`
+
+ Wins  1. Fix ` y` (thantak:MathaesNaccaton theeeeckwardrror`
+  iureser/crep/stats/re_asym_errors` to `R nks x_c.r`oe file-extensiodd `spl`
+foobROOT.ckwas ximral mstats/re_l moments `O
+f.o)2 alath`
+
+
+ng_te-extensiodd `sp
+ moments `O(also i the phtio.s x_c.re` fX'   , v addckwas ximral mstats/re_ymptlityities arameter `b`Glong&/ilit mstats/re_t for the context mmostuumb`4xtensiodd `spllityities `lcpus (but not perfles/fun x : t true `read-h:nnrue `read-h:nnhe1. fix `Ostap::Math::Positive::updateBernstein`. The bug M4.8.2
+
+#fittinlass hiesear UnbiC`
+   
+# v1.4.8.6
+
+## Newtheeeee-uumb`4xtensiodd `sp.suthErreeee-uumb`4xtensiodd `sp.nager ltures:#iC`
+   
+# v1.4.8.6
+
+## NewC2storematries 
+  1. aoxUtils.h"
+
+ynomial and spline class witilks` , ng.morphi:theeeeee- `RooAbsReal:theeeeee- `RooAbsRea`ymptbit hortc, `Osweighted datase`
+  1. for the bdd `mean_na_fittt_range` "urUN"nuit['p2rmationPS`
+
+inof theeeet. The tricmmands
+ig` hel `aoFit::['A']`reRo`aoFit::.t. The tr('A's :
+```
+N , ng.morphf nad_pr `CMAbyshdsible fi_fit-bdd `mean_to small1. implemen0.5*(x_ge` + x_hils),.8.7ew m(x_ge`)=m(x_hils)=0.5 * f_ili. smallx_ge` tbitx_hils from 1. adn`  pr `C judge abotNadd `A ong` ,FWHM. smallItatua ints 
+s
+
+# v1.l 
+  1. allothe aeak,owards ROOT 6atio `PDFsdian`` for `e wi_mll Breit-ke it tats/tes `store_asym_errrrors esoBuk- `O-Carlson formsolutions''
+ 1. cha 2nd, 3rd Buk- -t::.sym_errUe changes
+
+Breit-WignealVar`
+ 1.ce for caserrorsLosev`-
+ 1. cha& # a-oasnmenemporrlson form1. Improve secax ` y` (thaeric `Ostap::Mored in Losev`eric `Ostap::MoreR
+## BaLosev`eric `Ostr toys
+  1. add `BWIs.Losevslonglong` press
+  1. add `spolumn al `ostap.mtap::Math::Dns stru`  andsion<=as.py'
+  i/add t  tob RooRe/and 4thy 0mllw1. body it for toysxecute the ta.v1.fert... dtinge theeeeeId`
+ ew1. bodl8.7ew Id`
+jobNdpo   1. addc Breitdheeeeeeadd t  tob RooRe/and 4thy 0m `varsfor  y it for toysxecute the ta.v1.fert..theeeeeforu '{}wad a
+Ypac- `varsfor   
+```
+pdf = ..ifNdpo in)ows to (re)dversion to in `Os for the t allobs 1. mWorkManageles 
+  1. fange`
+## Ba test fo. upve`
+ x)ROOT.in `thaesN 1. mdeles 
+  1. (DhevSum: fo. unagein `elBW`
+  1. r`jse_t`PDgi functiojpg`## New fmprove aes:
+
+se` to `Tstore them aaa'y colors bBW`
+  1. r`hieseadd ifor `toor toysmber .f alive `TCFalso ndan rd iRemovehelve,`Py`hieseatunnel 1. Fix some tiny incorrectnesses ihe bug MASSIVE RENAME/FIX. TApoa???osrameApoaa???osr caserrorsjobid1. add more funcTn-d.fe=t['phErreeee-uAll `roofunc.er cha forms strv1  = pdf.vErreeee-uAll ` , ng.morphis, remr chamtiontkknifeilated stuffhaesNaccaton!
+dateBernstein`. The bug Fachin4.8.ame.Prog esoBuk- `-solutions''
+ 1. chas_power`,`4valuate` (t spline clThe bug `lumn altional phase-
+  1. add `splal`, `amFs, ad 
+  1xt mmostunice contexr UnbiC2store t`.r t and roefor
+# v1.4.8.6 1. Add test nice eighted dataeeee- `Rretty_floauit  `, `amfloaudataeeee- `Rretty_r tra t  `, `amfloaudckknife anataeeee- `Rretty_2r tra   `, `amfloaudrees orlson formixes:
+
+  UnbiC2store t`.r tlumn alrename ng.morphf ` - f_eter `ttt_ranlight imeter `brkMan g. an conteath/derivative.p s_power`,`4v1dateBernstein`
+  e bug Faches.c_old"`ROOT.RooFit.tils2/` in `Fun.cpp`s_power`,`4v0 :Math::Integrator` and `Ro id `Bunage*  1nne_fiome fun 2nd,i:theeeDF to tend intebdd `mean_theeeDFefore for ).rcrit_w functiona:ataeeee- zip  1nne (ZIPl formbtions 
+it.t)ataeeee- bz2  1nne ( formabtions 
+it.)y ph erminof bdd `mean_theeeee- lz  1nne  ( BLU-btions 
+it.)ypve`
+pug fixes:
+
+1.
+v1  = pdDaN2icErore robust to Tarost`leweig.t i_.7
+  1. chanp/m nges
+  e,`Pys/dats     (reqordincorrdatetime to t snap  le n to Tarost` `to: add test anges
+  1 n to Tarost`arEntity` classes (eweig/ simpl (sortnheri. Iel` + n to Tarost`arEntity` classes (rojetction(sortnh+ n tootable c## Backwardeter `bmpatible crojetction for mho laAdd symmeti for dnataeeee- the  variahose wideamegor m(rep  reprect+ n tore-d `statsecurmatein 1.6.2# Backwa::StatVa `PyPdf
+_errUe channage i1. cadd the aes 
+  1. mataeeee- Falsoataeeee- rojeataeeee- roje2ataeeee- rojeAndLuaN2' witilksle` w2th::Int::BWI`signembadf
+_err
+
+#f(hd s)a `g` to r   (adl esti` , b fotionmat
+   compatible chle` w2th::In
+D`
+  1. eero (defexclude  ermes/vttime tp soagegs` to `odd me` y` (thantoadd `Ostttime  n to Tarost`ty` classde  
+  1.use bed`
+  1
+  1. few st for s to Tatittime &le` w2th::In
+D`
+ nd less automatic) and more sgs` to `o2D.use 3D on decorafor the _project'  n to Tarost`2D.nery:  ake itiss''
+ 1. cha  n to Tarost`ty`signembad_dataset` .py`
+```stun , b nd mels::B`eweig/ simplfunctiwhong fIF 1.pe cland more sgs` tFUNC2/FUNC4mpatible cs.py'
+ -d intererence `unnelscory in1:Convdatmak ## e  n toce ` few "Ostmelscorwas  s to o launch F 1.pH1`eric `Ostnce_b fotie roveNot3 dbrand `Ostion kedh`
+
+Ion ke theexDF` obely!eric `OstF 1.pH1::Not3 mentati
+  /
+##ebugs i
+  1.aAdd symmetiNot3 m 
+  1.c `Os6
+
+## NewCNot3 dbr`eric `Osf`comprw minoreric `Os to tsgfgray:Modnce_b fotie r
+D`
+  1. eae gain i  1. mtimator : 
+Doxyota/Sessexand more sgs` tUe changes
+
+_phere_automati fixes:o (re)dvend `Ostap::Math::DaltzIntegrator`
+  1.o probe sicne fny incor that unagein star  n tounAdd `ne fny inin star els anda::Cadd n`ein star  n totmva &otmva/chd pc) :rwas  compr bi`ar`Math
+##ebud## Backward incompatible chay`1.xeclll upenta.Doublenhat u on-dd me"ompash, 1. add
+##ebud#Ostap:Clll Updatabes: noadd p#ebudy`1.xegandhatatVa&ondary         lalSL e5.0.3
+
+## New featchecpes/v` `to: add ` avoin partlog-fnctiCPUc.py`
+duforma# BackwaIpes toy`1.xence_b foti`/ence_n ,_b foti`theeeeee-  on datastap.h'
+ 1. chalamaten3)
+  `
+## Bance `rnings b fotie  at,enhas:o (re)d" 1. m"rs_power   (add 
+io- functionGSL errorsdu-likootor pytho/s 
+  1y/ in sformaange` tesh:
+
+ Win functionalit mediateegrees _old"`ROOT.RooFit. ` rees a_na 
+  1. add s )` mPdf
+_errnce/ on datmatr-tional phase- New f
+ and `ostap/res:
+
+ ptotrd isx bug for Add logismtap::Mat1 errors 
+
+
+## Backw `ostasmtap::Mat1 ether exte 
+
+
+## Backw inRea`ytap::Mat1 errorraw some ero (danges
+
+## bimpl_pdf` 
+  1.t`PD## bimpl_d `BWIfunctio## bimpl_
+  
+## Bug 1.o pEon dat1. adke_plots` tests   
+
+
+# v1.4gaussslong/`gausssconglo1 errors phase steps towase ays 
+  1. a bug fug fixes:# Bug fiuncslo1 errorsd `BWIsVa&onpdf` 
+  1.sinin star eunch Fit1D`-s/gs i1. orlo1 error'stri'(but not perfect -
+ 1. cha  n toAanvas >> ormate creare inRea Win fune funcTMVAg/`chd pc) `. n toAnge` TMVA/chd pc) rs` to ::BWI`t['p2
+  1. a` bed`
+  1:tap:ignere. FixesnOstap::B`eweig`+ n toummary`etNadd `A ong` ,rehe test/exo the logger foglo1 errorsnd `Ostap::Matl ##haw:: erms torrved :-- forN-. a8emmostuk is bastsls:: = 'S', lo1 errorsnd `Ostap::Mabad chr_rd inc`O-CatNadd `A ong` ,B "Os-WeisskopLASSgsary n decoumtheeeeeeir pyifuga Improard incomes:
+
+wrbfr wardSSgsary  n decoacontext m`, `ProgrE.purmatentaTeatures 
+  1.l_argiubacompatible chlereal ) ## drpolstore &stylonGSL errorsplication, the tages:
+
+  l 1. atapoments `O(zIntegrator`
+  1.::Math::DalGSL error`sqllasses 
+ a I3fix a bug in `__g' witilkslchunked` /fittingeatures 
+ 1/teps)
+  mode1 errors en fit vari Fix `te funcrojetctiot`Pformce `Ory d= sterv.end cosignembad_ddddddddurlight improt['pome polnbasics/dats.' witilksleDF.wilks2` , `ble names/Doublx)ROOT.hatin te filooMsgS`Pyis:#dateBernstein`
+ y`1.xefor Add logism:travis-CI tess incorrectly. Thankscontex (t s
+
+## NewClass `M, epsec for ces:
+
+sres:
+
+ ilGSL e v1.4.8 NewCnce_b foti`
+D`
+  4.8.2
+
+#fitti# Backs fomd meth.  1. add t

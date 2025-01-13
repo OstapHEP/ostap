@@ -7,6 +7,7 @@
 // ROOT
 // ============================================================================
 #include "TVectorDfwd.h"
+#include "RVersion.h"
 // ============================================================================
 // ROOT/RooFit 
 // ============================================================================
@@ -818,22 +819,28 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor
-      ProfileLL ( const char*      name        , 
-                  const char*      title       , 
-                  RooAbsReal&      nll         ,  
-                  const RooArgSet& observables ) ;
+      ProfileLL
+      ( const char*      name        , 
+	const char*      title       , 
+	RooAbsReal&      nll         ,  
+	const RooArgSet& observables ) ;
       /// "copy" constructor
-      ProfileLL ( const RooProfileLL& right    , 
-                  const char*         name = nullptr ) ;
+      ProfileLL
+      ( const RooProfileLL& right    , 
+	const char*         name = nullptr ) ;
       /// virual destructor 
       virtual ~ProfileLL() ;
       /// clone method 
       ProfileLL* clone ( const char* newname ) const override ;
       // ======================================================================
+#if ROOT_VERSION_CODE<ROOT_VERSION(6,35,1)
+      // ============================================================================
     public:
       // ======================================================================
       /// default constructor 
-      ProfileLL () ;
+      ProfileLL () {} ;
+      // ============================================================================
+#endif 
       // ======================================================================
     public:
       // ======================================================================
