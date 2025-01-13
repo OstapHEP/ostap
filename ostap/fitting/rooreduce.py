@@ -684,6 +684,23 @@ def _rrcbs_reduce_ ( pdf ) :
 
 ROOT.RooCBShape   . __reduce__  = _rrcbs_reduce_
 
+# =================================================================================
+if ( 6 , 34 , 3 ) < root_info : 
+    ## Reduce RooCrystalBall
+    def _rrcb_reduce_ ( pdf ) :
+        """ Reduce RooCrystalBall
+        """
+        content = type ( pdf ) , pdf.name , pdf.title , pdf.x() , pdf.x0() 
+        has_aR = pdf.hasAlphaR ()
+        has_nR = pdf.hasNR     ()
+        if   has_aR and has_nR             : content +=  ( pdf.sigmaL() , pdf.sigmaR() , pdf.alphaL() , pdn.nL() , pdf.alphaR() , pdf.nR () )
+        elif pdf.sigmaL() is pdf.sigmaR () : content +=  ( pdf.sigmaL() , pdf.alphaL() , pdn.nL() , False )
+        return root_store_factory , content
+    
+    ROOT.RooCrystalBall   . __reduce__  = _rrcb_reduce_
+        
+    
+
 # ================================================================================
 ## Reduce RooExponential
 def _rrexp_reduce_ ( pdf ) :

@@ -50,7 +50,7 @@ else                       : logger = getLogger ( __name__              )
 # =============================================================================
 ## make a name from prefix, name and suffix 
 def make_name ( prefix , name = '' , suffix = '' ) :
-    """Make a name from prefix, name and suffix
+    """ Make a name from prefix, name and suffix
     """
     
     prefix = prefix.strip ( '_ ' ) 
@@ -102,13 +102,11 @@ _fit_status_ = {
     5    : ' 5/Any other failure',
     }
 # =============================================================================
-## Miniut::minimize status code
-# - status = 1    : Covariance was made pos defined
-# - status = 2    : Hesse is invalid
-# - status = 3    : Edm is above max
-# - status = 4    : Reached call limit
-# - status = 5    : Any other failure
-def fit_status ( status ) : return _fit_status_.get( status ,"%s" % status )
+## convert fit stats ointo the string 
+def fit_status ( status ) :
+    """ convert fit stats ointo the string """
+    return _fit_status_.get( status ,"%s" % status )
+                  
 # =============================================================================
 _nemax = 1000 ## number of events per CPU-core 
 _ncmax =   16 ## maximal number of CPUs: there are some problems with >= 7

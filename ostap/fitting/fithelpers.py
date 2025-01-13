@@ -2251,7 +2251,9 @@ class FitHelper(VarMaker) :
         >>> n =  pdf.gen_sample ( 10            ) ## get poissonian 
         >>> n =  pdf.gen_sample ( VE ( 10 , 3 ) ) ## get gaussian stuff
         """
-        if   isinstance ( nEvents , num_types ) and 0 < nEvents and not sample : return round ( nEvents ) 
+        if   isinstance ( nEvents , num_types ) and 0 < nEvents and not sample :
+            nEvents = round ( nEvents )
+            return max ( 1 , nEvents ) 
         elif isinstance ( nEvents , num_types ) and 0 < nEvents :
             nn = -1 
             while nn <= 0 : nn = poisson ( nEvents )
@@ -2261,7 +2263,7 @@ class FitHelper(VarMaker) :
             while nn <= 0 :
                 mu = ve_gauss ( nEvents )
                 if 0 < mu : nn = poisson ( mu ) if sample else int ( mu ) 
-            return int ( nn ) 
+            return max ( 1 , int ( nn ) ) 
 
         self.error ( "Can't generate positive number from %s/%s" % ( nEvents , type ( nEvents ) ) )
 
