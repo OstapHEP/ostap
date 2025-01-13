@@ -261,6 +261,10 @@ def test_jackknife_NE1 ( ) :
     with timing ( 'Jackknife analysis (non-extended)' , logger = logger )  :
         
         data = pdf.generate ( nominal_S + nominal_B , sample = False )
+
+        title = 'Data Test-Jackknife'
+        logger.info ( '%s:\n%s' % ( title , data.table ( prefix = '# ' , title = title ) ) ) 
+            
         with use_canvas ( "Jackknife analysis (non-extended)" , wait = 3 ) :            
             r , f = pdf.fitTo ( data , draw = True , nbins = 100 , **fit_config )
             
@@ -298,6 +302,10 @@ def test_jackknife_NE2 ( ) :
     with timing ( 'Jackknife analysis (non-extended)' , logger = logger )  :
         
         data = pdf.generate ( nominal_S , sample = False )
+
+        title = 'Data Test-Jackknife'
+        logger.info ( '%s:\n%s' % ( title , data.table ( prefix = '# ' , title = title ) ) ) 
+            
         with use_canvas ( "Jackknife analysis (non-extended)" , wait = 3 ) :
             r , f = pdf.fitTo ( data , draw = True , nbins = 100 , **fit_config )
             
@@ -376,7 +384,10 @@ def test_bootstrap_NE1 ( ) :
     with timing ( 'Bootstrap analysis (non-extended)' , logger = logger )  :        
 
 
-        data    = pdf.generate ( nominal_S + nominal_B , sample = False ) 
+        data    = pdf.generate ( nominal_S + nominal_B , sample = False )
+        title = 'Data Test-Bootstrap'
+        logger.info ( '%s:\n%s' % ( title , data.table ( prefix = '# ' , title = title ) ) ) 
+        
         with use_canvas ( "Booststrap analysis" , wait = 3 ) :
             r , f = pdf.fitTo ( data , draw = True , nbins = 100 , **fit_config )
 
@@ -416,7 +427,10 @@ def test_bootstrap_NE2 ( ) :
     pdf.load_params ( fit_pars , silent = True )     
     with timing ( 'Bootstrap analysis (non-extended)' , logger = logger )  :        
 
-        data    = pdf.generate ( nominal_S , sample = False ) 
+        data    = pdf.generate ( nominal_S , sample = False )
+        title = 'Data Test-Bootstrap'
+        logger.info ( '%s:\n%s' % ( title , data.table ( prefix = '# ' , title = title ) ) ) 
+        
         with use_canvas ( "Booststrap analysis" , wait = 3 ) :
             r , f = pdf.fitTo ( data , draw = True , nbins = 100 , **fit_config )
 
@@ -458,7 +472,10 @@ def test_bootstrap_EXT ( ) :
     pdf.load_params ( fit_pars , silent = True ) 
     with timing ( 'Bootstrap analysis (extended)' , logger = logger )  :        
 
-        data    = pdf.generate ( nominal_S + nominal_B , sample = False ) 
+        data    = pdf.generate ( nominal_S + nominal_B , sample = False )
+        title = 'Data Test-Bootstrap'
+        logger.info ( '%s:\n%s' % ( title , data.table ( prefix = '# ' , title = title ) ) ) 
+        
         with use_canvas ( "(Extended) Booststrap analysis" , wait = 3 ) :
             r , f = pdf.fitTo ( data , draw = True , nbins = 100 , **fit_config )
 

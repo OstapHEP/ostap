@@ -74,7 +74,8 @@ __all__     = (
     ##
     'cidict_fun'          , ## key transformation for case-insensitive keys ingoring underscores
     ##
-    'in_test'             , ## Are we in CMAKE-test regime?  
+    'in_test'             , ## Are we in CMAKE-test regime?
+    'typename'            , ## shortcut for type ( X ).__name__ 
     )
 # =============================================================================
 from   sys                    import version_info  as python_version 
@@ -85,7 +86,7 @@ from   ostap.math.base        import ( Ostap    , std     , cpp ,
                                        inrange  , strings , 
                                        natural_number     ,
                                        natural_entry      ,
-                                       ROOTIgnore         )
+                                       ROOTIgnore         , typename )
 from   ostap.math.ve          import VE
 from   ostap.stats.counters   import SE , WSE 
 from   ostap.core.meta_info   import root_info
