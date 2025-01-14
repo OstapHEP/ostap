@@ -9,7 +9,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 # =============================================================================
-"""Module with decoration for  RooArgSet, RooArgList and similar objects
+""" Module with decoration for  RooArgSet, RooArgList and similar objects
 - see RooArgSet 
 - see RooArgList 
 - see RooLinkedList 
@@ -49,7 +49,7 @@ _new_methods_ = []
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2011-06-07
 def _ral_iter_ ( self ) :
-    """Iterator for RooArgList:
+    """ Iterator for RooArgList:
     >>> arg_list = ...
     >>> for p in arg_list : print p    
     """
@@ -60,7 +60,7 @@ def _ral_iter_ ( self ) :
 # =============================================================================
 ## check presence of element or index in the list
 def _ral_contains_ ( self , i ) :
-    """Check the presence of element or index in the list
+    """ Check the presence of element or index in the list
     """
     if   isinstance ( i , int            ) : return 0<= i < len(self)
     elif isinstance ( i , string_types   ) : return self.find     ( i ) 
@@ -72,7 +72,7 @@ def _ral_contains_ ( self , i ) :
 # =============================================================================
 ##  get item from the list 
 def _ral_getitem_ ( self , index ) :
-    """Get item from the list
+    """ Get item from the list
     >>>  lst  = ...
     >>>  item = lst[3]
     >>>  iast = lst[-1]
@@ -175,7 +175,7 @@ ROOT.RooArgList . __repr__      = lambda s : str ( _rs_list_ ( s ) ) if s else '
 #  @date   2011-06-07
 if root_info < (6,31) : 
     def _ras_iter_ ( self ) :
-        """Simple iterator for RooArgSet:
+        """ Simple iterator for RooArgSet:
         >>> arg_set = ...
         >>> for i in arg_set : print i    
         """    
@@ -187,15 +187,13 @@ if root_info < (6,31) :
         del it        
 else :
     def _ras_iter_ ( self ) :
-        """Simple iterator for RooArgSet:
+        """ Simple iterator for RooArgSet:
         >>> arg_set = ...
         >>> for i in arg_set : print i    
         """    
         cnt = self.get()
         for v in cnt : yield v 
             
-
-
 # =============================================================================
 ## get the attibute for RooArgSet 
 def _ras_getattr_ ( self , aname ) :
@@ -213,7 +211,7 @@ if (6,18) <= root_info :
     # =========================================================================
     ## get the item for RooArgSet
     def _ras_getitem_ ( self , aname ) :
-        """Get the attibute from RooArgSet
+        """ Get the attibute from RooArgSet
         >>> aset = ...
         >>> print ( aset[' pt']  )    
         >>> print ( aset[  0  ]  ) ## the first element
@@ -244,7 +242,7 @@ else :
     # =========================================================================
     ## get the item for RooArgSet
     def _ras_getitem_ ( self , aname ) :
-        """Get the attibute from RooArgSet
+        """ Get the attibute from RooArgSet
         >>> aset = ...
         >>> print aset['pt']    
         """
@@ -270,7 +268,7 @@ else :
 # =============================================================================
 ## get the first element in collection 
 def _rac_front_ ( self ) :
-    """Get the first element in collection
+    """ Get the first element in collection
     >>> lst   = ...
     >>> first = lst.front ()
     """
@@ -279,7 +277,7 @@ def _rac_front_ ( self ) :
 # =============================================================================
 ## get the last element in collection 
 def _rac_back_ ( self ) :
-    """Get the last element in collection
+    """ Get the last element in collection
     >>> lst = ...
     >>> last = lst.back() 
     """
@@ -294,7 +292,7 @@ def _rac_back_ ( self ) :
 #  item = lst.pop('a') ## get and remove from collection the element with name 'a'
 #  @endcode 
 def _rac_pop_ ( self , item = -1 ) :
-    """Remove and return item at index( or name) (default last).
+    """ Remove and return item at index( or name) (default last).
     >>> lst  = ...
     >>> item = lst.pop( )   ## get and remove from collection the last   element 
     >>> item = lst.pop(2)   ## get and remove from collection the second element 
@@ -351,10 +349,30 @@ ROOT.RooArgSet     . __repr__      = lambda s : str ( set   ( _rs_list_ ( s ) ) 
 ROOT.RooLinkedList . __str__       = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
 ROOT.RooLinkedList . __repr__      = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
 
+
+
 ROOT.RooAbsCollection.__len__      = lambda s   : s.getSize() if valid_pointer ( s ) else 0 
 ROOT.RooAbsCollection. __nonzero__ = lambda s   : valid_pointer ( s ) and 0 < s.getSize()
 ROOT.RooAbsCollection. __bool__    = lambda s   : valid_pointer ( s ) and 0 < s.getsize()  
 
+
+
+# ========================================================================================
+## check it theitem is in th elist 
+def _stl_contains_ ( lst , item ) :
+    """ Check if the item is in the list 
+    """
+    if   isinstance ( item , integer_types  ) : return 0 <= item < len ( lst ) 
+    elif isinstance ( item , ROOT.RooAbsArg ) :
+        return any ( ( i is item ) or ( i == item ) or ( i.name == item.name ) for i in lst )
+    elif isinstance ( item , string_types ) :
+        return any (  i.name == item  for i in lst )    
+    return False 
+
+_STLList = ROOT.RooSTLRefCountList[ROOT.RooAbsArg]
+_STLList .__str__      = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
+_STLList .__repr__     = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
+_STLList .__contains__ = _stl_contains_ 
 
 
 if not hasattr ( ROOT.RooArgList , '__iter__' ) or root_info < ( 6 , 31 ) : 
@@ -376,7 +394,7 @@ if not hasattr ( ROOT.RooAbsCollection , '__iter__' ) or root_info < ( 6 , 31 ) 
 #  for l in lst : print l 
 #  @endcode 
 def _rll_iter_  ( self ) :
-    """Iterator over RooLinekdList
+    """ Iterator over RooLinekdList
     >>> lst = ...
     >>> for l in lst : print l     
     """
@@ -410,7 +428,7 @@ _new_methods_ += [
 # =============================================================================
 ## add more data into list/set
 def _ral_iadd_ ( self , other ) :
-    """Update/increment collections
+    """ Update/increment collections
     >>> lst = ....
     >>> lst += another_lst
     """
@@ -429,7 +447,7 @@ def _ral_iadd_ ( self , other ) :
 # =============================================================================
 ## add more data into list/set
 def _ral_add_ ( self , other ) :
-    """Make a sum of two lists/sets/collections
+    """ Make a sum of two lists/sets/collections
     >>> lst1 = ...
     >>> set2 = ...
     >>> lst2 = lst1 + set2 
@@ -464,9 +482,9 @@ def _ral_clear_ ( self ) :
     return self.removeAll() 
 # =============================================================================
 for t in ( ROOT.RooArgList , ROOT.RooArgSet , ROOT.RooLinkedList ) :
-    t. clone    =  _ral_clone_ 
-    t. clear    =  _ral_clear_ 
-    t. __add__  =  _ral_add_
+    t. clone    = _ral_clone_ 
+    t. clear    = _ral_clear_ 
+    t. __add__  = _ral_add_
     t.__iadd__  = _ral_iadd_
     t.__radd__  = _ral_radd_
     t.append    = _ral_iadd_
@@ -479,7 +497,7 @@ for t in ( ROOT.RooArgList , ROOT.RooArgSet , ROOT.RooLinkedList ) :
 #  set3 = set1.intersection ( set2 ) 
 #  @endcode 
 def _ras_intersection_ ( self , another ) :
-    """Get an intersection of two sets
+    """ Get an intersection of two sets
     >>> set1 = ...
     >>> set2 = ...
     >>> set3 = set1.intersection ( set2 ) 
@@ -498,7 +516,7 @@ def _ras_intersection_ ( self , another ) :
 #  set3 = set1.union  ( set2 ) 
 #  @endcode 
 def _ras_union_ ( self , another ) :
-    """Get an union of two sets
+    """ Get an union of two sets
     >>> set1 = ...
     >>> set2 = ...
     >>> set3 = set1.union ( set2 ) 
@@ -519,7 +537,7 @@ def _ras_union_ ( self , another ) :
 #  set3 = set1 - set2 
 #  @endcode 
 def _ras_difference_ (  self , another ) :
-    """Get a difference fot two sets
+    """ Get a difference fot two sets
     >>> set1 = ...
     >>> set2 = ...
     >>> set3 = set1.difference( set2 )
@@ -539,7 +557,7 @@ def _ras_difference_ (  self , another ) :
 #  set3 = set1.symmetric_difference( set2 ) 
 #  @endcode 
 def _ras_symmetric_difference_ (  self , another ) :
-    """Get a difference fot two sets
+    """ Get a difference fot two sets
     >>> set1 = ...
     >>> set2 = ...
     >>> set3 = set1.symmetric_difference( set2 )
@@ -595,6 +613,41 @@ _new_methods_ += [
     ]
 
 # =============================================================================
+## Same content of two containers (by names!)
+def _rac_same_ ( cnt , other ) :
+    """ same content of two containers (by names!)
+    """
+
+    if other is cnt : return True
+    assert isinstance ( other . ROOT.RooAbsCollection ), \
+        'Invaild sequence type'
+    
+    a1 = set ( v.name for v in cnt   )
+    a2 = set ( v.name for v in other )
+    diff = a1 ^ a2
+    
+    return True if not diff else False
+
+# =============================================================================
+## Non-Equality of content of two containers (by names!)
+def _rac_diff_ ( cnt , other ) :
+    """ Non-Equality of content of two containers (by names!)
+    """
+
+    if other is cnt : return False 
+    assert isinstance ( other . ROOT.RooAbsCollection ), \
+        'Invaild sequence type'
+
+    a1 = set ( v.name for v in cnt   )
+    a2 = set ( v.name for v in other )
+    diff = a1 ^ a2
+    
+    return True if diff else False
+
+ROOT.RooAbsCollection. same      = _rac_same_ 
+ROOT.RooAbsCollection. different = _rac_diff_
+
+# =============================================================================
 ## @class KeepArg
 #  Simple contect manager for temporary redefiniiton of some mutable collection
 #  @code
@@ -607,7 +660,7 @@ _new_methods_ += [
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 class  KeepArgs(object) :
-    """Simple contect manager for temporary redefitnnnonn of some mutbale collection
+    """ Simple context manager for temporary redefitnnnonn of some mutbale collection
     
     >>> signals = ...
     >>> new_signals = ...

@@ -157,6 +157,22 @@ def _rrv_ve_ ( var ) :
     #
     return VE ( v , e2 )
 
+# ===============================================================================
+## does var depends on item ?
+#  - if  type(item) is RooAbsArg   : check var.dependsOn ( item )
+#  - if  type(item) is string_type : check item in var.servers() 
+#  - else , return False 
+def _var_contains_ ( var , item ) :
+    """ Does var depends on item ?
+    - if  type(item) is RooAbsArg   : check var.dependsOn ( item )
+    - if  type(item) is string_type : check item in var.servers() 
+    - else , return False 
+    """
+    if   isinstance ( var , ROOT.RooAbsArg ) : return var.dependsOn ( item ) 
+    elif isinstance ( var , string_types   ) : return item in var.servers() 
+    # 
+    return False 
+    
 # ==============================================================================
 ## check if the given value is in the range of RooRealVar
 #  @code 
@@ -164,13 +180,16 @@ def _rrv_ve_ ( var ) :
 #  if v in mass_range : ...
 #  @endcode 
 def _rrv_contains_ ( var , value ) :
-    """check if the given value is in the range of RooRealVar
+    """ check if the given value is in the range of RooRealVar
     >>> mass_range = ...
     >>> if v in mass_range : ... 
     """
-    if var.hasMin() and value < var.getMin() : return False 
-    if var.hasMax() and value > var.getMax() : return False
-    return True 
+    if isinstance ( value , num_types ) :
+        value = float ( value ) 
+        if var.hasMin() and value < var.getMin() : return False 
+        if var.hasMax() and value > var.getMax() : return False
+        return True
+    return _var_contains_ ( var , value )  
     
 # =============================================================================
 ROOT.RooAbsReal.unit = property ( ROOT.RooAbsReal.getUnit ,
@@ -192,18 +211,16 @@ ROOT.RooAbsReal     . __str__         = lambda s : 'nullptr' if not valid_pointe
 ROOT.RooRealVar     . __repr__        = lambda s : 'nullptr' if not valid_pointer ( s ) else "'%s' : %s " % ( s.GetName() , s.ve()     )
 ROOT.RooRealVar     . __str__         = lambda s : 'nullptr' if not valid_pointer ( s ) else "'%s' : %s " % ( s.GetName() , s.ve()     )
 
-
 ROOT.RooConstVar    . as_VE          = lambda s : VE ( s.getVal() , 0 )
 ROOT.RooFormulaVar  . as_VE          = lambda s : VE ( s.getVal() , 0 )
 ROOT.RooConstVar    . asVE           = lambda s : VE ( s.getVal() , 0 )
 ROOT.RooFormulaVar  . asVE           = lambda s : VE ( s.getVal() , 0 )
 
-
 ROOT.RooAbsReal     . __float__      = lambda s : s.getVal() ## NB!!!
 ROOT.RooRealVar     . __float__      = lambda s : s.getVal()
 ROOT.RooConstVar    . __float__      = lambda s : s.getVal()
 
-ROOT.RooAbsReal       .__contains__ = lambda s,v : False ## ??? do we need it???
+ROOT.RooAbsArg        .__contains__ = _var_contains_ 
 ROOT.RooAbsRealLValue .__contains__ = _rrv_contains_ 
 
 # =====================================================================
@@ -214,9 +231,6 @@ ROOT.RooAbsRealLValue  . xmin            = lambda s : s.getMin()
 ROOT.RooAbsRealLValue  . xmax            = lambda s : s.getMax()
 ROOT.RooAbsRealLValue  . minmax          = lambda s : ( s.xmin() , s.xmax() ) 
 ROOT.RooAbsRealLValue  .xminmax          = lambda s : ( s.xmin() , s.xmax() ) 
-
-
-
 
 _new_methods_ += [
     ROOT.RooRealVar   . as_VE     ,
@@ -231,7 +245,9 @@ _new_methods_ += [
     ## print it in more suitable form 
     ROOT.RooRealVar   . __repr__  ,
     #
-    ROOT.RooAbsRealLValue .__contains__ , 
+    ROOT.RooAbsArg        .__contains__ , 
+    ROOT.RooAbsRealLValue .__contains__ ,
+    #
     ROOT.RooRealVar   . xmin      ,
     ROOT.RooRealVar   . xmax      ,
     ROOT.RooRealVar   . minmax    ,

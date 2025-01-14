@@ -8,7 +8,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-02-10
 # =============================================================================
-"""Module with some simple but useful utilities for momory profiling 
+""" Module with some simple but useful utilities for momory profiling 
 - It is recommended to install psutil module (e.g. from pip)
 see https://github.com/giampaolo/psutil
 see http://fa.bianp.net/blog/2013/different-ways-to-get-memory-consumption-or-lessons-learned-from-memory_profiler/
@@ -76,7 +76,8 @@ except ImportError : # ========================================================
             with open ( proc , 'r' ) as p :
                 for l in  p : return LONG ( l.split(' ')[22] )/1024./1024
         except:
-            return -1 
+            return -1
+# ============================================================================
         
 # ============================================================================
 ## Get the available memory (in MB) 
@@ -146,9 +147,9 @@ class Memory(object):
         self.format = format
         self._proc  = None 
         if not psutil :
-            if not self._printed :
-                self.logger.warning('Memory:"psutil" module is not available, "/proc/[pid]/stat"-based replacement is in use')
-                self.__class__._printed = True
+            ## if not self._printed :
+            ##    self.logger.warning('Memory:"psutil" module is not available, "/proc/[pid]/stat"-based replacement is in use')
+            ##    self.__class__._printed = True
             self.proc = '/procs/%d/stat' %  os.getpid()            
     def __enter__ ( self ) :
         self.memory = memory_usage ( self._proc )
@@ -167,7 +168,7 @@ class Memory(object):
 # ============================================================================
 ## create the context manager to monitor the virtual memory increase  
 def virtualMemory ( name = '' , logger = None ) :
-    """Create the context manager to monitor the virtual memory increase:
+    """ Create the context manager to monitor the virtual memory increase:
     
     >>> with memory('here...') :
     ...   whatever action is here

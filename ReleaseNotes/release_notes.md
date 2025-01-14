@@ -20,7 +20,8 @@
     1. add printout of gen-options for `generate`-methods
     1. simplify (&extend) `Ostap::MoreRooFit::Addition/Addition2/Product`
     1. remove default constructor for `Ostap::MoreRooFit::ProfileLL`
-
+    1. add some manipulations with `RooSTLRefCountList<RooAbsArg>`
+    
 ## Backward incompatible1
 
     1. remove obsolete `ostap.fitting.simfit.Sim1D`
