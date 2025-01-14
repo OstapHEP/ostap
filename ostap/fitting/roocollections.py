@@ -369,7 +369,10 @@ def _stl_contains_ ( lst , item ) :
         return any (  i.name == item  for i in lst )    
     return False 
 
-_STLList = ROOT.RooSTLRefCountList[ROOT.RooAbsArg]
+
+if ( 6 , 24 ) < root_info : _STLList = ROOT.RooSTLRefCountList[ROOT.RooAbsArg]
+else                      : _STLList = ROOT.RooSTLRefCountList(ROOT.RooAbsArg)
+
 _STLList .__str__      = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
 _STLList .__repr__     = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
 _STLList .__contains__ = _stl_contains_ 
