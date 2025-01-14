@@ -157,23 +157,44 @@ def _rrv_ve_ ( var ) :
     #
     return VE ( v , e2 )
 
-# ===============================================================================
-## does var depends on item ?
-#  - if  type(item) is RooAbsArg   : check var.dependsOn ( item )
-#  - if  type(item) is string_type : check item in var.servers() 
-#  - else , return False 
-def _var_contains_ ( var , item ) :
-    """ Does var depends on item ?
-    - if  type(item) is RooAbsArg   : check var.dependsOn ( item )
-    - if  type(item) is string_type : check item in var.servers() 
-    - else , return False 
-    """
-    if   isinstance ( var , ROOT.RooAbsArg ) : return var.dependsOn ( item ) 
-    elif isinstance ( var , string_types   ) : return item in var.servers() 
-    # 
-    return False 
-    
-# ==============================================================================
+
+# ==================================================================================
+if ( 6 , 18 ) <= root_info : # =====================================================
+    # ==============================================================================
+    ## does var depends on item ?
+    #  - if  type(item) is RooAbsArg   : check var.dependsOn ( item )
+    #  - if  type(item) is string_type : check item in var.servers() 
+    #  - else , return False
+    def _var_contains_ ( var , item ) :
+        """ Does var depends on item ?
+        - if  type(item) is RooAbsArg   : check var.dependsOn ( item )
+        - if  type(item) is string_type : check item in var.servers() 
+        - else , return False 
+        """
+        if   isinstance ( item , ROOT.RooAbsArg ) : return var.dependsOn ( item ) 
+        elif isinstance ( item , string_types   ) : return item in var.servers()
+        # 
+        return False
+    # ===============================================================================
+else : # ============================================================================
+    # ===============================================================================
+    ## does var depends on item ?
+    #  - if  type(item) is RooAbsArg   : check var.dependsOn  ( item )
+    #  - if  type(item) is string_type : check var.findServer ( item ) 
+    #  - else , return False
+    def _var_contains_ ( var , item ) :
+        """ Does var depends on item ?
+        - if  type(item) is RooAbsArg   : check var.dependsOn   ( item )
+        - if  type(item) is string_type : check var.findServer ( item )) 
+        - else , return False 
+        """
+        if   isinstance ( item , ROOT.RooAbsArg ) : return var.dependsOn ( item ) 
+        elif isinstance ( item , string_types   ) :
+            return valid_pointer ( var.findServer ( item ) ) 
+        # 
+        return False
+    # ==============================================================================
+# ==================================================================================
 ## check if the given value is in the range of RooRealVar
 #  @code 
 #  mass_range = ...

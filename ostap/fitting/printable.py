@@ -38,7 +38,7 @@ def print_multiline ( o , content = 1 , verbose = False , indent = '' ) :
     - see RooPrintable 
     - see Ostap::Utils::print_printable1 
     """
-    if not valid_pointer ( o ) : return 'Invalid object'
+    if not valid_pointer ( o ) : return 'Invalid object/nullptr'
     return Ostap.Utils.print_printable1 ( o , content , verbose , indent )
 # =============================================================================
 ##  Use RooPrintable::printStream function
@@ -49,7 +49,7 @@ def print_stream  ( o , content = 1 , style = 3 , indent = '' ) :
     - see RooPrintable 
     - see Ostap::Utils::print_printable2
     """
-    if not valid_pointer ( o ) : return 'Invalid object'
+    if not valid_pointer ( o ) : return 'Invalid object/nullptr'
     return Ostap.Utils.print_printable2 ( o , content , style , indent )
 # =============================================================================
 ##  Use RooPrintable::printTree function
@@ -60,7 +60,7 @@ def print_tree ( o , indent = '' ) :
     - see RooPrintable 
     - see Ostap::Utils::print_printable_tree
     """
-    if not valid_pointer ( o ) : return 'Invalid object'
+    if not valid_pointer ( o ) : return 'Invalid object/nullptr'
     return Ostap.Utils.print_printable_tree ( o , indent )
 
 # =============================================================================
@@ -70,6 +70,7 @@ def _rp_print_ ( obj , opts = 'vv' , *style ) :
     >>> o = ...
     >>> print o 
     """
+    if not valid_pointer ( obj ) : return 'Invalid object/nullptr'
     return Ostap.Utils.print_printable ( obj , opts , *style )
 
 ROOT.RooPrintable.print_multiline = print_multiline

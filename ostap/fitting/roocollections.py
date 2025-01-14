@@ -369,15 +369,17 @@ def _stl_contains_ ( lst , item ) :
         return any (  i.name == item  for i in lst )    
     return False 
 
-
-if ( 6 , 24 ) < root_info : _STLList = ROOT.RooSTLRefCountList[ROOT.RooAbsArg]
-else                      : _STLList = ROOT.RooSTLRefCountList(ROOT.RooAbsArg)
-
-_STLList .__str__      = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
-_STLList .__repr__     = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
-_STLList .__contains__ = _stl_contains_ 
-
-
+if ( 8 , 18 ) <= root_info < ( 6 , 24 ) : 
+    _STLList = ROOT.RooSTLRefCountList[ROOT.RooAbsArg]
+    _STLList .__str__      = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
+    _STLList .__repr__     = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
+    _STLList .__contains__ = _stl_contains_ 
+else ( 6 , 24 ) <= root_info : 
+    _STLList = ROOT.RooSTLRefCountList(ROOT.RooAbsArg)
+    _STLList .__str__      = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
+    _STLList .__repr__     = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
+    _STLList .__contains__ = _stl_contains_ 
+    
 if not hasattr ( ROOT.RooArgList , '__iter__' ) or root_info < ( 6 , 31 ) : 
     ROOT.RooArgList . __iter__      = _ral_iter_
     _new_methods_ += [ ROOT.RooArgList. __iter__ ]
