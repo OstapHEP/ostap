@@ -1961,14 +1961,10 @@ class APDF1 ( Components ) :
         >>> data   = model.generate ( 100000 , varset , sample = True  )
         """
 
-        print ( 'GENERATE/0:' , nEvents )
-
         ## sample number of events in dataset ?
         nEvents = self.gen_sample ( nEvents , sample ) 
         assert 0 <= nEvents , 'Invalid number of Events %s' % nEvents  
 
-        print ( 'GENERATE/1:' , nEvents )
-        
         args = args + ( ROOT.RooFit.Name ( dsID() ) , ROOT.RooFit.NumEvents ( nEvents ) )
 
         if  silent : args = args + ( ROOT.RooFit.Verbose ( False ) , )

@@ -36,7 +36,7 @@ from sys import version_info as python_version
 if   2 < python_version.major : LONG = int
 else                          : LONG = long 
 # =============================================================================
-try :
+try : # =======================================================================
     # =========================================================================
     import psutil 
     # =========================================================================
@@ -57,12 +57,12 @@ try :
             mem += p.memory_info()[0] / float( 2 ** 20 )
         return mem
     # =========================================================================
-except ImportError :
+except ImportError : # ========================================================
     # =========================================================================    
     psutil = None 
     # =========================================================================
     ## report current memory usage (in MB)
-    #  @attention it is ps-based version, slow...  :-(
+    #  @attention it is ps-based version, it can be slow...  :-(
     #  @code
     #  print memory_usage() 
     #  @endcode    

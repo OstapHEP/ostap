@@ -2254,22 +2254,18 @@ class FitHelper(VarMaker) :
         >>> n =  pdf.gen_sample ( VE ( 10 , 3 ) ) ## get gaussian stuff
         """
 
-        print ( 'gen-sample/0' , nEvents, sample ) 
         if   isinstance ( nEvents , integer_types ) and 0 < nEvents and not sample :
-            print ( 'gen-sample/1' , nEvents, sample )             
             return nEvents  
         elif isinstance ( nEvents , num_types     ) and 0 < nEvents :
-            print ( 'gen-sample/2' , nEvents, sample )                         
             nn = -1 
             while nn <= 0 : nn = poisson ( float ( nEvents ) ) 
             return nn 
-        elif isinstance ( nEvents , VE ) and 0 < nEvents.cov2 () and 0 < nEvents.value() + 3 * nEvents.error () : 
-            print ( 'gen-sample/3' , nEvents, sample )                         
+        elif isinstance ( nEvents , VE ) and 0 < nEvents.cov2 () : 
             nn = -1  
             while nn <= 0 :
                 mu = ve_gauss ( nEvents )
                 if 0 < mu : nn = poisson ( mu ) 
-            return max ( 1 , int ( nn ) ) 
+            return nn 
 
         raise TypeError ( "Can't generate positive number from %s/%s" % ( nEvents , typename ( nEvents ) ) )
 
