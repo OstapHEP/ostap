@@ -34,8 +34,10 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.meta_info    import root_info 
-from   ostap.core.core         import ( Ostap, rootID, VE,
-                                        items_loop, isequal , roo_silent ) 
+from   ostap.core.core         import ( Ostap          , rootID      ,
+                                        VE             , typename    , 
+                                        items_loop     , isequal     ,
+                                        roo_silent                   ) 
 from   ostap.core.ostap_types  import ( string_types   , num_types   ,
                                         integer_types  , list_types  , 
                                         is_good_number , is_integer  ,
@@ -2251,21 +2253,25 @@ class FitHelper(VarMaker) :
         >>> n =  pdf.gen_sample ( 10            ) ## get poissonian 
         >>> n =  pdf.gen_sample ( VE ( 10 , 3 ) ) ## get gaussian stuff
         """
-        if   isinstance ( nEvents , num_types ) and 0 < nEvents and not sample :
-            nEvents = round ( nEvents )
-            return max ( 1 , nEvents ) 
-        elif isinstance ( nEvents , num_types ) and 0 < nEvents :
+
+        print ( 'gen-sample/0' , nEvents, sample ) 
+        if   isinstance ( nEvents , integer_types ) and 0 < nEvents and not sample :
+            print ( 'gen-sample/1' , nEvents, sample )             
+            return nEvents  
+        elif isinstance ( nEvents , num_types     ) and 0 < nEvents :
+            print ( 'gen-sample/2' , nEvents, sample )                         
             nn = -1 
-            while nn <= 0 : nn = poisson ( nEvents )
+            while nn <= 0 : nn = poisson ( float ( nEvents ) ) 
             return nn 
         elif isinstance ( nEvents , VE ) and 0 < nEvents.cov2 () and 0 < nEvents.value() + 3 * nEvents.error () : 
+            print ( 'gen-sample/3' , nEvents, sample )                         
             nn = -1  
             while nn <= 0 :
                 mu = ve_gauss ( nEvents )
-                if 0 < mu : nn = poisson ( mu ) if sample else int ( mu ) 
+                if 0 < mu : nn = poisson ( mu ) 
             return max ( 1 , int ( nn ) ) 
 
-        self.error ( "Can't generate positive number from %s/%s" % ( nEvents , type ( nEvents ) ) )
+        raise TypeError ( "Can't generate positive number from %s/%s" % ( nEvents , typename ( nEvents ) ) )
 
     # =========================================================================
     ## get the proper min/max range for the variable  
