@@ -65,6 +65,11 @@ else                       : logger = getLogger ( __name__                 )
 if (3,0) <= sys.version_info : from itertools import  zip_longest
 else                         : from itertools import izip_longest as zip_longest 
 # =============================================================================
+## allowed types for observables 
+obs_types = ROOT.RooAbsReal, ROOT.RooAbsCategory
+## allowed types for parameters 
+par_types = ROOT.RooAbsReal, 
+# ==============================================================================
 ## @class ModelConfig
 #  Helper class to create `RooStats::ModelConfig`
 #  @see RooStats::ModelConfig 
@@ -105,15 +110,15 @@ class ModelConfig(object):
             "Invalid worskpace type:%s" % typename ( workspace )
 
         ## (1) quick check and very simple transform. more checks follow  
-        
+
         if   isinstance ( observables , string_types    ) :
             observables = split_string ( observables  , strip = True , respect_groups = True )
-        elif isinstance ( observables , ROOT.RooAbsReal ) :
+        elif isinstance ( observables , obs_types       ) : 
             observables = [ observables ]
         
         if   isinstance ( poi         , string_types    ) :
             poi = split_string ( poi , strip = True , respect_groups = True )
-        elif isinstance ( poi         , ROOT.RooAbsReal ) : poi         = [ poi         ]
+        elif isinstance ( poi         , par_types       ) : poi         = [ poi         ]
         
         if   isinstance ( constrained , string_types    ) : 
             constrained = split_string ( constrained , strip = True , respect_groups = True )        
@@ -123,15 +128,15 @@ class ModelConfig(object):
             conditional = split_string ( conditional , strip = True , respect_groups = True )
         elif isinstance ( conditional , ROOT.RooAbsReal ) : conditional = [ conditional ]
 
-        if   isinstance ( constraints  , ROOT.RooAbsPdf ) : constrainsts = [ constraints ]
+        if   isinstance ( constraints , ROOT.RooAbsPdf ) : constrainsts = [ constraints ]
 
-        if   isinstance ( constrained , string_types  ) :
+        if   isinstance ( constrained , string_types   ) :
             constrained = split_string ( constrained , strip = True , respect_groups = True )
         elif isinstance ( constrained , ROOT.RooAbsReal ) : constrained = [ constrained ]
                    
         if   isinstance ( global_observables , string_types    ) :
             global_observables = split_string ( global_observables  , strip = True , respect_groups = True )
-        elif isinstance ( global_observables , ROOT.RooAbsReal ) : global_observables = [ global_observables ]
+        elif isinstance ( global_observables , obs_types       ) : global_observables = [ global_observables ]
 
         ## save all input args
         self.__input_pdf                = pdf
@@ -197,11 +202,10 @@ class ModelConfig(object):
         ## (5) set PDF  
         mc.SetPdf ( self.__final_pdf ) ## note: we use bare RooAbsPdf here
 
-        
         if not observables :
             if   hasattr ( pdf , 'observables' ) : observables = pdf.observables
             else                                 : observables = final_pdf.getObservables ( dataset )
-            
+
         ## if data&observables are specified, reuqire all observables in data 
         assert all ( v in dataset for v in observables ) , \
             "Specified observables are not consistent with data"
@@ -213,7 +217,7 @@ class ModelConfig(object):
         assert all ( v in final_pdf for v in observables ), \
             "Specified observables are not consistent with PDF"
 
-        observables = ROOT.RooArgSet ( self.pdf_param ( o , dataset ) for o in observables ) 
+        observables = ROOT.RooArgSet ( self.pdf_observable ( o , dataset ) for o in observables ) 
         
         ##  (6) set observables 
         self.__mc.SetObservables ( observables ) 
@@ -233,9 +237,10 @@ class ModelConfig(object):
             mc.SetGlobalObservables  ( global_observables ) 
         self.__global_observables = global_observables 
 
-        ## nuisane = all_parameters - poi - global_observables 
+        ## nuisancee = all_parameters - poi - global_observables 
         nuisance = final_pdf.getParameters ( dataset ) - poi ## - global_observables 
         ## (9) Nuisance parameters
+        
         mc.SetNuisanceParameters ( nuisance )
         self.__nuisance = nuisance 
         
@@ -435,26 +440,58 @@ class ModelConfig(object):
         pdf = self.__final_pdf
         return pdf.getParameters ( ROOT.nullptr  ) if dataset is None else pdf.getParameters ( dataset )
 
+    # =========================================================================
+    ## helper function to get observables from the final PDF 
+    def pdf_observables ( self , dataset = None ) :
+        """ Helper function to get the parameters from the final PDF"""
+        pdf = self.__final_pdf
+        return pdf.getObservables( ROOT.nullptr  ) if dataset is None else pdf.getObservables ( dataset )
     
     # =========================================================================
     ## helper function to get parameters from PDF 
     def pdf_param  ( self , param , dataset = None ) :
         """ Helper function to get the parameters from PDF"""
         params = self.pdf_params ( dataset )
-        ## already parameter 
-        if isinstance ( param , ROOT.RooAbsReal ) and param in params : return param
-        ## loop by name 
+        ## already parameter ?        
+        if   isinstance ( param , par_types ) and param in params : return param
+        ## loop by name
+        print ( 'PDFPARAM', param, typename ( param ) , param.name , isinstance ( param , string_types ) , params ) 
         if isinstance ( param , string_types    ) :
             for p in params :
-                if p.name == param       : return p
-        elif isinstance ( param , ROOT.RooAbsReal ) :
+                if p.name == param       : return p                
+        elif isinstance ( param , par_types ) :
             for p in params :
                 if p.name == param.name  : return p
+        else : raise TypeError ( "Inavlid parameter type %s/%s!" % ( param , typename ( param ) ) )
+        
         ## try with workspace
         vv = self.var ( param )
+        ## 
         if vv : return vv
-        raise KeyError ( "No parameter %s/%s defined" % ( param , type ( param ) ) )
-    
+        else  : raise KeyError ( "No parameter %s/%s defined" % ( param , typename ( param ) ) )
+
+    # =========================================================================
+    ## helper function to get observables from PDF 
+    def pdf_observable  ( self , param , dataset = None ) :
+        """ Helper function to get the parameters from PDF"""
+        params = self.pdf_observables ( dataset )
+        ## already parameter ?        
+        if   isinstance ( param  , obs_types   ) and param in params : return param
+        ## loop by name
+        if isinstance   ( param , string_types ) :
+            for p in params :
+                if p.name == param       : return p                
+        elif isinstance ( param , obs_types    ) :
+            for p in params :
+                if p.name == param.name  : return p
+        else : raise TypeError ( "Inavlid observable type %s/%s!" % ( param , typename ( param ) ) )
+        
+        ## try with workspace
+        vv = self.var ( param )
+        ## 
+        if vv : return vv
+        else  : raise KeyError ( "No observable %s/%s defined" % ( param , typename ( param ) ) )
+        
     # =========================================================================
     ## get a variable from workspace
     #  @code
@@ -471,8 +508,7 @@ class ModelConfig(object):
         >>> var = 
         >>> v1 = mc.var ( 'var   ) ## get by var     
         """
-        if isinstance ( variable , ROOT.RooAbsReal ) :
-            return self.var ( variable.name )
+        if isinstance ( variable , par_types ) : return self.var ( variable.name )
         return self.ws.var ( variable ) 
 
     # ===========================================================================
@@ -486,7 +522,7 @@ class ModelConfig(object):
         
         newname  = '%s_with_constraints' % pdf.name
         newtitle = '%s-with-constraints' % pdf.title
-        
+
         if isinstance ( pdf , ROOT.RooSimultaneous ) :
             cat    = pdf.indexCat() 
             simpdf = ROOT.RooSimultaneous ( newname , newtitle , cat )
