@@ -3709,6 +3709,7 @@ class APDF2 (APDF1) :
                                             self.yvar.name    )
     __repr__ = __str__ 
 
+    # ===========================================================================
     ## Make PDF2 object 
     def make_PDF2 ( self , pdf , xvar = None , yvar = None , *args , **kwargs ) :
         """Make PDF1 object
@@ -4962,12 +4963,12 @@ class APDF3 (APDF2) :
         """ Make PDF1 object
         """
         if isinstance ( pdf , PDF3 ) :
-            
-            assert ( not xvar ) or ( xvar in pdf.xvar ) , \
+
+            assert ( not xvar ) or ( xvar in pdf.vars ) , \
                    "make_PDF3: Invalid setting of xvar %s vs %s" % ( xvar , pdf.xvar )
-            assert ( not yvar ) or ( yvar in pdf.xvar ) , \
+            assert ( not yvar ) or ( yvar in pdf.vars ) , \
                    "make_PDF3: Invalid setting of xvar %s vs %s" % ( yvar , pdf.yvar )
-            assert ( not zvar ) or ( zvar in pdf.xvar ) , \
+            assert ( not zvar ) or ( zvar in pdf.vars ) , \
                    "make_PDF3: Invalid setting of xvar %s vs %s" % ( xvar , pdf.zvar )
           
             return pdf, pdf.xvar, pdf.yvar, pdf.zvar 
@@ -4976,7 +4977,7 @@ class APDF3 (APDF2) :
             
             return Generic3D_pdf ( pdf , xvar = xvar , yvar = yvar , zvar = zvar , *args , **kwargs ) , xvar , yvar , zvar 
 
-        raise TypeError( "make_PDF2: invalid pdf/xvar %s/%s" % ( pdf , xvar ) )
+        raise TypeError( "make_PDF3: invalid pdf/xvar %s/%s" % ( pdf , xvar ) )
 
 
 # =============================================================================
