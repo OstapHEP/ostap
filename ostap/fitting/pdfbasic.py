@@ -2403,8 +2403,8 @@ class APDF1 ( Components ) :
         """
         if   isinstance ( pdf , PDF1 ) :
             
-            assert ( not xvar ) or ( xvar is pdf.xvar ) , \
-                       "make_PDF1: Invalid setting of xvar %s vs %s" % ( xvar , pdf.xvar )
+            assert ( not xvar ) or ( xvar in pdf.vars ) , \
+                       "make_PDF1: Invalid setting of xvar %s vs %s" % ( xvar , pdf.vars )
                 
             return pdf , pdf.xvar 
         
@@ -3712,14 +3712,14 @@ class APDF2 (APDF1) :
     # ===========================================================================
     ## Make PDF2 object 
     def make_PDF2 ( self , pdf , xvar = None , yvar = None , *args , **kwargs ) :
-        """Make PDF1 object
+        """ Make PDF2 object
         """
         if   isinstance  ( pdf , PDF2 ) :
             
             assert ( not xvar ) or ( xvar in pdf.vars ) , \
-                   "make_PDF2: Invalid setting of xvar %s vs %s" % ( xvar , pdf.xvar )
+                   "make_PDF2: Invalid setting of xvar %s vs %s" % ( xvar , pdf.vars )
             assert ( not yvar ) or ( yvar in pdf.vars ) , \
-                   "make_PDF2: Invalid setting of yvar %s vs %s" % ( yvar , pdf.yvar )
+                   "make_PDF2: Invalid setting of yvar %s vs %s" % ( yvar , pdf.vars )
    
             return pdf, pdf.xvar, pdf.yvar
         
@@ -4965,11 +4965,11 @@ class APDF3 (APDF2) :
         if isinstance ( pdf , PDF3 ) :
 
             assert ( not xvar ) or ( xvar in pdf.vars ) , \
-                   "make_PDF3: Invalid setting of xvar %s vs %s" % ( xvar , pdf.xvar )
+                   "make_PDF3: Invalid setting of xvar %s vs %s" % ( xvar , pdf.vars )
             assert ( not yvar ) or ( yvar in pdf.vars ) , \
-                   "make_PDF3: Invalid setting of xvar %s vs %s" % ( yvar , pdf.yvar )
+                   "make_PDF3: Invalid setting of xvar %s vs %s" % ( yvar , pdf.vars )
             assert ( not zvar ) or ( zvar in pdf.vars ) , \
-                   "make_PDF3: Invalid setting of xvar %s vs %s" % ( xvar , pdf.zvar )
+                   "make_PDF3: Invalid setting of xvar %s vs %s" % ( xvar , pdf.vars )
           
             return pdf, pdf.xvar, pdf.yvar, pdf.zvar 
         
