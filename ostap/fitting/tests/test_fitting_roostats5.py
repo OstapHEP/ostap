@@ -393,7 +393,7 @@ def test_point_limit_4() :
 
     with FIXVAR ( POI ) :
         POI.setVal ( 0 )
-        rB , _ = the_model.fitTo ( data , silent  = True , constraints = True )
+        rB , _ = the_model.fitTo ( data , silent  = True , constraints = constraints )
 
         # create ModelConfig  for 'B-only' model
         model_b  = ModelConfig ( pdf         = the_model          ,
