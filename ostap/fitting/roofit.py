@@ -355,7 +355,7 @@ def _rs_table_ ( pdf , title = '' , prefix = '' , style = '' ) :
         rows.append ( row )
 
     import ostap.logger.table as T
-    title = title if title else 'RooSimultaneous(%s,%s)' % ( self.name, self.title )
+    title = title if title else '%s(%s,%s)' % ( typename ( pdf ) , pdf.name , pdf.title )
     return T.table ( rows, title = title , prefix = prefix , alignment = 'lllll' )
      
 ROOT.RooSimultaneous.table    = _rs_table_
