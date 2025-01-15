@@ -27,10 +27,10 @@ from   ostap.core.core           import ( std , Ostap , VE   , WSE ,
                                           ROOTCWD , strings  , cidict_fun     , 
                                           split_string       , var_separators , 
                                           valid_pointer      , rootError  ) 
-from   ostap.core.ostap_types    import ( integer_types  , long_type      ,
-                                          string_types   , sequence_types ,
-                                          sized_types    , num_types      ,
-                                          dictlike_types , list_types     )
+from   ostap.core.ostap_types    import ( integer_types      , long_type      ,
+                                          string_types       , sequence_types ,
+                                          sized_types        , num_types      ,
+                                          dictlike_types     , list_types     )
 from   ostap.utils.utils         import chunked, evt_range, LAST_ENTRY
 from   ostap.utils.basic         import isatty, terminal_size, NoContext, loop_items  
 from   ostap.utils.scp_copy      import scp_copy
@@ -901,8 +901,7 @@ def _rt_table_0_ ( tree ,
             logger.warning ("table: can't get the leaf  \"%s\"" % b )
             continue
         
-        tn       = l.GetTypeName ()
-        typename = tn
+        tn        = l.GetTypeName ()
 
         selvars += 1 
         if not _in_types ( tn ) : continue
@@ -924,9 +923,9 @@ def _rt_table_0_ ( tree ,
             logger.warning ("table: can't get the leaf  \"%s\"" % b )
             continue
         
-        typename = l.get_type()
+        type_name = l.get_type()
         
-        rr = [ b , typename ]
+        rr = [ b , l.get_type () ]
         
         stat = bbstats.get ( b , None  )
         if stat :  
@@ -1140,22 +1139,22 @@ def _tl_type_ ( leaf ) :
     
     if not leaf : return 'NULL'
     
-    branch   = leaf.GetBranch   ()
-    typename = leaf.GetTypeName () 
+    branch    = leaf.GetBranch   ()
+    type_name = leaf.GetTypeName () 
     
     name     = branch.GetTitle() 
     p1       = name. find ( '[' ) 
     p2       = name.rfind ( ']' )
     if   0 < p1 < p2 :
-        typename = '%s [%s]' % ( typename , name [ p1 + 1 : p2 ] )
+        type_name = '%s [%s]' % ( type_name , name [ p1 + 1 : p2 ] )
     elif 0 < p1 :
-        typename = '%s [%s]' % ( typename , name [ p1 : ] )
+        type_name = '%s [%s]' % ( type_name , name [ p1 : ] )
 
-    typename = typename.replace ( 'Float_t'  , 'float'  ) 
-    typename = typename.replace ( 'Double_t' , 'double' ) 
-    typename = typename.replace ( 'Bool_t'   , 'bool'   )
+    type_name = type_name.replace ( 'Float_t'  , 'float'  ) 
+    type_name = type_name.replace ( 'Double_t' , 'double' ) 
+    type_name = type_name.replace ( 'Bool_t'   , 'bool'   )
     
-    return typename 
+    return type_name 
 
 
 # =============================================================================
