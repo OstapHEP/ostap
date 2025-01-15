@@ -14,12 +14,12 @@ __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
-    'docme' , ## the only one useful symbol from this module
+    'docme'    , ## the only one useful symbol from this module
     )
 # =============================================================================
 ## primitive types
 from sys import version_info as python_version 
-if python_version.major > 2 : 
+if 2 < python_version.major : 
     primitive =  int        , float , bool , str , bytes   , list , dict , set
 else :
     primitive =  int , long , float , bool , str , unicode , list , dict , set
@@ -103,13 +103,16 @@ def docme( module , symbols = {} , logger = None ) :
         logger.info ( 80*'*' )
         
     _klasses_  = getattr ( module , '_decorated_classes_' , () )
-    _klasses_  = set ( _klasses_ ) 
+    _klasses_  = set ( _klasses_ )
+
+    klname     = lambda k : getattr ( k , '__cppname' , getattr ( k , '__name__' , k ) )
+
     if _klasses_ :
-        logger.info ( "Decorated classes : %s" % [ getattr ( k ,'__name__' , k ) for k in _klasses_ ] )
+        logger.info ( "Decorated classes : %s" % [ klname ( k ) for k in _klasses_ ] )
         for sym in _klasses_ :
             if hasattr ( sym , '__doc__' ) and sym.__doc__ :
                 d = str ( sym.__doc__ ) .replace( '\n' , '\n#' )
-                logger.info ( "Decorated class `%s'\n# - %s" % ( getattr ( sym , '__name__' , sym ) , d ) )
+                logger.info ( "Decorated class `%s'\n# - %s" % ( klname ( sym )  , d ) )
         
         logger.info ( 80*'*' )
 
@@ -156,6 +159,6 @@ if '__main__' == __name__ :
     docme ( __name__ ) 
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
 

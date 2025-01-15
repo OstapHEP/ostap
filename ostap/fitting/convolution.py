@@ -21,6 +21,7 @@ __all__     = (
 from   ostap.fitting.pdfbasic  import PDF1, Generic1D_pdf
 from   ostap.core.ostap_types  import num_types ,  integer_types
 from   ostap.fitting.rooreduce import root_store_factory
+from   ostap.core.core         import typename 
 import ostap.logger.table      as     T 
 import ROOT, math
 # =============================================================================
@@ -319,11 +320,11 @@ class Convolution(object):
         rows = [ ( 'Parameter' , 'value' ) ]        
         row  = 'name' , '%s' % self.name
         rows.append ( row )        
-        row  = 'pdf/type' , '%s' % type ( self.old_pdf ).__name__            
+        row  = 'pdf/type' , '%s' % typename ( self.old_pdf )
         rows.append ( row )        
         row  = 'xvar'     , '%s' % self.xvar.name             
         rows.append ( row )        
-        row  = 'resolution/type' , '%s' % type ( self.resolution ).__name__            
+        row  = 'resolution/type' , '%s' % typename ( self.resolution )
         rows.append ( row )        
         row  = 'use FFT?' , '%s' % self.useFFT 
         rows.append ( row )        

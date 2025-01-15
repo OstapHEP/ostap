@@ -134,7 +134,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = () ## nothing to import 
 # =============================================================================
-from   ostap.core.core        import cpp, VE, funID, Ostap
+from   ostap.core.core        import cpp, VE, funID, Ostap, typename 
 from   ostap.math.param       import ( legendre_sum      ,
                                        chebyshev_sum     ,
                                        bezier_sum        ,
@@ -277,7 +277,7 @@ def _h1_param_sum_ ( h1               ,
     while r.Status() and 0 < refit :
         
         status = attention ( fit_status ( r.Status() ) ) 
-        b_name = type ( b ) . __name__
+        b_name = typename ( b ) 
         rtable = r.table ( title = 'Fit result for %s' % b_name , prefix = '# ' )
         logger.debug   ( 'Fit status is %s [%s]\n%s' % ( status , b_name ,  rtable ) )
 
@@ -292,7 +292,7 @@ def _h1_param_sum_ ( h1               ,
         
     if r.Status() :
         status = attention ( fit_status ( r.Status() ) ) 
-        b_name = type ( b ) . __name__ 
+        b_name = typename ( b ) 
         rtable = r.table ( title = 'Fit result for %s' % b_name , prefix = '# ' )
         logger.error ( 'Fit result [%s]\n%s'   % ( b_name , rtable ) )
 

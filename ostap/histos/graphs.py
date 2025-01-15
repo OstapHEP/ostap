@@ -36,7 +36,7 @@ __all__     = (
     ##
     ) 
 # =============================================================================
-from   ostap.core.core                import cpp, VE, grID
+from   ostap.core.core                import cpp, VE, grID, typename 
 from   ostap.math.base                import isint, pos_infinity, neg_infinity 
 from   ostap.core.meta_info           import root_info
 from   ostap.core.ostap_types         import ( num_types   , integer_types ,
@@ -2920,7 +2920,7 @@ def _gr_table_ ( graph            ,
         rows.append ( row )
 
     if title is None :
-        t = type(graph).__name__ 
+        t = typename( graph ) 
         title = "%s(%s,%s),#%d" % ( t , graph.GetName() , grpah.GetTitle() , len ( graph ) )
 
     import ostap.logger.table as T

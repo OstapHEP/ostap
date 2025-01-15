@@ -65,7 +65,7 @@ __all__     = (
     )
 # ============================================================================
 from   ostap.core.ostap_types   import integer_types 
-from   ostap.core.core          import Ostap, hID
+from   ostap.core.core          import Ostap, hID, typename 
 from   ostap.stats.counters     import EffCounter
 from   ostap.stats.gof          import AGoF
 from   ostap.stats.gof_utils    import TOYS  
@@ -193,7 +193,7 @@ def uPlot ( pdf            ,
         histo = ROOT.TH1F ( hID () ,'U-statistics', bins , 0 , 1 )
         histo.Sumw2()         
     else :
-        raise TypeError ( "Invalid type of ``histo'':%s" % type ( histo ).__name__  )
+        raise TypeError ( "Invalid type of ``histo'':%s" % typename ( histo )  )
     
     histo.SetMinimum ( 0 )
     tStat , hh = uCalc ( pdf       ,

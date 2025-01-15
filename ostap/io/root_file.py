@@ -141,7 +141,7 @@ def _rd_rrshift_ ( rdir , tnamed ) :
     
     if   hasattr ( tnamed , 'GetName' ) : name = tnamed.GetName ()
     elif hasattr ( tnamed , 'name'    ) : name = tnamed.name    ()
-    else : name = tnamed.__class__.__name__
+    else                                : name = typename ( tnamed ) 
     
     return _rd_setitem_ ( rdir , name , tnamed )
 

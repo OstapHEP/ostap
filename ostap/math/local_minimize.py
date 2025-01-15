@@ -24,14 +24,15 @@ __all__     = (
     'scalar_minimize' , ## local copy of minimize_scalar from scipy 
     )
 # =============================================================================
+import math, warnings
+from   math            import sqrt
+from   ostap.math.base import typename 
+# =============================================================================
 # logging 
 # =============================================================================
 from   ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.local_minimize' )
 else                       : logger = getLogger ( __name__              )
-# =============================================================================
-import math, warnings
-from math import sqrt
 # =============================================================================
 try :
     # =========================================================================
@@ -129,7 +130,7 @@ class OptimizeResult(dict):
             return '\n'.join([k.rjust(m) + ': ' + repr(v)
                               for k, v in sorted(self.items())])
         else:
-            return self.__class__.__name__ + "()"
+            return typename ( self ) + "()"
 
     def __dir__(self):
         return list(self.keys())

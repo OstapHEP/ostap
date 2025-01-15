@@ -114,6 +114,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.meta_info    import root_info
+from   ostap.utils.basic       import typename 
 import ROOT, cppyy, sys, math 
 # =============================================================================
 # logging 
@@ -144,19 +145,6 @@ Ostap = cpp.Ostap
 ## positive and negative infinities 
 pos_infinity = float('+inf')
 neg_infinity = float('-inf')
-
-# =============================================================================
-## Get the type name
-#  @code
-#  obj = ...
-#  print ( 'Object type name is %s' % typename ( obj ) ) 
-#  @endcode 
-def typename ( o ) :
-    """ Get the type name
-    >>> obj = ...
-    >>> print ( 'Object type name is %s' % typename ( obj ) )
-    """
-    return type ( o ) .__name__
 
 # =============================================================================
 ## Very simple context manager to suppress ROOT printout

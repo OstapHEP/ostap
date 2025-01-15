@@ -142,7 +142,7 @@ __all__     = (
 import  ROOT, math, sys, abc  
 from    array                  import array
 from    builtins               import range
-from    ostap.core.core        import cpp, Ostap
+from    ostap.core.core        import cpp, Ostap, typename 
 from    ostap.core.ostap_types import ( is_integer, sequence_types,
                                         integer_types , dictlike_types )  
 from    ostap.math.base        import iszero, isequal, doubles 
@@ -1010,7 +1010,7 @@ class BaseInterpolant(object) :
     def xmax ( self ) : return self.__xmax
 
     def __str__  ( self ) :
-        return "%s(%d,%.3g,%.3g)" % ( self.__class__.__name__ ,
+        return "%s(%d,%.3g,%.3g)" % ( typename ( self ) ,
                                       len ( self ) ,
                                       self.xmin () ,
                                       self.xmax () )
@@ -1142,7 +1142,7 @@ class FloaterHormann(BaseInterpolant) :
         return self.__degree
 
     def __str__  ( self ) :
-        return "%s%s(%d,%.3g,%.3g)" % ( self.__class__.__name__ ,
+        return "%s%s(%d,%.3g,%.3g)" % ( typename ( self ) ,
                                         self.degree , 
                                         len ( self ) ,
                                         self.xmin () ,

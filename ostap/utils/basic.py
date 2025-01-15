@@ -37,6 +37,8 @@ __all__     = (
     'get_env'       , ## case-insensitive access to environment variable
     ##
     'numcpu'        , ## number of cores/CPUs
+    ##
+    'typename'      , ## te typename of the object 
     )
 # =============================================================================
 import sys, os, datetime  
@@ -435,6 +437,20 @@ def sync_file ( source              ,
         return ''
     
     return destination
+
+# =============================================================================
+## Get the type name
+#  @code
+#  obj = ...
+#  print ( 'Object type name is %s' % typename ( obj ) ) 
+#  @endcode 
+def typename ( o ) :
+    """ Get the type name
+    >>> obj = ...
+    >>> print ( 'Object type name is %s' % typename ( obj ) )
+    """
+    tt = type ( o )
+    return getattr ( tt , '__cpp_name__' , getattr ( tt , '__name__' ) )
     
 # =============================================================================
 if ( 3 , 4 ) <= sys.version_info : 

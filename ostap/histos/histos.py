@@ -31,7 +31,7 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.core                import ( cpp      , Ostap     , cidict_fun      , 
-                                               ROOTCWD  , rootID    , 
+                                               ROOTCWD  , rootID    , typename        , 
                                                funcID   , funID     , fID             ,
                                                histoID  , hID       , dsID            ,
                                                VE       , SE        , WSE             ,
@@ -8839,7 +8839,7 @@ def _h1_table_ ( h1 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         rows = new_rows 
             
 
-    title = title if title else 'Summary of histogram %s(%s)' % ( type ( h1 ) .__name__ , h1.GetName() ) 
+    title = title if title else 'Summary of histogram %s(%s)' % ( typename ( h1 ) , h1.GetName() ) 
     
     table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lc' ) 
     return table 
@@ -8990,7 +8990,7 @@ def _h2_table_ ( h2 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         for row in rows : new_rows.append ( row [ : -1 ] )
         rows = new_rows 
                 
-    title = title if title else 'Summary of histogram %s(%s)' % ( type ( h2 ) .__name__ , h2.GetName() ) 
+    title = title if title else 'Summary of histogram %s(%s)' % ( typename ( h2 ) , h2.GetName() ) 
     
     table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lc' ) 
     return table 
@@ -9170,7 +9170,7 @@ def _h3_table_ ( h3 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         for row in rows : new_rows.append ( row [ : -1 ] )
         rows = new_rows 
                 
-    title = title if title else 'Summary of histogram %s(%s)' % ( type ( h3 ) .__name__ , h3.GetName() ) 
+    title = title if title else 'Summary of histogram %s(%s)' % ( typename ( h3 ) , h3.GetName() ) 
     
     table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lc' ) 
     return table 

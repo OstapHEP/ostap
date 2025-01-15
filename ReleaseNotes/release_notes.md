@@ -21,6 +21,7 @@
     1. simplify (&extend) `Ostap::MoreRooFit::Addition/Addition2/Product`
     1. remove default constructor for `Ostap::MoreRooFit::ProfileLL`
     1. add some manipulations with `RooSTLRefCountList<RooAbsArg>`
+    1. make use of `typename` function 
     
 ## Backward incompatible1
 

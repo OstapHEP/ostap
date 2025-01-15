@@ -36,8 +36,8 @@ import ostap.fitting.variables
 import ostap.fitting.dataset 
 import ostap.fitting.roocollections 
 from   builtins                 import range
-from   ostap.core.core          import ( Ostap , VE , hID , dsID , rootID,
-                                         valid_pointer , in_test      , 
+from   ostap.core.core          import ( Ostap , VE , hID , dsID , rootID   ,
+                                         valid_pointer , in_test , typename , 
                                          roo_silent    , rootWarning  )
 from   ostap.math.base          import iszero , frexp10 
 from   ostap.core.ostap_types   import ( is_integer     , string_types   , 
@@ -3703,8 +3703,10 @@ class APDF2 (APDF1) :
         
     ## conversion to string 
     def __str__ (  self ) :
-        return '%s(%s,xvar=%s,yvar=%s)' % (
-            self.__class__.__name__ , self.name , self.xvar.name , self.yvar.name )
+        return '%s(%s,xvar=%s,yvar=%s)' % ( typename ( self ) ,
+                                            self.name         ,
+                                            self.xvar.name    ,
+                                            self.yvar.name    )
     __repr__ = __str__ 
 
     ## Make PDF2 object 
@@ -4947,9 +4949,11 @@ class APDF3 (APDF2) :
 
     ## conversion to string 
     def __str__ (  self ) :
-        return '%s(%s,xvar=%s,yvar=%s,zvar=%s)' % (
-            self.__class__.__name__ , self.name ,
-            self.xvar.name , self.yvar.name , self.zvar.name )
+        return '%s(%s,xvar=%s,yvar=%s,zvar=%s)' % ( typename ( self ) ,
+                                                    self.name         ,
+                                                    self.xvar.name    ,
+                                                    self.yvar.name    ,
+                                                    self.zvar.name    )
     __repr__ = __str__ 
 
     # =========================================================================

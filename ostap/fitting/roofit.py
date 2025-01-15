@@ -21,7 +21,7 @@ __all__     = (
     'var_from_name' , ## "convert" name/expression into variable/formula
     ) 
 # =============================================================================
-from   ostap.core.core              import Ostap, VE
+from   ostap.core.core              import Ostap, VE, typename 
 from   ostap.fitting.variables      import SETVAR, FIXVAR  
 import ostap.fitting.roocollections
 import ostap.fitting.rooreduce 
@@ -278,7 +278,7 @@ def _rp_table_ ( plot , prefix = '' , title = '' ) :
     """
     
     def _name ( obj  ) :
-        n = type( obj ).__name__ 
+        n = typename ( obj )
         p = n.find ( 'cppyy.gbl.' ) 
         return n [ p + 10 : ] if 0 < p else n
     
@@ -351,7 +351,7 @@ def _rs_table_ ( pdf , title = '' , prefix = '' , style = '' ) :
     cat    = pdf.indexCat() 
     for label, index in cat.items() :
         cpdf = pdf.getPdf ( label )
-        row = '%s' % label , '%+d' % index , type(cpdf).__name__ , cpdf.name , cpdf.title
+        row = '%s' % label , '%+d' % index , typename ( cpdf ) , cpdf.name , cpdf.title
         rows.append ( row )
 
     import ostap.logger.table as T

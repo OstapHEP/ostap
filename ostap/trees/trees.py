@@ -23,7 +23,7 @@ __all__     = (
 from   ostap.core.meta_info      import root_info, ostap_version
 from   ostap.core.core           import ( std , Ostap , VE   , WSE ,
                                           hID , fID   , 
-                                          rootException      , 
+                                          rootException      , typename       , 
                                           ROOTCWD , strings  , cidict_fun     , 
                                           split_string       , var_separators , 
                                           valid_pointer      , rootError  ) 
@@ -1011,9 +1011,9 @@ def _rt_table_0_ ( tree ,
         
         tt = tree.GetTitle()
         if tt and tt != tree.GetName() : 
-            title  = '%s("%s","%s") %d entries,' % ( tree.__class__.__name__ , tree.path , tt , len ( tree ) )
+            title  = '%s("%s","%s") %d entries,' % ( typename ( tree ) , tree.path , tt , len ( tree ) )
         else :
-            title  = '%s("%s") %d entries,'      % ( tree.__class__.__name__ , tree.path ,      len ( tree ) )
+            title  = '%s("%s") %d entries,'      % ( typename ( tree ) , tree.path ,      len ( tree ) )
 
         nb = len ( tree.branches () )
         title += '%d branches' % nb 
@@ -1111,9 +1111,9 @@ def _rt_table_1_ ( tree ,
         
         tt = tree.GetTitle()
         if tt and tt != tree.GetName() : 
-            title  = '%s("%s","%s") %d entries,' % ( tree.__class__.__name__ , tree.path , tt , len ( tree ) )
+            title  = '%s("%s","%s") %d entries,' % ( typename ( tree ) , tree.path , tt , len ( tree ) )
         else :
-            title  = '%s("%s") %d entries,'      % ( tree.__class__.__name__ , tree.path ,      len ( tree ) )
+            title  = '%s("%s") %d entries,'      % ( typename ( tree ) , tree.path ,      len ( tree ) )
         
         if isinstance ( tree , ROOT.TChain ) :
             nfiles = len ( tree.files() )

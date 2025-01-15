@@ -20,7 +20,7 @@ __all__     = (
 from   ostap.core.meta_info   import root_info 
 from   ostap.core.ostap_types import listlike_types 
 from   collections            import defaultdict
-from   ostap.core.core        import SE, VE, Ostap
+from   ostap.core.core        import SE, VE, Ostap, typename 
 from   ostap.math.base        import doubles, axis_range  
 from   ostap.math.models      import f1_draw 
 from   ostap.stats.gof_utils  import Estimators,Summary
@@ -65,7 +65,7 @@ def ecdf_from_data  ( data ) :
     elif isinstance  ( data , array.array      ) : return Ostap.Math.ECDF ( data2vct ( data ) ) 
     elif isinstance  ( data1 , listlike_types  ) : return Ostap.Math.ECDF ( doubles  ( data ) ) 
     ## 
-    raise TypeError ( "ecdf_from_data: Unsupported `data' type: %s" % type ( data1 ).__name__ )
+    raise TypeError ( "ecdf_from_data: Unsupported `data' type: %s" % typename ( data1 ) )
 # ===============================================================================
 ## Prepare data
 #  @code

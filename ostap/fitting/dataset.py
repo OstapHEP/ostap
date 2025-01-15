@@ -28,8 +28,8 @@ from   builtins                  import range
 from   ostap.utils.progress_bar  import progress_bar 
 from   collections               import defaultdict
 from   ostap.core.meta_info      import root_info, ostap_version 
-from   ostap.core.core           import ( Ostap, VE, SE ,
-                                          hID  , dsID , strings , 
+from   ostap.core.core           import ( Ostap   , VE, SE , hID , dsID  ,
+                                          strings , typename             , 
                                           valid_pointer , split_string   ,
                                           ROOTCWD       , var_separators ,
                                           loop_items    , cidict_fun     )
@@ -2223,9 +2223,9 @@ def _ds_table_0_ ( dataset                ,
     tt = dataset.GetTitle()
     if not title :        
         if  tt and tt != dataset.GetName()  : 
-            title = '%s("%s","%s"):' % ( dataset.__class__.__name__ , dataset.GetName () , tt ) 
+            title = '%s("%s","%s"):' % ( typename ( dataset ) , dataset.GetName () , tt ) 
         else :
-            title = '%s("%s"):'      % ( dataset.__class__.__name__ , dataset.GetName () )
+            title = '%s("%s"):'      % ( typename ( dataset ) , dataset.GetName () )
         title =  '%s %d entries' %  ( title , len ( dataset ) )
 
     if not _vars :
@@ -2366,7 +2366,7 @@ def _ds_table_1_ ( dataset                ,
         
     tt = dataset.GetTitle()
     if not title :        
-        title = '%s("%s"):'     % ( dataset.__class__.__name__ , dataset.GetName () )
+        title = '%s("%s"):'     % ( typename ( dataset ) , dataset.GetName () )
         title = '%s %d entries' % ( title , len ( dataset ) )
 
     if not _vars :
@@ -3400,7 +3400,7 @@ def _ds_2tree_ ( dataset , name = '' , filename = '' , cuts = '' , vars = () , c
                         dstmp.convertToTreeStore()
                         store = dstmp.store() 
             assert isinstance ( store , ROOT.RooTreeDataStore ) , \
-                'Store type %s is not RooTreeDataStore!' % ( type ( store ) .__name__ ) 
+                'Store type %s is not RooTreeDataStore!' % ( typename ( store ) ) 
             rfile [ name ] = store.tree()
 
     with ROOT.TFile ( filename , 'r' ) as rfile : rfile.ls()

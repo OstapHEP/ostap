@@ -35,7 +35,7 @@ from   ostap.core.core               import ( Ostap         , hID ,
                                               valid_pointer ,
                                               cidict_fun    ,                                               
                                               roo_silent    ,                                              
-                                              rootWarning   )   
+                                              rootWarning   , typename )   
 from   ostap.math.base               import iszero , isequal  
 from   ostap.fitting.utils           import make_name 
 from   ostap.fitting.variables       import SETVAR
@@ -133,7 +133,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         
     ## conversion to string 
     def __str__ (  self ) :
-        return '%s(%s,xvar=%s)' % ( self.__class__.__name__ , self.name , self.xvar.name )
+        return '%s(%s,xvar=%s)' % ( typename ( self ) , self.name , self.xvar.name )
     __repr__ = __str__ 
 
     @property
@@ -364,7 +364,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
     #  a   = pdf['A']
     #  @endcode
     def __getitem__ ( self , param ) :
-        """Get parameter by name 
+        """ Get parameter by name 
         >>> pdf = ...
         >>> a   = pdf['A']
         """
@@ -618,7 +618,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             for k in kwargs :
                 if k in self.checked_keys :
                     if not hasattr ( self , k ) or getattr ( self, k ) != kwargs [ k ] :
-                        raise AttributeError ("Class %s cannot be cloned with '%s' key" % ( self.__class__.__name__ , k ) )
+                        raise AttributeError ("Class %s cannot be cloned with '%s' key" % ( typename ( self ) , k ) )
 
         ## two very special keys:
         if   'fun' in self.config                              : self.config.update ( { 'fun' : self.fun } ) 
@@ -2236,7 +2236,7 @@ class AFUN2(AFUN1,YVar) :
         
     ## conversion to string 
     def __str__ (  self ) :
-        return '%s(%s,xvar=%s,yvar=%s)' % ( self.__class__.__name__ ,
+        return '%s(%s,xvar=%s,yvar=%s)' % ( typename ( self ) ,
                                             self.name      ,
                                             self.xvar.name ,
                                             self.yvar.name )
@@ -3242,7 +3242,7 @@ class Fun2D ( FUN2 ) :
 ## @class AFUN3
 #  The base class for 3D-function
 class AFUN3(AFUN2,ZVar) :
-    """Base class for 3D-function
+    """ Base class for 3D-function
     """
 
     def __init__ ( self , name , xvar , yvar , zvar , tricks = True , **kwargs ) :
@@ -3267,7 +3267,7 @@ class AFUN3(AFUN2,ZVar) :
         
     ## conversion to string 
     def __str__ (  self ) :
-        return '%s(%s,xvar=%s,yvar=%s,zvar=%s)' % ( self.__class__.__name__ ,
+        return '%s(%s,xvar=%s,yvar=%s,zvar=%s)' % ( typename ( self ) ,
                                                     self.name      ,
                                                     self.xvar.name ,
                                                     self.yvar.name ,

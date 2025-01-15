@@ -54,16 +54,16 @@ __all__ = (
     'ENCODING'       
     )
 # =============================================================================
-import os, abc, shelve, shutil, glob, time, datetime, zipfile, tarfile 
-from   sys                  import version_info           as python_version
-from   ostap.io.dbase       import dbopen , whichdb, Item, ordered_dict, dbfiles   
+from   sys                  import version_info               as python_version
+from   ostap.io.dbase       import dbopen     , whichdb, Item, ordered_dict, dbfiles   
 from   ostap.core.meta_info import meta_info 
-from   ostap.io.pickling    import ( Pickler , Unpickler, BytesIO,
-                                     PROTOCOL,
+from   ostap.io.pickling    import ( Pickler  , Unpickler, BytesIO,
+                                     PROTOCOL ,
                                      HIGHEST_PROTOCOL, DEFAULT_PROTOCOL ) 
 from   ostap.utils.cleanup  import CUBase
 from   ostap.utils.utils    import file_size
-from   ostap.utils.basic    import writeable 
+from   ostap.utils.basic    import writeable, typename  
+import os, abc, shelve, shutil, glob, time, datetime, zipfile, tarfile 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.compress_shelve' )
@@ -540,16 +540,13 @@ class CompressShelf (shelve.Shelf,CUBase) :
                 timetag = ''
                 kobj    = rawitem  
 
-            ot   = type ( kobj )
-            if   hasattr ( ot , '__cpp_name__' ) : otype = ot.__cpp_name__ 
-            elif hasattr ( ot , '__cppname__'  ) : otype = ot.__cppname__
-            else                                 : otype = ot.__name__ 
+            otype = typename ( kobj )
 
             row = '{:15}'.format ( k ) , '{:15}'.format ( otype ) , size  , timetag 
             table.append ( row )
 
         import ostap.logger.table as T
-        t      = type( self ).__name__
+        t      = typename ( self ) 
         title  = '%s:%s' % ( t  , n )
         maxlen = 0
         for row in table :
@@ -597,7 +594,7 @@ class CompressShelf (shelve.Shelf,CUBase) :
         else :
             size = '%.2fGB' % ( float ( fs ) / ( 1024 * 1024 * 1024 ) )
 
-        t     = type( self ).__name__
+        t     = typename ( self )
         tab   = self.table ( pattern = pattern , load = load , prefix = prefix )
         
         ll    = logger if logger else getLogger ( n )

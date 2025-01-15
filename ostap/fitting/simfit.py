@@ -22,7 +22,7 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.meta_info     import root_info 
-from   ostap.core.core          import std , Ostap , dsID , items_loop
+from   ostap.core.core          import std , Ostap , dsID , items_loop, typename
 from   ostap.utils.utils        import chunked 
 from   ostap.fitting.fithelpers import VarMaker, ConfigReducer
 from   ostap.fitting.pdfbasic   import ( PDF1 , Generic1D_pdf , 
@@ -1193,7 +1193,7 @@ class SimFit (VarMaker,ConfigReducer) :
         for k , cmp in items_loop ( self.categories ) :
             row = str ( k ) , 
             if isinstance ( cmp , generic_pdfs ) :
-                ttype = type(cmp.pdf).__name__ , cmp.pdf.name , cmp.pdf.title  
+                ttype = typename ( cmp.pdf ) , cmp.pdf.name , cmp.pdf.title  
             else :
                 ttype = '%s' % cmp , ''                 
             rows.append ( row + ttype )

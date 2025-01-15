@@ -2888,7 +2888,7 @@ def checkops ( a , b , logger = logger ) :
         result = ''
         if checker : ok = True if checker ( a, b ) else False
         else       : ok = ''
-        result = '%s' % type ( operation ( a , b ) ).__name__ if operation and ok else '' 
+        result = '%s' % typename ( operation ( a , b ) ) if operation and ok else '' 
         
         row = ( symbol                       ,
                 'ok' if operation else '---' ,
@@ -2909,7 +2909,7 @@ def checkops ( a , b , logger = logger ) :
     import ostap.logger.table as T
     title = 'Allowed binary operations'
     table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lcccl' )
-    logger.info ( "%s for '%s' and '%s':\n%s" % ( title , type ( a ).__name__ , type ( b ).__name__ , table ) ) 
+    logger.info ( "%s for '%s' and '%s':\n%s" % ( title , typename ( a ) , typename ( b ) , table ) ) 
                       
 # =============================================================================
 if '__main__' == __name__ :

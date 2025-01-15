@@ -48,10 +48,12 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.meta_info   import root_info 
-from   ostap.core.ostap_types import  ( string_types   , integer_types  ,
+from   ostap.core.ostap_types import ( string_types    , integer_types  ,
                                         num_types      , 
                                         sequence_types , dictlike_types )
-from   ostap.core.core        import valid_pointer, split_string, loop_items, Ostap   
+from   ostap.core.core        import ( valid_pointer   , split_string   ,
+                                       loop_items      , Ostap          ,
+                                       typename  )    
 import ostap.fitting.roofit
 from   ostap.fitting.pdfbasic import APDF1
 import ROOT, abc, sys  
@@ -73,175 +75,189 @@ class ModelConfig(object):
     def __init__  ( self                      ,
                     pdf                       ,   ## PDF 
                     poi                       ,   ## parameter(s) of interest
-                    dataset            = None ,   ## dataset  (optional)
+                    dataset                   ,   ## dataset  
                     workspace          = None ,   ## worspace (optional)
                     observables        = ()   ,   ## observables 
                     global_observables = ()   ,   ## global observables
                     constraints        = ()   ,   ## constraints
-                    constrained        = ()   ,   ## constrained                     
+                    constrained        = ()   ,   ## constrained
                     conditional        = ()   ,   ## conditional observables 
                     snapshot           = None ,   ## snapshot 
                     **kwargs                  ) : ## other arguments
 
-        params = poi 
-        if   isinstance ( params , ROOT.RooAbsReal ) : params = [ params ]
-        elif isinstance ( params , string_types    ) :
-            params = split_string ( params , strip = True , respect_groups = True ) 
-
-        ## allow some freedom in arguments 
+        ## (0) allow some freedom in arguments 
         from ostap.utils.cidict import cidict
         from ostap.core.core    import cidict_fun
-        
+        ## case-insensitive kewword argumetns 
         kw_args = cidict ( transform = cidict_fun , **kwargs )
         
-        ## (1) create workspace (if needed)
-        ws = workspace 
-        if ws and isinstance ( ws , ROOT.RooWorkspace ) : pass
-        else : 
-            wsname  = kw_args.pop ( 'ws_name'  , 'WS_%s'            % pdf.name )
-            wstitle = kw_args.pop ( 'ws_title' , 'workspace for %s' % pdf.name )
-            ws      = ROOT.RooWorkspace         ( wsname  , wstitle )
-        self.__ws   = ws
+        ## check pdf 
+        assert isinstance ( pdf , ROOT.RooAbsPdf ) or \
+            ( hasattr ( pdf , 'roo_pdf' ) and isinstance ( pdf.roo_pdf , ROOT.RooAbsPdf ) ) , \
+            "Invalid `pdf' type:%s" % typename ( pdf )
+        
+        ## check dataset 
+        assert dataset and isinstance ( dataset , ROOT.RooAbsData ), \
+            "Invalid dataset type:%s" % typename ( dataset ) 
 
+        ## check workspace 
+        assert ( not workspace ) or isinstance ( workspace , ROOT.RooWorkspace ) , \
+            "Invalid worskpace type:%s" % typename ( workspace )
+
+        ## (1) quick check and very simple transform. more checks follow  
+        
+        if   isinstance ( observables , string_types    ) :
+            observables = split_string ( observables  , strip = True , respect_groups = True )
+        elif isinstance ( observables , ROOT.RooAbsReal ) :
+            observables = [ observables ]
+        
+        if   isinstance ( poi         , string_types    ) :
+            poi = split_string ( poi , strip = True , respect_groups = True )
+        elif isinstance ( poi         , ROOT.RooAbsReal ) : poi         = [ poi         ]
+        
+        if   isinstance ( constrained , string_types    ) : 
+            constrained = split_string ( constrained , strip = True , respect_groups = True )        
+        elif isinstance ( constrained , ROOT.RooAbsReal ) : constrained = [ constrained ]
+
+        if   isinstance ( conditional , string_types  ) :
+            conditional = split_string ( conditional , strip = True , respect_groups = True )
+        elif isinstance ( conditional , ROOT.RooAbsReal ) : conditional = [ conditional ]
+
+        if   isinstance ( constraints  , ROOT.RooAbsPdf ) : constrainsts = [ constraints ]
+
+        if   isinstance ( constrained , string_types  ) :
+            constrained = split_string ( constrained , strip = True , respect_groups = True )
+        elif isinstance ( constrained , ROOT.RooAbsReal ) : constrained = [ constrained ]
+                   
+        if   isinstance ( global_observables , string_types    ) :
+            global_observables = split_string ( global_observables  , strip = True , respect_groups = True )
+        elif isinstance ( global_observables , ROOT.RooAbsReal ) : global_observables = [ global_observables ]
+
+        ## save all input args
+        self.__input_pdf                = pdf
+        self.__input_poi                = poi 
+        self.__input_dataset            = dataset 
+        self.__input_observables        = observables
+        self.__input_global_observables = global_observables
+        self.__input_constraints        = constraints 
+        self.__input_constrained        = constrained 
+        self.__input_conditional        = conditional
+        self.__input_shapshot           = snapshot
+        self.__input_kwargs             = kwargs 
+
+        self.__keep = [] 
+
+        ## (1) create workspace (if needed)
+        if not workspace :
+            wsname    = kw_args.pop ( 'ws_name'  , 'WS_%s'            % pdf.name )
+            wstitle   = kw_args.pop ( 'ws_title' , 'workspace for %s' % pdf.name )
+            workspace = ROOT.RooWorkspace         ( wsname  , wstitle )            
+        self.__ws   = workspace
+    
         ## (2) create ModelConfig        
         mcname    = kw_args.pop ( 'name'  , 'MC_%s'               % pdf.name )
         mctitle   = kw_args.pop ( 'title' , 'model-config for %s' % pdf.name )
-        mc        = ROOT.RooStats.ModelConfig ( mcname , mctitle , ws )
+        mc        = ROOT.RooStats.ModelConfig ( mcname , mctitle , self.ws  )
         self.__mc = mc
 
+        ## (3) raw-pwd 
+        raw_pdf   = pdf if isinstance ( pdf , ROOT.RooAbsPdf ) else pdf.roo_pdf
 
-        self.__pdf                       = pdf
-        self.__poi                       = poi
-        self.__input_observables         = observables 
-        self.__intput_global_observables = global_observables 
-        self.__input_constraints         = constraints 
-        self.__input_snapshot            = snapshot 
-
-        if   isinstance ( pdf , ROOT.RooAbsPdf ) and observables :
-            self.__raw_pdf = pdf
-        elif hasattr    ( pdf , 'roo_pdf' ) :  ## PDF & SimFit 
-            self.__raw_pdf = pdf.roo_pdf 
-        else :
-            raise TypeError ( "Invalid setting of pdf" )
-
-        ## final pdf? (not yet...) 
-        self.__final_pdf = self.__raw_pdf
-
-        lgobs = ROOT.RooArgSet() 
-        ## (0) We need to start from constraints and modify our PDF on-fly 
+        final_pdf = raw_pdf 
+        ## (4) add constraints if specified 
         if constraints :
-            if isinstance ( constraints , ROOT.RooAbsReal ) :
-                constraints = [ constraints ]
-            assert all ( [ isinstance ( c , ( ROOT.RooAbsPdf , APDF1 ) ) for c in constraints ] ) , \
-                   'Invalid constraints: %s' % str ( constraints ) 
-            cnts = ROOT.RooArgSet()
-            for cc in constraints :                
-                c = cc.pdf if isinstance ( cc , APDF1 ) else cc                 
-                cpars = c.getParameters ( dataset ) if dataset else c.getParameters ()
-                for cp in cpars :
-                    if not cp in lgobs : lgobs.add ( cp ) 
-                cnts.add ( c )
-                
-            clst = ROOT.RooArgList ()
-            clst.add ( self.__raw_pdf )
-            for c in cnts : clst.add ( c )
-            self.__final_pdf = ROOT.RooProdPdf ( '%s_constrained' % pdf.name ,
-                                                 "PDF with %d constraints" % len ( cnts ) , clst )
-            self.__cs   = constraints, cnts, clst
 
+            cnts = ROOT.RooArgSet()            
+            for c in constraints :
+                
+                if   isinstance ( c , ROOT.RooAbsPdf ) : cnts.add( c ) 
+                elif hasattr    ( c , 'roo_pdf'      ) and isinstance ( c.roo_pdf , ROOT.RooAbsPdf ) :
+                    cnts.add( c.roo_pdf )
+                elif isinstance ( c , string_types   ) :
+                    cws = self.ws.pdf ( c )
+                    assert cws , "Invalid constraint by name:%s" % c
+                    cnts.add ( cws ) 
+                else :
+                    raise TypeError ( "Unknown constraint:%s" % typename ( c ) )
+                
+            ## ADD CONSTRAINTS TO PDF 
+            final_pdf   = self.add_constraints ( raw_pdf , *cnts )
+            
             ## attention, redefine/update 
             constraints = cnts
+            
+            ## Inform ModelConfig on the constraints 
+            self.__mc.SetExternalConstraints ( constraints )
+            self.__external_constraints = constraints 
+
+        self.__raw_pdf   =   raw_pdf 
+        self.__final_pdf = final_pdf 
 
         ## propagate PDF to ModelConfig/Workspace 
-        if isinstance   ( pdf , ROOT.RooAbsPdf ) and observables :
-            ## (3) set PDF  
-            mc.SetPdf         ( self.__final_pdf ) ## note: we use bare RooAbsPdf here 
-        elif hasattr    ( pdf , 'observables'  ) : 
-            ## (3/4) set PDF and observables 
-            mc.SetPdf         ( self.__final_pdf ) ## note: we use bare RooAbsPdf here 
-            mc.SetObservables ( pdf.observables  )
-            
-        ## (4) observables
-        if observables :
-            if isinstance ( observables , ROOT.RooAbsReal ) :
-                observables = [ observables ]                
-            pars = [ self.pdf_param ( v , dataset ) for v in observables ]
-            obs  = ROOT.RooArgSet   () 
-            for p in pars : obs.add ( p    ) 
-            mc.SetObservables  ( obs )
-            self.__ob = observables, obs 
+        ## (5) set PDF  
+        mc.SetPdf ( self.__final_pdf ) ## note: we use bare RooAbsPdf here
 
-        ## get them back from workspace 
-        observables = self.observables
         
-        ## (5) set parameters of interest
-        pars = [ pdf.parameter ( p , dataset ) for p in params ]
-        pois = ROOT.RooArgSet ()
-        for p in pars : pois.add   ( p    )
-        mc.SetParametersOfInterest ( pois )
-        self.__ps = params , pars, pois
-        
-        ## (6) Nuisance parameters   <---------- ATTENTION!! move them to global observables! 
-        pars = [ v for v in self.pdf_params ( dataset ) if  not v in observables and not v in pois ] ##  and not v in lgobs ]
-        nuis = ROOT.RooArgSet    ()
-        for p in pars : nuis.add ( p    ) 
-        mc.SetNuisanceParameters ( nuis )
-        self.__ns = pars, nuis 
-
-        ## (7) global observables
-        if global_observables or lgobs :
+        if not observables :
+            if   hasattr ( pdf , 'observables' ) : observables = pdf.observables
+            else                                 : observables = final_pdf.getObservables ( dataset )
             
-            if   isinstance ( global_observables , string_types ) :
-                global_observables = split_string ( global_observables , strip = True ) 
-            elif isinstance ( global_observables , ROOT.RooAbsReal ) :
-                global_observables = [ global_observables ]                
+        ## if data&observables are specified, reuqire all observables in data 
+        assert all ( v in dataset for v in observables ) , \
+            "Specified observables are not consistent with data"
 
-            pars = [ self.pdf_param  ( v , dataset ) for v in global_observables ]
+        assert all ( v in final_pdf.getObservables ( dataset ) for v in observables ) , \
+            "Specified observables are not consistent with PDF-observables" 
+        
+        ## PDF for sure depends on observables 
+        assert all ( v in final_pdf for v in observables ), \
+            "Specified observables are not consistent with PDF"
 
-            for p in lgobs :
-                pn = p.name
-                if     ( not pn in pars        ) \
-                   and ( not pn in observables ) \
-                   and ( not pn in pois        ) \
-                   and ( not pn in nuis        ) : pars.append ( p )
+        observables = ROOT.RooArgSet ( self.pdf_param ( o , dataset ) for o in observables ) 
+        
+        ##  (6) set observables 
+        self.__mc.SetObservables ( observables ) 
+        self.__observables = observables
 
-            gobs = ROOT.RooArgSet   () 
-            for p in pars :
-                if not p in gobs : gobs.add ( p    )
-                
-            mc.SetGlobalObservables  ( gobs )
-            self.__go = global_observables, lgobs, gobs 
+        ## (7) get parameters of interess
+        poi = ROOT.RooArgSet ( self.pdf_param ( p , dataset ) for p in poi ) 
+        mc.SetParametersOfInterest ( poi )
+        self.__poi  = poi 
 
-        ## (8) conditional observables
+        ## (8) global observables
+        assert all ( self.pdf_param ( p , dataset ) for p in global_observables )
+        if global_observables : 
+            global_observables = ROOT.RooArgSet ( v for v in global_observables )
+            assert all ( any ( o in c for c in constraints ) for o in global_observables ) , \
+                "Global observables are inconsisent with external constraints!"
+            mc.SetGlobalObservables  ( global_observables ) 
+        self.__global_observables = global_observables 
+
+        ## nuisane = all_parameters - poi - global_observables 
+        nuisance = final_pdf.getParameters ( dataset ) - poi ## - global_observables 
+        ## (9) Nuisance parameters
+        mc.SetNuisanceParameters ( nuisance )
+        self.__nuisance = nuisance 
+        
+        ## (10) conditional observables
+        assert all ( self.pdF_param ( p , dataset ) for p in conditional ) 
         if conditional :
+            conditional = ROOT.RooArgSet ( v for v in conditional )
+            mc.SetConditionalObservables  ( conditional ) 
+        self.__conditional = conditional
 
-            if isinstance ( conditional , string_types ) :
-                conditional = split_string ( conditional , strip = True ) 
-            elif isinstance ( conditional , ROOT.RooAbsReal ) :
-                conditional = [ conditional ]
-            
-            pars = [ self.pdf_param  ( v , dataset ) for v in conditional ]
-            
-            cobs = ROOT.RooArgSet   () 
-            for p in pars :
-                if not p in cobs : cobs.add ( p    )
-            
-            mc.SetConditionalObservables  ( cobs )
-            self.__co = conditional , cobs 
-                
-        ## (9) constrained parameters 
-        self.__constrained = ROOT.RooArgSet() 
+        ## (11) constrained parameters (not used by RooStats! 
+        assert all ( self.pdf_param ( p , dataset ) for p in constrained  )
         if constrained :
-            if isinstance ( constrained , ROOT.RooAbsReal ) : constrained = constrained , 
-            for c in constrained : self.__constrained.add ( s )
-            mc.SetConstraintParameters  ( self.__constrained )
-            
-        ## (10) define the default dataset 
+            constrained = ROOT.RooArgSet ( v for v in conditional )
+            mc.SetConstraintParametrs ( constrained ) 
+        self.__constrained = constrained  
+
+        ## (12) define the default dataset 
         self.__dataset = dataset 
 
-        ## (11) use snapshot if provided 
-        if snapshot :
-            self.snapshot = snapshot
+        ## (13) use snapshot if provided 
+        if snapshot : self.snapshot = snapshot
             
         ## is snapshot
         if kw_args :
@@ -256,7 +272,6 @@ class ModelConfig(object):
 
         ## finally print as table 
         logger.debug ( 'Created ModelConfig: %s\n%s' % ( self.name , self.table ( prefix = '# ' ) ) ) 
-
                        
     @property
     def name  ( self ) :
@@ -418,7 +433,7 @@ class ModelConfig(object):
     def pdf_params ( self , dataset = None ) :
         """ Helper function to get the parameters from the final PDF"""
         pdf = self.__final_pdf
-        return pdf.getParameters ( 0 ) if dataset is None else  pdf.getParameters ( dataset )
+        return pdf.getParameters ( ROOT.nullptr  ) if dataset is None else pdf.getParameters ( dataset )
 
     
     # =========================================================================
@@ -460,6 +475,36 @@ class ModelConfig(object):
             return self.var ( variable.name )
         return self.ws.var ( variable ) 
 
+    # ===========================================================================
+    ## Multiply the pdf with constraints 
+    def add_constraints ( self , pdf , *constraints ) :
+        """ Multiply the pdf with constraints 
+        """
+        assert isinstance ( pdf , ROOT.RooAbsPdf ) , 'Invalid pdf!'
+        assert constraints and all ( isinstance ( c , ROOT.RooAbsPdf ) for c in constraints ), \
+            "Invalid constraints: %s" % str ( constraints )
+        
+        newname  = '%s_with_constraints' % pdf.name
+        newtitle = '%s-with-constraints' % pdf.title
+        
+        if isinstance ( pdf , ROOT.RooSimultaneous ) :
+            cat    = pdf.indexCat() 
+            simpdf = ROOT.RooSimultaneous ( newname , newtitle , cat )
+            for label, index in cat.items() :
+                cpdf = pdf.getPdf ( label ) 
+                npdf = self.add_constraints ( cpdf , *constraints )
+                simpdf.addPdf ( npdf , str ( label ) )
+            self.__keep.append ( simpdf )
+            return simpdf 
+        
+        lst = ROOT.RooArgList()
+        lst.add ( pdf ) 
+        for c in constraints: lst.add ( c ) 
+        newpdf = ROOT.RooProdPdf ( newname , newtitle , lst )
+        self.__keep.append ( lst    ) 
+        self.__keep.append ( newpdf ) 
+        return newpdf
+        
     # ============================================================================
     ## print the model as a table 
     def table ( self , title = '' , prefix = '' ) : 
@@ -474,21 +519,20 @@ class ModelConfig(object):
         row = 'title' , self.mc.title 
         rows.append ( row )
         
-        if self.__ws :
-            row  = 'workspace' , self.ws.name
-            rows.append ( row )
-            row  = ''          , self.ws.title 
-            rows.append ( row )
-
-        row = 'PDF (arg)' , str ( self.__pdf )
+        row  = 'workspace' , self.ws.name
         rows.append ( row )
-        if not self.__raw_pdf is self.__pdf :
+        row  = ''          , self.ws.title 
+        rows.append ( row )
+
+        row = 'PDF (input)' , "%s: %s" % ( typename ( self.__input_pdf ) , self.__input_pdf.name )
+        rows.append ( row )
+        if not self.__raw_pdf is self.__input_pdf :
             pdf = self.__raw_pdf 
-            row = 'PDF (raw)'   , '%s: %s/%s' % ( type ( pdf ).__name__  , pdf.name , pdf.title )
+            row = 'PDF (raw)'   , '%s: %s/%s' % ( typename  ( pdf ) , pdf.name , pdf.title )
             rows.append ( row )            
         if not self.__final_pdf is self.__raw_pdf :
             pdf = self.__final_pdf 
-            row = 'PDF (final)' , '%s: %s/%s' % ( type ( pdf ).__name__  , pdf.name , pdf.title )                                       
+            row = 'PDF (final)' , '%s: %s/%s' % ( typename  ( pdf ) , pdf.name , pdf.title )                                       
             rows.append ( row )
         
         row = 'observables'        , ', '.join( v.name for v in self.observables )  
@@ -507,11 +551,11 @@ class ModelConfig(object):
         rows.append ( row )
 
         for i , c in enumerate ( self.__input_constraints , start = 1 )  :
-            row = 'constraint#%d (input)' % i , '%s: %s/%s' % ( type ( c ).__name__  , c.name , c.title )
+            row = 'constraint#%d (input)' % i , '%s: %s/%s' % ( typename ( c ) , c.name , c.title )
             rows.append ( row )
 
         for i , c in enumerate ( self.constraints , start = 1 )  :
-            row = 'constraint#%d' % i , '%s: %s/%s' % ( type ( c ).__name__  , c.name , c.title )
+            row = 'constraint#%d' % i , '%s: %s/%s' % ( typename ( c ) , c.name , c.title )
             rows.append ( row )
 
         vmax = -1
@@ -521,7 +565,7 @@ class ModelConfig(object):
         n    = len ( self.snapshot )
         for i , v in enumerate ( self.snapshot ) :
             if 0 == i : row = 'snapshot' , vfmt % ( v.name , v.getVal () )
-            else      : row = ''          , vfmt % ( v.name , v.getVal () )
+            else      : row = ''         , vfmt % ( v.name , v.getVal () )
             rows.append ( row )
             
         if not self.snapshot : rows.append (  ( 'shapshot' , ) ) 
@@ -1089,7 +1133,7 @@ class AsymptoticCalculator (Calculator) :
                    silent    = True  , 
                    verbose   = False ) : 
 
-        self.__asimov     = True if asimov    else False
+        self.__asimov     = True if asimov else False
         ## 
         if   silent  : self.__level = -1
         elif verbose : self.__level =  2

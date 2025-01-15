@@ -114,7 +114,7 @@ __all__ = (
     )
 # =============================================================================
 from   sys                     import version_info as     python_version 
-import ostap.io.root_file
+from   ostap.utils.basic       import typename 
 from   ostap.io.dbase          import TmpDB 
 from   ostap.io.pickling       import ( Pickler, Unpickler, BytesIO, 
                                         PROTOCOL,
@@ -126,6 +126,8 @@ if '__main__' == __name__ : logger = getLogger ( 'ostap.io.rootshelve' )
 else                      : logger = getLogger ( __name__              )
 # =============================================================================
 logger.debug ( "Simple generic ROOT-based shelve-like-database" )
+# =============================================================================
+
 # =============================================================================
 ## @class RootOnlyShelf
 #  Plain vanilla DBASE for ROOT-object (only)
@@ -521,13 +523,12 @@ class RootShelf(RootOnlyShelf):
             else :
                 size = '%7.2f GB' %  ( float ( ss ) / ( 1024 * 1024 * 1024 ) )
                 
-            ot    = type ( self [ k ] )
-            otype = ot.__cppname__ if hasattr ( ot , '__cppname__' ) else ot.__name__ 
+            otype = typename ( self [ k ] )
             row = '{:15}'.format ( k ) , '{:15}'.format ( otype ) , size 
             table.append ( row )
 
         import ostap.logger.table as T
-        t      = self.__class__.__name__
+        t      = typename ( self ) 
         title  = '%s:%s' % ( t  , n )
         maxlen = 0
         for row in table :

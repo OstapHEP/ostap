@@ -209,7 +209,7 @@ class VarMaker (object) :
     def logger   ( self ) :
         """'logger': get the local logger object"""
         name    = self.name
-        logname = str ( self.__class__.__name__ ) 
+        logname = typename ( self )
         if name : logname += '(' + name + ')'
         _logger = self.__loggers.get ( logname , None )
         if not _logger :
@@ -686,7 +686,7 @@ class FitHelper(VarMaker) :
         for i , a in enumerate ( args ) :
             if not isinstance ( a , ROOT.RooCmdArg ) :
                 ## self.error ( 'parse_args: unknown argument type %s/%s, skip' % ( a , type ( a ) ) )
-                _row = '[%d]' % i   , type ( a ).__name__ , str ( a ) 
+                _row = '[%d]' % i   , typename ( a ) , str ( a ) 
                 _rows.append ( _row ) 
             else : _args.append ( a ) 
 
@@ -945,7 +945,7 @@ class FitHelper(VarMaker) :
             else :
                
                 ## self.error ( 'parse_args: Unknown/illegal keyword argument: %s/%s, skip it ' % ( k , type ( a ) ) )
-                _row = k , type ( a ).__name__ , str ( a )                                 
+                _row = k , typename ( a ) , str ( a )                                 
                 _rows.append ( _row ) 
             
         if silent and not prntlev : _args.append ( ROOT.RooFit.PrintLevel      ( -1    ) )
