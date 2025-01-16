@@ -186,7 +186,7 @@ class ModelConfig(object):
                     raise TypeError ( "Unknown constraint:%s" % typename ( c ) )
                 
             ## ADD CONSTRAINTS TO PDF 
-            final_pdf   = self.add_constraints ( raw_pdf , *cnts )
+            ## final_pdf   = self.add_constraints ( raw_pdf , *cnts )
             
             ## attention, redefine/update 
             constraints = cnts
@@ -238,7 +238,7 @@ class ModelConfig(object):
         self.__global_observables = global_observables 
 
         ## nuisancee = all_parameters - poi - global_observables 
-        nuisance = final_pdf.getParameters ( dataset ) - poi ## - global_observables 
+        nuisance = final_pdf.getParameters ( dataset ) - poi - global_observables 
         ## (9) Nuisance parameters
         
         mc.SetNuisanceParameters ( nuisance )
@@ -455,7 +455,6 @@ class ModelConfig(object):
         ## already parameter ?        
         if   isinstance ( param , par_types ) and param in params : return param
         ## loop by name
-        print ( 'PDFPARAM', param, typename ( param ) , param.name , isinstance ( param , string_types ) , params ) 
         if isinstance ( param , string_types    ) :
             for p in params :
                 if p.name == param       : return p                
