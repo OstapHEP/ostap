@@ -179,8 +179,10 @@ class ModelConfig(object):
         ## (3) raw-pwd 
         raw_pdf   = pdf if isinstance ( pdf , ROOT.RooAbsPdf ) else pdf.roo_pdf
 
-        final_pdf = raw_pdf 
+        final_pdf = raw_pdf
+
         ## (4) add constraints if specified 
+        self.__external_constraints = () 
         if constraints :
 
             cnts = ROOT.RooArgSet()            
@@ -369,7 +371,7 @@ class ModelConfig(object):
         if ( 6 , 28 ) <= root_info : 
             pars = self.mc.GetConstraintParameters()
             if not valid_pointer ( pars ) : return ()
-        else : pars = self.__constraints                 
+        else : pars = self.__external_constraints                 
         return pars if pars and 0 < len ( pars ) else ()
 
     # =========================================================================
