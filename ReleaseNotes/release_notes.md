@@ -23,6 +23,7 @@
     1. add some manipulations with `RooSTLRefCountList<RooAbsArg>`
     1. make use of `typename` function 
     1. slight improvements in the printout methods for matrices and vectors
+    1. improve printout of `Simfit`
     
 ## Backward incompatible1
 

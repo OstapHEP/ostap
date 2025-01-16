@@ -1190,19 +1190,24 @@ class SimFit (VarMaker,ConfigReducer) :
         """
         rows = [ ( 'Category' , 'Index' , 'Type' , 'Name' , 'Title' ) ]
 
-        for k , cmp in items_loop ( self.categories ) :
-            row = str ( k ) , 
+        for label , index in items_loop ( self.sample ) :
+            row = str ( label ) , str ( index )
+            
+            cmp = self.categories [ label ]  
             if isinstance ( cmp , generic_pdfs ) :
                 ttype = typename ( cmp.pdf ) , cmp.pdf.name , cmp.pdf.title  
             else :
-                ttype = '%s' % cmp , ''                 
+                ttype = '%s' % cmp , ''
+
             rows.append ( row + ttype )
         
         import ostap.logger.table as T
-        rows = T.remove_empty_columns ( rows )
+        rows  = T.remove_empty_columns ( rows )
         title = title if title else 'SimFit(%s)' % self.name 
         return T.table ( rows , title = title , prefix = prefix , style = style )
-
+    
+    __repr__ = table
+    __str__  = table
     
 # =============================================================================
 if '__main__' == __name__ :
