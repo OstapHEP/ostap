@@ -70,6 +70,17 @@ obs_types = ROOT.RooAbsReal, ROOT.RooAbsCategory
 ## allowed types for parameters 
 par_types = ROOT.RooAbsReal, 
 # ==============================================================================
+if ( 6 , 28 ) <= root_info : # =================================================
+    # ==========================================================================
+    def make_set ( source ) : return ROOT.RooArgSet ( source )
+    # ==========================================================================
+else : # =======================================================================
+    # ==========================================================================
+    def make_set ( source ) : 
+        result = ROOT.RooArgSet()
+        for item in source : result.add ( item )
+        return result
+# ==============================================================================
 ## @class ModelConfig
 #  Helper class to create `RooStats::ModelConfig`
 #  @see RooStats::ModelConfig 
@@ -192,8 +203,7 @@ class ModelConfig(object):
             constraints = cnts
             
             ## Inform ModelConfig on the constraints
-            if ( 6 , 28 ) <= root_info : 
-                self.__mc.SetExternalConstraints ( constraints )
+            if ( 6 , 28 ) <= root_info : self.__mc.SetExternalConstraints ( constraints )
             self.__external_constraints = constraints 
 
         self.__raw_pdf   =   raw_pdf 
@@ -218,21 +228,22 @@ class ModelConfig(object):
         assert all ( v in final_pdf for v in observables ), \
             "Specified observables are not consistent with PDF"
 
-        observables = ROOT.RooArgSet ( self.pdf_observable ( o , dataset ) for o in observables ) 
-        
+
+        observables = make_set ( self.pdf_observable ( o , dataset ) for o in observables ) 
+            
         ##  (6) set observables 
         self.__mc.SetObservables ( observables ) 
         self.__observables = observables
 
         ## (7) get parameters of interess
-        poi = ROOT.RooArgSet ( self.pdf_param ( p , dataset ) for p in poi ) 
+        poi = make_set ( self.pdf_param ( p , dataset ) for p in poi ) 
         mc.SetParametersOfInterest ( poi )
         self.__poi  = poi 
 
         ## (8) global observables
         assert all ( self.pdf_param ( p , dataset ) for p in global_observables )
-        if global_observables : 
-            global_observables = ROOT.RooArgSet ( v for v in global_observables )
+        if global_observables :
+            global_observables = make_set ( v for v in global_observables )                
             assert all ( any ( o in c for c in constraints ) for o in global_observables ) , \
                 "Global observables are inconsisent with external constraints!"
             mc.SetGlobalObservables  ( global_observables ) 
@@ -240,9 +251,9 @@ class ModelConfig(object):
 
         ## nuisancee = all_parameters - poi - global_observables 
         nuisance = final_pdf.getParameters ( dataset ) - poi - global_observables
-        if nuisance : ROOT.RooStats.RemoveConstantParameters ( nuisance ) 
-        ## (9) Nuisance parameters
+        if nuisance : ROOT.RooStats.RemoveConstantParameters ( nuisance )
         
+        ## (9) Nuisance parameters        
         mc.SetNuisanceParameters ( nuisance )
         self.__nuisance = nuisance 
         
@@ -256,7 +267,7 @@ class ModelConfig(object):
         ## (11) constrained parameters (not used by RooStats! 
         assert all ( self.pdf_param ( p , dataset ) for p in constrained  )
         if constrained :
-            constrained = ROOT.RooArgSet ( v for v in conditional )
+            constrained = make_set ( v for v in conditional )
             mc.SetConstraintParametrs ( constrained ) 
         self.__constrained = constrained  
 

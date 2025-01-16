@@ -94,7 +94,7 @@ with FIXVAR ( fBA  ) :
 model_sim.fitTo ( dataset , quiet = True ) 
 
 
-err       = 0.1 
+err        = 0.3
 reff       = ROOT.RooRealVar ( 'reff' , 'ratio of efficiencies' , 1.0 , 0 , 10 )
 ceff1      = model2.soft_constraint ( reff , VE ( 1.0, err**2 ) )
 

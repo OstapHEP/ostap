@@ -375,7 +375,7 @@ def test_point_limit_hc  () :
 #  - Profile Likelihoood Calculator is used 
 def test_point_limit_pl () :
     """ Get the upper limit at given point for small signal at fixed mass
-    - resoltuion is fixed 
+    - resolution is fixed 
     - Profile-Likelihood Calculator is used 
     """
 
