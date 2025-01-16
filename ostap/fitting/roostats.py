@@ -205,7 +205,7 @@ class ModelConfig(object):
             constraints = cnts
             
             ## Inform ModelConfig on the constraints
-            if ( 6 , 28 ) <= root_info : self.__mc.SetExternalConstraints ( constraints )
+            if ( 6 , 28 , 10 ) <= root_info : self.__mc.SetExternalConstraints ( constraints )
             self.__external_constraints = constraints 
 
         self.__raw_pdf   =   raw_pdf 
