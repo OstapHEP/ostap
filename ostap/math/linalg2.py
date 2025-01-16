@@ -1372,6 +1372,8 @@ class LinAlg(object) :
         
         N = len ( vct )
 
+        if not title : title = typename ( vct )
+        
         ## the maximal element 
         maev = abs ( Ostap.Math.maxabs_element  ( vct ) )
         
@@ -1415,6 +1417,8 @@ class LinAlg(object) :
         
         values = vct.value      ()    
         cov2   = vct.covariance ()
+
+        if not title : title = typename ( vct )
         
         N    = len ( values )
         cols = N
@@ -1695,6 +1699,8 @@ class LinAlg(object) :
         rows = mtrx.kRows
         cols = mtrx.kCols
 
+        if not title : title = typename ( mtrx )
+
         mae = abs ( Ostap.Math.maxabs_element ( mtrx ) )
         fmtv , expo = fmt_pretty_float ( mae , width = width , precision = precision )
 
@@ -1823,6 +1829,8 @@ class LinAlg(object) :
         """
         rows = mtrx.kRows
         cols = mtrx.kCols
+        
+        if not title : title = typename ( mtrx )
 
         mae = abs ( Ostap.Math.maxabs_element ( mtrx ) )
         fmtv , expo = fmt_pretty_float ( mae , width = width , precision = precision )

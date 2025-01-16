@@ -22,6 +22,7 @@
     1. remove default constructor for `Ostap::MoreRooFit::ProfileLL`
     1. add some manipulations with `RooSTLRefCountList<RooAbsArg>`
     1. make use of `typename` function 
+    1. slight improvements in the printout methods for matrices and vectors
     
 ## Backward incompatible1
 
