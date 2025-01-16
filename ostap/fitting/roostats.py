@@ -186,13 +186,14 @@ class ModelConfig(object):
                     raise TypeError ( "Unknown constraint:%s" % typename ( c ) )
                 
             ## ADD CONSTRAINTS TO PDF 
-            ## final_pdf   = self.add_constraints ( raw_pdf , *cnts )
+            final_pdf   = self.add_constraints ( raw_pdf , *cnts )
             
             ## attention, redefine/update 
             constraints = cnts
             
-            ## Inform ModelConfig on the constraints 
-            self.__mc.SetExternalConstraints ( constraints )
+            ## Inform ModelConfig on the constraints
+            if ( 6 , 28 ) <= root_info : 
+                self.__mc.SetExternalConstraints ( constraints )
             self.__external_constraints = constraints 
 
         self.__raw_pdf   =   raw_pdf 
@@ -238,7 +239,8 @@ class ModelConfig(object):
         self.__global_observables = global_observables 
 
         ## nuisancee = all_parameters - poi - global_observables 
-        nuisance = final_pdf.getParameters ( dataset ) - poi - global_observables 
+        nuisance = final_pdf.getParameters ( dataset ) - poi - global_observables
+        if nuisance : ROOT.RooStats.RemoveConstantParameters ( nuisance ) 
         ## (9) Nuisance parameters
         
         mc.SetNuisanceParameters ( nuisance )
@@ -353,8 +355,10 @@ class ModelConfig(object):
         """'constraints' : constrain parameters from ModelConfig
         - see `ROOT.RooStats.ModelConfig.GetConstraintParameters`
         """
-        pars = self.mc.GetConstraintParameters()
-        if not valid_pointer ( pars ) : return () 
+        if ( 6 , 28 ) <= root_info : 
+            pars = self.mc.GetConstraintParameters()
+            if not valid_pointer ( pars ) : return ()
+        else : pars = self.__constraints                 
         return pars if pars and 0 < len ( pars ) else ()
 
     # =========================================================================
@@ -523,6 +527,7 @@ class ModelConfig(object):
         newtitle = '%s-with-constraints' % pdf.title
 
         if isinstance ( pdf , ROOT.RooSimultaneous ) :
+            logger.attention ( 'ModelConfig.add_constraints: special treatment of RooSimultaneous!' ) 
             cat    = pdf.indexCat() 
             simpdf = ROOT.RooSimultaneous ( newname , newtitle , cat )
             for label, index in cat.items() :

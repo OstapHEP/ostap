@@ -94,15 +94,15 @@ with FIXVAR ( fBA  ) :
 model_sim.fitTo ( dataset , quiet = True ) 
 
 
+err       = 0.1 
 reff       = ROOT.RooRealVar ( 'reff' , 'ratio of efficiencies' , 1.0 , 0 , 10 )
-ceff1      = model2.soft_constraint ( reff , VE ( 1.0, 0.001**2 ) )
+ceff1      = model2.soft_constraint ( reff , VE ( 1.0, err**2 ) )
 
 
 reff_mean  = ROOT.RooRealVar  ( 'reff_mean'  , 'mean  reff' , 1.0  , 0     , 10 )
 reff_mean .fix()
 
-reff_sigma = ROOT.RooRealVar  ( 'reff_sigma' , 'sigma reff' , 0.001 , 1.e-6 , 0.5 )
-## reff_sigma = ROOT.RooFit.RooConst (  0.001 ) 
+reff_sigma = ROOT.RooRealVar  ( 'reff_sigma' , 'sigma reff' , err , 1.e-6 , 0.5 )
 
 reff_sigma.fix()
 
@@ -454,7 +454,7 @@ def test_point_limit_5() :
     reff.release()
     constraints = ceff2 , 
 
-    gobs = ROOT.RooArgSet ( reff_mean , reff_sigma ) 
+    gobs = ROOT.RooArgSet ( reff_mean ) ## , reff_sigma ) 
 
     the_model   = Models.SimFit (  sample  , { 'A' : model1  , 'B' : model2_new } , name = 'X6' )
 
