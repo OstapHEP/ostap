@@ -23,12 +23,9 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.fitting.fithelpers import VarMaker
-from   ostap.fitting.pdfbasic   import ( PDF1 , Generic1D_pdf ,
-                                         PDF2 , Generic2D_pdf ,
-                                         PDF3 , Generic3D_pdf )
-from   ostap.fitting.fit1d      import Flat1D 
-from   ostap.fitting.fit2d      import Flat2D
-from   ostap.fitting.fit3d      import Flat3D
+from   ostap.fitting.pdfbasic   import ( PDF1 , Generic1D_pdf , Flat1D , 
+                                         PDF2 , Generic2D_pdf , Flat2D , 
+                                         PDF3 , Generic3D_pdf , Flat3D ) 
 import ROOT
 # =============================================================================
 from   ostap.logger.logger import getLogger

@@ -24,7 +24,10 @@
     1. make use of `typename` function 
     1. slight improvements in the printout methods for matrices and vectors
     1. improve printout of `Simfit`
-    
+    1. reshuffle some basic fitting classes
+    1. essentialy re-write of `RooStats`-wrapper 
+
+
 ## Backward incompatible1
 
     1. remove obsolete `ostap.fitting.simfit.Sim1D`

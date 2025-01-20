@@ -25,9 +25,10 @@ from   ostap.core.meta_info     import root_info
 from   ostap.core.core          import std , Ostap , dsID , items_loop, typename
 from   ostap.utils.utils        import chunked 
 from   ostap.fitting.fithelpers import VarMaker, ConfigReducer
-from   ostap.fitting.pdfbasic   import ( PDF1 , Generic1D_pdf , 
-                                         PDF2 , Generic2D_pdf , 
-                                         PDF3 , Generic3D_pdf )
+from   ostap.fitting.pdfbasic   import ( PDF1  , Generic1D_pdf    , 
+                                         PDF2  , Generic2D_pdf    , 
+                                         PDF3  , Generic3D_pdf    , 
+                                         APDF1 )
 import ostap.fitting.variables 
 import ostap.fitting.roocmdarg
 import ROOT, math,  random , warnings 
@@ -37,6 +38,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.simfit' )
 else                       : logger = getLogger ( __name__               )
 # =============================================================================
 generic_pdfs = Generic3D_pdf, Generic2D_pdf, Generic1D_pdf
+pdf_types    = ROOT.RooAbsPdf, APDF1 
 # =============================================================================
 ## Create combined dataset for simultaneous fit
 #  @code
@@ -401,8 +403,6 @@ class SimFit (VarMaker,ConfigReducer) :
                     self.__observables.add ( v )
               
         keys = self.categories.keys()
-
-
         for key in sorted ( keys ) :
             the_pdf = self.categories [ key ].pdf 
             sim_pdf.pdf.addPdf ( the_pdf , str ( key ) )
@@ -1208,7 +1208,29 @@ class SimFit (VarMaker,ConfigReducer) :
     
     __repr__ = table
     __str__  = table
-    
+
+    # =========================================================================
+    ## Create another SimFit object with constraints
+    def make_constrained ( self , *constraints ) :
+        """ Create another SimFit object with constraints
+        """
+        
+        newcats = {}
+        for k , cmp in items_loop ( self.categories ) :
+            newcats [ k ] = cmp.make_constrained ( *constraints ) 
+
+        newsim = SimFit ( sample     = self.sample ,
+                          categories = newcats     ,
+                          name       = 'Constrained_%s' % self.name , 
+                          title      = 'Constrained_%s' % self.pdf.pdf.title )
+
+        for k , cmp in items_loop ( self.categories ) :            
+            newsim.pdf.copy_structures     ( cmp )
+            newsim.pdf.draw_options.update ( cmp.draw_options )
+            
+        return newsim 
+
+        
 # =============================================================================
 if '__main__' == __name__ :
     

@@ -853,7 +853,7 @@ def _rar_name_ ( vname ) :
 #  sample = ROOT.RooCategory('sample','fitting sample', 'signal' , 'control' )
 #  @endcode
 def _rc_init_ ( self , name , title , *categories , **kwargs) :
-    """Modified ROOT.RooCategory constructor to define the categories
+    """ Modified ROOT.RooCategory constructor to define the categories
     >>> sample = ROOT.RooCategory('sample','fitting sample', 'signal' , 'control' )
     """
     ROOT.RooCategory._old_init_ ( self , name ,  title )
@@ -872,8 +872,7 @@ if not hasattr ( ROOT.RooCategory , '_old_init_' ) :
     ROOT.RooCategory.__init__   = _rc_init_     
 
 # =============================================================================
-if root_info < ( 6, 22 ) :
-
+if root_info < ( 6, 22 ) : # ==================================================
     # =========================================================================
     ## iterator over label/index pairs
     #  @code
@@ -884,7 +883,7 @@ if root_info < ( 6, 22 ) :
     #  @endcode
     #  @see RooAbsCategory 
     def _racat_items_ ( cat ) :
-        """Iterator over labelindex pairs
+        """ Iterator over label/index pairs
         >>> category = ...
         >>> for label , index in category : ... 
         >>> for label , index in category.items () : ...     ## ditto
@@ -922,7 +921,7 @@ if root_info < ( 6, 22 ) :
     #  label = category [ 15 ]
     #  @endcode
     def _racat_getitem_ ( cat , item ) :
-        """Get the index for the label (or label for the  index)
+        """ Get the index for the label (or label for the  index)
         >>> category = ...
         >>> index = category ['MyType']
         >>> label = category [ 15 ]
@@ -942,9 +941,8 @@ if root_info < ( 6, 22 ) :
         
         raise TypeError("No '%s' label/index is defined!" % item )
     
-else :
-
-        
+    # =========================================================================
+else : # ======================================================================    
     # =========================================================================
     ## iterator over label/index pairs
     #  @code
@@ -953,7 +951,7 @@ else :
     #  @endcode
     #  @see RooAbsCategory 
     def _racat_items_ ( cat ) :
-        """Iterator over labelindex pairs
+        """ Iterator over label/index pairs
         >>> category = ...
         >>> for label , index in category : ... 
         - see RooAbsCategory 
@@ -987,7 +985,7 @@ else :
     #  label = category [ 15 ]
     #  @endcode 
     def _racat_getitem_ ( cat , item ) :
-        """Get the index for the label (or label for the  index)
+        """ Get the index for the label (or label for the  index)
         >>> category = ...
         >>> index = category ['MyType']
         >>> label = category [ 15 ]
@@ -1009,7 +1007,7 @@ else :
 #  category[ 25 ] = 'AnotherType
 #  @endcode
 def _rcat_setitem_ ( cat , label , value ) :
-    """ define new category entry 
+    """ Define new category entry 
     >>> category = ...
     >>> category[ 'MyType' ] = 16
     >>> category[ 25 ] = 'AnotherType
@@ -1034,7 +1032,7 @@ def _rcat_setitem_ ( cat , label , value ) :
 #  @endcode
 #  @see RooCategory
 def _racat_labels_ ( cat  ) :
-    """Get the list/tuple of categories
+    """ Get the list/tuple of categories
     >>> cat = ....
     >>> labels = cat.labels()
     >>> labels = cat.names () ## ditto 
@@ -1045,13 +1043,13 @@ def _racat_labels_ ( cat  ) :
 # =============================================================================
 ## print RooCategory instance
 def _rcat_str_ ( cat ) : 
-    """Print RooCategory instance"""
+    """ Print RooCategory instance"""
     return "'%s' : '%s'/%d" % ( cat.name , cat.getLabel() , cat.getIndex() )
 
 # ==============================================================================
 ## set current label/index 
 def _rcat_setval_( cat , value ) :
-    """Set current label/index
+    """ Set current label/index
     """
     if   isinstance ( value , integer_types ) : return cat.setIndex ( value )
     elif isinstance ( value , string_types  ) : return cat.setLabel ( value )

@@ -37,11 +37,11 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.core          import cpp, Ostap
+from   ostap.core.meta_info     import root_info
 from   ostap.math.base          import iszero
 from   ostap.fitting.fithelpers import Phases
-from   ostap.fitting.fit2d      import PDF2, Flat2D
-from   ostap.fitting.signals    import Gauss_pdf, CB2_pdf
-from   ostap.core.meta_info     import root_info
+from   ostap.fitting.pdfbasic   import PDF2, Flat2D
+import ostap.fitting.fit2d      
 import ROOT 
 # =============================================================================
 from   ostap.logger.logger     import getLogger

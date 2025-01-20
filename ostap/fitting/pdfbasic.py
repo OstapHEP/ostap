@@ -6,30 +6,54 @@
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 # =============================================================================
-"""Set of useful basic utilities to build various fit models"""
+""" Set of useful basic utilities to build various fit models"""
 # =============================================================================
 __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
     ##
-    'APDF1'         , ## useful base class for 1D-models
-    'APDF2'         , ## useful base class for 2D-models
-    'APDF3'         , ## useful base class for 3D-models
+    'APDF1'            , ## useful base class for 1D-models
+    'APDF2'            , ## useful base class for 2D-models
+    'APDF3'            , ## useful base class for 3D-models
     ##
-    'PDF1'          , ## useful base class for 1D-models
-    'PDF2'          , ## useful base class for 2D-models
-    'PDF3'          , ## useful base class for 3D-models
+    'PDF1'             , ## useful base class for 1D-models
+    'PDF2'             , ## useful base class for 2D-models
+    'PDF3'             , ## useful base class for 3D-models
     ##
-    'Generic1D_pdf' , ## wrapper over imported RooFit (1D)-pdf
-    'Generic2D_pdf' , ## wrapper over imported RooFit (2D)-pdf
-    'Generic3D_pdf' , ## wrapper over imported RooFit (3D)-pdf
+    'Generic1D_pdf'    , ## wrapper over imported RooFit (1D)-pdf
+    'Generic2D_pdf'    , ## wrapper over imported RooFit (2D)-pdf
+    'Generic3D_pdf'    , ## wrapper over imported RooFit (3D)-pdf
     ##
-    'Constrained'   , ## mixin for creation of constrained PDFs
-    'make_pdf'      , ## helper function to make PDF
-    'all_args'      , ## check that all arguments has correct type 
+    'Shape1D_pdf'      , ## 1D-Generic/fixed shape from C++ callable 
+    'Shape2D_pdf'      , ## 2D-Generic/fixed shape from C++ callable 
+    'Shape3D_pdf'      , ## 3D-Generic/fixed shape from C++ callable 
     ##
-    )
+    'Histo1D_pdf'      , ## simple PDF from 1D-histogram
+    'Histo2D_pdf'      , ## simple PDF from 2D-histogram
+    'Histo3D_pdf'      , ## simple PDF from 3D-histogram
+    ##
+    'Constrained'      , ## mixin for creation of constrained PDFs
+    'Constrained1D'    , ## 1D-PDF with constraints
+    'Constrained2D'    , ## 1D-PDF with constraints
+    'Constrained3D'    , ## 1D-PDF with constraints
+    ##
+    'make_pdf'         , ## helper function to make PDF
+    'all_args'         , ## check that all arguments has correct type 
+    ##
+    'H1D_pdf'          , ## convertor of 1D-histo to RooHistPdf
+    'H2D_pdf'          , ## convertor of 2D-histo to RooHistPdf
+    'H3D_pdf'          , ## convertor of 3D-histo to RooHistPdf
+    ##
+    'Flat1D'           , ## uniform in 1D 
+    'Flat2D'           , ## uniform in 2D 
+    'Flat3D'           , ## uniform in 3D
+    ## 
+    'Sum1D'            , ## helper pdf: a non-extensive sum of 1D PDFs 
+    'Sum2D'            , ## helper pdf: a non-extensive sum of 2D PDFs 
+    'Sum3D'            , ## helper pdf: a non-extensive sum of 3D PDFs 
+    ## 
+)
 # =============================================================================
 import ostap.fitting.roofit 
 import ostap.fitting.variables
@@ -47,7 +71,8 @@ from   ostap.fitting.roofit     import SETVAR
 from   ostap.fitting.utils      import ( RangeVar   , numcpu     ,
                                          make_name  , fit_status ,
                                          cov_qual   , get_i      )
-from   ostap.fitting.fithelpers import H1D_dset, H2D_dset, H3D_dset , SETPARS  
+from   ostap.fitting.fithelpers import ( H1D_dset, H2D_dset, H3D_dset ,
+                                         SETPARS , Fractions          )
 from   ostap.fitting.funbasic   import FUN1, FUN2, FUN3, Fun1D , Fun2D , Fun3D 
 from   ostap.utils.cidict       import select_keys
 from   ostap.fitting.roocmdarg  import check_arg , nontrivial_arg , flat_args , command  
@@ -2444,6 +2469,17 @@ class APDF1 ( Components ) :
         
         self.aux_keep.append ( plst ) 
         return ROOT.RooProdPdf ( name , title , plst  )
+
+    # ========================================================================
+    ## create constrained PDF
+    #  @see Constrained
+    #  @see Constrained1D    
+    def make_constrained ( self , *constraints ) :
+        """ Create constrained PDF
+        - see Constrained
+        - see Constrained1D
+        """
+        return Constrained1D ( self , *constraints )
         
 # =============================================================================
 ## @class PDF1
@@ -3729,6 +3765,17 @@ class APDF2 (APDF1) :
 
         raise TypeError( "make_PDF2: invalid pdf/xvar %s/%s" % ( pdf , xvar ) )
 
+    # ========================================================================
+    ## create constrained PDF
+    #  @see Constrained
+    #  @see Constrained1D    
+    def make_constrained ( self , *constraints ) :
+        """ Create constrained PDF
+        - see Constrained
+        - see Constrained1D
+        """
+        return Constrained2D ( self , *constraints )
+        
 # =============================================================================
 ## @class PDF2
 #  The main helper base class for implementation of various 1D PDF-wrappers 
@@ -4979,7 +5026,17 @@ class APDF3 (APDF2) :
 
         raise TypeError( "make_PDF3: invalid pdf/xvar %s/%s" % ( pdf , xvar ) )
 
-
+    # ========================================================================
+    ## create constrained PDF
+    #  @see Constrained
+    #  @see Constrained1D    
+    def make_constrained ( self , *constraints ) :
+        """ Create constrained PDF
+        - see Constrained
+        - see Constrained1D
+        """
+        return Constrained3D ( self , *constraints )
+        
 # =============================================================================
 ## @class PDF3
 #  The main helper base class for implementation of various 3D PDF-wrappers 
@@ -5327,34 +5384,26 @@ class Flat3D(PDF3) :
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date 2023-04-18
 class Constrained(object) :
-    """ Helper mixin/base class for creation of constrained PDFs"""
-    def __init__  ( self , original , constraints ) :
+    """ Helper mixin/base class for creation of constrained PDFs
+    """
+    def __init__  ( self , original , *constraints ) :
 
         assert isinstance  ( original , APDF1 ) , '"original" must be APDF1!'
         assert constraints , '"constraints" are not specified!'
         
         self.__original_pdf     = original        
-        self.__constraints      = ()
-        self.__arg_constraints  = ()
-        self.__pdflist          = ROOT.RooArgList() 
+        self.__constraints      = () 
         
         ## add constraints 
-        self.add_constraints ( constraints )
+        self.add_constraints ( *constraints )
         
     # =========================================================================
     ## add more constraints  
-    def add_constraints ( self , constraints ) :
+    def add_constraints ( self , *constraints ) :
         """ Add more constraints"""
         
-        assert constraints , '"constraints" are not specified!'
-        
-        if   isinstance ( constraints , ROOT.RooAbsPdf )  :
-            cnts = [ constraints ] 
-        elif isinstance ( constraints , APDF1 )  :
-            cnts = [ constraints.pdf ]
-        else :
-            cnts = [ c for c in constraints ]
-     
+        assert constraints , '"Constraints" are not specified!'
+
         cnts1 = [ c         for c in cnts if isinstance ( c , ROOT.RooAbsPdf ) ]
         cnts2 = [ c.roo_pdf for c in cnts if isinstance ( c , APDF1          ) ]
         assert len ( cnts1 ) + len ( cnts2 ) == len ( cnts ) , \
@@ -5362,23 +5411,23 @@ class Constrained(object) :
         
         ## safe/preserve the previous PDF 
         if self.pdf       : self.aux_keep.append ( self.pdf       ) 
-        if self.__pdflist : self.aux_keep.append ( self.__pdflist )
 
-        self.__constraints     = self.constraints     + tuple ( cnts1 + cnts2 )
-        self.__arg_constraints = self.arg_constraints + tuple ( cnts          )
         
-        self.__pdflst = ROOT.RooArgList ( self.original_pdf.roo_pdf )
-        for c in self.constraints : self.__pdflst.add ( c )
+        self.__constraints     = set   ( self.constraints ) + set ( cnts1 + cnts2 )
+        self.__constraints     = tuple ( self.constraints ) 
         
         ## create the actual PDF
-        nc = len ( self.constraints ) 
-        self.pdf = ROOT.RooProdPdf ( self.roo_name ( 'constrained%d_' % nc ) ,
-                                     "Constrained %s [#%d]" % ( self.name , nc ),
-                                     self.__pdflst                    )
+        from ostp.fitting.consraint import make_constrained as mk_constrained 
+        self.pdf = mk_constrained ( self.original_pdf.roo_pdf , *self.constraints )
         
     @property
     def original_pdf ( self ) :
-        """'original_pdf' : get the original PDF (unconstrained)"""
+        """'original_pdf' : get the original PDF (same as `unconstrained`)"""
+        return self.__original_pdf
+
+    @property
+    def unconstrained ( self ) :
+        """'unconstrained' : get the unconstrained PDF (same as `original_pdf`)"""
         return self.__original_pdf
     
     @property
@@ -5386,11 +5435,1150 @@ class Constrained(object) :
         """'constraints' : get the constrainsts (as list of RooAbsPdf)"""
         return self.__constraints
 
-    @property
-    def arg_constraints  ( self ) :
-        """'arg_constraints' : get the constrainsts (as specified in constructor)"""
-        return self.__arg_constraints
 
+# =============================================================================
+## @class Constrained1D
+#  PDF1 with constraints
+#  @code
+#  opdf1 = ...
+#  constrains = cpdf1, cpdf2, cpdf3
+#  cpdf = Constrained1D ( opdf1 , consraints )
+#  @endcode
+class Constrained1D(PDF1,Constrained) :
+    """ PDF1 with constraints
+    >>> opdf1 = ...
+    >>> constrains = cpdf1, cpdf2, cpdf3
+    >>> cpdf = Constrained1D ( opdf1 , consraints )
+    """    
+    def __init__ ( self          ,
+                   original      ,
+                   *constraints  ) :
+
+        assert isinstance  ( original , PDF1 ) , '"original" must be PDF1!'
+        assert constraints , '"constraints" are not specified!'
+        
+        name = 'Constrained_%s' % original.name
+
+        ## initialize the 1st base 
+        PDF1.__init__        ( self , name , original.xvar )
+        
+        ## initialize the 2nd base
+        Constrained.__init__ ( self , original , *constraints ) 
+        
+        ## copy structural elements 
+        self.copy_structures     ( self.original_pdf )
+        ## copy drawing options 
+        self.draw_options.update ( self.original_pdf.draw_options )
+        ## copy fit options 
+        self.fit_options = self.original_pdf.fit_options 
+        
+        ## save the configuration
+        self.config = {
+            'name'        : self.name         ,
+            'original'    : self.original_pdf ,
+            'constraints' : self.constraints 
+            }
+        
+    ## access to attributes of original PDF
+    def __getattr__ ( self , attr ) :
+        """ Delegate the access to missing attributes to the original (unconstrained) PDF"""
+        return getattr ( self.original_pdf , attr ) 
+
+# =============================================================================
+## @class Constrained2D
+#  PDF2 with constraints
+#  @code
+#  opdf2 = ...
+#  constrains = cpdf1, cpdf2, cpdf3
+#  cpdf = Constrained2D ( opdf2 , consraints )
+#  @endcode
+class Constrained2D(PDF2,Constrained) :
+    """ PDF2 with constraints
+    >>> opdf2 = ...
+    >>> constrains = cpdf1, cpdf2, cpdf3
+    >>> cpdf = Constrained2D ( opdf2 , consraints )
+    """
+    
+    def __init__ ( self          ,
+                   original      ,
+                   *constraints  ) :
+
+        assert isinstance  ( original , PDF2 ) , '"original" must be PDF2!'
+        assert constraints , '"constraints" are not specified!'
+        
+        name = 'Constrained_%s' % original.name
+
+        ## initialize the 1st base 
+        PDF2.__init__ ( self , name , original.xvar , original.yvar )
+        
+        ## initialize the 2nd base
+        Constrained.__init__ ( self , original , *constraints ) 
+        
+        ## copy structural elements 
+        self.copy_structures     ( self.original_pdf )
+        ## copy drawing options 
+        self.draw_options.update ( self.original_pdf.draw_options )
+        ## copy fit options 
+        self.fit_options = self.original_pdf.fit_options 
+        
+        ## save the configuration
+        self.config = {
+            'name'        : self.name         ,
+            'original'    : self.original_pdf ,
+            'constraints' : self.constraints 
+            }
+
+    ## access to  attributes of original PDF 
+    def __getattr__ ( self , attr ) :
+        """Delegate the access to missing attribite to the original (unconstrained) PDF"""
+        return getattr ( self.__original_pdf , attr ) 
+
+# =============================================================================
+## @class Constrained3D
+#  PDF3 with constraints
+#  @code
+#  opdf3 = ...
+#  constrains = cpdf1, cpdf2, cpdf3
+#  cpdf = Constrained3D ( opdf3 , consraints )
+#  @endcode
+class Constrained3D(PDF3,Constrained) :
+    """ PDF3 with constraints
+    >>> opdf3 = ...
+    >>> constrains = cpdf1, cpdf2, cpdf3
+    >>> cpdf = Constrained3D ( opdf3 , consraints )
+    """    
+    def __init__ ( self         ,
+                   original     ,
+                   *constraints ) : 
+
+        assert isinstance  ( original , PDF3 ) , '"original" must be PDF3!'
+        assert constraints , '"constraints" are not specified!'
+        
+        name = 'Constrained_%s' % original.name
+
+        ## initialize the 1st base base 
+        PDF3.__init__ ( self , name , original.xvar , original.yvar , original.zvar ) 
+
+        ## initialize the 2nd base
+        Constrained.__init__ ( self , original , *constraints ) 
+        
+        ## copy structural elements 
+        self.copy_structures     ( self.original_pdf )
+        ## copy drawing options 
+        self.draw_options.update ( self.original_pdf.draw_options )
+        ## copy fit options 
+        self.fit_options = self.original_pdf.fit_options 
+        
+        ## save the configuration
+        self.config = {
+            'name'        : self.name         ,
+            'original'    : self.original_pdf ,
+            'constraints' : self.constraints  
+            }
+
+    ## access to  attributes of original PDF 
+    def __getattr__ ( self , attr ) :
+        """ Delegate the access to missing attribite to the original (unconstrained) PDF"""
+        return getattr ( self.__original_pdf , attr ) 
+
+# =============================================================================
+## generic shapes
+# =============================================================================
+# =============================================================================
+## Generic 1D-shape from C++ callable
+#  @see Ostap::Models:Shape1D
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2020-07-20
+class Shape1D_pdf(PDF1) :
+    """ Generic 1D-shape from C++ callable
+    - see Ostap::Models:Shape1D
+    """
+    
+    def __init__ ( self , name , shape , xvar , tag = 0 ) :
+
+        
+        th1 = None 
+        if   isinstance ( shape , ROOT.TH1           ) and 1 == shape.dim() : th1 = shape
+        elif isinstance ( shape , Ostap.Math.Histo3D )                      : th1 = shape.h ()
+        
+        if th1 and not xvar : xvar = th1.xminmax()
+        
+        if isinstance ( shape , ROOT.TH1 ) and 1 == shape.dim() :
+            
+            shape      = Ostap.Math.Histo1D     ( shape )
+            tag        = Ostap.Utils.hash_histo ( shape )
+            
+        elif hasattr ( shape , 'tag' ) and not tag : 
+
+            tag = shape.tag() 
+            
+        ##  initialize the base 
+        PDF1.__init__ ( self , name , xvar ) 
+        
+        self.__shape = shape
+        self.__tag   = tag
+        
+        if isinstance ( self.shape , Ostap.Math.Histo1D ) :
+            
+            ## create the actual pdf
+            self.pdf = Ostap.Models.Histo1D (
+                self.roo_name ( 'histo1_' ) , 
+                "Histo-1D %s" % self.name   ,
+                self.xvar                   ,
+                self.shape                  )
+            
+        else :
+
+            assert (6,18) <= root_info , 'Shape1D_pdf with generic function requires ROOT>=6.18!'
+            
+            ## create the actual pdf
+            self.pdf = Ostap.Models.Shape1D.create  (
+                self.roo_name ( 'shape1_' ) , 
+                "Shape-1D %s" % self.name ,
+                self.xvar                 ,
+                self.shape                ,
+                self.tag                  ) 
+            
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'shape'   : self.shape   , 
+            'xvar'    : self.xvar    ,
+            'tag'     : self.tag     ,
+            }
+        
+    @property
+    def shape  ( self ) :
+        """'shape': the actual C++ callable shape"""
+        return self.__shape 
+    @property
+    def tag   ( self ) :
+        """'tag' : unique tag used for cache-integration"""
+        return self.__tag
+
+# ============================================================================= 
+## Generic 2D-shape from C++ callable
+#  @see Ostap::Models:Shape2D
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2020-07-20
+class Shape2D_pdf(PDF2) :
+    """ Generic 2D-shape from C++ callable
+    - see Ostap::Models:Shape2D
+    """
+    
+    def __init__ ( self , name , shape , xvar , yvar , tag = 0 ) :
+        
+        
+        th2 = None 
+        if   isinstance ( shape , ROOT.TH2           ) and 2 == shape.dim() : th2 = shape
+        elif isinstance ( shape , Ostap.Math.Histo3D )                      : th2 = shape.h ()
+        
+        if th2 and not xvar : xvar = th2.xminmax()
+        if th2 and not yvar : yvar = th2.yminmax()
+
+        if isinstance ( shape , ROOT.TH2 ) and 2 == shape.dim () :
+            
+            self.histo_obj = shape
+            shape          = Ostap.Math.Histo2D     ( shape )
+            tag            = Ostap.Utils.hash_histo ( shape ) 
+            
+        elif hasattr ( shape , 'tag' ) and not tag :
+            
+            tag = shape.tag() 
+            
+        ##  iniialize the base 
+        PDF2.__init__ ( self , name , xvar , yvar ) 
+        
+        self.__shape = shape
+        self.__tag   = tag
+        
+        if isinstance ( self.shape , Ostap.Math.Histo2D ) :
+            
+            ## create the actual pdf
+            self.pdf = Ostap.Models.Histo2D (
+                self.roo_name ( 'histo2_' ) , 
+                "Histo-2D %s" % self.name   ,
+                self.xvar                   ,
+                self.yvar                   ,
+                self.shape                  )            
+        else :
+
+            assert (6,18) <= root_info , 'Shape1D_pdf with generic function requires ROOT>=6.18!'
+            
+            
+            ## create the actual pdf
+            self.pdf = Ostap.Models.Shape2D.create  (
+                self.roo_name  ( 'shape2_' ) , 
+                "Shape-2D %s" % self.name    ,
+                self.xvar                    ,
+                self.yvar                    ,
+                self.shape                   ,
+                self.tag                     )
+            
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'shape'   : self.shape   , 
+            'xvar'    : self.xvar    , 
+            'yvar'    : self.yvar    ,
+            'tag'     : self.tag     , 
+            }
+        
+    @property
+    def shape  ( self ) :
+        """'shape' : the actual C++ callable shape"""
+        return self.__shape 
+    @property
+    def tag   ( self ) :
+        """'tag' : unique tag used for cache-integration"""
+        return self.__tag 
+
+# ============================================================================= 
+## Generic 3D-shape from C++ callable
+#  @see Ostap::Models:Shape3D
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2020-07-20
+class Shape3D_pdf(PDF3) :
+    """ Generic 3D-shape from C++ callable
+    - see Ostap::Models:Shape3D
+    """
+    
+    def __init__ ( self , name , shape , xvar , yvar , zvar , tag = 0 ) :
+
+        th3 = None 
+        if   isinstance ( shape , ROOT.TH3           ) and 3 == shape.dim() : th3 = shape
+        elif isinstance ( shape , Ostap.Math.Histo3D )                      : th3 = shape.h ()
+        
+        if th3 and not xvar : xvar = th3.xminmax()
+        if th3 and not yvar : yvar = th3.yminmax()
+        if th3 and not zvar : zvar = th3.zminmax()
+                
+        if isinstance ( shape , ROOT.TH3 ) :
+            
+            self.histo = shape
+            shape      = Ostap.Math.Histo3D     ( shape )
+            tag        = Ostap.Utils.hash_histo ( shape ) 
+            
+        elif hasattr ( shape , 'tag' ) and not tag : 
+            tag = shape.tag() 
+            
+        ##  iniialize the base 
+        PDF3.__init__ ( self , name , xvar , yvar , zvar ) 
+        
+        self.__shape = shape
+        self.__tag   = tag
+        
+        if isinstance ( self.shape , Ostap.Math.Histo2D ) :
+            
+            ## create the actual pdf
+            self.pdf = Ostap.Models.Histo3D ( self.roo_name ( 'histo3_' ) , 
+                                              "Histo-3D %s" % self.name   ,
+                                              self.xvar                   ,
+                                              self.yvar                   ,
+                                              self.zvar                   ,
+                                              self.shape                  )
+        else :
+            
+            assert (6,18) <= root_info , 'Shape3D_pdf with generic function requires ROOT>=6.18!'
+            
+            ## create the actual pdf
+            self.pdf = Ostap.Models.Shape3D.create  (
+                    self.roo_name ( 'shape3_' ) , 
+                    "Shape-3D %s" % self.name   ,
+                    self.xvar                   ,
+                    self.yvar                   ,
+                    self.zvar                   ,
+                    self.shape                  ,
+                    self.tag                    )
+            
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'shape'   : self.shape   , 
+            'xvar'    : self.xvar    , 
+            'yvar'    : self.yvar    , 
+            'zvar'    : self.zvar    , 
+            'tag'     : self.tag     , 
+            }
+            
+    @property
+    def shape  ( self ) :
+        """'shape' : the actual C++ callable shape"""
+        return self.__shape  
+    @property
+    def tag   ( self ) :
+        """'tag' : unique tag used for cache-integration"""
+        return self.__tag
+    
+
+# =============================================================================
+## Histo*D PDFs
+# =============================================================================
+
+# =============================================================================
+## Use histogram as PDF
+#  @see Ostap::Models::Histo1D
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2020-07-20
+class Histo1D_pdf(PDF1) :
+    """ Use histgram as PDF
+    - see `Ostap.Models.Histo1D
+    """
+        
+    def __init__ ( self , name , histo , xvar ) :
+
+        assert isinstance ( histo , Ostap.Math.Histo1D ) or  \
+               ( isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim()  ) , 'Invalid histogram object'
+        
+        th1 = histo if isinstance ( histo , ROOT.TH1 ) else histo.h ()         
+        if not xvar : xvar = th1.xminmax ()
+        
+        ##  initialize the base 
+        PDF1.__init__ ( self , name , xvar ) 
+
+        shape = histo 
+        if not isinstance ( shape , Ostap.Math.Histo1D ) :
+            shape = Ostap.Math.Histo1D ( shape )
+
+        self.__shape = shape 
+        
+        ## create the actual pdf
+        self.pdf = Ostap.Models.Histo1D (
+            self.roo_name ( 'histo1_' ) , 
+            "Histo-1D %s" % self.name   ,
+            self.xvar                   ,
+            self.shape                  )            
+        
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'histo'   : self.shape   , 
+            'xvar'    : self.xvar    , 
+            }
+            
+    @property
+    def shape  ( self ) :
+        """'shape' : the actual C++ callable shape for TH1"""
+        return self.__shape
+
+# =============================================================================
+## Use histogram as PDF
+#  @see Ostap::Models::Histo2D
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2020-07-20
+class Histo2D_pdf(PDF2) :
+    """Use histgram as PDF
+    - see `Ostap.Models.Histo2D
+    """
+        
+    def __init__ ( self , name , histo , xvar , yvar ) :
+
+        assert isinstance ( histo , Ostap.Math.Histo2D ) or  \
+               ( isinstance ( histo , ROOT.TH2 ) and 2 == histo.dim()  ) , 'Invalid histogram object'
+        
+        th2 = histo if isinstance ( histo , ROOT.TH2 ) else histo.h ()         
+        if not xvar : xvar = th2.xminmax ()
+        if not yvar : yvar = th2.yminmax ()
+        
+        ##  initialize the base 
+        PDF2.__init__ ( self , name , xvar , yvar ) 
+
+        shape = histo 
+        if not isinstance ( shape , Ostap.Math.Histo2D ) :
+            shape = Ostap.Math.Histo2D ( shape )
+
+        self.__shape = shape 
+        
+        ## create the actual pdf
+        self.pdf = Ostap.Models.Histo2D (
+            self.roo_name ( 'histo2_' ) , 
+            "Histo-2D %s" % self.name   ,
+            self.xvar                   ,
+            self.yvar                   ,
+            self.shape                  )            
+        
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'histo'   : self.shape   , 
+            'xvar'    : self.xvar    , 
+            'yvar'    : self.yvar    ,
+            }
+        
+    @property
+    def shape  ( self ) :
+        """'shape' : the actual C++ callable shape for TH2"""
+        return self.__shape
+
+# =============================================================================
+## Use histogram as PDF
+#  @see Ostap::Models::Histo3D
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2020-07-20
+class Histo3D_pdf(PDF3) :
+    """Use histogram as PDF
+    - see `Ostap.Models.Histo3D
+    """
+        
+    def __init__ ( self , name , histo , xvar , yvar , zvar ) :
+
+        assert isinstance ( histo , Ostap.Math.Histo3D ) or  \
+               ( isinstance ( histo , ROOT.TH3 ) and 3 == histo.dim()  ) , 'Invalid histogram object'
+        
+        th3 = histo if isinstance ( histo , ROOT.TH3 ) else histo.h ()         
+        if not xvar : xvar = th3.xminmax ()
+        if not yvar : yvar = th3.yminmax ()
+        if not zvar : zvar = th3.zminmax ()
+        
+        ##  initialize the base 
+        PDF3.__init__ ( self , name , xvar , yvar , zvar ) 
+
+        shape = histo 
+        if not isinstance ( shape , Ostap.Math.Histo3D ) :
+            shape = Ostap.Math.Histo3D ( shape )
+
+        self.__shape = shape 
+        
+        ## create the actual pdf
+        self.pdf = Ostap.Models.Histo3D (
+            self.roo_name ( 'histo3_' ) , 
+            "Histo-3D %s" % self.name   ,
+            self.xvar                   ,
+            self.yvar                   ,
+            self.zvar                   ,
+            self.shape                  )            
+        
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'histo'   : self.shape   , 
+            'xvar'    : self.xvar    , 
+            'yvar'    : self.yvar    ,
+            'zvar'    : self.zvar    ,
+            }
+            
+    @property
+    def shape  ( self ) :
+        """'shape' : the actual C++ callable shape for TH3"""
+        return self.__shape
+            
+
+# =============================================================================
+## H*D_pdf
+# =============================================================================
+
+# =============================================================================
+## simple convertor of 1D-histogram into PDF
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2013-12-01
+class H1D_pdf(PDF1) :
+    """ Simple convertor of 1D-histogram into PDF
+    """
+    def __init__ ( self            ,
+                   name            ,
+                   histo           ,
+                   xvar    = None  ,
+                   density = False ,
+                   order   = 0     , ## interpolation order 
+                   silent  = False ) :
+        
+        assert isinstance ( order, integer_types ) and 0 <= order ,\
+               'Invalid interpolation order: %s/%s' % ( order , type ( order ) )
+
+        self.__ds = H1D_dset ( histo             ,
+                               xaxis   = xvar    ,
+                               density = density ,
+                               silent  = silent  )
+        
+        PDF1    .__init__ ( self , name  , self.ds.xaxis ) 
+
+        with roo_silent ( silent ) : 
+            #
+            ## finally create PDF :
+            self.__vset = ROOT.RooArgSet  ( self.xvar )        
+            self.pdf    = ROOT.RooHistPdf (
+                self.roo_name ( 'histo1_' ) ,
+                'Histo-1D PDF: %s/%s' % ( histo.GetName() , histo.GetTitle() ) , 
+                self.__vset , 
+                self.dset   ,
+                order       )
+            
+        ## and declare it be be a "signal"
+        ## self.signals.add ( self.pdf ) 
+        
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'histo'   : self.histo   , 
+            'xvar'    : self.xvar    , 
+            'density' : self.density , 
+            'silent'  : self.silent  ,
+            'order'   : self.order   ,
+            }
+
+    @property
+    def ds ( self ) :
+        """'ds' : the H1D_dset object"""
+        return self.__ds 
+    @property     
+    def xaxis  ( self ) :
+        """The histogram x-axis variable (same as xvar)"""
+        return self.xvar
+    @property
+    def histo ( self ) :
+        """The  histogram itself"""
+        return self.ds.histo    
+    @property
+    def density( self ) :
+        """Treat the histo as 'density' histogram?"""
+        return self.ds.density    
+    @property
+    def skip_zero ( self ) :
+        """'skip_zero' : skip zero bins for weighted dataset in histo?"""
+        return self.ds.skip_zero    
+    @property
+    def silent( self ) :
+        """Use the silent mode?"""
+        return self.ds.silent
+    @property
+    def dset ( self ) :
+        """'dset' : ROOT.RooDataHist object"""
+        return self.ds.dset
+    @property
+    def histo_hash ( self ) :
+        """Hash value for the histogram"""
+        return self.ds.histo_hash
+    @property
+    def weight ( self ) :
+        """'weight' : get weight variable if defined, None otherwise"""
+        return self.ds.wvar
+
+    @property
+    def order  ( self ) :
+        """'order': interpolation order"""
+        return self.pdf.getInterpolationOrder () 
+    @order.setter
+    def order  ( self , value ) :
+        assert isinstance ( value , integer_types ) and 0 <= value,\
+               'Invalid interpolation order %s/%s' % ( value , type ( value ) )
+        self.pdf.setInterpolationOrder ( value )
+
+# ===================================================it==========================
+## simple convertor of 2D-histogram into PDF
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2013-12-01
+class H2D_pdf(PDF2) :
+    """Simple convertor of 2D-histogram into PDF 
+    """
+    def __init__ ( self            ,
+                   name            ,
+                   histo           ,
+                   xvar    = None  , 
+                   yvar    = None  ,
+                   density = False ,
+                   order   = 0     , ## interpolation order 
+                   silent  = False ) :
+
+        assert isinstance ( order, integer_types ) and 0 <= order ,\
+               'Invalid interpolation order: %s/%s' % ( order , type ( order ) )
+
+        self.__ds = H2D_dset ( histo             ,
+                               xaxis   = xvar    ,
+                               yaxis   = yvar    , 
+                               density = density ,  
+                               silent  = silent  )
+        
+        PDF2    .__init__ ( self , name  , self.ds.xaxis , self.ds.yaxis ) 
+        
+        self.__vset  = ROOT.RooArgSet  ( self.xvar , self.yvar )
+
+        #
+        ## finally create PDF :
+        #
+        with roo_silent ( silent ) : 
+            self.pdf    = ROOT.RooHistPdf (
+                self.roo_name  ( 'histo2_' ) , 
+                'Histo-2D PDF: %s/%s' % ( self.histo.GetName() , self.histo.GetTitle() ) , 
+                self.__vset , 
+                self.dset   ,
+                order       )
+            
+        ## and declare it be be a "signal"
+        ## self.signals.add ( self.pdf ) 
+
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'histo'   : self.histo   , 
+            'xvar'    : self.xvar    , 
+            'yvar'    : self.yvar    , 
+            'density' : self.density , 
+            'silent'  : self.silent  ,             
+            'order'   : self.order   ,             
+            }
+        
+    @property
+    def ds ( self ) :
+        """'ds' : the H2D_dset object"""
+        return self.__ds 
+    @property     
+    def xaxis  ( self ) :
+        """The histogram x-axis variable (same as xvar)"""
+        return self.xvar
+    @property     
+    def yaxis  ( self ) :
+        """The histogram y-axis variable (same as yvar)"""
+        return self.yvar
+    @property
+    def histo ( self ) :
+        """The  histogram itself"""
+        return self.ds.histo    
+    @property
+    def density( self ) :
+        """Treat the histo as 'density' histogram?"""
+        return self.ds.density    
+    @property
+    def skip_zero ( self ) :
+        """'skip_zero' : skip zero bins for weighted dataset in histo?"""
+        return self.ds.skip_zero    
+    @property
+    def silent( self ) :
+        """Use the silent mode?"""
+        return self.ds.silent
+    @property
+    def dset ( self ) :
+        """'dset' : ROOT.RooDataHist object"""
+        return self.ds.dset
+    @property
+    def histo_hash ( self ) :
+        """Hash value for the histogram"""
+        return self.ds.histo_hash
+    @property
+    def weight ( self ) :
+        """'weight' : get weight variable if defined, None otherwise"""
+        return self.ds.wvar
+
+    @property
+    def order  ( self ) :
+        """'order' : interpolation order"""
+        return self.pdf.getInterpolationOrder () 
+    @order.setter
+    def order  ( self , value ) :
+        assert isinstance ( value , integer_types ) and 0 <= value,\
+               'Invalid interpolation order %s/%s' % ( value , type ( value ) )
+        self.pdf.setInterpolationOrder ( value )
+
+
+# =============================================================================
+## simple convertor of 3D-histogram into PDF
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2013-12-01
+class H3D_pdf(PDF3) :
+    """Simple convertor of 3D-histogram into PDF 
+    """
+    def __init__ ( self            ,
+                   name            ,
+                   histo           ,
+                   xvar    = None  , 
+                   yvar    = None  ,
+                   zvar    = None  ,
+                   density = False ,
+                   order   = 0     , 
+                   silent  = False ) :
+        
+        assert isinstance ( order, integer_types ) and 0 <= order ,\
+               'Invalid interpolation order: %s/%s' % ( order , type ( order ) )
+
+        self.__ds = H3D_dset ( histo ,
+                               xaxis   = xvar    ,
+                               yaxis   = yvar    ,
+                               zaxis   = zvar    ,
+                               density = density ,
+                               silent  = silent  )
+        
+        PDF3    .__init__ ( self , name = name  ,
+                            xvar = self.ds.xvar ,
+                            yvar = self.ds.yvar ,
+                            zvar = self.ds.zvar ) 
+        
+        self.__vset  = ROOT.RooArgSet  ( self.xvar , self.yvar , self.zvar )
+        
+        #
+        ## finally create PDF :
+        #
+        with roo_silent ( silent ) : 
+            self.pdf    = ROOT.RooHistPdf (
+                self.roo_name ( 'histo3_' ) , 
+                'Histo-3D PDF: %s/%s' % ( histo3.GetName() , histo2.GetTitle() ) , 
+                self.__vset  , 
+                self.dset    ,
+                order        )
+
+        ## and declare it be be a "signal"
+        ## self.signals.add ( self.pdf ) 
+            
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'histo'   : self.histo   , 
+            'xvar'    : self.xvar    , 
+            'yvar'    : self.yvar    , 
+            'zvar'    : self.zvar    , 
+            'density' : self.density , 
+            'silent'  : self.silent  ,             
+            'order'   : self.order   ,             
+            }
+
+    @property
+    def ds ( self ) :
+        """'ds' : the H3D_dset object"""
+        return self.__ds 
+    @property     
+    def xaxis  ( self ) :
+        """The histogram x-axis variable (same as xvar)"""
+        return self.xvar
+    @property     
+    def yaxis  ( self ) :
+        """The histogram y-axis variable (same as yvar)"""
+        return self.yvar
+    @property     
+    def zaxis  ( self ) :
+        """The histogram z-axis variable (same as zvar)"""
+        return self.zvar
+    
+    @property
+    def histo ( self ) :
+        """The  histogram itself"""
+        return self.ds.histo    
+    @property
+    def density( self ) :
+        """Treat the histo as 'density' histogram?"""
+        return self.ds.density    
+    @property
+    def skip_zero ( self ) :
+        """'skip_zero' : skip zero bins for weighted dataset in histo?"""
+        return self.ds.skip_zero    
+    @property
+    def silent( self ) :
+        """Use the silent mode?"""
+        return self.ds.silent
+    @property
+    def dset ( self ) :
+        """'dset' : ROOT.RooDataHist object"""
+        return self.ds.dset
+    @property
+    def histo_hash ( self ) :
+        """Hash value for the histogram"""
+        return self.ds.histo_hash
+    @property
+    def weight ( self ) :
+        """'weight' : get weight variable if defined, None otherwise"""
+        return self.ds.wvar
+        
+    @property
+    def order  ( self ) :
+        """'order' : interpolation order"""
+        return self.pdf.getInterpolationOrder () 
+    @order.setter
+    def order  ( self , value ) :
+        assert isinstance ( value , integer_types ) and 0 <= value,\
+               'Invalid interpolation order %s/%s' % ( value , type ( value ) )
+        self.pdf.setInterpolationOrder ( value )
+
+
+# ============================================================================
+## Flat*D
+# ============================================================================
+
+# ============================================================================
+## @class Flat1D
+#  The most trivial 1D-model - constant
+#  @code 
+#  pdf = Flat1D( 'flat' , xvar = ... )
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+class Flat1D(PDF1) :
+    """ The most trival 1D-model - constant
+    >>> pdf = Flat1D ( 'flat' , xvar = ... )
+    """
+    def __init__ ( self , xvar , name = '' , title = '' ) :
+        
+        name = name if name else self.generate_name ( prefix = 'flat1D_')
+        PDF1.__init__ ( self  , name , xvar ) 
+        
+        if not title : title = 'flat1(%s)' % name
+        
+        self.pdf = Ostap.Models.Uniform ( self.roo_name ( 'flat_' ) , title , self.xvar )
+        assert 1 == self.pdf.dim() , 'Flat1D: wrong dimensionality!'
+        
+        ## save configuration
+        self.config = {
+            'xvar'     : self.xvar ,
+            'name'     : self.name ,            
+            'title'    : title     
+            }
+
+# =============================================================================
+## @class Flat2D
+#  The most trivial 2D-model - constant
+#  @code 
+#  pdf = Flat2D( 'flat' , xvar = ...  , yvar = ... )
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+class Flat2D(PDF2) :
+    """ The most trival 2D-model - constant
+    >>> pdf = Flat2D( 'flat' , xvar = ...  , yvar = ... )
+    """
+    def __init__ ( self , xvar , yvar , name = '' ,  title = '' ) :
+
+        name = name if name else self.generate_name ( prefix = 'flat2D_')                            
+        PDF2.__init__ ( self  , name , xvar , yvar ) 
+                        
+        if not title : title = 'flat2(%s)' % name 
+        self.pdf = Ostap.Models.Uniform ( name , title , self.xvar , self.yvar )
+        assert 2 == self.pdf.dim() , 'Flat2D: wrong dimensionality!'
+        
+        ## save configuration
+        self.config = {
+            'xvar'     : self.xvar ,
+            'yvar'     : self.yvar ,
+            'name'     : self.name ,            
+            'title'    : title     ,             
+            }                   
+
+# ===========================================================================
+## @class Flat3D
+#  The most trivial 3D-model - constant
+#  @code 
+#  pdf = Flat3D( 'flat' , xvar = ...  , yvar = ... , zvar = ... )
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+class Flat3D(PDF3) :
+    """ The most trival 3D-model - constant
+    >>> pdf = Flat3D( 'flat' , xvar = ...  , yvar = ... , zvar = ... )
+    """
+    def __init__ ( self , xvar , yvar , zvar , name = ''  , title = '' ) :
+
+        name = name if name else self.generate_name ( prefix = 'Flat3D_')                            
+        PDF3.__init__ ( self  , name , xvar , yvar , zvar ) 
+        
+        if not title : title = 'flat3(%s)' % name 
+        self.pdf = Ostap.Models.Uniform ( name , title , self.xvar , self.yvar , self.zvar )
+        assert 3 == self.pdf.dim() , 'Flat3D: wrong dimensionality!'
+        
+        ## save configuration
+        self.config = {
+            'xvar'     : self.xvar ,
+            'yvar'     : self.yvar ,
+            'zvar'     : self.zvar ,
+            'name'     : self.name ,            
+            'title'    : title     ,             
+            }
+
+
+# =============================================================================
+## Sum*D
+# =============================================================================
+
+
+# =============================================================================
+## @class Sum1D
+#  Non-extended sum of several PDFs
+#  It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+#  @see RooAddPdf 
+class Sum1D (PDF1,Fractions) :
+    """ Non-extended sum of several PDFs:    
+    It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+    - see RooAddPdf     
+    >>> sum  = Sum1D ( [ pdf1 , pdf2 , pdf3 ]  )     
+    """
+    def __init__ ( self             ,
+                   pdfs             , ## input list of PDFs  
+                   xvar      = None , 
+                   name      = ''   ,
+                   recursive = True ,
+                   prefix    = 'f'  , ## prefix for fraction names 
+                   suffix    = ''   , ## suffix for fraction names 
+                   fractions = None ) :
+
+        assert 2 <= len ( pdfs ) , 'Sum1D: at least two PDFs are needed!'
+        pdf_list = []           
+        for i , p in enumerate ( pdfs ) :
+            cmp , xvar = self.make_PDF1 ( p , xvar = xvar ) 
+            pdf_list.append ( cmp )
+            
+        ## generic name 
+        patname =  '+'.join ( '(%s)' % p.name for p in pdf_list )
+        ## check the instance name 
+        name    = name if name else self.new_name ( patname ) 
+        
+        ## ininialize the base class
+        PDF1.__init__ ( self , name , xvar ) 
+        Fractions.__init__ ( self , pdf_list       ,
+                             prefix    = prefix    ,
+                             suffix    = suffix    ,
+                             recursive = recursive ,
+                             fractions = fractions ) 
+
+        for p in self.pdfs      : self.alist1.add ( p.pdf )
+        for f in self.frac_list : self.alist2.add ( f     )
+        
+        ## finally build PDF
+        self.pdf = ROOT.RooAddPdf ( self.new_roo_name ( patname , suffix ) , 
+                                    patname        ,
+                                    self.alist1    ,
+                                    self.alist2    ,
+                                    self.recursive )
+        
+        self.config = {
+            'pdfs'      : self.pdfs      ,
+            'xvar'      : self.xvar      ,
+            'name'      : self.name      , 
+            'prefix'    : self.prefix    ,
+            'suffix'    : self.suffix    ,
+            'fractions' : self.fractions ,
+            'recursive' : self.recursive        
+            }
+                
+# =============================================================================
+## @class Sum2D
+#  Non-extended sum of several PDFs
+#  It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+#  @see RooAddPdf 
+class Sum2D (PDF2,Fractions) :
+    """ Non-extended sum of several PDFs:
+    
+    It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+    - see RooAddPdf 
+    
+    >>> sum  = Sum2D ( [ pdf1 , pdf2 , pdf3 ]  ) 
+
+    """
+    def __init__ ( self             ,
+                   pdfs             , ## input list of PDFs  
+                   xvar      = None , 
+                   yvar      = None , 
+                   name      = ''   ,
+                   recursive = True ,
+                   prefix    = 'f'  , ## prefix for fraction names 
+                   suffix    = ''   , ## suffix for fraction names 
+                   fractions = None ) :
+
+        assert 2 <= len ( pdfs ) , 'Sum2D: at least two PDFs are needed!'
+        
+        pdf_list = []           
+        for i , p in enumerate ( pdfs ) :
+            cmp , xvar , yvar = self.make_PDF2 ( p , xvar = xvar , yvar = yvar ) 
+            pdf_list.append ( cmp )
+
+        ## generic name 
+        patname =  '+'.join ( '(%s)' % p.name for p in pdf_list )
+
+        ## check the instance name 
+        name    = name if name else self.new_name ( patname ) 
+        
+        ## ininialize the base classes 
+        PDF2.     __init__ ( self , name , xvar , yvar )        
+        Fractions.__init__ ( self , pdf_list       , 
+                             prefix    = prefix    ,
+                             suffix    = suffix    ,
+                             recursive = recursive ,
+                             fractions = fractions )
+
+        for p in self.pdfs      : self.alist1.add ( p.pdf )
+        for f in self.frac_list : self.alist2.add ( f     )
+        
+        ## finally build PDF
+        self.pdf = ROOT.RooAddPdf ( self.new_roo_name ( patname , suffix ) , 
+                                    patname        ,
+                                    self.alist1    ,
+                                    self.alist2    ,
+                                    self.recursive )
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+
+        self.config = {
+            'pdfs'      : self.pdfs      ,
+            'xvar'      : self.xvar      ,
+            'yvar'      : self.yvar      ,
+            'name'      : self.name      , 
+            'prefix'    : self.prefix    ,
+            'suffix'    : self.suffix    ,
+            'fractions' : self.fractions ,
+            'recursive' : self.recursive        
+            }
+  
+
+
+
+# =============================================================================
+## @class Sum3D
+#  Non-extended sum of several PDFs
+#  It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+#  @see RooAddPdf 
+class Sum3D (PDF3,Fractions) :
+    """ Non-extended sum of several PDFs:
+    
+    It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+    - see RooAddPdf 
+    
+    >>> sum  = Sum3D ( [ pdf1 , pdf2 , pdf3 ]  ) 
+    
+    """
+    def __init__ ( self             ,
+                   pdfs             , ## input list of PDFs  
+                   xvar      = None , 
+                   yvar      = None , 
+                   zvar      = None , 
+                   name      = ''   ,
+                   recursive = True ,
+                   prefix    = 'f'  , ## prefix for fraction names 
+                   suffix    = ''   , ## suffix for fraction names 
+                   fractions = None ) :
+
+        assert 2 <= len ( pdfs ) , 'Sum3D: at least two PDFs are needed!'
+
+        pdf_list = []           
+        for i , p in enumerate ( pdfs ) :
+            cmp , xvar , yvar , zvar = self.make_PDF3 ( p , xvar = xvar , yvar = yvar , zvar = zvar ) 
+            pdf_list.append ( cmp )
+            
+        ## generic name 
+        patname =  '+'.join ( '(%s)' % p.name for p in pdf_list )
+        ## check the instance name 
+        name    = name if name else self.new_name ( patname ) 
+
+        ## initialize the base class
+        PDF3.     __init__ ( self , name , xvar , yvar , zvar ) 
+        Fractions.__init__ ( self , pdf_list ,
+                             prefix    = prefix    ,
+                             suffix    = suffix    ,
+                             recursive = recursive ,
+                             fractions = fractions ) 
+
+        for p in self.pdfs      : self.alist1.add ( p.pdf )
+        for f in self.frac_list : self.alist2.add ( f     )
+        
+        ## finally build PDF
+        self.pdf = ROOT.RooAddPdf ( self.new_roo_name ( patname , suffix ) , 
+                                    patname        ,
+                                    self.alist1    ,
+                                    self.alist2    ,
+                                    self.recursive )
+        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+        
+        self.config = {
+            'pdfs'      : self.pdfs      ,
+            'xvar'      : self.xvar      ,
+            'yvar'      : self.yvar      ,
+            'zvar'      : self.zvar      ,
+            'name'      : self.name      , 
+            'prefix'    : self.prefix    ,
+            'suffix'    : self.suffix    ,
+            'fractions' : self.fractions ,
+            'recursive' : self.recursive        
+            }
+
+        
 # =============================================================================
 if '__main__' == __name__ :
     

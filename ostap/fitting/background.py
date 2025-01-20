@@ -57,8 +57,7 @@ __all__     = (
 from   ostap.core.core          import Ostap
 from   ostap.core.ostap_types   import integer_types , num_types 
 from   ostap.math.base          import iszero
-from   ostap.fitting.pdfbasic   import PDF1, Generic1D_pdf 
-from   ostap.fitting.fit1d      import Flat1D,  Sum1D
+from   ostap.fitting.pdfbasic   import PDF1, Generic1D_pdf, Flat1D,  Sum1D
 from   ostap.fitting.fithelpers import Phases, ParamsPoly
 from   ostap.utils.utils        import vrange 
 import ROOT, math

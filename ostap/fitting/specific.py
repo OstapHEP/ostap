@@ -37,8 +37,8 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.core           import Ostap 
-from   ostap.fitting.pdfbasic    import PDF1, PDF2 
-from   ostap.fitting.fit1d       import PEAK, Sum1D 
+from   ostap.fitting.pdfbasic    import PDF1, PDF2, Sum1D
+from   ostap.fitting.fit1d       import PEAK
 from   ostap.fitting.signals     import CB2_pdf, Needham_pdf, Bukin_pdf
 from   ostap.fitting.convolution import Convolution_pdf 
 import ROOT, math

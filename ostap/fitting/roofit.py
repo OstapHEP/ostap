@@ -21,7 +21,7 @@ __all__     = (
     'var_from_name' , ## "convert" name/expression into variable/formula
     ) 
 # =============================================================================
-from   ostap.core.core              import Ostap, VE, typename 
+from   ostap.core.core              import Ostap, VE, valid_pointer, typename 
 from   ostap.fitting.variables      import SETVAR, FIXVAR  
 import ostap.fitting.roocollections
 import ostap.fitting.rooreduce 
@@ -341,7 +341,7 @@ ROOT.RooPlot.__repr__ =  _rp_table_
 
 # ================================================================================
 ## Friendly print of RooSimultaneous
-def _rs_table_ ( pdf , title = '' , prefix = '' , style = '' ) :
+def _rsim_table_ ( pdf , title = '' , prefix = '' , style = '' ) :
     """ Friendly print of RooSimultaneous
     """
     assert isinstance ( pdf , ROOT.RooSimultaneous ) , \
@@ -351,16 +351,19 @@ def _rs_table_ ( pdf , title = '' , prefix = '' , style = '' ) :
     cat    = pdf.indexCat() 
     for label, index in cat.items() :
         cpdf = pdf.getPdf ( label )
-        row = '%s' % label , '%+d' % index , typename ( cpdf ) , cpdf.name , cpdf.title
-        rows.append ( row )
+        if not valid_pointer ( cpdf ) :
+            print ('INVALID POINTER' , label )
+        else :
+            row  = '%s' % label , '%+d' % index , typename ( cpdf ) , cpdf.name , cpdf.title
+            rows.append ( row )
 
     import ostap.logger.table as T
     title = title if title else '%s(%s,%s)' % ( typename ( pdf ) , pdf.name , pdf.title )
     return T.table ( rows, title = title , prefix = prefix , alignment = 'lllll' )
      
-ROOT.RooSimultaneous.table    = _rs_table_
-ROOT.RooSimultaneous.__str__  = _rs_table_
-ROOT.RooSimultaneous.__repr__ = _rs_table_
+ROOT.RooSimultaneous.table    = _rsim_table_
+ROOT.RooSimultaneous.__str__  = _rsim_table_
+ROOT.RooSimultaneous.__repr__ = _rsim_table_
 
 _new_methods_ += [
     ROOT.RooSimultaneous.table    , 
