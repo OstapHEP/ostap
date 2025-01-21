@@ -51,7 +51,7 @@ def make_constrained ( pdf , *constraints ) :
 
     if root_info < ( 6, 24 ) :
         plist = ROOT.RooArgSet( pdf )
-        for p in contsraints  : plist.add ( p ) 
+        for p in constraints  : plist.add ( p ) 
         return ROOT.RooProdPdf ( name , title , plist ) , () 
         
     return ROOT.RooProdPdf ( name , title , ( pdf , ) + constraints ) , () 
