@@ -2378,7 +2378,7 @@ class FitHelper(VarMaker) :
     #  @endcode 
     def make_fractions ( self              ,
                          N                 ,
-                         name      = 'f%d' , ## pattern to contruct the fraction name from index 
+                         name      = 'f%d' , ## pattern to contruct the fraction name from the index 
                          title     = ''    , 
                          recursive = True  ,
                          fractions = ()    ) :
@@ -2391,17 +2391,15 @@ class FitHelper(VarMaker) :
         >>> fractions = MV.make_fractions ( 5 , name = 'F%d_C' , fractions = (0.4, 0.1 , 0.3 , 0.1 ) )   
         """
         
-        assert is_integer ( N ) and 2 <= N ,\
-               "make_fractions: there must be at least two components!"
+        assert is_integer ( N ) and 2 <= N , "make_fractions: there must be at least two components!"
 
-        my_fractions = make_iterable ( fractions , None )
+        my_fractions = make_iterable ( fractions , None , N -1  )
             
         fracs = []
         value = 1.0
         prod  = 1.0
 
-
-        for i , ff in zip ( range ( N - 1  ) , my_fractions ) :
+        for i , ff in enumerate ( my_fractions ) : 
 
             value = 1.0 / N
             
@@ -2410,16 +2408,16 @@ class FitHelper(VarMaker) :
                 value /= prod
                 prod  *= ( 1.0 - value ) 
                 
-            if   isinstance  ( ff , num_types       ) and not 0 <= ff <= 1 :
-                self.error   ("make_fractions: fraction %s is outside [0,1] interval, ignore it!" %  ff )
+            if   isinstance  ( ff , num_types       ) and not 0 <= float ( ff ) <= 1 :
+                self.error   ("make_fractions: fraction[%d] %s is outside [0,1] interval, ignore it!" %  ( i , ff ) ) 
                 ff = value
                 
             elif isinstance  ( ff , ROOT.RooAbsReal ) and not 0 <= float ( ff ) <= 1 :
-                self.warning ("make_fractions: fraction %s is outside [0,1] interval" %  ff )
+                self.warning ("make_fractions: fraction[%d,%s] %s is outside [0,1] interval" %  ( i , ff.name , float ( ff ) ) ) 
                 
             if ff is None : ff = value
 
-            fname = name if ( 2 == N and  '%s' not in name and '%d' not in name ) else name % i  
+            fname = name if ( 2 == N and '%s' not in name and '%d' not in name ) else name % i  
             
             tit   =  title if title else 'Fraction #%d: %s %s' % ( i , fname , self.name )                 
             fvar  = self.make_var ( ff   , fname  , tit , False , value , 0 , 1 )
@@ -3309,7 +3307,6 @@ class ShiftScalePoly ( Phases ) :
     def pars_lst ( self ) :
         """'pars_lst' :  polynomial parameters as RooArgList"""
         return self.phis_lst
-    
 
 # =============================================================================
 ## @class Fractions
@@ -3340,7 +3337,13 @@ class Fractions(object) :
         self.__suffix    = suffix
         self.__recursive = True   if recursive else False 
         
-        fr_name = make_name ( self.prefix , '%d' if 2 < len ( self.pdfs ) else '' , self.suffix )
+        nf   = len ( self.pdfs ) - 1
+        name_format= '' if nf < 2 else \
+            ( '%d' if nf < 10 else \
+              ( '%02d' if nf < 100 else \
+                ( '%03d' if nf < 1000 else \
+                  ( '%04d' if nf < 10000 else '%d' ) ) ) )
+        fr_name = make_name ( self.prefix , name_format , self.suffix )
 
         ## make list of fractions 
         self.__fractions = tuple ( self.make_fractions  ( len ( self.pdfs )           ,
@@ -3353,28 +3356,28 @@ class Fractions(object) :
         return self.__pdfs
 
     @property
-    def pdf1 ( self ) :
-        """'pdf1' : the first PDF"""
-        return self.__pdfs[0] if 1<= len ( self.__pdfs ) else None 
-    
-    @property
-    def pdf2 ( self ) :
-        """'pdf2' : the second PDF"""
-        return self.__pdfs[1] if 2<= len ( self.__pdfs ) else None 
-    
-    @property 
-    def tail( self ) :
-        """'tail' : other PDFs (if any)"""
-        return self.pdfs[2:] if 2<= len ( self.__pdfs ) else () 
-
-    @property
     def components ( self ) :
         """'components' : get list/tuple of involved PDFs (same as 'pdfs')"""
         return self.pdfs
         
     @property
+    def pdf1 ( self ) :
+        """'pdf1' : the first PDF"""
+        return self.__pdfs [ 0 ]
+    
+    @property
+    def pdf2 ( self ) :
+        """'pdf2' : the second PDF"""
+        return self.__pdfs [ 1 ]
+    
+    @property 
+    def tail( self ) :
+        """'tail' : other PDFs (if any)"""
+        return self.pdfs [ 2 : ] 
+
+    @property
     def prefix ( self ) :
-        """'fr_prefix' : prefix for fraction names"""
+        """'prefix' : prefix for fraction names"""
         return self.__prefix
 
     @property

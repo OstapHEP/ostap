@@ -6392,14 +6392,15 @@ class Sum1D (PDF1,Fractions) :
     - see RooAddPdf     
     >>> sum  = Sum1D ( [ pdf1 , pdf2 , pdf3 ]  )     
     """
-    def __init__ ( self             ,
-                   pdfs             , ## input list of PDFs  
-                   xvar      = None , 
-                   name      = ''   ,
-                   recursive = True ,
-                   prefix    = 'f'  , ## prefix for fraction names 
-                   suffix    = ''   , ## suffix for fraction names 
-                   fractions = None ) :
+    def __init__ ( self              ,
+                   pdfs              , ## input list of PDFs  
+                   xvar      = None  , 
+                   name      = ''    ,
+                   recursive = True  ,
+                   prefix    = 'f'   , ## prefix for fraction names 
+                   suffix    = ''    , ## suffix for fraction names 
+                   fractions = None  ,
+                   fix_norm  = False ) :
 
         assert 2 <= len ( pdfs ) , 'Sum1D: at least two PDFs are needed!'
         pdf_list = []           
@@ -6429,7 +6430,10 @@ class Sum1D (PDF1,Fractions) :
                                     self.alist1    ,
                                     self.alist2    ,
                                     self.recursive )
-        
+
+        ## attention!
+        if fix_norm : self.pdf.SetCoefNormalization ( self.vars )
+            
         self.config = {
             'pdfs'      : self.pdfs      ,
             'xvar'      : self.xvar      ,
@@ -6437,9 +6441,19 @@ class Sum1D (PDF1,Fractions) :
             'prefix'    : self.prefix    ,
             'suffix'    : self.suffix    ,
             'fractions' : self.fractions ,
-            'recursive' : self.recursive        
+            'recursive' : self.recursive ,
+            'fix_norm'  : self.fix_norm  
             }
-                
+        
+    @property
+    def fix_norm ( self ) :
+        """`fix-norm`: 
+        - see `ROOT.RooAbsPdf.SetCoefNormalization`
+        - see `ROOT.RooAbsPdf.getCoefNormalization`
+        """
+        pars = self.pdf.getCoefNormalization()
+        return True if pars else False 
+    
 # =============================================================================
 ## @class Sum2D
 #  Non-extended sum of several PDFs
@@ -6454,16 +6468,17 @@ class Sum2D (PDF2,Fractions) :
     >>> sum  = Sum2D ( [ pdf1 , pdf2 , pdf3 ]  ) 
 
     """
-    def __init__ ( self             ,
-                   pdfs             , ## input list of PDFs  
-                   xvar      = None , 
-                   yvar      = None , 
-                   name      = ''   ,
-                   recursive = True ,
-                   prefix    = 'f'  , ## prefix for fraction names 
-                   suffix    = ''   , ## suffix for fraction names 
-                   fractions = None ) :
-
+    def __init__ ( self              ,
+                   pdfs              , ## input list of PDFs  
+                   xvar      = None  , 
+                   yvar      = None  , 
+                   name      = ''    ,
+                   recursive = True  ,
+                   prefix    = 'f'   , ## prefix for fraction names 
+                   suffix    = ''    , ## suffix for fraction names 
+                   fractions = None  ,
+                   fix_norm  = False ) :
+        
         assert 2 <= len ( pdfs ) , 'Sum2D: at least two PDFs are needed!'
         
         pdf_list = []           
@@ -6494,8 +6509,10 @@ class Sum2D (PDF2,Fractions) :
                                     self.alist1    ,
                                     self.alist2    ,
                                     self.recursive )
-        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
+        ## attention!
+        if fix_norm : self.pdf.SetCoefNormalization ( self.vars )
+        
         self.config = {
             'pdfs'      : self.pdfs      ,
             'xvar'      : self.xvar      ,
@@ -6504,12 +6521,20 @@ class Sum2D (PDF2,Fractions) :
             'prefix'    : self.prefix    ,
             'suffix'    : self.suffix    ,
             'fractions' : self.fractions ,
-            'recursive' : self.recursive        
+            'recursive' : self.recursive ,        
+            'fix_norm'  : self.fix_norm  
             }
   
-
-
-
+    @property
+    def fix_norm ( self ) :
+        """`fix-norm`: 
+        - see `ROOT.RooAbsPdf.SetCoefNormalization`
+        - see `ROOT.RooAbsPdf.getCoefNormalization`
+        """
+        pars = self.pdf.getCoefNormalization()
+        return True if pars else False 
+    
+        
 # =============================================================================
 ## @class Sum3D
 #  Non-extended sum of several PDFs
@@ -6524,16 +6549,17 @@ class Sum3D (PDF3,Fractions) :
     >>> sum  = Sum3D ( [ pdf1 , pdf2 , pdf3 ]  ) 
     
     """
-    def __init__ ( self             ,
-                   pdfs             , ## input list of PDFs  
-                   xvar      = None , 
-                   yvar      = None , 
-                   zvar      = None , 
-                   name      = ''   ,
-                   recursive = True ,
-                   prefix    = 'f'  , ## prefix for fraction names 
-                   suffix    = ''   , ## suffix for fraction names 
-                   fractions = None ) :
+    def __init__ ( self              ,
+                   pdfs              , ## input list of PDFs  
+                   xvar      = None  , 
+                   yvar      = None  , 
+                   zvar      = None  , 
+                   name      = ''    ,
+                   recursive = True  ,
+                   prefix    = 'f'   , ## prefix for fraction names 
+                   suffix    = ''    , ## suffix for fraction names 
+                   fractions = None  ,
+                   fix_norm  = False ) :
 
         assert 2 <= len ( pdfs ) , 'Sum3D: at least two PDFs are needed!'
 
@@ -6564,8 +6590,10 @@ class Sum3D (PDF3,Fractions) :
                                     self.alist1    ,
                                     self.alist2    ,
                                     self.recursive )
-        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
-        
+
+        ## attention!
+        if fix_norm : self.pdf.SetCoefNormalization ( self.vars )
+
         self.config = {
             'pdfs'      : self.pdfs      ,
             'xvar'      : self.xvar      ,
@@ -6575,9 +6603,18 @@ class Sum3D (PDF3,Fractions) :
             'prefix'    : self.prefix    ,
             'suffix'    : self.suffix    ,
             'fractions' : self.fractions ,
-            'recursive' : self.recursive        
+            'recursive' : self.recursive , 
+            'fix_norm'  : self.fix_norm  
             }
 
+    @property
+    def fix_norm ( self ) :
+        """`fix-norm`: 
+        - see `ROOT.RooAbsPdf.SetCoefNormalization`
+        - see `ROOT.RooAbsPdf.getCoefNormalization`
+        """
+        pars = self.pdf.getCoefNormalization()
+        return True if pars else False 
         
 # =============================================================================
 if '__main__' == __name__ :

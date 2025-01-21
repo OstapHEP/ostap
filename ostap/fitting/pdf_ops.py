@@ -491,7 +491,7 @@ def pdf1_sum ( pdf1 , pdf2 , *other ) :
     """ Make an non-extended  sum of the 1D PDFs
     - see Sum1D
     """
-    if   isinstance ( pdf2 , PDF1 ) : pass 
+    if   isinstance ( pdf2 , PDF1           ) : pass 
     elif isinstance ( pdf2 , sequence_types ) :
         args = tuple ( pdf2 ) + other 
         return pdf1_sum ( pdf1 , *args )
@@ -506,7 +506,7 @@ def pdf1_sum ( pdf1 , pdf2 , *other ) :
         if not isinstance ( p , PDF1 ) : return NotImplemented
         if not p.xvar in head.vars     : return NotImplemented 
 
-    from ostap.fitting.fit1d import Sum1D 
+    from ostap.fitting.pdfbasic import Sum1D
     return Sum1D ( pall )
     
 # =============================================================================
@@ -516,7 +516,7 @@ def pdf2_sum ( pdf1 , pdf2 , *other ) :
     """ Make an non-extended  sum of the 2D PDFs
     - see Sum2D
     """
-    if   isinstance ( pdf2 , PDF2 ) : pass 
+    if   isinstance ( pdf2 , PDF2           ) : pass 
     elif isinstance ( pdf2 , sequence_types ) :
         args = tuple ( pdf2 ) + other 
         return pdf2_sum ( pdf1 , *args )
@@ -532,7 +532,7 @@ def pdf2_sum ( pdf1 , pdf2 , *other ) :
         if not p.xvar in head.vars     : return NotImplemented 
         if not p.yvar in head.vars     : return NotImplemented 
         
-    from ostap.fitting.fit2d import Sum2D
+    from ostap.fitting.pdfbasic import Sum2D
     return Sum2D ( pall , xvar = head.xvar , yvar = head.yvar ) 
     
 # =============================================================================
@@ -560,7 +560,7 @@ def pdf3_sum ( pdf1 , pdf2 , *other ) :
         if not p.yvar in head.vars     : return NotImplemented 
         if not p.zvar in head.vars     : return NotImplemented 
 
-    from ostap.fitting.fit3d import Sum3D
+    from ostap.fitting.pdfbasic import Sum3D
     return Sum3D ( pall , xvar = head.xvar , yvar = head.yvar , zvar = head.zvar ) 
 
      

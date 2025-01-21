@@ -96,7 +96,7 @@ _new_methods_ = []
 ## Factory for deserialization of generic objects
 #  @attention it stores the constructor parameters as local attributes
 def root_store_factory ( klass , *params ) :
-    """Factory for deserialization of generic object
+    """ Factory for deserialization of generic object
     - attention: it stores the constructor parameters as local attributes
     """
     ## create the objects 
@@ -110,7 +110,7 @@ def root_store_factory ( klass , *params ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-09-20
 def _fix_par_ ( var , value  = None ) :
-    """Fix parameter at some value :
+    """ Fix parameter at some value :
 
     >>> par = ...
     >>> par.fix ( 10 )     
@@ -126,21 +126,21 @@ def _fix_par_ ( var , value  = None ) :
     var.setVal      ( value )
     if not var.isConstant() : var.setConstant ( True  )
     #
-    return var.ve() 
+    return var.asVE () 
 
 # =============================================================================
 ## release the parameter
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-09-20
 def _rel_par_ ( var )  :
-    """Release the parameters
+    """ Release the parameters
 
     >>> par = ...
     >>> par.release ()     
     """
     if var.isConstant() : var.setConstant ( False )
     #
-    return var.ve()
+    return var.asVE ()
 
 # ==============================================================================
 ## Convert RooRealVar into ValueWithError 
@@ -220,10 +220,6 @@ ROOT.RooAbsReal.unit = property ( ROOT.RooAbsReal.getUnit ,
 ROOT.RooRealVar     . as_VE           = _rrv_ve_ 
 ROOT.RooRealVar     . asVE            = _rrv_ve_ 
 ROOT.RooRealVar     . ve              = _rrv_ve_
-ROOT.RooRealVar     . fix             = _fix_par_
-ROOT.RooRealVar     . Fix             = _fix_par_
-ROOT.RooRealVar     . release         = _rel_par_
-ROOT.RooRealVar     . Release         = _rel_par_
 ## convert to float 
 ROOT.RooRealVar     . __float__       = lambda s : s.getVal()
 ## print it in more suitable form 
@@ -244,6 +240,42 @@ ROOT.RooConstVar    . __float__      = lambda s : s.getVal()
 ROOT.RooAbsArg        .__contains__ = _var_contains_ 
 ROOT.RooAbsRealLValue .__contains__ = _rrv_contains_ 
 
+ROOT.RooAbsRealLValue . fix      = _fix_par_
+ROOT.RooAbsRealLValue . release  = _rel_par_
+ROOT.RooAbsRealLValue . Fix      = _fix_par_
+ROOT.RooAbsRealLValue . Felease  = _rel_par_
+
+
+# ========================================================================
+def _rel_const_par_ ( v ) :
+    """`ROOT.RooConstVar` can not be released! warn and skip!"""
+    logger.warning ( "ROOT.RooConstVar cannot be `released`! ignore")
+    return s.asVE()
+
+# ========================================================================
+def _fix_const_par_ ( v ) :
+    """`ROOT.RooConstVar` can not be released! warn and skip!"""
+    logger.warning ( "ROOT.RooConstVar cannot be `released`! ignore")
+    return s.asVE()
+
+ROOT.RooConstVar      . release  = _rel_const_par_ 
+ROOT.RooConstVar      . Release  = _rel_const_par_ 
+
+## fix parameter at some value
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2012-09-20
+def _fix_const_par_ ( var , value  = None ) :
+    """ Fix parameter at some value 
+    """
+    if value is None          : return var.asVE ()
+    varval  = float ( var ) 
+    if value == varval        : return var.asVE ()
+    logger.warning ( "ROOT.RooConstVar[%s] cannot be changed to %s)! ignore" % ( varval , value ) )
+    return s.asVE()
+
+ROOT.RooConstVar      . fix  = _fix_const_par_ 
+ROOT.RooConstVar      . Fix  = _fix_const_par_ 
+
 # =====================================================================
 
 ROOT.RooAbsReal. minmax  = lambda s : ()
@@ -254,13 +286,20 @@ ROOT.RooAbsRealLValue  . minmax          = lambda s : ( s.xmin() , s.xmax() )
 ROOT.RooAbsRealLValue  .xminmax          = lambda s : ( s.xmin() , s.xmax() ) 
 
 _new_methods_ += [
-    ROOT.RooRealVar   . as_VE     ,
-    ROOT.RooRealVar   . asVE      ,
-    ROOT.RooRealVar   . ve        ,
-    ROOT.RooRealVar   . fix       ,
-    ROOT.RooRealVar   . Fix       ,
-    ROOT.RooRealVar   . release   ,
-    ROOT.RooRealVar   . Release   ,
+    ROOT.RooRealVar       . as_VE    ,
+    ROOT.RooRealVar       . asVE     ,
+    ROOT.RooRealVar       . ve       ,
+    ## 
+    ROOT.RooAbsRealLValue . fix      , 
+    ROOT.RooAbsRealLValue . release  , 
+    ROOT.RooAbsRealLValue . Fix      , 
+    ROOT.RooAbsRealLValue . Felease  , 
+    ## 
+    ROOT.RooConstVar      . fix      , 
+    ROOT.RooConstVar      . Fix      , 
+    ROOT.RooConstVar      . release  , 
+    ROOT.RooConstVar      . Release  , 
+    ## 
     ## convert to float 
     ROOT.RooRealVar   . __float__ ,
     ## print it in more suitable form 

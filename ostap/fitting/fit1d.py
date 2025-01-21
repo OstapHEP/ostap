@@ -28,7 +28,7 @@ from   ostap.core.ostap_types   import ( is_integer     , string_types   ,
                                          integer_types  , num_types      ,
                                          list_types     , all_numerics   ) 
 from   ostap.fitting.funbasic   import FUN1
-from   ostap.fitting.pdfbasic   import PDF1, APDF1, Constrained  
+from   ostap.fitting.pdfbasic   import PDF1, APDF1, Sum1D
 from   ostap.fitting.utils      import make_name
 import ROOT, math,  random
 # =============================================================================
