@@ -42,7 +42,6 @@ def make_constrained ( pdf , *constraints ) :
         for label, index in category.items () :
             cmp           = pdf.getPdf ( label )
             newcmp , tail = make_constrained ( cmp , *constraints )
-            print ( 'SIM::', label, index ,type ( label ) , type ( index ) , type ( newcmp ) ) 
             keep_it.append ( newcmp ) 
             if tail : keep_it.append ( tail ) 
             result.addPdf ( newcmp , str ( label ) )

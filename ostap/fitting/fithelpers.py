@@ -44,9 +44,9 @@ from   ostap.core.ostap_types  import ( string_types   , num_types   ,
                                         sequence_types , sized_types )
 from   ostap.utils.utils       import make_iterable
 from   ostap.fitting.variables import SETVAR, make_formula 
-from   ostap.fitting.utils     import make_name, numcpu, ncpu, get_i  
+from   ostap.fitting.utils     import  ( make_name, numcpu, ncpu, get_i ,
+                                         roo_poisson , roo_gaussian  )
 from   ostap.fitting.roocmdarg import check_arg 
-from   ostap.math.random_ext   import ve_gauss, poisson
 from   ostap.logger.pretty     import pretty_ve
 import ROOT, sys, random, math
 # =============================================================================
@@ -59,7 +59,7 @@ except ImportError : from string import letters as ascii_letters
 # =============================================================================
 _py2 = sys.version_info.major < 3
 ## possible numericla types for variables 
-numvar_types = num_types + ( VE , ) 
+numvar_types = num_types + ( VE , )
 # =============================================================================
 ## @class NameDuplicates
 #  Are name duplicates allowed?
@@ -2257,14 +2257,16 @@ class FitHelper(VarMaker) :
         if   isinstance ( nEvents , integer_types ) and 0 < nEvents and not sample :
             return nEvents  
         elif isinstance ( nEvents , num_types     ) and 0 < nEvents :
-            nn = -1 
-            while nn <= 0 : nn = poisson ( float ( nEvents ) ) 
+            nn = -1
+            mu = float ( nEvents ) 
+            while nn <= 0 : nn = roo_poisson ( mu ) 
             return nn 
         elif isinstance ( nEvents , VE ) and 0 < nEvents.cov2 () : 
-            nn = -1  
+            nn = -1
+            mean , error = nEvents.value() , nEvents.error() 
             while nn <= 0 :
-                mu = ve_gauss ( nEvents )
-                if 0 < mu : nn = poisson ( mu ) 
+                mu = roo_gaussian ( mean , error ) 
+                if 0 < mu : nn = roo_poisson ( mu ) 
             return nn 
 
         raise TypeError ( "Can't generate positive number from %s/%s" % ( nEvents , typename ( nEvents ) ) )

@@ -51,7 +51,7 @@ from timeit import  default_timer as _timer
 #  wtih Timer ( logger = lambda *s : '' ) : ... 
 #  @endcode
 class Timer(object):
-    """Simple context manager to measure the time
+    """ Simple context manager to measure the time
     
     >>> with Timer() :
     ...  whatever action is
@@ -100,10 +100,13 @@ class Timer(object):
         
         if    start               : self.start_message = start
         elif '' == start and name : self.start_message = 'Start  %s' % name
-        else                      : self.start_message = '' 
+        else                      : self.start_message = ''
+        
+        self.__delta = -100000
         
     def __enter__ ( self ) :
         self.__start = _timer ()
+        self.__delta = 0 
         if self.logger and self.start_message :
             self.logger ( self.start_message )
         return self
@@ -112,8 +115,7 @@ class Timer(object):
         self.__stop  = _timer ()
         self.__delta = self.__stop - self.__start
         
-        if self.logger :
-            
+        if self.logger :            
             try :
                 message = self.format       % ( self.__name , self.__delta ) 
             except TypeError :

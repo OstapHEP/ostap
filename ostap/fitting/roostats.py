@@ -144,13 +144,9 @@ class ModelConfig(object):
             conditional = split_string ( conditional , strip = True , respect_groups = True )
         elif isinstance ( conditional , ROOT.RooAbsReal ) : conditional = [ conditional ]
 
-        if   pdf_like ( constraints                     ) : constrainsts         = [ constraints          ]
-        if   pdf_like ( external_constraints            ) : external_constraints = [ external_constraints ]
+        if   pdf_like ( constraints          ) : constraints          = [ constraints          ]
+        if   pdf_like ( external_constraints ) : external_constraints = [ external_constraints ]
         
-        if   isinstance ( constrained , string_types   ) :
-            constrained = split_string ( constrained , strip = True , respect_groups = True )
-        elif isinstance ( constrained , ROOT.RooAbsReal ) : constrained = [ constrained ]
-                   
         if   isinstance ( global_observables , string_types    ) :
             global_observables = split_string ( global_observables  , strip = True , respect_groups = True )
         elif isinstance ( global_observables , obs_types       ) : global_observables = [ global_observables ]
@@ -201,7 +197,6 @@ class ModelConfig(object):
             
         self.__raw_pdf   =   raw_pdf 
         self.__final_pdf = final_pdf 
-
         
         ## propagate PDF to ModelConfig/Workspace 
         ## (6) set PDF  
@@ -292,6 +287,9 @@ class ModelConfig(object):
             table = T.table ( rows , title = title , prefix = '# ' , alignment = 'll' )    
             logger.warning ( '%s\n%s' % ( title , table ) )
 
+        ## store in Workspace
+        self.ws.Import ( self.mc )
+        
         ## finally print as table 
         logger.debug ( 'Created ModelConfig: %s\n%s' % ( self.name , self.table ( prefix = '# ' ) ) ) 
                        
@@ -324,6 +322,18 @@ class ModelConfig(object):
     def dataset ( self ) :
         """'dataset' : defaukt dataset"""
         return self.__dataset
+
+    @property
+    def pdf ( self ) :
+        """`pdf` : PDF from ModelConfig"""
+        return self.mc.GetPdf()
+
+    @property
+    def constraints  ( self ) :
+        """'constraints' : constrain parameters from ModelConfig
+        - see `ROOT.RooStats.ModelConfig.GetConstraintParameters`
+        """
+        return self.__constraints
     
     @property
     def observables ( self ) :
@@ -366,18 +376,12 @@ class ModelConfig(object):
         if not valid_pointer ( pars ) : return () 
         return pars if pars and 0 < len ( pars ) else () 
     @property
-    def constraints  ( self ) :
-        """'constraints' : constrain parameters from ModelConfig
-        - see `ROOT.RooStats.ModelConfig.GetConstraintParameters`
-        """
-        return self.__constraints
-    @property
     def external_constraints  ( self ) :
         """'external_constraints' : constrain parameters from ModelConfig
         - see `ROOT.RooStats.ModelConfig.GetConstraintParameters`
         """
         if ( 6 , 28 , 10 ) <= root_info :
-            pars = self_mc.GetExternalConstraints ()
+            pars = self.mc.GetExternalConstraints ()
             if not valid_pointer ( pars ) : return () 
             return pars if pars and 0 < len ( pars ) else () 
         return self.__external_constraints
@@ -541,52 +545,57 @@ class ModelConfig(object):
         """ Print the model as table
         """
 
-        rows = [ ( '' , '' ) ]
+        rows = [ ( '' , '' , '' ) ]
 
-        row = 'name' , self.mc.name
+        row = '*' , 'name' , self.mc.name
         rows.append ( row )
         
-        row = 'title' , self.mc.title 
+        row = '*' , 'title' , self.mc.title 
         rows.append ( row )
         
-        row  = 'workspace' , self.ws.name
+        row  = '*' , 'workspace' , self.ws.name
         rows.append ( row )
-        row  = ''          , self.ws.title 
+        row  = ''  , ''          , self.ws.title 
         rows.append ( row )
 
-        row = 'PDF (input)' , "%s: %s" % ( typename ( self.__input_pdf ) , self.__input_pdf.name )
+        row = '' , 'PDF (input)' , "%s: %s" % ( typename ( self.__input_pdf ) , self.__input_pdf.name )
         rows.append ( row )
         
         if not self.__raw_pdf is self.__final_pdf :
             pdf = self.__raw_pdf 
-            row = 'PDF (raw)'   , '%s: %s/%s' % ( typename  ( pdf ) , pdf.name , pdf.title )
+            row = '' , 'PDF (raw)'   , '%s: %s/%s' % ( typename  ( pdf ) , pdf.name , pdf.title )
             rows.append ( row )
             
         pdf = self.__final_pdf 
-        row = 'PDF (final)' , '%s: %s/%s' % ( typename  ( pdf ) , pdf.name , pdf.title )                                       
-        rows.append ( row )
-        
-        row = 'observables'        , ', '.join( v.name for v in self.observables )  
+        row = '' , 'PDF (final)' , '%s: %s/%s' % ( typename  ( pdf ) , pdf.name , pdf.title )                                       
         rows.append ( row )
 
-        row = 'poi'                , ', '.join( v.name for v in self.poi ) 
+        pdf = self.pdf
+        row = '*' , 'PDF (MC/WS)' , '%s: %s/%s' % ( typename  ( pdf ) , pdf.name , pdf.title )                                       
         rows.append ( row )
-
-        row = 'nuisance'           , ', '.join( v.name for v in self.nuisance )
-        rows.append ( row )
-
-        row = 'global observables' , ', '.join( v.name for v in self.global_observables ) 
-        rows.append ( row )
-
-        row = 'conditional'        , ', '.join( v.name for v in self.conditional ) 
-        rows.append ( row )
-
-        for i , c in enumerate ( self.__input_constraints , start = 1 )  :
-            row = 'constraint#%d (input)' % i , '%s: %s/%s' % ( typename ( c ) , c.name , c.title )
-            rows.append ( row )
 
         for i , c in enumerate ( self.constraints , start = 1 )  :
-            row = 'constraint#%d' % i , '%s: %s/%s' % ( typename ( c ) , c.name , c.title )
+            row = '' , 'Multiplicative constraint #%d' % i , '%s: %s/%s' % ( typename ( c ) , c.name , c.title )
+            rows.append ( row )
+
+        row = '*' , 'Parameters-of-interest'  , ', '.join( v.name for v in self.poi ) 
+        rows.append ( row )
+
+        row = '*' , 'Observables:'            , ', '.join( v.name for v in self.observables )  
+        rows.append ( row )
+
+        row = '*' , 'Nuisance parameters'     , ', '.join( v.name for v in self.nuisance )
+        rows.append ( row )
+
+        row = '*' , 'Global observables:'     , ', '.join( v.name for v in self.global_observables ) 
+        rows.append ( row )
+
+        row = '*' , 'Conditional parameters:' ,  ', '.join( v.name for v in self.conditional ) 
+        rows.append ( row )
+
+        q = '*' if ( 6 , 28 , 10 ) <= root_info else '' 
+        for i , c in enumerate ( self.external_constraints , start = 1 )  :
+            row = q , 'External constraint #%d' % i , '%s: %s/%s' % ( typename ( c ) , c.name , c.title )
             rows.append ( row )
 
         vmax = -1
@@ -595,8 +604,8 @@ class ModelConfig(object):
         vfmt = '%%%ds : %%-+7g' % vmax
         n    = len ( self.snapshot )
         for i , v in enumerate ( self.snapshot ) :
-            if 0 == i : row = 'snapshot' , vfmt % ( v.name , v.getVal () )
-            else      : row = ''         , vfmt % ( v.name , v.getVal () )
+            if 0 == i : row = '*' , 'Snapshot:' , vfmt % ( v.name , v.getVal () )
+            else      : row = '*' ''            , vfmt % ( v.name , v.getVal () )
             rows.append ( row )
             
         if not self.snapshot : rows.append (  ( 'shapshot' , ) ) 

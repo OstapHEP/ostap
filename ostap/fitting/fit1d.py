@@ -497,6 +497,7 @@ class Fit1D (PDF1) :
                    fS                    = ()      ,    ## fraction for combined signal
                    fB                    = ()      ,    ## fraction for combined background
                    fC                    = ()      ,    ## fraction for combined components
+                   fix_norm              = False   ,    ## SetCoefNoralization.getCoefNormalization 
                    **kwargs                        ) :  ## other arguments (e.g. drawing)
 
         
@@ -692,7 +693,8 @@ class Fit1D (PDF1) :
             pdf_args = pdf_args + ( True if recursive else False , ) ## RECURSIVE ?
             
         self.pdf = ROOT.RooAddPdf     ( *pdf_args )
-        ## self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+        
+        if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         ## sanity checks
 
@@ -735,10 +737,10 @@ class Fit1D (PDF1) :
             'C'                     : self.C                     ,
             'F'                     : self.F                     ,
             ##
+            'fix_norm'              : self.fix_norm 
             }
 
         self.checked_keys.add  ( 'xvar' )
-
 
     @property
     def extended ( self ) :
@@ -963,8 +965,17 @@ class Fit1D (PDF1) :
         if not yields                                          : return None
         if not self.natural                                    : return None 
         if 1 ==  len ( yields )                                : return yields[0].value  
-        return self.fit_result.sum ( *yields ) 
- 
+        return self.fit_result.sum ( *yields )
+    
+    @property
+    def fix_norm ( self ) :
+        """`fix-norm`: 
+        - see `ROOT.RooAbsPdf.SetCoefNormalization`
+        - see `ROOT.RooAbsPdf.getCoefNormalization`
+        """
+        pars = self.pdf.getCoefNormalization()
+        return True if pars else False 
+
 # =============================================================================
 if '__main__' == __name__ :
     

@@ -27,7 +27,9 @@ __all__     = (
     'add_topic'         , ## add    topic from RooMsgService
     'suppress_topics'   , ## suppress topics from RooMsgService 
     #
-    )
+    'roo_gaussian'      , ## generate gaussian random number 
+    'roo_poisson'       , ## generate Poisson random number 
+)
 # =============================================================================
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
@@ -48,6 +50,19 @@ from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.utils' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
+# =============================================================================
+## Generate Poisson random number coherentry  with RooFit
+def roo_poisson ( mu ) :
+    """ Generate Poisson random number coherentry  with RooFit
+    """
+    return ROOT.RooRandom.randomGenerator().Poisson ( mu )
+# ==============================================================================
+## Generate Gaussian random number coherentry  with RooFit
+def roo_gaussian ( mu , sigma ) :
+    """ Generate Gaussian random number coherentry  with RooFit
+    """
+    return ROOT.RooRandom.randomGenerator().Gaus   ( mu , sigma )
+# =================================================================================
 ## make a name from prefix, name and suffix 
 def make_name ( prefix , name = '' , suffix = '' ) :
     """ Make a name from prefix, name and suffix

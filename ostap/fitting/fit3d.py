@@ -295,7 +295,8 @@ class Fit3D (PDF3) :
                    components = []    ,
                    xvar       = None  ,
                    yvar       = None  ,
-                   zvar       = None  ,                   
+                   zvar       = None  ,
+                   fix_norm   = False , 
                    name       = ''    ) : 
 
         ## keep all arguments 
@@ -337,11 +338,11 @@ class Fit3D (PDF3) :
             'yvar'       : yvar     , 
             'zvar'       : zvar     , 
             ##
-            'name'     : name     
+            'fix_norm'   : fix_norm , 
+            'name'       : name     
             }
         
         self.__suffix      = suffix
-
 
         self.__signal_x , xvar = self.make_PDF1 ( signal_x , xvar , prefix = 'SX' , suffix = suffix )
         self.__signal_y , yvar = self.make_PDF1 ( signal_y , yvar , prefix = 'SY' , suffix = suffix )
@@ -605,7 +606,8 @@ class Fit3D (PDF3) :
         pdftitle = "Fit3D %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
-        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+
+        if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         self.signals     .add ( self.__sss_cmp.pdf )
         self.backgrounds .add ( self.__bbb_cmp.pdf )
@@ -621,40 +623,41 @@ class Fit3D (PDF3) :
             'signal_x'   : self.signal_x ,
             'signal_y'   : self.signal_y ,
             'signal_z'   : self.signal_z ,
-            'suffix'     : self.suffix  ,
+            'suffix'     : self.suffix   ,
             ##
-            'bkg_1x'     : self.bkg_1x  ,
-            'bkg_1y'     : self.bkg_1y  ,
-            'bkg_1z'     : self.bkg_1z  ,
+            'bkg_1x'     : self.bkg_1x   ,
+            'bkg_1y'     : self.bkg_1y   ,
+            'bkg_1z'     : self.bkg_1z   ,
             ##
-            'bkg_2x'     : self.bkg_2x  ,
-            'bkg_2y'     : self.bkg_2y  ,
-            'bkg_2z'     : self.bkg_2z  ,
+            'bkg_2x'     : self.bkg_2x   ,
+            'bkg_2y'     : self.bkg_2y   ,
+            'bkg_2z'     : self.bkg_2z   ,
             ##
-            'bkg_2xy'    : self.bkg_2xy ,
-            'bkg_2xz'    : self.bkg_2xz ,
-            'bkg_2yz'    : self.bkg_2yz ,
+            'bkg_2xy'    : self.bkg_2xy  ,
+            'bkg_2xz'    : self.bkg_2xz  ,
+            'bkg_2yz'    : self.bkg_2yz  ,
             ##
-            'bkg_3x'     : self.bkg_3x  ,
-            'bkg_3y'     : self.bkg_3y  ,
-            'bkg_3z'     : self.bkg_3z  ,
+            'bkg_3x'     : self.bkg_3x   ,
+            'bkg_3y'     : self.bkg_3y   , 
+            'bkg_3z'     : self.bkg_3z   ,
             ##
-            'bkg_3D'     : self.bkg_3D  ,
+            'bkg_3D'     : self.bkg_3D   ,
             ##
-            'sss'        : self.SSS     ,
-            'ssb'        : self.SSB     ,
-            'sbs'        : self.SBS     ,
-            'bss'        : self.BSS     ,
-            'sbb'        : self.SBB     ,
-            'bsb'        : self.BSB     ,
-            'bbs'        : self.BBS     ,
-            'bbb'        : self.BBB     ,
+            'sss'        : self.SSS      ,
+            'ssb'        : self.SSB      ,
+            'sbs'        : self.SBS      ,
+            'bss'        : self.BSS      ,
+            'sbb'        : self.SBB      ,
+            'bsb'        : self.BSB      ,
+            'bbs'        : self.BBS      ,
+            'bbb'        : self.BBB      ,
             #
             'components' : self.more_components ,            
-            'xvar'       : self.xvar    ,
-            'yvar'       : self.yvar    ,
-            'zvar'       : self.zvar    ,
-            'name'       : self.name    ,             
+            'xvar'       : self.xvar     ,
+            'yvar'       : self.yvar     ,
+            'zvar'       : self.zvar     ,
+            'fix_norm'   : self.fix_norm , 
+            'name'       : self.name     ,             
             }
 
         self.checked_keys.add  ( 'xvar' )
@@ -898,6 +901,14 @@ class Fit3D (PDF3) :
         """'suffix' used to build the name"""
         return self.__suffix
 
+    @property
+    def fix_norm ( self ) :
+        """`fix-norm`: 
+        - see `ROOT.RooAbsPdf.SetCoefNormalization`
+        - see `ROOT.RooAbsPdf.getCoefNormalization`
+        """
+        pars = self.pdf.getCoefNormalization()
+        return True if pars else False 
 
 # =============================================================================
 ## @class Fit3DSym
@@ -1044,7 +1055,8 @@ class Fit3DSym (PDF3) :
                    components = []    ,
                    xvar       = None  ,
                    yvar       = None  ,
-                   zvar       = None  ,                   
+                   zvar       = None  ,
+                   fix_norm   = False , 
                    name       = ''    ) : 
         
         ## keep all arguments 
@@ -1070,6 +1082,7 @@ class Fit3DSym (PDF3) :
             'xvar'       : xvar       ,
             'yvar'       : yvar       ,
             'zvar'       : zvar       ,
+            'fix_norm'   : fix_norm   , 
             ##
             'name'       : name                   
             }
@@ -1323,7 +1336,8 @@ class Fit3DSym (PDF3) :
         pdftitle = "Fit3DSym %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
-        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+
+        if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         self.signals     .add ( self.__sss_cmp.pdf )
         self.backgrounds .add ( self.__bbb_cmp.pdf )
@@ -1351,11 +1365,12 @@ class Fit3DSym (PDF3) :
             ##
             'components' : self.more_components ,
             ##
-            'xvar'       : self.xvar    ,
-            'yvar'       : self.yvar    ,
-            'zvar'       : self.zvar    ,
+            'xvar'       : self.xvar     ,
+            'yvar'       : self.yvar     ,
+            'zvar'       : self.zvar     ,
             ##
-            'name'       : self.name    ,             
+            'fix_norm'   : self.fix_norm , 
+            'name'       : self.name     ,             
             }
         
         self.checked_keys.add  ( 'xvar' )
@@ -1632,7 +1647,15 @@ class Fit3DSym (PDF3) :
         """'background-background-signal' raw,non-symmetrized component/PDF"""
         return self.__bbs_cmp_raw
 
-
+    @property
+    def fix_norm ( self ) :
+        """`fix-norm`: 
+        - see `ROOT.RooAbsPdf.SetCoefNormalization`
+        - see `ROOT.RooAbsPdf.getCoefNormalization`
+        """
+        pars = self.pdf.getCoefNormalization()
+        return True if pars else False
+    
 # =============================================================================
 ## @class Fit3DMix
 #  The actual model for fully "mixed-symemtry" 3D-fits  (symmetric for y<-->z)
@@ -1799,10 +1822,11 @@ class Fit3DMix (PDF3) :
                    bbb     = None  , ## B(x,y,z)                   component    
                    ## additional components 
                    components = [] , ## the list additional components 
-                   xvar    = None  , ## x-variable 
-                   yvar    = None  , ## y-variable 
-                   zvar    = None  , ## z-variable                   
-                   name    = ''    ) : 
+                   xvar     = None  , ## x-variable 
+                   yvar     = None  , ## y-variable 
+                   zvar     = None  , ## z-variable
+                   fix_norm = False , 
+                   name     = ''    ) : 
         
         ## keep all arguments 
         self.__args = {
@@ -1836,6 +1860,7 @@ class Fit3DMix (PDF3) :
             'xvar'       : xvar       ,
             'yvar'       : yvar       ,
             'zvar'       : zvar       ,
+            'fix_norm'   : fix_norm   , 
             'name'       : name                   
             }
         
@@ -2145,7 +2170,8 @@ class Fit3DMix (PDF3) :
         pdftitle = "Fit3DMix %s " % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
-        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+
+        if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         self.signals     .add ( self.__sss_cmp.pdf )
         self.backgrounds .add ( self.__bbb_cmp.pdf )
@@ -2183,10 +2209,11 @@ class Fit3DMix (PDF3) :
             'bbb'        : self.BBB     ,            
             #
             'components' : self.more_components ,            
-            'xvar'       : self.xvar    ,
-            'yvar'       : self.yvar    ,
-            'zvar'       : self.zvar    ,
-            'name'       : self.name    ,             
+            'xvar'       : self.xvar     ,
+            'yvar'       : self.yvar     ,
+            'zvar'       : self.zvar     ,
+            'fix_norm'   : self.fix_norm , 
+            'name'       : self.name     ,             
             }
         
         self.checked_keys.add  ( 'xvar' )
@@ -2456,6 +2483,14 @@ class Fit3DMix (PDF3) :
         """'background-signal-background' raw,non-symmetrized component/PDF"""
         return self.__bsb_cmp_raw
 
+    @property
+    def fix_norm ( self ) :
+        """`fix-norm`: 
+        - see `ROOT.RooAbsPdf.SetCoefNormalization`
+        - see `ROOT.RooAbsPdf.getCoefNormalization`
+        """
+        pars = self.pdf.getCoefNormalization()
+        return True if pars else False 
 
 # =============================================================================
 if '__main__' == __name__ :

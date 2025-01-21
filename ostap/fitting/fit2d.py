@@ -237,7 +237,8 @@ class Fit2D (PDF2) :
                    ## additional components 
                    components = []    ,
                    xvar       = None  ,
-                   yvar       = None  ,                   
+                   yvar       = None  ,
+                   fix_norm   = False ,                   
                    name       = ''    ) :
         
         ## collect all the arguments 
@@ -251,7 +252,9 @@ class Fit2D (PDF2) :
             'bkg_2D'     : bkg_2D     ,
             'sig_2D'     : sig_2D     ,
             'components' : components ,
-            ##
+            'xvar'       : xvar       , 
+            'yvar'       : yvar       , 
+             ##
             'ss'         : ss ,
             'bb'         : bb ,
             'sb'         : sb ,
@@ -415,7 +418,8 @@ class Fit2D (PDF2) :
         pdftitle = "Fit2D %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
-        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+
+        if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         self.signals     .add ( self.__ss_cmp.pdf )
         self.backgrounds .add ( self.__bb_cmp.pdf )
@@ -439,7 +443,8 @@ class Fit2D (PDF2) :
             'bb'         : self.BB              ,
             'components' : self.more_components ,
             'xvar'       : self.xvar            , 
-            'yvar'       : self.yvar            , 
+            'yvar'       : self.yvar            ,
+            'fix_norm'   : self.fix_norm        , 
             'name'       : self.name    
             }
         
@@ -592,6 +597,15 @@ class Fit2D (PDF2) :
         """'BB_cmp'  : Background(x,y)         component in the fit (PDF)"""
         return self.__bb_cmp
     
+    @property
+    def fix_norm ( self ) :
+        """`fix-norm`: 
+        - see `ROOT.RooAbsPdf.SetCoefNormalization`
+        - see `ROOT.RooAbsPdf.getCoefNormalization`
+        """
+        pars = self.pdf.getCoefNormalization()
+        return True if pars else False 
+
 # =============================================================================
 ## @class Fit2DSym
 #  The actual model for symmetric 2D-fits. It consists of three main components :
@@ -690,7 +704,8 @@ class Fit2DSym (PDF2) :
                    components = []    ,
                    xvar       = None  ,
                    yvar       = None  ,                   
-                   name       = ''    ) :
+                   fix_norm   = False , 
+                   name       = ''    ) : 
         
         ## collect all the arguments 
         self.__args = {
@@ -711,6 +726,7 @@ class Fit2DSym (PDF2) :
             ##
             'xvar'       : xvar       ,
             'yvar'       : yvar       ,            
+            'fix_norm'   : fix_norm   , 
             }
         
         self.__suffix      = suffix
@@ -866,7 +882,8 @@ class Fit2DSym (PDF2) :
         pdftitle = "Fit2Dsym %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
-        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+
+        if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         self.signals     .add ( self.__ss_cmp.pdf )
         self.backgrounds .add ( self.__bb_cmp.pdf )
@@ -887,7 +904,8 @@ class Fit2DSym (PDF2) :
             'bb'         : self.BB              ,
             'components' : self.more_components ,
             'xvar'       : self.xvar            , 
-            'yvar'       : self.yvar            , 
+            'yvar'       : self.yvar            ,
+            'fix_norm'   : self.fix_norm        ,
             'name'       : self.name            ,
             }
 
@@ -1042,8 +1060,16 @@ class Fit2DSym (PDF2) :
     def cmp_BS ( self ) :
         """'cmp_BS'  :  Bkg(1)*Sig(2) raw, non-symmetrized component in the fit (PDF)"""
         return self.__bs_cmp_raw
+    
+    @property
+    def fix_norm ( self ) :
+        """`fix-norm`: 
+        - see `ROOT.RooAbsPdf.SetCoefNormalization`
+        - see `ROOT.RooAbsPdf.getCoefNormalization`
+        """
+        pars = self.pdf.getCoefNormalization()
+        return True if pars else False 
 
- 
 # =============================================================================
 if '__main__' == __name__ :
     

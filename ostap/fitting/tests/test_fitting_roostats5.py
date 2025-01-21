@@ -19,12 +19,12 @@ from   ostap.core.meta_info     import root_info
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models
 from   ostap.fitting.variables  import SETVAR, FIXVAR  
-from   ostap.core.core          import cpp, VE, dsID, hID , rooSilent, Ostap 
+from   ostap.core.core          import cpp, VE, rooSilent, Ostap 
 from   ostap.utils.timing       import timing
 from   ostap.utils.utils        import vrange, lrange
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait
 from   ostap.fitting.simfit     import combined_data
+from   ostap.utils.progress_bar import progress_bar 
 import ostap.logger.table       as     T
 import ROOT
 # =============================================================================
@@ -45,17 +45,13 @@ mass    = ROOT.RooRealVar   ('mass','mass-variable', 0 , 10 )
 vars    = ROOT.RooArgSet    ( mass ) 
 signal1 = Models.Gauss_pdf  ( 'Gauss1',
                               xvar  = mass                 ,
-                              ## mean  = ( 5.0 , 1.5  , 8.5 ) ,
-                              ## sigma = ( 0.5 , 0.01 , 3.0 ) )
-                              mean  = ROOT.RooFit.RooConst ( 5 ) ,
-                              sigma = ROOT.RooFit.RooConst ( 1 ) ) 
+                              mean  = ( 5.0 , 1.5  , 8.5 ) ,
+                              sigma = ( 0.5 , 0.01 , 3.0 ) )
 signal2 = Models.Gauss_pdf  ( 'Gauss2',
                               xvar  = mass                 ,
                               mean  = signal1.mean         ,
                               sigma = signal1.sigma        )         
            
-## signal1.sigma.fix()
-## signal1.mean .fix()
 
 NS_A     = 200
 NB_A     = 50
@@ -112,7 +108,7 @@ ceff2      = ROOT.RooGaussian ( 'CG2' , 'CG2' , reff_mean , reff , reff_sigma )
 summary = [ ( 'method' , '90%CL' , 'time [s]') ]
 plots   = [] 
 
-values  = lrange ( 1.e-5 , 0.05 , 30 )
+values  = lrange ( 1.e-5 , 0.08 , 50 )
 # ============================================================================-
 ## Get the upper limit limit for small signal
 #  - Asymptotic Calculator is used 
@@ -123,7 +119,7 @@ def test_point_limit_1() :
 
     logger = getLogger("test_point_limit_1")
 
-    logger.info ( "Test Point limits with RooStats (Asymptotic Calculator)" )
+    logger.info ( "Test Point limits with RooStats (Asymptotic Calculator, No efficiency)" )
 
     from   ostap.fitting.roostats   import ( ModelConfig           ,
                                              AsymptoticCalculator  ,
@@ -132,7 +128,6 @@ def test_point_limit_1() :
     the_model = model_sim.clone ( name = 'X1' )
     data      = dataset 
 
-    logger.info ('Fit S+B') 
     rS , _ = the_model.fitTo ( data , quiet = True ) 
     with use_canvas ( 'test_point_limit_1/A' ) : the_model.draw  ( 'A' , data )  
     with use_canvas ( 'test_point_limit_1/B' ) : the_model.draw  ( 'B' , data )  
@@ -148,7 +143,6 @@ def test_point_limit_1() :
     
     with FIXVAR ( POI ) :
         POI.setVal ( 0 )
-        logger.info ( 'Fit B-only' )        
         rB , _ = the_model.fitTo ( data , quiet = True )
 
         # create ModelConfig  for 'B-only' model
@@ -158,12 +152,11 @@ def test_point_limit_1() :
                                  workspace   = model_sb.workspace , 
                                  name        = 'B-only'           ,
                                  snapshot    = POI                )
-      
-       
+             
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
     
-    with timing ( "Using Asymptotic Calculator" , logger = logger ) as timer :
+    with timing ( "Using Asymptotic Calculator, No efficiency" , logger = logger ) as timer :
         ## create the calculator 
         ac  = AsymptoticCalculator ( model_b           ,
                                      model_sb          ,
@@ -175,15 +168,15 @@ def test_point_limit_1() :
         hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
         
         ## make a scan 
-        hti .scan_with_progress ( values  ) #can it!
+        hti .scan_with_progress ( values  ) # scan it!
           
     ## visualize the scan results 
-    with use_canvas ( 'test_point_limit_ac1: No efficiency' , wait = 2 ) :
+    with use_canvas ( 'test_point_limit_1: No efficiency' , wait = 2 ) :
         plot = hti.plot
         plot .draw('LCb 2CL')                    
-        logger.info ( '90%%CL upper limit (asymptotic)  = %.2f' % hti.upper_limit )
+        logger.info ( '90%%CL upper limit (asymptotic)  = %.4f' % hti.upper_limit )
 
-    row = 'No efficiency' , '%.3f' % hti.upper_limit , '%.1f' % timer.delta 
+    row = 'No efficiency' , '%.4f' % hti.upper_limit , '%.2f' % timer.delta 
     summary.append ( row  )
     plots  .append ( plot )
 
@@ -197,7 +190,7 @@ def test_point_limit_2() :
 
     logger = getLogger("test_point_limit_2")
 
-    logger.info ( "Test Point limits with RooStats (Asymptotic Calculator)" )
+    logger.info ( "Test Point limits with RooStats (Asymptotic Calculator, Fixed efficiency)" )
 
     from   ostap.fitting.roostats   import ( ModelConfig           ,
                                              AsymptoticCalculator  ,
@@ -213,9 +206,11 @@ def test_point_limit_2() :
 
     data        = dataset 
     
-    rS , _ = the_model.fitTo ( data , silent = True ) 
-    with use_canvas ( 'test_point_limit_2/A' ) : the_model.draw  ( 'A' , data )  
-    with use_canvas ( 'test_point_limit_2/B' ) : the_model.draw  ( 'B' , data )  
+    fit_conf = { 'silent' : True }
+    
+    rS , _ = the_model.fitTo ( data , **fit_conf ) 
+    ## with use_canvas ( 'test_point_limit_2/A' ) : the_model.draw  ( 'A' , data )  
+    ## with use_canvas ( 'test_point_limit_2/B' ) : the_model.draw  ( 'B' , data )  
                    
     POI = fBA 
 
@@ -229,7 +224,7 @@ def test_point_limit_2() :
 
     with FIXVAR ( POI ) :
         POI.setVal ( 0 )
-        rB , _ = the_model.fitTo ( data , silent = True )
+        rB , _ = the_model.fitTo ( data , **fit_conf )
 
         # create ModelConfig  for 'B-only' model
         model_b  = ModelConfig ( pdf         = the_model          ,
@@ -242,7 +237,7 @@ def test_point_limit_2() :
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
     
-    with timing ( "Using Asymptotic Calculator" , logger = logger ) as timer :
+    with timing ( "Using Asymptotic Calculator,Fixed efficiency" , logger = logger ) as timer :
         ## create the calculator 
         ac  = AsymptoticCalculator ( model_b           ,
                                      model_sb          ,
@@ -254,15 +249,15 @@ def test_point_limit_2() :
         hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
         
         ## make a scan 
-        hti .scan_with_progress ( values ) #can it!
+        hti .scan_with_progress ( values ) # scan it!
           
     ## visualize the scan results 
     with use_canvas ( 'test_point_limit_ac2: Fixed efficiency' , wait = 2 ) :
         plot = hti.plot
         plot .draw('LCb 2CL')                    
-        logger.info ( '90%%CL upper limit (asymptotic)  = %.2f' % hti.upper_limit )
+        logger.info ( '90%%CL upper limit (asymptotic)  = %.4f' % hti.upper_limit )
 
-    row = 'Fixed efficiency' , '%.3f' % hti.upper_limit , '%.1f' % timer.delta 
+    row = 'Fixed efficiency' , '%.4f' % hti.upper_limit , '%.2f' % timer.delta 
     summary.append ( row  )
     plots  .append ( plot )
 
@@ -277,7 +272,7 @@ def test_point_limit_3() :
 
     logger = getLogger("test_point_limit_3")
 
-    logger.info ( "Test Point limits with RooStats (Asymptotic Calculator)" )
+    logger.info ( "Test Point limits with RooStats (Asymptotic Calculator,Fixed&Constrained efficiency)" )
 
     from   ostap.fitting.roostats   import ( ModelConfig           ,
                                              AsymptoticCalculator  ,
@@ -288,15 +283,17 @@ def test_point_limit_3() :
     model2_new  = model2.clone  ( S = S3 , name = 'M4' )
 
     reff.fix()
-    constraints = ceff1 , 
+    constraints = ceff1
 
     the_model   = Models.SimFit (  sample  , { 'A' : model1  , 'B' : model2_new } , name = 'X4' )
 
     data        = dataset 
     
-    rS , _ = the_model.fitTo ( data , silent = True , constraints = constraints ) 
-    with use_canvas ( 'test_point_limit_3/A' ) : the_model.draw  ( 'A' , data )  
-    with use_canvas ( 'test_point_limit_3/B' ) : the_model.draw  ( 'B' , data )  
+    fit_conf = { 'silent' : True , 'constraints' : constraints }
+
+    rS , _ = the_model.fitTo ( data , **fit_conf ) 
+    ## with use_canvas ( 'test_point_limit_3/A' ) : the_model.draw  ( 'A' , data )  
+    ## with use_canvas ( 'test_point_limit_3/B' ) : the_model.draw  ( 'B' , data )  
                    
     POI = fBA 
 
@@ -310,7 +307,7 @@ def test_point_limit_3() :
 
     with FIXVAR ( POI ) :
         POI.setVal ( 0 )
-        rB , _ = the_model.fitTo ( data , silent = True , constraints = constraints )
+        rB , _ = the_model.fitTo ( data , **fit_conf )
 
         # create ModelConfig  for 'B-only' model
         model_b  = ModelConfig ( pdf         = the_model          ,
@@ -324,7 +321,7 @@ def test_point_limit_3() :
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
     
-    with timing ( "Using Asymptotic Calculator" , logger = logger ) as timer :
+    with timing ( "Using Asymptotic Calculator,Fixed&Constrained efficiency" , logger = logger ) as timer :
         ## create the calculator 
         ac  = AsymptoticCalculator ( model_b           ,
                                      model_sb          ,
@@ -336,17 +333,18 @@ def test_point_limit_3() :
         hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
         
         ## make a scan 
-        hti .scan_with_progress ( values ) #can it!
+        hti .scan_with_progress ( values ) # scan it!
           
     ## visualize the scan results 
-    with use_canvas ( 'test_point_limit_ac3: Fixed&constrained efficiency' , wait = 2 ) :
+    with use_canvas ( 'test_point_limit_3: Fixed&Constrained efficiency' , wait = 2 ) :
         plot = hti.plot
         plot .draw('LCb 2CL')                    
-        logger.info ( '90%%CL upper limit (asymptotic)  = %.2f' % hti.upper_limit )
+        logger.info ( '90%%CL upper limit (asymptotic)  = %.4f' % hti.upper_limit )
 
-    row = 'Fixed&constrained' , '%.3f' % hti.upper_limit , '%.1f' % timer.delta 
+    row = 'Fixed&Constrained efficiency' , '%.4f' % hti.upper_limit , '%.2f' % timer.delta 
     summary.append ( row  )
     plots  .append ( plot )
+
 
 
 # ============================================================================-
@@ -359,26 +357,27 @@ def test_point_limit_4() :
 
     logger = getLogger("test_point_limit_4")
 
-    logger.info ( "Test Point limits with RooStats (Asymptotic Calculator)" )
+    logger.info ( "Test Point limits with RooStats (Asymptotic Calculator, Constrained efficiency)" )
 
     from   ostap.fitting.roostats   import ( ModelConfig           ,
                                              AsymptoticCalculator  ,
                                              HypoTestInverter      )
 
-
     S3          = signal2.vars_multiply ( SB , reff , name = 'S5' )
     model2_new  = model2.clone  ( S = S3 , name = 'M5' )
 
     reff.release()
-    constraints = ceff1 , 
+    constraints = ceff1
     
     the_model   = Models.SimFit (  sample  , { 'A' : model1  , 'B' : model2_new } , name = 'X5' )
 
     data        = dataset 
     
+    fit_conf = { 'silent' : True , 'constraints' : constraints }
+
     rS , _ = the_model.fitTo ( data , silent  = True , constraints = constraints ) 
-    with use_canvas ( 'test_point_limit_4/A' ) : the_model.draw  ( 'A' , data )  
-    with use_canvas ( 'test_point_limit_4/B' ) : the_model.draw  ( 'B' , data )  
+    ## with use_canvas ( 'test_point_limit_4/A' ) : the_model.draw  ( 'A' , data )  
+    ## with use_canvas ( 'test_point_limit_4/B' ) : the_model.draw  ( 'B' , data )  
                    
     POI = fBA 
 
@@ -393,7 +392,7 @@ def test_point_limit_4() :
 
     with FIXVAR ( POI ) :
         POI.setVal ( 0 )
-        rB , _ = the_model.fitTo ( data , silent  = True , constraints = constraints )
+        rB , _ = the_model.fitTo ( data , **fit_conf )
 
         # create ModelConfig  for 'B-only' model
         model_b  = ModelConfig ( pdf         = the_model          ,
@@ -419,29 +418,33 @@ def test_point_limit_4() :
         hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
         
         ## make a scan 
-        hti .scan_with_progress ( values ) #can it!
+        hti .scan_with_progress ( values ) # scan it!
           
     ## visualize the scan results 
-    with use_canvas ( 'test_point_limit_ac4: Constrained efficinecy#1' , wait = 2 ) :
+    with use_canvas ( 'test_point_limit_4: Constrained efficinecy#1' , wait = 2 ) :
         plot = hti.plot
         plot .draw('LCb 2CL')                    
-        logger.info ( '90%%CL upper limit (asymptotic)  = %.2f' % hti.upper_limit )
+        logger.info ( '90%%CL upper limit (asymptotic)  = %.4f' % hti.upper_limit )
 
-    row = 'Constrained efficiency/1' , '%.3f' % hti.upper_limit , '%.1f' % timer.delta 
+    row = 'Constrained efficiency/1' , '%.4f' % hti.upper_limit , '%.2f' % timer.delta 
     summary.append ( row  )
     plots  .append ( plot )
 
+        
+
 # ============================================================================-
 ## Get the upper limit limit for small signal
-#  - Asymptotic Calculator is used 
+#  - Asymptotic Calculator is used
+#  - Varinat with Global observables 
 def test_point_limit_5() :
     """ Get the upper limit at given point for small signal
     - Asymptotic Calculator is used 
+    - Varinat with Global observables 
     """
 
     logger = getLogger("test_point_limit_5")
 
-    logger.info ( "Test Point limits with RooStats (Asymptotic Calculator)" )
+    logger.info ( "Test Point limits with RooStats (Asymptotic Calculator, Consrained efficienicy&GlobalObservables)" )
 
     from   ostap.fitting.roostats   import ( ModelConfig           ,
                                              AsymptoticCalculator  ,
@@ -452,40 +455,41 @@ def test_point_limit_5() :
     model2_new  = model2.clone  ( S = S3 , name = 'M6' )
 
     reff.release()
-    constraints = ceff2 , 
+    constraints = ceff2
 
-    gobs = ROOT.RooArgSet ( reff_mean ) ## , reff_sigma ) 
+    global_observables  = reff_mean 
 
     the_model   = Models.SimFit (  sample  , { 'A' : model1  , 'B' : model2_new } , name = 'X6' )
 
     data        = dataset 
     
-    rS , _ = the_model.fitTo ( data , silent = True , constraints = constraints ) 
-    with use_canvas ( 'test_point_limit_5/A' ) : the_model.draw  ( 'A' , data )  
-    with use_canvas ( 'test_point_limit_5/B' ) : the_model.draw  ( 'B' , data )  
+    fit_conf = { 'silent' : True , 'constraints' : constraints }
+    
+    rS , _ = the_model.fitTo ( data , **fit_conf ) 
+    ## with use_canvas ( 'test_point_limit_5/A' ) : the_model.draw  ( 'A' , data )  
+    ## with use_canvas ( 'test_point_limit_5/B' ) : the_model.draw  ( 'B' , data )  
                    
     POI = fBA 
 
     ## create ModelConfig  for 'S+B' model
-    model_sb = ModelConfig ( pdf                = the_model   ,
-                             poi                = POI         , ## parameter of interest
-                             dataset            = data        ,
-                             global_observables = gobs        , 
-                             constraints        = constraints , 
-                             name               = 'S+B'       ,
-                             snapshot           = POI         ) ## ATTENTION! 
-
+    model_sb = ModelConfig ( pdf                = the_model          ,
+                             poi                = POI                , ## parameter of interest
+                             dataset            = data               ,
+                             global_observables = global_observables , 
+                             constraints        = constraints        , 
+                             name               = 'S+B'              ,
+                             snapshot           = POI                ) ## ATTENTION! 
 
     with FIXVAR ( POI ) :
         POI.setVal ( 0 )
-        rB , _ = the_model.fitTo ( data , silent  = True , constraints = constraints )
+        rB , _ = the_model.fitTo ( data , **fit_conf )
 
         # create ModelConfig  for 'B-only' model
-        model_b  = ModelConfig ( pdf         = the_model          ,
-                                 poi         = POI                , ## parameter of interest                                 
-                                 dataset     = data               ,
-                                 constraints        = constraints ,
-                                 global_observables = gobs              , 
+        model_b  = ModelConfig ( pdf                = the_model          ,
+                                 poi                = POI                , ## parameter of interest                                 
+                                 dataset            = data               ,
+                                 constraints        = constraints        ,
+                                 global_observables = global_observables , 
                                  workspace          = model_sb.workspace , 
                                  name               = 'B-only'           ,
                                  snapshot           = POI                )
@@ -505,19 +509,105 @@ def test_point_limit_5() :
         hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
         
         ## make a scan 
-        hti .scan_with_progress ( values ) #can it!
+        hti .scan_with_progress ( values ) # scan it!
           
     ## visualize the scan results 
-    with use_canvas ( 'test_point_limit_ac5: Constrained efficiency#2' , wait = 2 ) :
+    with use_canvas ( 'test_point_limit_5: Constrained efficiency#2' , wait = 2 ) :
         plot = hti.plot
         plot .draw('LCb 2CL')                    
-        logger.info ( '90%%CL upper limit (asymptotic)  = %.2f' % hti.upper_limit )
+        logger.info ( '90%%CL upper limit (asymptotic)  = %.4f' % hti.upper_limit )
 
-    row = 'Constrained efficiency/2' , '%.3f' % hti.upper_limit , '%.1f' % timer.delta 
+    row = 'Constrained efficiency/2' , '%.4f' % hti.upper_limit , '%.2f' % timer.delta 
     summary.append ( row  )
     plots  .append ( plot )
 
+
+# ============================================================================-
+## Get the upper limit limit for small signal
+#  - Asymptotic Calculator is used 
+def test_point_limit_6() :
+    """ Get the upper limit at given point for small signal
+    - Asymptotic Calculator is used 
+    """
+
+    logger = getLogger("test_point_limit_6")
+
+    logger.info ( "Test Point limits with RooStats (Asymptotic Calculator, Constrained efficiencies)" )
+
+    from   ostap.fitting.roostats   import ( ModelConfig           ,
+                                             AsymptoticCalculator  ,
+                                             HypoTestInverter      )
+
+
+    S3          = signal2.vars_multiply ( SB , reff , name = 'S7' )
+    model2_new  = model2.clone  ( S = S3 , name = 'M7' )
+
+    reff.release()
     
+    the_model   = Models.SimFit (  sample  , { 'A' : model1  , 'B' : model2_new } , name = 'X5' )
+
+    data        = dataset 
+
+    for eff in progress_bar ( ( VE ( 1.0 , 0.01 **2 ) , 
+                                VE ( 1.0 , 0.05 **2 ) ,
+                                VE ( 1.0 , 0.10 **2 ) ,
+                                VE ( 1.0 , 0.15 **2 ) ,
+                                VE ( 1.0 , 0.20 **2 ) ,
+                                VE ( 1.0 , 0.25 **2 ) ,
+                                VE ( 1.0 , 0.30 **2 ) ,
+                                VE ( 1.0 , 0.35 **2 ) ,
+                                VE ( 1.0 , 0.40 **2 ) ,
+                                VE ( 1.0 , 0.45 **2 ) ,
+                                VE ( 1.0 , 0.50 **2 ) ) ) :
+        
+        ceff = model2.soft_constraint ( reff , eff )
+        constraints = ceff 
+                
+        fit_conf = { 'silent' : True , 'constraints' : constraints }
+        
+        rS , _ = the_model.fitTo ( data , **fit_conf ) 
+        
+        POI = fBA 
+        
+        ## create ModelConfig  for 'S+B' model
+        model_sb = ModelConfig ( pdf         = the_model   ,
+                                 poi         = POI         , ## parameter of interest
+                                 dataset     = data        ,
+                                 constraints = constraints , 
+                                 name        = 'S+B'       ,
+                                 snapshot    = POI         ) ## ATTENTION! 
+        
+        
+        with FIXVAR ( POI ) :
+            POI.setVal ( 0 )
+            rB , _ = the_model.fitTo ( data , **fit_conf )
+            
+            # create ModelConfig  for 'B-only' model
+            model_b  = ModelConfig ( pdf         = the_model          ,
+                                     poi         = POI                , ## parameter of interest                                 
+                                     dataset     = data               ,
+                                     constraints = constraints        ,                                  
+                                     workspace   = model_sb.workspace , 
+                                     name        = 'B-only'           ,
+                                     snapshot    = POI                )
+            
+        with timing ( "Using Asymptotic Calculator" , logger = None ) as timer :
+            ## create the calculator 
+            ac  = AsymptoticCalculator ( model_b           ,
+                                         model_sb          ,
+                                         dataset   = data  ,
+                                         asimov    = False )
+            ac.calculator.SetOneSided ( True ) 
+            
+            ## create Hypo Test inverter 
+            hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
+            
+            ## make a scan 
+            hti .scan ( values ) # scan it!
+            
+        row = 'Constrained efficiency %s' % eff.toString ( '%+.3f +/- %.3f' )  , '%.4f' % hti.upper_limit , '%.2f' % timer.delta 
+        summary.append ( row  )
+            
 # =============================================================================
 if '__main__' == __name__ :
 
@@ -530,6 +620,7 @@ if '__main__' == __name__ :
         test_point_limit_3 () ## add efficiency 
         test_point_limit_4 () ## add efficiency 
         test_point_limit_5 () ## add efficiency 
+        test_point_limit_6 () ## scan efficiencies 
  
         
     import ostap.logger.table as T

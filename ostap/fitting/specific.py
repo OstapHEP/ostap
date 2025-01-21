@@ -57,7 +57,7 @@ models = []
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class Bd_pdf(CB2_pdf) :
-    """B0: double-sided Crystal Ball function
+    """ B0: double-sided Crystal Ball function
     """
     def __init__ ( self                   ,
                    xvar                   ,   ## mass is mandatory here! 
@@ -89,7 +89,7 @@ models.append ( Bd_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class Bu_pdf(CB2_pdf) :
-    """B+: double-sided Crystal Ball function
+    """ B+: double-sided Crystal Ball function
     """
     def __init__ ( self                   ,
                    xvar                   ,   ## mass is mandatory here! 
@@ -120,7 +120,7 @@ models.append ( Bu_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class Bs_pdf(CB2_pdf) :
-    """Bs: double-sided Crystal Ball function
+    """ Bs: double-sided Crystal Ball function
     """
     def __init__ ( self                   ,
                    xvar                   ,    ## mass is mandatory here! 
@@ -163,7 +163,7 @@ models.append ( Bs_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class Bc_pdf(CB2_pdf) :
-    """Bc: double-sided Crystal Ball function
+    """ Bc: double-sided Crystal Ball function
     """
     def __init__ ( self                   ,
                    xvar                   ,   ## mass is mandatory here! 
@@ -227,7 +227,7 @@ models.append ( D0_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class Dp_pdf(Bukin_pdf) :
-    """D+: Bukin function 
+    """ D+: Bukin function 
     """
     def __init__ ( self                    ,
                    xvar                    , ## mass is mandatory here 
@@ -257,7 +257,7 @@ models.append ( Dp_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class Ds_pdf(Bukin_pdf) :
-    """Ds: Bukin function 
+    """ Ds: Bukin function 
     """
     def __init__ ( self                    , 
                    xvar                    , ## mass is mandatory 
@@ -287,7 +287,7 @@ models.append ( Ds_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class Lc_pdf(Bukin_pdf) :
-    """Lc: Bukin function 
+    """ Lc: Bukin function 
     """
     def __init__ ( self                     ,
                    xvar                     , 
@@ -316,13 +316,13 @@ models.append ( Lc_pdf )
 ## @class BdBs_pdf
 #  Ready-to-use model to fit a distribution with Bd and Bs peaks 
 #  - Bs mass is calculated as  <code>m(Bd)+delta_m</code>
-#  - Bs resolution is calcualetd as <code>sigma(Bd)*(m(Bs)/m(Bd)))</code>
+#  - Bs resolution is calculated as <code>sigma(Bd)*(m(Bs)/m(Bd)))</code>
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-08-02
 class BdBs_pdf (PEAK) :
-    """Ready-to-use model to fit a distribution iwth D+ and D_s+ peaks
+    """ Ready-to-use model to fit a distribution iwth D+ and D_s+ peaks
       - Bs mass is calculated as  `m(Bd)+delta_m`
-      - Bs resolution is calculates as `sigma(Bd)*(m(Bs)/m(Bd))`
+      - Bs resolution is calculated as `sigma(Bd)*(m(Bs)/m(Bd))`
     """
     def __init__ ( self                               ,
                    xvar                               ,
@@ -337,7 +337,8 @@ class BdBs_pdf (PEAK) :
                    background = 'convex decreasing 2' , 
                    NBd        = None                  ,
                    NBs        = None                  ,
-                   B          = None                  ) :
+                   B          = None                  ,
+                   fix_norm   = False                 ) :
         
         ## initialize the base
         PEAK.__init__      ( self                         ,
@@ -411,7 +412,8 @@ class BdBs_pdf (PEAK) :
             "BdBs(%s)" % self.name ,
             self.alist1 ,
             self.alist2 )
-        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+        
+        if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
         
         # ===============================================================================
         ## finally declare the components 
@@ -422,22 +424,23 @@ class BdBs_pdf (PEAK) :
 
         ## save configuration
         self.config = {
-            'xvar'        : self.xvar  ,
-            'name'        : self.name  ,
-            'background'  : self.bkg   ,
-            'mBd'         : self.mBd   ,
-            'sBd'         : self.sBd   ,
+            'xvar'        : self.xvar     ,
+            'name'        : self.name     ,
+            'background'  : self.bkg      ,
+            'mBd'         : self.mBd      ,
+            'sBd'         : self.sBd      ,
             ##
-            'alphaL'      : self.Bd.aL ,
-            'alphaR'      : self.Bd.aR ,
-            'nL'          : self.Bd.nL ,
-            'nR'          : self.Bd.nR ,
+            'alphaL'      : self.Bd.aL    ,
+            'alphaR'      : self.Bd.aR    ,
+            'nL'          : self.Bd.nL    ,
+            'nR'          : self.Bd.nR    ,
             ##
-            'dm'          : self.dm    , 
+            'dm'          : self.dm       , 
             ## 
-            'NBd'         : self.NBd   ,
-            'NBs'         : self.NBs   ,
-            'B'           : self.B     }
+            'NBd'         : self.NBd      ,
+            'NBs'         : self.NBs      ,
+            'B'           : self.B        ,
+            'fix_norm'    : self.fix_norm }
     
     @property
     def Bd ( self ) :
@@ -502,8 +505,16 @@ class BdBs_pdf (PEAK) :
         """'background' : get the background shape"""
         return self.__bkg 
 
+    @property
+    def fix_norm ( self ) :
+        """`fix-norm`: 
+        - see `ROOT.RooAbsPdf.SetCoefNormalization`
+        - see `ROOT.RooAbsPdf.getCoefNormalization`
+        """
+        pars = self.pdf.getCoefNormalization()
+        return True if pars else False 
+    
 models.append ( BdBs_pdf ) 
-
 
 # =============================================================================
 ## @class DpDs_pdf
@@ -513,7 +524,7 @@ models.append ( BdBs_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-08-02
 class DpDs_pdf (PEAK) :
-    """Ready-to-use model to fit a distribution with D+ and Ds+ peaks
+    """ Ready-to-use model to fit a distribution with D+ and Ds+ peaks
       - Ds+ mass is calculated as  `m(D+)+delta_m`
       - Ds+ resolution is calculated as `sigma(D+)*(m(Ds+)/m(D+))`
     """
@@ -529,7 +540,8 @@ class DpDs_pdf (PEAK) :
                    background = 'convex decreasing 2' , 
                    NDp        = None                  ,
                    NDs        = None                  ,
-                   B          = None                  ) :
+                   B          = None                  ,
+                   fix_norm   = False                 ) :
         
         ## initialize the base
         PEAK.__init__      ( self                         ,
@@ -601,7 +613,8 @@ class DpDs_pdf (PEAK) :
             "DpDs(%s)" % self.name ,
             self.alist1 ,
             self.alist2 )
-        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+
+        if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         # ===============================================================================
         ## finally declare the components 
@@ -612,21 +625,22 @@ class DpDs_pdf (PEAK) :
 
         ## save configuration
         self.config = {
-            'xvar'        : self.xvar    ,
-            'name'        : self.name    ,
-            'background'  : self.bkg     ,
-            'mDp'         : self.mDp     ,
-            'sDp'         : self.sDp     ,
+            'xvar'        : self.xvar     ,
+            'name'        : self.name     ,
+            'background'  : self.bkg      ,
+            'mDp'         : self.mDp      ,
+            'sDp'         : self.sDp      ,
             ##
-            'xi'          : self.Dp.xi   ,
-            'rhoL'        : self.Dp.rhoL ,
-            'rhoR'        : self.Dp.rhoR ,
+            'xi'          : self.Dp.xi    ,
+            'rhoL'        : self.Dp.rhoL  ,
+            'rhoR'        : self.Dp.rhoR  ,
             ##
-            'dm'          : self.dm      , 
+            'dm'          : self.dm       , 
             ## 
-            'NDp'         : self.NDp     ,
-            'NDs'         : self.NDs     ,
-            'B'           : self.B       }
+            'NDp'         : self.NDp      ,
+            'NDs'         : self.NDs      ,
+            'B'           : self.B        ,
+            'fix_norm'    : self.fix_norm }
     
     @property
     def Dp ( self ) :
@@ -689,8 +703,18 @@ class DpDs_pdf (PEAK) :
     @property
     def bkg ( self ) :
         """'background' : get the background shape"""
-        return self.__bkg 
+        return self.__bkg
+    
+    @property
+    def fix_norm ( self ) :
+        """`fix-norm`: 
+        - see `ROOT.RooAbsPdf.SetCoefNormalization`
+        - see `ROOT.RooAbsPdf.getCoefNormalization`
+        """
+        pars = self.pdf.getCoefNormalization()
+        return True if pars else False 
 
+    
 models.append ( DpDs_pdf ) 
 
 # =============================================================================
@@ -705,7 +729,7 @@ models.append ( DpDs_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-08-02
 class MANCA(PEAK) :
-    """Helper base class for implementaton of PDFs for Y-> mu+mu- peaks
+    """ Helper base class for implementaton of PDFs for Y-> mu+mu- peaks
     - It helps to make a connection between three Upsilons peaks:
     starting form the Y(1S) parameters 
     - Y(2S) mass is calculated as `m(Y(1S))+dm21`
@@ -946,7 +970,7 @@ class MANCA(PEAK) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-08-02
 class Manca_pdf (MANCA) :
-    """Manca: the final fit model for Y->mu+mu- fit
+    """ Manca: the final fit model for Y->mu+mu- fit
     This is physically well-motivated function for fits in narrow bins in pt and rapidity
     - three Needham functions for Y(1S), Y(2S) and Y(3S) peaks
     - constrants for their resolutions and masses 
@@ -991,8 +1015,9 @@ class Manca_pdf (MANCA) :
                    N1S        = None  ,   ## Y(2S) signal
                    N2S        = None  ,   ## Y(2S) signal
                    N3S        = None  ,   ## Y(3S) signal 
-                   B          = None  ) : ## background
-
+                   B          = None  ,   ## background
+                   fix_norm   = False ) :
+        
         """ Create Manca1 PDF: function to fit Y->mu+mu- signals in narrow kinematic range 
         - xvar       : observable, mu+mu- mass
         - name       : the name of the PDF
@@ -1027,7 +1052,8 @@ class Manca_pdf (MANCA) :
                          N1S        = N1S        , 
                          N2S        = N2S        , 
                          N3S        = N3S        , 
-                         B          = B          )
+                         B          = B          ,
+                         fix_norm   = False      )
         
         # =====================================================================
         ## Shape parameters
@@ -1094,7 +1120,8 @@ class Manca_pdf (MANCA) :
             "manca(%s)" % name ,
             self.alist1 ,
             self.alist2 )
-        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+
+        if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         # ===============================================================================
         ## finally declare the components 
@@ -1106,23 +1133,24 @@ class Manca_pdf (MANCA) :
 
         ## save configurtaion
         self.config = {
-            'xvar'        : self.xvar ,
-            'name'        : self.name ,
-            'background'  : self.bkg  ,
-            'm1s'         : self.m1s  ,
-            's1s'         : self.s1s  ,
+            'xvar'        : self.xvar     ,
+            'name'        : self.name     ,
+            'background'  : self.bkg      ,
+            'm1s'         : self.m1s      ,
+            's1s'         : self.s1s      ,
             ##
-            'a0'          : self.a0   ,
-            'a1'          : self.a1   , 
-            'a2'          : self.a2   ,
+            'a0'          : self.a0       ,
+            'a1'          : self.a1       , 
+            'a2'          : self.a2       ,
             ##
-            'dm21'        : self.dm21 , 
-            'dm32'        : self.dm32 ,
+            'dm21'        : self.dm21     , 
+            'dm32'        : self.dm32     ,
             ## 
-            'N1S'         : self.N1S  ,
-            'N2S'         : self.N2S  ,
-            'N3S'         : self.N3S  ,
-            'B'           : self.B    }
+            'N1S'         : self.N1S      ,
+            'N2S'         : self.N2S      ,
+            'N3S'         : self.N3S      ,
+            'B'           : self.B        ,
+            'fix_norm'    : self.fix_norm }
     
     @property
     def a0 ( self ) :
@@ -1162,7 +1190,16 @@ class Manca_pdf (MANCA) :
     def Y3S ( self ) :
         """'Y3S' : Y(3S) shape"""
         return self.__Y3S
-   
+
+    @property
+    def fix_norm ( self ) :
+        """`fix-norm`: 
+        - see `ROOT.RooAbsPdf.SetCoefNormalization`
+        - see `ROOT.RooAbsPdf.getCoefNormalization`
+        """
+        pars = self.pdf.getCoefNormalization()
+        return True if pars else False 
+
 models.append ( Manca_pdf ) 
 
 # =============================================================================
@@ -1180,7 +1217,7 @@ models.append ( Manca_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-06-24
 class Manca2_pdf (MANCA) :
-    """Manca2: the final fit model for Y->mu+mu- fit
+    """ Manca2: the final fit model for Y->mu+mu- fit
     This is an effective function for fit in global bin, without pt/y-binning
     - three double-sided Crystal Ball functions for Y(1S), Y(2S) and Y(3S) peaks
     - constrants for their resolutions and masses 
@@ -1228,7 +1265,8 @@ class Manca2_pdf (MANCA) :
                    N1S        = None       ,   ## Y(2S) signal
                    N2S        = None       ,   ## Y(2S) signal
                    N3S        = None       ,   ## Y(3S) signal 
-                   B          = None       ) : ## background 
+                   B          = None       ,   ## background
+                   fix_norm   = False      ) : 
         
         """ Create Manca2 PDF: function to fit Y->mu+mu- signals in wide kinematic ranges 
         - xvar       : observable, mu+mu- mass
@@ -1266,7 +1304,8 @@ class Manca2_pdf (MANCA) :
                          N1S        = N1S        , 
                          N2S        = N2S        , 
                          N3S        = N3S        , 
-                         B          = B          )
+                         B          = B          ,
+                         fix_norm   = fix_norm   )
 
         # =====================================================================
         ## Double Crystal Ball shape parameters 
@@ -1337,7 +1376,8 @@ class Manca2_pdf (MANCA) :
             "manca(%s)" % name ,
             self.alist1 ,
             self.alist2 )
-        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+
+        if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         # ===============================================================================
         ## finally declare the components 
@@ -1349,24 +1389,25 @@ class Manca2_pdf (MANCA) :
 
         ## save configurtaion
         self.config = {
-            'xvar'        : self.xvar   ,
-            'name'        : self.name   ,
-            'background'  : self.bkg    ,
-            'm1s'         : self.m1s    ,
-            's1s'         : self.s1s    ,
+            'xvar'        : self.xvar     ,
+            'name'        : self.name     ,
+            'background'  : self.bkg      ,
+            'm1s'         : self.m1s      ,
+            's1s'         : self.s1s      ,
             ##
-            'alphaL'      : self.aL     , 
-            'alphaR'      : self.aR     , 
-            'nL'          : self.nL     ,
-            'nR'          : self.nR     ,
+            'alphaL'      : self.aL       , 
+            'alphaR'      : self.aR       , 
+            'nL'          : self.nL       ,
+            'nR'          : self.nR       ,
             ##
-            'dm21'        : self.dm21   , 
-            'dm32'        : self.dm32   ,
+            'dm21'        : self.dm21     , 
+            'dm32'        : self.dm32     ,
             ## 
-            'N1S'         : self.N1S    ,
-            'N2S'         : self.N2S    ,
-            'N3S'         : self.N3S    ,
-            'B'           : self.B      }
+            'N1S'         : self.N1S      ,
+            'N2S'         : self.N2S      ,
+            'N3S'         : self.N3S      ,
+            'B'           : self.B        ,
+            'fix_norm'    : self.fix_norm } 
         
     @property
     def aL (  self ) :
@@ -1420,16 +1461,17 @@ models.append ( Manca2_pdf )
 # =============================================================================
 ## Specific model for fitting of Y+X
 class MancaX_pdf(PDF2) :
-    """MancaX: 2D-model to study associative production of Upsilon and X 
+    """ MancaX: 2D-model to study associative production of Upsilon and X 
     """
-    def __init__ ( self         ,
-                   manca        , ## manca pdf, that defined 3 upsilon peaks  
-                   charm        , ## charm pdf
-                   bkg1   = 0   ,
-                   bkg2   = 0   ,
-                   bkgA   = 0   ,
-                   bkgB   = 0   ,
-                   suffix = ''  ) :
+    def __init__ ( self             ,
+                   manca            , ## manca pdf, that defined 3 upsilon peaks  
+                   charm            , ## charm pdf
+                   bkg1     = 0     ,
+                   bkg2     = 0     ,
+                   bkgA     = 0     ,
+                   bkgB     = 0     ,
+                   suffix   = ''    ,
+                   fix_norm = False ) :
 
         PDF2.__init__ ( self , 'MancaX' + suffix , manca.xvar , charm.xvar )  
         self._crossterms1 = ROOT.RooArgSet ()
@@ -1505,7 +1547,8 @@ class MancaX_pdf(PDF2) :
                                       "Model2D(%s)"  % suffix ,
                                       self.alist1 ,
                                       self.alist2 )
-        self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+        
+        if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         self.name    = self.pdf.GetName()
         ##
@@ -1523,14 +1566,15 @@ class MancaX_pdf(PDF2) :
     
         ## save configurtaion
         self.config = {
-            'mass'   : self.mass     ,
-            'manca'  : self.name     ,
-            'charm'  : self.charma   ,
-            'bkg1'   : self.b_Y      , 
-            'bkg2'   : self.b_C      , 
-            'bkgA'   : self.b_A      , 
-            'bkgB'   : self.b_B      , 
-            'suffix' : self.__siffix
+            'mass'     : self.mass     ,
+            'manca'    : self.name     ,
+            'charm'    : self.charma   ,
+            'bkg1'     : self.b_Y      , 
+            'bkg2'     : self.b_C      , 
+            'bkgA'     : self.b_A      , 
+            'bkgB'     : self.b_B      , 
+            'suffix'   : self.__siffix ,
+            'fix_norm' : self.fix_norm  
             }
 
     ## get all declared components 
@@ -1547,8 +1591,16 @@ class MancaX_pdf(PDF2) :
         """'charm'-function to decribe Charm peak"""
         return self.__charm
     
-models.append ( MancaX_pdf ) 
+    @property
+    def fix_norm ( self ) :
+        """`fix-norm`: 
+        - see `ROOT.RooAbsPdf.SetCoefNormalization`
+        - see `ROOT.RooAbsPdf.getCoefNormalization`
+        """
+        pars = self.pdf.getCoefNormalization()
+        return True if pars else False 
 
+models.append ( MancaX_pdf ) 
 
 # =============================================================================
 ## @class HORNSdini_pdf
@@ -1567,7 +1619,7 @@ models.append ( MancaX_pdf )
 #  @see Ostap::Math::HORNSdini
 #  @see Ostap::Modls::HORNSdini
 class HORNSdini_pdf(PEAK) :
-    """HORNSdini PDF
+    """ HORNSdini PDF
     """
     def __init__ ( self              ,
                    name              ,
