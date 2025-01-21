@@ -16,8 +16,10 @@ __all__     = (
     'make_constrained' , ## helper function to create constraied PDFs
 )
 # =============================================================================
-from   ostap.core.core         import typename 
-import ostap.fitting.variables 
+from   ostap.core.meta_info         import root_info 
+from   ostap.core.core              import typename 
+import ostap.fitting.variables
+import ostap.fitting.roocollections
 import ROOT 
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -46,9 +48,13 @@ def make_constrained ( pdf , *constraints ) :
             if tail : keep_it.append ( tail ) 
             result.addPdf ( newcmp , str ( label ) )
         return result, tuple ( keep_it )   
+
+    if root_info < ( 6, 24 ) :
+        plist = ROOT.RooArgSet( pdf )
+        for p in contsraints  : plist.add ( p ) 
+        return ROOT.RooProdPdf ( name , title , plist ) , () 
         
     return ROOT.RooProdPdf ( name , title , ( pdf , ) + constraints ) , () 
-    
 
 # =============================================================================
 if '__main__' == __name__ :
