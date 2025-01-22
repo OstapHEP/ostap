@@ -27,6 +27,8 @@
     1. reshuffle some basic fitting classes
     1. essentialy re-write of `RooStats`-wrapper 
     1. make use of `shutil.get_terminal_size` 
+    1. improve utilities for table creatio 
+
 
 ## Backward incompatible1
 
