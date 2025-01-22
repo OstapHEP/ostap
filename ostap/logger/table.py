@@ -32,7 +32,8 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.logger.colorized import infostr, allright, decolorize        
-from   ostap.utils.basic      import terminal_size 
+from   ostap.utils.basic      import terminal_size
+from   itertools              import zip_longest 
 import textwrap, os, sys   
 # =============================================================================
 # logging 
@@ -41,20 +42,29 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.table' )
 else                       : logger = getLogger( __name__             )
 # =============================================================================
-terminaltables = None 
-if ( 3 , 9 ) <= sys.version_info :
-    try :
+terminaltables = None
+# =============================================================================
+if ( 3 , 9 ) <= sys.version_info : # ==========================================
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
         import terminaltables3 as terminaltables
-    except ImportError :
+        # =====================================================================
+    except ImportError : # ====================================================
+        # =====================================================================
         terminaltables = None
 # =============================================================================
-if not terminaltables :  
-    try :
+if not terminaltables : # =====================================================
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
         import terminaltables
-    except ImportError :
+        # =====================================================================
+    except ImportError : # ====================================================
+        # =====================================================================
         terminaltables = None 
-        pass
-# ===============================================================================
+
+# =============================================================================
 if terminaltables :
     ## Vaild `style` arguments (case insensitive) 
     table_styles = ( 'local'     , ## use local, handmade replacement
@@ -119,7 +129,7 @@ except ImportError :
 left        = '<' , 'l' , 'left'  
 right       = '>' , 'r' , 'right' 
 center      = '^' , 'c' , 'center' , '='
-wrapped     = 'w' ,
+wrapped     = 'w' , 'p' 
 max_width   = 50
 wrap_indent = '  '
 # =============================================================================
@@ -157,17 +167,18 @@ def the_table ( rows                          ,
 
     title = allright ( decolorize ( title ).strip() ) 
     
-    rows   = list ( rows )
+    rows = list ( rows )
     
-    nc  = 0
+    nc   = 0
     for row in rows : nc = max ( nc , len ( row ) )
 
     wraps = [] 
-    for i , a in  zip ( range ( nc ) , alignment ) :
+    for i , a in  zip_longest ( range ( nc ) , alignment ) :
         if a and isinstance ( a , str ) :
             al = a.lower() 
-            if   al in left  : pass 
-            elif al in right : pass 
+            if   al in left   : pass 
+            elif al in right  : pass 
+            elif al in center : pass 
             elif al in wrapped : wraps.append ( i ) 
 
     ## calculate the maximum width for columns 
@@ -193,7 +204,7 @@ def the_table ( rows                          ,
 
         ww = 12
         
-        _ , w = terminal_size()
+        w , _ = terminal_size()
         if w <= twidth : break
         
         nw = len ( wraps ) 
@@ -437,7 +448,7 @@ def table ( rows                          ,
                                           table_instance.padding_right ) [2] 
         widths = sum ( l  for ( i , l ) in enumerate ( widths ) if not i in wraps ) 
         widths += nc + 1 + len ( prefix ) + 4 + 2 * len ( wraps )              
-        _ , w = terminal_size()
+        w , _  = terminal_size()
         ww = w - widths
         ww , _ = divmod ( ww , len ( wraps ) )
         
@@ -473,7 +484,7 @@ def table ( rows                          ,
         pstrip   = decolorize ( prefix ) if prefix else ''
         prfwidth = visible_width ( pstrip )        
         titwidth = visible_width ( tstrip ) 
-        totwidth = terminal_size() [ 1 ]
+        totwidth = terminal_size() [ 0 ]
         tabwidth = table_instance.table_width
 
         ## (1) try to stretch the table 

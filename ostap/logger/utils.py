@@ -454,7 +454,7 @@ def multicolumn ( lines , term_width = None , indent = 0 , pad = 2 ):
     
     if not term_width :
         from ostap.utils.basic import terminal_size 
-        h , term_width = terminal_size()
+        term_width , h = terminal_size()
         
     col_width = max(len(line) for line in lines)
     n_cols = int((term_width + pad - indent)/(col_width + pad))

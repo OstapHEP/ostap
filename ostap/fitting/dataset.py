@@ -2494,7 +2494,7 @@ def _ds_print2_ ( dataset ) :
         else : return _ds_print_ ( dataset )         
     from ostap.utils.basic import terminal_size, isatty 
     if not isatty() : return _ds_table_ ( dataset )
-    th  , tw  = terminal_size()
+    tw  , th  = terminal_size()
     rep , wid = _ds_table_0_ ( dataset ) 
     if wid < tw  : return rep
     return _ds_print_ ( dataset )

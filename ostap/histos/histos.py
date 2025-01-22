@@ -8203,7 +8203,7 @@ def dumpHisto ( histo , *args ) :
     """
     if not args :
         from ostap.utils.basic import terminal_size 
-        h , w = terminal_size()
+        w , h = terminal_size()
         if 0 < h and 0 < w :
             w = max ( 20 ,       w - 25     ) 
             h = max ( 20 , int ( h * 0.55 ) )

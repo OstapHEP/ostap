@@ -1256,9 +1256,9 @@ def _rt_print2_ ( data  , prefix = '' ) :
     l  = len ( data             )
     if 10000000 < br * l : return _rt_print_ ( data )
     
-    from   ostap.utils.basic      import terminal_size, isatty
+    from   ostap.utils.basic import isatty
     if not isatty() : return _rt_table_ ( data )
-    th  , tw   = terminal_size()
+    tw  , th   = terminal_size()
     rep , wid  = _rt_table_0_ ( data , prefix = prefix ) 
     if wid < tw  : return rep
     ##

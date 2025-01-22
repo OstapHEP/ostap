@@ -93,21 +93,70 @@ def with_ipython()  :
         return False
 
 # ============================================================================
-## Get the terminal console size
-def terminal_size():
-    """ Get the terminal console size
-    >>> height , width = terminal_size() 
-    """
-    try :
-        import fcntl, termios, struct
-        th, tw, hp, wp = struct.unpack(
-            'HHHH',fcntl.ioctl(0, termios.TIOCGWINSZ,
-                               struct.pack('HHHH', 0, 0, 0, 0)))
-        return th , tw  
-    except :
-        return 50 , 128
+fallback      = 80 , 50
+# ============================================================================
+terminal_size = None
+# ============================================================================
+if ( 3 , 9 ) <= sys.version_info : # =========================================
+    # ========================================================================
+    try : #===================================================================
+        # ====================================================================
+        from terminaltables3.terminal_io import terminal_size as tt_terminal_size
+        def terminal_size ( fallback = fallback ) :
+            """ Get the terminal console size (use terminaltables3)
+            >>> width, height = terminal_size () 
+            """
+            return tt_terminal_size () 
+        # ====================================================================
+    except ImportError : # ===================================================
+        # ====================================================================
+        pass
+# ============================================================================
+if not terminal_size : # =====================================================
+    # ========================================================================
+    try : #===================================================================
+        # ====================================================================
+        from terminaltables.terminal_io import terminal_size as tt_terminal_size
+        def terminal_size ( fallback = fallback ) :
+            """ Get the terminal console size (use terminaltables)
+            >>> width, height = terminal_size () 
+            """
+            return tt_terminal_size () 
+        # ====================================================================
+    except ImportError : # ===================================================
+        # ====================================================================
+        pass
+# ============================================================================
+if not terminal_size and ( 3 , 3 ) <= sys.version_info : # ===================
+    # ========================================================================
+    import shutil 
+    def terminal_size ( fallback = fallback ) :
+        """ Get the terminal console size (use shutil.get_terminal_size)
+        >>> width, height = terminal_size () 
+        """
+        return shutil.get_terminal_size ( fallback ) 
+    # ========================================================================
+elif not terminal_size  : # ====================================================
+    # ========================================================================
+    ## Get the terminal console size
+    def terminal_size ( fallback = fallback ):
+        """ Get the terminal console size (use local version) 
+            >>> width, height = terminal_size () 
+            """
+        # ====================================================================
+        try : # ==============================================================
+            # ================================================================
+            import fcntl, termios, struct
+            th, tw, hp, wp = struct.unpack(
+                'HHHH',fcntl.ioctl(0, termios.TIOCGWINSZ,
+                                   struct.pack('HHHH', 0, 0, 0, 0)))
+            return tw  , th
+            # ================================================================
+        except : # ============================================================
+            # =================================================================
+            return fallback
+        # =================================================================
 
-    
 # ===============================================================================
 ## make directory
 #  @code

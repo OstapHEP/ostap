@@ -117,7 +117,7 @@ import sys , os, time
 def columns () :
     """ Get number of columns for xterm
     """
-    height , width = terminal_size()
+    width , height = terminal_size()
     return width
 
 # =============================================================================

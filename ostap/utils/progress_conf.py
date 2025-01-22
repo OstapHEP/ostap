@@ -40,7 +40,7 @@ def progress_conf ( show = True , timer = True , description = 'Entries:' ) :
     """
     if not show : return Ostap.Utils.ProgressConf ( 0 )
     tty    = isatty () 
-    twidth = terminal_size() [1] if tty else 105
+    twidth = terminal_size() [ 0 ] if tty else 105
     left   = '[ '
     right  = ' ]'
     ld     = len ( description ) 

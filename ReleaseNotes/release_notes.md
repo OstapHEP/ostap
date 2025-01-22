@@ -26,7 +26,7 @@
     1. improve printout of `Simfit`
     1. reshuffle some basic fitting classes
     1. essentialy re-write of `RooStats`-wrapper 
-
+    1. make use of `shutil.get_terminal_size` 
 
 ## Backward incompatible1
 

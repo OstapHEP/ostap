@@ -842,7 +842,7 @@ def _rfr_print_ ( self , opts = 'v' ) :
     table = _rfr_table_ ( self )
     lmax  = -1
     from ostap.utils.basic      import terminal_size 
-    _ , width = terminal_size()
+    width , _ = terminal_size()
     
     from ostap.logger.colorized import decolorize 
     for row in table :
