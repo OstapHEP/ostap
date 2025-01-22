@@ -28,8 +28,9 @@
     1. essentialy re-write of `RooStats`-wrapper 
     1. make use of `shutil.get_terminal_size` 
     1. improve utilities for table creatio 
-
-
+    1. add better printout for RooWorkspace and ModelConfig
+    
+   
 ## Backward incompatible1
 
     1. remove obsolete `ostap.fitting.simfit.Sim1D`

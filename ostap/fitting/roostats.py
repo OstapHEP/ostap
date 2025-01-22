@@ -69,7 +69,7 @@ else                         : from itertools import izip_longest as zip_longest
 obs_types = ROOT.RooAbsReal , ROOT.RooAbsCategory
 ## allowed types for parameters 
 par_types = ROOT.RooAbsReal ,
-## 
+# # ============================================================================
 pdf_like  = lambda o : isinstance ( o , ROOT.RooAbsPdf ) or \
     ( hasattr ( o , 'roo_pdf' ) and isinstance ( o.roo_pdf , ROOT.RooAbsPdf ) )
 get_pdf   = lambda c : c if isinstance  ( c , ROOT.RooAbsPdf ) else c.roo_pdf
@@ -266,8 +266,8 @@ class ModelConfig(object):
         ## (13) constrained parameters (not used by RooStats) 
         assert all ( self.pdf_param ( p , dataset ) for p in constrained  )
         if constrained :
-            constrained = make_set ( v for v in conditional )
-            mc.SetConstraintParametrs ( constrained ) 
+            constrained = make_set ( v for v in constrained )
+            mc.SetConstraintParameters ( constrained ) 
         self.__constrained = constrained  
 
         ## (14) define the default dataset 
@@ -374,7 +374,16 @@ class ModelConfig(object):
         """
         pars = self.mc.GetConditionalObservables()
         if not valid_pointer ( pars ) : return () 
+        return pars if pars and 0 < len ( pars ) else ()
+    @property 
+    def constrained ( self ) :
+        """'constrained' : constrained parameters from ModelConfig
+        - see `ROOT.RooStats.ModelConfig.GetConstraintParameters 
+        """
+        pars = self.mc.GetConstraintParameters () 
+        if not valid_pointer ( pars ) : return () 
         return pars if pars and 0 < len ( pars ) else () 
+    
     @property
     def external_constraints  ( self ) :
         """'external_constraints' : constrain parameters from ModelConfig
@@ -545,64 +554,66 @@ class ModelConfig(object):
         """ Print the model as table
         """
 
-        rows = [ ( '' , '' , '' ) ]
+        rows = [ ( '' , 'Model Config' , 'Value' ) ]
 
-        row = '*' , 'name' , self.mc.name
+        row = '*' , 'Name' , self.mc.name
         rows.append ( row )
         
-        row = '*' , 'title' , self.mc.title 
+        row = '*' , 'Title' , self.mc.title 
         rows.append ( row )
         
-        row  = '*' , 'workspace' , self.ws.name
+        row  = '*' , 'Workspace' , self.ws.name
         rows.append ( row )
         row  = ''  , ''          , self.ws.title 
         rows.append ( row )
 
-        row = '' , 'PDF (input)' , "%s: %s" % ( typename ( self.__input_pdf ) , self.__input_pdf.name )
+        row = '' , 'Input PDF    ' , "%s: %s" % ( typename ( self.__input_pdf ) , self.__input_pdf.name )
         rows.append ( row )
         
         if not self.__raw_pdf is self.__final_pdf :
             pdf = self.__raw_pdf 
-            row = '' , 'PDF (raw)'   , '%s: %s/%s' % ( typename  ( pdf ) , pdf.name , pdf.title )
+            row = '' , 'Input raw PDF' , '%s: %s/%s' % ( typename  ( pdf ) , pdf.name , pdf.title )
             rows.append ( row )
             
         pdf = self.__final_pdf 
-        row = '' , 'PDF (final)' , '%s: %s/%s' % ( typename  ( pdf ) , pdf.name , pdf.title )                                       
+        row = '' , 'Final PDF' , '%s: %s/%s' % ( typename  ( pdf ) , pdf.name , pdf.title )                                       
         rows.append ( row )
 
         pdf = self.pdf
-        row = '*' , 'PDF (MC/WS)' , '%s: %s/%s' % ( typename  ( pdf ) , pdf.name , pdf.title )                                       
+        row = '*' , 'PDF for RooStats' , '%s: %s/%s' % ( typename  ( pdf ) , pdf.name , pdf.title )                                       
         rows.append ( row )
 
         for i , c in enumerate ( self.constraints , start = 1 )  :
-            row = '' , 'Multiplicative constraint #%d' % i , '%s: %s/%s' % ( typename ( c ) , c.name , c.title )
+            row = '' , 'Added multiplicative constraint #%d:' % i , '%s: %s/%s' % ( typename ( c ) , c.name , c.title )
             rows.append ( row )
 
-        row = '*' , 'Parameters-of-interest'  , ', '.join( v.name for v in self.poi ) 
+        row = '*' , 'Parameters-of-interest'  , ', '.join ( v.name for v in self.poi ) 
         rows.append ( row )
 
-        row = '*' , 'Observables:'            , ', '.join( v.name for v in self.observables )  
+        row = '*' , 'Observables:'            , ', '.join ( v.name for v in self.observables )  
         rows.append ( row )
 
-        row = '*' , 'Nuisance parameters'     , ', '.join( v.name for v in self.nuisance )
+        row = '*' , 'Nuisance parameters'     , ', '.join ( v.name for v in self.nuisance )
         rows.append ( row )
 
-        row = '*' , 'Global observables:'     , ', '.join( v.name for v in self.global_observables ) 
+        row = '*' , 'Global observables:'     , ', '.join ( v.name for v in self.global_observables ) 
         rows.append ( row )
 
-        row = '*' , 'Conditional parameters:' ,  ', '.join( v.name for v in self.conditional ) 
+        row = '*' , 'Conditional parameters:' , ', '.join ( v.name for v in self.conditional ) 
         rows.append ( row )
-
+        
+        row = '*' , 'Constrained parameters:' , ', '.join ( v.name for v in self.constrained  ) 
+        rows.append ( row )
+        
         q = '*' if ( 6 , 28 , 10 ) <= root_info else '' 
         for i , c in enumerate ( self.external_constraints , start = 1 )  :
-            row = q , 'External constraint #%d' % i , '%s: %s/%s' % ( typename ( c ) , c.name , c.title )
+            row = q , 'External constraint #%d:' % i , '%s: %s/%s' % ( typename ( c ) , c.name , c.title )
             rows.append ( row )
-
+                    
         vmax = -1
         for v in self.snapshot : vmax = max ( vmax , len ( v.name ) ) 
         vmax += 2
         vfmt = '%%%ds : %%-+7g' % vmax
-        n    = len ( self.snapshot )
         for i , v in enumerate ( self.snapshot ) :
             if 0 == i : row = '*' , 'Snapshot:' , vfmt % ( v.name , v.getVal () )
             else      : row = '*' ''            , vfmt % ( v.name , v.getVal () )
@@ -2003,7 +2014,184 @@ class P0Plot(object) :
         import ostap.logger.table as T
         title = title if title else 'p0-scan'
         return T.table ( self.__rows , title = title , prefix = prefix , alignment = 'lccc' )
+
+# =============================================================================
+## Print ModelConfig as table 
+def mc_table ( mc , title = '' , prefix = '' ) :
+    """ Print ModelConfig as table 
+    """
+    rows = [  ( 'Model Config' , 'Value' ) ]
+
+    row = 'Name' ,  mc.name
+    rows.append ( row )
+
+    row = 'Title' ,  mc.title 
+    rows.append ( row )
     
+    pdf = mc.GetPdf() 
+    if valid_pointer ( pdf ) :
+        row = 'PDF' , '%s: %s/%s' % ( typename  ( pdf ) , pdf.name , pdf.title )                                       
+        rows.append ( row )
+
+    pars = mc.GetObservables()
+    if valid_pointer ( pars ) :
+        row = 'Observables:'            , ', '.join ( v.name for v in pars )  
+        rows.append ( row )
+
+    pars = mc.GetParametersOfInterest()
+    if valid_pointer ( pars ) : 
+        row = 'Parameters-of-interest'  , ', '.join ( v.name for v in pars  ) 
+        rows.append ( row )
+
+    pars = mc.GetNuisanceParameters()
+    if valid_pointer ( pars ) : 
+        row = 'Nuisance parameters'     , ', '.join ( v.name for v in pars )
+        rows.append ( row )
+
+    pars = mc.GetGlobalObservables() 
+    if valid_pointer ( pars ) : 
+        row = 'Global observables:'     , ', '.join ( v.name for v in pars ) 
+        rows.append ( row )
+
+    pars = mc.GetConditionalObservables()
+    if valid_pointer ( pars ) : 
+        row = 'Conditional observables:'     , ', '.join ( v.name for v in pars ) 
+        rows.append ( row )
+        
+    pars = mc.GetConstraintParameters () 
+    if valid_pointer ( pars ) : 
+        row = 'Constraint parameters:'     , ', '.join ( v.name for v in pars ) 
+        rows.append ( row )
+
+    if ( 6 , 29 , 10 ) <= root_info :
+        pars = mc.GetConstraintParameters () 
+        if valid_pointer ( pars ) :
+            for i , c in enumerate ( pars , start = 1 )  :
+                row = 'External constraint #%d:' % i , '%s: %s/%s' % ( typename ( c ) , c.name , c.title )
+                rows.append ( row )
+        
+    pdf = mc.GetPriorPdf() 
+    if valid_pointer ( pdf ) :
+        row = 'Prior-PDF' , '%s: %s/%s' % ( typename  ( pdf ) , pdf.name , pdf.title )                                       
+        rows.append ( row )
+
+    data = mc.GetProtoData() 
+    if valid_pointer ( data ) : 
+        vars = data.get() 
+        row  = 'ProtoData' , '%s(%s,#%d){%s}' % ( typename ( data ) ,
+                                                  data.name         ,
+                                                  len      ( data ) ,
+                                                  ', '.join ( v.name for v in vars ) ) 
+    pars = mc.GetSnapshot()
+    if valid_pointer ( pars ) :
+        vmax = -1
+        for v in pars : vmax = max ( vmax , len ( v.name ) ) 
+        vmax += 2
+        vfmt = '%%%ds : %%-+7g' % vmax
+        for i , v in enumerate ( pars ) :
+            if 0 == i : row = 'Snapshot:' , vfmt % ( v.name , v.getVal () )
+            else      : row = ''          , vfmt % ( v.name , v.getVal () )
+            rows.append ( row )
+
+    import ostap.logger.table as T
+    title = title if title else '%s(%s,%s)' % ( typename ( mc ) , mc.name , mc.title )
+    return T.table ( rows , title = title , prefix = prefix , alignment = 'lw' )
+
+    
+ROOT.RooStats.ModelConfig.table    = mc_table
+ROOT.RooStats.ModelConfig.__repr__ = mc_table
+ROOT.RooStats.ModelConfig.__str__  = mc_table
+
+# =============================================================================
+## Print RooWorkspace as table 
+def ws_table ( ws , title = '' , prefix = '' ) :
+    """ Print EooWorkspace  as table 
+    """
+    rows = [  ( 'Component' , 'Label', 'Value' ) ]
+
+    row = 'Name'  , '' , ws.name
+    rows.append ( row )
+
+    row = 'Title' , '' , ws.title 
+    rows.append ( row )
+
+    printed = set()
+
+    values = ws.allPdfs()
+    for i,v in enumerate ( values , start = 1 ) : 
+        row = 'PDF'      ,          '%s' % v.name   , '%s(%s,%s)' % ( typename ( v ) , v.name , v.title )
+        rows.append ( row ) 
+
+    values = ws.allFunctions()
+    for i,v in enumerate ( values , start = 1 ) : 
+        row = 'Function' ,          '%s' % v.name   , '%s(%s,%s)' % ( typename ( v ) , v.name , v.title )
+        rows.append ( row ) 
+
+    values = ws.allCatFunctions()
+    for i,v in enumerate ( values , start = 1 ) : 
+        row = 'Category function' , '%s' % v.name  , '%s(%s,%s)' % ( typename ( v ) , v.name , v.title )
+        rows.append ( row ) 
+
+    values = ws.allResolutionModels()
+    for i,v in enumerate ( values , start = 1 ) : 
+        row = 'Resolution model' , '%s' % v.name   , '%s(%s,%s)' % ( typename ( v ) , v.name , v.title )
+        rows.append ( row ) 
+
+    values = ws.allGenericObjects ()
+    for i,v in enumerate ( values , start = 1 ) : 
+        row = 'Generic object' , '%s' % ( v.GetName () if hasattr ( v , 'GetName'  ) else '' ) , \
+            '%s(%s,%s)' % ( typename ( v ) ,  
+                            v.GetName  () if hasattr ( v , 'GetName'  ) else '' ,
+                            v.GetTitle () if hasattr ( v , 'GetTitle' ) else '' ) 
+        rows.append ( row ) 
+
+
+    snapshots = ws.getSnapshots()
+    for i, snapshot  in enumerate ( snapshots , start = 1 ) :
+        fmt = '%s : %-+7g'
+        row = 'Snapshot'  , '%s' % snapshot.GetName() , '{ %s }' %  ( ', '.join ( ( fmt % ( v.name , v.getVal() ) ).strip() for v in snapshot ) )
+        rows.append ( row ) 
+        
+    sets = ws.sets()
+    keys = sorted (  ( str ( k.first ) for k in sets ) ) 
+    for i, key in enumerate ( keys , start = 1 ) :
+        the_set = ws.set (  key  )
+        row = 'Named set' , '%s' % key  , '{ %s }' % ( ', '.join ( sorted ( v.name for v in the_set ) ) ) 
+        rows.append ( row )
+        
+    values = ws.allVars()
+    row = 'Variables'  , '#%d' % len ( values ) , ', '.join ( sorted ( v.name for v in values ) ) 
+    rows.append ( row ) 
+                                     
+    values = ws.allCats()
+    for i , c in enumerate ( values , start = 1 ) : 
+        row = 'Category' , '%s' % c.name , '{ %s }' % ( ', '.join (  ( '%s:%s' % ( l ,k ) ) for ( l , k ) in c.items() ) )
+        rows.append ( row ) 
+
+    values = ws.allData()
+    for i, v in enumerate ( values , start = 1 ) :
+        vars = v.get() 
+        row = 'Data' , '%s' % v.name  , '%s(%s,%s) #%d entries { %s }' % ( typename ( v ) , v.name , v.title , len ( v ) ,
+                                                                           ', '.join ( sorted ( p.name for p in vars ) ) ) 
+        rows.append ( row ) 
+                                                            
+    values = ws.allEmbeddedData()
+    for i, v in enumerate ( values , start = 1 ) :
+        vars = v.get() 
+        row = 'Embedded Data' , '%s' % v.name  , '%s(%s,%s) #%d entries { %s }' % ( typename ( v ) , v.name , v.title , len ( v ) ,
+                                                                                    ', '.join ( sorted ( p.name for p in vars ) ) ) 
+        rows.append ( row ) 
+
+        
+    import ostap.logger.table as T
+    title = title if title else '%s(%s,%s)' % ( typename ( ws ) , ws.name , ws.title )
+    return T.table ( rows , title = title , prefix = prefix , alignment = 'lrw' )
+
+    
+ROOT.RooWorkspace.table    = ws_table
+ROOT.RooWorkspace.__repr__ = ws_table
+ROOT.RooWorkspace.__str__  = ws_table
+
 # =============================================================================
 if '__main__' == __name__ :
     

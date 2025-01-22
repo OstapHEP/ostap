@@ -86,6 +86,9 @@ with FIXVAR ( fBA  ) :
     print ( ds_B ) 
     dataset = combined_data ( sample , allvars,  { 'A' : ds_A , 'B'  : ds_B } )
     
+ds_A.name    = 'ds_A'
+ds_B.name    = 'ds_B'
+dataset.name = 'ds_combined'
 
 model_sim.fitTo ( dataset , quiet = True ) 
 
@@ -140,7 +143,8 @@ def test_point_limit_1() :
                              dataset     = data        ,
                              name        = 'S+B'       ,
                              snapshot    = POI         ) ## ATTENTION! 
-    
+
+
     with FIXVAR ( POI ) :
         POI.setVal ( 0 )
         rB , _ = the_model.fitTo ( data , quiet = True )
@@ -155,7 +159,13 @@ def test_point_limit_1() :
              
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
+
+    model_sb.ws.Import ( data )
+    model_sb.ws.Import ( ds_A )
+    model_sb.ws.Import ( ds_B )
     
+    logger.info  ( 'Workspace:\n%s' % ( model_b.ws.table ( prefix = '# ' ) ) ) 
+
     with timing ( "Using Asymptotic Calculator, No efficiency" , logger = logger ) as timer :
         ## create the calculator 
         ac  = AsymptoticCalculator ( model_b           ,
