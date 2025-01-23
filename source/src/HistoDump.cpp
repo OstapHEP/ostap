@@ -52,7 +52,7 @@ namespace
         const double l = -1 )
         : height ( h  )
         , error  ( e  )
-        , lower ( l ) {}
+        , lower  ( l  ) {}
       // ======================================================================
       /// bin height
       double height ;                                            //  bin height

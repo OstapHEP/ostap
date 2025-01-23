@@ -46,7 +46,7 @@ __all__     = (
     'BrasilBand'                  , ## utility to produce Brasil-band plots 
     'P0Plot'                      , ## utility to produce p0-plots 
     )
-# =============================================================================
+# ==============================================================================
 from   ostap.core.meta_info   import root_info 
 from   ostap.core.ostap_types import ( string_types    , integer_types  ,
                                         num_types      , 
@@ -57,14 +57,16 @@ from   ostap.core.core        import ( valid_pointer   , split_string   ,
 import ostap.fitting.roofit
 from   ostap.fitting.pdfbasic import APDF1
 import ROOT, abc, sys  
-# =============================================================================
+# ==============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.roostats' )
 else                       : logger = getLogger ( __name__                 )
-# =============================================================================
+# ==============================================================================
 if (3,0) <= sys.version_info : from itertools import  zip_longest
 else                         : from itertools import izip_longest as zip_longest 
-# =============================================================================
+# ==============================================================================
+_new_methods_ = []
+# ==============================================================================
 ## allowed types for observables 
 obs_types = ROOT.RooAbsReal , ROOT.RooAbsCategory
 ## allowed types for parameters 
@@ -2097,11 +2099,16 @@ def mc_table ( mc , title = '' , prefix = '' ) :
     title = title if title else '%s(%s,%s)' % ( typename ( mc ) , mc.name , mc.title )
     return T.table ( rows , title = title , prefix = prefix , alignment = 'lw' )
 
-    
+
 ROOT.RooStats.ModelConfig.table    = mc_table
 ROOT.RooStats.ModelConfig.__repr__ = mc_table
 ROOT.RooStats.ModelConfig.__str__  = mc_table
 
+_new_methods_ += [  
+    ROOT.RooStats.ModelConfig.table    ,
+    ROOT.RooStats.ModelConfig.__repr__ ,
+    ROOT.RooStats.ModelConfig.__str__  ,
+]
 # =============================================================================
 ## Print RooWorkspace as table 
 def ws_table ( ws , title = '' , prefix = '' ) :
@@ -2192,6 +2199,23 @@ ROOT.RooWorkspace.table    = ws_table
 ROOT.RooWorkspace.__repr__ = ws_table
 ROOT.RooWorkspace.__str__  = ws_table
 
+_new_methods_ += [ 
+    ROOT.RooWorkspace.table    , 
+    ROOT.RooWorkspace.__repr__ ,
+    ROOT.RooWorkspace.__str__  , 
+]
+
+if root_info < ( 6 , 28 ) and not hasattr ( ROOT.RooWorspace , 'Import' ) :
+    ROOT.RooWorksPace.Import = getattr ( ROOT.RooWorkspace , 'import' )
+    _new_methods_ . append ( ROOT.RooWorkspace.Import )
+
+_decorated_classes_ = (
+    ROOT.RooStats.ModelConfig , 
+    ROOT.RooWorkspace         , 
+    )
+
+_new_methods_ = tuple ( _new_methods_ ) 
+    
 # =============================================================================
 if '__main__' == __name__ :
     

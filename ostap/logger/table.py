@@ -66,17 +66,28 @@ if not terminaltables : # =====================================================
         terminaltables = None 
 
 # =============================================================================
-if terminaltables : # =========================================================
+visible_width = None
+# =============================================================================
+if terminaltables and not visible_width : # ===================================
     # =========================================================================
     visible_width = terminaltables.width_and_alignment.visible_width
     # =========================================================================
-else : # ======================================================================
+# =============================================================================
+if not visible_width : # ======================================================
     # =========================================================================
-    ## visible length of the string/expression
+    import unicodedata 
+    ## visible lenght of the string/expression
     def visible_width ( what ) :
-        """ Visible length of the string/expression (local) 
+        """ Visible length of the string/expression (local, use unicodedata) 
         """
-        return len ( decolorize ( what ) ) if what else 0
+        if not what : return 0
+        item = decolorize ( what )
+        if not item : return 0
+        width = 0
+        for char in item :
+            if unicodedata.east_asian_width ( char ) in ( 'F' , 'W' ) : width += 2
+            else                                                      : width += 1
+        return width 
     
 # =============================================================================
 if terminaltables : # =========================================================
