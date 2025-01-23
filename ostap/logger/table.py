@@ -50,25 +50,34 @@ if ( 3 , 9 ) <= sys.version_info : # ==========================================
     try : # ===================================================================
         # =====================================================================
         import terminaltables3 as terminaltables
-        visible_width = terminaltables.width_and_alignment.visible_width
+        from   terminaltables3.width_and_alignment import visible_width
         # =====================================================================
     except ImportError : # ====================================================
         # =====================================================================
         terminaltables = None
-        visible_withd  = None 
+        visible_width  = None 
 # =============================================================================
 if not terminaltables : # =====================================================
     # =========================================================================
     try : # ===================================================================
         # =====================================================================
         import terminaltables
-        visible_width = terminaltables.width_and_alignment.visible_width
+        from   terminaltables.width_and_alignment import visible_width
         # =====================================================================
     except ImportError : # ====================================================
         # =====================================================================
         terminaltables = None 
-        visible_withd  = None 
+        visible_width  = None 
 
+# =============================================================================
+if not visible_width : # ======================================================
+    # =========================================================================
+    ## visible length of the string/expression
+    def visible_width ( what ) :
+        """ Visible length of the string/expression (local) 
+        """
+        return len ( decolorise ( what ) ) if what else 0
+    
 # =============================================================================
 if terminaltables : # =========================================================
     ## Vaild `style` arguments (case insensitive) 
@@ -136,15 +145,6 @@ except ImportError : # ========================================================
     pass
 
 
-# =============================================================================
-if not visible_width : # ======================================================
-    # =========================================================================
-    ## visible length of the string/expression
-    def visible_width ( what ) :
-        """ Visible length of the string/expression (local) 
-        """
-        return len ( decolorise ( what ) ) if what else 0
-    
 # =============================================================================
 left        = '<' , 'l' , 'left'  
 right       = '>' , 'r' , 'right' 
