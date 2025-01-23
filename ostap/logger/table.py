@@ -50,33 +50,33 @@ if ( 3 , 9 ) <= sys.version_info : # ==========================================
     try : # ===================================================================
         # =====================================================================
         import terminaltables3 as terminaltables
-        from   terminaltables3.width_and_alignment import visible_width
         # =====================================================================
     except ImportError : # ====================================================
         # =====================================================================
         terminaltables = None
-        visible_width  = None 
 # =============================================================================
 if not terminaltables : # =====================================================
     # =========================================================================
     try : # ===================================================================
         # =====================================================================
         import terminaltables
-        from   terminaltables.width_and_alignment import visible_width
         # =====================================================================
     except ImportError : # ====================================================
         # =====================================================================
         terminaltables = None 
-        visible_width  = None 
 
 # =============================================================================
-if not visible_width : # ======================================================
+if terminaltables : # =========================================================
+    # =========================================================================
+    visible_width = terminaltables.width_and_alignment.visible_width
+    # =========================================================================
+else : # ======================================================================
     # =========================================================================
     ## visible length of the string/expression
     def visible_width ( what ) :
         """ Visible length of the string/expression (local) 
         """
-        return len ( decolorise ( what ) ) if what else 0
+        return len ( decolorize ( what ) ) if what else 0
     
 # =============================================================================
 if terminaltables : # =========================================================
@@ -440,6 +440,7 @@ def table ( rows                          ,
         ##
         if title :
             tab_width = table_width ( result )
+            if fmt.startswith( 'latex' ) : title = '%% ' + title             
             title , twidth = shorten_title ( title , tab_width  )
             result = title + '\n' + result 
             
@@ -497,6 +498,10 @@ def table ( rows                          ,
                 for l , line in enumerate ( table_instance.table_data ) :
                     if i < len ( line ) and width < len ( line [ i ] ) : 
                         table_instance.table_data[l][i] = textwrap. fill ( line [ i ] , width = wrap_width , initial_indent = indent )
+                        
+    if title and ( 'github' , 'markdown' ) :
+        title   = '# ' + title
+        twidth += 2
 
     tabwidth = table_instance.table_width
     if title and twidth and tabwidth < twidth + 2 :
@@ -724,11 +729,8 @@ if __name__ == '__main__' :
     logger.info ( 'The table with prefix is \n%s' %
                   the_table ( table_data , 'Title' , prefix = '# ' ) ) 
 
-    if 'latex'    in __all__ : 
-        logger.info ( 'The table is \n%s' % latex  ( table_data ) )
-
     for fmt in tabulate_styles + table_styles : 
-        result = table ( table_data , style  = fmt , prefix = '# ' )            
+        result = table ( table_data , title = 'Title' , style  = fmt , prefix = '# ' )            
         logger.info ( 'Use the format="%s":\n%s' % ( fmt , result ) )
 
     logger.info ( 'Available styles: \n%s' % ( '\n'.join ( table_styles + tabulate_styles ) ) ) 
