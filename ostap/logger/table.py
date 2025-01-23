@@ -50,24 +50,27 @@ if ( 3 , 9 ) <= sys.version_info : # ==========================================
     try : # ===================================================================
         # =====================================================================
         import terminaltables3 as terminaltables
+        visible_width = terminaltables.width_and_alignment.visible_width
         # =====================================================================
     except ImportError : # ====================================================
         # =====================================================================
         terminaltables = None
+        visible_withd  = None 
 # =============================================================================
 if not terminaltables : # =====================================================
     # =========================================================================
     try : # ===================================================================
         # =====================================================================
         import terminaltables
+        visible_width = terminaltables.width_and_alignment.visible_width
         # =====================================================================
     except ImportError : # ====================================================
         # =====================================================================
         terminaltables = None 
+        visible_withd  = None 
 
 # =============================================================================
 if terminaltables : # =========================================================
-    # =========================================================================
     ## Vaild `style` arguments (case insensitive) 
     table_styles = ( 'local'     , ## use local, handmade replacement
                      'ascii'     , ## use `AsciiTable` 
@@ -77,24 +80,19 @@ if terminaltables : # =========================================================
                      'markdown'  , ## use `GithubFlavoredMarkdownTable`
                      'double'    , ## use `DoubleTable` 
                      'default'   ) ## use `DoubleTable`
-    ## special treatment of very long titles
-    from terminaltables.width_and_alignment import visible_width
     # =========================================================================
 else : # ======================================================================
     # =========================================================================
-    ## Valid `style` arguments (case insensitive)     
-    table_styles = 'local' ,
-    ## visible length of the string/expression
-    def visible_width ( what ) :
-        """ Visible length of the string/expression
-        """
-        return len ( decolorise ( item ) ) if item else 0
-    
+    table_styles = 'local' , 
+    # =========================================================================
+
+# =============================================================================
+## default style
+default_style = 'default' if terminaltables else 'local'
+
 # =============================================================================
 ## environment variable
 env_var = 'OSTAP_TABLE_STYLE'
-## default style
-default_style = 'default'
 # =============================================================================
 if    not terminaltables : # ==================================================
     # =========================================================================
@@ -137,11 +135,21 @@ except ImportError : # ========================================================
     tabulate_styles  = () 
     pass
 
+
+# =============================================================================
+if not visible_width : # ======================================================
+    # =========================================================================
+    ## visible length of the string/expression
+    def visible_width ( what ) :
+        """ Visible length of the string/expression (local) 
+        """
+        return len ( decolorise ( what ) ) if what else 0
+    
 # =============================================================================
 left        = '<' , 'l' , 'left'  
 right       = '>' , 'r' , 'right' 
 center      = '^' , 'c' , 'center' , '='
-wrapped     = 'w' , 'p' 
+wrapped     = 'w' , 'p' , 'wrap'   , 'wrapped'
 max_width   = 50
 wrap_indent = ' '
 # =============================================================================
