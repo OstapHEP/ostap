@@ -44,7 +44,10 @@ else                       : logger = getLogger( __name__             )
 # =============================================================================
 terminaltables = None
 # ============================================================================
-print ( 'TABLE/0' )
+print ( 'TABLE/0.1' )
+import terminaltables3 
+print ( 'TABLE/0.2' )
+
 if ( 3 , 9 ) <= sys.version_info : # ==========================================
     print ( 'TABLE/1' )
     # =========================================================================
@@ -650,7 +653,7 @@ def add_prefix ( table , prefix = '' ) :
 #  aligned = align_column ( table , 1 , 'left' ) 
 #  @endcode 
 def align_column ( table , index , align = 'left') :
-    """ Aling the certain column of the table
+    """ Align the certain column of the table
     >>> aligned = align_column ( table , 1 , 'left' ) 
     """
     nrows = [ list ( row ) for row in table ]
