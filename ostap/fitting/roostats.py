@@ -2206,7 +2206,7 @@ _new_methods_ += [
 ]
 
 if root_info < ( 6 , 28 ) and not hasattr ( ROOT.RooWorkspace , 'Import' ) :
-    ROOT.RooWorksPace.Import = getattr ( ROOT.RooWorkspace , 'import' )
+    ROOT.RooWorkspace.Import = getattr ( ROOT.RooWorkspace , 'import' )
     _new_methods_ . append ( ROOT.RooWorkspace.Import )
 
 _decorated_classes_ = (
