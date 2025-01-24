@@ -107,6 +107,13 @@ else : # ======================================================================
     table_styles = 'local' , 
     # =========================================================================
 
+    
+print ( 'TERMINALTABLES' , terminaltables )
+print ( 'VISIBLE_WIDTH'  , visible_width  )
+raise TypeError('HERE!!!') 
+
+
+    
 # =============================================================================
 ## default style
 default_style = 'default' if terminaltables else 'local'
