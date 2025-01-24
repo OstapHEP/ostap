@@ -65,7 +65,7 @@ if ( CMAKE_CXX_COMPILER_VERSION )
   message ( "----> C++-compiler vers : " ${CMAKE_CXX_COMPILER_VERSION} ) 
 endif()
 if ( CMAKE_CXX_COMPILER_LAUNCHER )
-   message ( "----> c++-launcher      : " ${CMAKE_CXX_COMPILER_LAUNCHER} ) 
+  message ( "----> C++-launcher      : " ${CMAKE_CXX_COMPILER_LAUNCHER} ) 
 endif() 
 # You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
 # - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake

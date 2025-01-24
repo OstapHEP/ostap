@@ -2158,12 +2158,13 @@ def ws_table ( ws , title = '' , prefix = '' ) :
             row = 'Snapshot'  , '%s' % snapshot.GetName() , '{ %s }' %  ( ', '.join ( ( fmt % ( v.name , v.getVal() ) ).strip() for v in snapshot ) )
             rows.append ( row ) 
 
-    sets = ws.sets()
-    keys = sorted (  ( str ( k.first ) for k in sets ) ) 
-    for i, key in enumerate ( keys , start = 1 ) :
-        the_set = ws.set (  key  )
-        row = 'Named set' , '%s' % key  , '{ %s }' % ( ', '.join ( sorted ( v.name for v in the_set ) ) ) 
-        rows.append ( row )
+    if ( 6 , 24 ) <= root_info and hasattr ( ROOT.RooWorkspace , 'sets' ) : 
+        sets = ws.sets()
+        keys = sorted ( ( str ( k.first ) for k in sets ) ) 
+        for i, key in enumerate ( keys , start = 1 ) :
+            the_set = ws.set (  key  )
+            row = 'Named set' , '%s' % key  , '{ %s }' % ( ', '.join ( sorted ( v.name for v in the_set ) ) ) 
+            rows.append ( row )
         
     values = ws.allVars()
     row = 'Variables'  , '#%d' % len ( values ) , ', '.join ( sorted ( v.name for v in values ) ) 
