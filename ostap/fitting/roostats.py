@@ -623,7 +623,7 @@ class ModelConfig(object):
             
         import ostap.logger.table as T
         title = title if title else 'ModelConfig %s' % self.mc.title  
-        return T.table ( rows, title = title , prefix = prefix , alignment = 'lw' )
+        return T.table ( rows, title = title , prefix = prefix , alignment = 'llw' )
     
 # ================================================================================
 ## Helper (abstract) base class for the confidence intervals and limits 
