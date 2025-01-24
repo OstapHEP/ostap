@@ -736,9 +736,7 @@ if __name__ == '__main__' :
         ( 'Alice' , '?'          , '---'  ) ,
         ( 'Bob'   , 'unemployed' , ''     ) ]
 
-    logger.info ( 'The table is \n%s' % table     ( table_data , 'Title' , alignment = 'rrr' ) )
-
-    
+    logger.info ( 'The table is \n%s' % table     ( table_data , 'Title' , alignment = 'rrr' ) )    
     logger.info ( 'The table is \n%s' % table     ( table_data , 'Title' , alignment = 'lll' ) ) 
     logger.info ( 'The table is \n%s' % table     ( table_data , 'Title' , alignment = 'ccc' ) ) 
     logger.info ( 'The table is \n%s' % the_table ( table_data , 'Title' , alignment = 'rrr' ) ) 
