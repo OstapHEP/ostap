@@ -128,7 +128,6 @@ else : # ======================================================================
     
 print ( 'TERMINALTABLES' , terminaltables )
 print ( 'VISIBLE_WIDTH'  , visible_width  )
-raise TypeError('HERE!!!') 
 
 
     
@@ -771,7 +770,10 @@ if __name__ == '__main__' :
         logger.info ( 'Use the format="%s":\n%s' % ( fmt , result ) )
 
     logger.info ( 'Available styles: \n%s' % ( '\n'.join ( table_styles + tabulate_styles ) ) ) 
+
     
+    raise TypeError('HERE!!!') 
+
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
