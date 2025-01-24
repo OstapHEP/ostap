@@ -136,7 +136,7 @@ from   sys                    import version_info  as python_version
 ## timing stuff
 from   ostap.utils.timing     import timing, timer
 ## other useful stuff 
-from   ostap.utils.basic      import isatty, with_ipython, NoContext
+from   ostap.utils.basic      import isatty, with_ipython, NoContext, zip_longest 
 from   ostap.core.ostap_types import ( integer_types  , num_types ,
                                        string_types   ,
                                        dictlike_types , listlike_types )
@@ -1483,10 +1483,6 @@ except ImportError : # ========================================================
             ret.append(iter(seq[start:stop]))
             
         return ret
-
-# =============================================================================
-if ( 3 , 0 ) <= python_version : from itertools import zip_longest
-else                           : from itertools import izip_longest as zip_longest
 
 # =============================================================================
 ## Collect data into fixed-length chunks or blocks"

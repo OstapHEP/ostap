@@ -53,7 +53,8 @@ from   ostap.core.ostap_types import ( string_types    , integer_types  ,
                                         sequence_types , dictlike_types )
 from   ostap.core.core        import ( valid_pointer   , split_string   ,
                                        loop_items      , Ostap          ,
-                                       typename  )    
+                                       typename  )
+from   ostap.utils.basic      import zip_longest 
 import ostap.fitting.roofit
 from   ostap.fitting.pdfbasic import APDF1
 import ROOT, abc, sys  
@@ -61,9 +62,6 @@ import ROOT, abc, sys
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.roostats' )
 else                       : logger = getLogger ( __name__                 )
-# ==============================================================================
-if (3,0) <= sys.version_info : from itertools import  zip_longest
-else                         : from itertools import izip_longest as zip_longest 
 # ==============================================================================
 _new_methods_ = []
 # ==============================================================================

@@ -38,10 +38,15 @@ __all__     = (
     ##
     'numcpu'        , ## number of cores/CPUs
     ##
-    'typename'      , ## te typename of the object 
-    )
+    'typename'      , ## te typename of the object
+    ##
+    'zip_longest'   , ## itertools.(i)zip.longest 
+)
 # =============================================================================
-import sys, os, datetime  
+import sys, os, datetime
+# =============================================================================
+if (3,0) <= sys.version_info : from itertools import  zip_longest
+else                         : from itertools import izip_longest as zip_longest 
 # =============================================================================
 ## is sys.stdout attached to terminal or not  ?
 #  @code

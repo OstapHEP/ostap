@@ -33,9 +33,8 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types import string_types 
 from   ostap.logger.colorized import infostr, allright, decolorize        
-from   ostap.utils.basic      import terminal_size
-from   itertools              import zip_longest 
-import textwrap, os, sys   
+from   ostap.utils.basic      import terminal_size, zip_longest 
+import textwrap, os, sys
 # =============================================================================
 # logging 
 # =============================================================================
