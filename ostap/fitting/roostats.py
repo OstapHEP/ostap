@@ -2205,7 +2205,7 @@ _new_methods_ += [
     ROOT.RooWorkspace.__str__  , 
 ]
 
-if root_info < ( 6 , 28 ) and not hasattr ( ROOT.RooWorspace , 'Import' ) :
+if root_info < ( 6 , 28 ) and not hasattr ( ROOT.RooWorkspace , 'Import' ) :
     ROOT.RooWorksPace.Import = getattr ( ROOT.RooWorkspace , 'import' )
     _new_methods_ . append ( ROOT.RooWorkspace.Import )
 
