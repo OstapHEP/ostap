@@ -84,7 +84,8 @@ if not visible_width : # ======================================================
         if not item : return 0
         ##
         if  sys.version_info < ( 3 , 0 ) : item = item.decode("u8")
-        ## 
+        ##
+        width = 0 
         for char in item :
             if unicodedata.east_asian_width ( char ) in ( 'F' , 'W' ) : width += 2
             else                                                      : width += 1
