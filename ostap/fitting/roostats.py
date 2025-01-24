@@ -2095,7 +2095,7 @@ def mc_table ( mc , title = '' , prefix = '' ) :
 
     import ostap.logger.table as T
     title = title if title else '%s(%s,%s)' % ( typename ( mc ) , mc.name , mc.title )
-    return T.table ( rows , title = title , prefix = prefix , alignment = 'lw' )
+    return T.table ( rows , title = title , prefix = prefix , alignment = 'llw' )
 
 
 ROOT.RooStats.ModelConfig.table    = mc_table
@@ -2151,12 +2151,13 @@ def ws_table ( ws , title = '' , prefix = '' ) :
         rows.append ( row ) 
 
 
-    snapshots = ws.getSnapshots()
-    for i, snapshot  in enumerate ( snapshots , start = 1 ) :
-        fmt = '%s : %-+7g'
-        row = 'Snapshot'  , '%s' % snapshot.GetName() , '{ %s }' %  ( ', '.join ( ( fmt % ( v.name , v.getVal() ) ).strip() for v in snapshot ) )
-        rows.append ( row ) 
-        
+    if ( 6 , 24 ) <= root_info and hasattr ( ROOT.RooWorkspace , 'getSnapshots' ) : 
+        snapshots = ws.getSnapshots()
+        for i, snapshot  in enumerate ( snapshots , start = 1 ) :
+            fmt = '%s : %-+7g'
+            row = 'Snapshot'  , '%s' % snapshot.GetName() , '{ %s }' %  ( ', '.join ( ( fmt % ( v.name , v.getVal() ) ).strip() for v in snapshot ) )
+            rows.append ( row ) 
+
     sets = ws.sets()
     keys = sorted (  ( str ( k.first ) for k in sets ) ) 
     for i, key in enumerate ( keys , start = 1 ) :
