@@ -44,51 +44,40 @@ else                       : logger = getLogger( __name__             )
 # =============================================================================
 terminaltables = None
 # ============================================================================
-print ( 'TABLE/0.1' )
-import terminaltables3 
-print ( 'TABLE/0.2' )
-
 if ( 3 , 9 ) <= sys.version_info : # ==========================================
-    print ( 'TABLE/1' )
     # =========================================================================
     try : # ===================================================================
         # =====================================================================
-        print ( 'TABLE/2a')  
         import terminaltables3 as terminaltables
-        print ( 'TABLE/2b' , terminaltables )  
         # =====================================================================
     except ImportError : # ====================================================
         # =====================================================================
         terminaltables = None
-        print ( 'TABLE/2c' , terminaltables )
 
-print ( 'TABLE/3', terminaltables  )    
 # =============================================================================
 if not terminaltables : # =====================================================
     # =========================================================================
     try : # ===================================================================
         # =====================================================================
-        print ( 'TABLE/4a', terminaltables  )    
         import terminaltables
-        print ( 'TABLE/4b', terminaltables  )    
         # =====================================================================
     except ImportError : # ====================================================
         # =====================================================================
         terminaltables = None 
-        print ( 'TABLE/4c', terminaltables  )    
-        
-print ( 'TABLE/5', terminaltables  )            
+
 # =============================================================================
 visible_width = None
 # =============================================================================
 if terminaltables and not visible_width : # ===================================
     # =========================================================================
-    print ( 'TABLE/6a', terminaltables , visible_width )
-    visible_width = terminaltables.width_and_alignment.visible_width
-    print ( 'TABLE/6b', terminaltables , visible_width )
-    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        visible_width = terminaltables.width_and_alignment.visible_width
+        # =====================================================================
+    except ( AttributeError,NameError ) : # ===================================
+        # =====================================================================
+        visible_width = None 
 
-print ( 'TABLE/7', terminaltables , visible_width )    
 # =============================================================================
 if not visible_width : # ======================================================
     # =========================================================================
@@ -109,8 +98,6 @@ if not visible_width : # ======================================================
             else                                                      : width += 1
         return width 
 
-print ( 'TABLE/8', terminaltables , visible_width )    
-
 # =============================================================================
 if terminaltables : # =========================================================
     ## Vaild `style` arguments (case insensitive) 
@@ -128,12 +115,6 @@ else : # ======================================================================
     table_styles = 'local' , 
     # =========================================================================
 
-    
-print ( 'TERMINALTABLES' , terminaltables )
-print ( 'VISIBLE_WIDTH'  , visible_width  )
-
-
-    
 # =============================================================================
 ## default style
 default_style = 'default' if terminaltables else 'local'
@@ -768,15 +749,25 @@ if __name__ == '__main__' :
     logger.info ( 'The table with prefix is \n%s' %
                   the_table ( table_data , 'Title' , prefix = '# ' ) ) 
 
-    for fmt in tabulate_styles + table_styles : 
+    for fmt in sorted ( tabulate_styles + table_styles ) : 
         result = table ( table_data , title = 'Title' , style  = fmt , prefix = '# ' )            
         logger.info ( 'Use the format="%s":\n%s' % ( fmt , result ) )
 
-    logger.info ( 'Available styles: \n%s' % ( '\n'.join ( table_styles + tabulate_styles ) ) ) 
-
-    
-    raise TypeError('HERE!!!') 
-
+    rows = [ ( 'Style' , 'From' ) ]
+    styles = table_styles + tabulate_styles 
+    for s in sorted ( styles ) :
+        if    'local' == s                          : row = s , 'Local'
+        elif s in table_styles   and terminaltables : row = s , 'terminaltables'
+        elif s in tabulate_styles and tabulate      : row = s , 'tabulate'
+        else                                        : row = s , ''
+        rows.append ( row ) 
+        
+    title = 'All styles'
+    logger.info ( '%s: \n%s' % ( title , table ( rows              ,
+                                                 title     = title ,
+                                                 prefix    = '# '  ,
+                                                 alignment = 'll'  ) ) ) 
+                  
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
