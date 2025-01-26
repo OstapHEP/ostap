@@ -163,9 +163,19 @@ def test_point_limit_1() :
     model_sb.ws.Import ( data )
     model_sb.ws.Import ( ds_A )
     model_sb.ws.Import ( ds_B )
-    
-    logger.info  ( 'Workspace:\n%s' % ( model_b.ws.table ( prefix = '# ' ) ) ) 
 
+    logger.info  ( 'ModelConfig:\n%s' % ( model_b.mc.table ( prefix = '# ' ) ) ) 
+    logger.info  ( 'Workspace:\n%s'   % ( model_b.ws.table ( prefix = '# ' ) ) ) 
+
+    print ( model_sb.table()                 )
+    print ( model_sb.table( style = 'local') )
+
+    print ( model_sb.mc.table()                 )
+    print ( model_sb.mc.table( style = 'local') )
+
+    print ( model_sb.ws.table()                 )
+    print ( model_sb.ws.table( style = 'local') )
+    
     with timing ( "Using Asymptotic Calculator, No efficiency" , logger = logger ) as timer :
         ## create the calculator 
         ac  = AsymptoticCalculator ( model_b           ,
@@ -626,11 +636,11 @@ if '__main__' == __name__ :
     with rooSilent ( ) : 
 
         test_point_limit_1 () ## trivial  
-        test_point_limit_2 () ## add efficiency 
-        test_point_limit_3 () ## add efficiency 
-        test_point_limit_4 () ## add efficiency 
-        test_point_limit_5 () ## add efficiency 
-        test_point_limit_6 () ## scan efficiencies 
+        # test_point_limit_2 () ## add efficiency 
+        # test_point_limit_3 () ## add efficiency 
+        # test_point_limit_4 () ## add efficiency 
+        # test_point_limit_5 () ## add efficiency 
+        # test_point_limit_6 () ## scan efficiencies 
  
         
     import ostap.logger.table as T

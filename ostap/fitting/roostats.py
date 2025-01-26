@@ -550,7 +550,7 @@ class ModelConfig(object):
 
     # ============================================================================
     ## print the model as a table 
-    def table ( self , title = '' , prefix = '' ) : 
+    def table ( self , title = '' , prefix = '' , style = '' ) : 
         """ Print the model as table
         """
 
@@ -623,7 +623,7 @@ class ModelConfig(object):
             
         import ostap.logger.table as T
         title = title if title else 'ModelConfig %s' % self.mc.title  
-        return T.table ( rows, title = title , prefix = prefix , alignment = 'llw' )
+        return T.table ( rows, title = title , prefix = prefix , alignment = 'llw' , style = style )
     
 # ================================================================================
 ## Helper (abstract) base class for the confidence intervals and limits 
@@ -2009,15 +2009,15 @@ class P0Plot(object) :
     
     # =============================================================================
     ## get the summary table 
-    def table ( self , title = '' , prefix = '' ) :
+    def table ( self , title = '' , prefix = '' , style = '' ) :
         """ Get the summary table """
         import ostap.logger.table as T
         title = title if title else 'p0-scan'
-        return T.table ( self.__rows , title = title , prefix = prefix , alignment = 'lccc' )
+        return T.table ( self.__rows , title = title , prefix = prefix , alignment = 'lccc' , style = style )
 
 # =============================================================================
 ## Print ModelConfig as table 
-def mc_table ( mc , title = '' , prefix = '' ) :
+def mc_table ( mc , title = '' , prefix = '' , style = ''  ) :
     """ Print ModelConfig as table 
     """
     rows = [  ( 'Model Config' , 'Value' ) ]
@@ -2095,7 +2095,7 @@ def mc_table ( mc , title = '' , prefix = '' ) :
 
     import ostap.logger.table as T
     title = title if title else '%s(%s,%s)' % ( typename ( mc ) , mc.name , mc.title )
-    return T.table ( rows , title = title , prefix = prefix , alignment = 'llw' )
+    return T.table ( rows , title = title , prefix = prefix , alignment = 'llw' , style = style )
 
 
 ROOT.RooStats.ModelConfig.table    = mc_table
@@ -2109,7 +2109,7 @@ _new_methods_ += [
 ]
 # =============================================================================
 ## Print RooWorkspace as table 
-def ws_table ( ws , title = '' , prefix = '' ) :
+def ws_table ( ws , title = '' , prefix = '' , style = 'double' ) :
     """ Print EooWorkspace  as table 
     """
     rows = [  ( 'Component' , 'Label', 'Value' ) ]
@@ -2192,8 +2192,7 @@ def ws_table ( ws , title = '' , prefix = '' ) :
         
     import ostap.logger.table as T
     title = title if title else '%s(%s,%s)' % ( typename ( ws ) , ws.name , ws.title )
-    return T.table ( rows , title = title , prefix = prefix , alignment = 'lrw' )
-
+    return T.table ( rows , title = title , prefix = prefix , alignment = 'lrw' , style = style )
     
 ROOT.RooWorkspace.table    = ws_table
 ROOT.RooWorkspace.__repr__ = ws_table

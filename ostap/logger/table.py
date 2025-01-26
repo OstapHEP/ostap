@@ -98,54 +98,25 @@ if not visible_width : # ======================================================
             else                                                      : width += 1
         return width 
 
-# =============================================================================
+# ==============================================================================
+## available table styles 
+table_styles    = 'local' , 'default'         ## use local, handmade replacement
+ascii_styles    = 'local' , 
+terminal_styles = () 
+tabulate_styles = () 
+# ==============================================================================
 if terminaltables : # =========================================================
     ## Vaild `style` arguments (case insensitive) 
-    table_styles = ( 'local'     , ## use local, handmade replacement
-                     'ascii'     , ## use `AsciiTable` 
-                     'single'    , ## use `SingleTable` 
-                     'porcelain' , ## use `PorcelainTable` 
-                     'github'    , ## use `GithubFlavoredMarkdownTable`
-                     'markdown'  , ## use `GithubFlavoredMarkdownTable`
-                     'double'    , ## use `DoubleTable` 
-                     'default'   ) ## use `DoubleTable`
-    # =========================================================================
-else : # ======================================================================
-    # =========================================================================
-    table_styles = 'local' , 
-    # =========================================================================
-
-# =============================================================================
-## default style
-default_style = 'default' if terminaltables else 'local'
-
-# =============================================================================
-## environment variable
-env_var = 'OSTAP_TABLE_STYLE'
-# =============================================================================
-if    not terminaltables : # ==================================================
-    # =========================================================================
-    ## only 'local' is available for this case 
-    default_style = 'local'
-    # =========================================================================
-else : # ======================================================================
-    # =========================================================================
-    from ostap.utils.basic import has_env as ostap_hasenv 
-    if  ostap_hasenv ( env_var ) :
-        # =====================================================================
-        from ostap.utils.basic import get_env as ostap_getenv 
-        default_style = ostap_getenv ( env_var, default_style )
-        # =====================================================================
-    else : # ==================================================================
-        # =====================================================================
-        ## get the preferred table style from the configuration file(s)
-        import ostap.core.config as OCC
-        if 'STYLE' in OCC.tables :
-            default_style = OCC.tables.get ( 'STYLE' , fallback = default_style )
-# =============================================================================
-## finally adjust the style
-default_style = default_style.strip().lower()
-# =============================================================================
+    terminal_styles += ( 'ascii'     , ## use `AsciiTable` 
+                         'single'    , ## use `SingleTable` 
+                         'porcelain' , ## use `PorcelainTable` 
+                         'github'    , ## use `GithubFlavoredMarkdownTable`
+                         'markdown'  , ## use `GithubFlavoredMarkdownTable`
+                         'double'    , ## use `DoubleTable` 
+                         'default'   ) ## use `DoubleTable` 
+    table_styles += terminal_styles
+    ascii_styles += ( 'ascii' , ) 
+# ==============================================================================
 ## very light wrapper for tabulate tables
 #  @see https://github.com/astanin/python-tabulate
 # =============================================================================
@@ -155,21 +126,59 @@ try : # =======================================================================
     import tabulate
     # =========================================================================
     ## available formats 
-    tabulate_styles = tuple ( tabulate.tabulate_formats ) 
+    tabulate_styles  = tuple ( tabulate.tabulate_formats ) 
+    table_styles    += tabulate_styles
+    ascii_styles    += tuple ( s for s in sorted ( (
+        'asciidoc'  , 'github'     , 'markdown'       , 'grid'            ,
+        'jira'      , 'mediawiki'  , 'moinmoin'       , 'org_tbl'         ,
+        'outline'   , 'pipe'       , 'plain'          , 'html'            ,
+        'presto'    , 'pretty'     , 'psql'           , 'rst'             ,
+        'simple'    , 'texile'     , 'tsv'            , 'unsafehtml'      ,
+        'yourtrack' ,  'latex'     , 'latex_booktabs' , 'latex_longtable' ,
+        'latex_raw' ) ) if s in tabulate_styles )
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
     ## no formats are available
     tabulate         = None
-    tabulate_styles  = () 
-    pass
-
 
 # =============================================================================
-left        = '<' , 'l' , 'left'  
-right       = '>' , 'r' , 'right' 
-center      = '^' , 'c' , 'center' , '='
-wrapped     = 'w' , 'p' , 'wrap'   , 'wrapped'
+## default style
+default_style = 'default'
+# =============================================================================
+## check the environment variable
+env_var = 'OSTAP_TABLE_STYLE'
+# =============================================================================
+from ostap.utils.basic import has_env as ostap_hasenv
+# =============================================================================
+if  ostap_hasenv ( env_var ) :
+    # =========================================================================
+    from ostap.utils.basic import get_env as ostap_getenv 
+    default_style = ostap_getenv ( env_var, default_style )
+    # =========================================================================
+else : # ======================================================================
+    # =========================================================================
+    ## get the preferred table style from the configuration file(s)
+    import ostap.core.config as OCC
+    if 'STYLE' in OCC.tables : default_style = OCC.tables.get ( 'STYLE' , fallback = default_style )
+    
+# =============================================================================
+default_style = default_style.lower().strip()
+if not default_style in table_styles : 
+    if   isatty () and terminaltables : default_style = 'double'
+    elif isatty () and tabulate       : default_style = 'fancy_grid'
+    else                              : default_style = 'local' 
+# =============================================================================
+
+# =============================================================================
+## finally adjust the style
+# =============================================================================
+
+# =============================================================================
+columns_left    = '<' , 'l' , 'left'  
+columns_right   = '>' , 'r' , 'right' 
+columns_center  = '^' , 'c' , 'center' , '='
+columns_wrapped = 'w' , 'p' , 'wrap'   , 'wrapped'
 max_width   = 50
 wrap_indent = ' '
 # =============================================================================
@@ -193,7 +202,7 @@ def the_table ( rows                          ,
                 colorize_header = True        , 
                 indent          = wrap_indent ,
                 style           = ''          ,
-                maxwidth        = -1          ) :
+                maxwidth        = -1          , **kwargs ) :
     """ Format the list of rows as a  table (home-made primitive) 
     - Each row is a sequence of column cells.
     - The first row defines the column headers.
@@ -206,140 +215,108 @@ def the_table ( rows                          ,
     """
     ## calculate the number of columns
 
-    title = allright ( decolorize ( title ).strip() ) 
-    
-    rows = list ( rows )
-    
-    nc   = 0
-    for row in rows : nc = max ( nc , len ( row ) )
+    title_bw = decolorize    ( title    ).strip ()
+    title    = allright      ( title_bw )    
+    twidth   = visible_width ( title    ) ## visible lenght of the title 
+    pwidth   = visible_width ( prefix   ) ## visible lenght of the prefix 
 
-    wraps = [] 
-    for i , a in  zip_longest ( range ( nc ) , alignment ) :
-        if a and isinstance ( a , str ) :
-            al = a.lower() 
-            if   al in left   : pass 
-            elif al in right  : pass 
-            elif al in center : pass 
-            elif al in wrapped : wraps.append ( i ) 
+    if not maxwidth or maxwidth <= pwidth : maxwidth = terminal_size() [ 0 ]
+    
+    ## take care on "wrapped&wrapped-like" columns 
+    rows = [ list ( row ) for row in preprocess_table ( rows ) ]
+    
+    if not rows : return ''
 
-    ## calculate the maximum width for columns 
-    widths = {}
-    for k , row in enumerate ( rows ) :
-        cols = [ c for  c in row ]
-        while len  ( cols ) < nc : cols.append ('')             
-        for i , c in enumerate ( cols ) :
-            if not i in widths : widths[i] = 1
-            widths [ i ] = max ( widths[i] , len ( decolorize ( c ) ) )
-        cols = tuple ( cols )
-        rows [ k ] = cols 
+
+    # =================================================================
+    ## Basis structure 
+    # =================================================================
+
+    ## (max)number of columns
+    num_cols    = max ( len ( row ) for row in rows )        
+    ## take care on "wrapped&wrapped-like" columns 
+    rows        = [ list ( row ) for row in preprocess_table ( rows ) ]
+    ## equalize columns: ensure that all rows have the same (max) length  
+    rows        = [ row for row in equalize_columns ( rows , num_cols ) ]
+    ## widths of preprocessed columns 
+    widths      = column_widths ( rows )
+
+    # =================================================================
+    ## Column alignment:
+    # =================================================================
+    
+    cols_wrap   = column_types ( alignment , columns_wrapped , num_cols ) 
+    cols_left   = column_types ( alignment , columns_left    , num_cols )
+    cols_right  = column_types ( alignment , columns_right   , num_cols )
+    cols_center = column_types ( alignment , columns_center  , num_cols ) 
+
+    if not maxwidth or maxwidth <= pwidth : maxwidth = terminal_size() [ 0 ]
 
     ## play with wrapped columns
-    while  wraps :
+    rows , widths = wrap_cells ( rows , widths , cols_wrap , maxwidth , indent , twidth, pwidth ) 
 
-        twidth = 1 + len ( prefix )
-        
-        for k in widths :
-            if not k in wraps :
-                twidth += widths [ k ] + 2
-                twidth += nc + 1
+    ## actual "formatting"
+    for r , row in enumerate ( rows ) :
+        for c, cell in enumerate ( row ) :
+            cell_width = visible_width ( cell )
+            delta = widths [ c ] - cell_width
+            if   delta < 0  : cell = widths [ c ] * '*'
+            if   0 == delta : pass 
+            if   c in cols_right           : cell = ( delta * ' ' ) + cell ## extend 
+            elif c in cols_left            : cell = cell + ( delta * ' ' ) ## extend 
+            elif c in cols_wrap and 0 != r : cell = cell + ( delta * ' ' ) ## extend 
+            else :  
+                d1 , d2 = divmod ( delta , 2 ) 
+                cell = ( ( d1 + d2 )  * ' ' ) + cell + ( d1 * ' ' ) ## extend    
+            rows [ r ] [ c ] = cell
 
-        ww = 12
-        
-        w , _ = terminal_size()
-        if w <= twidth : break
-        
-        nw = len ( wraps ) 
-        ww = ( w - twidth ) - 2 * nw
-        ww , _ = divmod ( ww  , nw )
-
-
-        if 12 < wrap_width and wrap_width < ww :
-            ww = wrap_width
-            
-        if ww < 15 : break
-
-        lw = len ( wraps )                 
-        wraps = [ i for i in wraps if ww <= widths [i] ]
-        
-        if len ( wraps ) == lw  : break 
-
-    for i in wraps :
-        widths [ i ] = max ( min ( ww  , widths [ i ] ) , 10 ) 
-            
-    hformats = [  "{:^%d}"  % widths [ c ] for c in range ( nc ) ]
-    rformats = [ " {:^%d} " % widths [ c ] for c in range ( nc ) ]
-
-    for i , a in  zip ( range ( nc ) , alignment ) :
-        if a and isinstance ( a , str ) :
-            al = a.lower() 
-            if   al in left  or al in wrapped :
-                hformats [ i ] = hformats [ i ].replace ( '^' , '<' )
-                rformats [ i ] = rformats [ i ].replace ( '^' , '<' )
-            elif al in right :
-                hformats [ i ] = hformats [ i ].replace ( '^' , '>' )
-                rformats [ i ] = rformats [ i ].replace ( '^' , '>' )
-
-    if wraps :
-        rows_ = rows
-        rows  = [] 
-        for row in rows_ :
-            cells = [] 
-            for i , c in enumerate ( row ) :
-                if i in wraps and wrap_width < len ( c ) : cells.append ( textwrap.wrap ( indent + c , widths [ i ]  ) )
-                else          : cells.append ( [ c ] )
-            nr = 0 
-            for c in cells : nr = max ( nr , len ( c ) )
-            
-            for l in cells :
-                while len  (l )  < nr :
-                    l.insert ( 0 , '' )
-                    l.append (     '' )
-                                        
-            for r in range ( nr ) :
-                new_row = [] 
-                for i , c in enumerate ( cells ) :
-                    lc = len ( c )
-                    if r < lc : new_row.append ( c[r] )
-                    else      : new_row.append ( ''   )
-                rows.append ( new_row )
-                
-    totwidth = 0
-    for c in widths : totwidth += widths[c]
-    totwidth += ( nc - 1 ) * 3
-    titwidth  = len ( decolorize ( title ) )
-    if totwidth < titwidth :
-        delta = 1 + ( titwidth - totwidth ) // nc
-        for c in widths : widths[c] += delta 
-
-    seps     = [   '-' * ( widths [ c ]  + 2 ) for c in range ( nc ) ]
-    sepline  = '+' + "+".join (  seps ) +  '+'
-
-    table    = []
-    if title :
-        sline = '+' + '-' * ( len ( sepline ) - 2 ) + '+'
-        tfmt  = "{:^%d}"  % ( len ( sepline ) - 4 )
-        t     = '| ' + allright ( tfmt.format ( decolorize ( title ) ) ) + ' |'
-        table.append ( sline  )
-        table.append ( t      )
-
-    table.append ( sepline )    
-    for i , row in enumerate ( rows ) :
-        
-        cols = [ c for  c in row ]
-        while len  ( cols ) < nc : cols.append ('')             
-
-        if 0 == i :
-            if colorize_header : 
-                table.append ( '| ' + ' | '.join ( [ infostr ( f.format ( decolorize ( i ) ) )  for ( f , i ) in zip ( hformats , cols ) ] ) + ' |' )
-            else :
-                table.append ( '|'  +  '|' .join ( [           f.format ( decolorize ( i ) )    for ( f , i ) in zip ( rformats , cols ) ] ) +  '|' )                
-            table.append ( sepline )             
-        else :
-            table.append ( '|'  +  '|' .join ( [           f.format ( decolorize ( i ) )    for ( f , i ) in zip ( rformats , cols ) ] ) +  '|' ) 
-
-    table.append ( sepline )
+    pad_left  = 1
+    pad_right = 1
     
-    return prefix + ( '\n' + prefix ) .join ( table ) if prefix else '\n'.join ( table ) 
+    tabwidth = sum ( widths ) + num_cols * ( pad_left + pad_right ) + ( num_cols + 1 ) 
+    if pwidth + tabwidth < maxwidth and twidth and title :
+        ## try to stretch the table, if possible 
+        delta = ( pwidth + 2 + twidth  ) - ( pwidth + tabwidth )        
+        if 0 < delta :
+            d1 , d2    = divmod ( delta , 2 )
+            pad_left  += d1 + d2
+            pad_right += d1
+        tabwidth = sum ( widths ) + num_cols * ( pad_left + pad_right ) + ( num_cols + 1 ) 
+
+    glue = pad_left * ' '  + '|' + pad_right * ' '
+
+    seps     = [   '-' * ( widths [ c ]  + pad_left + pad_right  ) for c in range ( num_cols ) ]
+    sepline  = '+' + "+".join (  seps ) +  '+'
+        
+    table = [ sepline ]
+    
+    if title and twidth :
+
+        if tabwidth < twidth + 4 :
+            title , twidth = shorten_title ( title , tabwidth - 4 )
+
+        d1 , d2 = divmod ( tabwidth - 4 - twidth , 2 )
+
+        line = '| ' + allright ( ( d1 + d2 ) * ' ' + decolorize ( title ) + d1 * ' ' ) + ' |'
+
+        table.append ( line    ) 
+        table.append ( sepline )
+                
+    for r , row in enumerate ( rows ) :
+        if colorize_header and 0 == r : row  = [ infostr ( decolorize ( cell ) ) for cell in row ]        
+        line = '|' + pad_left * ' ' + glue.join ( row ) + pad_right * ' ' + '|'        
+        table.append ( line )
+        if 0 == r : table.append ( sepline )
+        
+    if table [ -1 ] != sepline : table.append ( sepline )
+
+    
+    table = '\n'.join ( table )    
+    if sys.version_info < ( 3 , 0 ) :
+        if isinstance ( result , unicode ) : table = tbale.encode ('utf-8')
+            
+    if kwargs : logger.warning ( 'Ignore keyword arguments: %s' %  ( ', '.join ( key for key in kwargs ) ) )             
+    return add_prefix ( table , prefix ) if prefix else table 
 
 # =============================================================================
 ## Format the list of rows as a  table.
@@ -402,7 +379,6 @@ def table ( rows                          ,
     - `github`    : use `GithubFlavoredMarkdownTable`
     - `markdown`  : use `GithubFlavoredMarkdownTable`
     - `double`    : use `DoubleTable` 
-    - (default)   : use `DoubleTable` 
     """
 
     from ostap.utils.basic import isatty
@@ -412,152 +388,177 @@ def table ( rows                          ,
     twidth   = visible_width ( title  ) ## visible lenght of the title 
     pwidth   = visible_width ( prefix ) ## visible lenght of the prefix 
 
-    if maxwidth <= pwidth : maxwidth = terminal_size() [ 0 ]
+    if not maxwidth or maxwidth <= pwidth : maxwidth = terminal_size() [ 0 ]
 
     rows = [ list ( row ) for row in preprocess_table ( rows ) ]
-    
+
     if rows and colorize_header : 
         header_row = rows [ 0 ]
         header_row = [ infostr ( decolorize ( c ) ) for c in header_row ]
         rows [ 0 ] = header_row 
-        
-    ## if style is None : style = '%s' % default_style
-    if not style : style = '%s' % default_style
-    
+
+    if not style : style = '%s' % default_style    
     fmt = style.lower()
-    
-    if not fmt in table_styles and not fmt in tabulate_styles :
-        fmt = 'local' 
 
-    if 'local' == fmt or not terminaltables :
-        if kwargs :
-            keys = ', '.join ( key for key in kwargs ) 
-            logger.warning ( 'Ignore keyword arguments: %s' % keys )  
-        ## use the local replacement 
-        return the_table ( rows                              ,
-                           title           = title           , 
-                           prefix          = prefix          ,
-                           alignment       = alignment       ,
-                           wrap_width      = wrap_width      , 
-                           colorize_header = colorize_header ,
-                           indent          = indent          ,
-                           style           = style           ,
-                           maxwidth        = maxwidth        ) 
+    if   not  fmt in table_styles : fmt = 'local' ## switch to local
+
+    if isatty()                   : pass
+    elif not fmt in ascii_styles  : fmt = 'local' ## swicth to local 
+
+    # =================================================================
+    ## Basis structure 
+    # =================================================================
+
+    ## (max)number of columns
+    num_cols    = max ( len ( row ) for row in rows )        
+    ## take care on "wrapped&wrapped-like" columns 
+    rows        = [ list ( row ) for row in preprocess_table ( rows ) ]
+    ## equalize columns: ensure that all rows have the same (max) length  
+    rows        = [ row for row in equalize_columns ( rows , num_cols ) ]
+    ## widths of preprocessed columns 
+    widths      = column_widths ( rows )
+
+    # =================================================================
+    ## Column alignment:
+    # =================================================================
     
-    elif terminaltables and fmt in table_styles    :  pass         
-    elif tabulate       and fmt in tabulate_styles :
-        colalign = [] 
-        if alignment and not 'colalign' in kwargs :
-            for a in alignment :
-                aL = a.lower()
-                if   aL in left   : colalign.append ( 'left'   )
-                elif aL in right  : colalign.append ( 'right'  )
-                elif aL in center : colalign.append ( 'center' )
-                else              : colalign.append ( None     )
-        colalign = tuple ( colalign )
-        if colalign  : result = tabulate.tabulate ( rows , tablefmt = fmt , colalign = colalign , **kwargs )
-        else         : result = tabulate.tabulate ( rows , tablefmt = fmt                       , **kwargs )
-        ##
-        if title :
-            tab_width = table_width ( result )
-            if fmt.startswith( 'latex' ) : title = '%% ' + title             
-            title , twidth = shorten_title ( title , tab_width  )
-            result = title + '\n' + result 
+    cols_wrap   = column_types ( alignment , columns_wrapped , num_cols ) 
+    cols_left   = column_types ( alignment , columns_left    , num_cols )
+    cols_right  = column_types ( alignment , columns_right   , num_cols )
+    cols_center = column_types ( alignment , columns_center  , num_cols ) 
+    
+    ## 
+    tty = isatty ()
+    
+    # =========================================================================
+    ## Terminal tables
+    # =========================================================================
+    if terminaltables and fmt in terminal_styles and ( tty or fmt in ascii_styles ) : 
+                                 
+        if   'ascii'  == fmt or not tty       : table_ = terminaltables.AsciiTable                  ( rows , title )        
+        elif 'single' == fmt                  : table_ = terminaltables.SingleTable                 ( rows , title )
+        elif 'porcelain' == fmt               : table_ = terminaltables.PorcelainTable              ( rows         )
+        elif fmt in ( 'github' , 'markdown' ) : table_ = terminaltables.GithubFlavoredMarkdownTable ( rows         )
+        elif 'double' == fmt                  : table_ = terminaltables.DoubleTable                 ( rows , title )
+        else                                  : table_ = terminaltables.DoubleTable                 ( rows , title )
             
-        if prefix : result = add_prefix ( result , prefix )
-        ##
-        return result
-
-    if kwargs :
-        keys = ', '.join ( key for key in kwargs ) 
-        logger.warning ( 'Ignore keyword arguments: %s' % keys )  
+        cw       = table_.column_widths
+        num_cols = len ( cw )
         
-    if 'ascii' == fmt or not isatty() : 
-        table_instance = terminaltables.AsciiTable                  ( rows , title )        
-    elif 'single' == fmt : 
-        table_instance = terminaltables.SingleTable                 ( rows , title )
-    elif 'porcelain' == fmt :
-        table_instance = terminaltables.PorcelainTable              ( rows )
-    elif fmt in ( 'github' , 'markdown' ) :
-        table_instance = terminaltables.GithubFlavoredMarkdownTable ( rows )
-    elif 'double' == fmt : 
-        table_instance = terminaltables.DoubleTable                 ( rows , title )
-    else :
-        table_instance = terminaltables.DoubleTable                 ( rows , title )
-        
-    cw    = table_instance.column_widths
-    nc    = len ( cw )
-    wraps = [ i for ( i , a ) in enumerate ( alignment ) if a in wrapped ]
+        wrap_width = 15
+        if cols_wrap :
+            max_dimensions = terminaltables.width_and_alignment.max_dimensions
+            col_widths     = max_dimensions ( table_.table_data    ,
+                                              table_.padding_left  ,
+                                              table_.padding_right ) [2]
+            tw  = sum ( l for ( i , l ) in enumerate ( col_widths ) if not i in cols_wrap )
+            tw += num_cols + 1 ## vertical stulls             
+            tw += ( table_.padding_left + table_.padding_right )  * len ( cols_wrap )
+            tw += pwidth
+            
+            max_width = maxwidth 
+            ## if twidth : max_width = min ( pwidth + 2 + twidth , max_width )
+            
+            wrap_width , _ = divmod ( max_width  - tw  , len ( cols_wrap  ) )        
+            wrap_width     = max ( wrap_width , 15  )
 
-    wrap_width = 12 
-    if wraps :
-        
-        max_dimensions = terminaltables.width_and_alignment.max_dimensions
-        widths         = max_dimensions ( table_instance.table_data    ,
-                                          table_instance.padding_left  ,
-                                          table_instance.padding_right ) [2]
-        widths  = sum ( l  for ( i , l ) in enumerate ( widths ) if not i in wraps ) 
-        widths += nc + 1 + pwidth + 4 + 2 * len ( wraps )        
-        ww , _ = divmod ( maxwidth  - widths  , len ( wraps ) )        
-        wrap_width = max ( ww , 10  )
-
-    nw = len ( wraps )        
-    for i, a in zip ( range ( nc ) , alignment ) :
-        if a and isinstance ( a , str ) :
-            al = a.lower() 
-            if   al in left   : table_instance.justify_columns [ i ] = 'left'
-            elif al in right  : table_instance.justify_columns [ i ] = 'right'
-            elif al in center : table_instance.justify_columns [ i ] = 'center'
-            elif al in wrapped :
-                maxw  = table_instance.column_max_width ( i )
-                if 15 < wrap_width * nw < maxw : maxw = ( wrap_width - 3 ) * nw if 1 < nw else wrap_width 
-                if maxw < 15 :                   maxw = ( wrap_width - 3 ) * nw if 1 < nw else wrap_width 
-                if maxw < 15 :                   maxw = ( max_width  - 3 ) * nw if 1 < nw else max_width
-                width = maxw / nw if 1 < nw else maxw
-                width = wrap_width 
-                for l , line in enumerate ( table_instance.table_data ) :
-                    if i < len ( line ) and width < len ( line [ i ] ) : 
-                        table_instance.table_data[l][i] = textwrap. fill ( line [ i ] , width = wrap_width , initial_indent = indent )
+            
+        for i in cols_right  : table_.justify_columns [ i ] = 'right'
+        for i in cols_left   : table_.justify_columns [ i ] = 'left'
+        for i in cols_center : table_.justify_columns [ i ] = 'center'
+        for i in cols_wrap   :
+            for l , line in enumerate ( table_.table_data ) :
+                cell = decolorize ( line [ i ] ) 
+                table_.table_data [ l ] [ i ] = textwrap. fill ( cell , width = wrap_width , initial_indent = indent )
                         
-    if title and ( 'github' , 'markdown' ) :
-        title   = '# ' + title
-        twidth += 2
+        if title and style in ( 'github' , 'markdown' ) :
+            title   = '# ' + title
+            twidth += 2
 
-    tabwidth = table_instance.table_width
-    if title and twidth and tabwidth < twidth + 2 :
-        ## is there a room for stretch ?
-        if tabwidth + pwidth <= maxwidth :            
-            newwidth = min ( twidth + 2 + pwidth , maxwidth  )
-            if tabwidth + pwidth <= newwidth : 
-                a  , _  = divmod ( newwidth - tabwidth - pwidth , nc )
-                a1 , r  = divmod ( a        , 2 )
-                table_instance.padding_left  += a1 + r 
-                table_instance.padding_right += a1  
-                tabwidth = table_instance.table_width
-                
-    if tabwidth < twidth + 2 :
-        title , twidth = shorten_title ( title , tabwidth - 2 )
-        table_instance.title = title 
+        tabwidth = table_.table_width
+        if title and twidth and tabwidth < twidth + 2 :
+            ## is there a room for stretch ?
+            if tabwidth + pwidth <= maxwidth :            
+                newwidth = min ( twidth + 2 + pwidth , maxwidth  )
+                if tabwidth + pwidth <= newwidth : 
+                    a  , _  = divmod ( newwidth - tabwidth - pwidth , num_cols )
+                    a1 , r  = divmod ( a        , 2 )
+                    table_.padding_left  += a1 + r 
+                    table_.padding_right += a1  
+                    tabwidth = table_.table_width
+                    
+        if tabwidth < twidth + 2 :
+            title , twidth = shorten_title ( title , tabwidth - 2 )
+            table_.title = title 
         
-    ## get the final table 
-    table  = table_instance.table
+        ## get the final table 
+        table = table_.table
 
-    # special final adjustment 
-    if title  and fmt in ( 'porcelain' , ) :
-        line  = twidth * '-'
-        table = title + '\n' + line + '\n' + table 
-    elif title and fmt in ( 'github' , 'markdown' ) :
-        line  = '---'
-        table = line  + '\n' + title + '\n' + line + '\n' + table 
+        ## special final adjustment 
+        if title  and fmt in ( 'porcelain' , ) :
+            line  = twidth * '-'
+            table = title + '\n' + line + '\n' + table 
+        elif title and fmt in ( 'github' , 'markdown' ) :
+            line  = '---'
+            table = line  + '\n' + title + '\n' + line + '\n' + table 
 
-    result = add_prefix ( table , prefix )
+        if sys.version_info < ( 3 , 0 ) :
+            if isinstance ( table , unicode ) : table = table.encode ('utf-8')
+        
+        if kwargs : logger.warning ( 'Ignore keyword arguments: %s' %  ( ', '.join ( key for key in kwargs ) ) )             
+        return add_prefix ( table  , prefix ) if prefix else table 
 
-    if sys.version_info < ( 3 , 0 ) :
-        if isinstance ( result , unicode ) :
-            result = result.encode ('utf-8')
+    # =========================================================================
+    ## Tanulate
+    # =========================================================================
+    elif tabulate  and fmt in tabulate_styles and ( tty or  fmt in ascii_styles ) : 
             
-    return result 
-    
+        colalign = kwargs.get ( 'colalign' , [] ) 
+        if alignment and not colalign :
+            for i in range ( num_cols ) :
+                if   i in cols_left   : colalign.append ( 'leff'   ) 
+                elif i in cols_right  : colalign.append ( 'right'  ) 
+                elif i in cols_center : colalign.append ( 'center' ) 
+                else                  : colalign.append ( None     ) 
+        colalign = tuple ( colalign )
+        
+        ## play with wrapped columns
+        rows , widths = wrap_cells ( rows , widths , cols_wrap , maxwidth , indent , twidth, pwidth ) 
+
+        if colalign  : table = tabulate.tabulate ( rows , tablefmt = fmt , colalign = colalign , **kwargs )
+        else         : table = tabulate.tabulate ( rows , tablefmt = fmt                       , **kwargs )
+        
+        if title :
+            tabwidth = table_width ( table  )
+            if tabwidth < twidth + 2 :                
+                title , twidth = shorten_title ( title , tabwidth - 2 )
+            if fmt.startswith( 'latex' ) : title = '%% ' + title
+            d1 , d2  = divmod ( tabwidth  - 2 - twidth , 2 )              
+            title    = allright ( ( d1 + d2 ) * ' ' + decolorize ( title ) + d1 * ' ' )                                 
+            table    = title + '\n' + table  
+
+        if   fmt.startswith( 'latex' ) : table = decolorize ( table )
+        elif 'html' in fmt             : table = decolorize ( table )
+        
+        if sys.version_info < ( 3 , 0 ) :
+            if isinstance ( table , unicode ) : table = table.encode ('utf-8')
+        
+        if kwargs : logger.warning ( 'Ignore keyword arguments: %s' %  ( ', '.join ( key for key in kwargs ) ) )             
+        return add_prefix ( table  , prefix ) if prefix else table 
+
+    # =========================================================================
+    ## Local
+    # =========================================================================    
+    return the_table ( rows                              ,
+                       title           = title           , 
+                       prefix          = prefix          ,
+                       alignment       = alignment       ,
+                       wrap_width      = wrap_width      , 
+                       colorize_header = colorize_header ,
+                       indent          = indent          ,
+                       style           = style           ,
+                       maxwidth        = maxwidth        , **kwargs )
+
 # =============================================================================
 ## Shorten the title
 def shorten_title ( title , size ) :
@@ -585,7 +586,9 @@ plain_string = lambda s : isinstance ( s , string_types ) and not '\n' in s
 def get_item ( item ) :
     if   plain_string ( item )                : yield item
     elif isinstance   ( item , string_types ) :
-        for line in item.split ( '\n' )       : yield line 
+        ## spliting can hav ebad interference with colorization
+        dcitem = decolorize ( item ) 
+        for line in dcitem.split ( '\n' )       : yield line 
     ## sequence ? 
     else :
         for line in item : yield line 
@@ -595,13 +598,80 @@ def preprocess_table ( rows ) :
     """ Preprocess table
     """
     make_item  = lambda s : s if s else '' 
-    for row in rows :
-        if   plain_string ( row )                          : yield ( row , ) 
-        elif all ( plain_string ( item ) for item in row ) : yield tuple ( row )
-        else : 
+    for i,row in enumerate ( rows ) :
+        if   plain_string ( row )                          : yield          row ,  
+        elif all ( plain_string ( item ) for item in row ) : yield  tuple ( row )
+        else :
             generators = tuple ( get_item ( item ) for item in row )
             for nrow in zip_longest ( *generators ) :
-                yield tuple ( make_item ( i ) for i in nrow )   
+                yield tuple ( make_item ( i ) for i in nrow )
+
+# =============================================================================
+## "wrap" certan cells in the table uinsg `textwrap.fill`
+def wrap_cells ( rows , widths , wrapped , maxwidth , indent = '' , twidth = 0 , pwidth = 0 ) :
+    """ `Wrap' certan cells in the table uinsg `textwrap.fill`
+    """
+
+    if not wrapped : return rows, widths  ## no action 
+    
+    num_cols = len ( widths )
+    
+    ## total width of non-wrapped columns + 2 blanks per column plus (nc+1) vertical separators +prefix 
+    tw   = sum ( widths [ i ] for i in range ( num_cols ) if not i in wrapped )
+    
+    tw  += 2 * num_cols ##  two padding blanks per each column 
+    tw  += num_cols + 1 ##  vertical separators     
+    tw  += pwidth       ##  prefix
+    
+    max_width = maxwidth 
+    ## if twidth : max_width = min ( pwidth + 2 + twidth , max_width )
+        
+    wrap_width , _ = divmod ( max_width - tw  , len ( wrapped ) ) 
+    wrap_width     = max    ( wrap_width , 15 )
+    
+    ## make wrapping
+    reprocess = False  
+    for row in rows :
+        for c in wrapped :
+            if wrap_width < widths [ c ] :
+                cell = decolorize ( row [ c ] ) 
+                row [ c ] = textwrap.fill ( cell , width = wrap_width , initial_indent = indent )
+                reprocess = True
+
+    if reprocess : 
+        ## re-process wrapped table 
+        rows = [ list ( row ) for row in preprocess_table ( rows ) ]        
+        ## adjust new width of preprocessed columns 
+        widths      = column_widths ( rows )
+        
+    return rows , widths
+    
+
+# =============================================================================
+## Generator that makes all rows of equal (max) length 
+def equalize_columns ( rows , numcols = None  ) :
+    """ Generator that makes all rows of equal (max) length 
+    """
+    if not numcols or numcols <= 0 : numcols  = max ( len ( row ) for row in rows )
+    for row in rows :
+        row = list ( row ) 
+        while len  ( row ) < numcols : row.append ( '' ) ## add empty cell
+        yield row
+
+# =============================================================================
+## Get indices of certain columns 
+def column_types ( alignment , col_types , num_cols ) :
+    """ Get indices of wrapped columns
+    """
+    return tuple ( i for ( i, a ) in enumerate ( alignment ) if ( i < num_cols and a and isinstance ( a , str ) and a.lower() in col_types ) ) if alignment else ()
+
+# =============================================================================
+## Get indices of wrapped columns 
+def wrapped_columns ( alignment , num_cols ) :
+    """ Get indices of wrapped columns
+    """
+    return column_types ( alignment , columns_wrapped , num_cols )
+
 # =============================================================================
 ## get the true  table width 
 def table_width  ( table ) :
@@ -615,6 +685,19 @@ def table_width  ( table ) :
         width = max ( width , visible_width ( row ) ) 
     return width 
 
+# =============================================================================
+## widths of columns
+#  - rows are assumed to be preprocessed!
+def column_widths ( rows ) :
+    """ Widths of columns in the table
+    - rows are assumed to be preprocessed!
+    """
+    widths = max ( len ( row ) for row in rows ) * [ 0 ]
+    for row in rows :
+        for col , cell in enumerate ( row ) :
+            widths [ col ] = max ( widths [ col ] , visible_width ( cell ) )            
+    return tuple ( widths )
+    
 # =============================================================================
 ## Add certain prefix to  each line of the table
 #  @code
@@ -647,8 +730,8 @@ def align_column ( table , index , align = 'left') :
 
     if not lmax : return table 
 
-    aleft   =               align.lower() in left 
-    aright  = not aleft and align.lower() in right 
+    aleft   =               align.lower() in columns_left 
+    aright  = not aleft and align.lower() in columns_right 
 
     new_table = []
     for row in nrows :
@@ -696,12 +779,12 @@ def empty_columns ( table ) :
 ## Remove empty columns from the table
 #  @code
 #  table = ...
-#  new_table = remove_empty_colums ( table ) 
+#  new_table = remove_empty_columns ( table ) 
 #  @endcode
 def remove_empty_columns ( table ) :
     """ Remove empty columns from the table
     >>> table = ...
-    >>> new_table = remove_empty_colums ( table ) 
+    >>> new_table = remove_empty_columns ( table ) 
     """
     empty = empty_columns ( table )
     if not empty : return table
@@ -747,17 +830,20 @@ if __name__ == '__main__' :
     logger.info ( 'The table with prefix is \n%s' %
                   the_table ( table_data , 'Title' , prefix = '# ' ) ) 
 
-    for fmt in sorted ( tabulate_styles + table_styles ) : 
+    all_styles  = terminal_styles + tabulate_styles
+    all_styles  = tabulate_styles
+    
+    for fmt in sorted ( all_styles ) : 
         result = table ( table_data , title = 'Title' , style  = fmt , prefix = '# ' )            
         logger.info ( 'Use the format="%s":\n%s' % ( fmt , result ) )
 
     rows = [ ( 'Style' , 'From' ) ]
-    styles = table_styles + tabulate_styles 
-    for s in sorted ( styles ) :
-        if    'local' == s                          : row = s , 'Local'
-        elif s in table_styles   and terminaltables : row = s , 'terminaltables'
-        elif s in tabulate_styles and tabulate      : row = s , 'tabulate'
-        else                                        : row = s , ''
+    
+    for s in sorted ( all_styles ) :
+        if    'local' == s                           : row = s , 'Local'
+        elif s in terminal_styles and terminaltables : row = s , 'terminaltables'
+        elif s in tabulate_styles and tabulate       : row = s , 'tabulate'
+        else                                         : row = s , ''
         rows.append ( row ) 
         
     title = 'All styles'
@@ -765,7 +851,9 @@ if __name__ == '__main__' :
                                                  title     = title ,
                                                  prefix    = '# '  ,
                                                  alignment = 'll'  ) ) ) 
-                  
+
+    logger.info  ('Default style: %s' % default_style )
+    
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
