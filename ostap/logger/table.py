@@ -313,7 +313,7 @@ def the_table ( rows                          ,
     
     table = '\n'.join ( table )    
     if sys.version_info < ( 3 , 0 ) :
-        if isinstance ( result , unicode ) : table = tbale.encode ('utf-8')
+        if isinstance ( table , unicode ) : table = table.encode ('utf-8')
             
     if kwargs : logger.warning ( 'Ignore keyword arguments: %s' %  ( ', '.join ( key for key in kwargs ) ) )             
     return add_prefix ( table , prefix ) if prefix else table 
