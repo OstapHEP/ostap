@@ -146,15 +146,11 @@ except ImportError : # ========================================================
 ## default style
 default_style = 'default'
 # =============================================================================
-## check the environment variable
-env_var = 'OSTAP_TABLE_STYLE'
+from ostap.utils.env import has_env, get_env, OSTAP_TABLE 
 # =============================================================================
-from ostap.utils.basic import has_env as ostap_hasenv
-# =============================================================================
-if  ostap_hasenv ( env_var ) :
+if  has_env ( OSTAP_TABLE ) :
     # =========================================================================
-    from ostap.utils.basic import get_env as ostap_getenv 
-    default_style = ostap_getenv ( env_var, default_style )
+    default_style = get_env ( OSTAP_TABLE , default_style )
     # =========================================================================
 else : # ======================================================================
     # =========================================================================

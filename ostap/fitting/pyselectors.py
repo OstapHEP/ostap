@@ -49,7 +49,7 @@
 # @date   2010-04-30
 # 
 # =============================================================================
-"""Helper module to fix a problems in communication of
+""" Helper module to fix a problems in communication of
 TTree/TChain.Process and TPySelector.
 
 In PyROOT some of original C++ methods are disable.
@@ -113,7 +113,7 @@ import ostap.fitting.roofit
 from   ostap.utils.progress_bar import ProgressBar
 from   ostap.math.reduce        import root_factory 
 from   ostap.trees.trees        import Chain 
-import ROOT, cppyy, math, sys
+import ROOT, os, cppyy, math, sys
 # =============================================================================
 # logging 
 # =============================================================================
@@ -1488,11 +1488,9 @@ class SelectorWithVars(SelectorWithCuts) :
                                           self.silence   )
     
 # =============================================================================
-import os
-from   ostap.core.workdir import workdir
-from   ostap.io.zipshelve import ZipShelf 
-# =============================================================================
-
+from   ostap.core.cache_dir import cache_dir
+from   ostap.utils.basic    import writeable 
+from   ostap.io.zipshelve   import ZipShelf 
 # ==============================================================================
 ## @class  SelectorWithVarsCached
 #  Generic selector which loads already loaded datasets from cache
@@ -1561,7 +1559,14 @@ class SelectorWithVarsCached(SelectorWithVars) :
 
         import hashlib 
         filename = hashlib.sha512(h).hexdigest() + ".shelve"
-        return os.path.join(workdir, "cache", filename)
+        
+        if os.path.exists ( cachedir ) and \
+           os.path.isdir  ( cachedir ) and \
+           writeable      ( cachedir ) :            
+            return os.path.join( cachedir , filename)
+        else :
+            return filename
+        
 
     def _loadcache(self):
         " Loads cache from ZipShelf. Returns `True` on success, `False` othervise"

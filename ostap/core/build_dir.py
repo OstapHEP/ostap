@@ -25,46 +25,54 @@ __all__     = (
     'use_build_dir'  , ## use  (temporary) build directory for ROOT    
     )
 # =============================================================================
-from   ostap.utils.basic import make_dir, writeable 
+from   ostap.utils.basic import make_dirs, writeable 
+from   ostap.utils.env   import get_env, OSTAP_BUILD_DIR  
 import ROOT, os, glob  
 # =============================================================================
 build_dir  = None
-prefix_dir = 'ostap-build-dir-'
+prefix_dir = 'ostap-build-'
 # =============================================================================
-# 1) use environment variable 
-if not build_dir :
-    
-    from   ostap.utils.basic import get_env 
-    build_dir = get_env ( 'OSTAP_BUILD_DIR' , '' )
-    ## build_dir = os.environ.get ( 'OSTAP_BUILD_DIR' , '' )
-    
-    if build_dir and not os.path.exists ( build_dir ) :
-        build_dir = make_dir ( build_dir ) 
-    if build_dir and not writeable ( build_dir ) :
-        logger.warning ('Directory %s is not writeable!' % tmp_dir )
-        build_dir = None
-
-## 2) get from configuration file 
-if not build_dir :
-    ## 2) check the configuration file 
+# 1) use environment variable
+# 2) use configurtaion flle 
+# =============================================================================
+if not build_dir : # ==========================================================
+    # =========================================================================
+    build_dir = get_env ( OSTAP_BUILD_DIR , '' )
+# =============================================================================
+if not build_dir : # ==========================================================
+    # =========================================================================
     import ostap.core.config as OCC 
     build_dir = OCC.general.get ( 'BUILD_DIR' , None )
     del OCC
-    
-    if build_dir and not os.path.exists ( build_dir ) :
-        build_dir = make_dir ( build_dir ) 
-    if build_dir and not writeable ( build_dir ) :
-        logger.warning ('Directory %s is not writeable!' % tmp_dir )
-        build_dir = None
 
-## 3) Construct something temporary and unique
-if not build_dir :
-    
+# =============================================================================
+if build_dir : # ==============================================================
+    # =========================================================================
+    build_dir = os.path.expandvars ( build_dir )
+    build_dir = os.path.expanduser ( build_dir )
+    build_dir = os.path.expandvars ( build_dir )
+    build_dir = os.path.expanduser ( build_dir )
+    # =========================================================================
+    if not os.path.exists ( build_dir ): # ====================================
+        # =====================================================================
+        try : # ===============================================================
+            # =================================================================
+            make_dirs ( build_dir , exist_ok = True ) 
+            # =================================================================
+        except OSError : # ====================================================
+            # =================================================================
+            pass
+        
+# =============================================================================
+if not build_dir                    or \
+   not os.path.exists ( build_dir ) or \
+   not os.path.isdir  ( build_dir ) or \
+   not writeable      ( build_dir ) :
+    # =========================================================================
     from ostap.utils.cleanup import CleanUp
     build_dir = CleanUp.tempdir ( prefix = 'ostap-build-' ) 
  
-    
-# ==============================================================================
+# =============================================================================
 ## Context manager to use certain build build directory 
 #  (useful for multiprocessing environment)
 #  @code
@@ -72,7 +80,7 @@ if not build_dir :
 #  ... 
 #  @endcode
 class UseBuildDir ( object ) :
-    """Context manager to use certain build build directory 
+    """ Context manager to use certain build directory 
     (useful for multiprocessing environment)
     >>> with UseBuildDir() :
     >>> ... 
@@ -98,7 +106,7 @@ class UseBuildDir ( object ) :
     
     ## context manager: EXIT  
     def __exit__ ( self , *_ ) :
-        
+        # =====================================================================
         ROOT.gSystem.SetBuildDir ( self.__prev )
         if self.__created :  
             from ostap.utils.cleanup import CleanUp
@@ -112,43 +120,41 @@ class UseBuildDir ( object ) :
 #  ... 
 #  @endcode
 def use_build_dir ( build = None ) :
-    """Context manager to use certain build build directory 
+    """ Context manager to use certain build build directory 
     (useful for multiprocessing environment)
     >>> with Use_build_dir() :
     >>> ... 
     """
     return UseBuildDir ( build )
 
-
 # ==============================================================================
 ## create proper temporary directry for ROOT builds 
 def make_build_dir ( build = None ) :
-    """Create proper temporary directory for ROOT builds
+    """ Create proper temporary directory for ROOT builds
     """
-
     if not build or not writeable  ( build ) : 
         from ostap.utils.cleanup import CleanUp 
         build = CleanUp.tempdir ( prefix = 'ostap-build-' )
-
+    
     if not os.path.exists ( build ) :
-        make_dir ( build )
+        make_dirs ( build , exits_ok = True )
         
     return build
 
-
-# ==============================================================================
-# 3) use the temporary directory 
-if not build_dir :    
+# =============================================================================
+# 3) use the temporary directory
+# =============================================================================
+if not build_dir : # ==========================================================
+    # =========================================================================
     build_dir = make_build_dir()
 
 # =============================================================================
-if build_dir and writeable ( build_dir ) : 
+if build_dir and os.path.isdir ( build_dir ) and writeable ( build_dir ) : 
     ROOT.gSystem.SetBuildDir ( build_dir )
     
-
+# =============================================================================
 build_dir = ROOT.gSystem.GetBuildDir ()
 
-    
 # =============================================================================
 if '__main__' == __name__ :
 

@@ -26,6 +26,7 @@ from   sys import version_info as python_version
 # =============================================================================
 from   ostap.core.ostap_types import string_types
 from   ostap.utils.basic      import make_dir, writeable, whoami, mtime 
+from   ostap.utils.env        import get_env, OSTAP_TMP_DIR  
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.cleanup' )
@@ -43,32 +44,43 @@ user        = whoami ()
 base_tmp_dir = None
 for_cleanup  = False 
 # =============================================================================
-## 1) check the environment variable OSTAP_TMPDIR 
-if not base_tmp_dir :
-    from ostap.utils.basic import get_env as ostap_getenv  
-    ## base_tmp_dir = os.environ.get  ( 'OSTAP_TMP_DIR' , None )
-    base_tmp_dir = ostap_getenv ( 'OSTAP_TMP_DIR' , None )
-    ##
+## 1) check the environment variable OSTAP_TMP_DIR
+# =============================================================================
+if not base_tmp_dir : # =======================================================
+    # =========================================================================
+    base_tmp_dir = get_env ( OSTAP_TMP_DIR , None )
     if base_tmp_dir and not os.path.exists ( base_tmp_dir ) :
         base_tmp_dir = make_dir  ( base_tmp_dir ) 
     if base_tmp_dir and not writeable ( base_tmp_dir ) :
         logger.warning ("Directory `%s' is not writeable!" % base_tmp_dir )
         base_tmp_dir = None
 # =============================================================================
-## 2) get from configuration file 
-if not base_tmp_dir :
+## 2) get from configuration file
+# =============================================================================
+if not base_tmp_dir : # =======================================================
+    # =========================================================================
     ## 2) check the configuration file 
     import ostap.core.config as OCC 
     base_tmp_dir = OCC.general.get ( 'TMP_DIR' , None )
     del OCC
 
-    if base_tmp_dir and not os.path.exists ( base_tmp_dir ) :
-        base_tmp_dir = make_dir ( base_tmp_dir ) 
-    if base_tmp_dir and not writeable ( base_tmp_dir ) :
-        logger.warning ('Directory ``%s'' is not writeable!' % base_tmp_dir )
-        base_tmp_dir = None
 
-# ===============================================================================
+# =============================================================================
+if base_tmp_dir and not os.path.exists ( base_tmp_dir ) : # ===================
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        base_tmp_dir = make_dir ( base_tmp_dir ) # ============================
+        # =====================================================================
+    except OSError : # ========================================================
+        # =====================================================================
+        base_tmp_dir = None
+# =============================================================================
+if base_tmp_dir and not writeable ( base_tmp_dir ) :
+    logger.warning ('Directory ``%s'' is not writeable!' % base_tmp_dir )
+    base_tmp_dir = None
+
+# =============================================================================
 ## local storage of temporary pid-dependent temporary directories 
 base_tmp_pid_dirs = {}
 dir_prefix        = 'ostap-session-'
@@ -77,10 +89,8 @@ dir_user_prefix   = 'ostap-session-%s-' % user
 ## create the base temporary directory
 def make_base_tmp_dir () :
     """ Create the base temporary directory
-    """
-    
-    prefix = '%s' % dir_prefix 
-    
+    """    
+    prefix = '%s' % dir_prefix     
     td = tempfile.gettempdir()
     if not user in td :
         ttd = os.path.join ( td , user )
@@ -95,16 +105,14 @@ def make_base_tmp_dir () :
     
     prefix  = "%s%s-%d-"   %  ( prefix , start.strftime ( date_format ) , os.getpid () )
 
-    t = tempfile.mkdtemp ( prefix = prefix ) 
-    return t
+    return tempfile.mkdtemp ( prefix = prefix ) 
 
 # ===============================================================================
 ## get the process-dependent name of the temporary directory 
 def tmp_dir ( pid = None ) :
     """ Get the process-dependent name of the temporary directory
     """
-    if base_tmp_dir :
-        return base_tmp_dir 
+    if base_tmp_dir : return base_tmp_dir 
         
     if not pid : pid = os.getpid()
 

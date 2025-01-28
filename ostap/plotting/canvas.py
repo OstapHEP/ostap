@@ -56,7 +56,7 @@ from ostap.plotting.makestyles import  ( canvas_width , canvas_height ,
 #$ define WebDispla
 #  @see TROOT::SetWebDisplay
 def setWebDisplay ( web ) :
-    """Define WebDispllay
+    """ Define WebDispllay
     - see `ROOT.TROOT.SetWebDisplay`
     """
     wlow = web.lower()
@@ -120,10 +120,17 @@ def  useWeb( web  = 'default' ) :
     return UseWeb ( web )
         
 # =============================================================================
-import ostap.core.config as cnf
-web = cnf.general['WebDisplay']
-if web :
-    logger.debug ( 'Set WebDisplay to be `%s`' % web ) 
+from   ostap.utils.env import get_env, OSTAP_DISPLAY
+web  = get_env ( OSTAP_DISPLAY , None )
+# =============================================================================
+if web is None : # ============================================================
+    # =========================================================================
+    import ostap.core.config as cnf
+    web = cnf.general [ 'WebDisplay' ]
+    # =========================================================================
+if web : # ====================================================================
+    # =========================================================================
+    logger.debug  ( 'Set WebDisplay to be `%s`' % web ) 
     setWebDisplay ( web )
 
 # =============================================================================
@@ -138,7 +145,7 @@ def getCanvas ( name   = 'glCanvas'    ,   ## canvas name
                 width  = canvas_width  ,   ## canvas width
                 height = canvas_height ,   ## canvas height 
                 **kwargs               ) : ## other properties 
-    """Get create canvas/create new canvas
+    """ Get create canvas/create new canvas
     
     >>> cnv = getCanvas ( 'glnewCanvas' , width = 1200 , height = 1000 )
     """

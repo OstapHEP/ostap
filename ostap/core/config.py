@@ -33,7 +33,7 @@ __all__     = (
 # =============================================================================
 import configparser, os, sys  
 import ostap.core.default_config as     default_config 
-from   ostap.utils.basic         import get_env        as ostap_getenv 
+from   ostap.utils.env           import get_env, OSTAP_CONFIG 
 # =============================================================================
 ## print for configparger 
 def _cp_str_ ( cp ) :
@@ -68,7 +68,7 @@ config [ 'Pathos'      ] = {} ## PATHOS configuration
 config [ 'IPyparallel' ] = {} ## ipyparallel configuration 
 
 ## the list of processes config files
-config_files = default_config.config_files + tuple ( ostap_getenv ( 'OSTAP_CONFIG', '' , True ).split( os.pathsep ) )
+config_files = default_config.config_files + tuple ( get_env ( OSTAP_CONFIG , '' , True ).split( os.pathsep ) )
 the_files    = [] 
 for f in config_files :
     ff = f
@@ -109,10 +109,7 @@ fit_draw = config [ 'Fit Draw' ]
 # =============================================================================
 ## section for Tables  
 tables   = config [ 'Tables'   ]
-
 # =============================================================================
-## Redefine webdidpay fron environment variable if set 
-general [ 'WebDisplay' ] = ostap_getenv ( 'OSTAP_DISPLAY' , general [ 'WebDisplay' ] )
 
 # =============================================================================
 # logging 

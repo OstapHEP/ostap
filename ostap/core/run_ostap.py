@@ -321,12 +321,11 @@ if level <= logging.INFO :
     
 # =============================================================================
 if arguments.Config :
-    from ostap.utils.basic import get_env as ostap_getenv  
-    ## cc  = os.environ.get ('OSTAP_CONFIG','').split( os.pathsep )
-    cc  = ostap_getenv ('OSTAP_CONFIG','').split( os.pathsep )
+    from ostap.utils.env import get_env, OSTAP_CONFIG 
+    cc  = get_env ( OSTAP_CONFIG , '' ).split( os.pathsep )
     cc += arguments.Config
     cc  = os.pathsep.join ( cc )
-    os.environ['OSTAP_CONFIG'] = cc
+    os.environ [ OSTAP_CONFIG ] = cc
 
 import ostap.core.config     
 
