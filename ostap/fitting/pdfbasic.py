@@ -78,7 +78,7 @@ from   ostap.utils.cidict       import select_keys
 from   ostap.fitting.roocmdarg  import check_arg , nontrivial_arg , flat_args , command  
 from   ostap.core.meta_info     import root_info
 import ostap.histos.histos 
-import ROOT, math,  random, warnings, sys 
+import ROOT, math,  random, warnings, sys, abc  
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
@@ -234,7 +234,8 @@ class Components ( object ) :
     @property
     def crossterms2 ( self ) : 
         """'cross-terms2': cross-components for multidimensional PDFs e.g.
-        - Signal(y)*Background(x)               for 2D-fits,
+        - Signal(y)*Background(x)     
+          for 2D-fits,
         - Signal(x)*Background(y)*Background(z) for 3D-fits, etc...         
         """        
         return self.__crossterms2
@@ -250,14 +251,29 @@ class Components ( object ) :
         
     @property
     def alist2 ( self ) :
-        """ The list/RooArgList of PDF  component's fractions (or yields for exteded fits) for compound PDF"""        
+        """ The list/RooArgList of PDF component's fractions (or yields/fractions for exteded fits) for compound PDF"""        
         return self.__alist2
     @alist2.setter
     def alist2 ( self , value ) :
         assert isinstance ( value , ROOT.RooArgList ) , "Value must be RooArgList, %s/%s is  given" % ( value , type(value) )
         self.__alist2 = value                    
 
+    # =========================================================================
+    ## List/tuple of structural components from `self.alist1` 
+    @abc.abstractmethod
+    def cmp_alist ( self ) :
+        """ Generator os structural components from `self.alist` 
+        """
+        pass 
 
+    # =========================================================================
+    ## A list of structural components from `self.alist1`
+    @property
+    def alist_cmp ( self ) :
+        """`alist_cmps` : a list of structural components from `self.alist1`
+        """
+        return self.cmp_alist()
+    
 # =============================================================================
 ## @class APDF1
 #  The helper MIXIN class for implementation of various PDF-wrappers
@@ -382,7 +398,8 @@ class APDF1 ( Components ) :
             
         
         if   isinstance ( dataset , ( H1D_dset , H2D_dset , H3D_dset ) ) : dataset = dataset.dset        
-        elif isinstance ( dataset , ROOT.TH1 ) and 1 == dataset.dim () :
+        elif isinstance ( dataset , ROOT.TH1 )  :
+            assert 1 == dataset.GetDimension () , 'Invalid histogram dimension: %s' % dataset.GetDimension() 
             density = kwargs.pop ( 'density' , False  )
             chi2    = kwargs.pop ( 'chi2'    , False  )
             return self.fitHisto ( dataset           ,
@@ -874,7 +891,7 @@ class APDF1 ( Components ) :
 
             drawvar = drawvar if drawvar else ( self.draw_var if self.draw_var else self.xvar )  
 
-            binned = dataset and isinstance ( dataset , ROOT.RooDataHist )
+            binned  = dataset and isinstance ( dataset , ROOT.RooDataHist )
 
             if nbins :  frame = drawvar.frame ( nbins )            
             else     :  frame = drawvar.frame ()
@@ -1903,13 +1920,12 @@ class APDF1 ( Components ) :
         
         projdeps = proj_deps if proj_deps else ROOT.RooArgSet()
         if dataset.isWeighted() and not silent : 
-            if use_weight : logger.info( 'sPlot: internal weight will be used!') 
-            else          : logger.info( 'sPlot: internal weight will *not* be used!')
+            if use_weights : logger.info( 'sPlot: internal weights will be used!') 
+            else           : logger.info( 'sPlot: internal weights will *not* be used!')
 
         ## parse additional options 
         opts = self.parse_args ( dataset , *args , **kwargs )
 
-        
         if opts and root_info < ( 6, 20 ) :
             vok  = ( 'Extended' , 'SumW2Error' , 'PrintLevel' , 'PrintEvalLevel' , 'NumCPU' ) 
             opts = tuple ( o for o in opts if not o.name in vok  )
@@ -2107,7 +2123,7 @@ class APDF1 ( Components ) :
                 elif  0 != c.value() and 0 != v : 
                     v = c * ( v / c.value() )
                     
-            histo [ i ] = v
+                    histo [ i ] = v
                     
         return histo
 
@@ -2136,12 +2152,6 @@ class APDF1 ( Components ) :
         >>> histo_template = ...
         >>> h2  = pdf.roo_histo ( histo = histo_template ) ## use histogram template
         """
-        print ( 'NBINS'  , nbins  ) 
-        print ( 'HPARS'  , hpars  ) 
-        print ( 'HISTO'  , histo  ) 
-        print ( 'HISTO'  , histo  ) 
-        print ( 'EVENTS' , events ) 
-        print ( 'KWARGS' , kwargs ) 
         
         histo = self.make_histo ( nbins = nbins ,
                                   hpars = hpars ,
@@ -2154,19 +2164,18 @@ class APDF1 ( Components ) :
             ROOT.RooFit.Extended ( False ) ,
             ROOT.RooFit.Scaling  ( False ) ,            
             )
-        
+
+        ## nullify errors 
         for i in hh : hh.SetBinError ( i , 0 ) 
-        
-        if events and self.pdf.mustBeExtended() :
-            
+    
+        if events and self.pdf.mustBeExtended() :            
             for i , x , y in hh.items() :
                 volume  = 2*x.error() 
-                hh[i]  *= volume
+                hh [ i ]  *= volume
                 
             hh *= self.pdf.expectedEvents ( self.vars ) / hh.sum() 
                 
-        histo += hh
-        
+        histo += hh        
         return histo 
 
     # ==========================================================================
@@ -2293,7 +2302,7 @@ class APDF1 ( Components ) :
         return self.pull_histo ( hdata ) 
         
     # ==========================================================================
-    ## make 2D-cpontours
+    ## make 2D-contours
     # ==========================================================================
     def contours ( self              ,
                    var1              ,
@@ -2480,6 +2489,12 @@ class APDF1 ( Components ) :
         - see Constrained1D
         """
         return Constrained1D ( self , *constraints )
+
+    # ========================================================================== 
+    ## List/tuple of structural components from `self.alist1` 
+    def cmp_alist ( self )  :
+        """ List/tuple of structural components from `self.alist1`"""
+        return tuple ( Generic1D_pdf ( p , xvar = self.xvar ) for p in self.alist1 )
         
 # =============================================================================
 ## @class PDF1
@@ -2801,9 +2816,9 @@ class Generic1D_pdf(PDF1) :
         >>> raw_pdf = RooGaussian   ( ...     )
         >>> pdf     = Generic1D_pdf ( raw_pdf , xvar = x )
         """
-        assert xvar and   isinstance ( xvar , ROOT.RooAbsReal ) , "'xvar' must be ROOT.RooAbsReal"
-        assert pdf  and ( isinstance ( pdf  , ROOT.RooAbsPdf  ) or \
-                          ( isinstance ( pdf  , ROOT.RooAbsReal ) ) ) , \
+        assert xvar and   isinstance ( xvar  , ROOT.RooAbsReal ) , "'xvar' must be ROOT.RooAbsReal"
+        assert pdf  and ( isinstance ( pdf   , ROOT.RooAbsPdf  ) or \
+                          ( isinstance ( pdf , ROOT.RooAbsReal ) ) ) , \
                           "Invalid `pdf'' type`"
         
         name = ( prefix + name + suffix ) if name \
@@ -2812,7 +2827,7 @@ class Generic1D_pdf(PDF1) :
         ## initialize the base 
         PDF1 . __init__ ( self , name , xvar )
         ##
-
+        
         ## Does PDF depends on XVAR ?
         if not pdf.depends_on ( xvar ) :
             self.warning ( "PDF/%s does not depend on %s!" % ( pdf.name , xvar.name ) ) 
@@ -2820,14 +2835,20 @@ class Generic1D_pdf(PDF1) :
         ## PDF itself 
         self.pdf  = pdf
 
+        ## get some structure 
+        if isinstance ( self.pdf , ROOT.RooAddPdf ) :
+            for p in self.pdf.pdfList    () : self.alist1.add ( p )
+            for f in self.pdf.orig_fracs () : self.alist2.add ( f )
+            
+        
         if not self.xvar in self.params () : 
             self.warning ("Function/PDF does not depend on xvar=%s" % self.xvar.name )
             
         ## add it to the list of signal components ?
         self.__add_to_signals = True if add_to_signals else False
         
-        if self.add_to_signals :
-            self.signals.add ( self.pdf )
+        if self.add_to_signals : self.signals.add ( self.pdf )
+
         
         ## save the configuration
         self.config = {
@@ -2866,7 +2887,7 @@ def make_pdf ( pdf , args , name = '' ) :
         if (6,20) <= root_info : 
             pdf = ROOT.RooWrapperPdf        ( name , 'PDF from %s' % pdf.name , pdf )
         else :
-            pdf = Ostap.MorERooFit.WrapPdf  ( name , 'PDF from %s' % pdf.name , pdf )
+            pdf = Ostap.MoreRooFit.WrapPdf  ( name , 'PDF from %s' % pdf.name , pdf )
         
     num = len ( args )
     if   1 == num : return Generic1D_pdf ( pdf , name = name , *args )
@@ -2914,7 +2935,8 @@ class APDF2 (APDF1) :
         >>> r , f = model.fitTo ( dataset , draw = True , nbins = 300 )    
         """
         if   isinstance ( dataset , H2D_dset ) : dataset = dataset.dset        
-        elif isinstance ( dataset , ROOT.TH2 ) and 2 == dataste.dim() :
+        elif isinstance ( dataset , ROOT.TH2 ) :
+            assert 2 == dataset.GetDimension() , 'Invalid histogram dimension: %s' % dataset.GetDimension() 
             density = kwargs.pop ( 'density' , False ) 
             chi2    = kwargs.pop ( 'chi2'    , False ) 
             return self.fitHisto ( dataset   ,
@@ -3565,7 +3587,7 @@ class APDF2 (APDF1) :
             
             ranges = [ ( self.xvar.name , self.xminmax() ) ,
                        ( self.yvar.name , self.yminmax() ) ] 
-            histo  = histo_book ( ranges , xnbins = xbins , ybins = ybins , **kwargs )
+            histo  = histo_book ( ranges , xbins = xbins , ybins = ybins , **kwargs )
 
         return histo 
                      
@@ -3645,10 +3667,10 @@ class APDF2 (APDF1) :
     #  h3  = pdf.roo_histo ( ... , density  = True  ) ## convert to "density" histogram 
     #  @endcode
     def roo_histo ( self           ,
-                   xbins   = 20    , 
-                   ybins   = 20    , 
-                   hpars   = ()    , 
-                   histo   = None  , 
+                    xbins   = 20    , 
+                    ybins   = 20    , 
+                    hpars   = ()    , 
+                    histo   = None  , 
                     events  = True  , **kwargs ) : 
         """ Convert PDF to the 2D-histogram, taking PDF-values at bin-centres
         >>> pdf = ...
@@ -3670,7 +3692,8 @@ class APDF2 (APDF1) :
             ROOT.RooFit.Scaling  ( False ) , 
             ROOT.RooFit.Extended ( False ) ) 
 
-        for i in hh : hh.SetBinError ( i , 0 ) 
+        ## nullify errors 
+        for i , j in hh : hh.SetBinError ( i , j , 0 ) 
         
         if events and self.pdf.mustBeExtended() :
             
@@ -3775,7 +3798,15 @@ class APDF2 (APDF1) :
         - see Constrained1D
         """
         return Constrained2D ( self , *constraints )
-        
+    
+    # ========================================================================== 
+    ## List/tuple of structural components from `self.alist1` 
+    def cmp_alist ( self )  :
+        """ List/tuple of structural components from `self.alist1`"""
+        return tuple ( Generic2D_pdf ( p ,
+                                       xvar = self.xvar ,
+                                       yvar = self.yvar ) for p in self.alist1 )
+                
 # =============================================================================
 ## @class PDF2
 #  The main helper base class for implementation of various 1D PDF-wrappers 
@@ -4028,7 +4059,12 @@ class Generic2D_pdf(PDF2) :
 
         ## PDF! 
         self.pdf = pdf
-
+        
+        ## get some structure 
+        if isinstance ( self.pdf , ROOT.RooAddPdf ) :
+            for f in self.pdf.orig_fracs () : self.alist1.add ( f )
+            for p in self.pdf.pdfList    () : self.alist2.add ( p )
+            
         if not self.xvar in self.params () : 
             self.warning ( "Function/PDF does not depend on xvar=%s" % self.xvar.name )
         if not self.yvar in self.params () : 
@@ -4100,6 +4136,7 @@ class APDF3 (APDF2) :
         """
         if   isinstance ( dataset , H3D_dset ) : dataset = dataset.dset        
         elif isinstance ( dataset , ROOT.TH3 ) :
+            assert 3 == dataset.GetDimension () , 'Invalid histogram dimension: %s' % dataset.GetDimension() 
             density = kwargs.pop ( 'density' , False ) 
             chi2    = kwargs.pop ( 'chi2'    , False ) 
             return self.fitHisto ( dataset   ,
@@ -4930,17 +4967,17 @@ class APDF3 (APDF2) :
             ROOT.RooFit.Scaling  ( False ) , 
             ROOT.RooFit.Extended ( False ) )
         
-        for i in hh : hh.SetBinError ( i , 0 ) 
+        for i,j,k in hh : hh.SetBinError ( i , j , k , 0 ) 
         
-        if events and self.pdf.mustBeExtended() :            
+        if events and self.pdf.mustBeExtended() :
+            
             for ix , iy , iz , x , y , z , v  in hh.items() :
                 volume               = 8 * x.error()  * y.error() * z.error() 
                 hh [ iz , iy , iz ] *= volume
                 
             hh *= self.pdf.expectedEvents ( self.vars ) / hh.sum() 
                 
-        histo += hh
-            
+        histo += hh            
         return histo 
 
     # ==========================================================================
@@ -5036,6 +5073,15 @@ class APDF3 (APDF2) :
         - see Constrained1D
         """
         return Constrained3D ( self , *constraints )
+    
+    # ========================================================================== 
+    ## List/tuple of structural components from `self.alist1` 
+    def cmp_alist ( self )  :
+        """ List/tuple of structural components from `self.alist1`"""
+        return tuple ( Generic3D_pdf ( p ,
+                                       xvar = self.xvar ,
+                                       yvar = self.yvar ,
+                                       zvar = self.zvar ) for p in self.alist1 )
         
 # =============================================================================
 ## @class PDF3
@@ -5312,7 +5358,12 @@ class Generic3D_pdf(PDF3) :
 
         ## PDF! 
         self.pdf = pdf
-
+        
+        ## get some structure 
+        if isinstance ( self.pdf , ROOT.RooAddPdf ) :
+            for p in self.pdf.pdfList    () : self.alist1.add ( p )
+            for f in self.pdf.orig_fracs () : self.alist2.add ( f )
+            
         if not self.xvar in self.params () : 
             self.warning ( "Function/PDF does not depend on xvar=%s" % self.xvar.name )
         if not self.yvar in self.params () : 
@@ -6430,7 +6481,7 @@ class Sum1D (PDF1,Fractions) :
                                     self.alist1    ,
                                     self.alist2    ,
                                     self.recursive )
-
+        
         ## attention!
         if fix_norm : self.pdf.SetCoefNormalization ( self.vars )
             

@@ -594,17 +594,39 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
             za = obj.GetZaxis() 
             if za : za.SetLabelOffset ( kw.pop  ( 'ZaxisLabelOffset' ) ) 
                                         
-        ##
+        # =====================================================================
+        ## finally, draw it!        
+        with rootWarning() , rooSilent ( 2 )  :
+            
+            copy = kw.pop ( 'copy' , False ) and hasattr ( obj , 'DrawCopy' )
 
-        copy = kw.pop ( 'copy' , False )
+            if copy : result = obj.DrawCopy ( option , *args )
+            else    : result = obj.Draw     ( option , *args )
+                
+            result = obj
 
-        ## get the current pad/canvas 
-        pad = Ostap.Utils.get_pad() 
-        if pad :
-            if 'LogX' in kw : pad.SetLogx ( kw.pop ( 'LogX' ) )
-            if 'LogY' in kw : pad.SetLogy ( kw.pop ( 'LogY' ) )
-        
-        if kw :
+        # =====================================================================
+        ## update the pad/canvas
+        # =====================================================================
+        try : # ===============================================================
+            # =================================================================
+            pad = Ostap.Utils.get_pad() 
+            if pad : Ostap.Utils.pad_update  ( pad )\
+            # =================================================================
+        except: # =============================================================
+            # =================================================================
+            logger.error ( 'Exception here!!' , exc_info = True )
+            
+        # =====================================================================
+        ## Lin/log scale ?
+        if 'LogY' in kw or 'LogX' in kw :            
+            pad = Ostap.Utils.get_pad() 
+            if pad and 'LogX' in kw : pad.SetLogx ( kw.pop ( 'LogX' ) )
+            if pad and 'LogY' in kw : pad.SetLogy ( kw.pop ( 'LogY' ) )
+                
+        # =====================================================================
+        if kw : # =============================================================
+            # =================================================================
             import ostap.logger.table as T 
             rows = [ ( 'Argument' , 'Value' ) ]
             for k , v in loop_items ( kw ) :
@@ -614,22 +636,6 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
             table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
             logger.warning ( '%s\n%s' % ( title , table ) )
             
-        with rootWarning() , rooSilent ( 2 )  :
-            
-            if copy and hasattr ( obj , 'DrawCopy' ):
-                result = obj.DrawCopy ( option , *args )
-            else                                    :
-                result = obj.Draw     ( option , *args )
-                
-            result = obj
-
-            # ====================      =============================================
-            ## update the pad/canvas
-            try : 
-                Ostap.Utils.pad_update  ( pad )
-            except:
-                logger.error ( 'Exception here!!' , exc_info = True )
-
         return result 
 
     ROOT.TObject.draw       = _TO_draw_
@@ -638,12 +644,12 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
 # =============================================================================
 ## Set/Set name/title 
 # =============================================================================
-def _tn_name_get_ ( self )         : return self.GetName()
-def _tn_name_set_ ( self , value ) : self.SetName( value )
-_tn_name_doc_ = "``name'' of the object using GetName/SetName"
+def _tn_name_get_  ( self )         : return self.GetName()
+def _tn_name_set_  ( self , value ) : self.SetName( value )
+_tn_name_doc_  = "`name' of the object using GetName/SetName"
 def _tn_title_get_ ( self )         : return self.GetTitle()
 def _tn_title_set_ ( self , value ) : self.SetTitle( value )
-_tn_title_doc_ = "``title'' of the object using GetTitle/SetTitle"
+_tn_title_doc_ = "`title' of the object using GetTitle/SetTitle"
 ROOT.TNamed.name  = property ( _tn_name_get_  ,  _tn_name_set_  , None , _tn_name_doc_  ) 
 ROOT.TNamed.title = property ( _tn_title_get_ ,  _tn_title_set_ , None , _tn_title_doc_ ) 
 
@@ -683,13 +689,14 @@ def _rd_valid_ ( rdir ) :
     >>> odir = ...
     >>> if odir : ...
     """
-
+    # =========================================================================
     ## check validity of C++ pointer 
     if not valid_pointer ( rdir ) : return False
 
+    # ========================================================================
     ## for the file directories check the validity of the file
-    if isinstance ( rdir , ROOT.TDirectoryFile ) :
-
+    if isinstance ( rdir , ROOT.TDirectoryFile ) : # =========================
+        # ====================================================================
         fdir = rdir.GetFile()
         if not valid_pointer ( fdir ) or ( not fdir.IsOpen () ) or fdir.IsZombie () :
             return False 

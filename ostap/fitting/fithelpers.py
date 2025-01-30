@@ -1073,7 +1073,7 @@ class FitHelper(VarMaker) :
                "set_value: invalid type of 'var' %s" % type ( var )
         
         if not hasattr ( var ,  'setVal' ) :
-            raise ValueError ( "No value can be set for %s/%s" % ( var , type ( var ) ) )  
+            raise ValueError ( "No value can be set for %s/%s" % ( var , typename ( var ) ) )  
 
         ## convert to float 
         value = float ( value )
@@ -1083,11 +1083,13 @@ class FitHelper(VarMaker) :
         if minmax :
             mn , mx = minmax
             if not ( mn <= value <= mx or isequal ( mn , value ) or isequal ( mx , value ) ) :
-                raise ValueError ( "set_value: value %s is outside of the [%s,%s] region" % ( value , mn , mx ) ) 
+                raise ValueError ( "set_value: value %g is outside of the [%s,%s] region for " % ( value , mn , mx , var.name ) ) 
+            if isequal ( value , mn ) and value <= mn : value = mn
+            if isequal ( value , mx ) and value >= mx : value = mx 
             
         ## check for external conditions, if specified  
         if not ok ( var , value ) :
-            raise ValueError ( "Value %s is not OK" % value ) 
+            raise ValueError ( "Value %g is not OK for " % ( value , var.name ) )
 
         ## finally set the value 
         var.setVal ( value )

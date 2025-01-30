@@ -2109,7 +2109,7 @@ class FUN1(AFUN1,F1AUX) :
         else :
             
             ranges = [ ( self.xvar.name , self.xminmax() ) ] 
-            histo  = histo_book ( ranges , nbins = nbins , **kwargs )
+            histo  = histo_book ( ranges , xbins = nbins , **kwargs )
 
         return histo 
 
