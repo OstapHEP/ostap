@@ -55,14 +55,19 @@ namespace Ostap
     {
       // ===================================================================== 
     public:
+      // =====================================================================
+      /// desctructor 
+      ~Branches () ; // desctructor 
+      // ===================================================================== 
+    public:
       // ======================================================================
       bool add
-      ( const std::string&      name ,
-        const Ostap::IFuncTree& func ) ;
+      ( const std::string&      name       ,
+        const Ostap::IFuncTree& func       ) ;
       // ======================================================================
       bool add
-      ( const Ostap::IFuncTree& func ,
-        const std::string&      name ) ;
+      ( const Ostap::IFuncTree& func       ,
+        const std::string&      name       ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -77,7 +82,7 @@ namespace Ostap
     private :
       // ======================================================================
       /// the actual storage 
-      FUNCTREEMAP m_map {} ; // the actual storage 
+      FUNCTREEMAP                                     m_map {} ; // the actual storage
       // ======================================================================
     };
     // ========================================================================
@@ -915,7 +920,7 @@ namespace Ostap
       const std::string&                yname     ,
       const std::string&                zname     ) 
     { return add_branch ( tree , progress , bname , xname , yname , zname , std::cref ( fun ) ) ; }
-    // ========================================================================
+    // ========================================================================    
   } //                                        The end of namespace Ostap::Trees 
   // ==========================================================================
 } //                                                 The end of namesapce Ostap 

@@ -44,6 +44,10 @@ namespace
   // ==========================================================================
 }
 // ============================================================================
+// Destructor 
+// ============================================================================
+Ostap::Trees::Branches::~Branches(){} 
+// ============================================================================
 bool Ostap::Trees::Branches::add
 ( const std::string&      name ,
   const Ostap::IFuncTree& func )
@@ -68,8 +72,7 @@ Ostap::Trees::Branches::branch
   FUNCTREEMAP::const_iterator it = m_map.find ( key ) ;
   return ( m_map.end() != it ) ? it->second : nullptr ; 
 }
-// ======================================================================
- 
+// =========================================================================== 
 // ===========================================================================
 /*  add new branches to the tree
  *  the value of the branch each  is taken from <code>branches</code>
