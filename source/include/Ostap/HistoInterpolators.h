@@ -106,8 +106,7 @@ namespace Ostap
       ( const double x ) const 
       {
         return Ostap::Math::HistoInterpolation::interpolate_1D
-          ( m_h , x , m_t , 
-            edges () , extrapolate () , density () );                    
+          ( m_h , x , m_t , edges () , extrapolate () , density () );                    
       }
       // ======================================================================
     public: // integrals 
