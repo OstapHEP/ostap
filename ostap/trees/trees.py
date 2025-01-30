@@ -287,7 +287,7 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = LAST_ENTRY , p
     from ostap.utils.progress_conf import progress_conf
     with context :
         
-        getter = Ostap.Trees.Getter ( tree , vars ) 
+        getter = Ostap.Trees.Getter ( vars , tree ) 
         result = std.vector('double')()
         
         if cuts : ## more efficient loop using Ostap.PyIterator 
@@ -301,7 +301,7 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = LAST_ENTRY , p
             weight = pit.weight () 
             while valid_pointer ( mytree ) :
                 
-                sc = getter.eval ( result )
+                sc = getter.eval ( result , mytree )
                 if sc.isFailure () :
                     logger.error('ROWS: Error status from getter %s' % sc  ) 
                     break
@@ -315,8 +315,9 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = LAST_ENTRY , p
           
             for event in progress_bar ( range ( first, last ) , silent = not progress , description = 'Entries:' ) : 
                 
-                tt      = getter.tree()
-                
+                ## tt      = getter.tree()
+                tt      = tree
+            
                 ievent  = tt.GetEntryNumber ( event  )
                 if ievent < 0 :
                     logger.error('ROWS: Cannot read entry %s' % event ) 
@@ -327,7 +328,7 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = LAST_ENTRY , p
                     logger.error('ROWS: Cannot get entry  %s' % event ) 
                     break
                 
-                sc = getter.eval ( result )
+                sc = getter.eval ( result , tt )
                 if sc.isFailure () :
                     logger.error('ROWS: Error status from getter %s' % sc  ) 
                     break 
