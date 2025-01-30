@@ -58,18 +58,21 @@ namespace Ostap
       // ======================================================================
       bool add
       ( const std::string&      name ,
-	const Ostap::IFuncTree& func ) ;      
+        const Ostap::IFuncTree& func ) ;
+      // ======================================================================
       bool add
-      ( const Ostap::IFuncTree& func ,		 
-	const std::string&      name ) ;
+      ( const Ostap::IFuncTree& func ,
+        const std::string&      name ) ;
       // ======================================================================
     public:
       // ======================================================================
-      FUNCTREEMAP::const_iterator begin () const { return m_map.begin () ; }
-      FUNCTREEMAP::const_iterator end   () const { return m_map.end   () ; }
-      std::size_t                 size  () const { return m_map.size  () ; }
-      bool                        empty () const { return m_map.empty () ; }
-      const FUNCTREEMAP&          map   () const { return m_map          ; }
+      FUNCTREEMAP::const_iterator begin  () const { return m_map.begin () ; }
+      FUNCTREEMAP::const_iterator end    () const { return m_map.end   () ; }
+      std::size_t                 size   () const { return m_map.size  () ; }
+      bool                        empty  () const { return m_map.empty () ; }
+      const FUNCTREEMAP&          map    () const { return m_map          ; }
+      // ======================================================================
+      const Ostap::IFuncTree*     branch  ( const std::string& key) const ;
       // ======================================================================
     private :
       // ======================================================================

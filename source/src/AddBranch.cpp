@@ -58,6 +58,19 @@ bool Ostap::Trees::Branches::add
   const std::string&      name )
 { return add ( name , func ) ; }
 // ===========================================================================
+// get the branch 
+// ===========================================================================
+const Ostap::IFuncTree*
+Ostap::Trees::Branches::branch
+( const std::string&key ) const 
+{
+  // explicit loop 
+  FUNCTREEMAP::const_iterator it = m_map.find ( key ) ;
+  return ( m_map.end() != it ) ? it->second : nullptr ; 
+}
+// ======================================================================
+ 
+// ===========================================================================
 /*  add new branches to the tree
  *  the value of the branch each  is taken from <code>branches</code>
  *  @param tree     input tree 

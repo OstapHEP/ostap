@@ -1868,52 +1868,55 @@ def _chain_add_new_branch_array ( chain           ,
     return newc 
 
 
-# =============================================================================
-try : 
-    import numpy, ctypes  
-except ImportError :
+# ==============================================================================
+try : # ========================================================================
+    # ==========================================================================
+    import numpy, ctypes
+    # ==========================================================================
+except ImportError : # =========================================================
+    # ==========================================================================
     numpy = None
 
+# ==============================================================================
 from ostap.utils.utils import implicitMT 
-
 # ==============================================================================
 ## Helper class to keep/store fnuctios 
 class FunStore(object) :
-    """Helper class to keep/store functions"""
+    """ Helper class to keep/store functions"""
     def __init__ ( self ) :
+        
         self.__map      = {} 
-        self.__funcs    = [] ## store objects 
+        self.__keep     = [] ## store objects 
         self.__branches = Ostap.Trees.Branches() 
-            
+
+    # =========================================================================
+    ## Add function to local store    
     def add ( self , name , fun , tree = ROOT.nullptr ) :
+        """ Add function to local store """
+        
+        assert not name in self.__map , "Function with key '%s' already defined!" % name 
 
-        if name in self.__map :
-            raise KeyError ( "Function with key '%s' already defined!" % name )
-
-        if   isinstance ( fun , Ostap.IFuncTree ) : w = fun 
-        elif isinstance ( fun , string_types    ) :
-            w = Ostap.Functions.FuncFormula ( fun , tree )
+        if   isinstance ( fun , Ostap.IFuncTree ) : wfun = fun 
+        elif isinstance ( fun , string_types    ) : wfun = Ostap.Functions.FuncFormula ( fun , tree )
         else :
             raise TypeError ( 'Invalid type %s:%s' % (  name , fun ) )
         
-        self.__map [ name  ] = fun  
-        self.__funcs.append ( fun  )
-        self.__funcs.append ( w    )
-        self.__branches.add ( name , w )
+        self.__map [ name  ] = wfun  
+        self.__keep.append (  fun  )
+        self.__keep.append ( wfun  )
+        self.__branches.add ( name , wfun )
 
-    def __getstate__ ( self ) :
-        return self.__map
-    def __setstate__ ( self , state ) :
+    def __getstate__ ( self ) : return self.__map
+    def __setstate__ ( self , state ) :        
         self.__map      = {} 
-        self.__funcs    = [] ## store objects 
+        self.__keep     = [] ## store objects 
         self.__branches = Ostap.Trees.Branches() 
-        for k in state :
-            self.add ( k , kwargs [ k ] )
+        for k in state : self.add ( k , kwargs [ k ] )
         
     ## get the branches 
     @property
     def branches ( self )  :
-        """Get the branches"""
+        """ Get the branches """
         return self.__branches 
     
 # ==============================================================================
@@ -2039,9 +2042,9 @@ def add_new_branch ( tree           ,
                                        verbose  = verbose  ,
                                        report   = report   , 
                                        value    = value    )
-    
+
     if isinstance ( function , dictlike_types ) :
-        assert name     is None , 'add_branch: when function is dict, name must be None!'
+        assert name is None , 'add_branch: when function is dict, name must be None!'
         name , function = function , None 
 
     names = name 
@@ -2063,13 +2066,14 @@ def add_new_branch ( tree           ,
 
     if isinstance ( name  ,  dictlike_types ) and function is None :
         
-        for k in name.keys() :
-            fun_store.add ( k , name [ k ] , tree )
-            
+        for k in name.keys() : fun_store.add ( k , name [ k ] , tree )
+
+        """ 
         names = list ( name.keys() )
-        args  = fun_store.branches.map() , 
+        args  = fun_store.branches.map() ,
         
-        """
+        print ( 'ADD BRANCH/2' ,   )
+        
         typeformula = False 
         for k in  name.keys() :
             
@@ -2108,11 +2112,12 @@ def add_new_branch ( tree           ,
             print ( 'ADD BRANCH/5.2 ' , k , v , type ( v ) , isinstance ( v , ROOT.TObject ) )  
             
             ## mmap [ k ] = v
-            
-        funcs.append ( mmap )
+
+        """
+        
+        ## funcs.append ( mmap )
         names = list ( name.keys() )
         args  = fun_store.branches ,
-        """
 
     elif isinstance ( function , addbranch_types ) :
 
@@ -2843,7 +2848,7 @@ class Chain(CleanUp) :
 
     ## split the chain for several chains with at most chunk_size entries
     def split ( self , chunk_size = -1 , max_files = 10 ) :
-        """Split the tree for several trees with chunk_size entries
+        """ Split the tree for several trees with chunk_size entries
         >>> tree = ....
         >>> trees = tree.split ( chunk_size = 1000000 ) 
         """

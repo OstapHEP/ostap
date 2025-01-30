@@ -804,8 +804,7 @@ class Histo1DFun (object) :
                    extrapolate = False      ,
                    density     = False      ) :
         
-        assert isinstance ( h1 , ROOT.TH1 ) and not isinstance ( h1 , ROOT.TH2 ),\
-               'Invalid histogram type!'
+        assert isinstance ( h1 , ROOT.TH1 ) and 1 == h1.GetDimension() , 'Invalid histogram type!'
         
         self.__histo  = h1
         self.__config = {
@@ -1487,8 +1486,7 @@ class Histo2DFun (object) :
                    extrapolate = False      ,
                    density     = False      ) :
         
-        assert isinstance ( h2 , ROOT.TH2 ) and not isinstance ( h2 , ROOT.T32 ),\
-               'Invalid histogram type!'
+        assert isinstance ( h2 , ROOT.TH2 ) and 2 == h2.GetDimension() , 'Invalid histogram type!'
         
         self.__histo  = h2
         self.__config = {
@@ -1594,8 +1592,7 @@ class Histo3DFun (object) :
                    extrapolate = False      ,
                    density     = False      ) :
         
-        assert isinstance ( h3 , ROOT.TH3 ) ,\
-               'Invalid histogram type!'
+        assert isinstance ( h3 , ROOT.TH3 ) and 3 == h3.GetDimension() , 'Invalid histogram type!'
         
         self.__histo  = h3
         self.__config = {
