@@ -153,7 +153,7 @@ class Components ( object ) :
         self.__combined_components   = ROOT.RooArgList ()
 
         ## needed for sPlot
-        self.__alist1                = ROOT.RooArgList ()
+        self.__alist1                = ROOT.RooArgList () 
         self.__alist2                = ROOT.RooArgList ()
 
     # =========================================================================
@@ -2837,10 +2837,9 @@ class Generic1D_pdf(PDF1) :
 
         ## get some structure 
         if isinstance ( self.pdf , ROOT.RooAddPdf ) :
-            for p in self.pdf.pdfList    () : self.alist1.add ( p )
-            for f in self.pdf.orig_fracs () : self.alist2.add ( f )
+            for p in self.pdf.pdfList    ()    : self.alist1.add ( p )
+            for f in self.pdf.orig_fracs ()[0] : self.alist2.add ( f )
             
-        
         if not self.xvar in self.params () : 
             self.warning ("Function/PDF does not depend on xvar=%s" % self.xvar.name )
             
@@ -4062,8 +4061,8 @@ class Generic2D_pdf(PDF2) :
         
         ## get some structure 
         if isinstance ( self.pdf , ROOT.RooAddPdf ) :
-            for f in self.pdf.orig_fracs () : self.alist1.add ( f )
-            for p in self.pdf.pdfList    () : self.alist2.add ( p )
+            for p in self.pdf.pdfList    ()       : self.alist1.add ( p )
+            for f in self.pdf.orig_fracs () [ 0 ] : self.alist2.add ( f )
             
         if not self.xvar in self.params () : 
             self.warning ( "Function/PDF does not depend on xvar=%s" % self.xvar.name )
@@ -5361,8 +5360,8 @@ class Generic3D_pdf(PDF3) :
         
         ## get some structure 
         if isinstance ( self.pdf , ROOT.RooAddPdf ) :
-            for p in self.pdf.pdfList    () : self.alist1.add ( p )
-            for f in self.pdf.orig_fracs () : self.alist2.add ( f )
+            for p in self.pdf.pdfList    ()    : self.alist1.add ( p )
+            for f in self.pdf.orig_fracs ()[0] : self.alist2.add ( f )
             
         if not self.xvar in self.params () : 
             self.warning ( "Function/PDF does not depend on xvar=%s" % self.xvar.name )
