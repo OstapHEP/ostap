@@ -148,10 +148,10 @@ class sPlot(object) :
 
         if not fast : logger.warning  ( "sPlot(fast=False) is specified: it could be biased!" )
 
-        ## (extendd) sum of all component 
+        ## total (extended) sum of all components 
         total = None
 
-        ## 1) get the fit components in a form of histograms & calcualte to total (extebded) sum 
+        ## 1) get the fit components in a form of histograms & calcualte the total (extended) sum 
         for p , v in zip  ( cpdfs , pdf.alist2  ) :
             
             if fast      : hc = p.roo_histo ( histo = template , events = False )
