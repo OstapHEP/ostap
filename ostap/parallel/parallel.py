@@ -41,7 +41,7 @@ workers = ( 'PATHOS'           ,
 worker  = ''  
 if has_env ( OSTAP_PARALLEL ) :
     # =========================================================================
-    worker = ostap_getenv ( OSTAP_PARALLEL, '' ) .upper()
+    worker = get_env ( OSTAP_PARALLEL, '' ) .upper()
     if not worker in workers : worker = ''
 # =============================================================================
 if not worker : # =============================================================
