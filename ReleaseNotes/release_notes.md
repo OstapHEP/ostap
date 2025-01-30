@@ -29,8 +29,8 @@
     1. make use of `shutil.get_terminal_size` 
     1. improve utilities for table creatio 
     1. add better printout for RooWorkspace and ModelConfig
+    1. re-write `ostap.tools.splot` extending it to 2D and 3D cases    
     
-   
 ## Backward incompatible1
 
     1. remove obsolete `ostap.fitting.simfit.Sim1D`

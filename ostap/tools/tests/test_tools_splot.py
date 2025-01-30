@@ -36,41 +36,45 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_tools_splot' )
 else                       : logger = getLogger ( __name__           )
 # =============================================================================
+xmin , xmax  = 3.0 , 3.2
+ymin , ymax  = 0   ,  10 
+mean , sigma = 3.1 , 0.01
+# =============================================================================
 ## create a file with tree 
 def create_tree ( fname , nentries = 1000 ) :
-    """Create a file with a tree
+    """ Create a file with a tree
     >>> create_tree ( 'file.root' ,  1000 ) 
     """
     
-    import ROOT, random 
     import ostap.io.root_file
     
     from array import array 
     var1 = array ( 'd', [ 0 ] )
     var2 = array ( 'd', [ 0 ] )
-    var3 = array ( 'd', [ 0 ] )
     
     from ostap.core.core import ROOTCWD
 
     with ROOTCWD() , ROOT.TFile.Open( fname , 'new' ) as root_file:
         root_file.cd () 
         tree = ROOT.TTree ( 'S','tree' )
-        tree.SetDirectory ( root_file  ) 
-        tree.Branch ( 'mass'  , var1 , 'mass/D' )
-        tree.Branch ( 'ctau'  , var2 , 'ctau/D' )
+        tree.SetDirectory ( root_file  )
+        
+        tree.Branch ( 'x'  , var1 , 'x/D' )
+        tree.Branch ( 'y'  , var2 , 'y/D' )
         
         for i in range ( nentries ) : 
 
-            u = random.uniform  ( 0 , 1 )
-            if 0.5 < u :
-                m    = random.gauss  ( 3.1 ,  0.015 )
-                ctau = random.expovariate ( 1/1.0 ) 
+            x, y = -100 , -100
+        
+            if 0 == i % 2 : 
+                while not xmin < x < xmax : x = random.gauss   ( mean , sigma )
+                while not ymin < y < ymax : y = random.gauss   ( 2.5  , 0.7   )
             else       :
-                m  = random.uniform  ( 3.0 , 3.2  )
-                ctau = random.expovariate ( 1/0.1 ) 
+                while not xmin < x < xmax : x = random.uniform ( xmin , xmax  ) 
+                while not ymin < y < ymax : y = random.gauss   ( 7.5  , 0.7   )
                 
-            var1[0] = m
-            var2[0] = ctau 
+            var1 [ 0 ] = x 
+            var2 [ 0 ] = y  
             
             tree.Fill()
             
@@ -92,38 +96,44 @@ def prepare_data ( nfiles = 50 ,  nentries = 500  ) :
 # - fit the histogram
 # - make sPlot
 # - write sPlot results into origin TTree
-def test_splotting  () : 
-    """ Test sPlotting macheinery (outside of RooFit)
+def test_splotting  () :
+    """ Test sPlotting machinery (outside of RooFit)
     - fill histogram from TTree 
     - fit the histogram
     - make sPlot
     - write sPlot results into oroigin Ttree
     """
     
-    files = prepare_data ( 100 , 5000 )
+    files = prepare_data ( 50 , 100000 )
     
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data ( 'S' , files )
     logger.info ( 'Initial Tree/Chain:\n%s' % data.chain.table ( prefix = '# ' ) )
     
     chain  = data.chain 
-    histo = ROOT.TH1D       ( hID() , 'mass distibution' , 200 , 3.0 , 3.2 )
+    histo = ROOT.TH1D       ( hID() , 'x-distibution' , 200 , xmin , xmax  )
 
-    chain.project ( histo , 'mass' )
+    chain.project ( histo , 'x' )
     
-    mass  = ROOT.RooRealVar ( 'mass' , 'mass-variable' , 3.0 , 3.2  )
+    xvar   = ROOT.RooRealVar ( 'x' , 'c-variable' , xmin , xmax )
     
-    gauss = Models.Gauss_pdf ( 'G' , xvar = mass ,
-                               mean  = (3.1   , 3.1-0.01     , 3.1 + 0.01 ) ,
-                               sigma = (0.015 , 0.8 * 0.015 , 1.2 * 0.015 ) ) 
+    gauss = Models.Gauss_pdf ( 'G' , xvar = xvar ,
+                               mean  = ( mean  , mean - 2 * sigma , mean + 2 * sigma ) ,
+                               sigma = ( sigma , 0.5 * sigma , 2.0 * sigma           ) )
+    
+    gauss.sigma.fix()    
     model = Models.Fit1D( signal = gauss , background = 0 )
+    NS = 0.5 * ( histo.Integral() )
+    NB = 0.5 * ( histo.Integral() )
     
-    model.S = 0.5 * ( histo.Integral() )
-    model.B = 0.5 * ( histo.Integral() )
+    model.S.setMax ( 3 * NS )
+    model.B.setMax ( 3 * NS )
+    
+    model.S = NS 
+    model.B = NB 
 
-    with FIXVAR ( [ gauss.mean , gauss.sigma ] ) : 
-        model.fitTo ( histo , draw = False , silent = True )
-        model.fitTo ( histo , draw = False , silent = True )
+    with FIXVAR ( ( gauss.mean , gauss.sigma ) ) : 
+        model.fitTo ( histo , draw = False , silent = True , refit = 5 )
         
     model.fitTo ( histo , draw = False , silent = True )
 
@@ -133,13 +143,11 @@ def test_splotting  () :
     title = "Fit results for" 
     logger.info ('%s:\n%s' % ( title  , r.table ( title = title , prefix = '# ') ) ) 
   
-    ds  = model.histo_data.dset
-
     with DBASE.tmpdb()  as db :
         
         for fast in ( True , False ) :
             
-            sp  = sPlot1D ( model , ds  , nbins = 100 , fast = fast ) ## SPLOT IT! 
+            sp  = sPlot1D ( model , histo  , nbins = 500 , fast = fast ) ## SPLOT IT! 
             sph = sp.hweights['S']
             
             with use_canvas ( 'test_tools_splot: sPlot') :
@@ -147,7 +155,7 @@ def test_splotting  () :
                 value =  float ( sph ( r.mean_G * 1 ) ) 
                 assert 0.7 < value < 1.5 , "Something totally wrong here, fast=%s!" % fast 
                 
-            fnsp = Ostap.Functions.FuncTH1 ( sph , 'mass' )
+            fnsp = Ostap.Functions.FuncTH1 ( sph , 'x' )
             
             db ['histo;fast=%s'   % fast ] = histo 
             db ['splot;fast=%s'   % fast ] = sp    
@@ -155,59 +163,53 @@ def test_splotting  () :
             db ['splot,f;fast=%s' % fast ] = fnsp  
             db.ls()
             
-            with timing ( "Adding sPlot results to TTree" , logger = logger ) :
+            with timing ( "Adding sPlot results to TTree/TChain" , logger = logger ) :
                 chain = data.chain
-                if fast : chain.add_new_branch ( 'sw_Sf' , fnsp  )
-                else    : chain.add_new_branch ( 'sw_St' , fnsp  )
-                
+                sp.add_to_tree ( chain , 'x' , prefix = 'f' if fast else 'n' , parallel = False ) 
+
     chain = data.chain 
-    cntt  = chain.statVar ( 'sw_St' )
-    cntf  = chain.statVar ( 'sw_Sf' )
-    diff  = chain.statVar ( 'sw_St-sw_Sf' )
+    nS_sw = chain.statVar ( 'nS_sw' )
+    fS_sw = chain.statVar ( 'fS_sw' )
+    diff  = chain.statVar ( 'nS_sw-fS_sw' )
     
-    logger.info ( 'sw_St: %s' % cntt )
-    logger.info ( 'sw_Sf: %s' % cntf )
+    logger.info ( 'nS_sw: %s' % nS_sw )
+    logger.info ( 'fS_sw: %s' % fS_sw )    
     logger.info ( 'diff : %s' % diff )
 
-    for fast in ( True , False ) :
-        
-        chain = data.chain 
-        logger.info ( 'Updated Tree/Chain:\n%s' % chain.table ( prefix = '# ' ) )
-        
-        hs = ROOT.TH1D( hID() , 'ctau for signal'     , 200 , 0 , 5 )
-        hb = ROOT.TH1D( hID() , 'ctau for background' , 200 , 0 , 5 )
 
-        if fast : 
-            chain.project ( hs , 'ctau' , 'sw_St'   )
-            chain.project ( hb , 'ctau' , '1-sw_St' )
-        else    :
-            chain.project ( hs , 'ctau' , 'sw_Sf'   )
-            chain.project ( hb , 'ctau' , '1-sw_Sf' )
+    hs  = ROOT.TH1D( hID() , 'y for signal'     , 100 , ymin , ymax )
+    hb  = ROOT.TH1D( hID() , 'y for background' , 100 , ymin , ymax )
+    hsf = ROOT.TH1D( hID() , 'y for signal'     , 100 , ymin , ymax )
+    hbf = ROOT.TH1D( hID() , 'y for background' , 100 , ymin , ymax )
 
-        
-        with wait ( 3 ) , use_canvas ( 'test_tools_splot: c*tau, fast=%s' % fast ) :
-            
-            hs.red ()
-            hb.blue()
-            hb.draw()
-            hs.draw('same')
-
-            if fast : 
-               cnts = chain.statVar ('ctau' , 'sw_St'   )
-               cntb = chain.statVar ('ctau' , '1-sw_St' )
-            else :
-               cnts = chain.statVar ('ctau' , 'sw_Sf'   )
-               cntb = chain.statVar ('ctau' , '1-sw_Sf' )
-                
-            logger.info ( 'ctau S:%s' % cnts.mean() )
-            logger.info ( 'ctau B:%s' % cntb.mean() )
-            
-        
+    hs .red  ()
+    hb .blue ()
+    hsf.red  ()
+    hbf.blue ()
     
+    with use_canvas ( 'test_tools_splot: y/n', wait = 5 ) :
+            
+        chain.project ( hs , 'y' , 'nS_sw'   )
+        hs.draw ()
+
+        chain.project ( hb , 'y' , 'nB_sw'   )        
+        hb.draw ('same')
+
+    with use_canvas ( 'test_tools_splot: y/f ', wait = 5 ) :
+
+        chain.project ( hsf, 'y' , 'fS_sw'   )
+        hsf.draw()
+
+        chain.project ( hbf, 'y' , 'fB_sw'   )        
+        hbf.draw('same')
+        
+    with use_canvas ( 'test_tools_splot: delta', wait = 5 ) :
+        chain.draw ( 'nS_sw-fS_sw' )
+
 # =============================================================================
 if '__main__' ==  __name__  :
 
-    with timing ( "test_splotting" , logger = logger ) : 
+    with timing ( "test_splotting" , logger = logger ) :
         test_splotting ()
     
 # =============================================================================
