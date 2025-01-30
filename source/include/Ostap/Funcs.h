@@ -683,11 +683,11 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class Expression
-     *  "Universal" formula that is simultanepously 
+     *  "Universal" formula that is simultaneously 
      *  - Ostap::IFuncTree 
      *  - Ostap::IFuncData
-     *  @see  Ostap::Functions::FuncFormula
-     *  @see  Ostap::Functions::FuncRooFormula
+     *  @see Ostap::Functions::FuncFormula
+     *  @see Ostap::Functions::FuncRooFormula
      *  @see Ostap::IFuncTree 
      *  @see Ostap::IFuncData
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -747,7 +747,7 @@ namespace Ostap
       FuncRooFormula m_roofun{} ; // IFuncData  for Roo-stuff 
       // ======================================================================
     } ;
-    // ========================================================================
+    // ========================================================================    
   } //                                   The END of  namespace Ostap::Functions
   // ==========================================================================
 } //                                                The END of  namespace Ostap
