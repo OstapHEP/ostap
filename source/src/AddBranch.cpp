@@ -8,19 +8,34 @@
 // ============================================================================
 // ROOT
 // ============================================================================
+#include "RVersion.h"
 #include "TTree.h"
 #include "TBranch.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
 // ============================================================================
+// ROOT/RooFit 
+// ============================================================================
+#include "RooArgSet.h"
+#include "RooAbsReal.h"
+#include "RooAbsRealLValue.h"
+#include "RooAbsCategoryLValue.h"
+// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/StatusCode.h"
 #include "Ostap/AddBranch.h"
 #include "Ostap/Funcs.h"
+#include "Ostap/Math.h"
 #include "Ostap/Notifier.h"
+#include "Ostap/TreeGetter.h"
 #include "Ostap/ProgressBar.h"
+// ============================================================================
+// Local stuff 
+// ============================================================================
+#include "local_roofit.h" 
+#include "status_codes.h" 
 // ============================================================================
 /** @file
  *  Implementation file for function Ostap::Trees::add_branch 
@@ -28,21 +43,6 @@
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2019-05-14
  */
-// ============================================================================
-namespace 
-{
-  // ==========================================================================
-  enum {
-    INVALID_TREE          = 750 , 
-    CANNOT_CREATE_BRANCH  = 751 , 
-    CANNOT_CREATE_FORMULA = 752 , 
-    INVALID_TREEFUNCTION  = 753 , 
-    INVALID_TH2           = 754 , 
-    INVALID_TH1           = 755 , 
-    INVALID_BUFFER        = 756 , 
-  };
-  // ==========================================================================
-}
 // ============================================================================
 // Destructor 
 // ============================================================================
@@ -72,7 +72,6 @@ Ostap::Trees::Branches::branch
   FUNCTREEMAP::const_iterator it = m_map.find ( key ) ;
   return ( m_map.end() != it ) ? it->second : nullptr ; 
 }
-// =========================================================================== 
 // ===========================================================================
 /*  add new branches to the tree
  *  the value of the branch each  is taken from <code>branches</code>
@@ -126,12 +125,11 @@ Ostap::Trees::add_branch
   const std::string&                name     , 
   const Ostap::IFuncTree&           func     ) 
 {
-  
-  if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
+  if ( !tree   ) { return INVALID_TREE ; }
   //
   Double_t value    = 0  ;
   TBranch* branch   = tree->Branch( name.c_str() , &value , (name + "/D").c_str() );
-  if ( !branch ) { return Ostap::StatusCode ( CANNOT_CREATE_BRANCH ) ; }
+  if ( !branch ) { return CANNOT_CREATE_BRANCH ; }
   //
   const TObject* o = dynamic_cast<const TObject*>( &func ) ;
   Ostap::Utils::Notifier notifier { tree , o ? const_cast<TObject*>(o) : nullptr } ;
@@ -143,13 +141,13 @@ Ostap::Trees::add_branch
   const Long64_t nentries = tree->GetEntries(); 
   Ostap::Utils::ProgressBar bar ( nentries , progress  ) ;
   for ( Long64_t i = 0 ; i < nentries ; ++i , ++bar )
-  {
-    if ( tree->GetEntry ( i ) < 0 ) { break ; };
-    //
-    value  =  func ( tree  ) ;
-    //
-    branch -> Fill (       ) ;
-  }
+    {
+      if ( tree->GetEntry ( i ) < 0 ) { break ; };
+      //
+      value  =  func ( tree  ) ;
+      //
+      branch -> Fill (       ) ;
+    }
   //
   return Ostap::StatusCode::SUCCESS ;  
 }
@@ -392,8 +390,6 @@ Ostap::Trees::add_branch
   /// delegate to another mehtod 
   return add_branch ( tree , progress , branches ) ;
 }
-
-
 // ============================================================================
 /*  add new branch to TTree, sampling it from   the 1D-histogram
  *  @param tree (UPFATE) input tree 
@@ -616,8 +612,8 @@ namespace
     const DATA                        value    ) 
   {
     //
-    if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE   ) ; }
-    if ( !data ) { return Ostap::StatusCode ( INVALID_BUFFER ) ; }
+    if ( !tree ) { return INVALID_TREE   ; }
+    if ( !data ) { return INVALID_BUFFER ; }
     //    
     DATA  bvalue  { value } ;
     TBranch* branch = tree->Branch( vname.c_str() , &bvalue , ( vname + vtype ).c_str() );
@@ -1148,6 +1144,175 @@ Ostap::Trees::add_branch
   return add_branch ( tree , progress , bname , fun3d ) ;
 }
 
+
+
+// ============================================================================
+/*  add new branch to the tree from RooFir function
+ *  @param tree input tree 
+ *  @param bname branch name 
+ *  @param fun   the function 
+ *  @param observables   function observables 
+     *  @oaram normalization normalization set 
+ *  @param mapping : observables -> brnaches 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch
+( TTree*                   tree          ,
+  const std::string&       bname         , 
+  const RooAbsReal&        fun           ,
+  const RooAbsCollection&  observables   ,
+  const RooAbsCollection*  normalization ,       
+  const Ostap::Trees::DCT& mapping       )
+{
+  /// create fake progress bar
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  /// delegate to another method 
+  return add_branch  ( tree          ,
+                       progress      ,
+                       bname         ,
+                       fun           ,
+                       observables   ,
+                       normalization , 
+                       mapping       ) ;
+}
+// ============================================================================
+/*  add new branch to the tree from RooFir function
+ *  @param tree input tree 
+ *  @param bname branch name 
+ *  @param fun   the function 
+ *  @param observables   function observables 
+ *  @oaram normalization normalization 
+ *  @param mapping : observables -> brnaches 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch
+( TTree*                            tree          ,
+  const Ostap::Utils::ProgressConf& progress      , 
+  const std::string&                bname         , 
+  const RooAbsReal&                 fun           ,
+  const RooAbsCollection&           observables   ,
+  const RooAbsCollection*           normalization ,         
+  const Ostap::Trees::DCT&          mapping       )
+{
+  //
+  if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
+
+  
+  /// get/copy the observables
+  if ( 0 == ::size ( observables ) ) { return INVALID_OBSERVABLES ; }
+  RooArgSet obsset { observables } ;
+  
+  // actual observables 
+  const std::unique_ptr<RooArgSet> obsvars { fun.getObservables ( obsset ) } ;
+  if ( !obsvars || ::size ( *obsvars )  != ::size ( obsset ) ) { return INVALID_OBSERVABLES ; }
+  
+  /// rooFit observables <-> Tree branches  mapping 
+  DCT dct  { mapping } ;
+  
+  // check the proper type of all obsevables
+  typedef std::vector<RooAbsRealLValue*>     RSET ;
+  typedef std::vector<RooAbsCategoryLValue*> CSET ;
+  //
+  RSET rvars {} ; rvars.reserve ( ::size ( *obsvars ) ) ;
+  CSET cvars {} ; cvars.reserve ( ::size ( *obsvars ) ) ;
+  //
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
+  //
+  Ostap::Utils::Iterator iter (  *obsvars ) ; // only for ROOT < 6.18
+  RooAbsArg* o = 0 ;
+  while ( o = (RooAbsArg*) iter .next() )
+    {
+      //
+#else
+      //
+  for ( auto* o : *obsvars )
+    {
+      //
+#endif 
+      //
+      Ostap::Assert ( nullptr != o ,
+                      "Invalid/nullptr observable" ,
+                      "Ostap::Trees:add_branch"    ,
+                      INVALID_OBSERVABLE           , __FILE__ , __LINE__ ) ;
+      //
+      DCT::const_iterator found = dct.find ( o->GetName() ) ;
+      if ( dct.end() == found ) { dct [ o->GetName() ] = o->GetName()  ; }
+      
+      RooAbsRealLValue*       rlv = dynamic_cast<RooAbsRealLValue*>     ( o ) ;
+      RooAbsCategoryLValue*   clv = nullptr ;
+      if ( nullptr == rlv ) { clv = dynamic_cast<RooAbsCategoryLValue*> ( o ) ; } 
+      Ostap::Assert (  ( nullptr != rlv ) ||  ( nullptr != clv ) ,
+                       "Invalid/nullptr observable" ,
+                       "Ostap::Trees:add_branch"    ,
+                       INVALID_OBSERVABLE           , __FILE__ , __LINE__ ) ;
+      //
+      if ( rlv ) { rvars.push_back ( rlv ) ; }
+      if ( clv ) { cvars.push_back ( clv ) ; }
+    }
+    
+  /// get/copy normalization set 
+  RooArgSet normset {} ;
+  if ( nullptr != normalization ) { ::copy_real ( *normalization , normset ) ; }
+  
+  
+  // Create the getter object 
+  Ostap::Trees::Getter getter ( dct , tree ) ;
+  
+  // create the branch 
+  Double_t bvalue = 0  ;
+  TBranch* branch = tree->Branch ( bname.c_str() , &bvalue , ( bname + "/D" ).c_str() );
+  if ( !branch ) { return CANNOT_CREATE_BRANCH ; }
+
+  /// create the notifies 
+  Ostap::Utils::Notifier notifier { tree , &getter } ; 
+  // due to  some strange reasons we need to invoke the Notifier explicitely.
+  notifier.Notify() ;
+  
+  /// result 
+  typedef Ostap::Trees::Getter::RMAP RMAP ;
+  typedef RMAP::const_iterator       RIT   ;
+  RMAP   result {} ; 
+
+  // normalization 
+  const RooArgSet* norm = ( 0 !=! normalization ) ? &normset : nullptr ;
+  
+  // loop over the TTree entries
+  const Long64_t nentries = tree->GetEntries(); 
+  Ostap::Utils::ProgressBar bar ( nentries , progress  ) ;
+  for ( Long64_t i = 0 ; i < nentries ; ++i , ++bar )
+    {
+      if ( tree->GetEntry ( i ) < 0 ) { break ; };
+      //
+      Ostap::StatusCode sc = getter.eval ( result , tree ) ;
+      if ( sc.isFailure() ) { return sc ; } 
+      //
+      // real variables 
+      for ( RSET::const_iterator rit = rvars.begin() ; rvars.end() != rit ; ++rit )
+        {
+          RooAbsRealLValue* rlv = *rit ;
+          RIT found = result.find ( rlv->GetName() ) ;           
+          if ( result.end() == found ) { return INVALID_OBSERVABLE ; }
+          rlv->setVal ( found->second ) ;          
+        }
+      // category variables 
+      for ( CSET::const_iterator cit = cvars.begin() ; cvars.end() != cit ; ++cit )
+        {
+          RooAbsCategoryLValue* clv = *cit ;
+          RIT found = result.find ( clv->GetName() ) ;           
+          if ( result.end() == found ) { return INVALID_OBSERVABLE ; }          
+          clv->setIndex ( Ostap::Math::round ( found->second ) ) ;          
+        }
+      //
+      // Evaluate the RooFit function
+      bvalue = fun.getVal ( norm ) ;
+      //
+      branch->Fill () ; 
+    }
+  //
+  return Ostap::StatusCode::SUCCESS ;  
+}
 
 
 

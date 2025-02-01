@@ -1733,7 +1733,7 @@ def _chain_add_new_branch ( chain          ,
         assert not n in chain.branches() ,'Branch %s already exists!' % n 
         
     assert ( isinstance ( name , dictlike_types ) and function is None ) or btypes ( function ) ,\
-           "add_branch: invalid type of ``function'': %s/%s" % ( function , type ( function ) )  
+           "add_branch: invalid type of `function': %s/%s" % ( function , type ( function ) )  
 
     if   isinstance   ( name     ,  dictlike_types ) and function is None : pass    
     elif isinstance   ( function , addbranch_types )                      : pass 

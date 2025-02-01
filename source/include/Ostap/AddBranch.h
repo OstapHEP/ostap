@@ -19,13 +19,18 @@
 // ============================================================================
 #include "RVersion.h"
 // ============================================================================
-// Forward declarations 
+// Forward declarations from ROOT 
 // ============================================================================
-class TTree   ; // from ROOT 
-class TBranch ; // from ROOT 
-class TH1     ;
-class TH2     ;
-class TH3     ;
+class TTree      ; 
+class TBranch    ; 
+class TH1        ;
+class TH2        ;
+class TH3        ;
+// ============================================================================
+// Forward declarations from ROOT/RooFit 
+// ============================================================================
+class RooAbsReal       ;
+class RooAbsCollection ;
 // ============================================================================
 namespace Ostap
 {  
@@ -50,6 +55,11 @@ namespace Ostap
      *  helper type to deal with map of functions 
      */
     typedef FUNCTREEMAP::value_type                              FUNCTREEPAIR ;
+    // ========================================================================
+    /** @typdef DCT
+     *  string->string dictionary 
+     */
+    typedef  std::map<std::string,std::string> DCT ;
     // ========================================================================
     class Branches 
     {
@@ -483,7 +493,7 @@ namespace Ostap
      *  @param tree   The tree 
      *  @param data   input data buffer 
      *  @param size   length of the buffer
-     *  @param value  default value (used for short buffers) 
+     *  @param value  default value (used for short buffers)
      *  @return status code 
      */
     Ostap::StatusCode
@@ -920,6 +930,76 @@ namespace Ostap
       const std::string&                yname     ,
       const std::string&                zname     ) 
     { return add_branch ( tree , progress , bname , xname , yname , zname , std::cref ( fun ) ) ; }
+    // ========================================================================
+    /** add new branch to the tree from RooFir function
+     *  @param tree input tree 
+     *  @param bname branch name 
+     *  @param fun   the function 
+     *  @param observables   function observables 
+     *  @oaram normalization normalization set 
+     *  @param mapping : observables -> brnaches 
+     */
+    Ostap::StatusCode
+    add_branch
+    ( TTree*                  tree                    ,
+      const std::string&      bname                   , 
+      const RooAbsReal&       fun                     ,
+      const RooAbsCollection& observables             ,
+      const RooAbsCollection* normalization = nullptr , 
+      const DCT&              mapping       = DCT ()  ) ;
+    // ========================================================================
+    /** add new branch to the tree from RooFir function
+     *  @param tree input tree 
+     *  @param bname branch name 
+     *  @param fun   the function 
+     *  @param observables   function observables 
+     *  @param mapping : observables -> brnaches 
+     */
+    inline
+    Ostap::StatusCode
+    add_branch
+    ( TTree*                  tree        ,
+      const std::string&      bname       , 
+      const RooAbsReal&       fun         ,
+      const RooAbsCollection& observables ,
+      const DCT&              mapping     )
+    { return add_branch ( tree , bname , fun , observables , nullptr , mapping ) ; } 
+    // ========================================================================    
+    /** add new branch to the tree from RooFir function
+     *  @param tree input tree 
+     *  @param bname branch name 
+     *  @param fun   the function 
+     *  @param observables   function observables 
+     *  @oaram normalization normalization set 
+     *  @param mapping : observables -> brnaches 
+     */
+    Ostap::StatusCode
+    add_branch
+    ( TTree*                            tree                    ,
+      const Ostap::Utils::ProgressConf& progress                , 
+      const std::string&                bname                   , 
+      const RooAbsReal&                 fun                     ,
+      const RooAbsCollection&           observables             ,
+      const RooAbsCollection*           normalization = nullptr ,       
+      const DCT&                        mapping       = DCT ()  ) ;
+    // ========================================================================
+    /** add new branch to the tree from RooFir function
+     *  @param tree input tree 
+     *  @param bname branch name 
+     *  @param fun   the function 
+     *  @param observables   function observables 
+     *  @param mapping : observables -> brnaches 
+     */
+    inline 
+    Ostap::StatusCode
+    add_branch
+    ( TTree*                            tree        ,
+      const Ostap::Utils::ProgressConf& progress    , 
+      const std::string&                bname       , 
+      const RooAbsReal&                 fun         ,
+      const RooAbsCollection&           observables ,
+      const DCT&                        mapping     ) 
+    { return add_branch ( tree , progress , bname , fun , observables , nullptr , mapping ) ; } 
     // ========================================================================    
   } //                                        The end of namespace Ostap::Trees 
   // ==========================================================================

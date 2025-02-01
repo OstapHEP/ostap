@@ -29,9 +29,7 @@ namespace
 {
   // ==========================================================================
   /// size of RooArgList 
-  inline std::size_t size 
-  // ( const RooArgList& lst ) 
-  ( const RooAbsCollection& lst ) 
+  inline std::size_t size ( const RooAbsCollection& lst ) 
   {
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
     return lst.getSize () ;
@@ -70,6 +68,43 @@ namespace
   inline unsigned   int copy_real 
   ( const RooAbsCollection&  from                                    ,
     RooArgList&              to                                      , 
+    const std::string&       message = "Variable is not RooAbsReal!" ,
+    const std::string&       tag     = "Ostap::copy_real"            )
+  {
+    //
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
+    //
+    Ostap::Utils::Iterator tmp ( from ) ; // only for ROOT < 6.18 
+    RooAbsArg* c = 0 ;
+    while ( c = (RooAbsArg*) tmp.next() )
+    {
+      Ostap::Assert ( dynamic_cast<RooAbsReal*> ( c ) != nullptr , message , tag , 510 ) ;
+      to.add ( *c ) ;
+    }
+    //
+#else
+    //
+    unsigned ii = 0 ;
+    for ( auto* c : from ) 
+    {
+      Ostap::Assert ( dynamic_cast<RooAbsReal*> ( c ) != nullptr , message , tag , 510 ) ;
+      to.add ( *c ) ;   
+      ++ii ;
+    }
+    //
+#endif 
+    //
+    return ::size ( from ) ;
+    //
+  }
+  // ==========================================================================
+  /** copy RooAbsReal from list to list
+   *  @param from objects to be copied from this list 
+   *  @param to   objects to be copied to this proxy 
+   */
+  inline unsigned   int copy_real 
+  ( const RooAbsCollection&  from                                    ,
+    RooArgSet&               to                                      , 
     const std::string&       message = "Variable is not RooAbsReal!" ,
     const std::string&       tag     = "Ostap::copy_real"            )
   {

@@ -14,6 +14,7 @@
 // ============================================================================
 #include "Ostap/IFuncs.h"
 #include "Ostap/Formula.h"
+#include "Ostap/TreeGetter.h"
 // ============================================================================
 // ROOT
 // ============================================================================
@@ -376,6 +377,80 @@ namespace Ostap
       mutable std::unique_ptr<Ostap::Formula> m_zvar { nullptr } ; //!
       /// the tree itself 
       mutable const TTree*                    m_tree { nullptr } ; //!
+      // ======================================================================
+    } ;    
+    // ========================================================================
+
+
+    
+    class RooTreeFun : public Ostap::IFuncTree, public Ostap::Trees::RooGetter 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Functions::RooTreeFun,1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** full constructor 
+       *  @param fun the functon 
+       *  @param observables observables 
+       *  @param normalization nornalization 
+       *  @Param mapping  RooFit varibale <-> TTree branch mapping 
+       *  @param tree input tree 
+       */
+      RooTreeFun
+      ( const RooAbsReal&       fun           , 
+        const RooAbsCollection& observables   , 
+        const RooAbsCollection* normalization = nullptr ,
+        const DCT&              mapping       = DCT()   ,
+        const TTree*            tree          = nullptr ) ;
+      // ======================================================================
+      /** full constructor 
+       *  @param fun the functon 
+       *  @param observables observables 
+       *  @Param mapping  RooFit varibale <-> TTree branch mapping 
+       *  @param tree input tree 
+       */
+      RooTreeFun
+      ( const RooAbsReal&       fun                     , 
+        const RooAbsCollection& observables             , 
+        const DCT&              mapping                 ,       
+        const TTree*            tree          = nullptr ) ;
+      // ======================================================================
+      /// copy constructor 
+      RooTreeFun  ( const RooTreeFun&  right ) ;
+      /// move constructor 
+      RooTreeFun  (       RooTreeFun&& right ) = default ;
+      /// virtual constructor 
+      virtual ~RooTreeFun() ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      RooTreeFun* Clone ( const char* newname = "" ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      ///  evaluate the formula for TTree
+      double operator() ( const TTree* tree ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the fnuiction
+      const RooAbsReal& function      () const { return *m_fun           ; }
+      /// get the observables 
+      const RooArgSet&  observables   () const { return *m_observables   ; }
+      /// get the normalization 
+      const RooArgSet*  normalization () const { return  m_normset.get() ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the function 
+      std::unique_ptr<RooAbsReal> m_fun         { nullptr } ;
+      /// observables
+      std::unique_ptr<RooArgSet>  m_observables { nullptr } ;
+      /// normalization
+      std::unique_ptr<RooArgSet>  m_normset     { nullptr } ;
       // ======================================================================
     } ;
     // ========================================================================

@@ -45,27 +45,31 @@ ClassImp(Ostap::Formula)
 Ostap::Formula::Formula
 ( const std::string& name       , 
   const std::string& expression ,
-  TTree*             tree       ) 
-: TTreeFormula ( name.c_str() , expression.c_str() , tree )
+  const TTree*       tree       ) 
+: TTreeFormula ( name.c_str()                ,
+                 expression.c_str()          ,
+                 const_cast<TTree*> ( tree ) ) 
 {}
 // ============================================================================
 Ostap::Formula::Formula
 ( const std::string& name       , 
   const TCut&        expression ,
-  TTree*             tree       ) 
-  : TTreeFormula ( name.c_str() , expression , tree )
+  const TTree*       tree       ) 
+  : TTreeFormula ( name.c_str()                ,
+                   expression                  , 
+                   const_cast<TTree*> ( tree ) ) 
 {}
 // ============================================================================
 Ostap::Formula::Formula
 ( const std::string& expression ,
-  TTree*             tree       ) 
+  const TTree*       tree       ) 
   : Formula ( formula_name ( "formula_" , expression , tree ) , expression , tree )
 {}
 // ============================================================================
 Ostap::Formula::Formula
 ( const TCut&        expression ,
-  TTree*             tree       ) 
-  : Formula ( formula_name ( "formula_" , expression.GetName() , tree ) , expression , tree )
+  const TTree*       tree       ) 
+  : Formula ( formula_name ( "formula_" , expression.GetName() , tree ) , expression , tree ) 
 {}
 // ============================================================================
 // destructor 
