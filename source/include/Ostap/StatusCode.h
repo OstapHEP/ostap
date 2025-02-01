@@ -81,9 +81,11 @@ namespace Ostap
    *  @param code    the code 
    */
   StatusCode throwException
-  ( const std::string& message           , 
-    const std::string& tag     = "Ostap" , 
-    const StatusCode&  code    = Ostap::StatusCode::FAILURE ) ;
+  ( const std::string& message                              , 
+    const std::string& tag     = "Ostap"                    , 
+    const StatusCode&  code    = Ostap::StatusCode::FAILURE ,
+    const char*        file    = nullptr                    ,
+    const std::size_t  line    = 0                          ) ;
   // ===========================================================================
 } //                                                      end of namespace Ostap
 // =============================================================================

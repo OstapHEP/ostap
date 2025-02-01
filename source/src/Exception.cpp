@@ -25,11 +25,40 @@
 Ostap::Exception::Exception 
 ( const std::string& message ,
   const std::string& tag     ,
-  const StatusCode&  code    )
+  const StatusCode&  code    ,
+  const char*        file    ,
+  const std::size_t  line    ) 
   : m_message    ( message   )   
   , m_tag        ( tag       )
-  , m_code       ( code      ) 
-{}
+  , m_code       ( code      )
+  , m_file       ( file ? file : "" )
+  , m_line       ( line      )
+  , m_what       ()
+  , m_previous   () 
+{
+  m_what = toString() ;
+}
+// ============================================================================
+/*  constructor from std:exception 
+ *  @param exc exception 
+ *  @param  file file name 
+ *  @param line line numbr 
+ */
+// ============================================================================
+Ostap::Exception::Exception 
+( const std::exception& exc   ,
+  const char*           file  ,
+  const std::size_t     line  )
+  : m_message    ( exc.what() )
+  , m_tag        ( typeid ( exc ).name()      )
+  , m_code       ( Ostap::StatusCode::FAILURE )
+  , m_file       ( file ? file : "" )
+  , m_line       ( line      )
+  , m_what       ()
+  , m_previous   () 
+{
+  m_what = toString() ;  
+}
 // ============================================================================
 /*  Constructor (2)
  *  @param Message error message
@@ -41,13 +70,20 @@ Ostap::Exception::Exception
 Ostap::Exception::Exception 
 ( const std::string&      message  ,
   const std::string&      tag      ,
+  const Ostap::Exception& previous , 
   const StatusCode&       code     ,
-  const Ostap::Exception& previous )
+  const char*             file     ,
+  const std::size_t       line     )
   : m_message    ( message   )   
   , m_tag        ( tag       )
-  , m_code       ( code      ) 
-  , m_previous   ( previous.clone()  )
-{}
+  , m_code       ( code      )
+  , m_file       ( file ? file : "" )
+  , m_line       ( line      )
+  , m_what       ()
+  , m_previous   ( previous.clone() )
+{
+  m_what = toString() ;
+}
 // ============================================================================
 /** Constructor (3)
  *  @param message error message
@@ -57,66 +93,68 @@ Ostap::Exception::Exception
  */
 // ============================================================================
 Ostap::Exception::Exception 
-( const std::string&    message   ,
-  const std::string&    tag       ,
-  const StatusCode&     code      ,
-  const std::exception& previous  )
-  : m_message    ( message   )   
-  , m_tag        ( tag       )
-  , m_code       ( code      ) 
-{
-  m_message += std::string(":exception(") + previous.what() + ")" ;
-}
+( const std::string&       message   ,
+  const std::string&       tag       ,
+  const std::exception&    previous  , 
+  const Ostap::StatusCode& code      ,
+  const char*              file      ,
+  const std::size_t        line      ) 
+  : Exception ( message , tag , Exception ( previous ) , code , file , line ) 
+{}
 // ============================================================================
 // Copy constructor (deep copying!)
 // ============================================================================
 Ostap::Exception::Exception ( const Ostap::Exception& right ) 
   : std::exception( right )
-  , m_message {     right.message () } 
-  , m_tag     {     right.tag     () }
-  , m_code    {     right.code    () }
-  , m_previous{     right.previous() ? right.previous()->clone() : nullptr }
+  , m_message { right.m_message  }  
+  , m_tag     { right.m_tag      }
+  , m_code    { right.m_code     }
+  , m_file    ( right.m_file     )
+  , m_line    ( right.m_line     )
+  , m_what    ( right.m_what     )
+  , m_previous{ right.previous () ? right.previous()->clone() : nullptr }
 {}
 // ============================================================================
 // clone operation
 // ============================================================================
 Ostap::Exception* Ostap::Exception::clone() const { return new Exception(*this); }
 // ============================================================================
-// assignment operator
-// ============================================================================
-Ostap::Exception& Ostap::Exception::operator=( const Ostap::Exception& right )
-{
-  if (&right == this ) { return *this ; }
-  m_message  =   right.message() ;
-  m_tag      =   right.tag    () ;
-  m_code     =   right.code   () ;
-  m_previous.reset( right.previous() ? right.previous()->clone() : nullptr );
-  return *this;
-}
-// ============================================================================
-// update the error message to be printed
-// ============================================================================
-void Ostap::Exception::setMessage ( const std::string& m ) { m_message = m ; }
-// ============================================================================
-// update name tag
-// ============================================================================
-void Ostap::Exception::setTag ( const std::string& t ) { m_tag = t ; }
-// ============================================================================
-//  update the status code for the exception
-// ============================================================================
-void Ostap::Exception::setCode( const Ostap::StatusCode& s ) { m_code = s ; }
 // ============================================================================
 // method  for overloaded printout to std::ostream& and MsgStream&
 // ============================================================================
-std::ostream& Ostap::Exception::fillStream ( std::ostream& os ) const 
+std::ostream&
+Ostap::Exception::fillStream
+( std::ostream& os ) const 
 {
-  os << tag() << " \t " << message() ;
-  switch( code() ) {
-  case Ostap::StatusCode::SUCCESS : os << "\t StatusCode=SUCCESS"    ;  break ;
-  case Ostap::StatusCode::FAILURE : os << "\t StatusCode=FAILURE"    ;  break ;
-  default                         : os << "\t StatusCode=" << code() ;  break ;
-  }
-  return ( 0 != previous() ) ? previous()->fillStream( os << std::endl ) : os ;
+  //
+  const static std::string s_exception = " EXCEPTION : " ;
+  const static std::string s_index     = " --- INDEX : " ;
+  const static std::string s_tag       = " ---   TAG : " ;
+  const static std::string s_code      = " ---  CDDE : " ;
+  const static std::string s_file      = " ---  FILE : " ;
+  const static std::string s_line      = " ---  line : " ;
+  //
+  os << s_exception << m_message ; 
+  //
+  const std::string newline = "\n" ; 
+  const int ind = index() ;
+  if ( ind    ) { os << newline << s_index  << ind ; }  
+  if ( !m_tag.empty() ) { os << newline << s_tag << m_tag   ; }
+  // 
+  switch ( m_code )
+    {
+    case Ostap::StatusCode::SUCCESS     : os << newline << s_code << "SUCCESS"     ;  break ;
+    case Ostap::StatusCode::FAILURE     : os << newline << s_code << "FAILURE"     ;  break ;
+    case Ostap::StatusCode::RECOVERABLE : os << newline << s_code << "RECOVERABLE" ;  break ;
+    default                             : os << newline << s_code << m_code        ;  break ;
+    }
+  //
+  if ( !m_file.empty() ) { os << newline << s_file << m_file ; } 
+  if (  m_line         ) { os << newline << s_line << m_line ; }
+  //
+  if ( m_previous ) { os << newline ; m_previous->fillStream ( os ) ; }
+  //
+  return os ;
 }
 // ============================================================================
 // conversion to string 
@@ -128,7 +166,7 @@ std::string Ostap::Exception::toString  () const
   return os.str() ;
 }
 // ============================================================================
-/* throw the exception
+/*  throw the exception
  *  @param message the reason 
  *  @param tag     the tag 
  *  @param code    the code 
@@ -137,9 +175,11 @@ std::string Ostap::Exception::toString  () const
 Ostap::StatusCode Ostap::throwException
 ( const std::string&       message ,
   const std::string&       tag     , 
-  const Ostap::StatusCode& code    ) 
+  const Ostap::StatusCode& code    ,
+  const char*              file    ,
+  const std::size_t        line    )
 {
-  throw Ostap::Exception ( message , tag , code ) ;
+  throw Ostap::Exception ( message , tag , code , file , line ) ;
   return code ;
 }
 // ===========================================================================  
