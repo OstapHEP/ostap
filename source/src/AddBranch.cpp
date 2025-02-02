@@ -1197,13 +1197,21 @@ Ostap::Trees::add_branch
   const Ostap::Trees::DCT&          mapping       )
 {
   //
-  if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
-
-  
+  if ( !tree )                       { return INVALID_TREE ; }
+  // 
   /// get/copy the observables
   if ( 0 == ::size ( observables ) ) { return INVALID_OBSERVABLES ; }
+  // ==========================================================================
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,26,0)
+  // ==========================================================================
+  RooArgSet obsset { observables } ; ::copy ( observables , obsset ) ;
+  // ==========================================================================
+#else // ======================================================================
+  // ==========================================================================
   RooArgSet obsset { observables } ;
-  
+  //===========================================================================
+#endif // =====================================================================
+  // ==========================================================================
   // actual observables 
   const std::unique_ptr<RooArgSet> obsvars { fun.getObservables ( obsset ) } ;
   if ( !obsvars || ::size ( *obsvars )  != ::size ( obsset ) ) { return INVALID_OBSERVABLES ; }
@@ -1313,10 +1321,6 @@ Ostap::Trees::add_branch
   //
   return Ostap::StatusCode::SUCCESS ;  
 }
-
-
-
-
 
 // ============================================================================
 //                                                                      The END 

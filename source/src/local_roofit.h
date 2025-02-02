@@ -44,7 +44,7 @@ namespace
    */
   inline void copy 
   ( const RooAbsCollection&  from ,
-    RooArgList&              to   ) 
+    RooAbsCollection&        to   ) 
   {
     //
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
@@ -67,7 +67,7 @@ namespace
    */
   inline unsigned   int copy_real 
   ( const RooAbsCollection&  from                                    ,
-    RooArgList&              to                                      , 
+    RooAbsCollection&        to                                      , 
     const std::string&       message = "Variable is not RooAbsReal!" ,
     const std::string&       tag     = "Ostap::copy_real"            )
   {
