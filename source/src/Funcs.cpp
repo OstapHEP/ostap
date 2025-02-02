@@ -1286,8 +1286,17 @@ Ostap::Functions::RooTreeFun::RooTreeFun
   , m_observables ()
   , m_normset     () 
 {
-  //
-  const RooArgSet obsset { observables } ;
+  // ==========================================================================
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,26,0)
+  // ==========================================================================
+  RooArgSet obsset {} ; ::copy ( observables , obsset ) ;
+  // ==========================================================================
+#else // ======================================================================
+  // ==========================================================================
+  RooArgSet obsset { observables } ;
+  //===========================================================================
+#endif // =====================================================================
+  // ==========================================================================
   // actual observables
   m_observables = std::unique_ptr<RooArgSet> { m_fun->getObservables ( obsset ) } ;
   if ( normalization ) { m_normset = std::make_unique<RooArgSet> ( *normalization ) ; }
