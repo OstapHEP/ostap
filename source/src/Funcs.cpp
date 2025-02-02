@@ -1304,7 +1304,7 @@ Ostap::Functions::RooTreeFun::RooTreeFun
   if ( normalization )
     {
       // ======================================================================
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,26,0) <= ROOT_VERSION_CODE // ==========
+#if ROOT_VERSION(6,26,0) <= ROOT_VERSION_CODE // ==============================
       // ======================================================================      
       m_normset = std::make_unique<RooArgSet> ( *normalization ) ;
       // ======================================================================

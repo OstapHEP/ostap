@@ -12,12 +12,14 @@
 #include "RooAbsDataStore.h"
 #include "RooFitResult.h"
 #include "RooGlobalFunc.h"
+#include "RooRealVar.h"
 // ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/MoreMath.h"
 #include "Ostap/MoreRooFit.h"
 #include "Ostap/Power.h"
+#include "Ostap/ToStream.h"
 // ============================================================================
 // local
 // ============================================================================
@@ -2047,6 +2049,142 @@ void Ostap::MoreRooFit::assign
 { 
 ::assign ( to , from ) ; 
 }
+// ============================================================================
+/*  print TNamed
+ *  @see  TNamed
+ */
+// ============================================================================
+std::ostream&
+Ostap::Utils::toStream
+( const TNamed& o ,
+  std::ostream& s )
+{ return s << o.GetName() ; }
+// ============================================================================
+/* print RooPrintable 
+ *  @see  RooPrintabbe
+ */
+// ============================================================================
+std::ostream&
+Ostap::Utils::toStream
+( const RooPrintable& o ,
+  std::ostream&       s )
+{
+  o.printClassName ( s ) ;
+  return s ;
+}
+// ============================================================================
+/** print RooAbsReal 
+ *  @see  RooAbsReal
+ */
+// ============================================================================
+std::ostream&
+Ostap::Utils::toStream
+( const RooAbsReal& o ,
+  std::ostream&     s )
+{
+  // ==========================================================================
+  const unsigned short s_precision = 4 ; // ====================================
+  // ==========================================================================
+  if      ( nullptr != dynamic_cast<const RooConstVar*> ( &o ) )
+    { return toStream ( o.getVal() , s , s_precision  ) ; }           // RETURN
+  //
+  const RooRealVar* rrv = dynamic_cast<const RooRealVar*>  ( &o ) ;
+  if ( nullptr == rrv ) { o.printClassName ( s ) ; s << "/"     ; }
+  //
+  s << o.GetName() << " : " ;
+  if ( rrv && rrv->hasAsymError () && ( rrv->getErrorLo() || rrv->getErrorHi() ) ) 
+    {
+      s << "( " ;
+      toStream ( o.getVal()                , s , s_precision ) << " -/ " ;
+      toStream ( rrv->getErrorLo ()        , s , s_precision ) << " +/ " ;
+      return toStream ( rrv->getErrorHi () , s , s_precision ) << " )" ;  // RETURN 
+    }
+  if ( rrv && rrv->hasError () && rrv->getError () )
+    {
+      s << "( " ;
+      toStream ( o.getVal()              , s , s_precision ) << " +/- " ;
+      return toStream ( rrv->getError () , s , s_precision ) << " )" ;     // RETURN 
+    }
+  //
+  return toStream ( o.getVal() , s , s_precision ) ;                       // RETURN       
+}
+// ============================================================================
+/*  print RooAbsCategory  
+ *  @see  RooAbsCategory
+ */
+// ============================================================================
+std::ostream&
+Ostap::Utils::toStream
+( const RooAbsCategory& o ,
+  std::ostream&         s )
+{
+  s << o.GetName() << "::" ;
+  toStream ( o.getCurrentLabel() , s ) << "/" ;
+  return toStream ( o.getCurrentIndex() , s ) ;
+}
+// ============================================================================
+/*  print RooAbsArg 
+ *  @see  RooAbsArg 
+ */
+// ============================================================================
+std::ostream&
+Ostap::Utils::toStream
+( const RooAbsArg& o ,
+  std::ostream&    s )
+{
+  const RooAbsReal*     r = dynamic_cast<const RooAbsReal*>    (&o) ;
+  if ( nullptr != r ) { return toStream ( *r , s ) ; }
+  const RooAbsCategory* c = dynamic_cast<const RooAbsCategory*>(&o) ;
+  if ( nullptr != c ) { return toStream ( *c , s ) ; }
+  o.printClassName ( s ) ;
+  return s << o.GetName() ;  
+}
+// ============================================================================
+/* print RooAbsCollection
+ *  @see  RooAbsCollection
+ */
+// ============================================================================
+std::ostream&
+Ostap::Utils::toStream
+( const RooAbsCollection& o ,
+  std::ostream&           s )
+{
+  // ==========================================================================
+  static const std::string  s_open   { "{ " } ;
+  static const std::string  s_close  { " }" } ;
+  static const std::string  l_open   { "[ " } ;
+  static const std::string  l_close  { " ]" } ;
+  static const std::string  delim    { ", " } ;
+  //
+  const RooArgSet* aset = dynamic_cast<const RooArgSet*>( &o ) ;
+  //
+  const std::string& open  = aset ? s_open  : l_open  ;
+  const std::string& close = aset ? s_close : l_close ;
+  //
+  // ==========================================================================
+#if ROOT_VERSION(6,18,0) <= ROOT_VERSION_CODE // ==============================
+  // ==========================================================================
+  return toStream ( o.begin () , o.end () , s , open , close , delim ) ;
+  // ==========================================================================
+#else // ======================================================================
+  // ==========================================================================
+  Ostap::Utils::Iterator tmp ( o ) ; // only for ROOT < 6.18 
+  RooAbsArg* c = 0    ;
+  bool       f = true ;
+  s << open  ;
+  while ( c = (RooAbsArg*) tmp.next() )
+    {
+      if ( !first ) { s << delim; }
+      toStream ( c , s ) ;
+      first = false ;
+    }
+  return s << close  ;
+  // ==========================================================================
+#endif // =====================================================================
+  // ==========================================================================
+  return s ;
+}
+   
 // ============================================================================
 //                                                                      The END
 // ============================================================================

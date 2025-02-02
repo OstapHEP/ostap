@@ -325,6 +325,17 @@ namespace Ostap
       std::ostream&              s     ) 
     { return Ostap::Utils::details::TuplePrinter<decltype(tuple), sizeof...(Args)>::toStream ( tuple , s << " ( " )<< " ) "; }
     // ========================================================================
+    /// print generic pointer 
+    // ========================================================================
+    template <class TYPE>
+    inline std::ostream& toStrem
+    ( const TYPE*   o ,
+      std::ostream& s )
+    {
+      if ( nullptr == o ) { s << "nullptr" ; return o ;}
+      return toStream ( *o , s ) ; 
+    }
+    // ========================================================================
     /** the generic implementation of the type conversion to the string
      *  @author Alexander MAZUROV Alexander.Mazurov@gmail.com
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
