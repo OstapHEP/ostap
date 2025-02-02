@@ -13,6 +13,7 @@
 #include "RooFitResult.h"
 #include "RooGlobalFunc.h"
 #include "RooRealVar.h"
+#include "RooAbsCategory.h"
 // ============================================================================
 // Ostap
 // ============================================================================

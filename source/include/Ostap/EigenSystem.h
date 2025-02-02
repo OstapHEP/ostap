@@ -218,9 +218,13 @@ namespace Ostap
         /// check/adjust the  internal structures 
         Ostap::StatusCode _check    ( const unsigned int D ) const ;
         // thrown the exception 
-        Ostap::StatusCode Exception ( const StatusCode& sc ) const ;       
+        Ostap::StatusCode Exception
+        ( const StatusCode& sc             ,
+          const char*       file = nullptr ,
+          const std::size_t line = 0       ) const ;       
         // ====================================================================
       private:
+        // ====================================================================
         // the size of workspace 
         mutable unsigned int   m_dim1   ; ///< the size of workspace 
         mutable unsigned int   m_dim2   ; ///< the size of workspace 
@@ -233,7 +237,8 @@ namespace Ostap
         // the matrix with eigenvectors  
         mutable gsl_matrix*     m_evec   ; ///< the matrix with eigenvectors  
         // the vector with eigenvalues 
-        mutable gsl_vector*     m_vector ; ///< the vector with eigenvalues 
+        mutable gsl_vector*     m_vector ; ///< the vector with eigenvalues
+        // ====================================================================
       } ;      
       // ======================================================================
       /** copy GSL vector into MathLib vector 
@@ -285,5 +290,5 @@ namespace Ostap
 // ============================================================================
 #include "Ostap/EigenSystem.icpp"  
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================

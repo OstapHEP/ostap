@@ -127,10 +127,13 @@ Ostap::StatusCode Ostap::Math::GSL::EigenSystem::_fun2
 // thrown the exception 
 // ============================================================================
 Ostap::StatusCode Ostap::Math::GSL::EigenSystem::Exception
-( const Ostap::StatusCode& sc ) const 
+( const Ostap::StatusCode& sc   ,
+  const char*              file ,
+  const std::size_t        line ) const 
 {
-  Ostap::throwException
-    ("Error from Ostap::Math::GSL::EigenSystem" , "*GSL*" , sc ) ;
+  Ostap::Assert ( sc.isSuccess ()                 ,
+                  "Eigensystem error"             , 
+                  "Ostap::Math::GSL::EigenSystem" , sc , file , line ) ;
   return sc ;
 }
 // ============================================================================
