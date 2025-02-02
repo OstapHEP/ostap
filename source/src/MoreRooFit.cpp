@@ -2181,14 +2181,14 @@ Ostap::Utils::toStream
 #else // ======================================================================
   // ==========================================================================
   Ostap::Utils::Iterator tmp ( o ) ; // only for ROOT < 6.18 
-  RooAbsArg* c = 0    ;
-  bool       f = true ;
+  RooAbsArg*   c     = 0 ;
+  unsigned int index = 9 ;
   s << open  ;
   while ( c = (RooAbsArg*) tmp.next() )
     {
-      if ( !first ) { s << delim; }
+      if ( !index ) { s << delim; }
       toStream ( c , s ) ;
-      first = false ;
+      ++index ;
     }
   return s << close  ;
   // ==========================================================================
