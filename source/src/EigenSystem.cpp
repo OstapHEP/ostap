@@ -66,44 +66,67 @@ Ostap::StatusCode Ostap::Math::GSL::EigenSystem::_check
   if ( 0 != m_matrix && ( D != m_matrix->size1 || D != m_matrix->size2 ) ) 
   { gsl_matrix_free ( m_matrix ) ; m_matrix = 0 ; }
   if ( 0 == m_matrix   ) { m_matrix = gsl_matrix_alloc ( D , D ) ; }
-  if ( 0 == m_matrix   ) { return Ostap::StatusCode ( MatrixAllocationFailure    ) ; }
-  
+  //
+  Ostap::Assert ( nullptr != m_matrix ,
+                  "(GSL)Matrix allocation failure" ,
+                  "Ostap::Math::GSL::EigenSystem"  ,
+                  MatrixAllocationFailure , __FILE__ , __LINE__ ) ;
+  //
   // check existing GSL matrix, (re)allocate if needed 
   if ( 0 != m_evec && ( D != m_evec->size1 || D != m_evec->size2 ) ) 
-  { gsl_matrix_free ( m_evec ) ; m_evec = 0 ; }
+    { gsl_matrix_free ( m_evec ) ; m_evec = 0 ; }
   if ( 0 == m_evec     ) { m_evec = gsl_matrix_alloc   ( D , D ) ; }
-  if ( 0 == m_evec     ) { return Ostap::StatusCode ( MatrixAllocationFailure    ) ; }
-  
+  //
+  Ostap::Assert ( nullptr != m_evec ,
+                  "(GSL)Vector allocation failure" ,
+                  "Ostap::Math::GSL::EigenSystem"  ,
+                  VectorAllocationFailure , __FILE__ , __LINE__ ) ;
+  //
   // check the GSL vector, (re)allocate if needed 
   if ( 0 != m_vector && D != m_vector->size )
-  { gsl_vector_free ( m_vector ) ; m_vector = 0 ; }
+    { gsl_vector_free ( m_vector ) ; m_vector = 0 ; }
   if ( 0 == m_vector   ) { m_vector = gsl_vector_alloc ( D ) ; }
-  if ( 0 == m_vector   ) { return Ostap::StatusCode ( VectorAllocationFailure    ) ; }
- 
+  //
+  Ostap::Assert ( nullptr != m_vector  ,
+                  "(GSL)Vector allocation failure" ,
+                  "Ostap::Math::GSL::EigenSystem"  ,
+                  VectorAllocationFailure , __FILE__ , __LINE__ ) ;
+  //
   return Ostap::StatusCode::SUCCESS ;
 } 
 // ============================================================================
 // find the eigenvalues   (& sort them if needed ) 
 // ============================================================================
-Ostap::StatusCode Ostap::Math::GSL::EigenSystem::_fun1 
+Ostap::StatusCode
+Ostap::Math::GSL::EigenSystem::_fun1 
 ( const bool sorted ) const
 {
   // check the working space, (re)allocate if needed  
   if ( 0 != m_work1 && m_dim1 != m_vector->size ) 
-  { gsl_eigen_symm_free  ( m_work1 ) ; m_work1 = 0 ; }
+    { gsl_eigen_symm_free  ( m_work1 ) ; m_work1 = 0 ; }
   if ( 0 == m_work1 ) 
-  { m_dim1 = m_vector->size ; m_work1 = gsl_eigen_symm_alloc ( m_dim1 ) ; ; }
-  if ( 0 == m_work1 ) { return Ostap::StatusCode ( WorkspaceAllocationFailure ) ; }
-  
+    { m_dim1 = m_vector->size ; m_work1 = gsl_eigen_symm_alloc ( m_dim1 ) ; ; }
+  // 
+  Ostap::Assert ( nullptr != m_work1                  ,
+                  "(GSL)Workspace allocation failure" ,
+                  "Ostap::Math::GSL::EigenSystem"     ,
+                  WorkspaceAllocationFailure , __FILE__ , __LINE__ ) ;
+  //
   const int result = gsl_eigen_symm  ( m_matrix , m_vector , m_work1 ) ;
-  if ( result ) { return Ostap::StatusCode ( ErrorFromGSL + result ) ; }
+  Ostap::Assert ( !result                          ,
+                  "Error from gsl_eigen_symm/+200" ,
+                  "Ostap::Math::GSL::EigenSystem"  ,
+                  ErrorFromGSL + 1 , __FILE__ , __LINE__ ) ;
+  //
   if ( sorted ) { gsl_sort_vector   ( m_vector )  ; }
+  //
   return Ostap::StatusCode::SUCCESS ;
 } 
 // ============================================================================
 // find the eigenvalues&eigenvectors (& sort them if needed ) 
 // ============================================================================
-Ostap::StatusCode Ostap::Math::GSL::EigenSystem::_fun2 
+Ostap::StatusCode
+Ostap::Math::GSL::EigenSystem::_fun2 
 ( const bool sorted    ,
   const bool ascending ) const
 {
@@ -112,10 +135,18 @@ Ostap::StatusCode Ostap::Math::GSL::EigenSystem::_fun2
   { gsl_eigen_symmv_free ( m_work2 ) ; m_work2 = 0 ; }  
   if ( 0 == m_work2 ) 
   { m_dim2 = m_vector->size ; m_work2 = gsl_eigen_symmv_alloc ( m_dim2 ) ; ; }
-  if ( 0 == m_work2 ) { return Ostap::StatusCode ( WorkspaceAllocationFailure ) ; }
-  
+  //
+  Ostap::Assert ( nullptr != m_work2                  ,
+                  "(GSL)Workspace allocation failure" ,
+                  "Ostap::Math::GSL::EigenSystem"     ,
+                  WorkspaceAllocationFailure , __FILE__ , __LINE__ ) ;
+  //
   const int result = gsl_eigen_symmv ( m_matrix , m_vector , m_evec , m_work2 ) ;
-  if ( result ) { return Ostap::StatusCode ( ErrorFromGSL + result ) ; }
+  Ostap::Assert ( !result                           ,
+                  "Error from gsl_eigen_symmv/+200" ,
+                  "Ostap::Math::GSL::EigenSystem"   ,
+                  ErrorFromGSL + 1 , __FILE__ , __LINE__ ) ;
+  //
   if ( sorted ) { gsl_eigen_symmv_sort
       ( m_vector  ,
         m_evec    ,
