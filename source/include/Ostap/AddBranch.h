@@ -32,6 +32,10 @@ class TH3        ;
 class RooAbsReal       ;
 class RooAbsCollection ;
 // ============================================================================
+// Forward declarations from Ostap 
+// ============================================================================
+namespace  Ostap { namespace MoreRooFit { class SPlot2Tree ; } }  // Ostap 
+// ============================================================================
 namespace Ostap
 {  
   // ==========================================================================
@@ -972,6 +976,7 @@ namespace Ostap
      *  @param observables   function observables 
      *  @oaram normalization normalization set 
      *  @param mapping : observables -> brnaches 
+     *  @return StatusCode
      */
     Ostap::StatusCode
     add_branch
@@ -989,6 +994,7 @@ namespace Ostap
      *  @param fun   the function 
      *  @param observables   function observables 
      *  @param mapping : observables -> brnaches 
+     *  @return StatusCode
      */
     inline 
     Ostap::StatusCode
@@ -1000,6 +1006,35 @@ namespace Ostap
       const RooAbsCollection&           observables ,
       const DCT&                        mapping     ) 
     { return add_branch ( tree , progress , bname , fun , observables , nullptr , mapping ) ; } 
+    // ========================================================================
+    /** Add sPlot information to the tree 
+     *  @param tree  input tree 
+     *  @param splot sPlot object 
+     *  @param prefix prefix for the branch names 
+     *  @param suffix suffix for the branch names 
+     *  @return StatusCode
+     */
+    StatusCode
+    add_branch
+    ( TTree*                               tree           ,
+      const Ostap::MoreRooFit::SPlot2Tree& esplot         ,
+      const std::string&                   prefix = ""    ,
+      const std::string&                   suffix = "_sw" ) ;    
+    // ========================================================================
+    /** Add sPlot information to the tree 
+     *  @param tree  input tree 
+     *  @param splot sPlot object 
+     *  @param prefix prefix for the branch names 
+     *  @param suffix suffix for the branch names 
+     *  @return StatusCode
+     */
+    StatusCode
+    add_branch
+    ( TTree*                               tree           ,
+      const Ostap::Utils::ProgressConf&    progress       , 
+      const Ostap::MoreRooFit::SPlot2Tree& esplot         ,
+      const std::string&                   prefix = ""    ,
+      const std::string&                   suffix = "_sw" ) ;
     // ========================================================================    
   } //                                        The end of namespace Ostap::Trees 
   // ==========================================================================
