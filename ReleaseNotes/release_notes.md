@@ -36,6 +36,8 @@
     1. remove obsolete `ostap.fitting.simfit.Sim1D`
     
 ## Bug fixes
+    
+    1. fix a typo  in `parallel_statvars` (@thanks to Dima Pereima) 
 
 # v1.13.9.0
 
