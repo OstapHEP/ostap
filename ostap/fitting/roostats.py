@@ -53,10 +53,8 @@ from   ostap.core.ostap_types import ( string_types   ,
                                        num_types      , 
                                        sequence_types ,
                                        dictlike_types )
-from   ostap.core.core        import Ostap , valid_pointer
+from   ostap.core.core        import Ostap , valid_pointer, split_string , loop_items 
 from   ostap.utils.basic      import ( zip_longest   ,
-                                       split_string  ,
-                                       loop_items    , 
                                        typename      )
 import ostap.fitting.roofit
 from   ostap.fitting.pdfbasic import APDF1
