@@ -15,7 +15,7 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 from   builtins                 import range
-from   ostap.core.metA_info     import root_info 
+from   ostap.core.meta_info     import root_info 
 from   ostap.fitting.variables  import SETVAR, FIXVAR  
 from   ostap.core.core          import cpp, VE, dsID, hID , rooSilent, Ostap 
 from   ostap.utils.timing       import timing
