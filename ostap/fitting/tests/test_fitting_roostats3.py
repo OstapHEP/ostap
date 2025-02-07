@@ -15,8 +15,7 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 from   builtins                 import range
-import ostap.fitting.roofit 
-import ostap.fitting.models     as     Models
+from   ostap.core.metA_info     import root_info 
 from   ostap.fitting.variables  import SETVAR, FIXVAR  
 from   ostap.core.core          import cpp, VE, dsID, hID , rooSilent, Ostap 
 from   ostap.utils.timing       import timing
@@ -24,7 +23,9 @@ from   ostap.utils.utils        import vrange
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait
+import ostap.fitting.models     as     Models
 import ostap.logger.table       as     T
+import ostap.fitting.roofit 
 import ROOT
 # =============================================================================
 # logging 
@@ -183,6 +184,11 @@ def test_scan_limit2 () :
 
     logger.info ( "Scan limits with RooStats (constrained mass-dependent resolution&efficiency)" )
 
+
+    if ( 6 , 28 , 0 ) <= root_info < ( 6 , 28 , 10 ) :
+        logger.warning ( "Test is disabled foe this version of ROOT" )
+        return
+    
     from ostap.fitting.roofuncs import BernsteinPoly as BP 
 
     ## resolution depends on the peak position
@@ -273,8 +279,6 @@ def test_scan_limit2 () :
     
     rows = [ ( 'm0' , '90%UL' ) ]
 
-    print ( 'MODELS-before', model_sb.poi, model_b.poi )
-    
     ## start the scan: 
     for m0 in progress_bar ( vrange ( 1 , 9 , 25 ) ) : 
         
@@ -307,7 +311,6 @@ def test_scan_limit2 () :
             row = '%.1f' % m0 , '%.1f' % limit
             rows.append ( row ) 
 
-    print ( 'MODELS-after', model_sb.poi, model_b.poi )
     model_b.ws.Print('vvv')
     
     ## visualize the Brasil plot 
