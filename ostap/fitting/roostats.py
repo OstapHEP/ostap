@@ -48,13 +48,16 @@ __all__     = (
     )
 # ==============================================================================
 from   ostap.core.meta_info   import root_info 
-from   ostap.core.ostap_types import ( string_types    , integer_types  ,
-                                        num_types      , 
-                                        sequence_types , dictlike_types )
-from   ostap.core.core        import ( valid_pointer   , split_string   ,
-                                       loop_items      , Ostap          ,
-                                       typename  )
-from   ostap.utils.basic      import zip_longest 
+from   ostap.core.ostap_types import ( string_types   ,
+                                       integer_types  ,
+                                       num_types      , 
+                                       sequence_types ,
+                                       dictlike_types )
+from   ostap.core.core        import Ostap , valid_pointer
+from   ostap.utils.basic      import ( zip_longest   ,
+                                       split_string  ,
+                                       loop_items    , 
+                                       typename      )
 import ostap.fitting.roofit
 from   ostap.fitting.pdfbasic import APDF1
 import ROOT, abc, sys  
@@ -616,7 +619,7 @@ class ModelConfig(object):
         vfmt = '%%%ds : %%-+7g' % vmax
         for i , v in enumerate ( self.snapshot ) :
             if 0 == i : row = '*' , 'Snapshot:' , vfmt % ( v.name , v.getVal () )
-            else      : row = '*' ''            , vfmt % ( v.name , v.getVal () )
+            else      : row = '*' , ''          , vfmt % ( v.name , v.getVal () )
             rows.append ( row )
             
         if not self.snapshot : rows.append (  ( 'shapshot' , ) ) 
