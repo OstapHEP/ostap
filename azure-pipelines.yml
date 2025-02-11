@@ -137,3 +137,21 @@ jobs:
     CMTCONFIG: 'x86_64-el9-gcc13-opt'
     artifact: 'test_al9_lcg106_gcc13'
 
+ - template: template-pipelines.yml  # Template reference
+   parameters:
+    name: el9_lcg_107_gcc14
+    vmImage:  'ubuntu-latest'
+    dockername: 'gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest'
+    LCG: 'LCG_107'
+    CMTCONFIG: 'x86_64-el9-gcc14-opt'
+    artifact: 'test_al9_lcg107_gcc14'
+
+ - template: template-pipelines.yml  # Template reference
+   parameters:
+    name: el9_lcg_107_clang19
+    vmImage:  'ubuntu-latest'
+    dockername: 'gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest'
+    LCG: 'LCG_107'
+    CMTCONFIG: 'x86_64-el9-clang19-opt'
+    artifact: 'test_al9_lcg107_clang19'
+    
