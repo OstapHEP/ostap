@@ -9,22 +9,209 @@ if (${FORCE_COLORED_OUTPUT})
     endif ()
 endif ()
 
+  
 if(ROOT_VERSION VERSION_LESS "6.24")
-  message ( WARNING " Support for ROOT version " ${ROOT_VERSION} " will reach end soon!")
+  message ( " ROOT   version " ${ROOT_VERSION} " is not supported anymore" )
+endif() 
+    
+message ( "----> ROOT   version    : " ${ROOT_VERSION} )
+    
+# =============================================================================
+## Locate proper Python/PythonLibs 
+find_program(ROOT_CONFIG_EXECUTABLE NAMES root-config)
+
+execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python3-version
+                 OUTPUT_VARIABLE PY3VERSION_ROOT
+                 OUTPUT_STRIP_TRAILING_WHITESPACE )
+
+if (PY3VERSION_ROOT VERSION_LESS "3.8" )
+  message ( SEND_ERROR " Python version " ${PY3VERSION}   " is no tsupported anymore")
+endif() 
+
+    
+add_library ( root_pyroot INTERFACE IMPORTED)
+    
+find_package(Python3 ${PY3VERSION_ROOT} COMPONENTS Interpreter Development NumPy)
+if  (Python3_FOUND)
+else()
+  message ( SEND_ERROR "Python3 is NOT FOUND!" ) 
+endif()  
+if (Python3_VERSION  VERSION_LESS "3.8" )
+  message ( SEND_ERROR " Python version " ${Python3_VERSION} " is not supported anymore")
+endif() 
+
+set(Python_VERSION ${Python3_VERSION}  )
+message ( "----> Python version    : " ${Python3_VERSION}      )
+message ( "----> Python executable : " ${Python3_EXECUTABLE}   )
+message ( "----> Python include    : " ${Python3_INCLUDE_DIRS} )
+message ( "----> Python libraries  : " ${Python3_LIBRARIES}    )
+set( PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS} )
+set( PYTHON_LIBRARIES    ${Python3_LIBRARIES}    )
+set( PYTHON_VERSION      ${Python3_VERSION}      PARENT_SCOPE)
+set( PYTHON_EXECUTABLE   ${Python3_EXECUTABLE}   PARENT_SCOPE)
+if(ROOT_VERSION VERSION_LESS "6.31.01")
+  set_target_properties( root_pyroot PROPERTIES INTERFACE_LINK_LIBRARIES "ROOT::PyROOT3;ROOT::ROOTTPython;Python3::Python")
+else  ()
+  set_target_properties( root_pyroot PROPERTIES INTERFACE_LINK_LIBRARIES "ROOT::ROOTTPython;Python3::Python")
+endif () 
+
+# =============================================================================
+## Locate GSL 
+## since we are using MathMore, GSL *must be* somewhere around
+## try with gsl-config in the path 
+if ( EXISTS "$ENV{GSL_ROOT_DIR}" )
+  file( TO_CMAKE_PATH "$ENV{GSL_ROOT_DIR}" GSL_ROOT_DIR )
+  set( GSL_ROOT_DIR "${GSL_ROOT_DIR}" CACHE PATH "Prefix for GSL installation." )
+endif()
+if ( NOT EXISTS "${GSL_ROOT_DIR}" )
+ find_program( GSL_CONFIG_EXECUTABLE NAMES gsl-config )        
+ if( EXISTS "${GSL_CONFIG_EXECUTABLE}" )
+  execute_process(
+    COMMAND "${GSL_CONFIG_EXECUTABLE}" --prefix
+    OUTPUT_VARIABLE GSL_ROOT_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE )
+ endif()
+endif()
+
+find_package(GSL REQUIRED GSL_ROOT_DIR COMPONENTS gsl)
+if (GSL_FOUND) 
+  message ( "----> GSL    version    : " ${GSL_VERSION} )
+  message ( "----> GSL    include    : " ${GSL_INCLUDE_DIRS} )
+  message ( "----> GSL    libraries  : " ${GSL_LIBRARIES} )
+else()
+  message ( SEND_ERROR "----> No GSL libraries are found!" )
+endif() 
+
+if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+  #message(STATUS "YES" "${CMAKE_CXX_COMPILER_ID}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-register")
+  set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -undefined dynamic_lookup")
+endif()
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/build.config.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/build.config"
+)
+                                                           
+configure_file (
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap/Config.h.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h"
+  )
+
+#---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
+include(${ROOT_USE_FILE})
+
+
+function( MAKE_DICT name header selection )
+   REFLEX_GENERATE_DICTIONARY( ${name} ${header} SELECTION ${selection})
+   add_library( ${name}Dict MODULE ${name}.cxx)
+   add_dependencies(${name}Dict ${name}-dictgen ostap ROOT::MathMore ROOT::GenVector root_pyroot)
+   target_link_libraries   ( ${name}Dict ostap ROOT::MathMore ROOT::GenVector root_pyroot )
+endfunction( MAKE_DICT )
+
+## include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${GSL_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
+
+
+include(CMake_OSTAP.cmake) 
+
+
+## set_target_properties(ostap
+##     PROPERTIES
+##     NO_SYSTEM_FROM_IMPORTED ON
+##     )
+
+if(ROOT_VERSION VERSION_LESS_EQUAL "6.31.00")
+
+execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx26
+                 OUTPUT_VARIABLE CXX26_ROOT
+                 OUTPUT_STRIP_TRAILING_WHITESPACE )
+execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx20
+                 OUTPUT_VARIABLE CXX20_ROOT
+                 OUTPUT_STRIP_TRAILING_WHITESPACE )
+execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx14
+                 OUTPUT_VARIABLE CXX14_ROOT
+                 OUTPUT_STRIP_TRAILING_WHITESPACE )
+execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx11
+                 OUTPUT_VARIABLE CXX11_ROOT
+                 OUTPUT_STRIP_TRAILING_WHITESPACE )
+
+if     ( ${CXX26_ROOT} STREQUAL "yes" ) 
+target_compile_features (ostap PUBLIC cxx_std_26 )
+elseif ( ${CXX20_ROOT} STREQUAL "yes" ) 
+target_compile_features (ostap PUBLIC cxx_std_20 )
+slseif ( ${CXX17_ROOT} STREQUAL "yes" ) 
+target_compile_features (ostap PUBLIC cxx_std_17 )
+elseif ( ${CXX14_ROOT} STREQUAL "yes" ) 
+target_compile_features (ostap PUBLIC cxx_std_14 )
+elseif ( ${CXX11_ROOT} STREQUAL "yes" ) 
+target_compile_features (ostap PUBLIC cxx_std_11 )
+endif() 
+
+else() 
+
+execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --cxxstandard
+                 OUTPUT_VARIABLE CXX_ROOT
+                 OUTPUT_STRIP_TRAILING_WHITESPACE )
+
+set_property(TARGET ostap PROPERTY CXX_STANDARD ${CXX_ROOT} )
+
+if     ( ${CXX_ROOT} STREQUAL "26" ) 
+target_compile_features (ostap PUBLIC cxx_std_26 )
+elseif ( ${CXX_ROOT} STREQUAL "23" ) 
+target_compile_features (ostap PUBLIC cxx_std_23 )
+elseif ( ${CXX_ROOT} STREQUAL "20" ) 
+target_compile_features (ostap PUBLIC cxx_std_20 )
+elseif ( ${CXX_ROOT} STREQUAL "17" ) 
+target_compile_features (ostap PUBLIC cxx_std_17 )
+elseif ( ${CXX_ROOT} STREQUAL "14" ) 
+target_compile_features (ostap PUBLIC cxx_std_14 )
+else() 
+##target_compile_features (ostap PUBLIC cxx_std_11 )
+endif()
+    
 endif() 
 
 
-if(ROOT_VERSION VERSION_GREATER_EQUAL "6.23.01")
-    message ( "----> Use OSTAP/CMAKE setting for ROOT  >6.23")
-    include(CMakeROOT_6_23.cmake)
-elseif(ROOT_VERSION VERSION_GREATER_EQUAL "6.22")
-    message ( FATAL_ERROR "FATAL ERROR: ----> ROOT version " ${ROOT_VERSION} " is not supported (new PyROOT)!" )
-elseif(ROOT_VERSION VERSION_EQUAL "6.16.0")
-    message ( "----> Use OSTAP/CMAKE setting for ROOT  6.16")
-    include(CMakeROOT_6_16.cmake)
-else()
-    message ( "----> Use OSTAP/CMAKE setting for ROOT  6.14")
-    include(CMakeROOT_6_14.cmake)
-endif()
+target_link_libraries   ( ostap ROOT::MathMore ROOT::ROOTVecOps ROOT::GenVector root_pyroot ROOT::RooFit ROOT::Hist ROOT::Tree ROOT::TreePlayer ROOT::RIO ROOT::TMVA ROOT::ROOTDataFrame GSL::gsl )
+
+target_include_directories (ostap
+    PUBLIC 
+        $<INSTALL_INTERFACE:include>    
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src ${Python_INCLUDE_DIRS} 
+)
+
+REFLEX_GENERATE_DICTIONARY( ostap     ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.hh 
+                            SELECTION ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.xml )
+
+add_library           ( ostapDict MODULE ostap.cxx)
+add_dependencies      ( ostapDict ostap-dictgen ostap ROOT::MathMore ROOT::GenVector root_pyroot )
+target_link_libraries ( ostapDict               ostap ROOT::MathMore ROOT::GenVector root_pyroot )
 
 
+install ( TARGETS ostap     EXPORT   ostap-export 
+                            LIBRARY  DESTINATION lib 
+                            INCLUDES DESTINATION include )
+
+install ( TARGETS ostapDict LIBRARY  DESTINATION lib COMPONENT libraries )
+
+install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap     
+                    DESTINATION include 
+                    FILES_MATCHING
+                    COMPONENT headers 
+                    PATTERN "*.h"
+                    PATTERN "*.hpp"
+                    PATTERN "*.icpp"
+                    PATTERN  "*#*" EXCLUDE )
+    
+install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h    DESTINATION include/Ostap COMPONENT headers   )
+install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm   DESTINATION lib           COMPONENT libraries )
+install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap DESTINATION lib           COMPONENT libraries )
+install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/build.config      DESTINATION lib           COMPONENT libraroes )
+
+install(EXPORT ostap-export
+  FILE         OstapTargets.cmake
+  NAMESPACE    ostap::
+  DESTINATION  cmake/Ostap
+)
