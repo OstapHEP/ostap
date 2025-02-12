@@ -2,7 +2,6 @@
 // ============================================================================
 // ROOT 
 // ============================================================================
-#include "RVersion.h"
 #include "TTree.h"
 #include "TChain.h"
 // ============================================================================
@@ -40,7 +39,7 @@ Ostap::Trees::Getter::Getter
   , m_formulae ()   
 {
   unsigned short index = 0 ;
-  for ( auto item : expressions ) { m_map [ "var" + Ostap::Utils::toString ( ++index ) ] = item ; }
+  for ( const auto& item : expressions ) { m_map [ "var" + Ostap::Utils::toString ( ++index ) ] = item ; }
   //
   if ( nullptr != tree )
     {
@@ -285,39 +284,20 @@ bool Ostap::Trees::RooGetter::add
 ( const RooAbsCollection& vars )
 {
   // ==========================================================================
-  { // ========================================================================
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0) // ===============================
+  for ( RooAbsArg* o : vars )
+    {
+      Ostap::Assert ( nullptr != o                         ,
+                      "Invalid varibale "                  ,
+                      "Ostap::Trees:RooGeter::add"         ,
+                      INVALID_ABSARG , __FILE__ , __LINE__ ) ;
+      // loopkup & imsert 
+      if ( m_map.end () == m_map.find ( o->GetName() ) )
+        { add ( o->GetName() , o->GetName() ) ; }
+      // ====================================================================
+    } //                                     The end of the loop over results
     // ========================================================================
-    //
-    Ostap::Utils::Iterator iter ( vars ) ; // only for ROOT < 6.18
-    RooAbsArg* o = 0 ;
-    while ( o = (RooAbsArg*) iter .next() )
-      {
-        // ====================================================================
-#else   // ====================================================================
-        // ====================================================================
-    for ( RooAbsArg* o : vars )
-      {
-        // ====================================================================
-#endif  // ====================================================================
-        // ====================================================================
-        Ostap::Assert ( nullptr != o                         ,
-                        "Invalid varibale "                  ,
-                        "Ostap::Trees:RooGeter::add"         ,
-                        INVALID_ABSARG , __FILE__ , __LINE__ ) ;
-        // loopkup & imsert 
-        if ( m_map.end () == m_map.find ( o->GetName() ) )
-          { add ( o->GetName() , o->GetName() ) ; }
-        // ====================================================================
-      } //                                     The end of the loop over results
-    // ========================================================================
-  } //                                                      The end of if-block
-  // ==========================================================================
   return true ;  
 }
-  
-
-
 
 // ============================================================================
 // get the results
@@ -346,20 +326,8 @@ Ostap::Trees::RooGetter::assign
   Ostap::StatusCode sc = eval ( rmap , tree ) ;
   Ostap::Assert ( sc.isSuccess () , "Invalid Getter" , "Ostap::Trees::RooGetter::assign" , sc , __FILE__ , __LINE__ ) ;
   // ==========================================================================
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0) // ===============================
-  // ==========================================================================
-  //
-  Ostap::Utils::Iterator iter( result  ) ; // only for ROOT < 6.18
-  RooAbsArg* o = 0 ;
-  while ( o = (RooAbsArg*) iter .next() )
-    {
-      // =====================================================================
-#else  // ====================================================================
-      // =====================================================================
   for ( RooAbsArg* o : result )
     {
-      // =====================================================================
-#endif // ====================================================================
       // =====================================================================
       if ( nullptr == o ) { continue ; }
       RooAbsRealLValue*       rlv = dynamic_cast<RooAbsRealLValue*>     ( o ) ;

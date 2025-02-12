@@ -78,15 +78,7 @@ namespace
       const RooArgSet* varset = m_data->get() ;
       if ( nullptr == varset ) { return Ostap::TMVA::InvalidDataSet ; }
       //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
-      //      
-      RooArgList       varlst ;
-      Ostap::Utils::Iterator iter ( *varset ); // only for ROOT < 6.18 
-      // RooAbsArg*   coef = 0 ;
-      while ( RooAbsArg* coef = iter.static_next<RooAbsArg>() ) { varlst.add ( *coef ); }
-#else 
       RooArgList       varlst { *varset } ;      
-#endif
       //
       // 1)  create variables 
       for ( const auto& i : m_inputs ) 

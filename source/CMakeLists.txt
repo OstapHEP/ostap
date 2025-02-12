@@ -119,6 +119,9 @@ if(ROOT_VERSION VERSION_LESS_EQUAL "6.31.00")
 execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx26
                  OUTPUT_VARIABLE CXX26_ROOT
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
+execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx23
+                 OUTPUT_VARIABLE CXX23_ROOT
+                 OUTPUT_STRIP_TRAILING_WHITESPACE )
 execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx20
                  OUTPUT_VARIABLE CXX20_ROOT
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
@@ -129,17 +132,17 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx11
                  OUTPUT_VARIABLE CXX11_ROOT
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
 
-if     ( ${CXX26_ROOT} STREQUAL "yes" ) 
-target_compile_features (ostap PUBLIC cxx_std_26 )
-elseif ( ${CXX20_ROOT} STREQUAL "yes" ) 
-target_compile_features (ostap PUBLIC cxx_std_20 )
-slseif ( ${CXX17_ROOT} STREQUAL "yes" ) 
-target_compile_features (ostap PUBLIC cxx_std_17 )
-elseif ( ${CXX14_ROOT} STREQUAL "yes" ) 
-target_compile_features (ostap PUBLIC cxx_std_14 )
-elseif ( ${CXX11_ROOT} STREQUAL "yes" ) 
-target_compile_features (ostap PUBLIC cxx_std_11 )
-endif() 
+## if     ( ${CXX26_ROOT} STREQUAL "yes" ) 
+## target_compile_features (ostap PUBLIC cxx_std_26 )
+## elseif ( ${CXX20_ROOT} STREQUAL "yes" ) 
+## target_compile_features (ostap PUBLIC cxx_std_20 )
+## slseif ( ${CXX17_ROOT} STREQUAL "yes" ) 
+## target_compile_features (ostap PUBLIC cxx_std_17 )
+## elseif ( ${CXX14_ROOT} STREQUAL "yes" ) 
+## target_compile_features (ostap PUBLIC cxx_std_14 )
+## elseif ( ${CXX11_ROOT} STREQUAL "yes" ) 
+## target_compile_features (ostap PUBLIC cxx_std_11 )
+## endif() 
 
 else() 
 

@@ -102,24 +102,13 @@ Ostap::MoreRooFit::RooFun::RooFun
                   INVALID_OBSERVABLES , __FILE__ , __LINE__       ) ;                   
   // ==========================================================================
   { // ========================================================================
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0) // ===============================
-    // ========================================================================
-    Ostap::Utils::Iterator iter_o ( *m_observable ) ; // only for ROOT < 6.18
-    RooAbsArg* o = 0 ;
-    while ( o = (RooAbsArg*) iter_o .next() )
-      {
-        // ====================================================================
-#else   // ====================================================================
-        // ====================================================================
     for ( auto* o : *m_observables )
       {
         // ====================================================================
-#endif  // ====================================================================
-        // ====================================================================
-      Ostap::Assert ( nullptr != o                             ,
-                      "Invalid/nullptr observable"             , 
-                      "Ostap::MoreRoofit::RooFun"              ,
-                      INVALID_OBSERVABLE , __FILE__ , __LINE__ ) ;
+        Ostap::Assert ( nullptr != o                             ,
+                        "Invalid/nullptr observable"             , 
+                        "Ostap::MoreRoofit::RooFun"              ,
+                        INVALID_OBSERVABLE , __FILE__ , __LINE__ ) ;
       //
       const RooAbsRealLValue*     rv = dynamic_cast<RooAbsRealLValue*> ( o ) ;
       const RooAbsCategoryLValue* cv = nullptr ;
