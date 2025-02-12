@@ -5,6 +5,7 @@
 // ============================================================================
 #include "TCut.h"
 #include "TTree.h"
+#include "TChain.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -14,6 +15,7 @@
 // local
 // ============================================================================
 #include "Exception.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file 
  *  Implementation file for class Analysis::SelectorWithCuts
@@ -43,43 +45,25 @@ namespace
 // ClassImp(Ostap::SelectorWithCuts) ;
 // ============================================================================
 Ostap::SelectorWithCuts::SelectorWithCuts
-(
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
-  PyObject*   self          , 
-#endif  
-  const TCut& cuts          ,
-  TTree*      tree          ) :
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
-  SelectorWithCuts ( self , std::string ( cuts.GetTitle () ) , tree ) 
-#else
-  SelectorWithCuts (        std::string ( cuts.GetTitle () ) , tree ) 
-#endif 
+( const TCut& cuts          ,
+  TTree*      tree          )
+  : SelectorWithCuts ( std::string ( cuts.GetTitle () ) , tree ) 
 {}
 // ============================================================================
 // constructor 
 // ============================================================================
 Ostap::SelectorWithCuts::SelectorWithCuts
-( 
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
-  PyObject*          self , 
-#endif
-  const std::string& cuts ,     
-  TTree*             tree )
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
-  : Ostap::Selector ( self , tree ) 
-#else
-  : Ostap::Selector (        tree ) 
-#endif  
-  , fMyCuts            ( strip ( cuts ) ) 
-  , fMyFormula         ()
+(  const std::string& cuts ,     
+   TTree*             tree )
+  : Ostap::Selector    (         tree ) 
+  , m_cuts             ( strip ( cuts ) ) 
+  , m_formula          ()
   , m_good             ( 0              )            
 {
-  if ( tree && !fMyCuts.empty() )
-  {
-    Ostap::Assert ( make_formula ( tree )     , 
-                    "Invalid formula "        , 
-                    "Ostap::SelectorWithCuts" ) ;
-  }
+ Ostap:Assert ( !m_tree || m_cuts.empty() || make_formula ( tree ) , 
+                "Invalid formula "        ,
+                "Ostap::SelectorWithCuts" ,
+                INVALID_FORMULA , __FILE__ , __LINE__ ) ;
 }
 // ============================================================================
 // virtual destructor 
@@ -88,11 +72,10 @@ Ostap::SelectorWithCuts::~SelectorWithCuts () {}
 // ============================================================================
 bool Ostap::SelectorWithCuts::make_formula ( TTree*   tree ) 
 {
-  if ( fMyCuts.empty() ) { return true ; }
-  fMyFormula.reset() ;
+  if ( m_cuts.empty()  ) { return true ; }
+  m_formula.reset() ;
   if ( nullptr == tree ) { return false ; }
-  //
-  fMyFormula.reset ( new Ostap::Formula ( fMyCuts , tree ) ) ; 
+  m_formula = std::make_unique<Ostap::Formula> ( m_cuts , tree) ; 
   return ok  () ;    
 }
 // ============================================================================
@@ -100,21 +83,20 @@ bool Ostap::SelectorWithCuts::make_formula ( TTree*   tree )
 // ============================================================================
 void Ostap::SelectorWithCuts::reset_formula ( TTree* tree ) 
 {
-  //
   set_tree ( tree ) ;
-  fMyFormula.reset() ;
+  m_formula.reset() ;
   //
-  if ( tree && !fMyCuts.empty() ) 
-  { Ostap::Assert ( make_formula ( tree )           , 
-                    "Invalid formula "              , 
-                    "Ostap::SelectorWithCuts::Init" ) ; }
+ Ostap:Assert ( !m_tree || m_cuts.empty() || make_formula ( tree ) , 
+                "Invalid formula "        ,
+                "Ostap::SelectorWithCuts" ,
+                INVALID_FORMULA , __FILE__ , __LINE__ ) ;
 }   
 // ============================================================================
 // notify 
 // ============================================================================
 Bool_t Ostap::SelectorWithCuts::Notify() 
 {
-  if ( fMyFormula ) { fMyFormula->Notify() ; }
+  if ( m_formula ) { m_formula->Notify() ; }
   return Ostap::Selector::Notify () ;
 }
 // ============================================================================
@@ -139,12 +121,11 @@ void Ostap::SelectorWithCuts::Begin ( TTree* tree )
 // ============================================================================
 void Ostap::SelectorWithCuts::SlaveBegin ( TTree* tree ) 
 {
-  //
-  Ostap::Assert ( tree                  , 
-                  "Invalid tree"        , 
-                  "Ostap::SelectorWithCuts::SlaveBegin" ) ;
+  Ostap::Assert ( tree                                   , 
+                  "Invalid tree"                         , 
+                  "Ostap::SelectorWithCuts::SlaveBegin"  ,
+                  INVALID_TREE , __FILE__ , __LINE__     ) ;
   reset_formula ( tree  ) ;
-  //
   Ostap::Selector::SlaveBegin  ( tree ) ;
 }
 // ============================================================================
@@ -152,15 +133,14 @@ void Ostap::SelectorWithCuts::SlaveBegin ( TTree* tree )
 // ============================================================================
 bool Ostap::SelectorWithCuts::good_entry  ( Long64_t entry ) 
 {
-  //
   if ( Ostap::Selector::GetEntry ( entry ) < 0 ) 
-  {
-    Ostap::Selector::Abort ( "" , TSelector::kAbortFile ) ;
-    return false ; 
-  }
+    {
+      Ostap::Selector::Abort ( "" , TSelector::kAbortFile ) ;
+      return false ; 
+    }
   //
-  if ( !fMyCuts.empty() && fMyFormula && fMyFormula->GetNdim() && !fMyFormula ->evaluate() )
-  { return false ; }
+  if ( !m_cuts.empty() && m_formula && m_formula->GetNdim() && !m_formula ->evaluate() )
+    { return false ; }
   //
   return true ;  
 }
@@ -179,17 +159,10 @@ Bool_t Ostap::SelectorWithCuts::Process      ( Long64_t entry )
   // increment the event counter for good events 
   ++m_good  ;
   //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
-  //
-  return Ostap::Selector::Process ( entry ) ;
-  //
-#else
-  // ==========================================================================
   // total event counter 
   increment_event () ;
   return process_entry () ;
   // ==========================================================================
-#endif 
 }
 // ============================================================================
 // terminate the slave 
@@ -217,7 +190,7 @@ Int_t Ostap::SelectorWithCuts::Version () const
 // is formula OK?
 // ============================================================================
 bool Ostap::SelectorWithCuts::ok () const // is formula OK ? 
-{ return fMyCuts.empty() || ( fMyFormula && fMyFormula->ok () ) ; }
+{ return m_cuts.empty() || ( m_formula && m_formula->ok () ) ; }
 // ============================================================================
 // process good entry 
 // ============================================================================
@@ -232,12 +205,9 @@ void Ostap::SelectorWithCuts::set_cuts  ( const TCut& cuts )
 // ============================================================================
 void Ostap::SelectorWithCuts::set_cuts  ( const std::string& cuts ) 
 {
-  fMyFormula.reset() ;
-  fMyCuts = strip ( cuts ) ;
+  m_formula.reset() ;
+  m_cuts = strip ( cuts ) ;
 }
-// ============================================================================
-
-
 
 // ============================================================================
 //                                                                     The END 

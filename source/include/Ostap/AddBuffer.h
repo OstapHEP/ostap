@@ -37,7 +37,7 @@ namespace Ostap
      */
     bool valid_name_for_branch ( const std::string& name ) ;
     // ========================================================================
-#if defined ( __cplusplus ) && ( 202002L <= __cplusplus ) // ==================
+#if defined ( __cplusplus ) && ( 202002L <= __cplusplus ) && ( 1 > 2 ) // ==================
     // ========================================================================
     /** @class Buffer 
      *  Helper cladd to add the content of buffer to TTrer

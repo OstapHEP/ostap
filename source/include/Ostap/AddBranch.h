@@ -8,6 +8,7 @@
 // ============================================================================ 
 #include <string>
 #include <map>
+#include <list>
 #include <functional>
 #include <memory>
 // ============================================================================
@@ -73,21 +74,16 @@ namespace Ostap
       // =====================================================================
     public :
       // =====================================================================
-      typedef std::unique_ptr<const Ostap::IFuncTree> BRANCH    ;
-      typedef std::map<std::string,BRANCH>            BRANCHMAP ;  
-      // ===================================================================== 
-    public:
-      // =====================================================================
       Branches () ; 
       /// copy constructor 
       Branches ( const Branches&  right ) ;
       /// move constructor 
-      Branches (       Branches&& right ) = default ;
+      Branches (       Branches&& right ) ;
       /// desctructor 
-      ~Branches () ; // desctructor 
+      ~Branches () ; // destructor 
       // ===================================================================== 
     public:
-      // ======================================================================
+      // ===================================================================== 
       ///  add a fnuction to calculate new branch 
       bool add
       ( const std::string&      name                  ,
@@ -105,19 +101,40 @@ namespace Ostap
       bool                      empty  () const { return m_map.empty () ; }
       std::size_t               size   () const { return m_map.size  () ; }
       //
-      std::pair<std::string,const Ostap::IFuncTree*>
-      entry  ( const std::size_t index ) const ;
-      //
-      BRANCHMAP::const_iterator begin  () const { return m_map.begin () ; }
-      BRANCHMAP::const_iterator end    () const { return m_map.end   () ; }
+      typedef std::pair<std::string,const Ostap::IFuncTree*>  ENTRY ;  
+      ENTRY                     entry  ( const std::size_t index ) const ;
+      // =====================================================================      
+    public: 
+      // =====================================================================
+#if ROOT_VERSION(6,32,0) <= ROOT_VERSION_CODE
+      // =====================================================================
+      typedef std::unique_ptr<const Ostap::IFuncTree>  BRANCH        ;
+      typedef std::map<std::string,BRANCH>             BRANCHES      ;  
+      typedef BRANCHES::const_iterator                 const_iterator;
+      // ======================================================================
+#else // ======================================================================
+      // ======================================================================
+      typedef const Ostap::IFuncTree*                  BRANCH        ;
+      typedef std::map<std::string,BRANCH>             BRANCHES      ;  
+      typedef BRANCHES::const_iterator                 const_iterator;
+      // ======================================================================
+#endif // =====================================================================
+      // =====================================================================
+    public:
+      // =====================================================================      
+      const_iterator begin  () const { return m_map.begin () ; }
+      const_iterator end    () const { return m_map.end   () ; }
+      // ======================================================================
+      bool has_key ( const std::string& name ) const 
+      { return m_map.end() != m_map.find ( name ) ; }
       // ======================================================================
       /// get new branch by name 
       const Ostap::IFuncTree*   branch ( const std::string& key ) const ;
       // ======================================================================
     private :
       // ======================================================================
-      /// the actual storage 
-      BRANCHMAP                 m_map {} ; // the actual storage
+      /// the actual storage
+      BRANCHES m_map {} ; // the actual storage
       // ======================================================================
     }; //                               The end of class Ostap::Trees::Branches
     // ========================================================================

@@ -5,16 +5,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
-#include "Ostap/OstapPyROOT.h"
-// ============================================================================
-// Ostap
-// ============================================================================
 #include "Ostap/IFuncs.h"
-// ============================================================================
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
-struct  _object ;
-typedef _object PyObject ;
-#endif 
 // ============================================================================
 namespace Ostap 
 {
@@ -33,19 +24,6 @@ namespace Ostap
     {
     public :
       // ======================================================================
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT // ==========================
-      // ======================================================================
-      /** constructor
-       *  @param self python object
-       *  @param tree pointer to the tree
-       */
-      PyFuncTree ( PyObject*    self = 0 , 
-                   const TTree* tree = 0 );
-      /// copy 
-      PyFuncTree ( const PyFuncTree& right ) ;
-      // ======================================================================
-#else // ======================================================================
-      // ======================================================================
       /** constructor
        *  @param self python object
        *  @param tree pointer to the tree
@@ -55,8 +33,6 @@ namespace Ostap
       PyFuncTree ( const PyFuncTree& right ) = default ; 
       /// default constructor 
       PyFuncTree () : PyFuncTree ( nullptr ) {}
-      // ======================================================================
-#endif // =====================================================================
       // ======================================================================
       /// destructor 
       virtual ~PyFuncTree() ;
@@ -85,15 +61,6 @@ namespace Ostap
       /// potentially cached pointer to the tree 
       mutable const TTree*    m_tree { nullptr } ;
       // ======================================================================
-    private :
-      // ======================================================================
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT // ==========================
-      // ======================================================================
-      // self reference for python instance 
-      PyObject*               m_self { nullptr } ; // self reference for python instance
-      // ======================================================================
-#endif // =====================================================================
-      // ======================================================================
     } ;
     // ========================================================================
     /** @class PyFuncData
@@ -104,19 +71,6 @@ namespace Ostap
     {
     public :
       // ======================================================================
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
-      // ======================================================================
-      /** constructor
-       *  @param self python object
-       *  @param data pointer to the data
-       */
-      PyFuncData ( PyObject*         self = 0 , 
-                   const RooAbsData* data = 0 );
-      /// copy 
-      PyFuncData ( const PyFuncData& right ) ;
-      // ======================================================================
-#else 
-      // ======================================================================
       /** constructor
        *  @param self python object
        *  @param data pointer to the data
@@ -125,8 +79,6 @@ namespace Ostap
       PyFuncData () : PyFuncData ( nullptr ) {} ;
       /// copy 
       PyFuncData ( const PyFuncData& right ) = default ;
-      // ======================================================================
-#endif 
       // ======================================================================
       /// destructor 
       virtual ~PyFuncData () ;
@@ -152,13 +104,6 @@ namespace Ostap
       // ======================================================================
       /// potentially cached pointer to the tree 
       mutable const RooAbsData* m_data { nullptr } ;
-      // ======================================================================
-    private :
-      // ======================================================================
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
-      // self reference for python instance 
-      PyObject* m_self { nullptr } ; ; // self-reference for python instance 
-#endif 
       // ======================================================================
      } ;
     // ========================================================================

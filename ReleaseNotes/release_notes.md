@@ -11,8 +11,10 @@
     
 ## New features
 
+    
     1. further improvemetn dfor wrapped columns in the table
-
+    1. remove std::uniqu_otr from Ostap::Trees::Branches for ROOT < 6.32.00 due to failure in dictionary generation)
+    
 ## Backward incompatible1
     
 ## Bug fixes

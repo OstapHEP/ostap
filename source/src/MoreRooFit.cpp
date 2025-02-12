@@ -227,7 +227,7 @@ Ostap::MoreRooFit::Constant::clone ( const char* newname ) const
 // ============================================================================
 // REDEFINED METHODS 
 // ============================================================================
-#if   ROOT_VERSION(6,24,0)<=ROOT_VERSION_CODE && ROOT_VERSION_CODE<=ROOT_VERSION(6,29,0)
+#if ROOT_VERSION_CODE<=ROOT_VERSION(6,29,0)
 #include "RunContext.h"
 RooSpan<const double> 
 Ostap::MoreRooFit::Constant::getValues 

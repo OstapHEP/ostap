@@ -42,23 +42,6 @@ namespace
   // =========================================================================
 } //                                           the end of anonnnymous namespace 
 // ============================================================================
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
-// ============================================================================
-/*  constructor
- *  @param self python objects
- *  @param tree pointer to the tree
- */
-// ============================================================================
-Ostap::Functions::PyFuncTree::PyFuncTree 
-( PyObject*    self  , 
-  const TTree* tree )
-  : Ostap::IFuncTree () 
-  , m_tree ( tree )
-  , m_self ( self ) 
-{ if ( nullptr != m_self ) { Py_INCREF( m_self ) ; } }
-// ============================================================================
-#else 
-// ============================================================================
 /*  constructor
  *  @param self python objects
  *  @param tree pointer to the tree
@@ -70,37 +53,19 @@ Ostap::Functions::PyFuncTree::PyFuncTree
   , m_tree ( tree )
 {}
 // ============================================================================
-#endif 
-// ============================================================================
 // destructor 
 // ============================================================================
-Ostap::Functions::PyFuncTree::~PyFuncTree() 
-{
-  // ==========================================================================
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT // ==========================
-  // ==========================================================================
-  Py_XDECREF ( m_self ) ;
-  // ==========================================================================
-#endif // =====================================================================
-  // ==========================================================================
-}
-// ============================================================================
-// copy constructor
-// ============================================================================
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT // ==========================
-// ============================================================================
-Ostap::Functions::PyFuncTree::PyFuncTree
-( const Ostap::Functions::PyFuncTree& right )
-  : m_self ( right.m_self )
-{
-  { if ( nullptr != m_self ) { Py_INCREF( m_self ) ; } }
-}
-// ============================================================================
-#endif // =====================================================================
+Ostap::Functions::PyFuncTree::~PyFuncTree()  {}
 // ============================================================================
 Ostap::Functions::PyFuncTree*
 Ostap::Functions::PyFuncTree::clone( const char* /* name */ ) const
-{ return new PyFuncTree ( *this ) ; }
+{
+  Ostap::throwException ( "Method `clone` must be overriden!"    ,  
+                          "Ostap::Functions::PyFuncTree"         ,
+                          UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
+  
+  return new PyFuncTree ( *this ) ;
+}
 // ============================================================================
 // the basic 
 // ============================================================================
@@ -108,51 +73,18 @@ double Ostap::Functions::PyFuncTree::operator() ( const TTree* t ) const
 { 
   /// redefine the current  tree 
   if ( nullptr != t ) { m_tree = t ; }
-  //
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
-  //
-  Ostap::Assert ( m_self                               , 
-                  "self*  points to NULL"              , 
-                  "Ostap::Functions::PyFuncTree::()"   , 
-                  INVALID_PYSELF , __FILE__ , __LINE__ ) ;
-  Ostap::Assert ( m_tree                               , 
-                  "TTree* points to NULL"              , 
-                  "Ostap::Functions::PyFuncTree::()"   , 
-                  INVALID_TREE   , __FILE__ , __LINE__ ) ;
-  //
-  return call_method ( m_self , s_method ) ;
-  //
-#else 
-  //
   return evaluate () ;
-  //
-#endif 
 }
 // ============================================================================
 // function that needs to be redefiend in python 
 // ============================================================================
-double Ostap::Functions::PyFuncTree::evaluate () const { return -1000 ; }
-// ============================================================================
-
-
-
-// ============================================================================
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
-// ============================================================================
-/* constructor
- *  @param self python objects
- *  @param tree pointer to the tree
- */
-// ============================================================================
-Ostap::Functions::PyFuncData::PyFuncData 
-( PyObject* self , 
-  const RooAbsData* data )
-  : Ostap::IFuncData () 
-  , m_data ( data )
-  , m_self ( self ) 
-{ if ( 0 != m_self ) { Py_INCREF( m_self ) ;} }
-// ============================================================================
-#else 
+double Ostap::Functions::PyFuncTree::evaluate () const
+{
+  Ostap::throwException ( "Method `evaluate` must be overriden!" , 
+                          "Ostap::Functions::PyFuncTree"         ,
+                          UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
+  return -1000 ;
+}
 // ============================================================================
 /* constructor
  *  @param self python objects
@@ -165,39 +97,18 @@ Ostap::Functions::PyFuncData::PyFuncData
   , m_data ( data )
 {}
 // ============================================================================
-#endif
-// ============================================================================
 // destructor 
 // ============================================================================
-Ostap::Functions::PyFuncData::~PyFuncData() 
-{
-  // ==========================================================================
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT // ==========================
-  // ==========================================================================
-  Py_XDECREF ( m_self ) ;
-  // ==========================================================================
-#endif // =====================================================================
-  // ==========================================================================
-}
-// ============================================================================
-// copy constructor
-// ============================================================================
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT // ==========================
-// ============================================================================
-Ostap::Functions::PyFuncData::PyFuncData
-( const Ostap::Functions::PyFuncData& right )
-  : m_data ( right.m_data )
-  : m_self ( right.m_self )
-{
-  { if ( nullptr != m_self ) { Py_INCREF( m_self ) ; } }
-}
-// ============================================================================
-#endif // =====================================================================
-// ============================================================================
+Ostap::Functions::PyFuncData::~PyFuncData()  {}
 // ============================================================================
 Ostap::Functions::PyFuncData*
-Ostap::Functions::PyFuncData::clone( const char* /* name */ ) const
-{ return new PyFuncData ( *this ) ; }
+Ostap::Functions::PyFuncData::clone ( const char* /* name */ ) const
+{
+  Ostap::throwException ( "Method `clone` must be overriden!"    ,  
+                          "Ostap::Functions::PyFuncTree"         ,
+                          UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
+  return new PyFuncData ( *this ) ;
+}
 // ============================================================================
 // the basic 
 // ============================================================================
@@ -206,30 +117,18 @@ double Ostap::Functions::PyFuncData::operator() ( const RooAbsData* d ) const
   /// redefine the current  tree 
   if ( nullptr != d ) { m_data = d ; }
   //
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
-  //
-  Ostap::Assert ( m_self                   , 
-                  "self*  points to NULL"  , 
-                  "PyFuncData::operator()" , 
-                  Ostap::StatusCode(400)   ) ;
-  Ostap::Assert ( m_data                   , 
-                  "RooabsData* points to NULL" , 
-                  "PyFuncData::operator()" , 
-                  Ostap::StatusCode(401)   ) ;
-  return call_method ( m_self , s_method ) ;
-  //
-#else 
-  //
   return evaluate () ;
-  //
-#endif 
 }  
 // ============================================================================
 // function that needs to be redefiend in python 
 // ============================================================================
-double Ostap::Functions::PyFuncData::evaluate () const { return -1000 ; }
-// ============================================================================
-
+double Ostap::Functions::PyFuncData::evaluate () const
+{
+  Ostap::throwException ( "Method `evaluate` must be overriden!" , 
+                          "Ostap::Functions::PyFuncData"         ,
+                          UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
+  return -1000 ;
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

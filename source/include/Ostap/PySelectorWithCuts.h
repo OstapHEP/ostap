@@ -35,23 +35,11 @@ namespace Ostap
     // ========================================================================
   public:
     // ========================================================================
-    ClassDefOverride (Ostap::SelectorWithCuts , 2) ;
+    ClassDefOverride (Ostap::SelectorWithCuts , 3) ;
     // ========================================================================
   public:
     // ========================================================================
     /// constructor 
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
-    // ========================================================================
-    SelectorWithCuts
-    ( PyObject*          self           , 
-      const std::string& cuts = ""      , 
-      TTree*             tree = nullptr ) ;
-    SelectorWithCuts
-    ( PyObject*          self           , 
-      const TCut&        cuts           ,      
-      TTree*             tree = nullptr ) ;
-    // ========================================================================
-#else 
     // ========================================================================
     SelectorWithCuts 
     ( const std::string& cuts = ""      , 
@@ -59,8 +47,6 @@ namespace Ostap
     SelectorWithCuts 
     ( const TCut&        cuts           ,
       TTree*             tree = nullptr ) ;
-    // ========================================================================
-#endif 
     // ========================================================================
     /// virtual destructor 
     virtual ~SelectorWithCuts () ; // virtual destructor 
@@ -112,9 +98,9 @@ namespace Ostap
     /// is formula OK ? 
     bool ok () const  ; // is formula OK ? 
     /// get the formula 
-    Ostap::Formula*    formula () const { return fMyFormula.get() ; }
+    Ostap::Formula*    formula () const { return m_formula.get() ; }
     /// get the formula
-    const std::string& cuts    () const { return fMyCuts ; }
+    const std::string& cuts    () const { return m_cuts ; }
     /** good event counter 
      *  - useless for PROOF
      *  - useful for interactive python
@@ -125,10 +111,10 @@ namespace Ostap
   private:
     // ========================================================================
     /// the selection formula 
-    std::string                        fMyCuts    ; 
-    std::unique_ptr<Ostap::Formula>    fMyFormula ;
+    std::string                     m_cuts    {} ; 
+    std::unique_ptr<Ostap::Formula> m_formula {} ;
     /// event counter 
-    unsigned long long  m_good  { 0 } ; // event counter: useless for PROOF
+    unsigned long long              m_good    { 0 } ;
     // ========================================================================    
   };
   // ==========================================================================

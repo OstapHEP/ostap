@@ -13,7 +13,6 @@
 // ============================================================================
 // Ostap
 // ============================================================================
-#include "Ostap/OstapPyROOT.h"
 #include "Ostap/PyCallable.h"
 // ============================================================================
 namespace Ostap 
@@ -32,71 +31,29 @@ namespace Ostap
     {
     public: 
       // ======================================================================
-      ClassDefOverride(Ostap::Models::PyPdf, 2 ) ;
+      ClassDefOverride(Ostap::Models::PyPdf, 4 ) ;
       // ======================================================================
     public:
       // ======================================================================
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
-      // ======================================================================
-      /** Standard constructor
-       *  @param self python partner for this instance 
-       *  @param name      the name of PDF 
-       *  @param title     the title  of PDF 
-       *  @param variables all variables 
-       */
-      PyPdf ( PyObject*         self      , 
-              const char*       name      , 
-              const char*       title     ,
-              const RooArgList& variables );
-      // ======================================================================
-      /** Standard constructor
-       *  @param self python partner for this instance 
-       *  @param name      the name of PDF 
-       *  @param variables all variables 
-       *  @param title     the title  of PDF 
-       */
-      PyPdf ( PyObject*          self      , 
-              const std::string& name      , 
-              const RooArgList&  variables ,
-              const std::string& title = "" ) 
-        : PyPdf ( self         , 
-                  name.c_str() , 
-                  title.empty() ?  name.c_str () : title.c_str() , 
-                  variables ) 
-      {}
-      // ======================================================================
-      /** Standard constructor
-       *  @param self python partner for this instance 
-       *  @param variables all variables 
-       *  @param name      the name of PDF 
-       *  @param title     the title  of PDF 
-       */
-      PyPdf ( PyObject*          self      , 
-              const RooArgList&  variables ,
-              const std::string& name      , 
-              const std::string& title = "" ) 
-        : PyPdf ( self , name , variables , title ) 
-      {}
-      // ======================================================================
-#else 
-      // ======================================================================
       /** Standard constructor
        *  @param name      the name of PDF 
        *  @param title     the title  of PDF 
        *  @param variables all variables 
        */
-      PyPdf ( const char*       name      , 
-              const char*       title     ,
-              const RooArgList& variables );
+      PyPdf
+      ( const char*       name      , 
+        const char*       title     ,
+        const RooArgList& variables );
       // ======================================================================
       /** Standard constructor
        *  @param name      the name of PDF 
        *  @param variables all variables 
        *  @param title     the title  of PDF 
        */
-      PyPdf ( const std::string& name       , 
-              const RooArgList&  variables  , 
-              const std::string& title = "" ) 
+      PyPdf
+      ( const std::string& name       , 
+        const RooArgList&  variables  , 
+        const std::string& title = "" ) 
         : PyPdf ( name.c_str() , 
                   title.empty() ? name.c_str() : title.c_str() , 
                   variables ) 
@@ -107,13 +64,12 @@ namespace Ostap
        *  @param name      the name of PDF 
        *  @param title     the title  of PDF 
        */
-      PyPdf ( const RooArgList&  variables  , 
-              const std::string& name       ,
-              const std::string& title = "" ) 
+      PyPdf
+      ( const RooArgList&  variables  , 
+        const std::string& name       ,
+        const std::string& title = "" ) 
         : PyPdf ( name , variables , title ) 
       {}
-      // ======================================================================
-#endif
       // ======================================================================
       /// copy  constructor 
       PyPdf ( const PyPdf& right , const char* name = nullptr ) ;
@@ -174,13 +130,6 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================  
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
-      // ======================================================================
-      /// python's  "self"
-      PyObject*    m_self      { nullptr } ; // python's  "self"
-      // ======================================================================
-#endif  
-      // ======================================================================
       /// all variables as list of variables 
       RooListProxy m_varlist {} ; // all variables as list of variables 
       // ======================================================================  
@@ -204,7 +153,7 @@ namespace Ostap
     {
     public: 
       // ======================================================================
-      ClassDefOverride(Ostap::Models::PyPdf2, 1) ;
+      ClassDefOverride(Ostap::Models::PyPdf2, 4 ) ;
       // ======================================================================
     public:
       // ======================================================================

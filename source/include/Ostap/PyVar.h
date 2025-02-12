@@ -12,7 +12,6 @@
 // ============================================================================
 // Ostap
 // ============================================================================
-#include "Ostap/OstapPyROOT.h"
 #include "Ostap/PyCallable.h"
 // ============================================================================
 namespace Ostap 
@@ -35,66 +34,25 @@ namespace Ostap
       // ======================================================================
     public: 
       // ======================================================================
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
-      // ======================================================================
-      /** Standard constructor
-       *  @param self python object 
-       *  @param name      the object name 
-       *  @param title     the object title
-       *  @param variables the list of variables 
-       */
-      PyVar ( PyObject*         self      , 
-              const char*       name      , 
-              const char*       title     ,
-              const RooArgList& variables ) ;
-      // ======================================================================
-      /** Standard constructor
-       *  @param self python object 
-       *  @param variables the list of variables 
-       *  @param name      the object name 
-       *  @param title     the objkect title
-       */
-      PyVar ( PyObject*         self        , 
-              const RooArgList& variables   , 
-              const std::string& name       , 
-              const std::string& title = "" )
-        : PyVar ( self , name.c_str() , 
-                  title.empty () ? name.c_str() : title.c_str() , 
-                  variables ) 
-      {}
-      // ======================================================================
-      /** Standard constructor
-       *  @param self python object 
-       *  @param variables the list of variables 
-       *  @param name      the object name 
-       *  @param title     the objkect title
-       */
-      PyVar ( PyObject*         self        , 
-              const std::string& name       , 
-              const RooArgList& variables   , 
-              const std::string& title = "" )
-        : PyVar ( self , variables , name , title ) 
-      {}
-      // ======================================================================
-#else 
-      // ======================================================================
       /** Standard constructor
        *  @param name      the object name 
        *  @param title     the object title
        *  @param variables the list of variables 
        */
-      PyVar ( const char*       name      , 
-              const char*       title     ,
-              const RooArgList& variables ) ;
+      PyVar
+      ( const char*       name      , 
+        const char*       title     ,
+        const RooArgList& variables ) ;
       // ======================================================================
       /** Standard constructor
        *  @param name      the object name 
        *  @param variables the list of variables 
        *  @param title     the object title
        */
-      PyVar ( const std::string& name       , 
-              const RooArgList&  variables  , 
-              const std::string& title = "" )
+      PyVar
+      ( const std::string& name       , 
+        const RooArgList&  variables  , 
+        const std::string& title = "" )
         : PyVar ( name.c_str() , 
                   title.empty() ? name.c_str() : title.c_str() , 
                   variables  ) 
@@ -105,13 +63,12 @@ namespace Ostap
        *  @param name      the object name 
        *  @param title     the object title
        */
-      PyVar ( const RooArgList&  variables  , 
-              const std::string& name       , 
-              const std::string& title = "" ) 
+      PyVar
+      ( const RooArgList&  variables  , 
+        const std::string& name       , 
+        const std::string& title = "" ) 
         : PyVar  ( name , variables , title ) 
       {}
-      // ======================================================================
-#endif 
       // ======================================================================
       /// Copy constructor
       PyVar ( const PyVar& right , const char* name = 0 ) ;
@@ -148,13 +105,6 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
-      // ======================================================================
-      /// python's  "self"
-      PyObject*    m_self      { nullptr } ; // python's  "self"
-      // ======================================================================
-#endif  
-      // ======================================================================
       /// the list of variables/parameters 
       RooListProxy m_variables {} ; // the list of variables/parameters 
       // ======================================================================      
@@ -180,10 +130,11 @@ namespace Ostap
        *  @param function  python object 
        *  @param variables the list of variables 
        */
-      PyVar2 ( const char*       name      , 
-               const char*       title     ,
-               PyObject*         function  ,
-               const RooArgList& variables ) ;
+      PyVar2
+      ( const char*       name      , 
+        const char*       title     ,
+        PyObject*         function  ,
+        const RooArgList& variables ) ;
       // ========================================================================
       /** Standard constructor
        *  @param name      the object name 
@@ -191,10 +142,11 @@ namespace Ostap
        *  @param variables the list of variables 
        *  @param title     the object title
        */
-      PyVar2 ( const std::string& name       , 
-               PyObject*          function   , 
-               const RooArgList&  variables  , 
-               const std::string& title = "" )
+      PyVar2
+      ( const std::string& name       , 
+        PyObject*          function   , 
+        const RooArgList&  variables  , 
+        const std::string& title = "" )
         : PyVar2 ( name.c_str() , 
                    title.empty() ? name.c_str() : title.c_str() , 
                    function     , 
@@ -207,10 +159,11 @@ namespace Ostap
        *  @param function  python object 
        *  @param title     the object title
        */
-      PyVar2 ( const std::string& name       , 
-               const RooArgList&  variables  , 
-               PyObject*          function   , 
-               const std::string& title = "" )
+      PyVar2
+      ( const std::string& name       , 
+        const RooArgList&  variables  , 
+        PyObject*          function   , 
+        const std::string& title = "" )
         : PyVar2 ( name , function , variables , title ) 
       {}
       /// Copy constructor

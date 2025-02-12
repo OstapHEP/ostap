@@ -19,7 +19,6 @@
 
   <function name    = "Ostap::TMVA::addResponse"  />
   
-
   <class name    = "std::function&lt;double(double,double,double,double)&gt;" />
   <class pattern = "std::function&lt;double(*)&gt;" />
 
@@ -37,9 +36,9 @@
   <class name   = "Ostap::Exception">
     <field name = "m_previous"          transient="true"/>      
   </class>
-
-  <exclusion>    
-
+  
+   <exclusion>
+     
     <class name    = "Ostap::StatVar::Interval"     />
     <class name    = "Ostap::Math::Interpolation::DATAVCT" />    
     <class name    = "Ostap::Math::Bernstein2D::VB" />
@@ -57,12 +56,6 @@
     <class pattern = "ROOT::Math::LorentzVector*"      />
     <class pattern = "ROOT::Math::Impl::Plane3D*"      />
 
-    <class mane = "Ostap::Trees::Branches::BRANCH"      />
-    <class mane = "Ostap::Trees::Branches::BRANCHMAP"   />
-    <class mane = "Ostap::Trees::Branches">
-      <field name  = "m_map"   />            
-    </class >
-    
     <class name    = "Ostap::Utils::Tee">
       <field name  = "m_file"   />      
       <field name  = "m_buffer" />      
@@ -104,8 +97,6 @@
     <class name    = "Ostap::Functions::FuncRooFormula">  
       <field name  = "m_formula" />      
     </class>
-
-    <class name = "Ostap::ROOT_Selector"/>
 
     <class function = "Ostap::Math::poly_to_bernstein"     />  
     <class function = "Ostap::Math::bernstein_from_roots"  />  

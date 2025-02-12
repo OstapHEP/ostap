@@ -8,7 +8,12 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/StatusCode.h"
 #include "Ostap/PySelector.h"
+// ============================================================================
+// local
+// ============================================================================
+#include "status_codes.h"
 // ============================================================================
 /** @file 
  * 
@@ -25,23 +30,14 @@ ClassImp(Ostap::Selector) ;
 // ============================================================================
 // constructor 
 // ============================================================================
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
-// ============================================================================
-Ostap::Selector::Selector ( PyObject* self , 
-                            TTree*    tree ) 
-  : ROOT_Selector ( tree , self )
-  , m_event { 0 }
-{}
-// ============================================================================
-#else
-// ============================================================================
-Ostap::Selector::Selector ( TTree* tree ) 
-  : ROOT_Selector ()
-  , m_event { 0 }
-  , m_tree  ( tree ) 
-{}
-// ============================================================================
-#endif
+Ostap::Selector::Selector
+( TTree* tree ) 
+  : TSelector ()
+  , m_event { 0    }
+  , m_tree  ( tree )
+{
+  set_tree ( tree ) ;
+}
 // ============================================================================
 // destructor
 // ============================================================================
@@ -53,7 +49,7 @@ void   Ostap::Selector::Init
 ( TTree*   tree       )
 {
   set_tree ( tree ) ;
-  ROOT_Selector::Init ( tree ) ;
+  TSelector::Init ( m_tree ) ;
 }
 // ============================================================================
 // beginn
@@ -62,7 +58,7 @@ void   Ostap::Selector::Begin
 ( TTree*   tree       )
 {
   set_tree ( tree ) ;
-  ROOT_Selector::Begin ( tree ) ;
+  TSelector::Begin ( m_tree ) ;
 }
 // ============================================================================
 // initialize the slave 
@@ -71,7 +67,7 @@ void   Ostap::Selector::SlaveBegin
 ( TTree*   tree       ) 
 {
   set_tree ( tree ) ;
-  ROOT_Selector::SlaveBegin ( tree ) ;
+  TSelector::SlaveBegin ( m_tree ) ;
 } 
 // ============================================================================
 // process 
@@ -87,98 +83,62 @@ Bool_t Ostap::Selector::Process ( Long64_t entry )
     return false ; 
   }
   //
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
-  //
-  return ROOT_Selector::Process ( entry ) ; 
-  //
-#else 
-  //
   return process_entry () ;
-  //
-#endif 
-  //
 }
 // ============================================================================
 // notify 
 // ============================================================================
-Bool_t Ostap::Selector::Notify         () { return ROOT_Selector::Notify ()  ; }
+Bool_t Ostap::Selector::Notify         () { return TSelector::Notify ()  ; }
 // ============================================================================
 // teminate the slave 
 // ============================================================================
-void   Ostap::Selector::SlaveTerminate () { ROOT_Selector::SlaveTerminate () ; }
+void   Ostap::Selector::SlaveTerminate () { TSelector::SlaveTerminate () ; }
 // ============================================================================
 /// terminate
 // ============================================================================
-void   Ostap::Selector::Terminate      () { ROOT_Selector::Terminate () ; }
+void   Ostap::Selector::Terminate      () { TSelector::Terminate () ; }
 // ============================================================================
 // get entry 
 // ============================================================================
 Int_t  Ostap::Selector::GetEntry       
 ( Long64_t entry  , 
   Int_t    getall ) 
-{
-  //
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
-  //
-  return ROOT_Selector::GetEntry ( entry , getall ) ;
-  //
-#else 
-  //
-  return  m_tree ? m_tree->GetTree()->GetEntry ( entry , getall ) : 0 ;
-  //
-#endif 
-  //
-}
+{ return  m_tree ? m_tree->GetTree()->GetEntry ( entry , getall ) : 0 ; }
 // ============================================================================
 // version
 // ============================================================================
 Int_t Ostap::Selector::Version()const 
 {
   //
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
-  //
-  return ROOT_Selector::Version ()  ;
-  //
-#else 
-  //
   return  2 ; // NB! note 2 here!!!
-  //
-#endif 
   //
 }
 // ============================================================================
 // get the tree 
 // ============================================================================
-TTree* Ostap::Selector::get_tree () const
-{
-  //
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
-  //
-  return ROOT_Selector::fChain ;
-  //
-#else 
-  //
-  return  m_tree ;
-  //
-#endif 
-}
+TTree* Ostap::Selector::get_tree () const { return  m_tree ; }
 // ============================================================================
 //  set the tree 
 // ============================================================================
-void Ostap::Selector::set_tree  ( TTree* tree ) 
+void Ostap::Selector::set_tree  ( TTree* tree )
 {
-  //
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
-  //
-  ROOT_Selector::fChain = tree ;
-  //
-#else 
+  if ( tree )
+    {
+      TChain* chain = dynamic_cast<TChain*> ( m_tree ) ;
+      if ( chain ) { tree = chain->GetTree() ;}
+    }
   //
   m_tree = tree ;
-  //
-#endif 
-  //
 }
+// ============================================================================
+/// process an entry 
+bool Ostap::Selector::process_entry ()
+{
+  Ostap::throwException ( "`process_entry` method must be overrided!" , 
+                          "Ostap::Selector"                           ,
+                          UNDEFINED_METHOD , __FILE__ , __LINE__      ) ;
+  return true ;
+} 
 // ============================================================================
 /*  helper function to use TTree::Process in python 
  * 
