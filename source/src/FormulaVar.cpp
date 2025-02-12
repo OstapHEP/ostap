@@ -76,27 +76,12 @@ namespace
   {
     RooArgList used {};
     //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
-    if ( !const_cast<RooFormula&>(formula).ok() ) { return used; }   // RETURN 
-#else 
     if ( !formula.ok()                          ) { return used; }   // RETURN 
-#endif
     //
     const RooArgSet actual { formula.actualDependents() } ;
     //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
-    //   
-    Ostap::Utils::Iterator tmp ( variables ) ; // only for ROOT < 6.18
-    RooAbsArg* c = 0 ;
-    while ( c = (RooAbsArg*) tmp.next() )
-    { if ( c && actual.contains ( *c ) ) { used.add ( *c ) ; } }
-    //
-#else
-    //
     for ( const auto* arg : variables ) 
     { if ( arg && actual.contains ( *arg ) ) { used.add ( *arg ) ; } }
-    //
-#endif
     //
     return used ;
   }
@@ -124,23 +109,7 @@ Ostap::makeFormula
   const std::string vname { Ostap::tmp_name ( "test_formula1_" , expression ) } ;
   //
   // ========================================================================
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,20,0)
-  //
-  std::unique_ptr<RooFormula> ptr ;
-  try
-  {
-    ESentry sentry {} ;
-    ptr.reset ( new RooFormula ( vname     .c_str () ,
-                                 expression.c_str () , 
-                                 dependents          ) ) ;
-  }
-  catch ( std::invalid_argument& /* e1 */ ){ return nullptr ; }
-  catch ( std::runtime_error&    /* e2 */ ){ return nullptr ; }
-  //
-  if ( !ptr || !ptr->ok() ) { return nullptr ; }
-  const RooArgList used { ::usedVariables ( *ptr , dependents ) } ;
-  //
-#elif ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
   //
   std::unique_ptr<RooFormula> ptr ;
   //
@@ -261,23 +230,7 @@ Ostap::usedVariables
   //
   const std::string vname { Ostap::tmp_name ( "formula2_" , formula ) } ;
   //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,20,0)
-  //
-  std::unique_ptr<RooFormula> ptr ;
-  try
-  {
-    ESentry sentry {} ;
-    ptr.reset (  new RooFormula ( vname  .c_str () ,
-                                  formula.c_str () ,
-                                  variables        ) ) ;
-  }
-  catch ( std::invalid_argument& /* e1 */ ){ return RooArgList () ; }
-  catch ( std::runtime_error&    /* e2 */ ){ return RooArgList () ; }
-  //
-  if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
-  return ::usedVariables ( *ptr , variables ) ;
-  //
-#elif ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
   //
   std::unique_ptr<RooFormula> ptr ;
   try
@@ -332,56 +285,7 @@ Ostap::usedVariables
   const RooArgList&       variables  )
 {
   //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,20,0)
-  //
-  std::ostringstream os {} ;
-  formula.printMetaArgs( os ) ;
-  std::string expression {os.str() } ;
-  //
-  std::size_t pos = expression.find ( "formula=\"" ) ;
-  Ostap::Assert ( 0 == pos ,
-                  "Invalid formula expression/1: " + expression ,
-                  "Ostap::usedVariables" );
-  //
-  expression = expression.substr ( 9 ) ;
-  pos = expression.find('"');
-  Ostap::Assert ( 0 <= pos && pos != std::string::npos , 
-                  "Invalid formula expression/2: " + expression ,
-                  "Ostap::usedVariables" );
-  expression = expression.substr ( 0 , pos ) ;
-  //
-  std::unique_ptr<RooFormula> ptr { new RooFormula ( formula.GetName  () ,
-                                                     expression.c_str () , 
-                                                     variables           ) } ;  
-  if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
-  return ::usedVariables ( *ptr , variables ) ;
-  //
-#elif ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
-  //
-  std::ostringstream os {} ;
-  formula.printMetaArgs( os ) ;
-  std::string expression {os.str() } ;
-  //
-  std::size_t pos = expression.find ( "formula=\"" ) ;
-  Ostap::Assert ( 0 == pos ,
-                  "Invalid formula expression/1: " + expression ,
-                  "Ostap::usedVariables" );
-  //
-  expression = expression.substr ( 9 ) ;
-  pos = expression.find('"');
-  Ostap::Assert ( 0 <= pos && pos != std::string::npos , 
-                  "Invalid formula expression/2: " + expression ,
-                  "Ostap::usedVariables" );
-  expression = expression.substr ( 0 , pos ) ;
-  // 
-  std::unique_ptr<RooFormula> ptr { new RooFormula ( formula.GetName  () ,
-                                                     expression.c_str () , 
-                                                     variables           , 
-                                                     false               ) } ;  
-  if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
-  return ::usedVariables ( *ptr , variables ) ;
-  //
-#elif ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
   //
   return ::usedVariables ( formula.formula() , variables ) ; 
   //
@@ -404,34 +308,24 @@ Ostap::usedVariables
 // ============================================================================
 Ostap::FormulaVar::FormulaVar
 ( const std::string& name          , 
-#if    ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
-  const std::string& /* title */   , 
-#elif  ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
+#if  ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
   const std::string&    title      , 
 #else        
   const std::string& /* title */   , 
 #endif 
   const std::string& expression    , 
   const RooArgList & dependents    ,
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,20,0)
-  const bool         /* check */   
-#else 
   const bool            check         
-#endif 
   )
-  : RooFormulaVar ( name       . c_str () , 
-#if    ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
-  expression . c_str () , 
-#elif  ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
-  title      . c_str () , 
+  : RooFormulaVar ( name       . c_str () 
+#if  ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
+  , title      . c_str () 
 #else        
-  expression . c_str () , 
+  , expression . c_str ()  
 #endif 
-  expression . c_str () , 
-  dependents            
-#if ROOT_VERSION(6,20,0) <= ROOT_VERSION_CODE
+  , expression . c_str () 
+  , dependents            
   , check
-#endif 
   ) 
 {}
 // ============================================================================
@@ -491,9 +385,7 @@ Ostap::FormulaVar::~FormulaVar(){}
 // ============================================================================
 std::string Ostap::FormulaVar::expression () const 
 {
-#if   ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
-  return           GetTitle() ;
-#elif ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
   return formula().GetTitle() ;
 #else 
   // ==========================================================================

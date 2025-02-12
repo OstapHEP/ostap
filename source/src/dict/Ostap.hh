@@ -100,7 +100,6 @@
 #include "Ostap/Printable.h"
 #include "Ostap/PyCallable.h"   
 #include "Ostap/PyFuncs.h"   
-#include "Ostap/PyIntegrator.h"   
 #include "Ostap/PyIterator.h"
 #include "Ostap/PyPdf.h"     
 #include "Ostap/PySelector.h"
@@ -339,12 +338,7 @@ namespace
     Ostap::Math::LessOrEqual<double>     __eq_7 ;
     Ostap::Math::GreaterOrEqual<double>  __eq_8 ;
     //
-    // std::function<std::complex<double>(double)>               __ff0 ;
-    // std::function<std::complex<double>(double,double)>        __ff1 ;
-    // std::function<std::complex<double>(double,double,double)> __ff2 ;
-    //
-
-  };
+  } ;
   // ==========================================================================
 } //                                             The end of anonymous namespace 
 // ============================================================================

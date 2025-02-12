@@ -176,11 +176,7 @@ unsigned int Ostap::Utils::mt_pool_size ()
   return std::max
     ( 1u ,
       ROOT::IsImplicitMTEnabled() ?  
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
       ROOT::GetThreadPoolSize     () : 1u  
-#else 
-      ROOT::GetImplicitMTPoolSize () : 1u 
-#endif
       ) ;
 }
 // ============================================================================

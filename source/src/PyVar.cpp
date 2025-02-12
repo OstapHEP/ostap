@@ -145,13 +145,8 @@ Ostap::Functions::PyVar::clone ( const char* name ) const
   ///
   /// set "name"-item 
   if  ( 0 != PyDict_SetItem ( kwargs                         ,   
-#if defined (PY_MAJOR_VERSION)  and PY_MAJOR_VERSION < 3
-                              PyString_FromString  ( "name" ) ,
-                              PyString_FromString  ( ( name ? name : "" ) ) ) )
-#else 
                               PyUnicode_FromString ( "name" ) ,
                               PyUnicode_FromString ( ( name ? name : "" ) ) ) )
-#endif
   {
     PyErr_Print();
     Py_DECREF ( method ) ; 
@@ -178,11 +173,7 @@ Ostap::Functions::PyVar::clone ( const char* name ) const
                             Ostap::StatusCode(500)           ) ; 
   }
   if  ( 0 != PyDict_SetItem ( kwargs                           ,   
-#if defined (PY_MAJOR_VERSION)  and PY_MAJOR_VERSION < 3
-                            PyString_FromString  ( "pyvar" )   ,
-#else 
                             PyUnicode_FromString ( "pyvar" )   ,
-#endif 
                             pycl                               ) )
   {
     PyErr_Print();
@@ -356,19 +347,9 @@ Double_t Ostap::Functions::PyVar2::evaluate() const
   //
   unsigned short index = 0 ;
   //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
-  //
-  Ostap::Utils::Iterator it ( m_variables ) ; // only for ROOT < 6.18 
-  while ( RooAbsReal* v = it.static_next<RooAbsReal>() )
-  {
-    //
-#else
-    //
   for  ( auto* vv : m_variables )
   {
     RooAbsReal* v = static_cast<RooAbsReal*>( vv ) ;
-    //
-#endif
     //
     const double value = v->getVal() ;
     PyObject* pv =  PyFloat_FromDouble ( value ) ;

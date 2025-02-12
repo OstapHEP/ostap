@@ -24,13 +24,7 @@
  */
 // ============================================================================
 PyObject* Ostap::blob_to_bytes ( const Ostap::BLOB& blob ) 
-{
-#if defined (PY_MAJOR_VERSION) and PY_MAJOR_VERSION < 3
-  return PyString_FromStringAndSize ( (const char*) blob.buffer () , blob.size () ) ;
-#else
-  return  PyBytes_FromStringAndSize ( (const char*) blob.buffer () , blob.size () ) ;
-#endif  
-}
+{ return  PyBytes_FromStringAndSize ( (const char*) blob.buffer () , blob.size () ) ; }
 // ============================================================================
 /*  convert bytes to blob 
  *  @see   Ostap::BLOB
@@ -44,23 +38,15 @@ PyObject* Ostap::blob_from_bytes ( Ostap::BLOB& blob , PyObject* bytes )
   // 
   // check the arguments 
   //
-#if defined (PY_MAJOR_VERSION) and PY_MAJOR_VERSION < 3
-  if ( nullptr == bytes || !PyString_Check ( bytes ) )
-#else
   if ( nullptr == bytes || !PyBytes_Check  ( bytes ) ) 
-#endif 
     {
-    PyErr_SetString( PyExc_TypeError, "Invalid bytes/string object" ) ;
-    return NULL ;
-  } 
+      PyErr_SetString( PyExc_TypeError, "Invalid bytes/string object" ) ;
+      return NULL ;
+    } 
   //
   // set the blob 
   //
-#if defined (PY_MAJOR_VERSION) and PY_MAJOR_VERSION < 3
-  blob.setBuffer ( PyString_Size ( bytes ) , PyString_AsString ( bytes ) ) ;
-#else   
   blob.setBuffer ( PyBytes_Size  ( bytes ) , PyBytes_AsString  ( bytes ) ) ;
-#endif 
   // 
   Py_INCREF ( Py_True );
   //

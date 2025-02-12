@@ -190,13 +190,8 @@ Ostap::Models::PyPdf::clone ( const char* name ) const
   ///
   /// set "name"-item 
   if  ( 0 != PyDict_SetItem ( kwargs                         ,   
-#if defined (PY_MAJOR_VERSION)  and PY_MAJOR_VERSION < 3
-                              PyString_FromString  ( "name" ) ,
-                              PyString_FromString  ( ( name ? name : "" ) ) ) )
-#else 
                               PyUnicode_FromString ( "name" ) ,
                               PyUnicode_FromString ( ( name ? name : "" ) ) ) )
-#endif
   {
     PyErr_Print();
     Py_DECREF ( method ) ; 
@@ -207,11 +202,7 @@ Ostap::Models::PyPdf::clone ( const char* name ) const
   }
   /// create "pdf"-item 
   PyObject*  pycl =
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
-       TPython::CPPInstance_FromVoidPtr ( cl , cl->IsA()->GetName() , false ) ;  
-#else
-       TPython::ObjectProxy_FromVoidPtr ( cl , cl->IsA()->GetName() , false ) ;  
-#endif
+    TPython::CPPInstance_FromVoidPtr ( cl , cl->IsA()->GetName() , false ) ;  
   ///
   if ( !pycl ) 
   {
@@ -223,11 +214,7 @@ Ostap::Models::PyPdf::clone ( const char* name ) const
                             Ostap::StatusCode(500)           ) ; 
   }
   if  ( 0 != PyDict_SetItem ( kwargs                             ,   
-#if defined (PY_MAJOR_VERSION)  and PY_MAJOR_VERSION < 3
-                              PyString_FromString  ( "pypdf" )   ,
-#else 
                               PyUnicode_FromString ( "pypdf" )   ,
-#endif 
                               pycl                               ) )
   {
     PyErr_Print();
@@ -606,21 +593,11 @@ Double_t Ostap::Models::PyPdf2::evaluate() const
   //
   unsigned short index = 0 ;
   //
-#if ROOT_VERSION(6,31,0) <= ROOT_VERSION_CODE
-  //
   for  ( auto* av : m_varlist )
   {
     if ( nullptr == av ) {continue  ; }
     RooAbsReal* v = static_cast<RooAbsReal*> ( av ) ;
     //  
-#else
-    //
-  Ostap::Utils::Iterator it ( m_varlist ) ;
-  while ( RooAbsReal* v = it.static_next<RooAbsReal>() )
-  {
-    //
-#endif
-    //
     if ( nullptr == v  ) { continue ; }
     PyObject* pv =  PyFloat_FromDouble ( v->getVal()  ) ;
     if ( 0 != PyTuple_SetItem ( arguments , index , pv ) ) 

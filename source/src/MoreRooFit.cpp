@@ -1572,19 +1572,6 @@ Double_t Ostap::MoreRooFit::Minimal::evaluate () const
   static const std::string s_message { "Invalid variable type!"      } ;
   static const std::string s_tag     { "Ostap::MoreRooFit::Minimal!" } ;
   // ==========================================================================
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
-  //
-  Ostap::Utils::Iterator tmp ( this->m_vars ) ;  // only for ROOT < 6.18 
-  RooAbsArg* c = 0 ;
-  while ( c = (RooAbsArg*) tmp.next() )
-  {
-    const RooAbsReal* v = dynamic_cast<RooAbsReal*> ( c ) ;
-    Ostap::Assert ( v != nullptr , s_message , s_tag , 510 ) ;
-    value = std::min ( value , v->getVal() ) ;
-  }
-  //
-#else
-  //
   unsigned ii = 0 ;
   for ( auto* c : this->m_vars ) 
   {
@@ -1592,8 +1579,6 @@ Double_t Ostap::MoreRooFit::Minimal::evaluate () const
     Ostap::Assert ( v != nullptr , s_message , s_tag , 510 ) ;
     value = std::min ( value , v->getVal() ) ;
   }
-  //
-#endif 
   // 
   return value ; 
 } 
@@ -1702,19 +1687,6 @@ Double_t Ostap::MoreRooFit::Maximal::evaluate () const
   static const std::string s_message { "Invalid variable type!"      } ;
   static const std::string s_tag     { "Ostap::MoreRooFit::Maximal!" } ;
   // ==========================================================================
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
-  //
-  Ostap::Utils::Iterator tmp ( this->m_vars ) ;   // only for ROOT < 6.18 
-  RooAbsArg* c = 0 ;
-  while ( c = (RooAbsArg*) tmp.next() )
-  {
-    const RooAbsReal* v = dynamic_cast<RooAbsReal*> ( c ) ;
-    Ostap::Assert ( v != nullptr , s_message , s_tag , 510 ) ;
-    value = std::max ( value , v->getVal() ) ;
-  }
-  //
-#else
-  //
   unsigned ii = 0 ;
   for ( auto* c : this->m_vars ) 
   {
@@ -1722,8 +1694,6 @@ Double_t Ostap::MoreRooFit::Maximal::evaluate () const
     Ostap::Assert ( v != nullptr , s_message , s_tag , 510 ) ;
     value = std::max ( value , v->getVal() ) ;
   }
-  //
-#endif 
   // 
   return value ; 
 } 
@@ -2171,27 +2141,8 @@ Ostap::Utils::toStream
   const std::string& close = aset ? s_close : l_close ;
   //
   // ==========================================================================
-#if ROOT_VERSION(6,18,0) <= ROOT_VERSION_CODE // ==============================
-  // ==========================================================================
   return toStream ( o.begin () , o.end () , s , open , close , delim ) ;
   // ==========================================================================
-#else // ======================================================================
-  // ==========================================================================
-  Ostap::Utils::Iterator tmp ( o ) ; // only for ROOT < 6.18 
-  RooAbsArg*   c     = 0 ;
-  unsigned int index = 9 ;
-  s << open  ;
-  while ( c = (RooAbsArg*) tmp.next() )
-    {
-      if ( !index ) { s << delim; }
-      toStream ( c , s ) ;
-      ++index ;
-    }
-  return s << close  ;
-  // ==========================================================================
-#endif // =====================================================================
-  // ==========================================================================
-  return s ;
 }
 // ============================================================================
 
