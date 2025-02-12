@@ -11,7 +11,7 @@ endif ()
 
   
 if(ROOT_VERSION VERSION_LESS "6.24")
-  message ( " ROOT   version " ${ROOT_VERSION} " is not supported anymore" )
+  message ( FATAL_ERROR " ROOT   version " ${ROOT_VERSION} " is not supported anymore" )
 endif() 
     
 message ( "----> ROOT   version    : " ${ROOT_VERSION} )
@@ -25,7 +25,7 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python3-version
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
 
 if (PY3VERSION_ROOT VERSION_LESS "3.8" )
-  message ( SEND_ERROR " Python version " ${PY3VERSION}   " is no tsupported anymore")
+  message ( FATAL_ERROR " Python version " ${PY3VERSION}   " is no tsupported anymore")
 endif() 
 
     
@@ -34,10 +34,10 @@ add_library ( root_pyroot INTERFACE IMPORTED)
 find_package(Python3 ${PY3VERSION_ROOT} COMPONENTS Interpreter Development NumPy)
 if  (Python3_FOUND)
 else()
-  message ( SEND_ERROR "Python3 is NOT FOUND!" ) 
+  message ( FATAL_ERROR "Python3 is NOT FOUND!" ) 
 endif()  
 if (Python3_VERSION  VERSION_LESS "3.8" )
-  message ( SEND_ERROR " Python version " ${Python3_VERSION} " is not supported anymore")
+  message ( FATAL_ERROR " Python version " ${Python3_VERSION} " is not supported anymore")
 endif() 
 
 set(Python_VERSION ${Python3_VERSION}  )
@@ -113,12 +113,6 @@ endfunction( MAKE_DICT )
 
 
 include(CMake_OSTAP.cmake) 
-
-
-## set_target_properties(ostap
-##     PROPERTIES
-##     NO_SYSTEM_FROM_IMPORTED ON
-##     )
 
 if(ROOT_VERSION VERSION_LESS_EQUAL "6.31.00")
 

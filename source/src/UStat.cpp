@@ -54,33 +54,6 @@ namespace
     //
     double result = 0.;
     //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
-    //
-    Ostap::Utils::Iterator xIter ( *x ) ; // only for ROOT < 6.18 
-    Ostap::Utils::Iterator yIter ( *y ) ; // only for ROOT < 6.18 
-    //
-    RooRealVar* xVar = 0 ;
-    RooRealVar* yVar = 0 ;
-    while ( ( xVar = (RooRealVar*)xIter -> Next() ) && 
-            ( yVar = (RooRealVar*)yIter -> Next() )    ) 
-    {
-      const double val  = xVar->getVal() - yVar->getVal() ;
-      result           += val*val ;
-    }
-#else 
-    //
-    // RooArgSet::const_iterator xIter = x -> begin () ;
-    // RooArgSet::const_iterator yIter = y -> begin () ;
-    // RooArgSet::const_iterator xEnd  = x -> end   () ;
-    // RooArgSet::const_iterator yEnd  = y -> begin () ;    
-    // for ( ; xIter != xEnd && yIter != yEnd ; ++xIter, ++yIter ) 
-    // {
-    //   const RooRealVar* xVar  = static_cast<const RooRealVar*> ( *xIter ) ;
-    //   const RooRealVar* yVar  = static_cast<const RooRealVar*> ( *yIter ) ;
-    //   //
-    //   const double      val   = xVar->getVal() - yVar->getVal() ;
-    //   result                 += val*val ;
-    // }
     //
     for ( auto* xa : *x )
     {
@@ -95,8 +68,6 @@ namespace
       result                += val*val ;
       //
     }
-    //
-#endif    
     //
     return std::sqrt ( result ) ;
   }
@@ -182,25 +153,6 @@ Ostap::StatusCode Ostap::UStat::calculate
     //
     // 2.Evaluate PDF 
     //
-    // 
-    // #if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
-    //
-    // Ostap::Utils::Iterator iter  ( *args ) ; // only for ROOT < 6.18 
-    // RooRealVar * var = 0 ;
-    // while ( (var = (RooRealVar*)iter->Next() ) ) 
-    // { var->setVal( event_i->getRealValue( var->GetName() ) ); }
-    //
-    /// #else 
-    //
-    // for ( auto* vv : *args ) 
-    // {
-    // RooRealVar* var = static_cast<RooRealVar*> ( vv ) ;
-    // var -> setVal ( event_i -> getRealValue ( var -> GetName () ) ) ;
-    // }
-    //
-    // #endif
-    //
-    // observables->assign ( *event_x ) ;
 	::assign( *observables, *event_x ) ;
     const double pdfValue = pdf . getVal() ;
     //
