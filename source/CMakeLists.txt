@@ -125,6 +125,9 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx23
 execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx20
                  OUTPUT_VARIABLE CXX20_ROOT
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
+execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx17
+                 OUTPUT_VARIABLE CXX17_ROOT
+                 OUTPUT_STRIP_TRAILING_WHITESPACE )
 execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx14
                  OUTPUT_VARIABLE CXX14_ROOT
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
@@ -132,6 +135,13 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx11
                  OUTPUT_VARIABLE CXX11_ROOT
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
 
+message ( ' CXX26 == ' ${CXX26_ROOT} )
+message ( ' CXX23 == ' ${CXX23_ROOT} )
+message ( ' CXX20 == ' ${CXX20_ROOT} )
+message ( ' CXX17 == ' ${CXX17_ROOT} )
+message ( ' CXX14 == ' ${CXX14_ROOT} )
+message ( ' CXX11 == ' ${CXX11_ROOT} )
+    
 if     ( ${CXX26_ROOT} STREQUAL "yes" ) 
   target_compile_features (ostap PUBLIC cxx_std_26 )
 elseif ( ${CXX23_ROOT} STREQUAL "yes" ) 
