@@ -14,16 +14,16 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ostap.fitting.roofit 
-import ostap.fitting.models     as     Models
 from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import hID , dsID, rooSilent 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait
+from   ostap.utils.utils        import wait, batch_env 
 from   ostap.fitting.simfit     import combined_data, combined_hdata
 from   ostap.fitting.fithelpers import H1D_dset
+import ostap.fitting.models     as     Models
 import ostap.io.zipshelve       as     DBASE
+import ostap.fitting.roofit 
 import ROOT, random
 # =============================================================================
 # logging 
@@ -34,7 +34,10 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 
 conf   = { 'refit' : 5 }
 if (6,29) <= root_info : 

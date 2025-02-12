@@ -72,7 +72,7 @@ __all__     = (
 from   builtins          import range
 from   ostap.math.ve     import VE
 from   ostap.math.base   import isequal, iszero
-from   ostap.core.core   import items_loop
+from   ostap.utils.basic import items_loop
 from   ostap.utils.utils import memoize 
 import ROOT, warnings, math, array 
 # =============================================================================

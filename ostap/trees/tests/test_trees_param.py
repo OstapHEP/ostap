@@ -22,15 +22,16 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
+from   ostap.core.core          import hID, SE, Ostap
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.timing       import timing
+from   ostap.utils.progress_bar import progress_bar
+from   ostap.utils.cleanup      import CleanUp
+import ostap.logger.table       as     T 
 import ostap.core.pyrouts
 import ostap.trees.param
 import ostap.math.models
-from   ostap.core.core          import hID, SE, Ostap
-from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait
-from   ostap.utils.timing       import timing
-from   ostap.utils.progress_bar import progress_bar
-import ostap.logger.table       as     T 
 import ROOT, os,  random
 # =============================================================================
 # logging 
@@ -41,7 +42,10 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__           )
 # =============================================================================
-from ostap.utils.cleanup import CleanUp
+batch_env ( logger ) 
+# =============================================================================
+
+
 data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-test-trees-param-' ) 
 
 xmin, xmax = -2, 2 

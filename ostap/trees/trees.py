@@ -12,37 +12,45 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (  
-    'Chain'           , ## helper class , needed for multiprocessing 
-    'Tree'            , ## helper class , needed for multiprocessing
-    'ActiveBranches'  , ## context manager to activate certain branches 
-    'active_branches' , ## context manager to activate certain branches
-    'UseAliases'      , ## context manager to redefine aliases 
-    'use_aliases'     , ## context manager to redefine aliases 
+    'Chain'              , ## helper class , needed for multiprocessing 
+    'Tree'               , ## helper class , needed for multiprocessing
+    'ActiveBranches'     , ## context manager to activate certain branches 
+    'active_branches'    , ## context manager to activate certain branches
+    'UseAliases'         , ## context manager to redefine aliases 
+    'use_aliases'        , ## context manager to redefine aliases
+    'numpy_buffer_types' , ## allowed buffer types from numpy  
+    'array_buffer_types' , ## allowed array buffer types 
   ) 
 # =============================================================================
 from   ostap.core.meta_info      import root_info, ostap_version
-from   ostap.core.core           import ( std , Ostap , VE   , WSE ,
-                                          hID , fID   , 
-                                          rootException      , typename       , 
-                                          ROOTCWD , strings  , cidict_fun     , 
-                                          split_string       , var_separators , 
-                                          valid_pointer      , rootError  ) 
 from   ostap.core.ostap_types    import ( integer_types      , long_type      ,
                                           string_types       , sequence_types ,
                                           sized_types        , num_types      ,
                                           dictlike_types     , list_types     )
-from   ostap.utils.utils         import chunked, evt_range, LAST_ENTRY
-from   ostap.utils.basic         import isatty, terminal_size, NoContext, loop_items  
-from   ostap.utils.scp_copy      import scp_copy
+from   ostap.core.core           import ( std , Ostap , VE   , WSE ,
+                                          hID , fID   ,  
+                                          rootException      ,  
+                                          ROOTCWD , strings  , 
+                                          valid_pointer      , rootError  ) 
+from   ostap.logger.utils        import print_args  
 from   ostap.math.reduce         import root_factory
-from   ostap.utils.progress_bar  import progress_bar
-from   ostap.trees.cuts          import vars_and_cuts, order_warning 
+from   ostap.histos.histos       import histo_book2, histo_keys
 from   ostap.stats.statvars      import data_decorate , data_range 
-from   ostap.histos.histos       import histo_book2, histo_keys  
+from   ostap.trees.cuts          import vars_and_cuts, order_warning
+from   ostap.utils.basic         import ( isatty , terminal_size ,
+                                          NoContext, loop_items  , typename  ,
+                                          split_string           ,
+                                          split_string_respect   ,
+                                          var_separators         )                                          
+from   ostap.utils.cidict        import cidict, cidict_fun
+from   ostap.utils.progress_bar  import progress_bar
+from   ostap.utils.scp_copy      import scp_copy
+from   ostap.utils.utils         import chunked, evt_range, LAST_ENTRY, implicitMT 
+# 
 import ostap.trees.treereduce 
 import ostap.trees.param
 import ostap.io.root_file 
-import ROOT, os, math, array, sys  
+import ROOT, os, math, array, sys, ctypes   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -51,8 +59,6 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.trees.trees' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some useful decorations for Tree/Chain objects')
-# =============================================================================
-
 # =============================================================================
 ## check validity/emptiness  of TTree/TChain
 #  require non-zero poniter and non-empty Tree/Chain
@@ -545,7 +551,6 @@ def tree_draw ( tree                    ,
     nvars = len ( varlst ) 
     assert 1 <= nvars <= 3 , "Invalid number of variables: %s" % str ( varlst )
     
-    from ostap.utils.cidict        import cidict
     kw = cidict ( transform = cidict_fun , **kwargs )
         
     if native and 1 == nvars :
@@ -909,6 +914,7 @@ def _rt_table_0_ ( tree ,
         
         bbs.append ( b ) 
 
+    
     if   hasattr ( tree , 'fstatVar' ) : bbstats = tree.fstatVar ( bbs , cuts , *args )
     elif hasattr ( tree , 'pstatVar' ) : bbstats = tree.pstatVar ( bbs , cuts , *args )
     else                               : bbstats = tree. statVar ( bbs , cuts , *args )
@@ -1522,7 +1528,7 @@ ROOT.TTree .slices = _rt_slices_
 #  @endcode 
 #  @see numpy.array 
 def _rc_slice_ ( chain , varname , cut = '' , weight = '', transpose = False ) :
-    """Get ``slices'' from TChain in a form of numpy.array
+    """ Get ``slices'' from TChain in a form of numpy.array
     >>> chain = ...
     >>> varrs1 = chain.slices ( ['Pt','eta'] , 'eta>3' )
     >>> print varrs1 
@@ -1573,17 +1579,18 @@ def _tc_iadd_ ( self ,  other ) :
     >>>  chain += 'myfile.root'
     >>>  chain += ( 'myfile1.root' , 'myfile2.root' )    
     """
-    if   self == other                             : return self    
-    elif isinstance ( o , ( list , tuple , set ) ) :        
-        for f in other : _tc_iadd_ (  self , f )
-        return  self
+    if   self == other                             : return self
     
     elif isinstance ( other , ROOT.TChain ) :
         return _tc_iadd_ ( self , other.files() ) 
     
-    elif isinstance ( other , str ) :        
+    elif isinstance ( other , strint_types ) :        
         if not other in self.files () : self.Add ( other )
         return self
+
+    elif isinstance ( o , ( list , tuple , set ) ) :        
+        for f in other : _tc_iadd_ ( self , f )
+        return  self
         
     return NotImplemented 
 
@@ -1611,694 +1618,6 @@ ROOT.TChain.__radd__ = _tc_add_
 from ostap.io.root_file import top_dir
 ROOT.TTree.topdir = property ( top_dir , None , None ) 
 
-
-# ==============================================================================
-addbranch_types = string_types + num_types + ( ROOT.TH1 , Ostap.IFuncTree )
-# ==============================================================================
-## Is obj a representation of a function?
-#  - (callable, var1, ... )
-#  - (var1, ... , callable)
-def bftype ( obj ) : 
-    """ Is obj a representation of a function?
-    - (callable, var1, ... )
-    - (var1, ... , callable)
-    """
-    if isinstance ( obj , sized_types ) and 2 <= len ( obj ) <= 4 :
-        
-        ## ( function, xvar, yvar, ...) 
-        if callable ( obj[ 0] ) and all ( isinstance ( v , string_types ) for v in obj[1:]  ) : return True
-        
-        ## ( xvar, yvar, ..., function ) 
-        if callable ( obj[-1] ) and all ( isinstance ( v , string_types ) for v in obj[:-1] ) : return True 
-                
-    return False 
-        
-# ==============================================================================
-## basic types of objects that can be used for <code>add_new_branch</code> methods
-#  - string formula
-#  - constant number
-#  - <code>ROOT.TH1</code> 
-#  - <code>ROOT.TH2</code> 
-#  - <code>ROOT.TH3</code> 
-#  - <code>Ostap.IFuncTree</code>
-#  - array-like objects
-#  - python callable
-#  @see Ostap.IFuncTree
-#  @see TH1 
-def btypes ( obj ) :
-    """ Basic types of objects that can be used for `add_new_branch`methods
-    - string formula
-    - constant number
-    - `ROOT.TH1`
-    - `ROOT.TH2`
-    - `ROOT.TH3`
-    - `Ostap.IFuncTree`
-    - array-like objects
-    - python callable
-    """
-
-    if   isinstance   ( obj , addbranch_types ) : return True
-    elif btypes_array ( obj )                   : return True
-    elif bftype       ( obj )                   : return True
-    
-    return callable   ( obj ) 
-
-# =============================================================================
-## basic types of array-line objects that can be used for <code>add_new_branch</code> methods 
-def btypes_array ( obj ) :
-    """ Basic types of array-line objects that can be used for <code>add_new_branch</code> methods 
-    """
-    
-    if   isinstance ( obj, string_types )          : return False
-    elif bftype     ( obj )                        : return False 
-
-    ## efficient treatment for ROOT versions from  6/24 
-    elif isinstance ( obj , array.array ) and  (6,24)<=root_info and \
-         obj.typecode in ( 'f' , 'd' ,'i' , 'l' )  : return True 
-
-    ## efficient treatment for ROOT version from 6/24 
-    elif numpy and (6,24)<= root_info       and \
-         isinstance ( obj , numpy.ndarray ) and \
-         obj.dtype  in ( numpy.float16 ,
-                         numpy.float32 ,
-                         numpy.float64 ,
-                         ## numpy.int8  ,
-                         numpy.int16   ,
-                         numpy.int32   ,
-                         numpy.int64   ,
-                         ## numpy.uint8 ,
-                         numpy.uint16  ,
-                         numpy.uint32  ,
-                         numpy.uint64  )  : return True
-    
-    ## generic case with array-like structure
-    elif isinstance ( obj , sized_types    ) and \
-         isinstance ( obj , sequence_types ) and \
-         hasattr    ( obj , '__getitem__'  ) : return True
-
-    return False
-
-# ==============================================================================
-## add new branch to the chain
-#  @see Ostap::Trees::add_branch
-#  @see Ostap::IFuncTree   
-def _chain_add_new_branch ( chain          ,
-                            name           ,
-                            function       ,
-                            verbose = True ,
-                            report  = True , 
-                            value   = 0    ) :
-    """ Add new branch to the tree
-    - see Ostap::Trees::add_branch
-    - see Ostap::IFuncTree 
-    """
-    assert isinstance ( chain , ROOT.TChain ), 'Invalid chain!'
-
-    if len ( chain.files() ) <= 1 :
-        return add_new_branch ( chain               ,
-                                name     = name     ,
-                                function = function , 
-                                verbose  = verbose  ,
-                                report   = report   , 
-                                value    = value    ) 
-    
-    if isinstance ( function , dictlike_types ) :
-        assert name     is None , 'add_branch: when function is dict, name must be None!'
-        name , function = function , None 
-        
-    names = name
-    if isinstance ( names , string_types )  :
-        names = split_string ( names , strip = True ) 
-    for n in names : 
-        assert not n in chain.branches() ,'Branch %s already exists!' % n 
-        
-    assert ( isinstance ( name , dictlike_types ) and function is None ) or btypes ( function ) ,\
-           "add_branch: invalid type of `function': %s/%s" % ( function , type ( function ) )  
-
-    if   isinstance   ( name     ,  dictlike_types ) and function is None : pass    
-    elif isinstance   ( function , addbranch_types )                      : pass 
-    elif btypes_array ( function ) :    
-        return _chain_add_new_branch_array ( chain                ,
-                                             name      = name     ,
-                                             the_array = function ,
-                                             verbose   = verbose  ,
-                                             report    = report   , 
-                                             value     = value    ) 
-
-
-    files = chain.files   ()
-    cname = chain.GetName () 
-
-    branches = set ( chain.branches () ) | set ( chain.leaves() )
-
-    tree_verbose  = verbose and      len ( files ) < 5
-    chain_verbose = verbose and 5 <= len ( files )
-
-    keep = name , function
-    
-    import ostap.io.root_file
-    for fname in progress_bar ( files , len ( files ) , silent = not chain_verbose , description = 'Files:' ) :
-
-        logger.debug ('Add_new_branch: processing file %s' % fname )
-        with ROOT.TFile.Open  ( fname , 'UPDATE' , exception = True ) as rfile :
-            ## get the tree 
-            ttree = rfile.Get ( cname )
-            ## treat the tree 
-            add_new_branch    ( ttree                   ,
-                                name     = name         ,
-                                function = function     ,
-                                verbose  = tree_verbose ,
-                                ## verbose  = False     ,
-                                report   = False        , 
-                                value    = value        )
-            
-    ## recollect the chain 
-    newc = ROOT.TChain ( cname )
-    for f in files : newc.Add ( f  )
-    
-    if report :
-        all_branches = set ( newc.branches() ) | set ( newc.leaves() ) 
-        new_branches = sorted ( all_branches - branches )        
-        if new_branches :
-            n = len ( new_branches )
-            if 1 == n : title = 'Added %s branch to TChain'   % n 
-            else      : title = 'Added %s branches to TChain' % n 
-            table = newc.table ( new_branches , title = title , prefix = '# ' )
-            logger.info ( '%s:\n%s' % ( title , table ) ) 
-            
-    return newc 
-
-# ==============================================================================
-## add new branch to the chain
-#  @see Ostap::Trees::add_branch
-#  @see Ostap::IFuncTree   
-def _chain_add_new_branch_array ( chain           ,
-                                  name            ,
-                                  the_array       ,
-                                  verbose = True  ,
-                                  report  = True  , 
-                                  value   = 0     ) : 
-    """ Add new branch to the tree
-    - see Ostap::Trees::add_branch
-    - see Ostap::IFuncTree 
-    """
-    assert isinstance ( chain , ROOT.TChain ), 'Invalid chain!'
-
-    names = name
-    if isinstance ( names , string_types )  : names =  [ names ]    
-    for n in names : 
-        assert not n in chain.branches() ,'Branch %s already exists!' % n 
-
-    assert isinstance ( the_array , sized_types    ) and \
-           isinstance ( the_array , sequence_types ) and \
-           hasattr    ( the_array , '__getitem__'  ) ,   \
-           "Invalid type of ``the_array'' %s/%s" % ( the_array , type ( the_array ) ) 
-    
-
-    files = chain.files   ()
-    cname = chain.GetName () 
-    
-    from ostap.utils.progress_bar import progress_bar
-
-    branches = set ( chain.branches () ) | set ( chain.leaves() )
-    
-    import ostap.io.root_file
-
-    start = 0
-    
-    tree_verbose  = verbose and      len ( files ) < 5
-    chain_verbose = verbose and 5 <= len ( files )
-
-    for i , fname in enumerate ( progress_bar ( files , len ( files ) , silent = not chain_verbose , description = 'Files:' ) ) :
-        
-        logger.debug ('Add_new_branch: processing file %s' % fname )
-        with ROOT.TFile.Open  ( fname , 'UPDATE' , exception = True ) as rfile :
-            ## get the tree 
-            ttree = rfile.Get ( cname )
-            ## treat the tree
-            size  = len ( ttree )
-            end   = min ( start + size , len ( the_array ) ) 
-                          
-            if   0 == i       : what = the_array
-            elif end <= start : what = ()
-            else              : what = the_array [ start : end ]
-            
-            add_new_branch    ( ttree                   ,
-                                name     = name         ,
-                                function = what         ,
-                                verbose  = tree_verbose ,
-                                ## verbose  = False        ,
-                                report   = False        , 
-                                value    = value        ) 
-            start += size
-
-    ## recollect the chain 
-    newc = ROOT.TChain ( cname )
-    for f in files : newc.Add ( f  )
-
-    if report :
-        all_branches = set ( newc.branches() ) | set ( newc.leaves() ) 
-        new_branches = sorted ( all_branches - branches )
-        if new_branches :
-            n = len ( new_branches )
-            if 1 == n : title = 'Added %s data array branch to TChain'   % n 
-            else      : title = 'Added %s data array branches to TChain' % n 
-            table = newc.table ( new_branches , title = title , prefix = '# ' )
-            logger.info ( '%s:\n%s' % ( title , table ) ) 
-                                           
-    return newc 
-
-
-# ==============================================================================
-try : # ========================================================================
-    # ==========================================================================
-    import numpy, ctypes
-    # ==========================================================================
-except ImportError : # =========================================================
-    # ==========================================================================
-    numpy = None
-
-# ==============================================================================
-from ostap.utils.utils import implicitMT 
-# ==============================================================================
-## Helper class to keep/store fnuctios 
-class FunStore(object) :
-    """ Helper class to keep/store functions"""
-    def __init__ ( self ) :
-        
-        self.__map      = {} 
-        self.__keep     = [] ## store objects 
-        self.__branches = Ostap.Trees.Branches() 
-
-    # =========================================================================
-    ## Add function to local store    
-    def add ( self , name , fun , tree = ROOT.nullptr ) :
-        """ Add function to local store """
-        
-        assert not name in self.__map , "Function with key '%s' already defined!" % name 
-
-        if   isinstance ( fun , Ostap.IFuncTree ) : wfun = fun 
-        elif isinstance ( fun , string_types    ) : wfun = Ostap.Functions.FuncFormula ( fun , tree )
-        else :
-            raise TypeError ( 'Invalid type %s:%s' % (  name , fun ) )
-        
-        self.__map [ name  ] = wfun  
-        self.__keep.append (  fun  )
-        self.__keep.append ( wfun  )
-        self.__branches.add ( name , wfun )
-
-    def __getstate__ ( self ) : return self.__map
-    def __setstate__ ( self , state ) :        
-        self.__map      = {} 
-        self.__keep     = [] ## store objects 
-        self.__branches = Ostap.Trees.Branches() 
-        for k in state : self.add ( k , kwargs [ k ] )
-        
-    ## get the branches 
-    @property
-    def branches ( self )  :
-        """ Get the branches """
-        return self.__branches 
-    
-# ==============================================================================
-## Add new branch to the tree
-# 
-#   - Using formula:
-#   @code
-#   >>> tree = ....
-#   >>> tree.add_new_branch ( 'pt2' , 'pt*pt' ) ## use formula
-#   @endcode
-# 
-#   - Sampling from 1D-histogram
-#   @code 
-#   >>> tree = ...
-#   >>> h1   = ...  ## 1D histogram to be sampled 
-#   >>> tree.add_new_branch ( 'ntracks' , h1 )
-#   @endcode
-# 
-#   - Sampling from 2D-histogram
-#   @code
-#   >>> tree = ...
-#   >>> h2   = ...  ## 2D histogram to be sampled 
-#   >>> tree.add_new_branch ( [ 'pt', 'eta' ] ,  h2 )
-#   @endcode
-#
-#   - Sampling from 3D-histogram
-#   @code
-#   >>> tree = ...
-#   >>> h3   = ...  ## 3D histogram to be sampled 
-#   >>> tree.add_new_branch ( [ 'pt', 'eta' , 'ntracks' ] ,  h3 )
-#   @endcode
-# 
-#   - adding 1D-histogram as function:
-#     for  each entry it gets the value of `mLb` variable
-#     and stores the value from the histogram in new `S_sw` variable:
-#   @code
-#   >>> h  = ...  ## histogram, e.g. sPlot 
-#   >>> fn = Ostap.Functions.FuncTH1 ( sph , 'mLb' )
-#   >>> tree.add_new_branch ( 'S_sw' , fn )
-#   @endcode
-# 
-#   - arbitrary function derived from Ostap.ITreeFunc:
-#   @code
-#   >>> fun = ...
-#   >>> tree.add_new_branch ( 'Var' , fun )
-#   @endcode
-# 
-#   -  Several variables can be filled at once:
-#   @code
-#   >>> tree = ....
-#   >>> tree.add_new_branch ( { 'pt2' : 'pt*pt'  ,
-#   ...                         'et2' : 'pt*pt+mass*mass' } , None ) ## use formulas
-#   @endcode
-#   @attention it makes a try to reopen the file with tree in UPDATE mode,
-#              and it fails when it is not possible!
-#
-#  @see Ostap::Trees::add_branch
-#  @see Ostap::IFuncTree 
-def add_new_branch ( tree           ,
-                     name           ,
-                     function       ,
-                     verbose = True ,
-                     report  = True ,
-                     value   = 0    ) :
-    """ Add new branch to the tree
-
-    - Using formula:
-    
-    >>> tree = ....
-    >>> tree.add_new_branch ( 'pt2' , 'pt*pt' ) ## use formula
-    
-    - Sampling from 1D-histogram
-    
-    >>> tree = ...
-    >>> h1   = ...  ## 1D histogram to be sampled 
-    >>> tree.add_new_branch ( 'ntracks' , h1 )
-    
-    - Sampling from 2D-histogram
-    
-    >>> tree = ...
-    >>> h2   = ...  ## 2D histogram to be sampled 
-    >>> tree.add_new_branch ( [ 'pt', 'eta' ] ,  h2 )
-    
-    - Sampling from 3D-histogram
-    
-    >>> tree = ...
-    >>> h3   = ...  ## 3D histogram to be sampled 
-    >>> tree.add_new_branch ( [ 'pt', 'eta' , 'ntracks' ] ,  h3 )
-
-    - adding histogram as function: for  each entry it gets the value of `mLb` variable
-    and stores the value from the histogram in new `S_sw` variable:
-    
-    >>> h  = ...  ## histogram, e.g. sPlot 
-    >>> fn = Ostap.Functions.FuncTH1 ( sph , 'mLb' )
-    >>> tree.add_new_branch ( 'S_sw' , fn )
-    
-    - arbitrary function derived from Ostap.ITreeFunc:
-    
-    >>> fun = ...
-    >>> tree.add_new_branch ( 'Var' , fun )
-    
-    -  Several variables can be filled at once:
-    >>> tree = ....
-    >>> tree.add_new_branch ( { 'pt2' : 'pt*pt'  ,
-    ...                         'et2' : 'pt*pt+mass*mass' } , None ) ## use formulas
-    
-    
-    - ATTENTION: it makes a try to reopen the file with tree in UPDATE mode,
-    and it fails when it is not possible!
-    
-    - see Ostap::Trees::add_branch
-    - see Ostap::IFuncTree
-    
-    """
-
-    if not tree :
-        logger.error (  "add_branch: Invalid Tree!" )
-        return
-    elif isinstance ( tree  , ROOT.TChain ) and 1 < len ( tree.files() ) :
-        return _chain_add_new_branch ( tree                ,
-                                       name                ,
-                                       function = function ,
-                                       verbose  = verbose  ,
-                                       report   = report   , 
-                                       value    = value    )
-
-    if isinstance ( function , dictlike_types ) :
-        assert name is None , 'add_branch: when function is dict, name must be None!'
-        name , function = function , None 
-
-    names = name 
-    if isinstance ( names , string_types ) : names = [ names ]
-    names = [ n.strip() for n in names ] 
-    for n in names : 
-        assert not n in tree.branches() ,"`Branch' %s already exists!" % n
-
-    assert ( isinstance ( name , dictlike_types ) and function is None ) or btypes ( function ) ,\
-           "add_branch: invalid type of ``function'': %s/%s" % ( function , type ( function ) )  
-
-    treepath = tree.path
-    the_file = tree.topdir
-    assert treepath and the_file and ( not the_file is ROOT.gROOT ) and isinstance ( the_file ,  ROOT.TFile ) , \
-           'This is not file-resident TTree object, addition of new branch is not posisble!'
-    the_file = the_file.GetName() 
-
-    fun_store = FunStore ()
-
-    if isinstance ( name  ,  dictlike_types ) and function is None :
-        
-        for k in name.keys() : fun_store.add ( k , name [ k ] , tree )
-
-        """ 
-        names = list ( name.keys() )
-        args  = fun_store.branches.map() ,
-        
-        print ( 'ADD BRANCH/2' ,   )
-        
-        typeformula = False 
-        for k in  name.keys() :
-            
-            print ( 'ADD BRANCH/3' , k  )
-            
-            assert not k in tree.branches() ,'Branch %s already exists!' % k
-            v = name [ k ]
-            if   isinstance ( v , string_types    ) : pass
-            elif isinstance ( v , Ostap.IFuncTree ) : typeformula = True
-            else : raise TypeError ('add_branch: Unknown branch %s/%s for %s'  % ( v , type( v ) , k ) )
-                    
-        print ( 'ADD BRANCH/4' , typeformula )
-        if typeformula :
-            MMAP = Ostap.Trees.FUNCTREEMAP
-            PAIR = Ostap.Trees.FUNCTREEPAIR
-        else           :
-            MMAP = std.map  ( 'std::string'       , 'std::string' )
-            PAIR = MMAP.value_type 
-
-        print ( 'ADD BRANCH/4' , typeformula , MMAP , PAIR )
-        
-        mmap  = MMAP () 
-        for k in name.keys() :
-            v = name [ k ]
-            print ( 'ADD BRANCH/5.1 ' , k , v , type ( v ) , isinstance ( v , ROOT.TObject ) )  
-            if typeformula and isinstance ( v , string_types ) :
-                v = Ostap.Functions.FuncFormula ( v , tree )
-                funcs.append ( v )
-            else :
-                assert isinstance ( v , Ostap.IFuncTree ) , 'Invalid type!'
-                funcs.append ( v )
-                
-            pp = PAIR ( k , v )
-            funcs.append ( pp ) 
-            mmap.insert ( PAIR ( k , v ) )
-            print ( 'ADD BRANCH/5.2 ' , k , v , type ( v ) , isinstance ( v , ROOT.TObject ) )  
-            
-            ## mmap [ k ] = v
-
-        """
-        
-        ## funcs.append ( mmap )
-        names = list ( name.keys() )
-        args  = fun_store.branches ,
-
-    elif isinstance ( function , addbranch_types ) :
-
-        args = tuple ( [ n  for n in names ] + [ function ] )
-
-    ## ( callable , var1 , ... ) 
-    elif isinstance ( name     , string_types ) and \
-             isinstance ( function , sized_types  ) and \
-             2 <= len ( function ) <= 4             and \
-             ( callable ( function [0] ) and all ( isinstance ( v , string_types ) for v in function[ 1: ] ) )  :
-
-        if   (6,26) <= root_info :
-            
-            args =  ( name , ) + tuple ( v for v in function [ 1 :] ) + ( function[0] , )
-            
-        elif (6,24) <= root_info :
-
-
-            fa = tuple ( v for v in function )
-            
-            from   ostap.math.make_fun  import make_fun1, make_fun2, make_fun3
-            
-            if   2 == len ( function ) :
-                ## fa = ( make_fun1 ( function[0] ) , ) + function [1: ]
-                ff = Ostap.Functions.Func1D ( *fa ) 
-            elif 3 == len ( function ) :
-                ##  fa = ( make_fun2 ( function[0] ) , ) + function [1: ]
-                ff = Ostap.Functions.Func2D ( *fa ) 
-            elif 4 == len ( function ) :
-                ## fa = ( make_fun3 ( function[0] ) , ) + function [1: ]
-                ff = Ostap.Functions.Func3D ( *fa )
-            
-            args = name , ff
-            
-        else:
-
-            fa = tuple ( v for v in function ) ## + ( tree , ) 
-
-            if   2 == len ( function ) : ff = Ostap.Functions.Func1D.create ( *fa ) 
-            elif 3 == len ( function ) : ff = Ostap.Functions.Func2D.create ( *fa ) 
-            elif 4 == len ( function ) : ff = Ostap.Functions.Func3D.create ( *fa )
-            
-            args = name , ff            
-        
-    ## ( var1 , ... , callable ) 
-    elif isinstance ( name     , string_types ) and \
-             isinstance ( function , sized_types  ) and \
-             2 <= len ( function ) <= 4             and \
-             ( callable ( function [-1] ) and all ( isinstance ( v , string_types ) for v in function[:-1] ) ) :
-
-        if (6,26) <= root_info :
-            
-            args =  ( name , ) + tuple ( v for v in function )
-            
-        elif (6,24) <= root_info :
-            
-            fs = ( function[-1] , ) + tuple ( v for v in function [:-1] ) ## + ( tree , )
-            
-            if   2 == len ( function ) : ff = Ostap.Functions.Func1D        ( *fs ) 
-            elif 3 == len ( function ) : ff = Ostap.Functions.Func2D        ( *fs ) 
-            elif 4 == len ( function ) : ff = Ostap.Functions.Func3D        ( *fs )
-            
-            args = name , ff
-            
-        else:
-
-            fs = ( function[-1] , ) + tuple ( v for v in function [:-1] ) ## + ( tree , )
-
-            if   2 == len ( function ) : ff = Ostap.Functions.Func1D.create ( *fs ) 
-            elif 3 == len ( function ) : ff = Ostap.Functions.Func2D.create ( *fs ) 
-            elif 4 == len ( function ) : ff = Ostap.Functions.Func3D.create ( *fs )
-            
-            args = name , ff
-           
-    ## efficient case with array 
-    elif ( 6 , 24 ) <= root_info                   and \
-             isinstance ( function , array.array ) and \
-             function.typecode in ( 'f' , 'd' , 'h' , 'i' , 'l' , 'H' , 'I' , 'L' ) :
-        
-        data = function 
-        args = tuple ( [ n  for n in names ] + [ data , len ( data ) , value ] )
-        
-    ## efficient case with array 
-    elif numpy and (6,24) <= root_info            and \
-         isinstance ( function , numpy.ndarray )  and \
-         function.dtype  in ( numpy.float32 ,
-                              numpy.float64 ,
-                              ## numpy.int8    ,
-                              numpy.int16   ,
-                              numpy.int32   ,
-                              numpy.int64   ,
-                              ## numpy.uint8   ,
-                              numpy.uint16  ,
-                              numpy.uint32  , 
-                              numpy.uint64  ) :
-        
-        data = function 
-        dt   = data.dtype 
-        ct   = numpy.ctypeslib._ctype_from_dtype( dt )
-        buff = data.ctypes.data_as ( ctypes.POINTER( ct ) )  
-        args = tuple ( [ n  for n in names ] + [ buff , len ( data ) , value ] )
-        
-    ## generic case with array-like structure 
-    elif isinstance ( function , sized_types    ) and \
-         isinstance ( function , sequence_types ) and \
-         hasattr    ( function , '__getitem__'  ) :
-
-        data = function 
-        from ostap.trees.funcs import PyTreeArray as PTA
-        args = tuple ( [ n  for n in names ] + [ PTA ( data , value = value ) ] )
-
-    elif callable ( function )  :
-        
-        from ostap.trees.funcs import PyTreeFunction as PTF
-        args = tuple ( [ n  for n in names ] + [ PTF ( function  ) ] )
-
-    else :
-
-        logger.warning ('addbranch: suspicion case name/function:  %s/%s %s/%s' % (
-            name , type(name) , function, type(function) ) ) 
-                        
-        args = tuple ( [n  for n in names ] + [ function ] )
-        
-    tname = tree.GetName      ()
-    tdir  = tree.GetDirectory ()
-    tpath = tree.path
-    
-    branches = set ( tree.branches () ) | set ( tree.leaves() ) 
-    exists   = set ( names ) & branches
-    
-    ## if exists : logger.warning ("Branches '%s' already exist(s)!" % exists ) 
-    assert not exists , "Branches '%s' already exist(s)!" % list ( exists ) 
-
-    from ostap.io.root_file        import REOPEN 
-    from ostap.utils.progress_conf import progress_conf
-    with ROOTCWD() , REOPEN ( tdir ) as tfile :
-
-        tfile.cd() 
-        ttree    = tfile.Get ( tpath )
-
-        ## add progress bar
-        
-        pconf = progress_conf ( verbose ) 
-        if verbose : sc = Ostap.Trees.add_branch ( ttree , pconf , *args )
-        else       : sc = Ostap.Trees.add_branch ( ttree ,         *args )
-        
-        if   sc.isFailure     () : logger.error ( "Error from Ostap::Trees::add_branch %s" % sc )
-        elif tfile.IsWritable () :
-
-            for n in names :
-                b = ttree.GetBranch ( n )
-                if not b : logger.warning ( "No branch '%s' is fonud!" % b ) 
-                
-            if ( 6 , 26 ) <= root_info :
-                with implicitMT ( False ) :
-                    tfile.Write ( "" , ROOT.TObject.kOverwrite )
-            else :
-                tfile.Write ( "" , ROOT.TObject.kOverwrite )
-            
-            logger.debug ('Write back TTree %s to %s' % ( tpath , tfile ) )            
-        else :
-            logger.error ("Can't write TTree %s back to the file %s" % ( tpath , tfile ) )
-
-    ## recollect the chain 
-    newc = ROOT.TChain ( treepath )
-    newc.Add ( the_file )
-
-    if report :
-        all_branches = set ( newc.branches() ) | set ( newc.leaves() ) 
-        new_branches = sorted ( all_branches - branches )        
-        if new_branches :
-            n = len ( new_branches )
-            if 1 == n : title = 'Added %s branch to TTree'   % n 
-            else      : title = 'Added %s branches to TTree' % n 
-            table = newc.table ( new_branches , title = title , prefix = '# ' )
-            logger.info ( '%s:\n%s' % ( title , table ) ) 
-            
-    return newc
-
-ROOT.TTree.add_new_branch = add_new_branch 
 
 # =============================================================================
 ## get all variables needed to evaluate the expressions for the given tree
@@ -2558,7 +1877,6 @@ def active_branches ( tree , *vars ) :
     """
     return ActiveBranches ( tree , *vars ) 
     
-
 # =============================================================================
 ## files and utilisties for TTree/TChain "serialization"
 # =============================================================================
@@ -3110,6 +2428,642 @@ def tree_path ( tree ) :
 
 ROOT.TTree.full_path = property ( tree_path , None , None )
 
+
+# =============================================================================
+## Sem decoration for Ostap.Trees.Branches
+# =============================================================================
+def _brs_items_  ( brs ) :
+    s = len ( brs )
+    for i in range ( len ( brs ) ) :
+        name , branch  = brs.entry ( i )
+        if name and branch  : yield name , branch
+# =============================================================================
+def _brs_iter_    ( brs ) :
+    for name , _ in brs.items() :
+        yield name
+# =============================================================================
+def _brs_getitem_  ( brs , name ) :
+    branch = brs.branch ( name )
+    if branch : return branch
+    raise KeyError ( "Unknown branch name:%s" % name )
+# =============================================================================
+def _brs_factory_  ( *items ) :
+    branches = Ostap.Trees.Branches () 
+    for n, b in items : branches.add ( n , b ) 
+    return branches ;
+# =============================================================================
+def _brs_reduce_  ( brs ) :
+    return _brs_factory_ , tuple ( ( n , b ) for ( n , b ) in brs.items () )
+# =============================================================================
+def _brs_str_     ( brs ) :    
+    return '{%s}' % ( ', '.join ( '%s: %s' % item for item in brs.items() ) ) 
+    
+Ostap.Trees.Branches.__len__    = lambda s : s.size()
+Ostap.Trees.Branches.items      = _brs_items_ 
+Ostap.Trees.Branches.iteritems  = _brs_items_ 
+Ostap.Trees.Branches.__getitem__= _brs_getitem_ 
+Ostap.Trees.Branches.__reduce__ = _brs_reduce_ 
+Ostap.Trees.Branches.__str__    = _brs_str_ 
+Ostap.Trees.Branches.__repr__   = _brs_str_ 
+Ostap.IFuncTree.__str__         = lambda s : typename ( s )
+
+# ===============================================================================
+func_keywords = 'function' , 'callable' , 'what' , 'how' , 'calculator'
+# ===============================================================================
+## parse&prepare branches
+#  @see Ostap::Trees::add_branch 
+def prepare_branches ( tree , branch , **kwargs ) :
+    """ parse& prepare new branches  
+    - see `Ostap.Trees.add_branch` 
+    """
+    assert isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree ) , \
+        "prepare_branches: TTree* is invalis!"
+
+    ## names for new branches 
+    new_branches = set ()
+
+    ## keep all information 
+    keeper = [ branch ]
+    for k , v in loop_items ( kwargs ) : keeper.append ( v ) 
+
+    the_case = 0
+    
+    ## the simplest case: branches are already prepared 
+    if   isinstance ( branch , Ostap.Trees.Branches        ) and not 'name' in kwargs :        
+        ## already prepared ....  not to much action
+        for name  in branch : new_branches.add ( name )  
+        args     = branch ,
+        the_case = 1
+        logger.debug ( 'prepare_branches: case %s' % the_case )
+        
+    elif isinstance ( branch , Ostap.MoreRooFit.SPlot4Tree ) and not 'name' in kwargs :        
+        ## (very) special case 
+        prefix   = kwargs.pop ( 'prefix'  , ''    )
+        suffix   = kwargs.pop ( 'suffix'  , '_sw' )
+        mapping  = kwargs.pop ( 'mapping' , {}    )
+        for c in branch.coefficients() : new_branches.add ( prefix + c.name  + suffix )        
+        args     = branch , prefix , suffix , mapping
+        the_case = 2
+        logger.debug ( 'prepare_branches: case %s' % the_case )
+        
+    elif isinstance ( branch , Ostap.IFuncTree ) and 'name' in kwargs :
+        ## a simple function        
+        args     = branch ,
+        the_case = 3
+        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+
+    elif isinstance ( branch , string_types    ) and 'name' in kwargs :
+        ## single branch/formula expression 
+        args     = branch , 
+        the_case =  4
+        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+
+    elif isinstance ( branch , Ostap.MoreRooFit.RooFun )  and 'name' in kwargs :
+        ## RooFit construction 
+        mapping  = kwargs.pop ( 'mapping' , {}  )
+        args     = branch , mapping
+        the_case = 5
+        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+
+    elif isinstance ( branch , ROOT.RooAbsReal ) and 'name' in kwargs and 'observables' in kwargs :        
+        ## add informaton form RooFit object 
+        ## need to have a little bit of RooFit here 
+        import ostap.fitting.roocoelctions 
+        ## RooFit construction 
+        observables   = kwargs.pop ( 'obsevables'    )
+        normalization = kwargs.pop ( 'nornalization' , ROOT.nullptr )
+        mapping       = kwargs.pop ( 'mapping' , {}  )
+        keeper.append ( obsrvables    )
+        keeper.append ( normalization )
+        args     = branch , observables , normalization , mapping 
+        the_case = 6
+        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+
+    elif isinstance ( branch , ROOT.TH1 ) and 1 <= branch.GetDimension() <=3 : 
+        ## sample from 1D,2D,3D historgam
+        
+        names = () 
+        if   3 == branch.GetDimension () : names = kwargs.pop ( 'xname' ) , kwargs.pop ( 'yname' ) , kwargs.pop ( 'zname' )
+        elif 2 == branch.GetDimension () : names = kwargs.pop ( 'xname' ) , kwargs.pop ( 'yname' ) 
+        elif 1 == branch.GetDimension () : names = kwargs.pop ( 'xname' ) ,
+        
+        for n in names : new_branches.add ( n )
+        args     = names +  ( branch , )
+        the_case = 7
+        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+
+    elif isinstance ( branch , dictlike_types ) and not 'name' in kwargs :        
+        ## general dict-like stuff, converrted to Ostap.Trees.Branches 
+
+        branches = Ostap.Trees.Branches()
+        keeper.append ( branches ) 
+        for key , value in loop_items ( branch ) :
+            
+            assert isinstance ( key , string_types ) and Ostap.Trees.valid_name_for_branch ( key ) ,\
+                "Invalid branch name type/value" % ( typename ( key ) , key )
+            
+            if   isinstance ( value , string_types    ) : branches .add ( key , value , tree )
+            elif isinstance ( value , Ostap.IFuncTree ) : branches .add ( key , value , tree )
+            elif callable   ( value ) :
+                from ostap.trees.funcs import PyTreeFunction as PTF
+                fun = PTF     ( value , tree )
+                keeper.append ( fun )
+                branches.add  ( key , fun , tree ) 
+            else :
+                raise TypeError ( "Invalid branch type:%s for key=%s" % ( typename ( value ) , key ) )
+            
+            keeper.append    ( value )            
+            new_branches.add ( key   )
+            
+        args     = branches ,
+        the_case = 8
+        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+
+    elif callable ( branch  ) and 'name' in kwargs and 'arguments' in kwargs : 
+        ## generic callable thattakes 1-3 arguments from the tree 
+        
+        vars = kwargs.pop( 'arguments' , () )
+        if isinstance ( vars , string_types ) :
+            vars = split_string ( vars , var_separators , strip = True , respect_groups = True )
+            
+        assert 1 <= len ( vars ) <= 3 and all ( ( isinstance ( a , string_types ) and a.strip() ) for a in vars ) , \
+            "1-to-3 non-empty strings must be specified as `arguments' for `branch'=%s" % typename ( branch )
+
+        if   ( 6 , 26 ) <= root_info : args = vars + ( branch , )
+        elif ( 6 , 24 ) <= root_info : 
+            
+            fvars = ( branch , ) + vars + ( tree , )
+            if   1 == len ( vars ) : args = Ostap.Functions.Func1D ( *fvars ) , 
+            elif 2 == len ( vars ) : args = Ostap.Functions.Func2D ( *fvars ) , 
+            elif 3 == len ( vars ) : args = Ostap.Functions.Func3D ( *fvars ) ,
+            
+        else :
+            
+            fvars = ( branch , ) + vars + ( tree , )
+            if   1 == len ( vars ) : args = Ostap.Functions.Func1D.create ( *fvars ) , 
+            elif 2 == len ( vars ) : args = Ostap.Functions.Func2D.create ( *fvars ) , 
+            elif 3 == len ( vars ) : args = Ostap.Functions.Func3D.create ( *fvars ) , 
+
+        the_case = 9
+        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+        
+    elif callable ( branch  ) and 'name' in kwargs : 
+        ## generic callable  ( function takes TTree as argument ) 
+        name = kwargs.pop ( 'name' )
+        return prepare_branches ( tree , { name : branch } , **kwargs )
+    
+    elif isinstance ( branch , string_types ) and 1 == sum ( key in kwargs for key in func_keywords ) and not 'name' in kwargs :
+        ## branch is actually the name of the branch
+        for key in func_keywords :
+            if key in kwargs : 
+                func = kwargs.pop ( key )
+                return prepare_branches ( tree , func , name = branch , **kwargs )
+            
+    elif isinstance ( branch , string_types ) and \
+         ( 'formula' in kwargs and isinstance ( kwargs['formula'] , string_types ) ) and not 'name' in kwargs :        
+        ## branch is actually the name of the branch 
+        formula = kwargs.pop ( 'formula' )
+        return prepare_branches ( tree , formula , name = branch , **kwargs )
+
+    else :
+        
+        table = print_args ( branch , **kwargs ) 
+        logger.error    ( 'Invalid/inconsistent branch/kwargs structure:\n%s' % table )  
+        raise TypeError ( 'Invalid/inconsistent branch?kwargs structure') 
+
+    if not new_branches :
+        name = kwargs.pop ( 'name' )
+        assert name , "Branch name `name=...' must be provided!'"
+        new_branches.add ( name )
+        args = ( name , ) + args
+
+    ## check names for new brnaches 
+    for name in new_branches :
+        assert name and isinstance ( name , string_types ) , "Invalid new brach name!"
+        assert Ostap.Trees.valid_name_for_branch ( name  ) , "Invalid name for bew brnach:'%s'" % name
+        assert not name in tree , "Branch/leave `%s' is already in the Treee!" % name   
+
+    return args , new_branches , kwargs, keeper 
+
+
+# ===============================================================================
+## Add new brnach to the tree
+#  @see Ostap::Trees::adD_branch 
+def add_new_branch ( tree , branch , **kwargs ) :
+    """ Add new branch to the tree
+    - see `Ostap,Trees.add_branch`
+    """
+    assert valid_pointer ( tree ) and isinstance ( tree , ROOT.TTree ) , \
+        "Tree* is invalid!"
+
+    verbose  = kwargs.pop ( 'verbose ' , True ) ## ATTENTION! 
+
+    ## parse argumenss
+    args , expected , kw , keeps = prepare_branches ( tree , branch , **kwargs ) 
+
+    progress = kw.pop ( 'progress' , True  )
+    report   = kw.pop ( 'report'   , True  ) 
+
+    if verbose :
+        logger.info ( 'Initial   arguments:\n%s' % print_args ( branch , **kwargs ) )
+        logger.info ( 'Processed arguments:\n%s' % print_args ( *args  , **kw     ) ) 
+        
+    assert args     , "No arguments for Ostap.Trees.add_branch are collected!"
+    assert expected , "No expected branches!"
+
+    if kw :
+        import ostap.logger.table as T 
+        rows = [ ( 'Argument' , 'Value' ) ]
+        for k , v in loop_items ( kw ) :
+            row = k , str ( v )
+            rows.append ( row )
+            title = 'add_new_branch:: %d unknown arguments' % len ( kwargs ) 
+            table = T.table ( rows , title = 'Unkown arguments' , prefix = '# ' , alignment = 'll' )    
+            logger.warning ( '%s\n%s' % ( title , table ) )
+
+    ## start the actual processing 
+    chain = push_2chain ( tree , args ,  progress = progress , report = report )
+
+    missing  =  sorted ( branch for branch in expected if not branch in chain  )
+    if missing : logger.warning ( 'Missing expecte dbrnaches: %s' % ( ', '.join ( m for m in missing ) ) ) 
+
+    return chain
+    
+# =============================================================================
+## Add new branch(s) to (single) TTree
+#  @param tree input tree
+#  @param params parameters
+#  @see Ostap::Trees::add_branch
+def push_2tree ( tree , config , progress = True , report = True ) :
+    """ Add new brnaches to (snigole) TTree according to specificaions
+    - @see `Ostap.Trees.add_branch`
+    """
+    assert isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree  ) , \
+        "push_2tree: `tree' is invalid"
+    
+    if isinstance ( tree , ROOT.TChain ) and 1 < len ( tree.files() ) :
+        return push_2chain ( tree , config , progress = progress , report = report ) 
+
+    treepath = tree.path
+    the_file = tree.topdir
+    assert treepath and the_file and ( not the_file is ROOT.gROOT ) and isinstance ( the_file , ROOT.TFile ) , \
+        'This is not the file-resident TTree* object! addition of new branch is not posisble!'
+    the_file = the_file.GetName() 
+    
+    tname = tree.GetName      ()
+    tdir  = tree.GetDirectory ()
+    tpath = tree.path
+
+    ## list of existing brranches/leaves 
+    branches = ( set ( tree.branches() ) | set ( tree.leaves() ) ) if report else set() 
+
+    from ostap.utils.progress_conf import progress_conf
+    
+    args = tuple ( a for a in config  ) 
+    if progress : args += ( progress_conf ( progress ) , ) 
+
+    from ostap.io.root_file  import REOPEN     
+    with ROOTCWD() , REOPEN ( tdir ) as tfile :
+        
+        tfile.cd()
+        ttree    = tfile.Get ( tpath )
+        assert valid_pointer ( ttree ) , 'Invalid TTree:%s in file:%s' % ( tpath , the_file )
+
+        assert tfile.IsWritable() , 'The file:%s is not writeable!'
+        
+        ## Add the branch!
+        sc = Ostap.Trees.add_branch ( ttree , *args  )
+        assert sc.isSuccess () , "Error from Ostap.Trees.add_branch %s" % sc
+
+        if ( 6 , 26 ) <= root_info :
+            with implicitMT ( False ) : tfile.Write ( "" , ROOT.TObject.kOverwrite )
+        else                          : tfile.Write ( "" , ROOT.TObject.kOverwrite )
+
+    chain = ROOT.TChain ( tpath )
+    chain.Add  ( the_file )
+
+    if report :
+        new_branches = sorted ( ( set ( chain.branches () ) | set ( chain.leaves () ) ) - branches )
+        if new_branches :
+            n = len ( new_branches )
+            if 1 == n : title = 'Added %s branch to TChain'   % n 
+            else      : title = 'Added %s branches to TChain' % n 
+            table = chain.table ( new_branches , title = title , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) ) 
+          
+    return chain
+
+# =============================================================================
+## Add new branch(s) to chain 
+#  @param tree input tree
+#  @param params parameters
+#  @see Ostap::Trees::add_branch
+def push_2chain ( chain , config , progress = True , report = True ) :
+    """ Add new brnaches to (snigole) TTree accoring to specificaions
+    - @see `Ostap.Trees.add_branch` 
+    """
+    assert isinstance  ( chain , ROOT.TTree ) and valid_pointer ( chain ) , \
+        "push_2chain: `chain' is invalid"
+
+    ## delegate to TTree: 
+    if not isinstance ( chain , ROOT.TChain ) or 2 > len ( chain.files() ) :
+        return push_2tree ( chain , config , report = report , progress = progress ) 
+
+    ## name & path 
+    cname, cpath = chain.GetName () , chain.path
+
+    ## list of existing brranches/leaves 
+    branches = ( set ( chain.branches() ) | set ( chain.leaves() ) ) if report else set() 
+
+    ## files to be processed 
+    files = chain.files()
+    
+    chain_progress = progress and ( 5 <= len ( files ) ) 
+    tree_progress  = progress and ( 5 >  len ( files ) ) 
+    
+    for fname in progress_bar ( files , silent = not chain_progress , description = 'Files:' ) :
+        tree = ROOT.TChain ( cname )
+        tree.Add ( fname ) 
+        ## treat the tree 
+        push_2tree ( tree , config , report = False , progress = tree_progress ) 
+        
+    ## reconstruct the resulting chain 
+    chain = ROOT.TChain ( cname )
+    for fname in files : chain.Add ( fname )
+            
+    if report :        
+        new_branches = sorted ( ( set ( chain.branches () ) | set ( chain.leaves () ) ) - branches )
+        if new_branches :
+            n = len ( new_branches )
+            if 1 >= n : title = 'Added %s branch to TChain'   % n 
+            else      : title = 'Added %s branches to TChain' % n 
+            table = chain.table ( new_branches , title = title , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) ) 
+          
+    return chain
+
+# ==============================================================================
+try : # ========================================================================
+    # ==========================================================================
+    import numpy
+    numpy_buffer_types = ( numpy.float16 ,
+                           numpy.float32 ,
+                           numpy.float64 ,
+                           numpy.byte    ,   
+                           numpy.int8    , 
+                           numpy.int_    ,
+                           numpy.int16   ,
+                           numpy.int32   ,
+                           numpy.int64   ,
+                           numpy.ubyte   ,
+                           numpy.uint8   ,
+                           numpy.uint    ,
+                           numpy.uint16  ,
+                           numpy.uint32  ,
+                           numpy.uint64  )    
+    # ==========================================================================
+except ImportError : # =========================================================
+    # ==========================================================================
+    numpy = None
+    numpy_buffer_types = () 
+
+# =========================================================================
+## valid array-types for adding to TTree
+# =========================================================================
+array_buffer_types = ( 'f' , 'd' , 'h' , 'i' , 'l' , 'H' , 'I' , 'L' , 'b' , 'B' , 'q' , 'Q' )
+
+# ============================================================================
+## Add new buyffer to TTree
+#  @see Ostap::Trees::add_buffer 
+def add_new_buffer ( tree , name , buffer , **kwargs ) :
+    """ Add new buyffer to TTree
+    - see `Ostap.Trees.add_buffer` 
+    """
+    
+    assert valid_pointer ( tree ) and isinstance ( tree , ROOT.TTree ) , \
+        "add_new_buffer: Tree* is invalis!"
+
+    assert name and isinstance ( name , string_types ) , \
+        "add_new_buffer: Invalid name for new branch: :%s/%s" % ( typoname ( name ) , name )
+
+    ## assert not name in tree , "Name `'%s' is already in TTree!" % name
+    assert Ostap.Trees.valid_name_for_branch ( name ) , \
+        "add_new_buffer: name `%s' is not valid!" % name
+
+    keep  = [ buffer ] 
+    for k , v in loop_items ( kwargs ) : keep.append ( ( k , v ) )
+
+    extra_floats = () if not numpy else ( numpy.float16 , )
+    extra_ints   = () if not numpy else ( numpy.int8    , )
+    
+    if numpy and ctypes and isinstance ( buffer , numpy.ndarray ) and buffer.dtype in numpy_buffer_types :
+        ## numpy array of valid types
+
+        keep.append ( buffer )
+        
+        ## recast 
+        if   buffer.dtype == numpy.float16 :
+            buffer = numpy.asarray ( buffer , dtype = numpy.float32 )
+            return add_new_buffer ( tree , name , buffer , **kwargs ) 
+        
+        dtype      = buffer.dtype
+        ctype      = numpy.ctypeslib._ctype_from_dtype( dtype  )
+        raw_buffer = buffer.ctypes.data_as ( ctypes.POINTER ( ctype ) )
+
+        if buffer.dtype in ( numpy.int8 , numpy.byte ) :
+            the_buffer = Ostap.Trees.char_buffer ( raw_buffer , len ( buffer ) ) ## CHAR_MAKE 
+        else :
+            the_buffer = Ostap.Trees.make_buffer ( raw_buffer , len ( buffer ) )
+                        
+        keep.append ( raw_buffer ) 
+        value      = kwargs.pop ( 'value' , 0 )
+        if value : the_buffer.setValue ( value )
+            
+    elif isinstance ( buffer , array.array ) and buffer.typecode in array_buffer_types :
+        ## arra.array f valied types
+
+        if   'b' == buffer.typecode : the_buffer = Ostap.Trees.char_buffer ( buffer , len ( buffer ) )
+        else                        : the_buffer = Ostap.Trees.make_buffer ( buffer , len ( buffer ) )
+
+        value      = kwargs.pop ( 'value' , 0  )
+        if value : the_buffer.setValue ( value )
+
+    elif numpy and ctypes and isinstance ( buffer ,  ( bytes , bytearray , memoryview ) ) :
+
+        ## construct numpyarray from raw buffer 
+        the_array = numpy.frombuffer ( buffer , dtype = numpy.byte )
+        
+        keep.append ( the_array ) 
+        return add_new_buffer ( tree , name , the_array , **kwargs )
+
+    elif isinstance ( buffer ,  ( bytes , bytearray , memoryview ) ) :
+
+        ## construct arra from raw  buffer 
+        the_array = array.array ( 'b' , buffer )
+        
+        keep.append ( the_array )                
+        return add_new_buffer ( tree , name , the_array , **kwargs )
+    
+    elif numpy and ctypes and isinstance ( buffer , sequence_types ) :
+        ## seqence convertivel to numpy
+
+        ## construct arrat from the sequence 
+        the_array = numpy.asarray ( buffer )
+        
+        keep.append ( the_array )
+        return add_new_buffer ( tree , name , the_array , **kwargs )
+
+    elif isinstance ( buffer , sequence_types ) :
+        ## seqence convertivel to array-array 
+
+        typecode  = kwargs.pop ( 'typecode' , 'd'    ) 
+        the_array = array.array ( typecode  , buffer )
+
+        keep.append ( the_array ) 
+        return add_new_buffer ( tree , name , the_array , **kwargs )
+
+    else :
+        
+        table = print_args ( name , buffer , **kwargs ) 
+        logger.error    ( 'Invalid/inconsistent name/buffer/kwargs structure:\n%s' % table )  
+        raise TypeError ( 'Invalid/inconsistent name/buffer/kwargs structure') 
+
+    keep.append ( the_buffer )
+    
+    progress = kwargs.pop ( 'progress' , True  )
+    report   = kwargs.pop ( 'report'   , True  ) 
+
+    if kwargs :
+        import ostap.logger.table as T 
+        rows = [ ( 'Argument' , 'Value' ) ]
+        for k , v in loop_items ( kw ) :
+            row = k , str ( v )
+            rows.append ( row )
+            title = 'add_new_branch:: %d unknown arguments' % len ( kwargs ) 
+            table = T.table ( rows , title = 'Unkown arguments' , prefix = '# ' , alignment = 'll' )    
+            logger.warning ( '%s\n%s' % ( title , table ) )
+
+    ## start the actual processing 
+    return buffer_2chain ( tree , name , the_buffer , progress = progress , report = report )
+
+# =============================================================================
+## Add new branch(s) to (single) TTree
+#  @param tree input tree
+#  @param params parameters
+#  @see Ostap::Trees::add_branch
+def buffer_2tree ( tree , name , buffer , progress = True , report = True ) :
+    """ Add new brnaches to (snigole) TTree accoring to specificaions
+    - @see Ostap.Trees.add_branch 
+    """
+    assert isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree  ) , \
+        "buffer_2tree: `tree' is invalid"
+    
+    if isinstance ( tree , ROOT.TChain ) and 1 < len ( tree.files() ) :
+        return  buffer_2chain ( tree , config , progress = progress , report = report ) 
+
+    treepath = tree.path
+    the_file = tree.topdir
+    assert treepath and the_file and ( not the_file is ROOT.gROOT ) and isinstance ( the_file , ROOT.TFile ) , \
+        'This is not the file-resident TTree* object! addition of new branch is not posisble!'
+    the_file = the_file.GetName() 
+    
+    tname = tree.GetName      ()
+    tdir  = tree.GetDirectory ()
+    tpath = tree.path
+
+    ## list of existing brranches/leaves 
+    branches = ( set ( tree.branches() ) | set ( tree.leaves() ) ) if report else set() 
+    from ostap.utils.progress_conf import progress_conf
+
+    if progress : args = name , buffer , progress_conf ( progress )
+    else        : args = name , buffer 
+
+    from ostap.io.root_file  import REOPEN     
+    with ROOTCWD() , REOPEN ( tdir ) as tfile :
+        
+        tfile.cd()
+        ttree    = tfile.Get ( tpath )
+        assert valid_pointer ( ttree ) , 'Invalid TTree:%s in file:%s' % ( tpath , the_file )
+
+        assert tfile.IsWritable() , 'The file:%s is not writeable!'
+        
+        ## Add the branch!
+        sc = Ostap.Trees.add_buffer ( ttree , *args  )
+        assert sc.isSuccess () , "Error from Ostap.Trees.add_branch %s" % sc
+
+        if ( 6 , 26 ) <= root_info :
+            with implicitMT ( False ) : tfile.Write ( "" , ROOT.TObject.kOverwrite )
+        else                          : tfile.Write ( "" , ROOT.TObject.kOverwrite )
+
+    ## recostrut the tree/chain 
+    chain = ROOT.TChain ( tpath )
+    chain.Add  ( the_file )
+
+    if report :
+        new_branches = sorted ( ( set ( chain.branches () ) | set ( chain.leaves () ) ) - branches )
+        if new_branches :
+            n = len ( new_branches )
+            if 1 == n : title = 'Added %s branch to TChain'   % n 
+            else      : title = 'Added %s branches to TChain' % n 
+            table = chain.table ( new_branches , title = title , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) ) 
+          
+    return chain
+
+# =============================================================================
+## Add new branch(s) to chain 
+#  @param tree input tree
+#  @param params parameters
+#  @see Ostap::Trees::add_branch
+def buffer_2chain ( chain , name , buffer , progress = True , report = True ) :
+    """ Add new brnaches to (snigole) TTree accoring to specificaions
+    - @see Ostap.Trees.add_branch 
+    """
+    assert isinstance  ( chain , ROOT.TTree ) and valid_pointer ( chain ) , \
+        "buffer_2chain: `chain' is invalid"
+
+    ## delegate to TTree: 
+    if not isinstance ( chain , ROOT.TChain ) or 2 > len ( chain.files() ) :
+        return buffer_2tree ( chain , name , buffer , report = report , progress = progress ) 
+
+    ## name & path 
+    cname, cpath = chain.GetName () , chain.path
+
+    ## list of existing brranches/leaves 
+    branches = ( set ( chain.branches() ) | set ( chain.leaves() ) ) if report else set() 
+
+    ## files to be processed 
+    files = chain.files()
+    
+    chain_progress = progress and ( 5 <= len ( files ) ) 
+    tree_progress  = progress and ( 5 >  len ( files ) ) 
+    
+    for fname in progress_bar ( files , silent = not chain_progress , description = 'Files:' ) :
+        tree = ROOT.TChain ( cname )
+        tree.Add ( fname ) 
+        ## treat the tree
+        
+        tree   = buffer_2tree ( tree , name , buffer , report = False , progress = tree_progress )
+        offset = len ( tree )         
+        buffer = buffer.offset ( offset )
+
+    ## reconstruct the chain 
+    chain = ROOT.TChain ( cname )
+    for fname in files : chain.Add ( fname )
+
+    if report :        
+        new_branches = sorted ( ( set ( chain.branches () ) | set ( chain.leaves () ) ) - branches )
+        if new_branches :
+            n = len ( new_branches )
+            if 1 >= n : title = 'Added %s branch to TChain'   % n 
+            else      : title = 'Added %s branches to TChain' % n 
+            table = chain.table ( new_branches , title = title , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) ) 
+          
+    return chain
+
+ROOT.TTree.add_new_branch  = add_new_branch 
+ROOT.TTree.add_new_buffer  = add_new_buffer 
 
 # =============================================================================
 ## Context manager to temporariliy redefine aliases

@@ -14,9 +14,10 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-import ostap.fitting.roofit 
 from   ostap.core.core      import rooSilent 
 from   ostap.utils.timing   import timing 
+from   ostap.utils.utils    import batch_env 
+import ostap.fitting.roofit 
 import ROOT, random
 # =============================================================================
 # logging 
@@ -28,6 +29,9 @@ else :
     logger = getLogger ( __name__ )
 # =============================================================================
 logger.info ( 'Test for operations with lists')
+# =============================================================================
+## set batch from environment 
+batch_env ( logger )
 # =============================================================================
 a  = ROOT.RooRealVar  ( 'a' , 'a' , -10 , 10 )
 b  = ROOT.RooRealVar  ( 'b' , 'b' , -10      )

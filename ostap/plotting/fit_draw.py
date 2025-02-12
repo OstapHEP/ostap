@@ -166,7 +166,10 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, list_types
-from   ostap.core.core  import items_loop
+from   ostap.utils.basic      import items_loop
+from   ostap.utils.cidict     import cidict
+from   ostap.utils.cidict     import cidict_fun as key_transform
+# 
 import ostap.plotting.style  
 import ostap.plotting.canvas
 import ostap.fitting.roocmdarg
@@ -182,11 +185,9 @@ def lineColor ( c ) : return ROOT.RooFit.LineColor ( c )
 # ==============================================================================
 ## compare the keys
 # ==============================================================================
-## transformation for the keys
-from ostap.core.core import cidict_fun as key_transform
 ## compare two keys 
 def key_compare   ( key1 , key2 ) :
-    """Comparison of keys"""
+    """ Comparison of keys """
     return key1 == key2 or key_transform ( key1 ) == key_transform ( key2 )
 # ==============================================================================  
 ## the list of predefined "draw"-keys 
@@ -274,7 +275,7 @@ def draw_options ( **kwargs ) :
 #  s = Style(  FillColor = 4 , fill_style = 1004  ) 
 #  @endcode 
 class Style(object):
-    """Store the drawing style for the component
+    """ Store the drawing style for the component
     - LineColor
     - LineStyle
     - LineWidth
@@ -290,7 +291,6 @@ class Style(object):
     """
     def __init__ ( self  , *args , **kwargs ) :
         
-        from ostap.utils.cidict import cidict
         kw = cidict ( transform = key_transform , **kwargs )
 
         linecolor    = kw.pop ( 'linecolor'    , ROOT.kBlack )
@@ -424,7 +424,6 @@ class Area (Style) :
     """
     def __init__ ( self , color = ROOT.kRed , style = 1001 , **kwargs ) :
 
-        from ostap.utils.cidict import cidict
         kw = cidict ( transform = key_transform , **kwargs )
         
         fillcolor = kw.pop ( 'fill_color' , color )
@@ -458,7 +457,6 @@ class Line (Style) :
                    width = 1            , **kwargs ) :
 
         
-        from ostap.utils.cidict import cidict
         kw = cidict ( transform = key_transform , **kwargs )
         
         fillcolor = kw.pop ( 'fill_color' , None  ) ## ignore 

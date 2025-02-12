@@ -9,15 +9,15 @@
 """ Test module for the file ostap/math/bernstein.py
 """
 # ============================================================================= 
-import random  
-import ostap.math.models 
-import ostap.math.bernstein
 from   ostap.core.core        import Ostap, SE, isequal
 from   ostap.plotting.canvas  import use_canvas
-from   ostap.utils.utils      import vrange, crange  
+from   ostap.utils.utils      import vrange, crange, batch_env   
 from   ostap.utils.timing     import timing
-import ostap.logger.table     as     T
 from   ostap.logger.colorized import allright , attention 
+import ostap.logger.table     as     T
+import ostap.math.models 
+import ostap.math.bernstein
+import random  
 # ============================================================================
 # logging 
 # =============================================================================
@@ -25,6 +25,10 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_bernstein' ) 
 else                       : logger = getLogger ( __name__                    )
 # ============================================================================= 
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 functions = set() 
 # ============================================================================
 ##  test solution of equation  B(x) = c

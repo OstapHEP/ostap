@@ -14,8 +14,8 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   builtins               import range
-from   ostap.stats.counters   import SE, WSE 
+from   ostap.stats.counters   import SE, WSE
+from   ostap.utils.utils      import batch_env 
 import ostap.logger.table     as     T
 import ROOT, random
 # =============================================================================
@@ -26,6 +26,8 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_stats_counters' )
 else : 
     logger = getLogger ( __name__              )
+# =============================================================================
+batch_env ( logger ) 
 # =============================================================================
 
 threshold = 1.e-14 

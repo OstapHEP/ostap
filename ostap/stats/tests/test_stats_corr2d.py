@@ -12,13 +12,13 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   builtins                 import range
 from   ostap.core.core          import WSE 
 from   ostap.utils.cleanup      import CleanUp
 from   ostap.utils.timing       import timing
 from   ostap.stats.corr2d       import Corr2D
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.progress_bar import progress_bar
+from   ostap.utils.utils        import batch_env 
 import ostap.trees.trees
 import ostap.histos.histos 
 import ROOT, os, random
@@ -30,6 +30,8 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_stats_corr2d' )
 else : 
     logger = getLogger ( __name__             )
+# =============================================================================
+batch_env ( logger ) 
 # =============================================================================
 
 testdata  = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-reweight2-' )

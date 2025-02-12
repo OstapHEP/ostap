@@ -21,10 +21,11 @@ __all__ = (
     'Unpickler'        ,
     'BytesIO'          ,
     'dumps'            ,
-    'loads'            ,    
+    'loads'            ,
+    'PickleChecker'    , ## check pickle-ability of objects 
     )
 # =============================================================================
-import os, sys
+import os, sys, array 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.pickling' )
@@ -33,17 +34,17 @@ else                      : logger = getLogger ( __name__               )
 if  ( 3 , 0 ) <= sys.version_info :
     from pickle import ( Pickler, Unpickler, 
                          DEFAULT_PROTOCOL, HIGHEST_PROTOCOL,
-                         dumps, loads,
+                         dumps, loads, dump , load , 
                          PicklingError, UnpicklingError ) 
 else : 
     DEFAULT_PROTOCOL = 2 
     try:
         from cPickle   import ( Pickler, Unpickler, HIGHEST_PROTOCOL,
-                                dumps, loads,
+                                dumps, loads, dump , load , 
                                 PicklingError, UnpicklingError ) 
     except ImportError:
         from  pickle   import ( Pickler, Unpickler, HIGHEST_PROTOCOL,
-                                dumps, loads,
+                                dumps, loads, dump , 
                                 PicklingError, UnpicklingError ) 
     DEFAULT_PROTOCOL = min ( DEFAULT_PROTOCOL , HIGHEST_PROTOCOL )
     
@@ -55,32 +56,192 @@ except ImportError :
         from cStringIO import StringIO as BytesIO 
     except ImportError:
         from  StringIO import StringIO as BytesIO
-# =============================================================================
-## Primitive check if the object casn be pickled and unpickled  
-def pickles ( obj ) :
-    """Primitive check if the object casn be pickled and unpickled 
-    """
-    try:
-        pkl = loads ( dumps ( obj ) )
-        return pkl == obj 
-    except ( PicklingError, UnpicklingError , AttributeError ) : 
-        return False
 
 # =============================================================================
-## Check pickling of an object across another process
-def check ( obj ):
-    """Check pickling of an object across another process
+## the basic pickle-types that for sure always can be pickled/unpickled 
+PICKLE_TYPES = type ( None ) , bool, int, float, str, bytes, bytearray
+# =============================================================================
+PICKLE_COMMAND = """import sys, pickle
+with open('%s','rb') as f : pickle.load ( f )"""
+# =============================================================================
+## @class PickleChecker
+#  Check if the object/type can be pickled/unpickled
+class PickleChecker ( object ) :
+    """ Check if the object/type can be pickled/uunpickeld
     """
-    import subprocess
-    fail = True
-    try:
-        _obj = dumps ( obj )
-    except ( PicklingError , AttributeError ) :
-        return None 
-    ## 
-    msg = "%s -c import pickle; print(pickle.loads(%s))" %  ( python , repr ( _obj ) )
-    return subprocess.call ( msg.split ( None , 2 ) )
+    MORE_TYPES  = set ()
+    EXTRA_TYPES = set ()
+    # ========================================================================
+    ## if the object type is already knowns 
+    def known ( self , *objtypes ) :
+        return all ( ( o in PICKLE_TYPES    ) or
+                     ( o in self.MORE_TYPES ) for o in objtypes ) 
+    # =========================================================================
+    def _pickles ( self , *objects , fun_dumps , fun_loads ) :
+        # =====================================================================
+        if not objects : return True 
+        ## check if the object can be properly pickled/unpickled
+        if self.known ( *( type ( o ) for o in objects ) ) : return True 
+        # =====================================================================
+        try: # ================================================================
+            # =================================================================
+            ## return fun_loads ( dumps ( objects ) ) == objects # ===============
+            fun_loads ( fun_dumps ( objects ) )
+            return True 
+        except ( PicklingError, UnpicklingError, AttributeError, TypeError ) :
+            # =================================================================
+            return False
+        
+    # =========================================================================
+    ## check if the type is 'known'
+    def __contains__ ( self , objtype ) :
+        return objtype in PICKLE_TYPES or \
+            objtype in self.MORE_TYPES or \
+            objtype in self.EXTRA_TYPES
+    
+    # =========================================================================
+    ## Check pickling of an object across another (sub) process
+    def _pickles_process ( self , *objects          ,
+                           fun_dump                 ,
+                           command = PICKLE_COMMAND ,
+                           fast    = False          ) :
+        """ Check pickling of an object across another (sub)process
+        """
+        if not objects : return True 
+        # =====================================================================
+        ## check if the object can be properly pickled/unpickled
+        if self.known ( *(type ( o ) for o in objects ) ) : return True
+        # =====================================================================
+        import subprocess, shlex 
+        import ostap.utils.cleanup as CU
+        tmpfile = CU.CleanUp.tempfile ( suffix = '.pkl')
+        # =====================================================================
+        try : # ===============================================================
+            # =================================================================
+            with open ( tmpfile , 'wb' ) as f : fun_dump ( objects , f )
+            # =================================================================
+        except ( PicklingError  ,
+                 AttributeError , TypeError , OSError ) : # ===
+            # =================================================================
+            return False
 
+        # =====================================================================
+        if fast or not command : # ============================================
+            # =================================================================
+            try : # ===========================================================
+                # =============================================================
+                with open ( tmpfile , 'rb' ) as f :
+                    ## return load ( f ) == objects                       # RETRURN
+                    load ( f )
+                    return True                                        # RETRUN
+            except ( UnpicklingError , 
+                     AttributeError  , TypeError , OSError ) : # ==============
+                # =============================================================
+                return False                                           # RETURN
+            else  : # =========================================================
+                # =============================================================
+                CU.CleanUp.remove_file ( tmpfile ) 
+            
+        # =====================================================================
+        ## the check-command 
+        cmd = command % tmpfile
+        # =====================================================================
+        try : # ===============================================================
+            # =================================================================
+            error = subprocess.run ( [ sys.executable , '-c' , cmd ] , 
+                                     check  = True               ,
+                                     stdout = subprocess.DEVNULL ,
+                                     stderr = subprocess.DEVNULL ,                                      
+                                     shell  = False              ).returncode 
+            return True if not error else False                        # RETURN
+        except subprocess.CalledProcessError as e : # =========================
+            # =================================================================
+            return False                                               # RETURN
+        else : # ==============================================================
+            # =================================================================
+            CU.CleanUp.remove_file ( tmpfile ) 
+
+    # =========================================================================
+    ## check if the object can be properly pickled/unpickled 
+    def pickles ( self , *objects ) :
+        """ Check of the object can be properly pickled/unpickled
+        """
+        return self._pickles  ( *objects          ,
+                                fun_dumps = dumps ,
+                                fun_loads = loads )
+    
+    # =========================================================================
+    ## Check pickling of an object across another (sub) process
+    def pickles_process ( self , *objects , fast = False   ) :
+        """ Check pickling of an object across another (sub)process
+        """
+        return self._pickles_process ( *objects                  ,
+                                       fun_dump = dump           ,
+                                       command  = PICKLE_COMMAND ,
+                                       fast     = fast           )
+    
+    # =========================================================================
+    ## check if all arguments are (un)pickle-able
+    def pickles_all ( self , *args , **kwargs ) :
+        """ Check if all arguments are (un)pickle-able
+        """
+        objects = args + tuple ( v for v in kwargs.values() )
+        return self.pickles ( *objects )
+                              
+    # =========================================================================
+    ## Check pickling of all objects across another (sub) process
+    def pickles_process_all ( self , *args , **kwargs ) :
+        """ Check pickling of all objects across another (sub) process
+        """
+        objects = args + tuple ( v for v in kwargs.values() )
+        return self.pickles_process ( *objects  )
+    
+    # =========================================================================
+    ## add new type into th elist of "known-types"
+    def add ( self , ntype ) :
+        """ Add new type into th elist of "known-types
+        """
+        if ntype in self : return 
+        self.MORE_TYPES.add ( ntype )
+        
+    # =========================================================================
+    ## Format and return the pickling table 
+    def pickling_table ( self , *args , **kwargs ) :
+        """ Format and return the pickling table 
+        """        
+        from ostap.core.ostap_types import string_types 
+        from ostap.utils.basic      import typename, prntrf,  loop_items
+    
+        rows  = [  ( 'Argument' , 'type' , 'value' , 'pickles' , "pickles'" ) ]
+        
+        good, bad = '\u2714' , '\u2715' 
+        for i , a in enumerate ( args ) :
+            pickable = self.pickles         ( a )
+            process  = self.pickles_process ( a )
+            row      = '#%d' % i , typename ( a ) , prntrf ( a ) , \
+                good if pickable else bad , \
+                good if process  else bad
+            rows.append ( row )
+
+        if 'prefix' in kwargs : kwargs [ '*prefix' ] = kwargs.pop ( 'prefix' )
+        if 'title'  in kwargs : kwargs [ '*title'  ] = kwargs.pop ( 'title'  ) 
+        
+        for key , v in loop_items  ( kwargs ) :
+            pickable = self.pickles         ( v )
+            process  = self.pickles_process ( v )            
+            row      = '%s' % key , typename ( v ) , prntrf  ( v ) , \
+                good if pickable else bad , \
+                good if process  else bad
+            rows.append ( row  )
+            
+        prefix = kwargs.get ( '*prefix' , '' )
+        if not prefix or not isinstance ( prefix , string_types ) : prefix = ''
+        title  = kwargs.get ( '*ttile' , '(Un)Pickle-able?' )
+        if not title  or not isinstance ( title  , string_types ) : title = '(Un)Pickle-able?'
+        
+        import ostap.logger.table as T        
+        return T.table ( rows , title = title , prefix = prefix , alignment = 'lwwcc' )
+    
 # =============================================================================
 ## helper function to get the protocol 
 def get_protocol ( p ) :
@@ -134,7 +295,24 @@ if PROTOCOL is None : # =======================================================
     # =========================================================================
     PROTOCOL = DEFAULT_PROTOCOL 
     logger.debug ( "Default protocol %s is used" % PROTOCOL  )
-    
+
+# =============================================================================
+import atexit
+@atexit.register
+def _report_ () :
+    # =========================================================================
+    if PickleChecker.MORE_TYPES or PickleChecker.EXTRA_TYPES :
+        from ostap.utils.basic import typename 
+        extra = PickleChecker.MORE_TYPES | PickleChecker.EXTRA_TYPES | set ( PICKLE_TYPES ) 
+        rows = [ ( '#' , 'Type' ) ]
+        extra = sorted ( typename ( e ) for e in extra ) 
+        for i , e in enumerate ( extra , start = 1 ) :
+            row = '%d' % i , e  
+            rows.append ( row ) 
+        import ostap.logger.table as T
+        title = 'Pickle types' 
+        logger.info ( '%s:\n%s' % ( title , T.table ( rows , title = title , prefix = '# ' , alignment = 'll' ) ) ) 
+
 # =============================================================================
 if '__main__' == __name__ :
     

@@ -103,16 +103,16 @@ __all__ = (
     'SelectorWithVarsCached'    ## Generic selector with cache   
 )
 # =============================================================================
-from   ostap.core.meta_info     import root_info 
-from   ostap.core.core          import ( cpp  , Ostap , items_loop ,
+from   ostap.core.meta_info     import root_info, old_PyROOT
+from   ostap.core.ostap_types   import num_types, string_types, integer_types
+from   ostap.core.core          import ( cpp  , Ostap ,
                                          dsID , valid_pointer , binomEff ) 
 from   ostap.fitting.variables  import make_formula
-from   ostap.core.ostap_types   import num_types, string_types, integer_types
-from   ostap.core.meta_info     import old_PyROOT
-import ostap.fitting.roofit 
 from   ostap.utils.progress_bar import ProgressBar
+from   ostap.utils.basic        import items_loop 
 from   ostap.math.reduce        import root_factory 
 from   ostap.trees.trees        import Chain 
+import ostap.fitting.roofit 
 import ROOT, os, cppyy, math, sys
 # =============================================================================
 # logging 

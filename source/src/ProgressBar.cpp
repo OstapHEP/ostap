@@ -44,7 +44,7 @@ Ostap::Utils::ProgressConf::ProgressConf
   const std::string&       what      ,
   const bool               use_timer ,
   const bool               atty      ) 
-  : m_width     ( width     )
+  : m_width     (  0 == width ? 0 : ( 40 <= width ? width : 40 ) )
   , m_symbol    ( symbol    ) 
   , m_empty     ( empty     ) 
   , m_left      ( left      ) 
@@ -61,6 +61,15 @@ Ostap::Utils::ProgressConf::ProgressConf
   setUseTimer ( use_timer ) ;
   // ==========================================================================
 }
+// ======================================================================
+// /** onstructor
+//  *  @param show show default progress bar? 
+//  */
+// // ======================================================================
+// Ostap::Utils::ProgressConf::ProgressConf
+// ( const bool show )
+//   : ProgressConf ( show ? 80u : 0u )
+// {}
 // ==========================================================================
 /// use timer ? 
 // ==========================================================================

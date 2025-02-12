@@ -11,21 +11,23 @@
 - It tests various multicomponents models 
 """
 # ============================================================================= 
-from   ostap.core.pyrouts       import *
-import ostap.fitting.roofit 
-import ostap.fitting.models     as     Models 
-from   ostap.core.core          import cpp, VE, dsID, rooSilent 
 from   builtins                 import range
+from   ostap.core.core          import cpp, VE, dsID, rooSilent 
 from   ostap.fitting.background import make_bkg 
 from   ostap.core.meta_info     import root_info 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait, batch_env  
+import ostap.fitting.models     as     Models 
+import ostap.fitting.roofit 
 import ROOT, sys, random, time
 # ============================================================================= 
 from   ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'test_fitting_in_range_3d' )
 else                       : logger = getLogger ( __name__  )
 # ============================================================================= 
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
 
 # ============================================================================= 
 def test_fitting_in_range_3d () :

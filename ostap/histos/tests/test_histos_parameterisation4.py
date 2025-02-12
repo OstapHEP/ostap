@@ -15,11 +15,12 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
 from   builtins              import range
+from   ostap.plotting.canvas import use_canvas
+from   ostap.utils.utils     import wait 
+from   ostap.utils.utils     import batch_env 
 import ostap.histos.param
 import ostap.histos.histos
 import ostap.fitting.funcs
-from   ostap.plotting.canvas import use_canvas
-from   ostap.utils.utils     import wait 
 import ROOT, random, time
 # =============================================================================
 # logging 
@@ -32,9 +33,15 @@ else :
 # =============================================================================
 logger.info ( 'Test for histogram parameterisation')
 # =============================================================================
-try :
+## set batch form environment 
+batch_env ( logger )
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
     import scipy
-except ImportError :
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     scipy = None 
     
 # =============================================================================

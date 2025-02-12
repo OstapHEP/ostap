@@ -8,13 +8,13 @@
 """ Add pseudoexperiments into TTree/TChain/RooDataSet
 """
 # ============================================================================= 
-from   __future__               import print_function
-import ostap.trees.trees
-import ostap.histos.histos
 from   ostap.core.pyrouts       import Ostap, VE,   SE
 from   ostap.utils.timing       import timing 
 from   ostap.trees.data         import Data 
 from   ostap.utils.progress_bar import progress_bar
+from   ostap.utils.utils        import batch_env 
+import ostap.trees.trees
+import ostap.histos.histos
 import ROOT, math, random 
 # ============================================================================= 
 # logging 
@@ -22,6 +22,8 @@ import ROOT, math, random
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_trees_addpexps' )
 else                       : logger = getLogger ( __name__              )
+# =============================================================================
+batch_env ( logger ) 
 # =============================================================================
 ## create a file with tree 
 def create_tree ( fname , nentries = 1000 ) :
@@ -99,26 +101,24 @@ def test_modify_initial_tree ( NEXP =  10 ) :
         for e in progress_bar ( range ( NEXP ) ) :
             h2_new = h2.sample()
             func   = Ostap.Functions.FuncTH2 ( h2_new , 'pt' , 'eta' ) 
-            data.chain.add_new_branch ( 'w%d' % e , func )
+            data.chain.add_new_branch ( func , name = 'w%d' % e  )
             
         data = Data ( 'S' , files )
         logger.info ( 'Tree/Chain after:\n%s' % data.chain.table ( prefix = '# ' ) )
         
-        counter = SE () 
+        rows = [ ( 'Experiment' , 'eff [%]' ) ]
         for e in range ( NEXP ) :
             weight     = 'w%d' % e 
             accepted   = data.chain.sumVar ( '1' , weight *  cut ) 
             rejected   = data.chain.sumVar ( '1' , weight * ~cut ) 
-            efficiency = 1 / ( 1 + rejected / accepted )
-            logger.info ( "Experiment %3d, accepted/rejected %s/%s , eff = %s "  % ( e          ,
-                                                                                     accepted   ,
-                                                                                     rejected   , 
-                                                                                     efficiency ) )
-            counter    += efficiency
-            
-        logger.info ( 'Statistics of pseudoexperiments %s' % counter ) 
-        logger.info ( 'Mean/rms: %s[%%]/%.4f]%%]' % ( counter.mean() * 100 ,
-                                                  counter.rms () * 100 ) ) 
+            efficiency = 100 / ( 1 + rejected / accepted )
+            row = '#%s' % ( e + 1 ) , efficiency.toString ( '%+5.2f +/- %-4.2f' )
+            rows.append ( row )
+
+        import ostap.logger.table as T
+        title = 'Statistics of pseudoexperiments'
+        logger.info ( '%s:\n%s' % ( title ,  T.table ( rows , title = title , prefix = '# ' ) ) ) 
+
 # =============================================================================
 ## Add pseudoexepriments into RooDataSet
 def test_add_to_dataset ( NEXP =  10 ) :
@@ -150,23 +150,19 @@ def test_add_to_dataset ( NEXP =  10 ) :
             
         logger.info ( 'Dataset after:\n%s' % dataset.table ( prefix = '# ' ) )
         
-        counter = SE () 
+        rows = [ ( 'Experiment' , 'eff [%]' ) ]
         for e in range ( NEXP ) :
             weight     = 'w%d' % e 
             accepted   = dataset.sumVar ( '1' , weight *  cut ) 
             rejected   = dataset.sumVar ( '1' , weight * ~cut ) 
-            efficiency = 1 / ( 1 + rejected / accepted )
-            logger.info ( "Experiment %3d, accepted/rejected %s/%s , eff = %s "  % ( e          ,
-                                                                                     accepted   ,
-                                                                                     rejected   , 
-                                                                                     efficiency ) )
+            efficiency = 100 / ( 1 + rejected / accepted )
+            row = '#%s' % ( e + 1 ) , efficiency.toString ( '%+5.2f +/- %-4.2f' )
+            rows.append ( row )
             
-            
-            counter    += efficiency
-        
-        logger.info ( 'Statistics of pseudoexperiments %s' % counter ) 
-        logger.info ( 'Mean/rms: %s[%%]/%.4f[%%]' % ( counter.mean() * 100 ,
-                                                      counter.rms () * 100 ) ) 
+        import ostap.logger.table as T
+        title = 'Statistics of pseudoexperiments'
+        logger.info ( '%s:\n%s' % ( title ,  T.table ( rows , title = title , prefix = '# ' ) ) ) 
+
         
 # =============================================================================
 if '__main__' == __name__ :

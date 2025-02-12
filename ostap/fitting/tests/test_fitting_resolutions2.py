@@ -15,14 +15,14 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 from   builtins                 import range 
-import ostap.fitting.roofit 
+from   ostap.core.meta_info     import root_info, python_info
 from   ostap.core.core          import VE, dsID
 from   ostap.utils.gsl          import gslCount
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait
+from   ostap.utils.utils        import wait, batch_env 
 import ostap.logger.table       as     T 
-from   ostap.core.meta_info     import root_info, python_info
+import ostap.fitting.roofit 
 import ROOT, random
 # =============================================================================
 # logging 
@@ -33,6 +33,10 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 ## make simple test mass 
 mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , -5 , 5 )
 

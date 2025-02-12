@@ -28,14 +28,19 @@ from   builtins                  import range
 from   ostap.utils.progress_bar  import progress_bar 
 from   collections               import defaultdict
 from   ostap.core.meta_info      import root_info, ostap_version 
-from   ostap.core.core           import ( Ostap   , VE, SE , hID , dsID  ,
-                                          strings , typename             , 
-                                          valid_pointer , split_string   ,
-                                          ROOTCWD       , var_separators ,
-                                          loop_items    , cidict_fun     )
+from   ostap.core.core           import ( Ostap         ,
+                                          VE , SE , hID , dsID ,
+                                          strings       , 
+                                          valid_pointer ,
+                                          ROOTCWD       )
 from   ostap.core.ostap_types    import ( integer_types , string_types   ,
                                           num_types     , dictlike_types , 
                                           list_types    , sequence_types )
+from   ostap.utils.basic         import ( split_string         , 
+                                          split_string_respect ,
+                                          var_separators       , 
+                                          loop_items           ,
+                                          typename             )
 from   ostap.math.base           import islong
 from   ostap.fitting.variables   import valid_formula, make_formula 
 from   ostap.trees.cuts          import expression_types, vars_and_cuts, order_warning
@@ -1412,7 +1417,7 @@ def ds_draw ( dataset ,
         
     assert len ( ranges ) == nvars , 'Invalid ranges: %s' % str ( ranges )
 
-    from ostap.utils.cidict import cidict
+    from ostap.utils.cidict import cidict, cidict_fun
     kw = cidict ( transform = cidict_fun , **kwargs )
 
     histos = []

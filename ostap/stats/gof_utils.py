@@ -23,7 +23,8 @@ __all__     = (
 # =============================================================================
 from   collections              import namedtuple
 from   ostap.core.meta_info     import python_info 
-from   ostap.core.core          import VE, Ostap, cidict_fun
+from   ostap.core.core          import VE, Ostap
+from   ostap.utils.cidict       import cidict_fun
 from   ostap.core.ostap_types   import string_types
 from   ostap.math.base          import axis_range  
 from   ostap.math.math_ve       import significance

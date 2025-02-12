@@ -124,22 +124,22 @@ class Timer(object):
             
     @property
     def name ( self ) :
-        """``name'' : Timer name"""
+        """`name' : Timer name"""
         return self.__name
     
     @property
     def start ( self ):
-        """``start'' : Timer start"""
+        """`start' : Timer start"""
         return self._start
     
     @property
     def stop  ( self ):
-        """``stop'' : Timer stop"""
+        """`stop' : Timer stop"""
         return self.__stop
     
     @property
     def delta ( self ) :
-        """``delta'' : stop - start for Timer"""
+        """`delta' : stop - start for Timer"""
         return self.__delta
     
 # =============================================================================
@@ -160,7 +160,7 @@ class Timer(object):
 #  print t.delta 
 #  @endcode
 def timing ( name = '' , logger = None , format = 'Timing %-18s %.3fs' , **kwargs  ) :
-    """Simple context manager to measure the clock counts 
+    """ Simple context manager to measure the clock counts 
     
     >>> with timing () :
     ...   whatever action is here
@@ -185,5 +185,5 @@ if '__main__' == __name__ :
         docme ( __name__ , logger = logger )
         
 # =============================================================================
-# The END 
+##                                                                     The END 
 # =============================================================================

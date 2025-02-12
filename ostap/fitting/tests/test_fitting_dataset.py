@@ -15,10 +15,11 @@ __all__    = () ## nothing to import
 from   builtins                 import range
 from   ostap.core.core          import dsID, hID, Ostap 
 from   ostap.plotting.canvas    import use_canvas 
+from   ostap.utils.utils        import batch_env 
+import ostap.logger.table       as     T
 import ostap.fitting.roofit 
 import ostap.trees.trees   
 import ostap.histos.histos 
-import ostap.logger.table       as     T
 import ROOT, random
 # =============================================================================
 # logging 
@@ -28,6 +29,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_fitting_dataset' )
 else : 
     logger = getLogger ( __name__ )
+# =============================================================================
+## set batch from environment 
+batch_env ( logger )
 # =============================================================================
 
 evt     = ROOT.RooRealVar ( 'Evt'    , '#event'        , 0 , 1000000 )

@@ -15,7 +15,8 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
 from   ostap.plotting.canvas  import use_canvas
-from   ostap.math.models      import f1_draw 
+from   ostap.math.models      import f1_draw
+from   ostap.utils.utils      import batch_env 
 import ROOT, math
 # =============================================================================
 # logging 
@@ -27,6 +28,9 @@ else :
     logger = getLogger ( __name__ )
 # =============================================================================
 logger.info ( 'Test for function convolution')
+# =============================================================================
+## set batch from environment 
+batch_env ( logger )
 # =============================================================================
 
 # =============================================================================

@@ -15,10 +15,12 @@
 - see Ostap::Math::LegendreSum3
 """
 # ============================================================================= 
-from   ostap.core.core        import Ostap
+from   ostap.core.core        import Ostap, VE
 from   ostap.logger.colorized import attention
+from   ostap.utils.utils      import batch_env 
 import ostap.math.integral    as     I 
 import ostap.logger.table     as     T
+import ostap.core.pyrouts
 import ROOT, random, math 
 # ============================================================================= 
 # logging 
@@ -27,10 +29,10 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_legendresum' )
 else                       : logger = getLogger ( __name__                      )
 # ============================================================================= 
-
-
-from   ostap.core.core import Ostap, VE
-import ostap.core.pyrouts
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 
 LS1 = Ostap.Math.LegendreSum
 LS2 = Ostap.Math.LegendreSum2

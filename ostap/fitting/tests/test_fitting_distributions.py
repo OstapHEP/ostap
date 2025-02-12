@@ -12,9 +12,10 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ostap.fitting.models     as     Models 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import batch_env 
+import ostap.fitting.models     as     Models 
 import ROOT 
 # =============================================================================
 # logging 
@@ -25,7 +26,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
 
 x = ROOT.RooRealVar( 'x' , 'x-variable' , 0  , 10 ) 
 y = ROOT.RooRealVar( 'x' , 'y-variable' , -5 ,  5 ) 

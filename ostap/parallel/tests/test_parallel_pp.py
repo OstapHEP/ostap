@@ -8,12 +8,11 @@
 - see https://www.parallelpython.com/examples.php#CALLBACK
 """
 # =============================================================================
-import pp
-import ostap.histos.histos
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
-import ROOT, time, sys 
+from   ostap.utils.utils        import wait, batch_env 
+import ostap.histos.histos
+import ROOT, random, time, sys, pp  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -23,8 +22,8 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-
-
+batch_env ( logger ) 
+# =============================================================================
 
 ## simple    function that created and  fill a histogram 
 def make_histo  ( i , n ) :

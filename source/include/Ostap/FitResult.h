@@ -8,9 +8,11 @@
 // ============================================================================
 #include <vector>
 #include <string>
+#include <limits>
 // ============================================================================
 // ROOT 
 // ============================================================================
+#include "RooAbsReal.h"
 #include "RooFitResult.h"
 // ============================================================================
 namespace Ostap
@@ -39,8 +41,8 @@ namespace Ostap
       // ======================================================================
       /// Constructor from  RooFitResult 
       FitResults
-      ( const RooFitResult& right , 
-        const char* new_name = nullptr ) ;
+      ( const RooFitResult& right              , 
+        const char*         new_name = nullptr ) ;
       // ======================================================================
       /// full constructor #1
       FitResults
@@ -86,6 +88,42 @@ namespace Ostap
       FitResults* clone () const override ;
       // ======================================================================
     public:
+      // ======================================================================
+      // check the status of FitResut 
+      bool ok () const 
+      {
+        if ( !_finalPars || _finalPars->getSize() <= 0 ) { return false ; }
+        const std::size_t size = _finalPars->getSize()  ;
+        for ( std::size_t i = 0 ; i < size ; ++i )
+          {
+            const RooAbsArg*  a = _finalPars->at ( i ) ;
+            if ( nullptr == a ) { return false ; }             // RETURN
+            const RooAbsReal* r = dynamic_cast<const RooAbsReal*>( a ) ; //
+            if ( nullptr == r ) { return false ; }             // RETURN            
+          }
+        return true ;
+      }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get all values 
+      void get_values ( std::vector<double>& out ) const
+      {
+        // bad value: quite NaN 
+        static const double s_NaN { std::numeric_limits<double>::quiet_NaN() } ;
+        //
+        Int_t size = _finalPars ? _finalPars->getSize () : 0 ;
+        if ( size <= 0 ) { out.clear() ; return ; }                 // RETURN
+        //
+        out.resize ( size ) ;
+        for ( Int_t i = 0 ; i < size ; ++i )
+          {
+            const RooAbsArg*  a = _finalPars->at ( i ) ;
+            if ( nullptr ==  a ) { out [ i ] = s_NaN ; continue ;  } 
+            const RooAbsReal* r = static_cast<const RooAbsReal*>( a ) ;
+            out [ i ] = r ? r->getVal () : s_NaN ;
+          }
+      }
       // ======================================================================
       /// get vector of global correlations coeffficients 
       std::vector<double> global_cc () const ;

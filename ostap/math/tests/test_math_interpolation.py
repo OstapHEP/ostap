@@ -9,19 +9,19 @@
 """ Test module for ostap/math/interpolation.py
 """
 # ============================================================================= 
-import random,math 
-import ostap.math.models
 from   ostap.math.interpolation import ( interpolate , points  ,
                                          interpolate_bernstein ,
                                          interpolate_bspline   )
 from   ostap.math.base          import doubles 
 from   ostap.core.core          import Ostap,  SE
 from   ostap.math.models        import f1_draw 
-from   ostap.utils.utils        import wait
+from   ostap.utils.utils        import wait, batch_env 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.progress_bar import progress_bar 
+from   ostap.utils.progress_bar import progress_bar
 import ostap.logger.table       as     T 
+import ostap.math.models
+import random,math 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -29,6 +29,10 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_interpolation' ) 
 else                       : logger = getLogger ( __name__                        )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 functions = set () 
 
 

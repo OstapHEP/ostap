@@ -9,19 +9,18 @@
 - It tests various ``signal-like''/``peak-like'' shapes 
 """
 # ============================================================================= 
-from   __future__               import print_function
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.core.meta_info  import root_info
 from   ostap.core.pyrouts    import hID, dsID, Ostap, VE 
+from   ostap.plotting.canvas import use_canvas
+from   ostap.utils.timing    import timing 
+from   ostap.utils.gsl       import gslCount
+from   ostap.utils.utils     import batch_env 
 import ostap.fitting.models  as     Models
 import ostap.histos.histos
 import ostap.fitting.dataset
-from   ostap.plotting.canvas import use_canvas
-from   ostap.utils.timing    import timing 
-from   ostap.utils.gsl       import gslCount 
 import ROOT, random
 # =============================================================================
 # logging 
@@ -32,6 +31,10 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 
 xvar   = ROOT.RooRealVar ( 'x' , 'x-variable' , 0 , 10 )
 yvar   = ROOT.RooRealVar ( 'y' , 'y-variable' , 0 ,  5 )

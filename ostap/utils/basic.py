@@ -38,10 +38,16 @@ __all__     = (
     ##
     'numcpu'        , ## number of cores/CPUs
     ##
-    'typename'      , ## te typename of the object
+    'typename'      , ## the typename of the object
+    'prntrf'        , ## very specific printer of functions 
     ##
-    'zip_longest'   , ## itertools.(i)zip.longest 
-)
+    'zip_longest'   , ## itertools.(i)zip.longest
+    ##
+    'var_separators'       , ## separators form the split  
+    'split_string_respect' , ## split the string  according to separators 
+    'split_string'         , ## split the string  according to separators
+    # =========================================================================
+) # ===========================================================================
 # =============================================================================
 import sys, os, datetime
 # =============================================================================
@@ -291,9 +297,8 @@ class NoContext(object) :
     ## context manager 
     def __exit__  ( self , *args ) : pass  
 
-
 # =============================================================================
-if   ( 3 , 0 ) <= sys.version_info :
+if   ( 3 , 0 ) <= sys.version_info : # ========================================
     # =========================================================================
     def loop_items ( dct ) :
         """ Iterate over the dictionary items
@@ -302,7 +307,7 @@ if   ( 3 , 0 ) <= sys.version_info :
         """
         for item in dct.items () : yield item
     # =========================================================================
-else :
+else : # ======================================================================
     # =========================================================================
     def loop_items ( dct ) :
         """ Iterate over the dictionary items
@@ -492,6 +497,23 @@ def sync_file ( source              ,
     
     return destination
 
+# ============================================================================
+def __the_function () : pass
+__fun_type = type ( __the_function )
+# =============================================================================
+## very specific printer of objhect
+#  - o defiend special print for fumnctins  
+def prntrf ( o ) :
+    """ very specific printer of objhect
+      - o defiend special print for fumnctins  
+    """
+    if callable ( o ) :
+        func_doc = getattr ( o , 'func_doc' , '' )
+        if func_doc : return func_doc
+        if type ( o ) is __fun_type :                
+            return getattr ( o , '__qualname__' , getattr ( o  , '__name__' , 'FUNCTION' ) ) 
+    return str ( o )
+
 # =============================================================================
 ## Get the type name
 #  @code
@@ -503,8 +525,20 @@ def typename ( o ) :
     >>> obj = ...
     >>> print ( 'Object type name is %s' % typename ( obj ) )
     """
-    tt = type ( o )
-    return getattr ( tt , '__cpp_name__' , getattr ( tt , '__name__' ) )
+    if callable ( o ) :
+        to = type ( o ) 
+        if to is __fun_type :
+            if '<lambda>' == to.__name__ : return 'lambda'
+            return getattr ( to , '__qualname__' , getattr ( to , '__name__' ) )
+        
+    tname = getattr ( o , '__cpp_name__'  ,\
+                      getattr ( o , '__qualname__' ,\
+                                getattr ( o , '__name__' , '' ) ) )
+    if tname : return tname
+    to = type ( o )
+    return getattr ( to , '__cpp_name__'  ,\
+                     getattr ( to , '__qualname__' ,\
+                               getattr ( to , '__name__' ) ) )
     
 # =============================================================================
 if ( 3 , 4 ) <= sys.version_info : 
@@ -517,6 +551,100 @@ else :
     ## Get number of cores/CPUs    
     from multiprocessing import cpu_count as _numcpu
     # =========================================================================
+
+# =============================================================================
+## defalt separators for the string expressions
+var_separators = ',:;'
+## rx_separators  = re.compile ( r'[,:;]\s*(?![^()]*\))' )
+## rx_separators  = re.compile ( '[ ,:;](?!(?:[^(]*\([^)]*\))*[^()]*\))')
+# =============================================================================
+## mark for double columns: double column is a special for C++ namespaces 
+dc_mark = '_SSPPLLIITT_'
+# =============================================================================
+## split string using separators and respecting the (),[] and {} groups.
+#  - group can be nested
+def split_string_respect  ( text , separators = var_separators , strip = True ) :
+    """ Split string using separators and respecting the (),[] and {} groups.
+    - groups can be nested
+    """
+    protected = False 
+    if ':' in separators and '::' in text :
+        text      = text.replace ( '::' , dc_mark ) 
+        protected = True 
+    
+    flag1  = 0
+    flag2  = 0
+    flag3  = 0
+    item   = ''
+    items  = []
+    for c in text:
+        if   c == '(' : flag1 += 1
+        elif c == ')' : flag1 -= 1
+        elif c == '[' : flag2 += 1
+        elif c == ']' : flag2 -= 1
+        elif c == '{' : flag3 += 1
+        elif c == '}' : flag3 -= 1
+        elif 0 == flag1 and 0 == flag2 and 0 == flag3 and c in separators :
+            items .append ( item )
+            item = ''
+            continue
+        item += c
+        
+    if item : items.append ( item  )
+
+    if protected :
+        nlst = []
+        for item in items :
+            if dc_mark in item : nlst.append ( item.replace ( dc_mark , '::' ) )
+            else               : nlst.appenf ( item ) 
+        items = nlst 
+                              
+    ## strip items if required 
+    if strip : items = [ item.strip() for item in items ] 
+    ## remove empty items 
+    return tuple ( item for item in items if item  )
+
+# =============================================================================
+## split string using separators:
+#  @code
+#  split_string ( ' a b cde,fg;jq', ',;:' )
+#  @endcode
+def split_string ( line                            ,
+                   separators     = var_separators ,
+                   strip          = False          ,
+                   respect_groups = False          ) :
+    """ Split the string using separators
+    >>> split_string ( ' a b cde,fg;jq', ',;:' )
+    """
+    if respect_groups :
+        return split_string_respect ( line                    ,
+                                      separators = separators ,
+                                      strip      = strip      )
+    ##
+    protected = False 
+    if ':' in separators and '::' in line :
+        line      = line.replace ( '::' , dc_mark ) 
+        protected = True 
+    
+    items = [ line ]
+    for s in separators :
+        result = []
+        for item in items :
+            if s in item : result += item.split ( s )
+            else         : result.append ( item ) 
+        items = result
+
+    if protected :
+        nlst = []
+        for item in items :
+            if dc_mark in item : nlst.append ( item.replace ( dc_mark , '::' ) )
+            else               : nlst.appenf ( item ) 
+        items = nlst 
+        
+    ## strip items if required 
+    if strip : items = [ i.strip() for i in items ] 
+    ## remove empty items 
+    return tuple ( item for item in items if item )
     
 # =============================================================================
 ## Get number of CPUs     

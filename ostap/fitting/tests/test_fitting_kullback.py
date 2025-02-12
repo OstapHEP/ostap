@@ -14,13 +14,13 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 from   builtins                 import range
 from   ostap.core.core          import SE, hID  
-import ostap.fitting.roofit 
-import ostap.fitting.models     as     Models
 from   ostap.fitting.fithelpers import SETPARS
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait
+from   ostap.utils.utils        import wait, batch_env 
+import ostap.fitting.models     as     Models
+import ostap.fitting.roofit 
 import ostap.histos.histos  
 import ROOT, random
 # =============================================================================
@@ -31,6 +31,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_fitting_kullback' )
 else : 
     logger = getLogger ( __name__ )
+# =============================================================================
+## set batch from environment 
+batch_env ( logger )
 # =============================================================================
 
 x        = ROOT.RooRealVar ( 'x' , 'x-observable' , -10 , 10 )

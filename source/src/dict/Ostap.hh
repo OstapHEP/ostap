@@ -7,6 +7,7 @@
 // Include files
 // ============================================================================
 #include "Ostap/AddBranch.h"
+#include "Ostap/AddBuffer.h"
 #include "Ostap/AddVars.h"
 #include "Ostap/BLOB.h"
 #include "Ostap/BSpline.h"
@@ -109,6 +110,7 @@
 #include "Ostap/Polarization.h"
 #include "Ostap/ProgressBar.h"
 #include "Ostap/Rational.h"
+#include "Ostap/RooFun.h"
 #include "Ostap/RootID.h"
 #include "Ostap/SFactor.h"
 #include "Ostap/StatEntity.h"

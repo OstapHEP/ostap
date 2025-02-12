@@ -14,16 +14,16 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-05-10"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-from   builtins               import range
 from   ostap.core.pyrouts     import hID
 from   ostap.histos.histos    import h1_axis, h2_axes 
-import ostap.io.zipshelve     as     DBASE
 from   ostap.math.base        import axis_range
-from   ostap.utils.utils      import vrange
+from   ostap.utils.utils      import vrange, batch_env 
 from   ostap.utils.timing     import timing
 from   ostap.trees.data_utils import Data 
 from   ostap.logger.colorized import attention, allright  
-import ROOT, random, math, os, time 
+from   ostap.utils.cleanup    import CleanUp
+import ostap.io.zipshelve     as     DBASE
+import ROOT, array, random, math, os, time 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -35,8 +35,9 @@ else :
 # =============================================================================    
 logger.info ( 'Test for 2D-Reweighting machinery using GBReweighter')
 # ============================================================================
-from ostap.utils.cleanup import CleanUp
-
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
 
 testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-gbreweight-' )
 ## dbname     = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-gbreweight-'   )
@@ -91,9 +92,8 @@ def prepare_data ( ) :
         datatree  = ROOT.TTree ( 'DATA_tree', 'data-tree' )
         datatree .SetDirectory ( mc_file ) 
         
-        from array import array 
-        xvar = array  ( 'f', [0])
-        yvar = array  ( 'f', [0])
+        xvar = array.array  ( 'f', [0])
+        yvar = array.array  ( 'f', [0])
         datatree.Branch ( 'x' , xvar , 'x/F' )
         datatree.Branch ( 'y' , yvar , 'y/F' )
     
@@ -187,9 +187,8 @@ def prepare_data ( ) :
         mctree  = ROOT.TTree ( tag_mc , 'mc-tree' )
         mctree .SetDirectory ( mc_file ) 
         
-        from array import array 
-        xvar = array  ( 'f', [ 0.0 ] )
-        yvar = array  ( 'f', [ 0.0 ] )
+        xvar = array.array  ( 'f', [ 0.0 ] )
+        yvar = array.array  ( 'f', [ 0.0 ] )
         mctree.Branch ( 'x' , xvar , 'x/F' )
         mctree.Branch ( 'y' , yvar , 'y/F' )
 
@@ -263,7 +262,8 @@ def test_gbreweight() :
     
     ## new weights 
     wnew = rw.weight ( original = dmc )
-    mc.chain.add_new_branch ( 'w' , wnew )
+    ## mc.chain.add_new_branch ( wnew , name = 'w')
+    mc.chain.add_new_buffer ( 'w' , wnew )
     
     ## reload data 
     data = Data ( 'DATA_tree' , testdata )

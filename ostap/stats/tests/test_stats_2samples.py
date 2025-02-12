@@ -12,7 +12,7 @@ from   ostap.stats.twosamples import TSTest, TSToys
 from   ostap.core.meta_info   import python_info, root_info  
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.logger.pretty    import pretty_float
-from   ostap.utils.utils      import vrange 
+from   ostap.utils.utils      import vrange, batch_env 
 from   ostap.math.math_ve     import significance
 import ostap.logger.table     as     T
 import ROOT, random, array    
@@ -21,6 +21,10 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'tests_stats_2samples' )
 else                       : logger = getLogger ( __name__            )
 # ==============================================================================
+batch_env ( logger ) 
+# =============================================================================
+
+
 N1  = 150
 N2  = 150
 

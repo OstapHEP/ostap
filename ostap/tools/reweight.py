@@ -23,7 +23,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.pyrouts     import VE, SE, Ostap 
 from   ostap.math.base        import iszero
-from   ostap.core.core        import split_string 
+from   ostap.utils.basic      import split_string 
 from   ostap.core.ostap_types import string_types, list_types, num_types, sized_types, sequence_types    
 from   ostap.math.operations  import Mul as MULT  ## needed for proper abstract multiplication
 import ostap.io.zipshelve     as     DBASE ## needed to store the weights&histos
@@ -31,6 +31,7 @@ from   ostap.trees.funcs      import FuncTree, FuncData ## add weigth to TTree/R
 from   ostap.utils.utils      import CallThem, is_formula  
 from   ostap.logger.pretty    import pretty_ve
 from   ostap.math.reduce      import root_factory
+import ostap.core.core 
 import ostap.histos.histos 
 import ostap.histos.compare 
 import ostap.trees.trees
@@ -1089,6 +1090,10 @@ def makeWeights  ( dataset                    ,
     ## return ( active , cmp_plots ) if make_plots else active
     return ( for_update , cmp_plots ) if make_plots else for_update 
 
+
+# =============================================================================
+## helper factory fro proper (de)serialization 
+def w2t_factory ( *args ) : return W2Tree ( *args ) 
 # =============================================================================
 ## @class W2Tree
 #  Helper class to add the weight into <code>ROOT.TTree</code>
@@ -1105,20 +1110,35 @@ class W2Tree(FuncTree) :
     >>> wf   = W2Tree ( w , tree ) ## create the weighting function
     >>> tree.add_new_branch ( 'weight' , wf )
     """
-    def __init__ ( self , weight , tree = None ) :
+    def __init__ ( self , weight = None , tree = None , clone = None ) :
+
+        assert not clone or isinstance ( clone , W2Tree ) , \
+            "W2Tree: Invalid 'clone' type!" % typename ( clone )        
+        assert clone or isinstance ( weight , Weight ) , \
+            "W2Tree: Invalid 'weight' type!" % typename ( weight )
+
+        ## initialize the base 
+        super(W2Tree,self).__init__ ( tree = tree , clone = clone )
+
+        if clone : self.__weight = clone.weight 
+        else     : self.__weight = weight
         
-        assert isinstance ( weight , Weight    )                 , 'Wrong type of weight!'
-        assert tree is None or isinstance ( tree  , ROOT.TTree ) , 'Wrong type of tree!'
-        
-        FuncTree.__init__ ( self , tree )
-        self.__weight = weight
-        
+    ## clone function 
+    def clone ( self , name = "" ) :
+        """ Clone it! """
+        cloned = W2Tree ( weight = self.weight , tree = self.the_tree , clone = self )
+        ROOT.SetOwnership ( cloned , False )
+        return cloned 
+
     ## evaluate the weighter for the given TTree entry 
     def evaluate ( self ) : 
-        """Evaluate the weighter for the given TTree entry"""
+        """ Evaluate the weighter for the given TTree entry """
         t = self.tree ()
         w = self.__weight ( t ) 
         return w
+    
+    ## REDUCE 
+    def __reduce__  ( self ) : return w2t_factory , ( self.weight , ) 
 
     @property
     def weight ( self ) :
@@ -1194,7 +1214,8 @@ def tree_add_reweighting ( tree                 ,
     ## create the weighting function 
     wfun = W2Tree ( weighter )
     
-    return tree.add_new_branch (  name , wfun , verbose = verbose  , report = report ) 
+    ## return tree.add_new_branch (  name , wfun , verbose = verbose  , report = report ) 
+    return tree.add_new_branch ( wfun , name = name  , verbose = verbose  , report = report ) 
 
 ROOT.TTree.add_reweighting = tree_add_reweighting    
 

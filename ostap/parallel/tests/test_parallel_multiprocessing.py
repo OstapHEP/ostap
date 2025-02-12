@@ -6,13 +6,14 @@
 """ Oversimplified script for parallel execution using multiprocessing
 """
 # =============================================================================
-import multiprocessing
 from   itertools                import count    
-import ostap.histos.histos
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
-import ROOT, time, sys 
+from   ostap.utils.utils        import wait, batch_env 
+import ostap.histos.histos
+import multiprocessing
+import ROOT, time, sys
+
 # =============================================================================
 # logging 
 # =============================================================================
@@ -22,13 +23,13 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-
-
+batch_env ( logger ) 
+# =============================================================================
 
 # =============================================================================
 ## simple    function that created and  fill a histogram
 def make_histos ( item ) :
-    """Simple    function that creates and  fills a histogram
+    """ Simple    function that creates and  fills a histogram
     """
     i, n = item 
     import ROOT, random 
@@ -40,7 +41,7 @@ def make_histos ( item ) :
 ## @class MakeHisto
 #  helper class to create a fill histograms
 class MakeHisto(object) :
-    """Helper class to create a fill histoghrams
+    """ Helper class to create a fill histoghrams
     """
     def process  ( self , item ) :
         i, n = item 

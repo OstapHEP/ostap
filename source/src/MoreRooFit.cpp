@@ -14,6 +14,8 @@
 #include "RooGlobalFunc.h"
 #include "RooRealVar.h"
 #include "RooAbsCategory.h"
+#include "RooAbsRealLValue.h"
+#include "RooAbsCategoryLValue.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -27,6 +29,7 @@
 #include "Exception.h"
 #include "local_math.h"
 #include "local_roofit.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file
  *  implementaton of various small additions to RooFit 
@@ -2086,13 +2089,15 @@ Ostap::Utils::toStream
   // ==========================================================================
   const unsigned short s_precision = 4 ; // ====================================
   // ==========================================================================
-  if      ( nullptr != dynamic_cast<const RooConstVar*> ( &o ) )
+  if ( nullptr != dynamic_cast<const RooConstVar*> ( &o ) )
     { return toStream ( o.getVal() , s , s_precision  ) ; }           // RETURN
   //
   const RooRealVar* rrv = dynamic_cast<const RooRealVar*>  ( &o ) ;
   if ( nullptr == rrv ) { o.printClassName ( s ) ; s << "/"     ; }
   //
   s << o.GetName() << " : " ;
+  if ( o.isConstant () ) { return toStream ( o.getVal() , s , s_precision ) ; } // RETURN  
+  //
   if ( rrv && rrv->hasAsymError () && ( rrv->getErrorLo() || rrv->getErrorHi() ) ) 
     {
       s << "( " ;
@@ -2100,6 +2105,7 @@ Ostap::Utils::toStream
       toStream ( rrv->getErrorLo ()        , s , s_precision ) << " +/ " ;
       return toStream ( rrv->getErrorHi () , s , s_precision ) << " )" ;  // RETURN 
     }
+  //
   if ( rrv && rrv->hasError () && rrv->getError () )
     {
       s << "( " ;
@@ -2119,19 +2125,10 @@ Ostap::Utils::toStream
 ( const RooAbsCategory& o ,
   std::ostream&         s )
 {
+  // ==========================================================================
   s << o.GetName() << "::" ;
-  //===========================================================================
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE // ==============================
-  // ==========================================================================
-  toStream ( o.getCurrentLabel() , s ) << "/" ;
-  return toStream ( o.getCurrentIndex() , s ) ;
-  // ==========================================================================
-#else
-  // ==========================================================================
-  toStream ( o.getLabel() , s ) << "/" ;
-  return toStream ( o.getIndex() , s ) ;
-  // ==========================================================================
-#endif
+  toStream ( ::getLabel ( o ) , s ) << "/" ;
+  return toStream ( ::getValue ( o )  , s ) ;
   // ==========================================================================
 }
 // ============================================================================
@@ -2196,7 +2193,9 @@ Ostap::Utils::toStream
   // ==========================================================================
   return s ;
 }
-   
+// ============================================================================
+
+
 // ============================================================================
 //                                                                      The END
 // ============================================================================

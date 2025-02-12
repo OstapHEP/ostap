@@ -17,13 +17,14 @@ __version__ = '$Revision$'
 __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = '2016-02-23'
 __all__     = (
-    'Task'        , ## the base class for task
-    'WorkManager' , ## task manager
-    'GenericTask' , ## very generic "template"  tasl 
+    'Task'          , ## the base class for task
+    'WorkManager'   , ## task manager
+    'GenericTask'   , ## very generic "template"  tasl
+    'Checker'       , ## check of the object can be pickled/unpickled 
     )
 # =============================================================================
-from ostap.parallel.task import Task, GenericTask
-from ostap.utils.env     import has_env, get_env, OSTAP_PARALLEL  
+from   ostap.parallel.task import Task, GenericTask
+from   ostap.utils.env     import has_env, get_env, OSTAP_PARALLEL  
 import sys, os, warnings 
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -128,12 +129,13 @@ WorkManager = None
 if 'IPYPARALLEL' == worker and ( 3 , 6 ) <= sys.version_info :
     # ===========================================================================
     try : # =====================================================================
-        from ostap.parallel.parallel_ipyparallel import WorkManager 
-        logger.debug ('Use TaskManager from ostap.parallel.ipyparallel')
+        # =======================================================================
+        from ostap.parallel.parallel_ipyparallel import WorkManager, Checker
+        logger.debug ('Use WorkManager from ostap.parallel.ipyparallel')
         # =======================================================================
     except ImportError : # ======================================================
         # =======================================================================
-        WorkManager = None 
+        WorkManage, Checker = None, None
         worker      = 'PATHOS'
 
 # ===============================================================================
@@ -142,41 +144,24 @@ if 'IPYPARALLEL' == worker and ( 3 , 6 ) <= sys.version_info :
 if 'PATHOS' == worker and not WorkManager and not DILL_PY3_issue :
     # ===========================================================================
     try : # =====================================================================
-        from ostap.parallel.parallel_pathos import WorkManager 
-        logger.debug ('Use TaskManager from ostap.parallel.pathos')
+        from ostap.parallel.parallel_pathos import WorkManager, Checker
+        logger.debug ('Use WorkManager from ostap.parallel.pathos')
         # =======================================================================
     except ImportError : # ======================================================
         # =======================================================================
-        WorkManager = None 
+        WorkManager, Checker = None, None
 
 # ===============================================================================
 ## Use multiprocess/multiprocessing
 # ===============================================================================
 if not WorkManager : # ==========================================================
     # ===========================================================================
-    from ostap.parallel.parallel_gaudi  import WorkManager 
-    logger.debug ('Use TaskManager from GaudiMP.Parallel'         )
+    from ostap.parallel.parallel_gaudi  import WorkManager, Checker
+    logger.debug ('Use WorkManager from GaudiMP.Parallel' )
     worker = 'GAUDI'
 
-# =============================================================================
-## check if object can be pickled & nupickled 
-def pickles ( obj ) :
-    """ Check if object can be pickled & unpiickled
-    """
-    if dill and WorkManager and worker == 'PATHOS' :
-        return dill.pickles ( obj )
-    from ostap.io.pickling import pickles as _pickles
-    return _pickles ( obj )
 
-# =============================================================================
-## Check pickling of an object across another process
-def check ( obj ):
-    """Check pickling of an object across another process
-    """
-    if dill and WorkManager and worker == 'PATHOS' :
-        return dill.check ( obj )
-    from ostap.io.pickling import check  as _check 
-    return _check ( obj )
+if not Checker : from ostap.io.pickling import Checker
 
 # =============================================================================
 if '__main__' == __name__ :

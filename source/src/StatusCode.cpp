@@ -2,6 +2,8 @@
 // ============================================================================
 //  STD&STL
 // ============================================================================
+#include <ostream> 
+// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/StatusCode.h"
@@ -11,14 +13,17 @@
  */
 // ============================================================================
 // printout 
-std::ostream& Ostap::operator<< ( std::ostream& s , const Ostap::StatusCode& sc )
+std::ostream&
+Ostap::operator<<
+( std::ostream&            os ,
+  const Ostap::StatusCode& sc )
 {
-  if      ( sc.isSuccess     ()                     ) { return s << "SUCCESS"     ; }
-  else if ( sc.isRecoverable ()                     ) { return s << "RECOVERABLE" ; }
-  else if ( Ostap::StatusCode::FAILURE == sc.code() ) { return s << "FAILRUE"     ; }
+  if      ( sc.isSuccess     ()                     ) { return os << "SUCCESS"     ; }
+  else if ( sc.isRecoverable ()                     ) { return os << "RECOVERABLE" ; }
+  else if ( Ostap::StatusCode::FAILURE == sc.code() ) { return os << "FAILRUE"     ; }
   //
-  return s << "FAILURE(" << sc.getCode() << ")" ;
+  return os << "FAILURE(" << sc.code() << ")" ;
 }
 // ============================================================================
-// The END  
+//                                                                      The END  
 // ============================================================================

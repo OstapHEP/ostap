@@ -17,17 +17,17 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.core.pyrouts       import hID, VE 
-import ostap.fitting.models     as     Models
-import ostap.fitting.toys       as     Toys
-import ostap.histos.histos
 from   ostap.utils.timing       import timing
 from   ostap.utils.memory       import memory 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait, batch_env  
 from   ostap.fitting.toys       import pull_var
 from   ostap.math.base          import num_range 
 from   ostap.utils.progress_bar import progress_bar
 import ostap.logger.table       as     T
+import ostap.fitting.models     as     Models
+import ostap.fitting.toys       as     Toys
+import ostap.histos.histos
 import ROOT, time, random
 # =============================================================================
 # logging 
@@ -38,6 +38,11 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
+
 nominal_mean    = 0.4
 nominal_sigma   = 0.1
 nominal_S       = 1000

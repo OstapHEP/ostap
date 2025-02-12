@@ -9,15 +9,17 @@
 """Test for reweighting machinery in  Ostap
 """
 # =============================================================================
-from   builtins               import range
-from   ostap.core.pyrouts     import *
+from   ostap.utils.timing     import timing
+from   ostap.logger.colorized import attention, allright
+from   ostap.plotting.canvas  import use_canvas
+from   ostap.utils.utils      import batch_env 
+from   ostap.utils.cleanup    import CleanUp
+from   ostap.histos.histos    import h1_axis 
 import ostap.io.zipshelve     as     DBASE
 import ostap.io.root_file
 import ostap.trees.trees
 import ostap.parallel.kisa 
-from   ostap.utils.timing     import timing
-from   ostap.logger.colorized import attention, allright
-from   ostap.plotting.canvas  import use_canvas
+import ostap.core.pyrouts 
 import ROOT, random, math, os, time  
 # =============================================================================
 # logging 
@@ -30,7 +32,11 @@ else :
 # =============================================================================    
 logger.info ( 'Test for Reweighting machinery')
 # =============================================================================
-from ostap.utils.cleanup import CleanUp
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+
+
 testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-reweight-' )
 tag_data   = 'DATA_histogram'
 tag_mc     = 'MC_tree'

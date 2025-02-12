@@ -15,6 +15,7 @@
 #include "Ostap/IFuncs.h"
 #include "Ostap/Formula.h"
 #include "Ostap/TreeGetter.h"
+#include "Ostap/RooFun.h"
 // ============================================================================
 // ROOT
 // ============================================================================
@@ -54,13 +55,18 @@ namespace Ostap
       /// copy constructor 
       FuncFormula ( const  FuncFormula& right )  ;
       // ======================================================================
-      /// default constructor, needed for serialization 
-      FuncFormula () = default ;
-      /// destructor 
       virtual ~FuncFormula() ;
       // ======================================================================
     public:
       // ======================================================================
+      /// default constructor, needed for (de) serialization 
+      FuncFormula () = default ;
+      // ======================================================================
+    public: // Clone&clone 
+      // ======================================================================
+      /// IFuncTree::clone 
+      FuncFormula* clone ( const char* newname = "" ) const override ;
+      /// TObject::Clone 
       FuncFormula* Clone ( const char* newname = "" ) const override ;
       // ======================================================================
     public:
@@ -74,6 +80,10 @@ namespace Ostap
       const std::string& expression () const { return m_expression ; }
       /// function name 
       const std::string& fun_name   () const { return m_name ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      bool ok () const { return m_formula && m_formula->ok () ;  }
       // ======================================================================
     public:
       // ======================================================================
@@ -128,8 +138,11 @@ namespace Ostap
       /// virtual destructor 
       virtual ~Func1D() ;
       // ======================================================================
-    public:
+    public: // Clone&clone 
       // ======================================================================
+      /// IFuncTree::clone 
+      Func1D* clone ( const char* newname = "" ) const override ;
+      /// TObject::Clone 
       Func1D* Clone ( const char* newname = "" ) const override ;
       // ======================================================================
     public:
@@ -213,8 +226,11 @@ namespace Ostap
       /// virtual destructor 
       virtual ~Func2D() ;
       // ======================================================================
-    public:
+    public: // Clone&clone 
       // ======================================================================
+      /// IFuncTree::clone 
+      Func2D* clone ( const char* newname = "" ) const override ;
+      /// TObject::Clone 
       Func2D* Clone ( const char* newname = "" ) const override ;
       // ======================================================================
     public:
@@ -311,8 +327,11 @@ namespace Ostap
       /// virtual destructor 
       virtual ~Func3D() ;
       // ======================================================================
-    public:
+    public: // Clone&clone 
       // ======================================================================
+      /// IFuncTree::clone 
+      Func3D* clone ( const char* newname = "" ) const override ;
+      /// TObject::Clone 
       Func3D* Clone ( const char* newname = "" ) const override ;
       // ======================================================================
     public:
@@ -380,9 +399,9 @@ namespace Ostap
       // ======================================================================
     } ;    
     // ========================================================================
-
-
-    
+    /** @class RooTreeFun 
+     *  Specil "tree-function" that evalated RooFit-function 
+     */
     class RooTreeFun : public Ostap::IFuncTree, public Ostap::Trees::RooGetter 
     {
       // ======================================================================
@@ -418,6 +437,32 @@ namespace Ostap
         const DCT&              mapping                 ,       
         const TTree*            tree          = nullptr ) ;
       // ======================================================================
+      /** full constructor 
+       *  @param fun the functon 
+       *  @param observables observables 
+       *  @param normalization nornalization 
+       *  @Param mapping  RooFit varibale <-> TTree branch mapping 
+       *  @param tree input tree 
+       */
+      RooTreeFun
+      ( const RooAbsReal&       fun           , 
+        const RooAbsData&       observables   , 
+        const RooAbsCollection* normalization = nullptr ,
+        const DCT&              mapping       = DCT()   ,
+        const TTree*            tree          = nullptr ) ;
+      // ======================================================================
+      /** full constructor 
+       *  @param fun the functon 
+       *  @param observables observables 
+       *  @Param mapping  RooFit varibale <-> TTree branch mapping 
+       *  @param tree input tree 
+       */
+      RooTreeFun
+      ( const RooAbsReal&       fun                     , 
+        const RooAbsData&       observables             , 
+        const DCT&              mapping                 ,       
+        const TTree*            tree          = nullptr ) ;      
+      // ======================================================================
       /// copy constructor 
       RooTreeFun  ( const RooTreeFun&  right ) ;
       /// move constructor 
@@ -425,9 +470,12 @@ namespace Ostap
       /// virtual constructor 
       virtual ~RooTreeFun() ;
       // ======================================================================
-    public:
+    public: // Clone&clone 
       // ======================================================================
+      // IFunTree::clone 
       RooTreeFun* Clone ( const char* newname = "" ) const override ;
+      // Tobject::clone 
+      RooTreeFun* clone ( const char* newname = "" ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -437,20 +485,18 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the fnuiction
-      const RooAbsReal& function      () const { return *m_fun           ; }
+      const RooAbsReal& function      () const { return m_fun.fun           () ; }
       /// get the observables 
-      const RooArgSet&  observables   () const { return *m_observables   ; }
+      const RooArgSet&  observables   () const { return m_fun.observables   () ; }
+      /// get the parameters 
+      const RooArgSet&  parameters    () const { return m_fun.parameters    () ; }
       /// get the normalization 
-      const RooArgSet*  normalization () const { return  m_normset.get() ; }
+      const RooArgSet*  normalization () const { return m_fun.normalization () ; }
       // ======================================================================
     private:
       // ======================================================================
-      /// the function 
-      std::unique_ptr<RooAbsReal> m_fun         { nullptr } ;
-      /// observables
-      std::unique_ptr<RooArgSet>  m_observables { nullptr } ;
-      /// normalization
-      std::unique_ptr<RooArgSet>  m_normset     { nullptr } ;
+      /// RooFun object
+      Ostap::MoreRooFit::RooFun   m_fun {} ; //Roofun object
       // ======================================================================
     } ;
     // ========================================================================
@@ -479,6 +525,11 @@ namespace Ostap
       // ======================================================================
       /// destructor 
       virtual ~FuncRooFormula() ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // IFuncData::clone 
+      FuncRooFormula* clone ( const char* name = "" ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -549,6 +600,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      // IFuncData::clone 
+      FuncRoo1D* clone ( const char* name = "" ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
       ///  evaluate the function for TTree
       double operator () ( const RooAbsData* tree ) const override ;
       // ======================================================================
@@ -609,6 +665,11 @@ namespace Ostap
       // ======================================================================
       /// virtual destructor
       virtual ~FuncRoo2D() ; 
+      // ======================================================================
+    public:
+      // ======================================================================
+      // IFuncData::clone 
+      FuncRoo2D* clone ( const char* name = "" ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -710,6 +771,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      // IFuncData::clone 
+      FuncRoo3D* clone ( const char* name = "" ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
       ///  evaluate the function for TTree
       double operator () ( const RooAbsData* tree ) const override ;
       // ======================================================================
@@ -807,6 +873,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+    public: // Clone&clone 
+      // ======================================================================
+      /// IFuncTree::clone, IFuncData::clone 
+      Expression* clone ( const char* newname = "" ) const override ;
+      /// TObject::Clone 
       Expression* Clone ( const char* newname = "" ) const override ;
       // ======================================================================
     public:

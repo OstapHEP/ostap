@@ -20,14 +20,14 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2015-10-26"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-import ostap.io.root_file 
 from   ostap.utils.timing       import timing
-from   builtins                 import range
 from   ostap.core.core          import ROOTCWD, SE
 from   ostap.stats.counters     import counters_table  
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.tools.tmva         import Reader, addTMVAResponse
 from   ostap.utils.cleanup      import CleanUp
+from   ostap.utils.utils        import batch_env 
+import ostap.io.root_file 
 import ROOT, os, random 
 # =============================================================================
 # logging 
@@ -36,6 +36,9 @@ from ostap.logger.logger import getLogger
 if '__main__' == __name__  : logger = getLogger ( 'ostap.test_tools_tmva' )
 else                       : logger = getLogger ( __name__ )
 # ==============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
 
 
 # =============================================================================

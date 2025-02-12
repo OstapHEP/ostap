@@ -4,7 +4,6 @@
 ## @file ostap/utils/cleanup.py
 #  Module with some simple but useful utilities
 #  to deal  with temporary files and directories
-#
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-02-10  
 # =============================================================================
@@ -323,7 +322,7 @@ class  CleanUp(object) :
     # =========================================================================
     @staticmethod
     def remove_dir ( fdir ) :
-        """Remove the (temporary) directory
+        """ Remove the (temporary) directory
         """
         if os.path.exists ( fdir ) and os.path.isdir ( fdir ) :
             logger.verbose ( 'remove the dir : %s' % fdir  )

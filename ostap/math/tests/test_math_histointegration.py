@@ -8,13 +8,14 @@
 """ Test module
 """
 # ============================================================================= 
-import ostap.math.models
 from   ostap.core.core          import Ostap, hID, SE 
 from   ostap.utils.progress_bar import progress_bar
-from   ostap.utils.timing       import timing 
+from   ostap.utils.timing       import timing
+from   ostap.utils.utils        import batch_env 
 import ostap.math.integral      as     I 
 import ostap.math.integrator    as     II
 import ostap.logger.table       as     T 
+import ostap.math.models
 import ROOT, random 
 # =============================================================================
 # logging 
@@ -23,6 +24,10 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_histo_integration' ) 
 else                       : logger = getLogger ( __name__                        )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 
 
 def test_histo1_integration () :

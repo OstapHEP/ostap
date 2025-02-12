@@ -11,11 +11,10 @@
 - It tests decorations for <code>ROOT.TMinuit</code>
 """
 # ============================================================================= 
-from   __future__        import print_function
-# ============================================================================= 
-import ostap.fitting.minuit
-from   ostap.utils.timing   import timing
 from   ostap.core.meta_info import old_PyROOT 
+from   ostap.utils.timing   import timing
+from   ostap.utils.utils    import batch_env 
+import ostap.fitting.minuit
 import ROOT, random 
 # =============================================================================
 # logging 
@@ -25,6 +24,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_fitting_minuit' )
 else : 
     logger = getLogger ( __name__ )
+# =============================================================================
+## set batch from environment 
+batch_env ( logger )
 # =============================================================================
 
 

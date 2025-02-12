@@ -15,15 +15,16 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
 from   builtins                 import range
-import ostap.histos.param
-import ostap.histos.histos
-import ostap.fitting.funcs
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait
 from   ostap.histos.param       import legendre_sum, chebyshev_sum
 from   ostap.core.core          import hID , fID, SE, Ostap  
 from   ostap.utils.timing       import timing
 from   ostap.utils.progress_bar import progress_bar 
+from   ostap.utils.utils        import batch_env 
+import ostap.histos.param
+import ostap.histos.histos
+import ostap.fitting.funcs
 import ostap.logger.table       as     T 
 import ROOT, random, time
 # =============================================================================
@@ -37,12 +38,19 @@ else :
 # =============================================================================
 logger.info ( 'Test for histogram parameterisation')
 # =============================================================================
-use_scipy = False 
-try :
+## set batch form environment 
+batch_env ( logger )
+# =============================================================================
+use_scipy = False
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
     import numpy 
     import scipy
-    use_scipy = True 
-except ImportError :
+    use_scipy = True
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     use_scipy = False 
     logger.warning ("Numpy/scipy-dependent test are disabled!")
     

@@ -9,8 +9,6 @@
 """ Test module for RooStats 
 """
 # ============================================================================= 
-from   __future__               import print_function
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
@@ -22,7 +20,7 @@ from   ostap.utils.timing       import timing
 from   ostap.utils.utils        import vrange
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait
+from   ostap.utils.utils        import wait, batch_env 
 import ostap.fitting.models     as     Models
 import ostap.logger.table       as     T
 import ostap.fitting.roofit 
@@ -35,6 +33,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_fitting_roostats3' )
 else : 
     logger = getLogger ( __name__ )
+# =============================================================================
+## set batch from environment 
+batch_env ( logger )
 # =============================================================================
 
 # =============================================================================

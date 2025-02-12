@@ -45,11 +45,13 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      enum Type { Nearest          , 
-                  Linear           , 
-                  Quadratic        , 
-                  Cubic            , 
-                  Default = Linear } ;
+      enum Type {
+        Nearest          , // no interpolation 
+        Linear           , // linear interpolaiton 
+        Quadratic        , // parabolic interpolation
+        Cubic            , // cubic interpolaiton 
+        Default = Linear
+      } ;
       // ======================================================================
     public: // 1D interpolation 
       // ======================================================================

@@ -12,16 +12,19 @@
 from   ostap.core.pyrouts     import Ostap, SE 
 from   ostap.utils.gsl        import gslCount
 from   ostap.logger.colorized import attention 
-import ostap.logger.table     as     T
-from   ostap.utils.utils      import wait
+from   ostap.utils.utils      import wait, vrange, batch_env 
 from   ostap.plotting.canvas  import use_canvas
-from   ostap.utils.utils      import vrange 
+import ostap.logger.table     as     T
 import ROOT, math, random  
 # ============================================================================
 from   ostap.logger.logger    import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_carlson' ) 
 else                       : logger = getLogger ( __name__                  )
 # ============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 
 RF     = Ostap.Math.carlson_RF
 RC     = Ostap.Math.carlson_RC

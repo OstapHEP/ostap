@@ -9,7 +9,9 @@
 """
 # =============================================================================
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait, batch_env  
+from   ostap.utils.progress_bar import progress_bar 
+import ostap.histos.histos
 import ROOT, time, sys 
 # =============================================================================
 # logging 
@@ -20,18 +22,25 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-try : 
-    import dill 
-except ImportError :
+batch_env ( logger ) 
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    import dill
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     logger.error('Can not import dill')
     dill = None
-
-try : 
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
     import ppft
-except ImportError :
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     logger.error('Can not import ppft')
     ppft = None
-
 
 DILL_PY3_issue = False 
 if ( 3 , 6 ) <= sys.version_info and dill :
@@ -44,9 +53,6 @@ if ( 3 , 6 ) <= sys.version_info and dill :
 
 if DILL_PY3_issue : logger.warning ( "There is an issue with DILL/ROOT/PYTHON")
         
-# =============================================================================
-import ostap.histos.histos
-from   ostap.utils.progress_bar import progress_bar 
 # =============================================================================
 ## simple  function that creates and  fills a histogram 
 def make_histo  ( i , n ) :

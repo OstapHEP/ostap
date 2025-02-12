@@ -12,15 +12,15 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ostap.fitting.models     as     Models 
 from   ostap.fitting.roofit     import FIXVAR 
 from   ostap.core.core          import cpp, VE, dsID, Ostap, rooSilent 
 from   ostap.fitting.efficiency import Efficiency1D
 from   ostap.fitting.variables  import FIXVAR 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait
+from   ostap.utils.utils        import wait, batch_env 
 from   ostap.logger.logger      import attention 
+import ostap.fitting.models     as     Models 
 import ROOT, random, math 
 # =============================================================================
 # logging 
@@ -31,6 +31,10 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+
 ## make
 x           = ROOT.RooRealVar ( 'x',  'test' , 0 , 10 )
 xmin , xmax = x.minmax()

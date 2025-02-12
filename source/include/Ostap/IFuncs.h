@@ -20,7 +20,9 @@ namespace Ostap
   public :
     // ========================================================================
     /// evaluate the function from TTree 
-    virtual double     operator () ( const TTree* tree ) const = 0 ;
+    virtual  double     operator () ( const TTree* tree      ) const = 0 ;
+    /// clone it! 
+    virtual  IFuncTree* clone       ( const char*  name = "" ) const = 0 ;
     /// virtual destructor 
     virtual ~IFuncTree  () ;
     // ========================================================================
@@ -34,7 +36,9 @@ namespace Ostap
   public :
     // ========================================================================
     /// evaluate the function from RooAbsData 
-    virtual double operator ()  ( const RooAbsData* tree ) const = 0 ;
+    virtual  double operator ()  ( const RooAbsData* tree ) const = 0 ;
+    /// clone it! 
+    virtual  IFuncData* clone    ( const char*  name = "" ) const = 0 ;
     /// virtual destructor 
     virtual ~IFuncData () ;
     // ========================================================================

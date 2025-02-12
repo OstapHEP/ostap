@@ -12,14 +12,14 @@
 """
 # ============================================================================= 
 from   ostap.core.core          import Ostap, hID 
-import ostap.math.kinematic
-import ostap.math.dalitz
-import ostap.histos.histos 
-import ostap.logger.table       as     T
-from   ostap.utils.utils        import wait
+from   ostap.utils.utils        import wait, batch_env 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.plotting.style     import useStyle as use_style
 from   ostap.utils.progress_bar import progress_bar 
+import ostap.logger.table       as     T
+import ostap.math.kinematic
+import ostap.math.dalitz
+import ostap.histos.histos 
 import ROOT, random, time, math  
 # ============================================================================= 
 # logging 
@@ -28,6 +28,10 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_dalitz'   )
 else                       : logger = getLogger ( __name__                   )
 # ============================================================================= 
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 
 LV = Ostap.LorentzVector
 CT = Ostap.Kinematics.cos_theta

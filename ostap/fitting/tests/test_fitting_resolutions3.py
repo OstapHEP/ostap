@@ -15,15 +15,22 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.core.pyrouts       import Ostap
-import ostap.fitting.models     as     Models 
 from   ostap.fitting.simfit     import combined_data 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait, batch_env  
+import ostap.fitting.models     as     Models 
 import ROOT, random
 # ============================================================================= 
 from   ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_fitting_resolution3' )
+if '__main__' ==  __name__ :
+    logger = getLogger ( 'ostap.test_fitting_resolution3' )
+else : 
+    logger = getLogger ( __name__ )
 # ============================================================================= 
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+
 
 GeV = 1.0
 MeV = 0.001 * GeV

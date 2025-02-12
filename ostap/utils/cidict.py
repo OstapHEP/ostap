@@ -17,7 +17,8 @@ __all__     = (
     'cidict'          , ## case-insensitive dictionary
     'case_transform'  , ## simple key-funnction for case-insensitive comparison 
     'select_keys'     , ## select ``interesting'' keys from the dictionary 
-    )
+    'cidict_fun'      , ## key transformation for case-insensitive keys ingoring underscores/dahes/blancs
+)
 # =============================================================================
 from sys  import version_info as python_version
 if    3<= python_version.major : from collections.abc import  MutableMapping
@@ -58,7 +59,7 @@ class cidict(MutableMapping) :
         self.__transform = transform 
         self.__store     = {}
         
-        from ostap.core.core import items_loop
+        from ostap.utils.basic import items_loop
         dtmp = dict ( dct )
         for k,v in items_loop ( dtmp ) :
             kk = self.the_key( k )
@@ -103,7 +104,7 @@ class cidict(MutableMapping) :
 #  res = select_keys ( dct , ( 'a' , 'b' ) , transform = lambda s : s.lower() )
 #  @endcode 
 def select_keys ( origin , keys , transform = case_transform , **kwargs ) :
-    """Select from mapping object <code>origin</code> the "interesting" keys.
+    """ Select from mapping object <code>origin</code> the "interesting" keys.
     The keys, that result in the same <code>transform(key)</code> value 
     are considered as non-distiguishable
     
@@ -116,8 +117,7 @@ def select_keys ( origin , keys , transform = case_transform , **kwargs ) :
     ## transformed keys
     kt =  set ( [ selected.the_key( k ) for k in keys ] )
     
-    from ostap.core.core import items_loop
-    
+    from ostap.utils.basic import items_loop    
     remove = set() 
     for k , value in items_loop ( origin ) :
         kk = selected.the_key ( k )
@@ -133,7 +133,29 @@ def select_keys ( origin , keys , transform = case_transform , **kwargs ) :
         if kk in kt : selected [ kk ] = value
         
     return selected 
-        
+
+
+## cidict_fun = lambda k : case_transform ( k ) . replace('_','') . replace ( ' ', '').replace('-','')
+# =============================================================================
+## helper function for case-insensitive dictionary:
+#  - blank are ignored
+#  - bashes  are ignored
+#  - underscores are ignored
+def cidict_fun ( key ) :
+    """ Helper function for case-insensitive dictionary:
+    - case -insenstitive 
+    - blans are ignored 
+    - dashes are ignored 
+    - uderscores are ignired 
+    """
+    return case_transform ( key ) . \
+        strip   ()                . \
+        replace ( ' ' , '' )      . \
+        replace ( '_' , '' )      . \
+        replace ( '-' , '' )
+
+# =============================================================================
+
 # =============================================================================
 if '__main__' == __name__ :
     

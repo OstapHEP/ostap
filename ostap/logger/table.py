@@ -43,7 +43,7 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.table' )
 else                       : logger = getLogger( __name__             )
 # =============================================================================
 terminaltables = None
-# ============================================================================
+# =============================================================================
 if ( 3 , 9 ) <= sys.version_info : # ==========================================
     # =========================================================================
     try : # ===================================================================
@@ -82,7 +82,7 @@ if terminaltables and not visible_width : # ===================================
 if not visible_width : # ======================================================
     # =========================================================================
     import unicodedata 
-    ## visible lenght of the string/expression
+    ## visible length of the string/expression
     def visible_width ( what ) :
         """ Visible length of the string/expression (local, use unicodedata) 
         """
@@ -105,7 +105,7 @@ ascii_styles    = 'local' ,
 terminal_styles = () 
 tabulate_styles = () 
 # ==============================================================================
-if terminaltables : # =========================================================
+if terminaltables : # ==========================================================
     ## Vaild `style` arguments (case insensitive) 
     terminal_styles += ( 'ascii'     , ## use `AsciiTable` 
                          'single'    , ## use `SingleTable` 
@@ -163,6 +163,7 @@ default_style = default_style.lower().strip()
 if not default_style in table_styles : 
     if   isatty () and terminaltables : default_style = 'double'
     elif isatty () and tabulate       : default_style = 'fancy_grid'
+    elif               terminaltables : default_style = 'ascii' 
     else                              : default_style = 'local' 
 # =============================================================================
 
@@ -223,7 +224,6 @@ def the_table ( rows                          ,
     
     if not rows : return ''
 
-
     # =================================================================
     ## Basis structure 
     # =================================================================
@@ -269,7 +269,8 @@ def the_table ( rows                          ,
     pad_left  = 1
     pad_right = 1
     
-    tabwidth = sum ( widths ) + num_cols * ( pad_left + pad_right ) + ( num_cols + 1 ) 
+    tabwidth = sum ( widths ) + num_cols * ( pad_left + pad_right ) + ( num_cols + 1 )
+
     if pwidth + tabwidth < maxwidth and twidth and title :
         ## try to stretch the table, if possible 
         delta = ( pwidth + 2 + twidth  ) - ( pwidth + tabwidth )        
@@ -277,8 +278,8 @@ def the_table ( rows                          ,
             d1 , d2    = divmod ( delta , 2 )
             pad_left  += d1 + d2
             pad_right += d1
-        tabwidth = sum ( widths ) + num_cols * ( pad_left + pad_right ) + ( num_cols + 1 ) 
-
+        tabwidth = sum ( widths ) + num_cols * ( pad_left + pad_right ) + ( num_cols + 1 )
+        
     glue = pad_left * ' '  + '|' + pad_right * ' '
 
     seps     = [   '-' * ( widths [ c ]  + pad_left + pad_right  ) for c in range ( num_cols ) ]
@@ -411,7 +412,7 @@ def table ( rows                          ,
     rows        = [ list ( row ) for row in preprocess_table ( rows ) ]
     ## equalize columns: ensure that all rows have the same (max) length  
     rows        = [ row for row in equalize_columns ( rows , num_cols ) ]
-    ## widths of preprocessed columns 
+    ## widths of preprocessed columns    
     widths      = column_widths ( rows )
 
     # =================================================================
@@ -453,19 +454,43 @@ def table ( rows                          ,
             tw += pwidth
             
             max_width = maxwidth 
-            ## if twidth : max_width = min ( pwidth + 2 + twidth , max_width )
+
+            wrap_total     = max_width - tw 
+            wrap_width , _ = divmod ( wrap_total , len ( cols_wrap  ) )            
+            wrap_width     = max ( wrap_width , 15  )
+
+            ## adjust wrapping
+            
+            narrow = 0 
+            used   = 0 
+            for c in cols_wrap :
+                colw  = col_widths [ c ] 
+                delta = wrap_width - colw
+                if delta <= 0 : continue
+                narrow += 1 
+                used   += colw 
+
+            if narrow and narrow < len ( cols_wrap )  and used :
+                wrap_width , _ = divmod ( wrap_total - used  , len ( cols_wrap ) - narrow  )            
+                wrap_width     = max ( wrap_width , 15  )
+            
+            for c in cols_wrap   :
+                for l , line in enumerate ( table_.table_data ) :
+                    cell  = decolorize ( line [ c ] )                    
+                    width = min ( wrap_width , col_widths [ c ] )
+                    table_.table_data [ l ] [ c ] = textwrap. fill ( cell , width = width , initial_indent = indent )
+
+            if colorize_header and table_.table_data :
+                header_row              = table_.table_data [ 0 ] 
+                header_row              = [ infostr ( decolorize ( cell ) ) for cell in header_row ]
+                table_.table_data [ 0 ] = header_row 
             
             wrap_width , _ = divmod ( max_width  - tw  , len ( cols_wrap  ) )        
             wrap_width     = max ( wrap_width , 15  )
-
-            
+        
         for i in cols_right  : table_.justify_columns [ i ] = 'right'
         for i in cols_left   : table_.justify_columns [ i ] = 'left'
         for i in cols_center : table_.justify_columns [ i ] = 'center'
-        for i in cols_wrap   :
-            for l , line in enumerate ( table_.table_data ) :
-                cell = decolorize ( line [ i ] ) 
-                table_.table_data [ l ] [ i ] = textwrap. fill ( cell , width = wrap_width , initial_indent = indent )
                         
         if title and style in ( 'github' , 'markdown' ) :
             title   = '# ' + title
@@ -485,8 +510,8 @@ def table ( rows                          ,
                     
         if tabwidth < twidth + 2 :
             title , twidth = shorten_title ( title , tabwidth - 2 )
-            table_.title = title 
-        
+            table_.title = title
+                        
         ## get the final table 
         table = table_.table
 
@@ -515,7 +540,7 @@ def table ( rows                          ,
                 if   i in cols_left   : colalign.append ( 'leff'   ) 
                 elif i in cols_right  : colalign.append ( 'right'  ) 
                 elif i in cols_center : colalign.append ( 'center' ) 
-                else                  : colalign.append ( None     ) 
+                else                  : colalign.append ( 'left'   ) # #ATTENTION 
         colalign = tuple ( colalign )
         
         ## play with wrapped columns
@@ -594,7 +619,7 @@ def preprocess_table ( rows ) :
     """ Preprocess table
     """
     make_item  = lambda s : s if s else '' 
-    for i,row in enumerate ( rows ) :
+    for row in rows :
         if   plain_string ( row )                          : yield          row ,  
         elif all ( plain_string ( item ) for item in row ) : yield  tuple ( row )
         else :
@@ -621,25 +646,42 @@ def wrap_cells ( rows , widths , wrapped , maxwidth , indent = '' , twidth = 0 ,
     
     max_width = maxwidth 
     ## if twidth : max_width = min ( pwidth + 2 + twidth , max_width )
-        
-    wrap_width , _ = divmod ( max_width - tw  , len ( wrapped ) ) 
+
+    wrap_total     = max_width - tw 
+    wrap_width , _ = divmod ( wrap_total , len ( wrapped ) ) 
     wrap_width     = max    ( wrap_width , 15 )
+
+    # adjust wrapping:
     
+    used   = 0
+    narrow = 0 
+    for c in wrapped :
+        colw  = widths [ c ] 
+        delta = wrap_width - colw
+        if delta <= 0 : continue
+        narrow += 1 
+        used   += colw 
+        
+    if narrow and narrow < len ( wrapped ) and used :
+        wrap_width , _ = divmod ( wrap_total - used  , len ( wrapped ) - narrow )            
+        wrap_width     = max ( wrap_width , 15  )
+            
     ## make wrapping
     reprocess = False  
     for row in rows :
         for c in wrapped :
             if wrap_width < widths [ c ] :
-                cell = decolorize ( row [ c ] ) 
-                row [ c ] = textwrap.fill ( cell , width = wrap_width , initial_indent = indent )
+                cell  = decolorize ( row [ c ] )
+                width = min ( wrap_width , widths [ c ] )
+                row [ c ] = textwrap.fill ( cell , width = width , initial_indent = indent )
                 reprocess = True
-
+                
     if reprocess : 
         ## re-process wrapped table 
         rows = [ list ( row ) for row in preprocess_table ( rows ) ]        
         ## adjust new width of preprocessed columns 
         widths      = column_widths ( rows )
-        
+
     return rows , widths
     
 

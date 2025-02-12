@@ -15,14 +15,14 @@ Simultaneous fit of two 1D-distributions
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ostap.io.zipshelve       as     DBASE
-import ostap.fitting.roofit 
-import ostap.fitting.models     as     Models 
 from   builtins                 import range 
 from   ostap.core.core          import dsID, rooSilent
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait, batch_env  
+import ostap.io.zipshelve       as     DBASE
+import ostap.fitting.models     as     Models 
+import ostap.fitting.roofit 
 import ROOT, random
 # =============================================================================
 # logging 
@@ -33,6 +33,10 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 ## make simple test mass 
 mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 0 , 5  )
 xyz      = ROOT.RooRealVar ( 'test_xyz'  , 'Some test xyz'  , 0 , 10 )

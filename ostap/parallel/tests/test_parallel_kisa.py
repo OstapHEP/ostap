@@ -14,18 +14,16 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-08"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-from   builtins                import range
-import ostap.core.pyrouts 
-from   ostap.utils.timing      import timing
-from   ostap.trees.data        import Data
-import ostap.parallel.parallel as     Parallel  
-##  
+from   ostap.utils.timing             import timing
+from   ostap.trees.data               import Data
+from   ostap.utils.utils              import batch_env 
+import ostap.parallel.parallel        as     Parallel  
 import ostap.parallel.kisa              ## ATTENTION!
 import ostap.parallel.parallel_project  ## ATTENTION!
 import ostap.parallel.parallel_fill     ## ATTENTION!
-##
+import ostap.core.pyrouts 
 import ostap.io.root_file 
-import ROOT,os,  random  
+import ROOT, array, os,  random  
 ##
 # =============================================================================
 # logging 
@@ -36,6 +34,8 @@ if '__main__' == __name__ or '__builtin__' == __name__ :
 else : 
     logger = getLogger( __name__ )
 # =============================================================================
+batch_env ( logger ) 
+# =============================================================================
 ## create a file with tree 
 def create_tree ( jobid , item ) :
     """ Create a file with a tree
@@ -44,13 +44,9 @@ def create_tree ( jobid , item ) :
     
     fname , nentries = item 
     
-    import ROOT, random 
-    import ostap.io.root_file
-    
-    from array import array 
-    var1 = array ( 'd', [0])
-    var2 = array ( 'd', [0])
-    var3 = array ( 'd', [0])
+    var1 = array.array ( 'd', [0])
+    var2 = array.array ( 'd', [0])
+    var3 = array.array ( 'd', [0])
 
     with ROOT.TFile( fname , 'new' ) as root_file:
         

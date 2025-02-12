@@ -67,8 +67,8 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.ostap_types import num_types, string_types  
-from   ostap.core.core        import VE, hID, cidict_fun 
-from   ostap.utils.cidict     import cidict 
+from   ostap.core.core        import VE , hID 
+from   ostap.utils.cidict     import cidict , cidict_fun 
 from   ostap.utils.utils      import vrange  
 from   ostap.math.base        import pos_infinity, neg_infinity
 import ostap.histos.graphs  

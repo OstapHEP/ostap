@@ -16,13 +16,12 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.core.meta_info        import root_info 
 from   ostap.core.core             import cpp, VE, dsID
-import ostap.fitting.models        as     Models
 from   ostap.fitting.transform_pdf import TrPDF
 from   ostap.fitting.funbasic      import Fun1D
-from   builtins                    import range
 from   ostap.utils.timing          import timing 
 from   ostap.plotting.canvas       import use_canvas
-from   ostap.utils.utils           import wait 
+from   ostap.utils.utils           import wait, batch_env 
+import ostap.fitting.models        as     Models
 import ostap.fitting.roofit
 import ROOT, random
 # =============================================================================
@@ -34,7 +33,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
 
 # =============================================================================
 def  test_transform () :

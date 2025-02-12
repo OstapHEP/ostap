@@ -9,11 +9,12 @@
 """ Test module for ostap/math/base.py
 """
 # ============================================================================= 
-import random
+from   ostap.logger.pretty    import pretty_float
+from   ostap.logger.colorized import allright, attention
+from   ostap.utils.utils      import batch_env 
 import ostap.math.base        as     MB
 import ostap.logger.table     as     T
-from   ostap.logger.pretty    import pretty_float
-from   ostap.logger.colorized import allright, attention 
+import random
 # ============================================================================= 
 # logging 
 # =============================================================================
@@ -21,6 +22,10 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_math_base' ) 
 else                       : logger = getLogger ( __name__         )
 # ============================================================================= 
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 
 # =============================================================================
 ## test frexp10 

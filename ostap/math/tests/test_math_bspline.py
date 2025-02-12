@@ -9,15 +9,15 @@
 """ Test module for ostap/math/bspline.py
 """
 # ============================================================================= 
-import random  
-import ostap.math.models 
-import ostap.math.bspline
 from   ostap.core.core       import Ostap, SE 
 from   ostap.utils.timing    import timing 
 from   ostap.core.meta_info  import root_version_int 
 from   ostap.plotting.canvas import use_canvas
-from   ostap.utils.utils     import wait
+from   ostap.utils.utils     import wait, batch_env
 from   ostap.math.models     import f1_draw
+import ostap.math.models 
+import ostap.math.bspline
+import random  
 # ============================================================================= 
 # logging 
 # =============================================================================
@@ -25,6 +25,10 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_math_bspline' ) 
 else                       : logger = getLogger ( __name__            )
 # ============================================================================= 
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 functions = set()
 
 # ============================================================================

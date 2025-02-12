@@ -33,7 +33,7 @@ namespace Ostap
     {
     public :
       // ======================================================================
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT // ==========================
       // ======================================================================
       /** constructor
        *  @param self python object
@@ -41,21 +41,29 @@ namespace Ostap
        */
       PyFuncTree ( PyObject*    self = 0 , 
                    const TTree* tree = 0 );
+      /// copy 
+      PyFuncTree ( const PyFuncTree& right ) ;
       // ======================================================================
-#else 
+#else // ======================================================================
       // ======================================================================
       /** constructor
        *  @param self python object
        *  @param tree pointer to the tree
        */
       PyFuncTree ( const TTree* tree ) ;
+      /// copy 
+      PyFuncTree ( const PyFuncTree& right ) = default ; 
       /// default constructor 
       PyFuncTree () : PyFuncTree ( nullptr ) {}
       // ======================================================================
-#endif 
+#endif // =====================================================================
       // ======================================================================
       /// destructor 
       virtual ~PyFuncTree() ;
+      // ======================================================================
+    public:  
+      // ======================================================================
+      PyFuncTree* clone ( const char* name = "" ) const override ; 
       // ======================================================================
     public:
       // ======================================================================
@@ -79,10 +87,12 @@ namespace Ostap
       // ======================================================================
     private :
       // ======================================================================
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT // ==========================
+      // ======================================================================
       // self reference for python instance 
-      PyObject*               m_self { nullptr } ; // self reference for python instance 
-#endif 
+      PyObject*               m_self { nullptr } ; // self reference for python instance
+      // ======================================================================
+#endif // =====================================================================
       // ======================================================================
     } ;
     // ========================================================================
@@ -102,6 +112,8 @@ namespace Ostap
        */
       PyFuncData ( PyObject*         self = 0 , 
                    const RooAbsData* data = 0 );
+      /// copy 
+      PyFuncData ( const PyFuncData& right ) ;
       // ======================================================================
 #else 
       // ======================================================================
@@ -111,11 +123,17 @@ namespace Ostap
        */
       PyFuncData ( const RooAbsData* data ) ;
       PyFuncData () : PyFuncData ( nullptr ) {} ;
+      /// copy 
+      PyFuncData ( const PyFuncData& right ) = default ;
       // ======================================================================
 #endif 
       // ======================================================================
       /// destructor 
       virtual ~PyFuncData () ;
+      // ======================================================================
+    public:  
+      // ======================================================================
+      PyFuncData* clone ( const char* name = "" ) const override ; 
       // ======================================================================
     public:
       // ======================================================================

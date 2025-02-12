@@ -2,6 +2,7 @@
 add_library(ostap SHARED src/format.cpp
                          src/gauss.cpp
                          src/AddBranch.cpp
+                         src/AddBuffer.cpp
                          src/AddVars.cpp
                          src/BLOB.cpp
                          src/BSpline.cpp
@@ -95,7 +96,9 @@ add_library(ostap SHARED src/format.cpp
                          src/PyVar.cpp   
                          src/Rational.cpp
                          src/RootID.cpp
+                         src/RooFun.cpp
                          src/SFactor.cpp
+                         src/SPlot4Tree.cpp
                          src/StatEntity.cpp
                          src/StatVar.cpp
                          src/StatusCode.cpp

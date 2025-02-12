@@ -49,14 +49,10 @@ __all__     = (
     'root_enum'           , ## Get enum from ROOT by name 
     ##
     'strings'             , ## construct std::vector<std::string>
-    'split_string'        , ## split the string  according to separators 
     ##
     'StatusCode'          , ## status code
     'SUCCESS'             , ## status code SUCCESS 
     'FAILURE'             , ## status code FAILURE
-    ##
-    'loop_items'          , ## loop over dictionary items 
-    'items_loop'          , ## ditto
     ##
     'is_sorted'           , ## check that list is sorted
     ## 
@@ -70,12 +66,7 @@ __all__     = (
     'rootException'       , ## context manager to perform ROOT Error -> C++/Python exception
     'RootError2Exception' , ## context manager to perform ROOT Error -> C++/Python exception
     ##
-    'var_separators'      , ##  defalt separators for the string expressions
-    ##
-    'cidict_fun'          , ## key transformation for case-insensitive keys ingoring underscores
-    ##
     'in_test'             , ## Are we in CMAKE-test regime?
-    'typename'            , ## shortcut for type ( X ).__name__ 
     )
 # =============================================================================
 from   sys                    import version_info  as python_version 
@@ -86,12 +77,12 @@ from   ostap.math.base        import ( Ostap    , std     , cpp ,
                                        inrange  , strings , 
                                        natural_number     ,
                                        natural_entry      ,
-                                       ROOTIgnore         , typename )
+                                       ROOTIgnore         )
 from   ostap.math.ve          import VE
 from   ostap.stats.counters   import SE , WSE 
 from   ostap.core.meta_info   import root_info
 from   ostap.core.ostap_types import integer_types, sequence_types, string_types
-from   ostap.utils.basic      import NoContext, loop_items, items_loop 
+from   ostap.utils.basic      import NoContext, loop_items         
 import ROOT, cppyy, math, sys, os, re  
 # =============================================================================
 ## ROOT.ROOT.EnableThreadSafety()
@@ -110,10 +101,6 @@ binomEff2       = Ostap.Math.binomEff2
 zechEff         = Ostap.Math.zechEff
 wilsonEff       = Ostap.Math.wilsonEff
 agrestiCoullEff = Ostap.Math.agrestiCoullEff
-# =============================================================================
-## helper function for case-insensitive dictionary with ignorance of underscores and blanks and dashes 
-from ostap.utils.cidict import case_transform 
-cidict_fun = lambda k : case_transform ( k ) . replace('_','') . replace ( ' ', '').replace('-','') 
 # =============================================================================
 ## @class ROOTCWD
 #  context manager to preserve current directory (rather confusing stuff in ROOT)
@@ -282,8 +269,8 @@ def _sc_print_ ( sc ) :
     from ostap.logger.colorized import colored_string
     if   sc.isSuccess     () : return colored_string ( 'SUCCESS'     , WHITE , GREEN  , True ) 
     elif sc.isRecoverable () : return colored_string ( 'RECOVERABLE' , RED   , YELLOW , True ) 
-    elif _FAILURE != sc.getCode  () :
-        return colored_string ( 'FAILURE[%d]' % sc.getCode() , YELLOW , RED   , True )
+    elif _FAILURE != sc.code  () :
+        return colored_string ( 'FAILURE[%d]' % sc.code() , YELLOW , RED   , True )
     return colored_string ( 'FAILURE' , YELLOW , RED , True ) 
         
 StatusCode = Ostap.StatusCode 
@@ -418,6 +405,7 @@ draw_args = frozenset ( [ 'linecolor'   , 'markercolor' , 'fillcolor'   , 'color
 def remove_draw_args ( kwargs  ) :
     """ remove "draw-args" from dictionary of arguments """
     nargs = {}
+    from ostap.utils.cidict import cidict_fun 
     for k, v in loop_items ( kwargs ) :
         key = cidict_fun ( k )
         if key in draw_args : continue
@@ -475,7 +463,7 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
 
         """
 
-        from ostap.utils.cidict import cidict
+        from ostap.utils.cidict import cidict, cidict_fun
         kw = cidict ( transform = cidict_fun , **kwargs )
 
         ## Global color (Line, Marker, Fill) 
@@ -1101,103 +1089,6 @@ def rootException () :
     ... do something here 
     """
     return RootError2Exception()
-
-# =============================================================================
-## defalt separators for the string expressions
-var_separators = ',:;'
-## rx_separators  = re.compile ( r'[,:;]\s*(?![^()]*\))' )
-## rx_separators  = re.compile ( '[ ,:;](?!(?:[^(]*\([^)]*\))*[^()]*\))')
-# =============================================================================
-## mark for double columns: double column is a special for C++ namespaces 
-dc_mark = '_SSPPLLIITT_'
-# =============================================================================
-## split string using separators and respecting the (),[] and {} groups.
-#  - group can be nested
-def split_string_respect  ( text , separators = var_separators , strip = True ) :
-    """ Split string using separators and respecting the (),[] and {} groups.
-    - groups can be nested
-    """
-    protected = False 
-    if ':' in separators and '::' in text :
-        text      = text.replace ( '::' , dc_mark ) 
-        protected = True 
-    
-    flag1  = 0
-    flag2  = 0
-    flag3  = 0
-    item   = ''
-    items  = []
-    for c in text:
-        if   c == '(' : flag1 += 1
-        elif c == ')' : flag1 -= 1
-        elif c == '[' : flag2 += 1
-        elif c == ']' : flag2 -= 1
-        elif c == '{' : flag3 += 1
-        elif c == '}' : flag3 -= 1
-        elif 0 == flag1 and 0 == flag2 and 0 == flag3 and c in separators :
-            items .append ( item )
-            item = ''
-            continue
-        item += c
-        
-    if item : items.append ( item  )
-
-    if protected :
-        nlst = []
-        for item in items :
-            if dc_mark in item : nlst.append ( item.replace ( dc_mark , '::' ) )
-            else               : nlst.appenf ( item ) 
-        items = nlst 
-                              
-    ## strip items if required 
-    if strip : items = [ item.strip() for item in items ] 
-    ## remove empty items 
-    return tuple ( item for item in items if item  )
-
-# =============================================================================
-## split string using separators:
-#  @code
-#  split_string ( ' a b cde,fg;jq', ',;:' )
-#  @endcode
-def split_string ( line                            ,
-                   separators     = var_separators ,
-                   strip          = False          ,
-                   respect_groups = False          ) :
-    """ Split the string using separators
-    >>> split_string ( ' a b cde,fg;jq', ',;:' )
-    """
-    if respect_groups :
-        return split_string_respect ( line                    ,
-                                      separators = separators ,
-                                      strip      = strip      )
-    ##
-    protected = False 
-    if ':' in separators and '::' in line :
-        line      = line.replace ( '::' , dc_mark ) 
-        protected = True 
-    
-    items = [ line ]
-    for s in separators :
-        result = []
-        for item in items :
-            if s in item : result += item.split ( s )
-            else         : result.append ( item ) 
-        items = result
-
-    if protected :
-        nlst = []
-        for item in items :
-            if dc_mark in item : nlst.append ( item.replace ( dc_mark , '::' ) )
-            else               : nlst.appenf ( item ) 
-        items = nlst 
-        
-    ## strip items if required 
-    if strip : items = [ i.strip() for i in items ] 
-    ## remove empty items 
-    return tuple ( item for item in items if item )
-
-
-
 
 # =============================================================================
 ## define the build directory for ROOT 

@@ -17,9 +17,13 @@ __version__ = ""
 # =============================================================================
 __all__     = ( )
 # =============================================================================
-from   builtins import range 
+from   builtins               import range 
+from   sys                    import version_info as python_version
+from   ostap.math.base        import isequal , iszero , std, Ostap
+from   ostap.core.ostap_types import num_types, integer_types
+from   ostap.utils.clsgetter  import classgetter 
+import ostap.math.linalg2     as     LA 
 import ROOT, re 
-from   sys      import version_info as python_version
 # =============================================================================
 # logging 
 # =============================================================================
@@ -27,18 +31,8 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.linalgt' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
-from ostap.math.base        import isequal , iszero , std, Ostap
-from ostap.core.ostap_types import num_types, integer_types
-from ostap.utils.clsgetter  import classgetter 
-# =============================================================================
-import ostap.math.linalg2   as LA 
-
-# =============================================================================
 revct = re.compile ( r'TVector<(?P<TYPE>[^,>]+)'      )
 remtx = re.compile ( r'TMatrix[^<]*<(?P<TYPE>[^,>]+)' )
-# =============================================================================
-
-
 # =============================================================================
 ## @class LinAlgT
 #  Collection of operations with TMatrixT/TVectorT

@@ -7,9 +7,11 @@
 """ Test module or soem core utils 
 """
 # =============================================================================
-from   ostap.core.core   import *
+from   ostap.utils.basic import split_string, typename 
 from   ostap.utils.utils import num_fds
 from   ostap.logger.mute import mute
+from   ostap.core.core   import *
+from   ostap.utils.utils  import batch_env 
 import ROOT, warnings  
 # =============================================================================
 # logging 
@@ -17,6 +19,8 @@ import ROOT, warnings
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_core_core'  )
 else                       : logger = getLogger ( __name__          )
+# =============================================================================
+batch_env ( logger ) 
 # =============================================================================
 
 def test_core_core1() :
@@ -32,13 +36,13 @@ def test_core_core1() :
 
         for i in ( 0.0 , 1.e-125 , 100 , 2**36 )  :
 
-            logger.info ( '%14s/%-6s is-zero  %s' % ( i , type(i).__name__ , iszero         ( i ) ) )
-            logger.info ( '%14s/%-6s is-int   %s' % ( i , type(i).__name__ , isint          ( i ) ) )
-            logger.info ( '%14s/%-6s is-long  %s' % ( i , type(i).__name__ , islong         ( i ) ) )
+            logger.info ( '%14s/%-6s is-zero  %s' % ( i , typename ( i ) , iszero         ( i ) ) )
+            logger.info ( '%14s/%-6s is-int   %s' % ( i , typename ( i ) , isint          ( i ) ) )
+            logger.info ( '%14s/%-6s is-long  %s' % ( i , typename ( i ) , islong         ( i ) ) )
 
             v = VE ( i , i ) 
-            logger.info ( '%14s/%-6s n-entry  %s' % ( i , type(i).__name__ , natural_entry  ( v ) ) ) 
-            logger.info ( '%14s/%-6s n-number %s' % ( i , type(i).__name__ , natural_number ( v ) ) ) 
+            logger.info ( '%14s/%-6s n-entry  %s' % ( i , typename ( i ) , natural_entry  ( v ) ) ) 
+            logger.info ( '%14s/%-6s n-number %s' % ( i , typename ( i ) , natural_number ( v ) ) ) 
             
         total    = VE ( 100 , 100 )
         accepted = VE (  10 ,  10 )

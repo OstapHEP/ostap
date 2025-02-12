@@ -6,15 +6,14 @@
 """ Oversimplified script for parallel execution using parallel_pathos
 """
 # =============================================================================
-from   __future__        import print_function
+from   itertools                import count 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
-from   itertools            import count 
-from   ostap.parallel.task  import Task, GenericTask
-from   ostap.parallel.utils import pool_context 
-import ostap.histos.histos
+from   ostap.parallel.task      import Task, GenericTask
+from   ostap.parallel.utils     import pool_context 
 from   ostap.utils.progress_bar import progress_bar 
-import ROOT, time, sys 
+from   ostap.utils.utils        import wait, batch_env  
+import ostap.histos.histos
+import ROOT, time, sys, random  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -24,15 +23,22 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-try :
-    from ostap.parallel.parallel_pathos import WorkManager 
-except ImportError :
+batch_env ( logger ) 
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    from ostap.parallel.parallel_pathos import WorkManager
+    # =========================================================================
+except ImportError : # ========================================================
     logger.error ("Cannot import WorkManager from parallel_pathos")
     WorkManager = None 
 # =============================================================================
-try : 
-    import dill 
-except ImportError :
+try : # =======================================================================
+    # =========================================================================
+    import dill
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     logger.error('Can not import dill')
     dill = None    
 

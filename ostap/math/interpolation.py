@@ -139,15 +139,17 @@ __all__     = (
     'FloaterHormann'        , ## rational Floater-Hormann interpolant 
     )
 # =============================================================================
-import  ROOT, math, sys, abc  
-from    array                  import array
 from    builtins               import range
-from    ostap.core.core        import cpp, Ostap, typename 
-from    ostap.core.ostap_types import ( is_integer, sequence_types,
-                                        integer_types , dictlike_types )  
+from    ostap.core.ostap_types import ( is_integer     ,
+                                        sequence_types ,
+                                        integer_types  ,
+                                        dictlike_types )  
+from    ostap.core.core        import cpp, Ostap
 from    ostap.math.base        import iszero, isequal, doubles 
+from    ostap.utils.basic      import typename 
 from    ostap.utils.utils      import vrange
 import  ostap.math.reduce      
+import  ROOT, math, sys, abc, array 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.interpolation' )
@@ -803,7 +805,7 @@ def _b12_weights_ ( self ) :
     >>> interpolant.weights()
     """
     N = len ( self ) 
-    return array ( 'd' , ( self.weight ( i ) for i in range ( N ) ) )  
+    return array.array ( 'd' , ( self.weight ( i ) for i in range ( N ) ) )  
 
 for t in ( Ostap.Math.Berrut1st   , 
            Ostap.Math.Berrut2nd   ) :
@@ -974,7 +976,7 @@ class BaseInterpolant(object) :
         """Get array of weights
         """
         N = len ( self ) 
-        return array ( 'd' , ( self.weight ( i ) for i in range ( N ) ) )  
+        return attay.array ( 'd' , ( self.weight ( i ) for i in range ( N ) ) )  
 
     # ==========================================================================
     ## sum of all weights
@@ -1067,7 +1069,7 @@ class Barycentric(BaseInterpolant) :
                     
             ws.append ( 1.0 / ww )
             
-        self.__weigths = array ( 'd' , ws ) 
+        self.__weigths = array.array ( 'd' , ws ) 
         
     def weight ( self , index ) :
         """Get the weigth for the given interpolation node"""
@@ -1125,7 +1127,7 @@ class FloaterHormann(BaseInterpolant) :
             wi =  ib * ( 1 if i % 2 else -1 ) 
             ws.append ( wi )
 
-        self.__weights = array( 'd',  ws ) 
+        self.__weights = array.array( 'd',  ws ) 
 
     def weight ( self , index ) :
         """Get the weigth for the given interpolation node"""

@@ -11,17 +11,15 @@
 - It tests various ``background-like'' smooth polynomial shapes
 """
 # ============================================================================= 
-from   __future__               import print_function
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-import ostap.fitting.roofit 
-import ostap.fitting.models     as     Models 
 from   ostap.core.core          import cpp, VE, dsID, rooSilent 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait, batch_env  
+import ostap.fitting.models     as     Models 
+import ostap.fitting.roofit 
 import ROOT, random
 # =============================================================================
 # logging 
@@ -34,6 +32,10 @@ else :
 # =============================================================================
 logger.info ( 'Test for some polynomials models from ostap')
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 ## make simple test 
 mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 2 , 10 )
 x        = mass 

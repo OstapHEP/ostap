@@ -65,13 +65,13 @@ __all__     = (
     )
 # ============================================================================
 from   ostap.core.ostap_types   import integer_types 
-from   ostap.core.core          import Ostap, hID, typename 
+from   ostap.core.core          import Ostap, hID
 from   ostap.stats.counters     import EffCounter
 from   ostap.stats.gof          import AGoF
 from   ostap.stats.gof_utils    import TOYS  
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.memory       import memory_enough 
-from   ostap.utils.basic        import numcpu 
+from   ostap.utils.basic        import numcpu, typename 
 import ostap.histos.histos
 import ROOT, ctypes
 # =============================================================================

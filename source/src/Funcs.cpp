@@ -76,16 +76,22 @@ Ostap::Functions::FuncFormula::FuncFormula
   , m_expression ( expression )  
   , m_name       ( name       )  
 {
-  if ( nullptr != tree )
-  {
-    const TChain* chain = dynamic_cast<const TChain*>( tree ) ;
-    if ( chain ) { m_tree = chain->GetTree() ; }
-  } 
+  //
+  if ( nullptr != m_tree )
+    {
+      const TChain* chain = dynamic_cast<const TChain*>( m_tree ) ;
+      if ( chain )
+        {
+          const TTree* chain_tree = chain->GetTree() ;
+          if ( chain_tree ) { m_tree = chain_tree ; }
+        }
+    }
   //
   Ostap::Assert ( !m_tree || make_formula ()               , 
                   "Invalid Formula '" + m_expression + "'" , 
                   "Ostap::Function::FuncFormula"           ,
                   INVALID_FORMULA , __FILE__ , __LINE__    ) ;
+  //
 }
 // ============================================================================
 // copy
@@ -102,6 +108,10 @@ Ostap::Functions::FuncFormula::FuncFormula
 // ============================================================================
 Ostap::Functions::FuncFormula*
 Ostap::Functions::FuncFormula::Clone ( const char* /* newname */ ) const 
+{ return new FuncFormula ( *this ) ; }
+// ============================================================================
+Ostap::Functions::FuncFormula*
+Ostap::Functions::FuncFormula::clone ( const char* /* newname */ ) const 
 { return new FuncFormula ( *this ) ; }
 // ============================================================================
 // destructor
@@ -195,6 +205,12 @@ Ostap::Functions::FuncRooFormula::FuncRooFormula
   , m_name       ( right.m_name       )
 {}
 // ============================================================================
+// clone 
+// ============================================================================
+Ostap::Functions::FuncRooFormula*
+Ostap::Functions::FuncRooFormula::clone ( const char* /* name */ ) const
+{ return new FuncRooFormula( *this ) ; }
+// ============================================================================
 // destructor
 // ============================================================================
 Ostap::Functions::FuncRooFormula::~FuncRooFormula(){}
@@ -260,6 +276,10 @@ Ostap::Functions::Func1D::Func1D
 {}
 // ===========================================================================
 // clone :
+// ===========================================================================
+Ostap::Functions::Func1D* 
+Ostap::Functions::Func1D::clone ( const char* /* newname */ ) const
+{ return new Func1D ( *this ) ; }
 // ===========================================================================
 Ostap::Functions::Func1D* 
 Ostap::Functions::Func1D::Clone ( const char* /* newname */ ) const
@@ -345,6 +365,10 @@ Ostap::Functions::Func2D::Func2D
 {}
 // ===========================================================================
 // clone :
+// ===========================================================================
+Ostap::Functions::Func2D* 
+Ostap::Functions::Func2D::clone ( const char* /* newname */ ) const
+{ return new Func2D ( *this ) ; }
 // ===========================================================================
 Ostap::Functions::Func2D* 
 Ostap::Functions::Func2D::Clone ( const char* /* newname */ ) const
@@ -464,6 +488,10 @@ Ostap::Functions::Func3D::Func3D
 {}
 // ===========================================================================
 // clone :
+// ===========================================================================
+Ostap::Functions::Func3D* 
+Ostap::Functions::Func3D::clone ( const char* /* newname */ ) const
+{ return new Func3D ( *this ) ; }
 // ===========================================================================
 Ostap::Functions::Func3D* 
 Ostap::Functions::Func3D::Clone ( const char* /* newname */ ) const
@@ -627,16 +655,19 @@ Ostap::Functions::FuncTH1::FuncTH1
 // ============================================================================
 Ostap::Functions::FuncTH1::FuncTH1
 ( const Ostap::Functions::FuncTH1&  right ) 
-  : Func1D ( right )
+  : Func1D  ( right         )
+  , m_histo ( right.m_histo ) 
 {}
 // ===========================================================================
 // clone :
 // ===========================================================================
 Ostap::Functions::FuncTH1* 
-Ostap::Functions::FuncTH1::Clone ( const char* /* newname */ ) const
+Ostap::Functions::FuncTH1::clone ( const char* /* newname */ ) const
 { return new FuncTH1 ( *this ) ; }
 // ============================================================================
-
+Ostap::Functions::FuncTH1* 
+Ostap::Functions::FuncTH1::Clone ( const char* /* newname */ ) const
+{ return new FuncTH1 ( *this ) ; }
 // ======================================================================
 /*  constructor from the histogram 
  *  @param histo         (INPUT) the historgam 
@@ -683,10 +714,15 @@ Ostap::Functions::FuncTH2::FuncTH2
 // ============================================================================
 Ostap::Functions::FuncTH2::FuncTH2
 ( const Ostap::Functions::FuncTH2&  right ) 
-  : Func2D ( right ) 
+  : Func2D  ( right ) 
+  , m_histo ( right.m_histo ) 
 {}
 // ===========================================================================
 // clone :
+// ===========================================================================
+Ostap::Functions::FuncTH2* 
+Ostap::Functions::FuncTH2::clone ( const char* /* newname */ ) const
+{ return new FuncTH2 ( *this ) ; }
 // ===========================================================================
 Ostap::Functions::FuncTH2* 
 Ostap::Functions::FuncTH2::Clone ( const char* /* newname */ ) const
@@ -744,10 +780,15 @@ Ostap::Functions::FuncTH3::FuncTH3
 // ============================================================================
 Ostap::Functions::FuncTH3::FuncTH3
 ( const Ostap::Functions::FuncTH3&  right ) 
-  : Func3D ( right  )
+  : Func3D  ( right  )
+  , m_histo ( right.m_histo ) 
 {}
 // ===========================================================================
 // clone :
+// ============================================================================
+Ostap::Functions::FuncTH3* 
+Ostap::Functions::FuncTH3::clone ( const char* /* newname */ ) const
+{ return new FuncTH3 ( *this ) ; }
 // ============================================================================
 Ostap::Functions::FuncTH3* 
 Ostap::Functions::FuncTH3::Clone ( const char* /* newname */ ) const
@@ -758,16 +799,13 @@ Ostap::Functions::FuncTH3::Clone ( const char* /* newname */ ) const
 
 
 
-
-
-// ======================================================================
+// ============================================================================
 // RooAbsData functions
-// ======================================================================
+// ============================================================================
 
-
-// ======================================================================
+// ============================================================================
 // copy constructor
-// ======================================================================
+// ============================================================================
 Ostap::Functions::FuncRoo1D::FuncRoo1D 
 ( const Ostap::Functions::FuncRoo1D& right ) 
   : Ostap::IFuncData (  right ) 
@@ -776,6 +814,12 @@ Ostap::Functions::FuncRoo1D::FuncRoo1D
   , m_xvar     ( nullptr )   
   , m_data     ( nullptr ) 
 {}
+// ============================================================================
+// IFuncData::clone
+// ============================================================================
+Ostap::Functions::FuncRoo1D*
+Ostap::Functions::FuncRoo1D::clone ( const char* /* name */  ) const
+{ return  new FuncRoo1D ( *this ) ; }
 // ============================================================================
 // make formula 
 // ============================================================================
@@ -842,6 +886,12 @@ Ostap::Functions::FuncRoo2D::FuncRoo2D
   , m_yvar     ( nullptr )   
   , m_data     ( nullptr ) 
 {}
+// ============================================================================
+// IFuncData::clone
+// ============================================================================
+Ostap::Functions::FuncRoo2D*
+Ostap::Functions::FuncRoo2D::clone ( const char* /* name */  ) const
+{ return  new FuncRoo2D ( *this ) ; }
 // ============================================================================
 // make formula 
 // ============================================================================
@@ -939,6 +989,12 @@ Ostap::Functions::FuncRoo3D::FuncRoo3D
   , m_zvar     ( nullptr )   
   , m_data     ( nullptr ) 
 {}
+// ============================================================================
+// IFuncData::clone
+// ============================================================================
+Ostap::Functions::FuncRoo3D*
+Ostap::Functions::FuncRoo3D::clone ( const char* /* name */  ) const
+{ return  new FuncRoo3D ( *this ) ; }
 // ============================================================================
 // make formula 
 // ============================================================================
@@ -1184,6 +1240,21 @@ Ostap::Functions::FuncRooTH3::FuncRooTH3
 {}
 // ============================================================================
 
+// ============================================================================
+// IFuncData::clone
+// ============================================================================
+Ostap::Functions::FuncRooTH1*
+Ostap::Functions::FuncRooTH1::clone ( const char* /* name */  ) const
+{ return  new FuncRooTH1 ( *this ) ; }
+// ============================================================================
+Ostap::Functions::FuncRooTH2*
+Ostap::Functions::FuncRooTH2::clone ( const char* /* name */  ) const
+{ return  new FuncRooTH2 ( *this ) ; }
+// ============================================================================
+Ostap::Functions::FuncRooTH3*
+Ostap::Functions::FuncRooTH3::clone ( const char* /* name */  ) const
+{ return  new FuncRooTH3 ( *this ) ; }
+// ============================================================================
 
 
 // ============================================================================
@@ -1230,6 +1301,10 @@ Ostap::Functions::Expression::~Expression(){}
 // clone 
 // ============================================================================
 Ostap::Functions::Expression* 
+Ostap::Functions::Expression::clone ( const char* /* newname */ ) const 
+{ return new Ostap::Functions::Expression (*this ) ; }
+// ============================================================================
+Ostap::Functions::Expression* 
 Ostap::Functions::Expression::Clone ( const char* /* newname */ ) const 
 { return new Ostap::Functions::Expression (*this ) ; }
 // ============================================================================
@@ -1255,6 +1330,38 @@ double Ostap::Functions::Expression::operator ()
 /*  full constructor 
  *  @param fun the functon 
  *  @param observables observables 
+ *  @param normalization nornalization 
+ *  @Param mapping  RooFit varibale <-> TTree branch mapping 
+ *  @param tree input tree 
+ */
+// ============================================================================
+Ostap::Functions::RooTreeFun::RooTreeFun
+( const RooAbsReal&       fun           , 
+  const RooAbsData&       observables   , 
+  const RooAbsCollection* normalization ,
+  const DCT&              mapping       ,
+  const TTree*            tree          )
+  : RooTreeFun ( fun , *observables.get() , normalization , mapping , tree )
+{}
+// ============================================================================
+/* full constructor 
+ *  @param fun the functon 
+ *  @param observables observables 
+ *  @Param mapping  RooFit varibale <-> TTree branch mapping 
+ *  @param tree input tree 
+ */
+// ============================================================================
+Ostap::Functions::RooTreeFun::RooTreeFun
+( const RooAbsReal&       fun         , 
+  const RooAbsData&       observables , 
+  const DCT&              mapping     ,       
+  const TTree*            tree        )
+  : RooTreeFun ( fun , *observables.get() , mapping , tree )
+{}
+// ============================================================================
+/*  full constructor 
+ *  @param fun the functon 
+ *  @param observables observables 
  *  @Param mapping  RooFit varibale <-> TTree branch mapping 
  */
 // ============================================================================
@@ -1263,7 +1370,7 @@ Ostap::Functions::RooTreeFun::RooTreeFun
   const RooAbsCollection& observables   , 
   const DCT&              mapping       ,
   const TTree*            tree          ) 
-  : RooTreeFun ( fun , observables ,nullptr , mapping , tree )
+  : RooTreeFun ( fun , observables , nullptr , mapping , tree )
 {}
 // ============================================================================
 /** full constructor 
@@ -1282,57 +1389,25 @@ Ostap::Functions::RooTreeFun::RooTreeFun
   const TTree*            tree          )
   : Ostap::IFuncTree ()
   , Ostap::Trees::RooGetter ( mapping , tree )
-  , m_fun     ( static_cast<RooAbsReal*> ( fun.clone() ) )
-  , m_observables ()
-  , m_normset     () 
+  , m_fun  ( fun , observables , normalization ) 
 {
-  // ==========================================================================
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,26,0)
-  // ==========================================================================
-  RooArgSet obsset {} ; ::copy ( observables , obsset ) ;
-  // ==========================================================================
-#else // ======================================================================
-  // ==========================================================================
-  RooArgSet obsset { observables } ;
-  //===========================================================================
-#endif // =====================================================================
-  // ==========================================================================
-  // ==========================================================================
-  // actual observables
-  m_observables = std::unique_ptr<RooArgSet> { m_fun->getObservables ( obsset ) } ;
-  // ===========================================================================
-  if ( normalization )
-    {
-      // ======================================================================
-#if ROOT_VERSION(6,26,0) <= ROOT_VERSION_CODE // ==============================
-      // ======================================================================      
-      m_normset = std::make_unique<RooArgSet> ( *normalization ) ;
-      // ======================================================================
-#else // ======================================================================
-      m_normset = std::make_unique<RooArgSet> () ;
-      ::copy ( *normalization , *m_normset ) ;
-      // ======================================================================
-#endif// ======================================================================
-      // ======================================================================
-    }
-  //
   // ==========================================================================
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0) // ===============================
   // ==========================================================================
   //
-  Ostap::Utils::Iterator iter( *m_observables  ) ; // only for ROOT < 6.18
+  Ostap::Utils::Iterator iter( this->observables () ) ; // only for ROOT < 6.18
   RooAbsArg* o = 0 ;
   while ( o = (RooAbsArg*) iter .next() )
     {
       // ======================================================================
 #else // ======================================================================
       // ======================================================================
-  for ( auto* o : *m_observables )
+      for ( auto* o : this->observables() )
     {
       // ======================================================================
 #endif// ======================================================================
       // ======================================================================
-      if ( nullptr != o ) { add ( o->GetName() ) ; } 
+      if ( nullptr != o ) { add ( o->GetName() , o->GetName() ) ; } 
     }
   //
 }
@@ -1342,15 +1417,15 @@ Ostap::Functions::RooTreeFun::RooTreeFun
 Ostap::Functions::RooTreeFun::RooTreeFun
 ( const Ostap::Functions::RooTreeFun& right )
   : Ostap::IFuncTree        ( right )
-  , Ostap::Trees::RooGetter ( right ) 
-  , m_fun         ( static_cast<RooAbsReal*> ( right.m_fun->clone()    ) )
-  , m_observables ( std::make_unique<RooArgSet> ( *right.m_observables ) )
-  , m_normset () 
-{
-  if ( right.m_normset ) { m_normset = std::make_unique<RooArgSet> ( *right.m_normset ) ; } 
-}
+  , Ostap::Trees::RooGetter ( right )
+  , m_fun                   ( right.m_fun ) 
+{}
 // ============================================================================ \
 // clone 
+// ============================================================================
+Ostap::Functions::RooTreeFun*
+Ostap::Functions::RooTreeFun::clone ( const char* /* newname */ ) const
+{ return new RooTreeFun ( *this ) ; }
 // ============================================================================
 Ostap::Functions::RooTreeFun*
 Ostap::Functions::RooTreeFun::Clone ( const char* /* newname */ ) const
@@ -1361,12 +1436,12 @@ Ostap::Functions::RooTreeFun::Clone ( const char* /* newname */ ) const
 double Ostap::Functions::RooTreeFun::operator()
   ( const TTree* tree ) const
 {
-  const Ostap::StatusCode sc = assign ( *m_observables , tree ) ;
+  const Ostap::StatusCode sc = assign ( m_fun.observables()  , tree ) ;
   Ostap::Assert ( sc.isSuccess ()      ,
                   "Invaild RooGetter!" ,
                   "Ostap::Functions::RooTreeFun:()" , sc , __FILE__ , __LINE__ ) ;
   //
-  return m_normset ? m_fun->getVal ( *m_normset ) : m_fun->getVal() ;
+  return m_fun.evaluate() ;
 }
 
 

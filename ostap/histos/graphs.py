@@ -36,12 +36,13 @@ __all__     = (
     ##
     ) 
 # =============================================================================
-from   ostap.core.core                import cpp, VE, grID, typename 
+from   builtins                       import range
+from   ostap.core.core                import cpp, VE, grID
+from   ostap.utils.basic              import typename 
 from   ostap.math.base                import isint, pos_infinity, neg_infinity 
 from   ostap.core.meta_info           import root_info
 from   ostap.core.ostap_types         import ( num_types   , integer_types ,
                                                sized_types , string_types  )   
-from   builtins                       import range
 from   ostap.plotting.draw_attributes import copy_graph_attributes
 from   ostap.utils.valerrors          import ( AsymErrors         ,
                                                ValWithErrors      ,

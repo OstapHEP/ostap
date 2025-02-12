@@ -9,19 +9,17 @@
 """ It tests various issues for  weighted datasets and minuit 
 """
 # ============================================================================= 
-from   __future__        import print_function
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ostap.fitting.roofit 
-import ostap.fitting.models  as     Models 
 from   ostap.core.core       import cpp, VE, dsID, rooSilent 
 from   builtins              import range
 from   ostap.utils.timing    import timing
 from   ostap.core.meta_info  import root_info
 from   ostap.plotting.canvas import use_canvas
-from   ostap.utils.utils     import wait 
+from   ostap.utils.utils     import wait, batch_env  
+import ostap.fitting.roofit 
+import ostap.fitting.models  as     Models 
 import ROOT, random
 # =============================================================================
 # logging 
@@ -32,7 +30,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
 
 # =============================================================================
 def test_minuit_weighted () : 

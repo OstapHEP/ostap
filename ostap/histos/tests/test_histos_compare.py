@@ -14,13 +14,14 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
+from   builtins              import range
 from   ostap.math.ve         import VE 
 from   ostap.core.core       import hID 
 from   ostap.histos.histos   import h1_axis
 from   ostap.plotting.canvas import use_canvas 
+from   ostap.utils.utils     import batch_env 
 import ostap.histos.compare
 import ostap.histos.graphs 
-from   builtins              import range
 import ROOT, random
 # =============================================================================
 # logging 
@@ -33,8 +34,9 @@ else :
 # =============================================================================
 logger.info ( 'Test for 1D-histogram compare')
 # =============================================================================
-
-
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
 #
 ## histos for gaussian distributions
 # 

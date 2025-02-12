@@ -9,11 +9,13 @@
 """ Test module for ostap/math/math_ve.py
 """
 # ============================================================================= 
-import math, random 
 from   ostap.math.ve       import VE
 from   ostap.math.base     import cpp, iszero, isequal
-import ostap.logger.table  as     T
+from   ostap.utils.basic   import typename 
+from   ostap.utils.utils   import batch_env 
 from   ostap.math.math_ve  import *
+import ostap.logger.table  as     T
+import math, random 
 # ============================================================================= 
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_math_ve2' )
@@ -51,7 +53,8 @@ def test_math_ve1 ():
     
     for v in vars :
         for f in funcs :
-            row = f.__name__ , str ( v ) , str ( f ( v ) )
+            ## row = f.__name__ , str ( v ) , str ( f ( v ) )
+            row = typename ( f ) , str ( v ) , str ( f ( v ) )
             rows.append ( row )
 
     title = 'Functions'
@@ -105,7 +108,8 @@ def test_math_ve2 ():
     for f,a,b in funcs :
 
         x = random.uniform ( a , b ) 
-        row = f.__name__ , '%s' % x , '%s' % f ( x ) 
+        ## row = f.__name__ , '%s' % x , '%s' % f ( x ) 
+        row = typename ( f ), '%s' % x , '%s' % f ( x ) 
         ## row = f.__name__ , '%+5.3f'  % x , '+.3g' % f ( x ) )
         rows.append ( row )
 
@@ -132,19 +136,23 @@ def test_math_ve3 ():
             
             for n in range ( 0 , 4 ) : 
                 x   = random.uniform ( 0 , 1 )
-                row = f.__name__ , '%s' % n , '%s' % x , '%s' % f ( n , x )        
+                ## row = f.__name__ , '%s' % n , '%s' % x , '%s' % f ( n , x )        
+                row = typename ( f ) , '%s' % n , '%s' % x , '%s' % f ( n , x )        
                 rows.append ( row )
                 
                 x   = VE ( random.uniform ( 1 , 2 ) , 0.1 **2 ) 
-                row = f.__name__ , '%s' % n , '%s' % x , '%s' % f ( n , x )        
+                ## row = f.__name__ , '%s' % n , '%s' % x , '%s' % f ( n , x )        
+                row = typename ( f ) , '%s' % n , '%s' % x , '%s' % f ( n , x )        
                 rows.append ( row )
                 
             n   = random.uniform ( 1 , 3 )
-            row = f.__name__ , '%+.3f' % n , '%s' % x , '%s' % f ( n , x )        
+            ## row = f.__name__ , '%+.3f' % n , '%s' % x , '%s' % f ( n , x )        
+            row = typename ( f ) , '%+.3f' % n , '%s' % x , '%s' % f ( n , x )        
             rows.append ( row )
             
             x   = VE ( random.uniform ( 1 , 2 ) , 0.1 **2 ) 
-            row = f.__name__ , '%+.3f' % n , '%s' % x , '%s' % f ( n , x )        
+            ## row = f.__name__ , '%+.3f' % n , '%s' % x , '%s' % f ( n , x )        
+            row = typename ( f ) , '%+.3f' % n , '%s' % x , '%s' % f ( n , x )        
             rows.append ( row )
 
     title = 'Functions'

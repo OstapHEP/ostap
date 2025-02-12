@@ -37,6 +37,7 @@ __all__     = (
     'with_ipython'       , ## do we run IPython?
     ##
     'batch'              , ## context manager to keep/force certain ROOT ``batch''-mode
+    'batch_env'          , ## chek&set the bacth from environment 
     ##
     'keepCanvas'         , ## context manager to keep the current ROOT canvas
     'invisibleCanvas'    , ## context manager to use the invisible current ROOT canvas
@@ -141,7 +142,8 @@ from   ostap.core.ostap_types import ( integer_types  , num_types ,
                                        string_types   ,
                                        dictlike_types , listlike_types )
 ## ... and more useful stuff 
-from   ostap.utils.memory     import memory, virtualMemory, Memory 
+from   ostap.utils.memory     import memory, virtualMemory, Memory
+from   ostap.utils.env        import get_env , OSTAP_BATCH
 import ROOT, time, os , sys, math, time, functools, abc, array, random, datetime  ## attention here!!
 # =============================================================================
 try :
@@ -340,7 +342,7 @@ def get_file_names_from_file_number(fds):
 #  ... do something here 
 #  @endcode 
 class Batch(object) :
-    """Context manager to keep ROOT ``batch'' state
+    """ Context manager to keep ROOT ``batch'' state
     >>> with Batch() :
     ... do something here 
     """
@@ -348,17 +350,30 @@ class Batch(object) :
         self.__batch = batch 
     ## contex manahger: ENTER
     def __enter__ ( self ) :
-        import ROOT
         groot = ROOT.ROOT.GetROOT()
         self.old_state = groot.IsBatch()
         if self.old_state != self.__batch : groot.SetBatch ( self.__batch ) 
         return self
     ## contex manager: EXIT
     def __exit__  ( self , *_ ) :
-        import ROOT
         groot = ROOT.ROOT.GetROOT()
         if self.old_state != groot.IsBatch() : groot.SetBatch( self.old_state ) 
 
+# =============================================================================
+## check batch from environmen variables, set it ans issue the message
+def batch_env  ( logger = logger ) :
+    """ chek&set the bacth from environment 
+    - Check batch environmen variable
+    - set ROOT.TROOT.SetBatch(True) 
+    - issue the message 
+    """
+    groot = ROOT.ROOT.GetROOT()
+    if not groot.IsBatch () :
+        if get_env ( OSTAP_BATCH , '' ).lower() not in ( '' , '0' , 'off' , 'false' ) :        
+            groot.SetBatch ( True )
+            logger.attention ( "BATCH processing is activated" )
+    return groot.IsBatch() 
+        
 # =============================================================================
 ## context manager to keep ROOT ``batch'' state
 #  @code
@@ -482,17 +497,15 @@ def wait ( after = 0 , before = 0 ) :
 # ... 
 # @endcode 
 def slow ( iterable , wait = 0 ) :
-    """ `slow' looping over some iterable with delay for each eatep 
+    """ `slow' looping over some iterable with delay for each step 
     >>> for i in slow ( range ( 5 ) , wait = 0.1 ) :
     >>> ... 
     """
-    if isinstance ( iterable , int ) and 0 <= iterable :
-        iterable = range ( iterable )
-        
+    if isinstance ( iterable , int ) and 0 <= iterable : iterable = range ( iterable )
+    ## 
     for r in iterable :
+        yield r
         if 0 < wait : time.sleep ( wait )
-        yield r 
-        
         
 # =============================================================================
 ## the last index for laooping over TTRee/RooAbsData

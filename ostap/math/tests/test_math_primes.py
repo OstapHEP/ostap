@@ -11,7 +11,6 @@
 It tests local implementation of prime numbers sieve 
 """
 # ============================================================================= 
-from __future__        import print_function
 from ostap.math.primes import primes, Primes 
 # ============================================================================= 
 # logging 

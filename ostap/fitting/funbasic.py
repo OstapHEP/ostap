@@ -33,9 +33,8 @@ from   ostap.core.ostap_types        import ( integer_types  , num_types    ,
                                               is_good_number , string_types )
 from   ostap.core.core               import ( Ostap         , hID ,
                                               valid_pointer ,
-                                              cidict_fun    ,                                               
                                               roo_silent    ,                                              
-                                              rootWarning   , typename )   
+                                              rootWarning   )
 from   ostap.math.base               import iszero , isequal  
 from   ostap.fitting.utils           import make_name 
 from   ostap.fitting.variables       import SETVAR
@@ -45,8 +44,9 @@ from   ostap.fitting.fithelpers      import ( FitHelper      ,
                                               config_factory , 
                                               XVar , YVar , ZVar )
 from   ostap.utils.cidict            import cidict
-from   ostap.plotting.fit_draw       import key_transform, draw_options  
-import ostap.fitting.variables
+from   ostap.utils.basic             import typename 
+from   ostap.plotting.fit_draw       import key_transform, draw_options
+# 
 import ostap.fitting.roocollections
 import ROOT, math, sys, abc  
 # =============================================================================
@@ -88,6 +88,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         self.__tricks       = True if tricks else False 
         
         self.__draw_var     = None
+        
         ## predefined drawing options for this FUN/PDF
         self.__draw_options = cidict ( transform = key_transform )
 

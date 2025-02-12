@@ -9,19 +9,18 @@
 """ Test module for Breit-Wigner wirth interferenc e 
 """
 # ============================================================================= 
-from   __future__        import print_function
-# ============================================================================= 
-import ostap.fitting.roofit 
-import ostap.fitting.models    as     Models 
+from   __future__              import print_function
+from   builtins                import range
 from   ostap.core.core         import Ostap
-import ostap.io.zipshelve      as     DBASE
-import ostap.logger.table      as     T 
 from   ostap.utils.timing      import timing
 from   ostap.utils.utils       import wait
 from   ostap.plotting.canvas   import use_canvas
 from   ostap.fitting.variables import SETVAR 
-from   ostap.utils.utils       import vrange 
-from   builtins                import range
+from   ostap.utils.utils       import vrange, batch_env  
+import ostap.fitting.models    as     Models 
+import ostap.io.zipshelve      as     DBASE
+import ostap.logger.table      as     T 
+import ostap.fitting.roofit 
 import ROOT, time, math  
 # =============================================================================
 # logging 
@@ -32,7 +31,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-
+## set batch form environment 
+batch_env ( logger )
+# =============================================================================
 
 models  = set() 
 results = [] 

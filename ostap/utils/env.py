@@ -16,8 +16,9 @@ __all__     = (
     ## 
     'has_env'           , ## case-insensitive check for environment variable   
     'get_env'           , ## case-insensitive access to environment variable
-    ## 
-    'OSTAP_BUILD_DIR'   , ## environment varibale for build-dir
+    ##
+    'OSTAP_BATCH'       , ## environment varianle for batch processing
+    'OSTAP_BUILD_DIR'   , ## environment varianle for build-dir
     'OSTAP_DISPLAY'     , ## Ostap display 
     'OSTAP_CONFIG'      , ## Ostap config 
     'OSTAP_CACHE_DIR'   , ## Ostap cache directory
@@ -30,6 +31,7 @@ __all__     = (
 # =============================================================================
 import os
 # =============================================================================
+OSTAP_BATCH         = 'OSTAP_BATCH'
 OSTAP_BUILD_DIR     = 'OSTAP_BUILD_DIR'
 OSTAP_DISPLAY       = 'OSTAP_DISPLAY'
 OSTAP_CONFIG        = 'OSTAP_CONFIG'

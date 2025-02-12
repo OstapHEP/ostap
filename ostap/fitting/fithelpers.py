@@ -35,18 +35,18 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info    import root_info 
 from   ostap.core.core         import ( Ostap          , rootID      ,
-                                        VE             , typename    , 
-                                        items_loop     , isequal     ,
-                                        roo_silent                   ) 
+                                        VE             , isequal     ,
+                                       roo_silent                   )
 from   ostap.core.ostap_types  import ( string_types   , num_types   ,
                                         integer_types  , list_types  , 
                                         is_good_number , is_integer  ,
                                         sequence_types , sized_types )
-from   ostap.utils.utils       import make_iterable
-from   ostap.fitting.variables import SETVAR, make_formula 
-from   ostap.fitting.utils     import  ( make_name, numcpu, ncpu, get_i ,
-                                         roo_poisson , roo_gaussian  )
+from   ostap.fitting.utils     import ( make_name   , numcpu , ncpu , get_i ,
+                                       roo_poisson , roo_gaussian  )
 from   ostap.fitting.roocmdarg import check_arg 
+from   ostap.fitting.variables import SETVAR, make_formula
+from   ostap.utils.utils       import make_iterable
+from   ostap.utils.basic       import typename , items_loop
 from   ostap.logger.pretty     import pretty_ve
 import ROOT, sys, random, math
 # =============================================================================
@@ -698,7 +698,7 @@ class FitHelper(VarMaker) :
         prnterr = False
         prntwar = False
         
-        from ostap.core.core import cidict_fun as key_transform 
+        from ostap.utils.cidict import cidict_fun as key_transform 
         transformed_draw_options = tuple ( key_transform ( k ) for k in drawing_options )
         
         for k , a in items_loop ( kwargs ) :

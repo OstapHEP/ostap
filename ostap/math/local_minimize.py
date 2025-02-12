@@ -25,8 +25,8 @@ __all__     = (
     )
 # =============================================================================
 import math, warnings
-from   math            import sqrt
-from   ostap.math.base import typename 
+from   math              import sqrt
+from   ostap.utils.basic import typename 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -34,7 +34,7 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.local_minimize' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
-try :
+try : # =======================================================================
     # =========================================================================
     import numpy
     import numpy  as np
@@ -43,7 +43,7 @@ try :
         warnings.simplefilter ( "ignore" )
         _epsilon = math.sqrt ( numpy.finfo ( float ) . eps )
 # =============================================================================
-except ImportError :
+except ImportError : # ========================================================
     # =========================================================================
     class numpy(object) :
         @staticmethod 

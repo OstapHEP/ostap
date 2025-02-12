@@ -11,12 +11,15 @@
 from   ostap.math.ve         import VE 
 from   ostap.plotting.canvas import use_canvas 
 from   ostap.stats.average   import *
+from   ostap.utils.utils     import batch_env 
 import ostap.logger.table    as     T 
 import random, math 
 # =============================================================================
 from   ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'tests_stats_avegrate' )
 else                       : logger = getLogger ( __name__               )
+# =============================================================================
+batch_env ( logger ) 
 # =============================================================================
 try : # =======================================================================
     # =========================================================================

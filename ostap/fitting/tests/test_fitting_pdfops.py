@@ -11,17 +11,16 @@
 - It tests basic PDF methods 
 """
 # ============================================================================= 
-from   __future__               import print_function
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 from   builtins                  import range
 from   ostap.utils.timing        import timing
 from   ostap.plotting.canvas     import use_canvas
-from   ostap.utils.utils         import wait
+from   ostap.utils.utils         import wait, batch_env 
 from   ostap.fitting.models      import Gauss_pdf 
 from   ostap.fitting.resolution  import ResoGauss 
+from   ostap.math.math_ve        import *
 import ROOT, random, math 
 # =============================================================================
 # logging 
@@ -32,8 +31,11 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-from ostap.math.math_ve import *
-    
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
+
 x = ROOT.RooRealVar ( 'x' , 'x-variable' , 0  , 10 )
 y = ROOT.RooRealVar ( 'y' , 'y-variable' , 10 , 20 )
 z = ROOT.RooRealVar ( 'z' , 'z-variable' , 20 , 30 )

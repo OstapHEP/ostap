@@ -1,9 +1,17 @@
 
-   ostap2
+# Ostap-dev
+
+ - stiop support ROOT < 6.24
+ - stop support python < 3.8 
+ - split `add_new_branch` into `add_newbranch` and `adD_new_buffer`
+ - fix Py<->c++ functions
+ - imporve `Ostap::statusCode`
+ - more use of `Ostap::Assert`
+    
     
 ## New features
 
-    1. furthr improvemetn dfor wrapped columns in the table
+    1. further improvemetn dfor wrapped columns in the table
 
 ## Backward incompatible1
     

@@ -8,8 +8,7 @@
 """
 # =============================================================================
 import ostap.plotting.color
-from   ostap.utils.cidict import cidict
-from   ostap.core.core    import cidict_fun
+from   ostap.utils.cidict import cidict, cidict_fun
 from   ostap.utils.utils  import classprop 
 import ROOT, ctypes 
 # =============================================================================

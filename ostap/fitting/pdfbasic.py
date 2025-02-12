@@ -55,29 +55,31 @@ __all__     = (
     ## 
 )
 # =============================================================================
-import ostap.fitting.roofit 
-import ostap.fitting.variables
-import ostap.fitting.dataset 
-import ostap.fitting.roocollections 
 from   builtins                 import range
-from   ostap.core.core          import ( Ostap , VE , hID , dsID , rootID   ,
-                                         valid_pointer , in_test , typename , 
-                                         roo_silent    , rootWarning  )
 from   ostap.math.base          import iszero , frexp10 
+from   ostap.core.core          import ( Ostap , VE , hID , dsID , rootID   ,
+                                         valid_pointer , in_test , 
+                                         roo_silent    , rootWarning  )
 from   ostap.core.ostap_types   import ( is_integer     , string_types   , 
                                          integer_types  , num_types      ,
                                          list_types     , all_numerics   ) 
-from   ostap.fitting.roofit     import SETVAR
 from   ostap.fitting.utils      import ( RangeVar   , numcpu     ,
                                          make_name  , fit_status ,
                                          cov_qual   , get_i      )
 from   ostap.fitting.fithelpers import ( H1D_dset, H2D_dset, H3D_dset ,
                                          SETPARS , Fractions          )
 from   ostap.fitting.funbasic   import FUN1, FUN2, FUN3, Fun1D , Fun2D , Fun3D 
+from   ostap.fitting.variables  import SETVAR
 from   ostap.utils.cidict       import select_keys
+from   ostap.utils.basic        import typename 
 from   ostap.fitting.roocmdarg  import check_arg , nontrivial_arg , flat_args , command  
 from   ostap.core.meta_info     import root_info
-import ostap.histos.histos 
+# 
+import ostap.fitting.roofit 
+import ostap.fitting.dataset 
+import ostap.histos.histos
+import ostap.fitting.roocollections 
+# 
 import ROOT, math,  random, warnings, sys, abc  
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -2388,7 +2390,7 @@ class APDF1 ( Components ) :
     # ================================================================================
     ## Check the ranges for variables  in dataset 
     def check_ranges ( self , dataset , range = '' ) :
-        """ Check the ranges for varibales in dataset 
+        """ Check the ranges for variables in dataset 
         """
 
         import ostap.trees.cuts

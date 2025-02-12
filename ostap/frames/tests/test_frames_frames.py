@@ -14,8 +14,9 @@ from   ostap.trees.trees     import Tree
 from   ostap.plotting.canvas import use_canvas
 from   ostap.utils.utils     import wait 
 from   ostap.core.meta_info  import root_info
-from   ostap.utils.utils     import implicitMT
+from   ostap.utils.utils     import implicitMT, batch_env 
 from   ostap.utils.timing    import timing
+from   ostap.frames.frames   import Frames_OK 
 import ostap.logger.table    as     T 
 import ROOT, os, sys
 # =============================================================================
@@ -24,9 +25,10 @@ import ROOT, os, sys
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_frames_frames' )
 else                       : logger = getLogger ( __name__            )
-# ============================================================================= 
-from ostap.frames.frames   import Frames_OK 
-
+# =============================================================================
+## set batch form environment 
+batch_env ( logger )
+# =============================================================================
 if not Frames_OK : 
     
     logger.warning ( "Tests are disabled for this version of ROOT %s" % str ( root_info ) )

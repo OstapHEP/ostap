@@ -9,9 +9,9 @@
 """ Test module for ostap/math/rootfinder.py.
 """
 # ============================================================================= 
-import random,math 
-import ostap.math.models 
 from   ostap.math.rootfinder    import find_root, findroot 
+import ostap.math.models 
+import random,math 
 # =============================================================================
 # logging 
 # =============================================================================

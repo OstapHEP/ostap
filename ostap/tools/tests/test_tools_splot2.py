@@ -15,22 +15,19 @@
 - write sPlot results into oroigin Ttree
 """
 # ============================================================================= 
-from   __future__                 import print_function
-import ostap.trees.trees
-import ostap.histos.histos
 from   ostap.core.core            import Ostap, hID
 from   ostap.trees.data           import Data
 from   ostap.utils.timing         import timing 
 from   ostap.utils.progress_bar   import progress_bar
-
 from   ostap.fitting.variables    import FIXVAR 
 from   ostap.tools.splot          import sPlot2D
 from   ostap.plotting.canvas      import use_canvas 
-from   ostap.utils.utils          import wait
-
+from   ostap.utils.utils          import wait, batch_env 
 import ostap.fitting.models       as     Models
-import ostap.fitting.pyselectors 
 import ostap.io.zipshelve         as     DBASE 
+import ostap.fitting.pyselectors 
+import ostap.trees.trees
+import ostap.histos.histos
 import ROOT, math, random, array  
 # ============================================================================= 
 # logging 
@@ -39,6 +36,11 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_tools_splot2' )
 else                       : logger = getLogger ( __name__            )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+
+
 xmin , xmax  =    0 ,   10 
 ymin , ymax  = xmin , xmax
 zmin , zmax  = xmin , xmax

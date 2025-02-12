@@ -30,7 +30,7 @@ from   collections              import defaultdict, namedtuple
 from   ostap.core.meta_info     import root_info 
 from   ostap.fitting.funbasic   import AFUN1
 from   ostap.fitting.pdfbasic   import PDF1
-from   ostap.core.core          import SE, VE, Ostap, cidict_fun 
+from   ostap.core.core          import SE, VE, Ostap
 from   ostap.math.base          import doubles, axis_range  
 from   ostap.math.models        import f1_draw
 from   ostap.utils.basic        import numcpu, loop_items  

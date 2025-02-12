@@ -12,17 +12,20 @@
 from   ostap.core.pyrouts     import Ostap, SE 
 from   ostap.utils.gsl        import gslCount
 from   ostap.logger.colorized import attention 
-import ostap.logger.table     as     T
-from   ostap.utils.utils      import wait
+from   ostap.utils.utils      import wait, batch_env 
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.math.models      import f1_draw
 from   ostap.math.minimize    import minimize_scalar 
+import ostap.logger.table     as     T
 import ROOT, math, random, itertools   
 # ============================================================================
 from   ostap.logger.logger    import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_phasespace3' ) 
 else                       : logger = getLogger ( __name__                      )
 # ============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
 
 # =============================================================================
 ## Test 3-body phase space calculation via elliptic integrals

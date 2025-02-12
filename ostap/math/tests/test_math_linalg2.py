@@ -9,24 +9,29 @@
 """ Test module for ostap/math/linalg2.py
 """
 # ============================================================================= 
-from __future__             import print_function
 from   sys                  import version_info as python_version
-import math 
+from   ostap.core.meta_info import root_version_int
 from   ostap.math.linalg    import checkops 
 from   ostap.core.core      import Ostap 
-from   ostap.core.meta_info import root_version_int 
+from   ostap.utils.utils    import batch_env 
+import math 
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'tests_math_linalg2'  )
 else                       : logger = getLogger ( __name__              )
-# ============================================================================= 
-try :
+# =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
     import numpy as np
-except ImportError :
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     np = None
-
 
 # =============================================================================
 def test_linalg2_vct () :

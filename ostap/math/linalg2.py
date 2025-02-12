@@ -23,7 +23,8 @@ __all__     = (
 # =============================================================================
 from   sys                    import version_info as python_version
 from   builtins               import range
-from   ostap.math.base        import isequal   , iszero, std , Ostap, typename 
+from   ostap.math.base        import isequal   , iszero, std , Ostap 
+from   ostap.utils.basic      import typename 
 from   ostap.core.ostap_types import num_types , integer_types
 from   ostap.utils.clsgetter  import classgetter
 from   ostap.logger.pretty    import pretty_array, fmt_pretty_float, fmt_pretty_err1   
@@ -37,9 +38,12 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.linalg2' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
-try :
+try : # =======================================================================
+    # =========================================================================
     import numpy as np
-except ImportError :
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     np = None
 
 revct = re.compile ( r'SVector<(?P<TYPE>[^,>]+)' )

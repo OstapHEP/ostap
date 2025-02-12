@@ -105,8 +105,6 @@ __all__     = (
     ##
     'ROOTIgnore'     , ## control ROOT verbosity, suppress ROOT errors
     ##
-    'typename'       , ## get typename for the instance
-    ##
     'complex_types'  , ## list of complex & complex-like types
     ##
     'pos_infinity'   , ## positive infinity  
@@ -114,7 +112,6 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.meta_info    import root_info
-from   ostap.utils.basic       import typename 
 import ROOT, cppyy, sys, math 
 # =============================================================================
 # logging 
@@ -126,7 +123,7 @@ else                       : logger = getLogger ( __name__          )
 if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Iterable
 else                              : from collections     import Iterable
 # =============================================================================
-if ( 3 , 5 ) > sys.version_info  :
+if sys.version_info < ( 3, 5 )  :
     import math
     if not hasattr ( math , 'inf' ) : math.inf = float('inf' )
     if not hasattr ( math , 'nan' ) : math.nan = float('nan' )
@@ -978,9 +975,28 @@ def lround ( x ) :
 import ostap.math.reduce  
 import ostap.math.polynomials 
 
+
+# ========
+if not '__main__' == __name__ :
+    
+    import ostap.io.pickling as OP 
+    check = OP.PickleChecker ()
+    
+    for i , t in enumerate ( complex_types ) :
+        print ( 'CHECK/1:' , i , t , t() ) 
+        check.add ( t )
+        o = t ( ) 
+        if check.pickles ( o ) and check.pickles_process ( o ) :
+            check.add ( t ) 
+
 # =============================================================================
 if '__main__' == __name__ :
-    
+
+    import ostap.io.pickling as OP 
+    check = OP.PickleChecker ()
+
+
+"""
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
@@ -993,7 +1009,7 @@ if '__main__' == __name__ :
     logger.info ('dir(Ostap.Math) : ')
     _v.sort()
     for v in _v : logger.info ( v )
-
+"""
 
 # =============================================================================
 ##                                                                     The  END

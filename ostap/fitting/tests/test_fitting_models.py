@@ -11,22 +11,20 @@
 - It tests various ``signal-like''/``peak-like'' shapes 
 """
 # ============================================================================= 
-from   __future__               import print_function
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
+from   builtins                 import range
 from   ostap.core.meta_info     import root_info
 from   ostap.core.core          import cpp, VE, dsID, rooSilent 
 from   ostap.utils.timing       import timing
-from   builtins                 import range
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait
+from   ostap.utils.utils        import wait, batch_env 
 from   ostap.fitting.background import make_bkg
 from   ostap.logger.colorized   import attention
-import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
 import ostap.logger.table       as     T
+import ostap.fitting.roofit 
 import ROOT, random
 # =============================================================================
 # logging 
@@ -37,7 +35,10 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 ## make simple test mass 
 mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 2.9 , 3.3 )
 

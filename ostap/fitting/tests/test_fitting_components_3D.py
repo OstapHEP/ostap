@@ -15,14 +15,14 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 from   builtins                 import range
-import ostap.fitting.roofit 
-import ostap.fitting.models     as     Models 
 from   ostap.core.core          import cpp, VE, dsID, rooSilent 
 from   ostap.fitting.background import make_bkg 
 from   ostap.utils.timing       import timing
 from   ostap.core.meta_info     import root_info 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait, batch_env 
+import ostap.fitting.models     as     Models 
+import ostap.fitting.roofit 
 import ROOT, random
 # =============================================================================
 # logging 
@@ -32,6 +32,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_fitting_components_3D ' )
 else : 
     logger = getLogger ( __name__ )
+# =============================================================================
+## set batch form environment 
+batch_env ( logger )
 # =============================================================================
 
 models = set()

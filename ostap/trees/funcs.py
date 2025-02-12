@@ -15,9 +15,8 @@ __all__     = (
     'FuncTree'          , ## helper base class for 'TTree-function'
     'FuncData'          , ## helper base class for 'RooAbsData-function'
     'PyTreeFunction'    , ## 'TTree-function' that uses python function/callable 
-    'PyTreeArray'       , ## 'TTree-function' that uses python function/callable 
-    "pyfun_tree"        , ## ditto, but as fnuction 
     'PyDataFunction'    , ## 'Data-function' that uses python function/callable
+    "pyfun_tree"        , ## ditto, but as fnuction 
     "pyfun_data"        , ## ditto, but as fnuction 
     'FuncFormula'       , ## simple wrapper over TTreeFormula/Ostap::Formula  
     'FuncRooFormula'    , ## simple wrapper over RooFormulaVar  
@@ -26,9 +25,11 @@ __all__     = (
     'FuncTH3'           , ## TH3-based Tree-function 
     ) 
 # =============================================================================
-from   ostap.core.core      import Ostap, valid_pointer
-from   ostap.core.meta_info import old_PyROOT 
-import ROOT
+from   ostap.core.meta_info    import old_PyROOT, root_info  
+from   ostap.core.core         import Ostap, valid_pointer
+from   ostap.utils.basic       import typename, prntrf 
+import ostap.trees.treereduce 
+import ROOT, abc 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -40,49 +41,84 @@ else                       : logger = getLogger( __name__             )
 #  Helper class to implement "TTree-function"
 #  @see Ostap::Functions::PyFuncTree
 class FuncTree(Ostap.Functions.PyFuncTree) :
-    """Helper class to implement ``TTree-function'' in python 
+    """ Helper class to implement ``TTree-function'' in python 
     """
-    def __init__ ( self , tree = None ) :
+    def __init__ ( self , tree = None , clone = None ) :
         ## initialize the base class
         if tree is None : tree = ROOT.nullptr
         ##
-        if old_PyROOT : super (FuncTree,self).__init__ ( self , tree )
-        else          : super (FuncTree,self).__init__ (        tree )
+        assert isinstance ( tree  , ROOT.TTree ) or not tree , \
+            "FuncTree: inbalid 'tree'  type %s" % typename ( tree ) 
+        assert not clone or isinstance ( clone , FuncTree ) , \
+            "FuncTree: Invalid 'clone' type:%s" % typename ( clone )
+        ## 
+        if clone        : super (FuncTree,self).__init__ ( clone )
+        elif old_PyROOT : super (FuncTree,self).__init__ ( self , tree )
+        else            : super (FuncTree,self).__init__ (        tree )
         
     @property
     def the_tree ( self ) :
         """``the_tree'' : the actual pointer to the ROOT.TTree"""
         return self.tree ()
+
+    ## the main method, "double-abstract" one
+    @abc.abstractmethod 
+    def evaluate ( self ) : raise NotImplementedError("%s:  method `evaluate' is not implemented!" % typename ( self ) ) 
     
-    ## the main method, abstract one 
-    def evaluate ( self ) :
-        tree = self.the_tree 
-        assert valid_pointer ( tree ) , 'Invalid TTree object'
-        return -1
+    ## tricky clone method,  "double-abstract" one
+    @abc.abstractmethod 
+    def clone ( self , name = ""  ) : raise NotImplementedError("%s:  method `clone' is not implemented!" % typename ( self ) ) 
+
+    ## we need to serialize the instance, "double-abstrac" one 
+    @abc.abstractmethod
+    def __reduce__ ( self ) :  raise NotImplementedError("%s:  method `__reduce__' is not implemented!" % typename ( self ) ) 
+
+    
+    def __str__  ( self ) : return typename ( self )
+    def __repr__ ( self ) : return typename ( self )
 
 # =============================================================================
 ## @class FuncData
 #  Helper class to implement "RooAbsData-function"
 #  @see Ostap::Functions::PyFuncData
 class FuncData(Ostap.Functions.PyFuncData) :
-    """Helper class to implement ``TTree-function''
+    """ Helper class to implement ``TTree-function''
     """
-    def __init__ ( self , data = None ) :
+    def __init__ ( self , data = None , clone = None ) :
         ## initialize the base class
-        if  data is None : data = ROOT.nullptr 
-        if old_PyROOT : super (FuncData,self).__init__ ( self , data )
-        else          : super (FuncData,self).__init__ (        data )
-        
+        if  data is None : data = ROOT.nullptr
+        ## 
+        assert isinstance ( data , ROOT.RooAbsData ) or not data , \
+            "FuncData: invalid 'data'  type:%s" % typename ( data ) 
+        assert not clone  or isinstance ( clone , FuncData ) , \
+            "FuncData: Invalid 'clone' type: %s" % typename ( clone )
+        ## 
+        if clone        : super (FuncData,self).__init__ ( clone )            
+        elif old_PyROOT : super (FuncData,self).__init__ ( self , data )
+        else            : super (FuncData,self).__init__ (        data )
+
+    def __str__  ( self ) : return typename ( self )
+    def __repr__ ( self ) : return typename ( self )
+    
     @property
     def the_data ( self ) :
         """``the_data'' : the actual pointer to the ROOT.RooAbsData"""
         return self.data ()
     
-    ## the main method 
-    def evaluate ( self ) :
-        data = self.the_data
-        assert valid_pointer ( data ), 'Invalid RooAbsData object'
-        return -1
+    ## the main method, "double-abstract" one
+    @abc.abstractmethod 
+    def evaluate ( self ) : raise NotImplementedError("%s:  method `evaluate' is not implemented!" % typename ( self ) ) 
+    
+    ## tricky clone method,  "double-abstract" one
+    @abc.abstractmethod 
+    def clone ( self , name = ""  ) : raise NotImplementedError("%s:  method `clone' is not implemented!" % typename ( self ) ) 
+
+    ## we need to serialize the instance, "double-abstrac" one 
+    @abc.abstractmethod
+    def __reduce__ ( self ) :  raise NotImplementedError("%s:  method `__reduce__' is not implemented!" % typename ( self ) ) 
+
+    def __str__  ( self ) : return typename ( self )+'QUQU2'
+    def __repr__ ( self ) : return typename ( self )+'QUQU2'
 
 # =============================================================================
 ## @class PyTreeFunction
@@ -92,78 +128,52 @@ class FuncData(Ostap.Functions.PyFuncData) :
 #  @see Ostap.Functions.PyFuncTree
 #  @see Ostap.IFuncTree 
 class PyTreeFunction(FuncTree) :
-    """The concrete implementation on of PyFunTree, FuncTree,
+    """ The concrete implementation on of PyFunTree, FuncTree,
     that delegates the evaluation to provided function/callable object
     - see ostap.trees.funcs.FunTree
     - see Ostap.Functions.PyFuncTree
     - see Ostap.IFuncTree 
     """
-    def __init__ ( self , the_function , tree = None ) :
-        """Constructor from the function/callable and (optional) tree"""
-        if tree is None : tree = ROOT.nullptr 
-        super(PyTreeFunction,self).__init__ ( tree  )
-        assert callable   ( the_function ), \
-               'PyTreeFunction:Invalid callable %s/%s' % ( the_function , type ( the_function ) )
-        self.__function = the_function
+    store  = set()
+    
+    def __init__ ( self , the_function , tree = None , clone = None ) :
+        """ Constructor from the function/callable and (optional) tree"""
+        if tree is None : tree = ROOT.nullptr
+        ##
+        assert not clone or isinstance ( clone , PyTreeFunction ) , \
+            "PyTreeFunction: Invalid 'clone' type!" % typename ( clone )
+        assert clone or callable  ( the_function ), \
+            'PyTreeFunction: Invalid callable: %s'  % typename ( the_function ) 
+        ## 
+        super(PyTreeFunction,self).__init__ ( tree = tree , clone = clone )
+        ## 
+        if clone : self.__function = clone.the_function
+        else     : self.__function = the_function
         
     @property
     def the_function ( self ) :
         """``the_function'' : the actual function/callable object"""
         return self.__function
-    
-    ## the only one method, delegate to the function  
-    def evaluate  ( self ) :
-        tree = self.the_tree   
-        return self.__function ( tree )
 
-# =============================================================================
-## @class PyTreeArray
-#  The concrete implementation on of <code>PyFunTree</code>, <code>FuncTree</code>
-#  @see ostap.trees.funcs.FunTree
-#  @see Ostap.Functions.PyFuncTree
-#  @see Ostap.IFuncTree 
-class PyTreeArray(FuncTree) :
-    """The concrete implementation on of PyFunTree, FuncTree,
-    - see ostap.trees.funcs.FunTree
-    - see Ostap.Functions.PyFuncTree
-    - see Ostap.IFuncTree 
-    """
-    def __init__ ( self , array , tree = None , length = None , value = 0.0 ) :
-        """Constructor from the function/callable and (optional) tree"""
-        if tree is None : tree = ROOT.nullptr 
-        super(PyTreeArray,self).__init__ ( tree  )
-        self.__array  = array
-        self.__length = len ( array ) if ( length is None ) else int ( length )
-        self.__value  = float(value)
-        assert 0 <= self.__length, "Invalid ``length'' %s" % length 
-                
-    @property
-    def array ( self ) :
-        """``array'' : the actual array"""
-        return self.__array
-    
-    @property
-    def length ( self ) :
-        """``length'': lenth of array """
-        return self.__length 
+    ## clone function 
+    def clone ( self , name = "" ) :
+        """ Clone it! """
+        cloned = PyTreeFunction ( the_function = self.the_function , tree = self.the_tree , clone = self )
+        ROOT.SetOwnership ( cloned , False )
+        return cloned 
 
-    @property
-    def value ( self ) :
-        """``value'' : defalt value for invaild entries """
-        return self.__array
+    ## REDUCE 
+    def __reduce__  ( self ) : return ptf_factory , ( self.the_function , ) 
 
-    ## the only one method, delegate to the function  
+    # ==============================================================================
+    ## The only one method, delegate to the function    
     def evaluate  ( self ) :
         tree = self.the_tree
-        if tree.GetReadEvent() < 0 :
-            assert 0 <= tree.GetEntry ( 0 ) , "PyTreeArray: Cannot get entry 0!"
-        index = tree.GetReadEvent()
-        assert 0<= index , "PyTreeArray: invalid event index %s" % index
-        ##
-        result = self.__array[ index ] if index < self.__length else self.__value
-        ##
-        return float ( result )
-    
+        return self.__function ( tree )
+
+    def __str__  ( self ) :
+        return '%s(%s/%s)' %  ( 'PyTreeFunction' , typename ( self.the_function ) , prntrf ( self.the_function ) ) 
+    __repr__ = __str__
 
 # =============================================================================
 ## @class PyDataFunction
@@ -179,13 +189,26 @@ class PyDataFunction(FuncData) :
     - see Ostap.Functions.PyFuncData
     - see Ostap.IFuncData 
     """
-    def __init__ ( self , the_function , data = None ) :        
-        if data is None : data = ROOT.nullptr 
-        super(PyDataFunction,self).__init__ ( self , data  )
-        assert callable   ( the_function ), \
-               'PyDataFunction:Invalid callable %s/%s' % ( the_function , type ( the_function ) )
-        self.__function = the_function
+    def __init__ ( self , the_function , data = None , clone = None  ) :        
+        if data is None : data = ROOT.nullptr
+
+        assert not clone or isinstance ( clone , PyDataFunction ) , \
+            "PyDataFunction: Invalid 'clone' type!" % typename ( clone )
+        assert clone or callable  ( the_function ), \
+            'PyDataFunction: Invalid callable %s' % typename ( the_function )
+        ## 
+        super(PyDataFunction,self).__init__ ( data = data , clone = clone )
+        ## 
+        if clone : self.__function = clone.the_function
+        else     : self.__function = the_function
         
+    ## clone function 
+    def clone ( self , name = "" ) :
+        """ Clone it! """
+        cloned = PyDataFunction ( th_function = self.__function , data = self.the_data , clone = self )
+        ROOT.SetOwnership ( cloned , False )
+        return cloned 
+
     @property
     def the_function ( self ) :
         """``the_function'' : the actual function/callable object"""
@@ -196,7 +219,23 @@ class PyDataFunction(FuncData) :
         data = self.the_data 
         return self.__function ( data  )
 
-# =================================================================================
+    def __reduce__  ( self ) : return pdf_factory , ( self.the_function , ) 
+
+    def __str__  ( self ) : return '%s(%s/%s)' %  ( 'PyDataFunction' , typename ( self.the_function ) , prntrf ( self.the_function ) ) 
+    __repr__ = __str__
+
+# =============================================================================
+## Helper function to (de)serialize PyTreeFunction 
+def ptf_factory ( *args ) :
+    """ Helper f to (de)serialize PyTreeFunction"""
+    return  PyTreeFunction ( *args  )
+# =============================================================================
+## Helper function to (de)serialize PyFataFunction 
+def pdf_factory ( *args ) :
+    """ Helper function to (de)serialize PyFataFunction"""
+    return  PyDataFunction ( *args  )
+    
+# =============================================================================
 ## create the Ostap.ITreeFunc obejct from python function/callable
 #  @code
 #  def ququ ( tree ) : return tree.pz/tree.pt
@@ -217,7 +256,7 @@ def pyfun_tree ( function , tree = None ) :
     """
     return PyTreeFunction ( function , tree ) 
     
-# =================================================================================
+# =============================================================================
 ## create the Ostap.IDataFunc obejct from python function/callable
 #  @code
 #  def ququ ( data ) : return data.pz/data.pt
@@ -241,9 +280,8 @@ def pyfun_data ( function , data = None ) :
 
 # =============================================================================
 ## print for FuncFormula 
-## def _pff_str_ ( f ) : return "FuncFormula('%s')"     % f.expression()
-## def _pfe_str_ ( f ) : return "Expression('%s')"      % f.expression()
-## def _pfr_str_ ( f ) : return "FuncRooFormula('%s')"  % f.expression()
+# =============================================================================
+
 def _pff_str_ ( f ) : return f.expression()
 def _pfe_str_ ( f ) : return f.expression()
 def _pfr_str_ ( f ) : return f.expression()
@@ -266,7 +304,8 @@ FuncRooFormula = Ostap.Functions.FuncRooFormula
 FuncTH1        = Ostap.Functions.FuncTH1
 FuncTH2        = Ostap.Functions.FuncTH2
 FuncTH3        = Ostap.Functions.FuncTH3
-         
+
+
 # =============================================================================
 if '__main__' == __name__ :
     

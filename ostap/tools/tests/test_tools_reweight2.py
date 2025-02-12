@@ -14,14 +14,16 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-05-10"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-from   builtins               import range
-from   ostap.core.pyrouts     import *
-import ostap.io.zipshelve     as     DBASE
+from   ostap.core.core        import Ostap 
 from   ostap.utils.timing     import timing
 from   ostap.logger.colorized import attention, allright  
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.utils.cleanup    import CleanUp
-import ostap.logger.table     as     T 
+from   ostap.utils.utils      import batch_env
+from   ostap.histos.histos    import h1_axis, h2_axes 
+import ostap.io.zipshelve     as     DBASE
+import ostap.logger.table     as     T
+import  ostap.core.pyrouts    
 import ROOT, random, math, os, time 
 # =============================================================================
 # logging 
@@ -34,6 +36,11 @@ else :
 # =============================================================================    
 logger.info ( 'Test for 2D-Reweighting machinery')
 # ============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+
+
 testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-reweight2-' )
 tag_data   = 'DATA2_histogram'
 tag_datax  = 'DATAX_histogram'

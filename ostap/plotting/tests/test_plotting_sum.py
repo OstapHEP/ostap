@@ -9,14 +9,13 @@
 """ Test sum of RoPlot objects 
 """
 # ============================================================================= 
-from   __future__               import print_function
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ostap.fitting.models     as     Models
 from   ostap.core.meta_info     import root_info 
-from   ostap.plotting.canvas    import use_canvas 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import batch_env 
+import ostap.fitting.models     as     Models
 import ostap.histos.graphs
 import ROOT 
 # =============================================================================
@@ -27,6 +26,8 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_plotting_sum' )
 else : 
     logger = getLogger ( __name__ )
+# =============================================================================
+batch_env ( logger ) 
 # =============================================================================
 
 

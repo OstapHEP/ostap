@@ -15,11 +15,14 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
 from   builtins import range
+from   ostap.histos.param       import legendre_sum, chebyshev_sum
+from   ostap.core.core          import hID, fID 
+from   ostap.utils.timing       import timing
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import batch_env, wait  
 import ostap.histos.param
 import ostap.histos.histos
 import ostap.fitting.funcs
-from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
 import ROOT, random, time
 # =============================================================================
 # logging 
@@ -32,15 +35,18 @@ else :
 # =============================================================================
 logger.info ( 'Test for histogram parameterisation')
 # =============================================================================
-try :
+## set batch form environment 
+batch_env ( logger )
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
     import scipy
-except ImportError :
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     scipy = None 
     
 # =============================================================================
-from ostap.histos.param import legendre_sum, chebyshev_sum
-from ostap.core.core    import hID, fID 
-from ostap.utils.timing import timing
 
 h1   = ROOT.TH1F ( hID () , 'decreasing convex ' , 100 , 0 , 1 ) ; h1.Sumw2 () 
 h2   = ROOT.TH1F ( hID () , 'increasing convex ' , 100 , 0 , 1 ) ; h2.Sumw2 () 

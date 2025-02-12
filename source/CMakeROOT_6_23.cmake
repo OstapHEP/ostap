@@ -142,8 +142,11 @@ include(CMake_OSTAP.cmake)
 
 if(ROOT_VERSION VERSION_LESS_EQUAL "6.31.00")
 
-execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx17
-                 OUTPUT_VARIABLE CXX17_ROOT
+execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx26
+                 OUTPUT_VARIABLE CXX26_ROOT
+                 OUTPUT_STRIP_TRAILING_WHITESPACE )
+execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx20
+                 OUTPUT_VARIABLE CXX20_ROOT
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
 execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx14
                  OUTPUT_VARIABLE CXX14_ROOT
@@ -152,7 +155,11 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx11
                  OUTPUT_VARIABLE CXX11_ROOT
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
 
-if     ( ${CXX17_ROOT} STREQUAL "yes" ) 
+if     ( ${CXX26_ROOT} STREQUAL "yes" ) 
+target_compile_features (ostap PUBLIC cxx_std_26 )
+elseif ( ${CXX20_ROOT} STREQUAL "yes" ) 
+target_compile_features (ostap PUBLIC cxx_std_20 )
+slseif ( ${CXX17_ROOT} STREQUAL "yes" ) 
 target_compile_features (ostap PUBLIC cxx_std_17 )
 elseif ( ${CXX14_ROOT} STREQUAL "yes" ) 
 target_compile_features (ostap PUBLIC cxx_std_14 )
@@ -170,21 +177,18 @@ set_property(TARGET ostap PROPERTY CXX_STANDARD ${CXX_ROOT} )
 
 if     ( ${CXX_ROOT} STREQUAL "26" ) 
 target_compile_features (ostap PUBLIC cxx_std_26 )
-                        message ( '26' ) 
 elseif ( ${CXX_ROOT} STREQUAL "23" ) 
 target_compile_features (ostap PUBLIC cxx_std_23 )
-                        message ( '23' ) 
 elseif ( ${CXX_ROOT} STREQUAL "20" ) 
 target_compile_features (ostap PUBLIC cxx_std_20 )
-                        message ( '20' ) 
 elseif ( ${CXX_ROOT} STREQUAL "17" ) 
 target_compile_features (ostap PUBLIC cxx_std_17 )
-##                         message ( '17' ) 
+elseif ( ${CXX_ROOT} STREQUAL "14" ) 
+target_compile_features (ostap PUBLIC cxx_std_14 )
 else() 
-##target_compile_features (ostap PUBLIC cxx_std_17 )
-##                        message ( '17/0' ) 
-endif() 
-
+##target_compile_features (ostap PUBLIC cxx_std_11 )
+endif()
+    
 endif() 
 
 

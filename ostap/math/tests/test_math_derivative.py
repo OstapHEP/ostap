@@ -11,21 +11,18 @@
 It tests local implementation of numerical derivatives 
 """
 # ============================================================================= 
-from __future__ import print_function
-# ============================================================================= 
 from   math                   import exp, sin, cos, pi, tanh
 from   ostap.core.core        import VE 
 from   ostap.math.models      import f1_draw
 from   ostap.math.derivative  import ( Derivative  , iszero      , Eval2VE     ,
                                        Derivative1 , Derivative2 , Derivative3 ,
-                                       Derivative4 , Derivative5 , Derivative6 )
-                                       
+                                       Derivative4 , Derivative5 , Derivative6 )                 
 from   ostap.math.finitediffs import CentralRule, ForwardOpen, BackwardOpen  
 from   ostap.stats.counters   import SE
 from   ostap.utils.timing     import timing
 import ostap.logger.table     as     T
 from   ostap.logger.pretty    import pretty_ve
-from   ostap.utils.utils      import wait
+from   ostap.utils.utils      import wait, batch_env 
 from   ostap.plotting.canvas  import use_canvas
 import ROOT, random, math 
 # ============================================================================= 
@@ -33,9 +30,11 @@ import ROOT, random, math
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_derivative' )
-else                       : logger = getLogger ( __name__                    )
+else                       : logger = getLogger ( __name__                     )
 # =============================================================================
-
+## set batch form environment 
+batch_env ( logger )
+# =============================================================================
 
 def derivative_testing ( der_type , func , der_exact , logger , **kwargs ) :
 

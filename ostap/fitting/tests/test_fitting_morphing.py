@@ -14,18 +14,18 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ostap.fitting.roofit
-import ostap.fitting.models        as     Models
+from   builtins                    import range
 from   ostap.core.meta_info        import root_info 
 from   ostap.utils.utils           import vrange
-from   builtins                    import range
 from   ostap.utils.timing          import timing 
 from   ostap.plotting.canvas       import use_canvas
-from   ostap.utils.utils           import wait
+from   ostap.utils.utils           import wait, batch_env 
 from   ostap.core.core             import roo_silent 
 from   ostap.fitting.morphing_pdf  import ( MorphingN1_pdf ,
                                             MorphingN2_pdf  ,
                                             LinearMorph_pdf ) 
+import ostap.fitting.models        as     Models
+import ostap.fitting.roofit
 import ROOT, random
 # =============================================================================
 # logging 
@@ -36,7 +36,10 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 mass = ROOT.RooRealVar ( 'mass' , 'some mass' , 0 , 20 )
 mass.setBins ( 10000  ,'cache' )
 varset = ROOT.RooArgSet ( mass ) 

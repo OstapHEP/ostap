@@ -255,6 +255,71 @@ Ostap::Trees::RooGetter::RooGetter
   : Getter ( expressions , tree )
 {}
 // ============================================================================
+//  constructor from the tree and expressions 
+// ============================================================================
+Ostap::Trees::RooGetter::RooGetter
+( const std::vector<std::string>& expressions ,
+  const RooAbsCollection&         variables   , 
+  const TTree*                    tree        )
+  : Getter ( expressions , tree )
+{
+  add ( variables ) ;
+}
+// ============================================================================
+//  constructor from the tree and expressions 
+// ============================================================================
+Ostap::Trees::RooGetter::RooGetter
+( const std::map<std::string,std::string>& expressions , 
+  const RooAbsCollection&         variables   , 
+  const TTree*                             tree        )
+  : Getter ( expressions , tree )
+{
+  add ( variables ) ;
+}
+// ============================================================================
+/*  add entry mapping 
+ *  @attention no replacement!!! 
+ */
+// ============================================================================
+bool Ostap::Trees::RooGetter::add
+( const RooAbsCollection& vars )
+{
+  // ==========================================================================
+  { // ========================================================================
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0) // ===============================
+    // ========================================================================
+    //
+    Ostap::Utils::Iterator iter ( vars ) ; // only for ROOT < 6.18
+    RooAbsArg* o = 0 ;
+    while ( o = (RooAbsArg*) iter .next() )
+      {
+        // ====================================================================
+#else   // ====================================================================
+        // ====================================================================
+    for ( RooAbsArg* o : vars )
+      {
+        // ====================================================================
+#endif  // ====================================================================
+        // ====================================================================
+        Ostap::Assert ( nullptr != o                         ,
+                        "Invalid varibale "                  ,
+                        "Ostap::Trees:RooGeter::add"         ,
+                        INVALID_ABSARG , __FILE__ , __LINE__ ) ;
+        // loopkup & imsert 
+        if ( m_map.end () == m_map.find ( o->GetName() ) )
+          { add ( o->GetName() , o->GetName() ) ; }
+        // ====================================================================
+      } //                                     The end of the loop over results
+    // ========================================================================
+  } //                                                      The end of if-block
+  // ==========================================================================
+  return true ;  
+}
+  
+
+
+
+// ============================================================================
 // get the results
 // ============================================================================
 Ostap::StatusCode

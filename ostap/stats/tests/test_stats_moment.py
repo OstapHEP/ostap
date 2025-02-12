@@ -8,9 +8,10 @@
 """ Test module for ostap/stat/moment.py.
 """
 # =============================================================================
-import ostap.stats.moment
 from   ostap.core.core    import Ostap
+from   ostap.utils.utils  import batch_env 
 import ostap.logger.table as     T 
+import ostap.stats.moment
 import ROOT,random
 # ============================================================================= 
 # logging 
@@ -18,7 +19,9 @@ import ROOT,random
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_stats_moment' )
 else                       : logger = getLogger ( __name__            )
-# ============================================================================= 
+# =============================================================================
+batch_env ( logger ) 
+# =============================================================================
 root_version = ROOT.gROOT.GetVersionInt() 
 # ============================================================================= 
 def test_moment1() :

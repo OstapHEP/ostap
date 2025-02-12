@@ -20,7 +20,8 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info   import ostap_info
 from   ostap.core.ostap_types import num_types, string_types
-from   ostap.core.core        import cpp, VE, hID, dsID, split_string 
+from   ostap.core.core        import cpp, VE, hID, dsID
+from   ostap.utils.basic      import split_string 
 from   ostap.utils.utils      import balanced 
 import ROOT
 # =============================================================================

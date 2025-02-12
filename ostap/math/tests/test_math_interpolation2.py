@@ -9,13 +9,14 @@
 """ Test module for ostap/math/interpolation.py
 """
 # ============================================================================= 
-import ostap.math.linalg
-import ostap.math.models
 from   ostap.math.interpolation import ( Berrut1st      ,
                                          Berrut2nd      ,
                                          Barycentric    ,
                                          FloaterHormann )
 from   ostap.core.core          import Ostap
+from   ostap.utils.utils        import batch_env 
+import ostap.math.linalg
+import ostap.math.models
 import ROOT, random, math  
 # =============================================================================
 # logging 
@@ -24,6 +25,10 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_interpolation2' ) 
 else                       : logger = getLogger ( __name__                         )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 
 # =============================================================================
 def test_matrices0 () :

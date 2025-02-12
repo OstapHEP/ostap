@@ -27,9 +27,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.histos.graph_redcue' )
 else                       : logger = getLogger( __name__                    )
 # =============================================================================
-logger.debug ( 'redcue (T)Graph-like classes')
-# =============================================================================
-
+logger.debug ( 'reduce (T)Graph-like classes')
 # ===============================================================================
 ## reconstruct/deserialize/unpickle <code>TGraph</code> object
 #  @see TGraph

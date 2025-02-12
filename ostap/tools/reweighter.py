@@ -7,7 +7,8 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2021-09-22
 # =============================================================================
-"""Module with utilities for reweighting using GBReweighter"""
+""" Module with utilities for reweighting using GBReweighter
+"""
 # =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -64,7 +65,7 @@ class Reweighter(object) :
                     target                     ,
                     original_weight     = None ,
                     target_weight       = None ) :
-        """The main method to train the underlying BDT
+        """ The main method to train the underlying BDT
         - see hep_ml.reweight.GBReweighter        
         """
         

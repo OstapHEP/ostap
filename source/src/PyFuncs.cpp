@@ -18,6 +18,7 @@
 // ============================================================================
 #include "CallPython.h"
 #include "Exception.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file 
  *  Implementation file for classes from namespace Ostap::Functions 
@@ -75,10 +76,31 @@ Ostap::Functions::PyFuncTree::PyFuncTree
 // ============================================================================
 Ostap::Functions::PyFuncTree::~PyFuncTree() 
 {
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
+  // ==========================================================================
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT // ==========================
+  // ==========================================================================
   Py_XDECREF ( m_self ) ;
-#endif 
+  // ==========================================================================
+#endif // =====================================================================
+  // ==========================================================================
 }
+// ============================================================================
+// copy constructor
+// ============================================================================
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT // ==========================
+// ============================================================================
+Ostap::Functions::PyFuncTree::PyFuncTree
+( const Ostap::Functions::PyFuncTree& right )
+  : m_self ( right.m_self )
+{
+  { if ( nullptr != m_self ) { Py_INCREF( m_self ) ; } }
+}
+// ============================================================================
+#endif // =====================================================================
+// ============================================================================
+Ostap::Functions::PyFuncTree*
+Ostap::Functions::PyFuncTree::clone( const char* /* name */ ) const
+{ return new PyFuncTree ( *this ) ; }
 // ============================================================================
 // the basic 
 // ============================================================================
@@ -89,14 +111,15 @@ double Ostap::Functions::PyFuncTree::operator() ( const TTree* t ) const
   //
 #if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
   //
-  Ostap::Assert ( m_self                   , 
-                  "self*  points to NULL"  , 
-                  "PyFuncTree::operator()" , 
-                  Ostap::StatusCode(400)   ) ;
-  Ostap::Assert ( m_tree                   , 
-                  "TTree* points to NULL"  , 
-                  "PyFuncTree::operator()" , 
-                  Ostap::StatusCode(401)   ) ;
+  Ostap::Assert ( m_self                               , 
+                  "self*  points to NULL"              , 
+                  "Ostap::Functions::PyFuncTree::()"   , 
+                  INVALID_PYSELF , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( m_tree                               , 
+                  "TTree* points to NULL"              , 
+                  "Ostap::Functions::PyFuncTree::()"   , 
+                  INVALID_TREE   , __FILE__ , __LINE__ ) ;
+  //
   return call_method ( m_self , s_method ) ;
   //
 #else 
@@ -148,10 +171,33 @@ Ostap::Functions::PyFuncData::PyFuncData
 // ============================================================================
 Ostap::Functions::PyFuncData::~PyFuncData() 
 {
-#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
+  // ==========================================================================
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT // ==========================
+  // ==========================================================================
   Py_XDECREF ( m_self ) ;
-#endif 
+  // ==========================================================================
+#endif // =====================================================================
+  // ==========================================================================
 }
+// ============================================================================
+// copy constructor
+// ============================================================================
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT // ==========================
+// ============================================================================
+Ostap::Functions::PyFuncData::PyFuncData
+( const Ostap::Functions::PyFuncData& right )
+  : m_data ( right.m_data )
+  : m_self ( right.m_self )
+{
+  { if ( nullptr != m_self ) { Py_INCREF( m_self ) ; } }
+}
+// ============================================================================
+#endif // =====================================================================
+// ============================================================================
+// ============================================================================
+Ostap::Functions::PyFuncData*
+Ostap::Functions::PyFuncData::clone( const char* /* name */ ) const
+{ return new PyFuncData ( *this ) ; }
 // ============================================================================
 // the basic 
 // ============================================================================

@@ -11,15 +11,13 @@
 - It tests various 2D-non-factrorizeable models 
 """
 # ============================================================================= 
-from   __future__              import print_function
-# ============================================================================= 
-import ostap.fitting.roofit 
-import ostap.fitting.models     as     Models 
-from   ostap.core.core          import Ostap, VE, dsID, rooSilent 
 from   builtins                 import range
+from   ostap.core.core          import Ostap, VE, dsID, rooSilent 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait, batch_env  
+import ostap.fitting.models     as     Models 
+import ostap.fitting.roofit 
 import ROOT, random
 # =============================================================================
 # logging 
@@ -29,6 +27,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_fitting_models_2D' )
 else : 
     logger = getLogger ( __name__ )
+# =============================================================================
+## set batch from environment 
+batch_env ( logger )
 # =============================================================================
 ## make simple test mass 
 m_x     = ROOT.RooRealVar ( 'mass_x' , 'Some test mass(X)' , 3 , 3.2 )

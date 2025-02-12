@@ -14,11 +14,12 @@ from   __future__               import print_function
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ostap.fitting.roofit 
+from   builtins                 import range
 from   ostap.core.core          import dsID
 from   ostap.utils.timing       import timing
-from   builtins                 import range
+from   ostap.utils.utils        import batch_env 
 import ostap.logger.table       as     T
+import ostap.fitting.roofit 
 import ROOT, random
 # =============================================================================
 # logging 
@@ -29,7 +30,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
 
 evt     = ROOT.RooRealVar ( 'Evt'    , '#event'        , 0 , 1000000 )
 run     = ROOT.RooRealVar ( 'Run'    , '#run'          , 0 , 1000000 )

@@ -9,18 +9,17 @@
 """ Test toys + simfit
 """
 # ============================================================================= 
-from builtins    import range 
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ostap.fitting.roofit 
-import ostap.fitting.models     as     Models 
+from   builtins                 import range 
 from   ostap.core.core          import dsID, rooSilent
-import ostap.fitting.toys       as     Toys
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait, batch_env  
+import ostap.fitting.models     as     Models 
+import ostap.fitting.toys       as     Toys
+import ostap.fitting.roofit 
 import ROOT, random
 # =============================================================================
 # logging 
@@ -30,8 +29,12 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_fitting_simfit1' )
 else : 
     logger = getLogger ( __name__ )
-
-        
+# =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
+       
 # =============================================================================
 def test_toys_simfit_1 () :
 

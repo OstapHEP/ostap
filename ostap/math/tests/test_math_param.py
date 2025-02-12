@@ -14,14 +14,13 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-from   builtins               import range
+from   ostap.plotting.canvas  import use_canvas
+from   ostap.utils.timing     import timing
+from   ostap.math.models      import f1_draw 
+from   ostap.utils.utils      import wait, batch_env  
 import ostap.histos.param
 import ostap.histos.histos
 import ostap.fitting.funcs
-from   ostap.plotting.canvas  import use_canvas
-from   ostap.utils.utils      import wait 
-from   ostap.utils.timing     import timing
-from   ostap.math.models      import f1_draw 
 import ROOT, random, math,  time
 # =============================================================================
 # logging 
@@ -34,11 +33,18 @@ else :
 # =============================================================================
 logger.info ( 'Test for function parameterisation')
 # =============================================================================
-use_scipy = False 
-try :
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+use_scipy = False
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
     import scipy
-    use_scipy = True 
-except ImportError :
+    use_scipy = True
+    # =========================================================================
+except ImportError : # ========================================================
+     #=========================================================================
     use_scipy = False 
 
 # =============================================================================

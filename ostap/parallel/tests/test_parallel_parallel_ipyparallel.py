@@ -7,12 +7,13 @@
 """
 # ============================================================================
 from   itertools                import count 
-import ostap.histos.histos
 from   ostap.parallel.task      import Task, GenericTask
 from   ostap.parallel.utils     import pool_context 
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.plotting.canvas    import use_canvas
-import ROOT, time, sys 
+from   ostap.utils.utils        import batch_env 
+import ostap.histos.histos
+import ROOT, random, time, sys 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -22,13 +23,17 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-try :
-    from ostap.parallel.parallel_ipyparallel import WorkManager 
-except ImportError :
+batch_env ( logger ) 
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    from ostap.parallel.parallel_ipyparallel import WorkManager
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     logger.error ("Cannot import WorkManager from parallel_ipyparallel")
     WorkManager = None 
 # =============================================================================
-
 
 # =============================================================================
 ## simple    function that created and  fill a histogram

@@ -19,15 +19,16 @@ Two main class are defined: Task and WorkManager
 """
 # =============================================================================
 __all__ = (
-    'Task'        , ## Base class for Task 
     'WorkManager' , ## Task-manager 
-    )
+    'Checker'     , ## check of the object can be pickled/unpickled  
+   )
 # =============================================================================
 import sys, os, time
-from   itertools                 import repeat , count
-from   ostap.utils.progress_bar  import progress_bar
-from   ostap.parallel.task       import Task, TaskManager 
-import multiprocessing           as     MP
+from   itertools                import repeat , count
+from   ostap.utils.progress_bar import progress_bar
+from   ostap.parallel.task      import TaskManager
+from   ostap.io.pickling        import PickleChecker as Checker 
+import multiprocessing          as     MP
 # =============================================================================
 from    ostap.logger.logger       import getLogger
 # =============================================================================
@@ -67,15 +68,15 @@ class WorkManager(TaskManager) :
         if isinstance ( ncpus , int ) and 1 <= ncpus : pass
         else                                         : ncpus = MP.cpu_count()
 
-        if pp        :
-            logger.warning ( "WorkManager: option ``pp'' is ignored" )
-        if ppservers :
-            logger.warning ( "WorkManager: option ``ppservers'' is ignored" )
+        ## if pp        : logger.warning ( "WorkManager: option ``pp'' is ignored" )
+        ## if ppservers : logger.warning ( "WorkManager: option ``ppservers'' is ignored" )
         
         ## initialize the base class 
         TaskManager.__init__  ( self , ncpus = ncpus , silent = silent , progress = progress )        
         
         self.pool   = MP.Pool ( self.ncpus )
+        
+        if kwargs : self.extra_arguments ( **kwagrs )
 
     # =========================================================================
     ## process the bare <code>executor</code> function

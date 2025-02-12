@@ -9,21 +9,19 @@
 """ Test module for RooStats 
 """
 # ============================================================================= 
-from   __future__               import print_function
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 from   builtins                 import range
-import ostap.fitting.roofit 
-import ostap.fitting.models     as     Models
 from   ostap.fitting.variables  import SETVAR, FIXVAR  
 from   ostap.core.core          import cpp, VE, dsID, hID , rooSilent, Ostap 
 from   ostap.utils.timing       import timing
 from   ostap.utils.utils        import vrange
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait
+from   ostap.utils.utils        import wait, batch_env 
+import ostap.fitting.models     as     Models
 import ostap.logger.table       as     T
+import ostap.fitting.roofit 
 import ROOT
 # =============================================================================
 # logging 
@@ -33,6 +31,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_fitting_roostats4' )
 else : 
     logger = getLogger ( __name__ )
+# =============================================================================
+## set batch from environment 
+batch_env ( logger )
 # =============================================================================
 
 

@@ -22,13 +22,16 @@ __all__     = (
     )
 # =============================================================================
 from    ostap.core.meta_info   import root_info
-from    ostap.utils.cidict     import cidict
-from    ostap.core.core        import cpp, Ostap, funID, cidict_fun, loop_items 
+from    ostap.core.core        import cpp, Ostap, funID
+from    ostap.utils.basic      import loop_items 
 from    ostap.core.ostap_types import num_types, integer_types
 from    ostap.math.base        import pos_infinity, neg_infinity
+from    ostap.utils.cidict     import cidict, cidict_fun 
+# 
 import  ostap.math.polynomials 
 import  ostap.math.reduce   
-import  ostap.math.derivative  as     D  
+import  ostap.math.derivative  as     D
+#
 import  ROOT, random  
 # =============================================================================
 # logging 

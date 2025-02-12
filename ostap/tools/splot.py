@@ -37,13 +37,14 @@ __all__     = (
     'sPlot3D'  , ## 3D-splot
     )
 # =============================================================================
-from   ostap.core.core            import Ostap   , typename 
 from   ostap.core.ostap_types     import string_types, integer_types  
+from   ostap.core.core            import Ostap
 from   ostap.fitting.pdfbasic     import ( APDF1 ,
                                            PDF1  , Generic1D_pdf ,
                                            PDF2  , Generic2D_pdf )
 from   ostap.fitting.variables    import FIXVAR
 from   ostap.histos.histos        import Histo1DFun, Histo2DFun 
+from   ostap.utils.basic          import typename 
 import ostap.fitting.roofitresult
 import ROOT, abc
 # =============================================================================
@@ -128,7 +129,7 @@ class sPlot(object) :
             with FIXVAR ( to_fix ) :
                 ns = ', '.join ( sorted ( v.name for v in to_fix ) ) 
                 logger.info ( '(Re)fit with fixed parameters: %s' % ns )
-                fitresult , f = pdf.fitTo ( dataset , silent = True , draw = False , **fitopts )
+                fitresult , _ = pdf.fitTo ( dataset , silent = True , draw = False , **fitopts )
                 title = '(Re)fit with fixed parameters'
                 logger.info ( '%s:\n%s' % ( title , fitresult.table ( title = title , prefix = '# ' ) ) ) 
             # =================================================================
@@ -138,7 +139,7 @@ class sPlot(object) :
             if pars and all ( ( p in pdf.alist2 ) for p in pars ) : pass
             else :
                 ns = ', '.join ( n for n in names  )                 
-                raise TypeError ( "Please re-run fit with with only floating: %s" % ns )
+                raise TypeError ( "Please re-run fit with with (at most) floating: %s" % ns )
 
         ## dictionary of components 
         hcomponents  = {}
@@ -186,6 +187,18 @@ class sPlot(object) :
         self.__hcomponents = hcomponents
         self.__hweights    = hweights 
         self.__access      = access
+
+        """
+        spl = Ostap.MoreRooFit.SPlot2Tree ( pdf.pdf   ,
+                                            pdf.vars  ,
+                                            fitresult )
+        print ( ' PDF:'            , spl.pdf          () )
+        print ( ' observables:'    , spl.observables  () )
+        print ( ' componnets:'     , spl.components   () )
+        print ( ' coefficiencts:'  , spl.coefficients () )
+        print ( ' normalisation :' , spl.normalization () )
+        print ( ' fitesult:'       , spl.fitresult  () )
+        """
         
     @property
     def hcomponents ( self ) :
@@ -255,8 +268,8 @@ class sPlot(object) :
         bbs = ','.join ( vvs ) 
         logger.info ( "Adding sPlot results %s to TTree" % vvs ) 
         
-        if parallel : result = tree.padd_new_branch ( None , fmap ) 
-        else        : result = tree. add_new_branch ( None , fmap ) 
+        if parallel : result = tree.padd_new_branch ( fmap ) 
+        else        : result = tree. add_new_branch ( fmap ) 
 
         return result 
 

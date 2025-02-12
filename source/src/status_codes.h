@@ -16,20 +16,28 @@ namespace
     INVALID_TREE          = 750 ,
     INVALID_FORMULA       = 751 ,
     INVALID_FORMULAE      = 752 ,
-    CANNOT_CREATE_BRANCH  = 753 , 
-    CANNOT_CREATE_FORMULA = 754 , 
+    INVALID_BRANCH_NAME   = 753 , 
+    CANNOT_CREATE_BRANCH  = 754 , 
+    CANNOT_CREATE_FORMULA = 755 , 
     // ========================================================================
-    INVALID_TREEFUNCTION  = 755 ,
-    INVALID_TH2           = 756 , 
-    INVALID_TH1           = 757 , 
-    INVALID_BUFFER        = 758 ,
-    MISMATCH_TREE         = 759 , 
+    INVALID_TREEFUNCTION  = 756 ,
+    INVALID_TH3           = 757 , 
+    INVALID_TH2           = 758 , 
+    INVALID_TH1           = 759 , 
+    INVALID_BUFFER        = 760 ,
+    MISMATCH_TREE         = 761 , 
     //
-    INVALID_ABSDATA       = 760 ,
-    INVALID_ARGSET        = 761 ,
-    INVALID_OBSERVABLE    = 762 , 
-    INVALID_OBSERVABLES   = 763 ,
+    INVALID_ABSDATA       = 765 ,
+    INVALID_ARGSET        = 766 ,
+    INVALID_ABSARG        = 767 ,   
+    INVALID_OBSERVABLE    = 768 , 
+    INVALID_OBSERVABLES   = 769 ,
     //
+    INVALID_PDF           = 770 ,
+    INVALID_FITRESULT     = 771 ,
+    //
+    INVALID_PYSELF        = 772 ,
+    
     // =========================================================================
   }; // ========================================================================
   // ===========================================================================

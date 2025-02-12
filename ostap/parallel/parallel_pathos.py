@@ -35,18 +35,19 @@ __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = '2016-02-23'
 __all__     = (
     'WorkManager' , ## task manager
-    )
+    'Checker'     , ## check of the object can be pickled/unpickled  
+)
 # =============================================================================
 import sys, os 
 from   builtins                 import range
 from   itertools                import repeat , count
 # =============================================================================
-from   ostap.utils.progress_bar import progress_bar
 from   ostap.parallel.task      import ( TaskManager   ,
                                          Task          , TaskMerger    , 
                                          Statistics    , StatMerger    ,
                                          task_executor , func_executor )
-# =============================================================================
+from   ostap.utils.basic        import loop_items 
+from   ostap.utils.progress_bar import progress_bar
 from   ostap.parallel.utils     import get_local_port  , pool_context  
 # =============================================================================
 if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Sized
@@ -62,12 +63,10 @@ from ostap.logger.logger        import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.parallel_pathos' )
 else                      : logger = getLogger ( __name__                         ) 
 # =============================================================================
-
-# =============================================================================
 ## helper function to access the underlyng <code>pp.Server</code> object
 #  @attention It should not be abused! 
 def get_pps ( pool ) :
-    """Helper function to access the underlying pp.Server object
+    """ Helper function to access the underlying pp.Server object
     - It should not be abused! 
     """
     import pathos.parallel
@@ -215,6 +214,7 @@ class WorkManager (TaskManager) :
         for p in self.ppservers : ps = ps.replace ( p.local , p.remote )
         if not self.silent : logger.info ( 'WorkManager is %s' % ps )
 
+        if kwa : self.extra_arguments ( **kwa )
 
     @property
     def pool ( self ) :
@@ -335,6 +335,56 @@ class WorkManager (TaskManager) :
                 smpp   += s
         return smpp
 
+
+# =============================================================================
+DILL_COMMAND = """import sys, dill
+with open('%s','rb') as f : dill.load ( f )"""
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    import dill 
+    from ostap.io.pickling import PickleChecker 
+    # =========================================================================
+    ## @class DillChecker
+    #  Check if the object can be properly pickled/unpickled
+    class DillChecker(PickleChecker) :
+        """ Check if the object can be properly pickled/unpickled
+        """
+        def known ( self , *objtypes) :
+            return super(Checker,self).known ( *objtypes) or \
+                all ( o in self.EXTRA_TYPES for o in objtypes )
+        # =====================================================================
+        ## check if the object can be properly pickled/unpickled 
+        def pickles ( self , *objects ) :
+            """ Check of the object can be properly pickled/unpickled
+            """
+            return self._pickles ( *objects               ,
+                                   fun_dumps = dill.dumps ,
+                                   fun_loads = dill.loads ) 
+        # =====================================================================
+        ## Check pickling of an object across another (sub) process
+        def pickles_process ( self , *objects , fast = False  ) :
+            """ Check pickling of an object across another (sub)process
+            """
+            return self._pickles_process ( *objects                ,
+                                           fun_dump = dill.dump    ,
+                                           command  = DILL_COMMAND ,
+                                           fast     = fast         ) ;
+        # =========================================================================
+        ## add new type into th elist of "known-types"
+        def add ( self , ntype ) :
+            """ Add new type into th elist of "known-types
+            """
+            if ntype in self : return 
+            self.EXTRA_TYPES.add ( ntype )         
+    # =========================================================================
+    ## usefulname
+    Checker = DillChecker 
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    from ostap.io.pickling import PickleChecker as Checker 
+    # =========================================================================
 
 # =============================================================================
 if '__main__' == __name__ :

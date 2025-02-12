@@ -39,6 +39,7 @@ from   ostap.math.integral      import ( integral  , romberg     ,
                                          integral3 , genzmalik3  ,
                                        complex_circle_integral )
 from   ostap.math.make_fun      import make_fun1, make_fun2 , make_fun3
+from   ostap.utils.utils        import batch_env 
 import ostap.math.integrator 
 import ostap.logger.table       as     T
 # ============================================================================= 
@@ -47,8 +48,12 @@ import ostap.logger.table       as     T
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_math_integral' )
 else                       : logger = getLogger ( __name__             )
-# ============================================================================= 
-    
+# =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
+
 # =============================================================================
 def test_integral ():
 

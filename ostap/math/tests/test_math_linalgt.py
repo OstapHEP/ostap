@@ -9,12 +9,12 @@
 """ Test module for ostap/math/linalgt.py
 """
 # ============================================================================= 
-from __future__             import print_function
 from   sys                  import version_info as python_version
-from   ostap.math.base      import typename 
+from   ostap.core.meta_info import root_info
 from   ostap.math.linalg    import checkops 
 from   ostap.core.core      import Ostap
-from   ostap.core.meta_info import root_info
+from   ostap.utils.basic    import typename
+from   ostap.utils.utils    import batch_env 
 import ostap.logger.table   as     T 
 import ROOT, array, random   
 # ============================================================================= 
@@ -23,10 +23,15 @@ import ROOT, array, random
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'tests_math_linalgt'  )
 else                       : logger = getLogger ( __name__              )
-# ============================================================================= 
-try :
+# =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+try : # =======================================================================
     import numpy as np
-except ImportError :
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     np = None
 
 # =============================================================================

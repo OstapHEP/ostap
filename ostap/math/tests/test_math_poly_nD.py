@@ -19,7 +19,8 @@
 # ============================================================================= 
 from   ostap.core.core          import Ostap, SE  
 from   ostap.logger.colorized   import attention
-from   ostap.utils.progress_bar import progress_bar 
+from   ostap.utils.progress_bar import progress_bar
+from   ostap.utils.utils        import batch_env 
 import ostap.math.integral      as     I 
 import ostap.logger.table       as     T
 import ROOT, random, math 
@@ -29,7 +30,12 @@ import ROOT, random, math
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_poly_nD' )
 else                       : logger = getLogger ( __name__                  )
-# ============================================================================= 
+# =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
+
 scale = 1.e+12
 
 # =============================================================================

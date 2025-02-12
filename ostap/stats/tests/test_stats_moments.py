@@ -9,22 +9,23 @@
 """
 # =============================================================================
 import math
-from   ostap.stats.moments import  ( Mean          ,
-                                     Variance      ,
-                                     Median        ,
-                                     Mode          ,
-                                     Width         ,
-                                     RMS           ,
-                                     Moment        ,
-                                     CentralMoment ,
-                                     Skewness      ,
-                                     Kurtosis      ,
-                                     Quantile      ,
-                                     cl_symm       ,
-                                     cl_asymm      ,
-                                     skewness      ,
-                                     quantile      ,
-                                     kurtosis      )
+from   ostap.utils.utils   import batch_env 
+from   ostap.stats.moments import ( Mean          ,
+                                    Variance      ,
+                                    Median        ,
+                                    Mode          ,
+                                    Width         ,
+                                    RMS           ,
+                                    Moment        ,
+                                    CentralMoment ,
+                                    Skewness      ,
+                                    Kurtosis      ,
+                                    Quantile      ,
+                                    cl_symm       ,
+                                    cl_asymm      ,
+                                    skewness      ,
+                                    quantile      ,
+                                    kurtosis      )
 # ============================================================================= 
 # logging 
 # =============================================================================
@@ -32,6 +33,9 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_stats_moments' )
 else                       : logger = getLogger ( __name__             )
 # ============================================================================= 
+batch_env ( logger ) 
+# =============================================================================
+
 
 # ============================================================================= 
 def test_moments1() :

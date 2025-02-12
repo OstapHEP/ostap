@@ -60,15 +60,15 @@ __all__     = (
     'frame_types'          , ## the basic DataFrame/FeameNode types 
     ) 
 # =============================================================================
-from   ostap.core.core           import cpp, Ostap, cidict_fun      
+from   ostap.core.core           import cpp, Ostap
 from   ostap.math.base           import isequal, iszero, axis_range                             
 from   ostap.core.meta_info      import root_info 
 from   ostap.core.ostap_types    import ( integer_types , dictlike_types , 
                                           num_types     , ordered_dict   )    
 from   ostap.logger.utils        import multicolumn
+from   ostap.utils.cidict        import cidict, cidict_fun      
 from   ostap.utils.progress_conf import progress_conf 
 from   ostap.utils.basic         import isatty, loop_items
-from   ostap.utils.cidict        import cidict
 import ostap.core.config         as     OCC 
 import ostap.stats.statvars      as     SV
 import ostap.logger.table        as     T 

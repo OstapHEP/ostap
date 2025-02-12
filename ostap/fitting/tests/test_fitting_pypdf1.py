@@ -20,7 +20,7 @@ from   ostap.fitting.fit1d      import PEAK ,  Fit1D
 from   ostap.utils.utils        import timing
 from   ostap.core.meta_info     import old_PyROOT, root_info  
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait, batch_env  
 import ostap.fitting.roofit 
 import ROOT, random, math, time 
 # =============================================================================
@@ -32,6 +32,10 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 ## make simple test mass 
 mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 3.0 , 3.2 )
 

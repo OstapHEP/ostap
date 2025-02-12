@@ -14,21 +14,20 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   builtins                     import range
 from   ostap.core.meta_info         import root_info
-import ostap.fitting.roofit 
-import ostap.fitting.models         as     Models 
 from   ostap.utils.timing           import timing
 from   ostap.utils.memory           import memory 
 from   ostap.core.core              import cpp, VE, dsID, hID, rooSilent
-import ostap.fitting.models         as     Models
 from   ostap.plotting.canvas        import use_canvas
-from   ostap.utils.utils            import wait
+from   ostap.utils.utils            import wait, batch_env 
 from   ostap.utils.basic            import numcpu 
 from   ostap.fitting.toys           import pull_var
 from   ostap.math.base              import num_range
 from   ostap.utils.progress_bar     import progress_bar
+import ostap.parallel.parallel_toys as     Toys
 import ostap.logger.table           as     T
+import ostap.fitting.models         as     Models
+import ostap.fitting.roofit 
 import ROOT, sys, os, random, time 
 # =============================================================================
 # logging 
@@ -39,6 +38,8 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+batch_env ( logger ) 
+# =============================================================================
 if sys.version_info < ( 3, 0 ) and ( 6 , 18 ) <= root_info < ( 6 , 20 ) :
     try : 
         import dill
@@ -48,7 +49,6 @@ if sys.version_info < ( 3, 0 ) and ( 6 , 18 ) <= root_info < ( 6 , 20 ) :
     except ImportError :
         pass
 
-import ostap.parallel.parallel_toys as     Toys
 
 nominal_mean    = 0.4
 nominal_sigma   = 0.1

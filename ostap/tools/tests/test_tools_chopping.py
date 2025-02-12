@@ -14,14 +14,14 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2015-10-26"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-from   builtins                 import range
-import ostap.io.root_file
 from   ostap.core.meta_info     import root_info
 from   ostap.core.core          import ROOTCWD
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.utils.timing       import timing
-from   array                    import array
-import ROOT, os
+from   ostap.utils.utils        import batch_env 
+from ostap.utils.cleanup        import CleanUp
+import ostap.io.root_file
+import ROOT, os, array, random  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -30,12 +30,14 @@ if '__main__' == __name__  or '__builtin__'  == __name__ :
     logger = getLogger ( 'ostap.test_tools_chopping' )
 else : 
     logger = getLogger ( __name__ )
-# =============================================================================    
-from ostap.utils.cleanup import CleanUp
+# =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+
 data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-test-tools-chopping-' ) 
 
 if not os.path.exists( data_file ) :
-    import random
     
     nB = 20000
     nS = 10000
@@ -48,7 +50,6 @@ if not os.path.exists( data_file ) :
     b_evt_per_run = 511
     
     logger.info('Prepare input ROOT file with data %s' % data_file )
-    import ostap.io.root_file 
     with ROOT.TFile( data_file ,'recreate') as test_file:
         
         treeSignal = ROOT.TTree('S','signal     tree')
@@ -56,12 +57,11 @@ if not os.path.exists( data_file ) :
         treeSignal.SetDirectory ( test_file ) 
         treeBkg   .SetDirectory ( test_file ) 
         
-        from array import array 
-        var1 = array ( 'd', [0] )
-        var2 = array ( 'd', [0] )
-        var3 = array ( 'd', [0] )
-        vevt = array ( 'i', [0] )
-        vrun = array ( 'i', [0] )
+        var1 = array.array ( 'd', [0] )
+        var2 = array.array ( 'd', [0] )
+        var3 = array.array ( 'd', [0] )
+        vevt = array.array ( 'i', [0] )
+        vrun = array.array ( 'i', [0] )
         
         treeSignal.Branch ( 'var1' , var1 , 'var1/D' )
         treeSignal.Branch ( 'var2' , var2 , 'var2/D' )

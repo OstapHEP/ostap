@@ -13,9 +13,10 @@ Prepare tests/examples for the  summary graphs
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # =============================================================================
-from   ostap.core.pyrouts           import VE 
-from   ostap.plotting.graph_summary import  ( Average , Record   , draw_summary ,
-                                              Point   , Interval , Limit  ) 
+from   ostap.core.pyrouts           import VE
+from   ostap.utils.utils            import batch_env 
+from   ostap.plotting.graph_summary import ( Average  , Record , Point        ,
+                                             Interval , Limit  , draw_summary )
 import ROOT, time
 # =============================================================================
 # logging
@@ -26,7 +27,8 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else :
     logger = getLogger ( __name__ )
 # =============================================================================
-
+batch_env ( logger ) 
+# =============================================================================
 
 # =============================================================================
 def test_summary1 () :

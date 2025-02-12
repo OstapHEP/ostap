@@ -9,15 +9,14 @@
 """Test for HORSNdini_pdf, HILLdini_pdf and HHdini_pdf
 """
 # ============================================================================= 
-from   __future__              import print_function
-# ============================================================================= 
-import ostap.fitting.roofit 
-import ostap.fitting.models     as     Models 
+from   __future__               import print_function
 from   ostap.core.core          import Ostap, VE, dsID, rooSilent,rootError 
 from   builtins                 import range
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait, batch_env  
+import ostap.fitting.models     as     Models 
+import ostap.fitting.roofit 
 import ROOT, random, warnings 
 # =============================================================================
 # logging 
@@ -28,6 +27,10 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+
 ## make simple test mass
 x = ROOT.RooRealVar( 'x' , 'x-observable' , 0 , 12 )
 

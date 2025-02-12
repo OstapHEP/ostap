@@ -17,7 +17,7 @@ __all__     = (
 )
 # =============================================================================
 from   ostap.core.meta_info         import root_info 
-from   ostap.core.core              import typename 
+from   ostap.utils.basic            import typename 
 import ostap.fitting.variables
 import ostap.fitting.roocollections
 import ROOT 

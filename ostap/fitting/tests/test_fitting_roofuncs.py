@@ -11,16 +11,15 @@
 - It tests basic FUN methods 
 """
 # ============================================================================= 
-from   __future__               import print_function
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 from   builtins                 import range
 from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait
+from   ostap.utils.utils        import wait, batch_env 
 from   ostap.fitting.funbasic   import Id, Fun1D
+from   ostap.math.math_ve       import *
 import ostap.fitting.roofuncs   as     RF 
 import ROOT, random, math 
 # =============================================================================
@@ -32,7 +31,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-from ostap.math.math_ve import *
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
     
 x = ROOT.RooRealVar ( 'x' , 'x-variable' , 1.e-2 , 5 )
 y = ROOT.RooRealVar ( 'y' , 'y-variable' , 0     , 1 )

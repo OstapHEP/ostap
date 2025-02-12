@@ -10,6 +10,7 @@ from   itertools                import count
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.timing       import timing 
+from   ostap.utils.utils        import batch_env
 import ostap.histos.histos
 import ROOT, time, sys, warnings  
 # =============================================================================
@@ -20,6 +21,8 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_parallel_ipyparallel' )
 else : 
     logger = getLogger ( __name__ )
+# =============================================================================
+batch_env ( logger ) 
 # =============================================================================
 ipp = None
 # =============================================================================
@@ -123,7 +126,8 @@ def test_ipyparallel_callable () :
     
     if not ( 3 , 6 )<= sys.version_info :
         logger.error ( "python3.6 is required for the test!")
-        
+        return
+    
     if not ipp :
         logger.error ( "ipyparallel module is not available")
         return

@@ -34,10 +34,11 @@ __all__     = (
     "tmvaGUI"
     )
 # =============================================================================
-from   ostap.core.core         import items_loop, WSE, Ostap, rootWarning
+from   ostap.core.core         import Ostap, WSE , rootWarning
 from   ostap.core.ostap_types  import num_types, string_types, integer_types 
 from   ostap.core.meta_info    import root_info, python_info 
 from   ostap.utils.cleanup     import CleanUp
+from   ostap.utils.basic       import items_loop 
 import ostap.io.root_file
 import ROOT, os, glob, math, tarfile, shutil, itertools 
 # =============================================================================

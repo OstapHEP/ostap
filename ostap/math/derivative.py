@@ -62,14 +62,14 @@ __all__     = (
 from   builtins import range 
 import ROOT, math, abc, array  
 # =============================================================================
+from sys                    import float_info
 from ostap.math.base        import Ostap, iszero , isequal
 from ostap.core.ostap_types import num_types , is_integer
 from ostap.math.ve          import VE 
-from sys                    import float_info
-from ostap.math.finitediffs import  ( Rule , the_dot , darray ,
-                                      Derivative1 , Derivative2 , Derivative3 ,
-                                      Derivative4 , Derivative5 , Derivative6 )
-                                      
+from ostap.math.finitediffs import ( Rule , the_dot , darray ,
+                                     Derivative1 , Derivative2 , Derivative3 ,
+                                     Derivative4 , Derivative5 , Derivative6 )
+
 from ostap.math.delevie     import ( derivative         ,        Derivative ,
                                      complex_derivative , ComplexDerivative , 
                                      partial_derivative , PartialDerivative ) 

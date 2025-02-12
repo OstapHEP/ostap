@@ -919,7 +919,7 @@ class TaskManager(object) :
         from ostap.utils.progress_bar import ProgressBar
         ## total number of jobs  
         njobs = sum  ( len ( c ) for c in chunks )
-        with ProgressBar ( max_value = njobs , silent = not self.progress ) as bar :
+        with ProgressBar ( max_value = njobs , silent = not self.progress , description = 'Jobs:' ) as bar :
             
             while chunks :
 
@@ -972,7 +972,7 @@ class TaskManager(object) :
         ## total number of jobs 
         njobs = sum  ( len ( c ) for c in chunks ) 
         from ostap.utils.progress_bar import ProgressBar
-        with ProgressBar ( max_value = njobs , silent = not self.progress ) as bar :
+        with ProgressBar ( max_value = njobs , silent = not self.progress , description = "Jobs:") as bar :
 
             while chunks :
 
@@ -1070,7 +1070,17 @@ class TaskManager(object) :
             stat_pp .print_stats ( 'pp-' , cputime )
         else : 
             stat_loc.print_stats ( 'qq-' , cputime )
-                
+
+    # =========================================================================
+    ## report extra/unused arguments 
+    def extra_arguments ( self , *args , **kwargs ) :
+        """ report extra/unused arguments 
+        """
+        if args or kwargs :
+            from ostap.logger.utils import print_args
+            title = 'Unuser/extra arguments'
+            logger.warning  ( '%s:\n%s' % ( title , print_args ( *args , prefix = '#' , **kwargs ) ) )
+            
 # =============================================================================
 if '__main__' == __name__ :
     

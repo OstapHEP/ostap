@@ -349,7 +349,7 @@ namespace Ostap
       std::ostringstream s;
       std::ios::fmtflags orig_flags = s.flags();
       s.setf ( std::ios::showpoint ) ; // to display correctly floats
-      s.setf ( std::ios::boolalpha ) ; // for booleans 
+      s.setf ( std::ios::boolalpha ) ; // for booleans
       toStream ( obj , s  ) ;
       s.flags( orig_flags ) ;
       return s.str();

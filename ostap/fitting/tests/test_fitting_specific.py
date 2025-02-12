@@ -12,12 +12,13 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ostap.io.zipshelve       as     DBASE
-import ostap.fitting.roofit 
-import ostap.fitting.models     as     Models
-from   ostap.fitting.specific   import * 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import batch_env 
+from   ostap.fitting.specific   import * 
+import ostap.io.zipshelve       as     DBASE
+import ostap.fitting.models     as     Models
+import ostap.fitting.roofit 
 import ROOT
 # =============================================================================
 # logging 
@@ -28,6 +29,10 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 
 mB  = ROOT.RooRealVar ( 'mB'  , 'some beauty mass' , 5.0 , 5.5 )
 mBc = ROOT.RooRealVar ( 'mBc' , 'some beauty mass' , 6.1 , 6.5 )

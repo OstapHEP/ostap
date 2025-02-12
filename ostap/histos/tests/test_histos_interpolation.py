@@ -15,6 +15,7 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
 from   ostap.core.core      import hID, SE 
+from   ostap.utils.utils    import batch_env 
 import ostap.histos.histos  
 import ROOT, random
 # =============================================================================
@@ -28,9 +29,10 @@ else :
 # =============================================================================
 logger.info ( 'Test for 1,2&3D-histogram interpolation')
 # =============================================================================
-
-
-
+## set batch form environment 
+batch_env ( logger )
+# =============================================================================
+#
 h1 = ROOT.TH1D ( hID() , '', 5 , 0 , 1 )
 h2 = ROOT.TH2D ( hID() , '', 5 , 0 , 1 , 5 , 0 , 1 ) 
 h3 = ROOT.TH3D ( hID() , '', 5 , 0 , 1 , 5 , 0 , 1 , 5 , 0 , 1 ) 

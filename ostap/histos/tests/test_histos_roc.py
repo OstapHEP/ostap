@@ -18,6 +18,7 @@ from   ostap.core.core       import hID
 from   ostap.histos.roc      import roc_curve
 from   ostap.math.integral   import integral 
 from   ostap.plotting.canvas import use_canvas 
+from   ostap.utils.utils     import batch_env 
 import ROOT, random, math 
 # =============================================================================
 # logging 
@@ -30,7 +31,8 @@ else :
 # =============================================================================
 logger.info ( "Test for `roc_curve'")
 # =============================================================================
-
+## set batch form environment 
+batch_env ( logger )
 # =============================================================================
 def test_roc () :
 

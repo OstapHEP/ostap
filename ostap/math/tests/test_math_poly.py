@@ -22,10 +22,11 @@
 from   ostap.core.core          import Ostap, SE  
 from   ostap.logger.colorized   import attention
 from   ostap.utils.progress_bar import progress_bar
-import ostap.math.models 
+from   ostap.utils.utils        import batch_env 
 import ostap.math.integral      as     I 
 import ostap.math.derivative    as     D 
 import ostap.logger.table       as     T
+import ostap.math.models 
 import ROOT, random, math 
 # ============================================================================= 
 # logging 
@@ -34,6 +35,10 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_poly' )
 else                       : logger = getLogger ( __name__               )
 # ============================================================================= 
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 
 xmin  = 0
 xmax  = 10

@@ -6,7 +6,6 @@
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2015-05-17
 # =============================================================================
-from __future__                 import  print_function 
 """Test for parallel data processing 
 """
 # =============================================================================
@@ -21,11 +20,12 @@ from   ostap.utils.timing           import timing
 from   ostap.trees.data             import Data
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.core.core              import ROOTCWD 
+from   ostap.core.meta_info         import root_version_int
+from   ostap.utils.timing           import timing
+from   ostap.utils.utils            import batch_env 
 import ostap.trees.trees       
 import ostap.fitting.roofit
 import ostap.fitting.dataset
-from   ostap.core.meta_info         import root_version_int
-from   ostap.utils.timing           import timing
 import ostap.parallel.parallel_fill 
 import ROOT,os,sys, random
 # =============================================================================
@@ -37,6 +37,10 @@ if '__main__' == __name__ or '__builtin__' == __name__ :
 else : 
     logger = getLogger( __name__ )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 ## create a file with tree 
 def create_tree ( fname , nentries ) :
     """ Create a file with a tree

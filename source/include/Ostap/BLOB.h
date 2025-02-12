@@ -26,10 +26,11 @@ namespace Ostap
   public: 
     // ========================================================================
     /// Standard constructor
-    BLOB ( const std::string& name   = "" , 
-           const std::string& title  = "" ,
-           const std::size_t  len    = 0  , 
-           const void*        buffer = 0  ) ;
+    BLOB
+    ( const std::string& name   = "" , 
+      const std::string& title  = "" ,
+      const std::size_t  len    = 0  , 
+      const void*        buffer = 0  ) ;
     /// destructor 
     virtual ~BLOB() ;
     // ========================================================================

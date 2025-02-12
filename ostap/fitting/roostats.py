@@ -53,9 +53,11 @@ from   ostap.core.ostap_types import ( string_types   ,
                                        num_types      , 
                                        sequence_types ,
                                        dictlike_types )
-from   ostap.core.core        import Ostap , valid_pointer, split_string , loop_items 
-from   ostap.utils.basic      import ( zip_longest   ,
-                                       typename      )
+from   ostap.core.core        import Ostap , valid_pointer
+from   ostap.utils.basic      import ( zip_longest    ,
+                                       split_string   ,
+                                       loop_items     , 
+                                       typename       )
 import ostap.fitting.roofit
 from   ostap.fitting.pdfbasic import APDF1
 import ROOT, abc, sys  
@@ -108,8 +110,7 @@ class ModelConfig(object):
                     **kwargs                    ) : ## other arguments
 
         ## (0) allow some freedom in arguments 
-        from ostap.utils.cidict import cidict
-        from ostap.core.core    import cidict_fun
+        from ostap.utils.cidict import cidict, cidict_fun
         ## case-insensitive kewword argumetns 
         kw_args = cidict ( transform = cidict_fun , **kwargs )
         

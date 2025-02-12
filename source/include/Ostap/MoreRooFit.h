@@ -16,15 +16,18 @@
 #include "RooRealConstant.h"
 #include "RooRealProxy.h"
 #include "RooAbsPdf.h"
+#include "RooAddPdf.h"
 #include "RooGlobalFunc.h"
 // ======================================================================
 #if ROOT_VERSION(6,20,0)<=ROOT_VERSION_CODE && ROOT_VERSION_CODE<ROOT_VERSION(6,29,0)  
 #include "RooSpan.h"
 #endif 
 // ============================================================================
+// Ostap
+// ============================================================================
 // Forward declarations 
 // ============================================================================
-class RooAbsData ; // ROOT/RooFit 
+class RooAbsData ; // ROOT/RooFit
 // ============================================================================
 namespace Ostap 
 {
@@ -3640,6 +3643,13 @@ namespace Ostap
       RooRealProxy  m_func {} ;
       // ======================================================================
     }; //                            The end of clas Ostap::MoreRooFit::WrapPdf 
+    // ========================================================================
+    /** get the original fractions from the <code>RooAddPdf</code>
+     *  @see RooAddPdf
+     */
+    RooArgList fractions
+    ( const RooAddPdf&  pdf       , 
+      bool&             recursive ) ;  
     // ========================================================================
     /** reset RooAbsData and underlying store 
      *  @see RooAbsData

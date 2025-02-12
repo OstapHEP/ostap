@@ -9,22 +9,20 @@
 """ Test module for various polynomial PDFs
 """
 # ============================================================================= 
-from   __future__               import print_function
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
+from   builtins                 import range
 from   ostap.core.meta_info     import root_info 
-import ostap.fitting.roofit 
-import ostap.fitting.models     as     Models 
 from   ostap.core.core          import cpp, VE, dsID, hID , rooSilent, Ostap 
 from   ostap.utils.timing       import timing
-from   builtins                 import range
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait
+from   ostap.utils.utils        import wait, batch_env 
 from   ostap.fitting.background import make_bkg
 from   ostap.logger.colorized   import attention
+import ostap.fitting.models     as     Models 
 import ostap.logger.table       as     T
+import ostap.fitting.roofit 
 import ROOT, random, math 
 # =============================================================================
 # logging 
@@ -35,6 +33,10 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 
 ## observable 
 x       = ROOT.RooRealVar ( 'x' , 'Some test variable' , 0, 10)

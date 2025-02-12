@@ -269,7 +269,7 @@ def data_statistics ( data , expressions , cuts = '' , *args ) :
     - see Ostap.StatVar.statVar
     """
 
-    ## decode expressions & cuts 
+    ## decode expressions & cuts
     var_lst, cuts, input_string = vars_and_cuts ( expressions , cuts )
 
     ## only one name is specified as string

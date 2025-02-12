@@ -30,8 +30,8 @@ __all__     = (
     #
     )
 # =============================================================================
-from   ostap.core.core                import ( cpp      , Ostap     , cidict_fun      , 
-                                               ROOTCWD  , rootID    , typename        , 
+from   ostap.core.core                import ( cpp      , Ostap     , 
+                                               ROOTCWD  , rootID    , 
                                                funcID   , funID     , fID             ,
                                                histoID  , hID       , dsID            ,
                                                VE       , SE        , WSE             ,
@@ -51,11 +51,13 @@ from   ostap.utils.progress_bar       import progress_bar
 from   ostap.core.meta_info           import root_info, python_info
 from   ostap.math.random_ext          import poisson
 from   ostap.utils.utils              import accumulate
-from   ostap.utils.cidict             import cidict
-import ostap.logger.table             as     T 
+from   ostap.utils.cidict             import cidict, cidict_fun  
+from   ostap.utils.basic              import typename 
+# 
 import ostap.stats.moment 
 import ostap.plotting.draw_attributes 
 import ostap.io.root_file 
+import ostap.logger.table             as     T 
 import ROOT, sys, math, ctypes, array  
 # =============================================================================
 # logging 

@@ -13,14 +13,14 @@
 - see Ostap::Math::KarlinStudden
 """
 # ============================================================================= 
-import ostap.math.models 
-import ostap.math.karlin 
 from   ostap.core.core        import Ostap, hID 
 from   ostap.utils.timing     import timing
 from   ostap.plotting.canvas  import use_canvas
 from   builtins               import range
-from   ostap.utils.utils      import vrange
+from   ostap.utils.utils      import vrange, batch_env 
 import ostap.histos.graphs   
+import ostap.math.models 
+import ostap.math.karlin 
 import ROOT, math 
 # ============================================================================
 # logging 
@@ -29,6 +29,10 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_karlin' ) 
 else                       : logger = getLogger ( __name__                 )
 # ============================================================================= 
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 
 functions = set()
 graphs    = set()

@@ -9,22 +9,20 @@
 """ Test module for ostap/fitting/pectra.py
 """
 # ============================================================================= 
-from   __future__               import print_function
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ostap.fitting.roofit 
 from   ostap.core.core          import cpp, VE, dsID, rooSilent 
 from   ostap.utils.timing       import timing
 from   builtins                 import range
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait
+from   ostap.utils.utils        import wait, batch_env 
 from   ostap.logger.colorized   import attention
 from   ostap.fitting.models     import ( Hagedorn_pdf  ,
                                          Tsallis_pdf   ,
                                          QGSM_pdf      ,
                                          GammaDist_pdf ) 
+import ostap.fitting.roofit 
 import ROOT, random
 # =============================================================================
 # logging 
@@ -35,6 +33,10 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 
 models = set() 
 GeV    = 1.0

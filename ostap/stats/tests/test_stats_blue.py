@@ -10,14 +10,15 @@
 - see ostap/stat/combine.py.
 """
 # =============================================================================
-from   ostap.stats.combine import Combine, Ostap, VE, covMatrix  
+from   ostap.stats.combine import Combine, Ostap, VE, covMatrix
+from   ostap.utils.utils   import batch_env 
 import ROOT
 # =============================================================================
 from   ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'tests_stats_blue' )
 else                       : logger = getLogger ( __name__           )
 # ==============================================================================
-
+batch_env ( logger ) 
 # =============================================================================
 def test_stats_blue1 () :
 

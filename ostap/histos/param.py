@@ -134,7 +134,8 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = () ## nothing to import 
 # =============================================================================
-from   ostap.core.core        import cpp, VE, funID, Ostap, typename 
+from   ostap.core.ostap_types import integer_types, long_type, num_types
+from   ostap.core.core        import cpp, VE, funID, Ostap
 from   ostap.math.param       import ( legendre_sum      ,
                                        chebyshev_sum     ,
                                        bezier_sum        ,
@@ -142,8 +143,8 @@ from   ostap.math.param       import ( legendre_sum      ,
                                        beziereven_sum    ,
                                        bernsteineven_sum ,
                                        rational_fun      ) 
-from   ostap.core.ostap_types import integer_types, long_type, num_types
 from   ostap.utils.utils      import vrange 
+from   ostap.utils.basic      import typename
 from   collections            import namedtuple
 import ROOT, math 
 # =============================================================================

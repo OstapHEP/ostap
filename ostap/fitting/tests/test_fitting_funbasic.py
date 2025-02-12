@@ -19,8 +19,9 @@ __all__    = () ## nothing to import
 from   builtins                 import range
 from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait
+from   ostap.utils.utils        import wait, batch_env 
 from   ostap.fitting.funbasic   import Id, Fun1D
+from   ostap.math.math_ve       import *
 import ROOT, random, math 
 # =============================================================================
 # logging 
@@ -31,7 +32,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-from ostap.math.math_ve import *
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
     
 x = ROOT.RooRealVar ( 'x' , 'x-variable' , 1.e-2 , 5 )
 y = ROOT.RooRealVar ( 'y' , 'y-variable' , 0     , 1 )

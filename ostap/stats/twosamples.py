@@ -20,7 +20,8 @@ __all__     = (
 from   ostap.core.meta_info   import root_info 
 from   ostap.core.ostap_types import listlike_types 
 from   collections            import defaultdict
-from   ostap.core.core        import SE, VE, Ostap, typename 
+from   ostap.core.core        import SE, VE, Ostap
+from   ostap.utils.basic      import typename 
 from   ostap.math.base        import doubles, axis_range  
 from   ostap.math.models      import f1_draw 
 from   ostap.stats.gof_utils  import Estimators,Summary

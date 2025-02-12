@@ -16,16 +16,15 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2015-10-26"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-import ostap.io.root_file 
-from   builtins                 import range
 from   ostap.core.core          import ROOTCWD,SE
 from   ostap.stats.counters     import counters_table  
 from   ostap.utils.timing       import timing
 from   ostap.utils.progress_bar import progress_bar 
-from   array                    import array
 from   ostap.utils.cleanup      import CleanUp
 from   ostap.tools.tmva         import Reader, addTMVAResponse
-import ROOT, os, random 
+from   ostap.utils.utils        import batch_env 
+import ostap.io.root_file 
+import ROOT, array, os, random 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -35,6 +34,9 @@ if '__main__' == __name__  or '__builtin__'  == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # ==============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
 
 # ==============================================================================
 ## prepare traing and testing data for TMVA 
@@ -53,9 +55,9 @@ def prepare_data ( nB = 10000 , nS = 10000 ) :
         treeSignal.SetDirectory ( test_file ) 
         treeBkg   .SetDirectory ( test_file ) 
         
-        var1 = array ( 'd', [0] )
-        var2 = array ( 'd', [0] )
-        var3 = array ( 'd', [0] )
+        var1 = array.array ( 'd', [0] )
+        var2 = array.array ( 'd', [0] )
+        var3 = array.array ( 'd', [0] )
         
         treeSignal.Branch ( 'var1' , var1 , 'var1/D' )
         treeSignal.Branch ( 'var2' , var2 , 'var2/D' )

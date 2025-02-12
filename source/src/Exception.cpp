@@ -130,7 +130,7 @@ Ostap::Exception::fillStream
   const static std::string s_exception = " EXCEPTION : " ;
   const static std::string s_index     = " --- INDEX : " ;
   const static std::string s_tag       = " ---   TAG : " ;
-  const static std::string s_code      = " ---  CDDE : " ;
+  const static std::string s_code      = " ---  CODE : " ;
   const static std::string s_file      = " ---  FILE : " ;
   const static std::string s_line      = " ---  line : " ;
   //
@@ -141,7 +141,7 @@ Ostap::Exception::fillStream
   if ( ind    ) { os << newline << s_index  << ind ; }  
   if ( !m_tag.empty() ) { os << newline << s_tag << m_tag   ; }
   // 
-  switch ( m_code )
+  switch ( m_code.code () )
     {
     case Ostap::StatusCode::SUCCESS     : os << newline << s_code << "SUCCESS"     ;  break ;
     case Ostap::StatusCode::FAILURE     : os << newline << s_code << "FAILURE"     ;  break ;

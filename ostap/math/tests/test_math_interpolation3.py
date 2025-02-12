@@ -9,9 +9,6 @@
 """ Test module for ostap/math/interpolation.py
 """
 # ============================================================================= 
-from   ostap.utils.utils        import vrange 
-import ostap.core.pyrouts 
-import ostap.fitting.models     as M 
 from   ostap.math.interpolation import ( Berrut1st           ,
                                          Berrut2nd           ,
                                          Barycentric         ,
@@ -22,9 +19,11 @@ from   ostap.math.interpolation import ( Berrut1st           ,
                                         
 from   ostap.core.core          import Ostap
 from   ostap.math.models        import f1_draw 
-from   ostap.utils.utils        import wait
+from   ostap.utils.utils        import vrange, wait, batch_env 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
+import ostap.fitting.models     as M 
+import ostap.core.pyrouts 
 import ROOT, random, math
 # =============================================================================
 # logging 
@@ -33,6 +32,10 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_interpolation2' ) 
 else                       : logger = getLogger ( __name__                         )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 
 # =============================================================================
 def test_fitresults ()  :

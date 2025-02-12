@@ -80,7 +80,7 @@ namespace Ostap
       bool add
       ( const std::string& item            ,
         const std::string& expression = "" ) ;
-      // ======================================================================
+      // =====================================================================
     public:
       // ======================================================================
       /// get the tree 
@@ -156,6 +156,16 @@ namespace Ostap
       RooGetter
       ( const std::map<std::string,std::string>& expressions           ,
         const TTree*                             tree        = nullptr ) ; 
+      /// constuctor from the list of expressions and TTree 
+      RooGetter
+      ( const std::vector<std::string>&          expressions           ,
+        const RooAbsCollection&                  variables             , 
+        const TTree*                             tree        = nullptr ) ; 
+      /// constuctor from the map of expressions and TTree 
+      RooGetter
+      ( const std::map<std::string,std::string>& expressions           ,
+        const RooAbsCollection&                  variables             , 
+        const TTree*                             tree        = nullptr ) ; 
       // ======================================================================
       /// copy constructor 
       RooGetter ( const RooGetter&   ) ;
@@ -166,6 +176,14 @@ namespace Ostap
       // ======================================================================
       /// virtual destructor 
       virtual ~RooGetter() ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      using Ostap::Trees::Getter::add ;
+      /** add entry mapping 
+       *  @attention no replacement!!! 
+       */
+      bool add  ( const RooAbsCollection& vars ) ;
       // ======================================================================      
     public:
       // ======================================================================

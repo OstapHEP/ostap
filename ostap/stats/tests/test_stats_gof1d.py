@@ -8,22 +8,25 @@
 """ Test Goddness-of-fits for 1D fits 
 """
 # ==============================================================================
-import ostap.fitting.models  as     M 
-import ostap.stats.gof1d     as     G1D 
-import ostap.stats.gofnd     as     GnD
-import ostap.logger.table    as     T
 from   ostap.core.meta_info  import python_info 
 from   ostap.stats.ustat     import USTAT 
 from   ostap.plotting.canvas import use_canvas
 from   ostap.logger.pretty   import pretty_float
-from   ostap.utils.utils     import vrange 
+from   ostap.utils.utils     import vrange, batch_env  
 from   ostap.math.math_ve    import significance
+import ostap.fitting.models  as     M 
+import ostap.stats.gof1d     as     G1D 
+import ostap.stats.gofnd     as     GnD
+import ostap.logger.table    as     T
 import ROOT  
 # ==============================================================================
 from   ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'tests_stats_gof1d' )
 else                       : logger = getLogger ( __name__            )
 # ==============================================================================
+batch_env ( logger ) 
+# =============================================================================
+
 xvar  = ROOT.RooRealVar ( 'x', '', 0, 10)
 gauss = M.Gauss_pdf     ( 'G' , xvar = xvar , mean = 5 , sigma = 1 )
 model = M.Fit1D         ( signal = gauss , background = 'flat'     )

@@ -13,7 +13,8 @@ from   ostap.utils.timing    import timing
 from   ostap.logger.pretty   import pretty_float
 from   ostap.plotting.canvas import use_canvas
 from   ostap.math.math_ve    import significance
-from   ostap.core.meta_info  import python_info 
+from   ostap.core.meta_info  import python_info
+from   ostap.utils.utils     import batch_env 
 import ostap.fitting.models  as     M 
 import ostap.stats.gofnd     as     GnD 
 import ostap.logger.table    as     T 
@@ -23,6 +24,9 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'tests_stats_gofnd' )
 else                       : logger = getLogger ( __name__            )
 # ==============================================================================
+batch_env ( logger ) 
+# =============================================================================
+
 xvar   = ROOT.RooRealVar ( 'x', '', 0, 10)
 yvar   = ROOT.RooRealVar ( 'y', '', 0, 10)
 varset = ROOT.RooArgSet  ( xvar , yvar   )

@@ -8,17 +8,15 @@
 """ Test module for ostap/fitting/models..py
 """
 # ============================================================================= 
-from   __future__               import print_function
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ostap.fitting.models     as     Models
-import ostap.histos.histos
 from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import Ostap, hID
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait, batch_env  
+import ostap.fitting.models     as     Models
+import ostap.histos.histos
 import ROOT
 # =============================================================================
 # logging 
@@ -29,6 +27,10 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
 
 def gauss ( x , mu = 0 , sigma = 1 ) :
     return Ostap.Math.gauss_pdf ( x , mu , sigma ) 

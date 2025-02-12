@@ -31,11 +31,9 @@ __all__     = (
     'roo_poisson'       , ## generate Poisson random number 
 )
 # =============================================================================
-import ostap.fitting.variables 
-import ostap.fitting.roocollections
 from   builtins                import range
-from   ostap.core.core         import ( Ostap, rootID, VE,
-                                        items_loop, isequal , roo_silent )
+from   ostap.core.core         import ( Ostap   , rootID     , VE ,
+                                        isequal , roo_silent )
 from   ostap.core.ostap_types  import ( num_types      , list_types     ,
                                         integer_types  , string_types   ,
                                         is_good_number , sequence_types ,
@@ -43,13 +41,15 @@ from   ostap.core.ostap_types  import ( num_types      , list_types     ,
 from   ostap.math.random_ext   import ve_gauss, poisson
 from   ostap.core.meta_info    import root_info 
 from   ostap.fitting.variables import SETVAR 
-from   ostap.utils.basic       import numcpu 
+from   ostap.utils.basic       import numcpu , items_loop
+# 
+import ostap.fitting.variables 
+import ostap.fitting.roocollections
 import ROOT, math, random 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.utils' )
 else                       : logger = getLogger ( __name__              )
-# =============================================================================
 # =============================================================================
 ## Generate Poisson random number coherentry  with RooFit
 def roo_poisson ( mu ) :

@@ -14,12 +14,13 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
+from   builtins              import range
 from   ostap.math.ve         import VE 
 from   ostap.core.core       import hID 
 from   ostap.histos.histos   import h1_axis, h2_axes
 from   ostap.core.meta_info  import root_info 
-from   builtins              import range
 from   ostap.plotting.canvas import use_canvas 
+from   ostap.utils.utils     import batch_env 
 import ROOT, random, math 
 # =============================================================================
 # logging 
@@ -31,6 +32,9 @@ else :
     logger = getLogger ( __name__ )
 # =============================================================================
 logger.info ( 'Test for basic operations with histograms')
+# =============================================================================
+## set batch form environment 
+batch_env ( logger )
 # =============================================================================
 ## Test for very basic operations with 1D-histograms
 def test_basic_1D() :

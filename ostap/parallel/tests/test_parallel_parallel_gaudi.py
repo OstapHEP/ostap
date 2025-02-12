@@ -6,13 +6,14 @@
 """ Oversimplified script for parallel execution using parallel_gaudi
 """
 # ============================================================================
-from   itertools                import count 
+from   itertools                     import count 
+from   ostap.parallel.task           import Task, GenericTask
+from   ostap.parallel.utils          import pool_context 
+from   ostap.utils.progress_bar      import progress_bar 
+from   ostap.plotting.canvas         import use_canvas
+from   ostap.utils.utils             import wait, batch_env 
+from   ostap.parallel.parallel_gaudi import WorkManager
 import ostap.histos.histos
-from   ostap.parallel.task      import Task, GenericTask
-from   ostap.parallel.utils     import pool_context 
-from   ostap.utils.progress_bar import progress_bar 
-from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
 import ROOT, time, sys 
 # =============================================================================
 # logging 
@@ -23,13 +24,8 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-try :
-    from ostap.parallel.parallel_gaudi import WorkManager 
-except ImportError :
-    logger.error ("Cannot import WorkManager from parallel_gaudi")
-    WorkManager = None 
+batch_env ( logger ) 
 # =============================================================================
-
 
 # =============================================================================
 ## simple    function that created and  fill a histogram

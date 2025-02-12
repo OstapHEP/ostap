@@ -18,8 +18,8 @@ from   ostap.core.pyrouts       import Ostap, SE
 from   ostap.utils.timing       import timing
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.math.make_fun      import make_fun1, make_fun2 , make_fun3
-from   ostap.utils.timing       import timing 
 from   ostap.utils.memory       import memory
+from   ostap.utils.utils        import batch_env 
 import ostap.logger.table       as     T
 import ROOT, math, random  
 # ============================================================================= 
@@ -29,7 +29,11 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_math_callable' )
 else                       : logger = getLogger ( __name__             )
 # ============================================================================= 
-    
+ ## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+#
+   
 ## 1D function
 def my_fun1 ( x ) :
     return math.exp ( x )

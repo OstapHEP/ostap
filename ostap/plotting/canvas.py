@@ -33,11 +33,11 @@ __all__     = (
 # =============================================================================
 from   sys                     import version_info as python_version
 from   ostap.core.ostap_types  import ordered_dict 
-from   ostap.utils.cidict      import cidict
+from   ostap.utils.cidict      import cidict, cidict_fun 
 from   ostap.utils.utils       import KeepCanvas, keepCanvas 
-from   ostap.core.core         import cidict_fun
 from   ostap.core.core         import rootWarning
 from   ostap.utils.utils       import which
+import ostap.core.core         
 import ostap.plotting.style
 import ROOT, os, tempfile, math   
 # =============================================================================

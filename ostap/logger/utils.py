@@ -45,13 +45,17 @@ __all__     = (
     'fmt_pretty_err2'    , ## format for pretty print of the value with asymmetric error
     'fmt_pretty_errs'    , ## format for pretty print of the value with multiple errors
     ""
-    'add_expo'           , ## add an exponential factor to sting representaiton of the object 
+    'add_expo'           , ## add an exponential factor to string representaiton of the object 
     ##
     'multicolumn'        , ## format the list of strings into multicolumn block
-    'DisplayTree'        , ## display tree-like structures 
-)
+    'DisplayTree'        , ## display tree-like structures
+    ##
+    'print_args'         , ## print aguments as table
+    'map2table'          , ## Format map/dict-like object  as a table
+    # =========================================================================
+) # ===========================================================================
 # =============================================================================
-from   ostap.core.ostap_types import integer_types, num_types  
+from   ostap.core.ostap_types import integer_types, num_types, string_types  
 from   ostap.logger.logger    import logVerbose,  logDebug, logInfo, logWarning, logError
 from   ostap.math.base        import isfinite, iszero, frexp10
 from   ostap.math.ve          import VE
@@ -60,7 +64,7 @@ from   ostap.logger.mute      import ( mute   , mute_py ,
                                        output , silence , silence_py ,
                                        MuteC  , MutePy  ,
                                        TeeCpp , TeePy   , OutputC    )
-from   ostap.utils.basic      import NoContext
+from   ostap.utils.basic      import NoContext, typename, prntrf, items_loop  
 import time, os, sys, math  ## attention here!!
 # =============================================================================
 # logging 
@@ -417,22 +421,20 @@ def pretty_errs ( errlow             ,
     return fmt % values , expo 
 
 # =============================================================================
-##  Add the exponent to the sting representation of th eobejuct
+##  Add the exponent to the string representation of the obejuct
 #   @code
 #   value = ...
 #   value , expo = pretty_XXX ( value , .... )
 #   result = add_expo ( value , expo ) 
 #   @endcode 
 def add_expo ( value , expo , fmt = '%s x 10^%+d' ) :
-    """ Add the exponent to the sting representation of th eobejuct
+    """ Add the exponent to the sting representation of the objeuct
     >>> value = ...
     >>> value , expo = pretty_XXX ( value , .... )
     >>> result = add_expo ( value , expo ) 
     """
     assert isinstance ( expo , integer_types ) ,  "Invalid type of `expo':%s" % type ( expo )
-    ## 
     if not expo : return value
-    ## 
     return fmt % ( value , expo )
     
 # =============================================================================
@@ -476,6 +478,8 @@ def multicolumn ( lines , term_width = None , indent = 0 , pad = 2 ):
         result.append ( line )
     return '\n'.join ( result )
 
+# =======================================================================================
+## format argumetn as table
 
 # =======================================================================================
 ## @class DisplayTree
@@ -514,15 +518,15 @@ class DisplayTree ( object ) :
 
     @property
     def payload ( self ) :
-        """``payload''  : the actual object, hold by the tree leaf"""
+        """`payload'  : the actual object, hold by the tree leaf"""
         return self.__payload
     @property
     def parent ( self ) :
-        """``parent'' : the parent element in the tree"""
+        """`parent' : the parent element in the tree"""
         return self.__parent
     @property
     def last   (  self ) :
-        """``last''  : is it a alst object oin the list? """
+        """`last'  : is it a last object oin the list? """
         return self.__last
     @property
     def isdir  (  self ) :
@@ -530,18 +534,18 @@ class DisplayTree ( object ) :
         return self.__isdir    
     @property
     def depth  (  self ) :
-        """``depth''  : how deep is our tree? """
+        """`depth'  : how deep is our tree? """
         return self.__depth 
     
     @property 
     def itemname ( self ) :
-        """``itemname'' : how the name of the leaf is displayed?"""
+        """`itemname' : how the name of the leaf is displayed?"""
         return self.__display ( self.payload , self.isdir )
 
     # ==========================================================================
     ##  show the (sub)tree  
     def showme ( self , prefix = '' ) :
-        """Show the constructed (sub)tree  
+        """ Show the constructed (sub)tree  
         """        
         if self.parent is None:
             return self.itemname
@@ -563,6 +567,65 @@ class DisplayTree ( object ) :
                                                self.isdir    ,
                                                self.last     ) 
     __repr__ = __str__
+
+
+# ============================================================================
+## Print all arguments as table
+#  Two keyword argument are also used for formatting of internam table 
+#  - prefix 
+#  - title
+def print_args ( *args , **kwargs ) :
+    """ Print all arguments as table 
+    Two keyword argument are also used for formatting of internam table 
+    - `prefix` 
+    - `title` 
+    """
+    rows  = [  ( 'Argument' , 'type' , 'value' ) ]
+
+    for i , a in enumerate ( args ) : 
+        row  = '#%d' % i , typename ( a ) , prntrf ( a )
+        rows.append ( row )
+
+    if 'prefix' in kwargs : kwargs [ '*prefix' ] = kwargs.pop ( 'prefix' )
+    if 'title'  in kwargs : kwargs [ '*title'  ] = kwargs.pop ( 'title'  ) 
+    
+    for key in sorted ( kwargs ) :
+        v    = kwargs [ key ] 
+        row  = '%s' % key , typename ( v ) , prntrf  ( v )
+        rows.append ( row  )
+
+    prefix = kwargs.pop ( '*prefix' , '' )
+    if not prefix or not isinstance ( prefix , string_types ) : prefix = ''
+    title  = kwargs.pop ( '*title' , 'Arguments' )
+    if not title  or not isinstance ( title  , string_types ) : title = 'Arguments'
+    
+    import ostap.logger.table as T
+    return T.table ( rows , title = title , prefix = prefix , alignment = 'lww' ) 
+
+# =============================================================================
+## Format map/dict-like object  as a table
+def map2table ( dct                             ,
+                haader    = ( 'Key' , 'Value' ) ,  
+                prefix    = ''                  ,
+                title     = ''                  ,
+                alignment = 'rl'                ,
+                style     = ''                  ) :
+    """ Format map/dict-like object  as a table
+    """
+    rows = [ header ]
+    map  = {}
+    map.update ( dct )
+    for key in sorted ( map ) :
+        value = map[ key ]
+        row   = str ( key ) , str ( value )
+        rows.append ( row )
+        
+    import ostap.logger.table as T
+    return T.table ( rows                  ,
+                     title     = title     ,
+                     prefix    = prefix    ,
+                     alignment = alignment ,
+                     style     = style     ) 
     
 # =============================================================================
 if '__main__' == __name__ :
@@ -570,14 +633,7 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
-    vv = 1./3.0 
-    for i in range ( -10 , 20 ) :
-        v = vv * ( 10**i )
-        print ('VALUE' ,  v , pretty_float ( v ) )
-        print ('FMTS'  ,  fmt_pretty_errs  (  v , ( v, v ) ) ) 
         
-        
-    
 # =============================================================================
 ##                                                                     The END 
 # =============================================================================

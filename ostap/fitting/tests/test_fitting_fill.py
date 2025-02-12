@@ -16,15 +16,16 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 from   builtins                     import range
 from   ostap.core.meta_info         import root_info 
-import ostap.core.pyrouts 
-import ostap.fitting.roofit
-import ostap.io.root_file 
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.utils.timing           import timing  
 from   ostap.trees.data             import Data
 from   ostap.fitting.pyselectors    import Variable, SelectorWithVars, DataSet_NEW_FILL
 from   ostap.logger.colorized       import attention
+from   ostap.utils.utils            import batch_env 
 import ostap.logger.table           as     T
+import ostap.core.pyrouts 
+import ostap.fitting.roofit
+import ostap.io.root_file 
 import ostap.parallel.parallel_fill
 import ROOT, random, sys 
 # =============================================================================
@@ -36,6 +37,10 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__            )
 # =============================================================================
+## set batch from environment 
+batch_env ( logger )
+# =============================================================================
+
 DILL_PY3_issue = False 
 if ( 3 , 6 ) <= sys.version_info : 
     from   ostap.parallel.parallel import DILL_PY3_issue
