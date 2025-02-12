@@ -296,7 +296,7 @@ Ostap::Trees::add_branch
           // get the component value 
           const double dval = normset ? cmp->getVal ( normset ) : cmp->getVal() ;
           total += dval * std::get<1> ( items [ i ] ) ;                  // get<1>
-          get<2> ( items [ i ] ) = dval ;                                // get<2> 
+          std::get<2> ( items [ i ] ) = dval ;                           // get<2> 
         }
       /// (2) calculate s-weights   
       for ( unsigned int i = 0 ; i < N ; ++i )
