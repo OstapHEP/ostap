@@ -45,7 +45,6 @@ find_python_module ( numpy QUIET )
 if ( NOT ${PY_numpy_FOUND} )
    message ( "----> warning (optional)           numpy is NOT found!" ) 
 endif()
-
 find_python_module ( scipy QUIET )
 if ( NOT ${PY_scipy_FOUND} )
    message ( "----> warning (optional)           scipy is NOT found!" ) 
@@ -54,30 +53,26 @@ endif()
 # ========================================================================================
 ## ipyparallel 
 # ========================================================================================
-if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.6" )
-   find_python_module ( ipyparallel          QUIET )
-   if ( NOT ${PY_ipyparallel_FOUND} )
-      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install ipyparallel ${PIP_ARGS})
-   endif()
-   find_python_module ( ipyparallel          QUIET )
-   if ( NOT ${PY_ipyparallel_FOUND} )
-      message ( "----> warning (optional)     ipyparallel is NOT found!" ) 
-   endif()
-endif() 
+find_python_module ( ipyparallel          QUIET )
+if ( NOT ${PY_ipyparallel_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install ipyparallel ${PIP_ARGS})
+endif()
+find_python_module ( ipyparallel          QUIET )
+if ( NOT ${PY_ipyparallel_FOUND} )
+   message ( "----> warning (optional)     ipyparallel is NOT found!" ) 
+endif()
 
 # ========================================================================================
 ## zstandard
 # ========================================================================================
-if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.8" )
-   find_python_module ( zstandard QUIET )
-   if ( NOT ${PY_zstandard_FOUND} )
-      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install zstandard ${PIP_ARGS})    
-   endif()
-   find_python_module ( zstandard QUIET )
-   if ( NOT ${PY_zstandard_FOUND} )
-      message ( "----> warning (optional)       zstandard   is NOT found!" ) 
-   endif()    
+find_python_module ( zstandard QUIET )
+if ( NOT ${PY_zstandard_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install zstandard ${PIP_ARGS})    
 endif()
+find_python_module ( zstandard QUIET )
+if ( NOT ${PY_zstandard_FOUND} )
+   message ( "----> warning (optional)       zstandard   is NOT found!" ) 
+endif()    
 
 # ========================================================================================
 ## Check for PATHOS & friends
