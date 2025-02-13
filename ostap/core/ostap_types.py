@@ -43,8 +43,8 @@ __all__     = (
     'all_strings'     , ## all argumets of string  types?
     )
 # =============================================================================
-from   collections.abc import Collection, Sequence, Iterable, mAPPING, Sized, Generator   
-import array
+from   collections.abc import Collection, Sequence, Iterable, Mapping, Sized, Generator   
+import array, sys, os  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -111,20 +111,10 @@ def is_number  ( v ) :
     return isinstance ( v , num_types   ) 
 
 # =============================================================================
-if ( 3 , 2 ) <= python_version :
-    # =========================================================================
-    ## good numeric value 
-    def is_good_number  ( v ) :
-        """ Is numeric type and good value?"""
-        return isinstance ( v , num_types   ) and math.isfinite ( v ) 
-    # =========================================================================
-else : 
-    # =========================================================================
-    ## good numeric value 
-    def is_good_number  ( v ) :
-        """ Is numeric type and good value?"""
-        return isinstance ( v , num_types   ) and \
-            ( not math.isinf ( v ) ) and ( not math.isnan ( v ) )
+## good numeric value 
+def is_good_number  ( v ) :
+    """ Is numeric type and good value?"""
+    return isinstance ( v , num_types   ) and math.isfinite ( v ) 
 
 # =============================================================================
 ## is  value of str-type?

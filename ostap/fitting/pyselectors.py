@@ -103,7 +103,7 @@ __all__ = (
     'SelectorWithVarsCached'    ## Generic selector with cache   
 )
 # =============================================================================
-from   ostap.core.meta_info     import root_info, old_PyROOT
+from   ostap.core.meta_info     import root_info 
 from   ostap.core.ostap_types   import num_types, string_types, integer_types
 from   ostap.core.core          import ( cpp  , Ostap ,
                                          dsID , valid_pointer , binomEff ) 
@@ -136,14 +136,12 @@ class Selector ( Ostap.Selector ) :
     """
     ## constructor 
     def __init__ ( self , tree = None , silence = False  ) :
-
-        if isinstance ( tree , Chain ) : tree = tree.chain 
-        if tree is None : tree = ROOT.nullptr
-        
-        if old_PyROOT : super (Selector, self).__init__ ( self , tree ) 
-        else          : super (Selector, self).__init__ (        tree ) 
-        """Standart constructor
+        """ Standart constructor
         """
+        if isinstance ( tree , Chain ) : tree = tree.chain 
+        if tree is None : tree = ROOT.nullptr        
+        super (Selector, self).__init__ ( tree )
+        
     @property 
     def tree ( self ) :
         """'tree' : get the actual TTree pointer"""
@@ -153,7 +151,7 @@ class Selector ( Ostap.Selector ) :
     ## the actual major method
     #  it needs to be redefined 
     def process_entry ( self ) :
-        """The actual major method
+        """ The actual major method
         - it needs to be redefined
         """
         raise NotImplementedError ("Selector: process_entry is not implemented!")
@@ -161,100 +159,12 @@ class Selector ( Ostap.Selector ) :
     
     ## reduce the object 
     def __reduce__ ( self ) :
-        """Reduce the object"""
+        """ Reduce the object"""
         tree = self.tree 
         if tree : return root_factory , ( type ( self ) , Chain ( tree ) ) 
         else    : return root_factory , ( type ( self ) , ) 
         
-# =============================================================================
-if old_PyROOT :
-
-    # =========================================================================
-    ## Start master processing
-    #  @see TPySelector::Begin
-    #  @see Ostap::Selector::Begin
-    def Selector_Begin      ( self , tree = ROOT.nullptr  ) :
-        """Start master processing
-        - see ROOT.TPySelector.Begin
-        - see Ostap.Selector.Begin
-        """
-        pass
-    # =========================================================================
-    ## Start slave processing 
-    #  @see TPySelector::SlaveBegin
-    #  @see Ostap::Selector::SlaveBegin
-    def Selector_SlaveBegin ( self , tree ) :
-        """Start master processing
-        - see ROOT.TPySelector.SlaveBegin
-        - see Ostap.Selector.SlaveBegin
-        """
-        assert valid_pointer ( tree ) , 'SlaveBegin: invalid TTree*'
-        pass
-    # =========================================================================
-    ## Initialize
-    #  - Invoked for <code>2<=Version</code>
-    #  @see TPySelector::Init
-    #  @see Ostap::Selector::Init 
-    def Selector_Init  ( self , tree ) :
-        """Initialize 
-        - see ROOT.TPySelector.Init
-        - see Ostap.Selector.Init
-        """
-        pass
-    # =========================================================================
-    ## Terminate slave processing 
-    #  @see TPySelector::SlaveTerminate 
-    #  @see Ostap::Selector::SlaveTerminiate 
-    def Selector_SlaveTerminate ( self ) :
-        """Terminate slave processing
-        - see ROOT.TPySelector.SlaveTerminiate 
-        - see Ostap.Selector.SlaveTerminate
-        """
-        pass
-    # =========================================================================
-    ## Terminate master processing 
-    #  @see TPySelector::Terminate 
-    #  @see Ostap::Selector::Terminiate 
-    def Selector_Terminate ( self ) :
-        """Terminate master processing
-        - see ROOT.TPySelector.Terminiate 
-        - see Ostap.Selector.Terminate
-        """
-        pass
     
-    # =========================================================================
-    ## Version
-    #  @see TPySelector::Version
-    #  @see Ostap::Selector::Version
-    def Selector_Version ( self ) :
-        """Version 
-        - see ROOT.TPySelector.Version
-        - see Ostap.Selector.Version
-        """
-        return 3 
-    # ========================================================================= 
-    ## The major method
-    # -  note that  call for check for GetEntry is already called!
-    # -  No need to redefine this method 
-    # @see TPySelector::Process 
-    # @see TPySelector::GetEntry 
-    # @see Ostap::Selector::Process
-    def Selector_Process        ( self , entry    ) :
-        """The major method
-        -  note that  call for check for GetEntry is already called!
-        -  No need to redefine this method  
-        -  see Ostap::Selector::Process
-        """
-        return self.process_entry ()
-
-    Selector.Begin          = Selector_Begin
-    Selector.SlaveBegin     = Selector_SlaveBegin
-    Selector.Init           = Selector_Init
-    Selector.Version        = Selector_Version
-    Selector.Terminate      = Selector_Terminate
-    Selector.SlaveTerminate = Selector_SlaveTerminate
-    Selector.Process        = Selector_Process 
-
 # =============================================================================
 ## @class SelectorWithCuts
 #  Efficient selector that runs only for "good"-events  
@@ -284,9 +194,8 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
         ## initialize the base
         self.__selection = str ( selection ).strip()
         
-        
-        if   old_PyROOT : super ( SelectorWithCuts , self ).__init__ ( self , self.selection , tree )
-        else            : super ( SelectorWithCuts , self ).__init__ (        self.selection , tree )
+        ## initialize the base 
+        super ( SelectorWithCuts , self ).__init__ ( self.selection , tree )
         
         if self.cuts () and not self.silence :
             self.logger.info ( 'SelectorWithCuts: %s' % self.cuts() )
@@ -335,30 +244,6 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
                                           self.selection ,
                                           self.silence   ) 
             
-# =============================================================================
-if old_PyROOT :
-
-    # =========================================================================
-    ## The major method for <cdoe>SelectorWithCuts</code>: do NOT redefine it!
-    #  @see TPySelector::Process
-    #  @see Ostap::Selector::Process
-    #  @see Ostap::SelectorWithCuts::Process
-    def SelectorWithCuts_Process        ( self , entry ) :
-        """The major method for `SelectorWithCuts`: do NOT redefine it!
-         - see TPySelector::Process
-         - see Ostap::Selector::Process
-         - see Ostap::SelectorWithCuts::Process
-         """
-        return self.process_entry () 
-    
-    SelectorWithCuts.Begin          = Selector_Begin
-    SelectorWithCuts.SlaveBegin     = Selector_SlaveBegin
-    SelectorWithCuts.Init           = Selector_Init  
-    SelectorWithCuts.Version        = Selector_Version
-    SelectorWithCuts.Terminate      = Selector_Terminate
-    SelectorWithCuts.SlaveTerminate = Selector_SlaveTerminate
-    SelectorWithCuts.Process        = SelectorWithCuts_Process 
-
     
 # =============================================================================
 _maxv =  0.99 * sys.float_info.max
@@ -368,7 +253,7 @@ _minv = -0.99 * sys.float_info.max
 #  Helper   structure to manage/keep/create the variable for   SelectorWithVars
 #  @see SelectorWithVars
 class Variable(object) :
-    """Helper   structure to manage/keep/create the variable for   SelectorWithVars
+    """ Helper   structure to manage/keep/create the variable for   SelectorWithVars
     
     - Get a variable 'my_name1' from the tree/chain:
     

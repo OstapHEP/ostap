@@ -25,9 +25,8 @@ __all__     = (
     'FuncTH3'           , ## TH3-based Tree-function 
     ) 
 # =============================================================================
-from   ostap.core.meta_info    import old_PyROOT, root_info  
-from   ostap.core.core         import Ostap, valid_pointer
-from   ostap.utils.basic       import typename, prntrf 
+from   ostap.core.core         import Ostap    , valid_pointer
+from   ostap.utils.basic       import typename , prntrf 
 import ostap.trees.treereduce 
 import ROOT, abc 
 # =============================================================================
@@ -52,9 +51,8 @@ class FuncTree(Ostap.Functions.PyFuncTree) :
         assert not clone or isinstance ( clone , FuncTree ) , \
             "FuncTree: Invalid 'clone' type:%s" % typename ( clone )
         ## 
-        if clone        : super (FuncTree,self).__init__ ( clone )
-        elif old_PyROOT : super (FuncTree,self).__init__ ( self , tree )
-        else            : super (FuncTree,self).__init__ (        tree )
+        if clone  : super (FuncTree,self).__init__ ( clone )
+        else      : super (FuncTree,self).__init__ ( tree  )
         
     @property
     def the_tree ( self ) :
@@ -93,9 +91,8 @@ class FuncData(Ostap.Functions.PyFuncData) :
         assert not clone  or isinstance ( clone , FuncData ) , \
             "FuncData: Invalid 'clone' type: %s" % typename ( clone )
         ## 
-        if clone        : super (FuncData,self).__init__ ( clone )            
-        elif old_PyROOT : super (FuncData,self).__init__ ( self , data )
-        else            : super (FuncData,self).__init__ (        data )
+        if clone : super (FuncData,self).__init__ ( clone )            
+        else     : super (FuncData,self).__init__ ( data  )
 
     def __str__  ( self ) : return typename ( self )
     def __repr__ ( self ) : return typename ( self )

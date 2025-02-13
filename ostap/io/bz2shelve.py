@@ -139,12 +139,9 @@ __all__ = (
     'tmpdb'       ,   ## create TEMPORARY data base 
     )
 # =============================================================================
-from sys import version_info as python_version 
-# =============================================================================
-import os, sys, shelve, shutil
-import bz2          ## use bz2 to compress DB-content 
 from   ostap.io.compress_shelve import CompressShelf, HIGHEST_PROTOCOL
-from   ostap.io.dbase           import TmpDB 
+from   ostap.io.dbase           import TmpDB
+import shelve, bz2 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.bz2shelve' )

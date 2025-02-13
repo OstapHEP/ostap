@@ -116,13 +116,12 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.pypdf' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
 
-
 # =============================================================================
 if old_PyROOT :
-
+    
     __all__ = (
-    'PyPDF'  , ## 'pythonic' PDF for RooFit 
-    'PyPDF2' , ## 'pythonic' PDF for RooFit 
+        'PyPDF'  , ## 'pythonic' PDF for RooFit 
+        'PyPDF2' , ## 'pythonic' PDF for RooFit 
         )
     # =========================================================================
     ## @class PyPDF

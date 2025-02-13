@@ -132,16 +132,15 @@ __all__ = (
     'tmpdb'    ,   ## create TEMPORARY data base 
     )
 # =============================================================================
+from   ostap.io.compress_shelve import CompressShelf, HIGHEST_PROTOCOL
+from   ostap.io.dbase           import TmpDB 
+import shelve, zlib 
+# =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.zipshelve' )
 else                      : logger = getLogger ( __name__             )
 # =============================================================================
 logger.debug ( "Simple generic (c)Pickle-based ``zipped''-database"   )
-# =============================================================================
-import os, sys, shelve, shutil
-import zlib ## use zlib to compress DB-content 
-from   ostap.io.compress_shelve import CompressShelf, HIGHEST_PROTOCOL
-from   ostap.io.dbase           import TmpDB 
 # =============================================================================
 ## @class ZipShelf
 #  Zipped-version of ``shelve''-database

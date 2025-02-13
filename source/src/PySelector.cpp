@@ -122,11 +122,11 @@ TTree* Ostap::Selector::get_tree () const { return  m_tree ; }
 // ============================================================================
 void Ostap::Selector::set_tree  ( TTree* tree )
 {
-  if ( tree )
-    {
-      TChain* chain = dynamic_cast<TChain*> ( m_tree ) ;
-      if ( chain ) { tree = chain->GetTree() ;}
-    }
+  // if ( tree )
+  // {
+  // TChain* chain = dynamic_cast<TChain*> ( m_tree ) ;
+  // if ( chain ) { tree = chain->GetTree() ;}
+  // }
   //
   m_tree = tree ;
 }

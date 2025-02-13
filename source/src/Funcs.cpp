@@ -98,12 +98,12 @@ Ostap::Functions::FuncFormula::FuncFormula
 // ============================================================================
 Ostap::Functions::FuncFormula::FuncFormula
 ( const Ostap::Functions::FuncFormula& right )  
-  : Ostap::IFuncTree( right )
-  , TObject         ( right ) 
-  , m_tree          ( nullptr            )  // ATTENTION! 
-  , m_formula       ( nullptr            )  // ATTENTION  
-  , m_expression    ( right.m_expression )  
-  , m_name          ( right.m_name       )  
+  : Ostap::IFuncTree ( right )
+  , TObject          ( right ) 
+  , m_tree           ( nullptr            )  // ATTENTION! 
+  , m_formula        ( nullptr            )  // ATTENTION  
+  , m_expression     ( right.m_expression )  
+  , m_name           ( right.m_name       )  
 {}
 // ============================================================================
 Ostap::Functions::FuncFormula*
@@ -142,11 +142,11 @@ bool Ostap::Functions::FuncFormula::make_formula () const
 double Ostap::Functions::FuncFormula::operator() ( const TTree* tree ) const
 {
   //
-  if ( nullptr != tree ) 
-  {
-    const TChain* chain = dynamic_cast<const TChain*> ( tree ) ;
-    if ( chain ) { tree = chain->GetTree() ; }
-  }
+  // if ( nullptr != tree ) 
+  // {
+  //   const TChain* chain = dynamic_cast<const TChain*> ( tree ) ;
+  //   if ( chain ) { tree = chain->GetTree() ; }
+  // }
   //
   if ( nullptr != tree && m_tree != tree )
   {

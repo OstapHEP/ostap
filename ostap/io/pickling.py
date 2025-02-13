@@ -25,41 +25,19 @@ __all__ = (
     'PickleChecker'    , ## check pickle-ability of objects 
     )
 # =============================================================================
-import os, sys, array 
+from   pickle         import ( Pickler, Unpickler, 
+                               DEFAULT_PROTOCOL, HIGHEST_PROTOCOL,
+                               dumps, loads, dump , load , 
+                               PicklingError, UnpicklingError )
+from   io             import  BytesIO 
+import sys, array 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.pickling' )
 else                      : logger = getLogger ( __name__               )
 # =============================================================================
-if  ( 3 , 0 ) <= sys.version_info :
-    from pickle import ( Pickler, Unpickler, 
-                         DEFAULT_PROTOCOL, HIGHEST_PROTOCOL,
-                         dumps, loads, dump , load , 
-                         PicklingError, UnpicklingError ) 
-else : 
-    DEFAULT_PROTOCOL = 2 
-    try:
-        from cPickle   import ( Pickler, Unpickler, HIGHEST_PROTOCOL,
-                                dumps, loads, dump , load , 
-                                PicklingError, UnpicklingError ) 
-    except ImportError:
-        from  pickle   import ( Pickler, Unpickler, HIGHEST_PROTOCOL,
-                                dumps, loads, dump , 
-                                PicklingError, UnpicklingError ) 
-    DEFAULT_PROTOCOL = min ( DEFAULT_PROTOCOL , HIGHEST_PROTOCOL )
-    
-# =============================================================================    
-try :
-    from io            import BytesIO 
-except ImportError :
-    try:
-        from cStringIO import StringIO as BytesIO 
-    except ImportError:
-        from  StringIO import StringIO as BytesIO
-
-# =============================================================================
 ## the basic pickle-types that for sure always can be pickled/unpickled 
-PICKLE_TYPES = type ( None ) , bool, int, float, str, bytes, bytearray
+PICKLE_TYPES = type ( None ) , bool, int, float, str, bytes, bytearray, array.array 
 # =============================================================================
 PICKLE_COMMAND = """import sys, pickle
 with open('%s','rb') as f : pickle.load ( f )"""

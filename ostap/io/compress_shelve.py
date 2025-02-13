@@ -53,17 +53,16 @@ __all__ = (
     'HIGHEST_PROTOCOL' ,
     'ENCODING'       
     )
-# =============================================================================
-from   sys                  import version_info               as python_version
+# =============================================================================f
+from   ostap.core.meta_info import meta_info, python_info  
 from   ostap.io.dbase       import dbopen     , whichdb, Item, ordered_dict, dbfiles   
-from   ostap.core.meta_info import meta_info 
 from   ostap.io.pickling    import ( Pickler  , Unpickler, BytesIO,
                                      PROTOCOL ,
                                      HIGHEST_PROTOCOL, DEFAULT_PROTOCOL ) 
 from   ostap.utils.cleanup  import CUBase
 from   ostap.utils.utils    import file_size
 from   ostap.utils.basic    import writeable, typename  
-import os, abc, shelve, shutil, glob, time, datetime, zipfile, tarfile 
+import os, abc, shelve, glob, time, datetime, zipfile, tarfile 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.compress_shelve' )
@@ -262,8 +261,7 @@ class CompressShelf (shelve.Shelf,CUBase) :
         ## initialize the base class
         # =====================================================================
         conf  = { 'protocol' : protocol , 'writeback' : writeback }
-        if  3 <= python_version.major  : conf [ 'keyencoding'] = keyencoding
-        else                           : self.keyencoding      = keyencoding        
+        conf [ 'keyencoding'] = keyencoding
         shelve.Shelf.__init__ ( self   , dbase  , **conf )
 
         # ======================================================================
@@ -322,7 +320,7 @@ class CompressShelf (shelve.Shelf,CUBase) :
 
         self.sync ()
 
-        self.__taropts = 'x:gz' if (3,0)<= python_version else 'w:gz'
+        self.__taropts = 'x:gz' 
 	
 
     @property
@@ -411,7 +409,6 @@ class CompressShelf (shelve.Shelf,CUBase) :
         return self.__taropts
     @taropts.setter
     def taropts ( self , value ) :
-        if python_version < (3,0) and value and 'x' == value[0] : value = 'w' + value[1:] 
         self.__taropts = value
         
     # =========================================================================
@@ -849,7 +846,7 @@ class CompressShelf (shelve.Shelf,CUBase) :
                     logger.info ( "Tar-file `%s` content:" % filein )
                     tfile.list()
                 for item in tfile  :
-                    args = { 'filter' : 'data' } if ( 3 , 12 ) <= python_version else {}
+                    args = { 'filter' : 'data' } if ( 3 , 12 ) <= python_info else {}
                     tfile.extract ( item , path = where  , **args )
                     name = ( os.path.join ( where , item.name ) )
                     name = os.path.normpath  ( name ) 
@@ -905,20 +902,6 @@ class CompressShelf (shelve.Shelf,CUBase) :
 import ostap.io.shelve_ext
 
 
-# =============================================================================
-if python_version < ( 3 , 2 ) :
-    
-    def _arxiv_enter_ ( s ) : return s
-    def _arxiv_exit_  ( s , *_) : s.close() 
-    
-    import zipfile
-    if not hasattr ( zipfile.ZipFile , '__enter__' ) : zipfile.ZipFile . __enter__ = _arxiv_enter_
-    if not hasattr ( zipfile.ZipFile , '__exit__'  ) : zipfile.ZipFile . __exit__  = _arxiv_exit_
-    
-    import tarfile
-    if not hasattr ( tarfile.TarFile , '__enter__' ) : tarfile.TarFile . __enter__ = _arxiv_enter_
-    if not hasattr ( tarfile.TarFile , '__exit__'  ) : tarfile.TarFile . __exit__  = _arxiv_exit_
-    
 # =============================================================================
 if '__main__' == __name__ :
     
