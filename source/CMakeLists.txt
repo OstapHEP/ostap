@@ -11,11 +11,11 @@ endif ()
 
   
 if(ROOT_VERSION VERSION_LESS "6.24")
-  message ( FATAL_ERROR " ROOT   version " ${ROOT_VERSION} " is not supported anymore" )
+  message ( FATAL_ERROR " ROOT   version " ${ROOT_VERSION} "<6.24 is not supported anymore" )
 endif() 
     
 message ( "----> ROOT   version    : " ${ROOT_VERSION} )
-    
+        
 # =============================================================================
 ## Locate proper Python/PythonLibs 
 find_program(ROOT_CONFIG_EXECUTABLE NAMES root-config)
@@ -25,10 +25,10 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python3-version
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
 
 if (PY3VERSION_ROOT VERSION_LESS "3.8" )
-  message ( FATAL_ERROR " Python version " ${PY3VERSION}   " is no tsupported anymore")
+  message ( FATAL_ERROR " Python version " ${PY3VERSION}   "<3.8 is no tsupported anymore")
 endif() 
 
-    
+  
 add_library ( root_pyroot INTERFACE IMPORTED)
     
 find_package(Python3 ${PY3VERSION_ROOT} COMPONENTS Interpreter Development NumPy)
@@ -37,7 +37,7 @@ else()
   message ( FATAL_ERROR "Python3 is NOT FOUND!" ) 
 endif()  
 if (Python3_VERSION  VERSION_LESS "3.8" )
-  message ( FATAL_ERROR " Python version " ${Python3_VERSION} " is not supported anymore")
+  message ( FATAL_ERROR " Python version " ${Python3_VERSION} "<3.8 is not supported anymore")
 endif() 
 
 set(Python_VERSION ${Python3_VERSION}  )
@@ -114,73 +114,95 @@ endfunction( MAKE_DICT )
 
 include(CMake_OSTAP.cmake) 
 
+
 if(ROOT_VERSION VERSION_LESS_EQUAL "6.31.00")
 
-execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx26
-                 OUTPUT_VARIABLE CXX26_ROOT
-                 OUTPUT_STRIP_TRAILING_WHITESPACE )
-execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx23
-                 OUTPUT_VARIABLE CXX23_ROOT
-                 OUTPUT_STRIP_TRAILING_WHITESPACE )
-execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx20
-                 OUTPUT_VARIABLE CXX20_ROOT
-                 OUTPUT_STRIP_TRAILING_WHITESPACE )
-execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx17
-                 OUTPUT_VARIABLE CXX17_ROOT
-                 OUTPUT_STRIP_TRAILING_WHITESPACE )
-execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx14
-                 OUTPUT_VARIABLE CXX14_ROOT
-                 OUTPUT_STRIP_TRAILING_WHITESPACE )
-execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx11
-                 OUTPUT_VARIABLE CXX11_ROOT
-                 OUTPUT_STRIP_TRAILING_WHITESPACE )
+  execute_process ( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx26
+                    OUTPUT_VARIABLE CXX26_ROOT
+                    OUTPUT_STRIP_TRAILING_WHITESPACE )
+  execute_process ( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx23
+                    OUTPUT_VARIABLE CXX23_ROOT
+                    OUTPUT_STRIP_TRAILING_WHITESPACE )
+  execute_process ( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx20
+                    OUTPUT_VARIABLE CXX20_ROOT
+                    OUTPUT_STRIP_TRAILING_WHITESPACE )
+  execute_process ( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx17
+                    OUTPUT_VARIABLE CXX17_ROOT
+                    OUTPUT_STRIP_TRAILING_WHITESPACE )
+  execute_process ( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx14
+                    OUTPUT_VARIABLE CXX14_ROOT
+                    OUTPUT_STRIP_TRAILING_WHITESPACE )
+  execute_process ( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx11
+                  OUTPUT_VARIABLE CXX11_ROOT
+                  OUTPUT_STRIP_TRAILING_WHITESPACE )
 
-message ( ' CXX26 == ' ${CXX26_ROOT} )
-message ( ' CXX23 == ' ${CXX23_ROOT} )
-message ( ' CXX20 == ' ${CXX20_ROOT} )
-message ( ' CXX17 == ' ${CXX17_ROOT} )
-message ( ' CXX14 == ' ${CXX14_ROOT} )
-message ( ' CXX11 == ' ${CXX11_ROOT} )
-    
-if     ( ${CXX26_ROOT} STREQUAL "yes" ) 
-  target_compile_features (ostap PUBLIC cxx_std_26 )
-elseif ( ${CXX23_ROOT} STREQUAL "yes" ) 
-  target_compile_features (ostap PUBLIC cxx_std_23 )
-elseif ( ${CXX20_ROOT} STREQUAL "yes" ) 
-  target_compile_features (ostap PUBLIC cxx_std_20 )
-elseif ( ${CXX17_ROOT} STREQUAL "yes" ) 
-  target_compile_features (ostap PUBLIC cxx_std_17 )
-elseif ( ${CXX14_ROOT} STREQUAL "yes" ) 
-  target_compile_features (ostap PUBLIC cxx_std_14 )
-elseif ( ${CXX11_ROOT} STREQUAL "yes" ) 
-  target_compile_features (ostap PUBLIC cxx_std_11 )
-endif() 
+  if   ( ${CXX26_ROOT} STREQUAL "yes" )
+     target_compile_features (ostap PUBLIC cxx_std_26 )
+     message ( "----> C++    stanard    : C++26 " )
+     set_property(TARGET ostap PROPERTY CXX_STANDARD 26 )
+  elseif ( ${CXX23_ROOT} STREQUAL "yes" ) 
+     target_compile_features (ostap PUBLIC cxx_std_23 )
+     message ( "----> C++    stanard    : C++23 " )
+     set_property(TARGET ostap PROPERTY CXX_STANDARD 23 )
+  elseif ( ${CXX20_ROOT} STREQUAL "yes" ) 
+     target_compile_features (ostap PUBLIC cxx_std_20 )
+     message ( "----> C++    stanard    : C++20 " )
+     set_property(TARGET ostap PROPERTY CXX_STANDARD 20 )
+  elseif ( ${CXX17_ROOT} STREQUAL "yes" ) 
+     target_compile_features (ostap PUBLIC cxx_std_17 )
+     message ( "----> C++    stanard    : C++17 " )
+     set_property(TARGET ostap PROPERTY CXX_STANDARD 17 )
+  elseif ( ${CXX14_ROOT} STREQUAL "yes" ) 
+     target_compile_features (ostap PUBLIC cxx_std_14 )
+     message ( "----> C++    stanard    : C++14 " )  
+     set_property(TARGET ostap PROPERTY CXX_STANDARD 14 )
+  elseif ( ${CXX11_ROOT} STREQUAL "yes" ) 
+     target_compile_features (ostap PUBLIC cxx_std_11 )
+     message ( "----> C++    stanard    : C++11 " )
+    set_property(TARGET ostap PROPERTY CXX_STANDARD 11 )
+  else()
+    target_compile_features (ostap PUBLIC cxx_std_17 )
+    message ( "----> C++    stanard    : C++17 " )    
+    set_property(TARGET ostap PROPERTY CXX_STANDARD 17 )
+  endif() 
 
 else() 
 
-execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --cxxstandard
-                 OUTPUT_VARIABLE CXX_ROOT
-                 OUTPUT_STRIP_TRAILING_WHITESPACE )
+   execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --cxxstandard
+                    OUTPUT_VARIABLE CXX_ROOT
+                    OUTPUT_STRIP_TRAILING_WHITESPACE )
 
-set_property(TARGET ostap PROPERTY CXX_STANDARD ${CXX_ROOT} )
+   if     ( ${CXX_ROOT} STREQUAL "26" ) 
+      target_compile_features (ostap PUBLIC cxx_std_26 )
+      message ( "----> C++    standard    : C++26 " )    
+      set_property(TARGET ostap PROPERTY CXX_STANDARD 26 )
+   elseif ( ${CXX_ROOT} STREQUAL "23" ) 
+      target_compile_features (ostap PUBLIC cxx_std_23 )
+      message ( "----> C++    standard    : C++23 " )    
+      set_property(TARGET ostap PROPERTY CXX_STANDARD 23 )
+   elseif ( ${CXX_ROOT} STREQUAL "20" ) 
+      target_compile_features (ostap PUBLIC cxx_std_20 )  
+      message ( "----> C++    stanard    : C++20 " )    
+      set_property(TARGET ostap PROPERTY CXX_STANDARD 20 )
+   elseif ( ${CXX_ROOT} STREQUAL "17" ) 
+      target_compile_features (ostap PUBLIC cxx_std_17 )
+      message ( "----> C++    stanard    : C++17 " )    
+      set_property(TARGET ostap PROPERTY CXX_STANDARD 17 )
+   elseif ( ${CXX_ROOT} STREQUAL "14" ) 
+      target_compile_features (ostap PUBLIC cxx_std_14 )
+      message ( "----> C++    stanard    : C++14 " )    
+      set_property(TARGET ostap PROPERTY CXX_STANDARD 14 )
+   else() 
+      ##target_compile_features (ostap PUBLIC cxx_std_17 )
+      message ( "----> C++    stanard    : C++17 " )    
+      set_property(TARGET ostap PROPERTY CXX_STANDARD 17 )
+   endif()
 
-if     ( ${CXX_ROOT} STREQUAL "26" ) 
-target_compile_features (ostap PUBLIC cxx_std_26 )
-elseif ( ${CXX_ROOT} STREQUAL "23" ) 
-target_compile_features (ostap PUBLIC cxx_std_23 )
-elseif ( ${CXX_ROOT} STREQUAL "20" ) 
-target_compile_features (ostap PUBLIC cxx_std_20 )
-elseif ( ${CXX_ROOT} STREQUAL "17" ) 
-target_compile_features (ostap PUBLIC cxx_std_17 )
-elseif ( ${CXX_ROOT} STREQUAL "14" ) 
-target_compile_features (ostap PUBLIC cxx_std_14 )
-else() 
-##target_compile_features (ostap PUBLIC cxx_std_11 )
-endif()
     
 endif() 
 
 
+    
 target_link_libraries   ( ostap ROOT::MathMore ROOT::ROOTVecOps ROOT::GenVector root_pyroot ROOT::RooFit ROOT::Hist ROOT::Tree ROOT::TreePlayer ROOT::RIO ROOT::TMVA ROOT::ROOTDataFrame GSL::gsl )
 
 target_include_directories (ostap
@@ -190,6 +212,8 @@ target_include_directories (ostap
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src ${Python_INCLUDE_DIRS} 
 )
+
+
 
 REFLEX_GENERATE_DICTIONARY( ostap     ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.hh 
                             SELECTION ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.xml )
