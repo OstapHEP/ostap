@@ -9,15 +9,12 @@
 """Few utilities to simplify linear algebra manipulations 
 """
 # =============================================================================
-from   __future__        import print_function
-# =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
 __date__    = "2009-09-12"
 __version__ = ""
 # =============================================================================
 __all__     = ( )
 # =============================================================================
-from   builtins               import range 
 from   sys                    import version_info as python_version
 from   ostap.math.base        import isequal , iszero , std, Ostap
 from   ostap.core.ostap_types import num_types, integer_types

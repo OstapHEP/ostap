@@ -55,7 +55,6 @@ __all__     = (
     ## 
 )
 # =============================================================================
-from   builtins                 import range
 from   ostap.math.base          import iszero , frexp10 
 from   ostap.core.core          import ( Ostap , VE , hID , dsID , rootID   ,
                                          valid_pointer , in_test , 

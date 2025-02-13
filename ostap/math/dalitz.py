@@ -23,12 +23,11 @@ __all__     = (
     'DPlotRM' , ## vizialize Dalitz density as "rectangular mass plot" 
     )
 # =============================================================================
-from   builtins             import range
-import ostap.math.kinematic
 from   ostap.core.core      import Ostap, fID 
 import ostap.math.base
 import ostap.math.reduce 
 import ostap.histos.graphs  
+import ostap.math.kinematic
 import ROOT, random, math
 # =============================================================================
 # logging 

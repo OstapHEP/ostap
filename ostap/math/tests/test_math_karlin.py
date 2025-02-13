@@ -16,7 +16,6 @@
 from   ostap.core.core        import Ostap, hID 
 from   ostap.utils.timing     import timing
 from   ostap.plotting.canvas  import use_canvas
-from   builtins               import range
 from   ostap.utils.utils      import vrange, batch_env 
 import ostap.histos.graphs   
 import ostap.math.models 

@@ -13,7 +13,6 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-from   builtins              import range
 from   ostap.core.core       import hID 
 from   ostap.histos.roc      import roc_curve
 from   ostap.math.integral   import integral 

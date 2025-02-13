@@ -68,7 +68,6 @@ __all__     = (
     'valid_formula'  , ## valid formula expression? 
     ) 
 # =============================================================================
-from   builtins                 import range
 from   ostap.core.meta_info     import root_info 
 from   ostap.math.base          import doubles, iszero, isequal 
 from   ostap.core.core          import VE, hID, Ostap, valid_pointer 

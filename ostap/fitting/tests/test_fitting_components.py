@@ -14,7 +14,6 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   builtins             import range
 from   ostap.core.core      import cpp, VE, dsID, rooSilent 
 from   ostap.utils.timing   import timing 
 from   ostap.utils.utils    import batch_env 

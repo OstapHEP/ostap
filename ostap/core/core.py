@@ -69,8 +69,7 @@ __all__     = (
     'in_test'             , ## Are we in CMAKE-test regime?
     )
 # =============================================================================
-from   sys                    import version_info  as python_version 
-from   builtins               import range
+from   ostap.core.meta_info   import root_info
 from   ostap.math.base        import ( Ostap    , std     , cpp ,  
                                        iszero   , isequal ,
                                        isint    , islong  ,
@@ -80,7 +79,6 @@ from   ostap.math.base        import ( Ostap    , std     , cpp ,
                                        ROOTIgnore         )
 from   ostap.math.ve          import VE
 from   ostap.stats.counters   import SE , WSE 
-from   ostap.core.meta_info   import root_info
 from   ostap.core.ostap_types import integer_types, sequence_types, string_types
 from   ostap.utils.basic      import NoContext, loop_items         
 import ROOT, cppyy, math, sys, os, re  
@@ -118,7 +116,7 @@ agrestiCoullEff = Ostap.Math.agrestiCoullEff
 if root_info < ( 6, 29 ) : # ==================================================
     # =========================================================================
     class ROOTCWD(object) :
-        """Context manager to preserve current directory
+        """ Context manager to preserve current directory
         (rather confusing stuff in ROOT) 
         >>> print the_ROOT.CurrentDirectory() 
         >>> with ROOTCWD() :
@@ -143,7 +141,7 @@ if root_info < ( 6, 29 ) : # ==================================================
             groot     = ROOT.ROOT.GetROOT ()
             if groot :
                 cwd = groot.CurrentDirectory()
-                if ( 6 , 23 , 1 ) <= root_info : cwd = cwd.load() ## resolve std::atomic 
+                cwd = cwd.load() ## resolve std::atomic 
                 if cwd : self._dir = cwd
                 
             return self

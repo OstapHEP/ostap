@@ -9,8 +9,6 @@
 """Few utilities to simplify linear algebra manipulations 
 """
 # =============================================================================
-from   __future__        import print_function
-# =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
 __date__    = "2009-09-12"
 __version__ = ""
@@ -20,7 +18,8 @@ __all__     = (
     'correlation' , ## get i,j-correlation coeffiecient from matrix-like object
     )
 # =============================================================================
-from   builtins import range 
+from   ostap.math.base        import isequal,iszero
+from   ostap.core.ostap_types import num_types, is_integer
 import ROOT, cppyy 
 # =============================================================================
 # logging 
@@ -28,9 +27,6 @@ import ROOT, cppyy
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.linalg' )
 else                       : logger = getLogger ( __name__            )
-# =============================================================================
-from ostap.math.base        import isequal,iszero
-from ostap.core.ostap_types import num_types, is_integer
 # =============================================================================
 ## get  i,j element from matrix-like object
 #  @code

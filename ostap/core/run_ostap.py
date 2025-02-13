@@ -28,8 +28,6 @@ to provide access to zillions useful decorators for ROOT
 
 """
 # =============================================================================
-from   __future__        import print_function
-# =============================================================================
 __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = "2012-09-10"
 __version__ = '$Revision$'

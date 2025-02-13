@@ -14,7 +14,6 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-from   builtins import range
 from   ostap.histos.param       import legendre_sum, chebyshev_sum
 from   ostap.core.core          import hID, fID 
 from   ostap.utils.timing       import timing

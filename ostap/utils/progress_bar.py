@@ -91,8 +91,6 @@ This class is an improvement from the original found at:
 @see http://code.activestate.com/recipes/168639/
 """
 # =============================================================================
-from __future__ import print_function
-# =============================================================================
 __author__   = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __version__  = "$Revision$"
 __date__     = "2011-12-01"
@@ -103,7 +101,6 @@ __all__      = (
     "running_bar"     ## helper function for RunningBar 
     )
 # =============================================================================
-from   builtins               import range
 from   ostap.core.ostap_types import sized_types 
 from   ostap.utils.basic      import isatty, terminal_size 
 from   ostap.logger.colorized import allright, infostr 

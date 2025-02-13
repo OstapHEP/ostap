@@ -21,7 +21,6 @@ __all__     = (
     ##
     )
 # =============================================================================
-from   builtins                 import range
 from   ostap.core.meta_info     import root_info
 from   ostap.core.core          import Ostap , VE , valid_pointer, roo_silent 
 from   ostap.core.ostap_types   import ( is_integer     , string_types   , 

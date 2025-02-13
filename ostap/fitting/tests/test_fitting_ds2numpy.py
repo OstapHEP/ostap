@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # ============================================================================= 
-from   builtins                import range
 from   ostap.utils.timing      import timing
 from   ostap.fitting.ds2numpy  import ds2numpy
 from   ostap.plotting.canvas   import use_canvas

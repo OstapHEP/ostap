@@ -38,10 +38,8 @@ __all__     = (
     'Checker'     , ## check of the object can be pickled/unpickled  
 )
 # =============================================================================
-import sys, os 
-from   builtins                 import range
+from   collections.abc          import Sized
 from   itertools                import repeat , count
-# =============================================================================
 from   ostap.parallel.task      import ( TaskManager   ,
                                          Task          , TaskMerger    , 
                                          Statistics    , StatMerger    ,
@@ -49,9 +47,7 @@ from   ostap.parallel.task      import ( TaskManager   ,
 from   ostap.utils.basic        import loop_items 
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.parallel.utils     import get_local_port  , pool_context  
-# =============================================================================
-if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Sized
-else                              : from collections     import Sized 
+import sys, os 
 # =============================================================================
 ## CORE pathos 
 # =============================================================================

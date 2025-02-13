@@ -54,12 +54,11 @@ __all__     = (
     'Derivative6'       , ## evaluate 6th derivative 
     ) 
 # =============================================================================
-import ROOT, math, abc, array, sys, bisect   
-from   builtins          import range 
 from   collections       import namedtuple
 from   ostap.math.base   import Ostap, iszero , isequal
 from   ostap.math.ve     import VE
 from   ostap.utils.utils import classprop, memoize 
+import ROOT, math, abc, array, sys, bisect   
 # =============================================================================
 # logging 
 # =============================================================================

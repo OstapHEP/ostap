@@ -14,8 +14,6 @@
 - where J is Jacobi matrix 
 """
 # =============================================================================
-from   __future__  import print_function
-# =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
 __date__    = "2009-09-12"
 __version__ = ""
@@ -24,7 +22,8 @@ __all__     = (
     'transform'  , ## transfrom covarinance matrix 
     )
 # =============================================================================
-from   builtins  import range 
+from   ostap.core.core    import Ostap, VE 
+import ostap.math.linalg
 import ROOT
 # =============================================================================
 # logging 
@@ -32,12 +31,6 @@ import ROOT
 from   ostap.logger.logger   import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.covtransform' )
 else                       : logger = getLogger ( __name__                  )
-# =============================================================================
-from   ostap.core.core       import Ostap, VE 
-import ostap.math.linalg
-# =============================================================================
-
-
 # =============================================================================
 ## Transform the covariance matrix C at point `X` to the variables `Y(X)`
 #  for \f$ y = y ( x ) \f$, it gets

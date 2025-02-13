@@ -69,7 +69,6 @@ __all__     = (
     ##
     ) 
 # =============================================================================
-from   builtins          import range
 from   ostap.math.ve     import VE
 from   ostap.math.base   import isequal, iszero
 from   ostap.utils.basic import items_loop

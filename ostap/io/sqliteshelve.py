@@ -117,8 +117,6 @@ Access to DB in read-only mode :
  - see ostap.io.dump_root
 """
 # =============================================================================
-from   __future__        import print_function
-# =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-19"
 __version__ = "$Revision$" 

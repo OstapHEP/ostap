@@ -28,26 +28,24 @@
 
 """
 # =============================================================================
-from   __future__        import print_function
-# =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2012-05-13"
 __version__ = "$Revision$" 
 __all__     = ()   ## nothing to import 
+# =============================================================================
+import shelve 
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.io.shelve_ext' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 # 
-import shelve
-#
 _old_shelve_open_ = shelve.open
 #
 # ========================================================
 ## A bit extended version of shelve.open
 def _new_shelve_open_ ( filename , *kargs , **kwargs ) :
-    """A bit extended version of shelve.open:
+    """ A bit extended version of shelve.open:
     
     >>> db1 = open ('$HOME/a.db')
     >>> db2 = open ('../anotherdir/b.db')
@@ -99,6 +97,7 @@ def _shelf_enter_ ( self ) :
     
     """
     return self
+# =============================================================================
 def _shelf_exit_ ( self , *_ ) :
     """ Context-manager
     
@@ -127,5 +126,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

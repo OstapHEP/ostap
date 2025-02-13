@@ -31,7 +31,6 @@ __all__     = (
     'roo_poisson'       , ## generate Poisson random number 
 )
 # =============================================================================
-from   builtins                import range
 from   ostap.core.core         import ( Ostap   , rootID     , VE ,
                                         isequal , roo_silent )
 from   ostap.core.ostap_types  import ( num_types      , list_types     ,
@@ -42,7 +41,6 @@ from   ostap.math.random_ext   import ve_gauss, poisson
 from   ostap.core.meta_info    import root_info 
 from   ostap.fitting.variables import SETVAR 
 from   ostap.utils.basic       import numcpu , items_loop
-# 
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 import ROOT, math, random 

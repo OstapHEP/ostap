@@ -17,16 +17,15 @@ __date__    = "2011-06-07"
 __all__     = (
     ) 
 # =============================================================================
-from   builtins import range 
 from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import Ostap, VE, valid_pointer, iszero, isequal
 from   ostap.core.ostap_types   import string_types , integer_types
 from   ostap.utils.valerrors    import ValWithErrors, AsymErrors   
-import ostap.fitting.variables     
-import ostap.fitting.printable
-import ostap.math.linalg        as     LA 
 from   ostap.logger.colorized   import allright, attention, attstr 
 from   ostap.logger.pretty      import pretty_float, pretty_ve, pretty_err2 
+import ostap.math.linalg        as     LA 
+import ostap.fitting.variables     
+import ostap.fitting.printable
 import ROOT, math, sys, ctypes  
 # =============================================================================
 from   ostap.logger.logger import getLogger

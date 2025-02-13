@@ -9,12 +9,9 @@
 """ It tests the removal of duplicated entries 
 """
 # ============================================================================= 
-from   __future__               import print_function
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   builtins                 import range
 from   ostap.core.core          import dsID
 from   ostap.utils.timing       import timing
 from   ostap.utils.utils        import batch_env 

@@ -7,7 +7,10 @@
  - fix Py<->c++ functions
  - imporve `Ostap::statusCode`
  - more use of `Ostap::Assert`
-    
+ - remove `forn bultins import rane`
+ - reomve `from __future__ import ptint_function`
+ - suppress mave version-related ifs
+        
     
 ## New features
 

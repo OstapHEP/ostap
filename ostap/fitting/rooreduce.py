@@ -17,7 +17,6 @@ __date__    = "2011-06-07"
 __all__     = (
     ) 
 # =============================================================================
-from   builtins                     import range
 from   ostap.core.meta_info         import root_info 
 from   ostap.math.base              import doubles
 from   ostap.core.core              import Ostap

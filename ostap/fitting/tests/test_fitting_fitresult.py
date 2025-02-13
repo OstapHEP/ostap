@@ -9,12 +9,9 @@
 """ Test module for `ROOT.RooFitResult`
 """
 # ============================================================================= 
-from   __future__               import print_function
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   builtins                 import range
 from   ostap.core.core          import cpp, VE, dsID, rooSilent 
 from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas

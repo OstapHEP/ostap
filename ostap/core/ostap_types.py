@@ -43,8 +43,8 @@ __all__     = (
     'all_strings'     , ## all argumets of string  types?
     )
 # =============================================================================
-import sys, os, math, array
-from   sys                     import version_info as python_version
+from   collections.abc import Collection, Sequence, Iterable, mAPPING, Sized, Generator   
+import array
 # =============================================================================
 # logging 
 # =============================================================================
@@ -54,33 +54,16 @@ else                       : logger = getLogger( __name__     )
 # =============================================================================
 logger.debug ( 'Core objects/classes/types for Ostap')
 # =============================================================================
-if ( 3 , 0 ) <= python_version :
-    long           = int
-    string_types   = bytes , str 
-    integer_types  = int   ,
-    long_type      = int
-    import collections.abc as C
-else :
-    string_types   = str   , unicode
-    integer_types  = int   , long
-    long_type      = long 
-    import collections     as     C
+long           = int
+string_types   = bytes , str 
+integer_types  = int   ,
+long_type      = int
 # =============================================================================
-if   ( 3 , 5 ) <= python_version :
-    from collections.abc   import Collection, Sequence, Iterable, Sized, Generator   
-elif ( 3 , 3 ) <= python_version :
-    from collections.abc   import Collection, Sequence, Iterable, Sized   
-    from types             import GeneratorType as Generator 
-else :
-    from collections       import Sequence , Iterable , Sized            
-    from collections       import Container     as Collection
-    from types             import GeneratorType as Generator    
-# =============================================================================
-iterable_types  = Iterable,
+iterable_types  = Iterable ,
 num_types       = integer_types + ( float , ) 
-str_types       = str,
+str_types       = str ,
 list_types      = list , tuple
-listlike_types  = list_types + ( set , C.Sequence , array.array )
+listlike_types  = list_types + ( set , Sequence , array.array )
 # =============================================================================
 if sys.warnoptions or os.environ.get ( 'OSTAP_CMAKE_TEST', False ) :
     import warnings 
@@ -105,21 +88,16 @@ except ImportError : # ========================================================
     pass 
 # =============================================================================
 dict_types      = dict ,
-dictlike_types  = dict ,  C.Mapping  
+dictlike_types  = dict ,  Mapping  
 sequence_types  = listlike_types + ( Sequence , Collection , Iterable , Generator )
 sized_types     = Sized ,
 path_types      = string_types
 # =============================================================================
-if ( 3 , 6 ) <= python_version :
-    path_types = string_types + ( os.PathLike , )
+path_types = string_types + ( os.PathLike , )
 # =============================================================================
 ## sometimes we need to ensure that dictionary is ordered 
 ordered_dict = dict
-if python_version < ( 3 , 7 ) :
-    from collections import OrderedDict as ordered_dict 
-    dictlike_types += ( ordered_dict, )
-    dict_types     += ( ordered_dict, )
-    
+
 # =============================================================================
 ## Is this number of a proper integer?
 def is_integer ( v ) :

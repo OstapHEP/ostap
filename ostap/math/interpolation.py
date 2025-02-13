@@ -139,7 +139,6 @@ __all__     = (
     'FloaterHormann'        , ## rational Floater-Hormann interpolant 
     )
 # =============================================================================
-from    builtins               import range
 from    ostap.core.ostap_types import ( is_integer     ,
                                         sequence_types ,
                                         integer_types  ,

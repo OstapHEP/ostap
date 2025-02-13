@@ -24,7 +24,6 @@ __all__     = (
     'ds_combine' , ## combine two datasets with weights 
     )
 # =============================================================================
-from   builtins                  import range
 from   ostap.utils.progress_bar  import progress_bar 
 from   collections               import defaultdict
 from   ostap.core.meta_info      import root_info, ostap_version 

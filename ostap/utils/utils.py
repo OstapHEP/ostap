@@ -131,17 +131,13 @@ __all__     = (
     )
 
 # =============================================================================
-from   builtins               import range
-from   itertools              import repeat, chain, islice 
-from   sys                    import version_info  as python_version 
-## timing stuff
+from   itertools              import repeat, chain, islice
+from   ostap.core.meta_info   import python_info 
 from   ostap.utils.timing     import timing, timer
-## other useful stuff 
 from   ostap.utils.basic      import isatty, with_ipython, NoContext, zip_longest 
 from   ostap.core.ostap_types import ( integer_types  , num_types ,
                                        string_types   ,
                                        dictlike_types , listlike_types )
-## ... and more useful stuff 
 from   ostap.utils.memory     import memory, virtualMemory, Memory
 from   ostap.utils.env        import get_env , OSTAP_BATCH
 import ROOT, time, os , sys, math, time, functools, abc, array, random, datetime  ## attention here!!
@@ -1237,78 +1233,27 @@ def split_n_range ( low , high , num ) :
         yield low + num * newn - newn , high
         
 # ======================================================================================
-if  ( 3 , 2 ) <= python_version :
-    # ==================================================================================
-    ## use accumulae form itertools
-    from itertools import accumulate
-    # ==================================================================================
-else :
-    # ==================================================================================
-    import operator 
-    def accumulate(iterable, func=operator.add):
-        """ Return running totals """ 
-        # accumulate([1,2,3,4,5]) --> 1 3 6 10 15
-        # accumulate([1,2,3,4,5], operator.mul) --> 1 2 6 24 120
-        it = iter(iterable)
-        try:
-            total = next(it)
-        except StopIteration:
-            return
-        yield total
-        for element in it:
-            total = func(total, element)
-            yield total
+## use accumulae form itertools
+from itertools import accumulate
+# ====================================================================================
+## use choinced from random 
+choices = random.choices
+# ====================================================================================
+## Generate some random name of given name
+#  @code
+#  name = random_name ( 5 ) 
+#  @endcode 
+def random_name ( size = 6 , prefix = '' , suffix = '' ) :
+    """ Generate some random name of given name 
+    >>> name = random_name ( 5 )
+    """
+    assert 1 <= size , 'random_name: invalid size!'
+    ## 
+    first = random.choice  ( ascii_letters ) 
+    if 1 == size : return prefix + first + suffix 
+    ## 
+    return prefix + first  + ''.join ( random.choices ( all_symbols , k = size - 1 ) ) + suffix 
 
-# ======================================================================================
-if  ( 3 , 6 ) <= python_version: # =====================================================
-    # ==================================================================================
-    choices = random.choices
-    # ==================================================================================
-else : # ===============================================================================
-    # ==================================================================================
-    def choices ( population , weights = None , cum_weights = None , k = 1 ) :
-        """ Simple variant of `random.choice`
-        """
-        assert weights is None and cum_weights is None,\
-               "choices: Neither ``weigths'' nor ``cum_weights'' are supported!"
-        
-        return [ random.choice ( population ) for i in range ( k ) ] 
-
-# ========================================================================================
-if  ( 3 , 6 ) <= python_version : # ======================================================
-    # ====================================================================================
-    ## Generate some random name of given name
-    #  @code
-    #  name = random_name ( 5 ) 
-    #  @endcode 
-    def random_name ( size = 6 , prefix = '' , suffix = '' ) :
-        """ Generate some random name of given name 
-        >>> name = random_name ( 5 )
-        """
-        assert 1 <= size , 'random_name: invalid size!'
-        ## 
-        first = random.choice  ( ascii_letters ) 
-        if 1 == size : return prefix + first + suffix 
-        ## 
-        return prefix + first  + ''.join ( random.choices ( all_symbols , k = size - 1 ) ) + suffix 
-    # ====================================================================================
-else : # =================================================================================
-    # ====================================================================================
-    ## Generate some random name of given name
-    #  @code
-    #  name = random_name ( 5 ) 
-    #  @endcode 
-    def random_name ( size = 6 , prefix = '' , suffix = '' ) :
-        """ Generate some random name of given name 
-        >>> name = random_name ( 5 )
-        """
-        assert 1 <= size , 'random_name: invalid size!'
-        ## 
-        first = random.choice  ( ascii_letters ) 
-        if 1 == size : return prefix + first + suffix 
-        ## 
-        return prefix + first  + ''.join ( random.choice ( all_symbols ) for i in range ( size - 1  ) ) + suffix 
-    
 # ========================================================================================
 ## generate some pseudo-random 6-symbol name from provided hash sources 
 def short_hash_name ( size , name , *names ) :
@@ -1605,81 +1550,35 @@ def splitter ( N , n ) :
             for i in range ( b     ) : yield a + 1
             for i in range ( b , n ) : yield a 
                 
-# ============================================================================
-if   ( 3 , 9 ) <= python_version : memoize = functools.cache 
-elif ( 3 , 2 ) <= python_version : 
+# =============================================================================
+if   ( 3 , 9 ) <= python_info : # =============================================
     # =========================================================================
-    ## Simple lightweight unbounded cache
-    def memoize ( user_function ):
-        """ Simple lightweight unbounded cache """
-        return functools.lru_cache(maxsize=None)(user_function)
+    memoize = functools.cache
     # =========================================================================
 else : # ======================================================================
     # =========================================================================
-    from ostap.utils.basic import loop_items    
-    # =========================================================================
     ## Simple lightweight unbounded cache
-    class memoize(object):
-        """Simple lightweight unbounded cache
+    def memoize ( user_function ):
+        """ Simple lightweight unbounded cache 
+        - see `functools.lru_cache` 
         """
-        def __init__ ( self, func ) :
-            
-            self.func  = func
-            self.cache = {}
-            functools.update_wrapper ( self , func ) 
-            
-        def __call__ ( self, *args, **kwargs ):
-
-            if kwargs : all_args = args , tuple ( loop_items ( kwargs ) ) 
-            else      : all_args = args 
-                    
-            if all_args in self.cache:    
-                return self.cache [ all_args ]
-            
-            value = self.func ( *args , **kwargs )
-            self.cache [ all_args ] = value
-            
-            return value
-        
-        def __repr__(self):
-            return self.func.__doc__
-        def __get__(self, obj, objtype):
-          return functools.partial(self.__call__, obj)
+        return functools.lru_cache(maxsize=None)(user_function)    
       
-# ============================================================================
-## abstract prpoperty
+# =========================================================================
+## absract property decorator
 #  @code
 #  @absproperty
 #  def A ( self ) : ...  
 #  @endcode
-if ( 3 , 3 ) <= python_version :    
-    # =========================================================================
-    ## absract property decorator
-    #  @code
-    #  @absproperty
-    #  def A ( self ) : ...  
-    #  @endcode
-    def absproperty ( func ) :
-        """Abstract property
-        @absproperty
-        def A ( self ) : ...
-        """
-        return property ( abc.abstractmethod ( func ) ) 
-        
-else :
-
-    import abc 
-    # =========================================================================
-    ## abstract prpoperty
-    #  @code
-    #  @absproperty
-    #  def A ( self ) : ...  
-    #  @endcode
-    absproperty = abc.abstractproperty
-
+def absproperty ( func ) :
+    """ Abstract property
+    @absproperty
+    def A ( self ) : ...
+    """
+    return property ( abc.abstractmethod ( func ) ) 
     
 # =============================================================================
-if  ( 3 , 9 ) <= python_version :     
+if  ( 3 , 9 ) <= python_info : # ==============================================
     # =========================================================================
     ## class property decorator
     #  @code
@@ -1693,7 +1592,7 @@ if  ( 3 , 9 ) <= python_version :
         """
         return classmethod ( property ( func ) ) 
     # =========================================================================
-elif ( 3 , 0 ) <= python_version : # ==========================================
+else : 
     # =========================================================================
     ## class @classproperty
     #  class property decorator  (copied and simplified from astropy)
@@ -1702,7 +1601,7 @@ elif ( 3 , 0 ) <= python_version : # ==========================================
     #  def A ( cls ) : ...  
     #  @endcode
     class classprop(property):
-        """Class property
+        """ Class property
         @classprop
         def A ( cls ) : ...
         """        
@@ -1760,14 +1659,6 @@ elif ( 3 , 0 ) <= python_version : # ==========================================
                 return orig_fget(obj.__class__)
             
             return fget
-    # =========================================================================
-else : # ======================================================================
-    # =========================================================================
-    class classprop(object):
-        def __init__(self, fget):
-            self.fget = fget
-        def __get__(self, inst, cls):
-            return self.fget(cls)
 
 # =============================================================================
 ## @class CallThem

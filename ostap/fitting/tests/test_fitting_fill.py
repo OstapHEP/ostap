@@ -14,7 +14,6 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   builtins                     import range
 from   ostap.core.meta_info         import root_info 
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.utils.timing           import timing  

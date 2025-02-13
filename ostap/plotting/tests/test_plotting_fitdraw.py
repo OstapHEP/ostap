@@ -13,7 +13,6 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.utils.timing       import timing
-from   builtins                 import range
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait, batch_env 
 from   ostap.fitting.background import make_bkg

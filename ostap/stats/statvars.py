@@ -90,7 +90,6 @@ __all__     = (
     'expression_types'     , ## valid types for expressions/cuts/weights
 )
 # =============================================================================
-from   builtins               import range
 from   ostap.math.base        import isequal, iszero, axis_range  
 from   ostap.core.core        import Ostap, rootException, WSE, VE, std     
 from   ostap.core.ostap_types import ( string_types , integer_types  , 

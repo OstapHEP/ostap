@@ -9,8 +9,6 @@
 """ Test module for Breit-Wigner wirth interferenc e 
 """
 # ============================================================================= 
-from   __future__              import print_function
-from   builtins                import range
 from   ostap.core.core         import Ostap
 from   ostap.utils.timing      import timing
 from   ostap.utils.utils       import wait

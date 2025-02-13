@@ -81,9 +81,8 @@ __all__     = (
     'aitken_delta2'      , ## aitken delta2 acceleration process   
 )
 # =============================================================================
+from   ostap.math.base            import isequal, iszero , samesign
 import sys, collections, warnings 
-from   ostap.math.base  import isequal, iszero , samesign
-from   builtins import range
 # =============================================================================
 # logging 
 # =============================================================================

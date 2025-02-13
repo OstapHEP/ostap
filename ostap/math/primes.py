@@ -37,17 +37,17 @@ __all__     = (
     'prime_factors'     , ## get all non-repetitive prime factors for the given number 
     )
 # =============================================================================
+import bisect , random  
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger    import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.primes' )
 else                       : logger = getLogger ( __name__            )
 # =============================================================================
-import bisect , random  
-from   builtins import range
 # =============================================================================
-try :
-    
+try : # =======================================================================
+    # =========================================================================
     import numpy
     npvers   = tuple ( numpy.version.version.split('.') )
     npb_type = bool if ( '1', '20') <= npvers else numpy.bool 
@@ -124,7 +124,7 @@ except ImportError :
 #  q   = p.choice (  300 , 800 )  ## get random prime betwewn 300 and 800
 #  @endcode
 class Primes(object) :
-    """Produce and store the primary numbers
+    """ Produce and store the primary numbers
     >>> p = Primes(1000)
     >>> for q in p                     : print q  ## loop over all primes 
     >>> for q in p.range ( 500 , 700 ) : print q  ## loop over primes betee 500 and 700
@@ -358,9 +358,7 @@ def all_prime_factors ( n ) :
             a , b = divmod ( _n , p )
 
     return tuple ( factors ) 
-            
-            
-        
+                    
 # =============================================================================
 ## get all non-repetitive prime factors for the given number
 #  @code

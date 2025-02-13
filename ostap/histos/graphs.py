@@ -36,11 +36,9 @@ __all__     = (
     ##
     ) 
 # =============================================================================
-from   builtins                       import range
 from   ostap.core.core                import cpp, VE, grID
 from   ostap.utils.basic              import typename 
 from   ostap.math.base                import isint, pos_infinity, neg_infinity 
-from   ostap.core.meta_info           import root_info
 from   ostap.core.ostap_types         import ( num_types   , integer_types ,
                                                sized_types , string_types  )   
 from   ostap.plotting.draw_attributes import copy_graph_attributes
@@ -1141,194 +1139,6 @@ def _grae_iteritems_ ( graph ) :
         X , Y = graph [ ip ]        
         yield ip, X , Y 
 
-# =============================================================================
-
-if ( 6 , 20 ) <= root_info : 
-    # =============================================================================
-    ## iterate over points in TGraphMultiErrors
-    #  @code
-    #  gre = ...
-    #  for i,x,v in gre.    items(): ...
-    #  for i,x,v in gre.iteritems(): ... ## ditto
-    #  @endcode
-    #  @see TGraphMultiErrors
-    #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-    #  @date   2011-06-07
-    def _grme_iteritems_ ( graph ) :
-        """ Iterate over graph points 
-        >>> gre = ...
-        >>> for i,x,v in gre.    items(): ...
-        >>> for i,x,v in gre.iteritems(): ... ## ditto
-        """
-        for ip in graph :        
-            x , y = graph [ ip ]
-            yield ip , x , y 
-            
-    # =============================================================================
-    ## get the point in TGraph MultiErrors
-    #  @code
-    #  grme = ...
-    #  X , Y = = grme[ 1 ]
-    #  @endcode 
-    #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-    #  @date   2011-06-07
-    def _grme_getitem_ ( graph , ipoint ) :
-        """ Get the point from the graph 
-        >>> grme = ...
-        >>> X , Y = grme [ 1 ] 
-        """
-        
-        if isinstance ( ipoint , slice ) :
-            points = []
-            N      = len ( graph ) 
-            for point in range ( *slice.indices ( N ) ) :
-                points.append ( graph [ point ] )
-                klass = type ( graph )
-                new_graph = klass ()
-                new_graph.Set ( len ( points ) ) 
-                for i , point in enumerate ( points ) : new_graph [ i ] = point
-                copy_graph_attributes ( graph , new_graph )
-                return new_graph
-            
-        if ipoint < 0 : ipoint += len ( graph ) 
-        if not ipoint in graph : raise IndexError 
-        #
-        
-        x , y = graph.get_point ( ipoint )
-        
-        exl = graph.GetErrorXlow  ( ipoint )
-        exh = graph.GetErrorXhigh ( ipoint )
-        
-        ne  = graph.GetNYErrors()
-        
-        errors = ( (-graph.GetErrorYlow  ( ipoint , e ) ,
-                    +graph.GetErrorYhigh ( ipoint , e ) ) for e in range ( ne ) ) 
-        
-        X  = ValWithErrors      ( x , ( -exl , exh ) )
-        Y  = ValWithMultiErrors ( y , errors )
-        
-        return X , Y 
-
-    # =============================================================================
-    ## set the point content for the TGraphMultiErrors
-    #  @cdoe
-    #  @endcode     
-    #  @see TGraphMultiErrors
-    def _grme_setitem_ ( graph , ipoint , point ) :
-        """ Set graph point
-        """
-        if not ipoint in graph : raise IndexError
-        #
-        
-        n = len ( point)
-        assert 2 <= n , "Invalid lenght of 'point' object"
-        
-        pars  = point
-        
-        ## extract X
-        p0 = pars [ 0 ]
-        ## "ready-to-use" 
-        if   isinstance ( p0 , ( ValWithMultiErrors , ValWithErrors , VE ) ) :
-            X    = ValWithErrors ( p0 )
-            pars = pars [ 1 : ]
-        ## (value,error1,error2)
-        elif isinstance ( p0 , sized_types )           and \
-                 3 == len ( p0 )                       and \
-                 all ( isinstance ( v  , num_types ) for v in p0 ) :            
-            X = ValWithErrors ( p0 )
-            pars = pars [ 1 : ]            
-        ## (value,(error1,error2))
-        elif isinstance ( p0 , sized_types )        and \
-                 2 == len ( p0 )                    and \
-                 isinstance ( p0[0] , num_types   ) and \
-                 isinstance ( p0[1] , sized_types ) and \
-                 2 == len ( p0[1] )                 and \
-                 all ( isinstance ( v  , num_types ) for v in p0[1] ) :
-            X = ValWithErrors ( p0 )
-            pars = pars [ 1 : ]                        
-        ##  value,AsymErrors 
-        elif isinstance ( p0 , num_types ) and isinstance ( pars [ 1 ] , AsymErrors ) :
-            p0   = float ( p0 )
-            X    = ValWithErrors ( p0 , pars [1] ) 
-            pars = pars [ 2 : ]  
-        ##  value,(error1,error2) 
-        elif isinstance ( p0 , num_types ) and isinstance ( pars [ 1 ] , sized_types ) and 2 == len ( pars [ 1 ] ) :
-            p0   = float ( p0 )
-            errs = AsymErrors ( *point[ 1 ] )
-            X    = ValWithErrors ( p0 , errs ) 
-            pars = pars [ 2 : ]
-        ##  value,error1,error2
-        elif 4 <= len ( pars ) and all ( isinstance ( p , num_types ) for p in pars [:3] ) :        
-            p0   = float ( p0 )
-            errs = float ( pars [1] ) , float (  pars[2] ) 
-            X    = ValWithErrors ( p0 , errs ) 
-            pars = pars [ 3 : ]  
-        else :
-            raise TypeError("Invalid 'point' structure: %s" % str ( point ) )
-        
-        assert pars , "Invalid 'point' structure: %s" % str ( point ) 
-        ## extract Y
-        Y = ValWithMultiErrors ( *pars )
-
-        assert Y.nerrors <= graph.GetNYErrors() , 'Invalid number of errors is specified!' 
-        
-        graph.SetPoint ( ipoint , X.value , Y.value )    
-        graph.SetPointEXlow  ( ipoint , abs ( X.neg_error ) )
-        graph.SetPointEXhigh ( ipoint ,       X.pos_error   )
-        for i, e in enumerate ( Y.errors ) :
-            graph.SetPointEYlow  ( ipoint , i , abs ( e.negative ) )
-            graph.SetPointEYhigh ( ipoint , i ,       e.positive   )
-        
-    # =============================================================================
-    ## iterate over points in TGraphMultiErrors
-    #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-    #  @date   2011-06-07
-    def _grme_iteritems_ ( graph ) :
-        """Iterate over graph points 
-        
-        >>> grme = ...
-        >>> for i,X,Y in grme.    items(): ...
-        >>> for i,X,Y in grme.iteritems(): ... ##   ditto
-        
-        """
-        for ip in graph :
-            X , Y = graph [ ip ]        
-            yield ip, X , Y
-
-    # =========================================================================
-    ## add missing <code>SetNYErrors</code> method to <code>TGraphMultiErrors</code>
-    #  @see TGraphMultiErrors
-    #  @see TGraphMultiErrors::GetNYErrors     
-    def _grme_setnyerrors_ ( graph , N ) :
-        """Add missing `SetNYErrors` method to `ROOT.TGraphMultiErrors`
-        - see `ROOT.TGraphMultiErrors`
-        - see `ROOT.TGraphMultiErrors::GetNYErrors`
-        """
-        n  = graph.GetN() 
-        ne = graph.GetNYErrors() 
-        za = array.array ( 'd' , n * [ 0.0 ] )
-        while graph.GetNYErrors() < N : graph.AddYError( n , za , za )
-
-    if not hasattr ( ROOT.TGraphMultiErrors , 'SetNYErrors' ) :
-        ROOT.TGraphMultiErrors.  setNYErrors  = _grme_setnyerrors_ 
-        ROOT.TGraphMultiErrors.  SetNYErrors  = _grme_setnyerrors_ 
-        _new_methods_ += (
-            ROOT.TGraphMultiErrors.  setNYErrors  ,
-            ROOT.TGraphMultiErrors.  SetNYErrors  , 
-            )
-        
-    ROOT.TGraphMultiErrors.     items     = _grme_iteritems_
-    ROOT.TGraphMultiErrors. iteritems     = _grme_iteritems_
-    ROOT.TGraphMultiErrors. __getitem__   = _grme_getitem_ 
-    ROOT.TGraphMultiErrors. __setitem__   = _grme_setitem_
-
-    _new_methods_ += (
-        ROOT.TGraphMultiErrors.     items     , 
-        ROOT.TGraphMultiErrors. iteritems     ,
-        ROOT.TGraphMultiErrors. __getitem__   ,
-        ROOT.TGraphMultiErrors. __setitem__   ,
-        )
-    _decorated_classes_ += ( ROOT.TGraphMultiErrors , )
 # =============================================================================
 
 # =============================================================================
@@ -3513,7 +3323,7 @@ def _rplot_add_ ( plot1 , plot2 ) :
             
             return NotImplemented
 
-    if ( 6 , 24 ) <= root_info : result.SetDirectory ( ROOT.nullptr )    
+    result.SetDirectory ( ROOT.nullptr )    
     return result
 
         
@@ -3567,7 +3377,7 @@ def _rplot_select_ ( plot , *components ) :
         elif component.name in components :
             result.addPlotable ( component , options , invisible )
             
-    if ( 6 , 24 ) <= root_info : result.SetDirectory ( ROOT.nullptr )    
+    result.SetDirectory ( ROOT.nullptr )    
     copy_graph_attributes ( plot , result ) 
     return result
 

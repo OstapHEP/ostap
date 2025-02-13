@@ -16,11 +16,10 @@ __all__     = (
     'prepare_data'  ## prepare input data for parallel data processing 
     ) 
 # =============================================================================
-import ostap.core.pyrouts
-from   builtins                import range
 from   ostap.trees.data        import Data
 from   ostap.utils.timing      import timing 
 import ostap.parallel.parallel as     Parallel  
+import ostap.core.pyrouts
 import ROOT,os,  random  
 # =============================================================================
 # logging 

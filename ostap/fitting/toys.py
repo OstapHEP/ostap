@@ -24,7 +24,6 @@ __all__     = (
     "print_bootstrap"  , ## print bootstrap statistics 
     )
 # =============================================================================
-from   builtins               import range
 from   ostap.core.ostap_types import string_types, integer_types
 from   ostap.core.core        import VE, SE, Ostap 
 from   ostap.logger.pretty    import pretty_ve, pretty_float, fmt_pretty_float

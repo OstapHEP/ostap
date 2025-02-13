@@ -9,8 +9,6 @@
 """ Test module for soem BReit-Wigner models
 """
 # ============================================================================= 
-from   __future__            import print_function
-from   builtins              import range
 from   ostap.core.core       import Ostap, std, VE, dsID, rooSilent 
 from   ostap.utils.timing    import timing
 from   ostap.plotting.canvas import use_canvas 

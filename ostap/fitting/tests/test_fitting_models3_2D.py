@@ -11,7 +11,6 @@
 - It tests various 2D-non-factrorizeable models 
 """
 # ============================================================================= 
-from   builtins                 import range
 from   ostap.core.core          import Ostap, std, VE, dsID, rooSilent
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas

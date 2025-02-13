@@ -9,8 +9,6 @@
 """ Few utilities to simplify linear algebra manipulations 
 """
 # =============================================================================
-from   __future__  import print_function
-# =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
 __date__    = "2009-09-12"
 __version__ = ""
@@ -22,14 +20,13 @@ __all__     = (
     )
 # =============================================================================
 from   sys                    import version_info as python_version
-from   builtins               import range
 from   ostap.math.base        import isequal   , iszero, std , Ostap 
 from   ostap.utils.basic      import typename 
 from   ostap.core.ostap_types import num_types , integer_types
 from   ostap.utils.clsgetter  import classgetter
 from   ostap.logger.pretty    import pretty_array, fmt_pretty_float, fmt_pretty_err1   
-import ostap.logger.table     as     T
 from   ostap.logger.colorized import infostr 
+import ostap.logger.table     as     T
 import ROOT, math, re, ctypes, array, random 
 # =============================================================================
 # logging 

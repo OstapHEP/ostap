@@ -453,7 +453,6 @@ if '__main__' == __name__  :
     import random
     
     cnt = SE() 
-    from builtins import range 
     for i in range(10000) :
         cnt += random.gauss(1,1)
         

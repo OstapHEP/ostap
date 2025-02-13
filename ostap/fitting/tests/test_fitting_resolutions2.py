@@ -14,7 +14,6 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   builtins                 import range 
 from   ostap.core.meta_info     import root_info, python_info
 from   ostap.core.core          import VE, dsID
 from   ostap.utils.gsl          import gslCount

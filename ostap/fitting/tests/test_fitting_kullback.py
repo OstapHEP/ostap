@@ -12,7 +12,6 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   builtins                 import range
 from   ostap.core.core          import SE, hID  
 from   ostap.fitting.fithelpers import SETPARS
 from   ostap.utils.progress_bar import progress_bar 

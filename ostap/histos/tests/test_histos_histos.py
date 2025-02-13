@@ -14,7 +14,6 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-from   builtins              import range
 from   ostap.math.ve         import VE 
 from   ostap.core.core       import hID 
 from   ostap.histos.histos   import h1_axis, h2_axes

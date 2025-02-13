@@ -48,12 +48,11 @@ __all__     = (
     'ComplexDerivative'  , ## evaluate a complex derivatibe for analytical funtion (as object) 
     ) 
 # =============================================================================
-import sys 
-from   builtins               import range 
 from   ostap.math.base        import Ostap , iszero  , isequal
 from   ostap.math.ve          import VE 
 from   ostap.math.finitediffs import Rule  , the_dot , darray , delta 
 from   ostap.utils.utils      import classprop 
+import sys 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -63,8 +62,7 @@ else                       : logger = getLogger ( __name__             )
 # =============================================================================
 epsilon = sys.float_info.epsilon
 if not 0.75 < epsilon * 2**52 < 1.25 :
-    import warnings
-    warnings.warn ('"epsilon" in not in the expected range! Math could be suboptimal')
+    logger.warnings ('"epsilon" in not in the expected range! Math could be suboptimal')
     
 # ======================================================================================
 ## The rules for numerical differentiation (1st derivative) 
@@ -834,6 +832,8 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
+    if not 0.75 < epsilon * 2**52 < 1.25 :
+        logger.warnings ('"epsilon" in not in the expected range! Math could be suboptimal')
 
 # =============================================================================
 ##                                                                      The END 

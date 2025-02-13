@@ -9,9 +9,7 @@
 """Test for HORSNdini_pdf, HILLdini_pdf and HHdini_pdf
 """
 # ============================================================================= 
-from   __future__               import print_function
 from   ostap.core.core          import Ostap, VE, dsID, rooSilent,rootError 
-from   builtins                 import range
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait, batch_env  

@@ -18,7 +18,6 @@ Simultaneous fit of two 1D distributions
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   builtins                 import range 
 from   ostap.fitting.fithelpers import FitHelper 
 from   ostap.core.core          import dsID, rooSilent
 from   ostap.utils.timing       import timing 

@@ -14,7 +14,6 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-08"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-from   builtins                     import range
 from   ostap.core.pyrouts           import dsID,   Ostap 
 from   ostap.utils.timing           import timing
 from   ostap.trees.data             import Data

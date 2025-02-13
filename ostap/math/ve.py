@@ -27,8 +27,6 @@ __all__     = (
 # ============================================================================= 
 from   ostap.math.base       import Ostap, std , iszero, isequal
 from   ostap.math.random_ext import poisson as _poisson 
-# =============================================================================
-from   builtins        import range
 import ROOT
 # ============================================================================= 
 # logging 
@@ -402,7 +400,7 @@ def _ve_gauss_ ( s , accept = lambda a : True , nmax = 1000 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-08-10   
 def _ve_poisson_ ( s , fluctuate , accept = lambda s : True ) :
-    """Generate poisson random number according to parameters 
+    """ Generate poisson random number according to parameters 
     >>> v = ...  ## the number with error    
     ## get 100 random numbers 
     >>> for i in range ( 0, 100 ) : print v.poisson()    

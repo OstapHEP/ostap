@@ -11,7 +11,6 @@
 - It tests various multicomponents models 
 """
 # ============================================================================= 
-from   builtins                 import range
 from   ostap.core.core          import cpp, VE, dsID, rooSilent 
 from   ostap.fitting.background import make_bkg 
 from   ostap.core.meta_info     import root_info 

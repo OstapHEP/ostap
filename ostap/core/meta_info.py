@@ -72,11 +72,8 @@ meta_info        = MetaInfo ( user           ,
 python_info     = sys.version_info
 
 # =============================================================================
-if python_info < ( 3, 0   ) :
-    logger.warning ( "Support for PYTHON %s will reach the end soon!" %  ( '.'.join ( str ( i ) for i in python_info ) ) ) 
-# =============================================================================
-if root_info   < ( 6 , 24 ) :
-    logger.warning ( "support for ROOT   %s will reach the end soon!" % root_version )
+assert ( 3 ,  8 ) <  python_info, "No support for PYTHON %s " %  ( '.'.join ( str ( i ) for i in python_info  ) )
+assert ( 6 , 24 ) <= root_info  , "No support for ROOT %s "   %  ( '.'.join ( str ( i ) for i in   root_info  ) )
 # =============================================================================
 
 # =============================================================================

@@ -43,8 +43,7 @@ __all__     = (
     'pool_context'       , ## useful context for the pathos's Pools
     )
 # =============================================================================
-import sys
-from   builtins import range
+import sys, socket
 # =============================================================================
 from ostap.logger.logger    import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.utils' )

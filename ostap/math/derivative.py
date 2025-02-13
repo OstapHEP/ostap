@@ -59,9 +59,6 @@ __all__     = (
     'Derivative6'        , ## calculate 6th derivative
     ) 
 # =============================================================================
-from   builtins import range 
-import ROOT, math, abc, array  
-# =============================================================================
 from sys                    import float_info
 from ostap.math.base        import Ostap, iszero , isequal
 from ostap.core.ostap_types import num_types , is_integer
@@ -73,7 +70,7 @@ from ostap.math.finitediffs import ( Rule , the_dot , darray ,
 from ostap.math.delevie     import ( derivative         ,        Derivative ,
                                      complex_derivative , ComplexDerivative , 
                                      partial_derivative , PartialDerivative ) 
-
+import ROOT, math, abc, array  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -83,8 +80,7 @@ else                       : logger = getLogger ( __name__                )
 # =============================================================================
 _eps_ = float_info.epsilon
 if not 0.75 < _eps_ * 2**52 < 1.25 :
-    import warnings
-    warnings.warn ('"epsilon" in not in the expected range! Math could be suboptimal')
+    logger.warnings('"epsilon" in not in the expected range! Math could be suboptimal')
     
 _next_double_ = Ostap.Math.next_double
 _mULPs_       = 1000 
