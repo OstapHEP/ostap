@@ -127,37 +127,33 @@ endif()
 # ========================================================================================
 ## lmdb : check&install only if mdb_stat exists ...
 # ========================================================================================  
-if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.7" )
-   find_program(MDB_STAT_EXECUTABLE NAMES mdb_stat)
+find_program(MDB_STAT_EXECUTABLE NAMES mdb_stat)
    if ( ${MDB_STAT_EXECUTABLE} )
       find_python_module ( lmdb        QUIET )
-      if ( NOT ${PY_lmdb_FOUND} )
-         execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install lmdb ${PIP_ARGS})
-      endif()    
-      find_python_module ( lmdb        QUIET )
-      if ( NOT ${PY_lmdb_FOUND} )
-         message ( "----> warning (optional)            lmdb is NOT found!" )
-      endif() 
-   endif()
+   if ( NOT ${PY_lmdb_FOUND} )
+      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install lmdb ${PIP_ARGS})
+   endif()    
+   find_python_module ( lmdb        QUIET )
+   if ( NOT ${PY_lmdb_FOUND} )
+      message ( "----> warning (optional)            lmdb is NOT found!" )
+   endif() 
 endif()
         
 # =======================================================================================
 ## joblib: run some numpy-related code in parallel
 # =======================================================================================
-if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.6" )
-   find_python_module ( joblib          QUIET )
-   if ( NOT ${PY_joblib_FOUND} )
-      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install joblib ${PIP_ARGS})
-   endif()
-   find_python_module ( joblib          QUIET )
-   if ( NOT ${PY_joblib_FOUND} )
-      message ( "----> warning (optional)          joblib is NOT found!" ) 
-   endif()
- endif() 
+find_python_module ( joblib          QUIET )
+if ( NOT ${PY_joblib_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install joblib ${PIP_ARGS})
+endif()
+find_python_module ( joblib          QUIET )
+if ( NOT ${PY_joblib_FOUND} )
+   message ( "----> warning (optional)          joblib is NOT found!" ) 
+endif()
+    
 # ========================================================================================
 ## terminaltables3 & terminaltables 
 # ========================================================================================
-##     
 if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.9" )
    find_python_module ( terminaltables3 QUIET )
    if ( NOT ${PY_terminaltables3_FOUND} )
@@ -221,61 +217,41 @@ endif()
 ## tkrzw 
 # ========================================================================================
 ##
-if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.8" )
-   find_python_module ( tkrzw QUIET )
-   if ( NOT ${PY_tkrzw_FOUND} )
-      message ( "----> warning (optional)           tkrzw is NOT found!" ) 
-   endif()
+find_python_module ( tkrzw QUIET )
+if ( NOT ${PY_tkrzw_FOUND} )
+   message ( "----> warning (optional)           tkrzw is NOT found!" ) 
 endif()
     
 # ========================================================================================
 ## BerkeleyDB
 # ========================================================================================
-##  
-if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.6" )
-   if ( ${PYTHON_VERSION} VERSION_LESS       "3.7" )
-      find_python_module ( berkeleydb QUIET )
-      if ( NOT ${PY_berkeleydb_FOUND} )
-         execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install "berkeleydb==18.1.4" ${PIP_ARGS})
-      endif()
+##
+find_python_module ( berkeleydb QUIET )
+if ( NOT ${PY_berkeleydb_FOUND} )
+   if ( ${PYTHON_VERSION} VERSION_LESS "3.9" )
+      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install "berkeleydb==18.1.10" ${PIP_ARGS})
+   else ()   
+      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install  berkeleydb           ${PIP_ARGS})
    endif()
 endif()
-## 
-if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.7" )
-   if ( ${PYTHON_VERSION} VERSION_LESS       "3.8" )
-      find_python_module ( berkeleydb QUIET )
-      if ( NOT ${PY_berkeleydb_FOUND} )
-        execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install "berkeleydb==18.1.6" ${PIP_ARGS})
-      endif()    
-   endif()
+find_python_module ( berkeleydb QUIET )
+if ( NOT ${PY_berkeleydb_FOUND} )
+   message ( "----> warning (optional)      berkeleydb is NOT found!" ) 
 endif()
-## 
-if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.3"  )
-   find_python_module ( berkeleydb QUIET )
-   if ( NOT ${PY_berkeleydb_FOUND} )
-      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install berkeleydb ${PIP_ARGS})
-   endif()
-   find_python_module ( berkeleydb QUIET )
-   if ( NOT ${PY_berkeleydb_FOUND} )
-      message ( "----> warning (optional)      berkeleydb is NOT found!" ) 
-   endif()
-endif() 
 
 # ========================================================================================
 ## BDDDB3
 # ========================================================================================
-if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.3"  )    
-   if ( ${PYTHON_VERSION} VERSION_LESS       "3.10" )
-      find_python_module ( bsddb3 QUIET )
-      if ( NOT ${PY_bsddb3_FOUND} )
-         execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install bsddb3 ${PIP_ARGS})
-      endif()
-      find_python_module ( bsddb3 QUIET )
-      if ( NOT ${PY_bsddb3_FOUND} )
-         message ( "----> warning (optional)          bsddb3 is NOT found!" ) 
-      endif()
+if ( ${PYTHON_VERSION} VERSION_LESS       "3.10" )
+   find_python_module ( bsddb3 QUIET )
+   if ( NOT ${PY_bsddb3_FOUND} )
+      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install bsddb3 ${PIP_ARGS})
    endif()
-endif() 
+   find_python_module ( bsddb3 QUIET )
+   if ( NOT ${PY_bsddb3_FOUND} )
+      message ( "----> warning (optional)          bsddb3 is NOT found!" ) 
+   endif()
+endif()
 
 # ========================================================================================
 ## hep_ml
@@ -373,14 +349,6 @@ list(FILTER             allfiles EXCLUDE REGEX ".*\\/__init__\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/tests/.*\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/sp_.*\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/.*#.*\\.py$")
-##
-if ( Python_VERSION VERSION_LESS "3.3")
-   list(FILTER             allfiles EXCLUDE REGEX ".*\\/lzshelve\\.py$")
-endif ()
-##
-if ( Python_VERSION VERSION_LESS "3.6")
-   list(FILTER             allfiles EXCLUDE REGEX ".*\\/zstshelve\\.py$")
-endif ()
 ##
 if ( NOT ${PY_zstandard_FOUND} )
    list(FILTER             allfiles EXCLUDE REGEX ".*\\/zstshelve\\.py$")
