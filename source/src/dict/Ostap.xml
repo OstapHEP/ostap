@@ -16,17 +16,16 @@
   <function pattern = "Ostap::Utils::*"           />
   <function pattern = "Ostap::Utils::Histos::*"   />
   <function pattern = "Ostap::Kinematics::*"      />
-
+  
   <function name    = "Ostap::TMVA::addResponse"  />
   
   <class name    = "std::function&lt;double(double,double,double,double)&gt;" />
   <class pattern = "std::function&lt;double(*)&gt;" />
-
-
-  <class name = "Ostap::Math::Tensors::Epsilon"  />
-
+  
+  <class name    = "Ostap::Math::Tensors::Epsilon"  />
+  
   <class pattern = "std::vector&lt;Ostap::WStatEntity,*&gt;" />
-
+  
   <class name   = "Ostap::Math::WorkSpace">
     <field name = "m_workspace"         transient="true"/>      
     <field name = "m_workspace_cquad"   transient="true"/>      
@@ -37,7 +36,10 @@
     <field name = "m_previous"          transient="true"/>      
   </class>
   
-   <exclusion>
+  <class name = "Ostap::IFuncTree"  />
+  <class name = "Ostap::IFuncData"  />
+  
+  <exclusion>
      
     <class name    = "Ostap::StatVar::Interval"     />
     <class name    = "Ostap::Math::Interpolation::DATAVCT" />    
