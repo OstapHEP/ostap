@@ -75,9 +75,17 @@ class PickleChecker ( object ) :
             return True 
         except ( PicklingError, UnpicklingError, AttributeError, TypeError ) :
             # =================================================================
+            print ( 'EXCEPTION/1' ) 
+            CU.CleanUp.remove_file ( tmpfile ) 
+            return False
+        except Exception : # ===================================================
+            # ==================================================================
+            print ( 'EXCEPTION/2' ) 
+            CU.CleanUp.remove_file ( tmpfile ) 
             return False
         except : # ============================================================
             # ==================================================================
+            print ( 'EXCEPTION/3' ) 
             CU.CleanUp.remove_file ( tmpfile ) 
             return False
         
@@ -116,11 +124,18 @@ class PickleChecker ( object ) :
                  AttributeError ,
                  TypeError      ,
                  OSError        ) : # ===
-            # =================================================================
+            # =================================================================            
+            print ( 'EXCEPTION/1.1' ) 
+            CU.CleanUp.remove_file ( tmpfile ) 
+            return False
+        except Exception : # ===================================================
+            # ==================================================================
+            print ( 'EXCEPTION/2.1' ) 
             CU.CleanUp.remove_file ( tmpfile ) 
             return False
         except : # ============================================================
             # ==================================================================
+            print ( 'EXCEPTION/3.1' ) 
             CU.CleanUp.remove_file ( tmpfile ) 
             return False
             
@@ -130,11 +145,13 @@ class PickleChecker ( object ) :
             try : # ===========================================================
                 # =============================================================
                 with open ( tmpfile , 'rb' ) as f :
-                    ## return load ( f ) == objects                       # RETRURN
+                    ## return load ( f ) == objects                    # RETURN
                     load ( f )
-                    return True                                        # RETRUN
+                    return True                                        # RETURN
             except ( UnpicklingError , 
-                     AttributeError  , TypeError , OSError ) : # ==============
+                     AttributeError  ,
+                     TypeError       ,
+                     OSError         ) : # ====================================
                 # =============================================================
                 return False                                           # RETURN
             else  : # =========================================================
@@ -151,7 +168,8 @@ class PickleChecker ( object ) :
                                      check  = True               ,
                                      stdout = subprocess.DEVNULL ,
                                      stderr = subprocess.DEVNULL ,                                      
-                                     shell  = False              ).returncode 
+                                     shell  = False              ).returncode
+            # =================================================================
             return True if not error else False                        # RETURN
         except subprocess.CalledProcessError as e : # =========================
             # =================================================================
