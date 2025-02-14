@@ -44,7 +44,7 @@ __all__     = (
     )
 # =============================================================================
 from   collections.abc import Collection, Sequence, Iterable, Mapping, Sized, Generator   
-import array, sys, os  
+import array, sys, os. math  
 # =============================================================================
 # logging 
 # =============================================================================
