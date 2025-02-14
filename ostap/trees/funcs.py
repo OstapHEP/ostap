@@ -71,7 +71,6 @@ class FuncTree(Ostap.Functions.PyFuncTree) :
     @abc.abstractmethod
     def __reduce__ ( self ) :  raise NotImplementedError("%s:  method `__reduce__' is not implemented!" % typename ( self ) ) 
 
-    
     def __str__  ( self ) : return typename ( self )
     def __repr__ ( self ) : return typename ( self )
 
@@ -169,7 +168,9 @@ class PyTreeFunction(FuncTree) :
         return self.__function ( tree )
 
     def __str__  ( self ) :
-        return '%s(%s/%s)' %  ( 'PyTreeFunction' , typename ( self.the_function ) , prntrf ( self.the_function ) ) 
+        return '%s(%s/%s)' %  ( 'PyTreeFunction'               ,
+                                typename ( self.the_function ) ,
+                                prntrf   ( self.the_function ) ) 
     __repr__ = __str__
 
 # =============================================================================
@@ -218,7 +219,10 @@ class PyDataFunction(FuncData) :
 
     def __reduce__  ( self ) : return pdf_factory , ( self.the_function , ) 
 
-    def __str__  ( self ) : return '%s(%s/%s)' %  ( 'PyDataFunction' , typename ( self.the_function ) , prntrf ( self.the_function ) ) 
+    def __str__  ( self ) :
+        return '%s(%s/%s)' %  ( 'PyDataFunction'               ,
+                                typename ( self.the_function ) ,
+                                prntrf   ( self.the_function ) ) 
     __repr__ = __str__
 
 # =============================================================================
@@ -243,7 +247,7 @@ def pdf_factory ( *args ) :
 #  @see ostap.funcs.FuncTree 
 #  @see ostap.funcs.PyTreeFuction
 def pyfun_tree ( function , tree = None ) :
-    """Create the Ostap.ITreeFunc obejct from python function/callable
+    """ Create the Ostap.ITreeFunc obejct from python function/callable
     >>> def ququ ( tree ) : return tree.pz/tree.pt
     >>> fun = pyfun_tree ( ququ )
     - see Ostap::IFuncTree
@@ -264,7 +268,7 @@ def pyfun_tree ( function , tree = None ) :
 #  @see ostap.funcs.FuncData 
 #  @see ostap.funcs.PyDataFuction
 def pyfun_data ( function , data = None ) :
-    """Create the Ostap.IDataFunc obejct from python function/callable
+    """ Create the Ostap.IDataFunc obejct from python function/callable
     >>> def ququ ( data ) : return data.pz/data.pt
     >>> fun = pyfun_data ( ququ )
     - see Ostap::IFuncData

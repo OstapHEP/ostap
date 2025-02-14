@@ -104,14 +104,13 @@ for o in ( Ostap.Functions.FuncFormula    ,
     o.__repr__ = _q_str_
 
 
-for o in ( Ostap.Functions.Func3D     ,
-           Ostap.Functions.FuncTH3    ,
-           Ostap.Functions.FuncRoo3D  ,
-           Ostap.Functions.FuncRooTH3 ) :
+for o in ( Ostap.Functions.Func1D     ,
+           Ostap.Functions.FuncTH1    ,
+           Ostap.Functions.FuncRoo1D  ,
+           Ostap.Functions.FuncRooTH1 ) :
     
-    o.__str__  = _q_str3_
-    o.__repr__ = _q_str3_
-
+    o.__str__  = _q_str1_
+    o.__repr__ = _q_str1_
 
 for o in ( Ostap.Functions.Func2D     ,
            Ostap.Functions.FuncTH2    ,
@@ -121,14 +120,14 @@ for o in ( Ostap.Functions.Func2D     ,
     o.__str__  = _q_str2_
     o.__repr__ = _q_str2_
 
-for o in ( Ostap.Functions.Func1D     ,
-           Ostap.Functions.FuncTH1    ,
-           Ostap.Functions.FuncRoo1D  ,
-           Ostap.Functions.FuncRooTH1 ) :
+for o in ( Ostap.Functions.Func3D     ,
+           Ostap.Functions.FuncTH3    ,
+           Ostap.Functions.FuncRoo3D  ,
+           Ostap.Functions.FuncRooTH3 ) :
     
-    o.__str__  = _q_str1_
-    o.__repr__ = _q_str1_
-    
+    o.__str__  = _q_str3_
+    o.__repr__ = _q_str3_
+
 _decorated_classes = ( Ostap.IFuncTree                ,
                        Ostap.IFuncData                ,
                        #

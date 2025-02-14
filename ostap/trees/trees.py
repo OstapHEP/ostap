@@ -49,6 +49,7 @@ from   ostap.utils.utils         import chunked, evt_range, LAST_ENTRY, implicit
 # 
 import ostap.trees.treereduce 
 import ostap.trees.param
+import ostap.trees.funcs 
 import ostap.io.root_file 
 import ROOT, os, math, array, sys, ctypes   
 # =============================================================================
