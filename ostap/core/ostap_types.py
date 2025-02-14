@@ -44,7 +44,7 @@ __all__     = (
     )
 # =============================================================================
 from   collections.abc import Collection, Sequence, Iterable, Mapping, Sized, Generator   
-import array, sys, os. math  
+import array, sys, os, math  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -52,7 +52,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.ostap_types' )
 else                       : logger = getLogger( __name__     )
 # =============================================================================
-logger.debug ( 'Core objects/classes/types for Ostap')
+logger.debug ( 'Core classes/types for Ostap')
 # =============================================================================
 long           = int
 string_types   = bytes , str 
