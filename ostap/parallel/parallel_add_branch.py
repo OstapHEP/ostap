@@ -143,7 +143,11 @@ def add_new_branch ( chain           ,
     ## process all rguments  
     args , expected , kw , keeps = prepare_branches ( chain , branch , **kwargs ) 
 
-    logger.info ( 'PARALLEL-ADD/6' )
+    logger.info ( 'PARALLEL-ADD/6-1' )
+    from ostap.logger.utils import print_args
+    logger.info ( 'ARGUMENTS-HERE\n%s' % print_args ( *args , **kw ) ) 
+     
+    logger.info ( 'PARALLEL-ADD/6-2' )
     
     if True : ## verbose : 
         title = 'All processed arguments'
@@ -169,9 +173,9 @@ def add_new_branch ( chain           ,
         logger.info ( 'PARALLEL-ADD/11' )        
     elif backup :         
         # =====================================================================
-        print ( 'PARALLEL-ADD/12' )
+        logger.info( 'PARALLEL-ADD/12' )
         table = check.pickling_table ( branch , *args , prefix = '# ' , **kwargs )
-        print ( 'PARALLEL-ADD/13' )
+        logger.info ( 'PARALLEL-ADD/13' )
 
         logger.warning ( 'Not all arguments are pickable:\n%s' % table )        
         logger.warning ( 'Switch to sequential (SLOW) processing' )
