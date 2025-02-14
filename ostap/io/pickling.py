@@ -57,8 +57,8 @@ class PickleChecker ( object ) :
                      ( o in self.MORE_TYPES ) for o in objtypes ) 
     # ========================================================================
     ## type is knows for (un)pickle problems 
-    def notgood ( self , *objtype ) :
-        return objtypes and any ( o iin self.NONPEAKLEABLE for o  objtypes )
+    def notgood ( self , *objtypes ) :
+        return any ( ( o in self.NONPEAKLEABLE ) for o in objtypes )
     # =========================================================================
     def _pickles ( self , *objects , fun_dumps , fun_loads ) :
         # =====================================================================
