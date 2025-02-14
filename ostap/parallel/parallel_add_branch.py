@@ -42,12 +42,12 @@ class AddNewBranch(Task) :
     def initialize_local  ( self )                : self.__output = () 
     def initialize_remote ( self , jobid = -1   ) : self.__output = () 
     def process           ( self , jobid , tree ) :
-
-        from ostap.trees.trees import push_2chain, push_2tree, add_new_branch   
+        
+        from ostap.trees.trees import push_2chain
         
         files = []
         chain = tree.chain
-        push_2chain    ( chain , self.recipe_args , progress = False , report = False )
+        push_2chain ( chain , self.recipe_args , progress = False , report = False )
         for f in tree.files :
             if not f in files : files.append ( f )
 
@@ -104,43 +104,68 @@ def add_new_branch ( chain           ,
     >>> chain = ....
     >>> chain.padd_new_branch ( 'new_branch' , 'px*py' )     
     """
+    
+    print ( 'PARALLEL-ADD/0' )
+
     assert valid_pointer ( chain ) and isinstance ( chain , ROOT.TTree ) , \
         "TTree* is invalid!"
+
+    print ( 'PARALLEL-ADD/1' )
     
     from ostap.trees.trees import Chain, prepare_branches, push_2chain  
-    from ostap.trees.trees import add_new_branch as _add_branch_ 
+
+    print ( 'PARALLEL-ADD/2' )
 
     if   isinstance ( chain , ROOT.TChain ) and 1 < len ( chain.files () ) : pass 
     elif isinstance ( chain , ROOT.TTree  ) :        
+        from ostap.trees.trees import add_new_branch as _add_branch_ 
         return _add_branch_ ( chain , branch , progress = progress , report = report  ) 
+
+    print ( 'PARALLEL-ADD/3' )
 
     from ostap.parallel.parallel import Checker
     check = Checker()
+
+    print ( 'PARALLEL-ADD/4' )
     
     verbose = kwargs.pop ( 'verbose' , False )
 
-    if verbose : 
+    if True : ## verbose : 
         title = 'All input arguments'
         logger.info ( '%s:\n%s' % ( title , check.pickles_table ( branch , prefix = '# ' , **kwargs ) ) ) 
 
+    print ( 'PARALLEL-ADD/5' )
+        
     # ========================================================================
     ## process all rguments  
     args , expected , kw , keeps = prepare_branches ( chain , branch , **kwargs ) 
 
-
+    print ( 'PARALLEL-ADD/6' )
+    
     if True : ## verbose : 
         title = 'All processed arguments'
         table = check.pickling_table ( *args  , prefix = '# ' , **kwargs ) 
         logger.info ( '%s:\n%s' % ( title , table ) ) 
 
+    print ( 'PARALLEL-ADD/7' )
+        
     # =========================================================================
     ## perfect! 
-    if   check.pickles_all ( *args )  : task = AddNewBranch ( *args )
+    if   check.pickles_all ( *args )  :
+        print ( 'PARALLEL-ADD/8' )
+        task = AddNewBranch ( *args )
+        print ( 'PARALLEL-ADD/9' )
     ## some 'args' are not pickable! 
-    elif check.pickles_all ( branch , **kwargs ) : task = AddUnpreparedBranch ( branch , **kwargs )
+    elif check.pickles_all ( branch , **kwargs ) :
+        print ( 'PARALLEL-ADD/10' )
+        task = AddUnpreparedBranch ( branch , **kwargs )
+        print ( 'PARALLEL-ADD/11' )        
     elif backup :         
         # =====================================================================
-        table = check.pickling_table ( branch , *args , prefix = '# ' , **kwargs ) 
+        print ( 'PARALLEL-ADD/12' )
+        table = check.pickling_table ( branch , *args , prefix = '# ' , **kwargs )
+        print ( 'PARALLEL-ADD/13' )
+
         logger.warning ( 'Not all arguments are pickable:\n%s' % table )        
         logger.warning ( 'Switch to sequential (SLOW) processing' )
         ## 
@@ -151,10 +176,13 @@ def add_new_branch ( chain           ,
         return chain                           
     else  : # =================================================================
         # =====================================================================
+        print ( 'PARALLEL-ADD/15' )
         table = check.pickling_table ( branch , prefix = '# ' , **kwargs ) 
         logger.error ( 'Arguments are pickable:\n%s' % table )
         return
-        
+
+    print ( 'PARALLEL-ADD/15' )
+    
     files    = chain.files () 
     cname    = chain.name
     ch       = Chain ( chain ) 
@@ -163,8 +191,12 @@ def add_new_branch ( chain           ,
     wmgr     = WorkManager ( silent = not progress , **kw )
     trees    = ch.split    ( max_files = 1  )
     
+    print ( 'PARALLEL-ADD/16' )
+    
     wmgr.process ( task , trees )
 
+    print ( 'PARALLEL-ADD/17' )
+    
     nc = ROOT.TChain ( cname )
     for f in files : nc.Add ( f )
 
@@ -177,6 +209,8 @@ def add_new_branch ( chain           ,
             table = nc.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
 
+    print ( 'PARALLEL-ADD/18' )
+            
     return nc 
 
 ROOT.TTree .padd_new_branch = add_new_branch 
