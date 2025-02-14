@@ -147,8 +147,12 @@ def add_new_branch ( chain           ,
     
     if True : ## verbose : 
         title = 'All processed arguments'
-        table = check.pickling_table ( *args  , prefix = '# ' , **kwargs ) 
-        logger.info ( '%s:\n%s' % ( title , table ) ) 
+        try : 
+            table = check.pickling_table ( *args  , prefix = '# ' , **kwargs ) 
+            logger.info ( '%s:\n%s' % ( title , table ) )
+        except :
+            logger.fatal ( 'UNCAUGHT exception/2' , exc_info = True )
+            
 
     logger.info ( 'PARALLEL-ADD/7' )
         
