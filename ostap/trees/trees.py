@@ -2594,15 +2594,14 @@ def prepare_branches ( tree , branch , **kwargs ) :
         logger.info ( 'ARGUMENTS:\n%s' % print_args ( *fvars ) ) 
 
                       
+        ##elif ( 6 , 24 ) <= root_info : 
+        #3    
+        #3    fvars = ( branch , ) + vars + ( tree , )
+        ##    if   1 == len ( vars ) : args = Ostap.Functions.Func1D ( *fvars ) , 
+        ##    elif 2 == len ( vars ) : args = Ostap.Functions.Func2D ( *fvars ) , 
+        ##    elif 3 == len ( vars ) : args = Ostap.Functions.Func3D ( *fvars ) ,
+        ##""" 
         if   ( 6 , 26 ) <= root_info : args = vars + ( branch , )
-        """
-        elif ( 6 , 24 ) <= root_info : 
-            
-            fvars = ( branch , ) + vars + ( tree , )
-            if   1 == len ( vars ) : args = Ostap.Functions.Func1D ( *fvars ) , 
-            elif 2 == len ( vars ) : args = Ostap.Functions.Func2D ( *fvars ) , 
-            elif 3 == len ( vars ) : args = Ostap.Functions.Func3D ( *fvars ) ,
-        """ 
         else :
             
             fvars = ( branch , ) + vars + ( tree , )
