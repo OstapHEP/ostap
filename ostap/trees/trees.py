@@ -2589,14 +2589,20 @@ def prepare_branches ( tree , branch , **kwargs ) :
         assert 1 <= len ( vars ) <= 3 and all ( ( isinstance ( a , string_types ) and a.strip() ) for a in vars ) , \
             "1-to-3 non-empty strings must be specified as `arguments' for `branch'=%s" % typename ( branch )
 
+        from ostap.logger.utuils import print_args
+        fvars = ( branch , ) + vars + ( tree , )
+        logger.info ( 'ARGUMENTS:\n%s' % print_args ( *fvars ) ) 
+
+                      
         if   ( 6 , 26 ) <= root_info : args = vars + ( branch , )
+        """
         elif ( 6 , 24 ) <= root_info : 
             
             fvars = ( branch , ) + vars + ( tree , )
             if   1 == len ( vars ) : args = Ostap.Functions.Func1D ( *fvars ) , 
             elif 2 == len ( vars ) : args = Ostap.Functions.Func2D ( *fvars ) , 
             elif 3 == len ( vars ) : args = Ostap.Functions.Func3D ( *fvars ) ,
-            
+        """ 
         else :
             
             fvars = ( branch , ) + vars + ( tree , )
