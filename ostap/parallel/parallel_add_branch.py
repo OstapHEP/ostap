@@ -105,61 +105,64 @@ def add_new_branch ( chain           ,
     >>> chain.padd_new_branch ( 'new_branch' , 'px*py' )     
     """
     
-    print ( 'PARALLEL-ADD/0' )
+    logger.info ( 'PARALLEL-ADD/0' )
 
     assert valid_pointer ( chain ) and isinstance ( chain , ROOT.TTree ) , \
         "TTree* is invalid!"
 
-    print ( 'PARALLEL-ADD/1' )
+    logger.info ( 'PARALLEL-ADD/1' )
     
     from ostap.trees.trees import Chain, prepare_branches, push_2chain  
 
-    print ( 'PARALLEL-ADD/2' )
+    logger.info ( 'PARALLEL-ADD/2' )
 
     if   isinstance ( chain , ROOT.TChain ) and 1 < len ( chain.files () ) : pass 
     elif isinstance ( chain , ROOT.TTree  ) :        
         from ostap.trees.trees import add_new_branch as _add_branch_ 
         return _add_branch_ ( chain , branch , progress = progress , report = report  ) 
 
-    print ( 'PARALLEL-ADD/3' )
+    logger.info ( 'PARALLEL-ADD/3' )
 
     from ostap.parallel.parallel import Checker
     check = Checker()
 
-    print ( 'PARALLEL-ADD/4' )
+    logger.info ( 'PARALLEL-ADD/4' )
     
     verbose = kwargs.pop ( 'verbose' , False )
 
     if True : ## verbose : 
         title = 'All input arguments'
-        logger.info ( '%s:\n%s' % ( title , check.pickling_table ( branch , prefix = '# ' , **kwargs ) ) ) 
+        try : 
+            logger.info ( '%s:\n%s' % ( title , check.pickling_table ( branch , prefix = '# ' , **kwargs ) ) )
+        except :
+            logger.fatal ( 'UNCAUGHT exception/1' , exc_info = True )
 
-    print ( 'PARALLEL-ADD/5' )
+    logger.info ( 'PARALLEL-ADD/5' )
         
     # ========================================================================
     ## process all rguments  
     args , expected , kw , keeps = prepare_branches ( chain , branch , **kwargs ) 
 
-    print ( 'PARALLEL-ADD/6' )
+    logger.info ( 'PARALLEL-ADD/6' )
     
     if True : ## verbose : 
         title = 'All processed arguments'
         table = check.pickling_table ( *args  , prefix = '# ' , **kwargs ) 
         logger.info ( '%s:\n%s' % ( title , table ) ) 
 
-    print ( 'PARALLEL-ADD/7' )
+    logger.info ( 'PARALLEL-ADD/7' )
         
     # =========================================================================
     ## perfect! 
     if   check.pickles_all ( *args )  :
-        print ( 'PARALLEL-ADD/8' )
+        logger.info ( 'PARALLEL-ADD/8' )
         task = AddNewBranch ( *args )
-        print ( 'PARALLEL-ADD/9' )
+        logger.info ( 'PARALLEL-ADD/9' )
     ## some 'args' are not pickable! 
     elif check.pickles_all ( branch , **kwargs ) :
-        print ( 'PARALLEL-ADD/10' )
+        logger.info ( 'PARALLEL-ADD/10' )
         task = AddUnpreparedBranch ( branch , **kwargs )
-        print ( 'PARALLEL-ADD/11' )        
+        logger.info ( 'PARALLEL-ADD/11' )        
     elif backup :         
         # =====================================================================
         print ( 'PARALLEL-ADD/12' )
