@@ -76,6 +76,9 @@ class PickleChecker ( object ) :
         except ( PicklingError, UnpicklingError, AttributeError, TypeError ) :
             # =================================================================
             return False
+        except Exception as e:
+            print ( 'EXCEPTION' , type ( e ) , e ) 
+            raise 
         
     # =========================================================================
     ## check if the type is 'known'
@@ -111,8 +114,12 @@ class PickleChecker ( object ) :
         except ( PicklingError  ,
                  AttributeError , TypeError , OSError ) : # ===
             # =================================================================
+            CU.CleanUp.remove_file ( tmpfile ) 
             return False
-
+        except Exception as e:
+            print ( 'EXCEPTION' , type ( e ) , e ) 
+            raise 
+            
         # =====================================================================
         if fast or not command : # ============================================
             # =================================================================

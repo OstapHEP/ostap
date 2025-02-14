@@ -44,18 +44,20 @@ namespace
     if ( level  < gErrorIgnoreLevel ) { return ; }
     // error: throw exception 
     if      ( kError   <= level ) 
-    {
-      std::string msg  = location && location[0] ?
-        message + std::string( " in " ) + location : std::string ( message ) ;
-      std::string tag = 
-        kError    == level ? "ROOT/Error"    :
-        kBreak    == level ? "ROOT/Break"    :
-        kSysError == level ? "ROOT/SysError" :
-        kFatal    == level ? "ROOT/Fatal"    : "ROOT/error" ;
-      Ostap::throwException ( tag + ": " + msg  , 
-                              tag               , 
-                              Ostap::StatusCode ( 10000 + level ) ) ;
-    }
+      {
+        // std::string msg  =
+        // location && location[0] ?
+        // message + std::string( " in " ) + location :
+        // std::string ( message ) ;
+        std::string tag = 
+          kError    == level ? "ROOT/Error : "    :
+          kBreak    == level ? "ROOT/Break : "    :
+          kSysError == level ? "ROOT/SysError : " : 
+          kFatal    == level ? "ROOT/Fatal : "    : "ROOT/error : " ;
+        Ostap::throwException ( tag + message ,
+                                ( location && location [ 0 ] ) ? location : "ROOT" ,
+                                1000000 + level ) ;
+      }
     else if ( kWarning <= level && Py_IsInitialized() ) 
       {
         // ====================================================================
