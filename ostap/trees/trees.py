@@ -2603,11 +2603,16 @@ def prepare_branches ( tree , branch , **kwargs ) :
         ##""" 
         if   ( 6 , 26 ) <= root_info : args = vars + ( branch , )
         else :
-            
+
             fvars = ( branch , ) + vars + ( tree , )
-            if   1 == len ( vars ) : args = Ostap.Functions.Func1D.create ( *fvars ) , 
-            elif 2 == len ( vars ) : args = Ostap.Functions.Func2D.create ( *fvars ) , 
-            elif 3 == len ( vars ) : args = Ostap.Functions.Func3D.create ( *fvars ) , 
+            if   1 == len ( vars ) : args = Ostap.Functions.Func1D ( *fvars ) , 
+            elif 2 == len ( vars ) : args = Ostap.Functions.Func2D ( *fvars ) , 
+            elif 3 == len ( vars ) : args = Ostap.Functions.Func3D ( *fvars ) ,
+            
+            ## fvars = ( branch , ) + vars + ( tree , )
+            ## if   1 == len ( vars ) : args = Ostap.Functions.Func1D.create ( *fvars ) , 
+            ## elif 2 == len ( vars ) : args = Ostap.Functions.Func2D.create ( *fvars ) , 
+            ## elif 3 == len ( vars ) : args = Ostap.Functions.Func3D.create ( *fvars ) , 
 
         the_case = 9
         logger.debug ( 'prepare_branches: case %s' % the_case ) 
