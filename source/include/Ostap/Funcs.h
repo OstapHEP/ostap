@@ -129,6 +129,17 @@ namespace Ostap
         , m_tree     { tree    }
       {}     
       // ======================================================================
+      Func1D 
+      ( std::function<double(double)> fun  , 
+        const std::string& x               ,
+        const TTree*       tree =  nullptr ) 
+        : TObject () 
+        , m_fun      ( fun     )
+        , m_xvar_exp ( x       ) 
+        , m_xvar     { nullptr }
+        , m_tree     { tree    }
+      {}     
+      // ======================================================================
       /// copy constructor
       Func1D ( const Func1D& right ) ;
       // ======================================================================
