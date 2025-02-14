@@ -47,24 +47,31 @@ with open('%s','rb') as f : pickle.load ( f )"""
 class PickleChecker ( object ) :
     """ Check if the object/type can be pickled/uunpickeld
     """
-    MORE_TYPES  = set ()
-    EXTRA_TYPES = set ()
+    MORE_TYPES         = set ()
+    EXTRA_TYPES        = set ()
+    NONPICLEABLE_TYPES = set () 
     # ========================================================================
     ## if the object type is already knowns 
     def known ( self , *objtypes ) :
         return all ( ( o in PICKLE_TYPES    ) or
                      ( o in self.MORE_TYPES ) for o in objtypes ) 
+    # ========================================================================
+    ## type is knows for (un)pickle problems 
+    def notgood ( self , *objtype ) :
+        return objtypes and any ( o iin self.NONPEAKLEABLE for o  objtypes )
     # =========================================================================
     def _pickles ( self , *objects , fun_dumps , fun_loads ) :
         # =====================================================================
-        if not objects : return True 
+        if not objects               : return True
+        if self.notgood ( *objects ) : return False 
         ## check if the object can be properly pickled/unpickled
-        if self.known ( *( type ( o ) for o in objects ) ) : return True 
+        if self.known ( *( type ( o ) for o in objects ) ) : return True
+        from   ostap.core.core import rootException 
         # =====================================================================
         try: # ================================================================
             # =================================================================
             ## return fun_loads ( dumps ( objects ) ) == objects # ===============
-            fun_loads ( fun_dumps ( objects ) )
+            with rootException() : fun_loads ( fun_dumps ( objects ) )
             return True 
         except ( PicklingError, UnpicklingError, AttributeError, TypeError ) :
             # =================================================================
@@ -85,18 +92,21 @@ class PickleChecker ( object ) :
                            fast    = False          ) :
         """ Check pickling of an object across another (sub)process
         """
-        if not objects : return True 
+        if not objects               : return True
+        if self.notgood ( *objects ) : return False 
         # =====================================================================
         ## check if the object can be properly pickled/unpickled
         if self.known ( *(type ( o ) for o in objects ) ) : return True
         # =====================================================================
         import subprocess, shlex 
-        import ostap.utils.cleanup as CU
+        import ostap.utils.cleanup as     CU
+        from   ostap.core.core     import rootException 
         tmpfile = CU.CleanUp.tempfile ( suffix = '.pkl')
         # =====================================================================
         try : # ===============================================================
             # =================================================================
-            with open ( tmpfile , 'wb' ) as f : fun_dump ( objects , f )
+            with rootException () : 
+                with open ( tmpfile , 'wb' ) as f : fun_dump ( objects , f )
             # =================================================================
         except ( PicklingError  ,
                  AttributeError , TypeError , OSError ) : # ===
@@ -175,12 +185,19 @@ class PickleChecker ( object ) :
         return self.pickles_process ( *objects  )
     
     # =========================================================================
-    ## add new type into th elist of "known-types"
+    ## add new type into the list of "known-types"
     def add ( self , ntype ) :
         """ Add new type into th elist of "known-types
         """
         if ntype in self : return 
         self.MORE_TYPES.add ( ntype )
+        
+    # =========================================================================
+    ## add new type into the list of "non-picleable" types 
+    def add_bad ( self , ntype ) :
+        """ Add new type into the list of "non-pickleable" types 
+        """
+        self.NONPICLEABLE_TYPES.add ( ntype ) 
         
     # =========================================================================
     ## Format and return the pickling table 

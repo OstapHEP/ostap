@@ -1068,9 +1068,6 @@ class RootError2Exception (object) :
         if self.m_previous : self.e_handler ( False ) 
         self.m_previous = False 
 
-#    def __del__ ( self ) :
-##        if self.m_previous : self.e_handler ( False ) 
-        
 
 # =============================================================================
 ## helper context manager to activate ROOT Error -> Python exception converter 
