@@ -47,9 +47,9 @@ with open('%s','rb') as f : pickle.load ( f )"""
 class PickleChecker ( object ) :
     """ Check if the object/type can be pickled/uunpickeld
     """
-    MORE_TYPES         = set ()
-    EXTRA_TYPES        = set ()
-    NONPICLEABLE_TYPES = set () 
+    MORE_TYPES          = set ()
+    EXTRA_TYPES         = set ()
+    NONPICKLEABLE_TYPES = set () 
     # ========================================================================
     ## if the object type is already knowns 
     def known ( self , *objtypes ) :
@@ -197,7 +197,7 @@ class PickleChecker ( object ) :
     def add_nonpickleable ( self , ntype ) :
         """ Add new type into the list of "non-pickleable" types 
         """
-        self.NONPICkLEABLE_TYPES.add ( ntype ) 
+        self.NONPICKLEABLE_TYPES.add ( ntype ) 
         
     # =========================================================================
     ## Format and return the pickling table 
