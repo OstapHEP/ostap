@@ -132,7 +132,7 @@ def add_new_branch ( chain           ,
 
     if True : ## verbose : 
         title = 'All input arguments'
-        logger.info ( '%s:\n%s' % ( title , check.pickles_table ( branch , prefix = '# ' , **kwargs ) ) ) 
+        logger.info ( '%s:\n%s' % ( title , check.pickling_table ( branch , prefix = '# ' , **kwargs ) ) ) 
 
     print ( 'PARALLEL-ADD/5' )
         
