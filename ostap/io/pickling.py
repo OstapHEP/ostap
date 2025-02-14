@@ -215,18 +215,19 @@ class PickleChecker ( object ) :
     
     # =========================================================================
     ## add new type into the list of "known-types"
-    def add ( self , ntype ) :
+    def add ( self , *ntypes ) :
         """ Add new type into th elist of "known-types
         """
-        if ntype in self : return 
-        self.MORE_TYPES.add ( ntype )
+        for ntype in ntypes :
+            self.MORE_TYPES.add ( ntype )
         
     # =========================================================================
     ## add new type into the list of "non-picleable" types 
-    def add_nonpickleable ( self , ntype ) :
+    def add_nonpickleable ( self , *ntypes ) :
         """ Add new type into the list of "non-pickleable" types 
         """
-        self.NONPICKLEABLE_TYPES.add ( ntype ) 
+        for ntype in ntypes :        
+            self.NONPICKLEABLE_TYPES.add ( ntype ) 
         
     # =========================================================================
     ## Format and return the pickling table 

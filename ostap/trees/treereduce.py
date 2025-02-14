@@ -161,6 +161,14 @@ _new_methods_ = ( Ostap.Functions.FuncTH1        . __reduce__ ,
                   tuple ( t.__str__  for t in _decorated_classes ) + \
                   tuple ( t.__repr__ for t in _decorated_classes ) 
 
+notpickable_types = ( Ostap.Functions.Func1D , 
+                      Ostap.Functions.Func2D ,
+                      Ostap.Functions.Func3D ) 
+
+import ostap.io.pickling as OP
+checker = OP.Checker()
+checker.add_nonpicleable ( *nonpickleable_types )
+
 # =============================================================================
 if '__main__' == __name__ :
     
