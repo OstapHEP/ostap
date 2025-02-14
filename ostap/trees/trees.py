@@ -2554,7 +2554,7 @@ def prepare_branches ( tree , branch , **kwargs ) :
         logger.debug ( 'prepare_branches: case %s' % the_case ) 
 
     elif isinstance ( branch , dictlike_types ) and not 'name' in kwargs :        
-        ## general dict-like stuff, converrted to Ostap.Trees.Branches 
+        ## general dict-like stuff, converted to Ostap.Trees.Branches 
 
         branches = Ostap.Trees.Branches()
         keeper.append ( branches ) 
@@ -2618,10 +2618,10 @@ def prepare_branches ( tree , branch , **kwargs ) :
         the_case = 9
         logger.debug ( 'prepare_branches: case %s' % the_case ) 
         
-    elif callable ( branch  ) and 'name' in kwargs : 
+    elif callable ( branch  ) and 'name' in kwargs  and not any ( key in  kwargs for key in func_keywords ) :
         ## generic callable  ( function takes TTree as argument ) 
         name = kwargs.pop ( 'name' )
-        return prepare_branches ( tree , { name : branch } , **kwargs )
+        return prepare_branches ( tree , name , function = branch , **kwargs )
     
     elif isinstance ( branch , string_types ) and 1 == sum ( key in kwargs for key in func_keywords ) and not 'name' in kwargs :
         ## branch is actually the name of the branch
