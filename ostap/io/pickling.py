@@ -68,6 +68,7 @@ class PickleChecker ( object ) :
         if self.known ( *( type ( o ) for o in objects ) ) : return True
         from   ostap.core.core import rootException 
         # =====================================================================
+        print ( 'EXCEPTION/0' ) 
         try: # ================================================================
             # =================================================================
             ## return fun_loads ( dumps ( objects ) ) == objects # ===============
@@ -110,11 +111,11 @@ class PickleChecker ( object ) :
         ## check if the object can be properly pickled/unpickled
         if self.known ( *(type ( o ) for o in objects ) ) : return True
         # =====================================================================
-        import subprocess, shlex 
         import ostap.utils.cleanup as     CU
         from   ostap.core.core     import rootException 
         tmpfile = CU.CleanUp.tempfile ( suffix = '.pkl')
         # =====================================================================
+        print ( 'EXCEPTION/0.1' ) 
         try : # ===============================================================
             # =================================================================
             with rootException () : 

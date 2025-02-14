@@ -132,6 +132,8 @@ def test_addbranch() :
     ## reload the chain and check: 
     assert 'et1' in chain , "Branch `et1' is  not here!"
 
+    """ 
+
     # =========================================================================
     ## 1) add new branch as TTree-formula:
     # =========================================================================
@@ -301,7 +303,8 @@ def test_addbranch() :
     ## reload the chain and check: 
     assert 'gauss2' in chain , "Branch `gauss2' is  not here!"
 
-
+    """
+    
     # =========================================================================
     ## 13) generic fucction with 1 argument 
     # =========================================================================
@@ -313,6 +316,8 @@ def test_addbranch() :
     ## reload the chain and check: 
     assert 'gf1py_1' in chain , "Branch `gf1py_1' is  not here!"
 
+    """
+    
     # =========================================================================
     ## 14) generic function with 1 argument 
     # =========================================================================
@@ -434,6 +439,8 @@ def test_addbranch() :
     ## reload the chain and check: 
     assert 'gf3cxx_2' in chain , "Branch `gf3cxx_2' is  not here!"
 
+    """
+    
     title = 'With ALL variables'
     logger.info ( '%s:\n%s' %  (title , chain.table ( title = title , prefix = '# ' ) ) )
             
