@@ -49,10 +49,8 @@ __all__     = (
     # =========================================================================
 ) # ===========================================================================
 # =============================================================================
+from   itertools         import zip_longest
 import sys, os, datetime
-# =============================================================================
-if (3,0) <= sys.version_info : from itertools import  zip_longest
-else                         : from itertools import izip_longest as zip_longest 
 # =============================================================================
 ## is sys.stdout attached to terminal or not  ?
 #  @code
@@ -77,6 +75,16 @@ def isatty ( stream = None ) :
     ## 
     return False
 
+# ==============================================================================
+## does the atream support unicode? 
+def has_unicode ( stream = None ) :
+    """Does the stream support unicode?
+    """
+    if stream is None : stream = sys.stdout
+    encoding  = getattr ( stream , 'encoding' , '' )
+    if not encoding : return False 
+    return encoding.lower().startswith ( 'utf' )
+    
 # =============================================================================
 ## Who am I ?
 #  @cdoe

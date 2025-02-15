@@ -47,12 +47,29 @@ class PickleChecker ( object ) :
             objtype in self.MORE_TYPES or \
             objtype in self.EXTRA_TYPES
     # =========================================================================
+    def unpack ( self , *objects , **kwargs  ) :
+        unpacked = [] 
+        for obj in objects :
+            if   isinstance ( obj , ( list , tuple , set , frozenset ) ) :
+                unpacked += list ( self.unpack (  *obj ) ) 
+            elif isinstance ( obj ,   dict ) :                
+                unpacked += list ( self.unpack ( *obj.keys   () ) )
+                unpacked += list ( self.unpack ( *obj.values () ) )
+            else :
+                unpacked.append ( obj ) 
+
+        ## unpack keyword stuff 
+        for key , value in kwargs : unpacked += [ key , value ] 
+        
+        return tuple ( unpacked )
+    
     def _pickles ( self , *objects , fun_dumps , fun_loads ) :
         # =====================================================================
+        objects = self.unpack ( *objects ) 
         if not objects               : return True
-        if self.notgood ( *objects ) : return False 
+        if self.notgood ( *objects ) : return False        
         ## check if the object can be properly pickled/unpickled
-        if self.known ( *( type ( o ) for o in objects ) ) : return True
+        if self.known ( * ( type ( o ) for o in objects ) ) : return True
         # =====================================================================
         try: # ================================================================
             # =================================================================
@@ -83,6 +100,7 @@ class PickleChecker ( object ) :
                            fast    = False          ) :
         """ Check pickling of an object across another (sub)process
         """
+        objects = self.unpack ( *objects ) 
         if not objects               : return True
         if self.notgood ( *objects ) : return False
         # =====================================================================
@@ -157,18 +175,18 @@ class PickleChecker ( object ) :
             CleanUp.remove_file ( tmpfile ) 
 
     # =========================================================================
-    ## check if the object can be properly pickled/unpickled 
+    ## check if all object can be properly pickled/unpickled 
     def pickles ( self , *objects ) :
-        """ Check of the object can be properly pickled/unpickled
+        """ Check if all objects can be properly pickled/unpickled
         """
         return self._pickles  ( *objects                 ,
                                 fun_dumps = pickle.dumps ,
                                 fun_loads = pickle.loads )
     
     # =========================================================================
-    ## Check pickling of an object across another (sub) process
+    ## Check pickling of all objects across another (sub) process
     def pickles_process ( self , *objects , fast = False   ) :
-        """ Check pickling of an object across another (sub)process
+        """ Check pickling of all objects across another (sub)process
         """
         return self._pickles_process ( *objects                  ,
                                        fun_dump = pickle.dump    ,
@@ -181,7 +199,7 @@ class PickleChecker ( object ) :
     def pickles_all ( self , *args , **kwargs ) :
         """ Check if all arguments are (un)pickle-able
         """
-        objects = args + tuple ( v for v in kwargs.values() )
+        objects = self.unpack ( *args , **kwargs ) 
         return self.pickles ( *objects )
                               
     # =========================================================================
@@ -189,7 +207,7 @@ class PickleChecker ( object ) :
     def pickles_process_all ( self , *args , **kwargs ) :
         """ Check pickling of all objects across another (sub) process
         """
-        objects = args + tuple ( v for v in kwargs.values() )
+        objects = self.unpack ( *args , **kwargs ) 
         return self.pickles_process ( *objects  )
     
     # =========================================================================
