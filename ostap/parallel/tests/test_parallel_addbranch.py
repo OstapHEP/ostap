@@ -147,7 +147,6 @@ def test_addbranch() :
     ## reload the chain and check: 
     assert 'et1' in chain , "Branch `et1' is  not here!"
 
-    """ 
     # =========================================================================
     ## (2) add new branch as TTree-formula:
     # =========================================================================
@@ -180,8 +179,6 @@ def test_addbranch() :
     assert 'et8' in chain , "Branch `et8' is  not here!"
     assert 'et9' in chain , "Branch `et9' is  not here!"
 
-    """
-    
     # =========================================================================
     ## (4) add new branch as pure python function 
     # =========================================================================
@@ -193,7 +190,6 @@ def test_addbranch() :
     ## reload the chain and check: 
     assert 'pt2' in data.chain , "Branch `pt2' is  not here!"
 
-    """ 
     # =========================================================================
     ## (5) add new branch as pure python function 
     # =========================================================================
@@ -598,8 +594,6 @@ def test_addbranch() :
     ## reload the chain and check: 
     assert 'gf3cxx_2' in chain , "Branch `gf3cxx_2' is  not here!"
 
-    """
-    
     title = 'With ALL variables'
     logger.info ( '%s:\n%s' %  (title , chain.table ( title = title , prefix = '# ' ) ) )
             
