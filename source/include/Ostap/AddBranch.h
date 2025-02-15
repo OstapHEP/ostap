@@ -100,24 +100,22 @@ namespace Ostap
       // ======================================================================
       bool                      empty  () const { return m_map.empty () ; }
       std::size_t               size   () const { return m_map.size  () ; }
-      //
-      typedef std::pair<std::string,const Ostap::IFuncTree*>  ENTRY ;  
-      ENTRY                     entry  ( const std::size_t index ) const ;
       // ======================================================================     
     public: 
       // ======================================================================
-      typedef const Ostap::IFuncTree*                  BRANCH        ;
+      typedef const Ostap::IFuncTree*                  BRANCH          ;
+      typedef std::vector<std::string>                 NAMES           ; 
+      typedef NAMES::const_iterator                    const_iterator; ; 
+      typedef const_iterator                           iterator        ; 
       // ======================================================================
-      typedef std::map<std::string,BRANCH>             BRANCHES      ;  
-      typedef BRANCHES::const_iterator                 const_iterator;
+      typedef std::map<std::string,BRANCH>             BRANCHES        ;  
       // ======================================================================
     public:
       // =====================================================================      
-      const_iterator begin  () const { return m_map.begin () ; }
-      const_iterator end    () const { return m_map.end   () ; }
+      const_iterator begin  () const { return m_names.begin () ; }
+      const_iterator end    () const { return m_names.end   () ; }
       // ======================================================================
-      bool has_key ( const std::string& name ) const 
-      { return m_map.end() != m_map.find ( name ) ; }
+      bool has_key ( const std::string& name ) const ; 
       // ======================================================================
       /// get new branch by name 
       const Ostap::IFuncTree*   branch ( const std::string& key ) const ;
@@ -125,7 +123,9 @@ namespace Ostap
     private :
       // ======================================================================
       /// the actual storage
-      BRANCHES m_map {} ; // the actual storage
+      BRANCHES m_map   {} ; // the actual storage
+      /// branch  
+      NAMES    m_names {} ;
       // ======================================================================
     }; //                               The end of class Ostap::Trees::Branches
     // ========================================================================

@@ -13,35 +13,35 @@ namespace
   // ==========================================================================
   enum { // =================================================================== 
     // ========================================================================
-    INVALID_TREE          = 750 ,
-    INVALID_FORMULA       = 751 ,
-    INVALID_FORMULAE      = 752 ,
-    INVALID_BRANCH_NAME   = 753 , 
-    CANNOT_CREATE_BRANCH  = 754 , 
-    CANNOT_CREATE_FORMULA = 755 , 
+    INVALID_TREE          = 710 ,
+    INVALID_FORMULA       = 711 ,
+    INVALID_FORMULAE      = 712 ,
+    INVALID_BRANCH_NAME   = 713 , 
+    INVALID_BRANCH        = 714 , 
+    CANNOT_CREATE_BRANCH  = 715 , 
+    CANNOT_CREATE_FORMULA = 716 , 
     // ========================================================================
-    INVALID_TREEFUNCTION  = 756 ,
-    INVALID_TH3           = 757 , 
-    INVALID_TH2           = 758 , 
-    INVALID_TH1           = 759 , 
-    INVALID_BUFFER        = 760 ,
-    MISMATCH_TREE         = 761 , 
+    INVALID_TREEFUNCTION  = 720 ,
+    INVALID_TH3           = 721 , 
+    INVALID_TH2           = 722 , 
+    INVALID_TH1           = 723 , 
+    INVALID_BUFFER        = 724 ,
+    MISMATCH_TREE         = 725  , 
     //
-    INVALID_ABSDATA       = 765 ,
-    INVALID_ARGSET        = 766 ,
-    INVALID_ABSARG        = 767 ,   
-    INVALID_OBSERVABLE    = 768 , 
-    INVALID_OBSERVABLES   = 769 ,
+    INVALID_ABSDATA       = 730 ,
+    INVALID_ARGSET        = 731 ,
+    INVALID_ABSARG        = 732 ,   
+    INVALID_OBSERVABLE    = 733 , 
+    INVALID_OBSERVABLES   = 734 ,
     //
-    INVALID_PDF           = 770 ,
-    INVALID_FITRESULT     = 771 ,
+    INVALID_PDF           = 740 ,
+    INVALID_FITRESULT     = 741 ,
     //
-    INVALID_PYSELF        = 772 ,
+    INVALID_PYSELF        = 750 ,
     //
-    UNDEFINED_METHOD      = 780 ,
-    INVALID_VARIABLE      = 781 ,
-    INVALID_CALLABLE      = 781 ,
-    
+    UNDEFINED_METHOD      = 760 ,
+    INVALID_VARIABLE      = 761 ,
+    INVALID_CALLABLE      = 762 ,
     // =========================================================================
   }; // ========================================================================
   // ===========================================================================

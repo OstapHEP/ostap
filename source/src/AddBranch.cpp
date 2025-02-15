@@ -65,28 +65,65 @@ Ostap::Trees::Branches::Branches () {}
 // ============================================================================
 Ostap::Trees::Branches::Branches
 ( const Ostap::Trees::Branches&  right )
-  : m_map () 
-{ for ( const auto& item : right.m_map ) { add ( item.first , *item.second ) ; } }
+  : m_names () 
+  , m_map   () 
+{ 
+  for ( const std::string& name : right )
+    {
+      const Ostap::IFuncTree* fun = right.branch ( name ) ;
+      Ostap::Assert ( nullptr != fun  ,
+                      "Inconsistent names/map structure: " + name ,
+                      "Ostap::Trees::Branches"                    ,
+                      INVALID_TREEFUNCTION , __FILE__ , __LINE__  ) ;                  
+      add ( name , *fun ) ;
+    }
+  Ostap::Assert ( m_names.size() == m_map.size() ,
+                  "Inconsistent names/map structure"      ,
+                  "Ostap::Trees::Branches"                ,
+                  INVALID_BRANCH   , __FILE__ , __LINE__  ) ;                  
+  Ostap::Assert ( size() == right.size() ,
+                  "Inconsistent copy"                     ,
+                  "Ostap::Trees::Branches"                 ,
+                  INVALID_BRANCH   , __FILE__ , __LINE__  ) ;                  
+  
+}
 // ============================================================================
 // move consructor
 // ============================================================================
 Ostap::Trees::Branches::Branches
 ( Ostap::Trees::Branches&& right )
-  : m_map () 
-{ std::swap ( m_map , right.m_map ) ; }
+  : m_map   () 
+  , m_names () 
+{
+  std::swap ( m_map   , right.m_map   ) ;
+  std::swap ( m_names , right.m_names ) ;
+}
 // ============================================================================
 // destructor 
 // ============================================================================
 Ostap::Trees::Branches::~Branches()
 {
   // ==========================================================================
-  for ( const_iterator it = m_map.begin() ; m_map.end() != it ; ++it )
+  for ( BRANCHES::const_iterator it = m_map.begin() ; m_map.end() != it ; ++it )
     {
       const Ostap::IFuncTree* f = it->second ;
       if ( nullptr != f ) { delete f ; } 
     }  
   // ==========================================================================
 }
+// ============================================================================
+bool
+Ostap::Trees::Branches::has_key
+( const std::string& name ) const 
+{
+  if ( m_names.end() == std::find( m_names.begin() , m_names.end() , name ) ) { return false ; }
+  const Ostap::IFuncTree* br = branch ( name ) ;
+  Ostap::Assert ( nullptr != br                               ,
+                  "Inconsistent names/map structure: " + name ,
+                  "Ostap::Trees::Branches"                    ,
+                  INVALID_TREEFUNCTION , __FILE__ , __LINE__      ) ;
+  return nullptr != br ;
+}   
 // ============================================================================
 bool Ostap::Trees::Branches::add
 ( const std::string&         name    ,
@@ -102,21 +139,14 @@ bool Ostap::Trees::Branches::add
                   "Ostap::Trees::Branches"                   ,
                   INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
   // ==========================================================================
-  m_map [ name ] = func.clone() ;
+  m_names.push_back ( name ) ;
+  m_map [ name ] = func.clone() ; //
+  Ostap::Assert ( m_names.size() == m_map.size() ,
+                  "Inconsistent names/map structure: " + name ,
+                  "Ostap::Trees::Branches"                    ,
+                  INVALID_BRANCH   , __FILE__ , __LINE__      ) ;                  
   // ==========================================================================
   return true ;
-}
-// =============================================================================
-std::pair<std::string,const Ostap::IFuncTree*>
-Ostap::Trees::Branches::entry
-( const std::size_t index ) const
-{
-  if ( m_map.size() <= index ) { return  std::make_pair ( std::string() , nullptr ) ;}
-  const_iterator cit = m_map.begin() ;
-  std::advance ( cit , index ) ;
-  // ==========================================================================
-  return std::make_pair ( cit->first , cit->second      ) ;
-  // ==========================================================================
 }
 // ============================================================================
 bool Ostap::Trees::Branches::add
@@ -138,12 +168,12 @@ bool Ostap::Trees::Branches::add
 // ===========================================================================
 const Ostap::IFuncTree*
 Ostap::Trees::Branches::branch
-( const std::string& key ) const 
+( const std::string& name ) const 
 {
-  const_iterator found = m_map.find ( key ) ;
-  // ==========================================================================
-  return m_map.end() != found ? found->second : nullptr ;
-  // ==========================================================================
+  if ( m_names.end() == std::find ( m_names.begin() , m_names.end() , name ) ) { return nullptr ; }
+  BRANCHES::const_iterator found = m_map.find ( name ) ;
+  if ( m_map.end  () == found )                                                { return nullptr ; }
+  return found->second ; // FIX ME! 
 }
 // ============================================================================
 /* add new branch with name <code>name</code> to the tree
@@ -261,11 +291,10 @@ Ostap::Trees::add_branch
   // Notifier (needed for chain processing 
   Ostap::Utils::Notifier notifier { tree } ;
   /// create branches# 
-  for ( const auto& entry : lbranches ) 
+  for ( const std::string& name : lbranches ) 
     {
-      const std::string&      name = entry.first   ;
       // ======================================================================
-      const Ostap::IFuncTree* func = entry.second ;
+      const Ostap::IFuncTree* func = lbranches.branch ( name ) ;;
       // ======================================================================
       Ostap::Assert ( func                                       ,
                       "Invalid IFuncTree"                        ,

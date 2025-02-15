@@ -66,11 +66,13 @@ ATTENTION = 4
 WARNING   = 5
 ERROR     = 6
 FATAL     = 7
+ALWAYS    = 8
 # =============================================================================
 ## some manipulations with logging module
 if not hasattr ( logging , 'VERBOSE'   ) : logging.VERBOSE   = 5
 if not hasattr ( logging , 'ATTENTION' ) : logging.ATTENTION = logging.INFO     + 2 
 if not hasattr ( logging , 'FATAL'     ) : logging.FATAL     = logging.CRITICAL + 1 
+if not hasattr ( logging , 'ALWAYS'    ) : logging.ALWAYS    = logging.FATAL + 1000 
 # =============================================================================
 ## Log message with severity 'VERBOSE'
 def _verbose1_(self, msg, *args, **kwargs):
@@ -116,6 +118,29 @@ logging.Logger.attention = _attention1_
 logging.attention        = _attention2_
 # =============================================================================
 
+## Log message with severity 'ALWAYS'
+def _always1_(self, msg, *args, **kwargs):
+    """ Log 'msg % args' with severity 'ALWAYS'.
+    """
+    if self.isEnabledFor(logging.ALWAYS):
+        self._log(logging.ALWAYS, msg, args, **kwargs)        
+# =============================================================================
+## Log message with severity 'ALWAYS'
+def _always2_(msg, *args, **kwargs):
+    """ Log a message with severity 'VERBOSE' on the root logger.
+    """
+    if not logging.root.handlers : logging.basicConfig()
+    logging.root.always ( msg , *args , **kwargs )
+# ==============================================================================
+
+# ==============================================================================
+# add method 'attention' to logger 
+logging.Logger.always  = _always1_
+# =============================================================================
+## add method 'attention' to root logger 
+logging.always         = _always2_
+# =============================================================================
+
 # =============================================================================
 ## convert MSG::Level into logging level 
 def setLogging ( output_level ) :
@@ -130,7 +155,8 @@ def setLogging ( output_level ) :
 
 # =============================================================================
 ## define standard logging names
-logging_levels = { logging.CRITICAL  : 'FATAL    '  ,
+logging_levels = { logging.ALWAYS    : 'ALWAYS   '  ,
+                   logging.CRITICAL  : 'FATAL    '  ,
                    logging.ERROR     : 'ERROR    '  ,                   
                    logging.WARNING   : 'WARNING  '  ,                   
                    logging.ATTENTION : 'ATTENTION'  ,
@@ -207,7 +233,6 @@ def enabledError  () :
     """
     return enabled ( logging.ERROR ) 
 
-
 # =============================================================================
 ## Are FATAL prints  enabled? 
 def enabledFatal  () :
@@ -215,8 +240,12 @@ def enabledFatal  () :
     """
     return enabled ( logging.CRITICAL ) 
 
-
-    
+# =============================================================================
+## Are ALWAYAprints  enabled? 
+def enabledAlways  () :
+    """ Are ALWAYS prints  enabled?
+    """
+    return enabled ( logging.ALWAYS ) 
 
 # =============================================================================
 ## get configured logger
@@ -285,7 +314,7 @@ class LogLevel(KeepLevel) :
     ...  do something here ...
     """
     def __init__  ( self , level = logging.INFO - 1 ) :
-        self.new_level = level 
+        self.new_level = min ( level , ligging.ALWAYS - 1 ) ## cannot disable 'ALWAYS'
         self.old_level = logging.root.manager.disable
 
     ## context manager: ENTER 
@@ -452,6 +481,7 @@ def make_colors () :
 
     from ostap.logger.colorized import RED , BLUE , YELLOW , GREEN , WHITE
     
+    logging.addLevelName ( logging.ALWAYS    ,  makeName ( logging.ALWAYS    , bg = RED    , fg  = WHITE  , fgb = True ) ) 
     logging.addLevelName ( logging.CRITICAL  ,  makeName ( logging.CRITICAL  , fg = RED    , bg  = BLUE   , blink     = True ) )
     logging.addLevelName ( logging.ERROR     ,  makeName ( logging.ERROR     , fg = YELLOW , bg  = RED    , blink     = True , bgb = True , fgb = True ) )
     logging.addLevelName ( logging.WARNING   ,  makeName ( logging.WARNING   , fg = RED    , bg  = YELLOW , underline = True , bgb = True ) )
@@ -647,6 +677,7 @@ if __name__ == '__main__' :
     logger.error     ( 'This is ERROR     message'  ) 
     logger.fatal     ( 'This is FATAL     message'  ) 
     logger.critical  ( 'This is CRITICAL  message'  ) 
+    logger.always    ( 'This is ALWAYS    message'  ) 
 
     with logColor() : 
         
@@ -658,6 +689,7 @@ if __name__ == '__main__' :
         logger.error     ( 'This is ERROR     message'  ) 
         logger.fatal     ( 'This is FATAL     message'  ) 
         logger.critical  ( 'This is CRITICAL  message'  )
+        logger.always    ( 'This is ALWAYS    message'  ) 
 
         with noColor () : 
             logger.verbose   ( 'This is VERBOSE   message'  ) 
@@ -668,6 +700,7 @@ if __name__ == '__main__' :
             logger.error     ( 'This is ERROR     message'  ) 
             logger.fatal     ( 'This is FATAL     message'  ) 
             logger.critical  ( 'This is CRITICAL  message'  )
+            logger.always    ( 'This is ALWAYS    message'  ) 
             
         logger.verbose   ( 'This is VERBOSE   message'  ) 
         logger.debug     ( 'This is DEBUG     message'  ) 
@@ -677,6 +710,7 @@ if __name__ == '__main__' :
         logger.error     ( 'This is ERROR     message'  ) 
         logger.fatal     ( 'This is FATAL     message'  ) 
         logger.critical  ( 'This is CRITICAL  message'  )
+        logger.always    ( 'This is ALWAYS    message'  ) 
 
     with keepColor() :
         logger.verbose   ( 'This is VERBOSE   message'  ) 
@@ -684,12 +718,14 @@ if __name__ == '__main__' :
         logger.info      ( 'This is INFO      message'  ) 
         logger.attention ( 'This is ATTENTION message'  )
         logger.warning   ( 'This is WARNING   message'  )
+        logger.always    ( 'This is ALWAYS    message'  ) 
 
         make_colors()
         
         logger.error     ( 'This is ERROR     message'  ) 
         logger.fatal     ( 'This is FATAL     message'  ) 
         logger.critical  ( 'This is CRITICAL  message'  ) 
+        logger.always    ( 'This is ALWAYS    message'  ) 
 
     logger.info ( " -----> With VERBOSE threshold") 
     with logVerbose() : 
@@ -701,6 +737,7 @@ if __name__ == '__main__' :
         logger.error     ( 'This is ERROR     message'  ) 
         logger.fatal     ( 'This is FATAL     message'  ) 
         logger.critical  ( 'This is CRITICAL  message'  )
+        logger.always    ( 'This is ALWAYS    message'  ) 
 
     logger.info ( " -----> With DEBUG   threshold") 
     with logDebug () : 
@@ -712,6 +749,7 @@ if __name__ == '__main__' :
         logger.error     ( 'This is ERROR     message'  ) 
         logger.fatal     ( 'This is FATAL     message'  ) 
         logger.critical  ( 'This is CRITICAL  message'  )
+        logger.always    ( 'This is ALWAYS    message'  ) 
 
     logger.info ( " -----> With INFO    threshold") 
     with logInfo () : 
@@ -723,6 +761,7 @@ if __name__ == '__main__' :
         logger.error     ( 'This is ERROR     message'  ) 
         logger.fatal     ( 'This is FATAL     message'  ) 
         logger.critical  ( 'This is CRITICAL  message'  )
+        logger.always    ( 'This is ALWAYS    message'  ) 
 
     logger.info ( " -----> With ATTENTION threshold") 
     with logAttention () : 
@@ -734,6 +773,7 @@ if __name__ == '__main__' :
         logger.error     ( 'This is ERROR     message'  ) 
         logger.fatal     ( 'This is FATAL     message'  ) 
         logger.critical  ( 'This is CRITICAL  message'  )
+        logger.always    ( 'This is ALWAYS    message'  ) 
 
     logger.info ( " -----> With WARNING threshold") 
     with logWarning () : 
@@ -745,6 +785,7 @@ if __name__ == '__main__' :
         logger.error     ( 'This is ERROR     message'  ) 
         logger.fatal     ( 'This is FATAL     message'  ) 
         logger.critical  ( 'This is CRITICAL  message'  )
+        logger.always    ( 'This is ALWAYS    message'  ) 
 
     logger.info ( " -----> With ERROR   threshold") 
     with logError () : 
@@ -756,6 +797,7 @@ if __name__ == '__main__' :
         logger.error     ( 'This is ERROR     message'  ) 
         logger.fatal     ( 'This is FATAL     message'  ) 
         logger.critical  ( 'This is CRITICAL  message'  )
+        logger.always    ( 'This is ALWAYS    message'  ) 
 
     logger.info ( " -----> With FATAL   threshold") 
     with logFatal () : 
@@ -767,6 +809,7 @@ if __name__ == '__main__' :
         logger.error     ( 'This is ERROR     message'  ) 
         logger.fatal     ( 'This is FATAL     message'  ) 
         logger.critical  ( 'This is CRITICAL  message'  )
+        logger.always    ( 'This is ALWAYS    message'  ) 
 
         
     logger.info ( 80*'*'  )

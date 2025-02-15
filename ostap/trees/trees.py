@@ -2434,14 +2434,9 @@ ROOT.TTree.full_path = property ( tree_path , None , None )
 ## Sem decoration for Ostap.Trees.Branches
 # =============================================================================
 def _brs_items_  ( brs ) :
-    s = len ( brs )
-    for i in range ( len ( brs ) ) :
-        name , branch  = brs.entry ( i )
+    for name in brs :
+        branch  = brs.branch ( name ) 
         if name and branch  : yield name , branch
-# =============================================================================
-def _brs_iter_    ( brs ) :
-    for name , _ in brs.items() :
-        yield name
 # =============================================================================
 def _brs_getitem_  ( brs , name ) :
     branch = brs.branch ( name )
@@ -2454,19 +2449,28 @@ def _brs_factory_  ( *items ) :
     return branches ;
 # =============================================================================
 def _brs_reduce_  ( brs ) :
+    logger.always ( 'REDUCE NRANCHES/0 %s' % (  [ name for name in brs ] ) ) 
+    logger.always ( 'REDUCE NRANCHES/1 %s' %  brs  )
+    logger.always ( 'REDUCE NRANCHES/2 %s' % [ ( n , b ) for ( n , b ) in brs.items () ] ) 
+    
     return _brs_factory_ , tuple ( ( n , b ) for ( n , b ) in brs.items () )
 # =============================================================================
-def _brs_str_     ( brs ) :    
-    return '{%s}' % ( ', '.join ( '%s: %s' % item for item in brs.items() ) ) 
+def _brs_str_      ( brs ) :
+    if not brs : return "{}"
+    return '{ %s }' % ( ', '.join ( "'%s': %s" % item for item in brs.items() ) )
+
+def _brs_contains_ ( brs , name  ) :
+    return brs.has_key (  name )
     
-Ostap.Trees.Branches.__len__    = lambda s : s.size()
-Ostap.Trees.Branches.items      = _brs_items_ 
-Ostap.Trees.Branches.iteritems  = _brs_items_ 
-Ostap.Trees.Branches.__getitem__= _brs_getitem_ 
-Ostap.Trees.Branches.__reduce__ = _brs_reduce_ 
-Ostap.Trees.Branches.__str__    = _brs_str_ 
-Ostap.Trees.Branches.__repr__   = _brs_str_ 
-Ostap.IFuncTree.__str__         = lambda s : typename ( s )
+Ostap.Trees.Branches.__len__     = lambda s : s.size()
+Ostap.Trees.Branches.items       = _brs_items_ 
+Ostap.Trees.Branches.iteritems   = _brs_items_ 
+Ostap.Trees.Branches.__getitem__ = _brs_getitem_ 
+Ostap.Trees.Branches.__contains__= _brs_contains_ 
+Ostap.Trees.Branches.__reduce__  = _brs_reduce_ 
+Ostap.Trees.Branches.__str__     = _brs_str_ 
+Ostap.Trees.Branches.__repr__    = _brs_str_ 
+Ostap.IFuncTree.__str__          = lambda s : typename ( s )
 
 # ===============================================================================
 func_keywords = 'function' , 'callable' , 'what' , 'how' , 'calculator'
@@ -2620,8 +2624,9 @@ def prepare_branches ( tree , branch , **kwargs ) :
         
     elif callable ( branch  ) and 'name' in kwargs  and not any ( key in  kwargs for key in func_keywords ) :
         ## generic callable  ( function takes TTree as argument ) 
-        name = kwargs.pop ( 'name' )
-        return prepare_branches ( tree , name , function = branch , **kwargs )
+        name      = kwargs.pop ( 'name' )
+        newbranch = { name : branch }        
+        return prepare_branches ( tree , newbranch , **kwargs )
     
     elif isinstance ( branch , string_types ) and 1 == sum ( key in kwargs for key in func_keywords ) and not 'name' in kwargs :
         ## branch is actually the name of the branch
