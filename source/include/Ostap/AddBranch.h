@@ -157,8 +157,8 @@ namespace Ostap
      */
     Ostap::StatusCode 
     add_branch 
-    ( TTree*             tree                            ,  
-      const std::string& name                            , 
+    ( TTree*                            tree             ,  
+      const std::string&                name             , 
       const std::string&                formula          , 
       const Ostap::Utils::ProgressConf& progress = false ) ;
     // ========================================================================

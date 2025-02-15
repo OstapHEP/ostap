@@ -2558,7 +2558,13 @@ def prepare_branches ( tree , branch , **kwargs ) :
         args     = names +  ( branch , )
         the_case = 7
         logger.debug ( 'prepare_branches: case %s' % the_case ) 
-
+        
+    elif cisinsance ( branch , Ostap.IFuncTree ) and 'name' in kwargs :
+        ## generic callable  ( function takes TTree as argument )
+        args = branch, 
+        the_case = 8
+        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+    
     elif isinstance ( branch , dictlike_types ) and not 'name' in kwargs :        
         ## general dict-like stuff, converted to Ostap.Trees.Branches 
 
@@ -2583,7 +2589,7 @@ def prepare_branches ( tree , branch , **kwargs ) :
             new_branches.add ( key   )
             
         args     = branches ,
-        the_case = 8
+        the_case = 9
         logger.debug ( 'prepare_branches: case %s' % the_case ) 
 
     elif callable ( branch  ) and 'name' in kwargs and 'arguments' in kwargs : 
@@ -2619,7 +2625,7 @@ def prepare_branches ( tree , branch , **kwargs ) :
             logger.always ( 'FUCNNITON created %s' % args[0] )
 
             try :
-                args[0].__reduce__
+                args[0].__reduce__ () 
             except :
                 logger.always ( "triggered exception" , exc_info = True ) 
 
@@ -2631,7 +2637,7 @@ def prepare_branches ( tree , branch , **kwargs ) :
             ## elif 2 == len ( vars ) : args = Ostap.Functions.Func2D.create ( *fvars ) , 
             ## elif 3 == len ( vars ) : args = Ostap.Functions.Func3D.create ( *fvars ) , 
 
-        the_case = 9
+        the_case = 10
         logger.debug ( 'prepare_branches: case %s' % the_case ) 
         
     elif callable ( branch  ) and 'name' in kwargs  and not any ( key in  kwargs for key in func_keywords ) :
