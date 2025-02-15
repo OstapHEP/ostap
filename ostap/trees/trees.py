@@ -2559,12 +2559,6 @@ def prepare_branches ( tree , branch , **kwargs ) :
         the_case = 7
         logger.debug ( 'prepare_branches: case %s' % the_case ) 
         
-    elif cisinsance ( branch , Ostap.IFuncTree ) and 'name' in kwargs :
-        ## generic callable  ( function takes TTree as argument )
-        args = branch, 
-        the_case = 8
-        logger.debug ( 'prepare_branches: case %s' % the_case ) 
-    
     elif isinstance ( branch , dictlike_types ) and not 'name' in kwargs :        
         ## general dict-like stuff, converted to Ostap.Trees.Branches 
 
