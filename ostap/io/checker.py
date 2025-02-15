@@ -59,7 +59,7 @@ class PickleChecker ( object ) :
                 unpacked.append ( obj ) 
 
         ## unpack keyword stuff 
-        for key , value in kwargs : unpacked += [ key , value ] 
+        for key , value in kwargs.items() : unpacked += [ key , value ] 
         
         return tuple ( unpacked )
     

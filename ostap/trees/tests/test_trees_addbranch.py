@@ -114,9 +114,6 @@ def test_addbranch() :
     - using histogram sampling
     """
 
-    logger.always ("skip the test!") 
-    return
-
     files = prepare_data ( 3 , 100 )
     
     logger.info ( '#files:    %s'  % len ( files ) )  
@@ -457,9 +454,6 @@ def test_addbuffer() :
     - using histogram sampling
     """
     
-    logger.always ("skip the test!") 
-    return
-
     files = prepare_data ( 10 , 1000 )
 
     logger.info ( '#files:    %s'  % len ( files ) )  

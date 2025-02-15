@@ -20,6 +20,7 @@ __all__     = (
     'str_types'       , ## string  types (only string!)
     'listlike_types'  , ## list-like types (list, tuple, set, collections.Iterable)
     'list_types'      , ## list types (list, tuple)
+    'set_types'       , ## set types types (set&frzenset) 
     'dict_types'      , ## dict types 
     'dictlike_types'  , ## dict-like types 
     'long_type'       , ## long-type
@@ -92,6 +93,7 @@ dictlike_types  = dict ,  Mapping
 sequence_types  = listlike_types + ( Sequence , Collection , Iterable , Generator )
 sized_types     = Sized ,
 path_types      = string_types
+set_types       = set , frozenset 
 # =============================================================================
 path_types = string_types + ( os.PathLike , )
 # =============================================================================

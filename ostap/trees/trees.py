@@ -2598,16 +2598,7 @@ def prepare_branches ( tree , branch , **kwargs ) :
 
         from ostap.logger.utils import print_args
         fvars = ( branch , ) + vars + ( tree , )
-        logger.info ( 'ARGUMENTS:\n%s' % print_args ( *fvars ) ) 
-
-                      
-        ##elif ( 6 , 24 ) <= root_info : 
-        #3    
-        #3    fvars = ( branch , ) + vars + ( tree , )
-        ##    if   1 == len ( vars ) : args = Ostap.Functions.Func1D ( *fvars ) , 
-        ##    elif 2 == len ( vars ) : args = Ostap.Functions.Func2D ( *fvars ) , 
-        ##    elif 3 == len ( vars ) : args = Ostap.Functions.Func3D ( *fvars ) ,
-        ##""" 
+        
         if   ( 6 , 26 ) <= root_info : args = vars + ( branch , )
         else :
 
@@ -2615,22 +2606,6 @@ def prepare_branches ( tree , branch , **kwargs ) :
             if   1 == len ( vars ) : args = Ostap.Functions.Func1D ( *fvars ) , 
             elif 2 == len ( vars ) : args = Ostap.Functions.Func2D ( *fvars ) , 
             elif 3 == len ( vars ) : args = Ostap.Functions.Func3D ( *fvars ) ,
-            
-            logger.always ( 'FUCNNITON created %s' % args[0] )
-
-            
-            try :
-                args[0].__reduce__ () 
-            except :
-                logger.always ( "triggered exception" , exc_info = True ) 
-
-            logger.always ( 'AFTER CREATION OF FUNCTION'   ) 
-                                
-                    
-            ## fvars = ( branch , ) + vars + ( tree , )
-            ## if   1 == len ( vars ) : args = Ostap.Functions.Func1D.create ( *fvars ) , 
-            ## elif 2 == len ( vars ) : args = Ostap.Functions.Func2D.create ( *fvars ) , 
-            ## elif 3 == len ( vars ) : args = Ostap.Functions.Func3D.create ( *fvars ) , 
 
         the_case = 10
         logger.debug ( 'prepare_branches: case %s' % the_case ) 
