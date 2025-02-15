@@ -113,7 +113,7 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      ClassDefOverride(Ostap::Functions::Func1D,2) ;
+      ClassDefOverride(Ostap::Functions::Func1D,3) ;
       // ======================================================================
     public :
       // ======================================================================
@@ -132,13 +132,7 @@ namespace Ostap
       Func1D 
       ( std::function<double(double)> fun  , 
         const std::string& x               ,
-        const TTree*       tree =  nullptr ) 
-        : TObject () 
-        , m_fun      ( fun     )
-        , m_xvar_exp ( x       ) 
-        , m_xvar     { nullptr }
-        , m_tree     { tree    }
-      {}     
+        const TTree*       tree =  nullptr ) ;
       // ======================================================================
       /// copy constructor
       Func1D ( const Func1D& right ) ;
@@ -192,7 +186,7 @@ namespace Ostap
     protected :
       // ======================================================================
       /// the function  itself 
-      std::function<double(double)> m_fun      {} ; /// the function 
+      std::function<double(double)> m_fun      {} ; //! the function 
       /// expression for x-axis 
       std::string                   m_xvar_exp {} ; /// expression for x-axis 
       /// the actual function for x-axis 
@@ -209,7 +203,7 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      ClassDefOverride(Ostap::Functions::Func2D,2) ;
+      ClassDefOverride(Ostap::Functions::Func2D,3) ;
       // ======================================================================
     public :
       // ======================================================================
@@ -227,6 +221,12 @@ namespace Ostap
         , m_yvar     { nullptr }
         , m_tree     { tree    }
       {}     
+      // ======================================================================
+      Func2D 
+      ( std::function<double(double,double)> fun             , 
+        const std::string&                   x               ,
+        const std::string&                   y               ,
+        const TTree*                         tree =  nullptr ) ;
       // ======================================================================
       /// copy constructor
       Func2D ( const Func2D& right ) ;
@@ -286,7 +286,7 @@ namespace Ostap
     protected :
       // ======================================================================
       /// the function  itself 
-      std::function<double(double,double)> m_fun {} ; /// the function 
+      std::function<double(double,double)> m_fun {} ; //! the function 
       /// expression for x-axis 
       std::string                   m_xvar_exp {} ; /// expression for x-axis 
       /// expression for y-axis 
@@ -307,7 +307,7 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      ClassDefOverride(Ostap::Functions::Func3D,2) ;
+      ClassDefOverride(Ostap::Functions::Func3D,3) ;
       // ======================================================================
     public :
       // ======================================================================
@@ -328,6 +328,13 @@ namespace Ostap
         , m_zvar     { nullptr }
         , m_tree     { tree    }
       {}     
+      // 
+      Func3D 
+      ( std::function<double(double,double,double)> fun             , 
+        const std::string&                          x               ,
+        const std::string&                          y               ,
+        const std::string&                          z               ,
+        const TTree*                                tree =  nullptr ) ;
       // ======================================================================
       /// copy constructor
       Func3D ( const Func3D& right ) ;
@@ -392,7 +399,7 @@ namespace Ostap
     protected :
       // ======================================================================
       /// the function  itself 
-      std::function<double(double,double,double)> m_fun {} ; /// the function 
+      std::function<double(double,double,double)> m_fun {} ; //! the function 
       /// expression for x-axis 
       std::string                   m_xvar_exp {} ; /// expression for x-axis 
       /// expression for y-axis 

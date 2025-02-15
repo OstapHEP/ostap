@@ -263,6 +263,17 @@ double Ostap::Functions::FuncRooFormula::operator() ( const RooAbsData* data ) c
   return m_formula->getVal() ;
 }
 // ============================================================================
+Ostap::Functions::Func1D::Func1D
+( std::function<double(double)> fun  , 
+  const std::string&            x    ,
+  const TTree*                  tree ) 
+  : TObject () 
+  , m_fun      ( fun     )
+  , m_xvar_exp ( x       ) 
+  , m_xvar     { nullptr }
+  , m_tree     { tree    }
+{}     
+// ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::Functions::Func1D::Func1D
@@ -349,6 +360,20 @@ double Ostap::Functions::Func1D::operator() ( const TTree* tree ) const
   //
   return m_fun ( xvar ) ;
 }
+// ============================================================================
+Ostap::Functions::Func2D::Func2D
+( std::function<double(double,double)> fun  , 
+  const std::string&                   x    ,
+  const std::string&                   y    ,
+  const TTree*                         tree ) 
+  : TObject () 
+  , m_fun      ( fun     )
+  , m_xvar_exp ( x       ) 
+  , m_yvar_exp ( y       ) 
+  , m_xvar     { nullptr }
+  , m_yvar     { nullptr }
+  , m_tree     { tree    }
+{}     
 // ============================================================================
 // copy constructor 
 // ============================================================================
