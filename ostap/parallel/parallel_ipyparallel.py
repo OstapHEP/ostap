@@ -13,7 +13,7 @@ import sys, os, time, warnings
 from   itertools                    import repeat , count
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.parallel.task          import Task, TaskManager 
-from   ostap.io.pickling            import PickleChecker as Checker 
+from   ostap.io.checker             import PickleChecker as Checker 
 # =============================================================================
 from   ostap.logger.logger          import getLogger
 logger  = getLogger('ostap.parallel.parallel_ipyparallel')

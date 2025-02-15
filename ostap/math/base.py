@@ -979,8 +979,8 @@ import ostap.math.polynomials
 # ========
 if not '__main__' == __name__ :
     
-    import ostap.io.pickling as OP 
-    check = OP.PickleChecker ()
+    import ostap.io.checker as OC 
+    check = OC.PickleChecker ()
     
     for i , t in enumerate ( complex_types ) :
         print ( 'CHECK/1:' , i , t , t() ) 
@@ -992,8 +992,8 @@ if not '__main__' == __name__ :
 # =============================================================================
 if '__main__' == __name__ :
 
-    import ostap.io.pickling as OP 
-    check = OP.PickleChecker ()
+    import ostap.io.checker as OC 
+    check = OC.PickleChecker ()
 
 
 """

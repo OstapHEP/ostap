@@ -2443,22 +2443,23 @@ def _brs_getitem_  ( brs , name ) :
     if branch : return branch
     raise KeyError ( "Unknown branch name:%s" % name )
 # =============================================================================
+## Reconstruct Ostap::Trees::Branches objetc 
 def _brs_factory_  ( *items ) :
+    """ Reconstruct `Ostap::Trees::Branches` object
+    """
     branches = Ostap.Trees.Branches () 
     for n, b in items : branches.add ( n , b ) 
     return branches ;
 # =============================================================================
+## Reduce Ostap.Trees.Brnaches object
 def _brs_reduce_  ( brs ) :
-    logger.always ( 'REDUCE NRANCHES/0 %s' % (  [ name for name in brs ] ) ) 
-    logger.always ( 'REDUCE NRANCHES/1 %s' %  brs  )
-    logger.always ( 'REDUCE NRANCHES/2 %s' % [ ( n , b ) for ( n , b ) in brs.items () ] ) 
-    
+    """ Reduce `Ostap.Trees.Branches` object
+    """
     return _brs_factory_ , tuple ( ( n , b ) for ( n , b ) in brs.items () )
 # =============================================================================
 def _brs_str_      ( brs ) :
     if not brs : return "{}"
     return '{ %s }' % ( ', '.join ( "'%s': %s" % item for item in brs.items() ) )
-
 def _brs_contains_ ( brs , name  ) :
     return brs.has_key (  name )
     
@@ -2469,7 +2470,8 @@ Ostap.Trees.Branches.__getitem__ = _brs_getitem_
 Ostap.Trees.Branches.__contains__= _brs_contains_ 
 Ostap.Trees.Branches.__reduce__  = _brs_reduce_ 
 Ostap.Trees.Branches.__str__     = _brs_str_ 
-Ostap.Trees.Branches.__repr__    = _brs_str_ 
+Ostap.Trees.Branches.__repr__    = _brs_str_
+
 Ostap.IFuncTree.__str__          = lambda s : typename ( s )
 
 # ===============================================================================

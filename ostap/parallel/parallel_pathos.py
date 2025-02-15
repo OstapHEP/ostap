@@ -339,7 +339,7 @@ with open('%s','rb') as f : dill.load ( f )"""
 try : # =======================================================================
     # =========================================================================
     import dill 
-    from ostap.io.pickling import PickleChecker 
+    from ostap.io.checker import PickleChecker 
     # =========================================================================
     ## @class DillChecker
     #  Check if the object can be properly pickled/unpickled
@@ -364,22 +364,25 @@ try : # =======================================================================
             """
             return self._pickles_process ( *objects                ,
                                            fun_dump = dill.dump    ,
+                                           fun_load = dill.load    ,
                                            command  = DILL_COMMAND ,
                                            fast     = fast         ) ;
         # =========================================================================
         ## add new type into th elist of "known-types"
-        def add ( self , ntype ) :
+        def add ( self , *ntypes ) :
             """ Add new type into th elist of "known-types
             """
-            if ntype in self : return 
-            self.EXTRA_TYPES.add ( ntype )         
+            for ntype in ntypes :
+                if ntype in self : continue 
+                self.EXTRA_TYPES.append ( ntype )
+
     # =========================================================================
     ## usefulname
     Checker = DillChecker 
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
-    from ostap.io.pickling import PickleChecker as Checker 
+    from ostap.io.checker import PickleChecker as Checker 
     # =========================================================================
 
 # =============================================================================

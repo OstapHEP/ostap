@@ -27,7 +27,7 @@ import sys, os, time
 from   itertools                import repeat , count
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.parallel.task      import TaskManager
-from   ostap.io.pickling        import PickleChecker as Checker 
+from   ostap.io.checker         import PickleChecker as Checker 
 import multiprocessing          as     MP
 # =============================================================================
 from    ostap.logger.logger       import getLogger

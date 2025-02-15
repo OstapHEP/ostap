@@ -123,7 +123,6 @@ def add_new_branch ( chain           ,
 
     logger.info ( 'PARALLEL-ADD/3' )
 
-    from ostap.parallel.parallel import Checker
     check = Checker()
 
     logger.info ( 'PARALLEL-ADD/4' )
