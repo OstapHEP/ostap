@@ -2621,7 +2621,7 @@ def prepare_branches ( tree , branch , **kwargs ) :
             try :
                 args[0].__reduce__
             except :
-                logger.always ( "triggered exception" , exc_info = True
+                logger.always ( "triggered exception" , exc_info = True ) 
 
             logger.always ( 'AFTER CREATION OF FUNCTION'   ) 
                                 

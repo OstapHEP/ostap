@@ -164,6 +164,7 @@ _new_methods_ = ( Ostap.Functions.FuncTH1        . __reduce__ ,
 
 import pickle 
 def _no_reduce_ ( t ) :
+    logger.always ( "I AM REDUCE %s" % type ( t )  )
     raise pickle.PicklingError ( 'Class %%s is nonpickleable!' % typename ( t ) )
 
 notpickleable_types = ( Ostap.Functions.Func1D , 
