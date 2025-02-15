@@ -2618,6 +2618,7 @@ def prepare_branches ( tree , branch , **kwargs ) :
             
             logger.always ( 'FUCNNITON created %s' % args[0] )
 
+            
             try :
                 args[0].__reduce__ () 
             except :

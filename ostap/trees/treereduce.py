@@ -171,9 +171,8 @@ notpickleable_types = ( Ostap.Functions.Func1D ,
                         Ostap.Functions.Func2D ,
                         Ostap.Functions.Func3D )
 
-## for k in  notpickleable_types :
-##    print ( ' had reduce?' , k , typename  ( k ) , hasattr ( k , '__reduce__' ) ) 
-##    k.__reduce__ = _no_reduce_
+for k in  notpickleable_types :
+    k.__reduce__ = _no_reduce_
 
 ## import ostap.io.pickling as OP
 ## checker = OP.PickleChecker()
