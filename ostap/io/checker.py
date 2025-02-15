@@ -64,15 +64,14 @@ class PickleChecker ( object ) :
                  AttributeError         ,
                  TypeError              ) : # =================================
             # =================================================================
-            logger.always ( 'EXCEPTION/1'   ) 
             return False
         except Exception : # ===================================================
             # ==================================================================
-            logger.always ( 'EXCEPTION/2' ) 
+            logger.always ( 'EXCEPTION/2' , exc_info = True ) 
             return False
         except : # ============================================================
             # ==================================================================
-            logger.always ( 'EXCEPTION/3' ) 
+            logger.always ( 'EXCEPTION/3' , exc_info = True ) 
             return False
         
     # =========================================================================
@@ -104,17 +103,16 @@ class PickleChecker ( object ) :
                  TypeError            ,
                  OSError              ) : # ===================================
             # =================================================================            
-            logger.always ( 'EXCEPTION/1.1' ) 
             CleanUp.remove_file ( tmpfile ) 
             return False
         except Exception : # ===================================================
             # ==================================================================
-            logger.always ( 'EXCEPTION/2.1' ) 
+            logger.always ( 'EXCEPTION/2.1' , ext_info = True ) 
             CleanUp.remove_file ( tmpfile ) 
             return False
         except : # ============================================================
             # =================================================================
-            logger.always ( 'EXCEPTION/3.1' ) 
+            logger.always ( 'EXCEPTION/3.1' , exc_info = True ) 
             CleanUp.remove_file ( tmpfile ) 
             return False
             
@@ -220,7 +218,7 @@ class PickleChecker ( object ) :
         from ostap.core.ostap_types import string_types 
         from ostap.utils.basic      import typename, prntrf,  loop_items
     
-        rows  = [  ( 'Argument' , 'type' , 'value' , 'pickles' , "pickles'" ) ]
+        rows  = [  ( 'Argument' , 'type' , 'value' , "pickles'" , 'pickles"' ) ]
         
         good, bad = '\u2714' , '\u2715' 
         for i , a in enumerate ( args ) :

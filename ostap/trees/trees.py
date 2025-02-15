@@ -2616,6 +2616,16 @@ def prepare_branches ( tree , branch , **kwargs ) :
             elif 2 == len ( vars ) : args = Ostap.Functions.Func2D ( *fvars ) , 
             elif 3 == len ( vars ) : args = Ostap.Functions.Func3D ( *fvars ) ,
             
+            logger.always ( 'FUCNNITON created %s' % args[0] )
+
+            try :
+                args[0].__reduce__
+            except :
+                logger.always ( "triggered exception" , exc_info = True
+
+            logger.always ( 'AFTER CREATION OF FUNCTION'   ) 
+                                
+                    
             ## fvars = ( branch , ) + vars + ( tree , )
             ## if   1 == len ( vars ) : args = Ostap.Functions.Func1D.create ( *fvars ) , 
             ## elif 2 == len ( vars ) : args = Ostap.Functions.Func2D.create ( *fvars ) , 
