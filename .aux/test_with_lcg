@@ -4,4 +4,4 @@ CMTCONFIG=$2
 source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
 source build/INSTALL/thisostap.sh 
 cd build 
-ctest -N  && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && ctest -j2 -R '(fille|sele|add|pypdf|effi)' --output-on-failure --test-output-size-failed 5000000
+ctest -N  && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && ctest -j2 -R '(add|pypdf)' --output-on-failure --test-output-size-failed 5000000

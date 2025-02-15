@@ -2581,7 +2581,7 @@ def prepare_branches ( tree , branch , **kwargs ) :
         logger.debug ( 'prepare_branches: case %s' % the_case ) 
 
     elif callable ( branch  ) and 'name' in kwargs and 'arguments' in kwargs : 
-        ## generic callable thattakes 1-3 arguments from the tree 
+        ## generic callable that takes 1-3 arguments from the tree 
         
         vars = kwargs.pop( 'arguments' , () )
         if isinstance ( vars , string_types ) :

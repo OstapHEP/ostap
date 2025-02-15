@@ -226,13 +226,13 @@ void Ostap::Math::Integrator::set_precision_cube3
   m_rel_precision_cube3  = 0 < rprec ? rprec : s_RPRECISION_CUBE3D ;
 }
 // =============================================================================
-// set the QAG nitegrtaion rule 
+// set the QAG nitegration rule  
 // =============================================================================
 void Ostap::Math::Integrator::set_qag_rule ( const int rule ) 
 {
   m_qag_rule = 
-    GSL_INTEG_GAUSS15 <= rule && rule <= GSL_INTEG_GAUSS61 <= rule ? rule :
-    GSL_INTEG_GAUSS41 ; 
+    ( GSL_INTEG_GAUSS15 <= rule ) &&
+    ( rule <= GSL_INTEG_GAUSS61 ) ? rule : GSL_INTEG_GAUSS41 ; 
 } 
 // =============================================================================
 /*  calculate the integral 
