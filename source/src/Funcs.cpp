@@ -496,6 +496,23 @@ double Ostap::Functions::Func2D::operator() ( const TTree* tree ) const
 // ============================================================================
 // Func3D 
 // ============================================================================
+Ostap::Functions::Func3D::Func3D
+( std::function<double(double,double,double)> fun  , 
+  const std::string&                          x    ,
+  const std::string&                          y    ,
+  const std::string&                          z    ,
+  const TTree*                                tree ) 
+  : TObject () 
+  , m_fun      ( fun     )
+  , m_xvar_exp ( x       ) 
+  , m_yvar_exp ( y       ) 
+  , m_zvar_exp ( z       ) 
+  , m_xvar     { nullptr }
+  , m_yvar     { nullptr }
+  , m_zvar     { nullptr }
+  , m_tree     { tree    }
+{}   
+// ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::Functions::Func3D::Func3D
