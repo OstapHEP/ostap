@@ -54,10 +54,10 @@ namespace Ostap
       template <typename Stream, typename Iterator, typename Separator, typename OutputElement = IdentityOutputter>
       Stream& ostream_joiner
       ( Stream&       os                       ,
-	Iterator      first                    ,
-	Iterator      last                     ,
-	Separator     sep                      ,
-	OutputElement output = OutputElement{} ) 
+        Iterator      first                    ,
+        Iterator      last                     ,
+        Separator     sep                      ,
+        OutputElement output = OutputElement{} ) 
       {
         if  (   first != last           ) { output ( os        , *first ) ; ++first ; }
         for ( ; first != last ; ++first ) { output ( os << sep , *first ) ; }

@@ -31,7 +31,7 @@ namespace Ostap
     {
     public: 
       // ======================================================================
-      ClassDefOverride(Ostap::Models::PyPdf, 4 ) ;
+      ClassDefOverride(Ostap::Models::PyPdf, 5 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -41,38 +41,26 @@ namespace Ostap
        *  @param variables all variables 
        */
       PyPdf
-      ( const char*       name      , 
-        const char*       title     ,
-        const RooArgList& variables );
-      // ======================================================================
+      ( const std::string& name        , 
+        const std::string& title       ,
+        const RooArgList&  variables   ) ;
+      // =======================================================================
       /** Standard constructor
        *  @param name      the name of PDF 
-       *  @param variables all variables 
        *  @param title     the title  of PDF 
+       *  @param observables observables 
+       *  @param parameters  parameters 
        */
       PyPdf
-      ( const std::string& name       , 
-        const RooArgList&  variables  , 
-        const std::string& title = "" ) 
-        : PyPdf ( name.c_str() , 
-                  title.empty() ? name.c_str() : title.c_str() , 
-                  variables ) 
-      {} 
-      // ======================================================================
-      /** Standard constructor
-       *  @param variables all variables 
-       *  @param name      the name of PDF 
-       *  @param title     the title  of PDF 
-       */
-      PyPdf
-      ( const RooArgList&  variables  , 
-        const std::string& name       ,
-        const std::string& title = "" ) 
-        : PyPdf ( name , variables , title ) 
-      {}
+      ( const std::string& name        ,   
+        const std::string& title       ,
+        const RooArgList&  observables , 
+        const RooArgList&  parameters  ) ;      
       // ======================================================================
       /// copy  constructor 
-      PyPdf ( const PyPdf& right , const char* name = nullptr ) ;
+      PyPdf
+      ( const PyPdf& right           ,
+        const char*  name  = nullptr ) ;
       /// virtual destructor 
       virtual ~PyPdf() ;
       /// clone method 
@@ -86,16 +74,14 @@ namespace Ostap
     public:
       // ======================================================================
       ///  get all variables in a form of the list      
-      const RooArgList& variables () const { return m_varlist ; }
-      ///  get all variables in a form of the list
-      const RooArgList& varlist   () const { return m_varlist ; }
+      const RooArgList& varlist () const { return m_varlist  ; }
       // ======================================================================
     public:
       // ======================================================================
-      /// get a variable with index 
-      double variable ( const unsigned short index ) const ;
-      /// get a variable with name 
-      double variable ( const          char*  name ) const ;
+      /// get a value for a variable with index 
+      double value ( const unsigned short index ) const ;
+      /// get a value for a variable with name 
+      double value ( const          char*  name ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -114,12 +100,14 @@ namespace Ostap
       // ======================================================================
     public: /// helper methods  for implementation of getAnalyticalIntegral 
       // ======================================================================
-      inline const RooArgSet*   allDeps () const { return  m_allDeps  ; } 
+      inline const RooArgSet*   allDeps () const { return m_allDeps   ; } 
       inline       RooArgSet*  analDeps () const { return m_analDeps  ; }
       inline const char*      rangeName () const { return m_rangeName ; }
       inline Int_t              intCode () const { return m_intCode   ; }
       /// move the function from protected to public integrface 
-      Bool_t matchArgs ( const RooArgSet& refVars ) const ;
+      Bool_t match_args ( const RooArgSet& vars ) const ;
+      /// move the function from protected to public integrface 
+      Bool_t match_arg  ( const RooAbsArg& Var  ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -143,7 +131,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class PyPdf2 Ostap/PyPdf.h
-     *  ``Light'' version of PyPdf
+     *  `Light' version of PyPdf
      *  @see Ostap::Models::PyPDF
      *  @see ostap.fitting.pypdf.PyPDF2
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -206,10 +194,10 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      ///  get all variables in a form of the list      
+      ///  get all variables in a from of the list      
       const RooArgList&   variables () const { return m_varlist ; }
       ///  get all variables in a form of the list
-      const RooArgList&    varlist   () const { return m_varlist ; }
+      const RooArgList&   varlist   () const { return m_varlist ; }
       // ======================================================================
     public:
       // ======================================================================

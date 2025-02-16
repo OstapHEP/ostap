@@ -103,22 +103,84 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
     ##
+    'PyPDF'  , ## 'pythonic' PDF for RooFit 
     'PyPDF2' , ## 'pythonic' PDF for RooFit 
     )
 # =============================================================================
-from   ostap.core.core      import Ostap
+from   ostap.core.ostap_types import sequence_types 
+from   ostap.core.core        import Ostap
+from   ostap.utils.basic      import typename 
 import ostap.fitting.roofit
-from   ostap.core.meta_info import old_PyROOT 
-import ROOT, math
+import ROOT, math, abc 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.pypdf' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
+# @class PyPdf
+# Very simnple "Pythonic" PDF
+# One must define:
+#  - <code>clone</code> method 
+#  - proper constructor that takes keyword <code>clone</code>
+#  - <code>evaluate</code> method 
+#  - method <code>__reduce__</code> for serialization (if needed)
+# 
+# Twomore methods arte needed if one needs analystical integrals :
+#  - `get_analytical_integral`
+#  - `analytical_integral`
+class PyPDF(Ostap.Models.PyPdf) :
+    """ Very simple `pythonic' PDF 
+    One must define: 
+    - `clone` method 
+    - proper constructor that takes keyword <code>clone</code>
+    - `evaluate` method 
+    - method `reduce` for serialization (if needed) 
+    """
+    def __init__ ( self , name , title = '' , variables = () , clone = None ) :
+        """ Constructor that accepts `clone` argument 
+        """
+        
+        self._keep = name , title , variables
 
+        assert not clone or isinstance ( clone , PyPDF ), \
+            "PyPdf: invalid `clone` type:%s" % typename ( clone ) 
+        
+        assert clone or ( variables                                and \
+                          isinstance ( variables ,sequence_types ) and \
+                          all ( isinstance ( v , ROOT.RooAbsReal ) for v in variables ) ) , \
+                          "PyPdf: invalid `variables`" 
+        
+        if clone :
+            super ( PyPDF , self ) .__init__ ( clone , name )            
+        else     :
+            vv = ROOT.RooArgList(  v for v in variables ) 
+            super ( PyPDF, self ) .__init__ ( name , title , vv )
+
+        if clone : self._keep += clone._keep
+        
+    ## redefine 
+    def matchArgs ( self , *vars ) :
+        return self.match_args ( ROOT.RooArgSet ( v for v in vars ) ) 
+    ## redefine 
+    def matchArg  ( self ,  var  ) : return self.match_arg  ( var  ) 
+    
+    @abc.abstractmethod 
+    def clone ( self  , newname ) :
+        raise NotImplementedError("PyPdf.clone must be implemented")
+
+    @abc.abstractmethod
+    def evaluate ( self ) :
+        raise NotImplementedError("PyPdf.evaluate must be implemented")
+
+    @property
+    def variables ( self ) :
+        """`variables` : get list of varibales (same as `varlist()` """
+        return self.varlist()
+    
+old_PyROOT = False 
 # =============================================================================
 if old_PyROOT :
-    
+
     __all__ = (
         'PyPDF'  , ## 'pythonic' PDF for RooFit 
         'PyPDF2' , ## 'pythonic' PDF for RooFit 

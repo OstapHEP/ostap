@@ -46,6 +46,7 @@ from   ostap.utils.cidict        import cidict, cidict_fun
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.scp_copy      import scp_copy
 from   ostap.utils.utils         import chunked, evt_range, LAST_ENTRY, implicitMT
+from   ostap.math.base           import numpy 
 # 
 import ostap.trees.treereduce 
 import ostap.trees.param
@@ -238,18 +239,13 @@ ROOT.TTree .__call__  = _tc_call_
 ROOT.TChain.__call__  = _tc_call_
 
 # =============================================================================
-try : # =======================================================================
+if numpy : 
     # =========================================================================
-    from numpy import frombuffer as _frombuffer 
-    def get_result ( vct ) :
-        return _frombuffer ( vct.data() , count = len ( vct ) , dtype = float )
-        ## return _array ( data , dtype = float )
+    def get_result ( vct ) : return numpyfrombuffer ( vct.data() , count = len ( vct ) , dtype = float )
     # =========================================================================
-except ImportError : # ========================================================
+else : # ======================================================================
     # =========================================================================
-    from array import array as _array 
-    def get_result ( vct ) :
-        return _array ( 'd' , vct )
+    def get_result ( vct ) : return array.array ( 'd' , vct )
     # =========================================================================
 # =============================================================================
 ##  Iterate over tree entries and get a row/array of values for each good entry

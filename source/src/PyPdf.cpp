@@ -17,7 +17,6 @@
 // ============================================================================
 #include "Ostap/PyPdf.h"
 #include "Ostap/PyVar.h"
-#include "Ostap/Iterator.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -50,19 +49,31 @@ namespace
  */
 // ============================================================================
 Ostap::Models::PyPdf::PyPdf
-( const char*       name      , 
-  const char*       title     ,
-  const RooArgList& variables )
-  : RooAbsPdf ( name , title  ) 
+( const std::string& name        , 
+  const std::string& title       ,
+  const RooArgList&  variables   ) 
+  : RooAbsPdf   ( name.c_str() , title.c_str() )
   , m_varlist ( "!varlist" , "All variables(list)" , this ) 
-{
-  //
-  ::copy_real ( variables , m_varlist ) ;
-  //
-}
+{ ::copy_real ( variables , m_varlist ) ; }
 // ============================================================================
-
-
+/*  Standard constructor
+ *  @param name      the name of PDF 
+ *  @param title     the title  of PDF 
+ *  @param observables observables 
+ *  @param parameters  parameters 
+ */
+// ============================================================================
+Ostap::Models::PyPdf::PyPdf
+( const std::string& name        ,   
+  const std::string& title       ,
+  const RooArgList&  observables , 
+  const RooArgList&  parameters  ) 
+  : RooAbsPdf ( name.c_str() , title.c_str() )
+  , m_varlist ( "!varlisy" , "All variables(list)" , this ) 
+{
+  ::copy_real ( observables , m_varlist ) ;
+  ::copy_real ( parameters  , m_varlist ) ;
+}
 // ============================================================================
 // helper function to be redefined in python  
 // ============================================================================
@@ -72,8 +83,8 @@ int    Ostap::Models::PyPdf::get_analytical_integral () const { return 0 ; }
 // ============================================================================
 double Ostap::Models::PyPdf::analytical_integral     () const 
 {
-  Ostap::throwException ( "Method `analytical_integral' must be overriden!"  ,
-                          "Ostap::Models::PyPdf"                             ,
+  Ostap::throwException ( "Method `analytical_integral' *MUST* be overriden!" ,
+                          "Ostap::Models::PyPdf"                              ,
                           UNDEFINED_METHOD ,  __FILE__ , __LINE__ ) ;
   return 0 ;
 }
@@ -83,21 +94,19 @@ double Ostap::Models::PyPdf::analytical_integral     () const
 Ostap::Models::PyPdf::PyPdf
 ( const Ostap::Models::PyPdf& right , 
   const char*                 name  ) 
-  : RooAbsPdf ( right , name ) 
-  , m_varlist  ( "!varlist" , this , right.m_varlist ) 
+  : RooAbsPdf   ( right , name ) 
+  , m_varlist ( "!varlist" , this , right.m_varlist ) 
 {}
-// ============================================================================
-
-
 // ============================================================================
 // virtual destructor 
 // ============================================================================
 Ostap::Models::PyPdf::~PyPdf() {}
 // ============================================================================
 Ostap::Models::PyPdf* 
-Ostap::Models::PyPdf::clone ( const char* name ) const 
+Ostap::Models::PyPdf::clone
+( const char* name ) const 
 {  
-  Ostap::throwException ( "Clone method MUST be overridden!"     ,  
+  Ostap::throwException ( "Clone method *MUST* be overridden!"   ,  
                           "Ostap::Functions::PyPdf"              , 
                           UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
   return nullptr  ;  
@@ -150,13 +159,26 @@ Double_t Ostap::Models::PyPdf::analyticalIntegral
   return result ;
 }
 // ============================================================================
-/// move the function from protected to public interface 
-Bool_t Ostap::Models::PyPdf::matchArgs ( const RooArgSet& refVars ) const 
+// move the function from protected to public interface 
+// ============================================================================
+Bool_t Ostap::Models::PyPdf::match_args
+( const RooArgSet& vars ) const 
 { 
   return 
     nullptr != m_allDeps  && 
     nullptr != m_analDeps && 
-    RooAbsReal::matchArgs ( *m_allDeps , *m_analDeps , refVars ) ;
+    RooAbsReal::matchArgs ( *m_allDeps , *m_analDeps , vars ) ;
+}
+// ============================================================================
+// move the function from protected to public interface 
+// ============================================================================
+Bool_t Ostap::Models::PyPdf::match_arg
+( const RooAbsArg& var ) const 
+{ 
+  return 
+    nullptr != m_allDeps  && 
+    nullptr != m_analDeps && 
+    RooAbsReal::matchArgs ( *m_allDeps , *m_analDeps , var ) ;
 }
 // ============================================================================
 // the actual evaluation of function
@@ -171,40 +193,40 @@ Double_t Ostap::Models::PyPdf::evaluate() const
 // ============================================================================
 // get a variable with index 
 // ============================================================================
-double Ostap::Models::PyPdf::variable ( const unsigned short index ) const 
+double Ostap::Models::PyPdf::value ( const unsigned short index ) const 
 {
   Ostap::Assert ( index < m_varlist.getSize() , 
-                  "Invalid index"           , 
-                  "PyPdf::variable(index)"  ,
+                  "Invalid index"             , 
+                  "PyPdf::value(index)"       ,
                   INVALID_VARIABLE  , __FILE__ , __LINE__ ) ;
   //
   const RooAbsArg*  a = m_varlist.at ( index ) ;
-  Ostap::Assert ( a , 
+  Ostap::Assert ( a                        , 
                   "Invalid element"        , 
-                  "PyPdf::variable(index)" ,
+                  "PyPdf::value(index)"    ,
                   INVALID_VARIABLE  , __FILE__ , __LINE__ ) ;
   //
   const RooAbsReal* v = dynamic_cast<const RooAbsReal*>( a ) ;
-  Ostap::Assert ( v , 
+  Ostap::Assert ( v                         , 
                   "Invalid element type"    , 
-                  "PyPdf::variable(index)"  , 
+                  "PyPdf::value(index)"     , 
                   INVALID_VARIABLE  , __FILE__ , __LINE__ ) ;
   return v->getVal() ;  
 }
 // ============================================================================
 // get a variable with name 
 // ============================================================================
-double Ostap::Models::PyPdf::variable ( const char* name  ) const 
+double Ostap::Models::PyPdf::value ( const char* name  ) const 
 {
   const RooAbsArg*  a = m_varlist.find ( name  ) ;
-  Ostap::Assert ( a , 
+  Ostap::Assert ( a                        , 
                   "Invalid element"        , 
-                  "PyPdf::variable(name)"  , 
+                  "PyPdf::value(name)"     , 
                   INVALID_VARIABLE  , __FILE__ , __LINE__ ) ;
   const RooAbsReal* v = dynamic_cast<const RooAbsReal*>( a ) ;
-  Ostap::Assert ( v , 
-                  "Invalid element type"    , 
-                  "PyPdf::variable(name)"  , 
+  Ostap::Assert ( v                        , 
+                  "Invalid element type"   , 
+                  "PyPdf::value(name)"     , 
                   INVALID_VARIABLE  , __FILE__ , __LINE__ ) ;
   return v->getVal() ;  
 }
