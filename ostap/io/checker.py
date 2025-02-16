@@ -11,7 +11,7 @@ __all__ = (
     'PickleChecker'    , ## check pickle-ability of objects 
     )
 # =============================================================================
-import pickle, array, sys 
+import pickle, array, sys
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.checker' )
@@ -237,8 +237,9 @@ class PickleChecker ( object ) :
         from ostap.utils.basic      import typename, prntrf,  loop_items
     
         rows  = [  ( 'Argument' , 'type' , 'value' , "pickles'" , 'pickles"' ) ]
-        
-        good, bad = '\u2714' , '\u2715' 
+
+        from ostap.logger.symbols import checked_yes, checked_no 
+        good, bad = checked_yes, checked_no 
         for i , a in enumerate ( args ) :
             pickable = self.pickles         ( a )
             process  = self.pickles_process ( a )
@@ -266,24 +267,53 @@ class PickleChecker ( object ) :
         import ostap.logger.table as T        
         return T.table ( rows , title = title , prefix = prefix , alignment = 'lwwcc' )
 
-# =============================================================================
-import atexit
-@atexit.register
-def _report_ () :
-    # =========================================================================
-    if PickleChecker.MORE_TYPES or PickleChecker.EXTRA_TYPES :
+    # ==========================================================================
+    ## get table of known pickleable types 
+    def table_pickleable  ( self , title = 'Pickleable Types' , prefix = '' , style = '' ) :
+        """ Get table of known pickleable types 
+        """
         from ostap.utils.basic import typename 
-        extra = list ( PickleChecker.MORE_TYPES ) + list ( PickleChecker.EXTRA_TYPES ) + list ( PICKLE_TYPES ) 
-        rows = [ ( '#' , 'Type' ) ]
+        extra = set ( self.MORE_TYPES ) | set ( self.EXTRA_TYPES ) | set ( PICKLE_TYPES ) 
+        rows  = [ ( '#' , 'Type' ) ]
         extra = sorted ( typename ( e ) for e in extra ) 
         for i , e in enumerate ( extra , start = 1 ) :
             row = '%d' % i , e  
             rows.append ( row ) 
         import ostap.logger.table as T
-        title = 'Pickle types' 
-        logger.info ( '%s:\n%s' % ( title , T.table ( rows , title = title , prefix = '# ' , alignment = 'll' ) ) ) 
+        return T.table ( rows , title = title , prefix = prefix, alignment = 'll' , style = style )
 
-
+    # ==========================================================================
+    ## get table of known pickleable types 
+    def table_nonpickleable  ( self , title = 'Non-pickleable Types' , prefix = '' , style = '' ) :
+        """ Get table of known non-pickleable types 
+        """
+        from ostap.utils.basic import typename 
+        rows  = [ ( '#' , 'Type' ) ]
+        extra = sorted  ( typename ( t ) for t in self.NONPICKLEABLE_TYPES ) 
+        for i , e in enumerate ( extra , start = 1 ) :
+            row = '%d' % i , e  
+            rows.append ( row ) 
+        import ostap.logger.table as T
+        return T.table ( rows , title = title , prefix = prefix, alignment = 'll' , style = style )
+    
+    
+# =============================================================================
+import atexit
+@atexit.register
+def _report_ () :
+    # =========================================================================
+    checker = PickleChecker()
+    
+    if checker.MORE_TYPES or checker.EXTRA_TYPES :
+        title = 'Known pickleable types'
+        table = checker.table_pickleable ( title = title , prefix = '# ' ) 
+        logger.info ( '%s:\n%s' % ( title , table ) )
+        
+    if checker.NONPICKLEABLE_TYPES :
+        title = 'Non-pickleable types'
+        table = checker.table_nonpickleable ( title = title , prefix = '# ' ) 
+        logger.info ( '%s:\n%s' % ( title , table ) ) 
+                      
 # =============================================================================
 if '__main__' == __name__ :
     

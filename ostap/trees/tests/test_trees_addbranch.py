@@ -114,7 +114,7 @@ def test_addbranch() :
     - using histogram sampling
     """
 
-    files = prepare_data ( 1 , 1000 )
+    files = prepare_data ( 5 , 100 )
     
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data ( 'S' , files )
@@ -454,7 +454,7 @@ def test_addbuffer() :
     - using histogram sampling
     """
     
-    files = prepare_data ( 2 , 1000 )
+    files = prepare_data ( 5 , 100 )
 
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data ( 'S' , files )

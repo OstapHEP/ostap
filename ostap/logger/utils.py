@@ -571,12 +571,12 @@ class DisplayTree ( object ) :
 
 # ============================================================================
 ## Print all arguments as table
-#  Two keyword argument are also used for formatting of internam table 
+#  Two keyword argument are also used for formatting of internal table 
 #  - prefix 
 #  - title
 def print_args ( *args , **kwargs ) :
     """ Print all arguments as table 
-    Two keyword argument are also used for formatting of internam table 
+    Two keyword argument are also used for formatting of internal table 
     - `prefix` 
     - `title` 
     """

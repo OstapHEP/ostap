@@ -45,7 +45,7 @@ from   ostap.utils.basic         import ( isatty , terminal_size ,
 from   ostap.utils.cidict        import cidict, cidict_fun
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.scp_copy      import scp_copy
-from   ostap.utils.utils         import chunked, evt_range, LAST_ENTRY, implicitMT 
+from   ostap.utils.utils         import chunked, evt_range, LAST_ENTRY, implicitMT
 # 
 import ostap.trees.treereduce 
 import ostap.trees.param
@@ -968,7 +968,6 @@ def _rt_table_0_ ( tree ,
         max_l  = max ( max_l  , len ( v[5] ) )
         num_l  = max ( num_l  , len ( v[6] ) )
 
-    
     __vars = []
     for v in _vars :
         if not ' ' in v[1]  :
@@ -1030,8 +1029,9 @@ def _rt_table_0_ ( tree ,
         if isinstance ( tree , ROOT.TChain ) :
             nfiles = len ( tree.files() )
             if 1 < nfiles : title += '/%d files ' % nfiles 
-        
+
     import ostap.logger.table as T
+    if table_data : table_data = T.remove_empty_columns ( table_data ) 
     t  = T.table ( table_data , title , prefix = prefix , style = style )
     w  = T.table_width ( t )
     return t , w 
@@ -1127,6 +1127,7 @@ def _rt_table_1_ ( tree ,
             if 1 < nfiles : title += '/%d files ' % nfiles 
         
     import ostap.logger.table as T
+    if table_data : table_data = T.remove_empty_columns ( table_data ) 
     t  = T.table ( table_data , title , prefix = prefix , style = style )
     w  = T.table_width ( t )
     return t , w 
@@ -2596,9 +2597,7 @@ def prepare_branches ( tree , branch , **kwargs ) :
         assert 1 <= len ( vars ) <= 3 and all ( ( isinstance ( a , string_types ) and a.strip() ) for a in vars ) , \
             "1-to-3 non-empty strings must be specified as `arguments' for `branch'=%s" % typename ( branch )
 
-        from ostap.logger.utils import print_args
-        fvars = ( branch , ) + vars + ( tree , )
-        
+        fvars = ( branch , ) + vars + ( tree , )        
         if   ( 6 , 26 ) <= root_info : args = vars + ( branch , )
         else :
 
@@ -2613,22 +2612,27 @@ def prepare_branches ( tree , branch , **kwargs ) :
     elif callable ( branch  ) and 'name' in kwargs  and not any ( key in  kwargs for key in func_keywords ) :
         ## generic callable  ( function takes TTree as argument ) 
         name      = kwargs.pop ( 'name' )
-        newbranch = { name : branch }        
-        return prepare_branches ( tree , newbranch , **kwargs )
+        newbranch = { name : branch }
+        
+        args , nb , kw , keep = prepare_branches ( tree , newbranch , **kwargs )
+        return args , nb , kw , keeper + keep 
     
     elif isinstance ( branch , string_types ) and 1 == sum ( key in kwargs for key in func_keywords ) and not 'name' in kwargs :
         ## branch is actually the name of the branch
         for key in func_keywords :
             if key in kwargs : 
                 func = kwargs.pop ( key )
-                return prepare_branches ( tree , func , name = branch , **kwargs )
+                args, nb, kw , keep = prepare_branches ( tree , func , name = branch , **kwargs )
+                return args , nb , kw , keeper + keep 
             
     elif isinstance ( branch , string_types ) and \
          ( 'formula' in kwargs and isinstance ( kwargs['formula'] , string_types ) ) and not 'name' in kwargs :        
         ## branch is actually the name of the branch 
         formula = kwargs.pop ( 'formula' )
-        return prepare_branches ( tree , formula , name = branch , **kwargs )
-
+        
+        args, nb , kw , keep = prepare_branches ( tree , formula , name = branch , **kwargs )
+        return args , nb , kw , keeper+keep  
+    
     else :
         
         table = print_args ( branch , **kwargs ) 
@@ -2676,14 +2680,9 @@ def add_new_branch ( tree , branch , **kwargs ) :
     assert expected , "No expected branches!"
 
     if kw :
-        import ostap.logger.table as T 
-        rows = [ ( 'Argument' , 'Value' ) ]
-        for k , v in loop_items ( kw ) :
-            row = k , str ( v )
-            rows.append ( row )
-            title = 'add_new_branch:: %d unknown arguments' % len ( kwargs ) 
-            table = T.table ( rows , title = 'Unkown arguments' , prefix = '# ' , alignment = 'll' )    
-            logger.warning ( '%s\n%s' % ( title , table ) )
+        title1 = 'add_new_branch: Unknown arguments'
+        title2 = 'Unknown arguments'
+        loggeer.warning  ( '%s:\n%s' % ( title1 , print_args ( prefix = '# ' , title = title2 , **kw ) ) ) 
 
     ## start the actual processing 
     chain = push_2chain ( tree , args ,  progress = progress , report = report )
@@ -2938,14 +2937,9 @@ def add_new_buffer ( tree , name , buffer , **kwargs ) :
     report   = kwargs.pop ( 'report'   , True  ) 
 
     if kwargs :
-        import ostap.logger.table as T 
-        rows = [ ( 'Argument' , 'Value' ) ]
-        for k , v in loop_items ( kw ) :
-            row = k , str ( v )
-            rows.append ( row )
-            title = 'add_new_branch:: %d unknown arguments' % len ( kwargs ) 
-            table = T.table ( rows , title = 'Unkown arguments' , prefix = '# ' , alignment = 'll' )    
-            logger.warning ( '%s\n%s' % ( title , table ) )
+        title1 = 'add_new_branch: Unknown arguments'
+        title2 = 'Unknown arguments'
+        loggeer.warning  ( '%s:\n%s' % ( title1 , print_args ( prefix = '# ' , title = title2 , **kwargs ) ) ) 
 
     ## start the actual processing 
     return buffer_2chain ( tree , name , the_buffer , progress = progress , report = report )

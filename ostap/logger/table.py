@@ -809,7 +809,8 @@ def empty_columns ( table ) :
     ## skip the first row (assumed to be the header)
     for row in table [ 1 : ] :
         for col , item in enumerate ( row ) :
-            if item :  empty_cols [ col ] = False
+            cell = decolorize ( item ).strip() 
+            if cell :  empty_cols [ col ] = False
 
     return tuple ( i for i, col in enumerate ( empty_cols ) if col )  
         

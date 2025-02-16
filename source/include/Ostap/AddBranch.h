@@ -277,7 +277,12 @@ namespace Ostap
       FUNCTION                          fun              ,
       const std::string&                xname            , 
       const Ostap::Utils::ProgressConf& progress = false )       
-    { return add_branch ( tree , bname , xname , std::cref ( fun ), progress ) ; }
+    { return add_branch ( tree  ,
+                          bname ,
+                          xname ,
+                          // std::cref ( fun ),
+                          std::function<double(double)> ( fun ) ,                          
+                          progress ) ; }
     // ========================================================================
     // Add branch from generic 2D function 
     // ========================================================================
@@ -315,7 +320,13 @@ namespace Ostap
       const std::string&                xname            ,  
       const std::string&                yname            ,
       const Ostap::Utils::ProgressConf& progress = false )        
-    { return add_branch ( tree , bname , xname , yname , std::cref ( fun ) , progress ) ; }        
+    { return add_branch ( tree  ,
+                          bname ,
+                          xname ,
+                          yname ,
+                          // std::cref ( fun ) ,
+                          std::function<double(double,double)>  ( fun ) ,
+                          progress ) ; }        
     // ========================================================================
     // Add branch from generic 3D function 
     // ========================================================================
@@ -357,7 +368,14 @@ namespace Ostap
       const std::string&                yname            , 
       const std::string&                zname            , 
       const Ostap::Utils::ProgressConf& progress = false )  
-    { return add_branch ( tree , bname , xname , yname , zname , std::cref ( fun ) , progress ) ; }        
+    { return add_branch ( tree  ,
+                          bname ,
+                          xname ,
+                          yname ,
+                          zname ,
+                          // std::cref ( fun ) ,
+                          std::function<double(double,double,double)>  ( fun ) ,
+                          progress ) ; }        
     // ========================================================================
     /** add new branch to the tree from RooFit function
      *  @param tree input tree 

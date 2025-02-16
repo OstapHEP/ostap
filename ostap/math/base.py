@@ -108,10 +108,13 @@ __all__     = (
     'complex_types'  , ## list of complex & complex-like types
     ##
     'pos_infinity'   , ## positive infinity  
-    'neg_infinity'   , ## negative infinity 
+    'neg_infinity'   , ## negative infinity
+    ##
+    'numpy'          , ## numpy or None 
     ) 
 # =============================================================================
 from   ostap.core.meta_info    import root_info
+from   collections.abc         import Iterable
 import ROOT, cppyy, sys, math 
 # =============================================================================
 # logging 
@@ -119,15 +122,6 @@ import ROOT, cppyy, sys, math
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.base' )
 else                       : logger = getLogger ( __name__          )
-# =============================================================================
-if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Iterable
-else                              : from collections     import Iterable
-# =============================================================================
-if sys.version_info < ( 3, 5 )  :
-    import math
-    if not hasattr ( math , 'inf' ) : math.inf = float('inf' )
-    if not hasattr ( math , 'nan' ) : math.nan = float('nan' )
-
 # =============================================================================
 ## get global C++ namespace
 cpp   = cppyy.gbl
@@ -200,46 +194,12 @@ vInts    = std.vector ( 'int'    )
 vLongs   = std.vector ( 'long'   )
 
 # =============================================================================
-if ( 3 , 2 ) <= sys.version_info :
-    ## local version of <code>isfinite</code>
-    isfinite = math.isfinite 
-else :
-    # =========================================================================
-    ## local version of <code>isfinite</code>
-    def isfinite ( x ) :
-        """Local version of `isfinite`"""        
-        y = float ( x ) 
-        return ( not math.isinf ( y ) ) and ( not math.isnan ( y ) )
+## local version of <code>isfinite</code>
+isfinite = math.isfinite 
     
 # =============================================================================
-if ( 3 , 5 ) <= sys.version_info :
-    # =========================================================================
-    ## local version of <code>isclose</code>
-    isclose = math.isclose 
-else :
-    # =========================================================================
-    ## local version of <code>math.isclose</code>
-    def isclose  ( a , b , rel_tol = 1.e-9 , abs_tol = 0.0  ) :
-        """ Local version of `math.isclose`
-        Determine whether two floating point numbers are close in value.
-        
-        - rel_tol
-        maximum difference for being considered "close", relative to the
-        magnitude of the input values
-        - abs_tol
-        maximum difference for being considered "close", regardless of the
-        magnitude of the input values
-        
-        Return True if a is close in value to b, and False otherwise.
-        
-        For the values to be considered close, the difference between them
-        must be smaller than at least one of the tolerances.
-        
-        -inf, inf and NaN behave similarly to the IEEE 754 Standard.  That
-        is, NaN is not close to anything, even itself.  inf and -inf are
-        only close to themselves.
-        """
-        return abs ( a - b ) <= max ( rel_tol * max ( abs ( a ) , abs ( b ) ) , abs_tol )
+## local version of <code>isclose</code>
+isclose = math.isclose 
             
 # =============================================================================
 ##  get the sign of the number 
@@ -479,7 +439,7 @@ SPD.__str__  = lambda s : str(  ( s.first , s.second ) )
 SPD.__repr__ = SPD.__str__
 SPD.__len__  = lambda s : 2
 def _spd_getitem_ ( s ,  i ) :
-    """Get item from the pair:
+    """ Get item from the pair:
     >>> p = ...
     >>> p[0], p[1]
     """
@@ -646,63 +606,34 @@ def _cmplx_reduce_ ( c ) :
     """ Reduce complex numbers"""
     return _cmplx_factory_ , ( type ( c ) , c.real , c.imag )
     
-# =============================================================================
-if root_info < ( 6 , 22 ) :
-    # =========================================================================
-    def _cmplx_iadd_ ( s , o ) :
-        x = s + o
-        s.real ( x.real ) 
-        s.imag ( x.imag )
-        return s    
-    # =========================================================================
-    def _cmplx_isub_ ( s , o ) :
-        x = s - o
-        s.real ( x.real ) 
-        s.imag ( x.imag )
-        return s
-    # =========================================================================
-    def _cmplx_imul_ ( s , o ) :
-        x = s * o
-        s.real ( x.real ) 
-        s.imag ( x.imag )
-        return s
-    # =========================================================================
-    def _cmplx_idiv_ ( s , o ) :
-        x = s / o
-        s.real ( x.real ) 
-        s.imag ( x.imag )
-        return s
-    # =========================================================================
-else :
-    # =========================================================================
-    def _cmplx_iadd_ ( s , o ) :
-        x = s + o
-        T = type ( s )
-        t = T ( x.real , x.imag )
-        s.__assign__ ( t )         
-        return s
-    # =========================================================================
-    def _cmplx_isub_ ( s , o ) :
-        x = s - o
-        T = type ( s )
-        t = T ( x.real , x.imag )
-        s.__assign__ ( t )         
-        return s
-    # =========================================================================
-    def _cmplx_imul_ ( s , o ) :
-        x = s * o
-        T = type ( s )
-        t = T ( x.real , x.imag )
-        s.__assign__ ( t )         
-        return s
-    # =========================================================================
-    def _cmplx_idiv_ ( s , o ) :
-        x = s / o
-        T = type ( s )
-        t = T ( x.real , x.imag )
-        s.__assign__ ( t ) 
-        return s
-    # =========================================================================
+# =========================================================================
+def _cmplx_iadd_ ( s , o ) :
+    x = s + o
+    T = type ( s )
+    t = T ( x.real , x.imag )
+    s.__assign__ ( t )         
+    return s
+# =========================================================================
+def _cmplx_isub_ ( s , o ) :
+    x = s - o
+    T = type ( s )
+    t = T ( x.real , x.imag )
+    s.__assign__ ( t )         
+    return s
+# =========================================================================
+def _cmplx_imul_ ( s , o ) :
+    x = s * o
+    T = type ( s )
+    t = T ( x.real , x.imag )
+    s.__assign__ ( t )         
+    return s
+# =========================================================================
+def _cmplx_idiv_ ( s , o ) :
+    x = s / o
+    T = type ( s )
+    t = T ( x.real , x.imag )
+    s.__assign__ ( t ) 
+    return s
         
 # =============================================================================
 for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
@@ -956,7 +887,6 @@ else :
         return ( a * b ) // gcd ( a , b )
     # =========================================================================
 
-
 # =============================================================================
 _round = Ostap.Math.round
 # =============================================================================
@@ -975,28 +905,30 @@ def lround ( x ) :
 import ostap.math.reduce  
 import ostap.math.polynomials 
 
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    import numpy
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    numpy = None 
 
-# ========
-if not '__main__' == __name__ :
-    
-    import ostap.io.checker as OC 
-    check = OC.PickleChecker ()
-    
-    for i , t in enumerate ( complex_types ) :
-        print ( 'CHECK/1:' , i , t , t() ) 
-        check.add ( t )
-        o = t ( ) 
-        if check.pickles ( o ) and check.pickles_process ( o ) :
-            check.add ( t ) 
+# ==============================================================================
+if not '__main__' == __name__ : # ==============================================
+    # ==========================================================================
+    from ostap.io.checker import PickleChecker as Checker 
+    checker = Checker ()
+
+    checker.add ( *complex_types )
+    checker.add ( *( std.vector ( t ) for t in complex_types[1:] ) )     
+    checker.add ( vDoubles , vFloats, vInts , vLongs )
+    if numpy : checker.add ( numpy.ndarray ) 
 
 # =============================================================================
 if '__main__' == __name__ :
 
-    import ostap.io.checker as OC 
-    check = OC.PickleChecker ()
 
-
-"""
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
@@ -1009,8 +941,9 @@ if '__main__' == __name__ :
     logger.info ('dir(Ostap.Math) : ')
     _v.sort()
     for v in _v : logger.info ( v )
-"""
 
+    if not numpy : logger.warning ( "Numpy module is not accesible!")
+    
 # =============================================================================
 ##                                                                     The  END
 # =============================================================================
