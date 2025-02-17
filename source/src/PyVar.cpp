@@ -28,7 +28,7 @@
 /** @file 
  *  Implementation file for classes Ostap::Functions::PyVar 
  *  @see  Ostap::Functions::PyVar 
- *  @see  Ostap::Functions::PyVar2 
+ *  @see  Ostap::Functions::PyVarLite 
  *  @date 2018-06-06 
  *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
  */
@@ -50,10 +50,12 @@ Ostap::Functions::PyVar::PyVar
   const char*       title     ,
   const RooArgList& variables ) 
   : RooAbsReal  ( name  , title ) 
-  , m_variables ( "variables", "The actual variables/parameters" , this ) 
+  , m_varlist ( "!varlist", "The actual variables/parameters" , this ) 
 {
   //
-  ::copy_real ( variables , m_variables , "Variable is not RooAbsReal" , "Ostap::Functions::PyVar::PyVar" );
+  ::copy_real ( variables , m_varlist            ,
+                "Variable is not RooAbsReal!"    ,
+                "Ostap::Functions::PyVar::PyVar" ) ;
   //
 }
 // ============================================================================
@@ -62,7 +64,7 @@ Ostap::Functions::PyVar::PyVar
 Ostap::Functions::PyVar::PyVar 
 ( const Ostap::Functions::PyVar& right , const char* newname ) 
   : RooAbsReal  ( right , newname )
-  , m_variables ( "variables"  , this , right.m_variables )
+  , m_varlist ( "!varlist"  , this , right.m_varlist )
 {}
 // ============================================================================
 // virtual destructor
@@ -82,40 +84,40 @@ Ostap::Functions::PyVar::clone ( const char* name ) const
 // ============================================================================
 // get a variable with index 
 // ============================================================================
-double Ostap::Functions::PyVar::variable ( const unsigned short index ) const 
+double Ostap::Functions::PyVar::value ( const unsigned short index ) const 
 {
-  Ostap::Assert ( index < m_variables.getSize() , 
-                  "Invalid index"          , 
-                  "PyVar::variable(index)" , 
-                  Ostap::StatusCode ( 800 ) ) ;
+  Ostap::Assert ( index < m_varlist.getSize()           , 
+                  "Invalid index"                         , 
+                  "PyVar::value(index)"                   ,
+                  INVALID_VARIABLE  , __FILE__ , __LINE__ ) ;
   //
-  const RooAbsArg*  a = m_variables.at ( index ) ;
+  const RooAbsArg*  a = m_varlist.at ( index ) ;
   Ostap::Assert ( a , 
-                  "Invalid element"        , 
-                  "PyVar::variable(index)" , 
-                  Ostap::StatusCode ( 801 ) ) ;
+                  "Invalid element"                       , 
+                  "PyVar::value(index)"                   , 
+                  INVALID_VARIABLE  , __FILE__ , __LINE__ ) ;
   const RooAbsReal* v = static_cast<const RooAbsReal*>( a ) ;
-  Ostap::Assert ( a , 
-                  "Invalid element type"    , 
-                  "PyVar::variable(index)"  , 
-                  Ostap::StatusCode ( 802 ) ) ;
+  Ostap::Assert ( v , 
+                  "Invalid element type"                  , 
+                  "PyVar::value(index)"                   ,
+                  INVALID_VARIABLE  , __FILE__ , __LINE__ ) ;
   return v->getVal() ;  
 }
 // ============================================================================
 // get a variable with name 
 // ============================================================================
-double Ostap::Functions::PyVar::variable ( const char* name  ) const 
+double Ostap::Functions::PyVar::value ( const char* name  ) const 
 {
-  const RooAbsArg*  a = m_variables.find ( name  ) ;
+  const RooAbsArg*  a = m_varlist.find ( name  ) ;
   Ostap::Assert ( a , 
                   "Invalid element"                          , 
-                  "PyVar::variable " + std::string ( name ) ,
+                  "PyVar::value " + std::string ( name )     ,
                   INVALID_VARIABLE , __FILE__ , __LINE__     ) ;
   const RooAbsReal* v = dynamic_cast<const RooAbsReal*>( a ) ;
   Ostap::Assert ( v , 
-                  "Invalid element type" , 
-                  "PyVar::variable " + std::string ( name ) ,
-                  Ostap::StatusCode ( 804 ) ) ;
+                  "Invalid element type"                     , 
+                  "PyVar::value" + std::string ( name )      ,
+                  INVALID_VARIABLE , __FILE__ , __LINE__     ) ;
   return v->getVal() ;  
 }
 // ============================================================================
@@ -133,101 +135,132 @@ Double_t Ostap::Functions::PyVar::evaluate() const
 
 
 // ============================================================================
-// PyVar2
-// ============================================================================
-
-
+// PyVarLite
 // ============================================================================
 // Standard constructor
 // ============================================================================
-Ostap::Functions::PyVar2::PyVar2 
+Ostap::Functions::PyVarLite::PyVarLite 
 ( const char*       name      , 
   const char*       title     ,
   PyObject*         function  , 
   const RooArgList& variables ) 
   : RooAbsReal  ( name  , title ) 
   , m_function  ( function ) 
-  , m_variables ( "variables", "The actual variables/parameters" , this ) 
+  , m_varlist   ( "!varlisy", "The actual variables/parameters" , this ) 
 {
   //
-  ::copy_real ( variables , m_variables , "Variable is not RooAbsReal" , "Ostap::Functions::PyVar2::PyVar2" );
+  Ostap::Assert ( m_function && PyCallable_Check ( m_function ) , 
+                  "Invalid py-function"                         , 
+                  "Ostap::Functionis::PyVarLite"                ,
+                  INVALID_CALLABLE , __FILE__ , __LINE__        ) ;
+  //
+  ::copy_real  ( variables , m_varlist          ,
+                 "Variable is not RooAbsReal"   ,
+                 "Ostap::Functions::PyVarLite"  ) ;
   //
   Py_XINCREF ( m_function ) ;
-  m_arguments = PyTuple_New ( m_variables.getSize() ) ;
 }
 // =============================================================================
 // Copy constructors 
 // =============================================================================
-Ostap::Functions::PyVar2::PyVar2 
-( const Ostap::Functions::PyVar2& right , const char* newname ) 
-  : RooAbsReal  ( right , newname  )
-  , m_function  ( right.m_function )
-  , m_variables ( "variables"  , this , right.m_variables )
+Ostap::Functions::PyVarLite::PyVarLite 
+( const Ostap::Functions::PyVarLite& right , const char* newname ) 
+  : RooAbsReal ( right , newname  )
+  , m_function ( right.m_function )
+  , m_varlist  ( "!varlist"  , this , right.m_varlist )
 {
   Py_XINCREF ( m_function ) ;  
-  m_arguments = PyTuple_New ( m_variables.getSize() ) ;
 }
 // =============================================================================
 // virtual destructor
 // =============================================================================
-Ostap::Functions::PyVar2::~PyVar2() 
+Ostap::Functions::PyVarLite::~PyVarLite() 
 { 
   if ( m_function  ) { Py_DECREF ( m_function  ) ; }  
-  if ( m_arguments ) { Py_DECREF ( m_arguments ) ; } 
 }
 // ============================================================================
 //  Clone method 
 // ============================================================================
-Ostap::Functions::PyVar2* 
-Ostap::Functions::PyVar2::clone ( const char* name ) const 
-{ return new Ostap::Functions::PyVar2 ( *this , name ) ; }
+Ostap::Functions::PyVarLite* 
+Ostap::Functions::PyVarLite::clone ( const char* name ) const 
+{ return new Ostap::Functions::PyVarLite ( *this , name ) ; }
+// ============================================================================
+std::size_t Ostap::Functions::PyVarLite::numrefs   () const
+{ return nullptr == m_function ? 0 : Py_REFCNT ( m_function ) ; }
+// ============================================================================
+/*  get the underlyaing function 
+ *  @attention referenc odut is incremented!
+ */
+// ============================================================================
+const PyObject*
+Ostap::Functions::PyVarLite::function  () const
+{
+  if ( m_function ) { Py_XINCREF ( m_function  ) ; }  
+  return m_function ;
+}
 // ============================================================================
 // the actual evaluation of function
 // ============================================================================
-Double_t Ostap::Functions::PyVar2::evaluate() const 
+Double_t Ostap::Functions::PyVarLite::evaluate() const 
 {
   // 
   if  ( 0 == m_function || !PyCallable_Check( m_function ) ) 
-  {
-    PyErr_Print() ;
-    Ostap::throwException ( "Function is not callable/invalid" ,
-                            "PyVar2::evaluate"                 ,
-                            Ostap::StatusCode(500) )           ;
-  }
+    {
+      PyErr_Print() ;
+      Ostap::throwException ( "Function is not callable/invalid"      ,
+                              "?Ostap::Fuctions::PyVarLite::evaluate" ,
+                              INVALID_CALLABLE , __FILE__ , __LINE__  ) ;
+    }
   //
- Ostap:Assert ( PySequence_Size ( m_arguments ) == m_variables.getSize() , 
-                "Invalid argument/varlist  size!" ,
-                "PyVar2::evaluate"                ,
-                Ostap::StatusCode(500) ) ;
+  PyObject* arguments = PyTuple_New ( m_varlist.getSize() ) ;
+  if ( !arguments )
+    {
+      PyErr_Print () ;
+      Ostap::throwException ( "Can't create PyTuple"                  ,
+                              "?Ostap::Fuctions::PyVarLite::evaluate" ,
+                              ERROR_PYTHON , __FILE__ , __LINE__      ) ;
+      return 0 ;
+    }
   //
   unsigned short index = 0 ;
   //
-  for  ( auto* vv : m_variables )
-  {
-    RooAbsReal* v = static_cast<RooAbsReal*>( vv ) ;
-    //
-    const double value = v->getVal() ;
-    PyObject* pv =  PyFloat_FromDouble ( value ) ;
-    if ( 0 != PyTuple_SetItem ( m_arguments , index , pv ) ) 
+  for  ( auto* av : m_varlist )
     {
-      PyErr_Print () ;
-      Ostap::throwException ( "Can't fill PyTuple"   ,
-                              "PyVar2::evaluate"     ,
-                              Ostap::StatusCode(500) ) ;
+      Ostap::Assert ( nullptr != av                           ,
+                      "Invalid RooAbsArg"                     ,
+                      "?Ostap::Fuctions::PyVarLite::evaluate" ,
+                      INVALID_ABSARG , __FILE__ , __LINE__    ) ;
+      //
+      RooAbsReal* v = static_cast<RooAbsReal*> ( av ) ;
+      Ostap::Assert ( nullptr != v                            ,
+                      "Invalid RooAbsReal"                    ,
+                      "?Ostap::Fuctions::PyVarLite::evaluate" ,
+                      INVALID_ABSREAL , __FILE__ , __LINE__   ) ;
+      //
+      PyObject* pv =  PyFloat_FromDouble ( v->getVal()  ) ;
+      if ( 0 != PyTuple_SetItem ( arguments , index , pv ) ) 
+        {
+          PyErr_Print () ;
+          Py_XDECREF ( arguments ) ; arguments = nullptr ;
+          Ostap::throwException ( "Can't fill PyTuple"                    ,
+                                  "?Ostap::Fuctions::PyVarLite::evaluate" ,
+                                  ERROR_PYTHON , __FILE__ , __LINE__      ) ;
+        }
+      ++index ;
     }
-    ++index ;
-  }
   //
-  PyObject* result = PyObject_CallObject ( m_function , m_arguments ) ;
+  PyObject* result = PyObject_CallObject ( m_function , arguments ) ;
   //
-  return result_to_double ( result , "PyVar2::evaluate" ) ;
- }
+  Py_XDECREF ( arguments ) ;
+  //
+  return result_to_double ( result , "PyVarLite::evaluate" ) ;
+}
 // ============================================================================
 
 
 // ============================================================================
 ClassImp(Ostap::Functions::PyVar)
-ClassImp(Ostap::Functions::PyVar2)
+ClassImp(Ostap::Functions::PyVarLite)
 // ============================================================================
 
 // ============================================================================

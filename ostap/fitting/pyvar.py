@@ -16,317 +16,132 @@
 - For *OLD* PyROOT only
 
 - see Ostap.Functions.PyVar
-- see Ostap.Functions.PyVar2
+- see Ostap.Functions.PyVarLite
 """
 # =============================================================================
 __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
-    'PyVAR2'  , ## simple utility to build "pythonic" RooAbsReal 
+    'PyVAR'     , ## simple utility to build "pythonic" RooAbsReal 
+    'PyVARLite' , ## simple utility to build "pythonic" RooAbsReal 
     ) 
 # =============================================================================
-from   ostap.core.core      import Ostap
-from   ostap.core.meta_info import old_PyROOT 
-import ostap.fitting.roofit 
-import ROOT, math
+from   ostap.core.ostap_types       import sequence_types 
+from   ostap.core.core              import Ostap
+from   ostap.utils.basic            import typename, prntrf  
+import ostap.fitting.roocollections
+import ostap.fitting.variables     
+import ROOT, abc, math
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.pyvar' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
-
-# =============================================================================
-#  only for *OLD* PyROOT 
-if old_PyROOT :
-
-    __all__ = (
-        'PyVAR'  , ## helper object to create  "pythonic" variable 
-        'PyVAR2' , ## helper object to create  "pythonic" variable 
-        )
-    
-    # =========================================================================
-    ## @class PyVAR
-    #  Very specific helper class PyVAR to implement "pythonic" RooAbsReal for RooFit
-    #  - Typical usage:
-    #  @code
-    #  import math
-    #  from ostap.fitting.pyvar import PyVAR
-    #  class MyVar(PyVAR) :
-    #     
-    #     def evaluate ( self ) :
-    # 
-    #       vlist = self.varlist
-    #       x     = float ( vlist[0] )
-    #       x0    = float ( vlist[1] )
-    #       sigma = float ( vlist[2] )
-    #
-    #       dx =  (x-x0)/sigma
-    #       return  math.exp ( 0.5* dx ** 2 ) / math.sqrt ( 2*math.pi*sigma )
-    #
-    #   ## variables 
-    #   x     = RooRealVar( ... )
-    #   m0    = RooRealVar( ... )
-    #   sigma = RooRealVar( ... )
-    #
-    #   ## create the formula 
-    #   myVar = MyVar ( name = 'my_var' , vars = ( x,m0,sigma) )
-    #
-    #   for v in ( 0.1 , 0.2  , 0.3 , 0.4 , ... ) :
-    #      x.setVal ( v )
-    #      print 'function value is %s ', myVar()
-    # @endcode
-    class PyVAR (object) :
-        """Helper base class to implement 'pure-python' RooAbsVar
-        
-        - Typical usage (for *OLD* PyROOT only!):
-        
-        ... import math
-        ... from ostap.fitting.pyvar import PyVAR
-        ... class MyVar(PyVAR) :
-        ...
-        ...     def evaluate ( self ) :
-        ...
-        ...        vlist = self.varlist
-        ...        x     = float ( vlist[0] )
-        ...        x0    = float ( vlist[1] )
-        ...        sigma = float ( vlist[2] )
-        ...
-        ...        dx =  (x-x0)/sigma
-        ...
-        ...        return  math.exp ( 0.5* dx ** 2 ) / math.sqrt ( 2*math.pi*sigma )
-        
-        ... ## variables 
-        ... x     = RooRealVar( ... )
-        ... m0    = RooRealVar( ... )
-        ... sigma = RooRealVar( ... )
-        
-        ... ## create the formula 
-        ... myVar = MyVar ( name = 'my_var' , vars = ( x,m0,sigma) )
-        
-        ... for v in ( 0.1 , 0.2  , 0.3 , 0.4 , ... ) :
-        ...     x.setVal ( v )
-        ...     print 'function value is %s ', myVar()
-        
-        - see Ostap::Functions::PyVar 
-        
-        """
-        def __init__ ( self             ,
-                       name             ,   ## the name 
-                       vars      = []   ,   ## all variables 
-                       title     = ''   ,   ## the title 
-                       pyvar     = None ) : ## helper 
-            
-            assert vars or ( pyvar and isinstance ( pyvar , Ostap.Functions.PyVar ) ),\
-                   "Invaild configuration of PyVAR: %s/%s" % ( vars , pypdf ) 
-            
-            if not pyvar :
-                
-                ## convert to RooArgList if needed 
-                self.__pyvars  = vars        
-                if not title : title = "PyVAR(%s)"  % name
-                
-                if not isinstance ( vars , ROOT.RooArgList ) :
-                    vv = ROOT.RooArgList ()
-                    for v in vars :
-                        if not v in vv :  vv.add ( v )
-                    vars = vv 
-                self.__pyvars = vars
-                pyvar = Ostap.Functions.PyVar ( self , name , title , self.__pyvars  )
-                ROOT.SetOwnership ( pyvar , False )
-                
-            ## finally set the variable!
-            self.__var   = pyvar
-            
-        @property
-        def var     ( self ) :
-            """'var': the actual C++ RooAbsReal object"""
-            return self.__var
-        
-        @property
-        def name    ( self ) :
-            """'name' : the name of the variable"""
-            return self.var.GetName()
-        
-        @property
-        def title   ( self ) :
-            """'title' : the title of the variable"""
-            return self.var.GetTitle()
-    
-        @property
-        def varlist ( self ) :
-            """`variables' : get all variables (as RooArgList)  from Ostap::Functions::PyVar
-            """
-            return self.var.varlist ()
-    
-        # =====================================================================
-        ## get a value of certain variable
-        #  @code
-        #  pdf = ...
-        #  a = pdf.variable ( 'a' )
-        #  b = pdf.variable (  2  )
-        #  @endcode 
-        def variable ( self , tag ) :
-            """Get a value of certain variale
-            >>> pdf = ...
-            >>> a = pdf.variable ( 'a' )
-            >>> b = pdf.variable (  2  )
-            """
-            return self.pdf.variable ( tag ) 
-        
-        ## clone the object (needed by C++ partner class)
-        def clone ( self , **kwargs ) :
-            """Clone the object
-            -  attention: existing PDF is 'copied', unless specified via kwargs (by C++)
-            """
-            conf =  {
-                'name'    : self.name    ,
-                'title'   : self.title   , 
-                'vars'    : self.varlist ,
-                'pyvar'   : None
-                }
-            
-            conf.update ( kwargs )
-            
-            KLASS = self.__class__
-            return KLASS ( **conf )
-        
-        # =====================================================================
-        ## the method  that MUST be implemented
-        #  @code
-        #  var = ...
-        #  var.evaluate() 
-        #  @endcode
-        def evaluate ( self ) :
-            """The method  that MUST be implemented
-            >>> var = ...
-            >>> var.evaluate() 
-            """
-            raise NotImplementedError("PyVAR: 'evaluate' is not implemented!")
-        
-        # =====================================================================
-        ## get the value of the function
-        #  @code
-        #  var = ...
-        #  print var() 
-        #  @endcode
-        def __call__  ( self , local = True ) :
-            """Get the value of the function
-            >>> var = ...
-            >>> var() 
-            """
-            return self.evaluate() if local else self.getVal () 
-
-        # =====================================================================
-        ## get the value of the RooAbsReal
-        #  @code
-        #  var = ...
-        #  var.getVal()
-        #  @endcode
-        def getVal    ( self ) :
-            """Get the value of RootAbsReal
-            >>> var = ...
-            >>> var.getVal()
-            """
-            return self.var.getVal() 
-        
-
-
-# =============================================================================
-## @class PyVAR2
-#  Light version of PyVAR
-class PyVAR2 (object) :
-    """Helper base class to implement 'pure-python' RooAbsVar
-    
-    - Typical usage:
-    
-    ... import math
-    ... from ostap.fitting.pyvar import PyVAR
-    ... class MyVar(PyVAR) :
-    ...
-    ...     def evaluate ( self ) :
-    ...
-    ...        vlist = self.varlist
-    ...        x     = float ( vlist[0] )
-    ...        x0    = float ( vlist[1] )
-    ...        sigma = float ( vlist[2] )
-    ...
-    ...        dx =  (x-x0)/sigma
-    ...
-    ...        return  math.exp ( 0.5* dx ** 2 ) / math.sqrt ( 2*math.pi*sigma )
-    
-    ... ## variables 
-    ... x     = RooRealVar( ... )
-    ... m0    = RooRealVar( ... )
-    ... sigma = RooRealVar( ... )
-    
-    ... ## create the formula 
-    ... myVar = MyVar ( name = 'my_var' , vars = ( x,m0,sigma) )
-    
-    ... for v in ( 0.1 , 0.2  , 0.3 , 0.4 , ... ) :
-    ...     x.setVal ( v )
-    ...     print 'function value is %s ', myVar()
-    
-    - see Ostap::Functions::PyVar 
-    
+# @class PyPDF
+# Very simple "Pythonic" PDF
+# One must define:
+#  - <code>clone</code> method 
+#  - proper constructor that takes keyword <code>clone</code>
+#  - <code>evaluate</code> method 
+#  - method <code>__reduce__</code> for serialization (if needed)
+# 
+# Twomore methods arte needed if one needs analystical integrals :
+#  - `get_analytical_integral`
+#  - `analytical_integral`
+class PyVAR(Ostap.Functions.PyVar) :
+    """ Very simple `pythonic' PDF 
+    One must define: 
+    - `clone` method 
+    - proper constructor that takes keyword <code>clone</code>
+    - `evaluate` method 
+    - method `reduce` for serialization (if needed) 
     """
-    def __init__ ( self          ,
-                   name          ,   ## the name
-                   function      ,   ## the function 
-                   vars          ,   ## all variables 
-                   title  = ''   ):  ## the title 
+    def __init__ ( self , name , title = '' , variables = () , clone = None ) :
+        """ Constructor that accepts `clone` argument 
+        """
+        assert not clone or isinstance ( clone , PyVAR), \
+            "PyVAR: invalid `clone` type:%s " % typename ( clone ) 
         
-        ## function must be valid function! 
-        assert function and callable ( function ) , "`function' is not callable!"
+        assert clone or ( variables                                and \
+                          isinstance ( variables, sequence_types ) and \
+                          all ( isinstance ( v , ROOT.RooAbsReal ) for v in variables ) ) , \
+                          "PyPDF: invalid `variables`: %s/%s" %  ( typename ( variables ) , str ( variables ) )      
+        if clone :
+            super ( PyVAR , self ) .__init__ ( clone , name if name else clone.name )            
+        else     :
+            vv = ROOT.RooArgList ( v for v in variables ) 
+            super ( PyVAR, self ) .__init__ ( name , title if title else 'PyPDf(%s)' % name , vv )
+
+        self._keep = variables, 
+        if clone : self._keep += clone._keep
         
-        if not title : title = "PyVAR2(%s)"  % name
-        
-        self.__pyfunction = function
-        self.__argvars    = vars
-        
-        self.__argvars    = vars 
-        if not isinstance ( vars , ROOT.RooArgList )  :
-            self.__pyvars = vars 
-            vv = ROOT.RooArgList()
-            for v in vars : vv.add ( v ) 
-            vars = vv
-            
-        self.__vars  = vars
-        
-        ## create the actual RooAbsReal
-        pyvar        = Ostap.Functions.PyVar2 ( name              ,
-                                                title             ,
-                                                self.__pyfunction ,
-                                                self.__vars       )
-        ROOT.SetOwnership ( pyvar , False )
-        
-        ## finally set the variable!
-        self.__var   = pyvar
-        
-    @property
-    def var       ( self ) :
-        """'var': the actual C++ RooAbsReal object"""
-        return self.__var
-    
-    @property
-    def name      ( self ) :
-        """'name' : the name of the varibale"""
-        return self.var.GetName()
-    
-    @property
-    def title     ( self ) :
-        """'title' : the title of the variable"""
-        return self.var.GetTitle()
-    
+    @abc.abstractmethod 
+    def clone ( self  , newname = '' ) :
+        raise NotImplementedError("PyPDF.clone must be implemented")
+
+    @abc.abstractmethod
+    def evaluate ( self ) :
+        raise NotImplementedError("PyPDF.evaluate must be implemented")
+
     @property
     def variables ( self ) :
-        """'variables' : list(ROOT.RooArgList) of all variables"""
-        return self.__vars
+        """`variables` : get list of variables (same as `varlist()` 
+        - see `Ostap.Models.PyPdf.varlist` 
+        """
+        return self.varlist()
+
+
+# =============================================================================
+## Very simple `ready-to-use' pythonic PDF
+#  @see Ostap.Functions.PyVarLite 
+def PyVARLite ( name            ,
+                function        ,
+                variables       ,
+                title     = ''  ) : 
+    """ Very simple `ready-to-use' pythonic variable
+    - see `Ostap.Functions.PyVarLite` 
+    """
+
+    assert callable ( function ) , \
+        "PyVARLite: invalid `function`: %s/%s" %  ( typename ( function ) , prntrf ( function ) )
     
-    @property
-    def vars      ( self ) :
-        """'vars' : tuple of all variables"""
-        return  tuple ( [ i for i in self.__vars ] ) 
+    assert variables and isinstance ( variables, sequence_types )   and \
+        all ( isinstance ( v , ROOT.RooAbsReal ) for v in variables ) , \
+        "PyVARLite: invalid `variables`: %s/%s" %  ( typename ( variables ) , str ( variables ) ) 
+    
+    title = title if title else 'Python PDF %s with %s/%s' % ( name                  ,
+                                                               typename ( function ) ,
+                                                               prntrf   ( function ) )
+    vv = ROOT.RooArgList ( v for v in variables )
+    return Ostap.Functions.PyVarLite ( name , title , function , vv )
+
+# =============================================================================
+## printout of PyVarLite object 
+def _pvarl_str_    ( self ) :
+    """ printout of PyVarLite object """
+    return '%s(%s,%s,%s/%s,#%d)' % ( typename ( self ) ,
+                                     self.name  ,
+                                     self.title ,
+                                     typename ( self.function () ) ,
+                                     prntrf   ( self.function () ) ,
+                                     self.numrefs() )
+
+Ostap.Functions.PyVarLite.__str__   = _pvarl_str_
+Ostap.Functions.PyVarLite.__repr__  = _pvarl_str_
+
+## The factory to de-serialize the PyVarLine onjects 
+def pvarl_factory ( config ) : return PyVARLite ( **config )
+## Reduce/serialize  PyPdfLite objects 
+def _pvarl_reduce_ ( self ) :
+    """ Reduce/serialize  PyPdfLite objects """
+    config = { 'name'      : self.name       ,
+               'function'  : self.function() ,
+               'variables' : self.varlist()  , 
+               'title'     : self.title      } 
+    return  pvarl_factory , ( config , )
+
+Ostap.Functions.PyVarLite.__reduce__  = _pvarl_reduce_
     
 # =============================================================================
 if '__main__' == __name__ :

@@ -157,29 +157,6 @@ namespace Ostap
         PyObject*         function  , 
         const RooArgList& variables ) ;
       // =======================================================================
-      /** Standard constructor
-       *  @param name      the name of PDF 
-       *  @param function  callable function
-       *  @param variables all variables 
-       *  @param title     the title  of PDF 
-       */
-      PyPdfLite
-      ( const std::string& name       , 
-        PyObject*          function   ,
-        const RooArgList&  variables  ,
-        const std::string& title = "" ) ;
-      // =======================================================================
-      /** Standard constructor
-       *  @param name      the name of PDF 
-       *  @param function  callable function
-       *  @param variables all variables 
-       *  @param title     the title  of PDF 
-       */
-      PyPdfLite
-      ( const std::string& name       , 
-        const RooArgList&  variables  ,
-        PyObject*          function   ,
-        const std::string& title = "" );
       /// copy  constructor 
       PyPdfLite
       ( const PyPdfLite& right          ,
@@ -198,7 +175,9 @@ namespace Ostap
       // ======================================================================
       ///  get all variables in a form of the list
       const RooArgList&   varlist   () const { return m_varlist  ; }
-      ///  get the underlyaing function
+      /** get the underlyaing function 
+       *  @attention referenc odut is incremented!
+       */
       const PyObject*     function  () const ; 
       // ======================================================================
       std::size_t         numrefs   () const ;  
@@ -211,7 +190,7 @@ namespace Ostap
     private:
       // ======================================================================
       // python partner
-      PyObject*    m_function  { nullptr } ; // python partner
+      PyObject*    m_function  { nullptr } ; //! python partner
       /// all variables as list of variables 
       RooListProxy m_varlist   {} ; // all variables as list of variables 
       // ======================================================================  

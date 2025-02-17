@@ -30,7 +30,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      ClassDefOverride ( Ostap::Functions::PyVar , 2 ) ;
+      ClassDefOverride ( Ostap::Functions::PyVar , 5 ) ;
       // ======================================================================
     public: 
       // ======================================================================
@@ -93,34 +93,31 @@ namespace Ostap
     public:
       // ======================================================================
       /// get a variable with index 
-      double variable ( const unsigned short index ) const ;
+      double value ( const unsigned short index ) const ;
       /// get a variable with name 
-      double variable ( const          char*  name ) const ;
+      double value ( const          char*  name ) const ;
       // =====================================================================
       /// get all   parameters in a form of list
-      const RooArgList& variables () const { return m_variables    ; }
-      const RooArgList& params    () const { return   variables () ; }
-      /// get all   parameters in a form of list
-      const RooArgList& varlist   () const { return   variables () ; }
+      const RooArgList& varlist   () const { return m_varlist ; }
       // ======================================================================
     private:
       // ======================================================================
       /// the list of variables/parameters 
-      RooListProxy m_variables {} ; // the list of variables/parameters 
+      RooListProxy m_varlist {} ; // the list of variables/parameters 
       // ======================================================================      
     };
     // ========================================================================
-    /** @class PyVar2 Ostap/PyVar.h
+    /** @class PyVarLite Ostap/PyVar.h
      *  ``Light'' version of Ostap::Functions::PyVar
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date   2019-04-28
      */
-    class PyVar2 : public RooAbsReal
+    class PyVarLite : public RooAbsReal
     {
       // ======================================================================
     public:
       // ======================================================================
-      ClassDefOverride ( Ostap::Functions::PyVar2 , 1 ) ;
+      ClassDefOverride ( Ostap::Functions::PyVarLite , 5 ) ;
       // ======================================================================
     public: 
       // ======================================================================
@@ -130,56 +127,37 @@ namespace Ostap
        *  @param function  python object 
        *  @param variables the list of variables 
        */
-      PyVar2
+      PyVarLite
       ( const char*       name      , 
         const char*       title     ,
         PyObject*         function  ,
         const RooArgList& variables ) ;
       // ========================================================================
-      /** Standard constructor
-       *  @param name      the object name 
-       *  @param function  python object 
-       *  @param variables the list of variables 
-       *  @param title     the object title
-       */
-      PyVar2
-      ( const std::string& name       , 
-        PyObject*          function   , 
-        const RooArgList&  variables  , 
-        const std::string& title = "" )
-        : PyVar2 ( name.c_str() , 
-                   title.empty() ? name.c_str() : title.c_str() , 
-                   function     , 
-                   variables    ) 
-      {}
-      // ============================================================================
-      /** Standard constructor
-       *  @param name      the object name 
-       *  @param variables the list of variables 
-       *  @param function  python object 
-       *  @param title     the object title
-       */
-      PyVar2
-      ( const std::string& name       , 
-        const RooArgList&  variables  , 
-        PyObject*          function   , 
-        const std::string& title = "" )
-        : PyVar2 ( name , function , variables , title ) 
-      {}
       /// Copy constructor
-      PyVar2 ( const PyVar2& right , const char* name = 0 ) ;
+      PyVarLite ( const PyVarLite& right , const char* name = 0 ) ;
       /// virtual destructor
-      virtual ~PyVar2() ;
+      virtual ~PyVarLite() ;
       // ======================================================================
     public:
       // ======================================================================
       // default constructor (needed for serialization)
-      PyVar2() {} // default constructor (needed for serialization)
+      PyVarLite() {} // default constructor (needed for serialization)
       // ======================================================================
-     public:
+    public:
       // ======================================================================
       /// clone method 
-      PyVar2* clone ( const char* name = 0 ) const override ;
+      PyVarLite* clone ( const char* name = 0 ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      ///  get all variables in a form of the list
+      const RooArgList&   varlist   () const { return m_varlist  ; }
+      /** get the underlyaing function 
+       *  @attention referenc odut is incremented!
+       */
+      const PyObject*     function  () const ; 
+      // ======================================================================
+      std::size_t         numrefs   () const ;  
       // ======================================================================
     public:
       // ======================================================================
@@ -189,10 +167,9 @@ namespace Ostap
     private:
       // ======================================================================
       /// python's  function
-      PyObject*    m_function  { nullptr } ; // python's  "self"
-      PyObject*    m_arguments { nullptr } ; // arguments cache 
+      PyObject*    m_function  { nullptr } ; //! python partner 
       /// the list of variables/parameters 
-      RooListProxy m_variables {} ; // the list of variables/parameters 
+      RooListProxy m_varlist {} ; // the list of variables/parameters 
       // ======================================================================      
     };
     // ========================================================================
