@@ -84,8 +84,7 @@ class MyGauss1(PyPDF) :
 
     ## mandatory clone method 
     def clone ( self , newname = '' ) :
-        newname = newname if newname else self.name 
-        cloned = MyGauss1 ( newname , self.title , None , None , None , clone = self )
+        cloned = MyGauss1 ( newname if newname else self.name , self.title , None , None , None , clone = self )
         ROOT.SetOwnership ( cloned  , False )
         return cloned
 
@@ -133,7 +132,7 @@ class MyGauss2(PyPDF) :
     ## Declare the analystical integrtaio over x 
     def get_analytical_integral ( self ) :
         """ Declare the analystical integrtaio over x"""
-        x  = self.variables[0]        
+        x  = self.variables [ 0 ] 
         return 1 if self.matchArg ( x ) else 0 
 
     ## Perform analytical integration over x 

@@ -139,23 +139,23 @@ class PyPDF(Ostap.Models.PyPdf) :
     def __init__ ( self , name , title = '' , variables = () , clone = None ) :
         """ Constructor that accepts `clone` argument 
         """
-        
-        self._keep = name , title , variables
 
         assert not clone or isinstance ( clone , PyPDF ), \
-            "PyPdf: invalid `clone` type:%s" % typename ( clone ) 
+            "PyPDF: invalid `clone` type:%s " % typename ( clone ) 
         
         assert clone or ( variables                                and \
-                          isinstance ( variables ,sequence_types ) and \
+                          isinstance ( variables, sequence_types ) and \
                           all ( isinstance ( v , ROOT.RooAbsReal ) for v in variables ) ) , \
-                          "PyPdf: invalid `variables`" 
-        
-        if clone :
-            super ( PyPDF , self ) .__init__ ( clone , name )            
-        else     :
-            vv = ROOT.RooArgList(  v for v in variables ) 
-            super ( PyPDF, self ) .__init__ ( name , title , vv )
+                          "PyPDF: invalid `variables`: %s/%s" %  ( typename ( variables ) , str ( variables ) ) 
 
+                
+        if clone :
+            super ( PyPDF , self ) .__init__ ( clone , name if name else clone.name )            
+        else     :
+            vv = ROOT.RooArgList ( v for v in variables ) 
+            super ( PyPDF, self ) .__init__ ( name , title if title else 'PyPDf(%s)' % name , vv )
+
+        self._keep = variables, 
         if clone : self._keep += clone._keep
         
     ## redefine 
@@ -165,16 +165,18 @@ class PyPDF(Ostap.Models.PyPdf) :
     def matchArg  ( self ,  var  ) : return self.match_arg  ( var  ) 
     
     @abc.abstractmethod 
-    def clone ( self  , newname ) :
-        raise NotImplementedError("PyPdf.clone must be implemented")
+    def clone ( self  , newname = '' ) :
+        raise NotImplementedError("PyPDF.clone must be implemented")
 
     @abc.abstractmethod
     def evaluate ( self ) :
-        raise NotImplementedError("PyPdf.evaluate must be implemented")
+        raise NotImplementedError("PyPDF.evaluate must be implemented")
 
     @property
     def variables ( self ) :
-        """`variables` : get list of varibales (same as `varlist()` """
+        """`variables` : get list of variables (same as `varlist()` 
+        - see `Ostap.Models.PyPdf.varlist` 
+        """
         return self.varlist()
     
 old_PyROOT = False 
