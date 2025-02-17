@@ -167,9 +167,10 @@ def _no_reduce_ ( t ) :
     logger.always ( "I AM REDUCE %s" % type ( t )  )
     raise pickle.PicklingError ( 'Class %%s is nonpickleable!' % typename ( t ) )
 
-notpickleable_types = ( Ostap.Functions.Func1D , 
-                        Ostap.Functions.Func2D ,
-                        Ostap.Functions.Func3D )
+notpickleable_types = ( Ostap.Functions.FunTree ,
+                        Ostap.Functions.Func1D  , 
+                        Ostap.Functions.Func2D  ,
+                        Ostap.Functions.Func3D  )
 
 for k in  notpickleable_types :
     k.__reduce__ = _no_reduce_

@@ -32,6 +32,7 @@
  */
 // ============================================================================
 ClassImp(Ostap::Functions::FuncFormula)
+ClassImp(Ostap::Functions::FuncTree)
 ClassImp(Ostap::Functions::Func1D)
 ClassImp(Ostap::Functions::Func2D)
 ClassImp(Ostap::Functions::Func3D)
@@ -41,6 +42,7 @@ ClassImp(Ostap::Functions::FuncTH3)
 ClassImp(Ostap::Functions::Expression)
 ClassImp(Ostap::Functions::RooTreeFun)
 // ============================================================================
+Ostap::Functions::FunTree::~FunTree(){};
 Ostap::Functions::Func1D::~Func1D(){};
 Ostap::Functions::Func2D::~Func2D(){};
 Ostap::Functions::Func3D::~Func3D(){};
@@ -263,6 +265,61 @@ double Ostap::Functions::FuncRooFormula::operator() ( const RooAbsData* data ) c
   return m_formula->getVal() ;
 }
 // ============================================================================
+
+
+// ============================================================================
+Ostap::Functions::FunTree::FunTree
+( std::function<double(const TTree*)> fun  ,
+  const TTree*                        tree )
+  : TObject ()
+  , m_fun   ( fun  )
+  , m_tree  ( tree )
+{}
+// ============================================================================
+Ostap::Functions::FunTree::FunTree
+( const Ostap::Functions::FunTree& right )
+  : TObject ( right        )
+  , m_fun   ( right.m_fun  )
+  , m_tree  ( right.m_tree )
+{}
+// ============================================================================
+// clone :
+// ===========================================================================
+Ostap::Functions::FunTree* 
+Ostap::Functions::FunTree::clone ( const char* /* newname */ ) const
+{ return new FunTree ( *this ) ; }
+// ===========================================================================
+Ostap::Functions::FunTree* 
+Ostap::Functions::FunTree::Clone ( const char* /* newname */ ) const
+{ return new FunTree ( *this ) ; }
+// ===========================================================================
+// notify 
+// ============================================================================
+Bool_t Ostap::Functions::FunTree::Notify ()  { return true ; }
+// ============================================================================
+//  evaluate the function for  TTree
+// ============================================================================
+double Ostap::Functions::FunTree::operator() ( const TTree* tree ) const
+{
+  //
+  if ( nullptr != tree ) 
+    {
+      const TChain* chain = dynamic_cast<const TChain*>( tree ) ;
+      if ( chain ) { tree = chain->GetTree() ; }
+    }
+  //
+  // the tree 
+  if ( tree != m_tree ) {  m_tree = tree  ; }
+  //
+  Ostap::Assert ( nullptr != m_tree , 
+                  "Invalid Tree"    , 
+                  "Ostap::Function::FunTree" ) ;
+  //
+  return m_fun ( m_tree ) ;
+}
+// ============================================================================
+
+
 Ostap::Functions::Func1D::Func1D
 ( std::function<double(double)> fun  , 
   const std::string&            x    ,

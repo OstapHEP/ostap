@@ -106,6 +106,72 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class FunTree
+     *  Generic 1D-function 
+     */
+    class FunTree : public TObject , public Ostap::IFuncTree 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Functions::FunTree , 1 ) ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      template <class FUNCTION>
+      FunTree 
+      ( FUNCTION     fun             , 
+        const TTree* tree =  nullptr ) 
+        : TObject () 
+        , m_fun   ( fun  )
+        , m_tree  { tree }
+      {}     
+      // ======================================================================
+      FunTree
+      ( std::function<double(const TTree*)> fun            , 
+        const TTree*                        tree = nullptr ) ;
+      // ======================================================================
+      /// copy constructor
+      FunTree ( const FunTree& right ) ;
+      // ======================================================================
+      /// default constructor, needed for serialization 
+      FunTree () = default ;
+      // ======================================================================
+      /// virtual destructor 
+      virtual ~FunTree () ;
+      // ======================================================================
+    public: // Clone&clone 
+      // ======================================================================
+      /// IFuncTree::clone 
+      FunTree* clone ( const char* newname = "" ) const override ;
+      /// TObject::Clone 
+      FunTree* Clone ( const char* newname = "" ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      template <class FUNCTION>
+      static inline FunTree 
+      create 
+      ( FUNCTION     fun             , 
+        const TTree* tree =  nullptr )  { return FunTree ( fun , tree ) ; } 
+      // ======================================================================
+    public:
+      // ======================================================================
+      ///  evaluate the function for TTree
+      double operator () ( const TTree* tree ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      Bool_t Notify   () override ; 
+      // ======================================================================
+    protected :
+      // ======================================================================
+      /// the function  itself 
+      std::function<double(const TTree*)> m_fun {} ; //! the function 
+      /// the tree itself 
+      mutable const TTree*                m_tree { nullptr } ; //!
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class Func1D 
      *  Generic 1D-function 
      */
