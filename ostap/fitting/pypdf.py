@@ -110,7 +110,8 @@ def PyPDFLite ( name            ,
     title = title if title else 'Python PDF %s with %s/%s' % ( name                  ,
                                                                typename ( function ) ,
                                                             prntrf   ( function ) )
-    vv = ROOT.RooArgList ( v for v in variables )
+    vv = ROOT.RooArgList () ;
+    for v in variables : vv.add ( v )    
     return Ostap.Models.PyPdfLite ( name , title , function , vv )
 
 # =============================================================================

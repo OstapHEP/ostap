@@ -114,7 +114,8 @@ def PyVARLite ( name            ,
     title = title if title else 'Python PDF %s with %s/%s' % ( name                  ,
                                                                typename ( function ) ,
                                                                prntrf   ( function ) )
-    vv = ROOT.RooArgList ( v for v in variables )
+    vv = ROOT.RooArgList () ;
+    for v in variables : vv.add ( v )    
     return Ostap.Functions.PyVarLite ( name , title , function , vv )
 
 # =============================================================================
