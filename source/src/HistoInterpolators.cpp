@@ -13,6 +13,7 @@
 // ============================================================================
 #include "TH1.h"
 #include "TAxis.h"
+#include "TRandom.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -1137,7 +1138,199 @@ double Ostap::Math::Histo3D::integrateZ
 // ============================================================================
 
 
+// ============================================================================
+// Random numbers 
+// ============================================================================
+/*  get a random number from this distribution
+ *  - if maximum value is non-positive: generate uniform distribution
+ *  - negative content is interpreted as zero
+ *  @param rng  random generator
+ *  @see TH1::GetRandom 
+ *  @attention It can be rather inefficieint (e.g. for historgams 
+ *  with large  number of empty vins 
+ */
+// ============================================================================
+double
+Ostap::Math::Histo1D::random ( TRandom* rng ) const
+{
+  double result = 0 ;
+  random ( result , rng ) ;
+  return result ;
+}
+// ============================================================================
+// get random number
+// ============================================================================
+std::size_t Ostap::Math::Histo1D::random
+( double&  result ,
+  TRandom* rng    ) const 
+{
+  const double vmax   = m_h.GetBinContent ( m_h.GetMaximumBin() ) ;
+  const double r      = rng ? rng->Rndm() : gRandom->Rndm();
+  //
+  const double xmin   = m_h.GetXaxis()->GetXmin()        ;
+  const double xdelta = m_h.GetXaxis()->GetXmax() - xmin ;
+  //
+  double x = xmin + xdelta * r ;
+  //
+  std::size_t num = 1 ;
+  // if empty or everything non-positive: uniform distribution 
+  if ( ( vmax <= 0 ) || s_zero ( vmax ) )
+    {
+      result = x ;
+      return num ;                              // RETURN
+    }
+  //
+  double v = (*this) ( x ) ;
+  double c = vmax * ( rng ? rng->Rndm() : gRandom->Rndm() ) ;
+  num += 1 ; 
+  while ( v < c )
+    {
+      x    = xmin + xdelta * ( rng ? rng->Rndm() : gRandom->Rndm() ) ; 
+      v    = (*this) ( x ) ;
+      c    = vmax          * ( rng ? rng->Rndm() : gRandom->Rndm() ) ;
+      num += 2 ;
+    }
+  //
+  result =  x ;
+  return num ;
+}
 
+// ============================================================================
+/* get a random number from this distribution
+ *  - if maximum value is non-positive: generate uniform distribution
+ *  - negative content is interpreted as zero
+ *  @param rng  random generator
+ *  @see TH1::GetRandom 
+ *  @attention It can be rather inefficieint (e.g. for historgams 
+ *  with large  number of empty vins 
+ */
+// ============================================================================
+std::array<double,2>
+Ostap::Math::Histo2D::random ( TRandom* rng ) const
+{
+  std::array<double,2> result { 0 , 0 } ;
+  random ( result [ 0 ] , result [ 1 ] , rng ) ;
+  return result ;
+}
+// ============================================================================
+// get random number
+// ============================================================================
+std::size_t Ostap::Math::Histo2D::random
+( double&  xr  ,
+  double&  yr  ,
+  TRandom* rng ) const 
+{ 
+  const double vmax   = m_h.GetBinContent ( m_h.GetMaximumBin() ) ;
+  const double rx     = rng ? rng->Rndm() : gRandom->Rndm();
+  const double ry     = rng ? rng->Rndm() : gRandom->Rndm();
+  //
+  const double xmin   = m_h.GetXaxis()->GetXmin()        ;
+  const double xdelta = m_h.GetXaxis()->GetXmax() - xmin ;
+  //
+  const double ymin   = m_h.GetYaxis()->GetXmin()        ;
+  const double ydelta = m_h.GetYaxis()->GetXmax() - xmin ;
+  //
+  double x = xmin + xdelta * rx ;
+  double y = ymin + ydelta * ry ;
+  //
+  std::size_t num = 2 ;
+  // if empty or everything non-positive: uniform distribution 
+  if ( ( vmax <= 0 ) || s_zero ( vmax ) )
+    {
+      xr = x ;
+      yr = y ;
+      return num ;
+    }
+  //
+  double v = (*this) ( x , y ) ;
+  double c = vmax * ( rng ? rng->Rndm() : gRandom->Rndm() ) ;
+  num += 1 ;
+  while ( v < c )
+    {
+      x = xmin + xdelta * ( rng ? rng->Rndm() : gRandom->Rndm() ) ; 
+      y = ymin + ydelta * ( rng ? rng->Rndm() : gRandom->Rndm() ) ; 
+      v = (*this) ( x , y ) ;
+      c = vmax          * ( rng ? rng->Rndm() : gRandom->Rndm() ) ;
+      num += 3 ;
+    }
+  //
+  xr = x ;
+  yr = y ;
+  return num ;
+}
+// ============================================================================
+/* get a random number from this distribution
+ *  - if maximum value is non-positive: generate uniform distribution
+ *  - negative content is interpreted as zero
+ *  @param rng  random generator
+ *  @see TH1::GetRandom 
+ *  @attention It can be rather inefficieint (e.g. for historgams 
+ *  with large  number of empty vins 
+ */
+// ============================================================================
+std::array<double,3>
+Ostap::Math::Histo3D::random ( TRandom* rng ) const
+{
+  std::array<double,3> result { 0 , 0 , 0 } ;
+  random ( result [ 0 ] , result [ 1 ] , result [ 2 ] , rng ) ;
+  return result ;
+}
+// ============================================================================
+// get random number
+// ============================================================================
+std::size_t Ostap::Math::Histo3D::random
+( double&  xr  ,
+  double&  yr  ,
+  double&  zr  ,
+  TRandom* rng ) const 
+{ 
+  //
+  const double vmax   = m_h.GetBinContent ( m_h.GetMaximumBin() ) ;
+  const double rx     = rng ? rng->Rndm() : gRandom->Rndm();
+  const double ry     = rng ? rng->Rndm() : gRandom->Rndm();
+  const double rz     = rng ? rng->Rndm() : gRandom->Rndm();
+  //
+  const double xmin   = m_h.GetXaxis()->GetXmin()        ;
+  const double xdelta = m_h.GetXaxis()->GetXmax() - xmin ;
+  //
+  const double ymin   = m_h.GetYaxis()->GetXmin()        ;
+  const double ydelta = m_h.GetYaxis()->GetXmax() - ymin ;
+  //
+  const double zmin   = m_h.GetZaxis()->GetXmin()        ;
+  const double zdelta = m_h.GetZaxis()->GetXmax() - zmin ;
+  //
+  double x  = xmin + xdelta * rx ;
+  double y  = ymin + ydelta * ry ;
+  double z  = zmin + zdelta * rz ;
+  //
+  std::size_t num = 3 ;
+  // if empty or everything non-positive: uniform distribution 
+  if ( ( vmax <= 0 ) || s_zero ( vmax ) )
+    {
+      xr = x ;
+      yr = y ;
+      zr = z ;
+      return num ;
+    }
+  //
+  double v = (*this) ( x , y , z ) ;
+  double c = vmax * ( rng ? rng->Rndm() : gRandom->Rndm() ) ;
+  num     += 1 ;
+  while ( v < c )
+    {
+      x    = xmin + xdelta * ( rng ? rng->Rndm() : gRandom->Rndm() ) ; 
+      y    = ymin + ydelta * ( rng ? rng->Rndm() : gRandom->Rndm() ) ; 
+      z    = zmin + zdelta * ( rng ? rng->Rndm() : gRandom->Rndm() ) ; 
+      v    = (*this) ( x , y , z ) ;
+      c    = vmax          * ( rng ? rng->Rndm() : gRandom->Rndm() ) ;
+      num += 4 ;
+    }
+  //
+  xr = x ;
+  yr = y ;
+  zr = z ;
+  return num ;
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

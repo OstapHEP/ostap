@@ -346,9 +346,6 @@ try : # =======================================================================
     class DillChecker(PickleChecker) :
         """ Check if the object can be properly pickled/unpickled
         """
-        def known ( self , *objtypes) :
-            return super(Checker,self).known ( *objtypes) or \
-                all ( o in self.EXTRA_TYPES for o in objtypes )
         # =====================================================================
         ## check if the object can be properly pickled/unpickled 
         def pickles ( self , *objects ) :
@@ -374,7 +371,7 @@ try : # =======================================================================
             """
             for ntype in ntypes :
                 if ntype in self : continue 
-                self.EXTRA_TYPES.append ( ntype )
+                self.EXTRA_TYPES.add ( ntype )
 
     # =========================================================================
     ## usefulname

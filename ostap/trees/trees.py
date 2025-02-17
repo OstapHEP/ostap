@@ -2476,7 +2476,7 @@ func_keywords = 'function' , 'callable' , 'what' , 'how' , 'calculator'
 # ===============================================================================
 ## parse&prepare branches
 #  @see Ostap::Trees::add_branch 
-def prepare_branches ( tree , branch , **kwargs ) :
+def prepare_branches ( tree , branch , / , **kwargs ) :
     """ parse& prepare new branches  
     - see `Ostap.Trees.add_branch` 
     """
@@ -2543,6 +2543,36 @@ def prepare_branches ( tree , branch , **kwargs ) :
         the_case = 6
         logger.debug ( 'prepare_branches: case %s' % the_case ) 
 
+    elif isinstance ( branch , Ostap.Math.Histo3D ) and all ( ( k in kwargs ) for k in ( 'xname' , 'yname' , 'zname' ) ) :
+        
+        names = names = kwargs.pop ( 'xname' ) , kwargs.pop ( 'yname' ) , kwargs.pop ( 'zname' )
+        args  = names + ( branch , )
+        
+        for n in names : new_branches.add ( n )
+        args     = names +  ( branch , )
+        the_case = 7
+        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+
+    elif isinstance ( branch , Ostap.Math.Histo2D ) and all ( ( k in kwargs) for k in ( 'xname' , 'yname' ) ) :
+        
+        names = names = kwargs.pop ( 'xname' ) , kwargs.pop ( 'yname' )
+        args  = names + ( branch , )
+        
+        for n in names : new_branches.add ( n )
+        args     = names +  ( branch , )
+        the_case = 8
+        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+
+    elif isinstance ( branch , Ostap.Math.Histo1D ) and 'xname' in kwargs :
+        
+        names = names = kwargs.pop ( 'xname' ) ,
+        args  = names + ( branch , )
+        
+        for n in names : new_branches.add ( n )
+        args     = names +  ( branch , )
+        the_case = 9
+        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+        
     elif isinstance ( branch , ROOT.TH1 ) and 1 <= branch.GetDimension() <=3 : 
         ## sample from 1D,2D,3D historgam
         
@@ -2553,7 +2583,7 @@ def prepare_branches ( tree , branch , **kwargs ) :
         
         for n in names : new_branches.add ( n )
         args     = names +  ( branch , )
-        the_case = 7
+        the_case = 10
         logger.debug ( 'prepare_branches: case %s' % the_case ) 
         
     elif isinstance ( branch , dictlike_types ) and not 'name' in kwargs :        
@@ -2580,7 +2610,7 @@ def prepare_branches ( tree , branch , **kwargs ) :
             new_branches.add ( key   )
             
         args     = branches ,
-        the_case = 9
+        the_case = 11
         logger.debug ( 'prepare_branches: case %s' % the_case ) 
 
     elif callable ( branch  ) and 'name' in kwargs and 'arguments' in kwargs : 
@@ -2602,7 +2632,7 @@ def prepare_branches ( tree , branch , **kwargs ) :
             elif 2 == len ( vars ) : args = Ostap.Functions.Func2D ( *fvars ) , 
             elif 3 == len ( vars ) : args = Ostap.Functions.Func3D ( *fvars ) ,
 
-        the_case = 10
+        the_case = 12
         logger.debug ( 'prepare_branches: case %s' % the_case ) 
         
     elif callable ( branch  ) and 'name' in kwargs  and not any ( key in  kwargs for key in func_keywords ) :
@@ -2653,7 +2683,7 @@ def prepare_branches ( tree , branch , **kwargs ) :
 # ===============================================================================
 ## Add new brnach to the tree
 #  @see Ostap::Trees::adD_branch 
-def add_new_branch ( tree , branch , **kwargs ) :
+def add_new_branch ( tree , branch , / , **kwargs ) :
     """ Add new branch to the tree
     - see `Ostap,Trees.add_branch`
     """
@@ -2681,7 +2711,7 @@ def add_new_branch ( tree , branch , **kwargs ) :
         loggeer.warning  ( '%s:\n%s' % ( title1 , print_args ( prefix = '# ' , title = title2 , **kw ) ) ) 
 
     ## start the actual processing 
-    chain = push_2chain ( tree , args ,  progress = progress , report = report )
+    chain = push_2chain ( tree , *args ,  progress = progress , report = report )
 
     missing  =  sorted ( branch for branch in expected if not branch in chain  )
     if missing : logger.warning ( 'Missing expecte dbrnaches: %s' % ( ', '.join ( m for m in missing ) ) ) 
@@ -2693,7 +2723,7 @@ def add_new_branch ( tree , branch , **kwargs ) :
 #  @param tree input tree
 #  @param params parameters
 #  @see Ostap::Trees::add_branch
-def push_2tree ( tree , config , progress = True , report = True ) :
+def push_2tree ( tree , *config , progress = True , report = True ) :
     """ Add new brnaches to (snigole) TTree according to specificaions
     - @see `Ostap.Trees.add_branch`
     """
@@ -2701,7 +2731,7 @@ def push_2tree ( tree , config , progress = True , report = True ) :
         "push_2tree: `tree' is invalid"
     
     if isinstance ( tree , ROOT.TChain ) and 1 < len ( tree.files() ) :
-        return push_2chain ( tree , config , progress = progress , report = report ) 
+        return push_2chain ( tree , *config , progress = progress , report = report ) 
 
     treepath = tree.path
     the_file = tree.topdir
@@ -2757,7 +2787,7 @@ def push_2tree ( tree , config , progress = True , report = True ) :
 #  @param tree input tree
 #  @param params parameters
 #  @see Ostap::Trees::add_branch
-def push_2chain ( chain , config , progress = True , report = True ) :
+def push_2chain ( chain , *config , progress = True , report = True ) :
     """ Add new brnaches to (snigole) TTree accoring to specificaions
     - @see `Ostap.Trees.add_branch` 
     """
@@ -2766,7 +2796,7 @@ def push_2chain ( chain , config , progress = True , report = True ) :
 
     ## delegate to TTree: 
     if not isinstance ( chain , ROOT.TChain ) or 2 > len ( chain.files() ) :
-        return push_2tree ( chain , config , report = report , progress = progress ) 
+        return push_2tree ( chain , *config , report = report , progress = progress ) 
 
     ## name & path 
     cname, cpath = chain.GetName () , chain.path
@@ -2784,7 +2814,7 @@ def push_2chain ( chain , config , progress = True , report = True ) :
         tree = ROOT.TChain ( cname )
         tree.Add ( fname ) 
         ## treat the tree 
-        push_2tree ( tree , config , report = False , progress = tree_progress ) 
+        push_2tree ( tree , *config , report = False , progress = tree_progress ) 
         
     ## reconstruct the resulting chain 
     chain = ROOT.TChain ( cname )

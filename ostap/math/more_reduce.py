@@ -1575,6 +1575,13 @@ for t in _decorated_classes_ :
 _new_methods_ = tuple ( _new_methods_ ) 
 
 # =============================================================================
+if not '__main__' == __name__ :
+
+    pass 
+    ## from ostap.io.checker import PickleChecker as Checker
+    ## Checker().add ( *_decorated_classes_ )
+
+# =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme

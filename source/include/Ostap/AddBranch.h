@@ -39,6 +39,9 @@ class RooAbsCollection ;
 // ============================================================================
 namespace  Ostap { namespace MoreRooFit { class SPlot4Tree ; } }  // Ostap 
 namespace  Ostap { namespace MoreRooFit { class RooFun     ; } }  // Ostap 
+namespace  Ostap { namespace Math       { class Histo1D    ; } }  // Ostap 
+namespace  Ostap { namespace Math       { class Histo2D    ; } }  // Ostap 
+namespace  Ostap { namespace Math       { class Histo3D    ; } }  // Ostap 
 // ============================================================================
 namespace Ostap
 {  
@@ -192,6 +195,8 @@ namespace Ostap
       const Branches&                          branches         , 
       const Ostap::Utils::ProgressConf&        progress = false ) ;
     // ========================================================================
+    // sample variabales from 1D,2D&3D histograms 
+    // ========================================================================
     /** add new branch to TTree, sampling it from   the 1D-histogram
      *  @param tree (UPFATE) input tree 
      *  @param name   name of the new branch 
@@ -244,6 +249,60 @@ namespace Ostap
     // ========================================================================
     
     // ========================================================================
+    // sample varibiales from (smoothed) 1D,2D&3D smoothed historgams 
+    // ========================================================================    
+    /** add new branch to TTree, sampling it from   the 1D-histogram
+     *  @param tree (UPFATE) input tree 
+     *  @param name   name of the new branch 
+     *  @param histo  the historgam to be  sampled
+     *  @return status code 
+     *  @see TH1::GetRandom 
+     */
+    Ostap::StatusCode 
+    add_branch 
+    ( TTree*                                   tree             , 
+      const std::string&                       name             , 
+      const Ostap::Math::Histo1D&              histo            , 
+      const Ostap::Utils::ProgressConf&        progress = false ) ;
+    // =========================================================================
+    /** add new branch to TTree, sampling it from   the 2D-histogram
+     *  @param tree (UPFATE) input tree 
+     *  @param progress configuration of the progress bar
+     *  @param namex  name of the new branch 
+     *  @param namey  name of the new branch 
+     *  @param histo  the historgam to be  sampled
+     *  @return status code 
+     *  @see TH2::GetRandom2 
+     */
+    Ostap::StatusCode 
+    add_branch 
+    ( TTree*                                   tree             , 
+      const std::string&                       namex            , 
+      const std::string&                       namey            , 
+      const Ostap::Math::Histo2D&              histo            , 
+      const Ostap::Utils::ProgressConf&        progress = false ) ;
+    // ========================================================================
+    /** add new branch to TTree, sampling it from   the 3D-histogram
+     *  @param tree (UPFATE) input tree 
+     *  @param progress configuration of the progress bar
+     *  @param namex  name of the new branch 
+     *  @param namey  name of the new branch 
+     *  @param namez  name of the new branch 
+     *  @param histo  the historgam to be  sampled
+     *  @return status code 
+     *  @see TH3::GetRandom3 
+     */
+    Ostap::StatusCode 
+    add_branch 
+    ( TTree*                                   tree             , 
+      const std::string&                       namex            , 
+      const std::string&                       namey            , 
+      const std::string&                       namez            , 
+      const Ostap::Math::Histo3D&              histo            , 
+      const Ostap::Utils::ProgressConf&        progress = false ) ;
+    // ========================================================================
+    
+    // ========================================================================
     // Add branch from generic 1D function 
     // ========================================================================
     /** add new branch to the tree, calculated from the function  
@@ -280,7 +339,6 @@ namespace Ostap
     { return add_branch ( tree  ,
                           bname ,
                           xname ,
-                          // std::cref ( fun ),
                           std::function<double(double)> ( fun ) ,                          
                           progress ) ; }
     // ========================================================================
@@ -324,7 +382,6 @@ namespace Ostap
                           bname ,
                           xname ,
                           yname ,
-                          // std::cref ( fun ) ,
                           std::function<double(double,double)>  ( fun ) ,
                           progress ) ; }        
     // ========================================================================
@@ -373,7 +430,6 @@ namespace Ostap
                           xname ,
                           yname ,
                           zname ,
-                          // std::cref ( fun ) ,
                           std::function<double(double,double,double)>  ( fun ) ,
                           progress ) ; }        
     // ========================================================================

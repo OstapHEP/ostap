@@ -6,6 +6,8 @@
 // ============================================================================
 // STD & STL 
 // ============================================================================
+#include <array> 
+// ============================================================================
 // ROOT
 // ============================================================================
 #include "TH1D.h"
@@ -120,6 +122,23 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /** get a random number from this distribution
+       *  - if maximum value is non-positive: generate uniform distribution
+       *  - negative content is interpreted as zero
+       *  @param rng  random generator
+       *  @see TH1::GetRandom 
+       *  @attention It can be rather inefficieint (e.g. for historgams 
+       *  with large  number of empty vins 
+       */
+      double random
+      ( TRandom* rng = nullptr ) const ;
+      /// get a random number 
+      std::size_t random
+      ( double&  result           ,
+        TRandom* rng    = nullptr ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
       const TH1D&                           h () const  { return m_h ; }
       Ostap::Math::HistoInterpolation::Type t () const  { return m_t ; }      
       // ======================================================================
@@ -188,6 +207,24 @@ namespace Ostap
           ( m_h , x , y , m_tx , m_ty , 
             edges () , extrapolate () , density () );                    
       }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** get a random number from this distribution
+       *  - if maximum value is non-positive: generate uniform distribution
+       *  - negative content is interpreted as zero
+       *  @param rng  random generator
+       *  @see TH1::GetRandom 
+       *  @attention It can be rather inefficieint (e.g. for historgams 
+       *  with large  number of empty vins 
+       */
+      std::array<double,2> random
+      ( TRandom* rnd = nullptr ) const ;
+      /// get a random number 
+      std::size_t random
+      ( double&  xr            ,
+        double&  yr            ,
+        TRandom* rng = nullptr ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -290,6 +327,25 @@ namespace Ostap
           ( m_h ,  x  ,  y  ,  z  , m_tx  ,  m_ty  ,  m_tz , 
             edges () , extrapolate () , density () );                    
       }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** get a random number from this distribution
+       *  - if maximum value is non-positive: generate uniform distribution
+       *  - negative content is interpreted as zero
+       *  @param rng  random generator
+       *  @see TH1::GetRandom 
+       *  @attention It can be rather inefficieint (e.g. for historgams 
+       *  with large  number of empty vins 
+       */
+      std::array<double,3> random
+      ( TRandom* rnd = nullptr ) const ;
+      /// get a random number 
+      std::size_t random
+      ( double&  xr            ,
+        double&  yr            ,
+        double&  zr            ,
+        TRandom* rng = nullptr ) const ;
       // ======================================================================
     public:
       // ======================================================================

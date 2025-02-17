@@ -18,7 +18,7 @@ if '__main__' == __name__ : logger = getLogger ( 'ostap.io.checker' )
 else                      : logger = getLogger ( __name__               )
 # =============================================================================
 ## the basic pickle-types that for sure always can be pickled/unpickled 
-PICKLE_TYPES = type ( None ) , bool, int, float, str, bytes, bytearray, array.array 
+PICKLE_TYPES = frozenset ( [ type ( None ) , bool, int, float, str, bytes, bytearray, array.array ] )
 # =============================================================================
 PICKLE_COMMAND = """import sys, pickle
 with open('%s','rb') as f : pickle.load ( f )"""
@@ -30,12 +30,10 @@ class PickleChecker ( object ) :
     """
     MORE_TYPES          = [] 
     EXTRA_TYPES         = [] 
-    NONPICKLEABLE_TYPES = []  
+    NONPICKLEABLE_TYPES = [] 
     # ========================================================================
     ## if the object type is already knowns 
-    def known ( self , *objtypes ) :
-        return all ( ( o in PICKLE_TYPES    ) or
-                     ( o in self.MORE_TYPES ) for o in objtypes ) 
+    def known ( self , *objtypes ) : return all ( ( o in self ) for o in objtypes ) 
     # ========================================================================
     ## type is knows for (un)pickle problems 
     def notgood ( self , *objtypes ) :
@@ -65,11 +63,12 @@ class PickleChecker ( object ) :
     
     def _pickles ( self , *objects , fun_dumps , fun_loads ) :
         # =====================================================================
-        objects = self.unpack ( *objects ) 
-        if not objects               : return True
-        if self.notgood ( *objects ) : return False        
+        objects  = self.unpack ( *objects ) 
+        if not objects                : return True
+        objtypes = set ( type ( o ) for o in objects ) 
+        if self.notgood ( *objtypes ) : return False        
         ## check if the object can be properly pickled/unpickled
-        if self.known ( * ( type ( o ) for o in objects ) ) : return True
+        if self.known   ( *objtypes ) : return True
         # =====================================================================
         try: # ================================================================
             # =================================================================
@@ -102,10 +101,10 @@ class PickleChecker ( object ) :
         """
         objects = self.unpack ( *objects ) 
         if not objects               : return True
-        if self.notgood ( *objects ) : return False
-        # =====================================================================
+        objtypes = set ( type ( o ) for o in objects ) 
+        if self.notgood ( *objtypes ) : return False        
         ## check if the object can be properly pickled/unpickled
-        if self.known ( *(type ( o ) for o in objects ) ) : return True
+        if self.known   ( *objtypes ) : return True
         # =====================================================================
         from   ostap.utils.cleanup import CleanUp 
         tmpfile = CleanUp.tempfile ( suffix = '.pkl')
@@ -217,7 +216,7 @@ class PickleChecker ( object ) :
         """
         for ntype in ntypes :
             if ntype in self : continue 
-            self.MORE_TYPES.append( ntype )
+            self.MORE_TYPES.append ( ntype )
         
     # =========================================================================
     ## add new type into the list of "non-picleable" types 
@@ -225,8 +224,7 @@ class PickleChecker ( object ) :
         """ Add new type into the list of "non-pickleable" types 
         """
         for ntype in ntypes :        
-            if not ntype in self.NONPICKLEABLE_TYPES :
-                self.NONPICKLEABLE_TYPES.append ( ntype ) 
+            self.NONPICKLEABLE_TYPES.add ( ntype ) 
         
     # =========================================================================
     ## Format and return the pickling table 
@@ -295,7 +293,6 @@ class PickleChecker ( object ) :
             rows.append ( row ) 
         import ostap.logger.table as T
         return T.table ( rows , title = title , prefix = prefix, alignment = 'll' , style = style )
-    
     
 # =============================================================================
 import atexit

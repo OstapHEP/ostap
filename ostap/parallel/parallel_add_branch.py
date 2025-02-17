@@ -47,7 +47,7 @@ class AddNewBranch(Task) :
         
         files = []
         chain = tree.chain
-        push_2chain ( chain , self.recipe_args , progress = False , report = False )
+        push_2chain ( chain , *self.recipe_args , progress = False , report = False )
         for f in tree.files :
             if not f in files : files.append ( f )
 
@@ -113,7 +113,7 @@ def add_new_branch ( chain           ,
     if   isinstance ( chain , ROOT.TChain ) and 1 < len ( chain.files () ) : pass 
     elif isinstance ( chain , ROOT.TTree  ) :        
         from ostap.trees.trees import add_new_branch as _add_branch_ 
-        return _add_branch_ ( chain , branch , progress = progress , report = report  ) 
+        return _add_branch_ ( chain , branch , progress = progress , report = report , **kwargs ) 
 
     ## check (un)picleability 
     check = Checker()
@@ -147,7 +147,7 @@ def add_new_branch ( chain           ,
         logger.warning ( 'Not all arguments are pickable:\n%s' % table )        
         logger.warning ( 'Switch to (SLOW) sequential processing' )
         ## 
-        chain      = push_2chain ( chain , args , progress = progress , report = report )            
+        chain      = push_2chain ( chain , *args , progress = progress , report = report )            
         missing    = sorted ( branch for branch in expected if not branch in chain  )
         if missing : logger.warning ( 'Missing expected brnaches: %s' % ( ', '.join ( m for m in missing ) ) )
         logger.attention ( "A (SLOQ) sequentional processing was used..." ) 

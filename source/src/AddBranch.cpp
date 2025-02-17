@@ -32,9 +32,7 @@
 #include "Ostap/Math.h"
 #include "Ostap/Notifier.h"
 #include "Ostap/TreeGetter.h"
-#include "Ostap/RooFun.h"
-#include "Ostap/SPlot4Tree.h"
-#include "Ostap/MoreRooFit.h"
+#include "Ostap/HistoInterpolators.h"
 #include "Ostap/ProgressBar.h"
 // ============================================================================
 // Local stuff 
@@ -519,6 +517,184 @@ Ostap::Trees::add_branch
       if ( tree->GetEntry ( i ) < 0 ) { break ; };
       //
       h.GetRandom3 ( value_x , value_y , value_z ) ;
+      //
+      branch_x -> Fill (       ) ;
+      branch_y -> Fill (       ) ;
+      branch_z -> Fill (       ) ;
+    }
+  //
+  return Ostap::StatusCode::SUCCESS ;  
+}
+// ============================================================================
+
+
+// ============================================================================
+/*  add new branch to TTree, sampling it from   the 1D-histogram
+ *  @param tree (UPFATE) input tree 
+ *  @param progress configuration of the progress bar
+ *  @param name   name of the new branch 
+ *  @param histo  the historgam to be  sampled
+ *  @return status code 
+ *  @see TH1::GetRandom 
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch 
+( TTree*                            tree     , 
+  const std::string&                name     , 
+  const Ostap::Math::Histo1D&       histo    ,
+  const Ostap::Utils::ProgressConf& progress ) 
+{
+  if ( !tree ) { return INVALID_TREE ; }
+  //
+  Ostap::Assert ( valid_name_for_branch ( name )             ,
+                  "Invalid name for branch:\"" + name + "\"" ,
+                  "Ostap::Trees::add_branch"                 ,
+                  INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
+  //
+  Double_t value  = 0  ;
+  TBranch* branch = tree->Branch( name.c_str() , &value , (name + "/D").c_str() );
+  Ostap::Assert ( branch ,
+                  "Cannot create branch: " + name            ,
+                  "Ostap::Trees::add_branch"                 ,
+                  CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;
+  //
+  const Long64_t nentries = tree->GetEntries(); 
+  Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
+  for ( Long64_t entry = 0 ; entry < nentries ; ++entry , ++bar )
+    {
+      if ( tree->GetEntry ( entry ) < 0 ) { break ; };
+      //
+      histo.random ( value ) ;
+      //
+      branch -> Fill ( ) ;
+    }
+  //
+  return Ostap::StatusCode::SUCCESS ;  
+}
+// ============================================================================
+/** add new branch to TTree, sampling it from   the 2D-histogram
+ *  @param tree (UPFATE) input tree 
+ *  @param namex  name of the new branch 
+ *  @param namey  name of the new branch 
+ *  @param histo  the historgam to be  sampled
+ *  @return status code 
+ *  @see TH2::GetRandom2 
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch 
+( TTree*                            tree     , 
+  const std::string&                namex    , 
+  const std::string&                namey    , 
+  const Ostap::Math::Histo2D&       histo    ,
+  const Ostap::Utils::ProgressConf& progress )
+{
+  if ( !tree ) { return INVALID_TREE ; }
+  //
+  Ostap::Assert ( valid_name_for_branch ( namex )             ,
+                  "Invalid name for branch:\"" + namex + "\"" ,
+                  "Ostap::Trees::add_branch"                  ,
+                  INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
+  //
+  Ostap::Assert ( valid_name_for_branch ( namey )             ,
+                  "Invalid name for branch:\"" + namey + "\"" ,
+                  "Ostap::Trees::add_branch"                  ,
+                  INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
+  //
+  Double_t value_x   = 0  ;
+  TBranch* branch_x  = tree->Branch( namex.c_str() , &value_x , (namex + "/D").c_str() );
+  Ostap::Assert ( branch_x                                   ,
+                  "Cannot create branch: " + namex           ,
+                  "Ostap::Trees::add_branch"                 ,
+                  CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;  
+  //
+  Double_t value_y   = 0  ;
+  TBranch* branch_y  = tree->Branch( namey.c_str() , &value_y , (namey + "/D").c_str() ) ;
+  Ostap::Assert ( branch_y                                   ,
+                  "Cannot create branch: " + namey           ,
+                  "Ostap::Trees::add_branch"                 ,
+                  CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;  
+  //
+  std::array<double,2> result {} ;
+  //
+  const Long64_t nentries = tree->GetEntries(); 
+  Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
+  for ( Long64_t i = 0 ; i < nentries ; ++i, ++bar )
+    {
+      if ( tree->GetEntry ( i ) < 0 ) { break ; };
+      //
+      histo.random ( value_x , value_y ) ;
+      //
+      branch_x -> Fill (       ) ;
+      branch_y -> Fill (       ) ;
+    }
+  //
+  return Ostap::StatusCode::SUCCESS ;  
+}
+// ============================================================================
+/** add new branch to TTree, sampling it from   the 3D-histogram
+ *  @param tree (UPFATE) input tree 
+ *  @param progress configuration of the progress bar
+ *  @param namex  name of the new branch 
+ *  @param namey  name of the new branch 
+ *  @param namez  name of the new branch 
+ *  @param histo  the historgam to be  sampled
+ *  @return status code 
+ *  @see TH2::GetRandom2 
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch 
+( TTree*                            tree     , 
+  const std::string&                namex    , 
+  const std::string&                namey    , 
+  const std::string&                namez    , 
+  const Ostap::Math::Histo3D&       histo    ,
+  const Ostap::Utils::ProgressConf& progress )
+{
+  if ( !tree ) { return INVALID_TREE ; }
+  //
+  Ostap::Assert ( valid_name_for_branch ( namex )             ,
+                  "Invalid name for branch:\"" + namex + "\"" ,
+                  "Ostap::Trees::add_branch"                  ,
+                  INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
+  //
+  Ostap::Assert ( valid_name_for_branch ( namey )             ,
+                  "Invalid name for branch:\"" + namey + "\"" ,
+                  "Ostap::Trees::add_branch"                  ,
+                  INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
+  //
+  Double_t value_x   = 0  ;
+  TBranch* branch_x  = tree->Branch( namex.c_str() , &value_x , (namex + "/D").c_str() );
+  Ostap::Assert ( branch_x                                   ,
+                  "Cannot create branch: " + namex           ,
+                  "Ostap::Trees::add_branch"                 ,
+                  CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;    
+  //
+  Double_t value_y   = 0  ;
+  TBranch* branch_y  = tree->Branch( namey.c_str() , &value_y , (namey + "/D").c_str() );
+  Ostap::Assert ( branch_y                                   ,
+                  "Cannot create branch: " + namey           ,
+                  "Ostap::Trees::add_branch"                 ,
+                  CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;  
+  //
+  Double_t value_z   = 0  ;
+  TBranch* branch_z  = tree->Branch( namez.c_str() , &value_z , (namez + "/D").c_str() );
+  Ostap::Assert ( branch_z                                   ,
+                  "Cannot create branch: " + namez           ,
+                  "Ostap::Trees::add_branch"                 ,
+                  CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;  
+  //
+  std::array<double,3> result {} ;
+  //
+  const Long64_t nentries = tree->GetEntries(); 
+  Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
+  for ( Long64_t i = 0 ; i < nentries ; ++i , ++bar )
+    {
+      if ( tree->GetEntry ( i ) < 0 ) { break ; };
+      //
+      histo.random ( value_x , value_y , value_z ) ;
       //
       branch_x -> Fill (       ) ;
       branch_y -> Fill (       ) ;

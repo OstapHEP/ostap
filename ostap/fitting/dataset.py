@@ -3434,7 +3434,10 @@ _decorated_classes_ = (
     ROOT.RooDataSet ,
     )
 
-_new_methods_ = tuple ( _new_methods_ ) 
+_new_methods_ = tuple ( _new_methods_ )
+
+
+
 # =============================================================================
 if '__main__' == __name__ :
     
