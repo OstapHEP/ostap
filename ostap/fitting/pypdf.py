@@ -62,7 +62,7 @@ class PyPDF(Ostap.Models.PyPdf) :
             super ( PyPDF , self ) .__init__ ( clone , name if name else clone.name )            
         else     :
             vv = ROOT.RooArgList () ;
-            for v for v in variables : vv.add ( v ) 
+            for v in variables : vv.add ( v ) 
             super ( PyPDF, self ) .__init__ ( name , title if title else 'PyPDf(%s)' % name , vv )
 
         self._keep = variables, 
