@@ -32,7 +32,7 @@
  */
 // ============================================================================
 ClassImp(Ostap::Functions::FuncFormula)
-ClassImp(Ostap::Functions::FuncTree)
+ClassImp(Ostap::Functions::FunTree)
 ClassImp(Ostap::Functions::Func1D)
 ClassImp(Ostap::Functions::Func2D)
 ClassImp(Ostap::Functions::Func3D)
