@@ -20,10 +20,10 @@ from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait, batch_env
 from   ostap.utils.basic        import typename 
 from   ostap.fitting.models     import Gauss_pdf, Generic1D_pdf,  Fit1D  
-from   ostap.fitting.pypdf      import PyPDF
+from   ostap.fitting.pypdf      import PyPDF, PyPDFLite
 from   ostap.io.zipshelve       import tmpdb 
 import ostap.fitting.roofit 
-import ROOT , pickle  
+import ROOT, math 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -52,6 +52,7 @@ model_ref.B = 100
 
 ## generate dataset 
 dataset = model_ref.generate ( 1000 )
+NORM    = 1.0/math.sqrt ( 2 * math.pi )
 
 logger.info ('DATASET\n%s' % dataset )
 
@@ -156,86 +157,282 @@ class MyGauss2(PyPDF) :
 
 # =============================================================================
 ## Test pure python PDF: <code>PyPDF</code>
-#  @see ostap.fitting.pypdf.PyPdf
+#  @see ostap.fitting.pypdf.PyPDF
 #  @see Ostap::Models::PyPdf 
-def test_PyPdf1() :
+def test_PyPDF1() :
     """Test pure python PDF: pyPDF
-    - see `ostap.fitting.pypdf.PyPdf`
+    - see `ostap.fitting.pypdf.PyPDF`
     - see `Ostap::Models::PyPdf` 
     """
 
-    logger = getLogger("test_PyPdf1")
+    logger = getLogger("test_PyPDF1")
+    logger.info ( 'Use plain PyPDF' ) 
     
-    
-    mygauss1 = MyGauss1 ( 'MyGauss1'                           ,
+    mygauss = MyGauss1 ( 'MyGauss1'                           ,
                           title    = "local pure python PDF" ,
                           xvar     = gauss_ref.xvar          ,
                           mean     = gauss_ref.mean          ,
                           sigma    = gauss_ref.sigma         ) 
     
-    signal = Generic1D_pdf ( pdf = mygauss1 , xvar = xvar )
+    signal = Generic1D_pdf ( pdf = mygauss , xvar = xvar )
     model  = Fit1D ( signal = signal  , background = None , suffix = '_P1' )
 
-    print ( 'MYGAUSS1' , typename ( mygauss1 ) ) 
-            
     ##  fit!
-    with use_canvas ( "test_PyPdf1" , wait = 2 ) : 
+    with use_canvas ( "test_PyPDF1: plain PyPDF" , wait = 2 ) : 
         r, _ = model.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
 
-
-    with tmpdb ( )as db :
-        db ['mygauss1'  ] = mygauss1
-        db ['signal'    ] = signal 
-        db ['gauss_ref' ] = gauss_ref
-        db ['model_ref' ] = model_ref        
-        db.ls() 
-
-
-    ## del model, signal, mygauss1
-
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        with tmpdb ( )as db :
+            db [ mygauss.name ] = mygauss
+            db ['signal'      ] = signal 
+            db ['gauss_ref'   ] = gauss_ref
+            db ['model_ref'   ] = model_ref        
+            db.ls()
+        # =====================================================================
+    except : # ================================================================
+        # =====================================================================
+        logger.error ( "Cannot serialize!" , exc_info = True )
 
 # =============================================================================
 ## Test pure python PDF: <code>PyPDF</code> with analytical integration 
 #  @see ostap.fitting.pypdf.PyPdf
 #  @see Ostap::Models::PyPdf 
-def test_PyPdf2() :
+def test_PyPDF2() :
     """Test pure python PDF: pyPDF wth analysticla integration 
+    - see `ostap.fitting.pypdf.PyPDF
+    - see `Ostap::Models::PyPdf` 
+    """
+
+    logger = getLogger("test_PyPDF2")
+    logger.info ('Use PyPDF with analytical integrals' )
+    
+    mygauss = MyGauss2 ( 'MyGauss2'                           ,
+                         title    = "local pure python PDF" ,
+                         xvar     = gauss_ref.xvar          ,
+                         mean     = gauss_ref.mean          ,
+                         sigma    = gauss_ref.sigma         ) 
+    
+    signal = Generic1D_pdf ( pdf = mygauss , xvar = xvar )
+    model  = Fit1D ( signal = signal  , background = None , suffix = '_P2' )
+    
+    ##  fit!
+    with use_canvas ( "test_PyPDF2: use analytical integrals" , wait = 2 ) : 
+        r, _ = model.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
+
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        with tmpdb ( )as db :
+            db [ mygauss.name ] = mygauss
+            db ['signal'      ] = signal 
+            db ['gauss_ref'   ] = gauss_ref
+            db ['model_ref'   ] = model_ref        
+            db.ls()
+        # =====================================================================
+    except : # ================================================================
+        # =====================================================================
+        logger.error ( "Cannot serialize!" , exc_info = True )
+
+# =============================================================================
+gauss_cpp = Ostap.Math.gauss_pdf
+
+def gauss_fun ( x , mean , sigma ) :
+    return gauss_cpp ( x , mean , sigma ) 
+
+class GaussPdf ( object) :
+    def __call__ ( self , x , mean , sigma ) :
+        return gauss_fun ( x , mean , sigma )
+
+gauss_obj = GaussPdf()
+
+# =============================================================================
+## Test pure python PDF: <code>PyPDFLite</code
+#  @see ostap.fitting.pypdf.PyPDFLifgt 
+#  @see Ostap::Models::PyPdfLight 
+def test_PyPDFLite1() :
+    """ Test pure python PDF: pyPDF wth analysticla integration 
     - see `ostap.fitting.pypdf.PyPdf`
     - see `Ostap::Models::PyPdf` 
     """
 
-    logger = getLogger("test_PyPdf2")
+    logger   = getLogger("test_PyPDFLite1")
+    logger.info ( "Use `light' PDF:  global funtion" )
+        
+    function  = gauss_fun 
+
+    variables = gauss_ref.xvar, gauss_ref.mean, gauss_ref.sigma    
+    mygauss   = PyPDFLite ( "MyGauss3"             ,
+                             function   = function  ,
+                             variables  = variables )
     
-    mygauss2 = MyGauss2 ( 'MyGauss2'                           ,
-                          title    = "local pure python PDF" ,
-                          xvar     = gauss_ref.xvar          ,
-                          mean     = gauss_ref.mean          ,
-                          sigma    = gauss_ref.sigma         ) 
+    logger.info ( 'Use %s' % mygauss ) 
     
-    signal = Generic1D_pdf ( pdf = mygauss2 , xvar = xvar )
+    signal = Generic1D_pdf ( pdf = mygauss , xvar = xvar )
     model  = Fit1D ( signal = signal  , background = None , suffix = '_P2' )
     
     ##  fit!
-    with use_canvas ( "test_PyPdf2" , wait = 2 ) : 
+    with use_canvas ( "test_PyPDFLite1: global function " , wait = 2 ) : 
         r, _ = model.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
 
-    with tmpdb ( )as db :
-        
-        db ['mygauss2'  ] = mygauss2
-        db ['signal'    ] = signal 
-        db ['gauss_ref' ] = gauss_ref
-        db ['model_ref' ] = model_ref        
-        db.ls()
-        
-    ## del model, signal, mygauss2
-    
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        with tmpdb ( )as db :
+            db [ mygauss.name ] = mygauss
+            db ['signal'      ] = signal 
+            db ['gauss_ref'   ] = gauss_ref
+            db ['model_ref'   ] = model_ref        
+            db.ls()
+        # =====================================================================
+    except : # ================================================================
+        # =====================================================================
+        logger.error ( "Cannot serialize!" , exc_info = True )
+
 
 # =============================================================================
-if '__main__' == __name__ :
+## Test pure python PDF: <code>PyPDFLite</code
+#  @see ostap.fitting.pypdf.PyPDFLifgt 
+#  @see Ostap::Models::PyPdfLight 
+def test_PyPDFLite2() :
+    """ Test pure python PDF: pyPDF wth analysticla integration 
+    - see `ostap.fitting.pypdf.PyPdf`
+    - see `Ostap::Models::PyPdf` 
+    """
 
+    logger   = getLogger("test_PyPDFLite2")
+    logger.info ( "Use `light' PDF:  global c++ function" )
+        
+    function  = gauss_cpp 
+
+    variables = gauss_ref.xvar, gauss_ref.mean, gauss_ref.sigma    
+    mygauss   = PyPDFLite ( "MyGauss4"             ,
+                             function   = function  ,
+                             variables  = variables )
+
+    logger.info ( 'Use %s' % mygauss ) 
     
-    test_PyPdf1 () 
-    test_PyPdf2 () 
+    signal = Generic1D_pdf ( pdf = mygauss , xvar = xvar )
+    model  = Fit1D ( signal = signal  , background = None , suffix = '_P2' )
+    
+    ##  fit!
+    with use_canvas ( "test_PyPDFLite1: global function " , wait = 2 ) : 
+        r, _ = model.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
+
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        with tmpdb ( )as db :
+            db [ mygauss.name ] = mygauss
+            db ['signal'      ] = signal 
+            db ['gauss_ref'   ] = gauss_ref
+            db ['model_ref'   ] = model_ref        
+            db.ls()
+        # =====================================================================
+    except : # ================================================================
+        # =====================================================================
+        logger.error ( "Cannot serialize!" , exc_info = True )
+            
+# =============================================================================
+## Test pure python PDF: <code>PyPDFLite</code
+#  @see ostap.fitting.pypdf.PyPDFLifgt 
+#  @see Ostap::Models::PyPdfLight 
+def test_PyPDFLite3() :
+    """ Test pure python PDF: pyPDF wth analysticla integration 
+    - see `ostap.fitting.pypdf.PyPdf`
+    - see `Ostap::Models::PyPdf` 
+    """
+
+    logger   = getLogger("test_PyPDFLite2")
+    logger.info ( "Use `light' PDF:  global object" )
+        
+    function  = gauss_obj 
+
+    variables = gauss_ref.xvar, gauss_ref.mean, gauss_ref.sigma    
+    mygauss   = PyPDFLite ( "MyGauss5"             ,
+                             function   = function  ,
+                             variables  = variables )
+
+    logger.info ( 'Use %s' % mygauss ) 
+    
+    signal = Generic1D_pdf ( pdf = mygauss , xvar = xvar )
+    model  = Fit1D ( signal = signal  , background = None , suffix = '_P2' )
+    
+    ##  fit!
+    with use_canvas ( "test_PyPDFLite1: global object" , wait = 2 ) : 
+        r, _ = model.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
+
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        with tmpdb ( )as db :
+            db [ mygauss.name ] = mygauss
+            db ['signal'      ] = signal 
+            db ['gauss_ref'   ] = gauss_ref
+            db ['model_ref'   ] = model_ref        
+            db.ls()
+        # =====================================================================
+    except : # ================================================================
+        # =====================================================================
+        logger.error ( "Cannot serialize!" , exc_info = True )
+
+
+# =============================================================================
+## Test pure python PDF: <code>PyPDFLite</code
+#  @see ostap.fitting.pypdf.PyPDFLifgt 
+#  @see Ostap::Models::PyPdfLight 
+def test_PyPDFLite4() :
+    """ Test pure python PDF: pyPDF wth analysticla integration 
+    - see `ostap.fitting.pypdf.PyPdf`
+    - see `Ostap::Models::PyPdf` 
+    """
+
+    logger   = getLogger("test_PyPDFLite2")
+    logger.info ( "Use `light' PDF: local function" )
+
+    def local_fun ( *args ) : return gauss_cpp ( *args )
+    
+    function  = local_fun 
+
+    variables = gauss_ref.xvar, gauss_ref.mean, gauss_ref.sigma    
+    mygauss   = PyPDFLite ( "MyGauss6"             ,
+                             function   = function  ,
+                             variables  = variables )
+
+    logger.info ( 'Use %s' % mygauss ) 
+    
+    signal = Generic1D_pdf ( pdf = mygauss , xvar = xvar )
+    model  = Fit1D ( signal = signal  , background = None , suffix = '_P2' )
+    
+    ##  fit!
+    with use_canvas ( "test_PyPDFLite1: local function" , wait = 2 ) : 
+        r, _ = model.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
+
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        with tmpdb ( )as db :
+            db [ mygauss.name ] = mygauss
+            db ['signal'      ] = signal 
+            db ['gauss_ref'   ] = gauss_ref
+            db ['model_ref'   ] = model_ref        
+            db.ls()
+        # =====================================================================
+    except : # ================================================================
+        # =====================================================================
+        logger.error ( "Cannot serialize!" , exc_info = True )
+        
+# =============================================================================
+if '__main__' == __name__ :
+    
+    ## test_PyPDF1     () 
+    ## test_PyPDF2     () 
+
+    test_PyPDFLite1 () 
+    test_PyPDFLite2 () 
+    test_PyPDFLite3 () 
+    test_PyPDFLite4 () 
     
 # =============================================================================
 ##                                                                      The END 

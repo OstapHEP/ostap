@@ -103,13 +103,13 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
     ##
-    'PyPDF'  , ## 'pythonic' PDF for RooFit 
-    'PyPDF2' , ## 'pythonic' PDF for RooFit 
+    'PyPDF'      , ## 'pythonic' PDF for RooFit 
+    'PyPDFLight' , ## 'pythonic' PDF for RooFit 
     )
 # =============================================================================
 from   ostap.core.ostap_types import sequence_types 
 from   ostap.core.core        import Ostap
-from   ostap.utils.basic      import typename 
+from   ostap.utils.basic      import typename, prntrf  
 import ostap.fitting.roofit
 import ROOT, math, abc 
 # =============================================================================
@@ -117,8 +117,8 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.pypdf' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
-# @class PyPdf
-# Very simnple "Pythonic" PDF
+# @class PyPDF
+# Very simple "Pythonic" PDF
 # One must define:
 #  - <code>clone</code> method 
 #  - proper constructor that takes keyword <code>clone</code>
@@ -178,7 +178,54 @@ class PyPDF(Ostap.Models.PyPdf) :
         - see `Ostap.Models.PyPdf.varlist` 
         """
         return self.varlist()
+
+# =============================================================================
+## Very simple `ready-to-use' pythonic PDF
+#  @see Ostap.Modeld.PyPdfLite 
+def PyPDFLite ( name            ,
+                function        ,
+                variables       ,
+                title     = ''  ) : 
+    """ Very simple `ready-to-use' pythonic PDF
+    - see `Ostap.Modeld.PyPdfLite` 
+    """
+
+    assert callable ( function ) , \
+        "PyPDFLite: invalid `function`: %s/%s" %  ( typename ( function ) , prntrf ( function ) )
     
+    assert variables and isinstance ( variables, sequence_types )   and \
+        all ( isinstance ( v , ROOT.RooAbsReal ) for v in variables ) , \
+        "PyPDFLite: invalid `variables`: %s/%s" %  ( typename ( variables ) , str ( variables ) ) 
+    
+    title = title if title else 'Python PDF %s with %s/%s' % ( name                  ,
+                                                               typename ( function ) ,
+                                                            prntrf   ( function ) )
+    vv = ROOT.RooArgList ( v for v in variables )
+    return Ostap.Models.PyPdfLite ( name , title , function , vv )
+
+
+def __pdfl_str__    ( self ) :
+    return '%s(%s,%s,%s/%s,#%d)' % ( typename ( self ) ,
+                                     self.name  ,
+                                     self.title ,
+                                     typename ( self.function () ) ,
+                                     prntrf   ( self.function () ) ,
+                                     self.numrefs() )
+
+Ostap.Models.PyPdfLite.__str__  = __pdfl_str__
+Ostap.Models.PyPdfLite.__repr__ = __pdfl_str__
+
+def ppdfl_factory ( config ) : return PyPDFLite ( **config )
+def _ppdfl_reduce_ ( self ) :
+    config = { 'name'      : self.name       ,
+               'function'  : self.function() ,
+               'variables' : self.varlist()  , 
+               'title'     : self.title      } 
+    return  ppdfl_factory , ( config , )
+
+
+Ostap.Models.PyPdfLite.__reduce__ = _ppdfl_reduce_
+
 old_PyROOT = False 
 # =============================================================================
 if old_PyROOT :

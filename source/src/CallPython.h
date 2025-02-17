@@ -11,6 +11,7 @@
 //   Local
 // ============================================================================
 #include "Exception.h"
+#include "status_codes.h"
 // ============================================================================
 namespace 
 {
@@ -22,60 +23,49 @@ namespace
     if  ( !r ) 
     {
       PyErr_Print () ;
-      Ostap::throwException ( "CallPython:invalid `result'"  , tag , Ostap::StatusCode(500) ) ;
+      Ostap::throwException ( "CallPython:invalid `result'"  , tag   ,
+                              INVALID_PYOBJECT , __FILE__ , __LINE__ ) ;
     }
     // ========================================================================
     // float or integer ?
     // ========================================================================
     if      ( PyFloat_Check ( r ) )  // floating value? 
-    {
-      const double result = PyFloat_AS_DOUBLE ( r ) ;
-      Py_DECREF ( r ) ;
-      return result ;                                    // RETURN 
-    }
-    // ========================================================================
-#if defined (PY_MAJOR_VERSION)  and PY_MAJOR_VERSION < 3 
-    // ========================================================================
-    // Int/long in python2 
-    // ========================================================================
-    else if ( PyInt_Check ( r ) )   // integer value ? 
-    {
-      const double result = PyInt_AS_LONG ( r ) ;
-      Py_DECREF ( r ) ;
-      return result ;                                    //  RETURN
-    } 
-    //
-#else
+      {        const double result = PyFloat_AS_DOUBLE ( r ) ;
+        Py_DECREF ( r ) ;
+        return result ;                                    // RETURN 
+      }
     // ========================================================================
     // int in python3 
     // ========================================================================
     else if ( PyLong_Check ( r ) )   // integer value ? 
-    {
-      int overflow = 0 ;
-      const long result = PyLong_AsLongAndOverflow ( r , &overflow );
-      if      ( -1 == overflow || 1 == overflow ) 
       {
-        Py_DECREF ( r ) ;      
-        Ostap::throwException ( "CallPython:long overflow"      , tag , Ostap::StatusCode(600) ) ;
-      }
-      else if ( -1 == result && PyErr_Occurred() ) 
-      {
-        PyErr_Print();
-        Py_DECREF ( r ) ;      
-        Ostap::throwException ( "CallPython:invalid conversion" , tag , Ostap::StatusCode(700) ) ;
-      }
-      Py_DECREF ( r ) ;
-      return result ;                                    //  RETURN
-    } 
-#endif 
+        int overflow = 0 ;
+        const long result = PyLong_AsLongAndOverflow ( r , &overflow );
+        if      ( -1 == overflow || 1 == overflow ) 
+          {
+            Py_DECREF ( r ) ;      
+            Ostap::throwException ( "CallPython:long overflow"      , tag ,
+                                    INVALID_PYOBJECT , __FILE__ , __LINE__ ) ;
+          }
+        else if ( -1 == result && PyErr_Occurred() ) 
+          {
+            PyErr_Print();
+            Py_DECREF ( r ) ;      
+            Ostap::throwException ( "CallPython:invalid conversion" , tag ,
+                                    INVALID_PYOBJECT , __FILE__ , __LINE__ ) ;
+          }
+        Py_DECREF ( r ) ;
+        return result ;                                    //  RETURN
+      } 
     // ========================================================================
     const double result = PyFloat_AsDouble ( r ) ;
     if ( PyErr_Occurred() ) 
-    {
-      PyErr_Print();
-      Py_DECREF ( r ) ;      
-      Ostap::throwException ( "CallPython:invalid conversion" , tag , Ostap::StatusCode(800) ) ;
-    }
+      {
+        PyErr_Print();
+        Py_DECREF ( r ) ;      
+        Ostap::throwException ( "CallPython:invalid conversion" , tag ,
+                                INVALID_PYOBJECT , __FILE__ , __LINE__ ) ;
+      }
     //
     Py_DECREF ( r ) ; 
     return result   ;                                     // RETURN
@@ -85,10 +75,10 @@ namespace
   double call_method ( PyObject* self , char* method )  
   {
     // check arguments
-    Ostap::Assert ( self                          ,
-                    "CallPython:invalid `object'" , 
-                    "call_method"                 ,
-                    Ostap::StatusCode(400)        ) ;
+    Ostap::Assert ( self                                   ,
+                    "CallPython:invalid `object'"          , 
+                    "call_method"                          ,
+                    INVALID_PYOBJECT , __FILE__ , __LINE__ ) ;
     // call Python
     PyObject* result = PyObject_CallMethod ( self , method , nullptr );    
     // error/exception ?

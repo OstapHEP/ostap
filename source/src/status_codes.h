@@ -31,8 +31,9 @@ namespace
     INVALID_ABSDATA       = 730 ,
     INVALID_ARGSET        = 731 ,
     INVALID_ABSARG        = 732 ,   
-    INVALID_OBSERVABLE    = 733 , 
-    INVALID_OBSERVABLES   = 734 ,
+    INVALID_ABSREAL       = 733 ,   
+    INVALID_OBSERVABLE    = 734 , 
+    INVALID_OBSERVABLES   = 735 ,
     //
     INVALID_PDF           = 740 ,
     INVALID_FITRESULT     = 741 ,
@@ -42,6 +43,9 @@ namespace
     UNDEFINED_METHOD      = 760 ,
     INVALID_VARIABLE      = 761 ,
     INVALID_CALLABLE      = 762 ,
+    INVALID_PYOBJECT      = 763 ,
+    //
+    ERROR_PYTHON          = 770 ,
     // =========================================================================
   }; // ========================================================================
   // ===========================================================================

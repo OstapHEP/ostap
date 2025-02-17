@@ -27,7 +27,7 @@
 /** @file 
  *  Implementation file for class Ostap::Models::PyPdf 
  *  @see  Ostap::Models::PyPdf
- *  @see  Ostap::Models::PyPdf2
+ *  @see  Ostap::Models::PyPdfLite
  *  @date 2018-06-06 
  *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
  */
@@ -234,10 +234,7 @@ double Ostap::Models::PyPdf::value ( const char* name  ) const
 
 
 // ============================================================================
-// PyPdf2 
-// ============================================================================
-
-
+// PyPdfLite 
 // ============================================================================
 /*  Standard constructor
  *  @param self      python-partner for this C++ instance 
@@ -246,19 +243,19 @@ double Ostap::Models::PyPdf::value ( const char* name  ) const
  *  @param variables all variables 
  */
 // ============================================================================
-Ostap::Models::PyPdf2::PyPdf2
+Ostap::Models::PyPdfLite::PyPdfLite
 ( const char*       name      , 
   const char*       title     ,
   PyObject*         function  , 
   const RooArgList& variables )
-  : RooAbsPdf  (   name , title  ) 
+  : RooAbsPdf  ( name     , title  ) 
   , m_function ( function )
   , m_varlist  ( "!varlist" , "All variables(list)" , this ) 
 {
   //
   Ostap::Assert ( m_function , 
                   "Invalid py-functon"   , 
-                  "PyPdf2::consructor"   , 
+                  "PyPdfLite::consructor"   , 
                   Ostap::StatusCode(400) ) ;
   //
   ::copy_real ( variables , m_varlist ) ;
@@ -273,12 +270,12 @@ Ostap::Models::PyPdf2::PyPdf2
  *  @param title     the title  of PDF 
  */
 // ============================================================================
-Ostap::Models::PyPdf2::PyPdf2
+Ostap::Models::PyPdfLite::PyPdfLite
 ( const std::string& name       , 
   PyObject*          function   ,
   const RooArgList&  variables  ,
   const std::string& title      )
-  : PyPdf2 ( name.c_str() , 
+  : PyPdfLite ( name.c_str() , 
              title.empty() ? name.c_str() : title.c_str() , 
              function     ,  
              variables    )
@@ -291,19 +288,19 @@ Ostap::Models::PyPdf2::PyPdf2
  *  @param title     the title  of PDF 
  */
 // ============================================================================
-Ostap::Models::PyPdf2::PyPdf2
+Ostap::Models::PyPdfLite::PyPdfLite
 ( const std::string& name       , 
   const RooArgList&  variables  ,
   PyObject*          function   ,
   const std::string& title      ) 
-  : PyPdf2 ( name , function , variables , title ) 
+  : PyPdfLite ( name , function , variables , title ) 
 {}
 // ============================================================================
 // copy constructor
 // ============================================================================
-Ostap::Models::PyPdf2::PyPdf2
-( const Ostap::Models::PyPdf2& right , 
-  const char*                  name  ) 
+Ostap::Models::PyPdfLite::PyPdfLite
+( const Ostap::Models::PyPdfLite& right , 
+  const char*                     name  ) 
   : RooAbsPdf  ( right , name     ) 
     //
   , m_function ( right.m_function ) 
@@ -314,74 +311,93 @@ Ostap::Models::PyPdf2::PyPdf2
 // ============================================================================
 // virtual destructor 
 // ============================================================================
-Ostap::Models::PyPdf2::~PyPdf2() 
+Ostap::Models::PyPdfLite::~PyPdfLite() 
 {
   if ( m_function ) { Py_DECREF ( m_function  ) ; m_function  = nullptr ; }
 }
 // ============================================================================
-Ostap::Models::PyPdf2* 
-Ostap::Models::PyPdf2::clone ( const char* name ) const 
-{ return new Ostap::Models::PyPdf2 ( *this , name ) ; }
-
+std::size_t Ostap::Models::PyPdfLite::numrefs   () const
+{ return nullptr == m_function ? 0 : Py_REFCNT ( m_function ) ; }
+// ============================================================================
+/*  get the underlyaing function 
+ *  @attention referenc odut is incremented!
+ */
+// ============================================================================
+const PyObject*
+Ostap::Models::PyPdfLite::function  () const
+{
+  if ( m_function ) { Py_XINCREF ( m_function  ) ; }  
+  return m_function ;
+}
+// =============================================================================
+Ostap::Models::PyPdfLite* 
+Ostap::Models::PyPdfLite::clone ( const char* name ) const 
+{ return new Ostap::Models::PyPdfLite ( *this , name ) ; }
 // ============================================================================
 // the actual evaluation of function
 // ============================================================================
-Double_t Ostap::Models::PyPdf2::evaluate() const 
+Double_t Ostap::Models::PyPdfLite::evaluate() const 
 {
   // 
   if  ( 0 == m_function || !PyCallable_Check( m_function ) ) 
-  {
-    PyErr_Print() ;
-    Ostap::throwException ( "Function is not callable/invalid" ,
-                            "PyPdf2::evaluate"                 ,
-                            Ostap::StatusCode(500) )           ;
-  }
+    {
+      PyErr_Print() ;
+      Ostap::throwException ( "Function is not callable/invalid"     ,
+                              "PyPdfLite::evaluate"                  ,
+                              INVALID_CALLABLE , __FILE__ , __LINE__ ) ;
+    }
   //
-   //
+  //
   PyObject* arguments = PyTuple_New ( m_varlist.getSize() ) ;
   if ( !arguments )
-  {
-    PyErr_Print () ;
-    Ostap::throwException ( "Can't create PyTuple"   ,
-                            "PyPdf2::evaluate"     ,
-                            Ostap::StatusCode(500) ) ;
-    return 0 ;
-  }
+    {
+      PyErr_Print () ;
+      Ostap::throwException ( "Can't create PyTuple"             ,
+                              "PyPdfLite::evaluate"              ,
+                              ERROR_PYTHON , __FILE__ , __LINE__ ) ;
+      return 0 ;
+    }
   //
   unsigned short index = 0 ;
   //
   for  ( auto* av : m_varlist )
-  {
-    if ( nullptr == av ) {continue  ; }
-    RooAbsReal* v = static_cast<RooAbsReal*> ( av ) ;
-    //  
-    if ( nullptr == v  ) { continue ; }
-    PyObject* pv =  PyFloat_FromDouble ( v->getVal()  ) ;
-    if ( 0 != PyTuple_SetItem ( arguments , index , pv ) ) 
     {
-      PyErr_Print () ;
-      Py_XDECREF ( arguments ) ; arguments = nullptr ;
-      Ostap::throwException ( "Can't fill PyTuple"   ,
-                              "PyPdf2::evaluate"     ,
-                              Ostap::StatusCode(500) ) ;
+      Ostap::Assert ( nullptr != av                         ,
+                      "Invalid RooAbsArg"                   ,
+                      "PyPdfLite::evaluate"                 ,
+                      INVALID_ABSARG , __FILE__ , __LINE__  ) ;
+      //
+      RooAbsReal* v = static_cast<RooAbsReal*> ( av ) ;
+      Ostap::Assert ( nullptr != v                          ,
+                      "Invalid RooAbsReal"                  ,
+                      "PyPdfLite::evaluate"                 ,
+                      INVALID_ABSREAL , __FILE__ , __LINE__ ) ;
+      //
+      PyObject* pv =  PyFloat_FromDouble ( v->getVal()  ) ;
+      if ( 0 != PyTuple_SetItem ( arguments , index , pv ) ) 
+        {
+          PyErr_Print () ;
+          Py_XDECREF ( arguments ) ; arguments = nullptr ;
+          Ostap::throwException ( "Can't fill PyTuple"   ,
+                                  "PyPdfLite::evaluate"  ,
+                                  ERROR_PYTHON , __FILE__ , __LINE__ ) ;
+        }
+      ++index ;
     }
-    ++index ;
-  }
   //
   PyObject* result = PyObject_CallObject ( m_function , arguments ) ;
   //
   Py_XDECREF ( arguments ) ;
   //
-  return result_to_double ( result , "PyPdf2::evaluate" ) ;
-}
+  return result_to_double ( result , "PyPdfLite::evaluate" ) ;
+  }
 // ============================================================================
-
 
 // ============================================================================
 // needed ? 
 // ============================================================================
 ClassImp(Ostap::Models::PyPdf)
-ClassImp(Ostap::Models::PyPdf2)
+ClassImp(Ostap::Models::PyPdfLite)
 // ============================================================================
 //                                                                      The END
 // ============================================================================

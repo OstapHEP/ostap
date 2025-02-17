@@ -130,18 +130,18 @@ namespace Ostap
       // ======================================================================  
     } ;
     // ========================================================================
-    /** @class PyPdf2 Ostap/PyPdf.h
+    /** @class PyPdfLite Ostap/PyPdf.h
      *  `Light' version of PyPdf
      *  @see Ostap::Models::PyPDF
      *  @see ostap.fitting.pypdf.PyPDF2
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date   2018-06-06
      */
-    class PyPdf2 : public RooAbsPdf
+    class PyPdfLite : public RooAbsPdf
     {
     public: 
       // ======================================================================
-      ClassDefOverride(Ostap::Models::PyPdf2, 4 ) ;
+      ClassDefOverride(Ostap::Models::PyPdfLite, 1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -151,7 +151,7 @@ namespace Ostap
        *  @param function  callable function
        *  @param variables all variables 
        */
-      PyPdf2
+      PyPdfLite
       ( const char*       name      , 
         const char*       title     ,
         PyObject*         function  , 
@@ -163,7 +163,7 @@ namespace Ostap
        *  @param variables all variables 
        *  @param title     the title  of PDF 
        */
-      PyPdf2
+      PyPdfLite
       ( const std::string& name       , 
         PyObject*          function   ,
         const RooArgList&  variables  ,
@@ -175,29 +175,33 @@ namespace Ostap
        *  @param variables all variables 
        *  @param title     the title  of PDF 
        */
-      PyPdf2
+      PyPdfLite
       ( const std::string& name       , 
         const RooArgList&  variables  ,
         PyObject*          function   ,
         const std::string& title = "" );
       /// copy  constructor 
-      PyPdf2 ( const PyPdf2& right , const char* name = nullptr ) ;
+      PyPdfLite
+      ( const PyPdfLite& right          ,
+        const char*       name = nullptr ) ;
       /// virtual destructor 
-      virtual ~PyPdf2() ;
+      virtual ~PyPdfLite () ;
       /// clone method 
-      PyPdf2* clone ( const char* name ) const override ;
+      PyPdfLite* clone ( const char* name ) const override ;
       // ======================================================================
     public:
       // ======================================================================
       // default constructor (needed for serialization)
-      PyPdf2() {} // default constructor (needed for serialization)
+      PyPdfLite() {} // default constructor (needed for serialization)
       // ======================================================================
     public:
       // ======================================================================
-      ///  get all variables in a from of the list      
-      const RooArgList&   variables () const { return m_varlist ; }
       ///  get all variables in a form of the list
-      const RooArgList&   varlist   () const { return m_varlist ; }
+      const RooArgList&   varlist   () const { return m_varlist  ; }
+      ///  get the underlyaing function
+      const PyObject*     function  () const ; 
+      // ======================================================================
+      std::size_t         numrefs   () const ;  
       // ======================================================================
     public:
       // ======================================================================
