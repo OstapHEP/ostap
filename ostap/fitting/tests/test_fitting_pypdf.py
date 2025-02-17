@@ -426,8 +426,8 @@ def test_PyPDFLite4() :
 # =============================================================================
 if '__main__' == __name__ :
     
-    ## test_PyPDF1     () 
-    ## test_PyPDF2     () 
+    test_PyPDF1     () 
+    test_PyPDF2     () 
 
     test_PyPDFLite1 () 
     test_PyPDFLite2 () 
