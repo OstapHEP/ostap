@@ -54,7 +54,13 @@ Ostap::Models::PyPdf::PyPdf
   const RooArgList&  variables   ) 
   : RooAbsPdf   ( name.c_str() , title.c_str() )
   , m_varlist ( "!varlist" , "All variables(list)" , this ) 
-{ ::copy_real ( variables , m_varlist ) ; }
+{
+  ::copy_real ( variables                          ,
+                m_varlist                          ,
+                "Not all variables are RooAbsReal" ,
+                "Ostap::Models::PyPdf"             ,
+                __FILE__ , __LINE__                ) ;
+} 
 // ============================================================================
 /*  Standard constructor
  *  @param name      the name of PDF 
@@ -71,8 +77,18 @@ Ostap::Models::PyPdf::PyPdf
   : RooAbsPdf ( name.c_str() , title.c_str() )
   , m_varlist ( "!varlisy" , "All variables(list)" , this ) 
 {
-  ::copy_real ( observables , m_varlist ) ;
-  ::copy_real ( parameters  , m_varlist ) ;
+  //
+  ::copy_real ( observables                        ,
+                m_varlist                          ,
+                "Not all variables are RooAbsReal" ,
+                "Ostap::Models::PyPdf"             ,
+                __FILE__ , __LINE__                ) ;
+  //
+  ::copy_real ( parameters                         ,
+                m_varlist                          ,
+                "Not all variables are RooAbsReal" ,
+                "Ostap::Models::PyPdf"             ,
+                __FILE__ , __LINE__                ) ; 
 }
 // ============================================================================
 // helper function to be redefined in python  
@@ -231,6 +247,19 @@ double Ostap::Models::PyPdf::value ( const char* name  ) const
   return v->getVal() ;  
 }
 // ============================================================================
+std::vector<double>
+Ostap::Models::PyPdf::get_values() const
+{
+  std::vector<double> values  {} ; values.reserve ( m_varlist.size() ) ;
+  for ( const RooAbsArg* a : m_varlist )
+    {
+      // it is safe since itis checked in constructur 
+      const RooAbsReal* v = static_cast<const RooAbsReal*> ( a ) ;
+      values.push_back ( v->getVal() ) ;
+    }
+  return values ;
+}
+
 
 
 // ============================================================================
@@ -253,12 +282,16 @@ Ostap::Models::PyPdfLite::PyPdfLite
   , m_varlist  ( "!varlist" , "All variables(list)" , this ) 
 {
   //
+  ::copy_real   ( variables                          ,
+                  m_varlist                          ,
+                  "Not all variables are RooAbsReal" ,
+                  "Ostap::Models::PyPdfLite"         ,
+                  __FILE__ , __LINE__                ) ; 
+  //
   Ostap::Assert ( m_function && PyCallable_Check ( m_function ) , 
                   "Invalid py-function"                         , 
                   "Ostap::Models::PyPdfLite"                    ,
                   INVALID_CALLABLE , __FILE__ , __LINE__        ) ;
-  //
-  ::copy_real ( variables , m_varlist ) ;
   //
   if ( m_function ) { Py_XINCREF ( m_function ) ; }
 }
@@ -359,7 +392,18 @@ Double_t Ostap::Models::PyPdfLite::evaluate() const
   return result_to_double ( result , "PyPdfLite::evaluate" ) ;
   }
 // ============================================================================
-
+std::vector<double>
+Ostap::Models::PyPdfLite::get_values() const
+{
+  std::vector<double> values  {} ; values.reserve ( m_varlist.size() ) ;
+  for ( const RooAbsArg* a : m_varlist )
+    {
+      // it is safe since itis checked in constructur 
+      const RooAbsReal* v = static_cast<const RooAbsReal*> ( a ) ;
+      values.push_back ( v->getVal() ) ;
+    }
+  return values ;
+}
 // ============================================================================
 // needed ? 
 // ============================================================================

@@ -76,7 +76,8 @@ class PyVAR(Ostap.Functions.PyVar) :
 
         self._keep = variables, 
         if clone : self._keep += clone._keep
-        
+
+
     @abc.abstractmethod 
     def clone ( self  , newname = '' ) :
         raise NotImplementedError("PyPDF.clone must be implemented")
@@ -84,6 +85,11 @@ class PyVAR(Ostap.Functions.PyVar) :
     @abc.abstractmethod
     def evaluate ( self ) :
         raise NotImplementedError("PyPDF.evaluate must be implemented")
+
+    @property 
+    def values  ( self ) :
+        """`values` : list/tuple  of value of all argumets """
+        return tuple ( v for v in self.get_values () )
 
     @property
     def variables ( self ) :
@@ -118,7 +124,16 @@ def PyVARLite ( name            ,
     for v in variables : vv.add ( v )    
     return Ostap.Functions.PyVarLite ( name , title , function , vv )
 
-# =============================================================================
+# ==============================================================================
+# Furtyhe redecorations 
+# ==============================================================================
+
+# ==============================================================================
+##  list/tuple  of value of all argumets """
+def _pvarl_values_ ( self ) :
+    """`values` : list/tuple  of value of all argumets """
+    return tuple ( float ( v ) for v in self.varlist() )
+# ==============================================================================
 ## printout of PyVarLite object 
 def _pvarl_str_    ( self ) :
     """ printout of PyVarLite object """
@@ -128,12 +143,12 @@ def _pvarl_str_    ( self ) :
                                      typename ( self.function () ) ,
                                      prntrf   ( self.function () ) ,
                                      self.numrefs() )
-
-Ostap.Functions.PyVarLite.__str__   = _pvarl_str_
-Ostap.Functions.PyVarLite.__repr__  = _pvarl_str_
-
+# =============================================================================
 ## The factory to de-serialize the PyVarLine onjects 
-def pvarl_factory ( config ) : return PyVARLite ( **config )
+def pvarl_factory ( config ) :
+    """ The factory to de-serialize the PyVarLine onjects"""
+    return PyVARLite ( **config )
+# =============================================================================
 ## Reduce/serialize  PyPdfLite objects 
 def _pvarl_reduce_ ( self ) :
     """ Reduce/serialize  PyPdfLite objects """
@@ -143,8 +158,21 @@ def _pvarl_reduce_ ( self ) :
                'title'     : self.title      } 
     return  pvarl_factory , ( config , )
 
-Ostap.Functions.PyVarLite.__reduce__  = _pvarl_reduce_
-    
+Ostap.Functions.PyVarLite.values     = property ( _pvarl_values_ , None , None , _pvarl_values_ .__doc__ ) 
+Ostap.Functions.PyVarLite.__str__    = _pvarl_str_
+Ostap.Functions.PyVarLite.__repr__   = _pvarl_str_
+Ostap.Functions.PyVarLite.__reduce__ = _pvarl_reduce_
+
+_decorated_classes_ = (  
+    Ostap.Functions.PyVarLite , 
+    )
+
+_new_methods_  = (
+    Ostap.Functions.PyVarLite.values     , 
+    Ostap.Functions.PyVarLite.__str__    ,
+    Ostap.Functions.PyVarLite.__repr__   ,
+    Ostap.Functions.PyVarLite.__reduce__ ,
+)
 # =============================================================================
 if '__main__' == __name__ :
     

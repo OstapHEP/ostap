@@ -91,7 +91,7 @@ class MyGauss1(PyPDF) :
 
     ## mandatory evaluate method 
     def evaluate ( self ) :
-        x, mean, sigma = self.variables
+        x, mean, sigma = self.varibales 
         return Ostap.Math.gauss_pdf ( float ( x ) , float ( mean ) , float ( sigma ) )
 
     def __reduce__  ( self ) :
@@ -120,8 +120,7 @@ class MyGauss2(PyPDF) :
 
     ## mandatory clone method 
     def clone ( self , newname = '' ) :
-        newname = newname if newname else self.name 
-        cloned  = MyGauss2 ( newname , self.title , None , None , None , clone = self )
+        cloned  = MyGauss2 ( newname if newname else self.name , self.title , None , None , None , clone = self )
         ROOT.SetOwnership ( cloned  , False )
         return cloned
 

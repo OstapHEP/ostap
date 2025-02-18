@@ -389,11 +389,14 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
+    """
     with timing ("test_eff_pdf"   , logger ) :  
         test_eff_PDF   ()
-        
+
+    """
     with timing ("test_eff_BP" , logger ) :  
         test_eff_BP    ()
+
     
     with timing ("test_eff_MP" , logger ) :        
         test_eff_MP  ()
@@ -409,7 +412,8 @@ if '__main__' == __name__ :
         
     with timing ("test_eff_FUN" , logger ) :        
        test_eff_FUN ()
-        
+       
+    
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :
         test_db ()

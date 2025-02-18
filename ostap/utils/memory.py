@@ -25,16 +25,15 @@ __all__     = (
     'memory_usage'   , # report current memory usage 
     )
 # =============================================================================
-import os  
+import os
+from ostap.logger.symbols import ram as ram_symbol 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.memory' )
 else                       : logger = getLogger( __name__             )
 del getLogger
 # =============================================================================
-from sys import version_info as python_version 
-if   2 < python_version.major : LONG = int
-else                          : LONG = long 
+ram_symbol = ram_symbol + ' ' if ram_symbol else ''
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
@@ -74,7 +73,7 @@ except ImportError : # ========================================================
             proc = '/proc/%d/stat' % os.getpid()
         try : 
             with open ( proc , 'r' ) as p :
-                for l in  p : return LONG ( l.split(' ')[22] )/1024./1024
+                for l in  p : return int ( l.split(' ')[22] )/1024./1024
         except:
             return -1
 # ============================================================================
@@ -163,7 +162,7 @@ class Memory(object):
         except TypeError :
             message = 'Memory %-18s %+.1fMB/[%.2fGB]'% ( self.name , self.delta , current / 1024. )
 
-        self.logger.info ( message )
+        self.logger.info ( ram_symbol + message )
  
 # ============================================================================
 ## create the context manager to monitor the virtual memory increase  

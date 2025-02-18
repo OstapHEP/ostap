@@ -175,7 +175,7 @@ class Selector ( Ostap.Selector ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-09
 class SelectorWithCuts (Ostap.SelectorWithCuts) :
-    """Efficient selector that runs only for 'good'-events  
+    """ Efficient selector that runs only for 'good'-events  
     """
     ## constructor 
     def __init__ ( self             , 
@@ -650,7 +650,7 @@ class SelStat(object) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  - thanks to  Alexander BARANOV 
 class SelectorWithVars(SelectorWithCuts) :
-    """Create and fill the basic dataset for RooFit
+    """ Create and fill the basic dataset for RooFit
     
     - Define the list of 'variables' for selector:
     
@@ -713,9 +713,7 @@ class SelectorWithVars(SelectorWithCuts) :
                    tree          = ROOT.nullptr    ,
                    logger        = logger          ) :
 
-        
-        if not name : name = dsID ()
-            
+        if not name     : name     = dsID ()            
         if not fullname : fullname = name 
 
         self.__name     = name
@@ -737,44 +735,14 @@ class SelectorWithVars(SelectorWithCuts) :
         self.__variables = [] 
         self.__varset    = ROOT.RooArgSet()
 
-        ## vvars  = set ()
-        ## vnames = set ()
-        ## for v in variables :
-
-        ##     vv = v 
-        ##     if   isinstance ( v , str              ) : vv = Variable (   v ) 
-        ##     elif isinstance ( v , ROOT.RooAbsReal  ) : vv = Variable (   v )
-        ##     elif isinstance ( v , ( tuple , list ) ) : vv = Variable (  *v )
-        ##     elif isinstance ( v , dict             ) : vv = Variable ( **v )
-        ##     elif isinstance ( v , Variable         ) : vv = v  
-
-        ##     assert isinstance  ( vv , Variable ), 'Invalid variable %s/%s' % ( vv , type ( vv ) )
-
-        ##     if vv.name in self.__varset :
-        ##         logger.error ( 'Variable  %s is already defined! skip it' % vv.name )
-        ##         continue 
-
-        ##     self.__variables.append ( vv     )
-        ##     self.__varset   .add    ( vv.var )
-        ##     #
-        ##     if   vv.trivial and vv.name == vv.formula : pass
-        ##     elif vv.really_trivial                    : pass
-        ##     elif vv.formula                           : pass
-        ##     else                                      :
-        ##         self.__triv_vars = False
-        ##     #
-        ##     vvars.add ( vv )
-            
-        ## self.__variables = tuple( self.__variables ) 
-
         self.__variables = Variables ( variables ) 
         for v in self.__variables : self.__varset.add ( v.var )
             
-        assert 1 <= len ( self.__variables ), \
-               'Invalid setting of variablesl!'
+        assert 1 <= len ( self.__variables ) , 'Invalid setting of variablesl!'
         
         self.__triv_sel = True 
         ## self.__triv_sel = False
+        
         if   not selection                             : self.__triv_sel = True
         elif tree and tree.valid_formula ( selection ) : self.__triv_sel = True   
         elif tree and valid_formula      ( selection , self.varset ) :
@@ -963,17 +931,6 @@ class SelectorWithVars(SelectorWithCuts) :
         """ Get the data-set """ 
         return self.__data
 
-    ## # =========================================================================
-    ## ## the only one actually important method 
-    ## def Process ( self, entry ):
-    ##     """ Fill data set 
-    ##     """
-    ##     #
-    ##     ## == getting the next entry from the tree
-    ##     #
-    ##     if self.GetEntry ( entry ) <=  0 : return 0             ## RETURN 
-    ##     #
-    
     # =========================================================================
     ## the only one actually important method 
     def process_entry ( self ):
@@ -1012,7 +969,7 @@ class SelectorWithVars(SelectorWithCuts) :
     # =========================================================================
     ## fill it! 
     def fill ( self , bamboo ) :
-        """The  actual processing for the given 'bamboo'
+        """ The  actual processing for the given 'bamboo'
         Note that   this method is independent on TTree/TChain and can be used directy
         One just needs to  ensure that:
         - 'accessor functions' for the variables and 'cuts' agree with the type of 'bamboo'
@@ -1057,7 +1014,7 @@ class SelectorWithVars(SelectorWithCuts) :
     #  new_sel = sel.clone ( name = 'QUQU' , fullname = 'FullName  ) 
     #  @endcode
     def clone ( self , **kwargs ) :
-        """Clone the selector
+        """ Clone the selector
         >>> sel = ...
         >>> new_sel = sel.clone ( name = 'QUQU' , fullname = 'FullName  ) 
         """
@@ -1268,7 +1225,7 @@ class SelectorWithVars(SelectorWithCuts) :
     ## Start slave processing
     #  @see Ostap::SelectorWithCuts::SlaveBegin
     def SlaveBegin     ( self , tree ) :
-        """Start slave processing
+        """ Start slave processing
         - see Ostap::SelectorWithCuts::SlaveBegin
         """
         #
@@ -1317,7 +1274,7 @@ class SelectorWithVars(SelectorWithCuts) :
     ## Notify  (e.g. another TTree in the chain
     #  @see Ostap::SelectorWithCuts::Notify 
     def Notify         ( self ) :
-        """Notify  (e.g. another TTree in the chain
+        """ Notify  (e.g. another TTree in the chain
         - see Ostap::SelectorWithCuts::Notify
         """
         #
@@ -1333,7 +1290,7 @@ class SelectorWithVars(SelectorWithCuts) :
     ## Terminate slave processing
     #  @see Ostap::SelectorWithCuts::SlaveTerminate
     def SlaveTerminate ( self               ) :
-        """Terminate slave processing
+        """ Terminate slave processing
         - see Ostap::SelectorWithCuts::SlaveTerminate
         """
         
@@ -1352,7 +1309,7 @@ class SelectorWithVars(SelectorWithCuts) :
     # =========================================================================
     ## reduce the object 
     def __reduce__ ( self ) :
-        """Reduce the object"""
+        """ Reduce the object"""
         tree = self.tree
         if tree : return root_factory , ( type ( self )  ,
                                           self.variables ,
@@ -1382,7 +1339,7 @@ from   ostap.io.zipshelve   import ZipShelf
 #  @date   2014-07-02
 #  @author Sasha Baranov a.baranov@cern.ch
 class SelectorWithVarsCached(SelectorWithVars) :
-    """Create and fill the basic dataset for RooFit. Or just load it from cache.
+    """ Create and fill the basic dataset for RooFit. Or just load it from cache.
     """
     ## constructor 
     def __init__ ( self                           ,
@@ -1416,7 +1373,8 @@ class SelectorWithVarsCached(SelectorWithVars) :
             self._loaded_from_cache = True
 
     def _l_internals(self, lmbd):
-        " Returns str of lambda expression internals"
+        """ Returns str of lambda expression internals
+        """
         if not hasattr(lmbd, "__code__"):
             return ""
 
@@ -1424,7 +1382,8 @@ class SelectorWithVarsCached(SelectorWithVars) :
         return str((code.co_code, code.co_consts))
 
     def _get_files_str(self):
-        "Returns string with used files and their modification times"
+        """ Returns string with used files and their modification times
+        """
         ret = ""
         for filename in sorted(self.__filelist):
             ret += filename
@@ -1432,7 +1391,8 @@ class SelectorWithVarsCached(SelectorWithVars) :
         return ret
 
     def _compute_cache_name(self):
-        " Computes dataset cache path(SHA512) "
+        """ Computes dataset cache path(SHA512)
+        """ 
         h =  self._get_files_str()
         h += self._l_internals(self.morecuts)
 
@@ -1454,7 +1414,8 @@ class SelectorWithVarsCached(SelectorWithVars) :
         
 
     def _loadcache(self):
-        " Loads cache from ZipShelf. Returns `True` on success, `False` othervise"
+        """ Loads cache from ZipShelf. Returns `True` on success, `False` othervise
+        """ 
         if not os.path.exists(self._cachepath):
             return False
 
@@ -1463,9 +1424,9 @@ class SelectorWithVarsCached(SelectorWithVars) :
 
         return True
 
-    def _savecache(self):
-        
-        " Saves cache to file. "
+    def _savecache(self):        
+        """ Saves cache to file.
+        """ 
         with ZipShelf(self._cachepath) as db : 
             db['data'] = self.data
 

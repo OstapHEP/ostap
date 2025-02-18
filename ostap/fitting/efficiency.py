@@ -408,7 +408,7 @@ class Efficiency1D (Efficiency) :
     #  value =  eff(x) 
     #  @endcode     
     def __call__ (  self , x , error = False ) :
-        """Get the efficiency
+        """ Get the efficiency
         >>> dataset = ... 
         >>> eff = Efficiency1D( ... )
         >>> eff.fitTo ( dataset ) 
@@ -490,13 +490,13 @@ class Efficiency2D (Efficiency) :
         elif isinstance ( efficiency , ROOT.RooAbsPdf   ) :            
             okx = xvar and isinstance ( xvar , ROOT.RooAbsReal )
             oky = yvar and isinstance ( yvar , ROOT.RooAbsReal )
-            assert oix and oky, 'Invalid efficiency/xvar/yvar setting!'            
+            assert okx and oky, 'Invalid efficiency/xvar/yvar setting!'            
             eff_pdf = Generic2D_pdf ( efficiency , xvar , yvar  )                
             eff_fun = None       
         elif isinstance ( efficiency , ROOT.RooAbsReal  ) :            
             okx = xvar and isinstance ( xvar , ROOT.RooAbsReal )
             oky = yvar and isinstance ( yvar , ROOT.RooAbsReal )
-            assert oix and oky, 'Invalid efficiency/xvar/yvar setting!'            
+            assert okx and oky, 'Invalid efficiency/xvar/yvar setting!'            
             eff_pdf = Fun2D ( efficiency , xvar = xvar , yvar = yvar )  
             eff_fun = efficiency 
         else :
@@ -505,7 +505,7 @@ class Efficiency2D (Efficiency) :
         
         self.__xvar = xvar 
         self.__yvar = yvar 
-        Efficiency.__init__ ( self , name , eff_pdf , eff_fun ,  ( xvar , yvar) , cut , accept )
+        Efficiency.__init__ ( self , name , eff_pdf , eff_fun , ( xvar , yvar) , cut , accept )
         
         self.config = {
             'name'       : self.name   ,

@@ -13,14 +13,17 @@ __all__     = (
     'Timer'          , ## context manager to count time 
    )
 # =============================================================================
-from   ostap.logger.logger import getLogger
+from   timeit               import default_timer as _timer 
+from   ostap.logger.symbols import clock         as clock_symbol 
+# =============================================================================
+from   ostap.logger.logger  import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.utils.timing' )
 else                       : logger = getLogger ( __name__             )
 _logger_t = type ( logger )
 del getLogger
 # =============================================================================
-from timeit import  default_timer as _timer 
-# ==============================================================================
+clock_symbol = clock_symbol + ' ' if clock_symbol else '' 
+# =============================================================================
 ## @class Timer
 #  Simple context manager to measure the time 
 #  @code
@@ -98,17 +101,17 @@ class Timer(object):
 
         self.format        = format
         
-        if    start               : self.start_message = start
-        elif '' == start and name : self.start_message = 'Start  %s' % name
-        else                      : self.start_message = ''
-        
+        if    start               : self.start_message = clock_symbol + start
+        elif '' == start and name : self.start_message = clock_symbol + 'Start  %s' % name
+        else                      : self.start_message = clock_symbol 
+
         self.__delta = -100000
         
     def __enter__ ( self ) :
         self.__start = _timer ()
         self.__delta = 0 
         if self.logger and self.start_message :
-            self.logger ( self.start_message )
+            self.logger ( clock_symbol + self.start_message )
         return self
     
     def __exit__  ( self, *_ ) :
@@ -119,8 +122,9 @@ class Timer(object):
             try :
                 message = self.format       % ( self.__name , self.__delta ) 
             except TypeError :
-                message = 'Timing %-18s %s' % ( self.__name , self.__delta )                
-            self.logger ( message )
+                message = 'Timing %-18s %s' % ( self.__name , self.__delta )
+                
+            self.logger ( clock_symbol + message )
             
     @property
     def name ( self ) :

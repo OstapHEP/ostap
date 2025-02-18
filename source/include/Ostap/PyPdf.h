@@ -74,7 +74,12 @@ namespace Ostap
     public:
       // ======================================================================
       ///  get all variables in a form of the list      
-      const RooArgList& varlist () const { return m_varlist  ; }
+      const RooArgList& varlist      () const { return m_varlist  ; }
+      /// get a number of variables 
+      std::size_t        nvars       () const { return m_varlist.size() ; }
+      // ======================================================================
+      //// get values as a vector 
+      std::vector<double> get_values () const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -174,13 +179,21 @@ namespace Ostap
     public:
       // ======================================================================
       ///  get all variables in a form of the list
-      const RooArgList&   varlist   () const { return m_varlist  ; }
+      const RooArgList&   varlist    () const { return m_varlist        ; }
+      /// get a number of variables 
+      std::size_t         nvars      () const { return m_varlist.size() ; }
+      //// get values as a vector 
+      std::vector<double> get_values () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
       /** get the underlyaing function 
        *  @attention referenc odut is incremented!
        */
-      const PyObject*     function  () const ; 
+      const PyObject*     function   () const ; 
       // ======================================================================
-      std::size_t         numrefs   () const ;  
+      /// #of refernce for PyObject 
+      std::size_t         numrefs    () const ;  
       // ======================================================================
     public:
       // ======================================================================

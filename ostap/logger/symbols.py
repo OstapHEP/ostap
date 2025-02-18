@@ -24,6 +24,8 @@ __all__     = (
     'squared_ok'    ,
     'thumb_up'      ,
     'thumb_down'    ,
+    'clock'         ,
+    'ram'           ,
 ) # ===========================================================================
 from   ostap.utils.basic import isatty, has_unicode 
 # =============================================================================
@@ -43,6 +45,8 @@ hand_ok       = '\U0001f44c' if show else 'ok'
 squared_ok    = '\U0001f197' if show else 'ok'
 thumb_up      = '\U0001f44d' if show else '+'
 thumb_down    = '\U0001f44e' if show else '-'
+clock         = '\U0001f550' if show else '' 
+ram           = '\U0001f40f' if show else '' 
 
 # =============================================================================
 if '__main__' == __name__ :

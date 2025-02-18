@@ -98,7 +98,12 @@ namespace Ostap
       double value ( const          char*  name ) const ;
       // =====================================================================
       /// get all   parameters in a form of list
-      const RooArgList& varlist   () const { return m_varlist ; }
+      const RooArgList&   varlist   () const { return m_varlist ; }
+      // ======================================================================
+      /// get a number of variables 
+      std::size_t         nvars      () const { return m_varlist.size() ; }
+      //// get values as a vector 
+      std::vector<double> get_values () const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -151,12 +156,20 @@ namespace Ostap
     public:
       // ======================================================================
       ///  get all variables in a form of the list
-      const RooArgList&   varlist   () const { return m_varlist  ; }
+      const RooArgList&   varlist    () const { return m_varlist  ; }
+      /// get a number of variables 
+      std::size_t         nvars      () const { return m_varlist.size() ; }
+      //// get values as a vector 
+      std::vector<double> get_values () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
       /** get the underlyaing function 
        *  @attention referenc odut is incremented!
        */
       const PyObject*     function  () const ; 
       // ======================================================================
+      /// #of referenced for internap PyObject 
       std::size_t         numrefs   () const ;  
       // ======================================================================
     public:

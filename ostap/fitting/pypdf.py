@@ -81,7 +81,12 @@ class PyPDF(Ostap.Models.PyPdf) :
     @abc.abstractmethod
     def evaluate ( self ) :
         raise NotImplementedError("PyPDF.evaluate must be implemented")
-
+    
+    @property 
+    def values    ( self ) :
+        """`values` : get h values of all varinables as list/tuple """
+        return tuple ( v for v in self.get_values() )
+    
     @property
     def variables ( self ) :
         """`variables` : get list of variables (same as `varlist()` 
@@ -115,6 +120,13 @@ def PyPDFLite ( name            ,
     return Ostap.Models.PyPdfLite ( name , title , function , vv )
 
 # =============================================================================
+## Further decoration 
+# =============================================================================
+##  list/tuple  of value of all argumets """
+def _ppdfl_values_ ( self ) :
+    """`values` : list/tuple  of value of all arguments """
+    return tuple ( v for v in self.get_values() )
+# =============================================================================
 ## printout of PyPdfLite object 
 def _ppdfl_str_    ( self ) :
     """ printout of PyPdfLite object """
@@ -125,8 +137,6 @@ def _ppdfl_str_    ( self ) :
                                      prntrf   ( self.function () ) ,
                                      self.numrefs() )
 
-Ostap.Models.PyPdfLite.__str__  = _ppdfl_str_
-Ostap.Models.PyPdfLite.__repr__ = _ppdfl_str_
 
 ## The factory to de-serialize the PyPdfLine onjects 
 def ppdfl_factory ( config ) : return PyPDFLite ( **config )
@@ -139,8 +149,20 @@ def _ppdfl_reduce_ ( self ) :
                'title'     : self.title      } 
     return  ppdfl_factory , ( config , )
 
+Ostap.Models.PyPdfLite.values     = _ppdfl_values_
+Ostap.Models.PyPdfLite.__str__    = _ppdfl_str_
+Ostap.Models.PyPdfLite.__repr__   = _ppdfl_str_
 Ostap.Models.PyPdfLite.__reduce__ = _ppdfl_reduce_
 
+_decorated_classes_ = (  
+    Ostap.Models.PyPdfLite , 
+    )
+_new_methods_  = (
+    Ostap.Models.PyPdfLite.values     , 
+    Ostap.Models.PyPdfLite.__str__    , 
+    Ostap.Models.PyPdfLite.__repr__   , 
+    Ostap.Models.PyPdfLite.__reduce__ , 
+)
 # =============================================================================
 if '__main__' == __name__ :
     

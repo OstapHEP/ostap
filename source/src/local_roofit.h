@@ -19,6 +19,7 @@
 // Local
 // ============================================================================
 #include "Exception.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file local_roofit.h
  *  Collection of simple utilities for RooFit objects 
@@ -30,14 +31,7 @@ namespace
 {
   // ==========================================================================
   /// size of RooArgList 
-  inline std::size_t size ( const RooAbsCollection& lst ) 
-  {
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
-    return lst.getSize () ;
-#else 
-    return lst.size    () ;
-#endif
-  }
+  inline std::size_t size ( const RooAbsCollection& lst )  { return lst.size () ; }
   // ==========================================================================
   /** copy from list to list
    *  @param from objects to be copied from this list 
@@ -46,54 +40,27 @@ namespace
   inline void copy 
   ( const RooAbsCollection&  from ,
     RooAbsCollection&        to   ) 
-  {
-    //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
-    //
-    Ostap::Utils::Iterator tmp ( from ) ; // only for ROOT < 6.18
-    RooAbsArg* c = 0 ;
-    while ( c = (RooAbsArg*) tmp.next() ) { to.add ( *c ) ; }
-    //
-#else
-    //
-    for ( auto* c : from ) { to.add ( *c ) ; }
-    //
-#endif 
-    //
-  }
+  { for ( auto* c : from ) { to.add ( *c ) ; } }
   // ==========================================================================
   /** copy RooAbsReal from list to list
    *  @param from objects to be copied from this list 
    *  @param to   objects to be copied to this proxy 
    */
-  inline unsigned   int copy_real 
+  inline std::size_t copy_real 
   ( const RooAbsCollection&  from                                    ,
     RooAbsCollection&        to                                      , 
     const std::string&       message = "Variable is not RooAbsReal!" ,
-    const std::string&       tag     = "Ostap::copy_real"            )
+    const std::string&       tag     = "Ostap::copy_real"            ,
+    const char*              file    = nullptr                       ,
+    const std::size_t        line    = 0                             )
   {
     //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
-    //
-    Ostap::Utils::Iterator tmp ( from ) ; // only for ROOT < 6.18 
-    RooAbsArg* c = 0 ;
-    while ( c = (RooAbsArg*) tmp.next() )
-    {
-      Ostap::Assert ( dynamic_cast<RooAbsReal*> ( c ) != nullptr , message , tag , 510 ) ;
-      to.add ( *c ) ;
-    }
-    //
-#else
-    //
-    unsigned ii = 0 ;
     for ( auto* c : from ) 
-    {
-      Ostap::Assert ( dynamic_cast<RooAbsReal*> ( c ) != nullptr , message , tag , 510 ) ;
-      to.add ( *c ) ;   
-      ++ii ;
-    }
-    //
-#endif 
+      {
+        Ostap::Assert ( nullptr != dynamic_cast<RooAbsReal*> ( c ) ,
+                        message , tag , INVALID_ABSREAL , file , line ) ;
+        to.add ( *c ) ;   
+      }
     //
     return ::size ( from ) ;
     //
@@ -107,30 +74,17 @@ namespace
   ( const RooAbsCollection&  from                                    ,
     RooArgSet&               to                                      , 
     const std::string&       message = "Variable is not RooAbsReal!" ,
-    const std::string&       tag     = "Ostap::copy_real"            )
+    const std::string&       tag     = "Ostap::copy_real"            ,
+    const char*              file    = nullptr                       ,
+    const std::size_t        line    = 0                             )
   {
     //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
-    //
-    Ostap::Utils::Iterator tmp ( from ) ; // only for ROOT < 6.18 
-    RooAbsArg* c = 0 ;
-    while ( c = (RooAbsArg*) tmp.next() )
-    {
-      Ostap::Assert ( dynamic_cast<RooAbsReal*> ( c ) != nullptr , message , tag , 510 ) ;
-      to.add ( *c ) ;
-    }
-    //
-#else
-    //
-    unsigned ii = 0 ;
     for ( auto* c : from ) 
-    {
-      Ostap::Assert ( dynamic_cast<RooAbsReal*> ( c ) != nullptr , message , tag , 510 ) ;
-      to.add ( *c ) ;   
-      ++ii ;
-    }
-    //
-#endif 
+      {
+        Ostap::Assert ( nullptr != dynamic_cast<RooAbsReal*> ( c )    , 
+                        message , tag , INVALID_ABSREAL , file , line ) ;
+        to.add ( *c ) ;   
+      }
     //
     return ::size ( from ) ;
     //
@@ -158,28 +112,12 @@ namespace
     //
     const RooArgSet* nset  = lst.nset() ;
     //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
-    //
-    Ostap::Utils::Iterator it  ( lst  ) ; // only for ROOT < 6.18 
-    RooAbsArg*   p = 0 ;
-    unsigned int k = 0 ;
-    while ( ( p = (RooAbsArg*) it.next() ) )
-    {
-      const RooAbsReal* r = static_cast<const RooAbsReal*>( p ) ;
-      obj.setPar ( k + shift , r->getVal ( nset ) ) ;  
-      ++k ;
-    }
-    //
-#else
-    //
     const unsigned int N = lst.size() ;
     for ( unsigned int k = 0 ; k < N ; ++k ) 
-    {
-      const RooAbsReal& r = static_cast<const RooAbsReal&>( lst [ k ] ) ;
-      obj.setPar ( k + shift , r.getVal ( nset ) ) ;  
-    }
-    //
-#endif
+      {
+        const RooAbsReal& r = static_cast<const RooAbsReal&>( lst [ k ] ) ;
+        obj.setPar ( k + shift , r.getVal ( nset ) ) ;  
+      }
     //
   }
   // =======================================================================================
@@ -191,20 +129,6 @@ namespace
     const RooArgSet* nset  = lst.nset() ;
     vct.resize ( ::size ( lst ) ) ;
     //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
-    //
-    Ostap::Utils::Iterator it  ( lst  ) ; // only for ROOT < 6.18 
-    RooAbsArg*   p = 0 ;
-    unsigned int k = 0 ;
-    while ( ( p = (RooAbsArg*) it.next() ) )
-      {
-	const RooAbsReal* r = static_cast<const RooAbsReal*>( p ) ;
-	vct [ k ] = r->getVal ( nset ) ;  
-	++k ;
-      }
-    //
-#else
-    //
     const unsigned int N = lst.size() ;
     for ( unsigned int k = 0 ; k < N ; ++k ) 
       {
@@ -212,60 +136,38 @@ namespace
 	vct [ k ] = r.getVal ( nset ) ;  
       }
     //
-#endif
-    //
   }
   // ==========================================================================
   void assign 
-(       RooAbsCollection& to   ,
-  const RooAbsCollection& from ) 
-{
-  if ( &from == &to ) { return ; } // no self-assignment
-  // ==========================================================================
+  ( RooAbsCollection&       to   ,
+    const RooAbsCollection& from ) 
+  {
+    if ( &from == &to ) { return ; } // no self-assignment
+    // ==========================================================================
 #if ROOT_VERSION(6,26,0)  <= ROOT_VERSION_CODE 
-  // ==========================================================================  
-  to.assign ( from ) ;
-  // ==========================================================================
+    // ==========================================================================  
+    to.assign          ( from ) ;
+    // ==========================================================================
 #else 
-  // ==========================================================================
-  to.assignValueOnly ( from ) ;
-  // ==========================================================================
+    // ==========================================================================
+    to.assignValueOnly ( from ) ;
+    // ==========================================================================
 #endif 
-}
+  }
   // ==========================================================================
   inline long getValue ( const RooAbsCategory& c )
   {
     // ========================================================================
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE // ==============================
-    // ========================================================================
     return  c.getCurrentIndex() ;
-    // ========================================================================
-#else
-    // ========================================================================
-    return  c.getIndex() ;    
-    // ========================================================================    
-#endif
     // ========================================================================
   }
   // ==========================================================================
   inline std::string getLabel ( const RooAbsCategory & c )
   {
     // ========================================================================
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE // ==============================
-    // ========================================================================
     return  c.getCurrentLabel () ;
     // ========================================================================
-#else
-    // ========================================================================
-    return  c.getLabel () ;    
-    // ========================================================================    
-#endif
-    // ========================================================================
   }
-
-  
-
-  
   // ==========================================================================
 } //                                             The end of anynymous namespace 
 // ============================================================================

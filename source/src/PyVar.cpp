@@ -52,11 +52,11 @@ Ostap::Functions::PyVar::PyVar
   : RooAbsReal  ( name  , title ) 
   , m_varlist ( "!varlist", "The actual variables/parameters" , this ) 
 {
-  //
-  ::copy_real ( variables , m_varlist            ,
-                "Variable is not RooAbsReal!"    ,
-                "Ostap::Functions::PyVar::PyVar" ) ;
-  //
+  ::copy_real ( variables                          ,
+                m_varlist                          ,
+                "Not all variables are RooAbsReal" ,
+                "Ostap::Functions::PyVa"           ,
+                __FILE__ , __LINE__                ) ;
 }
 // ============================================================================
 // Copy constructor
@@ -131,8 +131,18 @@ Double_t Ostap::Functions::PyVar::evaluate() const
   return -1000 ;
 }
 // ============================================================================
-
-
+std::vector<double>
+Ostap::Functions::PyVar::get_values() const
+{
+  std::vector<double> values  {} ; values.reserve ( m_varlist.size() ) ;
+  for ( const RooAbsArg* a : m_varlist )
+    {
+      // it is safe since itis checked in constructur 
+      const RooAbsReal* v = static_cast<const RooAbsReal*> ( a ) ;
+      values.push_back ( v->getVal() ) ;
+    }
+  return values ;
+}
 
 // ============================================================================
 // PyVarLite
@@ -149,14 +159,16 @@ Ostap::Functions::PyVarLite::PyVarLite
   , m_varlist   ( "!varlisy", "The actual variables/parameters" , this ) 
 {
   //
+  ::copy_real   ( variables                          ,
+                  m_varlist                          ,
+                  "Not all variables are RooAbsReal" ,
+                  "Ostap::Functions::PyVarLite"      ,
+                  __FILE__ , __LINE__                ) ; 
+  //
   Ostap::Assert ( m_function && PyCallable_Check ( m_function ) , 
                   "Invalid py-function"                         , 
-                  "Ostap::Functionis::PyVarLite"                ,
+                  "Ostap::Functions::PyVarLite"                 ,
                   INVALID_CALLABLE , __FILE__ , __LINE__        ) ;
-  //
-  ::copy_real  ( variables , m_varlist          ,
-                 "Variable is not RooAbsReal"   ,
-                 "Ostap::Functions::PyVarLite"  ) ;
   //
   Py_XINCREF ( m_function ) ;
 }
@@ -256,6 +268,18 @@ Double_t Ostap::Functions::PyVarLite::evaluate() const
   return result_to_double ( result , "PyVarLite::evaluate" ) ;
 }
 // ============================================================================
+std::vector<double>
+Ostap::Functions::PyVarLite::get_values() const
+{
+  std::vector<double> values  {} ; values.reserve ( m_varlist.size() ) ;
+  for ( const RooAbsArg* a : m_varlist )
+    {
+      // it is safe since itis checked in constructur 
+      const RooAbsReal* v = static_cast<const RooAbsReal*> ( a ) ;
+      values.push_back ( v->getVal() ) ;
+    }
+  return values ;
+}
 
 
 // ============================================================================
