@@ -209,7 +209,7 @@ def pretty_vae ( value              ,
     return _pretty_vae_ ( value       = value       ,
                           width       = width       ,
                           precision   = precision   ,
-                          parentheses = parentehses ) 
+                          parentheses = parentheses ) 
 
 # =======================================================================
 ## nice printout of the ValWithMultiErrors object  ( string + exponent)

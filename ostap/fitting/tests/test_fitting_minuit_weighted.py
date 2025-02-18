@@ -14,11 +14,10 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.core.core       import cpp, VE, dsID, rooSilent 
 from   ostap.utils.timing    import timing
-from   ostap.core.meta_info  import root_info
 from   ostap.plotting.canvas import use_canvas
 from   ostap.utils.utils     import wait, batch_env  
-import ostap.fitting.roofit 
 import ostap.fitting.models  as     Models 
+import ostap.fitting.roofit 
 import ROOT, random
 # =============================================================================
 # logging 
@@ -67,7 +66,7 @@ def test_minuit_weighted () :
         yvar.value = y 
         dataset.add ( varset   )
 
-    logger.info ('DATASET\n%s' % dataset )
+    logger.info ('DATASET\n%s' % dataset.table( prefix = '# ' ) ) 
 
     signal  = Models.Gauss_pdf ('G' , xvar = xvar , mean = ( 4, 6 ) , sigma =   ( 0.5 , 1.5 ) )
     model   = Models.Fit1D ( signal = signal , background = 0 )
@@ -84,33 +83,29 @@ def test_minuit_weighted () :
     model.sPlot ( dataset )
     dsw =  dataset.makeWeighted ( "S_sw" )
     
-    logger.info ('Weighted DATASET\n%s' % dsw )
+    logger.info ('Weighted DATASET\n%s' % dsw.table ( prefix = '# ' ) ) 
     
     ## fitting function for the  exponential stuff
     expf = Models.Bkg_pdf ( 'E' , xvar = yvar , power = 0 )
 
-    # ==============================================================================
-    ## ROOT/RooFit "feature" @see https://sft.its.cern.ch/jira/browse/ROOT-10668
-    if (6,19) <= root_info  < (6,20,6)  :
-        expf.tau.SetTitle ( expf.tau.GetName() ) 
-        
     rw , fw = expf.fitTo ( dsw , silent = True , draw = False )
     rw , fw = expf.fitTo ( dsw , silent = True , draw = True  , nbins = 50 )
+
+    logger.always ( str ( type ( rw ) ) )
     
     logger.info ('Weighted fit result (incorrect)\n%s' % rw.table ( title = 'incorrect')  )
     
     r2 , f2 = expf.fitTo ( dsw , silent = True , sumw2 = True , draw = False )
     r2 , f2 = expf.fitTo ( dsw , silent = True , sumw2 = True , draw = True  , nbins = 50 )
     
-    r2.Print('vvv')
+    ## r2.Print('vvv')
     
     logger.info ('Weighted fit result (SumW2=True)\n%s' % r2.table ( 'SumW2=True')  )
     
-    if (6,19) <= root_info :
-        with use_canvas ( "test_minuit_weighted" ) , wait ( 2 ) : 
-            ra , fa = expf.fitTo ( dsw , asymptotic = True , draw = False , silent = True )
-            ra , fa = expf.fitTo ( dsw , asymptotic = True , draw = True  , silent = True , nbins = 50 )
-            logger.info ('Weighted fit result (asymptotic=True)\n%s' % ra.table ( 'Asymptotic=True')  )
+    with use_canvas ( "test_minuit_weighted" ) , wait ( 2 ) : 
+        ra , fa = expf.fitTo ( dsw , asymptotic = True , draw = False , silent = True )
+        ra , fa = expf.fitTo ( dsw , asymptotic = True , draw = True  , silent = True , nbins = 50 )
+        logger.info ('Weighted fit result (asymptotic=True)\n%s' % ra.table ( 'Asymptotic=True')  )
         
     m = expf.minuit ( dataset = dsw , scale = False , silent = True )
     m.migrad ( 5 )
@@ -127,7 +122,6 @@ def test_minuit_weighted () :
     
 # =============================================================================
 if '__main__' == __name__ :
-
 
     with timing ("minuit weighted" , logger ) :
         test_minuit_weighted ()

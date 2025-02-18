@@ -76,7 +76,7 @@ class WorkManager(TaskManager) :
         
         self.pool   = MP.Pool ( self.ncpus )
         
-        if kwargs : self.extra_arguments ( **kwagrs )
+        if kwargs : self.extra_arguments ( **kwargs )
 
     # =========================================================================
     ## process the bare <code>executor</code> function

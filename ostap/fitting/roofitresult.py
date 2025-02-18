@@ -820,10 +820,10 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
     crows.sort()
     frows.sort()
 
-    all = rows + crows + frows + mrows  
-
+    all = rows + crows + frows + mrows
+    
     import ostap.logger.table as T
-
+    if all : all = T.remove_empty_columns ( all ) 
     return T.table ( all , title = title if title else r.GetTitle() , prefix = prefix , alignment = 'lcclcccc' )
 
 # =============================================================================

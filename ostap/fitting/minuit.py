@@ -14,11 +14,11 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = () 
 # =============================================================================
-from   ostap.core.core        import cpp, VE 
 from   ostap.core.ostap_types import integer_types, string_types
-from   ostap.core.meta_info   import root_info
+from   ostap.core.core        import cpp, VE
+from   ostap.utils.valerrors  import VAE 
 from   ostap.logger.colorized import allright, attention
-import ROOT, ctypes
+import ROOT, math, ctypes
 # =============================================================================
 # logging 
 # =============================================================================
@@ -653,7 +653,7 @@ ROOT.TMinuit . contour = _mn_contour_
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2011-06-07
 def _mn_contours_ ( self , npoints , par1  , par2 , *nsigmas ) :
-    """Create n-sigma contours for par1 vs par2
+    """ Create n-sigma contours for par1 vs par2
 
     >>> mn = ... # TMinuit object
     >>> graphs = mn.contours ( 100 , 'par1' , 'par2' , 1 ,  2 , 3 )
@@ -681,7 +681,6 @@ def _mn_contours_ ( self , npoints , par1  , par2 , *nsigmas ) :
     
 ROOT.TMinuit . contours = _mn_contours_
 
-root_major = root_info.major 
 # =============================================================================
 ## get the covariance matrix from TMinuit
 def _mn_cov_ ( self , size = -1 , root = False ) :
@@ -711,7 +710,7 @@ def _mn_cov_ ( self , size = -1 , root = False ) :
 # =============================================================================
 ## get the correlation matrix from TMinuit
 def _mn_cor_ ( self , size = -1 , root  = False ) :
-    """Get the correlation matrix from TMinuit
+    """ Get the correlation matrix from TMinuit
 
     >>> mn  = ... # TMinuit object
     >>> cor = mn.cor() 
@@ -719,8 +718,6 @@ def _mn_cor_ ( self , size = -1 , root  = False ) :
     """
     #
     cov = self.cov ( size , root )
-    #
-    from math import sqrt
     #
     if   isinstance ( cov , ROOT.TMatrix ) :
 
@@ -742,15 +739,10 @@ def _mn_cor_ ( self , size = -1 , root  = False ) :
             
             d_j = cov ( j , j )
             
-            if 0 != cov ( i , j ) and 0 < d_i and 0 < d_j  :
-                
-                if root and root_major < 6  : cor [ i ] [ j ] = cov ( i , j ) / sqrt ( d_i * d_j )
-                else                        : cor [ i ,   j ] = cov ( i , j ) / sqrt ( d_i * d_j )
-                
+            if 0 != cov ( i , j ) and 0 < d_i and 0 < d_j  :                
+                cor [ i ,   j ] = cov ( i , j ) / math.sqrt ( d_i * d_j )                
             else :
-                
-                if root and root_major < 6  : cor [ i ] [ j ] = 0 
-                else                        : cor [ i ,   j ] = 0
+                cor [ i ,   j ] = 0
 
     return cor
             
@@ -765,14 +757,14 @@ ROOT.TMinuit . corr = _mn_cor_
 # =============================================================================
 ## Build parameter table from (T)Minuit
 def _mn_table_ ( self , title =  '' , prefix = '' ) :
-    """Build parameter table from (T)Minuit
+    """ Build parameter table from (T)Minuit
     """
     
     header = ( 'Parameter' , '' , 'Value' )
     rows   = [] 
 
     from ostap.fitting.utils import fit_status  , cov_qual
-    from ostap.logger.pretty import pretty_float, pretty_ve
+    from ostap.logger.pretty import pretty_float, pretty_ve, pretty_vae 
 
     status = self.GetStatus()
     if status :
@@ -830,22 +822,25 @@ def _mn_table_ ( self , title =  '' , prefix = '' ) :
         
         dct = {}
         
-        dct [ 'name' ] = '%-2d: %s' % ( i , str ( name ).strip() ) 
+        dct [ 'name' ] = '#%-2d: %s' % ( i , str ( name ).strip() ) 
         dct [ 'value'] = val.value
         
         if low.value < high.value :
             dct [ 'low' ] = low .value
             dct [ 'high'] = high.value
-            has_limits = True 
+            has_limits = True
+            
         if 0 <= err.value :
             dct [ 'error' ] = err.value
             mn_plus , mn_minus = _mn_minerr_ ( self , str ( name ) )
-            if 0 < mn_plus or mn_minus < 0 :
-                dct [ 'minos+' ] = mn_plus 
-                dct [ 'minos-' ] = mn_minus 
-                has_minos = True 
+            if ( 0 <= mn_plus and mn_minus <= 0 ) :
+                error = err.value 
+                if abs ( mn_minus ) != mn_plus or abs ( mn_minus ) != error or mn_plus != error : 
+                    dct [ 'minos+' ] = mn_plus 
+                    dct [ 'minos-' ] = mn_minus 
+                    has_minos = True
+                
         dct_pars[ i ] = dct
-
     
     if has_minos :
         ## some parameters have MINOS errors, add columns
@@ -865,21 +860,25 @@ def _mn_table_ ( self , title =  '' , prefix = '' ) :
         
         row.append ( pdict.pop ( 'name' )      )
         
-        value =      pdict.pop ( 'value'       )
-        error =      pdict.pop ( 'error', None ) 
+        value    = pdict.pop ( 'value'         )
+        error    = pdict.pop ( 'error'  , None ) 
+        mn_plus  = pdict.pop ( 'minos+' , None )
+        mn_minus = pdict.pop ( 'minos-' , None )
 
-        if error is None :
+        if   ( not mn_plus is None and not mn_minus is None ) :
+            s , n = pretty_vae ( VAE ( value , mn_minus , mn_plus ) , parentheses = False ) 
+        elif not error is None :
+            s , n = pretty_ve  ( VE  ( value , error    * error   )  , parentheses = False ) 
+        else : 
             s , n = pretty_float ( value )
             s = "%s(fixed)" % s
-        else :
-            s , n = pretty_ve    ( VE ( value , error * error ) )
-
-        if n : row.append ( '[10^%+d]' % n ) 
-        else : row.append ( '' )
-
+            
+        if n : row.append ( '[10^%+d]' % n )
+        else : row.append ( ''             )
+            
         row.append ( s )
-        
-        if has_minos :
+                                 
+        if False and has_minos :
             mn_plus  = pdict.pop ( 'minos+' , None ) 
             mn_minus = pdict.pop ( 'minos-' , None )
             
@@ -906,14 +905,99 @@ def _mn_table_ ( self , title =  '' , prefix = '' ) :
         
     rows = [ header ] + rows
     
-    from  ostap.logger.table import  table
-
-    return   table ( rows ,  title = title  , prefix = prefix ) 
-
+    import ostap.logger.table as T 
+    if rows : rows = T.remove_empty_columns ( rows )
+    return T.table ( rows ,  title = title  , prefix = prefix ) 
 
 
 ROOT.TMinuit .table = _mn_table_
               
+_decorates_classes_ = (
+    ROOT.TMinuit ,
+)
+
+_new_methdos_ = (
+    ## 
+    ROOT.TMinuit . __contains__ , 
+    ROOT.TMinuit . __len__      , 
+    ## 
+    ROOT.TMinuit . par          , 
+    ROOT.TMinuit . parameter    , 
+    ROOT.TMinuit . __getitem__  , 
+    ##     
+    ROOT.TMinuit . par_name    , 
+    ROOT.TMinuit . par_index   , 
+    ROOT.TMinuit . index       , 
+    ## 
+    ROOT.TMinuit . __iter__  , 
+    ## 
+    ROOT.TMinuit.execute  , 
+    ROOT.TMinuit.show     , 
+    ## 
+    ROOT.TMinuit . setPar        , 
+    ROOT.TMinuit . setParameter  , 
+    ROOT.TMinuit . set_par       , 
+    ROOT.TMinuit . set_parameter , 
+    ## 
+    ROOT.TMinuit . fixPar        , 
+    ROOT.TMinuit . fix_par       , 
+    ROOT.TMinuit . fixParameter  , 
+    ROOT.TMinuit . fix_parameter , 
+    ROOT.TMinuit . fix           , 
+    ## 
+    ROOT.TMinuit . __setitem__   , 
+    ##         
+    ROOT.TMinuit . release  , 
+    ROOT.TMinuit . rel      , 
+    ROOT.TMinuit . rel_par  , 
+    ##     
+    ROOT.TMinuit . migrade  , 
+    ROOT.TMinuit . migrad   , 
+    ROOT.TMinuit . fit      , 
+    ## 
+    ROOT.TMinuit . hesse    , 
+    ROOT.TMinuit . minimize , 
+    ROOT.TMinuit . seek     , 
+    ROOT.TMinuit . simplex  , 
+    ## 
+    ROOT.TMinuit . __str__          , 
+    ROOT.TMinuit . __repr__         , 
+    ## 
+    ROOT.TMinuit . addpar           , 
+    ROOT.TMinuit . addPar           , 
+    ROOT.TMinuit . add_par          , 
+    ROOT.TMinuit . add_parameter    , 
+    ROOT.TMinuit . defpar           , 
+    ROOT.TMinuit . def_par          , 
+    ROOT.TMinuit . define_parameter , 
+    ROOT.TMinuit . newpar           , 
+    ROOT.TMinuit . newPar           , 
+    ROOT.TMinuit . new_par          , 
+    ROOT.TMinuit . new_parameter    , 
+    ##     
+    ROOT.TMinuit .   minErr         , 
+    ROOT.TMinuit . minosErr         , 
+    ROOT.TMinuit . minos_err        , 
+    ROOT.TMinuit . minos_errors     , 
+    ROOT.TMinuit .   minErrs        , 
+    ROOT.TMinuit . minosErrs        , 
+    ##     
+    ROOT.TMinuit . minos            , 
+    ## 
+    ROOT.TMinuit.errDef             ,
+    ROOT.TMinuit.err_def            ,
+    ROOT.TMinuit.error_def          ,
+    ROOT.TMinuit.error_definition   ,
+    ROOT.TMinuit.GetErrorDef        ,
+    ## 
+    ROOT.TMinuit . contours         , 
+    ROOT.TMinuit . contour          , 
+    ## 
+    ROOT.TMinuit . cov              , 
+    ROOT.TMinuit . cor              , 
+    ROOT.TMinuit . corr             ,  
+    ROOT.TMinuit .table             ,
+    )
 
     
     

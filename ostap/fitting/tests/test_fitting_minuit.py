@@ -31,43 +31,21 @@ batch_env ( logger )
 
 
 # ==============================================================================
-if old_PyROOT : 
-
-    # ==========================================================================
-    ## *OLD* PyROOT uses arrays/buffers 
-    def fcn ( npar ,  gin , f , par , iflag ) :
-        """Trivial FCN
-        """
-        
-        n = npar[0]                  ## ATTENTION! 
-        
-        s = 0 
-        for i in range ( n ) :
-            p  = par [ i ]        
-            s += ( p - 10*i ) ** 2 / ( i + 1 ) ** 2 
-               
-        f[0]  = s                    ## ATTENTION! 
+## *NEW* PyROOT  uses <code>ctypes.c_int</code>, <code>ctypes.c_double</code>
+def fcn ( npar ,  gin , f , par , iflag ) :
+    """ Trivial FCN
+    """
+    n = int(npar.value)          ## ATTENTION! 
     
-else : 
-    
-    # ==========================================================================
-    ## *NEW* PyROOT  uses <code>ctypes.c_int</code>, <code>ctypes.c_double</code>
-    def fcn ( npar ,  gin , f , par , iflag ) :
-        """Trivial FCN
-        """
-        n = int(npar.value)          ## ATTENTION! 
+    s = 0   
+    for i in range ( n ) :
+        p  = par [ i ]        
+        s += ( p - 10*i ) ** 2 / ( i + 1 ) ** 2 
         
-        s = 0   
-        for i in range ( n ) :
-            p  = par [ i ]        
-            s += ( p - 10*i ) ** 2 / ( i + 1 ) ** 2 
-            
-        f.value = s                  ## ATTENTION! 
-
+    f.value = s                  ## ATTENTION! 
 
 # =============================================================================
 def test_minuit ( ) :
-## if 1  < 2 :
     
     logger = getLogger("test_minuit")
     
