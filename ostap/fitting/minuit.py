@@ -868,7 +868,7 @@ def _mn_table_ ( self , title =  '' , prefix = '' ) :
         if   ( not mn_plus is None and not mn_minus is None ) :
             s , n = pretty_vae ( VAE ( value , mn_minus , mn_plus ) , parentheses = False ) 
         elif not error is None :
-            s , n = pretty_ve  ( VE  ( value , error    * error   )  , parentheses = False ) 
+            s , n = pretty_ve  ( VE  ( value , error    * error   ) , parentheses = False ) 
         else : 
             s , n = pretty_float ( value )
             s = "%s(fixed)" % s

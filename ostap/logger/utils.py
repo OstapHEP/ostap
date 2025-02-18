@@ -40,7 +40,7 @@ __all__     = (
     'pretty_err2'        , ## pretty print of the floating number with asymmetric error
     'pretty_errs'        , ## pretty print of the asymmetric error
     ## 
-    'fmt_pretty_float'   , ## format for pretty print of the floatig number 
+    'fmt_pretty_float'   , ## format for pretty print of the floating number 
     'fmt_pretty_err1'    , ## format for pretty print of the value with error
     'fmt_pretty_err2'    , ## format for pretty print of the value with asymmetric error
     'fmt_pretty_errs'    , ## format for pretty print of the value with multiple errors
@@ -74,6 +74,49 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.utils' )
 else                       : logger = getLogger( __name__ )
 del getLogger 
 # =============================================================================
+## Formats for nice printout of the object wit
+#  @code
+#  fmtv , expo = fmt_pretty_values ( e1 , e2 , e3 )
+#  @endcode
+#  @return formats for nice string and the separate exponent 
+def fmt_pretty_values ( *values         ,
+                        width       = 6 ,
+                        precision   = 4 ) : 
+    """ Formats for nice printout of the object with errors  ( strings + exponent)
+    >>> fmtv , expo = fmt_pretty_values ( e1 , e2 , e3 ) 
+    """
+    assert values , "At least one values must to be speified!"
+    assert isinstance ( width  , integer_types ) and \
+        isinstance ( precision , integer_types ) and 2 <= precision < width, \
+        "Invalid width/precision parameters: %s/%s" % ( width , precision ) 
+
+    av = max ( abs ( float ( v )  ) for v in values )
+    
+    if   100 <= av < 1000 : return '%%+%d.%df' %  ( width , precision - 2 ) , 0 
+    elif 10  <= av < 100  : return '%%+%d.%df' %  ( width , precision - 1 ) , 0 
+    elif 0.1 <= av < 10   : return '%%+%d.%df' %  ( width , precision     ) , 0 
+    elif iszero ( av )    : return '%%+%d.%df' %  ( width , precision     ) , 0 
+
+    #
+    ## here we scale input data and try to get formats for scaled data
+    #
+    
+    v_a , v_e = frexp10 ( av )
+    v_ee      = v_e - 1
+    n , r     = divmod  ( v_ee , 3 )    
+
+    scale  = 10 ** ( r - v_ee  )
+    
+    scaled = av * scale 
+
+    ## get formats for properly scaled data
+    fmtv , expo = fmt_pretty_values ( scaled                ,
+                                      width     = width     ,
+                                      precision = precision )
+    
+    return fmtv , expo + 3 * n 
+
+# ==================================================================================
 ## Formats for nice printout of the object with errors   ( string + exponent)
 #  @code
 #  fmtv , fmte , expo = fmt_pretty_errs ( number , ( e1 , e2 , e3 ) ) 
