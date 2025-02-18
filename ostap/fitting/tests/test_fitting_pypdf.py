@@ -91,7 +91,7 @@ class MyGauss1(PyPDF) :
 
     ## mandatory evaluate method 
     def evaluate ( self ) :
-        x, mean, sigma = self.varibales 
+        x, mean, sigma = self.variables 
         return Ostap.Math.gauss_pdf ( float ( x ) , float ( mean ) , float ( sigma ) )
 
     def __reduce__  ( self ) :
