@@ -314,7 +314,7 @@ class LogLevel(KeepLevel) :
     ...  do something here ...
     """
     def __init__  ( self , level = logging.INFO - 1 ) :
-        self.new_level = min ( level , ligging.ALWAYS - 1 ) ## cannot disable 'ALWAYS'
+        self.new_level = min ( level , logging.ALWAYS - 1 ) ## cannot disable 'ALWAYS'
         self.old_level = logging.root.manager.disable
 
     ## context manager: ENTER 

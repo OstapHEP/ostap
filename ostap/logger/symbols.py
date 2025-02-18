@@ -21,6 +21,7 @@ __all__     = (
     'checked_no'    ,
     'question_mark' ,
     'hand_ok'       ,
+    'squared_ok'    ,
     'thumb_up'      ,
     'thumb_down'    ,
 ) # ===========================================================================
@@ -39,6 +40,7 @@ checked_yes   = '\u2705'     if show else "+"
 checked_no    = '\u274c'     if show else "-"
 question_mark = '\u2753'     if show else "?"
 hand_ok       = '\U0001f44c' if show else 'ok'
+squared_ok    = '\U0001f197' if show else 'ok'
 thumb_up      = '\U0001f44d' if show else '+'
 thumb_down    = '\U0001f44e' if show else '-'
 

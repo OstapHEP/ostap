@@ -2708,7 +2708,7 @@ def add_new_branch ( tree , branch , / , **kwargs ) :
     if kw :
         title1 = 'add_new_branch: Unknown arguments'
         title2 = 'Unknown arguments'
-        loggeer.warning  ( '%s:\n%s' % ( title1 , print_args ( prefix = '# ' , title = title2 , **kw ) ) ) 
+        logger.warning  ( '%s:\n%s' % ( title1 , print_args ( prefix = '# ' , title = title2 , **kw ) ) ) 
 
     ## start the actual processing 
     chain = push_2chain ( tree , *args ,  progress = progress , report = report )
@@ -2965,7 +2965,7 @@ def add_new_buffer ( tree , name , buffer , **kwargs ) :
     if kwargs :
         title1 = 'add_new_branch: Unknown arguments'
         title2 = 'Unknown arguments'
-        loggeer.warning  ( '%s:\n%s' % ( title1 , print_args ( prefix = '# ' , title = title2 , **kwargs ) ) ) 
+        logger.warning  ( '%s:\n%s' % ( title1 , print_args ( prefix = '# ' , title = title2 , **kwargs ) ) ) 
 
     ## start the actual processing 
     return buffer_2chain ( tree , name , the_buffer , progress = progress , report = report )
