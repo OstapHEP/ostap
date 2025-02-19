@@ -299,6 +299,10 @@ import atexit
 @atexit.register
 def _report_ () :
     # =========================================================================
+
+    return
+
+"""
     checker = PickleChecker()
     
     if checker.MORE_TYPES or checker.EXTRA_TYPES :
@@ -310,7 +314,8 @@ def _report_ () :
         title = 'Non-pickleable types'
         table = checker.table_nonpickleable ( title = title , prefix = '# ' ) 
         logger.info ( '%s:\n%s' % ( title , table ) ) 
-                      
+"""
+
 # =============================================================================
 if '__main__' == __name__ :
     
