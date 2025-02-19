@@ -33,16 +33,15 @@ __all__     = (
     'SETPARS'           , ## context manager to keep/preserve parameters 
     )
 # =============================================================================
-from   ostap.core.meta_info    import root_info 
-from   ostap.core.core         import ( Ostap          , rootID      ,
-                                        VE             , isequal     ,
-                                       roo_silent                   )
 from   ostap.core.ostap_types  import ( string_types   , num_types   ,
                                         integer_types  , list_types  , 
                                         is_good_number , is_integer  ,
                                         sequence_types , sized_types )
+from   ostap.core.core         import ( Ostap          , rootID      ,
+                                        VE             , isequal     ,
+                                        roo_silent                   )
 from   ostap.fitting.utils     import ( make_name   , numcpu , ncpu , get_i ,
-                                       roo_poisson , roo_gaussian  )
+                                        roo_poisson , roo_gaussian  )
 from   ostap.fitting.roocmdarg import check_arg 
 from   ostap.fitting.variables import SETVAR, make_formula
 from   ostap.utils.utils       import make_iterable
@@ -57,7 +56,6 @@ else                       : logger = getLogger ( __name__                  )
 try                : from string import            ascii_letters
 except ImportError : from string import letters as ascii_letters
 # =============================================================================
-_py2 = sys.version_info.major < 3
 ## possible numericla types for variables 
 numvar_types = num_types + ( VE , )
 # =============================================================================
@@ -110,8 +108,7 @@ class ConfigReducer(object) :
         
     ## pickling via reduce 
     def __reduce__ ( self ) :
-        if _py2 : return config_factory , ( type ( self ) , self.config, )
-        else    : return type ( self ).factory , ( self.config, )
+        return type ( self ).factory , ( self.config, )
 
     ## factory method 
     @classmethod
@@ -164,8 +161,7 @@ class VarMaker (object) :
     
     ## @attention ensure that important attributes are available even before __init__
     def __new__( cls, *args, **kwargs):
-        if _py2 : obj = super(VarMaker, cls).__new__( cls , *args , **kwargs )
-        else    : obj = super(VarMaker, cls).__new__( cls )
+        obj = super(VarMaker, cls).__new__( cls )
         ##
         obj.__aux_keep     = []     ## ATTENTION!        
         obj.__name        = None    ## ATTENTION!
@@ -768,7 +764,7 @@ class FitHelper(VarMaker) :
 
                 _args.append (  ROOT.RooFit.SumW2Error( a ) )
                                     
-            elif key in args_asymptotic and isinstance ( a , bool ) and (6,19) <= root_info :
+            elif key in args_asymptotic and isinstance ( a , bool ) :
                 
                 if   a and dataset and     dataset.isWeighted()           : pass 
                 elif a and dataset and not dataset.isWeighted()           :
@@ -784,7 +780,7 @@ class FitHelper(VarMaker) :
                     
                 _args.append (  ROOT.RooFit.AsymptoticError ( a ) )
                     
-            elif key in args_batch and isinstance ( a , bool ) and  ( 6, 20) <= root_info < ( 6 , 29 ) :
+            elif key in args_batch and isinstance ( a , bool ) and  root_info < ( 6 , 29 ) :
                 
                 _args.append (  ROOT.RooFit.BatchMode ( a ) )
 
@@ -888,11 +884,11 @@ class FitHelper(VarMaker) :
                 
                 _args.append   (  ROOT.RooFit.Save         ( a )  )
                 
-            elif key in args_clonedata and ( 6 , 28 ) <= root_info < ( 6, 28 ) :
+            elif key in args_clonedata and ( 6 , 28 ) <= root_info :
                 
                 self.warning ( "Ignore obsolete `CloneData' argument" ) 
             
-            elif key in args_clonedata and isinstance ( a , bool ) and root_info < ( 6, 28 ) :
+            elif key in args_clonedata and isinstance ( a , bool ) and root_info < ( 6 , 28 ) :
                 
                 _args.append   (  ROOT.RooFit.CloneData    ( a )  )
                 
@@ -911,8 +907,7 @@ class FitHelper(VarMaker) :
                 if c is None : self.error ('parse_args: Invalid constraint specification: %s/%s' % ( a , type ( a ) ) )
                 else         : _args.append ( c ) 
 
-            elif key in args_integratebins and \
-                          isinstance ( a , num_types )  and ( 6 , 24 ) <= root_info :
+            elif key in args_integratebins and isinstance ( a , num_types ) :
                 
                 _args.append   (  ROOT.RooFit.IntegrateBins ( a ) )
                 
@@ -926,15 +921,15 @@ class FitHelper(VarMaker) :
                 
                 _args.append   (  ROOT.RooFit.Parallelize ( *a ) )
                 
-            elif key in args_recover and isinstance ( a , bool      ) and ( 6, 24 ) <= root_info :
+            elif key in args_recover and isinstance ( a , bool      ) :
                 
                 _args.append   ( ROOT.RooFit.RecoverFromUndefinedRegions ( 10.0 if a else 0.0  ) ) 
                           
-            elif key in args_recover and isinstance ( a , num_types ) and ( 6, 24 ) <= root_info :
+            elif key in args_recover and isinstance ( a , num_types ) :
                 
                 _args.append   ( ROOT.RooFit.RecoverFromUndefinedRegions ( 1.0 * float ( a ) ) ) 
 
-            elif key in args_errorwall and isinstance ( a , bool ) and (6,22) <= root_info :
+            elif key in args_errorwall and isinstance ( a , bool ) :
                 
                 _args.append   ( ROOT.RooFit.EvalErrorWall ( a ) )  
 

@@ -22,6 +22,7 @@ __all__     = (
     'KeepArgs'  , ## context manager to preserve the content of the list
     ) 
 # =============================================================================
+from   collections.abc         import Container
 from   ostap.core.meta_info    import root_info 
 from   ostap.core.core         import std, Ostap, valid_pointer 
 from   ostap.core.ostap_types  import string_types , integer_types
@@ -34,8 +35,6 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.roocollections' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-if (3,3) < sys.version_info : from collections.abc import Container
-else                        : from collections     import Container
 # =============================================================================
 _new_methods_ = []
 # =============================================================================
@@ -118,7 +117,7 @@ _new_methods_ += [
     ROOT.RooArgList. __setitem__   ,
 ]
 
-if root_info < ( 6, 26 ) and not hasattr ( ROOT.RooAbsCollection , 'assign' ) :
+if root_info < ( 6 , 26 ) and not hasattr ( ROOT.RooAbsCollection , 'assign' ) :
     ROOT.RooAbsCollection.assign = ROOT.RooAbsCollection.assignValueOnly 
     _new_methods_ += [
         ROOT.RooAbsCollection.assign ,
@@ -173,7 +172,7 @@ ROOT.RooArgList . __repr__      = lambda s : str ( _rs_list_ ( s ) ) if s else '
 ## iterator for RooArgSet
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-if root_info < (6,31) : 
+if root_info < ( 6 , 31 ) : 
     def _ras_iter_ ( self ) :
         """ Simple iterator for RooArgSet:
         >>> arg_set = ...
@@ -207,63 +206,34 @@ def _ras_getattr_ ( self , aname ) :
     return _v 
 
 # =============================================================================
-if (6,18) <= root_info :
-    # =========================================================================
-    ## get the item for RooArgSet
-    def _ras_getitem_ ( self , aname ) :
-        """ Get the attibute from RooArgSet
-        >>> aset = ...
-        >>> print ( aset[' pt']  )    
-        >>> print ( aset[  0  ]  ) ## the first element
-        >>> print ( aset[ -1 ]   ) ## the last element
-        >>> print ( aset[ 3,5,2] ) ## get the range 
-        """
-        
-        if   isinstance ( aname , slice ) :
-            l = len ( self )
-            indices = aname.indices ( l )
-            result  = ROOT.RooArgSet()
-            for i in range (*indices) : result.add ( self[i] ) 
-            return result
-        elif isinstance ( aname , integer_types ) :
-            l = len ( self ) 
-            ## allow "slightly negative values 
-            if aname < 0 : aname += l 
-            if 0 <= aname < l : 
-                return ROOT.RooAbsCollection.__getitem__ ( self , aname )
-            raise IndexError('Invalid index!')
-        
-        ## normal lookup 
-        _v = self.find ( aname )
-        if not _v : raise  IndexError('Invalid nidex/name!')
-        return _v
-    # =========================================================================
-else :
-    # =========================================================================
-    ## get the item for RooArgSet
-    def _ras_getitem_ ( self , aname ) :
-        """ Get the attibute from RooArgSet
-        >>> aset = ...
-        >>> print aset['pt']    
-        """
-        if   isinstance ( aname , slice ) :
-            l = len ( self )
-            indices = aname.indices ( l )
-            result  = ROOT.RooArgSet()
-            for i in range (*indices) : result.add ( self[i] ) 
-            return result
-        elif isinstance ( aname , integer_types ) :
-            l = len ( self ) 
-            ## allow "slightly negative" values 
-            if aname < 0 : aname += l 
-            if 0 <= aname < l : 
-                for i, value in enumerate ( self ) :
-                    if i == aname : return value  
-            raise IndexError('Invalid index/name!')
-        
-        _v = self.find ( aname )
-        if not _v : raise  IndexError('Invalid index/name!')
-        return _v 
+## get the item for RooArgSet
+def _ras_getitem_ ( self , aname ) :
+    """ Get the attibute from RooArgSet
+    >>> aset = ...
+    >>> print ( aset[' pt']  )    
+    >>> print ( aset[  0  ]  ) ## the first element
+    >>> print ( aset[ -1 ]   ) ## the last element
+    >>> print ( aset[ 3,5,2] ) ## get the range 
+    """
+    
+    if   isinstance ( aname , slice ) :
+        l = len ( self )
+        indices = aname.indices ( l )
+        result  = ROOT.RooArgSet()
+        for i in range (*indices) : result.add ( self[i] ) 
+        return result
+    elif isinstance ( aname , integer_types ) :
+        l = len ( self ) 
+        ## allow "slightly negative values 
+        if aname < 0 : aname += l 
+        if 0 <= aname < l : 
+            return ROOT.RooAbsCollection.__getitem__ ( self , aname )
+        raise IndexError('Invalid index!')
+    
+    ## normal lookup 
+    _v = self.find ( aname )
+    if not _v : raise  IndexError('Invalid nidex/name!')
+    return _v
 
 # =============================================================================
 ## get the first element in collection 
@@ -369,17 +339,12 @@ def _stl_contains_ ( lst , item ) :
         return any (  i.name == item  for i in lst )    
     return False 
 
-if ( 8 , 18 ) <= root_info < ( 6 , 24 ) : 
-    _STLList = ROOT.RooSTLRefCountList[ROOT.RooAbsArg]
-    _STLList .__str__      = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
-    _STLList .__repr__     = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
-    _STLList .__contains__ = _stl_contains_ 
-elif ( 6 , 24 ) <= root_info : 
-    _STLList = ROOT.RooSTLRefCountList(ROOT.RooAbsArg)
-    _STLList .__str__      = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
-    _STLList .__repr__     = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
-    _STLList .__contains__ = _stl_contains_ 
-    
+
+_STLList = ROOT.RooSTLRefCountList(ROOT.RooAbsArg)
+_STLList .__str__      = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
+_STLList .__repr__     = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
+_STLList .__contains__ = _stl_contains_ 
+
 if not hasattr ( ROOT.RooArgList , '__iter__' ) or root_info < ( 6 , 31 ) : 
     ROOT.RooArgList . __iter__      = _ral_iter_
     _new_methods_ += [ ROOT.RooArgList. __iter__ ]
@@ -702,7 +667,7 @@ class  KeepArgs(object) :
 
 # =============================================================================
 ## attention 
-if root_info < (6,26) and not hasattr ( ROOT.RooAbsCollection , 'assign' ) :
+if root_info < ( 6 , 26 ) and not hasattr ( ROOT.RooAbsCollection , 'assign' ) :
     ## attention !!!
     ROOT.RooAbsCollection.assign = ROOT.RooAbsCollection.assignValueOnly 
 

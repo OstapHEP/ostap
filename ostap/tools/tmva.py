@@ -34,9 +34,9 @@ __all__     = (
     "tmvaGUI"
     )
 # =============================================================================
-from   ostap.core.core         import Ostap, WSE , rootWarning
+from   ostap.core.meta_info    import python_info 
 from   ostap.core.ostap_types  import num_types, string_types, integer_types 
-from   ostap.core.meta_info    import root_info, python_info 
+from   ostap.core.core         import Ostap, WSE , rootWarning
 from   ostap.utils.cleanup     import CleanUp
 from   ostap.utils.basic       import items_loop 
 import ostap.io.root_file
@@ -567,7 +567,7 @@ class Trainer(object):
         self.__pattern_C     = pattern_C 
         self.__pattern_plots = pattern_PLOTS % self.name
 
-        self.__multithread = multithread and ( 6 ,18 ) <= root_info 
+        self.__multithread = multithread 
 
         if self.verbose :
             
@@ -1041,8 +1041,7 @@ class Trainer(object):
             os.remove ( f )
         if rf : self.logger.debug ( "Remove existing xml/class-files %s" % rf  ) 
 
-        ## ROOT 6/18 crashes here...
-        ## if root_info < ( 6 , 18 ) : ROOT.TMVA.Tools.Instance()
+        ## open root file ...
         with ROOT.TFile.Open ( self.output_file, 'RECREATE' )  as outFile :
 
             self.logger.debug ( 'Output ROOT file: %s ' %  outFile.GetName() )
@@ -1106,11 +1105,8 @@ class Trainer(object):
                 if self.prefilter        : scuts.update ( { 'PreFilter/Common' : self.prefilter        } )
                 if self.signal_cuts      : scuts.update ( { 'Signal'           : self.signal_cuts      } )
                 
-                if ( 6 , 24 ) <= root_info :
-                    import ostap.frames.frames 
-                    import ostap.frames.tree_reduce       as TR
-                else :
-                    import ostap.parallel.parallel_reduce as TR
+                import ostap.frames.frames 
+                import ostap.frames.tree_reduce       as TR
                 
                 silent = not self.verbose or not self.category in ( 0, -1 )
                 self.logger.info ( 'Pre-filter Signal     before processing' )
@@ -1141,11 +1137,8 @@ class Trainer(object):
                 if self.prefilter            : bcuts.update ( { 'PreFilter/Common'     : self.prefilter            } )
                 if self.background_cuts      : bcuts.update ( { 'Background'           : self.background_cuts      } )
                 
-                if ( 6 , 24 ) <= root_info :
-                    import ostap.frames.frames 
-                    import ostap.frames.tree_reduce       as TR
-                else :
-                    import ostap.parallel.parallel_reduce as TR
+                import ostap.frames.frames 
+                import ostap.frames.tree_reduce       as TR
                                 
                 silent = not self.verbose or not self.category in ( 0, -1 )
                 self.logger.info ( 'Pre-filter Background before processing' )
@@ -1166,11 +1159,8 @@ class Trainer(object):
             ## check for signal weights
             # =====================================================================
             if self.signal_weight :
-                if ( 6 , 20 ) <= root_info : 
-                    from ostap.frames.frames import frame_statVar 
-                    sw = frame_statVar ( self.signal , self.signal_weight , self.signal_cuts )
-                else :
-                    sw = self.signal    .statVar ( self.signal_weight     , self.signal_cuts )
+                from ostap.frames.frames import frame_statVar 
+                sw = frame_statVar ( self.signal , self.signal_weight , self.signal_cuts )                    
                 if isinstance ( sw , WSE ) : sw = sw.values()
                 mn , mx = sw.minmax() 
                 if mn < 0 : 
@@ -1183,11 +1173,8 @@ class Trainer(object):
             ## check for background weights
             # =================================================================
             if self.background_weight :
-                if ( 6 , 20 ) <= root_info :
-                    from ostap.frames.frames import frame_statVar 
-                    bw = frame_statVar ( self.background , self.background_weight , self.background_cuts )
-                else :
-                    bw = self.background.statVar ( self.background_weight , self.background_cuts )
+                from ostap.frames.frames import frame_statVar 
+                bw = frame_statVar ( self.background , self.background_weight , self.background_cuts )
                 if isinstance ( bw , WSE ) : bw = bw.values()
                 mn , mx = bw.minmax() 
                 if mn < 0 : 
@@ -1195,8 +1182,7 @@ class Trainer(object):
                     for m in self.methods :
                         if not m[0] in good_for_negative :
                             self.logger.error ( "Method '%s' does not support negative (background) weights" % m[1] )
-                            
-                            
+                                                        
             NS = -1
             NB = -1
             SW = None
@@ -1209,13 +1195,9 @@ class Trainer(object):
                 if self.    signal_weight : sc *= self.    signal_weight
                 if self.background_weight : sc *= self.background_weight
 
-                if ( 6 , 20 ) <= root_info :
-                    from ostap.frames.frames import frame_statVar 
-                    ss = frame_statVar ( self.signal     , '1' , sc )
-                    sb = frame_statVar ( self.background , '1' , bc )
-                else :
-                    ss = self.signal    .statVar ( '1' , sc )
-                    sb = self.background.statVar ( '1' , bc )
+                from ostap.frames.frames import frame_statVar 
+                ss = frame_statVar ( self.signal     , '1' , sc )
+                sb = frame_statVar ( self.background , '1' , bc )
                     
                 if isinstance ( ss , WSE ) : ss = ss.values()
                 if isinstance ( sb , WSE ) : sb = sb.values()
@@ -1420,7 +1402,7 @@ class Trainer(object):
             factory.EvaluateAllMethods ()
 
         ## ROC curves 
-        if ( self.make_plots or self.verbose ) and ( 6 , 24 ) <= root_info :
+        if ( self.make_plots or self.verbose ) :
             import ostap.plotting.canvas
             from ostap.utils.utils import batch , keepCanvas
             with batch ( ROOT.ROOT.GetROOT().IsBatch() or not self.show_plots ) , keepCanvas() : 
@@ -1436,9 +1418,9 @@ class Trainer(object):
             rows = [ ('Method' , 'AUC' ) ]
             for m in self.methods :
                 mname = m[1]
-                if m[0] == ROOT.TMVA.Types.kCuts and root_info < ( 6 , 24 ) :
-                    self.logger.warning ( 'Skip ROC/AUC for %s' % m[1] ) 
-                    continue 
+                ## if m [ 0 ] == ROOT.TMVA.Types.kCuts and root_info < ( 6 , 24 ) :
+                ##     self.logger.warning ( 'Skip ROC/AUC for %s' % m[1] ) 
+                ##     continue 
                 ## auc = factory.GetROCIntegral ( dataloader , mname )
                 auc = factory.GetROCIntegral ( self.name , mname )
                 row = mname , '%.6g' % auc
@@ -1659,10 +1641,9 @@ def make_Plots ( name , output , show_plots = True ) :
         ## 
         ## ( ROOT.TMVA.likelihoodrefs ,  ( name , output     ) ) ,
         ]
+
     
-    ## if (6,24) <= root_info :
     ##    plots.append   ( ( ROOT.TMVA.mvaeffs            , ( name , output ) ) )
-    ## else :
     logger.warning ( 'make_Plots: Skip    macro ROOT.TMVA.%s%s' % ( 'mvaeffs'  , str ( ( name , output ) ) ) ) 
             
         
@@ -1870,8 +1851,6 @@ class Reader(object)  :
         self.__name   = name
         self.__logger = logger if logger else getLogger ( self.name )
 
-        if root_info < ( 6 , 18 )  :  ROOT.TMVA.Tools.Instance()
-        
         verbose = True if verbose else False
         ##
         options = opts_replace ( options , 'V:'      ,     verbose )

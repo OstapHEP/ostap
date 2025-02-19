@@ -21,7 +21,6 @@ __all__     = (
     )
 # =============================================================================
 import os, tempfile, datetime, weakref, re    
-from   sys import version_info as python_version 
 # =============================================================================
 from   ostap.core.ostap_types import string_types
 from   ostap.utils.basic      import make_dir, writeable, whoami, mtime 
@@ -163,12 +162,10 @@ class  CleanUp(object) :
     
     ## @attention ensure that important attributes are available even before __init__
     def __new__( cls, *args, **kwargs):
-        if  python_version.major > 2 : obj = super(CleanUp, cls).__new__( cls )
-        else                         : obj = super(CleanUp, cls).__new__( cls , *args , **kwargs )
+        obj = super(CleanUp, cls).__new__( cls )
         ## define the local trash 
         obj.__trash   = set()
-        if (3,4) <= python_version : obj.__cleaner = weakref.finalize ( obj , obj._clean_trash_ , obj.__trash )
-        else                       : obj.__cleaner = None 
+        obj.__cleaner = weakref.finalize ( obj , obj._clean_trash_ , obj.__trash )
         return obj
  
     @property
@@ -583,20 +580,16 @@ def _cleanup_ () :
 ## @class TempFile
 #  Base class-placeholder for the temporary  file 
 class TempFile(object) :
-    """Base class-placeholder for the temporary  file 
+    """ Base class-placeholder for the temporary  file 
     """
     def __init__ ( self , suffix = '' , prefix = '' , dir = None ) :
         
         self.__filename  = CleanUp.tempfile ( suffix = suffix ,
                                              prefix = prefix ,
                                              dir    = dir    )
-        if (3,4) <= python_version :  
-            self.__finalizer = weakref.finalize ( self                   ,
-                                                  self._remove_the_file_ ,
-                                                  self.__filename        )
-        else :
-            self.__finalizer = None   
-            
+        self.__finalizer = weakref.finalize ( self                   ,
+                                              self._remove_the_file_ ,
+                                              self.__filename        )
     @property
     def filename ( self ) :
         """`filename' : the actual name of temporary file"""

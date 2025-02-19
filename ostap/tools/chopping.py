@@ -87,16 +87,16 @@ __all__     = (
     'addChoppingResponse'  , ## add `chopping' response to TTree or RooDataSet
     )
 # =============================================================================
-from   ostap.core.meta_info    import root_info, python_info
+from   ostap.core.meta_info    import python_info
+from   ostap.core.ostap_types  import integer_types 
+from   ostap.core.core         import WSE 
+from   ostap.core.pyrouts      import hID, h1_axis, Ostap 
+from   ostap.utils.cleanup     import CleanUp
 from   ostap.tools.tmva        import Trainer as TMVATrainer
 from   ostap.tools.tmva        import Reader  as TMVAReader
 from   ostap.tools.tmva        import ( dir_name      , good_for_negative ,
                                         trivial_opts  , make_tarfile      ,
                                         NO_PROCESSING ) 
-from   ostap.core.core         import WSE 
-from   ostap.core.pyrouts      import hID, h1_axis, Ostap 
-from   ostap.core.ostap_types  import integer_types 
-from   ostap.utils.cleanup     import CleanUp
 import ostap.trees.trees 
 import ostap.trees.cuts
 import ostap.utils.utils       as     Utils 
@@ -278,10 +278,6 @@ class Trainer(object) :
                 self.logger.warning ("Disable parallel chopping due to DILL_PY3_issue")
                 self.__parallel = False
                 
-        if self.parallel and root_info < (6,15) :
-            self.logger.warning ( "Parallel chopping is activated only for ROOT>6.15")
-            self.__parallel = False
-            
         self.__parallel_conf   = {}
         self.__parallel_conf.update ( parallel_conf )
         
@@ -393,7 +389,7 @@ class Trainer(object) :
         self.__dirname           = dirname 
         self.__trainer_dirs      = [] 
 
-        self.__multithread       = multithread and (6,18)<= root_info
+        self.__multithread       = multithread 
 
         if not workdir : workdir = os.getcwd()
 
@@ -460,11 +456,8 @@ class Trainer(object) :
             if self.prefilter        : scuts.update ( { 'PreFilter/Common' : self.prefilter        } )
             if self.signal_cuts      : scuts.update ( { 'Signal'           : self.signal_cuts      } )
             
-            if ( 6 , 24 ) <= root_info :
-                import ostap.frames.frames 
-                import ostap.frames.tree_reduce       as TR
-            else :
-                import ostap.parallel.parallel_reduce as TR
+            import ostap.frames.frames 
+            import ostap.frames.tree_reduce       as TR
                 
             silent = not self.verbose or not self.category in ( 0, -1 )
             self.logger.info ( 'Pre-filter Signal     before processing' )
@@ -498,11 +491,8 @@ class Trainer(object) :
             if self.prefilter            : bcuts.update ( { 'PreFilter/Common'      : self.prefilter            } )
             if self.background_cuts      : bcuts.update ( { 'Background'           : self.background_cuts      } )
             
-            if ( 6 , 24 ) <= root_info :
-                import ostap.frames.frames 
-                import ostap.frames.tree_reduce       as TR
-            else :
-                import ostap.parallel.parallel_reduce as TR
+            import ostap.frames.frames 
+            import ostap.frames.tree_reduce       as TR
                     
             silent = not self.verbose or not self.category in ( 0, -1 )
             self.logger.info ( 'Pre-filter Background before processing' )
@@ -523,11 +513,8 @@ class Trainer(object) :
         ## check for signal weigths
         # =====================================================================
         if self.signal_weight :
-            if ( 6 , 20 ) <= root_info : 
-                from ostap.frames.frames import frame_statVar 
-                sw = frame_statVar ( self.signal , self.signal_weight , self.signal_cuts )
-            else :
-                sw = self.signal    .statVar ( self.signal_weight     , self.signal_cuts )
+            from ostap.frames.frames import frame_statVar 
+            sw = frame_statVar ( self.signal , self.signal_weight , self.signal_cuts )
             if isinstance ( sw , WSE ) : sw = sw.values()
             mn , mx = sw.minmax() 
             if mn < 0 : 
@@ -540,11 +527,8 @@ class Trainer(object) :
         ## check for background weigths
         # =================================================================
         if self.background_weight :
-            if ( 6 , 20 ) <= root_info :
-                from ostap.frames.frames import frame_statVar 
-                bw = frame_statVar ( self.background , self.background_weight , self.background_cuts )
-            else :
-                bw = self.background.statVar ( self.background_weight , self.background_cuts )
+            from ostap.frames.frames import frame_statVar 
+            bw = frame_statVar ( self.background , self.background_weight , self.background_cuts )
             if isinstance ( bw , WSE ) : bw = bw.values()
             mn , mx = bw.minmax() 
             if mn < 0 : 
@@ -584,17 +568,15 @@ class Trainer(object) :
         if isinstance ( self.__signal     , ROOT.TTree ) :  self.__signal     = Chain ( self.__signal     ) 
         if isinstance ( self.__background , ROOT.TTree ) :  self.__background = Chain ( self.__background ) 
 
-        ##  trick to pleas Kisa for ROTO 6.31/01  (enum TMVA.Types.ETMVA is not pickable...
+        ##  trick to pleas Kisa for ROOT 6.31/01  (enum TMVA.Types.ETMVA is not pickable...
         if ( 6, 31 ) <= root_info :
             ms = list ( self.__methods )
             for i, e in enumerate  ( ms ) :
                 e = list ( e )
-                e = tuple ( [ int ( e[0] ) ] + e[1:]) 
+                e = tuple ( [ int ( e [ 0 ] ) ] + e [ 1 : ]) 
                 ms [ i ] = e
             self.__methods = ms
             
-            
-        
         ## book the trainers 
         self.__trainers      = () 
         self.__weights_files = []

@@ -158,41 +158,21 @@ def _rrv_ve_ ( var ) :
 
 
 # ==================================================================================
-if ( 6 , 18 ) <= root_info : # =====================================================
-    # ==============================================================================
-    ## does var depends on item ?
-    #  - if  type(item) is RooAbsArg   : check var.dependsOn ( item )
-    #  - if  type(item) is string_type : check item in var.servers() 
-    #  - else , return False
-    def _var_contains_ ( var , item ) :
-        """ Does var depends on item ?
-        - if  type(item) is RooAbsArg   : check var.dependsOn ( item )
-        - if  type(item) is string_type : check item in var.servers() 
-        - else , return False 
-        """
-        if   isinstance ( item , ROOT.RooAbsArg ) : return var.dependsOn ( item ) 
-        elif isinstance ( item , string_types   ) : return item in var.servers()
-        # 
-        return False
-    # ===============================================================================
-else : # ============================================================================
-    # ===============================================================================
-    ## does var depends on item ?
-    #  - if  type(item) is RooAbsArg   : check var.dependsOn  ( item )
-    #  - if  type(item) is string_type : check var.findServer ( item ) 
-    #  - else , return False
-    def _var_contains_ ( var , item ) :
-        """ Does var depends on item ?
-        - if  type(item) is RooAbsArg   : check var.dependsOn   ( item )
-        - if  type(item) is string_type : check var.findServer ( item )) 
-        - else , return False 
-        """
-        if   isinstance ( item , ROOT.RooAbsArg ) : return var.dependsOn ( item ) 
-        elif isinstance ( item , string_types   ) :
-            return valid_pointer ( var.findServer ( item ) ) 
-        # 
-        return False
-    # ==============================================================================
+## does var depends on item ?
+#  - if  type(item) is RooAbsArg   : check var.dependsOn ( item )
+#  - if  type(item) is string_type : check item in var.servers() 
+#  - else , return False
+def _var_contains_ ( var , item ) :
+    """ Does var depends on item ?
+    - if  type(item) is RooAbsArg   : check var.dependsOn ( item )
+    - if  type(item) is string_type : check item in var.servers() 
+    - else , return False 
+    """
+    if   isinstance ( item , ROOT.RooAbsArg ) : return var.dependsOn ( item ) 
+    elif isinstance ( item , string_types   ) : return item in var.servers()
+    # 
+    return False
+
 # ==================================================================================
 ## check if the given value is in the range of RooRealVar
 #  @code 
@@ -910,132 +890,60 @@ if not hasattr ( ROOT.RooCategory , '_old_init_' ) :
     ROOT.RooCategory.__init__   = _rc_init_     
 
 # =============================================================================
-if root_info < ( 6, 22 ) : # ==================================================
-    # =========================================================================
-    ## iterator over label/index pairs
-    #  @code
-    #  category = ...
-    #  for label, index  in category : ... 
-    #  for label, index  in category.items()     : ...  ## ditto 
-    #  for label, index  in category.iteritems() : ...  ## ditto 
-    #  @endcode
-    #  @see RooAbsCategory 
-    def _racat_items_ ( cat ) :
-        """ Iterator over label/index pairs
-        >>> category = ...
-        >>> for label , index in category : ... 
-        >>> for label , index in category.items () : ...     ## ditto
-        >>> for label , index in category.iteritems()  : ... ## ditto
-        - see RooAbsCategory 
-        """
-        
-        cit  = Ostap.Utils.Iterator ( cat.typeIterator() )
-        rcat = cit .Next()
-        while rcat :            
-            yield rcat.GetName() , rcat.getVal()
-            rcat = cit.Next() 
-            
-        del cit
-
-    ROOT.RooAbsCategory.__iter__  = _racat_items_
+## iterator over label/index pairs
+#  @code
+#  category = ...
+#  for label, index  in category : ... 
+#  @endcode
+#  @see RooAbsCategory 
+def _racat_items_ ( cat ) :
+    """ Iterator over label/index pairs
+    >>> category = ...
+    >>> for label , index in category : ... 
+    - see RooAbsCategory 
+    """
     
-    # =========================================================================
-    ## Is given label (or index) defined fron this category?
-    #  @see RooAbsCategory.isValidIndex
-    #  @see RooAbsCategory.isValidLabel     
-    def _racat_contains_ ( cat , item ) :
-        """Is given label (or index) defined fron this category?
-        - see `ROOT.RooAbsCategory.isValidIndex`
-        - see `ROOT.RooAbsCategory.isValidLabel`
-        """
-        return ( isinstance ( item , string_types  ) and cat.isValidLabel ( item ) ) or \
-               ( isinstance ( item , integer_types ) and cat.isValidIndex ( item ) )
+    for label , index  in cat._old_iter_ () :
+        yield label , index
     
-    # =========================================================================
-    ## get the index for the label (or label for the  index)
-    #  @code
-    #  category = ...
-    #  index = category ['MyType']
-    #  label = category [ 15 ]
-    #  @endcode
-    def _racat_getitem_ ( cat , item ) :
-        """ Get the index for the label (or label for the  index)
-        >>> category = ...
-        >>> index = category ['MyType']
-        >>> label = category [ 15 ]
-        """
-        if  isinstance ( item , string_types ) :
-            result = cat.lookupType ( item , False )
-            if not result : raise KeyError("No '%s' label is defined!" % item )
-            return result.getVal() 
-        elif isinstance ( item , integer_types ) :  
-            result = cat.lookupType ( item , False )
-            if not result : raise  IndexError("No '%s' index is defined!" % item )
-            return result.GetName()
-        elif isinstance ( item , ROOT.RooCatType ) :  
-            result = cat.lookupType ( item , False )
-            if not result : raise  IndexError("No '%s' category is defined!" % item )
-            return result
-        
-        raise TypeError("No '%s' label/index is defined!" % item )
+if not hasattr ( ROOT.RooAbsCategory , '_old_iter_' ) :
+    ROOT.RooAbsCategory._old_iter_ =  ROOT.RooAbsCategory.__iter__
     
-    # =========================================================================
-else : # ======================================================================    
-    # =========================================================================
-    ## iterator over label/index pairs
-    #  @code
-    #  category = ...
-    #  for label, index  in category : ... 
-    #  @endcode
-    #  @see RooAbsCategory 
-    def _racat_items_ ( cat ) :
-        """ Iterator over label/index pairs
-        >>> category = ...
-        >>> for label , index in category : ... 
-        - see RooAbsCategory 
-        """
+ROOT.RooAbsCategory.__iter__   =  _racat_items_ 
 
-        for label , index  in cat._old_iter_ () :
-            yield label , index
-
-    if not hasattr ( ROOT.RooAbsCategory , '_old_iter_' ) :
-        ROOT.RooAbsCategory._old_iter_ =  ROOT.RooAbsCategory.__iter__
-        
-    ROOT.RooAbsCategory.__iter__   =  _racat_items_ 
-
-    # =========================================================================
-    ## Is given label (or index) defined fron this category?
-    #  @see RooAbsCategory.hasIndex
-    #  @see RooAbsCategory.hasLabel     
-    def _racat_contains_ ( cat , item ) :
-        """Is given label (or index) defined fron this category?
-        - see `ROOT.RooAbsCategory.isValidIndex`
-        - see `ROOT.RooAbsCategory.isValidLabel`
+# =============================================================================
+## Is given label (or index) defined fron this category?
+#  @see RooAbsCategory.hasIndex
+#  @see RooAbsCategory.hasLabel     
+def _racat_contains_ ( cat , item ) :
+    """ Is given label (or index) defined fron this category?
+    - see `ROOT.RooAbsCategory.isValidIndex`
+    - see `ROOT.RooAbsCategory.isValidLabel`
         """
-        return ( isinstance ( item , string_types  ) and cat.hasLabel ( item ) ) or \
-               ( isinstance ( item , integer_types ) and cat.hasIndex ( item ) )
-        
-    # =========================================================================
-    ## get the index for the label (or label for theindex)
-    #  @code
-    #  category = ...
-    #  index = category ['MyType']
-    #  label = category [ 15 ]
-    #  @endcode 
-    def _racat_getitem_ ( cat , item ) :
-        """ Get the index for the label (or label for the  index)
-        >>> category = ...
-        >>> index = category ['MyType']
-        >>> label = category [ 15 ]
-        """
-        if    isinstance ( item , string_types ) :
-            if not cat.hasLabel ( item ) : raise KeyError("No '%s' label is defined!" % item )
-            return cat.lookupIndex  ( item )
-        elif  isinstance ( item , integer_types ) :
-            if not cat.hasIndex ( item ) : raise IndexError("No '%s' index is defined!" % item )
-            return cat.lookupName ( item )
-        
-        raise TypeError("No '%s' label/index is defined!" % item )
+    return ( isinstance ( item , string_types  ) and cat.hasLabel ( item ) ) or \
+        ( isinstance ( item , integer_types ) and cat.hasIndex ( item ) )
+
+# =============================================================================
+## get the index for the label (or label for theindex)
+#  @code
+#  category = ...
+#  index = category ['MyType']
+#  label = category [ 15 ]
+#  @endcode 
+def _racat_getitem_ ( cat , item ) :
+    """ Get the index for the label (or label for the  index)
+    >>> category = ...
+    >>> index = category ['MyType']
+    >>> label = category [ 15 ]
+    """
+    if    isinstance ( item , string_types ) :
+        if not cat.hasLabel ( item ) : raise KeyError("No '%s' label is defined!" % item )
+        return cat.lookupIndex  ( item )
+    elif  isinstance ( item , integer_types ) :
+        if not cat.hasIndex ( item ) : raise IndexError("No '%s' index is defined!" % item )
+        return cat.lookupName ( item )
+
+    raise TypeError("No '%s' label/index is defined!" % item )
     
 # =========================================================================
 ## define new category entry 
@@ -1105,12 +1013,8 @@ ROOT.RooAbsCategory.keys          = _racat_labels_
 ROOT.RooCategory   .__str__       = _rcat_str_ 
 ROOT.RooCategory   .__repr__      = _rcat_str_
 
-if  ( 6 , 24 ) <= root_info : 
-    ROOT.RooCategory   .__int__       = lambda s : s.getCurrentIndex () 
-    ROOT.RooCategory   .getVal        = lambda s : s.getCurrentIndex ()
-else :
-    ROOT.RooCategory   .__int__       = lambda s : s.getIndex        () 
-    ROOT.RooCategory   .getVal        = lambda s : s.getIndex        ()
+ROOT.RooCategory   .__int__       = lambda s : s.getCurrentIndex () 
+ROOT.RooCategory   .getVal        = lambda s : s.getCurrentIndex ()
     
 ROOT.RooCategory   .setVal        = _rcat_setval_ 
 
@@ -1222,12 +1126,8 @@ def two_yields ( total , fraction ) :
 
 
 # =============================================================================
-if ( 6,6) <= root_info :
-    var1_types = ROOT.RooAbsRealLValue , ROOT.RooAbsCategoryLValue
-    var2_types = ROOT.RooAbsReal       , ROOT.RooAbsCategory 
-else :  
-    var1_types = ROOT.RooAbsReal       , ROOT.RooAbsCategory 
-    var2_types = () 
+var1_types = ROOT.RooAbsRealLValue , ROOT.RooAbsCategoryLValue
+var2_types = ROOT.RooAbsReal       , ROOT.RooAbsCategory 
 # =============================================================================
 ## @class SETVAR
 #  Simple context manager to preserve current value for RooAbsVar
@@ -1645,23 +1545,15 @@ def _rfv_repr_ ( var ) :
     """
     return '%s : %s' % ( var.expression() , var.getVal() ) 
 
-if (6,22) <= root_info : 
-    if root_info < ( 6, 26 ) : ROOT.RooFormulaVar. expression = _rfv_expr_
-    ROOT.RooFormulaVar. __str__    = _rfv_str_
-    ROOT.RooFormulaVar. __repr__   = _rfv_repr_
-    _new_methods_ += [
-        ROOT.RooFormulaVar. expression , 
-        ROOT.RooFormulaVar. __str__    , 
-        ROOT.RooFormulaVar. __repr__   , 
-        ]
-else :
-    Ostap.FormulaVar. __str__      = _rfv_str_
-    Ostap.FormulaVar. __repr__     = _rfv_repr_
-    _new_methods_ += [
-        Ostap.FormulaVar. __str__    , 
-        Ostap.FormulaVar. __repr__   , 
-        ]
 
+if root_info < ( 6, 26 ) : ROOT.RooFormulaVar. expression = _rfv_expr_
+ROOT.RooFormulaVar. __str__    = _rfv_str_
+ROOT.RooFormulaVar. __repr__   = _rfv_repr_
+_new_methods_ += [
+    ROOT.RooFormulaVar. expression , 
+    ROOT.RooFormulaVar. __str__    , 
+    ROOT.RooFormulaVar. __repr__   , 
+]
 # =============================================================================
 
 # =============================================================================

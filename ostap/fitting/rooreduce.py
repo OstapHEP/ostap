@@ -242,8 +242,7 @@ def _rfv_reduce ( rfv ) :
     return _rfv_factory , ( type ( rfv ) , args , vars ) 
 
 # =============================================================================
-if ( 6 , 22 ) <= root_info : ROOT.RooFormulaVar.__reduce__  = _rfv_reduce
-else                       : Ostap.FormulaVar.__reduce__    = _rfv_reduce
+ROOT.RooFormulaVar.__reduce__  = _rfv_reduce
 # =============================================================================
 
 # =============================================================================

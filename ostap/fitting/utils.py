@@ -38,7 +38,6 @@ from   ostap.core.ostap_types  import ( num_types      , list_types     ,
                                         is_good_number , sequence_types ,
                                         is_integer     )
 from   ostap.math.random_ext   import ve_gauss, poisson
-from   ostap.core.meta_info    import root_info 
 from   ostap.fitting.variables import SETVAR 
 from   ostap.utils.basic       import numcpu , items_loop
 import ostap.fitting.variables 

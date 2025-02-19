@@ -21,7 +21,6 @@ __all__     = (
     ##
     )
 # =============================================================================
-from   ostap.core.meta_info     import root_info
 from   ostap.core.core          import Ostap , valid_pointer, roo_silent 
 from   ostap.core.ostap_types   import integer_types
 from   ostap.fitting.utils      import component_similar , component_clone

@@ -20,7 +20,6 @@ __all__     = (
     ##
     )
 # =============================================================================
-from   ostap.core.meta_info     import root_info
 from   ostap.core.core          import Ostap , valid_pointer, roo_silent 
 from   ostap.core.ostap_types   import integer_types, num_types, list_types, iterable_types   
 from   ostap.fitting.funbasic   import FUN2

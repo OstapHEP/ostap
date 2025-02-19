@@ -21,7 +21,6 @@ __all__     = (
     'combined_hdata' , ## prepare combined binned dataset for the simultaneous fit
     )
 # =============================================================================
-from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import std , Ostap , dsID
 from   ostap.utils.basic        import items_loop  , typename
 from   ostap.utils.utils        import chunked 

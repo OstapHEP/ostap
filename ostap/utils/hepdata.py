@@ -41,9 +41,6 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'HepDATA format and conversion routines')
 # =============================================================================
-from sys import version_info as python_version
-    
-# =============================================================================
 ## fields required for each dataset
 dataset_fields = ( 'location'  , ## e.g. Figure 5a
                    'dscomment' , 

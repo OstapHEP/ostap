@@ -26,7 +26,6 @@ __all__     = (
     'make_fun1'         , ## reate popular FUN1 objects from the short description 
     )
 # =============================================================================
-from   sys                           import version_info as python_version
 from   ostap.core.meta_info          import root_info 
 from   ostap.core.ostap_types        import ( integer_types  , num_types    ,
                                               dictlike_types , list_types   ,
@@ -54,7 +53,6 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.funbasic' )
 else                       : logger = getLogger ( __name__                 )
 # =============================================================================
-py2 = 2 >= sys.version_info.major
 constant_types = num_types + ( ROOT.RooConstVar , ) 
 # =============================================================================
 ## is valuer equal to 1?
@@ -2094,8 +2092,8 @@ class FUN1(AFUN1,F1AUX) :
         
         if histo :
             
-            assert isinstance ( histo , ROOT.TH1 ) and not isinstance ( histo , ROOT.TH2 ) , \
-                   "Illegal type of 'histo'-argument %s" % type ( histo )
+            assert isinstance ( histo , ROOT.TH1 ) and 1 == histo.GetDimension() , \
+                   "Illegal type of 'histo'-argument %s" % typename ( histo )
             
             histo = histo.clone()
             histo.Reset()
@@ -2103,7 +2101,7 @@ class FUN1(AFUN1,F1AUX) :
         # arguments for the histogram constructor 
         elif hpars :
             
-            histo = ROOT.TH1F ( hID() , 'PDF%s' % self.name , *hpars  )
+            histo = ROOT.TH1D ( hID() , 'PDF%s' % self.name , *hpars  )
             if not histo.GetSumw2() : histo.Sumw2()
 
         # explicit construction from description 
@@ -2112,6 +2110,7 @@ class FUN1(AFUN1,F1AUX) :
             ranges = [ ( self.xvar.name , self.xminmax() ) ] 
             histo  = histo_book ( ranges , xbins = nbins , **kwargs )
 
+        histo.SetDirectory ( ROOT.nullptr ) 
         return histo 
 
     # =============================================================================

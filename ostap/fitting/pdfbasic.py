@@ -55,13 +55,13 @@ __all__     = (
     ## 
 )
 # =============================================================================
+from   ostap.core.ostap_types   import ( is_integer     , string_types   , 
+                                         integer_types  , num_types      ,
+                                         list_types     , all_numerics   ) 
 from   ostap.math.base          import iszero , frexp10 
 from   ostap.core.core          import ( Ostap , VE , hID , dsID , rootID   ,
                                          valid_pointer , in_test , 
                                          roo_silent    , rootWarning  )
-from   ostap.core.ostap_types   import ( is_integer     , string_types   , 
-                                         integer_types  , num_types      ,
-                                         list_types     , all_numerics   ) 
 from   ostap.fitting.utils      import ( RangeVar   , numcpu     ,
                                          make_name  , fit_status ,
                                          cov_qual   , get_i      )
@@ -1927,13 +1927,7 @@ class APDF1 ( Components ) :
         ## parse additional options 
         opts = self.parse_args ( dataset , *args , **kwargs )
 
-        if opts and root_info < ( 6, 20 ) :
-            vok  = ( 'Extended' , 'SumW2Error' , 'PrintLevel' , 'PrintEvalLevel' , 'NumCPU' ) 
-            opts = tuple ( o for o in opts if not o.name in vok  )
-            if opts : 
-                logger.error ( 'No options are allowed: %s ' % str ( opts ) ) 
-                opts = ()
-        elif opts :
+        if opts :
             ## those can be duplicated 
             vok  = ( 'Extended' , 'SumW2Error' , 'PrintLevel' , 'PrintEvalLevel' ) 
             opts = tuple ( o for o in opts if not o.name in vok  )
@@ -2884,10 +2878,7 @@ def make_pdf ( pdf , args , name = '' ) :
     name = name if name else "PDF_from_%s" % pdf.name
     
     if not isinstance ( pdf , ROOT.RooAbsPdf ) :
-        if (6,20) <= root_info : 
-            pdf = ROOT.RooWrapperPdf        ( name , 'PDF from %s' % pdf.name , pdf )
-        else :
-            pdf = Ostap.MoreRooFit.WrapPdf  ( name , 'PDF from %s' % pdf.name , pdf )
+        pdf = ROOT.RooWrapperPdf        ( name , 'PDF from %s' % pdf.name , pdf )
         
     num = len ( args )
     if   1 == num : return Generic1D_pdf ( pdf , name = name , *args )
@@ -3167,25 +3158,7 @@ class APDF2 (APDF1) :
         #
 
         self.draw_var = drawvar
-        ##
-        if in_range and root_info < ( 6 , 24 ) :
-            from itertools import chain 
-            for p in chain ( self.signals               ,
-                             self.backgrounds           ,
-                             self.components            ,
-                             self.crossterms1           ,
-                             self.crossterms2           ,
-                             self.combined_signals      ,
-                             self.combined_backgrounds  ,
-                             self.combined_components   ) :
-                
-                if   isinstance ( p , ( ROOT.RooHistPdf , ROOT.RooParamHistFunc ) ) :
-                    self.warning ("'in_range' is specified, it does not work properly for ROOT<6.24")
-                elif isinstance ( p , ( ROOT.RooAddPdf , ROOT.RooProdPdf ) ) : 
-                    for pp in p.pdfList() :
-                        if isinstance  ( pp , ( ROOT.RooHistPdf , ROOT.RooParamHistFunc ) ) :
-                            self.warning ("'in_range' is specified, it does not work properly for ROOT<6.24")
-                            
+        
         #
         ## delegate the actual drawing to the base class
         #
@@ -3570,8 +3543,8 @@ class APDF2 (APDF1) :
         # histogram is provided 
         if histo :
             
-            assert isinstance ( histo , ROOT.TH2 ) and not isinstance ( histo , ROOT.TH3 ) , \
-                   "Illegal type of 'histo'-argument %s" % type( histo )
+            assert isinstance ( histo , ROOT.TH2 ) and 2 == histo.GetDimension() , \
+                "Illegal type of 'histo'-argument %s" % type( histo )
             
             histo = histo.clone()
             histo.Reset()
@@ -3579,7 +3552,7 @@ class APDF2 (APDF1) :
         # arguments for the histogram constructor 
         elif hpars :
             
-            histo = ROOT.TH2F ( hID () , 'PDF%s' % self.name , *hpars  )
+            histo = ROOT.TH2d ( hID () , 'PDF%s' % self.name , *hpars  )
             if not histo.GetSumw2() : histo.Sumw2()
 
         # explicit construction from (#bins,min,max)-triplet  
@@ -3589,6 +3562,7 @@ class APDF2 (APDF1) :
                        ( self.yvar.name , self.yminmax() ) ] 
             histo  = histo_book ( ranges , xbins = xbins , ybins = ybins , **kwargs )
 
+        histo.SetDirectory ( ROOT.nullptr ) 
         return histo 
                      
     # ==========================================================================
@@ -4838,8 +4812,8 @@ class APDF3 (APDF2) :
         # histogram is provided 
         if histo :
             
-            assert isinstance ( histo  , ROOT.TH3 ), \
-                   "Illegal type of 'histo'-argument %s" % type( histo )
+            assert isinstance ( histo , ROOT.TH3 ) and 3 == histo.GetDimension() , \
+                "Illegal type of 'histo'-argument %s" % typename ( histo )
             
             histo = histo.clone()
             histo.Reset()
@@ -4862,8 +4836,8 @@ class APDF3 (APDF2) :
                                   ybins = ybins ,
                                   zbins = xbins , **kwargs )
 
+        histo.SetDirecotry ( ROOT.nullptr )
         return histo 
-
 
     # ==========================================================================
     ## Convert PDF to the 3D-histogram in correct  way 
@@ -4890,7 +4864,6 @@ class APDF3 (APDF2) :
         >>> h2  = pdf.histo ( histo = histo_template ) ## use histogram template
         >>> h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
         """
-
 
         histo = self.make_histo ( xbins = xbins , xmin = xmin , xmax = xmax ,
                                   ybins = ybins , ymin = ymin , ymax = ymax ,
@@ -5680,8 +5653,6 @@ class Shape1D_pdf(PDF1) :
             
         else :
 
-            assert (6,18) <= root_info , 'Shape1D_pdf with generic function requires ROOT>=6.18!'
-            
             ## create the actual pdf
             self.pdf = Ostap.Models.Shape1D.create  (
                 self.roo_name ( 'shape1_' ) , 
@@ -5754,9 +5725,6 @@ class Shape2D_pdf(PDF2) :
                 self.shape                  )            
         else :
 
-            assert (6,18) <= root_info , 'Shape1D_pdf with generic function requires ROOT>=6.18!'
-            
-            
             ## create the actual pdf
             self.pdf = Ostap.Models.Shape2D.create  (
                 self.roo_name  ( 'shape2_' ) , 
@@ -5829,8 +5797,6 @@ class Shape3D_pdf(PDF3) :
                                               self.zvar                   ,
                                               self.shape                  )
         else :
-            
-            assert (6,18) <= root_info , 'Shape3D_pdf with generic function requires ROOT>=6.18!'
             
             ## create the actual pdf
             self.pdf = Ostap.Models.Shape3D.create  (

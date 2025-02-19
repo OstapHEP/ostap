@@ -32,14 +32,9 @@ __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = "2012-09-10"
 __version__ = '$Revision$'
 # =============================================================================
-from ostap.core.core     import rootError
-# =============================================================================
+from   ostap.core.core     import rootError
 ## ROOT.PyConfig.IgnoreCommandLineOptions = True
-try :
-    from cString import StringIO
-except :
-    from io      import StringIO
-# =============================================================================
+from   io      import StringIO
 import os, sys   
 
 # =============================================================================
@@ -671,8 +666,8 @@ if PARAMETERS :
     logger.info ('PARAMETERS    : %s' % PARAMETERS )
 
 
-if  sys.version_info > (3,) :
-    from importlib import reload 
+## make `reload` command available 
+from importlib import reload 
 
 # =============================================================================
 if '__main__' == __name__ : logger.info ( 'ostap is ready'  ) 

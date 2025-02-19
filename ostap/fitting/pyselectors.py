@@ -324,8 +324,8 @@ class Variable(object) :
         if accessor is None :
             varname        = var.GetName()
             
-            if ( 6 ,30 ) <= root_info : accessor = '1.0*(%s)' % varname
-            else                      : accessor = varname
+            if ( 6 , 30 ) <= root_info : accessor = '1.0*(%s)' % varname
+            else                       : accessor = varname
 
             self.__formula = varname 
             
@@ -1601,8 +1601,8 @@ def make_dataset_old ( tree              ,
     with TIMING ( 'Fill RooDataSet' , logger = logger ) : 
         with rooSilent ( ROOT.RooFit.ERROR  , True ) :
             with rootError ( ROOT.kWarning ) :
-                if root_info <= ( 6, 31 ) : ds = ROOT.RooDataSet ( name , title , tree    , varsete , str ( cuts ) )
-                else                      : ds = ROOT.RooDataSet ( name , title , varsete , ROOT.RooFit.Import ( tree ) , ROOT.RooFit.Cut ( str ( cuts ) ) ) 
+                if root_info <= ( 6 , 31 ) : ds = ROOT.RooDataSet ( name , title , tree    , varsete , str ( cuts ) )
+                else                       : ds = ROOT.RooDataSet ( name , title , varsete , ROOT.RooFit.Import ( tree ) , ROOT.RooFit.Cut ( str ( cuts ) ) ) 
                     
                 varsete = ds.get()
                 
@@ -1745,10 +1745,7 @@ def make_dataset ( tree              ,
             pb = frame_progress  ( frame , total )
             
 
-    if  ( 6,16 ) <= root_info : 
-        columns = set ( frame_columns ( frame  ) )
-    else :
-        columns = set ( tree.branches() ) | set ( tree.leaves() )
+    columns = set ( frame_columns ( frame  ) )
 
     scuts  = [] 
     limits = []
@@ -1878,10 +1875,6 @@ def fill_dataset2 ( self              ,
     >>> chain    = ...
     >>> chain.fill_dataset2 ( selector )  ## NB: note lowercase 'process' here !!!    
     """
-
-    if use_frame and root_info < (6,15) :
-        ## logger.warning ( 'Processing via DataFrame is disabled for %s' % str ( root_info ) ) 
-        use_frame = False 
 
     ## process all events? 
     all = ( 0 == first ) and ( nevents < 0 or len ( self ) <= nevents )

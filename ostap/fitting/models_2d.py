@@ -37,7 +37,6 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.core          import cpp, Ostap
-from   ostap.core.meta_info     import root_info
 from   ostap.math.base          import iszero
 from   ostap.fitting.fithelpers import Phases
 from   ostap.fitting.pdfbasic   import PDF2, Flat2D
@@ -1742,7 +1741,6 @@ class RooKeys2D_pdf(PDF2) :
 # =============================================================================
 # some tiny decoration of underlying classes 
 # =============================================================================
-root_major = root_info.major 
 def _2d_get_pars_ ( self ) :
     """
     Get parameters of underlying positive Berstein polynomial
@@ -1760,9 +1758,7 @@ def _2d_get_pars_ ( self ) :
         m = ROOT.TMatrix ( b.nX() + 1 , b.nY() + 1 )
         for i in range ( 0 , b.nX() + 1 ) :
             for j in range ( 0 , b.nY() + 1 ) :
-                
-                if  root_major < 6 : m[i][j] = b.par(i,j)
-                else               : m[i, j] = b.par(i,j)
+                m[i, j] = b.par(i,j)
                     
         return m 
         

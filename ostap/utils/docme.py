@@ -18,12 +18,7 @@ __all__     = (
     )
 # =============================================================================
 ## primitive types
-from sys import version_info as python_version 
-if 2 < python_version.major : 
-    primitive =  int        , float , bool , str , bytes   , list , dict , set
-else :
-    primitive =  int , long , float , bool , str , unicode , list , dict , set
-
+primitive =  int        , float , bool , str , bytes   , list , dict , set
 # =============================================================================
 ## simple function to allow coherent self-print for all ostap modules
 #  @code

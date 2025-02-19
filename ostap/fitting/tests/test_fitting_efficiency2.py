@@ -156,6 +156,7 @@ def test_pyVAR () :
     class MyEff(PyVAR) :
         """ Local ``pythonic'' variable
         """
+        store = []
         
         def __init__ ( self , name , title = '' , variables = () , clone = None ) :
             
@@ -168,6 +169,7 @@ def test_pyVAR () :
         def clone    ( self , newname = '' ) :
             cloned  = MyEff ( newname if newname else self.name , title = self.title , clone = self )
             ROOT.SetOwnership ( cloned  , False )
+            if ( 6 , 32 ) <= root_info < ( 6, 35 ) : self.store.append ( cloned ) 
             return cloned
 
         ## evaluate the efficiency 

@@ -155,7 +155,7 @@ if not terminal_size and ( 3 , 3 ) <= sys.version_info : # ===================
         """
         return shutil.get_terminal_size ( fallback ) 
     # ========================================================================
-elif not terminal_size  : # ====================================================
+elif not terminal_size : # ===================================================
     # ========================================================================
     ## Get the terminal console size
     def terminal_size ( fallback = fallback ):
@@ -222,68 +222,12 @@ def writeable ( adir ) :
 
 
 # =============================================================================
-if (3,5) <= sys.version_info :
-
-    ## get a common path(prefix) for list of paths 
-    commonpath = os.path.commonpath
-    
-else :
-
-    # ========================================================================
-    ## get a common path(prefix) for list of paths
-    # Fix for a  buggy <code>os.path.commonprefix</code>
-    #  @see https://www.rosettacode.org/wiki/Find_common_directory_path#Python
-    def commonpath ( paths ) :
-        """Get a common path(prefix) for list of paths
-        Fix a buggy `os.path.commonprefix`
-        - https://www.rosettacode.org/wiki/Find_common_directory_path#Python
-        """
-        return os.path.dirname ( os.path.commonprefix ( paths ) ) 
+## get a common path(prefix) for list of paths 
+commonpath = os.path.commonpath
 
 # =============================================================================
-if (3,2) <= sys.version_info :
-    # =========================================================================    
-    make_dirs = os.makedirs
-    # =========================================================================        
-else :
-    # =========================================================================    
-    def make_dirs ( name , mode = 0o777 , exist_ok = False ):
-        """ makedirs(path [, mode=0o777])
-        
-        Super-mkdir; create a leaf directory and all intermediate ones.
-        Works like mkdir, except that any intermediate path segment (not
-        just the rightmost) will be created if it does not exist.  This is
-        recursive.
-        
-        """
-        head, tail = os.path.split(name)
-        if not tail:
-            head, tail = os.path.split(head)
-            
-        if head and tail and not os.path.exists(head):
-            
-            try:
-                
-                make_dirs ( head , mode , exist_ok = exist_ok ) ## RECURSION!
-                
-            except OSError as e :
-                
-                # be happy if someone already created the path
-                if e.errno != errno.EEXIST:
-                    raise
-                
-            if tail == os.curdir:           # xxx/newdir/. exists if xxx/newdir exists
-                return
-
-        try :
-            
-            os.mkdir ( name , mode )
-            
-        except OSError:
-            # Cannot rely on checking for EEXIST, since the operating system
-            # could give priority to other errors like EACCES or EROFS
-            if not exist_ok or not os.path.isdir ( name ) :
-                raise
+## make directoreis  
+make_dirs = os.makedirs
 
 # =============================================================================
 ## @class NoContext
@@ -306,25 +250,14 @@ class NoContext(object) :
     def __exit__  ( self , *args ) : pass  
 
 # =============================================================================
-if   ( 3 , 0 ) <= sys.version_info : # ========================================
-    # =========================================================================
-    def loop_items ( dct ) :
-        """ Iterate over the dictionary items
-        >>> d = { 'a' : ...   , 'b' : ... , }
-        >>> for e in   loop_items ( d ) : print (e) 
-        """
-        for item in dct.items () : yield item
-    # =========================================================================
-else : # ======================================================================
-    # =========================================================================
-    def loop_items ( dct ) :
-        """ Iterate over the dictionary items
-        >>> d = { 'a' : ...   , 'b' : ... , }
-        >>> for e in   loop_items ( d ) : print (e) 
-        """
-        for item in dct.iteritems () : yield item
-    # =========================================================================
-        
+## loop over dictoribnaty items
+def loop_items ( dct ) :
+    """ Iterate over the dictionary items
+    >>> d = { 'a' : ...   , 'b' : ... , }
+    >>> for e in   loop_items ( d ) : print (e) 
+    """
+    for item in dct.items () : yield item
+
 # =============================================================================
 ## Iterate over the dictionary items
 items_loop = loop_items 
@@ -549,16 +482,8 @@ def typename ( o ) :
                                getattr ( to , '__name__' ) ) )
     
 # =============================================================================
-if ( 3 , 4 ) <= sys.version_info : 
-    # =========================================================================
-    ## Get number of cores/CPUs
-    from os              import cpu_count as _numcpu
-    # =========================================================================
-else :
-    # =========================================================================
-    ## Get number of cores/CPUs    
-    from multiprocessing import cpu_count as _numcpu
-    # =========================================================================
+## Get number of cores/CPUs
+from os import cpu_count as _numcpu
 
 # =============================================================================
 ## defalt separators for the string expressions

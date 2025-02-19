@@ -679,9 +679,9 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
         rows.append ( ( 'Invalid FCN/NLL evaluations' , '' , '  %d' % nbadnll , '' ) )
 
 
-    with_globcorr =         not ( ( 6 , 24 ) <= root_info < ( 6 , 28 ) )
-    with_globcorr = True or not ( ( 6 , 24 ) <= root_info < ( 6 , 28 ) )
-    with_globcorr =         not ( ( 6 , 24 ) <= root_info < ( 6 , 26 ) )
+    with_globcorr =         not ( root_info < ( 6 , 28 ) )
+    with_globcorr = True or not ( root_info < ( 6 , 28 ) )
+    with_globcorr =         not ( root_info < ( 6 , 26 ) )
 
     with_globcorr = True 
 

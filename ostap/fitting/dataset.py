@@ -26,7 +26,6 @@ __all__     = (
 # =============================================================================
 from   ostap.utils.progress_bar  import progress_bar 
 from   collections               import defaultdict
-from   ostap.core.meta_info      import root_info, ostap_version 
 from   ostap.core.core           import ( Ostap         ,
                                           VE , SE , hID , dsID ,
                                           strings       , 
@@ -795,13 +794,9 @@ def _rad_choice_ ( self , num ) :
     else :
         raise TypeError("Unknown `num':%s" % num )
     ##
-    if ( 3 , 6 ) <= sys.version_info :
-        indices =   random.choices   ( range ( N )  , k = num )
-    else :
-        indices = [ random.randrange ( N ) for i in range ( num ) ]
+    indices =   random.choices   ( range ( N )  , k = num )
     ## 
     return self [ indices ]
-
 
 # =============================================================================
 ## get the shuffled sample
@@ -1650,9 +1645,6 @@ def _ds_print_ ( dataset ) :
     """
     if not  valid_pointer ( dataset ) : return 'Invalid dataset'
     result = dataset.print_multiline ( verbose = True )
-    if sys.version_info < ( 3 , 0 ) :
-        if isinstance ( result , unicode ) :
-            result = result.encode ('utf-8')
     return result 
     
 
@@ -1856,16 +1848,6 @@ def _rds_makeWeighted_ ( dataset           ,
     ## content
     varset = dataset.get()
 
-    ## special case 
-    if ( 6, 18 ) <= root_info < ( 6 , 20 ) :
-        args = dsID() , dataset.GetTitle() , varset, ROOT.RooFit.WeightVar ( weightvar ) 
-        if cuts : args + ( ROOT.RooFit.Cut ( cuts ) , )
-        result = ROOT.RooDataSet ( *args )
-        for entry , _ in dataset :
-            weight = entry [ weightvar ]
-            result.add ( entry , float ( weight ) )        
-        return result
-    
     ## make weighted dataset 
     result = ROOT.RooDataSet ( dsID()             ,
                                dataset.GetTitle() ,
@@ -2707,12 +2689,9 @@ _new_methods_ += [
     ROOT.RooAbsData.store_asym_errors ,
     ]
 
-if (3,0) <= sys.version_info :
-    def f_open ( name , mode , **kwargs ) :
-        return open ( name , mode , **kwargs )
-else : 
-    def f_open ( name , mode , **kwargs ) :
-        return open ( name , mode )
+def f_open ( name , mode , **kwargs ) :
+    return open ( name , mode , **kwargs )
+
 # =============================================================================
 ## Convert dataset to CSV format
 #  @code

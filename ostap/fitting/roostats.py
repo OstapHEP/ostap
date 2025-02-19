@@ -888,10 +888,6 @@ class FeldmanCousinsInterval(CLInterval) :
         >>> graph = fci.plot()
         >>> graph.Draw('ap')
         """
-
-        if root_info < (6,18) :
-            logger.warning ( "No plots from Feldman-Cousins for ROOT<(6.18)" )
-            return 
             
         if self.calculator and self.the_interval :
             
@@ -2153,14 +2149,14 @@ def ws_table ( ws , title = '' , prefix = '' , style = 'double' ) :
         rows.append ( row ) 
 
 
-    if ( 6 , 24 ) <= root_info and hasattr ( ROOT.RooWorkspace , 'getSnapshots' ) : 
+    if hasattr ( ROOT.RooWorkspace , 'getSnapshots' ) : 
         snapshots = ws.getSnapshots()
         for i, snapshot  in enumerate ( snapshots , start = 1 ) :
             fmt = '%s : %-+7g'
             row = 'Snapshot'  , '%s' % snapshot.GetName() , '{ %s }' %  ( ', '.join ( ( fmt % ( v.name , v.getVal() ) ).strip() for v in snapshot ) )
             rows.append ( row ) 
 
-    if ( 6 , 24 ) <= root_info and hasattr ( ROOT.RooWorkspace , 'sets' ) : 
+    if hasattr ( ROOT.RooWorkspace , 'sets' ) : 
         sets = ws.sets()
         keys = sorted ( ( str ( k.first ) for k in sets ) ) 
         for i, key in enumerate ( keys , start = 1 ) :

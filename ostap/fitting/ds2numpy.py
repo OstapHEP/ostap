@@ -25,7 +25,7 @@ from   ostap.core.ostap_types       import string_types, dictlike_types, sized_t
 from   ostap.core.core              import Ostap
 from   ostap.utils.basic            import loop_items 
 from   ostap.utils.utils            import split_range
-from   ostap.math.base              import doubles 
+from   ostap.math.base              import doubles, numpy  
 from   ostap.fitting.dataset        import useStorage
 from   ostap.fitting.funbasic       import AFUN1 
 from   ostap.utils.progress_bar     import progress_bar
@@ -40,16 +40,10 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.ds2numpy' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug( 'Convert RooDataSet into numpy array')
-
-# =============================================================================
-try :
-    import numpy as np
-except ImportError :
-    np = None
 # =============================================================================
 _new_methods_ = []
 # =============================================================================
-if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT     
+if numpy and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT     
     # =========================================================================
     ## Convert dataset into numpy array using <code>ROOT.RooAbsData</code> interface 
     #  @see ROOT.RooAbsData.getBatches
@@ -190,11 +184,11 @@ if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
 
         dtypes = [] 
         for v in vnames :
-            if   v in doubles    : dtypes.append ( ( v      , np.float64 ) ) 
-            elif v in categories : dtypes.append ( ( v      , np.int64   ) )
+            if   v in doubles    : dtypes.append ( ( v      , numpy.float64 ) ) 
+            elif v in categories : dtypes.append ( ( v      , numpy.int64   ) )
 
-        for f in funcs           : dtypes.append ( ( f[0]   , np.float64 ) ) 
-        if weight                : dtypes.append ( ( weight , np.float64 ) ) 
+        for f in funcs           : dtypes.append ( ( f[0]   , numpy.float64 ) ) 
+        if weight                : dtypes.append ( ( weight , numpy.float64 ) ) 
             
         ## get data in batches
         nevts  = len ( dataset ) 
@@ -209,7 +203,7 @@ if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
             
             num   = last - first            
             wget  = False 
-            part  = np.zeros ( num , dtype = dtypes )
+            part  = numpy.zeros ( num , dtype = dtypes )
 
             if doubles :
                 dpart   = source.getBatches ( first , num )
@@ -234,11 +228,11 @@ if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                 if twoargs : weights = source.getWeightBatch ( first , num         )
                 else       : weights = source.getWeightBatch ( first , num , False )
                 if weights : part [ weight ] = weights 
-                else       : part [ weight ] = np.full ( num , source.weight() , dtype = np.float64 )
+                else       : part [ weight ] = numpy.full ( num , source.weight() , dtype = numpy.float64 )
 
             if data is None : data = part
             else            :  
-                data = np.concatenate ( [ data , part ] )
+                data = numpy.concatenate ( [ data , part ] )
                 del part
 
         ## add PDF values
@@ -267,7 +261,7 @@ if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                        ROOT.RooDataSet.to_np   ]
     
 # =============================================================================
-elif   np  :  ## ROOT < 6.26 
+elif numpy  :  ## ROOT < 6.26 
     # =========================================================================
     ## Convert dataset into numpy array using (slow) explicit loops 
     def ds2numpy ( dataset           ,
@@ -379,13 +373,13 @@ elif   np  :  ## ROOT < 6.26
 
         dtypes = [] 
         for v in vnames :
-            if   v in doubles    : dtypes.append ( ( v      , np.float64 ) ) 
-            elif v in categories : dtypes.append ( ( v      , np.int64   ) )
-        for f in funcs           : dtypes.append ( ( f[0]   , np.float64 ) ) 
-        if weight                : dtypes.append ( ( weight , np.float64 ) ) 
+            if   v in doubles    : dtypes.append ( ( v      , numpy.float64 ) ) 
+            elif v in categories : dtypes.append ( ( v      , numpy.int64   ) )
+        for f in funcs           : dtypes.append ( ( f[0]   , numpy.float64 ) ) 
+        if weight                : dtypes.append ( ( weight , numpy.float64 ) ) 
                     
         ## create data 
-        data = np.zeros ( len ( dataset )  , dtype = dtypes )
+        data = numpy.zeros ( len ( dataset )  , dtype = dtypes )
     
         ## make an explict loop:
         for i , item in enumerate ( progress_bar ( dataset , silent = silent , description = 'Entries:' ) ) :
@@ -418,16 +412,13 @@ elif   np  :  ## ROOT < 6.26
                        ROOT.RooDataSet.tonp    ,
                        ROOT.RooDataSet.to_np   ]
     
-
 # =============================================================================
 else    : # ===================================================================
 # =============================================================================
-
     logger.warning ( "Numpy is not available: no action" )
 
-    
 # ==============================================================================
-if np : # ======================================================================
+if numpy : # ======================================================================
     # ==========================================================================
     if  ( 6 , 32 ) <= root_info : data2vct = lambda s : s
     else                        : data2vct = lambda s : doubles ( s ) 
@@ -495,6 +486,8 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     
+    if not numpy : logger.warninf ( "NumPpy is not availabele!" ) 
+
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

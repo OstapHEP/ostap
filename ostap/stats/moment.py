@@ -35,7 +35,6 @@ __all__     = ()
 from   ostap.core.ostap_types import integer_types, num_types
 from   ostap.math.base        import isfinite, isequal, pos_infinity, neg_infinity  
 from   ostap.core.core        import Ostap, VE
-from   ostap.core.meta_info   import root_version_int, root_info 
 from   ostap.logger.pretty    import pretty_float, pretty_ve
 import ROOT 
 # =============================================================================
@@ -61,8 +60,6 @@ def _om_mean ( obj ) :
     """
     o = obj.order
     assert 1 <= o , 'mean: the order must be >=1!'
-    if root_info < ( 6, 18 ) :
-        return obj.mu () 
     return Ostap.Math.Moments.mean ( obj )  
 
 # =============================================================================
@@ -80,8 +77,6 @@ def _om_variance ( obj ) :
     """
     o = obj.order
     assert 2 <= o , 'variance: the order must be >=2!'
-    if root_info < ( 6 , 18 ) :
-        return obj.moment ( 2 )
     return Ostap.Math.Moments.variance ( obj )
 
 # =============================================================================
@@ -96,10 +91,6 @@ def _om_skewness ( obj ) :
     >>> v = m.skewness() 
     """    
     assert 3 <= obj.order , 'skewness: the order must be >=3!' 
-    if root_info < ( 6 , 18 ) :
-        m3 = obj.moment ( 3 )
-        m2 = obj.moment ( 2 )        
-        return m3 / pow ( m2 , 0.5 * 3 )
     return Ostap.Math.Moments.skewness ( obj )  
 
 # =============================================================================
@@ -114,10 +105,6 @@ def _om_kurtosis ( obj ) :
     >>> v = m.kurtosis () 
     """    
     assert 4 <= obj.order , 'kurtosis: the order must be >=4!'
-    if root_info < ( 6 , 18 ) :
-        m4 = obj.moment ( 4 )
-        m2 = obj.moment ( 2 )        
-        return m4 / ( m2 * m2 ) - 3.0 
     return Ostap.Math.Moments.kurtosis ( obj )  
 
 # =============================================================================
@@ -147,11 +134,6 @@ def _om_cumulant_2nd ( obj ) :
     >>> v = m.cumulant2() 
     """
     assert 2 <= obj.order , 'cumulant_2nd: the order must be >=2!'
-    ##
-    if root_info < ( 6 , 18 ) : 
-        ## get the unbiased 2nd moment
-        return obj.variance () 
-    ##
     return Ostap.Math.Moments.cumulant_2nd  ( obj )  
 
 # =============================================================================
@@ -167,18 +149,6 @@ def _om_cumulant_3rd ( obj ) :
     >>> v = m.cumulant_3rd() 
     """
     assert 3 <= obj.order , 'cumulant_3rd: the order must be >=3!'
-    ##
-    if root_info < ( 6 , 18 ) : 
-        ## get the unbiased 3rd moment 
-        unb = obj.unbiased_3rd ()
-        if obj.order < 6 : return unb
-        ## get moment 
-        val = obj.central_moment ( 3 ) 
-        ## get the corrected value 
-        if isinstance ( val , VE ) : return VE ( unb , val.cov2() )
-        ## 
-        return unb 
-    ## 
     return Ostap.Math.Moments.cumulant_3rd ( obj )  
     
 
@@ -195,16 +165,6 @@ def _om_cumulant_4th ( obj ) :
     >>> v = m.cumulant_4th() 
     """
     assert 4 <= obj.order , 'cumulant_4th: the order must be >=3!'
-    ##
-    if root_info < ( 6 , 18 ) : 
-        ## get the unbiased 3rd moment
-        n   = obj.size()
-        m4  = obj.moment ( 4 )
-        m2  = obj.moment ( 2 )
-        vv  = m4 * ( n - 1 ) - 3 * m2 * m2 * ( n - 1 )
-        ## 
-        return vv * n * n * 1.0 / ( ( n - 1 ) * ( n -2 ) * ( n -3 ) )          
-    ## 
     return Ostap.Math.Moments.cumulant_4th ( obj )  
     
 
@@ -220,8 +180,6 @@ def _om_u2nd ( obj ) :
     >>> v = m.unbiased_3nd() 
     """    
     assert 2 <= obj.order , 'unbiased 2nd moment: the order must be >=2!'
-    if root_info < ( 6 , 18 ) :
-        return obj.moment ( 2 )    
     return Ostap.Math.Moments.unbiased_2nd ( obj )  
 
 # =============================================================================
@@ -236,8 +194,6 @@ def _om_u3rd ( obj ) :
     >>> v = m.unbiased_3rd() 
     """    
     assert 3 <= obj.order , 'unbiased 3rd moment: the order must be >=3!' 
-    if root_info < ( 6 , 18 ) :
-        return obj.moment ( 3 )    
     return Ostap.Math.Moments.unbiased_3rd ( obj )  
 
 # =============================================================================
@@ -252,8 +208,6 @@ def _om_u4th ( obj ) :
     >>> v = m.unbiased_4th() 
     """    
     assert 4 <= obj.order , 'unbiased 4th moment the order must be >=4!' 
-    if root_info < ( 6 , 18 ) :
-        return obj.moment ( 4 )    
     return Ostap.Math.Moments.unbiased_4th ( obj )  
 
 # =============================================================================
@@ -268,8 +222,6 @@ def _om_u5th ( obj ) :
     >>> v = m.unbiased_5th() 
     """    
     assert 5 <= obj.order  , 'unbiased 5th moment: the order must be >=4!' 
-    if root_info < ( 6 , 18 ) :
-        return obj.moment ( 5 )    
     return Ostap.Math.Moments.unbiased_5th ( obj )  
 
 # =============================================================================
@@ -279,28 +231,16 @@ def _om_u5th ( obj ) :
 #  v = m.central_moment() 
 #  v = m.moment() 
 #  @endcode
-if   ( 6 , 22 ) <= root_info :
-    ##
-    def _om_cm2 ( obj , order  ) :
-        assert isinstance  ( order , integer_types ) and order <= obj.order ,\
-               'central_moment: invalid order %s/%d' % ( order , obj.order )
-        if 2 <= order and obj.empty() : return neg_infinity
-        return obj.moment_[order]()
-    ##
-else :
-    ##
-    def _om_cm2 ( obj , order  ) :
-        assert isinstance  ( order , integer_types ) and order <= obj.order ,\
-               'central_moment: invalid order %s/%d' % ( order , obj.order )        
-        if 2 <= order and obj.empty() : return neg_infinity
-        return obj.moment ( order ) 
-
-_om_cm2.__doc__ = \
-   """Get a central moment fro the moment-counter 
+def _om_cm2 ( obj , order  ) :
+   """ Get a central moment fro the moment-counter 
    >>> m = ...
    >>> v = m.central_moment ( 3 ) ## ditto 
    >>> v = m.cmoment        ( 3 ) ## ditto 
    """
+   assert isinstance  ( order , integer_types ) and order <= obj.order ,\
+    'central_moment: invalid order %s/%d' % ( order , obj.order )
+   if 2 <= order and obj.empty() : return neg_infinity
+   return obj.moment_[order]()
 
 # =============================================================================
 ## get central moment 
@@ -309,29 +249,17 @@ _om_cm2.__doc__ = \
 #  v = m.central_moment() 
 #  v = m.moment() 
 #  @endcode
-if   ( 6 , 22 ) <= root_info :
-    ##
-    def _om_cm3 ( obj , order  ) :
-        assert isinstance  ( order , integer_types ) and order <= obj.order ,\
-               'central_moment: invalid order %s/%d' % ( order , obj.order )
-        if 2 <= order and not obj.ok () : return neg_infinity
-        ##
-        return obj.moment_[order]()
-    ##
-else :
-    ##
-    def _om_cm3 ( obj , order  ) :    
-        assert isinstance  ( order , integer_types ) and order <= obj.order ,\
-               'central_moment: invalid order %s/%d' % ( order , obj.order )
-        if 2 <= order and not obj.ok () : return neg_infinity
-        return obj.moment ( order ) 
-
-_om_cm3.__doc__ = \
+def _om_cm3 ( obj , order  ) :
     """ Get a central moment for the moment-counter 
     >>> m = ...
     >>> v = m.central_moment ( 3 ) ## ditto 
     >>> v = m.cmoment        ( 3 ) ## ditto 
     """
+    assert isinstance  ( order , integer_types ) and order <= obj.order ,\
+        'central_moment: invalid order %s/%d' % ( order , obj.order )
+    if 2 <= order and not obj.ok () : return neg_infinity
+    ##
+    return obj.moment_[order]()
 
 # ================================================================================
 ## get the cumulant
@@ -349,12 +277,8 @@ def _om_cumulant_ ( obj , order ) :
     if not obj.ok() : return neg_infinity
     return obj.cumulant_[order] ()
 
-if (6,22) <= root_info :
+Ostap.Math.Moment.cumulant  = _om_cumulant_
     
-    Ostap.Math.Moment.cumulant  = _om_cumulant_
-    
-    
-
 # =============================================================================
 ## get a RMS 
 #  @code

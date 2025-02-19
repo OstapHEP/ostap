@@ -244,16 +244,13 @@ def random_random ( *jobid ) :
     ##
     random.seed ( jhid )
     ## 
-    if sys.version_info.major < 3 :
-        random.jumpahead ( jhid )
-    ##
     njumps = jhid % 9967
     for j in range ( njumps ) :
         random.uniform ( 0 , 1 )
     ## 
 
-    ## sleep a bit (up to one second) 
-    time.sleep ( random.uniform ( 0.01 , 1.0 ) )
+    ## sleep a bit (up to hals a second) 
+    time.sleep ( random.uniform ( 0.01 , 0.5 ) )
     
     ## now  initialize ROOT
     ROOT.gRandom.SetSeed ()
@@ -262,10 +259,14 @@ def random_random ( *jobid ) :
     ROOT.RooRandom.randomGenerator().SetSeed()
 
     ## .. and numpy
-    try :
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
         import numpy as np
         np.random.seed()
-    except ImportError :
+        # =====================================================================
+    except ImportError : # ====================================================
+        # =====================================================================
         pass
     # 
     state = random.getstate() , ROOT.gRandom.GetSeed() , ROOT.RooRandom.randomGenerator().GetSeed() 
