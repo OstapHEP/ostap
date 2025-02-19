@@ -30,6 +30,9 @@ __all__     = (
     #
     )
 # =============================================================================
+from   ostap.core.ostap_types         import ( integer_types  , num_types   ,
+                                               long_type      , sized_types , 
+                                               sequence_types ) 
 from   ostap.core.core                import ( cpp      , Ostap     , 
                                                ROOTCWD  , rootID    , 
                                                funcID   , funID     , fID             ,
@@ -44,20 +47,15 @@ from   ostap.core.core                import ( cpp      , Ostap     ,
 from   ostap.math.base                import ( frexp10      , isequalf      ,
                                                pos_infinity , neg_infinity  ) 
 from   ostap.math.math_ve             import significance
-from   ostap.core.ostap_types         import ( integer_types  , num_types   ,
-                                               long_type      , sized_types , 
-                                               sequence_types ) 
 from   ostap.utils.progress_bar       import progress_bar
-from   ostap.core.meta_info           import root_info, python_info
 from   ostap.math.random_ext          import poisson
 from   ostap.utils.utils              import accumulate
 from   ostap.utils.cidict             import cidict, cidict_fun  
 from   ostap.utils.basic              import typename 
-# 
+import ostap.logger.table             as     T 
 import ostap.stats.moment 
 import ostap.plotting.draw_attributes 
 import ostap.io.root_file 
-import ostap.logger.table             as     T 
 import ROOT, sys, math, ctypes, array  
 # =============================================================================
 # logging 
@@ -4665,10 +4663,8 @@ ROOT.TH1F.significance = _h1_signif_
 ROOT.TH1D.significance = _h1_signif_ 
 
 # ================================================================================
-if  ( 2 , 7 ) <= python_info : _erfc_ = math.erfc 
-else                         : _erfc_ = ROOT.Math.erfc
-# ================================================================================
-_sqrt_2_ = math.sqrt( 2.0 )
+_erfc_   = math.erfc 
+_sqrt_2_ = math.sqrt ( 2.0 )
 ## helper function : convolution of gaussian with the single pulse 
 def _cnv_ ( x , x0 , dx , sigma ) :
     """ Simple wrapper over error-function:
@@ -8424,33 +8420,13 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
 
 
 # =============================================================================
-if root_info < ( 3 , 0 ) : 
-    ## Number of entries (as int)
-    #  @code
-    #  histo
-    #  n = histo.nEntries() 
-    #  @endcode
-    #  @see TH1::GetEntries 
-    def _h1_nEntries_ ( histo ) :
-        """ Number of entries (as int)
-        >>> histo = ..
-        >>> n = histo.nEntries() 
-        """
-        return long ( histo.GetEntries() )
-else :
-    ## Number of enbtries (as int)
-    #  @code
-    #  histo
-    #  n = histo.nEntries() 
-    #  @endcode
-    #  @see TH1::GetEntries 
-    def _h1_nEntries_ ( histo ) :
-        """ Number of enbtries (as int)
-        >>> histo = ..
-        >>> n = histo.nEntries() 
-        """
-        return int ( histo.GetEntries() )
-    
+def _h1_nEntries_ ( histo ) :
+    """ Number of enbtries (as int)
+    >>> histo = ..
+    >>> n = histo.nEntries() 
+    """
+    return int ( histo.GetEntries() )
+
 ROOT.TH1.nEntries = _h1_nEntries_
 
 # =============================================================================

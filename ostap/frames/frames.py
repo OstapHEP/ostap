@@ -60,11 +60,11 @@ __all__     = (
     'frame_types'          , ## the basic DataFrame/FeameNode types 
     ) 
 # =============================================================================
-from   ostap.core.core           import cpp, Ostap
-from   ostap.math.base           import isequal, iszero, axis_range                             
 from   ostap.core.meta_info      import root_info 
 from   ostap.core.ostap_types    import ( integer_types , dictlike_types , 
                                           num_types     , ordered_dict   )    
+from   ostap.core.core           import cpp, Ostap
+from   ostap.math.base           import isequal, iszero, axis_range                             
 from   ostap.logger.utils        import multicolumn
 from   ostap.utils.cidict        import cidict, cidict_fun      
 from   ostap.utils.progress_conf import progress_conf 
@@ -86,21 +86,25 @@ logger.debug ( 'Some useful decorations for ROOT::RDataFrame objects')
 DataFrame = Ostap.DataFrame
 ## @see Ostap/DataFrame.h 
 FrameNode = Ostap.FrameNode
-# ==============================================================================
-if FrameNode is DataFrame : frame_types = DataFrame ,
-else                      : frame_types = DataFrame , FrameNode
-# ===============================================================================
+# =============================================================================
+if    FrameNode is DataFrame : frame_types = DataFrame ,
+else                         : frame_types = DataFrame , FrameNode
+# =============================================================================
 if not hasattr ( Ostap ,'DataFrame' ) :  Ostap.DataFrame = DataFrame
 if not hasattr ( Ostap ,'FrameNode' ) :  Ostap.FrameNode = FrameNode 
 # =============================================================================
 Frames_OK    = False 
 std_move     = None 
-has_std_move = False 
-try :
+has_std_move = False
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
     std_move     = ROOT.std.move
     has_std_move = True 
-    Frames_OK    = has_std_move and ( 6 , 25 )<= root_info  ## ATTENTION!
-except AttributeError :
+    Frames_OK    = has_std_move and ( 6 , 25 ) <= root_info  ## ATTENTION!
+    # =========================================================================
+except AttributeError : # =====================================================
+    # =========================================================================
     std_move     = None 
     has_std_move = False
     Frames_OK    = False 
@@ -108,18 +112,10 @@ except AttributeError :
 ## type for the column names 
 CNT                = DataFrame.ColumnNames_t 
 # =============================================================================
-if   ( 6 , 18 ) <= root_info :
-    # =========================================================================
-    ## get frame-like stuff  as rnode 
-    def as_rnode ( frame ) :
-        """get frame-like stuff  as rnode"""
-        return ROOT.RDF.AsRNode ( frame ) 
-else :
-    # =========================================================================
-    ## get frame-like stuff  as rnode  
-    def as_rnode ( frame ) :
-        """get frame-like stuff  as rnode"""
-        return FrameNode  ( frame )
+## get frame-like stuff  as rnode 
+def as_rnode ( frame ) :
+    """ Get frame-like stuff  as rnode"""
+    return ROOT.RDF.AsRNode ( frame ) 
 
 # ==============================================================================
 ## Helper method to generate new, unique name for the variable 
@@ -279,43 +275,25 @@ if not hasattr ( DataFrame , '_fr_old_init_' ) :
     DataFrame.__init__      = _fr_new_init_
 
 # =============================================================================
-if ( 6 , 16 ) <= root_info : 
-    # =========================================================================    
-    ## get all column names
-    #  @code
-    #  cols = frame_colums   ( frame ) 
-    #  cols = frame_branches ( frame ) ## ditto
-    #  @endcode 
-    def frame_columns ( frame ) :
-        """Get all column names
-        >>> cols = frame_colums   ( frame ) 
-        >>> cols = frame_branches ( frame ) ## ditto 
-        """
-        names  = [ str ( c ) for c in frame.GetColumnNames()        ]
-        names += [ str ( c ) for c in frame.GetDefinedColumnNames() ]            
-        return tuple ( sorted ( set ( names ) ) )
-    # =============================================================================
-else : 
-    # =============================================================================
-    ## get all column names
-    #  @code
-    #  cols = frame_colums   ( frame ) 
-    #  cols = frame_branches ( frame ) ## ditto 
-    #  @endcode 
-    def frame_columns ( frame ) :
-        """Get all column names
-        >>> cols = frame_colums   ( frame ) 
-        >>> cols = frame_branches ( frame ) 
-        """
-        names  = [ str ( c ) for c in frame.GetColumnNames() ]
-        return tuple ( sorted ( set ( names ) ) )    
+## get all column names
+#  @code
+#  cols = frame_colums   ( frame ) 
+#  cols = frame_branches ( frame ) ## ditto
+#  @endcode 
+def frame_columns ( frame ) :
+    """ Get all column names
+    >>> cols = frame_colums   ( frame ) 
+    >>> cols = frame_branches ( frame ) ## ditto 
+    """
+    names  = [ str ( c ) for c in frame.GetColumnNames()        ]
+    names += [ str ( c ) for c in frame.GetDefinedColumnNames() ]            
+    return tuple ( sorted ( set ( names ) ) )
     
 # ==============================================================================
 ## Frame branches, same as frame columns
 #  @see frame_columns 
 frame_branches = frame_columns
 # =============================================================================
-
 
 # =============================================================================
 ## Display the progress bar for the DataFrame:
@@ -357,7 +335,7 @@ def frame_progress1 ( frame  , length ) :
     
     if rr : nchunks += 1 
 
-    if (6,32 ) <= root_info :
+    if ( 6 , 32 ) <= root_info :
         cnt = Ostap.Utils.add_progress_bar ( cnt , nchunks , csize , progress_conf () ) 
     else : 
         fun = Ostap.Utils.frame_progress ( nchunks , progress_conf () )
@@ -384,8 +362,8 @@ def frame_progress2 ( frame , length = -1 ) :
         
     cnt = frame.Count ()
     
-    if    not isatty ()         : return frame , cnt  ## ATTENTION 
-    elif  root_info < ( 6, 30 ) : return frame , cnt  ## ATTENTION! 
+    if    not isatty ()          : return frame , cnt  ## ATTENTION 
+    elif  root_info < ( 6 , 30 ) : return frame , cnt  ## ATTENTION! 
 
     ## add progress bar 
     ROOT.ROOT.RDF.Experimental.AddProgressBar ( frame )    
@@ -432,9 +410,7 @@ def frame_prescale ( frame , prescale , name = '' ) :
     if isinstance ( prescale , integer_types ) and 1 < prescale :
 
         name = name if name else 'PRESCALE_%d' % prescale        
-        code = '( 0 == ( ( rdfentry_ + %d * rdfslot_ ) %% %d ) )' \
-               if ( 6 , 16 ) < root_info else                     \
-               '( 0 == ( ( tdfentry_ + %d * tdfslot_ ) %% %d ) ) '        
+        code = '( 0 == ( ( rdfentry_ + %d * rdfslot_ ) %% %d ) )'
         ## 16777213 and 16777199 are just large prime numbers 
         code = code % ( 16777213 , prescale )
         return node.Filter ( code , name ) 
@@ -597,48 +573,19 @@ def frame_table ( frame , pattern = None ,  cuts = '' , more_vars = () , title =
 # =============================================================================
 # Frame -> histogram prjections 
 # =============================================================================
-if   ( 6 , 14 ) <= root_info :
     
-    DF_H1Model = ROOT.ROOT.RDF.TH1DModel 
-    DF_H1Type  = ROOT.TH1D
-    DF_H2Model = ROOT.ROOT.RDF.TH2DModel 
-    DF_H2Type  = ROOT.TH2D
-    DF_H3Model = ROOT.ROOT.RDF.TH3DModel 
-    DF_H3Type  = ROOT.TH3D
+DF_H1Model = ROOT.ROOT.RDF.TH1DModel 
+DF_H1Type  = ROOT.TH1D
+DF_H2Model = ROOT.ROOT.RDF.TH2DModel 
+DF_H2Type  = ROOT.TH2D
+DF_H3Model = ROOT.ROOT.RDF.TH3DModel 
+DF_H3Type  = ROOT.TH3D
 
-    DF_P1Model = ROOT.ROOT.RDF.TProfile1DModel 
-    DF_P1Type  = ROOT.TProfile
-    
-    DF_P2Model = ROOT.ROOT.RDF.TProfile2DModel
-    DF_P2Type  = ROOT.TProfile2D
+DF_P1Model = ROOT.ROOT.RDF.TProfile1DModel 
+DF_P1Type  = ROOT.TProfile
 
-elif ( 6, 12 ) <= root_info :
-
-    DF_H1Model = ROOT.ROOT.Experimental.TDF.TH1DModel 
-    DF_H1Type  = ROOT.TH1D
-    DF_H2Model = ROOT.ROOT.Experimental.TDF.TH2DModel 
-    DF_H2Type  = ROOT.TH2D
-    DF_H3Model = ROOT.ROOT.Experimental.TDF.TH3DModel 
-    DF_H3Type  = ROOT.TH3D
-
-    DF_P1Model = ROOT.ROOT.Experimental.TDF.TProfile1DModel 
-    DF_P1Type  = ROOT.TProfile
-    
-    DF_P2Model = ROOT.ROOT.Experimental.TDF.TProfile2DModel
-    DF_P2Type  = ROOT.TProfile2D
-
-else :
-
-    DF_H1Model = ROOT.TH1F
-    DF_H1Type  = ROOT.TH1F
-    DF_H2Model = ROOT.TH2F
-    DF_H2Type  = ROOT.TH2F
-    DF_H3Model = ROOT.TH3F 
-    DF_H3Type  = ROOT.TH3F
-    DF_P1Model = ROOT.TProfile
-    DF_P1Type  = ROOT.TProfile    
-    DF_P2Model = ROOT.TProfile
-    DF_P2Type  = ROOT.TProfile2D
+DF_P2Model = ROOT.ROOT.RDF.TProfile2DModel
+DF_P2Type  = ROOT.TProfile2D
 
 # =============================================================================
 ## convert 1D-histogram to "model" for usage with DataFrames 
@@ -2659,34 +2606,31 @@ _new_methods_ += [
     ]
 
 # =============================================================================
-if ( 6 , 18 ) <= root_info :
-    # =========================================================================
-    ## Project the tree to the histogram using DataFrame machinery
-    #  @code
-    #  tree  = ...
-    #  histo = ...
-    #  tree.fproject ( histo , what , ... ) 
-    #  @endcode
-    def _rt_fproject_ ( tree , histo , *args ) :
-        """ Project the tree to the histogram using DataFrame machinery
-        >>> tree  = ...
-        >>> histo = ...
-        >>> tree.fproject ( histo , what , ... ) 
-        """
-        assert isinstance ( histo , ROOT.TH1  ) or \
-               isinstance ( histo , _types_nD ) ,  \
-               '"histo" must be ROOT.TH1 or polynomial type!'
-        ## use frame methods
-        frame_project ( tree , histo , *args )
-        ## return        
-        return histo
-    
-    _rt_fproject_.__doc__ += '\n' + frame_project.__doc__ 
-    ROOT.TTree.fproject  = _rt_fproject_
+## Project the tree to the histogram using DataFrame machinery
+#  @code
+#  tree  = ...
+#  histo = ...
+#  tree.fproject ( histo , what , ... ) 
+#  @endcode
+def _rt_fproject_ ( tree , histo , *args ) :
+    """ Project the tree to the histogram using DataFrame machinery
+    >>> tree  = ...
+    >>> histo = ...
+    >>> tree.fproject ( histo , what , ... ) 
+    """
+    assert isinstance ( histo , ROOT.TH1  ) or \
+        isinstance ( histo , _types_nD ) ,  \
+        '"histo" must be ROOT.TH1 or polynomial type!'
+    ## use frame methods
+    frame_project ( tree , histo , *args )
+    ## return        
+    return histo
 
-    _decorated_classes_ += ( ROOT.TTree , )
-    _new_methods_.append   ( ROOT.TTree.fproject ) 
+_rt_fproject_.__doc__ += '\n' + frame_project.__doc__ 
+ROOT.TTree.fproject  = _rt_fproject_
 
+_decorated_classes_ += ( ROOT.TTree , )
+_new_methods_.append   ( ROOT.TTree.fproject ) 
 
 # =============================================================================
 if Frames_OK : 

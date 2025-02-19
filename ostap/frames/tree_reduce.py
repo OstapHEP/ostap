@@ -21,11 +21,11 @@ __all__     = (
     'reduce'     ,    
     ) 
 # =============================================================================
-import ostap.trees.trees
 from   ostap.core.meta_info import root_info 
 from   ostap.core.core      import cpp, Ostap 
 from   ostap.utils.cleanup  import CleanUp
 from   ostap.utils.basic    import make_dirs 
+import ostap.trees.trees
 import ROOT, os, sys 
 # =============================================================================
 # logging 
@@ -153,10 +153,7 @@ class ReduceTree(CleanUp):
             
         ## chain name:
         if not name : name = chname ## produces ROOT error
-        if name == chname and root_info <  ( 6 ,32 ) : name = '%s_reduced' % name
-            
-        if root_info < ( 6 , 24 ) : 
-            _ , _ , name = name.rpartition ( '/' )                
+        if name == chname and root_info < ( 6 , 32 ) : name = '%s_reduced' % name
             
         self.__name = name
 

@@ -33,6 +33,7 @@ __all__     = (
     'SETPARS'           , ## context manager to keep/preserve parameters 
     )
 # =============================================================================
+from   ostap.core.meta_info    import root_info 
 from   ostap.core.ostap_types  import ( string_types   , num_types   ,
                                         integer_types  , list_types  , 
                                         is_good_number , is_integer  ,

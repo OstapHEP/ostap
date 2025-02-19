@@ -15,7 +15,6 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = () 
 # =============================================================================
-from   ostap.core.meta_info   import root_info 
 from   ostap.core.core        import hID , VE 
 from   ostap.logger.colorized import allright  
 from   ostap.logger.pretty    import pretty_float, pretty_ve
