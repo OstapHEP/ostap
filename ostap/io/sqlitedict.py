@@ -31,25 +31,13 @@ __all__ = (
     'issqlite3'  , ##  is is sqlite3- file?
     )
 # =============================================================================
-import sys, os, io, sqlite3, traceback
-# =============================================================================
-# some Python 3 vs 2 imports
-try:
-    from collections import UserDict  as DictClass
-except ImportError:
-    from UserDict    import DictMixin as DictClass
-# =============================================================================
-from   threading                       import Thread
-# =============================================================================
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-# =============================================================================
-from ostap.io.pickling   import dumps, loads, HIGHEST_PROTOCOL as PICKLE_PROTOCOL
-import logging  
+from   collections import UserDict      as     DictClass
+from   threading                        import Thread
+from   queue import Queue
+from   ostap.io.pickling                 import dumps, loads, HIGHEST_PROTOCOL as PICKLE_PROTOCOL
+import sys, os, io, sqlite3, traceback, logging 
+# =============================================================================# 
 from ostap.logger.logger import getLogger
-# =============================================================================
 logger = getLogger( __name__ )
 # =============================================================================
 ## Is it a sqlite3 file?
@@ -73,36 +61,11 @@ def issqlite3 ( filename ) :
     return False 
 
 # =============================================================================
-major_version = sys.version_info [ 0 ]
-if major_version < 3:  # py <= 2.x
-    if sys.version_info[1] < 5:  # py <= 2.4
-        raise ImportError("sqlitedict requires python 2.5 or higher (python 3.3 or higher supported)")
-    
-    # necessary to use exec()_ as this would be a SyntaxError in python3.
-    # this is an exact port of six.reraise():
-    def exec_(_code_, _globs_=None, _locs_=None):
-        """Execute code in a namespace."""
-        if _globs_ is None:
-            frame = sys._getframe(1)
-            _globs_ = frame.f_globals
-            if _locs_ is None:
-                _locs_ = frame.f_locals
-            del frame
-        elif _locs_ is None:
-            _locs_ = _globs_
-        exec("""exec _code_ in _globs_, _locs_""")
-
-    exec_("def reraise(tp, value, tb=None):\n"
-          "    raise tp, value, tb\n")
-else:
-    
-    def reraise ( tp , value , tb = None):
-        if value is None : value = tp ()
-        if value.__traceback__ is not tb :
-            raise value.with_traceback ( tb )
-        raise value
-# =============================================================================
-
+def reraise ( tp , value , tb = None):
+    if value is None : value = tp ()
+    if value.__traceback__ is not tb :
+        raise value.with_traceback ( tb )
+    raise value
 
 # =============================================================================
 ## @class Connect
@@ -123,13 +86,9 @@ class Connect ( object ) :
     ## context manager ENTER
     def __enter__ ( self ) :
 
-        if  ( 3 , 4 ) <= sys.version_info and 'r' in self.flag :
+        if 'r' in self.flag :
             filename  = 'file:%s?mode=ro' % self.filename 
             self.__connect = sqlite3.connect ( filename , uri = True , *self.args , **self.kwargs )
-        elif 'r' in self.flag :
-            self.__fd = os.open ( self.__filename, os.O_RDONLY )
-            filename  = '/dev/fd/%d' % self.__fd
-            self.__connect = sqlite3.connect ( filename      , *self.args , **self.kwargs )
         else :
             self.__connect = sqlite3.connect ( self.filename , *self.args , **self.kwargs )
             
@@ -280,7 +239,7 @@ class SqliteDict(DictClass):
     # =========================================================================
     ## Context manager: EXIT 
     def __exit__(self, *exc_info):
-        """Context manager: EXIT 
+        """ Context manager: EXIT 
         """
         self.sync  ()  ## ADDED 
         self.close ()
@@ -469,9 +428,7 @@ class SqliteDict(DictClass):
         ##
         items = [ item for item in items ]
         ## 
-        if   kwargs and ( 3.0 ) <= sys.version_info :
-            items += [  item for item in kwargs.items () ]
-        elif kwargs : items += kwargs.items ()
+        if  kwargs : items += [  item for item in kwargs.items () ]
         ## 
         items = [ ( k , self.encode_value ( v ) ) for k, v in items ]
         ## 

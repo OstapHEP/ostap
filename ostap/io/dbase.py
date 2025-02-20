@@ -32,22 +32,14 @@ from ostap.io.sqlitedict import SqliteDict, issqlite3
 ## named tuple to DB-item: (time, payload)
 Item = collections.namedtuple ( 'Item', ( 'time' , 'payload' ) )
 # =============================================================================
-if ( 3 , 0 ) <= sys.version_info :
-    import dbm                    as std_db
-    std_whichdb = std_db.whichdb
-else : 
-    import anydbm                 as std_db
-    from   whichdb import whichdb as std_whichdb 
+import dbm                    as std_db
+std_whichdb = std_db.whichdb
 # =============================================================================
 ordered_dict = dict
-if sys.version_info < ( 3, 7 ) :
-    ordered_dict = collections.OrderedDict
-
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
-    if ( 3 , 0 ) <= sys.version_info : import dbm.gnu  as db_gnu
-    else                             : import gdbm     as db_gnu
+    import dbm.gnu  as db_gnu
     # =========================================================================
 except ImportError :
     # =========================================================================
@@ -55,72 +47,62 @@ except ImportError :
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
-    if ( 3 , 0 ) <= sys.version_info : import dbm.ndbm as db_dbm
-    else                             : import dbm      as db_dbm
+    import dbm.ndbm as db_dbm
     # =========================================================================
 except ImportError :
     # =========================================================================
     db_dbm = None
 # =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    if  sys.version_info < ( 3,0 ) : import dbhash as db_hash 
-    else                           : db_hash = None 
-    # =========================================================================
-except ImportError :
-    # =========================================================================
-    db_hash = None
+db_hash = None
 # =============================================================================
-if ( 3 , 0 ) <= sys.version_info : import dbm.dumb as db_dumb
-else                             : import dumbdbm  as db_dumb    
+import dbm.dumb as db_dumb
 # =============================================================================
 ## Check for Berkeley DB
 # =============================================================================
 use_berkeleydb = False
 # =============================================================================
 ## make a try to use berkeleydb
-if  ( 3 , 6 ) <= sys.version_info :
+# =============================================================================
+try : # =======================================================================
     # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
-        import berkeleydb
-        use_berkeleydb   = True
+    import berkeleydb
+    use_berkeleydb   = True
+    
+    berkeleydb_open_mode = {
+        'r' : berkeleydb.db.DB_RDONLY ,
+        'w' : 0                       ,
+        'c' : berkeleydb.db.DB_CREATE , 
+        'n' : berkeleydb.db.DB_CREATE
+    }
+
+    ## open Berkeley DB 
+    def berkeleydb_open ( filename                          ,
+                          flag     = 'c'                    ,
+                          mode     = 0o660                  ,
+                          filetype = berkeleydb.db.DB_HASH  ,
+                          dbenv    = None                   ,
+                          dbname   = None                   ,
+                          decode   = lambda s : s           ,
+                          encode   = lambda s : s           ) :            
+        """ Open Berkeley DB
+        """
+        assert flag in berkeleydb_open_mode, \
+            "berkeleydb_open: invalid open mode %s" % flag
         
-        berkeleydb_open_mode = {
-            'r' : berkeleydb.db.DB_RDONLY ,
-            'w' : 0                       ,
-            'c' : berkeleydb.db.DB_CREATE , 
-            'n' : berkeleydb.db.DB_CREATE
-            }
-        
-        ## open Berkeley DB 
-        def berkeleydb_open ( filename                          ,
-                              flag     = 'c'                    ,
-                              mode     = 0o660                  ,
-                              filetype = berkeleydb.db.DB_HASH  ,
-                              dbenv    = None                   ,
-                              dbname   = None                   ,
-                              decode   = lambda s : s           ,
-                              encode   = lambda s : s           ) :            
-            """ Open Berkeley DB
-            """
-            assert flag in berkeleydb_open_mode, \
-                "berkeleydb_open: invalid open mode %s" % flag
+        if 'n' == flag and os.path.exists ( filename ) and os.path.isfile ( filename ) : 
+            try    : os.remove ( filename )
+            except : pass
             
-            if 'n' == flag and os.path.exists ( filename ) and os.path.isfile ( filename ) : 
-                try    : os.remove ( filename )
-                except : pass
-                                
-            db = berkeleydb.db.DB ( dbenv )
-            db.open ( filename , dbname , filetype , berkeleydb_open_mode [ flag ]  , mode )
-            
-            return db
+        db = berkeleydb.db.DB ( dbenv )
+        db.open ( filename , dbname , filetype , berkeleydb_open_mode [ flag ]  , mode )
         
-        # =====================================================================
-    except ImportError :
-        # =====================================================================
-        berkeleydb      = None
-        use_berkeleydb  = False 
+        return db        
+
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    berkeleydb      = None
+    use_berkeleydb  = False 
 
 # =============================================================================
 ## Check for BSDDB3 
@@ -128,8 +110,8 @@ if  ( 3 , 6 ) <= sys.version_info :
 use_bsddb3     = False
 # =============================================================================
 ## make a try for dbddb3 
-if ( 3 , 3 ) <= sys.version_info < ( 3 , 10 ) :
-    # =========================================================================
+if sys.version_info < ( 3 , 10 ) :
+    # ==a=======================================================================
     try : # ===================================================================
         # =====================================================================
         import bsddb3
@@ -152,18 +134,17 @@ if ( 3 , 3 ) <= sys.version_info < ( 3 , 10 ) :
 use_lmdb = False
 # =============================================================================
 ## make a try for LMDB 
-if ( 3 , 7 ) <= sys.version_info :
+# =============================================================================
+try : # =======================================================================
     # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
-        import lmdb 
-        from ostap.io.lmdbdict import LmdbDict, islmdb 
-        use_lmdb = True
-        # =====================================================================
-    except ImportError  : # ===================================================
-        # =====================================================================
-        lmdb     = None 
-        use_lmdb = False 
+    import lmdb 
+    from ostap.io.lmdbdict import LmdbDict, islmdb 
+    use_lmdb = True
+    # =========================================================================
+except ImportError  : # =======================================================
+    # =========================================================================
+    lmdb     = None 
+    use_lmdb = False 
 
 # =============================================================================
 ##  Guess which db package to use to open a db file.
@@ -211,17 +192,20 @@ def whichdb ( filename  ) :
     if issqlite3 ( filename ) : return 'sqlite3'
 
     import io , struct
-    
-    try :    
+
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
         with io.open ( filename  ,'rb' ) as f :
             # Read the start of the file -- the magic number
-            s16 = f.read(16)   
-    except OSError :
+            s16 = f.read(16)
+        # =====================================================================
+    except OSError : # ========================================================
+        # =====================================================================
         return None
 
     ## TKRZW: Hash 
-    if ( 3 , 6 ) <= sys.version_info :
-        if s16[:9] == b'TkrzwHDB\n': return 'TkrzwHDB'
+    if s16[:9] == b'TkrzwHDB\n': return 'TkrzwHDB'
 
     s = s16[:4]
     # Return "" if not at least 4 bytes
@@ -232,9 +216,13 @@ def whichdb ( filename  ) :
         return 'root'
 
     # Convert to 4-byte int in native byte order -- return "" if impossible
-    try:
+    # =========================================================================
+    try: # ====================================================================
+        # =====================================================================
         ( magic, ) = struct.unpack("=l", s)
-    except struct.error:
+        # =====================================================================
+    except struct.error: # ====================================================
+        # =====================================================================
         return ""
 
     # Check for GNU dbm
@@ -247,9 +235,13 @@ def whichdb ( filename  ) :
 
     # Later versions of Berkeley db hash file have a 12-byte pad in
     # front of the file type
-    try:
-        (magic,) = struct.unpack("=l", s16[-4:])
-    except struct.error:
+    # =========================================================================
+    try: # ====================================================================
+        # =====================================================================
+        ( magic , ) = struct.unpack("=l", s16[-4:])
+        # =====================================================================
+    except struct.error: # ====================================================
+        # =====================================================================
         return ""
 
     # Check for BSD hash
@@ -259,7 +251,7 @@ def whichdb ( filename  ) :
     ## unknown 
     return ""
 
-# =====================================================================
+# ============================================================================
 ## Open or create database at path given by *file*.
 # 
 #  Optional argument *flag* can be 'r' (default) for read-only access, 'w'
@@ -399,9 +391,9 @@ def dbsize  ( filename  ) :
 def dbfiles ( dbtype , basename ) :
     """ Expected DB file names for the given basename
     """
-    if   dbtype in ( 'dbm.ndbm' , 'dbm'      ) : 
+    if   dbtype in ( 'dbm.ndbm' , ) : 
         return '%s.pag' % basename , '%s.dir' % basename , 
-    elif dbtype in ( 'dbm.dumb' , 'dumbdbm'  , ) : 
+    elif dbtype in ( 'dbm.dumb' , ) : 
         return '%s.dat' % basename , '%s.dir' % basename , 
     elif dbtype in ( 'lmdb', ) : 
         return ( os.path.join ( basename , ''         ) , ## directory 
@@ -471,20 +463,13 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
     logger.info  ('Available DB-backends are:' )
-    if use_berkeleydb :
-        logger.info ( ' - BerkeleyDB : %s' % str ( berkeleydb ) ) 
-    if use_bsddb3     :
-        logger.info ( ' - BSDDB3     : %s' % str ( bsddb3     ) ) 
-    if use_lmdb       :
-        logger.info ( ' - LMDB       : %s' % str ( lmdb       ) ) 
-    if db_gnu :
-        logger.info ( ' - GNU dbase  : %s' % str ( db_gnu     ) ) 
-    if db_dbm :
-        logger.info ( ' - NDBM       : %s' % str ( db_dbm     ) ) 
-    if db_dumb :
-        logger.info ( ' - DUMB       : %s' % str ( db_dumb    ) ) 
-    if db_hash :
-        logger.info ( ' - DBHASH     : %s' % str ( db_hash    ) ) 
+    if use_berkeleydb : logger.info ( ' - BerkeleyDB : %s' % str ( berkeleydb ) ) 
+    if use_bsddb3     : logger.info ( ' - BSDDB3     : %s' % str ( bsddb3     ) ) 
+    if use_lmdb       : logger.info ( ' - LMDB       : %s' % str ( lmdb       ) ) 
+    if db_gnu         : logger.info ( ' - GNU dbase  : %s' % str ( db_gnu     ) ) 
+    if db_dbm         : logger.info ( ' - NDBM       : %s' % str ( db_dbm     ) ) 
+    if db_dumb        : logger.info ( ' - DUMB       : %s' % str ( db_dumb    ) ) 
+    if db_hash        : logger.info ( ' - DBHASH     : %s' % str ( db_hash    ) ) 
         
 # =============================================================================
 ##                                                                      The END 

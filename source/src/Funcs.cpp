@@ -43,9 +43,6 @@ ClassImp(Ostap::Functions::Expression)
 ClassImp(Ostap::Functions::RooTreeFun)
 // ============================================================================
 Ostap::Functions::FunTree::~FunTree(){};
-Ostap::Functions::Func1D::~Func1D(){};
-Ostap::Functions::Func2D::~Func2D(){};
-Ostap::Functions::Func3D::~Func3D(){};
 //
 Ostap::Functions::FuncRoo1D::~FuncRoo1D(){};
 Ostap::Functions::FuncRoo2D::~FuncRoo2D(){};
@@ -302,11 +299,11 @@ Bool_t Ostap::Functions::FunTree::Notify ()  { return true ; }
 double Ostap::Functions::FunTree::operator() ( const TTree* tree ) const
 {
   //
-  if ( nullptr != tree ) 
-    {
-      const TChain* chain = dynamic_cast<const TChain*>( tree ) ;
-      if ( chain ) { tree = chain->GetTree() ; }
-    }
+  // if ( nullptr != tree ) 
+  //  {
+  //    const TChain* chain = dynamic_cast<const TChain*>( tree ) ;
+  //    if ( chain ) { tree = chain->GetTree() ; }
+  //  }
   //
   // the tree 
   if ( tree != m_tree ) {  m_tree = tree  ; }
@@ -319,6 +316,12 @@ double Ostap::Functions::FunTree::operator() ( const TTree* tree ) const
 }
 // ============================================================================
 
+#include <iostream>
+namespace
+{
+  std::size_t s_ID { 0 } ;
+}
+
 
 Ostap::Functions::Func1D::Func1D
 ( std::function<double(double)> fun  , 
@@ -329,7 +332,10 @@ Ostap::Functions::Func1D::Func1D
   , m_xvar_exp ( x       ) 
   , m_xvar     { nullptr }
   , m_tree     { tree    }
-{}     
+{
+  s_ID += 1 ;
+  std::cerr << " CREATE ME " << s_ID  <<  "  " <<  this <<std::endl ;
+}     
 // ============================================================================
 // copy constructor 
 // ============================================================================
@@ -341,7 +347,10 @@ Ostap::Functions::Func1D::Func1D
   , m_xvar_exp       ( right.m_xvar_exp ) 
   , m_xvar           ( nullptr          )
   , m_tree           ( right.m_tree     ) 
-{}
+{
+  s_ID += 1 ;
+  std::cerr << " COPY   ME " << s_ID  <<  "  " <<  this <<std::endl ;
+}
 // ===========================================================================
 // clone :
 // ===========================================================================
@@ -419,6 +428,17 @@ double Ostap::Functions::Func1D::operator() ( const TTree* tree ) const
   return m_fun ( xvar ) ;
 }
 // ============================================================================
+
+
+
+Ostap::Functions::Func1D::~Func1D()
+{
+  if ( s_ID ) { s_ID -= 1 ; } ;
+  std::cout << " DELETE ME " << s_ID  <<  "  " <<  this <<std::endl ;
+}
+Ostap::Functions::Func2D::~Func2D(){};
+Ostap::Functions::Func3D::~Func3D(){};
+
 Ostap::Functions::Func2D::Func2D
 ( std::function<double(double,double)> fun  , 
   const std::string&                   x    ,
@@ -445,7 +465,10 @@ Ostap::Functions::Func2D::Func2D
   , m_xvar           ( nullptr )
   , m_yvar           ( nullptr )
   , m_tree           ( nullptr ) 
-{}
+{
+  s_ID += 1 ;
+  std::cout << " COPY MEME " << s_ID  <<  "  " <<  this <<std::endl ;
+}
 // ===========================================================================
 // clone :
 // ===========================================================================
@@ -501,11 +524,11 @@ bool Ostap::Functions::Func2D::make_yvar() const
 double Ostap::Functions::Func2D::operator() ( const TTree* tree ) const
 {
   //
-  if ( nullptr != tree ) 
-  {
-    const TChain* chain = dynamic_cast<const TChain*> ( tree ) ;
-    if ( chain ) { tree = chain->GetTree() ; }
-  }
+  // if ( nullptr != tree ) 
+  // {
+  //  const TChain* chain = dynamic_cast<const TChain*> ( tree ) ;
+  //   if ( chain ) { tree = chain->GetTree() ; }
+  // }
   //
   // the tree 
   if ( tree != m_tree )
@@ -656,11 +679,12 @@ bool Ostap::Functions::Func3D::make_zvar() const
 double Ostap::Functions::Func3D::operator() ( const TTree* tree ) const
 {
   //
-  if ( nullptr != tree ) 
-  {
-    const TChain* chain = dynamic_cast<const TChain*> ( tree ) ;
-    if ( chain ) { tree = chain->GetTree() ; }
-  }
+  // if ( nullptr != tree ) 
+  // {
+  //   const TChain* chain = dynamic_cast<const TChain*> ( tree ) ;
+  //  if ( chain ) { tree = chain->GetTree() ; }
+  // }
+  //
   // the tree 
   if ( tree != m_tree )
   { 
@@ -749,15 +773,20 @@ Ostap::Functions::FuncTH1::FuncTH1
   const TTree*                tree  ) 
   : Func1D  ( histo , xvar , tree ) 
   , m_histo ( histo ) 
-{}
+{
+  s_ID += 1 ;
+  std::cerr << " AM TH1 CREATE" << s_ID <<  " " << this << std::endl ;
+}
 // ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::Functions::FuncTH1::FuncTH1
 ( const Ostap::Functions::FuncTH1&  right ) 
-  : Func1D  ( right         )
-  , m_histo ( right.m_histo ) 
-{}
+  : FuncTH1 ( right.m_histo , right.xvar() , right.tree() )
+{
+  s_ID += 1 ;
+  std::cerr << " AM TH1 COPY" << s_ID <<  " " << this << std::endl ;
+}
 // ===========================================================================
 // clone :
 // ===========================================================================
@@ -790,9 +819,9 @@ Ostap::Functions::FuncTH2::FuncTH2
   const bool           extrapolate               , 
   const bool           density                   )
   : FuncTH2 ( Ostap::Math::Histo2D ( histo , tx , ty , edges , extrapolate , density ) , 
-	      xvar ,   
-	      yvar , 
-	      tree )
+              xvar ,   
+              yvar , 
+              tree )
 {}
 // ======================================================================
 /*  constructor from the histogram 
@@ -806,7 +835,7 @@ Ostap::Functions::FuncTH2::FuncTH2
   const std::string&          xvar  , 
   const std::string&          yvar  , 
   const TTree*                tree  ) 
-  : Func2D ( histo , xvar , yvar , tree )
+  : Func2D  ( histo , xvar , yvar , tree )
   , m_histo ( histo ) 
 {}
 // ============================================================================
@@ -814,8 +843,7 @@ Ostap::Functions::FuncTH2::FuncTH2
 // ============================================================================
 Ostap::Functions::FuncTH2::FuncTH2
 ( const Ostap::Functions::FuncTH2&  right ) 
-  : Func2D  ( right ) 
-  , m_histo ( right.m_histo ) 
+  : FuncTH2 ( right.m_histo , right.xvar() , right.yvar() , right.tree() )
 {}
 // ===========================================================================
 // clone :
@@ -854,10 +882,10 @@ Ostap::Functions::FuncTH3::FuncTH3
   const bool           extrapolate               , 
   const bool           density                   )
 : FuncTH3 ( Ostap::Math::Histo3D ( histo , tx , ty , tz , edges , extrapolate , density ) , 
-	    xvar , 
-	    yvar , 
-	    zvar , 
-	    tree )
+            xvar , 
+            yvar , 
+            zvar , 
+            tree )
 {}
 // ======================================================================
 /*  constructor from the histogram 
@@ -872,7 +900,7 @@ Ostap::Functions::FuncTH3::FuncTH3
   const std::string&          yvar  , 
   const std::string&          zvar  , 
   const TTree*                tree  )
-  : Func3D ( histo , xvar , yvar , zvar , tree )
+  : Func3D  ( histo , xvar , yvar , zvar , tree )
   , m_histo ( histo ) 
 {}
 // ============================================================================
@@ -880,8 +908,7 @@ Ostap::Functions::FuncTH3::FuncTH3
 // ============================================================================
 Ostap::Functions::FuncTH3::FuncTH3
 ( const Ostap::Functions::FuncTH3&  right ) 
-  : Func3D  ( right  )
-  , m_histo ( right.m_histo ) 
+  : FuncTH3 ( right.m_histo , right.xvar() , right.yvar() , right.zvar() , right.tree() )
 {}
 // ===========================================================================
 // clone :

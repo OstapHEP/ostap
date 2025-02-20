@@ -14,7 +14,6 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2015-10-26"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-from   ostap.core.meta_info     import root_info
 from   ostap.core.core          import ROOTCWD
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.utils.timing       import timing
@@ -41,10 +40,6 @@ if not os.path.exists( data_file ) :
     
     nB = 20000
     nS = 10000
-
-    if root_info <  ( 6 , 15 ) : 
-        nB = 2000
-        nS = 1000
 
     s_evt_per_run = 927
     b_evt_per_run = 511

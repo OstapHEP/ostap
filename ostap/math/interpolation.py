@@ -147,6 +147,7 @@ from    ostap.core.core        import cpp, Ostap
 from    ostap.math.base        import iszero, isequal, doubles 
 from    ostap.utils.basic      import typename 
 from    ostap.utils.utils      import vrange
+from    collections.abc        import Iterable, Mapping
 import  ostap.math.reduce      
 import  ROOT, math, sys, abc, array 
 # =============================================================================
@@ -154,10 +155,6 @@ from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.interpolation' )
 else                       : logger = getLogger ( __name__                   )
 # =============================================================================
-if (3,3) <= sys.version_info : from collections.abc  import Iterable, Mapping
-else                         : from collections      import Iterable, Mapping
-# =============================================================================
-
     
 # =============================================================================
 ## Interpolation abscissas

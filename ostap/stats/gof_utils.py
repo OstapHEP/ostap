@@ -22,11 +22,10 @@ __all__     = (
 )
 # =============================================================================
 from   collections              import namedtuple
-from   ostap.core.meta_info     import python_info 
 from   ostap.core.core          import VE, Ostap
 from   ostap.utils.cidict       import cidict_fun
 from   ostap.core.ostap_types   import string_types
-from   ostap.math.base          import axis_range  
+from   ostap.math.base          import axis_range, numpy   
 from   ostap.math.math_ve       import significance
 from   ostap.stats.counters     import EffCounter
 from   ostap.utils.basic        import numcpu, loop_items 
@@ -35,14 +34,11 @@ from   ostap.utils.memory       import memory_enough
 from   ostap.utils.progress_bar import progress_bar
 import ROOT, sys, warnings, math  
 # =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import numpy as np
-    _np_floats = np.float16, np.float32, np.float64, np.float128
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    np = None
+## float types in pumy 
+np_floats = ( numpy.float16  ,
+              numpy.float32  ,
+              numpy.float64  ,
+              numpy.float128 ) if numpy else () 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -75,12 +71,12 @@ def mean_var ( data , weight = None ) :
     """
     #
     if weight is None :
-        mean = np.mean ( data , axis = 0 , dtype = np.float64 ) 
-        var  = np.var  ( data , axis = 0 , dtype = np.float64 ) 
+        mean = numpy.mean ( data , axis = 0 , dtype = numpy.float64 ) 
+        var  = numpy.var  ( data , axis = 0 , dtype = numpy.float64 ) 
         return mean , var
     # 
-    mean  = np.average (   data               , weights = weight , axis = 0 )
-    var   = np.average ( ( data - mean ) ** 2 , weights = weight , axis = 0 )
+    mean  = numpy.average (   data               , weights = weight , axis = 0 )
+    var   = numpy.average ( ( data - mean ) ** 2 , weights = weight , axis = 0 )
     #
     return mean , var 
 
@@ -93,8 +89,8 @@ def nEff ( weights ) :
     n_eff = ( sum ( x )  ) ^2 / sum ( x^2 )
     """
 
-    s1 = np.sum ( weights      , dtype = np.float64 )
-    s2 = np.sum ( weights ** 2 , dtype = np.float64 )
+    s1 = numpy.sum ( weights      , dtype = numpy.float64 )
+    s2 = numpy.sum ( weights ** 2 , dtype = numpy.float64 )
     
     return s1 * s1 / s2
 
@@ -143,7 +139,7 @@ def nEff ( weights ) :
 #  ds = ... # data set as structured array
 #  dsn = normalize ( ds ) 
 #  @endcode
-def normalize2 ( datasets , weight = () , first = True ) :
+def normalize ( ds , *others , weight = () , first = True ) :
     """ Get the `normalized' input datasets
     All floating fields  are calculated as
     
@@ -162,6 +158,8 @@ def normalize2 ( datasets , weight = () , first = True ) :
     - attention Only the floating point columns are transformed! 
     - attention Input datasets are expected to be numpy structured arrays 
     """
+
+    datasets = ( ds , ) + others
     
     nd = len ( datasets ) 
     if not weight                             : weight = nd * [ ''     ]
@@ -183,7 +181,7 @@ def normalize2 ( datasets , weight = () , first = True ) :
     columns = []
     w0      = weight [ 0 ] 
     for n,t in ds.dtype.fields.items () :
-        if t[0] in _np_floats  and n != w0 : columns.append ( n ) 
+        if t [ 0 ] in np_floats  and n != w0 : columns.append ( n ) 
         
     vmeans  = [] 
     for i , c in enumerate ( columns ) :
@@ -223,23 +221,6 @@ def normalize2 ( datasets , weight = () , first = True ) :
             
     return tuple ( result ) 
 
-# =============================================================================
-if ( 3 , 0 ) <= sys.version_info : 
-    code3 = """
-def normalize ( ds , *others , weight = () , first = True ) :
-    result = normalize2 ( ( ds , *others ) , weight = weight , first = first )      
-    return result [ 0 ] if not others else result 
-    """
-    exec ( code3 )
-else :
-    code2 = """
-def normalize ( ds , others = () , weight = () , first = True ) :
-    datasets = [ ds ] + [ d for d in others ]
-    result = normalize2 ( datasets , weight = weight , first = first )          
-    return result [ 0 ] if not others else result 
-    """
-    exec ( code2 )
-normalize.__doc__ = normalize2.__doc__ 
 
 # =============================================================================
 ## @class PERMUTATOR
@@ -256,12 +237,12 @@ class PERMUTATOR(object) :
     # =========================================================================
     ## run N-permutations 
     def __call__ ( self , N , silent = True ) :
-        np.random.seed()
+        numpy.random.seed()
         n1      = len ( self.ds1 )
-        pooled  = np.concatenate ( [ self.ds1 , self.ds2 ] )
+        pooled  = numpy.concatenate ( [ self.ds1 , self.ds2 ] )
         counter = EffCounter()
         for i in progress_bar ( N , silent = silent , description = 'Permutations:') : 
-            np.random.shuffle ( pooled )            
+            numpy.random.shuffle ( pooled )            
             tv       = self.gof.t_value ( pooled [ : n1 ] , pooled [ n1: ] )
             counter += bool ( self.t_value < tv  )            
         del pooled
@@ -270,7 +251,7 @@ class PERMUTATOR(object) :
 # =============================================================================
 jl = None 
 # =============================================================================
-if False and ( 3 , 0 ) <= python_info : # ===============================================
+if False : # ==================================================================
     # =========================================================================
     try : # ===================================================================
         # =====================================================================
@@ -631,8 +612,8 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
-    if not np : logger.warning ("Numpy  is not avalaille!") 
-    if not jl : logger.warning ("Joblib is not avalaille!") 
+    if not numpy : logger.warning ("Numpy  is not avalaille!") 
+    if not jl    : logger.warning ("Joblib is not avalaille!") 
 
 # =============================================================================
 ##                                                                      The END 

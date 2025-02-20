@@ -42,17 +42,6 @@ except ImportError : # ========================================================
     logger.error('Can not import dill')
     dill = None    
 
-DILL_PY3_issue = False 
-if ( 3 , 6 ) <= sys.version_info and dill :
-    dill_version =  getattr ( dill , '__version__' , '' )
-    if not dill_version :  dill_version =  getattr ( dill , 'version' , '' )
-    DILL_PY3_issue = dill_version < '0.3'
-    if not DILL_PY3_issue :
-        from ostap.core.meta_info import root_info
-        ## DILL_PY3_issue = root_info < ( 6 , 23 )
-        DILL_PY3_issue = root_info < ( 6 , 24 , 6 )
-        
-if DILL_PY3_issue : logger.warning ( "There is an issue with DILL/ROOT/PYTHON")
 
 # =============================================================================
 ## simple    function that created and  fill a histogram
@@ -115,10 +104,6 @@ def test_parallel_pathos_mp_bare ( ) :
     
     logger.info ('Test job submission with %s' % WorkManager  ) 
     
-    if DILL_PY3_issue : 
-        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
-        return
-    
     ## create the manager 
     manager = WorkManager ( silent = False  )
 
@@ -150,10 +135,6 @@ def test_parallel_pathos_pp_bare ( ) :
     
     logger.info ('Test job submission with %s' % WorkManager  ) 
 
-    if DILL_PY3_issue : 
-        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
-        return
-
     ## create the manager 
     manager  = WorkManager ( silent = False  , pp = True )
         
@@ -184,11 +165,6 @@ def test_parallel_pathos_mp_task ( ) :
     
     logger.info ('Test job submission with %s' % WorkManager  ) 
 
-    if DILL_PY3_issue : 
-        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
-        return
-
-    
     ## create the manager 
     manager = WorkManager ( silent = False  )
 
@@ -218,10 +194,6 @@ def test_parallel_pathos_pp_task ( ) :
         return
     
     logger.info ('Test job submission with %s' % WorkManager  ) 
-
-    if DILL_PY3_issue : 
-        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
-        return
 
     ## create the manager 
     manager = WorkManager ( silent = False , pp = True  )
@@ -253,10 +225,6 @@ def test_parallel_pathos_mp_func ( ) :
     
     logger.info ('Test job submission with %s' % WorkManager  ) 
     
-    if DILL_PY3_issue : 
-        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
-        return
-    
     ## create the manager 
     manager = WorkManager ( silent = False  )
 
@@ -283,10 +251,6 @@ def test_parallel_pathos_pp_func ( ) :
         return
     
     logger.info ('Test job submission with %s' % WorkManager  ) 
-
-    if DILL_PY3_issue : 
-        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
-        return
 
     ## create the manager 
     manager = WorkManager ( silent = False , pp = True )
@@ -315,10 +279,6 @@ def test_parallel_pathos_mp_generic ( ) :
     
     logger.info ('Test job submission with %s' % WorkManager  ) 
 
-    if DILL_PY3_issue : 
-        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
-        return
-    
     ## create the manager 
     manager = WorkManager ( silent = False  )
 
@@ -348,10 +308,6 @@ def test_parallel_pathos_pp_generic ( ) :
         return
     
     logger.info ('Test job submission with %s' % WorkManager  ) 
-
-    if DILL_PY3_issue : 
-        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
-        return
 
     ## create the manager 
     manager = WorkManager ( silent = False  , pp = True )

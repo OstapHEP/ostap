@@ -44,18 +44,6 @@ except ImportError : # ========================================================
     logger.error ('Can not import pathos')
     pathos = None
     
-
-DILL_PY3_issue = False 
-if ( 3 , 6 ) <= sys.version_info and dill :
-    dill_version =  getattr ( dill , '__version__' , '' )
-    if not dill_version :  dill_version =  getattr ( dill , 'version' , '' )
-    DILL_PY3_issue = dill_version < '0.3'
-    if not DILL_PY3_issue :
-        from ostap.core.meta_info import root_info
-        ## DILL_PY3_issue = root_info < ( 6 , 23 )
-        DILL_PY3_issue = root_info < ( 6 , 24 , 6  )
-
-if DILL_PY3_issue : logger.warning ( "There is an issue with DILL/ROOT/PYTHON")
     
 # =============================================================================
 ## simple function that creates and  fills a histogram
@@ -92,10 +80,6 @@ def test_pathos_mp_function () :
         return 
     
     logger.info ('Test job submission with %s' %  pathos ) 
-    
-    if DILL_PY3_issue : 
-        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
-        return
     
     from pathos.helpers import cpu_count
     ncpus = cpu_count  ()
@@ -134,10 +118,6 @@ def test_pathos_mp_callable  () :
         
     logger.info ('Test job submission with %s' %  pathos ) 
 
-    if DILL_PY3_issue : 
-        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
-        return
-    
     from pathos.helpers import cpu_count
     ncpus = cpu_count  ()
     
@@ -179,10 +159,6 @@ def test_pathos_pp_function () :
         return 
         
     logger.info ('Test job submission with %s' %  pathos ) 
-
-    if DILL_PY3_issue : 
-        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
-        return
 
     from pathos.helpers import cpu_count
     ncpus = cpu_count  ()
@@ -230,10 +206,6 @@ def test_pathos_pp_method () :
     
     logger.info ('Test job submission with %s' %  pathos ) 
     
-    if DILL_PY3_issue : 
-        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
-        return
-
     from pathos.helpers import cpu_count
     ncpus = cpu_count  ()
     
@@ -276,12 +248,6 @@ def test_pathos_pp_callable () :
     
     logger.info ('Test job submission with %s' %  pathos ) 
     
-    if DILL_PY3_issue : 
-        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
-        return
-
-    ## logger.warning ("test is disabled for UNKNOWN REASON")
-    ## return
 
     from pathos.helpers import cpu_count
     ncpus = cpu_count  ()

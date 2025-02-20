@@ -18,7 +18,6 @@ __all__     = (
 # =============================================================================
 from   ostap.parallel.parallel import Task, WorkManager
 from   ostap.core.core         import VE
-from   ostap.core.meta_info    import root_info, python_info 
 import ROOT
 # =============================================================================
 # logging 
@@ -134,9 +133,6 @@ def pStatVar ( chain               ,
     elif isinstance ( chain , ROOT.TChain ) and 1 == chain.nFiles() and len ( chain ) < chunk_size :
         return chain.statVar ( what , cuts , first , last )                         
     elif isinstance ( chain , ROOT.TTree  ) and len ( chain ) < chunk_size :
-        return chain.statVar ( what , cuts , first , last )
-    elif ( 6 , 18 ) <= root_info < ( 6 , 19 ) and python_info < ( 3 , 0 )  :
-        if not silent : logger.info ( 'Switch to seqential processing...' )
         return chain.statVar ( what , cuts , first , last )
     
     from ostap.trees.trees import Chain

@@ -640,20 +640,35 @@ Ostap.Math.PhaseSpaceLeftExpoPol .__reduce__ = _rm_pslep_reduce_
 ## reduce Histo1D
 def _rm_h1d_reduce_ ( o ) :
     """ Reduce Histo1D"""
-    return root_factory , ( type ( o ) , o.h () , o.t() ,
-                            o.edges () , o.extrapolate() , o.density () )
+    return root_factory , ( type ( o )       ,
+                            o.h           () ,
+                            o.t           () ,
+                            o.edges       () ,
+                            o.extrapolate () ,
+                            o.density     () )
 # =============================================================================
 ## reduce Histo2D
 def _rm_h2d_reduce_ ( o ) :
     """reduce Histo2D"""
-    return root_factory , ( type ( o ) , o.h () , o.tx() , o.ty() ,
-                            o.edges () , o.extrapolate() , o.density () )
+    return root_factory , ( type ( o )       ,
+                            o.h           () , 
+                            o.tx          () ,
+                            o.ty          () ,
+                            o.edges       () , 
+                            o.extrapolate () ,
+                            o.density     () )
 # =============================================================================
 ## reduce Histo3D
 def _rm_h3d_reduce_ ( o ) :
     """ Reduce Histo3D"""
-    return root_factory , ( type ( o ) , o.h () , o.tx() , o.ty() , o.tz() ,
-                            o.edges () , o.extrapolate() , o.density () )
+    return root_factory , ( type ( o )       ,
+                            o.h           () ,
+                            o.tx          () ,
+                            o.ty          () ,
+                            o.tz          () ,
+                            o.edges       () ,
+                            o.extrapolate () ,
+                            o.density     () )
 # =============================================================================
 Ostap.Math.Histo1D.__reduce__ = _rm_h1d_reduce_ 
 Ostap.Math.Histo2D.__reduce__ = _rm_h2d_reduce_ 

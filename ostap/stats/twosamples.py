@@ -22,7 +22,7 @@ from   ostap.core.ostap_types import listlike_types
 from   collections            import defaultdict
 from   ostap.core.core        import SE, VE, Ostap
 from   ostap.utils.basic      import typename 
-from   ostap.math.base        import doubles, axis_range  
+from   ostap.math.base        import doubles, axis_range, numpy   
 from   ostap.math.models      import f1_draw 
 from   ostap.stats.gof_utils  import Estimators,Summary
 import ostap.fitting.ds2numpy 
@@ -36,14 +36,6 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.twosamples' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Two-sample test' )
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import numpy as np
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    np = None
 # =============================================================================
 if  ( 6 , 32 ) <= root_info : data2vct = lambda s : s
 else                        : data2vct = lambda s : doubles ( s )
@@ -61,10 +53,10 @@ def ecdf_from_data  ( data ) :
     >>> data = ...
     >>> cdf  = ecdf_from_data ( data ) 
     """
-    if   isinstance  ( data , Ostap.Math.ECDF  ) : return data 
-    elif np and isinstance ( data , np.ndarray ) : return Ostap.Math.ECDF ( data2vct ( data ) ) 
-    elif isinstance  ( data , array.array      ) : return Ostap.Math.ECDF ( data2vct ( data ) ) 
-    elif isinstance  ( data1 , listlike_types  ) : return Ostap.Math.ECDF ( doubles  ( data ) ) 
+    if   isinstance  ( data , Ostap.Math.ECDF     ) : return data 
+    elif numpy and isinstance ( data , np.ndarray ) : return Ostap.Math.ECDF ( data2vct ( data ) ) 
+    elif isinstance  ( data , array.array         ) : return Ostap.Math.ECDF ( data2vct ( data ) ) 
+    elif isinstance  ( data1 , listlike_types     ) : return Ostap.Math.ECDF ( doubles  ( data ) ) 
     ## 
     raise TypeError ( "ecdf_from_data: Unsupported `data' type: %s" % typename ( data1 ) )
 # ===============================================================================
@@ -131,12 +123,12 @@ def prepare_data2 ( data1 , data2 , pooled = None , ranks1 = None , ranks2 = Non
     ok1 = isinstance ( ranks1 , listlike_types ) and n1 + n2 == len ( ranks1 )
     if not ok1 :
         r1     = ecdf1.ranks ( ecdf )            
-        ranks1 = np.asarray  ( r1 , dtype = np.dtype ( 'uint16' ) ) if np else array.array ( 'I' , r1 )
+        ranks1 = numpy.asarray  ( r1 , dtype = numpy.dtype ( 'uint16' ) ) if numpy else array.array ( 'I' , r1 )
         ## 
     ok2 = isinstance ( ranks2 , listlike_types ) and n1 + n2 == len ( ranks2 )
     if not ok2 :
         r2     = ecdf2.ranks ( ecdf )            
-        ranks2 = np.asarray  ( r2 , dtype = np.dtype ( 'uint16' ) ) if np else array.array ( 'I' , r2 )
+        ranks2 = numpy.asarray  ( r2 , dtype = numpy.dtype ( 'uint16' ) ) if numpy else array.array ( 'I' , r2 )
     ## 
     return ecdf1, ecdf2, ecdf, ranks1 , ranks2
 
@@ -610,7 +602,7 @@ class TSToys(TSTest,Summary):
         n1   = len ( self.ecdf1 )
         n2   = len ( self.ecdf1 )
         
-        data = np.asarray ( self.ecdf.data () , dtype = float )
+        data = numpy.asarray ( self.ecdf.data () , dtype = float )
         
         results  = defaultdict(list)
         counters = self.counters
@@ -618,7 +610,7 @@ class TSToys(TSTest,Summary):
         from ostap.utils.progress_bar import progress_bar 
         for i in progress_bar ( nToys , silent = silent , description = 'Permutations:') :
 
-            np.random.shuffle ( data )
+            numpy.random.shuffle ( data )
             data1 = data [    : n1 ]
             data2 = data [ n1 :    ] 
             

@@ -113,7 +113,6 @@ __all__ = (
     'tmpdb'         , ## helper function to create TEMPORARY  RootShelve database 
     )
 # =============================================================================
-from   sys                     import version_info as     python_version 
 from   ostap.utils.basic       import typename 
 from   ostap.io.dbase          import TmpDB 
 from   ostap.io.pickling       import ( Pickler, Unpickler, BytesIO, 
@@ -301,26 +300,27 @@ class RootOnlyShelf(shelve.Shelf):
     
 # =============================================================================
 ## need to disable endcode/decode for the keys 
-if python_version.major > 2 :
+def _ros_iter_     ( self ):
+    for k in self.dict.keys() : yield k
+def _ros_contains_ ( self , key ):
+    return key in self.dict
+def _ros_get_      ( self , key , default = None ) :
+    if key in self.dict       : return self[key]
+    return default
+def _ros_delitem_  ( self , key ) :
+    del self.dict[key]
+    # =========================================================================
+    try: # ====================================================================
+        del self.cache[key]
+        # =====================================================================
+    except KeyError: # ========================================================
+        # =====================================================================
+        pass
     
-    def _ros_iter_     ( self ):
-        for k in self.dict.keys() : yield k
-    def _ros_contains_ ( self , key ):
-        return key in self.dict
-    def _ros_get_      ( self , key , default = None ) :
-        if key in self.dict       : return self[key]
-        return default
-    def _ros_delitem_  ( self , key ) :
-        del self.dict[key]
-        try:
-            del self.cache[key]
-        except KeyError:
-            pass
-
-    RootOnlyShelf.__iter__     = _ros_iter_ 
-    RootOnlyShelf.__contains__ = _ros_contains_
-    RootOnlyShelf.__ros_get__  = _ros_get_
-    RootOnlyShelf.__delitem__  = _ros_delitem_
+RootOnlyShelf.__iter__     = _ros_iter_ 
+RootOnlyShelf.__contains__ = _ros_contains_
+RootOnlyShelf.__ros_get__  = _ros_get_
+RootOnlyShelf.__delitem__  = _ros_delitem_
     
 # =============================================================================
 ## @class RootShelf

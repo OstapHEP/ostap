@@ -10,9 +10,9 @@
 """
 # ============================================================================= 
 from   sys                  import version_info as python_version
-from   ostap.core.meta_info import root_version_int
 from   ostap.math.linalg    import checkops 
-from   ostap.core.core      import Ostap 
+from   ostap.core.core      import Ostap
+from   ostap.math.base      import numpy 
 from   ostap.utils.utils    import batch_env 
 import math 
 # =============================================================================
@@ -25,13 +25,6 @@ else                       : logger = getLogger ( __name__              )
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import numpy as np
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    np = None
 
 # =============================================================================
 def test_linalg2_vct () :
@@ -266,9 +259,6 @@ def test_linalg2_mtrx () :
     
     
     
-
-    
-    
 # =============================================================================
 def test_linalg2_np () :
 
@@ -276,13 +266,13 @@ def test_linalg2_np () :
     
     logger.info ( 'Test combined operations with numpy objects')
     
-    if not np :
+    if not numpy :
         logger.warning  ( 'No Numpy, test is disabled ')
         return
     
     LA2 = Ostap.Vector(2)
     vla = LA2 ( 1 , 2 )
-    vnp = np.array ( [1.0 , 2.0] )
+    vnp = numpy.array ( [1.0 , 2.0] )
 
     logger.info    ( 'Scalar product of two vectors (dot)' ) 
     logger.info    ( 'la  * np  : \n%s' % ( vla  * vnp ) )

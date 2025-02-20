@@ -257,20 +257,38 @@ class sPlot(object) :
         prefix = prefix.replace ( ' ' , '_' ).replace ( '-' , '_' ).strip() 
 
         fmap   = {}
+        bmap   = Ostap.Trees.Branches()
+        
         for ww in self.hweights  :            
             hw     = self.hweights [ ww ]
-            fw     = self.make_thfun ( hw , *vars )            
+
             newvar = '%s%s%s' % ( prefix , ww , suffix )
+
+            fw     = self.make_thfun ( hw , *vars )        
+            ## fw = Ostap.Functions.FuncFormula ( '2*%s' % vars[0] , tree ) 
+                                               
             assert not newvar in tree , "sPlot: Variable '%s' is already in the Tree!" % newvar 
             fmap [ newvar ] = fw
-
+            
+            ##  bmap.add  ( newvar , fw , tree )
+            ## nb = bmap.branch ( newvar ) 
+            ## print( 'NEWVAR' , newvar , fw , nb , id ( fw ) , id ( nb ) )
+                        
         vvs = sorted ( fmap.keys() )
         bbs = ','.join ( vvs ) 
         logger.info ( "Adding sPlot results %s to TTree" % vvs ) 
-        
-        if parallel : result = tree.padd_new_branch ( fmap ) 
-        else        : result = tree. add_new_branch ( fmap ) 
 
+        ## if parallel : result = tree.padd_new_branch ( fmap ) 
+        ## else        :
+        result = tree. add_new_branch ( fmap )
+
+        ## if parallel : result = tree.padd_new_branch ( bmap ) 
+        ## else        :
+        ## result = tree. add_new_branch ( bmap )
+
+        del bmap
+        del fmap
+        
         return result 
 
     # =========================================================================

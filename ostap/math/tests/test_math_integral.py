@@ -29,7 +29,6 @@ Also it tests Ostap::Math::Integrator
  
 """
 # =============================================================================
-from   ostap.core.meta_info     import root_info 
 from   ostap.core.pyrouts       import Ostap, SE  
 from   ostap.utils.timing       import timing
 from   ostap.utils.progress_bar import progress_bar
@@ -112,9 +111,7 @@ def test_inf_integrals ():
     logger = getLogger('test_inf_integrals')
 
     logger.info ( 'Test 1D-integrals for (semi)infinite intervals' )
-    ## if root_info < ( 6 , 18 ) :
-    ##     logger.warning ( "Test is disabled for %s" % str ( root_info ) )
-    ##    return 
+
 
     from math               import pi, exp 
     from ostap.math.math_ve import sech 
@@ -178,9 +175,7 @@ def test_cauchy_integrals ():
     logger = getLogger('test_cauchy_integrals')
 
     logger.info ( 'Test Cauchy principal value intervals' )
-    ## if root_info < ( 6 , 18 ) :
-    ##    logger.warning ( "Test is disabled for %s" % str ( root_info ) )
-    ##    return 
+
 
     from math               import pi, exp 
     from ostap.math.math_ve import sech 
@@ -267,12 +262,6 @@ def test_integrators ():
     
     results = []
 
-    ## if root_info < ( 6 , 18 ) :
-    ##     for_test = ( ( 'Native/1'  , f1 ,   integral          ) ,
-    ##                  ( 'Native/2'  , ff ,   integral          ) ,
-    ##                  ( 'Romberg/1' , f1 ,  my_romberg         ) ,
-    ##                  ( 'Romberg/2' , ff ,  my_romberg         ) )
-    ## else :
     I = Ostap.Math.Integrator() 
     for_test = ( ( 'QAG'              , f1 , I.integrate         ) ,
                  ( 'CQUAD'            , f1 , I.integrate_cquad   ) ,
@@ -390,7 +379,6 @@ def test_integrators_2D ():
                 cnt +=  abs ( integral2 ( *entry[1:6] , err = True ) - vv ) * scale                
         results.append (  ( name , 'Integral2' , cnt , td.delta ) ) 
 
-        ## if (6,18) <= root_info : 
         with timing ( 'Cubature2' ) as td :
             cnt  = SE()
             fn   = make_fun2 ( entry[1] )
@@ -497,7 +485,6 @@ def test_integrators_3D ():
                 cnt +=  abs ( integral3 ( *entry[1:8] , err = True ) - vv ) * scale                
         results.append (  ( name , 'Integral3' , cnt , td.delta ) ) 
 
-        ## if ( 6,18) <= root_info : 
         with timing ( 'Cubature3' ) as td :
             cnt  = SE()
             fn   = make_fun3 ( entry[1] )

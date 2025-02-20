@@ -11,7 +11,6 @@
 # ============================================================================= 
 from   ostap.core.core       import Ostap, SE 
 from   ostap.utils.timing    import timing 
-from   ostap.core.meta_info  import root_version_int 
 from   ostap.plotting.canvas import use_canvas
 from   ostap.utils.utils     import wait, batch_env
 from   ostap.math.models     import f1_draw
@@ -78,10 +77,6 @@ def test_interpolation ():
     """Test spline interpolation
     """
 
-    if 62006 <= root_version_int :
-        logger.warning ("Test_interpolation segfaults for ROOT %s" %  root_version_int ) 
-        return 
-    
     from math import sin,pi, sqrt
 
     fun = lambda x  : sin(2*pi*x)

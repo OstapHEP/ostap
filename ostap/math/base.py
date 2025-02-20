@@ -113,7 +113,7 @@ __all__     = (
     'numpy'          , ## numpy or None 
     ) 
 # =============================================================================
-from   ostap.core.meta_info    import root_info
+from   ostap.core.meta_info    import python_info
 from   collections.abc         import Iterable
 import ROOT, cppyy, sys, math 
 # =============================================================================
@@ -474,18 +474,11 @@ VCT_TYPES  = VDOUBLE, VCOMPLEX
 ## list of complex types: native and X++
 complex_types = complex , COMPLEX, COMPLEXf, COMPLEXl
 # =============================================================================
-if root_info < ( 6 , 22 ) : 
-    def _real_ ( s ) : return s.real ()
-    def _imag_ ( s ) : return s.imag ()
-    def _cmplx_to_complex_ ( s ) :
-        """ Convert C++ complex to Python's complex"""
-        return  complex    ( s.real () , s.imag () )
-else : 
-    def _real_ ( s ) : return s.real 
-    def _imag_ ( s ) : return s.imag 
-    def _cmplx_to_complex_ ( s ) :
-        """ Convert C++ complex to Python's complex"""
-        return  complex    ( s.real , s.imag  )
+def _real_ ( s ) : return s.real 
+def _imag_ ( s ) : return s.imag 
+def _cmplx_to_complex_ ( s ) :
+    """ Convert C++ complex to Python's complex"""
+    return  complex    ( s.real , s.imag  )
 
 # =============================================================================
 def _cmplx_negate_     ( s ) :
@@ -859,7 +852,7 @@ def axis_range ( xmin , xmax , delta = 0.02 , log = False ) :
     return xmin, xmax 
 
 # =============================================================================
-if   ( 3 , 9 ) <= sys.version_info :
+if   ( 3 , 9 ) <= python_info : # ========================================
     # =========================================================================
     ## Least Common Multiple.
     lcm = math.lcm
@@ -867,7 +860,7 @@ if   ( 3 , 9 ) <= sys.version_info :
     ## Greatest Common Divisor 
     gcd = math.gcd
     # =========================================================================
-elif ( 3 , 5 ) <= sys.version_info :
+else : # ======================================================================
     # =========================================================================
     ## Greatest Common Divisor 
     gcd = math.gcd 
@@ -876,15 +869,6 @@ elif ( 3 , 5 ) <= sys.version_info :
     def lcm ( a , b ) :
         """ Least Common Multiple """
         return abs ( a , b ) // gcd ( a , b )
-    # =========================================================================
-else :
-    # =========================================================================
-    ## Greatest Common Divisor 
-    from fractions import gcd
-    ## Least Common Multiple.
-    def lcm ( a , b ) :    
-        """ Least Common Multiple"""
-        return ( a * b ) // gcd ( a , b )
     # =========================================================================
 
 # =============================================================================

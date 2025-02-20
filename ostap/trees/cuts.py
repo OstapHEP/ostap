@@ -33,7 +33,7 @@ else                       : logger = getLogger( __name__           )
 # =============================================================================
 logger.debug( 'Some useful decorations for ROOT.TCut objects')
 # =============================================================================
-## warning about the order of variables for  `project`
+## warning about the order of variables for `project`
 order_warning = ostap_info < ( 2 , 0 )
 if order_warning :
     import datetime

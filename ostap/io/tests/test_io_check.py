@@ -7,11 +7,12 @@
 """ Check the available backends 
 """
 # =============================================================================
+from   ostap.core.meta_info   import python_info 
+from   ostap.logger.colorized import attention 
 import ostap.io.dbase         as     DB
 import ostap.io.sqlitedict 
 import ostap.logger.table     as     T
-from   ostap.logger.colorized import attention 
-from   sys                    import version_info as python_version 
+
 # =============================================================================
 # logging 
 # =============================================================================
@@ -28,37 +29,28 @@ def test_io_check() :
     
     rows = [   ( 'Backend' , 'Module' , 'Location' ) ] 
 
-    if  ( 3 , 6 ) <= python_version :
-        if DB.use_berkeleydb and DB.berkeleydb : 
-            row = 'BerkeleyDB' , DB.berkeleydb.__name__ , DB.berkeleydb.__file__ ,
-        else :
-            row = attention ( 'BerkeleyDB' ) , attention ( '---' )   , attention ( '---' ) 
-        rows.append ( row )
+    if DB.use_berkeleydb and DB.berkeleydb : 
+        row = 'BerkeleyDB' , DB.berkeleydb.__name__ , DB.berkeleydb.__file__ ,
+    else :
+        row = attention ( 'BerkeleyDB' ) , attention ( '---' )   , attention ( '---' ) 
+    rows.append ( row )
 
-    if  ( 3 , 3 ) <= python_version < ( 3 , 10 ) :
+    if  python_info < ( 3 , 10 ) :
         if DB.use_bsddb3 and DB.bsddb3 : 
             row = 'BSDDB3'  , DB.bsddb3.__name__ , DB.bdsdb3.__file__ ,
         else :
             row = attention ( 'BSDDB3' ) , attention ( '---' )   , attention ( '---' ) 
         rows.append ( row )
 
-    if ( 3 , 7 ) <= python_version :
-        if DB.use_lmdb and DB.lmdb : 
-            row = 'LMDB' , DB.lmdb.__name__ , DB.lmdb.__file__ ,
-        else :
-            row = attention ( 'LMDB' ) , attention ( '---' )   , attention ( '---' ) 
-        rows.append ( row )
+    if DB.use_lmdb and DB.lmdb : 
+        row = 'LMDB' , DB.lmdb.__name__ , DB.lmdb.__file__ ,
+    else :
+        row = attention ( 'LMDB' ) , attention ( '---' )   , attention ( '---' ) 
+    rows.append ( row )
 
     row = 'SqliteDict' , ostap.io.sqlitedict.__name__ , ostap.io.sqlitedict.__file__ 
     rows.append ( row )
     
-    if python_version < ( 3, 0 ) :
-        if DB.db_hash : 
-            row = 'DBHASH' , DB.db_hash.__name__ , DB.db_hash.__file__ ,
-        else :
-            row = attention ( 'DBHASH' ) , attention ( '---' )   , attention ( '---' ) 
-        rows.append ( row )            
-
     if DB.db_gnu : 
         row = 'GNU DB' , DB.db_gnu.__name__ , DB.db_gnu.__file__ ,
     else :
@@ -85,7 +77,6 @@ def test_io_check() :
     logger.info ( '%s:\n%s' % ( title , table ) )
     
         
-    
 # =============================================================================
 if '__main__' == __name__ :
 

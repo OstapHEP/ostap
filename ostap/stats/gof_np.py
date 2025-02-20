@@ -25,7 +25,7 @@ __all__     = (
 )
 # =============================================================================
 from   ostap.core.ostap_types   import string_types 
-from   ostap.stats.gof_utils    import normalize2, PERMUTATOR 
+from   ostap.stats.gof_utils    import PERMUTATOR, normalize as ds_normalize  
 from   ostap.core.core          import SE, VE, Ostap, hID  
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.utils        import split_n_range
@@ -113,7 +113,7 @@ class GoFnp (AGoFnp) :
         >>> gof = ... ##
         >>> nd1, nd2 = god.normalize ( ds1 , ds2 ) 
         """ 
-        return normalize2  ( datasets  , first = False ) 
+        return ds_normalize  ( *datasets  , first = False ) 
     # =========================================================================
     ## Generator of permutations
     #  @code

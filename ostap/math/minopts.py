@@ -29,7 +29,6 @@ __all__     = (
     'type_algo'          , ## context manager to deal with DefaultMinimizerType/Algo
     ) 
 # =============================================================================
-from   ostap.core.meta_info   import root_info
 from   ostap.core.ostap_types import num_types, integer_types, string_types 
 import ROOT, ctypes
 # =============================================================================
@@ -52,7 +51,7 @@ RRMMO = ROOT.ROOT.Math.MinimizerOptions
 #  @see ROOT::Math::MinimizerOptions::DefaultPrintLevel
 #  @see ROOT::Math::MinimizerOptions::SetDefaultPrintLevel
 class PrintLevel(object) :
-    """Context manager to play with Default Print level
+    """ Context manager to play with Default Print level
     
     >>> with PrintLevel ( 0 ) : ...
     
@@ -108,7 +107,7 @@ class Strategy(object) :
 #  @see ROOT::Math::MinimizerOptions::DefaultTolerance
 #  @see ROOT::Math::MinimizerOptions::SetDefaultTolerance
 class Tolerance(object) :
-    """Context manager to play with default strategy
+    """ Context manager to play with default strategy
     
     >>> with Tolerance ( 0.001 ) : ...
 
@@ -164,7 +163,7 @@ class MaxFunctionCalls(object) :
 #  @see ROOT::Math::MinimizerOptions::DefaultMaxIterations
 #  @see ROOT::Math::MinimizerOptions::SetDefaultMaxIterations
 class MaxIterations(object) :
-    """Context manager to play with default max iterations
+    """ Context manager to play with default max iterations
     
     >>> with MaxIterations ( 1000 ) : ...
 
@@ -219,35 +218,35 @@ class TypeAlgo(object) :
 # =============================================================================
 ## context manager to define default print level 
 def print_level ( level ) :
-    """context manager to define default print level
+    """ Context manager to define default print level
     """
     return PrintLevel ( level )
 
 # =============================================================================
 ## context manager to define default strategy
 def strategy ( strat ) :
-    """context manager to define default strategy
+    """ Context manager to define default strategy
     """
     return Strategy ( strat )
 
 # =============================================================================
 ## context manager to define default tolerance 
 def tolerance  ( tol ) :
-    """context manager to define default tolerance
+    """ Context manager to define default tolerance
     """
     return Tolerance ( tol )
 
 # =============================================================================
 ## context manager to define default max function calls 
 def max_calls  ( mx ) :
-    """context manager to define default max function calls 
+    """ Context manager to define default max function calls 
     """
     return MaxFunctionCalls ( mx )
 
 # =============================================================================
 ## context manager to define default max iterations 
 def max_iterations  ( mx ) :
-    """context manager to define default max iterations  
+    """ Context manager to define default max iterations  
     """
     return MaxIterations ( mx )
 
@@ -255,10 +254,9 @@ def max_iterations  ( mx ) :
 # =============================================================================
 ## context manager to define default minimizer type and algorithm 
 def type_algo  ( mtype , malgo = ''  ) :
-    """context manager to define default minimizer type and algorithm 
+    """ Context manager to define default minimizer type and algorithm 
     """
     return TypeAlgo ( mtype , malgo  )
-
 
 # =============================================================================
 if '__main__' == __name__ :

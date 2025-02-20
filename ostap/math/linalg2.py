@@ -19,13 +19,12 @@ __all__     = (
     'correlation' , ## get i,j-correlation coeffiecient from matrix-like object
     )
 # =============================================================================
-from   sys                    import version_info as python_version
-from   ostap.math.base        import isequal   , iszero, std , Ostap 
+from   ostap.math.base        import isequal   , iszero, std , Ostap, numpy  
 from   ostap.utils.basic      import typename 
 from   ostap.core.ostap_types import num_types , integer_types
 from   ostap.utils.clsgetter  import classgetter
 from   ostap.logger.pretty    import pretty_array, fmt_pretty_float, fmt_pretty_err1   
-from   ostap.logger.colorized import infostr 
+from   ostap.logger.colorized import infostr
 import ostap.logger.table     as     T
 import ROOT, math, re, ctypes, array, random 
 # =============================================================================
@@ -35,13 +34,6 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.linalg2' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import numpy as np
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    np = None
 
 revct = re.compile ( r'SVector<(?P<TYPE>[^,>]+)' )
 remtx = re.compile ( r'SMatrix<(?P<TYPE>[^,>]+)' )
@@ -75,7 +67,7 @@ def mgetter ( mtrx , i , j ) :
 
         return mtrx ( i , j )
     
-    if np and isinstance ( obj , np.ndarray ) and 2 == len ( obj.shape ) :
+    if numpy and isinstance ( obj , numpy.ndarray ) and 2 == len ( obj.shape ) :
         return obj [ i , j ]
     
     try :
@@ -212,7 +204,7 @@ class LinAlg(object) :
     """ Collection of decorators for vectors/matrices
     """
 
-    with_numpy    = np
+    with_numpy    = numpy
 
     methods_ADD   = Method2 ( Ostap.Math.Ops.Add    , Ostap.Math.Ops.CanAdd     ) 
     methods_RADD  = Method2 ( Ostap.Math.Ops.RAdd   , Ostap.Math.Ops.CanAdd     )
@@ -450,7 +442,7 @@ class LinAlg(object) :
         >>> vct = ...
         >>> na = vct.to_numpy() 
         """
-        return np.array ( vct  , dtype = 'd' ) 
+        return numpy.array ( vct  , dtype = 'd' ) 
     
     # =========================================================================
     ## convert matrix into numpy.matrix
@@ -465,7 +457,7 @@ class LinAlg(object) :
         >>> m    = mtrx.to_numpy() 
         """
         
-        npa = np.empty ( mtrx.shape , dtype = 'd' )         
+        npa = numpy.empty ( mtrx.shape , dtype = 'd' )         
         for ij, v in mtrx.items() : npa [ ij ] = v
         return npa 
 
@@ -515,7 +507,7 @@ class LinAlg(object) :
         """
         
         if isinstance ( b , num_types ) : b = float( b )
-        elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+        elif LinAlg.with_numpy and isinstance ( b , numpy.ndarray ) :
             sa = a.shape
             sb = b.shape
             if sa != sb : raise NotImplementedError ( "Cannot  add %s/%s with %s" % ( typename  ( a ) , sa , sb ) )            
@@ -540,7 +532,7 @@ class LinAlg(object) :
         """
 
         if isinstance ( b , num_types ) : b = float( b )
-        elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+        elif LinAlg.with_numpy and isinstance ( b , numpy.ndarray ) :
             sa = a.shape
             sb = b.shape
             if sa != sb : raise NotImplementedError ( "Cannot iadd %s/%s with %s" % ( typename  ( a ) , sa , sb ) )            
@@ -565,7 +557,7 @@ class LinAlg(object) :
         """
         if   isinstance ( b , num_types ) : b = float( b )
 
-        elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+        elif LinAlg.with_numpy and isinstance ( b , numpy.ndarray ) :
             
             return NotImplemented
         
@@ -593,7 +585,7 @@ class LinAlg(object) :
         """
         
         if   isinstance ( b , num_types ) : b = float( b )
-        elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :            
+        elif LinAlg.with_numpy and isinstance ( b , numpy.ndarray ) :            
             sa = a.shape
             sb = b.shape
             if sa != sb : raise NotImplementedError ( "Cannot  sub %s/%s with %s" % ( typename  ( a ) , sa , sb ) )            
@@ -618,7 +610,7 @@ class LinAlg(object) :
         """
                 
         if   isinstance ( b , num_types ) : b = float( b )
-        elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :            
+        elif LinAlg.with_numpy and isinstance ( b , numpy.ndarray ) :            
             sa = a.shape
             sb = b.shape
             if sa != sb : raise NotImplementedError ( "Cannot isub %s/%s with %s" % ( typename  ( a ) , sa , sb ) )            
@@ -643,7 +635,7 @@ class LinAlg(object) :
         """                
         if   isinstance ( b , num_types ) : b = float( b )
 
-        elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+        elif LinAlg.with_numpy and isinstance ( b , numpy.ndarray ) :
 
             return NotImplemented
 
@@ -671,7 +663,7 @@ class LinAlg(object) :
         """
         
         if   isinstance ( b , num_types ) : b = float( b )
-        elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+        elif LinAlg.with_numpy and isinstance ( b , numpy.ndarray ) :
             sa = a.shape
             sb = b.shape
             if sa [ -1 ] != sb [ 0 ]:
@@ -697,7 +689,7 @@ class LinAlg(object) :
         """
         
         if   isinstance ( b , num_types ) : b = float( b )        
-        elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+        elif LinAlg.with_numpy and isinstance ( b , numpy.ndarray ) :
             sa = a.shape
             sb = b.shape
             if sa [ -1 ] != sb [ 0 ] or 2 != len ( sb ) or sb [ 0 ] != sb [ 1 ] :
@@ -723,7 +715,7 @@ class LinAlg(object) :
         """
 
         if   isinstance ( b , num_types ) : b = float( b )
-        elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+        elif LinAlg.with_numpy and isinstance ( b , numpy.ndarray ) :
             
             return NotImplemented
 
@@ -794,11 +786,11 @@ class LinAlg(object) :
         if isinstance ( b , num_types ) : b = float( b )
 
         ## numpy 
-        if LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+        if LinAlg.with_numpy and isinstance ( b , numpy.ndarray ) :
             s1 = a.shape            
             s2 = b.shape
             if s1 != s2 : return NotImplemented 
-            return np.array_equal ( a.to_numpy() , b )
+            return numpy.array_equal ( a.to_numpy() , b )
 
         ## vector-like stuff 
         if isinstance ( b , ( list , tuple , array.array ) ) and 1 == len ( a.shape ) : 
@@ -834,11 +826,11 @@ class LinAlg(object) :
         if isinstance ( b , num_types ) : b = float( b )
 
         ## numpy 
-        if LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+        if LinAlg.with_numpy and isinstance ( b , numpy.ndarray ) :
             s1 = a.shape            
             s2 = b.shape
             if s1 != s2 : return NotImplemented 
-            return not np.array_equal ( a.to_numpy() , b )
+            return not numpy.array_equal ( a.to_numpy() , b )
 
         ## vector-like stuff 
         if isinstance ( b , ( list , tuple , array.array ) ) and 1 == len ( a.shape ) : 
@@ -870,12 +862,12 @@ class LinAlg(object) :
         >>> scalar = v1.dot ( v2 ) 
         """
         
-        if LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+        if LinAlg.with_numpy and isinstance ( b , numpy.ndarray ) :
             s1 = a.shape            
             s2 = b.shape
             if s1 != s2  or 1 != len ( s1 ) :
                 raise NotImplementedError ( "No DOT for %s/%s and %s/%s" % ( a , typename  ( a ), b , typename  ( b ) ) )
-            return np.dot ( a.to_numpy() , b )
+            return numpy.dot ( a.to_numpy() , b )
             
         
         if isinstance ( b , num_types ) : b = float( b )        
@@ -897,7 +889,7 @@ class LinAlg(object) :
         >>> matrix = v1.cross ( v2 ) 
         """
         
-        if LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+        if LinAlg.with_numpy and isinstance ( b , numpy.ndarray ) :
             s1 = a.shape            
             s2 = b.shape
             if 1 != len ( s1 ) or 1 != len ( s1 ) :
@@ -928,7 +920,7 @@ class LinAlg(object) :
         >>> C = A.sim ( B ) ## ditto
         """
 
-        if LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+        if LinAlg.with_numpy and isinstance ( b , numpy.ndarray ) :
             sa = a.shape            
             sb = b.shape
             ## square matrix
@@ -967,7 +959,7 @@ class LinAlg(object) :
         >>> C = A.simT ( B ) ## ditto 
         """
 
-        if LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+        if LinAlg.with_numpy and isinstance ( b , numpy.ndarray ) :
             sa = a.shape            
             sb = b.shape
             ## square matrix
@@ -2179,13 +2171,13 @@ class LinAlg(object) :
         assert ok , 'random: Cholesky decomposition failed!'
 
         ## use numpy if/when available
-        if np and use_numpy :
+        if numpy and use_numpy :
             
             v = v.to_numpy() 
             l = L.to_numpy()
             for i in range  ( N ) : 
-                u = np.random.normal ( loc = 0 , scale = 1, size = n) 
-                yield v + np.dot ( l , u )
+                u = numpy.random.normal ( loc = 0 , scale = 1, size = n) 
+                yield v + numpy.dot ( l , u )
                 
         else :
             
@@ -2245,12 +2237,10 @@ class LinAlg(object) :
         t.__rmul__      = LinAlg.RMUL 
         t.__imul__      = LinAlg.IMUL 
         
-        if ( 3 , 5 ) <= python_version :
-            
-            t. __matmul__   = LinAlg. MUL ## Py3
-            t.__rmatmul__   = LinAlg.RMUL ## Py3 
-            t.__imatmul__   = LinAlg.IMUL ## Py3 
-
+        t. __matmul__   = LinAlg. MUL ## Py3
+        t.__rmatmul__   = LinAlg.RMUL ## Py3 
+        t.__imatmul__   = LinAlg.IMUL ## Py3 
+        
         t. __div__      = LinAlg. DIV 
         t.__idiv__      = LinAlg.IDIV 
         t. __truediv__  = LinAlg. DIV 
@@ -2334,10 +2324,9 @@ class LinAlg(object) :
         m.__rmul__      = LinAlg.RMUL 
         m.__imul__      = LinAlg.IMUL 
 
-        if ( 3 , 5 ) <= python_version : 
-            m. __matmul__   = LinAlg. MUL ## Py3
-            m.__rmatmul__   = LinAlg.RMUL ## Py3 
-            m.__imatmul__   = LinAlg.IMUL ## Py3 
+        m. __matmul__   = LinAlg. MUL ## Py3
+        m.__rmatmul__   = LinAlg.RMUL ## Py3 
+        m.__imatmul__   = LinAlg.IMUL ## Py3 
             
         m. __div__      = LinAlg. DIV 
         m.__idiv__      = LinAlg.IDIV 
@@ -2689,8 +2678,8 @@ Ostap.Math.SymMatrix =  staticmethod ( LinAlg.SymMatrix )
 # =============================================================================
 
 
-if np :
-
+# =============================================================================
+if numpy: # ===================================================================
     # =========================================================================
     ## create <code>SMatrix</code> from <code>numpy</code> array
     #  @code
@@ -2702,7 +2691,7 @@ if np :
         >>> a = ...
         >>> m = toSMatrix ( a ) 
         """
-        assert isinstance ( a , np.ndarray ) and 2 == len ( a.shape ) ,\
+        assert isinstance ( a , numpy.ndarray ) and 2 == len ( a.shape ) ,\
                'toSMatrix: Invalid type/shape of input array'
         
         if shape :
@@ -2728,7 +2717,7 @@ if np :
         >>> a = ...
         >>> v = toSVector( a ) 
         """
-        assert isinstance ( a , np.ndarray ) and 1 == len ( a.shape ) ,\
+        assert isinstance ( a , numpy.ndarray ) and 1 == len ( a.shape ) ,\
                'toSVector: Invalid type/shape of input array'
         
         if not length is None :
@@ -2754,7 +2743,7 @@ if np :
         >>> a = ...
         >>> s = toSObject ( a ) 
         """
-        assert isinstance ( a , np.ndarray ) and 1 <= len ( a.shape ) <= 2 ,\
+        assert isinstance ( a , numpy.ndarray ) and 1 <= len ( a.shape ) <= 2 ,\
                'toSObject: Invalid type/shape of input array'
         return toSVector ( a ) if 1 == len( a.shape ) else toSMatrix ( a )
 
@@ -2836,7 +2825,9 @@ _new_methods_ = (
     Ostap.Math.SymMatrix , 
     )
 
-if np :
+# =============================================================================
+if numpy : # ==================================================================
+    # =========================================================================
     _new_methods_ = _new_methods_ + (
         Ostap.toSMatrix      ,
         Ostap.toSVector      ,
@@ -2857,7 +2848,7 @@ atexit.register ( LinAlg.CLEANUP )
 #  checkops ( obj1 , obj2 ) 
 #  @endcode 
 def checkops ( a , b , logger = logger ) :
-    """check what LinAlg operations are defined for these two objects    
+    """ Check what LinAlg operations are defined for these two objects    
     >>> obj1 = ...
     >>> obj2 = ...
     >>> checkops ( obj1 , obj2 ) 

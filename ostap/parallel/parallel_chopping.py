@@ -85,9 +85,8 @@ class ChopperTraining(Task) :
         import ROOT, ostap.tools.tmva        
         category , chopper = params
         from   ostap.utils.utils import batch
-        from   sys               import version_info as python_version 
-        in_batch = 2 < python_version.major or 0 != category 
-        with batch ( in_batch ) : 
+        ## in_batch = 2 < python_version.major or 0 != category 
+        with batch ( True ) : 
             trainer  = chopper.create_trainer ( category , False )
             trainer.train ()
         self.__output = (

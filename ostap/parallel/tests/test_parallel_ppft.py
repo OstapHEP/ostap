@@ -42,17 +42,6 @@ except ImportError : # ========================================================
     logger.error('Can not import ppft')
     ppft = None
 
-DILL_PY3_issue = False 
-if ( 3 , 6 ) <= sys.version_info and dill :
-    dill_version =  getattr ( dill , '__version__' , '' )
-    if not dill_version :  dill_version =  getattr ( dill , 'version' , '' )
-    DILL_PY3_issue = dill_version < '0.3'
-    if not DILL_PY3_issue :
-        from ostap.core.meta_info import root_info
-        DILL_PY3_issue = root_info < ( 6 , 24 , 6  )
-
-if DILL_PY3_issue : logger.warning ( "There is an issue with DILL/ROOT/PYTHON")
-        
 # =============================================================================
 ## simple  function that creates and  fills a histogram 
 def make_histo  ( i , n ) :
@@ -107,10 +96,6 @@ def test_ppft_function () :
         logger.error ( "ppdf is not available" )
         return 
     
-    if DILL_PY3_issue : 
-         logger.warning ("test is disabled for Python %s (DILL/ROOT/PY3 issue)" )
-         return
-    
     job_server = ppft.Server()
     
     jobs = [ ( i , job_server.submit ( make_histo , ( i , n ) ) ) for ( i , n ) in enumerate  ( inputs ) ]
@@ -144,10 +129,6 @@ def test_ppft_method() :
     if not ppft :
         logger.error ( "ppft is not available" )
         return 
-        
-    if DILL_PY3_issue : 
-         logger.warning ("test is disabled for Python %s (DILL/ROOT/PY3 issue)" )
-         return
         
     job_server = ppft.Server()
     
@@ -183,10 +164,6 @@ def test_ppft_callable () :
     if not ppft :
         logger.error ( "ppft is not available" )
         return 
-        
-    if DILL_PY3_issue : 
-         logger.warning ("test is disabled for Python %s (DILL/ROOT/PY3 issue)" )
-         return
         
     job_server = ppft.Server()
     

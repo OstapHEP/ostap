@@ -17,7 +17,6 @@ __all__    = () ## nothing to import
 from   ostap.math.ve         import VE 
 from   ostap.core.core       import hID 
 from   ostap.histos.histos   import h1_axis, h2_axes
-from   ostap.core.meta_info  import root_info 
 from   ostap.plotting.canvas import use_canvas 
 from   ostap.utils.utils     import batch_env 
 import ROOT, random, math 
@@ -195,19 +194,18 @@ def test_basic_1D() :
     logger.info ( 'y-minmax  %20s' % str( h1.yminmax() ) )
 
 
-    if ( 6 , 20 ) < root_info : 
-        hh = ROOT.TH1D ( hID() , 'Gaussian' , 500 , -5 , 5 )
-        for i in range ( 1000000 ) : hh.Fill ( random.gauss ( 0 , 1 ) ) 
-        
-        title = 'Histogram moments'
-        m     = hh.the_moment ( 24 ) 
-        logger.info ( '%s:\n%s' % ( title , m.table  ( title = title , prefix = '# ' ) ) ) 
-        logger.info ( 'neff       %-20s' % hh.nEff     () )
-        logger.info ( 'mean       %-20s' % hh.mean     () )
-        logger.info ( 'rms        %-20s' % hh.rms      () )
-        logger.info ( 'skewness   %-20s' % hh.skewness () )
-        logger.info ( 'kurtosis   %-20s' % hh.kurtosis () )
-
+    hh = ROOT.TH1D ( hID() , 'Gaussian' , 500 , -5 , 5 )
+    for i in range ( 1000000 ) : hh.Fill ( random.gauss ( 0 , 1 ) ) 
+    
+    title = 'Histogram moments'
+    m     = hh.the_moment ( 24 ) 
+    logger.info ( '%s:\n%s' % ( title , m.table  ( title = title , prefix = '# ' ) ) ) 
+    logger.info ( 'neff       %-20s' % hh.nEff     () )
+    logger.info ( 'mean       %-20s' % hh.mean     () )
+    logger.info ( 'rms        %-20s' % hh.rms      () )
+    logger.info ( 'skewness   %-20s' % hh.skewness () )
+    logger.info ( 'kurtosis   %-20s' % hh.kurtosis () )
+    
 
 # =============================================================================
 ## Test for very basic operations with 2D-histograms

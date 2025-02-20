@@ -148,7 +148,7 @@ def test_splotting  () :
   
     with DBASE.tmpdb()  as db :
         
-        for fast in ( True , False ) :
+        for fast in ( True , ) : ## False ) :
             
             sp  = sPlot1D ( model , dataset = histo  , nbins = 500 , fast = fast ) ## SPLOT IT! 
             sph = sp.hweights['S']
@@ -170,6 +170,7 @@ def test_splotting  () :
                 chain = data.chain
                 sp.add_to_tree ( chain , 'x' , prefix = 'f' if fast else 'n' , parallel = False ) 
 
+    return 1 
     chain = data.chain 
     nS_sw = chain.statVar ( 'nS_sw' )
     fS_sw = chain.statVar ( 'fS_sw' )

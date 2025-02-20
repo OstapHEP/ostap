@@ -189,7 +189,8 @@ namespace Ostap
         const std::string& x               ,
         const TTree*       tree =  nullptr ) 
         : TObject () 
-        , m_fun      ( fun     )
+          // , m_fun      ( fun     )
+        , m_fun      ( std::function<double(double)> ( fun ) ) 
         , m_xvar_exp ( x       ) 
         , m_xvar     { nullptr }
         , m_tree     { tree    }
@@ -233,7 +234,12 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const std::string& x() const { return m_xvar_exp ; }
+      /// get the varibale expression 
+      const std::string& x    () const { return m_xvar_exp ; }
+      /// get the varibale expression 
+      const std::string& xvar () const { return m_xvar_exp ; }
+      /// get the interal tree 
+      const TTree*       tree () const { return m_tree     ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -328,8 +334,13 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const std::string& x () const { return m_xvar_exp ; }
-      const std::string& y () const { return m_yvar_exp ; }
+      const std::string& x    () const { return m_xvar_exp ; }
+      const std::string& y    () const { return m_yvar_exp ; }
+      const std::string& xvar () const { return m_xvar_exp ; }
+      const std::string& yvar () const { return m_yvar_exp ; }
+      /// get the interal tree 
+      const TTree*       tree () const { return m_tree     ; }
+      // ======================================================================
       // ======================================================================
     public:
       // ======================================================================
@@ -437,9 +448,14 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const std::string& x () const { return m_xvar_exp ; }
-      const std::string& y () const { return m_yvar_exp ; }
-      const std::string& z () const { return m_zvar_exp ; }
+      const std::string& x    () const { return m_xvar_exp ; }
+      const std::string& y    () const { return m_yvar_exp ; }
+      const std::string& z    () const { return m_zvar_exp ; }
+      const std::string& xvar () const { return m_xvar_exp ; }
+      const std::string& yvar () const { return m_yvar_exp ; }
+      const std::string& zvar () const { return m_zvar_exp ; }
+      /// get the interal tree 
+      const TTree*       tree () const { return m_tree     ; }
       // ======================================================================
     public:
       // ======================================================================

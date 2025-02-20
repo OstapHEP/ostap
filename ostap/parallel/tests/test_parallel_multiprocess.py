@@ -43,18 +43,6 @@ except ImportError : # ========================================================
     logger.error('Can not import multiprocess')
     multiprocess = None
 
-DILL_PY3_issue = False 
-if ( 3 , 6 ) <= sys.version_info and dill :
-    dill_version =  getattr ( dill , '__version__' , '' )
-    if not dill_version :  dill_version =  getattr ( dill , 'version' , '' )
-    DILL_PY3_issue = dill_version < '0.3'
-    if not DILL_PY3_issue :
-        from ostap.core.meta_info import root_info
-        ## DILL_PY3_issue = root_info < ( 6 , 23 )
-        DILL_PY3_issue = root_info < ( 6 , 24 , 6 )
-
-if DILL_PY3_issue : logger.warning ( "There is an issue with DILL/ROOT/PYTHON")
-
 # =============================================================================
 ## simple    function that created and  fill a histogram
 def make_histos ( item ) :
@@ -103,10 +91,6 @@ def test_multiprocess_function () :
         logger.error ( "multiprocess is not available" )
         return 
 
-    if DILL_PY3_issue : 
-         logger.warning ("test is disabled for Python %s (DILL/ROOT/PY3 issue)" )
-         return
-    
     ncpus = multiprocess.cpu_count() 
     
     from multiprocess import Pool
@@ -148,10 +132,6 @@ def test_multiprocess_callable  () :
         logger.error ( "multiprocess is not available" )
         return 
         
-    if DILL_PY3_issue : 
-         logger.warning ("test is disabled for Python %s (DILL/ROOT/PY3 issue)" )
-         return
-    
     ncpus = multiprocess.cpu_count() 
     
     from multiprocess import Pool

@@ -31,22 +31,14 @@ from   ostap.core.meta_info     import root_info
 from   ostap.fitting.funbasic   import AFUN1
 from   ostap.fitting.pdfbasic   import PDF1
 from   ostap.core.core          import SE, VE, Ostap
-from   ostap.math.base          import doubles, axis_range  
+from   ostap.math.base          import doubles, axis_range, numpy   
 from   ostap.math.models        import f1_draw
 from   ostap.utils.basic        import numcpu, loop_items  
 from   ostap.stats.gof_utils    import Estimators,Summary
-from   ostap.fitting.fithelpers import ConfigReducer 
+from   ostap.fitting.fithelpers import ConfigReducer
 import ostap.fitting.ds2numpy 
 import ostap.fitting.roofit
 import ROOT, math  
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import numpy as np
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    np = None
 # =============================================================================
 # logging 
 # =============================================================================
@@ -226,14 +218,14 @@ class GoF1D(Estimators,ConfigReducer) :
         self.__xmnmx = pdf.xminmax()
         
         ## vectorized version of CDF 
-        self.__vct_cdf = np.vectorize ( cdf )
+        self.__vct_cdf = numpy.vectorize ( cdf )
         
         ## data in form of numpy sructured array
         varname = pdf.xvar.name 
         data    = dataset.tonumpy ( varname ) [ varname ] 
 
         ## sorted data 
-        self.__data     = np.sort  ( data )
+        self.__data     = numpy.sort  ( data )
 
         ## empirical CDF function 
         self.__ecdf     = Ostap.Math.ECDF ( data2vct ( self.__data ) )
@@ -363,9 +355,9 @@ class GoF1D(Estimators,ConfigReducer) :
     def clip ( self , input ) :
         """ Clip input CDF arrays"""
         vmin , vmax = 1.e-12 , 1 - 1.e-10
-        ## if np.min ( input ) < vmin or vmax < np.max ( input ) :
+        ## if numpy.min ( input ) < vmin or vmax < numpy.max ( input ) :
         ## logger.warning ( 'Adjust CDF' ) 
-        return np.clip ( input , a_min = vmin , a_max = vmax )
+        return numpy.clip ( input , a_min = vmin , a_max = vmax )
         ## return input 
     
     # =========================================================================
@@ -464,7 +456,7 @@ class GoF1DToys(GoF1D,Summary) :
         
             dset     = self.__pdf.generate ( self.N  , sample = True )
             data     = dset.tonumpy ( varname ) [ varname ] 
-            data     = np.sort ( data )
+            data     = numpy.sort ( data )
 
             
             cdf_data = self.clip ( vct_cdf ( data ) ) 

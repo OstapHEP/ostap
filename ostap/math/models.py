@@ -21,16 +21,14 @@ __all__     = (
     'f3_draw'   , ## draw 1D-function via conversion to TF3
     )
 # =============================================================================
-from    ostap.core.meta_info   import root_info
 from    ostap.core.core        import cpp, Ostap, funID
 from    ostap.utils.basic      import loop_items 
 from    ostap.core.ostap_types import num_types, integer_types
 from    ostap.math.base        import pos_infinity, neg_infinity
 from    ostap.utils.cidict     import cidict, cidict_fun 
-# 
+import  ostap.math.derivative  as     D
 import  ostap.math.polynomials 
 import  ostap.math.reduce   
-import  ostap.math.derivative  as     D
 #
 import  ROOT, random  
 # =============================================================================
@@ -535,7 +533,6 @@ def _amp_argand_ ( self , xmin , xmax , npx =  500 , args = () ) :
         g[i] = a.real, a.imag
     return g
 
-
 ## Ostap.Math.LASS            . amp = _amp_
 ## Ostap.Math.LASS23L         . amp = _amp_
 ## Ostap.Math.Bugg23L         . amp = _amp_
@@ -556,31 +553,6 @@ for m in  ( Ostap.Math.Flatte    ,
     m.amp_phase = _amp_phase_ 
     m.argand    = _amp_argand_ 
 
-## # =============================================================================
-if root_info < ( 6, 24 ) :
-    
-    from ostap.math.base import COMPLEX
-    for t in ( Ostap.Math.BW            ,
-               Ostap.Models.BreitWigner ) :
-        
-        if not hasattr ( t , '_old_breit_wigner_' ) :
-            t._old_breit_wigner_ = t.breit_wigner
-            # 
-            def _new_breit_wigner_ ( f , x , amp ) :
-                """ Updated `Breit-wigner` function
-                _ see `Ostap.Math.BW.breit_wigner`
-                _ see `Ostap.Models.breit_wigner`
-                _ see `Ostap.Math.BW._old_breit_wigner_`
-                _ see `Ostap.Models._old_breit_wigner_`
-                _ see `Ostap.Math.BW._new_breit_wigner_`
-                _ see `Ostap.Models._new_breit_wigner_`
-                """
-                a = COMPLEX ( amp )
-                return f._old_breit_wigner_ ( x , a )
-            t._new_breit_wigner_ = _new_breit_wigner_
-            t.breit_wigner       = _new_breit_wigner_
-            
-            
 # =============================================================================
 ## get min/max values for bernstein polynomials
 #  @code

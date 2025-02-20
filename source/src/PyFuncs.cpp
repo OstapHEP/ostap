@@ -63,7 +63,7 @@ Ostap::Functions::PyFuncTree::clone( const char* /* name */ ) const
   Ostap::throwException ( "Method `clone` must be overriden!"    ,  
                           "Ostap::Functions::PyFuncTree"         ,
                           UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
-  
+  // fake ....
   return new PyFuncTree ( *this ) ;
 }
 // ============================================================================

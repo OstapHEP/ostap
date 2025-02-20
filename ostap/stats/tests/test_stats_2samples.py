@@ -9,7 +9,6 @@
 """
 # ==============================================================================
 from   ostap.stats.twosamples import TSTest, TSToys 
-from   ostap.core.meta_info   import python_info, root_info  
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.logger.pretty    import pretty_float
 from   ostap.utils.utils      import vrange, batch_env 
@@ -37,9 +36,6 @@ ds4 = array.array ( 'd' , ( random.gauss ( 0   , 1.5 ) for i in range ( N2 ) ) )
 def test_2samples_good () :
     
     logger = getLogger ( 'test_2samples_good' ) 
-    if root_info < ( 6, 24 ) :
-        logger.warning ( 'Test is disabled' )
-        return
     
     test   = TSTest ( ds1 , ds2 )
     title  = 'Test good samples'
@@ -62,9 +58,6 @@ def test_2samples_good () :
 def test_2samples_same () :
     
     logger = getLogger ( 'test_2samples_same' ) 
-    if root_info < ( 6, 24 ) :
-        logger.warning ( 'Test is disabled' )
-        return
         
     test   = TSTest ( ds1 , ds1 )                   
     title  = 'Test same samples'
@@ -87,9 +80,6 @@ def test_2samples_same () :
 def test_2samples_bad1 () :
     
     logger = getLogger ( 'test_2samples_bad1'  ) 
-    if root_info < ( 6, 24 ) :
-        logger.warning ( 'Test is disabled' )
-        return
     
     test   = TSTest ( ds1 , ds3 )
     title  = 'Test bad/1 samples'
@@ -112,9 +102,6 @@ def test_2samples_bad1 () :
 def test_2samples_bad2 () :
     
     logger = getLogger ( 'test_2samples_bad2'  ) 
-    if root_info < ( 6, 24 ) :
-        logger.warning ( 'Test is disabled' )
-        return
     
     test   = TSTest ( ds1 , ds4  )
     title  = 'Test bad/2 samples'

@@ -14,7 +14,6 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   ostap.core.meta_info         import root_info
 from   ostap.utils.timing           import timing
 from   ostap.utils.memory           import memory 
 from   ostap.core.core              import cpp, VE, dsID, hID, rooSilent
@@ -40,15 +39,6 @@ else :
 # =============================================================================
 batch_env ( logger ) 
 # =============================================================================
-if sys.version_info < ( 3, 0 ) and ( 6 , 18 ) <= root_info < ( 6 , 20 ) :
-    try : 
-        import dill
-        if dill.__version__ < '0.3' :
-            os.environ['OSTAP_PARALLEL'] = 'GAUDIMP'
-            logger.warning ( "Redefined os.environ['OSTAP_PARALLEL']='%s'" % os.environ.get('OSTAP_PARALLEL','' ) ) 
-    except ImportError :
-        pass
-
 
 nominal_mean    = 0.4
 nominal_sigma   = 0.1

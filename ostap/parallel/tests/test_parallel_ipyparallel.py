@@ -26,17 +26,15 @@ batch_env ( logger )
 # =============================================================================
 ipp = None
 # =============================================================================
-if ( 3 , 6 )<= sys.version_info :
+try : # =======================================================================
     # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
-        with warnings.catch_warnings() :
-            warnings.simplefilter('ignore')
-            import ipyparallel as ipp
-        # =====================================================================
-    except ImportError : # ====================================================
-        # =====================================================================
-        ipp = None 
+    with warnings.catch_warnings() :
+    warnings.simplefilter('ignore')
+    import ipyparallel as ipp
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+ipp = None 
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
@@ -85,9 +83,6 @@ def test_ipyparallel_function () :
     logger = getLogger ( "test_ipyparallel_function")    
     logger.info ('Test job submission with ipyparallel')
     
-    if not ( 3 , 6 )<= sys.version_info :
-        logger.error ( "python3.6 is required for the test!")
-        
     if not ipp :
         logger.error ( "ipyparallel module is not available")
         return
@@ -123,10 +118,6 @@ def test_ipyparallel_callable () :
 
     logger = getLogger ( "test_ipyparallel_callable")    
     logger.info ('Test job submission with ipyparallel')
-    
-    if not ( 3 , 6 )<= sys.version_info :
-        logger.error ( "python3.6 is required for the test!")
-        return
     
     if not ipp :
         logger.error ( "ipyparallel module is not available")

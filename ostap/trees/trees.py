@@ -22,7 +22,7 @@ __all__     = (
     'array_buffer_types' , ## allowed array buffer types 
   ) 
 # =============================================================================
-from   ostap.core.meta_info      import root_info, ostap_version
+from   ostap.core.meta_info      import root_info
 from   ostap.core.ostap_types    import ( integer_types      , long_type      ,
                                           string_types       , sequence_types ,
                                           sized_types        , num_types      ,
@@ -441,7 +441,7 @@ def tree_project ( tree                    ,
 
     ## use frame if requested and if/when possible 
     if use_frame and 0 == first and len ( tree ) < last : 
-        if ( input_histo and ( 6 , 19 ) <= root_info ) or ( 6,25 ) <= root_info :
+        if input_histo or ( 6 , 25 ) <= root_info :
             import ostap.frames.frames as F 
             frame  = F.DataFrame ( tree )
             if progress : frame , _ = F.frame_progress ( frame , len ( tree ) )            
@@ -819,9 +819,6 @@ def _rt_print_ ( t ) :
     if _b : res += "\nNon-trivial branches:\n%s" % multicolumn ( _b , indent = 2 ,  pad = 1 )
 
     result = res.replace ('\n','\n# ')
-    if sys.version_info < ( 3 , 0 ) :
-        if isinstance ( result , unicode ) :
-            result = result.encode ('utf-8')
     return result 
  
 
@@ -2490,8 +2487,10 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
     new_branches = set ()
 
     ## keep all information 
-    keeper = [ branch ]
-    for k , v in loop_items ( kwargs ) : keeper.append ( v ) 
+    ## keeper = [ branch ]
+    ## for k , v in loop_items ( kwargs ) : keeper.append ( v ) 
+    
+    keeper = []
 
     the_case = 0
     
@@ -2593,10 +2592,12 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         ## general dict-like stuff, converted to Ostap.Trees.Branches 
 
         branches = Ostap.Trees.Branches()
-        keeper.append ( branches )
+
+        ## keeper.append ( branches )
         
         for key , value in loop_items ( branch ) :
-            keeper.append    ( value )            
+            
+            ## keeper.append    ( value )            
 
             assert isinstance ( key , string_types ) and Ostap.Trees.valid_name_for_branch ( key ) ,\
                 "Invalid branch name type/value" % ( typename ( key ) , key )

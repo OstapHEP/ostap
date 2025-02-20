@@ -14,7 +14,8 @@ from   ostap.core.meta_info import root_info
 from   ostap.math.linalg    import checkops 
 from   ostap.core.core      import Ostap
 from   ostap.utils.basic    import typename
-from   ostap.utils.utils    import batch_env 
+from   ostap.utils.utils    import batch_env
+from   ostap.math.base      import numpy 
 import ostap.logger.table   as     T 
 import ROOT, array, random   
 # ============================================================================= 
@@ -27,12 +28,6 @@ else                       : logger = getLogger ( __name__              )
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-try : # =======================================================================
-    import numpy as np
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    np = None
 
 # =============================================================================
 def test_linalgt_vct () :
@@ -549,12 +544,12 @@ def test_linalgt_old () :
     s22 -= s22*1
     
     ## DISABLE!!!
-    if np : ## and False :
+    if numpy : ## and False :
 
         logger.info ( 'Operations with numpy objects')
         
-        v2 = np.array ( [1.0,2.0]      )
-        v3 = np.array ( [1.0,2.0,3.0 ] )
+        v2 = numpy.array ( [1.0,2.0]      )
+        v3 = numpy.array ( [1.0,2.0,3.0 ] )
 
         logger.info ( 'v2  * l2  : \n%s' % ( v2  * l2  ) )
         logger.info ( 'l3  * v3  : \n%s' % ( l3  * v3  ) )
@@ -567,7 +562,7 @@ def test_linalgt_old () :
         n22_s = s22.to_numpy ()
         n23   = m23.to_numpy ()
         
-        if ( 6 , 20 ) <= root_info < ( 6 ,33 ) : 
+        if root_info < ( 6 , 33 ) : 
             logger.warning ("Tests with numpy are broken for ROOT %s" %  str ( root_info ) ) 
         else :
             

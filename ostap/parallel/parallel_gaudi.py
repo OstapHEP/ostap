@@ -23,19 +23,17 @@ __all__ = (
     'Checker'     , ## check of the object can be pickled/unpickled  
    )
 # =============================================================================
-import sys, os, time
+from   collections.abc          import Sized
 from   itertools                import repeat , count
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.parallel.task      import TaskManager
 from   ostap.io.checker         import PickleChecker as Checker 
 import multiprocessing          as     MP
+import sys, os, time
 # =============================================================================
 from    ostap.logger.logger       import getLogger
-# =============================================================================
-if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Sized
-else                              : from collections     import Sized 
-# =============================================================================
 logger  = getLogger('ostap.parallel.parallel_gaudi')
+# =============================================================================
 
 # =============================================================================
 class pool_context :

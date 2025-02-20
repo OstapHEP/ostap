@@ -52,10 +52,8 @@ __all__     = (
     'LmdbDict' 
 )
 # =============================================================================
-import sys, os, shutil 
-# =============================================================================
-if ( 3 , 5 ) <= sys.version_info : from collections.abc import MutableMapping
-else                             : from collections     import MutableMapping
+from   collections.abc import MutableMapping
+import os, shutil 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -63,13 +61,14 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.io.lmdbdict' )
 else                       : logger = getLogger( __name__     )
 # =============================================================================
-lmdb = None 
-if ( 3 , 7 ) <= sys.version_info :
-    try :
-        import lmdb
-    except ImportError:
-        logger.warning ("No `lmdb` module is available!")
-        pass
+try : # =======================================================================
+    # =========================================================================
+    import lmdb
+    # =========================================================================
+except ImportError: # =========================================================
+    # =========================================================================
+    logger.warning ("No `lmdb` module is available!")
+    lmbd = None
     
 # =============================================================================
 def _qislmdb_ ( q , path ) :

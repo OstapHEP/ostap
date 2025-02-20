@@ -31,12 +31,14 @@ __all__     = (
     'use_canvas'       , ## context manager to create currect canvas
     )
 # =============================================================================
-from   sys                     import version_info as python_version
 from   ostap.core.ostap_types  import ordered_dict 
 from   ostap.utils.cidict      import cidict, cidict_fun 
 from   ostap.utils.utils       import KeepCanvas, keepCanvas 
 from   ostap.core.core         import rootWarning
 from   ostap.utils.utils       import which
+from ostap.plotting.makestyles import ( canvas_width , canvas_height ,
+                                        margin_left  , margin_right  ,
+                                        margin_top   , margin_bottom )
 import ostap.core.core         
 import ostap.plotting.style
 import ROOT, os, tempfile, math   
@@ -47,10 +49,6 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.plotting.canvas' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-from ostap.plotting.makestyles import  ( canvas_width , canvas_height ,
-                                         margin_left  , margin_right  ,
-                                         margin_top   , margin_bottom )
-
 
 # =============================================================================
 #$ define WebDispla
@@ -285,7 +283,7 @@ def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
 
         elif files and el in  ( 'txz'   , 'tlz'   ,
                                 'tarxz' , 'tarlz' ,
-                                'xztar' , 'lztar' ) and 3 <= python_version.major : 
+                                'xztar' , 'lztar' ) : 
             import tarfile
             with tarfile.open ( fname , "w:xz" ) as output :
                 for f in files : output.add   ( f )

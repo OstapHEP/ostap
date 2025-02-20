@@ -13,6 +13,7 @@
 ## sys.modules['gdbm'  ] = None
 ## ##  sys.modules['dbm'   ] = None
 # =============================================================================
+from   ostap.core.meta_info     import python_info 
 from   ostap.utils.cleanup      import CleanUp
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.timing       import timing
@@ -28,96 +29,90 @@ else                       : logger = getLogger ( __name__         )
 dbases = []
 
 # ============================================================================
-try :
+try : # ======================================================================
+    # ========================================================================
     import lmdb 
     from ostap.io.lmdbdict import islmdb, LmdbDict
     item = 'LmdbDict' , CleanUp.tempdir ( prefix = 'ostap-LMDB-' ) , LmdbDict
     dbases.append ( item )
-except ImportError:
+    # =========================================================================
+except ImportError: # =========================================================
+    # =========================================================================
     logger.warning ( 'LmdbDict    is not accessible!' )
 
 # ============================================================================
-try :
+try : # ======================================================================
+    # ========================================================================
     import berkeleydb 
     from ostap.io.dbase import berkeleydb_open 
     item = 'BerkeleyDB' , CleanUp.tempfile ( prefix = 'ostap-BerkeleyDB-' , suffix = '.db' ) , berkeleydb_open 
     dbases.append ( item )
-except ImportError:
+    # =========================================================================
+except ImportError: # =========================================================
+    # ==========================================================================
     logger.warning ( 'BerkeleyDB  is not accessible!' )
 
 # ============================================================================
-try :
-    import bsddb3 
-    from ostap.io.dbase import bsddb3_open 
-    item = 'BSDDB3' , CleanUp.tempfile ( prefix = 'ostap-BSDDB3-' , suffix = '.db'  ) , bsbdb3_open 
-    dbases.append ( item )
-except ImportError:
-    logger.warning ( 'bsddb3      is not accessible!' )
-   
+if python_info < ( 3 , 10 ) : 
+    # ========================================================================
+    try : # ==================================================================
+        # ====================================================================
+        import bsddb3 
+        from ostap.io.dbase import bsddb3_open 
+        item = 'BSDDB3' , CleanUp.tempfile ( prefix = 'ostap-BSDDB3-' , suffix = '.db'  ) , bsbdb3_open 
+        dbases.append ( item )
+        # ====================================================================
+    except ImportError: # ====================================================
+        # ====================================================================
+        logger.warning ( 'bsddb3      is not accessible!' )
+        
 # ============================================================================
-try :
+try : # ======================================================================
+    # ========================================================================
     from ostap.io.sqlitedict import SqliteDict
     item = 'SqliteDict' , CleanUp.tempfile ( prefix = 'ostap-SqliteDB-' , suffix = '.sql') , SqliteDict
     dbases.append ( item )
-except ImportError:
+    # ========================================================================
+except ImportError: # ========================================================
+    # ========================================================================
     logger.warning ( 'SQliteDict  is not accessible!' )
 
-# ============================================================================
-if ( 3,0 ) <= sys.version_info :
-    # ========================================================================
-    try :
-        from dbm.gnu import open as _gnu_open
-        def gnu_open ( filename , flag = 'r' ) : return _gnu_open ( filename , flag )        
-        item = 'dbm.gnu' , CleanUp.tempfile ( prefix = 'ostap-GNUDB-' , suffix = '.db' ) , gnu_open
-        dbases.append ( item )
-    except ImportError:
-        logger.warning ( 'dbm.gnu   is not accessible!' )
-    # ======================================================================
-    try :
-        from dbm.ndbm import open as _ndbm_open
-        def ndbm_open ( filename , flag = 'r' ) : return _ndbm_open ( filename , flag )        
-        item = 'dbm.ndbm' , CleanUp.tempfile ( prefix = 'ostap-NDB-' , suffix = '.db' ) , ndbm_open
-        dbases.append ( item )
-    except ImportError:
-        logger.warning ( 'dbm.ndbm  is not accessible!' )
-    # ======================================================================
-    try :
-        from dbm.dumb import open as dumb_open
-        ## def ndbm_open ( filename , flag = 'r' ) : return _ndbm_open ( filename , flag )        
-        item = 'dbm.dumb' , CleanUp.tempfile ( prefix = 'ostap-DumbDB-' , suffix = '.db' ) , dumb_open
-        dbases.append ( item )
-    except ImportError:
-        logger.warning ( 'dbm.dumb is not accessible!' )
-
-else : ## python2
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    from dbm.gnu import open as _gnu_open
+    def gnu_open ( filename , flag = 'r' ) : return _gnu_open ( filename , flag )        
+    item = 'dbm.gnu' , CleanUp.tempfile ( prefix = 'ostap-GNUDB-' , suffix = '.db' ) , gnu_open
+    dbases.append ( item )
+    # =========================================================================
+except ImportError: # =========================================================
+    # =========================================================================
+    logger.warning ( 'dbm.gnu   is not accessible!' )
     
-    # ======================================================================
-    try :
-        from anydbm.dbm import open as _dbm_open
-        def dbm_open ( filename , flag = 'r' ) : return _dbm_open ( filename , flag )        
-        item = 'anydbm.dbm' , CleanUp.tempfile ( prefix = 'ostap-DBM-' , suffix = '.db' ) , dbm_open
-        dbases.append ( item )
-    except ImportError:
-        logger.warning ( 'anydbm.dbm accessible!' )
-    # ======================================================================
-    try :
-        from anydbm.gdbm import open as _gdbm_open
-        def gdbm_open ( filename , flag = 'r' ) : return _gdbm_open ( filename , flag )        
-        item = 'anydbm.gdbm' , CleanUp.tempfile ( prefix = 'ostap-GDBM-' , suffix = '.db' ) , gdbm_open
-        dbases.append ( item )
-    except ImportError:
-        logger.warning ( 'anydbm.gdbm accessible!' )
-    # ======================================================================
-    try :
-        from anydbm.dbhash import open as _hash_open
-        def hash_open ( filename , flag = 'r' ) : return _hash_open ( filename , flag )        
-        item = 'anydbm.dbhash' , CleanUp.tempfile ( prefix = 'ostap-DBHASH-' , suffix = '.db' ) , hash_open
-        dbases.append ( item )
-    except ImportError:
-        logger.warning ( 'anydbm.dbhash accessible!' )
-    # ======================================================================
-
-
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    from dbm.ndbm import open as _ndbm_open
+    def ndbm_open ( filename , flag = 'r' ) : return _ndbm_open ( filename , flag )        
+    item = 'dbm.ndbm' , CleanUp.tempfile ( prefix = 'ostap-NDB-' , suffix = '.db' ) , ndbm_open
+    dbases.append ( item )
+    # =========================================================================
+except ImportError: # =========================================================
+    # =========================================================================
+    logger.warning ( 'dbm.ndbm  is not accessible!' )
+    
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    from dbm.dumb import open as dumb_open
+    ## def ndbm_open ( filename , flag = 'r' ) : return _ndbm_open ( filename , flag )        
+    item = 'dbm.dumb' , CleanUp.tempfile ( prefix = 'ostap-DumbDB-' , suffix = '.db' ) , dumb_open
+    dbases.append ( item )
+    # =========================================================================
+except ImportError: # =========================================================
+    # =========================================================================
+    logger.warning ( 'dbm.dumb is not accessible!' )
+    
 data = {
     'string'  : 'string'         ,
     'int'     : 1                , 

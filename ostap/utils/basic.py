@@ -20,28 +20,28 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2013-02-10"
 # =============================================================================
 __all__     = (
-    'with_ipython'  , ## do we run IPython ? 
-    'isatty'        , ## is the stream ``isatty'' ?
-    'terminal_size' , ## get the size of terminal cosole
-    'writeable'     , ## good writeable directory?
-    'whoami'        , ## who am I? 
-    'commonpath'    , ## common path(prefix) for list of files
-    'copy_file'     , ## copy fiel creating inetremadiet directorys if needed 
-    'NoContext'     , ## empty context manager
-    'mtime'         , ## last modication/creation time for the path (dir or file)
+    'with_ipython'         , ## do we run IPython ? 
+    'isatty'               , ## is the stream ``isatty'' ?
+    'terminal_size'        , ## get the size of terminal cosole
+    'writeable'            , ## good writeable directory?
+    'whoami'               , ## who am I? 
+    'commonpath'           , ## common path(prefix) for list of files
+    'copy_file'            , ## copy fiel creating inetremadiet directorys if needed 
+    'NoContext'            , ## empty context manager
+    'mtime'                , ## last modication/creation time for the path (dir or file)
     ##
-    'loop_items'    , ## loop over dictionary items 
-    'items_loop'    , ## ditto
+    'loop_items'           , ## loop over dictionary items 
+    'items_loop'           , ## ditto
     ##
-    'has_env'       , ## case-insensitive check for environment variable   
-    'get_env'       , ## case-insensitive access to environment variable
+    'has_env'              , ## case-insensitive check for environment variable   
+    'get_env'              , ## case-insensitive access to environment variable
     ##
-    'numcpu'        , ## number of cores/CPUs
+    'numcpu'               , ## number of cores/CPUs
     ##
-    'typename'      , ## the typename of the object
-    'prntrf'        , ## very specific printer of functions 
+    'typename'             , ## the typename of the object
+    'prntrf'               , ## very specific printer of functions 
     ##
-    'zip_longest'   , ## itertools.(i)zip.longest
+    'zip_longest'          , ## itertools.(i)zip.longest
     ##
     'var_separators'       , ## separators form the split  
     'split_string_respect' , ## split the string  according to separators 
@@ -49,7 +49,8 @@ __all__     = (
     # =========================================================================
 ) # ===========================================================================
 # =============================================================================
-from   itertools         import zip_longest
+from   ostap.core.meta_info import python_info 
+from   itertools            import zip_longest
 import sys, os, datetime
 # =============================================================================
 ## is sys.stdout attached to terminal or not  ?
@@ -116,7 +117,7 @@ fallback      = 80 , 50
 # ============================================================================
 terminal_size = None
 # ============================================================================
-if ( 3 , 9 ) <= sys.version_info : # =========================================
+if ( 3 , 9 ) <= python_info : # ==============================================
     # ========================================================================
     try : #===================================================================
         # ====================================================================
@@ -146,7 +147,7 @@ if not terminal_size : # =====================================================
         # ====================================================================
         pass
 # ============================================================================
-if not terminal_size and ( 3 , 3 ) <= sys.version_info : # ===================
+if not terminal_size : # =====================================================
     # ========================================================================
     import shutil 
     def terminal_size ( fallback = fallback ) :
@@ -482,10 +483,6 @@ def typename ( o ) :
                                getattr ( to , '__name__' ) ) )
     
 # =============================================================================
-## Get number of cores/CPUs
-from os import cpu_count as _numcpu
-
-# =============================================================================
 ## defalt separators for the string expressions
 var_separators = ',:;'
 ## rx_separators  = re.compile ( r'[,:;]\s*(?![^()]*\))' )
@@ -578,18 +575,21 @@ def split_string ( line                            ,
     if strip : items = [ i.strip() for i in items ] 
     ## remove empty items 
     return tuple ( item for item in items if item )
-    
+
+
+
+# =============================================================================
+## Get number of cores/CPUs
+if ( 3 , 13 ) <= python_info : from os import process_cpu_count as cpu_count 
+else                         : from os import         cpu_count 
+
 # =============================================================================
 ## Get number of CPUs     
 def numcpu () :
     """ Get number of CPUs (non-negative integer number)
     - it uses the function `cpu_count` from `%s` module  
     """
-    nc = _numcpu ()
-    return nc if nc and 0 < nc else 0
-
-numcpu.__doc__ = numcpu.__doc__ % _numcpu.__module__ \
-    +  '\n' + _numcpu.__doc__
+    return max ( 1 , cpu_count () ) 
 
 # =============================================================================
 if __name__ == '__main__' :

@@ -45,10 +45,9 @@ __all__     = (
     'shoot'                , ## generate random numbers 
     )
 # =============================================================================
-from    ostap.core.core        import Ostap, funID
 from    ostap.core.ostap_types import is_integer, integer_types
+from    ostap.core.core        import Ostap, funID
 from    ostap.math.base        import iszero, isequal, signum, doubles
-from    ostap.core.meta_info   import root_info
 import  ostap.math.reduce 
 import  ostap.math.bernstein 
 import  ostap.math.polynomials
@@ -261,9 +260,6 @@ def interpolate ( func , abscissas , spline , *args ) :
     from ostap.math.interpolation import points 
     table = points ( func , abscissas )
 
-    if root_info < (6 , 24 ) and 16 < len ( table ) and table.atype() < 0  : 
-        logger.warning ('interpoalte: segmentation fault can occur for large number of points')
-        
     sc    = Ostap.Math.Interpolation.bspline ( table , bs )
     if sc.isFailure () : raise TypeError("Ostap.Math.Bspline/2: Can't iterpolate!%s" %  sc )
     

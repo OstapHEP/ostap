@@ -28,7 +28,6 @@ from   ostap.math.base       import iszero
 from   ostap.core.pyrouts    import VE, hID 
 from   ostap.utils.timing    import timing
 from   ostap.utils.utils     import random_name 
-from   sys                   import version_info as python_version
 import ostap.utils.cleanup   as     CU
 import ostap.io.zipshelve    as     zipshelve
 import ostap.io.bz2shelve    as     bz2shelve
@@ -42,21 +41,11 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_io_shelves' )
 else                       : logger = getLogger ( __name__          )
 # =============================================================================
-if  ( 3 , 3 ) <= python_version :
-    import ostap.io.lzshelve  as lzshelve
-    if not lzshelve.lzma : lzshelve = None 
-else :
-    lzshelve = None
+import ostap.io.lzshelve as lzshelve
+if not lzshelve.lzma : lzshelve = None 
 # =============================================================================
-if  ( 3 , 6 ) <= python_version :    
-    import ostap.io.zstshelve as zstshelve 
-    if not zstshelve.zst : zstshelve = None 
-    try : 
-        import zstandard
-    except ImportError :
-        zstshelve = None
-else :
-    zstshelve = None 
+import ostap.io.zstshelve as zstshelve 
+if not zstshelve.zst : zstshelve = None
 # =============================================================================
 
 bins    = 1000
