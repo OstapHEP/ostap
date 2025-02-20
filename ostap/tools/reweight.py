@@ -1082,11 +1082,13 @@ def makeWeights  ( dataset                    ,
 
     cmp_plots = tuple ( cmp_plots )
 
-    if make_plots and cmp_plots and not ROOT.gROOT.IsBatch() :
-        from ostap.plotting.canvas import use_canvas 
-        for item in cmp_plots :
-            with use_canvas ( '%s/%s' % ( tag , item.what ) ) : item.draw()
-                    
+    if make_plots and cmp_plots :
+        groot = ROOT.ROOT.GetROOT() 
+        if groot and not groot.IsBatch() : 
+            from ostap.plotting.canvas import use_canvas 
+            for item in cmp_plots :
+                with use_canvas ( '%s/%s' % ( tag , item.what ) ) : item.draw()
+                
     ## return ( active , cmp_plots ) if make_plots else active
     return ( for_update , cmp_plots ) if make_plots else for_update 
 

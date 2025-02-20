@@ -125,8 +125,9 @@ class ProjectTask(Task) :
         from ostap.core.core import ROOTCWD
 
         with ROOTCWD() :
-            
-            ROOT.gROOT.cd()
+
+            groot = ROOT.ROOT.GetROOT() 
+            if groot : groot.cd()
 
             target = self.copy_target() 
             self.__output = target 

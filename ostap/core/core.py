@@ -93,7 +93,6 @@ else                       : logger = getLogger( __name__     )
 # =============================================================================
 logger.debug ( 'Core objects/classes/functions for Ostap')
 # =============================================================================
-## @var global ROOT/gROOT object 
 binomEff        = Ostap.Math.binomEff
 binomEff2       = Ostap.Math.binomEff2
 zechEff         = Ostap.Math.zechEff

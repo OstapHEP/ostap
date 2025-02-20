@@ -67,8 +67,11 @@ def setWebDisplay ( web ) :
         elif which ( wlow ) : web = wlow 
         elif which ( 'google-chrome'        ) : web = 'google-chrome'
         elif which ( 'google-chrome-stable' ) : web = 'google-chrome-stable'
-    ROOT.gROOT.SetWebDisplay( web )
-    return ROOT.gROOT.GetWebDisplay()
+    groot = ROOT.ROOT.GetROOT() 
+    if groot :
+        groot.SetWebDisplay( web )
+        return groot.GetWebDisplay()
+    return ''
 
 # =============================================================================
 ## @class UseWeb
@@ -93,8 +96,10 @@ class UseWeb(object) :
 
     ## ENTER the context 
     def __enter__ ( self ) :
-        self.__prev = ROOT.gROOT.GetWebDisplay()
-        setWebDisplay ( self.__web )
+        groot = ROOT.ROOT.GetROOT()
+        if groot : 
+            self.__prev = groot.GetWebDisplay()
+            setWebDisplay ( self.__web )
         return self 
     
     ## EXIT the context 
@@ -151,8 +156,12 @@ def getCanvas ( name   = 'glCanvas'    ,   ## canvas name
     """
     if not name : name = 'glCanvas'
 
-    cnvlst = ROOT.gROOT.GetListOfCanvases()
-    cnv    = cnvlst.get ( name , None ) 
+    cnv = None 
+    groot  = ROOT.ROOT.GetROOT()
+    if groot :
+        cnvlst = groot.GetListOfCanvases()
+        cnv    = cnvlst.get ( name , None )
+        
     if cnv and isinstance ( cnv , ROOT.TCanvas ) :
         _canvases.append ( cnv )
         set_pad ( cnv , **kwargs )
@@ -451,8 +460,10 @@ if not hasattr ( ROOT.TObject , 'draw_with_autoplot' ) :
 ## get all known canvases 
 def getCanvases () :
     """ Get all known canvases """
-    
-    return tuple ( ( c.GetName() for c in ROOT.gROOT.GetListOfCanvases() if  ( c and isintance ( c , ROOT.TCanvas ) ) ) ) 
+
+    groot = ROOT.ROOT.GetROOT()
+    if not groot : return () 
+    return tuple ( ( c.GetName() for c in groot.GetListOfCanvases() if ( c and isintance ( c , ROOT.TCanvas ) ) ) ) 
 # =============================================================================
 
 # =============================================================================
@@ -1120,7 +1131,8 @@ class Canvas(KeepCanvas) :
         KeepCanvas.__enter__ ( self )
 
         if not self.__name :
-            cnvlst = ROOT.gROOT.GetListOfCanvases() 
+            groot  = ROOT.ROOT.GetROOT() 
+            cnvlst = groot.GetListOfCanvases() 
             self.__name = 'gl_canvas#%d' % len ( cnvlst )
             while self.__name in cnvlst : 
                 h = self.__name , title , width , height , len ( cnvlst ) 

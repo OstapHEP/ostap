@@ -552,7 +552,7 @@ def tree_draw ( tree                    ,
         
     if native and 1 == nvars :
         with ROOTCWD () :
-            groot  = ROOT.gROOT.GetROOT()
+            groot  = ROOT.ROOT.GetROOT()
             groot.cd()            
             hname  = hID ()
             varexp = '(%s) >> %s' % ( varlst [ 0 ] , hname )
@@ -2735,7 +2735,8 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
 
     treepath = tree.path
     the_file = tree.topdir
-    assert treepath and the_file and ( not the_file is ROOT.gROOT ) and isinstance ( the_file , ROOT.TFile ) , \
+    groot = ROOT.ROOT.GetROOT() 
+    assert treepath and the_file and ( not the_file is groot ) and isinstance ( the_file , ROOT.TFile ) , \
         'This is not the file-resident TTree* object! addition of new branch is not posisble!'
     the_file = the_file.GetName() 
     
@@ -2987,7 +2988,8 @@ def buffer_2tree ( tree , name , buffer , progress = True , report = True ) :
 
     treepath = tree.path
     the_file = tree.topdir
-    assert treepath and the_file and ( not the_file is ROOT.gROOT ) and isinstance ( the_file , ROOT.TFile ) , \
+    groot    = ROOT.ROOT.GetROOT()
+    assert treepath and the_file and ( not the_file is ROOT.groot ) and isinstance ( the_file , ROOT.TFile ) , \
         'This is not the file-resident TTree* object! addition of new branch is not posisble!'
     the_file = the_file.GetName() 
     
