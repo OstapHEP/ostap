@@ -81,6 +81,15 @@ namespace Ostap
       /// set new default value 
       void setValue ( const DATA new_value ) { m_value = new_value ; }
       // ======================================================================
+    public: // ===============================================================
+      // ======================================================================
+      /// swap two buffers 
+      void swap ( Buffer& another )
+      {
+        std::swap ( m_span  , another.m_span  ) ;
+        std::swap ( m_value , another.m_value ) ;
+      }
+      // ======================================================================
     private: // ===============================================================
       // ======================================================================
       SPAN m_span  {   } ;
@@ -131,6 +140,16 @@ namespace Ostap
       /// set new default value 
       void setValue ( const DATA new_value ) { m_value = new_value ; }
       // ======================================================================
+    public: // ===============================================================
+      // ======================================================================
+      /// swap two buffers 
+      void swap ( Buffer& another )
+      {
+        std::swap ( m_data  , another.m_data  ) ;
+        std::swap ( m_size  , another.m_size  ) ;
+        std::swap ( m_value , another.m_value ) ;
+      }
+      // ======================================================================
     private: // ===============================================================
       // ======================================================================
       const DATA* m_data  { nullptr } ;
@@ -140,6 +159,10 @@ namespace Ostap
     } ;  // ===================================================================
     // ========================================================================
 #endif // =====================================================================
+    // ========================================================================
+    /// swap two buffers
+    template<class DATA>
+    inline void swap ( Buffer<DATA>& a , Buffer<DATA>& b ) { a.swap ( b ) ; }
     // ========================================================================
     /// create new fuffer with offset 
     template <class DATA> 
@@ -168,6 +191,51 @@ namespace Ostap
       const char        value = char( 0 ) )
     { return Buffer<char> ( static_cast<const  char*> ( data ) , size , value ) ; }
     // =========================================================================    
+    /** @class Buffers 
+     *  a collection of several named buffers 
+     */
+    template <class DATA>
+    class Buffers
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      typedef Ostap::Trees::Buffer<DATA>                              BUFFER  ;
+      typedef std::map<std::string,BUFFER>                            BUFFERS ;
+      typedef typename BUFFERS::const_iterator                 const_iterator ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// add new buffer into the map 
+      void add ( const std::string& name , const BUFFER& buffer )
+      { m_buffers.insert ( BUFFERS::value_type ( name , buffer ) ) ; }
+      // ======================================================================
+    public :
+      // ======================================================================
+      bool           empty () const { return m_buffers.empty () ; }
+      std::size_t    size  () const { return m_buffers.size  () ; }
+      const_iterator begin () const { return m_buffers.begin () ; }
+      const_iterator end   () const { return m_buffers.end   () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// create new buffers with offset 
+      Buffers offset ( const std::size_t offset ) const
+      {
+        Buffers result {}  ;
+        for ( const_iterator it = this->begin() ; this->end() != it ; ++it )
+          { result.add ( it->first , it->second.offset ( offset ) ) ; } 
+        return result;       
+      }
+      // ======================================================================
+    private :
+      // ====================================================================== 
+      /// actual map of  bufferss 
+      BUFFERS m_buffers {} ; //!        actual map of  bufferss       
+      // ======================================================================
+    } ; // ====================================================================
+    // ========================================================================
+    /// add buffer to tree 
     Ostap::StatusCode
     add_buffer
     ( TTree*                            tree     ,

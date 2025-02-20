@@ -569,7 +569,7 @@ class Trainer(object) :
         if isinstance ( self.__background , ROOT.TTree ) :  self.__background = Chain ( self.__background ) 
 
         ##  trick to please Kisa for ROOT 6.31/01  (enum TMVA.Types.ETMVA is not pickable...
-        if ( 6 , 31 ) <= root_info < ( 6 , 32 , 4 ) :
+        if ( 6 , 31 ) <= root_info < ( 6 , 35 ) :
             ## @see https://github.com/root-project/root/issues/15104
             ms = list ( self.__methods )
             for i, e in enumerate  ( ms ) :
