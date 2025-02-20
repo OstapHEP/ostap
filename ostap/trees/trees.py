@@ -2989,7 +2989,7 @@ def buffer_2tree ( tree , name , buffer , progress = True , report = True ) :
     treepath = tree.path
     the_file = tree.topdir
     groot    = ROOT.ROOT.GetROOT()
-    assert treepath and the_file and ( not the_file is ROOT.groot ) and isinstance ( the_file , ROOT.TFile ) , \
+    assert treepath and the_file and ( not the_file is groot ) and isinstance ( the_file , ROOT.TFile ) , \
         'This is not the file-resident TTree* object! addition of new branch is not posisble!'
     the_file = the_file.GetName() 
     
