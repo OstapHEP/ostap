@@ -87,7 +87,7 @@ __all__     = (
     'addChoppingResponse'  , ## add `chopping' response to TTree or RooDataSet
     )
 # =============================================================================
-from   ostap.core.meta_info    import python_info
+from   ostap.core.meta_info    import python_info, root_info
 from   ostap.core.ostap_types  import integer_types 
 from   ostap.core.core         import WSE 
 from   ostap.core.pyrouts      import hID, h1_axis, Ostap 
@@ -568,8 +568,9 @@ class Trainer(object) :
         if isinstance ( self.__signal     , ROOT.TTree ) :  self.__signal     = Chain ( self.__signal     ) 
         if isinstance ( self.__background , ROOT.TTree ) :  self.__background = Chain ( self.__background ) 
 
-        ##  trick to pleas Kisa for ROOT 6.31/01  (enum TMVA.Types.ETMVA is not pickable...
-        if ( 6, 31 ) <= root_info :
+        ##  trick to please Kisa for ROOT 6.31/01  (enum TMVA.Types.ETMVA is not pickable...
+        if ( 6 , 31 ) <= root_info < ( 6 , 32 , 4 ) :
+            ## @see https://github.com/root-project/root/issues/15104
             ms = list ( self.__methods )
             for i, e in enumerate  ( ms ) :
                 e = list ( e )
