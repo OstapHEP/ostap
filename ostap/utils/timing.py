@@ -101,9 +101,9 @@ class Timer(object):
 
         self.format        = format
         
-        if    start               : self.start_message = clock_symbol + start
-        elif '' == start and name : self.start_message = clock_symbol + 'Start  %s' % name
-        else                      : self.start_message = clock_symbol 
+        if    start               : self.start_message = start
+        elif '' == start and name : self.start_message = 'Start  %s' % name
+        else                      : self.start_message = ''
 
         self.__delta = -100000
         

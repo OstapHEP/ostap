@@ -2471,6 +2471,9 @@ Ostap.Trees.Branches.__repr__    = _brs_str_
 
 Ostap.IFuncTree.__str__          = lambda s : typename ( s )
 
+
+store = []
+
 # ===============================================================================
 func_keywords = 'function' , 'callable' , 'what' , 'how' , 'calculator'
 # ===============================================================================
@@ -2590,9 +2593,11 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         ## general dict-like stuff, converted to Ostap.Trees.Branches 
 
         branches = Ostap.Trees.Branches()
-        keeper.append ( branches ) 
+        keeper.append ( branches )
+        
         for key , value in loop_items ( branch ) :
-            
+            keeper.append    ( value )            
+
             assert isinstance ( key , string_types ) and Ostap.Trees.valid_name_for_branch ( key ) ,\
                 "Invalid branch name type/value" % ( typename ( key ) , key )
             
@@ -2601,14 +2606,13 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
             elif callable   ( value ) :
                 from ostap.trees.funcs import PyTreeFunction as PTF
                 fun = PTF     ( value , tree )
-                keeper.append ( fun )
+                ## keeper.append ( fun )
                 branches.add  ( key , fun , tree ) 
             else :
                 raise TypeError ( "Invalid branch type:%s for key=%s" % ( typename ( value ) , key ) )
             
-            keeper.append    ( value )            
-            new_branches.add ( key   )
-            
+            new_branches.add ( key )
+
         args     = branches ,
         the_case = 11
         logger.debug ( 'prepare_branches: case %s' % the_case ) 

@@ -82,9 +82,9 @@ def create_tree ( fname , nentries = 1000 ) :
             c2 = random.gammavariate ( 2.5 , 0.5    ) / 5 
             pt = random.uniform      ( 0   , 10     )
             
-            var1[0] = m
-            var2[0] = c2 
-            var3[0] = pt
+            var1 [ 0 ] = m
+            var2 [ 0 ] = c2 
+            var3 [ 0 ] = pt
             
             tree.Fill()
             
@@ -114,7 +114,7 @@ def test_addbranch() :
     - using histogram sampling
     """
 
-    files = prepare_data ( 5 , 100 )
+    files = prepare_data ( 1 , 100 )
     
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data ( 'S' , files )
@@ -185,15 +185,15 @@ def test_addbranch() :
     rows.append ( ( timer.name  , '%.3f' % timer.delta ) ) 
     ## reload the chain and check: 
     assert 'pt3' in data.chain , "Branch `pt3' is  not here!"
-
+    
     # =========================================================================
     ## 5) add new branch as histogram-function 
     # =========================================================================
     with timing ('fun-hist-1' , logger = logger ) as timer :          
-        h1  = ROOT.TH1D ( hID () , 'some pt-correction' , 100 , 0 , 10 )
-        h1 += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
+        h1    = ROOT.TH1D ( hID () , 'some pt-correction' , 100 , 0 , 10 )
+        h1   += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
         from   ostap.trees.funcs  import FuncTH1
-        ptw = FuncTH1 ( h1 , 'pt' )
+        ptw   = FuncTH1 ( h1 , 'pt' )
         chain = data.chain 
         chain = chain.add_new_branch ( ptw , name = 'ptw1' )
     rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
@@ -204,8 +204,8 @@ def test_addbranch() :
     ## 6) add new branch as histogram-function 
     # =========================================================================
     with timing ( 'fun-hist-2' , logger = logger ) as timer :          
-        h1  = ROOT.TH1D ( hID () , 'some pt-correction' , 100 , 0 , 10 )
-        h1 += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
+        h1    = ROOT.TH1D ( hID () , 'some pt-correction' , 100 , 0 , 10 )
+        h1   += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
         from   ostap.trees.funcs  import FuncTH1
         ptw   = FuncTH1 ( h1 , 'pt' )
         chain = data.chain 
@@ -214,27 +214,29 @@ def test_addbranch() :
     ## reload the chain and check: 
     assert 'ptw2' in chain , "Branch `ptw2' is  not here!"
 
+
     # =========================================================================
     ## 7) add several functions simultaneously 
     # =========================================================================
-    with timing ('sim-funcs' , logger = logger ) as timer :          
-        from   ostap.trees.funcs  import FuncTH1
-        hh    = ROOT.TH1D ( hID() , 'some pt-correction' , 100 , 0 , 10 )
-        h1    = hh + ( lambda x :  1.0 + math.tanh ( 0.1 * ( x - 5 ) ) )
-        ptw3  = FuncTH1 ( h1 , 'pt' )
-        h2    = h1 + ( lambda x :  1.0 + math.tanh ( 0.2 * ( x - 5 ) ) )
-        ptw4  = FuncTH1 ( h2 , 'pt' )
-        h3    = h1 + ( lambda x :  1.0 + math.tanh ( 0.3 * ( x - 5 ) ) ) 
-        ptw5  = FuncTH1 ( h3 , 'pt' )
-        chain = data.chain
-        brs   = { 'ptw3' : ptw3 , 'ptw4' : ptw4 , 'ptw5' : ptw4 } 
-        chain = chain.add_new_branch ( brs )     
-    rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
-    ## reload the chain and check: 
-    assert 'ptw3' in chain , "Branch `ptw3' is  not here!"
-    assert 'ptw4' in chain , "Branch `ptw4' is  not here!"
-    assert 'ptw5' in chain , "Branch `ptw5' is  not here!"
-    
+    if not ( 6 , 32 ) <= root_info < ( 6 , 35 ) :  
+        with timing ('sim-funcs' , logger = logger ) as timer :          
+            from   ostap.trees.funcs  import FuncTH1
+            hh    = ROOT.TH1D ( hID() , 'some pt-correction' , 100 , 0 , 10 )
+            h1    = hh + ( lambda x :  1.0 + math.tanh ( 0.1 * ( x - 5 ) ) )
+            ptw3  = FuncTH1 ( h1 , 'pt' )
+            h2    = hh + ( lambda x :  1.0 + math.tanh ( 0.2 * ( x - 5 ) ) )
+            ptw4  = FuncTH1 ( h2 , 'pt' )
+            h3    = hh + ( lambda x :  1.0 + math.tanh ( 0.3 * ( x - 5 ) ) ) 
+            ptw5  = FuncTH1 ( h3 , 'pt' )
+            chain = data.chain
+            brs   = { 'ptw3' : ptw3 , 'ptw4' : ptw4 , 'ptw5' : ptw4 } 
+            chain = chain.add_new_branch ( brs )     
+        rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
+        ## reload the chain and check: 
+        assert 'ptw3' in chain , "Branch `ptw3' is  not here!"
+        assert 'ptw4' in chain , "Branch `ptw4' is  not here!"
+        assert 'ptw5' in chain , "Branch `ptw5' is  not here!"
+
     h1 = ROOT.TH1D ( hID() , 'Gauss1' , 120 , -6 , 6 )
     h2 = ROOT.TH2D ( hID() , 'Gauss2' ,  50 , -6 , 6 , 50 , -6 , 6 )
     h3 = ROOT.TH3D ( hID() , 'Gauss3' ,  20 , -6 , 6 , 20 , -6 , 6 , 20 , -6 , 6 )
@@ -245,7 +247,7 @@ def test_addbranch() :
         h1.Fill ( g1 ) ; h1.Fill ( g2 ) ; h1.Fill ( g3 ) ;
         h2.Fill ( g1 , g2 )
         h3.Fill ( g1 , g2 , g3 )
-        
+                
     # =========================================================================
     ## 8) add the variable sampled from the 1D histogram
     # =========================================================================

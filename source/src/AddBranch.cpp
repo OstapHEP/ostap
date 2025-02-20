@@ -114,7 +114,7 @@ bool
 Ostap::Trees::Branches::has_key
 ( const std::string& name ) const 
 {
-  if ( m_names.end() == std::find( m_names.begin() , m_names.end() , name ) ) { return false ; }
+  if ( m_names.end() == std::find ( m_names.begin() , m_names.end() , name ) ) { return false ; }
   const Ostap::IFuncTree* br = branch ( name ) ;
   Ostap::Assert ( nullptr != br                               ,
                   "Inconsistent names/map structure: " + name ,
@@ -193,7 +193,6 @@ Ostap::Trees::add_branch
   const Ostap::Utils::ProgressConf& progress ) 
 {
   if ( !tree   ) { return INVALID_TREE ; }
-  //
   Ostap::Trees::Branches branches {} ;
   branches.add ( name , func , tree ) ;
   return add_branch ( tree , branches , progress ) ;
@@ -272,8 +271,8 @@ Ostap::Trees::add_branch
   //
 
   /// (1) keep branches locally 
-  // const Ostap::Trees::Branches lbranches { branches } ;
-  const Ostap::Trees::Branches& lbranches = branches ;
+  const Ostap::Trees::Branches lbranches { branches } ;
+  // const Ostap::Trees::Branches& lbranches = branches ;
 
   /// #of brached to be added 
   const std::size_t N = lbranches.size() ;  
@@ -364,6 +363,10 @@ Ostap::Trees::add_branch
                    "Ostap::Trees::add_branch"                    ,
                    INVALID_TH1  , __FILE__ , __LINE__            ) ; 
   //
+  TH1D hh {} ;
+  histo.Copy ( hh ) ;
+  hh.SetDirectory ( nullptr ) ;
+  //
   Double_t value  = 0  ;
   TBranch* branch = tree->Branch( name.c_str() , &value , (name + "/D").c_str() );
   Ostap::Assert ( branch ,
@@ -377,7 +380,7 @@ Ostap::Trees::add_branch
     {
       if ( tree->GetEntry ( entry ) < 0 ) { break ; };
       //
-      value = histo.GetRandom() ;
+      value = hh.GetRandom() ;
       //
       branch -> Fill (       ) ;
     }
@@ -419,6 +422,10 @@ Ostap::Trees::add_branch
                    "Ostap::Trees::add_branch"                    ,
                    INVALID_TH2  , __FILE__ , __LINE__            ) ; 
   //
+  TH2D hh {} ;
+  histo.Copy ( hh ) ;
+  hh.SetDirectory ( nullptr ) ;
+  //
   Double_t value_x   = 0  ;
   TBranch* branch_x  = tree->Branch( namex.c_str() , &value_x , (namex + "/D").c_str() );
   Ostap::Assert ( branch_x                                   ,
@@ -433,15 +440,13 @@ Ostap::Trees::add_branch
                   "Ostap::Trees::add_branch"                 ,
                   CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;  
   //
-  TH2& h = const_cast<TH2&> ( histo ) ;
-  //
   const Long64_t nentries = tree->GetEntries(); 
   Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
   for ( Long64_t i = 0 ; i < nentries ; ++i, ++bar )
     {
       if ( tree->GetEntry ( i ) < 0 ) { break ; };
       //
-      h.GetRandom2 ( value_x , value_y ) ;
+      hh.GetRandom2 ( value_x , value_y ) ;
       //
       branch_x -> Fill (       ) ;
       branch_y -> Fill (       ) ;
@@ -487,6 +492,10 @@ Ostap::Trees::add_branch
                    "Ostap::Trees::add_branch"                    ,
                    INVALID_TH3  , __FILE__ , __LINE__            ) ;   
   //
+  TH3D hh {} ;
+  histo.Copy ( hh ) ;
+  hh.SetDirectory ( nullptr ) ;
+  //
   Double_t value_x   = 0  ;
   TBranch* branch_x  = tree->Branch( namex.c_str() , &value_x , (namex + "/D").c_str() );
   Ostap::Assert ( branch_x                                   ,
@@ -508,15 +517,13 @@ Ostap::Trees::add_branch
                   "Ostap::Trees::add_branch"                 ,
                   CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;  
   //
-  TH3& h = const_cast<TH3&> ( histo ) ;
-  //
   const Long64_t nentries = tree->GetEntries(); 
   Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
   for ( Long64_t i = 0 ; i < nentries ; ++i , ++bar )
     {
       if ( tree->GetEntry ( i ) < 0 ) { break ; };
       //
-      h.GetRandom3 ( value_x , value_y , value_z ) ;
+      hh.GetRandom3 ( value_x , value_y , value_z ) ;
       //
       branch_x -> Fill (       ) ;
       branch_y -> Fill (       ) ;
@@ -526,7 +533,6 @@ Ostap::Trees::add_branch
   return Ostap::StatusCode::SUCCESS ;  
 }
 // ============================================================================
-
 
 // ============================================================================
 /*  add new branch to TTree, sampling it from   the 1D-histogram
@@ -552,6 +558,8 @@ Ostap::Trees::add_branch
                   "Ostap::Trees::add_branch"                 ,
                   INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
   //
+  const Ostap::Math::Histo1D hh { histo } ;
+  //
   Double_t value  = 0  ;
   TBranch* branch = tree->Branch( name.c_str() , &value , (name + "/D").c_str() );
   Ostap::Assert ( branch ,
@@ -565,7 +573,7 @@ Ostap::Trees::add_branch
     {
       if ( tree->GetEntry ( entry ) < 0 ) { break ; };
       //
-      histo.random ( value ) ;
+      hh.random ( value ) ;
       //
       branch -> Fill ( ) ;
     }
@@ -602,6 +610,8 @@ Ostap::Trees::add_branch
                   "Ostap::Trees::add_branch"                  ,
                   INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
   //
+  const Ostap::Math::Histo2D hh { histo } ;
+  //
   Double_t value_x   = 0  ;
   TBranch* branch_x  = tree->Branch( namex.c_str() , &value_x , (namex + "/D").c_str() );
   Ostap::Assert ( branch_x                                   ,
@@ -624,7 +634,7 @@ Ostap::Trees::add_branch
     {
       if ( tree->GetEntry ( i ) < 0 ) { break ; };
       //
-      histo.random ( value_x , value_y ) ;
+      hh.random ( value_x , value_y ) ;
       //
       branch_x -> Fill (       ) ;
       branch_y -> Fill (       ) ;
@@ -665,6 +675,8 @@ Ostap::Trees::add_branch
                   "Ostap::Trees::add_branch"                  ,
                   INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
   //
+  const Ostap::Math::Histo3D hh { histo } ;
+  //
   Double_t value_x   = 0  ;
   TBranch* branch_x  = tree->Branch( namex.c_str() , &value_x , (namex + "/D").c_str() );
   Ostap::Assert ( branch_x                                   ,
@@ -694,7 +706,7 @@ Ostap::Trees::add_branch
     {
       if ( tree->GetEntry ( i ) < 0 ) { break ; };
       //
-      histo.random ( value_x , value_y , value_z ) ;
+      hh.random ( value_x , value_y , value_z ) ;
       //
       branch_x -> Fill (       ) ;
       branch_y -> Fill (       ) ;
@@ -704,7 +716,6 @@ Ostap::Trees::add_branch
   return Ostap::StatusCode::SUCCESS ;  
 }
 // ============================================================================
-
 
 // ============================================================================
 // Generic 1D-functions 

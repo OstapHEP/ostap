@@ -80,17 +80,17 @@ namespace Ostap
       /// virtual destructor
       virtual ~FuncTH1() ; 
       // ======================================================================
-    public:
-      // ======================================================================
-      /// get the histo
-      const  Ostap::Math::Histo1D& histo() const { return m_histo ; }
-      // ======================================================================
     public: // CLone&clone 
       // ======================================================================
       // IFuncTree::clone 
       FuncTH1* clone ( const char* newname = "" ) const override ;
       // TObject::clone 
       FuncTH1* Clone ( const char* newname = "" ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the histo
+      const  Ostap::Math::Histo1D& histo() const { return m_histo ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -155,17 +155,17 @@ namespace Ostap
       /// virtual destructor
       virtual ~FuncTH2() ; 
       // ======================================================================
+    public: // Clone&clone 
+      // ======================================================================
+      /// IFuncTree::clone 
+      FuncTH2* clone ( const char* newname = "" ) const override ;
+      /// TObject::Clone 
+      FuncTH2* Clone ( const char* newname = "" ) const override ;
+      // ======================================================================
     public:
       // ======================================================================
       /// get the histo
       const Ostap::Math::Histo2D& histo() const { return m_histo ; }
-      // ======================================================================
-    public: // CLone&clone 
-      // ======================================================================
-      // IFuncTree::clone 
-      FuncTH2* clone ( const char* newname = "" ) const override ;
-      // TObject::clone 
-      FuncTH2* Clone ( const char* newname = "" ) const override ;
       // ======================================================================
     private:
       // ======================================================================
@@ -238,17 +238,17 @@ namespace Ostap
       /// virtual destructor
       virtual ~FuncTH3() ; 
       // ======================================================================
+    public: // Clone&clone 
+      // ======================================================================
+      /// IFuncTree::clone 
+      FuncTH3* clone ( const char* newname = "" ) const override ;
+      /// TObject::Clone 
+      FuncTH3* Clone ( const char* newname = "" ) const override ;
+      // ======================================================================
     public: 
       // ======================================================================
       /// get the histo
       const Ostap::Math::Histo3D& histo() const { return m_histo ; } 
-      // ======================================================================
-    public: // CLone&clone 
-      // ======================================================================
-      // IFuncTree::clone 
-      FuncTH3* clone ( const char* newname = "" ) const override ;
-      // TObject::clone 
-      FuncTH3* Clone ( const char* newname = "" ) const override ;
       // ======================================================================
     private:
       // ======================================================================

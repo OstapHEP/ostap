@@ -339,8 +339,8 @@ Ostap::Functions::Func1D::Func1D
   , TObject          ( right            ) 
   , m_fun            ( right.m_fun      )
   , m_xvar_exp       ( right.m_xvar_exp ) 
-  , m_xvar           ( nullptr )
-  , m_tree           ( nullptr ) 
+  , m_xvar           ( nullptr          )
+  , m_tree           ( right.m_tree     ) 
 {}
 // ===========================================================================
 // clone :
@@ -380,11 +380,12 @@ bool Ostap::Functions::Func1D::make_xvar() const
 double Ostap::Functions::Func1D::operator() ( const TTree* tree ) const
 {
   //
-  if ( nullptr != tree ) 
-    {
-      const TChain* chain = dynamic_cast<const TChain*>( tree ) ;
-      if ( chain ) { tree = chain->GetTree() ; }
-    }
+  // if ( nullptr != tree ) 
+  // {
+  // const TChain* chain = dynamic_cast<const TChain*>( tree ) ;
+  // if ( chain ) { tree = chain->GetTree() ; }
+  //}
+  
   //
   // the tree 
   if ( tree != m_tree )

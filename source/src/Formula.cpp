@@ -85,7 +85,6 @@ Ostap::Formula::~Formula()
   TTree* tree = GetTree() ;
   if ( nullptr != tree && this == tree->GetNotify() ) { tree -> SetNotify ( 0 ) ; }
 }
-
 // ============================================================================
 // evaluate the formula 
 // ============================================================================
