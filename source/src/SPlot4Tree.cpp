@@ -52,45 +52,6 @@ Ostap::MoreRooFit::SPlot4Tree::size      () const
 // ============================================================================
 /*  @param addpdf input extended RooAddPdf 
  *  @param observabels list of observables 
- *  @param normalzation normalisation set 
- */
-// ============================================================================
-Ostap::MoreRooFit::SPlot4Tree::SPlot4Tree
-( const RooAddPdf&        addpdf        ,
-  const RooAbsData&       observables   ,
-  const RooFitResult&     fitresult     , 
-  const RooAbsCollection* normalization )                               
-  : SPlot4Tree ( addpdf , *observables.get() , fitresult , normalization )
-{}
-// ============================================================================
-/* @param addpdf input extended RooAddPdf 
- *  @param observabels list of observables 
- *  @param normalzation normalisation set 
- */
-// ============================================================================
-Ostap::MoreRooFit::SPlot4Tree::SPlot4Tree
-( const RooAddPdf&        addpdf        ,
-  const RooAbsData&       observables   ,
-  const RooAbsCollection* normalization , 
-  const RooFitResult&     fitresult     )
-  : SPlot4Tree ( addpdf , *observables.get() , normalization , fitresult )
-{}
-// ============================================================================
-/*  @param addpdf input extended RooAddPdf 
- *  @param observabels list of observables 
- *  @param normalzation normalisation set 
- */
-// ============================================================================
-Ostap::MoreRooFit::SPlot4Tree::SPlot4Tree
-( const RooAddPdf&        addpdf        ,
-  const RooAbsCollection& observables   ,
-  const RooAbsCollection* normalization , 
-  const RooFitResult&     fitresult     )
-  : SPlot4Tree ( addpdf , observables , fitresult , normalization )
-{}
-// ============================================================================
-/*  @param addpdf input extended RooAddPdf 
- *  @param observabels list of observables 
  *  @param normalzation normalizartion set 
  */
 // ============================================================================
@@ -175,13 +136,18 @@ Ostap::MoreRooFit::SPlot4Tree::SPlot4Tree
 // ============================================================================
 Ostap::MoreRooFit::SPlot4Tree::SPlot4Tree
 ( const Ostap::MoreRooFit::SPlot4Tree& right )
-  : m_cmps   { std::make_unique<RooArgList>() } 
+  : RooFun   ( right ) 
+  , m_cmps   { std::make_unique<RooArgList>() } 
   , m_coefs  { std::make_unique<RooArgList>() } 
   , m_result { right.m_result ? right.m_result->Clone() : nullptr }
 {
   ::copy ( *right.m_cmps  , *m_cmps  ) ;
   ::copy ( *right.m_coefs , *m_coefs ) ;
 }
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::SPlot4Tree::~SPlot4Tree() {}
 // ============================================================================
 /*  Add sPlot information to the tree 
  *  @param tree  input tree 
@@ -212,15 +178,14 @@ Ostap::Trees::add_branch
   const std::size_t N = the_splot.size()   ;
   //                  name/0      c/1   d/2    b/3 
   typedef std::tuple<std::string,double,double, double> ITEM  ;
-  typedef std::vector<ITEM>                    ITEMS ; 
+  typedef std::vector<ITEM>                             ITEMS ; 
   ITEMS items {} ; items.reserve ( N ) ;
   // ==========================================================================
   { // ========================================================================
-    std::size_t index = 0 ;
     // ========================================================================
     for ( const RooAbsArg* c : the_splot.coefficients () )
       {
-       // =====================================================================
+        // =====================================================================
         Ostap::Assert ( nullptr != c                         ,
                         "Invalid coefficient"                ,
                         "Ostap::Trees::add_branch"           ,
@@ -238,9 +203,9 @@ Ostap::Trees::add_branch
                         "Invalid Coeffcient:" + Ostap::Utils::toString ( *c ) , 
                         "Ostap::Trees::add_branch"           ,                      
                         INVALID_ABSARG , __FILE__ , __LINE__ ) ;
-        if      ( rv ) { items [ index ] = std::make_tuple ( c->GetName() , rv->getVal (     ) , 0.0 , 0.0 ) ; } 
-        else if ( cv ) { items [ index ] = std::make_tuple ( c->GetName() , ::getValue ( *cv ) , 0.0 , 0.0 ) ; } 
-        ++index ;
+        items.push_back ( ITEM () ) ;
+        if      ( rv ) { items.back() = std::make_tuple ( c->GetName() , rv->getVal (     ) , 0.0 , 0.0 ) ; } 
+        else if ( cv ) { items.back() = std::make_tuple ( c->GetName() , ::getValue ( *cv ) , 0.0 , 0.0 ) ; } 
         // ====================================================================
       } // ====================================================================
     // ========================================================================

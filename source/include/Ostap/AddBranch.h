@@ -472,12 +472,12 @@ namespace Ostap
      */
     StatusCode
     add_branch
-    ( TTree*                               tree             ,
-      const Ostap::MoreRooFit::SPlot4Tree& splot            ,
-      const std::string&                   prefix  = ""     ,
-      const std::string&                   suffix  = "_sw"  , 
-      const DCT&                           mapping = DCT () , 
-      const Ostap::Utils::ProgressConf&   progress = false  ) ; 
+    ( TTree*                               tree              ,
+      const Ostap::MoreRooFit::SPlot4Tree& splot             ,
+      const std::string&                   prefix   = ""     ,
+      const std::string&                   suffix   = "_sw"  , 
+      const DCT&                           mapping  = DCT () , 
+      const Ostap::Utils::ProgressConf&    progress = false  ) ; 
     // ========================================================================
   } //                                        The end of namespace Ostap::Trees 
   // ==========================================================================

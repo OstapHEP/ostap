@@ -42,26 +42,19 @@ namespace Ostap
     public :
       // ======================================================================
       /** @param fun the function 
-       *  @param observables data constains with observables  
-       *  @param normalzation normalisation set 
-       */
-      RooFun 
-        ( const RooAbsReal&       fun                     ,
-          const RooAbsData&       observables             , 
-          const RooAbsCollection* normalization = nullptr ) ;
-      // ======================================================================
-      /** @param fun the function 
        *  @param observabels list of observables 
        *  @param normalzation normalisation set 
        */
       RooFun 
-        ( const RooAbsReal&       fun                     ,
-          const RooAbsCollection& observables             ,
-          const RooAbsCollection* normalization = nullptr ) ;
+      ( const RooAbsReal&       fun                     ,
+        const RooAbsCollection& observables             ,
+        const RooAbsCollection* normalization = nullptr ) ;
       // ======================================================================
       RooFun ( const RooFun&  right ) ;
       RooFun (       RooFun&& right ) = default ;
       RooFun (                      ) = default ;
+      // ======================================================================
+      virtual ~RooFun() ;
       // ======================================================================      
     public: // constant getters 
       // ======================================================================

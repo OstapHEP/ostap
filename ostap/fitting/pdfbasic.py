@@ -2536,7 +2536,7 @@ class PDF1(APDF1,FUN1) :
             xmn , xmx = xmnmx 
             if not xmn <= x <= xmx : return 0
         
-        with SETVAR( self.xvar ) :
+        with SETVAR ( self.xvar ) :
             
             self.xvar.setVal ( x )
             
@@ -2544,7 +2544,7 @@ class PDF1(APDF1,FUN1) :
             
             if error and self.fit_result :
                 e = self.pdf.getPropagatedError ( self.fit_result )
-                if 0<= e : v= VE ( v ,  e * e )
+                if 0 <= e : v = VE ( v ,  e * e )
 
             return v
 
@@ -3085,7 +3085,7 @@ class APDF2 (APDF1) :
         hdata.SetTitle(';;;')
         hpdf .SetTitle(';;;')
         _lst   = ROOT.RooArgList ( self.xvar , self.yvar )  
-        if dataset : dataset.fillHistogram( hdata , _lst ) 
+        if dataset : dataset.fillHistogram ( hdata , _lst ) 
         self.pdf.fillHistogram  ( hpdf , _lst )
 
         groot = ROOT.ROOT.GetROOT()
@@ -3305,7 +3305,6 @@ class APDF2 (APDF1) :
                     return self.pdf.generate (  varset , *args )
 
             return self.pdf.generate ( varset , *args )
-
 
     # ========================================================================
     ## check minmax of the PDF using the random shoots

@@ -36,6 +36,10 @@
  *  @date 2019-11-21
  */
 // ============================================================================
+// destructor
+// ============================================================================
+Ostap::MoreRooFit::RooFun::~RooFun() {}
+// ============================================================================
 // evaluate it!
 // ============================================================================
 double
@@ -55,18 +59,6 @@ Ostap::MoreRooFit::RooFun::set_parameters
 { m_parameters  -> assignValueOnly ( pars ) ; }
 // ============================================================================
 /*  @param fun the function 
- *  @param observables data constains with observables  
- *  @param normalzation normalization set 
- */
-// ============================================================================
-Ostap::MoreRooFit::RooFun::RooFun 
-( const RooAbsReal&       fun           ,
-  const RooAbsData&       observables   , 
-  const RooAbsCollection* normalization )
-  : RooFun ( fun , *observables.get() , normalization )
-{}          
-// ============================================================================
-/*  @param fun the function 
  *  @param observabels list of observables 
  *  @param normalzation normalization set 
  */
@@ -75,7 +67,7 @@ Ostap::MoreRooFit::RooFun::RooFun
 ( const RooAbsReal&       fun           ,
   const RooAbsCollection& observables   ,
   const RooAbsCollection* normalization )
-  : m_fun         { static_cast<RooAbsReal*> ( fun.clone ( "" ) ) }
+  : m_fun         { static_cast<RooAbsReal*> ( fun.clone () ) }
   , m_observables () 
   , m_parameters  () 
   , m_normset     () 

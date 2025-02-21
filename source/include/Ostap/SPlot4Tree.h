@@ -36,7 +36,7 @@ namespace Ostap
   {
     // ========================================================================
    /** @class SPlot4Tree 
-     *  Hellper class to add sPlot result to the tree 
+     *  Hellper class to add sPlot results to the TTree 
      */
     class SPlot4Tree : public RooFun 
     {
@@ -49,41 +49,17 @@ namespace Ostap
        */
       SPlot4Tree
       ( const RooAddPdf&        addpdf                  ,
-        const RooAbsData&       observables             ,
-        const RooFitResult&     fitresult               , 
-        const RooAbsCollection* normalization = nullptr ) ;
-      // ======================================================================
-      /** @param addpdf input extended RooAddPdf 
-       *  @param observabels list of observables 
-       *  @param normalzation normalisation set 
-       */
-      SPlot4Tree
-      ( const RooAddPdf&        addpdf        ,
-        const RooAbsData&       observables   ,
-        const RooAbsCollection* normalization , 
-        const RooFitResult&     fitresult     ) ;  
-      // ======================================================================
-      /** @param addpdf input extended RooAddPdf 
-       *  @param observabels list of observables 
-       *  @param normalzation normalisation set 
-       */
-      SPlot4Tree
-      ( const RooAddPdf&        addpdf                  ,
         const RooAbsCollection& observables             ,
         const RooFitResult&     fitresult               , 
         const RooAbsCollection* normalization = nullptr ) ;
       // ======================================================================
-      /** @param addpdf input extended RooAddPdf 
-       *  @param observabels list of observables 
-       *  @param normalzation normalisation set 
-       */
-      SPlot4Tree
-      ( const RooAddPdf&        addpdf        ,
-        const RooAbsCollection& observables   ,
-        const RooAbsCollection* normalization , 
-        const RooFitResult&     fitresult     ) ;  
       // copy constructor 
       SPlot4Tree ( const SPlot4Tree&  right ) ;
+      // move constructor 
+      SPlot4Tree (       SPlot4Tree&& right ) = default ;
+      // ======================================================================
+      // destructore 
+      virtual ~SPlot4Tree() ;
       // ======================================================================      
     public:
       // ======================================================================
@@ -95,14 +71,14 @@ namespace Ostap
       const RooArgList&   coefficients () const { return *m_coefs  ; }
       /// fit result
       const RooFitResult& fitresult    () const { return *m_result ; }
-      /// size of object: number of ocmponnent
+      /// size of object: number of componnents
       std::size_t         size         () const ; 
       // ======================================================================      
     private:
       // ======================================================================
       /// components 
       std::unique_ptr<RooArgList>               m_cmps   {} ; // components 
-      /// coefficients 
+      /// coefficients
       std::unique_ptr<RooArgList>               m_coefs  {} ; // coefficients 
       /// fir result
       std::unique_ptr<Ostap::Utils::FitResults> m_result {} ; // 
@@ -111,7 +87,7 @@ namespace Ostap
     // ========================================================================
   } //                                   The END of namespace Ostap::MoreRooFit
   // ==========================================================================
-} //                                     The END of namespace Ostap::MoreRooFit
+} //                                                 The END of namespace Ostap
 // ============================================================================
 #endif // OSTAP_SPLOT4TREE_H 
 // ============================================================================

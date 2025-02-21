@@ -44,7 +44,9 @@ from   ostap.fitting.pdfbasic     import ( APDF1 ,
                                            PDF2  , Generic2D_pdf )
 from   ostap.fitting.variables    import FIXVAR
 from   ostap.histos.histos        import Histo1DFun, Histo2DFun 
-from   ostap.utils.basic          import typename 
+from   ostap.utils.basic          import typename
+from   ostap.utils.progress_bar   import progress_bar 
+import ostap.trees.trees 
 import ostap.fitting.roofitresult
 import ROOT, abc
 # =============================================================================
@@ -98,8 +100,9 @@ class sPlot(object) :
                    dataset    = None , 
                    fitresult  = None ,  
                    fast       = True ,   ## fast histogram filling ? (bin centers)
-                   access     = {}   ,   ## histogram access options 
-                   fitopts    = {}   ) : ## PDF.fitTo options 
+                   access     = {}   ,   ## histogram access options
+                   fitopts    = {}   ,   ## PDF.fitTo options 
+                   progress   = True ) : 
         
         assert dataset or fitresult, 'Either dataset or fitresult must be specified!'
 
@@ -118,7 +121,7 @@ class sPlot(object) :
         names  = tuple ( sorted ( set ( c.name for c in cmps ) ) ) 
 
         # =====================================================================
-        ## if  datset is specified - perform the fit
+        ## if  dataset is specified - perform the fit
         if  dataset : # =======================================================
             # =================================================================
             ## get all parameters 
@@ -141,41 +144,64 @@ class sPlot(object) :
                 ns = ', '.join ( n for n in names  )                 
                 raise TypeError ( "Please re-run fit with with (at most) floating: %s" % ns )
 
+        self.__pdf         = pdf
+        self.__fitresult   = fitresult 
+        self.__template    = template 
+        self.__fast        = fast
+        self.__access      = access
+        self.__progress    = True if progress else False
+
+        self.__hcomponents = {} 
+        self.__hweights    = {} 
+        self.__components  = {} 
+        self.__weights     = {} 
+        
+    ## calculate sPlot histograms 
+    def calculate ( self , progress = True )  :
+        """ Calculate sPlot histograms 
+        """
+        
         ## dictionary of components 
         hcomponents  = {}
         
         ## get the list of PDFs 
-        cpdfs        = pdf.alist_cmp 
+        cpdfs        = self.pdf.alist_cmp 
 
-        if not fast : logger.warning  ( "sPlot(fast=False) is specified: it could be biased!" )
-
+        if not self.fast : logger.warning  ( "sPlot(fast=False) is specified: it could be biased!" )
+        
         ## total (extended) sum of all components 
         total = None
 
-        ## 1) get the fit components in a form of histograms & calcualte the total (extended) sum 
-        for p , v in zip  ( cpdfs , pdf.alist2  ) :
+        ## 1) get the fit components in a form of histograms & calcualte the total (extended) sum
+        nmax = min ( len ( cpdfs ) , len ( self.pdf.alist2 ) ) 
+        for p , v in progress_bar ( zip ( cpdfs , self.pdf.alist2 ) ,
+                                    max_value = nmax                ,
+                                    description = '#Components:' , silent = not self.progress ) : 
             
-            if fast      : hc = p.roo_histo ( histo = template , events = False )
-            else         : hc = p.    histo ( histo = template , events = False , errors = False , integral = False )
+            if self.fast : hc = p.roo_histo ( histo = self.__template , events = False )
+            else         : hc = p.    histo ( histo = self.__template , events = False , errors = False , integral = False )
 
             key = v.name
             
             hcomponents [ key ] = hc
 
             ## calcuate the total (extendd) sum 
-            factor = float ( fitresult ( key ) [ 0 ] )
+            factor = float ( self.fitresult ( key ) [ 0 ] )
             if not total : total  = hc * factor 
             else         : total += hc * factor 
 
         # =======================================================================
         ## calculate the weights
         # ========================================================================
+        cmps   = self.pdf.alist2 
+        names  = tuple ( sorted ( set ( c.name for c in cmps ) ) ) 
+
         hweights = {}
         for i , iname  in enumerate ( names ) :
             
             cmp = None 
             for j, jname in enumerate ( names ) : 
-                cov_ij = fitresult.cov ( iname , jname ) 
+                cov_ij = self.__fitresult.cov ( iname , jname ) 
                 if not cmp : cmp  = cov_ij * hcomponents [ jname ] 
                 else       : cmp += cov_ij * hcomponents [ jname ] 
                 
@@ -186,52 +212,93 @@ class sPlot(object) :
 
         self.__hcomponents = hcomponents
         self.__hweights    = hweights 
-        self.__access      = access
 
-        """
-        spl = Ostap.MoreRooFit.SPlot2Tree ( pdf.pdf   ,
-                                            pdf.vars  ,
-                                            fitresult )
-        print ( ' PDF:'            , spl.pdf          () )
-        print ( ' observables:'    , spl.observables  () )
-        print ( ' componnets:'     , spl.components   () )
-        print ( ' coefficiencts:'  , spl.coefficients () )
-        print ( ' normalisation :' , spl.normalization () )
-        print ( ' fitesult:'       , spl.fitresult  () )
-        """
-        
+        self.__components = {}
+        self.__weights    = {}        
+        for k in self.__hcomponents : self.__components [ k ] = self.HFUN ( self.__hcomponents [ k ] , **self.access )
+        for k in self.__hweights    : self.__weights    [ k ] = self.HFUN ( self.__hweights    [ k ] , **self.access )          
+
     @property
-    def hcomponents ( self ) :
-        """'hcomponents' : get fit components  (as 1D-histograms)"""
-        return self.__hcomponents
-        
+    def pdf         ( self ) :
+        """`pdf` : actual fit pdf"""
+        return self.__pdf
+
     @property
-    def hweights    ( self ) :
-        """'hweights'    : get sWeights (as 1D-histograms)"""
-        return self.__hweights
+    def fitresult  ( self ) :
+        """`fitresult` : fit results"""
+        return self.__fitresult 
 
     @property
     def access ( self ) :
         """'access' : parameters for histogram->function transition"""
         return self.__access
+    
+    @property
+    def fast    ( self  ) :
+        """`fast` : use bin centers of intergal over bins? """
+        return self.__fast
+
+    @property
+    def progress ( self  ) :
+        """`progress` : show progress?"""
+        return self.__progress
+
+    @property
+    def hcomponents ( self ) :
+        """'hcomponents' : get fit components  (as 1D-histograms)"""
+        if not self.__hcomponent : self.calculate () 
+        return self.__hcomponents
+        
+    @property
+    def hweights    ( self ) :
+        """'hweights'    : get sWeights (as 1D-histograms)"""
+        if not self.__hweights : self.calculate () 
+        return self.__hweights
+
+    @property
+    def components  ( self ) :
+        """'components'  :  get fit components (as nD-functions)"""
+        if not self.__components : self.calculate() 
+        return self.__components 
+
+    @property
+    def weights ( self ) :
+        """'weights'     : get sWeights (as nD-functions)"""
+        if not self.__weights : self.calculate() 
+        return self.__weights
 
     ## serialisation/pickling 
     def __getstate__  ( self ) :
         """ Serializarion/pickling
         """
-        return { 'hcomponents' : self.hcomponents ,
-                 'hweights'    : self.hweights    ,
-                 'access'      : self.access      } 
-    
+        state = { 'pdf'       : self.pdf        ,
+                  'fitresult' : self.fitresult  ,
+                  'template'  : self.__template ,
+                  'fast'      : self.fast       , 
+                  'access'    : self.access     , 
+                  'progress'  : self.progress   }
+        if self.__hcomponents :  state ['hcomponents'] = self.__hcomponents
+        if self.__hweights    :  state ['hweights']    = self.__hweights         
+        return state 
     # =========================================================================
     ## deserialisation/unpickling
     def __setstate__  ( self , state ) :
         """ Deserialisation/unpickling
         """
-        self.__hcomponents = state.get ( 'hcomponents' , {} ) 
-        self.__hweights    = state.get ( 'hweights'    , {} ) 
-        self.__access      = state.get ( 'access'      , {} )
+        self.__pdf         = state.get ( 'pdf'         , None )
+        self.__fitresult   = state.get ( 'fitresult'   , None )
+        self.__template    = state.get ( 'template'    , None )
+        self.__access      = state.get ( 'access'      , {}   )
+        self.__fast        = state.get ( 'fast'        , True )
+        self.__progress    = state.get ( 'progress'    , True )
+        self.__hcomponents = state.get ( 'hcomponents' , {}   )
+        self.__hweights    = state.get ( 'hweights'    , {}   )
         
+        self.__components = {}
+        self.__weights    = {}        
+        for k in self.__hcomponents : self.__components [ k ] = self.HFUN ( self.__hcomponents [ k ] , **self.access )
+        for k in self.__hweights    : self.__weights    [ k ] = self.HFUN ( self.__hweights    [ k ] , **self.access )          
+    
     # =========================================================================
     ## Add sPlot results to TTree
     #  @code
@@ -239,41 +306,55 @@ class sPlot(object) :
     #  tree  = ...
     #  splot.add_to_tree ( tree , parallel = True , suffix = '_sw'
     #  @endcode 
-    def _add_to_tree ( self , tree , vars , prefix = '' , suffix = '_sw' , parallel = False ) :
+    def _add_to_tree ( self , tree , *vars , prefix = '' , suffix = '_sw' , unbinned = True , parallel = False ) :
         """ Add sPlot results to TTree
         >>> splot = ...
         >>> tree  = ...
         >>> splot.add_to_tree ( tree , parallel = True , suffix = '_sw'
         """
-        import ostap.trees.trees 
         assert tree and isinstance ( tree , ROOT.TTree   ) , "sPlot: Ivalid tree!"
         for var in vars : 
             assert var  and isinstance ( var  , string_types ) and var in tree, "sPlot: Variable '%s' not in the tree" % var 
-        
+
         if parallel :
             import ostap.parallel.parallel_add_branch
             
         suffix = suffix.replace ( ' ' , '_' ).replace ( '-' , '_' ).strip() 
         prefix = prefix.replace ( ' ' , '_' ).replace ( '-' , '_' ).strip() 
 
-        fmap   = {}
-        for ww in self.hweights  :            
-            hw     = self.hweights [ ww ]
+        if unbinned :
+            
+            ## add to tree using Splti4tree machinery :
+            splot = Ostap.MoreRooFit.SPlot4Tree (
+                self.pdf.pdf   ,
+                self.pdf.vars  ,
+                self.fitresult , 
+                self.pdf.vars  ,
+            )
 
-            newvar = '%s%s%s' % ( prefix , ww , suffix )
-            fw     = self.make_thfun ( hw , *vars )        
-                                               
-            assert not newvar in tree , "sPlot: Variable '%s' is already in the Tree!" % newvar 
-            fmap [ newvar ] = fw
-                        
-        vvs = sorted ( fmap.keys() )
-        bbs = ','.join ( vvs ) 
-        logger.info ( "Adding sPlot results %s to TTree" % vvs ) 
+            kwargs = { 'prefix' : prefix , 'suffix' : suffix , 'progress' : self.progress , 'report' : True }
+            if parallel : result = tree.padd_new_branch ( splot , **kwargs ) 
+            else        : result = tree. add_new_branch ( splot , **kwargs )
 
-        if parallel : result = tree.padd_new_branch ( fmap ) 
-        else        : result = tree. add_new_branch ( fmap )
-
-        del fmap
+        else : 
+        
+            fmap   = {}
+            for ww in self.hweights  :            
+                hw     = self.hweights [ ww ]
+                
+                newvar = '%s%s%s' % ( prefix , ww , suffix )
+                fw     = self.make_thfun ( hw , *vars )        
+                
+                assert not newvar in tree , "sPlot: Variable '%s' is already in the Tree!" % newvar 
+                fmap [ newvar ] = fw
+                
+                vvs = sorted ( fmap.keys() )
+                bbs = ','.join ( vvs )
+                logger.info ( "Adding sPlot results %s to TTree" % vvs )
+                
+            kwargs = { 'progress' : self.progress , 'report' : True }
+            if parallel : result = tree.padd_new_branch ( fmap , **kwargs ) 
+            else        : result = tree. add_new_branch ( fmap , **kwargs )
         
         return result 
 
@@ -328,7 +409,8 @@ class sPlot1D(sPlot) :
                    fast      = True ,   ## fast histogram filling ? (bin centers)
                    nbins     = 200  ,   ## histogram binning 
                    access    = {}   ,   ## histogram access options 
-                   fitopts   = {}   ) : ## PDF.fitTo options 
+                   fitopts   = {}   ,   ## PDF.fitTo options 
+                   progress  = True ) :
 
         ## 
         assert isinstance ( pdf   , PDF1          ) ,               'Invalid type of PDF!'
@@ -339,7 +421,7 @@ class sPlot1D(sPlot) :
         
         ## template histogram 
         template = pdf.make_histo ( nbins )
-
+        
         ## initialize the base class 
         sPlot.__init__ ( self ,
                          pdf       = pdf       ,
@@ -348,39 +430,15 @@ class sPlot1D(sPlot) :
                          fitresult = fitresult ,
                          fast      = fast      ,
                          access    = access    ,
-                         fitopts   = fitopts   )
+                         fitopts   = fitopts   ,
+                         progress  = progress  )
         
         ## we do not need it anymore 
         del template
         
-        # =====================================================================
-        ## specisic post-action for 1D
-        self.__components, self.__weights  = {} , {}         
-        for k in self.hcomponents : self.__components [ k ] = Histo1DFun ( self.hcomponents [ k ] , **self.access )
-        for k in self.hweights    : self.__weights    [ k ] = Histo1DFun ( self.hweights    [ k ] , **self.access )  
-
-    # =========================================================================
-    ## deserialisation/unpickling
-    def __setstate__  ( self , state ) :
-        """ Deserialisation/unpickling
-        """
-        ## reconstruct the base 
-        sPlot.__setstate__ ( self , state )  
-        ## specisic post-action for 1D
-        self.__components, self.__weights  = {} , {}         
-        for k in self.hcomponents : self.__components [ k ] = Histo1DFun ( self.hcomponents [ k ] , **self.access )
-        for k in self.hweights    : self.__weights    [ k ] = Histo1DFun ( self.hweights    [ k ] , **self.access )  
-    
-    @property
-    def components  ( self ) :
-        """'components'  :  get fit components (as 1D-functions)"""
-        return self.__components 
-
-    @property
-    def weights     ( self ) :
-        """'weights'     : get sWeights (as 1D-functions)"""
-        return self.__weights
-
+    ## H-function type 
+    def HFUN  ( self , *args , **kwargs ) : return Histo1DFun ( *args , **kwargs ) 
+        
     # =========================================================================
     ## Add sPlot results to TTree
     #  @code
@@ -388,13 +446,13 @@ class sPlot1D(sPlot) :
     #  tree  = ...
     #  splot.add_to_tree ( tree , xvar , parallel = True , suffix = '_sw'
     #  @endcode 
-    def add_to_tree ( self , tree , xvar , suffix = '_sw' , prefix = '' , parallel = False ) :
+    def add_to_tree ( self , tree , xvar , * , suffix = '_sw' , prefix = '' , unbinned = True , parallel = False ) :
         """ Add sPlot results to TTree
         >>> splot = ...
         >>> tree  = ...
         >>> splot.add_to_tree ( tree , xvar , parallel = True , suffix = '_sw'
         """
-        return self._add_to_tree ( tree , ( xvar, ) , suffix = suffix , prefix = prefix , parallel = parallel )
+        return self._add_to_tree ( tree , xvar , suffix = suffix , prefix = prefix , unbinned = unbinned , parallel = parallel )
     
     # =========================================================================
     ## make proper TH1 function 
@@ -447,7 +505,8 @@ class sPlot2D(sPlot) :
                    xbins     = 100           ,   ## histogram binning 
                    ybins     = 100           ,   ## histogram binning 
                    access    = {}            ,   ## histogram access options 
-                   fitopts   = {}            ) : ## PDF.fitTo options 
+                   fitopts   = {}            ,   ## PDF.fitTo options 
+                   progress  = True          ) :
 
         ## 
         assert isinstance ( pdf   , PDF2          )               , 'Invalid type of PDF!'
@@ -468,39 +527,14 @@ class sPlot2D(sPlot) :
                          fitresult = fitresult ,
                          fast      = fast      ,
                          access    = access    ,
-                         fitopts   = fitopts   )
+                         fitopts   = fitopts   ,
+                         progress  = progress  )
 
         ## we do not need it anymore 
         del template
         
-        # =====================================================================
-        ## specific post-action for 2D
-        self.__components, self.__weights  = {} , {}         
-        for k in self.hcomponents : self.__components [ k ] = Histo2DFun ( self.hcomponents [ k ] , **self.access )
-        for k in self.hweights    : self.__weights    [ k ] = Histo2DFun ( self.hweights    [ k ] , **self.access )  
-
-    # =========================================================================
-    ## deserialisation/unpickling
-    def __setstate__  ( self , state ) :
-        """ Deserialisation/unpickling
-        """
-        ## reconstruct the base 
-        sPlot.__setstate__ ( self , state )  
-        # =====================================================================
-        ## specific post-action for 2D
-        self.__components , self.__weights  = {} , {}         
-        for k in self.hcomponents : self.__components [ k ] = Histo2DFun ( self.hcomponents [ k ] , **self.access )
-        for k in self.hweights    : self.__weights    [ k ] = Histo2DFun ( self.hweights    [ k ] , **self.access )  
-    
-    @property
-    def components  ( self ) :
-        """'components'  :  get fit components (as 1D-functions)"""
-        return self.__components 
-
-    @property
-    def weights     ( self ) :
-        """'weights'     : get sWeights (as 1D-functions)"""
-        return self.__weights
+    ## H-function type 
+    def HFUN  ( self , *args , **kwargs ) : return Histo2DFun ( *args , **kwargs ) 
 
     # =========================================================================
     ## Add sPlot results to TTree
@@ -509,13 +543,13 @@ class sPlot2D(sPlot) :
     #  tree  = ...
     #  splot.add_to_tree ( tree , xvar , yvar , parallel = True , suffix = '_sw'
     #  @endcode 
-    def add_to_tree ( self , tree , xvar , yvar , suffix = '_sw' , prefix = ''  , parallel = False ) :
+    def add_to_tree ( self , tree , xvar , yvar , * , suffix = '_sw' , prefix = ''  , unbinned = True , parallel = False ) :
         """ Add sPlot results to TTree
         >>> splot = ...
         >>> tree  = ...
         >>> splot.add_to_tree ( tree , xvar , yvar , parallel = True , suffix = '_sw'
         """
-        return self._add_to_tree ( tree , ( xvar, yvar) , suffix = suffix , prefix = '' , parallel = parallel )
+        return self._add_to_tree ( tree , xvar, yvar , suffix = suffix , prefix = prefix , unbineed = unbinned , parallel = parallel )
     
     # =========================================================================
     ## make proper TH2-function 
@@ -569,7 +603,8 @@ class sPlot3D(sPlot) :
                    ybins     = 100           , ## histogram binning 
                    zbins     = 100           , ## histogram binning 
                    access    = {}            , ## histogram access options 
-                   fitopts   = {}            ) : ## PDF.fitTo options 
+                   fitopts   = {}            , ## PDF.fitTo options 
+                   progress  = True          ) :
 
         ## 
         assert isinstance ( pdf   , PDF3          )               , 'Invalid type of PDF!'
@@ -583,6 +618,9 @@ class sPlot3D(sPlot) :
         ## template histogram 
         template = pdf.make_histo ( xbins , ybins , zbins )
 
+        ## H-function type 
+        self.HFUN = Histo3DFun
+        
         ## initialize the base class 
         sPlot.__init__ ( self ,
                          pdf       = pdf       ,
@@ -591,39 +629,14 @@ class sPlot3D(sPlot) :
                          fitresult = fitresult ,
                          fast      = fast      ,
                          access    = access    ,
-                         fitopts   = fitopts   )
+                         fitopts   = fitopts   ,
+                         progress  = progress  )
 
         ## we do not need it anymore 
         del template
         
-        # =====================================================================
-        ## specific post-action for 3D
-        self.__components, self.__weights  = {} , {}         
-        for k in self.hcomponents : self.__components [ k ] = Histo3DFun ( self.hcomponents [ k ] , **self.access )
-        for k in self.hweights    : self.__weights    [ k ] = Histo3DFun ( self.hweights    [ k ] , **self.access )  
-
-    # =========================================================================
-    ## deserialisation/unpickling
-    def __setstate__  ( self , state ) :
-        """ Deserialisation/unpickling
-        """
-        ## reconstruct the base 
-        sPlot.__setstate__ ( self , state )  
-        # =====================================================================
-        ## specific post-action for 3D
-        self.__components , self.__weights  = {} , {}         
-        for k in self.hcomponents : self.__components [ k ] = Histo3DFun ( self.hcomponents [ k ] , **self.access )
-        for k in self.hweights    : self.__weights    [ k ] = Histo3DFun ( self.hweights    [ k ] , **self.access )  
-    
-    @property
-    def components  ( self ) :
-        """'components'  :  get fit components (as 1D-functions)"""
-        return self.__components 
-
-    @property
-    def weights     ( self ) :
-        """'weights'     : get sWeights (as 1D-functions)"""
-        return self.__weights
+    ## H-function type 
+    def HFUN  ( self , *args , **kwargs ) : return Histo3DFun ( *args , **kwargs ) 
 
     # =========================================================================
     ## Add sPlot results to TTree
@@ -632,13 +645,13 @@ class sPlot3D(sPlot) :
     #  tree  = ...
     #  splot.add_to_tree ( tree , xvar , yvar , xvar , parallel = True , suffix = '_sw'
     #  @endcode 
-    def add_to_tree ( self , tree , xvar , yvar , zvar , suffix = '_sw' , prefix = ''  , parallel = False ) :
+    def add_to_tree ( self , tree , xvar , yvar , zvar , * , suffix = '_sw' , prefix = ''  , unbinned = True , parallel = False ) :
         """ Add sPlot results to TTree
         >>> splot = ...
         >>> tree  = ...
         >>> splot.add_to_tree ( tree , xvar , yvar , zvar , parallel = True , suffix = '_sw'
         """
-        return self._add_to_tree ( tree , ( xvar, yvar , zvar ) , suffix = suffix , prefix = '' , parallel = parallel )
+        return self._add_to_tree ( tree , xvar, yvar , zvar , suffix = suffix , prefix = prefix  , unbinned = unbinned , parallel = parallel )
     
     # =========================================================================
     ## make proper TH3 function 
@@ -647,6 +660,30 @@ class sPlot3D(sPlot) :
         """
         return Ostap.Functions.FuncTH3 ( histo , xvar , yvar , zvar )
     
+
+
+
+
+# =============================================================================
+## reconstrucct SPlot4Tree object
+def _sp4t_factory_ ( *args ) :
+    """ Reconstrucct SPlot4Tree object
+    """
+    result = Ostap.MoreRooFit.SPlot4Tree ( *args )
+    result._args = args
+    return result
+# =============================================================================
+## reduce SPlit3Tree object 
+def _sp4t_reduce_  ( sp4t   ) :
+    """ Reduce SPlit3Tree object
+    """
+    return _sp4t_factory_ , ( sp4t.pdf           () ,
+                              sp4t.observables   () ,
+                              sp4t.fitresult     () ,                            
+                              sp4t.normalization () )
+
+Ostap.MoreRooFit.SPlot4Tree.__reduce__ = _sp4t_reduce_
+
 ## =============================================================================
 if '__main__' == __name__ :
     

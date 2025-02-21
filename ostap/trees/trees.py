@@ -2512,14 +2512,17 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         logger.debug ( 'prepare_branches: case [1] %s' % typename ( branch ) ) 
         
     elif isinstance ( branch , Ostap.MoreRooFit.SPlot4Tree ) and not 'name' in kwargs :        
-        ## (very) special case 
+        ## (very) special case
+        
         prefix   = kwargs.pop ( 'prefix'  , ''    )
         suffix   = kwargs.pop ( 'suffix'  , '_sw' )
         mapping  = kwargs.pop ( 'mapping' , {}    )
+        the_map  = Ostap.Trees.DCT()
+        for key, value in loop_items ( mapping ) : the_map[ key ] = value
         for c in branch.coefficients() : new_branches.add ( prefix + c.name  + suffix )        
-        args     = branch , prefix , suffix , mapping
+        args     = branch , prefix , suffix , the_map 
         logger.debug ( 'prepare_branches: case [2] %s' % typename ( branch ) ) 
-        
+
     elif isinstance ( branch , Ostap.IFuncTree ) and 'name' in kwargs :
         ## a simple function        
         args     = branch ,
@@ -2672,7 +2675,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         assert not name in tree , "Branch/leave `%s' is already in the Treee!" % name   
 
     logger.debug ( 'prepare_bramnches, end...' ) 
-    return args , new_branches , kwargs, keeper 
+    return args , new_branches , kwargs , keeper 
 
 
 # ===============================================================================

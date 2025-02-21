@@ -108,7 +108,7 @@ def test_splotting  () :
     - write sPlot results into oroigin Ttree
     """
     
-    files = prepare_data ( 1 , 1000 )
+    files = prepare_data ( 10 , 10000 )
     
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data ( 'S' , files )
@@ -146,7 +146,8 @@ def test_splotting  () :
         
     title = "Fit results for" 
     logger.info ('%s:\n%s' % ( title  , r.table ( title = title , prefix = '# ') ) ) 
-    
+
+    ## binnings  
     for fast in ( True , False ) :
 
         sp  = sPlot1D ( model , dataset = histo  , nbins = 500 , fast = fast ) ## SPLOT IT! 
@@ -166,49 +167,72 @@ def test_splotting  () :
             db ['splot,h;fast=%s' % fast ] = sph   
             db ['splot,f;fast=%s' % fast ] = fnsp  
             db.ls()
-            
-        with timing ( "Adding sPlot results to TTree/TChain" , logger = logger ) :
+
+
+        with timing ( "Adding   BINNED sPlot results to TTree/TChain" , logger = logger ) :
             chain = data.chain
-            sp.add_to_tree ( chain , 'x' , prefix = 'f' if fast else 'n' , parallel = False ) 
+            sp.add_to_tree ( chain , 'x' , prefix = 'f' if fast else 'n' ,  unbinned = False , parallel = True )
+
             
-    chain = data.chain 
+    with timing ( "Adding UNBINNED sPlot results to TTree/TChain" , logger = logger ) :
+        chain = data.chain 
+        sp    = sPlot1D ( model , dataset = histo  , nbins = 500 , fast = fast ) ## SPLOT IT! 
+        sp.add_to_tree ( chain , 'x' , prefix = 'u' , unbinned = True , parallel = True )
+
+    chain = data.chain
+    
     nS_sw = chain.statVar ( 'nS_sw' )
     fS_sw = chain.statVar ( 'fS_sw' )
-    diff  = chain.statVar ( 'nS_sw-fS_sw' )
+    uS_sw = chain.statVar ( 'uS_sw' )
+
+    dun   = chain.statVar ( 'uS_sw - nS_sw' )
+    duf   = chain.statVar ( 'uS_sw - fS_sw' )
+    dnf   = chain.statVar ( 'nS_sw - fS_sw' )
     
     logger.info ( 'nS_sw: %s' % nS_sw )
     logger.info ( 'fS_sw: %s' % fS_sw )    
-    logger.info ( 'diff : %s' % diff )
+    logger.info ( 'uS_sw: %s' % uS_sw )
+    logger.info ( 'u-n  : %s' % dun   )
+    logger.info ( 'u-f  : %s' % duf   )
+    logger.info ( 'n-f  : %s' % dnf   )
 
-
-    hs  = ROOT.TH1D( hID() , 'y for signal'     , 100 , ymin , ymax )
-    hb  = ROOT.TH1D( hID() , 'y for background' , 100 , ymin , ymax )
-    hsf = ROOT.TH1D( hID() , 'y for signal'     , 100 , ymin , ymax )
-    hbf = ROOT.TH1D( hID() , 'y for background' , 100 , ymin , ymax )
-
-    hs .red  ()
-    hb .blue ()
+    hsn  = ROOT.TH1D( hID() , 'y for signal'     , 100 , ymin , ymax )
+    hbn  = ROOT.TH1D( hID() , 'y for background' , 100 , ymin , ymax )
+    hsf  = ROOT.TH1D( hID() , 'y for signal'     , 100 , ymin , ymax )
+    hbf  = ROOT.TH1D( hID() , 'y for background' , 100 , ymin , ymax )
+    hsu  = ROOT.TH1D( hID() , 'y for signal'     , 100 , ymin , ymax )
+    hbu  = ROOT.TH1D( hID() , 'y for background' , 100 , ymin , ymax )
+    
+    hsn.red  ()
+    hbn.blue ()
     hsf.red  ()
     hbf.blue ()
-    
-    with use_canvas ( 'test_tools_splot: y/n', wait = 5 ) :
+    hsu.red  ()
+    hbu.blue ()
+
+    with use_canvas ( 'test_tools_splot: y/n (UNBINNED)', wait = 2 ) :
             
-        chain.project ( hs , 'y' , 'nS_sw'   )
-        hs.draw ()
+        chain.project ( hsu , 'y' , 'uS_sw'   )
+        hsu.draw ()
 
-        chain.project ( hb , 'y' , 'nB_sw'   )        
-        hb.draw ('same')
+        chain.project ( hbu , 'y' , 'uB_sw'   )        
+        hbu.draw ('same')
 
-    with use_canvas ( 'test_tools_splot: y/f ', wait = 5 ) :
+    with use_canvas ( 'test_tools_splot: y/n (N-BINNED)', wait = 2 ) :
+            
+        chain.project ( hsn , 'y' , 'nS_sw'   )
+        hsn.draw ()
 
-        chain.project ( hsf, 'y' , 'fS_sw'   )
-        hsf.draw()
+        chain.project ( hbn , 'y' , 'nB_sw'   )        
+        hbn.draw ('same')
 
-        chain.project ( hbf, 'y' , 'fB_sw'   )        
-        hbf.draw('same')
-        
-    with use_canvas ( 'test_tools_splot: delta', wait = 5 ) :
-        chain.draw ( 'nS_sw-fS_sw' )
+    with use_canvas ( 'test_tools_splot: y/n (F-BINNED)', wait = 2 ) :
+            
+        chain.project ( hsf , 'y' , 'fS_sw'   )
+        hsf.draw ()
+
+        chain.project ( hbf , 'y' , 'fB_sw'   )        
+        hbf.draw ('same')
 
 # =============================================================================
 if '__main__' ==  __name__  :
