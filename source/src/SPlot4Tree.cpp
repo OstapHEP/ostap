@@ -203,6 +203,7 @@ Ostap::Trees::add_branch
   //
   if ( !tree )                       { return INVALID_TREE ; }
   //
+  // keep a local copy
   const Ostap::MoreRooFit::SPlot4Tree the_splot { splot                   } ;
   const Ostap::Trees::RooGetter       getter    ( mapping                 ,
                                                   the_splot.observables() ,

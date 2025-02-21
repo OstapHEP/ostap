@@ -17,12 +17,13 @@
 # ============================================================================= 
 from   ostap.core.core          import Ostap, hID 
 from   ostap.trees.data         import Data
+from   ostap.utils.basic        import typename 
 from   ostap.utils.timing       import timing 
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.fitting.variables  import FIXVAR 
 from   ostap.tools.splot        import sPlot1D
 from   ostap.plotting.canvas    import use_canvas 
-from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.utils        import wait, batch_env
 import ostap.fitting.models     as     Models 
 import ostap.io.zipshelve       as     DBASE 
 import ostap.trees.trees
@@ -145,20 +146,20 @@ def test_splotting  () :
         
     title = "Fit results for" 
     logger.info ('%s:\n%s' % ( title  , r.table ( title = title , prefix = '# ') ) ) 
-  
-    with DBASE.tmpdb()  as db :
+    
+    for fast in ( True , False ) :
+
+        sp  = sPlot1D ( model , dataset = histo  , nbins = 500 , fast = fast ) ## SPLOT IT! 
+        sph = sp.hweights['S']
         
-        for fast in ( True , ) : ## False ) :
-            
-            sp  = sPlot1D ( model , dataset = histo  , nbins = 500 , fast = fast ) ## SPLOT IT! 
-            sph = sp.hweights['S']
-            
-            with use_canvas ( 'test_tools_splot: sPlot') :
-                sph .draw ()
-                value =  float ( sph ( r.mean_G * 1 ) ) 
-                assert 0.7 < value < 1.5 , "Something totally wrong here, fast=%s!" % fast 
+        with use_canvas ( 'test_tools_splot: sPlot') :
+            sph .draw ()
+            value =  float ( sph ( r.mean_G * 1 ) ) 
+            assert 0.7 < value < 1.5 , "Something totally wrong here, fast=%s!" % fast 
                 
-            fnsp = Ostap.Functions.FuncTH1 ( sph , 'x' )
+        fnsp = Ostap.Functions.FuncTH1 ( sph , 'x' )
+        
+        with DBASE.tmpdb()  as db :
             
             db ['histo;fast=%s'   % fast ] = histo 
             db ['splot;fast=%s'   % fast ] = sp    
@@ -166,11 +167,10 @@ def test_splotting  () :
             db ['splot,f;fast=%s' % fast ] = fnsp  
             db.ls()
             
-            with timing ( "Adding sPlot results to TTree/TChain" , logger = logger ) :
-                chain = data.chain
-                sp.add_to_tree ( chain , 'x' , prefix = 'f' if fast else 'n' , parallel = False ) 
-
-    return 1 
+        with timing ( "Adding sPlot results to TTree/TChain" , logger = logger ) :
+            chain = data.chain
+            sp.add_to_tree ( chain , 'x' , prefix = 'f' if fast else 'n' , parallel = False ) 
+            
     chain = data.chain 
     nS_sw = chain.statVar ( 'nS_sw' )
     fS_sw = chain.statVar ( 'fS_sw' )

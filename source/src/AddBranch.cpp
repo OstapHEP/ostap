@@ -66,7 +66,7 @@ Ostap::Trees::Branches::Branches
   : m_names () 
   , m_map   () 
 { 
-  for ( const std::string& name : right )
+  for ( const std::string& name : right.names() )
     {
       const Ostap::IFuncTree* fun = right.branch ( name ) ;
       Ostap::Assert ( nullptr != fun  ,
@@ -272,7 +272,6 @@ Ostap::Trees::add_branch
 
   /// (1) keep branches locally 
   const Ostap::Trees::Branches lbranches { branches } ;
-  // const Ostap::Trees::Branches& lbranches = branches ;
 
   /// #of brached to be added 
   const std::size_t N = lbranches.size() ;  
@@ -288,7 +287,7 @@ Ostap::Trees::add_branch
   // Notifier (needed for chain processing 
   Ostap::Utils::Notifier notifier { tree } ;
   /// create branches# 
-  for ( const std::string& name : lbranches ) 
+  for ( const std::string& name : lbranches.names() ) 
     {
       // ======================================================================
       const Ostap::IFuncTree* func = lbranches.branch ( name ) ;;

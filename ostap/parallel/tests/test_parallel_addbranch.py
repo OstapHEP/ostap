@@ -22,7 +22,6 @@ Four ways to add branch into TTree/Tchain
 - using histogram sampling
 """
 # ============================================================================= 
-from   ostap.core.meta_info               import root_info
 from   ostap.core.pyrouts                 import hID , Ostap 
 from   ostap.trees.data                   import Data
 from   ostap.math.make_fun                import make_fun1, make_fun2, make_fun3 
@@ -294,25 +293,24 @@ def test_addbranch() :
     # =========================================================================
     ## (8) add several functions simultaneously 
     # =========================================================================
-    if not ( 6 , 32 ) <= root_info < ( 6 , 35 ) :  
-        with timing ('sim-funcs' , logger = logger ) as timer :          
-            from   ostap.trees.funcs  import FuncTH1
-            hh    = ROOT.TH1D ( hID() , 'some pt-correction' , 100 , 0 , 10 )
-            h1    = hh + ( lambda x :  1.0 + math.tanh ( 0.1 * ( x - 5 ) ) )
-            ptw3  = FuncTH1 ( h1 , 'pt' )
-            h2    = h1 + ( lambda x :  1.0 + math.tanh ( 0.2 * ( x - 5 ) ) )
-            ptw4  = FuncTH1 ( h2 , 'pt' )
-            h3    = h1 + ( lambda x :  1.0 + math.tanh ( 0.3 * ( x - 5 ) ) ) 
-            ptw5  = FuncTH1 ( h3 , 'pt' )
-            chain = data.chain
-            brs   = { 'ptw3' : ptw3 , 'ptw4' : ptw4 , 'ptw5' : ptw4 } 
-            chain = chain.padd_new_branch ( brs )     
-        rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
-        ## reload the chain and check: 
-        assert 'ptw3' in chain , "Branch `ptw3' is  not here!"
-        assert 'ptw4' in chain , "Branch `ptw4' is  not here!"
-        assert 'ptw5' in chain , "Branch `ptw5' is  not here!"
-        
+    with timing ('sim-funcs' , logger = logger ) as timer :          
+        from   ostap.trees.funcs  import FuncTH1
+        hh    = ROOT.TH1D ( hID() , 'some pt-correction' , 100 , 0 , 10 )
+        h1    = hh + ( lambda x :  1.0 + math.tanh ( 0.1 * ( x - 5 ) ) )
+        ptw3  = FuncTH1 ( h1 , 'pt' )
+        h2    = h1 + ( lambda x :  1.0 + math.tanh ( 0.2 * ( x - 5 ) ) )
+        ptw4  = FuncTH1 ( h2 , 'pt' )
+        h3    = h1 + ( lambda x :  1.0 + math.tanh ( 0.3 * ( x - 5 ) ) ) 
+        ptw5  = FuncTH1 ( h3 , 'pt' )
+        chain = data.chain
+        brs   = { 'ptw3' : ptw3 , 'ptw4' : ptw4 , 'ptw5' : ptw4 } 
+        chain = chain.padd_new_branch ( brs )     
+    rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
+    ## reload the chain and check: 
+    assert 'ptw3' in chain , "Branch `ptw3' is  not here!"
+    assert 'ptw4' in chain , "Branch `ptw4' is  not here!"
+    assert 'ptw5' in chain , "Branch `ptw5' is  not here!"
+    
     h1 = ROOT.TH1D ( hID() , 'Gauss1' , 120 , -6 , 6 )
     h2 = ROOT.TH2D ( hID() , 'Gauss2' ,  50 , -6 , 6 , 50 , -6 , 6 )
     h3 = ROOT.TH3D ( hID() , 'Gauss2' ,  20 , -6 , 6 , 20 , -6 , 6 , 20 , -6 , 6 )

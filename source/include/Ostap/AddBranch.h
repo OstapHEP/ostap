@@ -108,16 +108,14 @@ namespace Ostap
       // ======================================================================
       typedef const Ostap::IFuncTree*                  BRANCH          ;
       typedef std::vector<std::string>                 NAMES           ; 
-      typedef NAMES::const_iterator                    const_iterator; ; 
-      typedef const_iterator                           iterator        ; 
       // ======================================================================
       typedef std::map<std::string,BRANCH>             BRANCHES        ;  
       // ======================================================================
     public:
+      // =====================================================================
+      const NAMES& names    () const  { return m_names ; }
+      const NAMES& branches () const  { return m_names ; }
       // =====================================================================      
-      const_iterator begin  () const { return m_names.begin () ; }
-      const_iterator end    () const { return m_names.end   () ; }
-      // ======================================================================
       bool has_key ( const std::string& name ) const ; 
       // ======================================================================
       /// get new branch by name 

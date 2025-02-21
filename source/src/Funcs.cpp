@@ -315,14 +315,6 @@ double Ostap::Functions::FunTree::operator() ( const TTree* tree ) const
   return m_fun ( m_tree ) ;
 }
 // ============================================================================
-
-#include <iostream>
-namespace
-{
-  std::size_t s_ID { 0 } ;
-}
-
-
 Ostap::Functions::Func1D::Func1D
 ( std::function<double(double)> fun  , 
   const std::string&            x    ,
@@ -332,10 +324,7 @@ Ostap::Functions::Func1D::Func1D
   , m_xvar_exp ( x       ) 
   , m_xvar     { nullptr }
   , m_tree     { tree    }
-{
-  s_ID += 1 ;
-  std::cerr << " CREATE ME " << s_ID  <<  "  " <<  this <<std::endl ;
-}     
+{}     
 // ============================================================================
 // copy constructor 
 // ============================================================================
@@ -347,10 +336,7 @@ Ostap::Functions::Func1D::Func1D
   , m_xvar_exp       ( right.m_xvar_exp ) 
   , m_xvar           ( nullptr          )
   , m_tree           ( right.m_tree     ) 
-{
-  s_ID += 1 ;
-  std::cerr << " COPY   ME " << s_ID  <<  "  " <<  this <<std::endl ;
-}
+{}
 // ===========================================================================
 // clone :
 // ===========================================================================
@@ -395,13 +381,12 @@ double Ostap::Functions::Func1D::operator() ( const TTree* tree ) const
   // if ( chain ) { tree = chain->GetTree() ; }
   //}
   
-  //
   // the tree 
-  if ( tree != m_tree )
-  { 
-    m_tree = tree  ;
-    m_xvar.reset ( nullptr ) ;
-  }
+  if ( nullptr != tree && tree != m_tree )
+    { 
+      m_tree = tree  ;
+      m_xvar.reset ( nullptr ) ;
+    }
   //
   Ostap::Assert ( nullptr != m_tree , 
                   "Invalid Tree"    , 
@@ -430,12 +415,7 @@ double Ostap::Functions::Func1D::operator() ( const TTree* tree ) const
 // ============================================================================
 
 
-
-Ostap::Functions::Func1D::~Func1D()
-{
-  if ( s_ID ) { s_ID -= 1 ; } ;
-  std::cout << " DELETE ME " << s_ID  <<  "  " <<  this <<std::endl ;
-}
+Ostap::Functions::Func1D::~Func1D(){} 
 Ostap::Functions::Func2D::~Func2D(){};
 Ostap::Functions::Func3D::~Func3D(){};
 
@@ -465,10 +445,7 @@ Ostap::Functions::Func2D::Func2D
   , m_xvar           ( nullptr )
   , m_yvar           ( nullptr )
   , m_tree           ( nullptr ) 
-{
-  s_ID += 1 ;
-  std::cout << " COPY MEME " << s_ID  <<  "  " <<  this <<std::endl ;
-}
+{}
 // ===========================================================================
 // clone :
 // ===========================================================================
@@ -531,7 +508,7 @@ double Ostap::Functions::Func2D::operator() ( const TTree* tree ) const
   // }
   //
   // the tree 
-  if ( tree != m_tree )
+  if ( nullptr != tree && tree != m_tree )
   { 
     m_tree = tree  ;
     m_xvar.reset ( nullptr ) ;
@@ -686,7 +663,7 @@ double Ostap::Functions::Func3D::operator() ( const TTree* tree ) const
   // }
   //
   // the tree 
-  if ( tree != m_tree )
+  if ( nullptr != tree && tree != m_tree )
   { 
     m_tree = tree  ;
     m_xvar.reset ( nullptr ) ;
@@ -773,20 +750,14 @@ Ostap::Functions::FuncTH1::FuncTH1
   const TTree*                tree  ) 
   : Func1D  ( histo , xvar , tree ) 
   , m_histo ( histo ) 
-{
-  s_ID += 1 ;
-  std::cerr << " AM TH1 CREATE" << s_ID <<  " " << this << std::endl ;
-}
+{}
 // ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::Functions::FuncTH1::FuncTH1
 ( const Ostap::Functions::FuncTH1&  right ) 
   : FuncTH1 ( right.m_histo , right.xvar() , right.tree() )
-{
-  s_ID += 1 ;
-  std::cerr << " AM TH1 COPY" << s_ID <<  " " << this << std::endl ;
-}
+{}
 // ===========================================================================
 // clone :
 // ===========================================================================

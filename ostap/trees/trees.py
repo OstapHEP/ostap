@@ -2425,11 +2425,18 @@ ROOT.TTree.full_path = property ( tree_path , None , None )
 
 
 # =============================================================================
-## Sem decoration for Ostap.Trees.Branches
+## Some decoration for Ostap.Trees.Branches
+# =============================================================================
+def _brs_iter_  ( brs ) :
+    """ Simple iterator over known valid names of branches """
+    for name in brs.names():
+        branch = brs.branch ( name ) 
+        if name and branch : yield name  
 # =============================================================================
 def _brs_items_  ( brs ) :
-    for name in brs :
-        branch  = brs.branch ( name ) 
+    """ simple iterator over valid (name,function) items"""
+    for name in brs.names() :
+        branch = brs.branch ( name ) 
         if name and branch  : yield name , branch
 # =============================================================================
 def _brs_getitem_  ( brs , name ) :
@@ -2456,8 +2463,9 @@ def _brs_str_      ( brs ) :
     return '{ %s }' % ( ', '.join ( "'%s': %s" % item for item in brs.items() ) )
 def _brs_contains_ ( brs , name  ) :
     return brs.has_key (  name )
-    
+
 Ostap.Trees.Branches.__len__     = lambda s : s.size()
+Ostap.Trees.Branches.__iter__    = _brs_iter_ 
 Ostap.Trees.Branches.items       = _brs_items_ 
 Ostap.Trees.Branches.iteritems   = _brs_items_ 
 Ostap.Trees.Branches.__getitem__ = _brs_getitem_ 
@@ -2483,12 +2491,14 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
     assert isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree ) , \
         "prepare_branches: TTree* is invalis!"
 
+    logger.debug ( 'prepare_branches: start %s' % typename ( branch ) ) 
+    
     ## names for new branches 
     new_branches = set ()
 
     ## keep all information 
-    ## keeper = [ branch ]
-    ## for k , v in loop_items ( kwargs ) : keeper.append ( v ) 
+    keeper = [ branch ]
+    for k , v in loop_items ( kwargs ) : keeper.append ( v ) 
     
     keeper = []
 
@@ -2498,9 +2508,8 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
     if   isinstance ( branch , Ostap.Trees.Branches        ) and not 'name' in kwargs :        
         ## already prepared ....  not to much action
         for name  in branch : new_branches.add ( name )  
-        args     = branch ,
-        the_case = 1
-        logger.debug ( 'prepare_branches: case %s' % the_case )
+        args = branch ,
+        logger.debug ( 'prepare_branches: case [1] %s' % typename ( branch ) ) 
         
     elif isinstance ( branch , Ostap.MoreRooFit.SPlot4Tree ) and not 'name' in kwargs :        
         ## (very) special case 
@@ -2509,30 +2518,43 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         mapping  = kwargs.pop ( 'mapping' , {}    )
         for c in branch.coefficients() : new_branches.add ( prefix + c.name  + suffix )        
         args     = branch , prefix , suffix , mapping
-        the_case = 2
-        logger.debug ( 'prepare_branches: case %s' % the_case )
+        logger.debug ( 'prepare_branches: case [2] %s' % typename ( branch ) ) 
         
     elif isinstance ( branch , Ostap.IFuncTree ) and 'name' in kwargs :
         ## a simple function        
         args     = branch ,
-        the_case = 3
-        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+        logger.debug ( 'prepare_branches: case (IFuncTree) %s' % typename ( branch ) ) 
 
     elif isinstance ( branch , string_types    ) and 'name' in kwargs :
         ## single branch/formula expression 
         args     = branch , 
-        the_case =  4
-        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+        logger.debug ( 'prepare_branches: case [3] %s' % typename ( branch ) ) 
 
+    elif isinstance ( branch , string_types ) and 1 == sum ( key in kwargs for key in func_keywords ) and not 'name' in kwargs :
+        ## branch is actually the name of the branch
+        for key in func_keywords :
+            if key in kwargs : 
+                func = kwargs.pop ( key )
+                logger.debug ( 'prepare_branches: case [4->delegate] %s' % typename ( branch ) )
+                args, nb, kw , keep = prepare_branches ( tree , func , name = branch , **kwargs )
+                return args , nb , kw , keeper + keep 
+            
+    elif isinstance ( branch , string_types ) and \
+         ( 'formula' in kwargs and isinstance ( kwargs['formula'] , string_types ) ) and not 'name' in kwargs :        
+        ## branch is actually the name of the branch 
+        formula = kwargs.pop ( 'formula' )
+        logger.debug ( 'prepare_branches: case [5->delegate] %s delegate! ' % typename ( branch ) )        
+        args, nb , kw , keep = prepare_branches ( tree , formula , name = branch , **kwargs )
+        return args , nb , kw , keeper+keep  
+        
     elif isinstance ( branch , Ostap.MoreRooFit.RooFun )  and 'name' in kwargs :
         ## RooFit construction 
         mapping  = kwargs.pop ( 'mapping' , {}  )
         args     = branch , mapping
-        the_case = 5
-        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+        logger.debug ( 'prepare_branches: case [6] %s' % typename ( branch ) ) 
 
     elif isinstance ( branch , ROOT.RooAbsReal ) and 'name' in kwargs and 'observables' in kwargs :        
-        ## add informaton form RooFit object 
+        ## add informaton from RooFit object 
         ## need to have a little bit of RooFit here 
         import ostap.fitting.roocoelctions 
         ## RooFit construction 
@@ -2542,38 +2564,28 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         keeper.append ( obsrvables    )
         keeper.append ( normalization )
         args     = branch , observables , normalization , mapping 
-        the_case = 6
-        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+        logger.debug ( 'prepare_branches: case [7] %s' % typename ( branch ) ) 
 
     elif isinstance ( branch , Ostap.Math.Histo3D ) and all ( ( k in kwargs ) for k in ( 'xname' , 'yname' , 'zname' ) ) :
         
-        names = names = kwargs.pop ( 'xname' ) , kwargs.pop ( 'yname' ) , kwargs.pop ( 'zname' )
-        args  = names + ( branch , )
-        
+        names = kwargs.pop ( 'xname' ) , kwargs.pop ( 'yname' ) , kwargs.pop ( 'zname' )
         for n in names : new_branches.add ( n )
-        args     = names +  ( branch , )
-        the_case = 7
-        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+        args   = names +  ( branch , )
+        logger.debug ( 'prepare_branches: case [8] %s' % typename ( branch ) ) 
 
     elif isinstance ( branch , Ostap.Math.Histo2D ) and all ( ( k in kwargs) for k in ( 'xname' , 'yname' ) ) :
         
-        names = names = kwargs.pop ( 'xname' ) , kwargs.pop ( 'yname' )
-        args  = names + ( branch , )
-        
+        names = kwargs.pop ( 'xname' ) , kwargs.pop ( 'yname' )
         for n in names : new_branches.add ( n )
-        args     = names +  ( branch , )
-        the_case = 8
-        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+        args  = names + ( branch , )
+        logger.debug ( 'prepare_branches: case [9] %s' % typename ( branch ) ) 
 
     elif isinstance ( branch , Ostap.Math.Histo1D ) and 'xname' in kwargs :
         
-        names = names = kwargs.pop ( 'xname' ) ,
-        args  = names + ( branch , )
-        
+        names = kwargs.pop ( 'xname' ) ,
         for n in names : new_branches.add ( n )
-        args     = names +  ( branch , )
-        the_case = 9
-        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+        args  = names + ( branch , )
+        logger.debug ( 'prepare_branches: case [10] %s' % typename ( branch ) ) 
         
     elif isinstance ( branch , ROOT.TH1 ) and 1 <= branch.GetDimension() <=3 : 
         ## sample from 1D,2D,3D historgam
@@ -2585,20 +2597,15 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         
         for n in names : new_branches.add ( n )
         args     = names +  ( branch , )
-        the_case = 10
-        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+        logger.debug ( 'prepare_branches: case [11] %s' % typename ( branch ) ) 
         
     elif isinstance ( branch , dictlike_types ) and not 'name' in kwargs :        
         ## general dict-like stuff, converted to Ostap.Trees.Branches 
 
         branches = Ostap.Trees.Branches()
 
-        ## keeper.append ( branches )
-        
         for key , value in loop_items ( branch ) :
             
-            ## keeper.append    ( value )            
-
             assert isinstance ( key , string_types ) and Ostap.Trees.valid_name_for_branch ( key ) ,\
                 "Invalid branch name type/value" % ( typename ( key ) , key )
             
@@ -2607,7 +2614,6 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
             elif callable   ( value ) :
                 from ostap.trees.funcs import PyTreeFunction as PTF
                 fun = PTF     ( value , tree )
-                ## keeper.append ( fun )
                 branches.add  ( key , fun , tree ) 
             else :
                 raise TypeError ( "Invalid branch type:%s for key=%s" % ( typename ( value ) , key ) )
@@ -2615,8 +2621,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
             new_branches.add ( key )
 
         args     = branches ,
-        the_case = 11
-        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+        logger.debug ( 'prepare_branches: case [12] %s' % typename ( branch )  )
 
     elif callable ( branch  ) and 'name' in kwargs and 'arguments' in kwargs : 
         ## generic callable that takes 1-3 arguments from the tree 
@@ -2637,32 +2642,16 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
             elif 2 == len ( vars ) : args = Ostap.Functions.Func2D ( *fvars ) , 
             elif 3 == len ( vars ) : args = Ostap.Functions.Func3D ( *fvars ) ,
 
-        the_case = 12
-        logger.debug ( 'prepare_branches: case %s' % the_case ) 
+        logger.debug ( 'prepare_branches: case [13] %s' % typename ( branch ) )
         
     elif callable ( branch  ) and 'name' in kwargs  and not any ( key in  kwargs for key in func_keywords ) :
         ## generic callable  ( function takes TTree as argument ) 
         name      = kwargs.pop ( 'name' )
         newbranch = { name : branch }
         
+        logger.debug ( 'prepare_branches: case [14->delegate] %s delegate! ' % typename ( branch ) )
         args , nb , kw , keep = prepare_branches ( tree , newbranch , **kwargs )
         return args , nb , kw , keeper + keep 
-    
-    elif isinstance ( branch , string_types ) and 1 == sum ( key in kwargs for key in func_keywords ) and not 'name' in kwargs :
-        ## branch is actually the name of the branch
-        for key in func_keywords :
-            if key in kwargs : 
-                func = kwargs.pop ( key )
-                args, nb, kw , keep = prepare_branches ( tree , func , name = branch , **kwargs )
-                return args , nb , kw , keeper + keep 
-            
-    elif isinstance ( branch , string_types ) and \
-         ( 'formula' in kwargs and isinstance ( kwargs['formula'] , string_types ) ) and not 'name' in kwargs :        
-        ## branch is actually the name of the branch 
-        formula = kwargs.pop ( 'formula' )
-        
-        args, nb , kw , keep = prepare_branches ( tree , formula , name = branch , **kwargs )
-        return args , nb , kw , keeper+keep  
     
     else :
         
@@ -2682,6 +2671,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         assert Ostap.Trees.valid_name_for_branch ( name  ) , "Invalid name for bew brnach:'%s'" % name
         assert not name in tree , "Branch/leave `%s' is already in the Treee!" % name   
 
+    logger.debug ( 'prepare_bramnches, end...' ) 
     return args , new_branches , kwargs, keeper 
 
 
@@ -2697,7 +2687,7 @@ def add_new_branch ( tree , branch , / , **kwargs ) :
 
     verbose  = kwargs.pop ( 'verbose ' , True ) ## ATTENTION! 
 
-    ## parse argumenss
+    ## parse argumensts
     args , expected , kw , keeps = prepare_branches ( tree , branch , **kwargs ) 
 
     progress = kw.pop ( 'progress' , True  )
@@ -2716,10 +2706,10 @@ def add_new_branch ( tree , branch , / , **kwargs ) :
         logger.warning  ( '%s:\n%s' % ( title1 , print_args ( prefix = '# ' , title = title2 , **kw ) ) ) 
 
     ## start the actual processing 
-    chain = push_2chain ( tree , *args ,  progress = progress , report = report )
+    chain    = push_2chain ( tree , *args ,  progress = progress , report = report )
 
-    missing  =  sorted ( branch for branch in expected if not branch in chain  )
-    if missing : logger.warning ( 'Missing expecte dbrnaches: %s' % ( ', '.join ( m for m in missing ) ) ) 
+    missing  = sorted ( br for br in expected if not br in chain  )
+    if missing : logger.warning ( 'Extected but missing branches: %s' % ( ', '.join ( m for m in missing ) ) ) 
 
     return chain
     
