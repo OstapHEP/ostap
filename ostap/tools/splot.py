@@ -549,7 +549,7 @@ class sPlot2D(sPlot) :
         >>> tree  = ...
         >>> splot.add_to_tree ( tree , xvar , yvar , parallel = True , suffix = '_sw'
         """
-        return self._add_to_tree ( tree , xvar, yvar , suffix = suffix , prefix = prefix , unbineed = unbinned , parallel = parallel )
+        return self._add_to_tree ( tree , xvar, yvar , suffix = suffix , prefix = prefix , unbinned = unbinned , parallel = parallel )
     
     # =========================================================================
     ## make proper TH2-function 

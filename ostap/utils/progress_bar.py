@@ -102,7 +102,8 @@ __all__      = (
     )
 # =============================================================================
 from   ostap.core.ostap_types import sized_types 
-from   ostap.utils.basic      import isatty, terminal_size 
+from   ostap.utils.basic      import isatty, terminal_size
+from   ostap.logger.symbols   import clock_ticks, runner  
 from   ostap.logger.colorized import allright, infostr 
 import sys , os, time
 # =============================================================================
@@ -401,10 +402,13 @@ class ProgressBar(object):
     def __del__   ( self      ) : self.end ()
 
 # =============================================================================
+_bar_  = tuple ( allright ( 'Running ... ' + runner + ' '+ tick ) + '\r' for tick in clock_ticks ) 
+"""
 _bar_  =  ( allright ( 'Running ... | '  ) + '\r' , 
             allright ( 'Running ... / '  ) + '\r' , 
             allright ( 'Running ... - '  ) + '\r' , 
-            allright ( 'Running ... \\ ' ) + '\r' ) 
+            allright ( 'Running ... \\ ' ) + '\r' )
+"""
 _lbar  = len ( _bar_ )
 _done_ =    infostr  ( 'Done            %-d' ) + '\n' 
 # =============================================================================
@@ -481,12 +485,12 @@ class RunningBar(object):
                     ie , ia = divmod ( self.amount , t )
                     if ia : return 
                     ib = ie % _lbar                  
-                    if self.prefix : sys.stdout.write (  self.prefix ) 
+                    if self.prefix : sys.stdout.write ( self.prefix ) 
                     sys.stdout.write ( _bar_ [ ib ] )
                     sys.stdout.flush ()
                     return
                 
-            if self.prefix : sys.stdout.write (  self.prefix ) 
+            if self.prefix : sys.stdout.write ( self.prefix ) 
             ib      = self.amount % _lbar  
             sys.stdout.write ( _bar_ [ ib ] )
             sys.stdout.flush ()
