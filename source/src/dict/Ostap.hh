@@ -109,6 +109,7 @@
 #include "Ostap/Polarization.h"
 #include "Ostap/ProgressBar.h"
 #include "Ostap/Rational.h"
+#include "Ostap/RooFitUtils.h"
 #include "Ostap/RooFun.h"
 #include "Ostap/RootID.h"
 #include "Ostap/SFactor.h"

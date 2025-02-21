@@ -22,6 +22,8 @@
 #include "Ostap/Notifier.h"
 #include "Ostap/TreeGetter.h"
 #include "Ostap/RooFun.h"
+#include "Ostap/RooFitUtils.h"
+#include "Ostap/ToStream.h"
 // ============================================================================
 // local
 // ============================================================================

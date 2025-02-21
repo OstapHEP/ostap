@@ -25,6 +25,8 @@
 #include "Ostap/AddBranch.h"
 #include "Ostap/TreeGetter.h"
 #include "Ostap/SPlot4Tree.h"
+#include "Ostap/RooFitUtils.h"
+#include "Ostap/ToStream.h"
 // ============================================================================
 // local
 // ============================================================================

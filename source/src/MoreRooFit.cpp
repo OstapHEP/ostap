@@ -22,6 +22,7 @@
 #include "Ostap/MoreMath.h"
 #include "Ostap/MoreRooFit.h"
 #include "Ostap/Power.h"
+#include "Ostap/RooFitUtils.h"
 #include "Ostap/ToStream.h"
 // ============================================================================
 // local

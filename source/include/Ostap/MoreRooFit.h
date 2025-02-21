@@ -3713,53 +3713,6 @@ namespace Ostap
     // ========================================================================
   } //                                   The end of namespace Ostap::MoreRooFit  
   // ==========================================================================
-  namespace Utils
-  {
-    // ========================================================================
-    /** print RooAbsCollection
-     *  @see  RooAbsCollection
-     */
-    std::ostream& toStream
-    ( const RooAbsCollection& o ,
-      std::ostream&           s ) ;
-    // ========================================================================
-    /** print TNamed
-     *  @see  TNamed
-     */
-    std::ostream& toStream
-    ( const TNamed& o ,
-      std::ostream& s ) ;
-    // ========================================================================
-    /** print RooPrintable 
-     *  @see  RooPrintable 
-     */
-    std::ostream& toStream
-    ( const RooPrintable& o ,
-      std::ostream&       s ) ;
-    // ========================================================================
-    /** print RooAbsArg 
-     *  @see  RooAbsArg 
-     */
-    std::ostream& toStream
-    ( const RooAbsArg& o ,
-      std::ostream&    s ) ;
-    // ========================================================================    
-    /** print RooAbsReal 
-     *  @see  RooAbsReal
-     */
-    std::ostream& toStream
-    ( const RooAbsReal& o ,
-      std::ostream&     s ) ;
-    // ========================================================================
-    /** print RooAbsCategory  
-     *  @see  RooAbsCategory
-     */
-    std::ostream& toStream
-    ( const RooAbsCategory& o ,
-      std::ostream&         s ) ;
-    // ========================================================================
-  } //                                        The end of namespace Ostap::Utils
-  // ==========================================================================
 } //                                                 The end of namespace Ostap
 // ============================================================================
 //                                                                      The END 

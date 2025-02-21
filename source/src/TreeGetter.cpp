@@ -15,6 +15,7 @@
 // ============================================================================
 #include "Ostap/Math.h"
 #include "Ostap/TreeGetter.h"
+#include "Ostap/RooFitUtils.h"
 #include "Ostap/ToStream.h"
 // ============================================================================
 // local
