@@ -169,9 +169,19 @@ Ostap::MoreRooFit::SPlot4Tree::SPlot4Tree
   set_parameters ( m_result->constPars      () ) ;
   set_parameters ( m_result->floatParsFinal () ) ;
   // ==========================================================================      
+} // ==========================================================================
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::MoreRooFit::SPlot4Tree::SPlot4Tree
+( const Ostap::MoreRooFit::SPlot4Tree& right )
+  : m_cmps   { std::make_unique<RooArgList>() } 
+  , m_coefs  { std::make_unique<RooArgList>() } 
+  , m_result { right.m_result ? right.m_result->Clone() : nullptr }
+{
+  ::copy ( *right.m_cmps  , *m_cmps  ) ;
+  ::copy ( *right.m_coefs , *m_coefs ) ;
 }
-
-
 // ============================================================================
 /*  Add sPlot information to the tree 
  *  @param tree  input tree 
