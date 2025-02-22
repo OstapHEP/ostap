@@ -57,23 +57,32 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
         using other nodes in the local cluster """
         
         def __init__( self ,
-                      ncpus    = None   ,
-                      silent   = False  ,
-                      progress = True   ,
-                      balanced = False  ,
-                      use_dill = True   , **kwargs ) :
+                      ncpus      = 'autodetect',
+                      silent     = False ,
+                      progress   = True  ,
+                      balanced   = False ,
+                      use_dill   = True  ,
+                      dump_dbase = None  ,
+                      dump_jobs  = 0     ,
+                      dump_freq  = 0     ,                             
+                      **kwargs ) :
 
-            if isinstance ( ncpus , str ) and ncpus.lower() == 'autodetect' :
-                ncpus = None
+            if not ( isinstance ( ncpus , int ) and 0 <= ncpus ) :
+                from ostap.utils.basic import numcpu 
+                ncpus = numcpu() 
+                
             n = kwargs.get ( 'n' , ncpus )
-            if isinstance ( n , int ) and 0 < n :     kwargs  [ 'n' ] = n
-            elif 'n' in kwargs                  : del kwargds [ 'n' ]
+            if isinstance ( n , int ) and 0 < n :     kwargs [ 'n' ] = n
+            elif 'n' in kwargs                  : del kwargs [ 'n' ]
             
             ## initialize the base class 
             TaskManager.__init__  ( self ,
-                                    ncpus    = ncpus    ,
-                                    silent   = silent   ,
-                                    progress = progress )
+                                    ncpus      = ncpus      ,
+                                    silent     = silent     ,
+                                    progress   = progress   ,
+                                    dump_dbase = dump_dbase ,
+                                    dump_jobs  = dump_jobs  ,
+                                    dump_freq  = dump_freq  ) 
             
             if self.silent :
                 import logging 

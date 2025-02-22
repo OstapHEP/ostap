@@ -45,8 +45,9 @@ __all__     = (
     'func_executor' , ## helper function to execute callable
     )
 # =============================================================================
+from   itertools          import repeat, count
+import ostap.io.zipshelve as     DBASE 
 import os, operator, abc  
-from   itertools   import repeat, count 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.task' )
@@ -109,19 +110,19 @@ class Task(object) :
 
     ## Local initialization:  invoked once on localhost for the main task
     def initialize_local  ( self )          :
-        """Local initialization:  invoked once on localhost for the main task"""
+        """ Local initialization:  invoked once on localhost for the main task"""
         pass
     
     ## Remote initialization: invoked for each secondary task on remote host
     def initialize_remote ( self , jobid = -1 )  :
-        """Remote initialization: invoked for each secondary task on remote host
+        """ Remote initialization: invoked for each secondary task on remote host
         - default: run `local initialization'
         """
         return self.initialize_local () 
     
     ## Finalization action: invoked once on local host for the main task (after merge)
     def finalize          ( self )          :
-        """Finalization action: invoked once on local host for the main task (after merge)"""
+        """ Finalization action: invoked once on local host for the main task (after merge)"""
         pass
     
     ## Process the (secondary) task on remote host
@@ -129,7 +130,7 @@ class Task(object) :
     #  @param jobid jobid 
     @abc.abstractmethod 
     def process           ( self , jobid , *params ) :
-        """Process the (secondary) task on remote host
+        """ Process the (secondary) task on remote host
         - It must return the results!
         """
         return None 
@@ -137,20 +138,20 @@ class Task(object) :
     ## Collect and merge the results (invoked at local host)
     @abc.abstractmethod 
     def merge_results     ( self , result , jobid = -1 ) :
-        """Collect and merge the results (invoked at local host)"""
+        """ Collect and merge the results (invoked at local host)"""
         pass
 
     ## get the final merged task results 
     @abc.abstractmethod 
     def results           ( self )          :
-        """Get the final merged task results"""
+        """ Get the final merged task results"""
         return None 
 
     ## shortcut of <code>process</code> method
     #  @param jobid jobid 
     #  @param item  item 
     def __call__          ( self , jobid , *params ) :
-        """Shortcut of process method"""
+        """ Shortcut of process method"""
         return self.process ( jobid , *params ) 
 
     @property
@@ -265,7 +266,7 @@ class GenericTask(Task) :
                    append_to   = {}    ,
                    prepend_to  = {}    ,
                    cleanup     = True  ) :
-        """Generic task for the parallel processing. One needs to define three functions/functors
+        """ Generic task for the parallel processing. One needs to define three functions/functors
         - processor   :         output = processor   ( jobid , item ) 
         - merger      : updated_output = merger      ( old_output , new_output )
         - collector   : updated_output = collector   ( old_output , new_output , job_id )
@@ -298,8 +299,7 @@ class GenericTask(Task) :
         self.prepend_to   . update ( prepend_to  )
         
         self.cleanup       = cleanup
-        
-        
+                
     # =========================================================================
     ## local initialization (executed once in parent process)
     def initialize_local   ( self ) :
@@ -607,7 +607,6 @@ class StatMerger(object) :
     
     __repr__ = __str__
 
-
 # =============================================================================
 ## Merge/combine task results 
 #  @code
@@ -807,29 +806,57 @@ def func_executor ( item ) :
     
     ##
     from ostap.utils.cleanup import CleanUpPID as clean_context
-    from ostap.utils.utils import batch 
+    from ostap.utils.utils   import batch 
     with clean_context () , batch ( True ) :        
         with Statistics ()  as stat :
             return jobid , fun ( jobid , *args ) , stat
         
 # ============================================================================
 ## @class TaskManager
-#   Abstract base class for the work manager for parallel processing  
+#   Abstract base class for the work manager for parallel data processing  
 class TaskManager(object) :
-    """ Abstract base class for the work manager for paralell processing 
+    """ Abstract base class for the work manager for parallel data processing 
     """
     
     __metaclass__ = abc.ABCMeta
 
-    def __init__  ( self             ,
-                    ncpus            ,
-                    silent   = False ,
-                    progress = True  ) :
+    def __init__  ( self                ,
+                    ncpus               ,
+                    silent      = False ,
+                    progress    = True  ,
+                    dump_dbase  = None  ,
+                    dump_jobs   = 0     ,
+                    dump_freq   = 0     ) :
         
-        self.__ncpus    = ncpus        
-        self.__silent   = silent
-        self.__progress = True if ( progress or not silent ) else False
+        self.__ncpus     = ncpus        
+        self.__silent    = silent
+        self.__progress  = True if ( progress or not silent ) else False
+
+        assert isinstance ( dump_freq , int ) and 0 <= dump_freq , \
+            "Invalid `dump_freq' argument: %s" % dumpfreq
+        assert isinstance ( dump_jobs , int ) , \
+            "Invalid `dump_jobs' argument: %s" % dumpfreq
         
+        self.__dump_jobs  = dump_jobs 
+        self.__dump_freq  = dump_freq        
+        self.__dump_dbase = dump_dbase
+        
+        if not self.dump_dbase and ( self.dump_jobs or self.dump_freq ) :
+            from ostap.utils.cleanup import CleanUp 
+            self.__dump_dbase = CleanUP.tempfile ( suffix = '.db' ) 
+            logger.info ( 'Temporary DBASE will be used: %s' % dump_dbase )
+
+        ## check that dbase can be created/used
+        if self.__dump_dbase and ( self.dump_jobs or self.dump_freq ) :
+            # =================================================================
+            try : # ===========================================================
+                with DBASE.open ( self.__dump_dbase ) as db : pass
+                # =============================================================
+            except : # ========================================================
+                # =============================================================
+                logger.error ( 'DBASE cannot be cused %s' % dump_dbase , exc_info = True ) 
+                self.__dump_dbase = None
+                
     # =========================================================================
     ## process Task or callable object :
     #  - process <code>Task</code>:
@@ -934,16 +961,37 @@ class TaskManager(object) :
                     
                     merged_stat += stat
                     
+                    
+                    if self.dump_jobs < 0  or ( index < self.dump_jobs ) :
+                        with DBASE.open ( self.dump_dbase ) as db :
+                            key = 'results_%d' % index 
+                            db [ key ] = jobid , result
+                            
                     ## merge results if merger or collector are provided 
                     if   merger    : results = merger    ( results , result ) 
                     elif collector : results = collector ( results , result , jobid )
-                    
-                    bar += 1 
 
-                index           += len ( chunk )
-                
+                    if 0 < self.dump_freq and 0 == index % self.dump_freq :
+                        with DBASE.open ( self.dump_dbase ) as db :
+                            db [ 'merged_%d'  % index ] = results
+                            
+                    ## advance progress bar & job counter 
+                    bar   += 1 
+                    index += 1
+
                 pp_stat = self.get_pp_stat() 
-                if pp_stat : merged_stat_pp  += pp_stat 
+                if pp_stat : merged_stat_pp  += pp_stat
+                
+                ## dump merged results at the end of each chunk 
+                if 0 < self.dump_freq :  
+                    with DBASE.open ( self.dump_dbase ) as db :
+                        db [ 'merged_%d'  % index ] = results 
+                                                
+        ## final results at the end of each chunk 
+        if 0 < self.dump_freq :  
+            with DBASE.open ( self.dump_dbase ) as db :
+                db [ 'TOTAL_jobs'    ] = index 
+                db [ 'FINAL_results' ] = results
 
         ## print statistics 
         self.print_statistics ( merged_stat_pp , merged_stat , _timer() - start )
@@ -987,18 +1035,39 @@ class TaskManager(object) :
                     ## merge statistics 
                     merged_stat += stat
 
+                    ## dump individual results if requested 
+                    if self.dump_jobs < 0  or ( index < self.dump_jobs ) :
+                        with DBASE.open ( self.dump_dbase ) as db :
+                            key = 'results_%d' % index 
+                            db [ key ] = jobid , result
+           
                     ## merge/collect resuls
                     task.merge_results ( result , jobid )
 
-                    bar += 1 
+                    ## dump merged results , if requested 
+                    if 0 < self.dump_freq and 0 == index % self.dump_freq :
+                        with DBASE.open ( self.dump_dbase ) as db :
+                            db [ 'merged_%d'  % index ] = task.results() 
+                            
+                    bar   += 1 
+                    index += 1 
 
-                index           += len ( chunk )
-                
                 pp_stat = self.get_pp_stat() 
                 if pp_stat : merged_stat_pp  += pp_stat 
 
+                ## dump merged results at the end of each chunk 
+                if 0 < self.dump_freq :  
+                    with DBASE.open ( self.dump_dbase ) as db :
+                        db [ 'merged_%d'  % index ] = task.results() 
+
         ## finalize the task 
-        task.finalize () 
+        task.finalize ()
+
+        ## final results at the end of each chunk 
+        if 0 < self.dump_freq :  
+            with DBASE.open ( self.dump_dbase ) as db :
+                db [ 'FINAL_results' ] = task.result()
+
         self.print_statistics ( merged_stat_pp , merged_stat , _timer() - start )
         ## 
         return task.results ()
@@ -1018,7 +1087,25 @@ class TaskManager(object) :
         """`ncpus' : number of CPUs"""
         return self.__ncpus
 
-    # ===========================================================================
+    @property
+    def dump_dbase  ( self ) :
+        """`dump_dbase` : database name (or None) to save intermediate resurtlas if requetsed
+        """
+        return self.__dump_dbase 
+
+    @property
+    def dump_jobs ( self ) :
+        """`dump_jobs` : dump first N jobs ( -1 == all) jobs into database ? 
+        """
+        return self.__dump_jobs 
+
+    @property
+    def dump_freq ( self ) :
+        """`dump_freq` : frequency to dump processed merged results into database
+        """
+        return self.__dump_freq
+    
+    # =========================================================================
     ## get PP-statistics if/when posssible  
     @abc.abstractmethod
     def get_pp_stat ( self ) : 

@@ -88,19 +88,29 @@ class WorkManager (TaskManager) :
     >>> wm2 = WorkManager ( ppservers = ... ) ## use local and remote servers
     >>> wm3 = WorkManager ( ncpus = 0 , ppservers = ... ) ## use only remote servers
     """
-    def __init__( self                     ,
-                  ncpus     = 'autodetect' ,
-                  ppservers = ()           ,
-                  silent    = False        ,
-                  progress  = True         , **kwargs ) :
+    def __init__( self                       ,
+                  ncpus      = 'autodetect' ,
+                  ppservers  = ()           ,
+                  silent     = False        ,
+                  progress   = True         ,                  
+                  dump_dbase = None         ,
+                  dump_jobs  = 0            ,
+                  dump_freq  = 0            ,         
+                  **kwargs                  ) :
 
         if not ( isinstance ( ncpus , int ) and 0 <= ncpus ) :
-            from pathos.helpers import cpu_count
-            ncpus = cpu_count ()
+            from ostap.utils.basic import numcpu 
+            ncpus = numcpu() 
             
         ## initialize the base class 
-        TaskManager.__init__ ( self, ncpus =  ncpus , silent = silent , progress = progress )
-        
+        TaskManager.__init__ ( self,
+                               ncpus      = ncpus      ,
+                               silent     = silent     , 
+                               progress   = progress   ,
+                               dump_dbase = dump_dbase ,
+                               dump_jobs  = dump_jobs  ,
+                               dump_freq  = dump_freq  ) 
+                                                              
         from ostap.utils.cidict import cidict
         kwa = cidict ( **kwargs ) 
 

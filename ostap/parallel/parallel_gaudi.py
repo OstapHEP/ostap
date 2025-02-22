@@ -56,13 +56,20 @@ class WorkManager(TaskManager) :
         using other nodes in the local cluster """
 
     def __init__( self                     , 
-                  ncpus     = 'autodetect' ,
-                  ppservers = None         ,
-                  pp        = False        ,
-                  silent    = False        ,
-                  progress  = True         , **kwargs ) :
-
-        ##
+                  ncpus      = 'autodetect' ,
+                  ppservers  = None         ,
+                  pp         = False        ,
+                  silent     = False        ,
+                  progress   = True         ,
+                  dump_dbase = None         ,
+                  dump_jobs  = 0            ,
+                  dump_freq  = 0            ,         
+                  **kwargs                  ) :
+        
+        if not ( isinstance ( ncpus , int ) and 0 <= ncpus ) :
+            from ostap.utils.basic import numcpu 
+            ncpus = numcpu () 
+            
         if isinstance ( ncpus , int ) and 1 <= ncpus : pass
         else                                         : ncpus = MP.cpu_count()
 
@@ -70,7 +77,13 @@ class WorkManager(TaskManager) :
         ## if ppservers : logger.warning ( "WorkManager: option ``ppservers'' is ignored" )
         
         ## initialize the base class 
-        TaskManager.__init__  ( self , ncpus = ncpus , silent = silent , progress = progress )        
+        TaskManager.__init__  ( self ,
+                                ncpus      = ncpus      ,
+                                silent     = silent     ,
+                                progress   = progress   , 
+                                dump_dbase = dump_dbase ,
+                                dump_jobs  = dump_jobs  ,
+                                dump_freq  = dump_freq  ) 
         
         self.pool   = MP.Pool ( self.ncpus )
         
