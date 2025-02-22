@@ -281,16 +281,17 @@ def test_addbranch() :
     # =========================================================================
     ## (7) add new branch as histogram-function 
     # =========================================================================
-    with timing ( 'fun-hist-2' , logger = logger ) as timer :          
-        h1  = ROOT.TH1D ( hID () , 'some pt-correction' , 100 , 0 , 10 )
-        h1 += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
-        from   ostap.trees.funcs  import FuncTH1
-        ptw   = FuncTH1 ( h1 , 'pt' )
-        chain = data.chain 
-        chain = chain.padd_new_branch ( 'ptw2' , function = ptw )     
-    rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
-    ## reload the chain and check: 
-    assert 'ptw2' in chain , "Branch `ptw2' is  not here!"
+    if ( 6 , 24 , 6 ) <= root_info : 
+        with timing ( 'fun-hist-2' , logger = logger ) as timer :          
+            h1  = ROOT.TH1D ( hID () , 'some pt-correction' , 100 , 0 , 10 )
+            h1 += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
+            from   ostap.trees.funcs  import FuncTH1
+            ptw   = FuncTH1 ( h1 , 'pt' )
+            chain = data.chain 
+            chain = chain.padd_new_branch ( 'ptw2' , function = ptw )     
+        rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
+        ## reload the chain and check: 
+        assert 'ptw2' in chain , "Branch `ptw2' is  not here!"
 
     # =========================================================================
     ## (8) add several functions simultaneously 
