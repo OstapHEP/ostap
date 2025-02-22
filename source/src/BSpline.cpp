@@ -17,6 +17,7 @@
 // ============================================================================
 #include "Exception.h"
 #include "GSL_helpers.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file 
  *  Implementation file for class Ostap::Math::BSpline 
@@ -292,8 +293,10 @@ Ostap::Math::BSpline::BSpline
   std::vector<double>::iterator it = std::unique ( m_knots.begin() , m_knots.end() , s_equal );
   m_knots.erase ( it , m_knots.end() ) ;
   //
-  if ( m_knots.size () < 2 ) { Ostap::throwException 
-      ("Vector of knots is too short", "Ostap::Math::BSpline" , 810 ) ; } 
+  Ostap::Assert( 2 <= m_knots.size () < 2 ,  
+       "Vector of knots is too short" , 
+       "Ostap::Math::BSpline"         , 
+        INVALID_KNOTS   , __FILE__ , __LINE__ ) ; 
   //
   m_inner = m_knots.size   () - 2 ;
   // specify vector of parameters 
@@ -343,11 +346,15 @@ Ostap::Math::BSpline::BSpline
   std::vector<double>::iterator it = std::unique ( m_knots.begin() , m_knots.end() , s_equal );
   m_knots.erase ( it , m_knots.end() ) ;
   //
-  if      ( m_knots.size()     <  2              ) 
-{ Ostap::throwException
-      ("Vector of knots is too short", "Ostap::Math::BSpline" , 812 ) ; } 
-  else if ( m_pars .size() + 1 <  m_knots.size() ) { Ostap::throwException
-      ("Vector of pars  is too short", "Ostap::Math::BSpline" , 813 ) ; }
+  Ostap::Assert ( 2 <= m_knots.size() , 
+        "Vector of knots is too short" , 
+        "Ostap::Math::BSpline"        , 
+        INVALID_KNOTS , __FILE__ , __LINE__  ) ;  
+
+  Ostap::Assert ( m_knots.size() <= m_pars .size() + 1 ,  
+        "Vector of pars  is too short" , 
+        "Ostap::Math::BSpline"         , 
+        INVALID_PARS , __FILE__  , __LINE__  ) ; 
   //
   m_inner = m_knots.size () - 2 ;
   m_order = m_pars.size  () - m_inner - 1 ;
@@ -438,7 +445,8 @@ Ostap::Math::BSpline::BSpline
   if      ( b.xmin() < m_xmin || s_equal (  b.xmin() , m_xmin ) ) { /* ok */ }
   else if ( b.xmax() > m_xmax || s_equal (  b.xmax() , m_xmax ) ) { /* ok */ }
   else { Ostap::throwException 
-      ("Invalid xmin/xmax  settings", "Ostap::Math::BSpline" , 821 ) ; }
+      ("Invalid xmin/xmax  settings", "Ostap::Math::BSpline" , 
+        INVALID_RANGE , __FILE__ , __LINE__ ) ; }
   //
   // ==========================================================================
   std::vector<double>::iterator il = 
@@ -1115,9 +1123,10 @@ Ostap::Math::PositiveSpline::PositiveSpline
   , m_sphere  ( 1 , 3 ) 
 {
   //
-  if ( 2 > m_bspline.npars() ) { Ostap::throwException
-      ( "At least two spline parameters are required" , 
-        "Ostap::Math::PositiveSpline"                 , 814 ) ; }
+  Ostap::Assert ( 2 <=  m_bspline.npars()  , 
+      "At least two spline parameters are required" , 
+      "Ostap::Math::PositiveSpline"                 , 
+      INVALID_PARS , __FILE__ , __LINE__ ) ;
   //
   m_sphere = Ostap::Math::NSphere( m_bspline.npars() - 1 , 3 ) ;  
   updateCoefficients () ;
@@ -1139,9 +1148,10 @@ Ostap::Math::PositiveSpline::PositiveSpline
   , m_sphere  ( pars   , 3 ) 
 {
   //
-  if ( 2 > m_bspline.npars() ) { Ostap::throwException
-      ( "At least two spline parameters are required" , 
-        "Ostap::Math::PositiveSpline"                 , 814 ) ; }
+  Ostap::Assert ( 2 <= m_bspline.npars() , 
+      "At least two spline parameters are required" , 
+      "Ostap::Math::PositiveSpline"                 , 
+      INVALID_PARS , __FILE__ , __LINE__ ) ; 
   //
   m_sphere = Ostap::Math::NSphere( m_bspline.npars() - 1 , true ) ;  
   updateCoefficients () ;
@@ -1163,9 +1173,10 @@ Ostap::Math::PositiveSpline::PositiveSpline
   , m_sphere  ( 1 , 3 ) 
 {
   //
-  if ( 2 > m_bspline.npars() ) { Ostap::throwException
-      ( "At least two spline parameters are required" , 
-        "Ostap::Math::PositiveSpline"                 , 814 ) ; }
+  Ostap::Assert ( 2 <= m_bspline.npars() , 
+      "At least two spline parameters are required" , 
+      "Ostap::Math::PositiveSpline"                 , 
+      INVALID_PARS , __FILE__ , __LINE__ ) ; 
   //
   m_sphere = Ostap::Math::NSphere( m_bspline.npars() - 1 , 3 ) ;  
   updateCoefficients() ;
@@ -1179,9 +1190,10 @@ Ostap::Math::PositiveSpline::PositiveSpline
   , m_sphere  ( 1 , 3  ) 
 {
   //
-  if ( 2 > m_bspline.npars() ) { Ostap::throwException
-      ( "At least two spline parameters are required" , 
-        "Ostap::Math::PositiveSpline"                 , 814 ) ; }
+  Ostap::Assert ( 2 <= m_bspline.npars() , 
+      "At least two spline parameters are required" , 
+      "Ostap::Math::PositiveSpline"                 , 
+      INVALID_PARS , __FILE__ , __LINE__  ) ; 
   //
   m_sphere = Ostap::Math::NSphere( m_bspline.npars() - 1 , 3 ) ;  
   updateCoefficients() ;
@@ -1395,9 +1407,10 @@ Ostap::Math::ConvexOnlySpline::ConvexOnlySpline
   : Ostap::Math::PositiveSpline ( points , order ) 
   , m_convex                    ( convex ) 
 {
-  if ( 2 > this->order() ) { Ostap::throwException
-      ( "Degree of spline must be at least 2" , 
-        "Ostap::Math::ConvexOnlySpline"       , 815 ) ; }
+  Ostap::Assert ( 2 <= this->order() , 
+      "Degree of spline must be at least 2" , 
+      "Ostap::Math::ConvexOnlySpline"       , 
+      INVALID_ORDER , __FILE__ , __LINE__ ) ; 
   updateCoefficients () ;
 }
 // ============================================================================
@@ -1417,9 +1430,10 @@ Ostap::Math::ConvexOnlySpline::ConvexOnlySpline
   : Ostap::Math::PositiveSpline ( points , pars ) 
   , m_convex                    ( convex    ) 
 {
-  if ( 2 > order() ) { Ostap::throwException
-      ( "Degree of spline must be at least 2" , 
-        "Ostap::Math::ConvexOnlySpline"       , 815 ) ; }
+  Ostap::Assert ( 2 <= order()  , 
+      "Degree of spline must be at least 2" , 
+      "Ostap::Math::ConvexOnlySpline"       , 
+      INVALID_ORDER , __FILE__ , __LINE__  ) ; 
   updateCoefficients () ;
 }
 // ============================================================================
@@ -1439,9 +1453,10 @@ Ostap::Math::ConvexOnlySpline::ConvexOnlySpline
   : Ostap::Math::PositiveSpline ( xmin , xmax  , inner , order ) 
   , m_convex                    ( convex    ) 
 {
-  if ( this->order() < 2 ) { Ostap::throwException
-      ( "Degree of spline must be at least 2" , 
-        "Ostap::Math::ConvexOnlySpline"       , 815 ) ; }
+  Ostap::Assert( 2 <= this->order() < 2 , 
+      "Degree of spline must be at least 2" , 
+      "Ostap::Math::ConvexOnlySpline"       , 
+      INVALID_ORDER , __FILE__  , __LINE__  ) ; 
   updateCoefficients () ;
 }
 // ============================================================================
@@ -1453,9 +1468,10 @@ Ostap::Math::ConvexOnlySpline::ConvexOnlySpline
   : Ostap::Math::PositiveSpline ( spline        ) 
   , m_convex                    ( convex    ) 
 {
-  if ( 2 > order() ) { Ostap::throwException
-      ( "Degree of spline must be at least 2" , 
-        "Ostap::Math::ConvexOnlySpline"       , 815 ) ; }
+  Ostap::Assert ( 2 <= order() , 
+      "Degree of spline must be at least 2" , 
+      "Ostap::Math::ConvexOnlySpline"       , 
+      INVALID_ORDER , __FILE__ , __LINE__  ) ; 
   updateCoefficients () ;
 }
 // ============================================================================
@@ -1467,9 +1483,10 @@ Ostap::Math::ConvexOnlySpline::ConvexOnlySpline
   : Ostap::Math::PositiveSpline ( spline        ) 
   , m_convex                    ( convex    ) 
 {
-  if ( 2 > order() ) { Ostap::throwException
-      ( "Degree of spline must be at least 2" , 
-        "Ostap::Math::ConvexOnlySpline"       , 815 ) ; }
+  Ostap::Assert ( 2 <= order() , 
+      "Degree of spline must be at least 2" , 
+      "Ostap::Math::ConvexOnlySpline"       , 
+    INVALID_ORDER , __FILE__ , __LINE__  ) ; 
   updateCoefficients () ;
 }
 // ============================================================================
@@ -1594,9 +1611,10 @@ Ostap::Math::ConvexSpline::ConvexSpline
   : Ostap::Math::MonotonicSpline ( points , order , increasing ) 
   , m_convex                      ( convex ) 
 {
-  if ( 2 > this->order() ) { Ostap::throwException
-      ( "Degree of spline must be at least 2" , 
-        "Ostap::Math::ConvexSpline"           , 816 ) ; }
+  Ostap::Assert ( 2 <= this->order() , 
+      "Degree of spline must be at least 2" , 
+      "Ostap::Math::ConvexSpline"           , 
+      INVALID_ORDER , __FILE__ , __LINE__  ) ; 
   updateCoefficients () ;
 }
 // ============================================================================
@@ -1617,9 +1635,10 @@ Ostap::Math::ConvexSpline::ConvexSpline
   : Ostap::Math::MonotonicSpline ( points , pars , increasing ) 
   , m_convex                      ( convex ) 
 {
-  if ( 2 > order() ) { Ostap::throwException
-      ( "Degree of spline must be at least 2" , 
-        "Ostap::Math::ConvexSpline"           , 816 ) ; }
+  Ostap::Assert ( 2 <= order() , 
+      "Degree of spline must be at least 2" , 
+      "Ostap::Math::ConvexSpline"           , 
+      INVALID_ORDER , __FILE__ , __LINE__ ) ; 
   updateCoefficients () ;
 }
 // ============================================================================
@@ -1640,9 +1659,10 @@ Ostap::Math::ConvexSpline::ConvexSpline
   : Ostap::Math::MonotonicSpline ( xmin , xmax , inner , order , increasing ) 
   , m_convex                      ( convex ) 
 {
-  if ( 2 > this->order() ) { Ostap::throwException
-      ( "Degree of spline must be at least 2" , 
-        "Ostap::Math::ConvexSpline"           , 816 ) ; }
+  Ostap::Assert ( 2 <= this->order() , 
+      "Degree of spline must be at least 2" , 
+      "Ostap::Math::ConvexSpline"           , 
+      INVALID_ORDER , __FILE__ , __LINE__  ) ; 
   updateCoefficients () ;
 }
 // ============================================================================
@@ -1655,9 +1675,10 @@ Ostap::Math::ConvexSpline::ConvexSpline
   : Ostap::Math::MonotonicSpline ( spline , increasing ) 
   , m_convex                      ( convex ) 
 {
-  if ( 2 > order() ) { Ostap::throwException
-      ( "Degree of spline must be at least 2" , 
-        "Ostap::Math::ConvexSpline"           , 816 ) ; }
+  Ostap::Assert ( 2 <= order() , 
+      "Degree of spline must be at least 2" , 
+      "Ostap::Math::ConvexSpline"           , 
+      INVALID_ORDER , __FILE__ , __LINE__  ) ; 
   updateCoefficients () ;
 }
 // ============================================================================
@@ -1670,9 +1691,10 @@ Ostap::Math::ConvexSpline::ConvexSpline
   : Ostap::Math::MonotonicSpline ( spline , increasing ) 
   , m_convex                      ( convex ) 
 {
-  if ( 2 > order() ) { Ostap::throwException
-      ( "Degree of spline must be at least 2" , 
-        "Ostap::Math::ConvexSpline"           , 816 ) ; }
+  Ostap::Assert ( 2 <= order() , 
+      "Degree of spline must be at least 2" , 
+      "Ostap::Math::ConvexSpline"           , 
+       INVALID_ORDER , __FILE__ , __LINE__  ) ; 
   updateCoefficients () ;
 }
 // ============================================================================
