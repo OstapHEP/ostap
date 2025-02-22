@@ -37,7 +37,7 @@ __all__     = (
     'sPlot3D'  , ## 3D-splot
     )
 # =============================================================================
-from   ostao.core.meta_info       import root_info
+from   ostap.core.meta_info       import root_info
 from   ostap.core.ostap_types     import string_types, integer_types  
 from   ostap.core.core            import Ostap
 from   ostap.fitting.pdfbasic     import ( APDF1 ,
