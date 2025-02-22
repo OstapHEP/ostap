@@ -324,9 +324,12 @@ class sPlot(object) :
         prefix = prefix.replace ( ' ' , '_' ).replace ( '-' , '_' ).strip() 
 
         if root_info < ( 6 , 24 , 6 ) and not unbinned :
-            logger.warning ( 'Switch to *UNBINNED* processing for ROOT version %s.%s' % root_info ) 
             unbinned = True
+            logger.warning ( 'Switch to *UNBINNED* processing for ROOT version %s.%s/%S' % ( root_info.major , 
+                                                                                             root_info.minor , 
+                                                                                             root_info.patch ) ) 
 
+        ## process!! 
         if unbinned :
             
             ## add to tree using Splti4tree machinery :
