@@ -1,6 +1,6 @@
 // ============================================================================
 #ifndef OSTAP_MOREVARS_H 
-#define OSTAP_NOREVARS_H 1
+#define OSTAP_MOREVARS_H 1
 // ============================================================================
 // Include  files 
 // ============================================================================
@@ -25,16 +25,6 @@
 #include "Ostap/HistoInterpolators.h"
 // ============================================================================
 /// forward declarations 
-// ============================================================================
-class RooAddPdf           ; // ROOT,RooFit 
-class RooProdPdf          ; // ROOT,RooFit 
-class RooGaussian         ; // ROOT,RooFit 
-class RooFFTConvPdf       ; // ROOT,RooFit 
-class RooEfficiency       ; // ROOT,RooFit 
-class RooPolyVar          ; // ROOT,RooFit 
-class RooPolynomial       ; // ROOT,RooFit 
-class RooMultiVarGaussian ; // ROOT,RooFit 
-class RooLinearVar        ; // ROOT,RooFit
 // ============================================================================
 namespace Ostap 
 {
@@ -858,131 +848,6 @@ namespace Ostap
       double evaluate  () const override ;
       // ======================================================================      
     } ;
-    // ========================================================================
-    /** Helper method to check if recursive fractions were 
-     *  used for creation of RooAddPdf object
-     *  @see RooAddPdf 
-     */
-    bool       recursive 
-    ( const RooAddPdf& pdf ) ;
-    // ========================================================================
-    /** get the original fractions from the <code>RooAddPdf</code>
-     *  @see RooAddPdf
-     */
-    RooArgList fractions
-    ( const RooAddPdf&  pdf       , 
-      bool&             recursive ) ;  
-    // ========================================================================
-    /** get the original fractions from the <code>RooAddPdf</code>
-     *  @see RooAddPdf
-     */
-    RooArgList fractions
-    ( const RooAddPdf&  pdf       ) ;
-    // ========================================================================
-    /** get x-observable
-     *  @see RooGauissian
-     */
-    const RooAbsReal& getX    ( const RooGaussian& pdf ) ;
-    // ========================================================================
-    /** get mean value 
-     *  @see RooGauissian
-     */
-    const RooAbsReal& getMean ( const RooGaussian& pdf ) ;
-    // ========================================================================
-    /** get sigma 
-     *  @see RooGauissian
-     */
-    const RooAbsReal& getSigma ( const RooGaussian& pdf ) ;
-    // ========================================================================
-    /** get parameters from RooFFTConvPdf 
-     *  @see RooFFTConvPdf 
-     */
-    RooArgList 
-    fft_pars 
-    ( const RooFFTConvPdf& pdf    ,
-      double&              shift1 ,
-      double&              shift2 ) ;
-    // ========================================================================
-    /** get the efficiency function from the RooEfficiency object
-     *  @see RooEfficiency
-     */
-    const RooAbsReal&     get_eff ( const RooEfficiency& pdf ) ;
-    // ========================================================================
-    /** get the category from the RooEfficiency object
-     *  @see RooEfficiency
-     */
-    const RooAbsCategory& get_cat ( const RooEfficiency& pdf ) ;
-    // ========================================================================
-    /** get the name of the 'accept' category from RooEfficiency object
-     *  @see RooEfficiency
-     */
-    std::string           get_acc ( const RooEfficiency& pdf ) ;
-    // ========================================================================
-    /** get the coefficients from the <code>RooPolyVar</code>
-     *  @see RooPolyVar
-     */
-    RooArgList coefficients 
-    ( const RooPolyVar&  var       ) ;
-    // ========================================================================
-    /** get the coefficients from the <code>RooPolynomial</code>
-     *  @see RooPolynomial
-     */
-    RooArgList coefficients 
-    ( const RooPolynomial&  var    ) ;
-    // ========================================================================
-    /** get the variable from <code>RooPolynomial</code>
-     *  @see RooPolynomial
-     */
-    const RooAbsReal& get_variable 
-    ( const RooPolynomial& var ) ;
-    // ========================================================================
-    /** get the variable from <code>RooPolyVar</code>
-     *  @see RooPolyVar
-     */
-    const RooAbsReal& get_variable 
-    ( const RooPolyVar& var ) ;
-    // ========================================================================
-    /** get the lowest order  <code>RooPolynomial</code>
-     *  @see RooPolynomial
-     */
-    Int_t lowest_order 
-    ( const RooPolynomial& var ) ;
-    // ========================================================================
-    /** get the lowest order  <code>RooPolyVar</code>
-     *  @see RooPolyVar
-     */
-    Int_t lowest_order 
-    ( const RooPolyVar& var ) ;
-    // ========================================================================
-    /** get the observables from <code>RooMultiVarGaussian</code>
-     *  @see RooMultiVarGaussian
-     */
-    RooArgList observables 
-    ( const RooMultiVarGaussian& pdf ) ;
-    // ========================================================================
-    /** get vector of mu-values from <code>RooMultiVarGaussian</code>
-     *  @see RooMultiVarGaussian
-     */
-    TVectorD mu_vec
-    ( const RooMultiVarGaussian& pdf ) ;
-    // ========================================================================
-    /** get the variable from <code>RooLinearVar</code>
-     *  @see RooLinearVar
-     */
-    const RooAbsReal& get_variable 
-    ( const RooLinearVar& var ) ;
-    // ========================================================================
-    /** get the slope  from <code>RooLinearVar</code>
-     *  @see RooLinearVar
-     */
-    const RooAbsReal& get_alope 
-    ( const RooLinearVar& var ) ;
-    // =======================================================================
-    /** get the offset from <code>RooLinearVar</code>
-     *  @see RooLinearVar
-     */
-    const RooAbsReal& get_offset
-    ( const RooLinearVar& var ) ;
     // ========================================================================
   } //                                   The end of namespace Ostap::MoreRooFit
   // ==========================================================================

@@ -136,6 +136,8 @@
 #include "Ostap/UStat.h"
 #include "Ostap/WStatEntity.h"
 #include "Ostap/Workspace.h"
+// ALL 
+#include "Ostap/Ostap.h"
 // ============================================================================
 #include "RooFormulaVar.h"
 // ============================================================================

@@ -19,9 +19,11 @@
 // ============================================================================
 // Ostap
 // ============================================================================
-#include "Ostap/MoreMath.h"
-#include "Ostap/MoreRooFit.h"
+#include "Ostap/Iterator.h"
 #include "Ostap/Power.h"
+#include "Ostap/MoreMath.h"
+#include "Ostap/MoreVars.h"
+#include "Ostap/MoreRooFit.h"
 #include "Ostap/RooFitUtils.h"
 #include "Ostap/ToStream.h"
 // ============================================================================
