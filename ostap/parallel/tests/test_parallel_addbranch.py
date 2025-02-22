@@ -21,7 +21,8 @@ Four ways to add branch into TTree/Tchain
 - using histogram/function
 - using histogram sampling
 """
-# ============================================================================= 
+# =============================================================================
+from   ostap.core.meta_info               import root_info 
 from   ostap.core.pyrouts                 import hID , Ostap 
 from   ostap.trees.data                   import Data
 from   ostap.math.make_fun                import make_fun1, make_fun2, make_fun3 
@@ -265,17 +266,18 @@ def test_addbranch() :
     # =========================================================================
     ## (6) add new branch as histogram-function 
     # =========================================================================
-    with timing ('fun-hist-1' , logger = logger ) as timer :          
-        h1  = ROOT.TH1D ( hID () , 'some pt-correction' , 100 , 0 , 10 )
-        h1 += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
-        from   ostap.trees.funcs  import FuncTH1
-        ptw = FuncTH1 ( h1 , 'pt' )
-        chain = data.chain 
-        chain = chain.padd_new_branch ( ptw , name = 'ptw1' )
-    rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
-    ## reload the chain and check: 
-    assert 'ptw1' in chain , "Branch `ptw1' is  not here!"
-
+    if ( 6 , 24 , 6 ) <= root_info : 
+        with timing ('fun-hist-1' , logger = logger ) as timer :          
+            h1  = ROOT.TH1D ( hID () , 'some pt-correction' , 100 , 0 , 10 )
+            h1 += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
+            from   ostap.trees.funcs  import FuncTH1
+            ptw = FuncTH1 ( h1 , 'pt' )
+            chain = data.chain 
+            chain = chain.padd_new_branch ( ptw , name = 'ptw1' )
+        rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
+        ## reload the chain and check: 
+        assert 'ptw1' in chain , "Branch `ptw1' is  not here!"
+            
     # =========================================================================
     ## (7) add new branch as histogram-function 
     # =========================================================================
