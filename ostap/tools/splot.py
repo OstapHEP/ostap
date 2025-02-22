@@ -325,7 +325,7 @@ class sPlot(object) :
 
         if root_info < ( 6 , 24 , 6 ) and not unbinned :
             unbinned = True
-            logger.warning ( 'Switch to *UNBINNED* processing for ROOT version %s.%s/%S' % ( root_info.major , 
+            logger.warning ( 'Switch to *UNBINNED* processing for ROOT version %s.%s/%s' % ( root_info.major , 
                                                                                              root_info.minor , 
                                                                                              root_info.patch ) ) 
 
