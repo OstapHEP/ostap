@@ -182,7 +182,7 @@ else()
       set_property(TARGET ostap PROPERTY CXX_STANDARD 23 )
    elseif ( ${CXX_ROOT} STREQUAL "20" ) 
       target_compile_features (ostap PUBLIC cxx_std_20 )  
-      message ( "----> C++    stanard    : C++20 " )    
+      message ( "----> C++    standard    : C++20 " )    
       set_property(TARGET ostap PROPERTY CXX_STANDARD 20 )
    elseif ( ${CXX_ROOT} STREQUAL "17" ) 
       target_compile_features (ostap PUBLIC cxx_std_17 )
@@ -197,10 +197,8 @@ else()
       message ( "----> C++    standard   : C++17 " )    
       set_property(TARGET ostap PROPERTY CXX_STANDARD 17 )
    endif()
-
     
 endif() 
-
 
     
 target_link_libraries   ( ostap ROOT::MathMore ROOT::ROOTVecOps ROOT::GenVector root_pyroot ROOT::RooFit ROOT::Hist ROOT::Tree ROOT::TreePlayer ROOT::RIO ROOT::TMVA ROOT::ROOTDataFrame GSL::gsl )

@@ -319,6 +319,14 @@ endif()
 # ========================================================================================
     
 file(GLOB files "${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}/ostap/*/tests/test_*.py")
+
+if ( CMAKE_CXX_COMPILER_ID  STREQUAL "GNU" )
+  if ( CMAKE_CXX_COMPILER_VERSION VERSION VERSION_LESS "10.0.0" ) 
+    list(FILTER files EXCLUDE REGEX "\.*test_parallel_addbranches.py$")
+    list(FILTER files EXCLUDE REGEX "\.*test_tools_splot.*.py$")
+  endif()
+endif()
+    
 find_program(NOSE_EXECUTABLE NAMES nosetests)
 if ( ${NOSE_EXECUTABLE} )
    MESSAGE ( "Nose will be used for main tests" ) 
@@ -335,7 +343,7 @@ foreach(filename ${files})
 endforeach()
 
 # ========================================================================================
-## additiomal tests 
+## additional tests 
 # ========================================================================================
 file(GLOB               allfiles "${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}/ostap/*/*.py")
 list(SORT               allfiles)

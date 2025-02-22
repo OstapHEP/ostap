@@ -1,6 +1,12 @@
 // ============================================================================
 // Include files 
 // ============================================================================
+// ROOT
+// ============================================================================
+#include "TClass.h"
+#include "TObject.h"
+#include "TNamed.h"
+// ============================================================================
 // ROOT/RooFit 
 // ============================================================================
 #include "RooAbsReal.h"
@@ -2035,7 +2041,15 @@ std::ostream&
 Ostap::Utils::toStream
 ( const TNamed& o ,
   std::ostream& s )
-{ return s << o.GetName() ; }
+{
+  const TClass* c = o.IsA() ;
+  if (   nullptr !=  c          ) { s << c->GetName() ; }
+  const char* n = o.GetName() ;
+  if ( ( nullptr != n ) && n[0] ) { s << " Name:"  << n ; }
+  const char* t = o.GetTitle() ;
+  if ( ( nullptr != t ) && t[0] ) { s << " Title:" << t ; }
+  return s ;
+}
 // ============================================================================
 /** print RooAbsReal 
  *  @see  RooAbsReal
