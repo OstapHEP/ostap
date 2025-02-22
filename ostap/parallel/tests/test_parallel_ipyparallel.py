@@ -29,12 +29,12 @@ ipp = None
 try : # =======================================================================
     # =========================================================================
     with warnings.catch_warnings() :
-    warnings.simplefilter('ignore')
-    import ipyparallel as ipp
+        warnings.simplefilter('ignore')
+        import ipyparallel as ipp
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
-ipp = None 
+    ipp = None 
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
@@ -46,7 +46,7 @@ except ImportError : # ========================================================
 # =============================================================================
 ## simple    function that created and  fill a histogram
 def make_histos ( item ) :
-    """Simple    function that creates and  fills a histogram
+    """ Simple    function that creates and  fills a histogram
     """
     i, n = item 
     import ROOT, random 

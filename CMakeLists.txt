@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 message ( "----> CMAKE  version    : " ${CMAKE_VERSION} ) 
 
 string(TIMESTAMP OSTAP_BUILD_TIMESTAMP   "%b %d, %Y, %H:%M [UTC]" UTC)

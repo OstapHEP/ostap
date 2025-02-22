@@ -53,10 +53,10 @@ def ecdf_from_data  ( data ) :
     >>> data = ...
     >>> cdf  = ecdf_from_data ( data ) 
     """
-    if   isinstance  ( data , Ostap.Math.ECDF     ) : return data 
-    elif numpy and isinstance ( data , np.ndarray ) : return Ostap.Math.ECDF ( data2vct ( data ) ) 
-    elif isinstance  ( data , array.array         ) : return Ostap.Math.ECDF ( data2vct ( data ) ) 
-    elif isinstance  ( data1 , listlike_types     ) : return Ostap.Math.ECDF ( doubles  ( data ) ) 
+    if   isinstance  ( data , Ostap.Math.ECDF        ) : return data 
+    elif numpy and isinstance ( data , numpy.ndarray ) : return Ostap.Math.ECDF ( data2vct ( data ) ) 
+    elif isinstance  ( data , array.array            ) : return Ostap.Math.ECDF ( data2vct ( data ) ) 
+    elif isinstance  ( data1 , listlike_types        ) : return Ostap.Math.ECDF ( doubles  ( data ) ) 
     ## 
     raise TypeError ( "ecdf_from_data: Unsupported `data' type: %s" % typename ( data1 ) )
 # ===============================================================================
