@@ -277,7 +277,8 @@ def data_statistics ( data , expressions , cuts = '' , *args ) :
         with rootException() :
             result = StatVar.statVar ( data , var , cuts , *args )
             if not result.isfinite() : logger.error ( "Invalid statistics for `%s`" % var )
-            return result 
+            return result
+        
     elif 1 == len ( var_lst ) :
         var    = var_lst [ 0 ]
         with rootException() :
@@ -495,7 +496,7 @@ def data_sum ( data        ,
     """
 
     result = data_statistics ( data , expressions , cuts , *args )
-    
+
     if isinstance ( result , dictlike_types ) :
         for k , r in loop_items ( result ) : 
             result [ key ] = VE ( r.sum() , r.sum2() )

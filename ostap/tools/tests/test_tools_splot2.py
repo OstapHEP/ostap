@@ -41,10 +41,10 @@ batch_env ( logger )
 # =============================================================================
 
 
-xmin , xmax  =    0 ,   10 
+xmin , xmax  =    0 ,   20 
 ymin , ymax  = xmin , xmax
 zmin , zmax  = xmin , xmax
-mean , sigma =    5 , 0.50 
+mean , sigma =   10 , 0.50 
 xvar = ROOT.RooRealVar ( 'x' , 'x-var' , xmin , xmax )
 yvar = ROOT.RooRealVar ( 'y' , 'y-var' , ymin , ymax )
 zvar = ROOT.RooRealVar ( 'z' , 'z-var' , zmin , zmax )
@@ -80,11 +80,11 @@ def create_tree ( fname , nentries = 1000 ) :
             if 0 == i % 2 :  
                 while not xmin < xv < xmax : xv = random.gauss   ( mean , sigma )
                 while not ymin < yv < ymax : yv = random.gauss   ( mean , sigma )
-                while not zmin < zv < zmax : zv = random.gauss   ( 2.5  , 0.75  ) 
+                while not zmin < zv < zmax : zv = random.gauss   (    5 , 0.5   ) 
             else :
                 while not xmin < xv < xmax : xv = random.uniform ( xmin , xmax  ) 
                 while not ymin < yv < ymax : yv = random.uniform ( ymin , ymax  ) 
-                while not zmin < zv < zmax : zv = random.gauss   ( 7.5  , 0.75  ) 
+                while not zmin < zv < zmax : zv = random.gauss   (   15 , 0.5   ) 
 
             x [ 0 ] = xv
             y [ 0 ] = yv
@@ -118,7 +118,8 @@ def test_splotting2 () :
     - write sPlot results into oroigin Ttree
     """
     
-    files = prepare_data ( 10 , 100000 )
+    ## files = prepare_data ( 10 , 100000 )
+    files = prepare_data ( 10 , 12345 )
     
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data ( 'S' , files )
@@ -129,12 +130,6 @@ def test_splotting2 () :
     title = 'Input TTree/TChain'
     logger.info ( '%s:\n%s' % ( title , chain.table ( title = title , prefix = '# ' ) ) ) 
 
-    ## 
-    ## dataset , _ = chain.make_dataset ( ( xvar , yvar , zvar ) )
-    ## title = 'Dataset form TTree'
-    ## logger.info ( '%s:\n%s' % ( title , dataset.table ( title = title , prefix = '# ' ) ) ) 
-    ##
-    
     histo = ROOT.TH2F ( hID() , 'input histogram' , 200 , xmin , xmax , 200 , ymin , ymax )
     data.chain.project ( histo , 'x, y' ) 
 
@@ -168,7 +163,7 @@ def test_splotting2 () :
 
     with timing ( "Adding sPlot results to TTree/TChain" , logger = logger ) :
         chain = data.chain
-        splot.add_to_tree ( chain , 'x' , 'y' , parallel = False ) 
+        splot.add_to_tree ( chain , 'x' , 'y' , unbinned = True  , parallel = False ) 
         
     with use_canvas ( 'test_splot2: Z ' , wait = 5 ) :
 
@@ -182,7 +177,7 @@ def test_splotting2 () :
         title = 'TTree with sPlot-results'
         logger.info ( '%s:\n%s' % ( title , chain.table ( title  = title , prefix = '# ' ) ) ) 
 
-    for var in ( 'SS_sw' , 'BB_sw' , 'SB_sw' , 'BS_sw' ) :        
+    for var in ( 'SS_sw' , 'BB_sw' , 'SB_sw' , 'BS_sw' ) :
         logger.info  ('%s variable sum : %s' % ( var , chain.sumVar  ( var ) ) )
         
     with DBASE.tmpdb()  as db :

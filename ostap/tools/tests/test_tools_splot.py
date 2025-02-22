@@ -109,7 +109,7 @@ def test_splotting  () :
     - write sPlot results into oroigin Ttree
     """
 
-    if root_info < ( 6, 24 , 6 ) :
+    if root_info < ( 6 , 24 , 6 ) :
         logger.warning ( "The test is disabled for ROOT %s.%s/%s" % ( root_info.major ,
                                                                       root_info.minor ,
                                                                       root_info.patch ) )

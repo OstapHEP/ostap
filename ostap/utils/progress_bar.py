@@ -103,9 +103,9 @@ __all__      = (
 # =============================================================================
 from   ostap.core.ostap_types import sized_types 
 from   ostap.utils.basic      import isatty, terminal_size
-from   ostap.logger.symbols   import clock_ticks, runner, finish   
+from   ostap.logger.symbols   import clock_ticks, runner, finish, clock, arrow_right     
 from   ostap.logger.colorized import allright, infostr 
-import sys , os, time
+import sys , os, time, datetime 
 # =============================================================================
 ## get number of columns for xterm
 #  @code
@@ -310,37 +310,48 @@ class ProgressBar(object):
         
         eta  = ''
         leta = len ( eta )
-        if  self.__end is None and 6 < num_hashes and 1 < done :
+        
+        if  self.__end is None and 7 < num_hashes and 1 < done :
+            
             now   = time.time ()
             feta  = int ( ( 100 - done ) *  ( now -  self.__start ) / done )
             h , _ = divmod ( feta            , 3600 )
             m , s = divmod ( feta - h * 3600 ,   60 )
-            if   h     : eta = 'ETA %02d:%02d:%02d ' % ( h , m , s )
-            elif m     : eta = 'ETA %02d:%02d '      % (     m , s )
-            elif s >=1 : eta = 'ETA %02d '           %           s 
+            if   h     : eta = 'ETA %02dh%02d\'%02d" ' % ( h , m , s )
+            elif m     : eta = 'ETA %02d\'%02d" '      % (     m , s )
+            elif s >=1 : eta = 'ETA %02d" '            %           s 
             leta = len ( eta )
-        elif ( not self.__end is None ) and 5 < num_hashes :
+            
+        elif ( not self.__end is None ) and 6 < num_hashes :
+            
             now   = self.__end 
             feta  = int ( now -  self.__start ) 
             h , _ = divmod ( feta            , 3600 )
             m , s = divmod ( feta - h * 3600 ,   60 )
-            if   h     : eta = '%02d:%02d:%02d ' % ( h , m , s )
-            elif m     : eta = '%02d:%02d '      % (     m , s )
-            elif s >=1 : eta = '%ds '            %           s 
+            if   h     : eta = '%02dh%02d\'%02d" ' % ( h , m , s )
+            elif m     : eta = '%02d\'%02d" '      % (     m , s )
+            elif s >=1 : eta = '%d" '              %           s 
             leta = len ( eta )
 
+        if finish   and 100 <= done : 
+            eta   = finish + ' ' + eta
+            leta += 2
+        elif runner and done < 100 :
+            eta   = runner + ' ' + eta
+            leta += 2
+        
         if self.mode == 'dynamic':
             # build a progress bar with self.char (to create a dynamic bar
             # where the percent string moves along with the bar progress.            
             if eta and leta < num_hashes : 
-                self.bar = allright (  eta + self.char * ( num_hashes - leta ) )
+                self.bar = eta + allright ( self.char * ( num_hashes - leta ) )
             else :
                 self.bar = allright ( self.char * num_hashes ) 
         else:
             # build a progress bar with self.char and spaces (to create a 
             # fixed bar (the percent string doesn't move)
             if eta and leta + 1 < num_hashes :
-                self.bar = allright ( eta + self.char * ( num_hashes - leta ) ) + ' ' * ( all_full - num_hashes )
+                self.bar = eta + allright ( self.char * ( num_hashes - leta ) ) + ' ' * ( all_full - num_hashes )
             else : 
                 self.bar = allright ( self.char * num_hashes ) + ' ' * ( all_full - num_hashes )
  
@@ -389,28 +400,25 @@ class ProgressBar(object):
     # =========================================================================
     ## Context manager: ENTER 
     def __enter__ ( self      ) : 
-        """ Context manager: ENTER """
+        """ Context manager: ENTER 
+        """
+        self.__start  = time.time ()
         self.show() 
         return self
         
     # =========================================================================
     ## Context manager EXIT 
     def __exit__  ( self , *_ ) :
-        """ Context manager EXIT """
+        """ Context manager EXIT 
+        """
         self.end ()
 
     def __del__   ( self      ) : self.end ()
 
 # =============================================================================
 _bar_  = tuple ( ( runner + ' ' + tick + ' '  + '\r' ) for tick in clock_ticks ) 
-"""
-_bar_  =  ( allright ( 'Running ' ) ... | '  ) + '\r' , 
-            allright ( 'Running ... / '  ) + '\r' , 
-            allright ( 'Running ... - '  ) + '\r' , 
-            allright ( 'Running ... \\ ' ) + '\r' )
-"""
-_lbar  = len ( _bar_ )
-_done_ =    finish + ' ' + infostr  ( 'Done %-d' ) + '\n' 
+_lbar_ = len ( _bar_ )
+_done_ = finish + ' ' + infostr  ( 'Done #%-d' ) 
 # =============================================================================
 ## @class RunningBar 
 #  - RunningBar
@@ -443,10 +451,15 @@ class RunningBar(object):
         
         self.silent   = kwargs.get( 'silent' , False ) or not isatty() 
 
-        self.amount   = 0 
-        self.freq     = int ( kwargs.get ( 'frequence' , 100 ) )
-        self.prefix   = kwargs.get ( 'description' , ''     ) 
+        self.amount   =  0 
+        self.freq     =  int ( kwargs.get ( 'frequence' , 100 ) )
+        self.prefix   =  kwargs.get ( 'description' , ''     )
+        self.__start  =  time.time ()
+        self.__last   =  None 
+        self.__shown  =  0
+        
         self.update_amount() 
+
         
     def increment_amount(self, add_amount = 1):
         return self if self.silent else self.update_amount ( self.amount + add_amount )
@@ -470,39 +483,68 @@ class RunningBar(object):
         return str(self.bar)
 
     def show ( self ) :
-        if not self.silent : 
-            ir   , iq   = divmod ( self.amount , self.freq ) 
-            if self.amount <= self.freq or not iq :
-                ib      = self.amount % _lbar
-                #
-                if self.prefix : sys.stdout.write (  self.prefix ) 
-                sys.stdout.write ( _bar_ [ ib ][:-1] + infostr ( str ( self.amount ) ) + '\r' ) 
-                sys.stdout.flush ()
-                return
-            
-            for t in ( 53 , 23 , 11 , 3 ) :
-                if t <= ir :
-                    ie , ia = divmod ( self.amount , t )
-                    if ia : return 
-                    ib = ie % _lbar                  
-                    if self.prefix : sys.stdout.write ( self.prefix ) 
-                    sys.stdout.write ( _bar_ [ ib ] )
-                    sys.stdout.flush ()
-                    return
-                
-            if self.prefix : sys.stdout.write ( self.prefix ) 
-            ib      = self.amount % _lbar  
-            sys.stdout.write ( _bar_ [ ib ] )
-            sys.stdout.flush ()
 
-    def end  ( self ) : 
-        if not self.silent : 
-            if self.prefix : sys.stdout.write (  self.prefix ) 
-            sys.stdout.write ( _done_ % self.amount )
-            sys.stdout.flush ()
-            self.silent = True
-            
-    def __enter__ ( self      ) : return self
+        if self.silent : return
+
+        if   0 < self.freq          and 0 == self.amount % self.freq : return self.show_ ()
+        elif self.amount <=      10                                  : return self.show_ () 
+        elif self.amount <=     100 and 0 == self.amount % 10        : return self.show_ () 
+        elif self.amount <=    1000 and 0 == self.amount % 50        : return self.show_ () 
+        elif self.amount <=   10000 and 0 == self.amount % 100       : return self.show_ () 
+        elif self.amount <= 1000000 and 0 == self.amount % 500       : return self.show_ ()
+        elif 0 == self.amount % 1000                                 : return self.show_ () 
+
+    def show_ ( self , now = None ) :
+
+        if   self.silent : return        
+        elif now is None : now = time.time() 
+
+        ## avoid very frequent printout        
+        if self.__last and now - self.__last < 0.1 : return
+        
+        ## index 
+        bar = _bar_ [ self.__shown % _lbar_ ]
+        
+        sys.stdout.write ( self.prefix + _bar_ [ self.__shown % _lbar_ ] )
+        sys.stdout.flush ()
+
+        self.__shown += 1
+        self.__last   = now 
+
+        return
+    
+    def end  ( self ) :
+        if self.silent : return
+        start   = datetime.datetime.fromtimestamp ( self.__start )
+        end     = datetime.datetime.now ()
+        delta   = end - start
+
+        hours    , reminder = divmod ( delta.seconds , 3600 )
+        minutes  , seconds  = divmod ( reminder      ,   60 )
+        days     = delta.days 
+        secs     = seconds + 1.e-6 * delta.microseconds
+        
+        if   days    : timebar = ' %d days %02dh%02d\'%04.1f"'  % ( delta.days , hours , minutes , secs )
+        elif hours   : timebar = ' %02dh%02d\'%04.1f"'          % ( hours , minutes , secs )
+        elif minutes : timebar = ' %02d\'%04.1f"'               % (         minutes , secs )
+        else         : timebar = ' %.2f"'                       %                     secs 
+
+        timebar += ' ' + start.strftime ('%a %d %b %Y, %I:%M%p')
+        timebar += ' ' + arrow_right 
+        timebar += ' ' + end.strftime   ('%a %d %b %Y, %I:%M%p')
+        
+        sys.stdout.write ( self.prefix + ( _done_ % self.amount ) + ' ' + clock + timebar + '\n' ) 
+        sys.stdout.flush ()
+        self.silent = True
+        
+    ## CONTEXT manager ENTER 
+    def __enter__ ( self      ) :
+        self.__start  = time.time ()
+        self.__last   = None 
+        self.__shown  = 0 
+        return self
+    
+    ## CONTEXT manager EXIT 
     def __exit__  ( self , *_ ) : self.end()
     def __del__   ( self , *_ ) : self.end()
 
