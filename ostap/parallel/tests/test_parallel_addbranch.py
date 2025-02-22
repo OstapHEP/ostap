@@ -329,36 +329,39 @@ def test_addbranch() :
     # =========================================================================
     ## (9) add the variable sampled from the 1D histogram
     # =========================================================================
-    with timing ('sample-h1' , logger = logger ) as timer :          
-        chain = data.chain 
-        chain = chain.padd_new_branch ( h1 , xname = 'xh1' ) 
-    rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
-    ## reload the chain and check: 
-    assert 'xh1' in chain , "Branch `xh1' is  not here!"
-
+    if ( 6 , 24 , 6 ) <= root_info : 
+        with timing ('sample-h1' , logger = logger ) as timer :          
+            chain = data.chain 
+            chain = chain.padd_new_branch ( h1 , xname = 'xh1' ) 
+        rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
+        ## reload the chain and check: 
+        assert 'xh1' in chain , "Branch `xh1' is  not here!"
+            
     # =========================================================================
-    ## (10) add the variable sampled from the 1D histogram
+    ## (10) add the variable sampled from the 2D histogram
     # =========================================================================
-    with timing ('sample-h2' , logger = logger ) as timer :          
-        chain = data.chain 
-        chain = chain.padd_new_branch ( h2 , xname = 'xh2' , yname = 'yh2' ) 
-    rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
-    ## reload the chain and check: 
-    assert 'xh2' in chain , "Branch `xh2' is  not here!"
-    assert 'yh2' in chain , "Branch `yh2' is  not here!"
+    if ( 6 , 24 , 6 ) <= root_info : 
+        with timing ('sample-h2' , logger = logger ) as timer :          
+            chain = data.chain 
+            chain = chain.padd_new_branch ( h2 , xname = 'xh2' , yname = 'yh2' ) 
+            rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
+        ## reload the chain and check: 
+        assert 'xh2' in chain , "Branch `xh2' is  not here!"
+        assert 'yh2' in chain , "Branch `yh2' is  not here!"
     
     # =========================================================================
-    ## (11) add the variable sampled from the 1D histogram
+    ## (11) add the variable sampled from the 3D histogram
     # =========================================================================
-    with timing ('sample-h3' , logger = logger ) as timer :          
-        chain = data.chain 
-        chain = chain.padd_new_branch ( h3 , xname = 'xh3' , yname = 'yh3' , zname = 'zh3' ) 
-    rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
-    ## reload the chain and check: 
-    assert 'xh3' in chain , "Branch `xh2' is  not here!"
-    assert 'yh3' in chain , "Branch `yh2' is  not here!"
-    assert 'zh3' in chain , "Branch `zh2' is  not here!"
-    
+    if ( 6 , 24 , 6 ) <= root_info : 
+        with timing ('sample-h3' , logger = logger ) as timer :          
+            chain = data.chain 
+            chain = chain.padd_new_branch ( h3 , xname = 'xh3' , yname = 'yh3' , zname = 'zh3' ) 
+            rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
+        ## reload the chain and check: 
+        assert 'xh3' in chain , "Branch `xh2' is  not here!"
+        assert 'yh3' in chain , "Branch `yh2' is  not here!"
+        assert 'zh3' in chain , "Branch `zh2' is  not here!"
+        
     # =========================================================================
     ## (12) python function again 
     # =========================================================================
