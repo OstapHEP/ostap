@@ -1715,8 +1715,9 @@ namespace Ostap
         //
         Ostap::StatusCode sc = bspline ( x  , f , result ) ;
         if (  sc.isFailure() ) 
-        { Ostap::throwException ( "Can't interpolate" , 
-                                  "Ostap::Math::spline_interpolate", sc ) ; }
+        { Ostap::throwException ( "Can't interpolate with BSpline" , 
+                                  "Ostap::Math::spline_interpolate", 
+                                  sc , __FILE__ , __LINE__ ) ; }
         //
         return result ;
       }

@@ -85,7 +85,8 @@ namespace  Ostap
         if ( Ostap::Math::inverse ( m_cov2 , m_vxi ) ) 
         {
           Ostap::throwException ( "Covariance matrix is not innvertible!" ,
-                                  "Ostap::Math::Combine<>" , 730 ) ;
+                                  "Ostap::Math::Combine<>" , 
+                                  730, __FILE__ , __LINE__  ) ;
         }
         const Data& vone = this->units() ;
         m_w = ( m_vxi * vone ) / ROOT::Math::Similarity( m_vxi , vone ) ; 

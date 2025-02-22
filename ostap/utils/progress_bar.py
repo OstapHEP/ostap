@@ -263,7 +263,7 @@ class ProgressBar(object):
         return self.min <= self.amount < self.max
 
     # =========================================================================
-    ## Incremeemt self.amount
+    ## Increment self.amount
     def increment_amount ( self , add_amount = 1 ) :
         """ Incremeemt self.amount """ 
         return self.update_amount ( self.amount + add_amount )

@@ -18,6 +18,11 @@ if ( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.15" )
    cmake_policy ( SET CMP0094 NEW ) 
 endif() 
 
+if ( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.31" )
+   ## https://cmake.org/cmake/help/latest/policy/CMP0177.html
+   cmake_policy ( SET CMP0177 NEW ) 
+endif() 
+
 
 if ( ${CMAKE_CXX_COMPILER_LAUNCHER} )
 else () 

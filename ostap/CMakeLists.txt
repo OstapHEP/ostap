@@ -370,7 +370,7 @@ endforeach()
 
 add_test (NAME ostap.ostap        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND ostap -b )
 add_test (NAME ostap.dependencies WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND ostap-check-dependencies )
-
+ 
 
 install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}  
           DESTINATION             . 
