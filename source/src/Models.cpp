@@ -37,7 +37,6 @@
 #include "Ostap/MoreMath.h"
 #include "Ostap/PhaseSpace.h"
 #include "Ostap/Models.h"
-#include "Ostap/ToStream.h"
 // ============================================================================
 //  Local 
 // ============================================================================

@@ -10,7 +10,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
-// #include "Ostap/ToStream.h"
+#include "Ostap/Printable.h"
 // ============================================================================
 // Forward declarations 
 // ============================================================================
@@ -27,13 +27,6 @@ namespace Ostap
   namespace Utils
   {
     // ========================================================================
-    /** print RooAbsCollection
-     *  @see  RooAbsCollection
-     */
-    std::ostream& toStream
-      ( const RooAbsCollection& o ,
-        std::ostream&           s ) ;
-    // ========================================================================
     /** print TNamed
      *  @see  TNamed
      */
@@ -41,12 +34,12 @@ namespace Ostap
       ( const TNamed& o ,
         std::ostream& s ) ;
     // ========================================================================
-    /** print RooPrintable 
-     *  @see  RooPrintable 
+    /** print RooAbsCollection
+     *  @see  RooAbsCollection
      */
     std::ostream& toStream
-      ( const RooPrintable& o ,
-        std::ostream&       s ) ;
+      ( const RooAbsCollection& o ,
+        std::ostream&           s ) ;
     // ========================================================================
     /** print RooAbsArg 
      *  @see  RooAbsArg 

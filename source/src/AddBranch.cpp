@@ -26,7 +26,6 @@
 // Ostap
 // ============================================================================
 #include "Ostap/StatusCode.h"
-#include "Ostap/ToStream.h"
 #include "Ostap/AddBranch.h"
 #include "Ostap/Funcs.h"
 #include "Ostap/Math.h"

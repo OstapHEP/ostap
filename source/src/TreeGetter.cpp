@@ -16,7 +16,6 @@
 #include "Ostap/Math.h"
 #include "Ostap/TreeGetter.h"
 #include "Ostap/RooFitUtils.h"
-#include "Ostap/ToStream.h"
 // ============================================================================
 // local
 // ============================================================================
@@ -40,7 +39,7 @@ Ostap::Trees::Getter::Getter
   , m_formulae ()   
 {
   unsigned short index = 0 ;
-  for ( const auto& item : expressions ) { m_map [ "var" + Ostap::Utils::toString ( ++index ) ] = item ; }
+  for ( const auto& item : expressions ) { m_map [ "var" + std::to_string ( ++index ) ] = item ; }
   //
   if ( nullptr != tree )
     {

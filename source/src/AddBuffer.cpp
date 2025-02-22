@@ -18,7 +18,6 @@
 // Ostap
 // ============================================================================
 #include "Ostap/StatusCode.h"
-#include "Ostap/ToStream.h"
 #include "Ostap/ProgressBar.h"
 #include "Ostap/AddBranch.h"
 #include "Ostap/AddBuffer.h"

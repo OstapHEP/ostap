@@ -2037,19 +2037,6 @@ Ostap::Utils::toStream
   std::ostream& s )
 { return s << o.GetName() ; }
 // ============================================================================
-/* print RooPrintable 
- *  @see  RooPrintabbe
- */
-// ============================================================================
-std::ostream&
-Ostap::Utils::toStream
-( const RooPrintable& o ,
-  std::ostream&       s )
-{
-  o.printClassName ( s ) ;
-  return s ;
-}
-// ============================================================================
 /** print RooAbsReal 
  *  @see  RooAbsReal
  */

@@ -22,7 +22,6 @@
 #include "Ostap/qMath.h"
 #include "Ostap/Clenshaw.h"
 #include "Ostap/Polynomials.h"
-#include "Ostap/ToStream.h"
 // ============================================================================
 //  Local
 // ============================================================================

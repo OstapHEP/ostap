@@ -17,7 +17,6 @@
 // ============================================================================
 // Ostap
 // ============================================================================
-#include "Ostap/ToStream.h"
 #include "Ostap/RooFun.h"
 #include "Ostap/FitResult.h"
 #include "Ostap/MoreRooFit.h"
@@ -26,7 +25,6 @@
 #include "Ostap/TreeGetter.h"
 #include "Ostap/SPlot4Tree.h"
 #include "Ostap/RooFitUtils.h"
-#include "Ostap/ToStream.h"
 // ============================================================================
 // local
 // ============================================================================

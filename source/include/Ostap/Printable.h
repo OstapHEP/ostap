@@ -25,36 +25,48 @@ namespace Ostap
   {
     // ========================================================================
     /// convert  Printable object into string 
-    std::string   toString        ( const RooPrintable& obj       , 
-                                    const std::string&  opts = "" ) ;                   
-    std::string   toString        ( const RooPrintable& obj       , 
-                                    const std::string&  opts      ,
-                                    const int           style     ) ;                   
+    std::string   toString
+    ( const RooPrintable& obj       , 
+      const std::string&  opts = "" ) ;                   
+    // ========================================================================
+    std::string   toString
+    ( const RooPrintable& obj       , 
+      const std::string&  opts      ,
+      const int           style     ) ;                   
+    // ========================================================================
     /// push Printable object into output stream 
-    std::ostream& toStream        ( const RooPrintable& obj       , 
-                                    std::ostream&       stream    , 
-                                    const std::string&  opts = "" ) ;                   
-    std::ostream& toStream        ( const RooPrintable& obj       , 
-                                    std::ostream&       stream    , 
-                                    const std::string&  opts      , 
-                                    const int           style     ) ;                   
+    std::ostream& toStream
+    ( const RooPrintable& obj       , 
+      std::ostream&       stream    , 
+      const std::string&  opts = "" ) ;                   
+    // ========================================================================
+    std::ostream& toStream
+    ( const RooPrintable& obj       , 
+      std::ostream&       stream    , 
+      const std::string&  opts      , 
+      const int           style     ) ;                   
+    // ========================================================================
     /// convert  Printable object into string 
     inline 
-    std::string   to_string       ( const RooPrintable& obj       , 
-                                    const std::string&  opts = "" ) 
+    std::string   to_string
+    ( const RooPrintable& obj       , 
+      const std::string&  opts = "" ) 
     { return toString ( obj , opts ) ; }      
+    // ========================================================================
     /// convert  Printable object into string 
     inline
-    std::string   print_printable ( const RooPrintable& obj       , 
-                                    const std::string&  opts = "" ) 
+    std::string   print_printable
+    ( const RooPrintable& obj       , 
+      const std::string&  opts = "" ) 
     { return toString ( obj , opts ) ; }
+    // ========================================================================
     /// convert  Printable object into string 
     inline
-    std::string   print_printable ( const RooPrintable& obj       , 
-                                    const std::string&  opts      ,
-                                    const int           style     ) 
+    std::string   print_printable
+    ( const RooPrintable& obj       , 
+      const std::string&  opts      ,
+      const int           style     ) 
     { return toString ( obj , opts , style ) ; }
-
     // ==========================================================================
     /** helper function to print printable object into string (needed for python)
      *  @param object the object
