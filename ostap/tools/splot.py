@@ -37,6 +37,7 @@ __all__     = (
     'sPlot3D'  , ## 3D-splot
     )
 # =============================================================================
+from   ostao.core.meta_info       import root_info
 from   ostap.core.ostap_types     import string_types, integer_types  
 from   ostap.core.core            import Ostap
 from   ostap.fitting.pdfbasic     import ( APDF1 ,
@@ -323,9 +324,9 @@ class sPlot(object) :
         prefix = prefix.replace ( ' ' , '_' ).replace ( '-' , '_' ).strip() 
 
         if root_info < ( 6 , 24 , 6 ) and not unbinned :
-            logger.warning ( 'Switch to *UNBINNED* mode for ROOT<6.24/06!' )
+            logger.warning ( 'Switch to *UNBINNED* processing for ROOT version %s.%s' % root_info ) 
             unbinned = True
-            
+
         if unbinned :
             
             ## add to tree using Splti4tree machinery :
