@@ -322,6 +322,10 @@ class sPlot(object) :
         suffix = suffix.replace ( ' ' , '_' ).replace ( '-' , '_' ).strip() 
         prefix = prefix.replace ( ' ' , '_' ).replace ( '-' , '_' ).strip() 
 
+        if root_info < ( 6 , 24 , 6 ) and not unbinned :
+            logger.warning ( 'Switch to *UNBINNED* mode for ROOT<6.24/06!' )
+            unbinned = True
+            
         if unbinned :
             
             ## add to tree using Splti4tree machinery :

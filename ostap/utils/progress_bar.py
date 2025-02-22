@@ -103,7 +103,7 @@ __all__      = (
 # =============================================================================
 from   ostap.core.ostap_types import sized_types 
 from   ostap.utils.basic      import isatty, terminal_size
-from   ostap.logger.symbols   import clock_ticks, runner  
+from   ostap.logger.symbols   import clock_ticks, runner, finish   
 from   ostap.logger.colorized import allright, infostr 
 import sys , os, time
 # =============================================================================
@@ -402,15 +402,15 @@ class ProgressBar(object):
     def __del__   ( self      ) : self.end ()
 
 # =============================================================================
-_bar_  = tuple ( allright ( 'Running ... ' + runner + ' '+ tick ) + '\r' for tick in clock_ticks ) 
+_bar_  = tuple ( ( runner + ' ' + tick + ' '  + '\r' ) for tick in clock_ticks ) 
 """
-_bar_  =  ( allright ( 'Running ... | '  ) + '\r' , 
+_bar_  =  ( allright ( 'Running ' ) ... | '  ) + '\r' , 
             allright ( 'Running ... / '  ) + '\r' , 
             allright ( 'Running ... - '  ) + '\r' , 
             allright ( 'Running ... \\ ' ) + '\r' )
 """
 _lbar  = len ( _bar_ )
-_done_ =    infostr  ( 'Done            %-d' ) + '\n' 
+_done_ =    finish + ' ' + infostr  ( 'Done %-d' ) + '\n' 
 # =============================================================================
 ## @class RunningBar 
 #  - RunningBar
@@ -568,18 +568,18 @@ def test_bars ():
     with ProgressBar ( limit ,  mode = 'fixed' ) as bar : 
         for i in range ( limit + 1 ):
             bar += 1 
-            time.sleep ( 0.02   )
+            time.sleep ( 0.005 )
  
     print('Example 2: Dynamic Bar')
     with ProgressBar( limit , mode = 'dynamic' , char = '-' ) as bar : 
         for i in range ( limit + 1 ):
             bar += 1 
-            time.sleep ( 0.02  )
+            time.sleep ( 0.005 )
 
-    for i in progress_bar ( range ( 15000 ) , description = "Doing something ") : 
+    for i in progress_bar ( range ( 5000 ) , description = "Doing something ") : 
         time.sleep(0.001)
         
-    for i in running_bar  ( range ( 15000 ) , description = "Empty looping ") :         
+    for i in running_bar  ( range ( 5000 ) , description = "Empty looping ") :         
         time.sleep(0.001)
 
 # ==============================================================================
