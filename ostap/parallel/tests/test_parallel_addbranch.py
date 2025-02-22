@@ -268,10 +268,10 @@ def test_addbranch() :
     # =========================================================================
     if ( 6 , 24 , 6 ) <= root_info : 
         with timing ('fun-hist-1' , logger = logger ) as timer :          
-            h1  = ROOT.TH1D ( hID () , 'some pt-correction' , 100 , 0 , 10 )
-            h1 += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
+            h1    = ROOT.TH1D ( hID () , 'some pt-correction' , 100 , 0 , 10 )
+            h1   += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
             from   ostap.trees.funcs  import FuncTH1
-            ptw = FuncTH1 ( h1 , 'pt' )
+            ptw   = FuncTH1 ( h1 , 'pt' )
             chain = data.chain 
             chain = chain.padd_new_branch ( ptw , name = 'ptw1' )
         rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
@@ -283,8 +283,8 @@ def test_addbranch() :
     # =========================================================================
     if ( 6 , 24 , 6 ) <= root_info : 
         with timing ( 'fun-hist-2' , logger = logger ) as timer :          
-            h1  = ROOT.TH1D ( hID () , 'some pt-correction' , 100 , 0 , 10 )
-            h1 += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
+            h1    = ROOT.TH1D ( hID () , 'some pt-correction' , 100 , 0 , 10 )
+            h1   += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
             from   ostap.trees.funcs  import FuncTH1
             ptw   = FuncTH1 ( h1 , 'pt' )
             chain = data.chain 
@@ -296,24 +296,25 @@ def test_addbranch() :
     # =========================================================================
     ## (8) add several functions simultaneously 
     # =========================================================================
-    with timing ('sim-funcs' , logger = logger ) as timer :          
-        from   ostap.trees.funcs  import FuncTH1
-        hh    = ROOT.TH1D ( hID() , 'some pt-correction' , 100 , 0 , 10 )
-        h1    = hh + ( lambda x :  1.0 + math.tanh ( 0.1 * ( x - 5 ) ) )
-        ptw3  = FuncTH1 ( h1 , 'pt' )
-        h2    = h1 + ( lambda x :  1.0 + math.tanh ( 0.2 * ( x - 5 ) ) )
-        ptw4  = FuncTH1 ( h2 , 'pt' )
-        h3    = h1 + ( lambda x :  1.0 + math.tanh ( 0.3 * ( x - 5 ) ) ) 
-        ptw5  = FuncTH1 ( h3 , 'pt' )
-        chain = data.chain
-        brs   = { 'ptw3' : ptw3 , 'ptw4' : ptw4 , 'ptw5' : ptw4 } 
-        chain = chain.padd_new_branch ( brs )     
-    rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
-    ## reload the chain and check: 
-    assert 'ptw3' in chain , "Branch `ptw3' is  not here!"
-    assert 'ptw4' in chain , "Branch `ptw4' is  not here!"
-    assert 'ptw5' in chain , "Branch `ptw5' is  not here!"
-    
+    if ( 6 , 24 , 6 ) <= root_info : 
+        with timing ('sim-funcs' , logger = logger ) as timer :          
+            from   ostap.trees.funcs  import FuncTH1
+            hh    = ROOT.TH1D ( hID() , 'some pt-correction' , 100 , 0 , 10 )
+            h1    = hh + ( lambda x :  1.0 + math.tanh ( 0.1 * ( x - 5 ) ) )
+            ptw3  = FuncTH1 ( h1 , 'pt' )
+            h2    = h1 + ( lambda x :  1.0 + math.tanh ( 0.2 * ( x - 5 ) ) )
+            ptw4  = FuncTH1 ( h2 , 'pt' )
+            h3    = h1 + ( lambda x :  1.0 + math.tanh ( 0.3 * ( x - 5 ) ) ) 
+            ptw5  = FuncTH1 ( h3 , 'pt' )
+            chain = data.chain
+            brs   = { 'ptw3' : ptw3 , 'ptw4' : ptw4 , 'ptw5' : ptw4 } 
+            chain = chain.padd_new_branch ( brs )     
+        rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
+        ## reload the chain and check: 
+        assert 'ptw3' in chain , "Branch `ptw3' is  not here!"
+        assert 'ptw4' in chain , "Branch `ptw4' is  not here!"
+        assert 'ptw5' in chain , "Branch `ptw5' is  not here!"
+
     h1 = ROOT.TH1D ( hID() , 'Gauss1' , 120 , -6 , 6 )
     h2 = ROOT.TH2D ( hID() , 'Gauss2' ,  50 , -6 , 6 , 50 , -6 , 6 )
     h3 = ROOT.TH3D ( hID() , 'Gauss2' ,  20 , -6 , 6 , 20 , -6 , 6 , 20 , -6 , 6 )
