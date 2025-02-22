@@ -37,7 +37,6 @@ __all__     = (
     'sPlot3D'  , ## 3D-splot
     )
 # =============================================================================
-from   ostap.core.meta_info       import root_info
 from   ostap.core.ostap_types     import string_types, integer_types  
 from   ostap.core.core            import Ostap
 from   ostap.fitting.pdfbasic     import ( APDF1 ,
@@ -322,12 +321,6 @@ class sPlot(object) :
             
         suffix = suffix.replace ( ' ' , '_' ).replace ( '-' , '_' ).strip() 
         prefix = prefix.replace ( ' ' , '_' ).replace ( '-' , '_' ).strip() 
-
-        if root_info < ( 6 , 24 , 6 ) and not unbinned :
-            unbinned = True
-            logger.warning ( 'Switch to *UNBINNED* processing for ROOT version %s.%s/%s' % ( root_info.major , 
-                                                                                             root_info.minor , 
-                                                                                             root_info.patch ) ) 
 
         ## process!! 
         if unbinned :

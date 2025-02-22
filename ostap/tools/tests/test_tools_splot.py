@@ -15,6 +15,7 @@
 - write sPlot results into oroigin Ttree
 """
 # ============================================================================= 
+from   ostap.core.meta_info     import root_info
 from   ostap.core.core          import Ostap, hID 
 from   ostap.trees.data         import Data
 from   ostap.utils.basic        import typename 
@@ -107,6 +108,12 @@ def test_splotting  () :
     - make sPlot
     - write sPlot results into oroigin Ttree
     """
+
+    if root_info < ( 6, 24 , 6 ) :
+        logger.warning ( "The test is disabled for ROOT %s.%s/%s" % ( root_info.major ,
+                                                                      root_info.minor ,
+                                                                      root_info.patch ) )
+        return
     
     files = prepare_data ( 10 , 10000 )
     
