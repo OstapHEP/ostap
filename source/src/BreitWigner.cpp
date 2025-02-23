@@ -274,11 +274,11 @@ Ostap::Math::FormFactors::BlattWeisskopf::BlattWeisskopf
   , m_b ( b )
   , m_what ( "BlattWeisskopf(" + std::to_string( (int) L ) + "," + std::to_string ( b ) + ")" )
 {
-  Ostap::Assert ( Zero  == L &&
-                  One   == L &&
-                  Two   == L &&
-                  Three == L &&
-                  Four  == L &&
+  Ostap::Assert ( Zero  == L ||
+                  One   == L ||
+                  Two   == L ||
+                  Three == L ||
+                  Four  == L ||
                   Five  == L                                 ,
                   "Illegal orbital momentum!"                ,  
                   "Ostap::Math::FormFactors::BlattWeisskopf" ,
