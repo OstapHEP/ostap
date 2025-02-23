@@ -1714,10 +1714,10 @@ namespace Ostap
         for ( unsigned short i = 0 ; i < N ; ++i ) { f[i] = func ( x[i] ) ; }
         //
         Ostap::StatusCode sc = bspline ( x  , f , result ) ;
-        if (  sc.isFailure() ) 
-        { Ostap::throwException ( "Can't interpolate with BSpline" , 
-                                  "Ostap::Math::spline_interpolate", 
-                                  sc , __FILE__ , __LINE__ ) ; }
+        Ostap::Assert (  sc.isSuccess ()                   ,
+                         "Can't interpolate with BSpline"  , 
+                         "Ostap::Math::spline_interpolate" , 
+                         sc , __FILE__ , __LINE__          ) ;
         //
         return result ;
       }

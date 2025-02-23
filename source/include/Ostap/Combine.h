@@ -73,6 +73,13 @@ namespace  Ostap
       // ============================================================================
     public:
       // =======================================================================
+      enum 
+        {
+          InvalidCovariance = 810 , 
+        } ;
+      // ============================================================================
+    public:
+      // =======================================================================
       // constructor from the vector of data and cov matrix 
       Combine
       ( const Data&       data , 
@@ -81,13 +88,12 @@ namespace  Ostap
         , m_cov2 ( cov2 )
         , m_vxi  ()  
         , m_w    () 
-      {
-        if ( Ostap::Math::inverse ( m_cov2 , m_vxi ) ) 
-        {
-          Ostap::throwException ( "Covariance matrix is not innvertible!" ,
-                                  "Ostap::Math::Combine<>" , 
-                                  730, __FILE__ , __LINE__  ) ;
-        }
+      { 
+        Ostap::Assert ( !Ostap::Math::inverse ( m_cov2 , m_vxi )   , 
+                        "Covariance matrix is not innvertible!"    ,
+                        "Ostap::Math::Combine<>"                   , 
+                        InvalidCovariance , __FILE__ , __LINE__  ) ;
+        //
         const Data& vone = this->units() ;
         m_w = ( m_vxi * vone ) / ROOT::Math::Similarity( m_vxi , vone ) ; 
       }

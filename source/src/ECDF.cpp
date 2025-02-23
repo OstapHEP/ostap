@@ -40,17 +40,6 @@ Ostap::Math::ECDF::ECDF
   m_complementary = complementary ; 
 }
 // ============================================================================
-// sort container 
-// ============================================================================
-void Ostap::Math::ECDF::sort_me()
-{
-  Ostap::Assert ( 0 < m_data.size()       ,
-                  "Empty data container!" ,
-                  "Ostap::Math::ECDF"     ) ;
-  // sort it! 
-  std::sort ( m_data.begin() , m_data.end  () ) ;
-}
-// ============================================================================
 // swap two objects 
 // ============================================================================
 void Ostap::Math::ECDF::swap ( Ostap::Math::ECDF& right )
@@ -66,8 +55,6 @@ double Ostap::Math::ECDF::evaluate   ( const double x ) const
   if      ( x < m_data.front () ) { return m_complementary ? 1.0 : 0.0 ; } 
   else if ( x > m_data.back  () ) { return m_complementary ? 0.0 : 1.0 ; } 
   //
-  // const double result = double ( std::upper_bound ( m_data.begin () ,
-  //                                                   m_data.end   () , x ) - m_data.begin() ) / m_data.size () ;
   const double result = double ( rank ( x ) ) / m_data.size () ;
   return m_complementary ? ( 1 - result ) : result ; 
 }
@@ -106,7 +93,14 @@ Ostap::Math::ECDF::add
 Ostap::Math::ECDF::Data::size_type 
 Ostap::Math::ECDF::add
 ( const Ostap::Math::ECDF::Data& values )
-{ return  add ( values.begin() , values.end() ) ; }
+{ return add ( values.begin() , values.end() ) ; }
+// ============================================================================
+// add values to data container  
+// ============================================================================
+Ostap::Math::ECDF::Data::size_type 
+Ostap::Math::ECDF::add
+( const Ostap::Math::ECDF& values )
+{ return add_sorted ( values.m_data.begin() , values.m_data.end () ) ; }
 // ============================================================================
 Ostap::Math::ECDF
 Ostap::Math::ECDF::__add__  ( const Ostap::Math::ECDF&  x ) const 
@@ -115,23 +109,6 @@ Ostap::Math::ECDF::__add__  ( const Ostap::Math::ECDF&  x ) const
   c.add ( x ) ;
   return c ;
 } 
-// ============================================================================
-// add a value to data container  
-// ============================================================================
-Ostap::Math::ECDF::Data::size_type 
-Ostap::Math::ECDF::add
-( const Ostap::Math::ECDF& values )
-{
-  Data tmp2  ( m_data.size() + values.size() ) ;
-  /// merge two sorted containers 
-  std::merge ( m_data.begin        () ,
-               m_data.end          () ,
-               values.m_data.begin () ,
-               values.m_data.end   () ,
-               tmp2.begin          () ) ;
-  std::swap ( m_data , tmp2 ) ;
-  return m_data.size () ;
-}
 // ============================================================================
 // get ranks of the elements in the (pooled) sample
 // ============================================================================
@@ -153,8 +130,26 @@ Ostap::Math::ECDF::ranks
   return result ;
 }
 // ============================================================================
-
-
+/*  assuming that x comes from the same distribution 
+ *  return transformed value  \f$ g = f(x) \f$, such that 
+ *  \f$ g \f$  has Gaussian distribution
+ */
+// ============================================================================
+double Ostap::Math::ECDF::gauss   ( const double x ) const
+{ return Ostap::Math::probit ( uniform ( x ) ) ; }
+// ============================================================================
+/*  assuming that x comes from the same distribution 
+ *  return transformed value  \f$ u = f(x) \f$, such that 
+ *  \f$ u \f$  has uniform distribution for \f$ 0 \le  u \le 1 \f$ 
+ */
+// ============================================================================
+double Ostap::Math::ECDF::uniform ( const double x ) const
+{
+  return 
+    ( ( x < xmin () ) ? (       1.0 / size () ) :
+      ( x > xmax () ) ? ( 1.0 - 1.0 / size () ) : 
+      ( std::lower_bound ( m_data.begin () , m_data.end () , x ) - m_data.begin() ) * 1.0 / size () ) ;
+}
 // ============================================================================
 // For weighted data 
 // ============================================================================

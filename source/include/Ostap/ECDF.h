@@ -56,7 +56,10 @@ namespace Ostap
         const bool complementary = false ) 
         : m_data          ( begin , end   )
         , m_complementary ( complementary ) 
-      { if ( !std::is_sorted ( m_data.begin() , m_data.end() ) ) { this->sort_me() ; } }
+      {
+        if ( !std::is_sorted ( m_data.begin() , m_data.end() ) )
+          { std::sort ( m_data.begin() , m_data.end() ) ; }
+      }
       /// constructor to create complementary/ordinary ECDF
       ECDF
       ( const ECDF&  right         ,
@@ -87,29 +90,45 @@ namespace Ostap
       Data::size_type add ( const Data&  values ) ; 
       /// add more values to data container 
       Data::size_type add ( const ECDF&  values ) ;
-      /// add a bunch oif values 
+      /// add a bunch of values 
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
                 typename            = std::enable_if<std::is_convertible<value_type,double>::value> >
-      unsigned long add
+      Data::size_type add
       ( ITERATOR begin ,
         ITERATOR end   )
       {
+        if ( std::is_sorted ( begin, end ) ) { return this-> add_sorted ( begin , end ) ; }
         /// copy input data 
-        Data tmp1 ( begin , end ) ;
+        Data tmp  ( begin , end ) ;
         /// sort input data 
-        if ( !std::is_sorted ( tmp1.begin() , tmp1.end() ) || tmp1.empty() ) { std::sort ( tmp1.begin  () , tmp1.end  ()  ) ; }
+        std::sort ( tmp.begin () , tmp.end () ) ; 
+        return this->add_sorted ( tmp.begin() , tmp.end() ) ;
+      }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      /// add a bunch of sorted values 
+      template <class ITERATOR,
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename            = std::enable_if<std::is_convertible<value_type,double>::value> >
+      Data::size_type add_sorted 
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        const std::size_t d = std::distance ( begin , end ) ;
+        if ( !d  ) { return m_data.size () ; } // no action! 
         /// prepare the output 
-        Data tmp2 ( m_data.size () + tmp1.size () )  ;
+        Data tmp  ( d + m_data.size () )  ;
         /// merge two sorted containers 
-        std::merge ( m_data.begin() ,
-                     m_data.end  () ,
-                     tmp1.begin  () ,
-                     tmp1.end    () ,
-                     tmp2.begin  () ) ;
-        /// swap the result  with own data 
-        std::swap ( m_data , tmp2 ) ;
-        return m_data.size () ;
+        std::merge ( begin           ,
+                     end             ,
+                     m_data.begin () ,
+                     m_data.end   () ,                     
+                     tmp.begin    () ) ;
+        /// swap the merged result  with own data 
+        std::swap ( m_data , tmp ) ;
+        return m_data.size () ;        
       }
       // ======================================================================
     public :
@@ -153,9 +172,23 @@ namespace Ostap
       // get the value of F_k
       inline double Fk ( const unsigned int k ) const
       {
-	const Data::size_type n = m_data.size() ;
-	return 0 == k ? 0.0 : n <= k ? 1.0 : k * 1.0 / n  ;
+        const Data::size_type n = m_data.size() ;
+        return 0 == k ? 0.0 : n <= k ? 1.0 : k * 1.0 / n  ;
       }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** assuming that x comes from the same distribution 
+       *  return transformed value  \f$ g = f(x) \f$, such that 
+       *  \f$ g \f$  has Gaussian distribution 
+       */
+      double gauss   ( const double x ) const ;
+      // =======================================================================
+      /** assuming that x comes from the same distribution 
+       *  return transformed value  \f$ u = f(x) \f$, such that 
+       *  \f$ u \f$  has uniform distribution for \f$ 0 \le  u \le 1 \f$ 
+       */
+      double uniform ( const double x ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -175,10 +208,6 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      void sort_me () ;
-      // ======================================================================
-    private:
-      // ======================================================================
       /// container of sorted data 
       Data m_data          {       } ; // container of sorted data
       /// complementary CDF?
@@ -187,11 +216,16 @@ namespace Ostap
     }; //                                The end of the class Ostap::Math::ECDF
     // ========================================================================
     /// swap two objects 
-    inline void swap ( ECDF& left , ECDF& right ) { left.swap ( right ) ; }
+    inline void swap
+    ( ECDF& left ,
+      ECDF& right )
+    { left.swap ( right ) ; }
     /// add two ECDFs
-    inline ECDF operator+( const ECDF& a ,
-                           const ECDF& b )
-    { ECDF c { a } ; c += b ; return c ;  }
+    inline ECDF
+    operator+
+    ( const ECDF& a ,
+      const ECDF& b )
+    { ECDF c { a } ; c += b ; return c ; }
     // ========================================================================
     /** @class WECDF Ostap/ECDF.h
      *  Empirical cumulative distribution function for weighted data 
@@ -223,7 +257,7 @@ namespace Ostap
        */ 
       WECDF
       ( const ECDF::Data&  data                  ,
-	const ECDF::Data&  weights               ,
+        const ECDF::Data&  weights               ,
         const bool         complementary = false ) ;
       // =======================================================================
       /** Constructor from  data
@@ -267,16 +301,15 @@ namespace Ostap
       /// add a value to data container  
       inline Data::size_type add
       ( const double value        ,
-	const double weight = 1.0 ) { return add ( Entry ( value , weight ) ) ; }
+        const double weight = 1.0 ) { return add ( Entry ( value , weight ) ) ; }
       /// add a value to data container  
-      Data::size_type add
-      ( const Entry& entry        ) ;      
+      Data::size_type add ( const Entry& entry  ) ;      
       /// add more values to data container 
-      Data::size_type add ( const WECDF&  values ) ;
+      Data::size_type add ( const WECDF& values ) ;
       /// add more values to data container 
-      Data::size_type add ( const  ECDF&  values ) ;
+      Data::size_type add ( const  ECDF& values ) ;
       /// add more values to data container 
-      Data::size_type add ( const Data&   values ) ;
+      Data::size_type add ( const Data&  values ) ;
       // ======================================================================
       inline WECDF& operator+= ( const  ECDF& x ) { add ( x ) ; return *this ; }
       inline WECDF& operator+= ( const WECDF& x ) { add ( x ) ; return *this ; }      
@@ -331,22 +364,18 @@ namespace Ostap
       // ======================================================================
       /// calculate \f$ \sum_i^{n} w_i \f$
       inline double calc_sumw ( const unsigned long n ) const
-      {
-	return std::accumulate  ( m_data.begin () ,
-				  m_data.begin () + std::min ( n , m_data.size() ) , 
-				  0.0             ,
-				  [] ( const double s , const Entry& entry ) -> double
-				  { return s + entry.second ; } ) ;	
-      }
+      { return std::accumulate  ( m_data.begin () ,
+                                  m_data.begin () + std::min ( n , m_data.size() ) , 
+                                  0.0             ,
+                                  [] ( const double s , const Entry& entry ) -> double
+                                  { return s + entry.second ; } ) ;	}
       /// calculate \f$ \sum_i^{n} w_i \f$
       inline double calc_sumw2 ( const unsigned long n ) const
-      {
-	return std::accumulate ( m_data.begin () ,
-				 m_data.begin () + std::min ( n , m_data.size() ) , 
-				 0.0             ,
-				 [] ( const double s , const Entry& entry ) -> double
-				 { return s + entry.second * entry.second ; } ) ;	
-      }
+      { return std::accumulate ( m_data.begin () ,
+                                 m_data.begin () + std::min ( n , m_data.size() ) , 
+                                 0.0             ,
+                                 [] ( const double s , const Entry& entry ) -> double
+                                 { return s + entry.second * entry.second ; } ) ; }
       // ======================================================================
       /// calculate \f$ \sum_i w_i   \f$
       inline double calc_sumw  () const { return calc_sumw  ( m_data.size() ) ; }
@@ -360,11 +389,11 @@ namespace Ostap
        */
       inline Data::size_type rank ( const double x ) const
       { return std::upper_bound ( m_data.begin ()   ,
-				  m_data.end   ()   ,
-				  Entry ( x , 1.0 ) ,
-				  []  ( const Entry& e1 , 
-					const Entry& e2 ) -> bool
-				  { return e1.first < e2.first ; } ) - m_data.begin() ; }
+                                  m_data.end   ()   ,
+                                  Entry ( x , 1.0 ) ,
+                                  []  ( const Entry& e1 , 
+                                        const Entry& e2 ) -> bool
+                                  { return e1.first < e2.first ; } ) - m_data.begin() ; }
       // ======================================================================
       /// get ranks for all elements from another sample 
       ECDF::Indices ranks ( const  ECDF& sample ) const ;
@@ -391,19 +420,28 @@ namespace Ostap
     } ; //                              The end of the class Ostap::Math::WECDF 
     // ========================================================================
     /// swap two objects 
-    inline void swap ( WECDF& left , WECDF& right ) { left.swap ( right ) ; }
+    inline void swap
+    ( WECDF& left ,
+      WECDF& right )
+    { left.swap ( right ) ; }
     /// add two WECDFs
-    inline WECDF operator+( const WECDF& a ,
-			    const WECDF& b )
-    { WECDF c { a } ; c += b ; return c ;  }
+    inline WECDF
+    operator+
+    ( const WECDF& a ,
+      const WECDF& b )
+    { WECDF c { a } ; c += b ; return c ; }
     /// add WECDF and ECDF 
-    inline WECDF operator+( const WECDF& a ,
-			    const  ECDF& b )
-    { WECDF c { a } ; c += b ; return c ;  }
+    inline WECDF
+    operator+
+    ( const WECDF& a ,
+      const  ECDF& b )
+    { WECDF c { a } ; c += b ; return c ; }
     /// add WECDF and ECDF 
-    inline WECDF operator+( const  ECDF& a ,
-			    const WECDF& b )
-    { WECDF c { b } ; c += a ; return c ;  }
+    inline WECDF
+    operator+
+    ( const  ECDF& a ,
+      const WECDF& b )
+    { WECDF c { b } ; c += a ; return c ; }
     // =======================================================================    
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================
