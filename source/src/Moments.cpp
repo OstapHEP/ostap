@@ -11,6 +11,7 @@
 // ============================================================================
 #include  "Exception.h"
 #include  "local_math.h"
+#include  "status_codes.h"
 // ============================================================================
 /** @file 
  *  Implementation file for classes from the file Ostap/Moments.h
@@ -41,8 +42,6 @@ Ostap::Math::Moment::~Moment(){}
 Ostap::Math::WMoment::~WMoment(){}
 // ===========================================================================
 
-
-
 // ===========================================================================
 // constructor 
 // ===========================================================================
@@ -60,34 +59,39 @@ Ostap::Math::WMoment_<0>::WMoment_
   , m_w    ( sumw  )
   , m_w2   ( sumw2 ) 
 {
+  Ostap::Assert ( std::isfinite ( m_w ) && std::isfinite ( m_w2 ) ,
+                  "Invalid sumw/sumw2!"              , 
+                  "Ostap::Math::WMoment_<0>"         ,
+                  INVALID_PARS , __FILE__ , __LINE__ ) ;
+  
   if ( 0 == m_size )
     {
-      Ostap::Assert ( s_zero ( m_w ) && s_zero ( m_w2 ) ,  
-		      "Non-zero sum of (squared) weights for empty counter!" , 
-		      "Ostap::Math::WMoment_<0>"  ) ;
+      Ostap::Assert ( s_zero ( m_w ) && s_zero ( m_w2 )  ,  
+                      "Non-zero sum of (squared) weights for empty counter!" , 
+                      "Ostap::Math::WMoment_<0>"         ,
+                      INVALID_PARS , __FILE__ , __LINE__ ) ;
       m_w  = 0 ;
       m_w2 = 0 ;       
     }
   //
   if ( s_zero ( m_w2 ) )
     {
-      Assert ( s_zero ( m_w )  ,
-	       "Non zero sum of weigth for zero sumw2 !" , 
-	       "Ostap::Math::WMoment_<0>"  ) ;      
+      Ostap::Assert ( s_zero ( m_w )                     ,
+                      "Non zero sum of weigth for zero sumw2 !" , 
+                      "Ostap::Math::WMoment_<0>"         ,
+                      INVALID_PARS , __FILE__ , __LINE__ ) ;      
       m_w  = 0 ;
       m_w2 = 0 ;
     }
   //
   if ( s_zero ( m_w ) ) { m_w = 0 ; }
   //
-  Ostap::Assert ( 0 <= m_w2  ,      
-		  "Negatoive sum of squared weights!" , 
-		  "Ostap::Math::WMoment_<0>"  ) ;
-  
+  Ostap::Assert ( 0 <= m_w2                          ,      
+                  "Negative sum of squared weights!" , 
+                  "Ostap::Math::WMoment_<0>"         , 
+                  INVALID_PARS , __FILE__ , __LINE__ ) ;      
 }
 // ===========================================================================
-
-
 
 // ===========================================================================
 Ostap::Math::GeometricMean::GeometricMean
@@ -201,6 +205,7 @@ Ostap::Math::GeometricMean&
 Ostap::Math::GeometricMean::add
 ( const double         x )
 {
+  if ( !std::isfinite ( x ) ) { return *this ; }
   if ( 0 < x && !s_zero ( x ) ) { m_log.add ( std::log2 ( x ) ) ; }
   return *this ;
 }
@@ -210,6 +215,7 @@ Ostap::Math::GeometricMean::add
 Ostap::Math::HarmonicMean&
 Ostap::Math::HarmonicMean::add ( const double x )
 {
+  if ( !std::isfinite ( x ) ) { return *this ; }
   if ( !s_zero ( x ) ) { m_inv.add ( 1/x ) ; }
   return *this ;
 }
@@ -220,6 +226,7 @@ Ostap::Math::PowerMean&
 Ostap::Math::PowerMean::add
 ( const double         x )
 {
+  if ( !std::isfinite ( x ) ) { return *this ; }
   if ( ( 0 < x ) && !s_zero ( x ) ) { m_pow.add ( std::pow ( x , m_p ) ) ; }
   return *this ;
 }
@@ -229,6 +236,7 @@ Ostap::Math::PowerMean::add
 Ostap::Math::LehmerMean&
 Ostap::Math::LehmerMean::add ( const double x )
 {
+  if ( !std::isfinite ( x ) ) { return *this ; }
   if ( ( 0 < x ) && !s_zero( x ) )
     {
       m_lp  .add ( std::pow ( x , m_p     ) ) ;
@@ -244,6 +252,7 @@ Ostap::Math::WGeometricMean::add
 ( const double x ,
   const double w ) 
 {
+  if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
   if ( ( 0 < x ) && !s_zero ( x ) ) { m_log.add ( std::log2 ( x ) , w ) ; }
   return *this ;
 }
@@ -255,6 +264,7 @@ Ostap::Math::WHarmonicMean::add
 ( const double x ,
   const double w ) 
 {
+  if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
   if ( !s_zero ( x ) ) { m_inv.add ( 1/x , w ) ; }
   return *this ;
 }
@@ -266,6 +276,7 @@ Ostap::Math::WPowerMean::add
 ( const double x  ,
   const double w  )
 {
+  if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
   if ( ( 0 < x ) && !s_zero ( x ) ) { m_pow.add ( std::pow ( x , m_p ) , w ) ; }
   return *this ;
 }
@@ -277,6 +288,7 @@ Ostap::Math::WLehmerMean::add
 ( const double x ,
   const double w ) 
 {
+  if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
   if ( ( 0 < x ) && !s_zero ( x ) )
     {
       m_lp  .add ( std::pow ( x , m_p     ) , w ) ;
@@ -291,8 +303,9 @@ Ostap::Math::PowerMean&
 Ostap::Math::PowerMean::add ( const Ostap::Math::PowerMean& x )
 {
   Ostap::Assert ( s_equal ( m_p , x.m_p ) ,
-		  "Cannot add counters with non-eual values of 'p'" , 
-		  "Ostap::Math::PowerMean"  ) ;
+                  "Cannot add counters with non-eual values of 'p'" , 
+                  "Ostap::Math::PowerMean"  ,
+                  INVALID_ORDER , __FILE__  , __LINE__ ) ;
   m_pow.add ( x.m_pow ) ;
   return *this ;
 }
@@ -315,8 +328,9 @@ Ostap::Math::LehmerMean&
 Ostap::Math::LehmerMean::add ( const Ostap::Math::LehmerMean& x )
 {
   Ostap::Assert ( s_equal ( m_p , x.m_p ) ,
-		  "Cannot add counters with non-eual values of 'p'" , 
-		  "Ostap::Math::LehmerMean"  ) ;
+                  "Cannot add counters with non-eual values of 'p'" , 
+                  "Ostap::Math::LehmerMean" ,
+                  INVALID_ORDER , __FILE__  , __LINE__ ) ;
   m_lp   .add ( x.m_lp   ) ;
   m_lpm1 .add ( x.m_lpm1 ) ;
   return *this ;
@@ -327,8 +341,9 @@ Ostap::Math::WLehmerMean::add
 ( const Ostap::Math::WLehmerMean& x )
 {
   Ostap::Assert ( s_equal ( m_p , x.m_p ) ,
-		  "Cannot add counters with non-eual values of 'p'" , 
-		  "Ostap::Math::WLehmerMean"  ) ;
+                  "Cannot add counters with non-eual values of 'p'" , 
+                  "Ostap::Math::WLehmerMean" ,
+                  INVALID_ORDER , __FILE__ , __LINE__ ) ;
   m_lp   .add ( x.m_lp   ) ;
   m_lpm1 .add ( x.m_lpm1 ) ;
   return *this ;
@@ -352,14 +367,15 @@ Ostap::Math::MinMaxValue::MinMaxValue
   const Ostap::Math::MinMaxValue::Counter& cnt  )
   : m_min ( minv )  
   , m_max ( maxv ) 
-  , m_cnt ()
+  , m_cnt ( cnt  )
 {
   Ostap::Assert ( ( empty()
-		    && m_min ==   std::numeric_limits<double>::max()
-		    && m_max == - std::numeric_limits<double>::max() )
-		  || ( !empty() && m_min <= m_max ) ,
-		  "Invalid min/max/empty structure!" ,
-		  "Ostap::Math::MinMaxValue!" ) ;
+                    && m_min ==   std::numeric_limits<double>::max()
+                    && m_max == - std::numeric_limits<double>::max() )
+                  || ( !empty() && m_min <= m_max ) ,
+                  "Invalid min/max/empty structure!" ,
+                  "Ostap::Math::MinMaxValue!" ,
+                  INVALID_RANGE , __FILE__ , __LINE__ ) ;
 }
 // ===========================================================================
 // default constructor
@@ -381,11 +397,12 @@ Ostap::Math::WMinMaxValue::WMinMaxValue
   , m_cnt ()
 {
   Ostap::Assert ( ( empty()
-		    && m_min ==   std::numeric_limits<double>::max()
-		    && m_max == - std::numeric_limits<double>::max() ) 
-		  || ( !empty() && m_min <= m_max ) ,		      
-		  "Invalid min/max/empty structure!" ,
-		  "Ostap::Math::WMinMaxValue!" ) ;
+                    && m_min ==   std::numeric_limits<double>::max()
+                    && m_max == - std::numeric_limits<double>::max() ) 
+                  || ( !empty() && m_min <= m_max )   , 		      
+                  "Invalid min/max/empty structure!"  ,
+                  "Ostap::Math::WMinMaxValue!"        ,
+                  INVALID_RANGE , __FILE__ , __LINE__ ) ;
 }
 // ============================================================================
 //                                                                      The END 

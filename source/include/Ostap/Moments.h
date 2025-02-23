@@ -83,9 +83,9 @@ namespace  Ostap
       /// constructor from the value and previous moment 
       Moment_
       ( const double        mom  ,
-	const Moment_<N-1>& prev )
-	: m_prev ( prev              )
-	, m_M    ( mom * prev.size() )
+        const Moment_<N-1>& prev )
+        : m_prev ( prev              )
+        , m_M    ( mom * prev.size() )
       {} 
       // ======================================================================
     public:
@@ -146,8 +146,15 @@ namespace  Ostap
       inline Moment_& add ( const Moment_& x ) ;
       /// add sequence of values  
       template <class ITERATOR>
-      inline void add ( ITERATOR begin , ITERATOR end   )
-      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
+      inline
+      Moment_&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
       // ======================================================================
     public: // python operations 
       // ======================================================================
@@ -409,6 +416,8 @@ namespace  Ostap
     inline Moment_<N>& Moment_<N>::add ( const double  x )
     {
       //
+      if ( !std::isfinite ( x ) ) { return *this ; } // NB: NO ACTION!!
+      //
       const auto nA = this->size() ;
       const unsigned long long nB =      1 ;
       const unsigned long long nN = nA + 1 ;
@@ -480,7 +489,7 @@ namespace  Ostap
       /// (default) constructor 
       Moment_
       ( const unsigned long long size = 0 )
-	: m_size ( size )
+        : m_size ( size )
       {}
       // ======================================================================
     public:
@@ -522,13 +531,21 @@ namespace  Ostap
     public:
       // ======================================================================
       /// add single value
-      inline void add ( const double   /* x */ ) { ++m_size           ; }
+      inline Moment_& add ( const double   x )
+      { if ( std::isfinite ( x ) ) { ++m_size ; } ; return *this ; }
       /// add single value
-      inline void add ( const Moment_&    x    ) { m_size += x.m_size ; }
+      inline Moment_& add ( const Moment_& x    ) { m_size += x.m_size ; return *this ; }
       /// add sequence of values  
       template <class ITERATOR>
-      inline void add ( ITERATOR begin , ITERATOR end   )
-      { m_size += std::distance  ( begin , end ) ; }
+      inline
+      Moment_&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
       // ======================================================================
     public: // python operations 
       // ======================================================================
@@ -601,16 +618,16 @@ namespace  Ostap
       /// default constructor from mu and size 
       Moment_
       ( const double             mu   = 0 ,
-	const unsigned long long size = 0 ) 
-	: m_prev ( size ) 
-	, m_mu   ( mu   )
+        const unsigned long long size = 0 ) 
+        : m_prev ( size ) 
+        , m_mu   ( mu   )
       {}
       /// constructor from mu and previous 
       Moment_
       ( const double      mu   ,
-	const Moment_<0>& prev ) 
-	: m_prev ( prev ) 
-	, m_mu   ( mu   )
+        const Moment_<0>& prev ) 
+        : m_prev ( prev ) 
+        , m_mu   ( mu   )
       {}
       // ======================================================================
     public: 
@@ -655,6 +672,8 @@ namespace  Ostap
       /// add single value 
       inline Moment_& add ( const double x )
       {
+        if ( !std::isfinite ( x ) ) { return *this ; }
+        //
         const auto n = m_prev.size() ;
         m_mu = ( n * m_mu + x ) /  ( n + 1 );  // calculate new mean value 
         m_prev += x ;                          // updated previous  
@@ -676,8 +695,15 @@ namespace  Ostap
       }
       /// add sequence of values  
       template <class ITERATOR>
-      inline void add ( ITERATOR begin , ITERATOR end   )
-      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
+      inline
+      Moment_&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
       // ======================================================================
     public: // python operations 
       // ======================================================================
@@ -918,6 +944,17 @@ namespace  Ostap
       inline WMoment_& add ( const double x , const double w = 1 ) ;
       /// add aother moment   
       inline WMoment_& add ( const WMoment_& x ) ;
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline
+      WMoment_&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
       // ======================================================================
     public: // python operations 
       // ======================================================================
@@ -1051,8 +1088,10 @@ namespace  Ostap
     template <unsigned short N>
     inline WMoment_<N>& WMoment_<N>::add ( const double  x , const double w )
     {
-      //
-      if ( !w ) { return *this ; }  // ZERO weights are ignored 
+      /// invalid value aand weights are ignored 
+      if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
+      /// ZERO weights are ignored 
+      if ( !w )                                       { return *this ; }  // ZERO weights are ignored 
       //
       const long double wA    = this->w () ;
       const long double wB    =       w    ;
@@ -1080,7 +1119,7 @@ namespace  Ostap
     template <unsigned short N>
     inline WMoment_<N>& WMoment_<N>::add ( const WMoment_<N>&  x )
     {
-      //
+      //      
       if      ( x     . empty () ) {               return *this ; }
       else if ( this -> empty () ) { (*this) = x ; return *this ; }
       //
@@ -1178,10 +1217,13 @@ namespace  Ostap
       // ======================================================================
       /// add a single value
       inline WMoment_& add
-      ( const double /* x     */ ,
-	const double    w = 1    )
-      { 
-        if ( !w ) { return *this ; }  // ZERO weights are ignored 
+      ( const double x     ,
+        const double w = 1 )
+      {
+        /// INVALID values and weights are ignored 
+        if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ;}
+        /// ZERO weights are ignored 
+        if ( !w )                                      { return *this ; }  // ZERO weights are ignored 
         //
         ++m_size ; 
         m_w  += w     ; 
@@ -1198,6 +1240,18 @@ namespace  Ostap
         m_w    += x.m_w    ;
         m_w2   += x.m_w2   ;
         //
+        return *this ;
+      }
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline
+      WMoment_&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
         return *this ;
       }
       // ======================================================================
@@ -1279,9 +1333,9 @@ namespace  Ostap
       /// constructor from mu and previous moment 
       WMoment_
       ( const double       mu   ,
-	const WMoment_<0>& prev )
-	: m_prev ( prev )
-	, m_mu   ( mu   )
+        const WMoment_<0>& prev )
+        : m_prev ( prev )
+        , m_mu   ( mu   )
       {} 
       // ======================================================================
     public :
@@ -1329,7 +1383,10 @@ namespace  Ostap
       /// add single value 
       inline WMoment_& add ( const double x , const double w = 1 )
       {
-        if ( !w ) { return *this ; }  // ZERO weights are ignored 
+        /// INVALUID values and weights are ignored 
+        if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
+        /// ZERO weights are ignored 
+        if ( !w )                                       { return *this ; }  // ZERO weights are ignored 
         //
         const long double wA = this -> w() ;
         const long double wB = w ;
@@ -1354,6 +1411,18 @@ namespace  Ostap
         //
         m_prev += x.m_prev ;                                 // update previous
         //
+        return *this ;
+      }
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline
+      WMoment_&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
         return *this ;
       }
       // ====================================================================== 
@@ -1493,14 +1562,21 @@ namespace  Ostap
       /// sum of two counters 
       inline GeometricMean& add ( const GeometricMean& x )
       {
-	m_log.add ( x.m_log ) ;
-	return *this ;
+        m_log.add ( x.m_log ) ;
+        return *this ;
       }
       // ======================================================================
       /// add sequence of values  
       template <class ITERATOR>
-      inline void add ( ITERATOR begin , ITERATOR end   )
-      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
+      inline
+      GeometricMean&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
       // ======================================================================
     public:
       // ======================================================================
@@ -1560,19 +1636,25 @@ namespace  Ostap
       /// add two counters togather 
       inline HarmonicMean& add ( const HarmonicMean& x )
       {
-	m_inv.add ( x.m_inv ) ;
-	return *this ;
+        m_inv.add ( x.m_inv ) ;
+        return *this ;
       }
       // ======================================================================
       /// add sequence of values  
       template <class ITERATOR>
-      inline void add ( ITERATOR begin , ITERATOR end   )
-      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
+      inline
+      HarmonicMean& 
+      add ( ITERATOR begin ,
+            ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
       // ======================================================================
     public:
       // ======================================================================
       /// the counter of 1/x values 
-      const Counter counter () const { return m_inv ; }
+      const Counter& counter () const { return m_inv ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1628,7 +1710,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// the counter of x**p  values 
-      const Counter counter () const { return m_pow ; }
+      const Counter& counter () const { return m_pow ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1639,8 +1721,15 @@ namespace  Ostap
       // ======================================================================
       /// add sequence of values  
       template <class ITERATOR>
-      inline void add ( ITERATOR begin , ITERATOR end   )
-      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
+      inline
+      PowerMean&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
       // ======================================================================
     public:
       // ======================================================================
@@ -1693,8 +1782,8 @@ namespace  Ostap
       /// constructor for the counters 
       LehmerMean
       ( const double   p    ,
-	const Counter& cnt1 , 
-	const Counter& cnt2 ) ;      
+        const Counter& cnt1 , 
+        const Counter& cnt2 ) ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -1710,9 +1799,9 @@ namespace  Ostap
     public:
       // ======================================================================
       /// the counter of x**p  values 
-      const Counter counter1 () const { return m_lp   ; }
+      const Counter& counter1 () const { return m_lp   ; }
       /// the counter of x**(p-1)  values 
-      const Counter counter2 () const { return m_lpm1 ; }
+      const Counter& counter2 () const { return m_lpm1 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1723,8 +1812,15 @@ namespace  Ostap
       // ======================================================================
       /// add sequence of values  
       template <class ITERATOR>
-      inline void add ( ITERATOR begin , ITERATOR end   )
-      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
+      inline
+      LehmerMean&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
       // ======================================================================
     public:
       // ======================================================================
@@ -1792,12 +1888,24 @@ namespace  Ostap
       /// accumulate only positive entries 
       WGeometricMean& add
       ( const double x      ,
-	const double w  = 1 ) ;
+        const double w  = 1 ) ;
       // sum of to counters 
       inline WGeometricMean& add ( const WGeometricMean& x )
       {
-	m_log.add ( x.m_log ) ;
-	return *this ;
+        m_log.add ( x.m_log ) ;
+        return *this ;
+      }
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline
+      WGeometricMean&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
       }
       // ======================================================================
     public:
@@ -1805,7 +1913,7 @@ namespace  Ostap
       /// to use it as a WMoment 
       void update
       ( const double x ,
-	const double w ) override { add ( x , w ) ; }
+        const double w ) override { add ( x , w ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1860,19 +1968,31 @@ namespace  Ostap
     public:
       // ======================================================================
       /// the counter of 1/x values 
-      const Counter counter () const { return m_inv ; }
+      const Counter& counter () const { return m_inv ; }
       // ======================================================================
     public:
       // ======================================================================
       /// accumulate only non-zero entries 
       WHarmonicMean&
       add ( const double         x     ,
-	    const double         w = 1 ) ;
+            const double         w = 1 ) ;
       /// add two counters togather 
       inline WHarmonicMean& add ( const WHarmonicMean& x )
       {
-	m_inv.add ( x.m_inv ) ;
-	return *this ;
+        m_inv.add ( x.m_inv ) ;
+        return *this ;
+      }
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline
+      WHarmonicMean&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
       }
       // ======================================================================
     public:
@@ -1880,7 +2000,7 @@ namespace  Ostap
       /// to use it as a WMoment 
       void update
       ( const double x ,
-	const double w ) override { add ( x , w ) ; }
+        const double w ) override { add ( x , w ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1935,23 +2055,35 @@ namespace  Ostap
     public:
       // ======================================================================
       /// the counter of x**p  values 
-      const Counter counter () const { return m_pow ; }
+      const Counter& counter () const { return m_pow ; }
       // ======================================================================
     public:
       // ======================================================================
       /// accumulate only positive entries 
       WPowerMean& add
       ( const double  x     ,
-	const double  w = 1 ) ;
+        const double  w = 1 ) ;
       /// add two counters togather if p is common 
       WPowerMean& add ( const WPowerMean& x ) ;
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline
+      WPowerMean&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
       // ======================================================================
     public:
       // ======================================================================
       /// to use it as a Moment 
       void update
       ( const double x ,
-	const double w ) override { add ( x , w ) ; }
+        const double w ) override { add ( x , w ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1998,8 +2130,8 @@ namespace  Ostap
       /// constructor for the counters 
       WLehmerMean
       ( const double   p    ,
-	const Counter& cnt1 , 
-	const Counter& cnt2 ) ;      
+        const Counter& cnt1 , 
+        const Counter& cnt2 ) ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -2014,25 +2146,37 @@ namespace  Ostap
     public:
       // ======================================================================
       /// the counter of x**p  values 
-      const Counter counter1 () const { return m_lp   ; }
+      const Counter& counter1 () const { return m_lp   ; }
       /// the counter of x**(p-1)  values 
-      const Counter counter2 () const { return m_lpm1 ; }
+      const Counter& counter2 () const { return m_lpm1 ; }
       // ======================================================================
     public:
       // ======================================================================
       /// accumulate only positive entries with non-zero weight       
       WLehmerMean& add
       ( const double x     ,
-	const double w = 1 ) ;
+        const double w = 1 ) ;
       /// add two counters togather if p is common 
       WLehmerMean& add ( const WLehmerMean& x ) ;
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline
+      WLehmerMean&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
       // ======================================================================
     public:
       // ======================================================================
       /// to use it as a WMoment 
       void update
       ( const double x ,
-	const double w ) override { add ( x , w ) ; }
+        const double w ) override { add ( x , w ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2076,13 +2220,27 @@ namespace  Ostap
       ArithmeticMean() = default ;
       ArithmeticMean ( const Counter& cnt ) ; 
       // ======================================================================
+    public :
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline
+      ArithmeticMean&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
+      // ====================================================================== 
     public:
       // ======================================================================
       inline double value() const { return this->mean () ; }
       // ======================================================================
     public:
       // ======================================================================
-      Counter counter() const { return *this ; }
+      const Counter& counter() const { return *this ; }
       // ======================================================================
     } ;
     // ========================================================================
@@ -2100,13 +2258,27 @@ namespace  Ostap
       WArithmeticMean() = default ;
       WArithmeticMean ( const Counter& cnt ) ; 
       // ======================================================================
+    public :
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline
+      WArithmeticMean&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
+      // ====================================================================== 
     public:
       // ======================================================================
       inline double value() const { return this->mean () ; }
       // ======================================================================
     public:
       // ======================================================================
-      Counter counter() const { return *this ; }
+      const Counter& counter() const { return *this ; }
       // ======================================================================
     } ;       
     // ========================================================================
@@ -2126,8 +2298,8 @@ namespace  Ostap
       /// constructor from min/max & counter 
       MinMaxValue
       ( const double   min ,
-	const double   max ,
-	const Counter& cnt ) ;
+        const double   max ,
+        const Counter& cnt ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2149,23 +2321,31 @@ namespace  Ostap
       /// accumulate only positive entries 
       inline MinMaxValue& add ( const double x )
       {
-	m_min = std::min ( m_min , x ) ;
-	m_max = std::max ( m_max , x ) ;
-	m_cnt.add ( x ) ;
-	return *this ;
+        if ( !std::isfinite ( x ) ) { return *this ; }
+        m_min = std::min ( m_min , x ) ;
+        m_max = std::max ( m_max , x ) ;
+        m_cnt.add ( x ) ;
+        return *this ;
       }
       inline MinMaxValue& add ( const MinMaxValue& x )
       {
-	m_min = std::min ( m_min , x.m_min ) ;
-	m_max = std::max ( m_max , x.m_max ) ;
-	m_cnt.add ( x.m_cnt  ) ;
-	return *this ;
+        m_min = std::min ( m_min , x.m_min ) ;
+        m_max = std::max ( m_max , x.m_max ) ;
+        m_cnt.add ( x.m_cnt  ) ;
+        return *this ;
       }
       // ======================================================================
       /// add sequence of values  
       template <class ITERATOR>
-      inline void add ( ITERATOR begin , ITERATOR end   )
-      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
+      inline
+      MinMaxValue&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
       // ======================================================================
     public:
       // ======================================================================
@@ -2212,10 +2392,10 @@ namespace  Ostap
       /// constructor from min/max & counter 
       WMinMaxValue
       ( const double   min ,
-	const double   max ,
-	const Counter& cnt ) ;
+        const double   max ,
+        const Counter& cnt ) ;
       // ======================================================================
-   public:
+    public:
       // ======================================================================
       /// get the min/max value  
       inline std::pair<double,double> value () const
@@ -2234,36 +2414,41 @@ namespace  Ostap
       /// accumulate only no-zero weights  
       inline WMinMaxValue& add
       ( const double x     ,
-	const double w = 1 )
+        const double w = 1 )
       {
-	const unsigned long long sbefore = m_cnt.size() ;
-	m_cnt.add ( x , w ) ;
-	if ( m_cnt.size() != sbefore  )
-	  {
-	    m_min = std::min ( m_min , x ) ;
-	    m_max = std::max ( m_max , x ) ;
-	  }
-	return *this ;
+        if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
+        if ( !w )                                           { return *this ; }
+        m_min = std::min ( m_min , x ) ;
+        m_max = std::max ( m_max , x ) ;        
+        m_cnt.add ( x , w ) ;
+        return *this ;
       }
       inline WMinMaxValue& add ( const WMinMaxValue& x )
       {
-	m_min = std::min ( m_min , x.m_min ) ;
-	m_max = std::max ( m_max , x.m_max ) ;
-	m_cnt.add ( x.m_cnt  ) ;
-	return *this ;
+        m_min = std::min ( m_min , x.m_min ) ;
+        m_max = std::max ( m_max , x.m_max ) ;
+        m_cnt.add ( x.m_cnt  ) ;
+        return *this ;
       }
       // ======================================================================
       /// add sequence of values  
       template <class ITERATOR>
-      inline void add ( ITERATOR begin , ITERATOR end   )
-      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
+      inline
+      WMinMaxValue&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
       // ======================================================================
     public:
       // ======================================================================
       /// to use it as a WMoment 
       void update
       ( const double x      ,
-	const double w  = 1 ) override { add ( x , w ) ; }
+        const double w  = 1 ) override { add ( x , w ) ; }
       // ======================================================================
     public:
       // ======================================================================

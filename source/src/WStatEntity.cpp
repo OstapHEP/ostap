@@ -15,6 +15,7 @@
 // ============================================================================
 #include "format.h"
 #include "Exception.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file 
  *  Implementation file for class Ostap::WStatEntity
@@ -51,28 +52,38 @@ Ostap::WStatEntity::WStatEntity
   , m_values  ( values  ) 
   , m_weights ( weights ) 
 {
+  Ostap::Assert ( std::isfinite ( m_mu   ) &&
+                  std::isfinite ( m_mu2  )           , 
+                  "Invalid parameters!"              , 
+                  "Ostap::Math::WStatEntity"         ,
+                  INVALID_PARS , __FILE__ , __LINE__ ) ;
+  //
   if ( empty () )
     {
       Ostap::Assert ( s_zero ( m_mu ) && s_zero  ( m_mu2 ) ,		      
-		      "Ostap::WStatWEntity: invalid mu/mu2 for empty counter!" ,
-		      "Ostap::WStatEntity" ) ;
+                      "Ostap::WStatWEntity: invalid mu/mu2 for empty counter!" ,
+                      "Ostap::WStatEntity"                 ,
+                      INVALID_PARS , __FILE__ , __LINE__   ) ;
       m_mu  = 0 ;
       m_mu2 = 0 ;
     }
   //
   Ostap::Assert ( m_values.n () <= m_weights.n () , 
-		  "Ostap::WStatWEntity: inconsistent values/weights counters!" ,
-		  "Ostap::WStatEntity" ) ;
+                  "Ostap::WStatWEntity: inconsistent values/weights counters!" ,
+                  "Ostap::WStatEntity" ,
+                  INVALID_PARS , __FILE__ , __LINE__ ) ;
   //
   if ( s_zero ( m_mu2 ) ) { m_mu2 = 0 ; }
   //
-  Ostap::Assert ( ( !empty () ) || ( empty() && !m_mu2 )  ,		  
-		  "Ostap::WStatEntity: inconsistent mu2/emptty!" ,
-		  "Ostap::WStatEntity" ) ;  
+  Ostap::Assert ( ( !empty () ) || ( empty() && !m_mu2 )         ,		  
+                  "Ostap::WStatEntity: inconsistent mu2/emptty!" ,
+                  "Ostap::WStatEntity"                           ,
+                  INVALID_PARS , __FILE__ , __LINE__             ) ;  
   //
-  Ostap::Assert ( 0 <= m_mu2 , 
-		  "Ostap::WStatEntity: invalid second moment",
-		  "Ostap::WStatEntity" ) ;
+  Ostap::Assert ( 0 <= m_mu2                                  , 
+                  "Ostap::WStatEntity: invalid second moment" ,
+                  "Ostap::WStatEntity"                        ,
+                  INVALID_PARS , __FILE__ , __LINE__          ) ;
 }
 // ============================================================================
 // update statistics 

@@ -19,7 +19,7 @@ namespace Ostap
     // ========================================================================
   public: // ==================================================================
     // ========================================================================
-    enum
+    enum ErrorCodes 
       {
         SUCCESS     = 0 ,
         FAILURE     = 1 ,
@@ -59,8 +59,10 @@ namespace Ostap
   // ===========================================================================
   /** throw the exception
    *  @param message the reason 
-   *  @param tag     the tag 
+   *  @param tag     the tag/category  
    *  @param code    the code 
+   *  @param file    filename 
+   *  @param line    linenumber 
    */
   StatusCode throwException
   ( const std::string& message                              , 
@@ -68,6 +70,62 @@ namespace Ostap
     const StatusCode&  code    = Ostap::StatusCode::FAILURE ,
     const char*        file    = nullptr                    ,
     const std::size_t  line    = 0                          ) ;
+  // ==========================================================================
+  /** Assert certain condition
+   *  @param assertion condition 
+   *  @param message   message 
+   *  @param tag       tag/category 
+   *  @param file      filename 
+   *  @param line      linenumber 
+   */ 
+  inline bool Assert
+  ( const bool         assertion                       ,
+    const std::string& message                         ,
+    const std::string& tag       = "Ostap"             ,
+    const StatusCode&  sc        = StatusCode::FAILURE ,
+    const char*        file      = nullptr             ,
+    const std::size_t  line      =  0                  )
+  { return assertion ? true : throwException ( message , tag , sc , file , line ).isSuccess() ; }
+  // ===========================================================================
+  /** Assert certain condition
+   *  @param assertion condition 
+   *  @param message   message 
+   *  @param tag       tag/category 
+   *  @param file      filename 
+   *  @param line      linenumber 
+   */ 
+  inline bool Assert
+  ( const bool         assertion                       ,
+    const char*        message                         ,
+    const char*        tag       = "Ostap"             ,
+    const StatusCode&  sc        = StatusCode::FAILURE ,
+    const char*        file      = nullptr             ,
+    const std::size_t  line      =  0                  )
+  { return assertion ? true :
+      throwException ( std::string ( message ) ,
+                       std::string ( tag     ) , sc , file , line ).isSuccess() ; }
+  // ===========================================================================
+  /** Assert certain condition
+   *  @param assertion condition 
+   *  @param message   message 
+   *  @param tag       tag/category 
+   *  @param file      filename 
+   *  @param line      linenumber 
+   */ 
+  template < unsigned int N1,
+             unsigned int N2>
+  inline bool Assert
+  ( const bool        assertion                              ,
+    const char        (&message)[N1+1]                       ,
+    const char        (&tag)    [N2+1]                       ,
+    const StatusCode& sc               = StatusCode::FAILURE ,
+    const char*       file             = nullptr             ,
+    const std::size_t line             =  0                  )
+  {
+    return assertion ? true :
+      throwException ( std::string ( message , message + N1 ) ,
+                       std::string ( tag     , tag     + N2 ) , sc , file , line ).isSuccess() ;
+  }
   // ===========================================================================
 } //                                                      end of namespace Ostap
 // =============================================================================

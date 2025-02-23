@@ -20,6 +20,7 @@
 // ============================================================================
 #include "format.h"
 #include "Exception.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file
  *  Implementation file for class Ostap::StatEntity
@@ -55,12 +56,20 @@ Ostap::StatEntity::StatEntity
   , m_min ( minv    )
   , m_max ( maxv    )
 {
+  Ostap::Assert ( std::isfinite ( m_mu  ) &&
+                  std::isfinite ( m_mu2 ) &&
+                  std::isfinite ( m_min ) &&
+                  std::isfinite ( m_max )            ,                   
+                  "Invalid parameters!"              , 
+                  "Ostap::Math::StatEntity"          ,
+                  INVALID_PARS , __FILE__ , __LINE__ ) ;
   // empty counter  (ignore min/max)
   if ( empty () )
     {
-      Ostap::Assert ( s_zero ( m_mu ) && s_zero ( m_mu2 ) , 
-		      "Ostap::StatEntity: invalid mu/mu2 for empty counter!" ,
-		      "Ostap::StatEntity" ) ;
+      Ostap::Assert ( s_zero ( m_mu ) && s_zero ( m_mu2 )  , 
+                      "Invalid mu/mu2 for empty counter!"  ,
+                      "Ostap::StatEntity"                  ,
+                      INVALID_PARS  , __FILE__ , __LINE__  ) ;
       m_mu  = 0 ;
       m_mu2 = 0 ;
       /// redefine/ignore min/max 
@@ -69,20 +78,23 @@ Ostap::StatEntity::StatEntity
     }
   else
     {
-      Ostap::Assert ( m_min <= mu && mu <= m_max , 
-		      "Ostap::StatEntity: invalid minv/mu/maxv" ,
-		      "Ostap::StatEntity" ) ; 
+      Ostap::Assert ( m_min <= mu && mu <= m_max         , 
+                      "Invalid minv/mu/maxv"             ,
+                      "Ostap::StatEntity"                ,
+                      INVALID_PARS , __FILE__ , __LINE__ ) ; 
     }
   //
   if ( s_zero ( m_mu2 ) ) { m_mu2 = 0 ; }
   //
-  Ostap::Assert ( ( !empty () ) || ( empty() && !m_mu2 )       ,		  
-		  "Ostap::StatEntity: inconsistent mu2/empty!" ,
-		  "Ostap::StatEntity" ) ;  
+  Ostap::Assert ( ( !empty () ) || ( empty() && !m_mu2 ) ,		  
+                  "Inconsistent mu2/empty!"              ,
+                  "Ostap::StatEntity"                    ,
+                  INVALID_PARS , __FILE__ , __LINE__     ) ;  
   //
-  Ostap::Assert ( 0 <= m_mu2 , 
-		  "Ostap::StatEntity: invalid second moment",
-		  "Ostap::StatEntity" ) ;
+  Ostap::Assert ( 0 <= m_mu2                         , 
+                  "Invalid second moment"            ,
+                  "Ostap::StatEntity"                , 
+                  INVALID_PARS , __FILE__ , __LINE__ ) ;
 }
 // ============================================================================
 /* add a value : the main method 

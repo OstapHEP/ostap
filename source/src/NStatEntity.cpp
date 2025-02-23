@@ -16,6 +16,7 @@
 // local
 // ============================================================================
 #include "Exception.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file 
  *  Implementation file for class Ostap::NStatEntity
@@ -45,9 +46,10 @@ Ostap::NStatEntity::NStatEntity
   , m_cnt2 (   ) 
   , m_N    ( N ) 
 {
-  Ostap::Assert ( 2 <= m_N                ,
-		  "Invalid window size!" , 
-		  "Ostap::NstatEntity"   ) ;
+  Ostap::Assert ( 2 <= m_N                 ,
+                  "Invalid window size!"  , 
+                  "Ostap::NstatEntity"    , 
+                  INVALID_PARS , __FILE__ , __LINE__ ) ;
   
 }
 // ===========================================================================
@@ -61,15 +63,18 @@ Ostap::NStatEntity::NStatEntity
   , m_cnt2 ( cnt2 )
   , m_N    ( N    ) 
 {
-  Ostap::Assert ( 2 <= m_N                ,
-		  "Invalid window size!" , 
-		  "Ostap::NStatEntity"   ) ;
+  Ostap::Assert ( 2 <= m_N               ,
+                  "Invalid window size!" , 
+                  "Ostap::NStatEntity"   ,
+                  INVALID_PARS , __FILE__ , __LINE__ ) ;
   Ostap::Assert ( m_cnt1.nEntries () <= 2 *  m_N ,
-		  "Invalid first counter!"  , 
-		  "Ostap::NstatEntity"   ) ;
+                  "Invalid first counter!"  , 
+                  "Ostap::NstatEntity"    ,
+                  INVALID_PARS , __FILE__ , __LINE__ ) ;
   Ostap::Assert ( m_cnt2.nEntries () <= 2 *  m_N ,
-		  "Invalid second counter!"  , 
-		  "Ostap::NStatEntity"   ) ;					  
+                  "Invalid second counter!"  , 
+                  "Ostap::NStatEntity"    ,
+                  INVALID_PARS , __FILE__ , __LINE__ ) ;
 }
 // ======================================================================
 
