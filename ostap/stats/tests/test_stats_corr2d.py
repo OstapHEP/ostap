@@ -95,6 +95,15 @@ def test_corr2d  ( var1 = 'x' , var2 = 'y') :
     
     c2d = Corr2D ( chain , var1 , var2 )
 
+    logger.info ( 'var1          %s' % chain.statVar ( var1 ) )
+    logger.info ( 'var2          %s' % chain.statVar ( var2 ) )
+    logger.info ( 'decorrelatd11 %s' % chain.statVar ( c2d.decorrelated1 ) )
+    logger.info ( 'decorrelated2 %s' % chain.statVar ( c2d.decorrelated2 ) )
+    logger.info ( 'normalized1   %s' % chain.statVar ( c2d.normalized1   ) )
+    logger.info ( 'normalized2   %s' % chain.statVar ( c2d.normalized2   ) )
+    logger.info ( 'uniform11     %s' % chain.statVar ( c2d.uniform1      ) )
+    logger.info ( 'uniform2      %s' % chain.statVar ( c2d.uniform2      ) )
+
     with use_canvas ( 'test_corr2D(%s,%s)'              %  ( var1 , var2 ) , wait = 1 ) :
         chain.draw ( [ var1 , var2  ] )
     with use_canvas ( 'test_corr2D(%s,%s) decorrelated' %  ( var1 , var2 ) , wait = 1 ) :
@@ -104,16 +113,6 @@ def test_corr2d  ( var1 = 'x' , var2 = 'y') :
     with use_canvas ( 'test_corr2D(%s,%s) uniform'      %  ( var1 , var2 ) , wait = 1 ) :
         chain.draw ( [ c2d.uniform1      , c2d.uniform2      ] )
 
-
-    logger.info ( 'var1          %s' % chain.statVar ( var1 ) )
-    logger.info ( 'var2          %s' % chain.statVar ( var2 ) )
-    logger.info ( 'decorrelatd11 %s' % chain.statVar ( c2d.decorrelated1 ) )
-    logger.info ( 'decorrelated2 %s' % chain.statVar ( c2d.decorrelated2 ) )
-    logger.info ( 'normalized1   %s' % chain.statVar ( c2d.normalized1   ) )
-    logger.info ( 'normalized2   %s' % chain.statVar ( c2d.normalized2   ) )
-    logger.info ( 'uniform11     %s' % chain.statVar ( c2d.uniform1      ) )
-    logger.info ( 'uniform2      %s' % chain.statVar ( c2d.uniform2      ) )
-        
     cnt1  = chain.statVar ( c2d.var1          )
     cnt1d = chain.statVar ( c2d.decorrelated1 )
     cnt1n = chain.statVar ( c2d.normalized1   )
