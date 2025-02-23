@@ -59,6 +59,7 @@ namespace Ostap
       {
         if ( !std::is_sorted ( m_data.begin() , m_data.end() ) )
           { std::sort ( m_data.begin() , m_data.end() ) ; }
+        this->check_me() ;
       }
       /// constructor to create complementary/ordinary ECDF
       ECDF
@@ -85,22 +86,22 @@ namespace Ostap
     public:
       // ======================================================================
       /// add a value to data container  
-      Data::size_type add ( const double value  ) ;
+      ECDF& add ( const double value  ) ;
       /// add more values to data constainer 
-      Data::size_type add ( const Data&  values ) ; 
+      ECDF& add ( const Data&  values ) ; 
       /// add more values to data container 
-      Data::size_type add ( const ECDF&  values ) ;
+      ECDF& add ( const ECDF&  values ) ;
       /// add a bunch of values 
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
                 typename            = std::enable_if<std::is_convertible<value_type,double>::value> >
-      Data::size_type add
+      ECDF& add
       ( ITERATOR begin ,
         ITERATOR end   )
       {
-        if ( std::is_sorted ( begin, end ) ) { return this-> add_sorted ( begin , end ) ; }
-        /// copy input data 
-        Data tmp  ( begin , end ) ;
+        if ( std::is_sorted ( begin , end ) ) { return this -> add_sorted ( begin , end ) ; }
+        /// copy input data (only valid/finite entries)  
+        Data tmp ( begin, end ) ;
         /// sort input data 
         std::sort ( tmp.begin () , tmp.end () ) ; 
         return this->add_sorted ( tmp.begin() , tmp.end() ) ;
@@ -112,36 +113,40 @@ namespace Ostap
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
                 typename            = std::enable_if<std::is_convertible<value_type,double>::value> >
-      Data::size_type add_sorted 
+      ECDF& add_sorted 
       ( ITERATOR begin ,
         ITERATOR end   )
       {
         const std::size_t d = std::distance ( begin , end ) ;
-        if ( !d  ) { return m_data.size () ; } // no action! 
+        /// nothing to add ?
+        if ( !d  ) { return  *this  ; } // nothing to add 
         /// prepare the output 
         Data tmp  ( d + m_data.size () )  ;
         /// merge two sorted containers 
-        std::merge ( begin           ,
+        std::merge ( begin           ,                     
                      end             ,
                      m_data.begin () ,
                      m_data.end   () ,                     
                      tmp.begin    () ) ;
         /// swap the merged result  with own data 
         std::swap ( m_data , tmp ) ;
-        return m_data.size () ;        
+        return this->check_me() ;
       }
       // ======================================================================
     public :
       // ======================================================================
-      inline ECDF& __iadd__ ( const double x ) { add ( x ) ; return *this ; }
-      inline ECDF& __iadd__ ( const Data&  x ) { add ( x ) ; return *this ; }
-      ECDF  __add__         ( const ECDF&  x ) const ;      
+      inline ECDF& __iadd__ ( const double      x ) { return add ( x ) ; }
+      inline ECDF& __iadd__ ( const ECDF&       x ) { return add ( x ) ; }
+      inline ECDF& __iadd__ ( const ECDF::Data& x ) { return add ( x ) ; }
+      ECDF         __add__  ( const double      x ) const ;      
+      ECDF         __add__  ( const ECDF&       x ) const ;      
+      ECDF         __add__  ( const ECDF::Data& x ) const ;      
       // ======================================================================
     public :
       // ======================================================================
-      inline ECDF& operator+= ( const double x ) { add ( x ) ; return *this ; }
-      inline ECDF& operator+= ( const Data&  x ) { add ( x ) ; return *this ; }
-      inline ECDF& operator+= ( const ECDF&  x ) { add ( x ) ; return *this ; }      
+      inline ECDF& operator+= ( const double      x ) { return add ( x ) ; }
+      inline ECDF& operator+= ( const ECDF&       x ) { return add ( x ) ; }      
+      inline ECDF& operator+= ( const ECDF::Data& x ) { return add ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -205,6 +210,13 @@ namespace Ostap
       // ======================================================================
       /// swap two objects 
       void swap ( ECDF& right ) ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /** check that ECDF is OK: there are some entries
+       *  - remove elments <code>!std::isfinite</code>
+       */
+      ECDF& check_me () ; // check that ECDF is OK: there are some entries 
       // ======================================================================
     private:
       // ======================================================================
@@ -299,25 +311,36 @@ namespace Ostap
     public:
       // ======================================================================
       /// add a value to data container  
-      inline Data::size_type add
+      inline WECDF&
+      add
       ( const double value        ,
         const double weight = 1.0 ) { return add ( Entry ( value , weight ) ) ; }
       /// add a value to data container  
-      Data::size_type add ( const Entry& entry  ) ;      
+      WECDF& add ( const Entry&       entry  ) ;      
       /// add more values to data container 
-      Data::size_type add ( const WECDF& values ) ;
+      WECDF& add ( const WECDF&       values ) ;
+      /// add more values to data container       
+      WECDF& add ( const WECDF::Data& values ) ;
       /// add more values to data container 
-      Data::size_type add ( const  ECDF& values ) ;
+      WECDF& add ( const ECDF&        values ) ;
       /// add more values to data container 
-      Data::size_type add ( const Data&  values ) ;
+      WECDF& add ( const ECDF::Data&  values ) ;
       // ======================================================================
-      inline WECDF& operator+= ( const  ECDF& x ) { add ( x ) ; return *this ; }
-      inline WECDF& operator+= ( const WECDF& x ) { add ( x ) ; return *this ; }      
+      inline WECDF& operator+= ( const double       x ) { return add ( x ) ; }
+      inline WECDF& operator+= ( const Entry&       x ) { return add ( x ) ; }
+      inline WECDF& operator+= ( const WECDF&       x ) { return add ( x ) ; }      
+      inline WECDF& operator+= ( const WECDF::Data& x ) { return add ( x ) ; }      
+      inline WECDF& operator+= ( const ECDF&        x ) { return add ( x ) ; }
+      inline WECDF& operator+= ( const ECDF::Data&  x ) { return add ( x ) ; }
       // ======================================================================
     public: 
       // ======================================================================
-      inline WECDF& __iadd__ ( const WECDF&  x ) { add ( x ) ; return *this ; }
-      inline WECDF& __iadd__ ( const  ECDF&  x ) { add ( x ) ; return *this ; }
+      inline WECDF& __iadd__ ( const double       x ) { return add ( x ) ; }
+      inline WECDF& __iadd__ ( const Entry&       x ) { return add ( x ) ; }
+      inline WECDF& __iadd__ ( const WECDF&       x ) { return add ( x ) ; }
+      inline WECDF& __iadd__ ( const WECDF::Data& x ) { return add ( x ) ; }
+      inline WECDF& __iadd__ ( const ECDF&        x ) { return add ( x ) ; }
+      inline WECDF& __iadd__ ( const ECDF::Data&  x ) { return add ( x ) ; }
       // ======================================================================      
       WECDF  __add__  ( const WECDF&  x ) const ;      
       WECDF  __add__  ( const  ECDF&  x ) const ;      
@@ -390,10 +413,7 @@ namespace Ostap
       inline Data::size_type rank ( const double x ) const
       { return std::upper_bound ( m_data.begin ()   ,
                                   m_data.end   ()   ,
-                                  Entry ( x , 1.0 ) ,
-                                  []  ( const Entry& e1 , 
-                                        const Entry& e2 ) -> bool
-                                  { return e1.first < e2.first ; } ) - m_data.begin() ; }
+                                  Entry ( x , 1.0 ) ) - m_data.begin() ; }
       // ======================================================================
       /// get ranks for all elements from another sample 
       ECDF::Indices ranks ( const  ECDF& sample ) const ;
@@ -402,7 +422,13 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      void sort_me () ;
+      /** check that WECDF is OK: 
+       *  - there are some entries
+       *  - sum of weigths is positive 
+       *  - sum of squaed weigths is positive 
+       *  - remove elments <code>!std::isfinite</code>
+       */
+      WECDF& check_me () ; // check that ECDF is OK: there are some entries 
       // ======================================================================
     private: 
       // ======================================================================
@@ -420,10 +446,7 @@ namespace Ostap
     } ; //                              The end of the class Ostap::Math::WECDF 
     // ========================================================================
     /// swap two objects 
-    inline void swap
-    ( WECDF& left ,
-      WECDF& right )
-    { left.swap ( right ) ; }
+    inline void swap ( WECDF& left , WECDF& right ) { left.swap ( right ) ; }
     /// add two WECDFs
     inline WECDF
     operator+
