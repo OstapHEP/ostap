@@ -176,12 +176,13 @@ namespace
   {
     std::string tag = "GSL/Error" ;
     std::ostringstream ss ;
-    ss << gsl_strerror ( gsl_errno ) << "(" << gsl_errno << ") "
-       << reason
-       << " in "     << file   << " at line " << line ;
-    Ostap::throwException ( tag + ": " + ss.str() , 
-                            tag                   , 
-                            Ostap::StatusCode ( 20000 + gsl_errno ) ) ;
+    ss << gsl_strerror ( gsl_errno )
+       << "(" << gsl_errno << ") "
+       << reason ; 
+    Ostap::Assert ( false                            ,
+                    tag + ": " + ss.str()            , 
+                    tag                              , 
+                    100000 + gsl_errno , file , line ) ; 
   }
   // ==========================================================================
   /// silently count errors 

@@ -134,9 +134,10 @@ void Ostap::Selector::set_tree  ( TTree* tree )
 /// process an entry 
 bool Ostap::Selector::process_entry ()
 {
-  Ostap::throwException ( "`process_entry` method must be overrided!" , 
-                          "Ostap::Selector"                           ,
-                          UNDEFINED_METHOD , __FILE__ , __LINE__      ) ;
+  Ostap::Assert ( false ,
+                  "`process_entry` method must be overrided!" , 
+                  "Ostap::Selector"                           ,
+                  UNDEFINED_METHOD , __FILE__ , __LINE__      ) ;
   return true ;
 } 
 // ============================================================================

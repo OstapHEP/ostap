@@ -442,11 +442,11 @@ Ostap::Math::BSpline::BSpline
   m_xmin = std::max ( b.xmin () , std::min ( xmn ,  xmx ) ) ;
   m_xmax = std::min ( b.xmax () , std::max ( xmn ,  xmx ) ) ;
   //
-  if      ( b.xmin() < m_xmin || s_equal (  b.xmin() , m_xmin ) ) { /* ok */ }
-  else if ( b.xmax() > m_xmax || s_equal (  b.xmax() , m_xmax ) ) { /* ok */ }
-  else { Ostap::throwException 
-      ("Invalid xmin/xmax  settings", "Ostap::Math::BSpline" , 
-        INVALID_RANGE , __FILE__ , __LINE__ ) ; }
+  Ostap::Assert ( ( b.xmin() < m_xmin || s_equal (  b.xmin() , m_xmin ) ) ||
+                  ( b.xmax() > m_xmax || s_equal (  b.xmax() , m_xmax ) ) , 
+                  "Invalid xmin/xmax  settings"       ,
+                  "Ostap::Math::BSpline"              , 
+                  INVALID_RANGE , __FILE__ , __LINE__ ) ; 
   //
   // ==========================================================================
   std::vector<double>::iterator il = 
@@ -1706,9 +1706,10 @@ Ostap::Math::ConvexSpline::ConvexSpline
   : Ostap::Math::MonotonicSpline ( spline ) 
   , m_convex                      ( convex ) 
 {
-  if ( 2 > order() ) { Ostap::throwException
-      ( "Degree of spline must be at least 2" , 
-        "Ostap::Math::ConvexSpline"           , 816 ) ; }
+  Assert ( 2 <=  order() , 
+           "Degree of spline must be at least 2" , 
+           "Ostap::Math::ConvexSpline"           ,
+           INVALID_ORDER , __FILE__ , __LINE__   ) ; 
   updateCoefficients () ;
 }
 // ============================================================================

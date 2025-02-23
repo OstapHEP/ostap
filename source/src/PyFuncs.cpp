@@ -60,9 +60,10 @@ Ostap::Functions::PyFuncTree::~PyFuncTree()  {}
 Ostap::Functions::PyFuncTree*
 Ostap::Functions::PyFuncTree::clone( const char* /* name */ ) const
 {
-  Ostap::throwException ( "Method `clone` must be overriden!"    ,  
-                          "Ostap::Functions::PyFuncTree"         ,
-                          UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( false ,
+                  "Method `clone` must be overriden!"    ,  
+                  "Ostap::Functions::PyFuncTree"         ,
+                  UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
   // fake ....
   return new PyFuncTree ( *this ) ;
 }
@@ -80,9 +81,10 @@ double Ostap::Functions::PyFuncTree::operator() ( const TTree* t ) const
 // ============================================================================
 double Ostap::Functions::PyFuncTree::evaluate () const
 {
-  Ostap::throwException ( "Method `evaluate` must be overriden!" , 
-                          "Ostap::Functions::PyFuncTree"         ,
-                          UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( false ,
+                  "Method `evaluate` must be overriden!" , 
+                  "Ostap::Functions::PyFuncTree"         ,
+                  UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
   return -1000 ;
 }
 // ============================================================================
@@ -104,9 +106,10 @@ Ostap::Functions::PyFuncData::~PyFuncData()  {}
 Ostap::Functions::PyFuncData*
 Ostap::Functions::PyFuncData::clone ( const char* /* name */ ) const
 {
-  Ostap::throwException ( "Method `clone` must be overriden!"    ,  
-                          "Ostap::Functions::PyFuncTree"         ,
-                          UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( false ,
+                  "Method `clone` must be overriden!"    ,  
+                  "Ostap::Functions::PyFuncTree"         ,
+                  UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
   return new PyFuncData ( *this ) ;
 }
 // ============================================================================
@@ -124,9 +127,10 @@ double Ostap::Functions::PyFuncData::operator() ( const RooAbsData* d ) const
 // ============================================================================
 double Ostap::Functions::PyFuncData::evaluate () const
 {
-  Ostap::throwException ( "Method `evaluate` must be overriden!" , 
-                          "Ostap::Functions::PyFuncData"         ,
-                          UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( false ,
+                  "Method `evaluate` must be overriden!" , 
+                  "Ostap::Functions::PyFuncData"         ,
+                  UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
   return -1000 ;
 }
 // ============================================================================

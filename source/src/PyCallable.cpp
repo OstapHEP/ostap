@@ -17,6 +17,7 @@
 // ============================================================================
 #include "Exception.h"
 #include "CallPython.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file 
  *  Implementation file for class Ostap::PyCallable
@@ -31,6 +32,9 @@ namespace
   const char s_ERROR2  [] = "Cannot fill tuple"                         ; 
   const char s_METHOD1 [] = "Ostap::Functions::PyCallable::constructor" ; 
   const char s_METHOD2 [] = "Ostap::Functions::PyCallable::evaluate"    ; 
+  // ==========================================================================
+  /// defautl (invalid) value 
+  const double s_DEFAULT {-1000 } ;   /// default (invalid) value 
   // ==========================================================================
 }
 // ============================================================================
@@ -80,17 +84,22 @@ double Ostap::Functions::PyCallable::evaluate ( const  double x ) const
   if  ( nullptr == m_callable || !PyCallable_Check( m_callable  ) ) 
     {
       PyErr_Print() ;
-      Ostap::throwException ( s_ERROR1 , s_METHOD2 , 511 ) ;
+      Ostap::Assert ( false     ,
+                      s_ERROR1  ,
+                      s_METHOD2 ,
+                      INVALID_CALLABLE , __FILE__ , __LINE__ ) ;
+      return s_DEFAULT ;
     }
   //
   PyObject* arguments = PyTuple_New ( 1 ) ;
   if ( !arguments )
     {
-      PyErr_Print () ;
-      Ostap::throwException ( "Can't create PyTuple"    ,
-			      "PyCallable::evaluate"    ,
-			      Ostap::StatusCode ( 541 ) ) ;
-      return 0 ;
+      PyErr_Print () ;      
+      Ostap::Assert ( false ,
+                      "Can't create PyTuple"             ,
+                      "PyCallable::evaluate"             ,
+                      ERROR_PYTHON , __FILE__ , __LINE__ ) ;
+      return s_DEFAULT ;
     }
   //
   PyObject* px =  PyFloat_FromDouble ( x ) ;
@@ -98,7 +107,11 @@ double Ostap::Functions::PyCallable::evaluate ( const  double x ) const
     {
       PyErr_Print () ;
       Py_DECREF ( arguments ) ; arguments = nullptr ;
-      Ostap::throwException ( s_ERROR2  , s_METHOD2 , 512 ) ;
+      Ostap::Assert ( false     ,
+                      s_ERROR2  ,
+                      s_METHOD2 ,
+                      ERROR_PYTHON , __FILE__ , __LINE__ ) ;
+      return s_DEFAULT ; 
     }
   //
   PyObject* result = PyObject_CallObject ( m_callable , arguments ) ;
@@ -117,7 +130,9 @@ Ostap::Functions::PyCallable2::PyCallable2
 {
   //
   Ostap::Assert ( m_callable && PyCallable_Check ( m_callable ) , 
-                  s_ERROR1 , s_METHOD1 , 510  ) ;
+                  s_ERROR1                               ,
+                  s_METHOD1                              ,
+                  INVALID_CALLABLE , __FILE__ , __LINE__ ) ; 
   //
   Py_XINCREF ( m_callable ) ;
 }
@@ -157,25 +172,34 @@ double Ostap::Functions::PyCallable2::evaluate
   if  ( nullptr == m_callable || !PyCallable_Check( m_callable  ) ) 
   {
     PyErr_Print() ;
-    Ostap::throwException ( s_ERROR1 , s_METHOD2 , 511 ) ;
+    Ostap::Assert  ( false                                  ,
+                     s_ERROR1                               ,
+                     s_METHOD2                              ,
+                     INVALID_CALLABLE , __FILE__ , __LINE__ ) ;
+    return s_DEFAULT ;
   }
   //
   PyObject* arguments = PyTuple_New ( 2 ) ;
   if ( !arguments )
     {
       PyErr_Print () ;
-      Ostap::throwException ( "Can't create PyTuple"    ,
-			      "PyCallable2::evaluate"   ,
-			      Ostap::StatusCode ( 542 ) ) ;
-      return 0 ;
+      Ostap::Assert ( false                               ,
+                      "Can't create PyTuple"              ,
+                      "PyCallable2::evaluate"             ,
+                      ERROR_PYTHON  , __FILE__ , __LINE__ ) ;
+      return s_DEFAULT ;
     }
   //
   PyObject* px =  PyFloat_FromDouble ( x ) ;
   if ( 0 != PyTuple_SetItem ( arguments , 0 , px ) ) 
     {
       PyErr_Print () ;
-      Py_DECREF ( arguments ) ; arguments = nullptr ;
-      Ostap::throwException ( s_ERROR2  , s_METHOD2 , 512 ) ;
+      Py_DECREF ( arguments ) ; arguments = nullptr ;      
+      Ostap::Assert ( false                              ,
+                      s_ERROR2                           ,
+                      s_METHOD2                          ,
+                      ERROR_PYTHON , __FILE__ , __LINE__ ) ;
+      return s_DEFAULT ; 
     }
   //
   PyObject* py =  PyFloat_FromDouble ( y ) ;
@@ -183,7 +207,11 @@ double Ostap::Functions::PyCallable2::evaluate
     {
       PyErr_Print () ;
       Py_DECREF ( arguments ) ; arguments = nullptr ;
-      Ostap::throwException ( s_ERROR2  , s_METHOD2 , 512 ) ;
+      Ostap::Assert ( false                              ,
+                      s_ERROR2                           ,
+                      s_METHOD2                          , 
+                      ERROR_PYTHON , __FILE__ , __LINE__ ) ;
+      return s_DEFAULT ;
     }
   //
   PyObject* result = PyObject_CallObject ( m_callable , arguments ) ;
@@ -192,7 +220,6 @@ double Ostap::Functions::PyCallable2::evaluate
   //
   return result_to_double ( result , s_METHOD2 ) ;
 }
-
 
 // ============================================================================
 // constructor from the callable object 
@@ -242,43 +269,60 @@ double Ostap::Functions::PyCallable3::evaluate
 {
   // 
   if  ( nullptr == m_callable || !PyCallable_Check( m_callable  ) ) 
-  {
-    PyErr_Print() ;
-    Ostap::throwException ( s_ERROR1 , s_METHOD2 , 511 ) ;
-  }
+    {
+      PyErr_Print() ;    
+      Ostap::Assert ( false                                  ,
+                      s_ERROR1                               ,
+                      s_METHOD2                              ,
+                      INVALID_CALLABLE , __FILE__ , __LINE__ ) ;
+      return s_DEFAULT ;
+    }
   //
   PyObject* arguments = PyTuple_New ( 3 ) ;
   if ( !arguments )
     {
       PyErr_Print () ;
-      Ostap::throwException ( "Can't create PyTuple"    ,
-			      "PyCallable3::evaluate"   ,
-			      Ostap::StatusCode ( 543 ) ) ;
-      return 0 ;
+      Ostap::Assert ( false , 
+                      "Can't create PyTuple"    ,
+                      "PyCallable3::evaluate"   ,
+                      ERROR_PYTHON , __FILE__ , __LINE__ ) ;
+      return s_DEFAULT ;
     }
   //
   PyObject* px =  PyFloat_FromDouble ( x ) ;
   if ( 0 != PyTuple_SetItem ( arguments , 0 , px ) ) 
   {
     PyErr_Print () ;
-    Py_DECREF ( arguments ) ; arguments = nullptr ;
-    Ostap::throwException ( s_ERROR2  , s_METHOD2 , 512 ) ;
+    Py_DECREF ( arguments ) ; arguments = nullptr ;    
+    Ostap::Assert ( false                              ,
+                    s_ERROR2                           ,
+                    s_METHOD2                          ,
+                    ERROR_PYTHON , __FILE__ , __LINE__ ) ;
+    return s_DEFAULT ;
   }
   //
   PyObject* py =  PyFloat_FromDouble ( y ) ;
   if ( 0 != PyTuple_SetItem ( arguments , 1 , py ) ) 
-  {
-    PyErr_Print () ;
-    Py_DECREF ( arguments ) ; arguments = nullptr ;
-    Ostap::throwException ( s_ERROR2  , s_METHOD2 , 512 ) ;
-  }
+    {
+      PyErr_Print () ;
+      Py_DECREF ( arguments ) ; arguments = nullptr ;
+      Ostap::Assert ( false                              ,
+                      s_ERROR2                           ,
+                      s_METHOD2                          ,
+                      ERROR_PYTHON , __FILE__ , __LINE__ ) ;
+      return s_DEFAULT ;
+    }
   //
   PyObject* pz =  PyFloat_FromDouble ( z ) ;
   if ( 0 != PyTuple_SetItem ( arguments , 2 , pz ) ) 
   {
     PyErr_Print () ;
     Py_DECREF ( arguments ) ; arguments = nullptr ;
-    Ostap::throwException ( s_ERROR2  , s_METHOD2 , 512 ) ;
+    Ostap::Assert ( false                              ,
+                    s_ERROR2                           ,
+                    s_METHOD2                          ,
+                    ERROR_PYTHON , __FILE__ , __LINE__ ) ;
+    return s_DEFAULT ;
   }
   //
   PyObject* result = PyObject_CallObject ( m_callable , arguments ) ;

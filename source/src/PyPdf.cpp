@@ -40,6 +40,9 @@ namespace
   static char s_getAI   [] = "get_analytical_integral"  ;
   static char s_AI      [] = "analytical_integral"      ;
   // ==========================================================================
+  /// defautl (invalid) value 
+  const double s_DEFAULT {-1000 } ;   /// default (invalid) value 
+  // ==========================================================================
 }
 // ============================================================================
 /*  Standard constructor
@@ -93,16 +96,18 @@ Ostap::Models::PyPdf::PyPdf
 // ============================================================================
 // helper function to be redefined in python  
 // ============================================================================
-int    Ostap::Models::PyPdf::get_analytical_integral () const { return 0 ; }
+int    Ostap::Models::PyPdf::get_analytical_integral () const
+{ return 0 ; }
 // ============================================================================
 // helper function to be redefined in python  
 // ============================================================================
 double Ostap::Models::PyPdf::analytical_integral     () const 
 {
-  Ostap::throwException ( "Method `analytical_integral' *MUST* be overriden!" ,
-                          "Ostap::Models::PyPdf"                              ,
-                          UNDEFINED_METHOD ,  __FILE__ , __LINE__ ) ;
-  return 0 ;
+  Ostap::Assert( false ,
+                 "Method `analytical_integral' *MUST* be overriden!" ,
+                 "Ostap::Models::PyPdf"                              ,
+                 UNDEFINED_METHOD ,  __FILE__ , __LINE__ ) ;
+  return s_DEFAULT ;
 }
 // ============================================================================
 // copy constructor
@@ -122,9 +127,10 @@ Ostap::Models::PyPdf*
 Ostap::Models::PyPdf::clone
 ( const char* name ) const 
 {  
-  Ostap::throwException ( "Clone method *MUST* be overridden!"   ,  
-                          "Ostap::Functions::PyPdf"              , 
-                          UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
+  Ostap::Assert(  false ,
+                  "Clone method *MUST* be overridden!"   ,  
+                  "Ostap::Functions::PyPdf"              , 
+                  UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
   return nullptr  ;  
   // ============================================================================
 }
@@ -201,10 +207,11 @@ Bool_t Ostap::Models::PyPdf::match_arg
 // ============================================================================
 Double_t Ostap::Models::PyPdf::evaluate() const 
 { 
-  Ostap::throwException ( "evaluate method must be overrided!"   , 
-                          "Ostap::Functions::PyPdf"              ,
-                          UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
-  return -1 ;
+  Ostap::Assert ( false ,
+                  "evaluate method must be overrided!"   , 
+                  "Ostap::Functions::PyPdf"              ,
+                  UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
+  return s_DEFAULT ;
 }
 // ============================================================================
 // get a variable with index 
@@ -342,9 +349,11 @@ Double_t Ostap::Models::PyPdfLite::evaluate() const
   if  ( 0 == m_function || !PyCallable_Check( m_function ) ) 
     {
       PyErr_Print() ;
-      Ostap::throwException ( "Function is not callable/invalid"     ,
-                              "Ostap::Models::PyPdfLite::evaluate"   ,
-                              INVALID_CALLABLE , __FILE__ , __LINE__ ) ;
+      Ostap::Assert ( false ,
+                      "Function is not callable/invalid"     ,
+                      "Ostap::Models::PyPdfLite::evaluate"   ,
+                      INVALID_CALLABLE , __FILE__ , __LINE__ ) ;
+      return s_DEFAULT ;
     }
   //
   //
@@ -352,10 +361,11 @@ Double_t Ostap::Models::PyPdfLite::evaluate() const
   if ( !arguments )
     {
       PyErr_Print () ;
-      Ostap::throwException ( "Can't create PyTuple"               ,
-                              "Ostap::Models::PyPdfLite::evaluate" ,
-                              ERROR_PYTHON , __FILE__ , __LINE__   ) ;
-      return 0 ;
+      Ostap::Assert ( false                                ,
+                      "Can't create PyTuple"               ,
+                      "Ostap::Models::PyPdfLite::evaluate" ,
+                      ERROR_PYTHON , __FILE__ , __LINE__   ) ;
+      return s_DEFAULT ;
     }
   //
   unsigned short index = 0 ;
@@ -378,9 +388,10 @@ Double_t Ostap::Models::PyPdfLite::evaluate() const
         {
           PyErr_Print () ;
           Py_XDECREF ( arguments ) ; arguments = nullptr ;
-          Ostap::throwException ( "Can't fill PyTuple"                 ,
-                                  "Ostap::Models::PyPdfLite::evaluate" ,
-                                  ERROR_PYTHON , __FILE__ , __LINE__   ) ;
+          Ostap::Assert ( false ,
+                          "Can't fill PyTuple"                 ,
+                          "Ostap::Models::PyPdfLite::evaluate" ,
+                          ERROR_PYTHON , __FILE__ , __LINE__   ) ;
         }
       ++index ;
     }

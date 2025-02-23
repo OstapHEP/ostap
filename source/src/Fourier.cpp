@@ -15,6 +15,7 @@
 // ============================================================================
 #include "Exception.h"
 #include "local_math.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file
  *  Implementation file for functions from the file Ostap/Fourier.h
@@ -491,17 +492,16 @@ Ostap::Math::FourierSum::sum( const Ostap::Math::FourierSum& other ) const
   if      ( other.zero() ) { return *this ; } // 
   else if (       zero() ) { return other ; } // random choice 
   //
-  if ( !s_equal ( xmin () , other.xmin() ) || 
-       !s_equal ( xmax () , other.xmax() ) ) 
-  {
-    Ostap::throwException ( "Can't sum Fourier series with different domains" , 
-                            "Ostap::Math::FourierSum" ) ;
-  }
-  if ( fejer() != other.fejer () ) 
-  {
-    Ostap::throwException ( "Can't sum Fourier series with different 'fejer' flag" , 
-                            "Ostap::Math::FourierSum"  ) ;
-  }
+  Ostap::Assert ( s_equal ( xmin () , other.xmin() ) && 
+                  s_equal ( xmax () , other.xmax() )  , 
+                  "Can't sum Fourier series with different domains" ,                  
+                  "Ostap::Math::FourierSum"           ,
+                  INVALID_RANGE , __FILE__ , __LINE__ ) ;
+  
+  Ostap::Assert  ( fejer() == other.fejer ()          ,
+                   "Can't sum Fourier series with different 'fejer' flag" , 
+                   "Ostap::Math::FourierSum"          ,
+                   INVALID_PARS , __FILE__ , __LINE__ ) ;
   //
   const unsigned short idegree = std::max ( degree () , other.degree () ) ;
   //
@@ -996,17 +996,17 @@ Ostap::Math::CosineSum::sum ( const Ostap::Math::CosineSum& other ) const
   if      ( other.zero() ) { return *this ; }
   else if (       zero() ) { return other ; }
   //
-  if ( !s_equal ( xmin () , other.xmin() ) ||
-       !s_equal ( xmax () , other.xmax() ) ) 
-  {
-    Ostap::throwException ( "Can't sum Fourier cosine series with different domains" , 
-                            "Ostap::Math::CosineSum" ) ;
-  }
-  if ( fejer() != other.fejer () ) 
-  {
-    Ostap::throwException ( "Can't sum Fourier cosine series with different 'fejer' flag" , 
-                            "Ostap::Math::CosineSum" ) ;
-  }
+  Ostap::Assert ( s_equal ( xmin () , other.xmin() ) && 
+                  s_equal ( xmax () , other.xmax() ) , 
+                  "Can't sum Cosine series with different domains" ,                  
+                  "Ostap::Math::CosineSum"            ,
+                  INVALID_RANGE , __FILE__ , __LINE__ ) ;
+  
+  Ostap::Assert ( fejer() == other.fejer ()           , 
+                  "Can't sum Cosine series with different 'fejer' flag" ,
+                  "Ostap::Math::CosineSum"            ,
+                  INVALID_PARS , __FILE__ , __LINE__  ) ;
+  
   //
   const unsigned short idegree = std::max ( degree () , other.degree () ) ;
   //

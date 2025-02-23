@@ -23,6 +23,7 @@
 #include "local_math.h"
 #include "local_gsl.h"
 #include "Integrator1D.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file 
  *  implementation of useful models for describing signal peaks with the natural width \
@@ -273,19 +274,16 @@ Ostap::Math::FormFactors::BlattWeisskopf::BlattWeisskopf
   , m_b ( b )
   , m_what ( "BlattWeisskopf(" + std::to_string( (int) L ) + "," + std::to_string ( b ) + ")" )
 {
-  switch ( L ) 
-  {
-  case Zero  : break ;
-  case One   : break ;
-  case Two   : break ;
-  case Three : break ;
-  case Four  : break ;
-  case Five  : break ;
-  default:   
-    Ostap::throwException( "Illegal Blatt-Weisskopf form factor" , "Math" ) ;
-  }
+  Ostap::Assert ( Zero  == L &&
+                  One   == L &&
+                  Two   == L &&
+                  Three == L &&
+                  Four  == L &&
+                  Five  == L                                 ,
+                  "Illegal orbital momentum!"                ,  
+                  "Ostap::Math::FormFactors::BlattWeisskopf" ,
+                  INVALID_PARS , __FILE__ , __LINE__         ) ; 
 }
-
 
 // ============================================================================
 // default constructor (needed for  serialization)

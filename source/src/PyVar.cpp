@@ -40,6 +40,9 @@ namespace
   static char s_clone   [] = "clone"                    ;
   static char s_getAI   [] = "get_analytical_integral"  ;
   static char s_AI      [] = "analytical_integral"      ;
+  // ==========================================================================}
+  /// defautl (invalid) value 
+  const double s_DEFAULT {-1000 } ;   /// default (invalid) value 
   // ==========================================================================
 }
 // ============================================================================
@@ -76,9 +79,10 @@ Ostap::Functions::PyVar::~PyVar() {}
 Ostap::Functions::PyVar* 
 Ostap::Functions::PyVar::clone ( const char* name ) const 
 {
-  Ostap::throwException ( "clone method must be implemented!"    , 
-                          "Ostap::Functions::PyVar"              ,
-                          UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
+  Ostap::Assert( false                                  ,
+                 "clone method must be implemented!"    , 
+                 "Ostap::Functions::PyVar"              ,
+                 UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
   return nullptr ;
 }
 // ============================================================================
@@ -125,10 +129,11 @@ double Ostap::Functions::PyVar::value ( const char* name  ) const
 // ============================================================================
 Double_t Ostap::Functions::PyVar::evaluate() const 
 { 
-  Ostap::throwException ( "evaluate method must be implemented!" , 
-                          "Ostap::Functions::PyVar"              ,
-                          UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
-  return -1000 ;
+  Ostap::Assert ( false ,
+                  "evaluate method must be implemented!" , 
+                  "Ostap::Functions::PyVar"              ,
+                  UNDEFINED_METHOD , __FILE__ , __LINE__ ) ;
+  return s_DEFAULT ;
 }
 // ============================================================================
 std::vector<double>
@@ -143,7 +148,6 @@ Ostap::Functions::PyVar::get_values() const
     }
   return values ;
 }
-
 // ============================================================================
 // PyVarLite
 // ============================================================================
@@ -156,7 +160,7 @@ Ostap::Functions::PyVarLite::PyVarLite
   const RooArgList& variables ) 
   : RooAbsReal  ( name  , title ) 
   , m_function  ( function ) 
-  , m_varlist   ( "!varlisy", "The actual variables/parameters" , this ) 
+  , m_varlist   ( "!varlist", "The actual variables/parameters" , this ) 
 {
   //
   ::copy_real   ( variables                          ,
@@ -219,19 +223,22 @@ Double_t Ostap::Functions::PyVarLite::evaluate() const
   if  ( 0 == m_function || !PyCallable_Check( m_function ) ) 
     {
       PyErr_Print() ;
-      Ostap::throwException ( "Function is not callable/invalid"      ,
-                              "?Ostap::Fuctions::PyVarLite::evaluate" ,
-                              INVALID_CALLABLE , __FILE__ , __LINE__  ) ;
+      Ostap::Assert ( false ,
+                      "Function is not callable/invalid"      ,
+                      "?Ostap::Fuctions::PyVarLite::evaluate" ,
+                      INVALID_CALLABLE , __FILE__ , __LINE__  ) ;
+      return s_DEFAULT ;
     }
   //
   PyObject* arguments = PyTuple_New ( m_varlist.getSize() ) ;
   if ( !arguments )
     {
       PyErr_Print () ;
-      Ostap::throwException ( "Can't create PyTuple"                  ,
-                              "?Ostap::Fuctions::PyVarLite::evaluate" ,
-                              ERROR_PYTHON , __FILE__ , __LINE__      ) ;
-      return 0 ;
+      Ostap::Assert ( false                                   ,
+                      "Can't create PyTuple"                  ,
+                      "?Ostap::Fuctions::PyVarLite::evaluate" ,
+                      ERROR_PYTHON , __FILE__ , __LINE__      ) ;
+      return s_DEFAULT ;
     }
   //
   unsigned short index = 0 ;
@@ -254,9 +261,10 @@ Double_t Ostap::Functions::PyVarLite::evaluate() const
         {
           PyErr_Print () ;
           Py_XDECREF ( arguments ) ; arguments = nullptr ;
-          Ostap::throwException ( "Can't fill PyTuple"                    ,
-                                  "?Ostap::Fuctions::PyVarLite::evaluate" ,
-                                  ERROR_PYTHON , __FILE__ , __LINE__      ) ;
+          Ostap::Assert ( false ,
+                          "Can't fill PyTuple"                    ,
+                          "?Ostap::Fuctions::PyVarLite::evaluate" ,
+                          ERROR_PYTHON , __FILE__ , __LINE__      ) ;
         }
       ++index ;
     }

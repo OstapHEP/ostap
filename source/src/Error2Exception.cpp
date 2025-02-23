@@ -54,9 +54,10 @@ namespace
           kBreak    == level ? "ROOT/Break  "    :
           kSysError == level ? "ROOT/SysError  " : 
           kFatal    == level ? "ROOT/Fatal  "    : "ROOT/error  " ;
-        Ostap::throwException ( tag + message ,
-                                ( location && location [ 0 ] ) ? location : "ROOT" ,
-                                1000000 + level ) ;
+        Ostap::Assert ( false                                              ,
+                        tag + message                                      ,
+                        ( location && location [ 0 ] ) ? location : "ROOT" ,
+                        1000000 + level                                    ) ; 
       }
     else if ( kWarning <= level && Py_IsInitialized() ) 
       {

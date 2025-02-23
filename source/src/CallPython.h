@@ -23,8 +23,10 @@ namespace
     if  ( !r ) 
     {
       PyErr_Print () ;
-      Ostap::throwException ( "CallPython:invalid `result'"  , tag   ,
-                              INVALID_PYOBJECT , __FILE__ , __LINE__ ) ;
+      Ostap::Assert ( false                                  ,
+                      "CallPython:invalid `result'"          ,
+                      tag                                    ,
+                      INVALID_PYOBJECT , __FILE__ , __LINE__ ) ;
     }
     // ========================================================================
     // float or integer ?
@@ -44,15 +46,19 @@ namespace
         if      ( -1 == overflow || 1 == overflow ) 
           {
             Py_DECREF ( r ) ;      
-            Ostap::throwException ( "CallPython:long overflow"      , tag ,
-                                    INVALID_PYOBJECT , __FILE__ , __LINE__ ) ;
+            Ostap::Assert ( false                                  ,
+                            "CallPython:long overflow"             ,
+                            tag                                    ,
+                            INVALID_PYOBJECT , __FILE__ , __LINE__ ) ;
           }
         else if ( -1 == result && PyErr_Occurred() ) 
           {
             PyErr_Print();
             Py_DECREF ( r ) ;      
-            Ostap::throwException ( "CallPython:invalid conversion" , tag ,
-                                    INVALID_PYOBJECT , __FILE__ , __LINE__ ) ;
+            Ostap::Assert ( false                                  ,
+                            "CallPython:invalid conversion"        ,
+                            tag                                    ,
+                            INVALID_PYOBJECT , __FILE__ , __LINE__ ) ;
           }
         Py_DECREF ( r ) ;
         return result ;                                    //  RETURN
@@ -63,8 +69,10 @@ namespace
       {
         PyErr_Print();
         Py_DECREF ( r ) ;      
-        Ostap::throwException ( "CallPython:invalid conversion" , tag ,
-                                INVALID_PYOBJECT , __FILE__ , __LINE__ ) ;
+        Ostap::Assert ( false                                  ,
+                        "CallPython:invalid conversion"        ,
+                        tag                                    ,
+                        INVALID_PYOBJECT , __FILE__ , __LINE__ ) ;
       }
     //
     Py_DECREF ( r ) ; 
@@ -77,7 +85,7 @@ namespace
     // check arguments
     Ostap::Assert ( self                                   ,
                     "CallPython:invalid `object'"          , 
-                    "call_method"                          ,
+                    "CallPython::call_method"              ,
                     INVALID_PYOBJECT , __FILE__ , __LINE__ ) ;
     // call Python
     PyObject* result = PyObject_CallMethod ( self , method , nullptr );    
