@@ -2222,6 +2222,8 @@ namespace  Ostap
       // ======================================================================
     public :
       // ======================================================================
+      using Moment_<1>::add ;
+      // ======================================================================
       /// add sequence of values  
       template <class ITERATOR>
       inline
@@ -2247,7 +2249,7 @@ namespace  Ostap
     /** @class WArithmeticMean 
      *  Calculate the weighted arithmetic mean 
      */
-    class WArithmeticMean : public WMoment_<1>
+   class WArithmeticMean : public WMoment_<1>
     {
     public:
       // ======================================================================
@@ -2259,6 +2261,8 @@ namespace  Ostap
       WArithmeticMean ( const Counter& cnt ) ; 
       // ======================================================================
     public :
+      // ======================================================================
+      using WMoment_<1>::add ;
       // ======================================================================
       /// add sequence of values  
       template <class ITERATOR>
