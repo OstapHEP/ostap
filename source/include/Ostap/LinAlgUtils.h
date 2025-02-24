@@ -83,21 +83,15 @@ namespace Ostap
     /// convert T-matrix into GSL matrix 
     Matrix matrix ( const TMatrixT<float>&          m ) ;    
     /// convert T-matrix into GSL matrix 
-    Matrix matrix ( const TMatrixT<double>&         m ) ;
-    /// convert T-matrix into GSL matrix 
-    Matrix matrix ( const TMatrixT<long double>&    m ) ;    
+    Matrix matrix ( const TMatrixT<double>&         m ) ;   
     /// convert T-matrix into GSL matrix 
     Matrix matrix ( const TMatrixTSym<float>&       m ) ;
     /// convert T-matrix into GSL matrix 
     Matrix matrix ( const TMatrixTSym<double>&      m ) ;
-    /// convert T-matrix into GSL matrix 
-    Matrix matrix ( const TMatrixTSym<long double>& m ) ;    
     // convert T-vector into GSL vector 
-    Vector vector ( const TVectorT<float>&          v ) ;
+    // Vector vector ( const TVectorT<float>&          v ) ;
     // convert T-vector into GSL vector 
-    Vector vector ( const TVectorT<double>&         v ) ;
-    // convert T-vector into GSL vector 
-    Vector vector ( const TVectorT<long double>&    v ) ;    
+    // Vector vector ( const TVectorT<double>&         v ) ;
     // ========================================================================
   } //                                          The end of namesapce Ostap::GSL
   // ==========================================================================

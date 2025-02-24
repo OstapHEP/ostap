@@ -2539,7 +2539,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
             if key in kwargs : 
                 func = kwargs.pop ( key )
                 logger.debug ( 'prepare_branches: case [4->delegate] %s' % typename ( branch ) )
-                args, nb, kw , keep = prepare_branches ( tree , func , name = branch , **kwargs )
+                args , nb, kw , keep = prepare_branches ( tree , func , name = branch , **kwargs )
                 return args , nb , kw , keeper + keep 
             
     elif isinstance ( branch , string_types ) and \
@@ -2547,13 +2547,15 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         ## branch is actually the name of the branch 
         formula = kwargs.pop ( 'formula' )
         logger.debug ( 'prepare_branches: case [5->delegate] %s delegate! ' % typename ( branch ) )        
-        args, nb , kw , keep = prepare_branches ( tree , formula , name = branch , **kwargs )
-        return args , nb , kw , keeper+keep  
+        args , nb , kw , keep = prepare_branches ( tree , formula , name = branch , **kwargs )
+        return args , nb , kw , keeper + keep  
         
     elif isinstance ( branch , Ostap.MoreRooFit.RooFun )  and 'name' in kwargs :
         ## RooFit construction 
         mapping  = kwargs.pop ( 'mapping' , {}  )
-        args     = branch , mapping
+        the_map  = Ostap.Trees.DCT()
+        for key, value in loop_items ( mapping ) : the_map[ key ] = value
+        args     = branch , the_map
         logger.debug ( 'prepare_branches: case [6] %s' % typename ( branch ) ) 
 
     elif isinstance ( branch , ROOT.RooAbsReal ) and 'name' in kwargs and 'observables' in kwargs :        
@@ -2562,11 +2564,13 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         import ostap.fitting.roocoelctions 
         ## RooFit construction 
         observables   = kwargs.pop ( 'obsevables'    )
-        normalization = kwargs.pop ( 'nornalization' , ROOT.nullptr )
+        normalization = kwargs.pop ( 'normalization' , ROOT.nullptr )
         mapping       = kwargs.pop ( 'mapping' , {}  )
-        keeper.append ( obsrvables    )
+        the_map  = Ostap.Trees.DCT()
+        for key, value in loop_items ( mapping ) : the_map[ key ] = value
+        keeper.append ( observables   )
         keeper.append ( normalization )
-        args     = branch , observables , normalization , mapping 
+        args     = branch , observables , normalization , the_map 
         logger.debug ( 'prepare_branches: case [7] %s' % typename ( branch ) ) 
 
     elif isinstance ( branch , Ostap.Math.Histo3D ) and all ( ( k in kwargs ) for k in ( 'xname' , 'yname' , 'zname' ) ) :
@@ -2599,6 +2603,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         elif 1 == branch.GetDimension () : names = kwargs.pop ( 'xname' ) ,
         
         for n in names : new_branches.add ( n )
+        keeper.append ( branch ) 
         args     = names +  ( branch , )
         logger.debug ( 'prepare_branches: case [11] %s' % typename ( branch ) ) 
         
@@ -2608,6 +2613,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         branches = Ostap.Trees.Branches()
 
         for key , value in loop_items ( branch ) :
+            keeper.append ( value ) 
             
             assert isinstance ( key , string_types ) and Ostap.Trees.valid_name_for_branch ( key ) ,\
                 "Invalid branch name type/value" % ( typename ( key ) , key )
@@ -2622,7 +2628,8 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
                 raise TypeError ( "Invalid branch type:%s for key=%s" % ( typename ( value ) , key ) )
             
             new_branches.add ( key )
-
+            
+        keeper.append ( branches )  
         args     = branches ,
         logger.debug ( 'prepare_branches: case [12] %s' % typename ( branch )  )
 
@@ -2637,6 +2644,8 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
             "1-to-3 non-empty strings must be specified as `arguments' for `branch'=%s" % typename ( branch )
 
         fvars = ( branch , ) + vars + ( tree , )        
+        keeper.append ( fvars[:-1]  ) 
+        
         if   ( 6 , 26 ) <= root_info : args = vars + ( branch , )
         else :
 
@@ -2651,7 +2660,8 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         ## generic callable  ( function takes TTree as argument ) 
         name      = kwargs.pop ( 'name' )
         newbranch = { name : branch }
-        
+        keeper.append (    branch )
+        keeper.append ( newbranch ) 
         logger.debug ( 'prepare_branches: case [14->delegate] %s delegate! ' % typename ( branch ) )
         args , nb , kw , keep = prepare_branches ( tree , newbranch , **kwargs )
         return args , nb , kw , keeper + keep 
