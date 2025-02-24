@@ -293,10 +293,10 @@ Ostap::Math::BSpline::BSpline
   std::vector<double>::iterator it = std::unique ( m_knots.begin() , m_knots.end() , s_equal );
   m_knots.erase ( it , m_knots.end() ) ;
   //
-  Ostap::Assert( 2 <= m_knots.size () < 2 ,  
-       "Vector of knots is too short" , 
-       "Ostap::Math::BSpline"         , 
-        INVALID_KNOTS   , __FILE__ , __LINE__ ) ; 
+  Ostap::Assert( 2 <= m_knots.size () ,  
+                 "Vector of knots is too short" , 
+                 "Ostap::Math::BSpline"         , 
+                 INVALID_KNOTS   , __FILE__ , __LINE__ ) ; 
   //
   m_inner = m_knots.size   () - 2 ;
   // specify vector of parameters 
@@ -347,14 +347,14 @@ Ostap::Math::BSpline::BSpline
   m_knots.erase ( it , m_knots.end() ) ;
   //
   Ostap::Assert ( 2 <= m_knots.size() , 
-        "Vector of knots is too short" , 
-        "Ostap::Math::BSpline"        , 
-        INVALID_KNOTS , __FILE__ , __LINE__  ) ;  
-
+                  "Vector of knots is too short" , 
+                  "Ostap::Math::BSpline"        , 
+                  INVALID_KNOTS , __FILE__ , __LINE__  ) ;  
+  
   Ostap::Assert ( m_knots.size() <= m_pars .size() + 1 ,  
-        "Vector of pars  is too short" , 
-        "Ostap::Math::BSpline"         , 
-        INVALID_PARS , __FILE__  , __LINE__  ) ; 
+                  "Vector of pars  is too short" , 
+                  "Ostap::Math::BSpline"         , 
+                  INVALID_PARS , __FILE__  , __LINE__  ) ; 
   //
   m_inner = m_knots.size () - 2 ;
   m_order = m_pars.size  () - m_inner - 1 ;
@@ -1124,9 +1124,9 @@ Ostap::Math::PositiveSpline::PositiveSpline
 {
   //
   Ostap::Assert ( 2 <=  m_bspline.npars()  , 
-      "At least two spline parameters are required" , 
-      "Ostap::Math::PositiveSpline"                 , 
-      INVALID_PARS , __FILE__ , __LINE__ ) ;
+                  "At least two spline parameters are required" , 
+                  "Ostap::Math::PositiveSpline"                 , 
+                  INVALID_PARS , __FILE__ , __LINE__ ) ;
   //
   m_sphere = Ostap::Math::NSphere( m_bspline.npars() - 1 , 3 ) ;  
   updateCoefficients () ;
@@ -1149,9 +1149,9 @@ Ostap::Math::PositiveSpline::PositiveSpline
 {
   //
   Ostap::Assert ( 2 <= m_bspline.npars() , 
-      "At least two spline parameters are required" , 
-      "Ostap::Math::PositiveSpline"                 , 
-      INVALID_PARS , __FILE__ , __LINE__ ) ; 
+                  "At least two spline parameters are required" , 
+                  "Ostap::Math::PositiveSpline"                 , 
+                  INVALID_PARS , __FILE__ , __LINE__ ) ; 
   //
   m_sphere = Ostap::Math::NSphere( m_bspline.npars() - 1 , true ) ;  
   updateCoefficients () ;
@@ -1431,9 +1431,9 @@ Ostap::Math::ConvexOnlySpline::ConvexOnlySpline
   , m_convex                    ( convex    ) 
 {
   Ostap::Assert ( 2 <= order()  , 
-      "Degree of spline must be at least 2" , 
-      "Ostap::Math::ConvexOnlySpline"       , 
-      INVALID_ORDER , __FILE__ , __LINE__  ) ; 
+                  "Degree of spline must be at least 2" , 
+                  "Ostap::Math::ConvexOnlySpline"       , 
+                  INVALID_ORDER , __FILE__ , __LINE__  ) ; 
   updateCoefficients () ;
 }
 // ============================================================================
@@ -1453,10 +1453,10 @@ Ostap::Math::ConvexOnlySpline::ConvexOnlySpline
   : Ostap::Math::PositiveSpline ( xmin , xmax  , inner , order ) 
   , m_convex                    ( convex    ) 
 {
-  Ostap::Assert( 2 <= this->order() < 2 , 
-      "Degree of spline must be at least 2" , 
-      "Ostap::Math::ConvexOnlySpline"       , 
-      INVALID_ORDER , __FILE__  , __LINE__  ) ; 
+  Ostap::Assert( 2 <= this->order()         , 
+                 "Degree of spline must be at least 2" , 
+                 "Ostap::Math::ConvexOnlySpline"       , 
+                 INVALID_ORDER , __FILE__  , __LINE__  ) ; 
   updateCoefficients () ;
 }
 // ============================================================================
@@ -1469,9 +1469,9 @@ Ostap::Math::ConvexOnlySpline::ConvexOnlySpline
   , m_convex                    ( convex    ) 
 {
   Ostap::Assert ( 2 <= order() , 
-      "Degree of spline must be at least 2" , 
-      "Ostap::Math::ConvexOnlySpline"       , 
-      INVALID_ORDER , __FILE__ , __LINE__  ) ; 
+                  "Degree of spline must be at least 2" , 
+                  "Ostap::Math::ConvexOnlySpline"       , 
+                  INVALID_ORDER , __FILE__ , __LINE__  ) ; 
   updateCoefficients () ;
 }
 // ============================================================================
