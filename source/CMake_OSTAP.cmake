@@ -32,9 +32,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Fourier.cpp   
                          src/Funcs.cpp   
                          src/GetWeight.cpp 
-                         src/GSL_helpers.cpp              
                          src/GSL_sentry.cpp 
-                         src/GSL_utils.cpp 
                          src/Hesse.cpp
                          src/Hilbert.cpp
                          src/HistoDump.cpp
@@ -51,6 +49,8 @@ add_library(ostap SHARED src/format.cpp
                          src/Kinematics.cpp
                          src/KramersKronig.cpp
                          src/Laplace.cpp
+                         src/LinAlg.cpp
+                         src/LinAlgUtils.cpp
                          src/Lomont.cpp
                          src/LorentzVectorWithError.cpp
                          src/Math.cpp

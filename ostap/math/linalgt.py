@@ -268,13 +268,19 @@ class LinAlgT(LA.LinAlg) :
         t.     items    = LinAlgT.V_ITEMS
 
         t.to_array      = LinAlgT.V_ARRAY  ## plain array.array
+
         
         if LinAlgT.with_numpy : 
             t.to_numpy  = LinAlgT.V_NUMPY ## numpy array
 
         ## convert TVector to SVector 
         t.svector       = LinAlgT.TV_SV 
-            
+        
+        t.to_gsl        = LinAlgT.V_2GSL 
+        t.as_gsl        = LinAlgT.V_2GSL 
+        t.to_GSL        = LinAlgT.V_2GSL 
+        t.as_GSL        = LinAlgT.V_2GSL 
+        
         t.shape         = property ( LinAlgT.V_SHAPE , None , None )
         t.kSize         = property ( LinAlgT.T_KSIZE , None , None ) 
 
@@ -356,7 +362,14 @@ class LinAlgT(LA.LinAlg) :
 
         if LinAlgT.with_numpy : 
             m.to_numpy  = LinAlgT.M_NUMPY ## numpy array
-            
+
+        m.to_gsl        = LinAlgT.M_2GSL 
+        m.as_gsl        = LinAlgT.M_2GSL 
+        m.to_GSL        = LinAlgT.M_2GSL 
+        m.as_GSL        = LinAlgT.M_2GSL 
+
+        m.PLU           = LinAlgT.M_PLU 
+
         s = remtx.search ( m.__name__ )
         if s :
             stype = s.group('TYPE')

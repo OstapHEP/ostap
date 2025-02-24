@@ -19,7 +19,7 @@
 #include "Ostap/StatusCode.h"
 #include "Ostap/ValueWithError.h"
 #include "Ostap/Hesse.h"
-#include "Ostap/GSL_utils.h"
+#include "Ostap/LinAlg.h"
 #include "Ostap/Chi2Fit.h"
 // =============================================================================
 // Local

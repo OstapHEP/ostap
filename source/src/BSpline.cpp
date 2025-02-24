@@ -12,11 +12,15 @@
 #include "Ostap/BSpline.h"
 #include "Ostap/Bernstein.h"
 #include "Ostap/Lomont.h"
+#include "Ostap/LinAlg.h"
+// ============================================================================
+// GSL
+// ============================================================================
+#include "gsl/gsl_linalg.h"
 // ============================================================================
 // Local
 // ============================================================================
 #include "Exception.h"
-#include "GSL_helpers.h"
 #include "status_codes.h"
 // ============================================================================
 /** @file 
@@ -3048,7 +3052,7 @@ Ostap::Math::Interpolation::bspline
   // mismatch for number of input parameters 
   if ( N != bs.npars() ) { return 110 ; }             // RETURN 110 
   //
-  Ostap::GSL_Matrix m { N , N }  ;
+  Ostap::GSL::Matrix m { N , N }  ;
   if ( !m.matrix()     ) { return 141 ; }             // RETURN 141  
   // 
   const double xmin = bs.xmin () ;
@@ -3072,12 +3076,12 @@ Ostap::Math::Interpolation::bspline
     } 
   }
   //
-  Ostap::GSL_Vector x { N } ;
+  Ostap::GSL::Vector x { N } ;
   if ( !x.vector()       ) { return 142 ; }
   //
   for ( unsigned short i = 0 ; i < N ; ++i ) { x.set ( i , xy.y ( i ) ) ;  }
   //
-  Ostap::GSL_Permutation p { N };
+  Ostap::GSL::Permutation p { N };
   if ( !p.permutation () ) { return 143 ; }
   //
   // make LU decomposition 

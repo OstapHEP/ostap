@@ -493,7 +493,6 @@ class LinAlg(object) :
                 m [ i, j ] = mget ( obj , i, j )
             
         return m 
-
         
     # =========================================================================
     ## addtion of matrix/vector objects
@@ -2213,6 +2212,44 @@ class LinAlg(object) :
         return tobj
 
     # =========================================================================
+    ## Convert SMatrix/TMatrix objects into GSL MAtrix
+    @staticmethod 
+    def M_2GSL ( mtrx ) :
+        """ Convert SMatrix/TMatrix objects into GSL Matrix
+        """
+        return Ostap.GSL.matrix ( mtrx )
+    
+    # =========================================================================
+    ## Convert SVector/TVector objects into GSL Vector
+    @staticmethod 
+    def V_2GSL ( vct ) :
+        """ Convert SVecto/TVector objects into GSL Vector
+        """
+        return Ostap.GSL.vector ( vct )
+
+    # =========================================================================
+    ## (P)LU decomposition
+    #  @see Ostap::GSL::PLU
+    #  @code
+    #  matrix = ...
+    #  P , L , U = matrix.PLU() 
+    #  @endcode    
+    @staticmethod
+    def M_PLU  ( mtrx ) :
+        """ Perform (P)LU decomposition of the matrix 
+        >>> matrix = ...\
+        >>> P, L, U = matarix.PLU() 
+        - see `Ostap.GSL.PLU` 
+        """
+        A = mtrx.to_GSL()
+        M , N = A.nRows() , A.nCols()
+        K     = min ( M , N )
+        L = Ostap.GSL.Matrix ( M , K )
+        U = Ostap.GSL.Matrix ( K , N )
+        P = Ostap.GSL.PLU ( A , L , U )
+        return P , L , U 
+        
+    # =========================================================================
     ## Decorate SVector 
     @staticmethod
     def deco_vector ( t ) :
@@ -2283,6 +2320,11 @@ class LinAlg(object) :
         t.__reduce__    = LinAlg.V_REDUCE 
 
         t.isfinite      = LinAlg.M_ISFINITE
+
+        t.to_gsl        = LinAlg.V_2GSL 
+        t.as_gsl        = LinAlg.V_2GSL 
+        t.to_GSL        = LinAlg.V_2GSL 
+        t.as_GSL        = LinAlg.V_2GSL 
         
         s = revct.search ( t.__name__ )
         if s :
@@ -2395,6 +2437,13 @@ class LinAlg(object) :
         m.__reduce__    = LinAlg.M_REDUCE 
         m.rep_size      = classgetter ( lambda cls : cls.rep_type.kSize ) 
 
+        m.to_gsl        = LinAlg.M_2GSL 
+        m.as_gsl        = LinAlg.M_2GSL 
+        m.to_GSL        = LinAlg.M_2GSL 
+        m.as_GSL        = LinAlg.M_2GSL 
+
+        m.PLU           = LinAlg.M_PLU 
+        
         s = remtx.search ( m.__name__ )
         if s :
             stype = s.group('TYPE')
@@ -2679,7 +2728,7 @@ Ostap.Math.SymMatrix =  staticmethod ( LinAlg.SymMatrix )
 
 
 # =============================================================================
-if numpy: # ===================================================================
+if numpy : # ==================================================================
     # =========================================================================
     ## create <code>SMatrix</code> from <code>numpy</code> array
     #  @code
@@ -2739,7 +2788,7 @@ if numpy: # ===================================================================
     #  s = toSObject ( a ) 
     #  @endcode
     def toSObject ( a ) :
-        """Convert 1D or 2D numpy array to SMatrix/SVecrtor
+        """ Convert 1D or 2D numpy array to SMatrix/SVecrtor
         >>> a = ...
         >>> s = toSObject ( a ) 
         """

@@ -43,7 +43,7 @@ namespace Ostap
       const T* begin =         vct.GetMatrixArray () ;
       const T* end   = begin + vct.GetNrows       () ;
       for ( const T* v = begin ; v != end ; ++v )
-	{ if ( !std::isfinite ( *v ) ) { return false ; } }
+        { if ( !std::isfinite ( *v ) ) { return false ; } }
       return true ;
     }
     /// Are all elements are finite? 
@@ -55,7 +55,7 @@ namespace Ostap
       const T* begin =         mtrx.GetMatrixArray () ;
       const T* end   = begin + mtrx.GetNrows() * mtrx.GetNcols() ;
       for ( const T* v = begin ; v != end ; ++v )
-	{ if ( !std::isfinite ( *v ) ) { return false ; } }
+        { if ( !std::isfinite ( *v ) ) { return false ; } }
       return true ;
     }
     /// Are all elements are finite? 
@@ -67,7 +67,7 @@ namespace Ostap
       const T* begin =         mtrx.GetMatrixArray () ;
       const T* end   = begin + mtrx.GetNrows() * mtrx.GetNcols() ;
       for ( const T* v = begin ; v != end ; ++v )
-	{ if ( !std::isfinite ( *v ) ) { return false ; } }
+        { if ( !std::isfinite ( *v ) ) { return false ; } }
       return true ;
     }
     // ========================================================================

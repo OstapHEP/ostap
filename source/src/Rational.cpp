@@ -1,6 +1,8 @@
 // Include files 
 // ============================================================================
-// Incldue files 
+// GSL
+// ===========================================================================
+#include "gsl/gsl_linalg.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -8,7 +10,7 @@
 #include "Ostap/Polynomials.h"
 #include "Ostap/Rational.h"
 #include "Ostap/Clenshaw.h"
-#include "Ostap/GSL_utils.h"
+#include "Ostap/LinAlg.h"
 // ============================================================================
 // Local 
 // ===========================================================================
@@ -17,7 +19,6 @@
 #include "local_hash.h"
 #include "local_math.h"
 #include "local_gsl.h"
-#include "GSL_helpers.h"
 // ===========================================================================
 /** @file 
  *  Rational pole-less f
@@ -952,8 +953,8 @@ Ostap::Math::Pade::Pade
 		  "Ostap::Math::Pade"          ) ;
   //
   // =====================================================================  
-  Ostap::GSL_Matrix A { N , N , Ostap::GSL_Matrix::Zero() } ;  
-  Ostap::GSL_Vector b { N     } ; // free column 
+  Ostap::GSL::Matrix A { N , N , Ostap::GSL::Matrix::Zero() } ;  
+  Ostap::GSL::Vector b { N     } ; // free column 
   // (2) fill the matrix A and free column b
   for ( unsigned short j = 0 ; j < N ; ++j )
     {
@@ -966,21 +967,21 @@ Ostap::Math::Pade::Pade
       
       // =================================================================
       { // the first n + 1 columns  
-	double xx = Z ;
-	for ( unsigned int i = 0 ; i < m_n + 1 ; ++i ) 
-	  {
-	    A.set ( j , i , xx ) ;
-	    xx *= t ;	   
-	  }	
+        double xx = Z ;
+        for ( unsigned int i = 0 ; i < m_n + 1 ; ++i ) 
+          {
+            A.set ( j , i , xx ) ;
+            xx *= t ;	   
+          }	
       }
       // =================================================================
       { // remaining columns 
-	double xx = -R * y * t ;
-	for ( unsigned int i = m_n + 1 ; i < N ; ++i ) 
-	  {
-	    A.set ( j , i , xx ) ;
-	    xx *= t ;	   
-	  }
+        double xx = -R * y * t ;
+        for ( unsigned int i = m_n + 1 ; i < N ; ++i ) 
+          {
+            A.set ( j , i , xx ) ;
+            xx *= t ;	   
+          }
       }
       // free column
       b.set ( j , R * y ) ;
@@ -990,26 +991,25 @@ Ostap::Math::Pade::Pade
   // (3) solve the system Ax=b using LU decomposition with pivoting 
   
   // (3.1) make LU decomposition with pivoting 
-  Ostap::GSL_Permutation  P { N } ;  
+  Ostap::GSL::Permutation  P { N } ;  
   int signum ; 
   int ierror  = gsl_linalg_LU_decomp ( A.matrix() , P.permutation() , &signum ) ;
   if ( ierror ) { gsl_error ( "Failure in LU-decomposition" , __FILE__  , __LINE__ , ierror ) ; }
-  Ostap::Assert ( !ierror ,
-		  "Failure in LU-decomposition!" ,
-		  "Ostap::Math::Pade"            , 1100 + ierror ) ;
+  Ostap::Assert ( !ierror                        ,
+                  "Failure in LU-decomposition!" ,
+                  "Ostap::Math::Pade"            , 1100 + ierror ) ;
   
   // (3.2) solve the system Ax=b 
-  Ostap::GSL_Vector       x { N     } ; // solution 
+  Ostap::GSL::Vector       x { N     } ; // solution 
   ierror  = gsl_linalg_LU_solve ( A.matrix(), P.permutation() , b.vector() , x.vector() );
   if ( ierror ) { gsl_error ( "Failure in LU-solve" , __FILE__  , __LINE__ , ierror ) ; }
   Ostap::Assert ( !ierror                ,
-		  "Failure in LU-solve!" ,
-		  "Ostap::Math::Pade"    , 1200 + ierror ) ;
+                  "Failure in LU-solve!" ,
+                  "Ostap::Math::Pade"    , 1200 + ierror ) ;
   
   // (4) Feed Pade with calculated parameters 
   for ( unsigned short k = 0 ; k < N ; ++k ) { setPar ( k , x.get ( k ) ) ; }
 }
-
 
 // ===========================================================================
 /** constructor from the polynomial expansion 
@@ -1036,8 +1036,8 @@ Ostap::Math::Pade::Pade
   typedef std::vector<double>::const_iterator         CI  ;
   typedef std::vector<double>::const_reverse_iterator CRI ;
   //
-  Ostap::GSL_Matrix A { N , N , Ostap::GSL_Matrix::Zero() } ;
-  Ostap::GSL_Vector b { N     } ; // free column 
+  Ostap::GSL::Matrix A { N , N , Ostap::GSL::Matrix::Zero() } ;
+  Ostap::GSL::Vector b { N     } ; // free column 
   //
   for ( unsigned short j = 0 ; j < N ; ++j )
     {
@@ -1067,7 +1067,7 @@ Ostap::Math::Pade::Pade
   // (3) solve the system Ax=b using LU decomposition with pivoting 
   
   // (3.1) make LU decomposition with pivoting 
-  Ostap::GSL_Permutation  P { N } ;  
+  Ostap::GSL::Permutation  P { N } ;  
   int signum ; 
   int ierror  = gsl_linalg_LU_decomp ( A.matrix() , P.permutation() , &signum ) ;
   if ( ierror ) { gsl_error ( "Failure in LU-decomposition" , __FILE__  , __LINE__ , ierror ) ; }
@@ -1076,7 +1076,7 @@ Ostap::Math::Pade::Pade
 		  "Ostap::Math::Pade"            , 1100 + ierror ) ;
   
   // (3.2) solve the system Ax=b 
-  Ostap::GSL_Vector       x { N     } ; // solution 
+  Ostap::GSL::Vector       x { N     } ; // solution 
   ierror  = gsl_linalg_LU_solve ( A.matrix(), P.permutation() , b.vector() , x.vector() );
   if ( ierror ) { gsl_error ( "Failure in LU-solve" , __FILE__  , __LINE__ , ierror ) ; }
   Ostap::Assert ( !ierror                ,
@@ -1139,8 +1139,8 @@ void Ostap::Math::pade_ququ
   typedef std::vector<double>::const_iterator         CI ;
   typedef std::vector<double>::const_reverse_iterator CRI;
   //
-  Ostap::GSL_Matrix A { N , N , Ostap::GSL_Matrix::Zero() } ;
-  Ostap::GSL_Vector b { N     } ; // free column 
+  Ostap::GSL::Matrix A { N , N , Ostap::GSL::Matrix::Zero() } ;
+  Ostap::GSL::Vector b { N     } ; // free column 
   //
   for ( unsigned short j = 0 ; j < N ; ++j )
     {
@@ -1167,12 +1167,11 @@ void Ostap::Math::pade_ququ
       b.set( j , f[j] ) ;
     }
   // solve Ax=b
-  
-  
+    
   // (3) solve the system Ax=b using LU decomposition with pivoting 
   
   // (3.1) make LU decomposition with pivoting 
-  Ostap::GSL_Permutation  P { N } ;  
+  Ostap::GSL::Permutation  P { N } ;  
   int signum ; 
   int ierror  = gsl_linalg_LU_decomp ( A.matrix() , P.permutation() , &signum ) ;
   if ( ierror ) { gsl_error ( "Failure in LU-decomposition" , __FILE__  , __LINE__ , ierror ) ; }
@@ -1181,7 +1180,7 @@ void Ostap::Math::pade_ququ
 		  "Ostap::Math::Pade"            , 1100 + ierror ) ;
   
   // (3.2) solve the system Ax=b 
-  Ostap::GSL_Vector       x { N     } ; // solution 
+  Ostap::GSL::Vector       x { N     } ; // solution 
   ierror  = gsl_linalg_LU_solve ( A.matrix(), P.permutation() , b.vector() , x.vector() );
   if ( ierror ) { gsl_error ( "Failure in LU-solve" , __FILE__  , __LINE__ , ierror ) ; }
   Ostap::Assert ( !ierror                ,
