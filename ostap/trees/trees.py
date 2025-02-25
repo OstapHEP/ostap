@@ -2498,7 +2498,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
 
     ## keep all information 
     keeper = [ branch ]
-    for k , v in loop_items ( kwargs ) : keeper.append ( v ) 
+    ## for k , v in loop_items ( kwargs ) : keeper.append ( v ) 
     
     keeper   = []
 
@@ -2646,7 +2646,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         
         if   ( 6 , 26 ) <= root_info : args = vars + ( branch , )
         else :
-
+        
             fvars = ( branch , ) + vars + ( tree , )
             if   1 == len ( vars ) : args = Ostap.Functions.Func1D ( *fvars ) , 
             elif 2 == len ( vars ) : args = Ostap.Functions.Func2D ( *fvars ) , 
@@ -2682,8 +2682,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         assert Ostap.Trees.valid_name_for_branch ( name  ) , "Invalid name for bew brnach:'%s'" % name
         assert not name in tree , "Branch/leave `%s' is already in the Treee!" % name   
 
-    keeper.append ( args   )
-    keeper.append ( kwargs )
+    for a in args : keeper.append ( a )
     
     logger.debug ( 'prepare_bramnches, end...' ) 
     return args , new_branches , kwargs , keeper 
