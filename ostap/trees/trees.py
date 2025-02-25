@@ -2500,17 +2500,15 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
     keeper = [ branch ]
     for k , v in loop_items ( kwargs ) : keeper.append ( v ) 
     
-    keeper = []
+    keeper   = []
 
-    the_case = 0
-    
     ## the simplest case: branches are already prepared 
     if   isinstance ( branch , Ostap.Trees.Branches        ) and not 'name' in kwargs :        
         ## already prepared ....  not to much action
         for name  in branch : new_branches.add ( name )  
         args = branch ,
         logger.debug ( 'prepare_branches: case [1] %s' % typename ( branch ) ) 
-        
+
     elif isinstance ( branch , Ostap.MoreRooFit.SPlot4Tree ) and not 'name' in kwargs :        
         ## (very) special case
         
@@ -2684,6 +2682,9 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         assert Ostap.Trees.valid_name_for_branch ( name  ) , "Invalid name for bew brnach:'%s'" % name
         assert not name in tree , "Branch/leave `%s' is already in the Treee!" % name   
 
+    keeper.append ( args   )
+    keeper.append ( kwargs )
+    
     logger.debug ( 'prepare_bramnches, end...' ) 
     return args , new_branches , kwargs , keeper 
 
@@ -2698,10 +2699,10 @@ def add_new_branch ( tree , branch , / , **kwargs ) :
     assert valid_pointer ( tree ) and isinstance ( tree , ROOT.TTree ) , \
         "Tree* is invalid!"
 
-    verbose  = kwargs.pop ( 'verbose ' , True ) ## ATTENTION! 
+    verbose = kwargs.pop ( 'verbose ' , False ) ## ATTENTION! 
 
     ## parse argumensts
-    args , expected , kw , keeps = prepare_branches ( tree , branch , **kwargs ) 
+    args , expected , kw , keeper = prepare_branches ( tree , branch , **kwargs ) 
 
     progress = kw.pop ( 'progress' , True  )
     report   = kw.pop ( 'report'   , True  ) 
@@ -2711,11 +2712,13 @@ def add_new_branch ( tree , branch , / , **kwargs ) :
         logger.info ( 'Processed arguments:\n%s' % print_args ( *args  , **kw     ) ) 
         
     assert args     , "No arguments for Ostap.Trees.add_branch are collected!"
-    assert expected , "No expected branches!"
+    assert expected , "No expected branche detected!!"
 
-    if kw :
-        title1 = 'add_new_branch: Unknown arguments'
-        title2 = 'Unknown arguments'
+    kw.pop ( 'prefix' ) 
+    kw.pop ( 'title'  ) 
+    if kw : 
+        title1 = 'add_new_branch: Unknown/unprocessed arguments'
+        title2 = 'Unknown/uprocessed arguments'
         logger.warning  ( '%s:\n%s' % ( title1 , print_args ( prefix = '# ' , title = title2 , **kw ) ) ) 
 
     ## start the actual processing 
@@ -2724,6 +2727,7 @@ def add_new_branch ( tree , branch , / , **kwargs ) :
     missing  = sorted ( br for br in expected if not br in chain  )
     if missing : logger.warning ( 'Extected but missing branches: %s' % ( ', '.join ( m for m in missing ) ) ) 
 
+    del keeper 
     return chain
     
 # =============================================================================
