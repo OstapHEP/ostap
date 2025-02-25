@@ -123,11 +123,17 @@ def add_new_branch ( chain           ,
         title = 'All input arguments'
         logger.info ( '%s:\n%s' % ( title , check.pickling_table ( branch , prefix = '# ' , **kwargs ) ) )
 
+    keeper = [ branch ]
+    for k , v in loop_items ( kwargs ) : keeper.append ( v )
+    
     # ========================================================================
     ## process all rguments  
     args , expected , kw , keeps = prepare_branches ( chain , branch , **kwargs ) 
 
-
+    keeper += keeps 
+    for a     in args              : keeper.append ( a )
+    for k , v in loop_items ( kw ) : keeper.append ( v )
+    
     if verbose : 
         title = 'All processed arguments'
         table = check.pickling_table ( *args  , prefix = '# ' , **kwargs ) 
@@ -135,7 +141,7 @@ def add_new_branch ( chain           ,
 
     # =========================================================================
     ## perfect! 
-    if   check.pickles_all ( *args )  :
+    if   check.pickles_all  ( *args ) :
         task = AddNewBranch ( *args )
     ## some 'args' are not pickable! 
     elif check.pickles_all ( branch , **kwargs ) :
@@ -179,6 +185,7 @@ def add_new_branch ( chain           ,
             table = nc.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
 
+    del keeper 
     return nc 
 
 ROOT.TTree .padd_new_branch = add_new_branch 
