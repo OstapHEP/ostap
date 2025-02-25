@@ -2714,8 +2714,8 @@ def add_new_branch ( tree , branch , / , **kwargs ) :
     assert args     , "No arguments for Ostap.Trees.add_branch are collected!"
     assert expected , "No expected branche detected!!"
 
-    kw.pop ( 'prefix' ) 
-    kw.pop ( 'title'  ) 
+    kw.pop ( 'prefix' , '' ) 
+    kw.pop ( 'title'  , '' ) 
     if kw : 
         title1 = 'add_new_branch: Unknown/unprocessed arguments'
         title2 = 'Unknown/uprocessed arguments'
