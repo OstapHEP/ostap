@@ -2779,6 +2779,8 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
         if ( 6 , 26 ) <= root_info :
             with implicitMT ( False ) : tfile.Write ( "" , ROOT.TObject.kOverwrite )
         else                          : tfile.Write ( "" , ROOT.TObject.kOverwrite )
+        
+        ttree = ROOT.nullptr 
 
     chain = ROOT.TChain ( tpath )
     chain.Add  ( the_file )
@@ -2791,7 +2793,9 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
             else      : title = 'Added %s branches to TChain' % n 
             table = chain.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
-          
+            chain = ROOT.TChain ( tpath )
+            chain.Add  ( the_file )     
+            
     return chain
 
 # =============================================================================
@@ -2840,7 +2844,9 @@ def push_2chain ( chain , *config , progress = True , report = True ) :
             else      : title = 'Added %s branches to TChain' % n 
             table = chain.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
-          
+            chain = ROOT.TChain ( cname )
+            for fname in files : chain.Add ( fname )
+    
     return chain
 
 # ==============================================================================
