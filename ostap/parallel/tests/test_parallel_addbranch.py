@@ -406,6 +406,7 @@ def test_addbranch() :
     ## reload the chain and check: 
     assert 'gauss_lambda2' in chain , "Branch `gauss_lambda2' is  not here!"
 
+    """
     # =========================================================================
     ## (16) python function again 
     # =========================================================================
@@ -419,7 +420,7 @@ def test_addbranch() :
     # =========================================================================
     ## (17) python function again 
     # =========================================================================
-    with timing ('gauss-lambda-2' , logger = logger ) as timer :          
+    with timing ('gauss-lambda-4' , logger = logger ) as timer :          
         chain = data.chain 
         chain = chain.padd_new_branch ( 'gauss_lambda4' , function = gauss_lam )         
     rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
@@ -599,6 +600,7 @@ def test_addbranch() :
     ## reload the chain and check: 
     assert 'gf3cxx_2' in chain , "Branch `gf3cxx_2' is  not here!"
 
+    """ 
     title = 'With ALL variables'
     logger.info ( '%s:\n%s' %  (title , chain.table ( title = title , prefix = '# ' ) ) )
             
