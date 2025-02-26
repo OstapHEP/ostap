@@ -156,6 +156,7 @@ class PyTreeFunction(FuncTree) :
         """ Clone it! """
         cloned = PyTreeFunction ( the_function = self.the_function , tree = self.the_tree , clone = self )
         ROOT.SetOwnership ( cloned , False )
+        self.store.add ( cloned ) 
         return cloned 
 
     ## REDUCE 
