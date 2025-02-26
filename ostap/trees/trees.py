@@ -2763,6 +2763,8 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
     args = tuple ( a for a in config  ) 
     if progress : args += ( progress_conf ( progress ) , ) 
 
+
+    
     from ostap.io.root_file  import REOPEN     
     with ROOTCWD() , REOPEN ( tdir ) as tfile :
         
@@ -2773,7 +2775,9 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
         assert tfile.IsWritable() , 'The file:%s is not writeable!'
         
         ## Add the branch!
-        sc = Ostap.Trees.add_branch ( ttree , *args  )
+        table = print_args ( *args ) 
+        logger.always ( 'ARGUMETS:\n%s' % table )
+        sc    = Ostap.Trees.add_branch ( ttree , *args  )
         assert sc.isSuccess () , "Error from Ostap.Trees.add_branch %s" % sc
 
         if ( 6 , 26 ) <= root_info :
