@@ -2544,7 +2544,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
          ( 'formula' in kwargs and isinstance ( kwargs['formula'] , string_types ) ) and not 'name' in kwargs :        
         ## branch is actually the name of the branch 
         formula = kwargs.pop ( 'formula' )
-        logger.debug ( 'prepare_branches: case [5->delegate] %s delegate! ' % typename ( branch ) )        
+        logger.debug ( 'prepare_branches: case [5->delegate] %s' % typename ( branch ) )        
         args , nb , kw , keep = prepare_branches ( tree , formula , name = branch , **kwargs )
         return args , nb , kw , keeper + keep  
         
@@ -2660,7 +2660,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         newbranch = { name : branch }
         keeper.append (    branch )
         keeper.append ( newbranch ) 
-        logger.debug ( 'prepare_branches: case [14->delegate] %s delegate! ' % typename ( branch ) )
+        logger.debug ( 'prepare_branches: case [14->delegate] %s' % typename ( branch ) )
         args , nb , kw , keep = prepare_branches ( tree , newbranch , **kwargs )
         return args , nb , kw , keeper + keep 
     
