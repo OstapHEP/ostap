@@ -25,6 +25,7 @@ __all__     = (
     'FuncTH3'           , ## TH3-based Tree-function 
     ) 
 # =============================================================================
+from   ostap.core.meta_info    import root_info 
 from   ostap.core.core         import Ostap    , valid_pointer
 from   ostap.utils.basic       import typename , prntrf 
 import ostap.trees.treereduce 
@@ -156,7 +157,7 @@ class PyTreeFunction(FuncTree) :
         """ Clone it! """
         cloned = PyTreeFunction ( the_function = self.the_function , tree = self.the_tree , clone = self )
         ROOT.SetOwnership ( cloned , False )
-        self.store.add ( cloned ) 
+        if ( 6 , 32 ) <= root_info : self.store.add ( cloned ) 
         return cloned 
 
     ## REDUCE 
