@@ -4,14 +4,17 @@
 // Ostap
 // ============================================================================
 #include "Ostap/LinAlg.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 // GSL
 // ============================================================================
 #include "gsl/gsl_linalg.h"
+#include "gsl/gsl_cblas.h"
 // ============================================================================
 // local
 // ============================================================================
 #include "format.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file 
  *  Implementation file for helper  GSL classes 
@@ -22,27 +25,31 @@
 // allocate GSL-matrix 
 // ============================================================================
 Ostap::GSL::Matrix::Matrix
-( const unsigned int N1 , 
-  const unsigned int N2 )
+( const std::size_t N1 , 
+  const std::size_t N2 )
   : m_matrix ( gsl_matrix_alloc ( N1 , N2 ) )
 {}
 // ============================================================================
 // allocate GSL-matrix 
 // ============================================================================
 Ostap::GSL::Matrix::Matrix
-( const unsigned int N1    , 
-  const unsigned int N2    , 
+( const std::size_t N1    , 
+  const std::size_t N2    , 
   const double       value )
   : m_matrix ( gsl_matrix_alloc ( N1 , N2 ) )
 {
+  Ostap::Assert ( std::isfinite ( value )             ,
+                  "Cannot use !std::isfinite"         ,
+                  "Ostap::GSL::Matrix"                ,
+                  INVALID_SCALE , __FILE__ , __LINE__ ) ;
   gsl_matrix_set_all ( m_matrix , value ) ;
 }
 // ============================================================================
 // allocate GSL-matrix 
 // ============================================================================
 Ostap::GSL::Matrix::Matrix
-( const unsigned int N1    , 
-  const unsigned int N2    , 
+( const std::size_t N1    , 
+  const std::size_t N2    , 
   const Ostap::GSL::Matrix::Zero /* zero */ ) 
   : m_matrix ( gsl_matrix_calloc ( N1 , N2 ) )  // NB: calloc is here!!!
 {}
@@ -50,8 +57,8 @@ Ostap::GSL::Matrix::Matrix
 // allocate GSL-matrix 
 // ============================================================================
 Ostap::GSL::Matrix::Matrix
-( const unsigned int N1    , 
-  const unsigned int N2    , 
+( const std::size_t N1    , 
+  const std::size_t N2    , 
   const Ostap::GSL::Matrix::Identity /* zero */ ) 
   : m_matrix ( gsl_matrix_alloc ( N1 , N2 ) )
 {
@@ -61,14 +68,14 @@ Ostap::GSL::Matrix::Matrix
 // allocate square GSL-matrix 
 // ============================================================================
 Ostap::GSL::Matrix::Matrix
-( const unsigned int N  )
+( const std::size_t N  )
   : Matrix ( N , N )
 {}
 // ============================================================================
 // allocate square GSL-matrix 
 // ============================================================================
 Ostap::GSL::Matrix::Matrix
-( const unsigned int             N     , 
+( const std::size_t             N     , 
   const Ostap::GSL::Matrix::Zero zero  )
   : Matrix ( N , N , zero )
 {}
@@ -76,10 +83,29 @@ Ostap::GSL::Matrix::Matrix
 // allocate square GSL-matrix 
 // ============================================================================
 Ostap::GSL::Matrix::Matrix
-( const unsigned int                 N  , 
+( const std::size_t                 N  , 
   const Ostap::GSL::Matrix::Identity id ) 
   : Matrix ( N , N , id )
 {}
+// ============================================================================
+// allocate square permutation GSL-matrix 
+// ============================================================================
+Ostap::GSL::Matrix::Matrix
+( const Ostap::GSL::Permutation& p ) 
+  : m_matrix ( gsl_matrix_calloc ( p.size () , p.size () ) ) 
+{
+  //
+  Ostap::Assert ( gsl_permutation_valid ( p.permutation() ) ,
+                  "(GSL)Permutation is invalid!"            , 
+                  "Ostap::GSL::Matrix"                      ,
+                  INVALID_PERMUTATION , __FILE__ , __LINE__ ) ;
+  //
+  for ( std::size_t j = 0 ; j < nCols() ; ++j )
+    {
+      const std::size_t k = p.get ( j ) ; 
+      set ( k , j , 1 ) ;
+    }
+}
 // ============================================================================
 // copy constructor 
 // ============================================================================
@@ -138,8 +164,8 @@ Ostap::GSL::Matrix::operator=
 // ============================================================================
 Ostap::GSL::Matrix&
 Ostap::GSL::Matrix::resize
-( const unsigned int n1 ,
-  const unsigned int n2 )
+( const std::size_t n1 ,
+  const std::size_t n2 )
 {
   if ( n1 != m_matrix->size1 || n2 != m_matrix->size2 )
     {
@@ -153,11 +179,15 @@ Ostap::GSL::Matrix::resize
 // ============================================================================
 Ostap::GSL::Matrix&
 Ostap::GSL::Matrix::resize
-( const unsigned int n1    ,
-  const unsigned int n2    ,
-  const double       value )
+( const std::size_t n1    ,
+  const std::size_t n2    ,
+  const double      value )
 {
   if ( !value ) { return resize ( n1 , n2 , Zero() ) ; }
+  Ostap::Assert ( std::isfinite ( value )             ,
+                  "Cannot use !std::isfinite"         ,
+                  "Ostap::GSL::Matrix"                ,
+                  INVALID_SCALE , __FILE__ , __LINE__ ) ;
   resize ( n1 , n2 ) ;
   gsl_matrix_set_all ( m_matrix , value ) ;
   return *this ;
@@ -167,8 +197,8 @@ Ostap::GSL::Matrix::resize
 // ============================================================================
 Ostap::GSL::Matrix&
 Ostap::GSL::Matrix::resize
-( const unsigned int n1    ,
-  const unsigned int n2    ,
+( const std::size_t n1    ,
+  const std::size_t n2    ,
   const Ostap::GSL::Matrix::Zero /* zero */ ) 
 {
   if ( n1 != m_matrix->size1 || n2 != m_matrix->size2 )
@@ -185,8 +215,8 @@ Ostap::GSL::Matrix::resize
 // ============================================================================
 Ostap::GSL::Matrix&
 Ostap::GSL::Matrix::resize
-( const unsigned int n1    ,
-  const unsigned int n2    ,
+( const std::size_t n1    ,
+  const std::size_t n2    ,
   const Ostap::GSL::Matrix::Identity /* zero */ ) 
 {
   resize ( n1 , n2 ) ;
@@ -199,29 +229,214 @@ Ostap::GSL::Matrix::resize
 void Ostap::GSL::Matrix::swap
 ( Ostap::GSL::Matrix& right )
 { std::swap ( m_matrix , right.m_matrix ) ; }
+// ============================================================================
+// swap two rows in matrix 
+// ============================================================================
+Ostap::GSL::Matrix&
+Ostap::GSL::Matrix::swap_rows
+( const std::size_t i1 ,
+  const std::size_t i2 )
+{
+  if ( i1 == i2 ) { return *this ; }
+  Ostap::Assert ( i1 < nRows () && i2 <= nRows () , 
+                  "Invalid row index!"            ,
+                  "Ostap::GSL::Martix::swap_rows" ,
+                  INVALID_ROWINDEX , __FILE__ , __LINE__ ) ;
+  gsl_matrix_swap_rows    ( m_matrix , i1 , i2 ) ;
+  return *this ; 
+}
+// ============================================================================
+// swap two columns in matrix 
+// ============================================================================
+Ostap::GSL::Matrix&
+Ostap::GSL::Matrix::swap_cols
+( const std::size_t i1 ,
+  const std::size_t i2 )
+{
+  if ( i1 == i2 ) { return *this ; }
+  Ostap::Assert ( i1 < nCols () && i2 <= nCols ()  , 
+                  "Invalid coumn index!"          ,
+                  "Ostap::GSL::Martix::swap_cols" ,
+                  INVALID_COLINDEX , __FILE__ , __LINE__ ) ;
+  gsl_matrix_swap_columns ( m_matrix , i1 , i2 ) ;
+  return *this ; 
+}
+// ============================================================================
+// scale matrix 
+// ============================================================================
+Ostap::GSL::Matrix&                             
+Ostap::GSL::Matrix::imul
+( const double value )
+{
+  if ( 1 == value ) { return *this ; }
+  Ostap::Assert ( std::isfinite ( value )             ,
+                  "Cannto add !std::isfinite"         ,
+                  "Ostap::GSL::Matrix::iadd"          ,
+                  INVALID_SCALE , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( std::isfinite ( value )             ,
+                  "Cannto scale but !std::isfinite"   ,
+                  "Ostap::GSL::Matrix::imul"          ,
+                  INVALID_SCALE , __FILE__ , __LINE__ ) ;
+  //
+  gsl_matrix_scale ( m_matrix , value ) ;
+  return *this;
+}
+// ============================================================================
+// add&subtract matrix 
+// ============================================================================
+Ostap::GSL::Matrix&                             
+Ostap::GSL::Matrix::iadd
+( const Ostap::GSL::Matrix& right )
+{
+  Ostap::Assert ( this->nRows () == right.nRows() &&
+                  this->nCols () == right.nCols() ,
+                  "Cannot add matrix of incompatible structure" ,
+                  "Ostap::GSL::Martix::iadd" ,
+                  INVALID_GMATRIX , __FILE__ , __LINE__ ) ;
+  //
+  gsl_matrix_add ( m_matrix , right.m_matrix ) ;
+  return *this;
+}
+// ============================================================================
+// add&subtract matrix 
+// ============================================================================
+Ostap::GSL::Matrix&                             
+Ostap::GSL::Matrix::isub
+( const Ostap::GSL::Matrix& right )
+{
+  Ostap::Assert ( this->nRows () == right.nRows() &&
+                  this->nCols () == right.nCols() ,
+                  "Cannot sub matrix of incompatible structure" ,
+                  "Ostap::GSL::Martix::iasub" ,
+                  INVALID_GMATRIX , __FILE__ , __LINE__ ) ;
+  //
+  gsl_matrix_sub ( m_matrix , right.m_matrix ) ;
+  return *this;
+}
+// ============================================================================
+// add identity matrix 
+// ============================================================================
+Ostap::GSL::Matrix&                             
+Ostap::GSL::Matrix::iadd
+( const double value )
+{
+  if ( !value ) { return *this ; }
+  Ostap::Assert ( std::isfinite ( value )             ,
+                  "Cannto add  !std::isfinite"        ,
+                  "Ostap::GSL::Matrix::iadd"          ,
+                  INVALID_SCALE , __FILE__ , __LINE__ ) ;
+  //
+  const std::size_t N = std::min ( nRows () , nCols() );
+  for ( std::size_t i = 0 ; i < N ; ++i )
+    { set ( i , i , get ( i , i ) + value ) ; }
+  return *this;
+}
+// ============================================================================
+// multiply matrices  using CBLAS dgemm function 
+// ============================================================================
+Ostap::GSL::Matrix                            
+Ostap::GSL::Matrix::multiply
+( const Ostap::GSL::Matrix& right ) const
+{
+  Ostap::Assert ( this->nCols () == right.nRows() ,
+                  "Cannot multiply matrices of incompatible structure" ,
+                  "Ostap::GSL::Martix::multiply"  ,
+                  INVALID_GMATRIX , __FILE__ , __LINE__ ) ;
+  
+  Matrix result { nRows() , right.nCols() } ;
+  // 
+  gsl_blas_dgemm ( CblasNoTrans    ,
+                   CblasNoTrans    ,
+                   1.0             ,
+                   this ->matrix() ,
+                   right .matrix() ,
+                   0.0             ,
+                   result.matrix() );
+  //
+  return result ;
+}
+// ============================================================================
+// multiply matrices  using CBLAS dgemm function 
+// ============================================================================
+Ostap::GSL::Matrix&                           
+Ostap::GSL::Matrix::imul
+( const Ostap::GSL::Matrix& right )
+{
+  Ostap::Assert ( this->nCols () == right.nCols() ,
+                  "Cannot multiply matrices of incompatible structure" ,
+                  "Ostap::GSL::Martix::multiply"  ,
+                  INVALID_GMATRIX , __FILE__ , __LINE__ ) ;
+  
+  Matrix result { nRows() , right.nCols() } ;
+  // 
+  gsl_blas_dgemm ( CblasNoTrans    ,
+                   CblasNoTrans    ,
+                   1.0             ,
+                   this ->matrix() ,
+                   right .matrix() ,
+                   0.0             ,
+                   result.matrix() );
+  //
+  this->swap ( result ) ;
+  //
+  return *this ;
+}
+// ============================================================================
+// multiply matrix abd vector using CBLAS dgemv function 
+// ============================================================================
+Ostap::GSL::Vector
+Ostap::GSL::Matrix::multiply
+( const Ostap::GSL::Vector& right ) const
+{
+  Ostap::Assert ( this->nCols () == right.size() ,
+                  "Cannot multiply matrix&vector of incompatible structure" ,
+                  "Ostap::GSL::Martix::multiply"  ,
+                  INVALID_GMATRIX , __FILE__ , __LINE__ ) ;
+  //
+  Vector result { nRows() } ;
+  //
+  gsl_blas_dgemv ( CblasNoTrans     ,
+                   1.0              ,
+                   this ->matrix () ,
+                   right .vector () ,
+                   0.0              ,
+                   result.vector () ) ;
+  //
+  return result ;
+}
+
+
+
+
+
+
 
 // ============================================================================
 // allocate GSL-Vector 
 // ============================================================================
 Ostap::GSL::Vector::Vector
-( const unsigned int N  ) 
+( const std::size_t N  ) 
   : m_vector ( gsl_vector_alloc ( N ) )
 {}
 // ============================================================================
 // allocate GSL-Vector 
 // ============================================================================
 Ostap::GSL::Vector::Vector
-( const unsigned int  N     ,   
+( const std::size_t  N     ,   
   const double        value )
   : m_vector ( gsl_vector_alloc ( N ) )
 {
+  Ostap::Assert ( std::isfinite ( value )             ,
+                  "Cannot use !std::isfinite"         ,
+                  "Ostap::GSL::Vector"                ,
+                  INVALID_SCALE , __FILE__ , __LINE__ ) ;
   gsl_vector_set_all ( m_vector , value ) ;
 }
 // ============================================================================
 // allocate GSL-Vector 
 // ============================================================================
 Ostap::GSL::Vector::Vector
-( const unsigned int                N       ,   
+( const std::size_t                N       ,   
   const Ostap::GSL::Vector::Zero /* zero */ ) 
   : m_vector ( gsl_vector_calloc ( N ) )  //    NB! calloc here! 
 {}
@@ -282,7 +497,7 @@ Ostap::GSL::Vector::operator=
 // ============================================================================
 Ostap::GSL::Vector&
 Ostap::GSL::Vector::resize
-( const unsigned int n )
+( const std::size_t n )
 {
   if ( n != m_vector->size )
     {
@@ -296,10 +511,14 @@ Ostap::GSL::Vector::resize
 // ============================================================================
 Ostap::GSL::Vector&
 Ostap::GSL::Vector::resize
-( const unsigned int n     ,
+( const std::size_t n     ,
   const double       value ) 
 {
   if ( !value ) { return resize ( n , Zero() ) ; }
+  Ostap::Assert ( std::isfinite ( value )             ,
+                  "Cannot use !std::isfinite"         ,
+                  "Ostap::GSL::Vector"                ,
+                  INVALID_SCALE , __FILE__ , __LINE__ ) ;
   resize ( n ) ;
   gsl_vector_set_all ( m_vector , value ) ;
   return *this ;
@@ -309,7 +528,7 @@ Ostap::GSL::Vector::resize
 // ============================================================================
 Ostap::GSL::Vector&
 Ostap::GSL::Vector::resize
-( const unsigned int n     ,
+( const std::size_t n     ,
   const Ostap::GSL::Vector::Zero /* zero */ )  
 {
   if ( n != m_vector->size )
@@ -327,12 +546,152 @@ Ostap::GSL::Vector::resize
 void Ostap::GSL::Vector::swap
 ( Ostap::GSL::Vector& right )
 { std::swap ( m_vector , right.m_vector ) ; }
+// ============================================================================
+// dot product of two vect
+// ============================================================================
+double
+Ostap::GSL::Vector::dot
+( const Ostap::GSL::Vector& value ) const 
+{
+  Ostap::Assert ( this->size() == value.size () ,
+                  "Cannot dot vectors of incompatible structure" ,
+                  "Ostap::GSL::Vector::dot"  ,
+                  INVALID_GVECTOR, __FILE__ , __LINE__ ) ;
+  //
+  double result = 0 ;
+  gsl_blas_ddot ( m_vector , value.m_vector , &result ) ;
+  return result ;
+}
+// ============================================================================
+// cross product of two vect
+// ============================================================================
+Ostap::GSL::Matrix
+Ostap::GSL::Vector::cross
+( const Ostap::GSL::Vector& value ) const 
+{
+  Matrix result { size() , value.size() } ;
+  for ( std::size_t i = 0 ; i < size()  ; ++i )
+    { for ( std::size_t j = 0 ; j < value.size() ; ++j )
+        { result.set ( i , j , get ( i ) * value ( j ) ) ; } }
+  //
+  return result ;
+}
+// ============================================================================
+// add a vector 
+// ============================================================================
+Ostap::GSL::Vector&
+Ostap::GSL::Vector::iadd
+( const Ostap::GSL::Vector& value )
+{
+  Ostap::Assert ( size()  == value.size ()   ,
+                  "Cannot add vectors of incompatible structure" ,
+                  "Ostap::GSL::Vector::iadd" ,
+                  INVALID_GVECTOR, __FILE__  , __LINE__ ) ;
+  gsl_vector_add ( m_vector , value.m_vector ) ;
+  return *this ;
+}
+// ============================================================================
+// add a cboisrant 
+// ============================================================================
+Ostap::GSL::Vector&
+Ostap::GSL::Vector::iadd
+( const double value )
+{
+  Ostap::Assert ( std::isfinite ( value )             ,
+                  "Cannot use !std::isfinite"         ,
+                  "Ostap::GSL::Vector"                ,
+                  INVALID_SCALE , __FILE__ , __LINE__ ) ;
+  gsl_vector_add_constant  ( m_vector , value ) ;
+  return *this ;
+}
+// ============================================================================
+// subtract vector 
+// ============================================================================
+Ostap::GSL::Vector&
+Ostap::GSL::Vector::isub
+( const Ostap::GSL::Vector& value )
+{
+  Ostap::Assert ( this->size()  == value.size () ,
+                  "Cannot subtract vectors of incompatible structure" ,
+                  "Ostap::GSL::Vector::isub"  ,
+                  INVALID_GVECTOR, __FILE__ , __LINE__ ) ;
+  gsl_vector_sub ( m_vector , value.m_vector ) ;
+  return *this ;
+}
+
+
+// ============================================================================
+// scale vector  
+// ============================================================================
+Ostap::GSL::Vector&                             
+Ostap::GSL::Vector::imul
+( const double value )
+{
+  if ( 1 == value ) { return *this ; }
+  Ostap::Assert ( std::isfinite ( value )             ,
+                  "Cannto scale but !std::isfinite"   ,
+                  "Ostap::GSL::Vector::imul"          ,
+                  INVALID_SCALE , __FILE__ , __LINE__ ) ;
+  //
+  gsl_vector_scale ( m_vector , value ) ;
+  return *this;
+}
+// ============================================================================
+// multiply by matrix 
+// ============================================================================
+Ostap::GSL::Vector&
+Ostap::GSL::Vector::imul 
+( const Ostap::GSL::Matrix& value )
+{
+  Ostap::Assert ( size()  == value.nRows() ,
+                  "Cannot multiply vector&matrix of incompatible structure" ,
+                  "Ostap::GSL::Vector::isub"  ,
+                  INVALID_GMATRIX, __FILE__ , __LINE__ ) ;
+  
+  Vector result { value.nCols() } ;
+  //
+  gsl_blas_dgemv ( CblasTrans       , // ATTENTIO!!! 
+                   1.0              ,
+                   value .matrix () ,
+                   m_vector         ,
+                   0.0              ,
+                   result.vector () ) ;
+  //
+  this->swap ( result ) ;
+  //
+  return *this ;
+}
+
+// ============================================================================
+// multiply by matrix 
+// ============================================================================
+Ostap::GSL::Vector
+Ostap::GSL::Vector::multiply  
+( const Ostap::GSL::Matrix& value ) const
+{
+  Ostap::Assert ( this->size()  == value.nRows() ,
+                  "Cannot multiply vector&matrix of incompatible structure" ,
+                  "Ostap::GSL::Vector::isub"  ,
+                  INVALID_GMATRIX, __FILE__ , __LINE__ ) ;
+  
+  Vector result { value.nCols() } ;
+  //
+  gsl_blas_dgemv ( CblasTrans       , // ATTENTIO!!! 
+                   1.0              ,
+                   value .matrix () ,
+                   m_vector         ,
+                   0.0              ,
+                   result.vector () ) ;
+  //
+  return result ;
+}
+
 
 // ============================================================================
 // constructor: allocate the permutation 
 // ============================================================================
 Ostap::GSL::Permutation::Permutation
-( const unsigned int N ) 
+( const std::size_t N ) 
   : m_permutation ( gsl_permutation_calloc ( N ) ) 
 {}
 // ============================================================================
@@ -506,8 +865,8 @@ double Ostap::Math::maxabs_element
 ( const Ostap::GSL::Matrix& m )
 {
   double result = -1 ;
-  for ( unsigned int i = 0 ; i < m.nRows () ; ++i )
-    { for ( unsigned int j = 0 ; j < m.nCols () ; ++j )
+  for ( std::size_t i = 0 ; i < m.nRows () ; ++i )
+    { for ( std::size_t j = 0 ; j < m.nCols () ; ++j )
         { result = std::max ( result , std::abs ( m ( i , j ) ) ) ; } }
   return result ;
 }
@@ -518,7 +877,7 @@ double Ostap::Math::maxabs_element
 ( const Ostap::GSL::Vector& v )
 {
   double result = -1 ;
-  for ( unsigned int i = 0 ; i < v.size() ; ++i )
+  for ( std::size_t i = 0 ; i < v.size() ; ++i )
     { result = std::max ( result , std::abs ( v ( i ) ) ) ; }
   return result ;
 }
@@ -614,9 +973,9 @@ Ostap::GSL::PLU
   Ostap::GSL::Matrix      LU { A } ;
   Ostap::GSL::Permutation P  { PLU ( LU ) } ;
   //
-  const unsigned int M { A.nRows () } ;
-  const unsigned int N { A.nCols () } ;
-  const unsigned int K { std::min ( M , N ) } ; 
+  const std::size_t M { A.nRows () } ;
+  const std::size_t N { A.nCols () } ;
+  const std::size_t K { std::min ( M , N ) } ; 
   //
   L.resize ( M , K , Ostap::GSL::Matrix::Zero     () ) ; 
   U.resize ( K , N , Ostap::GSL::Matrix::Identity () ) ; 
@@ -624,16 +983,16 @@ Ostap::GSL::PLU
   // =========================================================================
   // Fill L-mattrix 
   // =========================================================================
-  for ( unsigned int i = 0 ; i < K ; ++i )
-    { for ( unsigned int j = 0 ; j <= i  ; ++j )
+  for ( std::size_t i = 0 ; i < K ; ++i )
+    { for ( std::size_t j = 0 ; j <= i  ; ++j )
         { L.set ( i , j , LU ( i , j ) ) ; } } 
-  for ( unsigned int i = K ; i < M ; ++i )
-    { for ( unsigned int j = 0 ; j < K ; ++j )
+  for ( std::size_t i = K ; i < M ; ++i )
+    { for ( std::size_t j = 0 ; j < K ; ++j )
         { L.set ( i , j , LU ( i , j ) ) ; } }  
   // =========================================================================
   // Fill U-matrix 
   // =========================================================================
-  for ( unsigned int i = 0 ; i < K ; ++i )
+  for ( std::size_t i = 0 ; i < K ; ++i )
     {
       //  U.set ( i , i , 1.0 ) ; // already set as "Identity"
       for ( unsigned j = i + 1 ; j < N ; ++j )

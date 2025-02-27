@@ -212,7 +212,7 @@ target_include_directories (ostap
 )
 
 
-
+ 
 REFLEX_GENERATE_DICTIONARY( ostap     ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.hh 
                             SELECTION ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.xml )
 

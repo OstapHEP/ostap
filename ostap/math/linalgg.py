@@ -28,6 +28,75 @@ Matrix      = Ostap.GSL.Matrix
 Vector      = Ostap.GSL.Vector
 Permutation = Ostap.GSL.Permutation
 
+# =============================================================================
+def _m_iadd_ ( m , value ) :
+    """ Add someting to matrtx 
+    """
+    if isinstance ( value , Matrix ) :
+        if m.nRows() != value.nRows () : return NotImplemented
+        if m.nCols() != value.nCols () : return NotImplemented
+    elif isinstance ( value , num_types ) : value = float ( value ) 
+    else                               : return NotImplemented 
+                    
+    m.iadd ( value )
+    
+    return m
+
+# =============================================================================
+## Subtract from the matrix
+def _m_isub_ ( m , value ) :
+    """ Subtract from the matrix
+    """
+    if isinstance ( value , Matrix ) :
+        if m.nRows() != value.nRows () : return NotImplemented
+        if m.nCols() != value.nCols () : return NotImplemented
+    elif isinstance ( value , num_types ) : value = float ( value ) 
+    else                               : return NotImplemented 
+                    
+    m.isub ( value )
+    
+    return m 
+
+
+# =============================================================================
+## Multiply by the matrox 
+def _m_imul_ ( m , value ) :
+    """ Multiply by the matrix 
+    """
+    if isinstance ( value , Matrix ) :
+        if m.nCols() != value.nRows () : return NotImplemented
+    elif isinstance ( value , num_types ) : value = float ( value ) 
+    else                               : return NotImplemented 
+                    
+    m.imul ( value )
+    
+    return m 
+
+# =============================================================================
+## scale/divdie by the matrix 
+def _m_imul_ ( m , value ) :
+    """ Multiply by the matrix 
+    """
+    if isinstance ( value , num_types ) : value = float ( value ) 
+    else                                : return NotImplemented 
+                    
+    m.idiv ( value )
+    
+    return m 
+
+# ==============================================================================
+## multiply matrix 
+def _m_mul_ ( m ,  value ) :
+    
+    if   isinstance ( value , Matrix ) :
+        if m.nCols() != value.nRows () : return NotImplemented
+    elif isinstance ( value , Vector ) :
+        if m.nCols() != value.size  () : return NotImplemented
+    elif isinstance ( value , num_types ) : value = float ( value ) 
+    else                               : return NotImplemented 
+    
+    return m.multiply ( value )
+    
 
 # ==============================================================================
 ## Convert GSL matrix to SMatrix 
@@ -51,7 +120,7 @@ Matrix.to_smatrix = _to_smatrix_
 Matrix.as_smatrix = _to_smatrix_
 
 # ==============================================================================
-## Convert GSL matrix to symmetric 
+## Convert GSL matrix to symmetric S-matrix 
 def _to_ssymmatrix_ ( mtrx ) :
     """ Convert GSL matrix to (symmetric) SMatrix 
     """

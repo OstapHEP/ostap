@@ -20,6 +20,10 @@ namespace Ostap
   namespace GSL
   {
     // =========================================================================
+    class Matrix      ;
+    class Vector      ;
+    class Permutation ;
+    // =========================================================================
     /** @class Ostap::GSL::Matrix
      *  Internal class to  hold GSL-Matrix
      */
@@ -36,37 +40,42 @@ namespace Ostap
       // ======================================================================
       /// allocate GSL-matrix 
       Matrix
-      ( const unsigned int N1        , 
-        const unsigned int N2        ) ;
+      ( const std::size_t N1        , 
+        const std::size_t N2        ) ;
       /// allocate GSL-matrix and initialize all elements to value 
       Matrix
-      ( const unsigned int N1        , 
-        const unsigned int N2        , 
-        const double       value     ) ;
+      ( const std::size_t N1        , 
+        const std::size_t N2        , 
+        const double      value     ) ;
       /// allocate GSL-matrix and initialize all elements to zero 
       Matrix
-      ( const unsigned int N1        , 
-        const unsigned int N2        , 
+      ( const std::size_t  N1        , 
+        const std::size_t  N2        , 
         const Zero         /* zero */ ) ;
       /// allocate "identity" GSL-matrix
       Matrix
-      ( const unsigned int N1        , 
-        const unsigned int N2        , 
+      ( const std::size_t  N1        , 
+        const std::size_t  N2        , 
         const Identity        /* id  */ ) ;
       // =====================================================================
       // Square matrix 
       // ======================================================================
       /// allocate squared GSL-matrix 
       Matrix
-      ( const unsigned int N ) ;      
+      ( const std::size_t  N ) ;      
       /// allocate square GSL-matrix and initialize all elements to zero 
       Matrix
-      ( const unsigned int N         , 
+      ( const std::size_t  N         , 
         const Zero         zero      ) ;
       /// allocate square identity GSL-matrix 
       Matrix
-      ( const unsigned int N    , 
-        const Identity     id    ) ;
+      ( const std::size_t  N    , 
+        const Identity     id   ) ;
+      /// make a permutation matrix
+      Matrix ( const Permutation& ) ;
+      // =======================================================================
+    public : 
+      // =======================================================================    
       /// copy constructor 
       Matrix  ( const Matrix&  right ) ;
       /// move constructor 
@@ -77,9 +86,9 @@ namespace Ostap
       /// no default constructor 
       Matrix  () = delete ;
       /// copy assignement! 
-      Matrix& operator= ( const Matrix&  ) ;
+      Matrix& operator=( const Matrix&  ) ;
       /// move assignement! 
-      Matrix& operator= (       Matrix&& ) ;
+      Matrix& operator=(       Matrix&& ) ;
       // ========================================================================
     public:
       // ========================================================================
@@ -91,51 +100,103 @@ namespace Ostap
     public :
       // ========================================================================
       /// get the matrix element 
-      double      get
-      ( const unsigned int n1 , 
-        const unsigned int n2 ) const 
+      inline double       get
+      ( const std::size_t n1 , 
+        const std::size_t n2 ) const 
       { return gsl_matrix_get ( m_matrix , n1 , n2 ) ; }
       /// set the matrix element 
-      void        set
-      ( const unsigned int n1    , 
-        const unsigned int n2    , 
-        const double       value )
+      inline void         set
+      ( const std::size_t n1    , 
+        const std::size_t n2    , 
+        const double      value )
       {        gsl_matrix_set ( m_matrix , n1 , n2 , value ) ; }
       // ========================================================================
     public:
       // ========================================================================
       inline double operator ()
-      ( const unsigned int i ,
-        const unsigned int j ) const { return get ( i , j ) ; }
+      ( const std::size_t i ,
+        const std::size_t j ) const { return get ( i , j ) ; }
       // ========================================================================
     public:
       // ========================================================================
       // #of rows 
-      unsigned int nRows () const { return m_matrix->size1 ; }
+      inline std::size_t nRows () const { return m_matrix->size1 ; }
       // #of columns 
-      unsigned int nCols () const { return m_matrix->size2 ; }      
+      inline std::size_t nCols () const { return m_matrix->size2 ; }      
       // ========================================================================
     public:
       // ========================================================================
       /// resize/reset matriz
       Matrix& resize
-      ( const unsigned int n1     ,
-        const unsigned int n2     ) ;
+      ( const std::size_t n1     ,
+        const std::size_t n2     ) ;
       /// resize/reset matriz
       Matrix& resize
-      ( const unsigned int n1     ,
-        const unsigned int n2     ,
-        const double       value  ) ;
+      ( const std::size_t n1     ,
+        const std::size_t n2     ,
+        const double      value  ) ;
       /// resize/reset matriz
       Matrix& resize
-      ( const unsigned int n1     ,
-        const unsigned int n2     ,
+      ( const std::size_t n1     ,
+        const std::size_t n2     ,
         const Zero     /* zero */ ) ;
       /// resize/reset matriz
       Matrix& resize
-      ( const unsigned int n1     ,
-        const unsigned int n2     ,
+      ( const std::size_t n1     ,
+        const std::size_t n2     ,
         const Identity /* id */   ) ;         
+      // ========================================================================
+    public: // simplest mathops  
+      // ========================================================================
+      /// scale matrix
+      Matrix&        imul ( const double  value ) ;
+      /// multiply matrices using CBLAS dgemm function 
+      Matrix&        imul ( const Matrix& value ) ;
+      /// add matrix 
+      Matrix&        iadd ( const Matrix& value ) ;
+      /// add I*vlue matrix 
+      Matrix&        iadd ( const double  value ) ;   
+      /// subtract matrix  
+      Matrix&        isub ( const Matrix& value ) ;      
+      /// subtract I*value  matrix 
+      inline Matrix& isub ( const double  value ) { return iadd ( -value  ) ; }
+      /// scale matrix
+      inline Matrix& idiv ( const double  value ) { return imul ( 1/value ) ; } 
+      // ========================================================================
+    public:
+      // ========================================================================
+      /// multiply  matrices using CBLAS dgemm function 
+      Matrix multiply ( const Matrix& right ) const ;
+      /// multiply matrix & vector using CBLAS dgemv function  
+      Vector multiply ( const Vector& right ) const ;
+      // ========================================================================
+    public: // simplest mathops  
+      // ========================================================================
+      /// add matrix 
+      inline Matrix& operator+=( const Matrix& right ) { return iadd (   right ) ; }
+      /// subtract matrix 
+      inline Matrix& operator-=( const Matrix& right ) { return isub (   right ) ; } 
+      /// multiply matrix 
+      inline Matrix& operator*=( const Matrix& right ) { return imul (   right ) ; }
+      /// scale matrix 
+      inline Matrix& operator*=( const double  right ) { return imul (   right ) ; } 
+      /// scale matrix 
+      inline Matrix& operator/=( const double  right ) { return imul ( 1/right ) ; } 
+      /// add      "right*identity" matrix
+      inline Matrix& operator+=( const double  right ) { return iadd (   right ) ; } 
+      /// subtract "right*identity" matrix
+      inline Matrix& operator-=( const double  right ) { return isub (   right ) ; } 
+      // ========================================================================
+    public:
+      // ========================================================================
+      /// swap two rows in the matrix 
+      Matrix& swap_rows
+      ( const std::size_t i1 ,
+        const std::size_t i2 ) ;      
+      /// swap two columns in the matrix 
+      Matrix& swap_cols 
+      ( const std::size_t i1 ,
+        const std::size_t i2 ) ;      
       // ========================================================================
     public:
       // ========================================================================
@@ -147,7 +208,8 @@ namespace Ostap
       /// the  actual pointer to GSL-matrix 
       gsl_matrix* m_matrix { nullptr } ; // the  actual pointer to GSL-matrix
       // ========================================================================
-    };
+    } ; 
+    //                                    The end of class Ostap::GSL:Matrix 
     // ==========================================================================
     /** @class Ostap::GSL::Vector
      *  Internal class to  hold GSL-Vector
@@ -162,14 +224,14 @@ namespace Ostap
       // ========================================================================
       /// allocate vector 
       Vector
-      ( const unsigned int N     ) ;
+      ( const std::size_t N     ) ;
       /// allocate vector 
       Vector
-      ( const unsigned int N     , 
+      ( const std::size_t N     , 
         const double       value ) ;
       /// allocate vector 
       Vector
-      ( const unsigned int N     , 
+      ( const std::size_t N     , 
         const Zero     /* zero */  ) ;
       /// copy constructor 
       Vector
@@ -195,37 +257,83 @@ namespace Ostap
       inline const gsl_vector* vector () const { return m_vector ; }
       // ========================================================================
       /// get the vector element 
-      double      get
-      ( const unsigned int n ) const 
+      inline double      get
+      ( const std::size_t n ) const 
       { return gsl_vector_get ( m_vector , n ) ; }
       /// set the vector element 
-      void        set
-      ( const unsigned int n , 
+      inline void        set
+      ( const std::size_t n , 
         const double       value    )
       {        gsl_vector_set ( m_vector , n , value ) ; }
       // ========================================================================
     public:
       // ========================================================================
       // get the element 
-      inline double operator() ( const unsigned int i ) const { return get ( i ) ; }
+      inline double      operator() ( const std::size_t i ) const { return get ( i ) ; }
       // get the element 
-      inline double operator[] ( const unsigned int i ) const { return get ( i ) ; }
+      inline double      operator[] ( const std::size_t i ) const { return get ( i ) ; }
       /// the size of the vector 
-      std::size_t   size    () const { return m_vector->size ; } 
+      inline std::size_t size    () const { return m_vector -> size ; } 
       // ========================================================================
     public:
       // ========================================================================
       // resie the vector
       Vector& resize
-      ( const unsigned int n     ) ; 
+      ( const std::size_t n     ) ; 
       // resie the vector
       Vector& resize
-      ( const unsigned int n     ,
+      ( const std::size_t n     ,
         const double       value ) ; 
       // resie the vector
       Vector& resize
-      ( const unsigned int n     ,
+      ( const std::size_t n     ,
         const Zero    /* zero */ ) ;
+      // ========================================================================
+    public: // some simple math oprations 
+      // ========================================================================
+      /// add a vector of the same size 
+      Vector& iadd      ( const Vector&  value ) ;
+      /// add a constant 
+      Vector& iadd      ( const double   value ) ;      
+      /// add a vector of the same size 
+      Vector& isub      ( const Vector&  value ) ;
+      /// scale vector 
+      Vector& imul      ( const double   value ) ;
+      /// multiply by the matrix 
+      Vector& imul      ( const Matrix&  value ) ;    
+      /// scale vector a
+      inline Vector& idiv ( const double value ) { return imul ( 1/value ) ; }
+      /// subtact a constant 
+      inline Vector& isub ( const double value ) { return iadd ( -value  ) ; }      
+      // ========================================================================
+    public : 
+      // ========================================================================
+      // multiplu by matrix 
+      Vector multiply ( const Matrix& value ) const ;
+      // ========================================================================
+    public : 
+      // ========================================================================      
+      /// dot-product   of two vectors
+      double dot      ( const Vector& right ) const ;
+      /// cross-product of two vectors 
+      Matrix cross    ( const Vector& right ) const ;      
+      // ========================================================================      
+    public: // some simple math oprations 
+      // ========================================================================
+      /// add vector 
+      inline Vector& operator+=( const Vector& value ) { return iadd (  value ) ; }
+      /// add constant 
+      inline Vector& operator+=( const double  value ) { return iadd (  value ) ; }
+      /// subtract vector 
+      inline Vector& operator-=( const Vector& value ) { return isub (  value ) ; }
+      /// subtract constant 
+      inline Vector& operator-=( const double  value ) { return isub (  value ) ; }
+      /// multiply with marix 
+      inline Vector& operator*=( const Matrix& value ) { return imul (  value ) ; }
+      /// scale it 
+      inline Vector& operator*=( const double  value ) { return imul (  value ) ; }
+      /// scale it 
+      inline Vector& operator/=( const double  value ) { return idiv (  value ) ; }
       // ========================================================================
     public:
       // ========================================================================
@@ -248,7 +356,7 @@ namespace Ostap
       // ========================================================================
       /// constructor: allocate the permutation 
       Permutation
-      ( const unsigned int N ) ;
+      ( const std::size_t N ) ;
       /// destructor: free permutation 
       ~Permutation() ;
       // ========================================================================
@@ -270,18 +378,18 @@ namespace Ostap
     public:
       // ========================================================================
       /// get the vector element 
-      double      get
-      ( const unsigned int n ) const 
+      inline std::size_t get
+      ( const std::size_t n ) const 
       { return gsl_permutation_get ( m_permutation , n ) ; }
       // ========================================================================
     public:
       // ========================================================================
       // get the element 
-      inline double operator() ( const unsigned int i ) const { return get ( i ) ; }
+      inline std::size_t operator() ( const std::size_t i ) const { return get ( i ) ; }
       // get the element 
-      inline double operator[] ( const unsigned int i ) const { return get ( i ) ; }
+      inline std::size_t operator[] ( const std::size_t i ) const { return get ( i ) ; }
       /// the size of the vector 
-      std::size_t   size    () const { return m_permutation->size ; } 
+      inline std::size_t size () const { return m_permutation -> size ; } 
       // ========================================================================
     public:
       // ========================================================================
@@ -302,6 +410,87 @@ namespace Ostap
     /// swap two permuattions 
     inline void swap ( Permutation& a , Permutation& b ) { a.swap ( b ) ; } 
     // ========================================================================
+
+
+    // ========================================================================
+    /// add two matrices 
+    inline Matrix operator+( const Matrix& a , const Matrix& b )
+    { Matrix c { a } ; c += b ; return c ; }
+    
+    /// subtract two matrices 
+    inline Matrix operator-( const Matrix& a , const Matrix& b )
+    { Matrix c { a } ; c -= b ; return c ; }
+    
+    /// add     b*identity 
+    inline Matrix operator+( const Matrix& a , const double& b  )
+    { Matrix c { a } ; c += b ; return c ; }
+    
+    /// subtract  b*identity 
+    inline Matrix operator-( const Matrix& a , const double& b  )
+    { Matrix c { a } ;  c-= b ; return c ; }
+    
+    /// multiply two matrices 
+    inline Matrix operator*( const Matrix& a , const Matrix& b )
+    { return a.multiply ( b ) ; }
+    
+    /// multiply matrix and vector 
+    inline Vector operator*( const Matrix& a , const Vector& b )
+    { return a.multiply ( b ) ; }
+    
+    /// scale the matrix
+    inline Matrix operator*( const Matrix& a , const double b  )
+    { Matrix c { a } ; c*= b ; return c ;; }
+    
+    /// scale the matrix
+    inline Matrix operator/( const Matrix& a , const double b  )
+    { Matrix c { a } ; c/= b ; return c ;; }
+    
+    // "right"  forms 
+
+    /// scale the matrix from the right 
+    inline Matrix operator*( const double  b , const Matrix& a )
+    { Matrix c { a } ; c*= b ; return c ;; }    
+    /// add     b*identity from rrght 
+    inline Matrix operator+( const double& b , const Matrix& a )
+    { Matrix c { a } ; c += b ; return c ; }
+
+
+    /// add two vectors 
+    inline Vector operator+( const Vector& a , const Vector& b )
+    { Vector c { a } ; c += b ; return c ; }
+
+    /// subtracy two vectors 
+    inline Vector operator-( const Vector& a , const Vector& b )
+    { Vector c { a } ; c -= b ; return c ; }
+
+    /// add constant 
+    inline Vector operator+( const Vector& a , const double  b )
+    { Vector c { a } ; c += b ; return c ; }
+
+    /// subtract constant 
+    inline Vector operator-( const Vector& a , const double  b )
+    { Vector c { a } ; c -= b ; return c ; }
+
+    /// multiply vector and matrix 
+    inline Vector operator*( const Vector& a , const Matrix& b )
+    { return a.multiply ( b ) ; }
+
+    /// scale the vector
+    inline Vector operator*( const Vector& a , const double b  )
+    { Vector c { a } ; c*= b ; return c ;; }
+
+    /// scale the vector
+    inline Vector operator/( const Vector& a , const double b  )
+    { Vector c { a } ; c/= b ; return c ;; }
+    
+    // "right"  forms 
+    
+    /// scale the vector  from the right 
+    inline Vector operator*( const double  b , const Vector& a )
+    { Vector c { a } ; c*= b ; return c ;; }    
+    /// add constant from rrght 
+    inline Vector operator+( const double& b , const Vector& a )
+    { Vector c { a } ; c += b ; return c ; }
     
     // ========================================================================
     // Linear Algebra 
@@ -364,9 +553,7 @@ namespace Ostap
      *  @return M-permutation 
      *  @see gsl_linalg_LU_decomp 
      */
-    Permutation PLU ( const Matrix& A , Matrix& L, Matrix& U  ) ;
-    
-    
+    Permutation PLU ( const Matrix& A , Matrix& L, Matrix& U  ) ;    
     // ========================================================================
   } //                                          The end of namespace Ostap::GSL
   // ==========================================================================
