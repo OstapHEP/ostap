@@ -4,14 +4,15 @@
  - stiop support ROOT < 6.24
  - stop support python < 3.8 
  - split `add_new_branch` into `add_newbranch` and `adD_new_buffer`
- - fix Py<->c++ functions
- - imporve `Ostap::statusCode`
+ - fix Py <-> c++ functions
+ - imporve `Ostap::StatusCode`
  - more use of `Ostap::Assert`
  - remove all appearecnes of `from bultins import rane`
  - reomve all appearenced of `from __future__ import ptint_function`
  - suppress many version-related `if`s
-        
-    
+ - large imporovements in LinAlg
+ - re-write AddBranch/AddBuffer machinery 
+   
 ## New features
 
     

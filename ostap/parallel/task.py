@@ -779,7 +779,6 @@ def task_executor ( item ) :
     else : 
         from ostap.utils.basic    import NoContext   as clean_context 
        
-    
     ## use clean, build & batch context 
     with clean_context (),  build_context ( task.build ), batch_context ( task.batch ) : 
         
