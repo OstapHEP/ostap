@@ -31,8 +31,8 @@ namespace Ostap
     {
     public : 
       // =====================================================================
-      struct Zero     {} ;
-      struct Identity {} ;
+      struct Zero {} ;
+      struct Id   {} ;
       // ======================================================================
     public : 
       // ======================================================================
@@ -40,23 +40,23 @@ namespace Ostap
       // ======================================================================
       /// allocate GSL-matrix 
       Matrix
-      ( const std::size_t N1        , 
-        const std::size_t N2        ) ;
+      ( const std::size_t N1       , 
+        const std::size_t N2       ) ;
       /// allocate GSL-matrix and initialize all elements to value 
       Matrix
-      ( const std::size_t N1        , 
-        const std::size_t N2        , 
-        const double      value     ) ;
+      ( const std::size_t N1       , 
+        const std::size_t N2       , 
+        const double      value    ) ;
       /// allocate GSL-matrix and initialize all elements to zero 
       Matrix
-      ( const std::size_t  N1        , 
-        const std::size_t  N2        , 
-        const Zero         /* zero */ ) ;
+      ( const std::size_t  N1      , 
+        const std::size_t  N2      , 
+        const Zero      /* zero */ ) ;
       /// allocate "identity" GSL-matrix
       Matrix
-      ( const std::size_t  N1        , 
-        const std::size_t  N2        , 
-        const Identity        /* id  */ ) ;
+      ( const std::size_t  N1      , 
+        const std::size_t  N2      , 
+        const Id        /* id  */  ) ;
       // =====================================================================
       // Square matrix 
       // ======================================================================
@@ -65,12 +65,12 @@ namespace Ostap
       ( const std::size_t  N ) ;      
       /// allocate square GSL-matrix and initialize all elements to zero 
       Matrix
-      ( const std::size_t  N         , 
-        const Zero         zero      ) ;
+      ( const std::size_t  N        , 
+        const Zero      /* zero  */ ) ;
       /// allocate square identity GSL-matrix 
       Matrix
-      ( const std::size_t  N    , 
-        const Identity     id   ) ;
+      ( const std::size_t  N        ,  
+        const Id        /* id  */    ) ;
       /// make a permutation matrix
       Matrix ( const Permutation& ) ;
       // =======================================================================
@@ -144,7 +144,7 @@ namespace Ostap
       Matrix& resize
       ( const std::size_t n1     ,
         const std::size_t n2     ,
-        const Identity /* id */   ) ;         
+        const Id      /* id */   ) ;         
       // ========================================================================
     public: // simplest mathops  
       // ========================================================================
@@ -197,6 +197,20 @@ namespace Ostap
       Matrix& swap_cols 
       ( const std::size_t i1 ,
         const std::size_t i2 ) ;      
+      // ========================================================================
+    public: 
+      // ========================================================================
+      /// permute the rows     of the ematrix according to permutation 
+      Matrix& permute_rows ( const Permutation& p ) ;
+      /// permute the coluimns of the ematrix according to permutation 
+      Matrix& permute_cols ( const Permutation& p ) ;      
+      // ========================================================================
+    public:
+      // ========================================================================
+      /// Are all elements finite ? 
+      bool isfinite () const ; // Are all elements finite ? 
+      /// Are all elements numerically equal to zero?      
+      bool iszero   () const ; // Are all elements numerically equal to zero?
       // ========================================================================
     public:
       // ========================================================================
@@ -300,7 +314,7 @@ namespace Ostap
       /// scale vector 
       Vector& imul      ( const double   value ) ;
       /// multiply by the matrix 
-      Vector& imul      ( const Matrix&  value ) ;    
+      Vector& imul      ( const Matrix&  value ) ;      
       /// scale vector a
       inline Vector& idiv ( const double value ) { return imul ( 1/value ) ; }
       /// subtact a constant 
@@ -334,6 +348,13 @@ namespace Ostap
       inline Vector& operator*=( const double  value ) { return imul (  value ) ; }
       /// scale it 
       inline Vector& operator/=( const double  value ) { return idiv (  value ) ; }
+      // ========================================================================
+    public:
+      // ========================================================================
+      /// Are all elements finite ? 
+      bool isfinite () const ; // Are all elements finite ? 
+      /// Are all elements numerically equal to zero?      
+      bool iszero   () const ; // Are all elements numerically equal to zero?
       // ========================================================================
     public:
       // ========================================================================
@@ -381,6 +402,16 @@ namespace Ostap
       inline std::size_t get
       ( const std::size_t n ) const 
       { return gsl_permutation_get ( m_permutation , n ) ; }
+      // ========================================================================
+    public:
+      // ========================================================================
+      /// valid permutation ? 
+      bool valid () const ; 
+      // ========================================================================
+    public:
+      // ========================================================================
+      /// apply permutation to the matrix 
+      Matrix apply ( const Matrix& value ) const ;
       // ========================================================================
     public:
       // ========================================================================
@@ -491,6 +522,12 @@ namespace Ostap
     /// add constant from rrght 
     inline Vector operator+( const double& b , const Vector& a )
     { Vector c { a } ; c += b ; return c ; }
+
+    // ========================================================================
+    // Apply permutation 
+    // ========================================================================
+    inline Matrix operator*( const Permutation& p , const Matrix& a )
+    { return p.apply ( a ) ; }
     
     // ========================================================================
     // Linear Algebra 
@@ -566,6 +603,7 @@ namespace Ostap
     double maxabs_element ( const Ostap::GSL::Vector&      v ) ;
     /// get the element with maxina absolute value 
     double maxabs_element ( const Ostap::GSL::Permutation& p ) ;
+    /// 
     // ========================================================================
   } //                                        The end of namespaxce Ostap::Math 
   // ==========================================================================

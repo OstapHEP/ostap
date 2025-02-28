@@ -15,6 +15,7 @@
 // ============================================================================
 #include "format.h"
 #include "status_codes.h"
+#include "local_math.h"
 // ============================================================================
 /** @file 
  *  Implementation file for helper  GSL classes 
@@ -59,7 +60,7 @@ Ostap::GSL::Matrix::Matrix
 Ostap::GSL::Matrix::Matrix
 ( const std::size_t N1    , 
   const std::size_t N2    , 
-  const Ostap::GSL::Matrix::Identity /* zero */ ) 
+  const Ostap::GSL::Matrix::Id /* zero */ ) 
   : m_matrix ( gsl_matrix_alloc ( N1 , N2 ) )
 {
   gsl_matrix_set_identity ( m_matrix ) ;
@@ -84,7 +85,7 @@ Ostap::GSL::Matrix::Matrix
 // ============================================================================
 Ostap::GSL::Matrix::Matrix
 ( const std::size_t                 N  , 
-  const Ostap::GSL::Matrix::Identity id ) 
+  const Ostap::GSL::Matrix::Id  id ) 
   : Matrix ( N , N , id )
 {}
 // ============================================================================
@@ -95,15 +96,15 @@ Ostap::GSL::Matrix::Matrix
   : m_matrix ( gsl_matrix_calloc ( p.size () , p.size () ) ) 
 {
   //
-  Ostap::Assert ( gsl_permutation_valid ( p.permutation() ) ,
+  Ostap::Assert ( p.valid()                                 ,
                   "(GSL)Permutation is invalid!"            , 
                   "Ostap::GSL::Matrix"                      ,
                   INVALID_PERMUTATION , __FILE__ , __LINE__ ) ;
   //
-  for ( std::size_t j = 0 ; j < nCols() ; ++j )
+  for ( std::size_t j = 0 ; j < nRows() ; ++j )
     {
       const std::size_t k = p.get ( j ) ; 
-      set ( k , j , 1 ) ;
+      set ( j , k , 1 ) ;
     }
 }
 // ============================================================================
@@ -217,7 +218,7 @@ Ostap::GSL::Matrix&
 Ostap::GSL::Matrix::resize
 ( const std::size_t n1    ,
   const std::size_t n2    ,
-  const Ostap::GSL::Matrix::Identity /* zero */ ) 
+  const Ostap::GSL::Matrix::Id /* zero */ ) 
 {
   resize ( n1 , n2 ) ;
   gsl_matrix_set_identity ( m_matrix ) ;
@@ -260,6 +261,64 @@ Ostap::GSL::Matrix::swap_cols
                   INVALID_COLINDEX , __FILE__ , __LINE__ ) ;
   gsl_matrix_swap_columns ( m_matrix , i1 , i2 ) ;
   return *this ; 
+}
+// ============================================================================
+// permute the rows     of the ematrix according to permutation 
+// ============================================================================
+Ostap::GSL::Matrix&
+Ostap::GSL::Matrix::permute_rows
+( const Ostap::GSL::Permutation& p )
+{
+  Ostap::Assert ( nRows () == p.size ()                     ,
+                  "Inconsistent Permutation structure"      , 
+                  "Ostap::GSL::Matrix::permute_rows"        ,
+                  INVALID_PERMUTATION , __FILE__ , __LINE__ ) ;
+  //
+  for ( std::size_t i = 0 ; i < nRows() ; ++i )
+    {
+      const std::size_t k = p ( i ) ;
+      if ( i != k ) { gsl_matrix_swap_rows ( m_matrix , i , k ) ; }      
+    }
+  return *this ;
+}
+// ============================================================================
+// permute the columns of the ematrix according to permutation 
+// ============================================================================
+Ostap::GSL::Matrix&
+Ostap::GSL::Matrix::permute_cols
+( const Ostap::GSL::Permutation& p )
+{
+  Ostap::Assert ( nCols () == p.size ()                     ,
+                  "Inconsistent Permutation structure"      , 
+                  "Ostap::GSL::Matrix::permute_cols"        ,
+                  INVALID_PERMUTATION , __FILE__ , __LINE__ ) ;
+  //
+  for ( std::size_t i = 0 ; i < nCols() ; ++i )
+    {
+      const std::size_t k = p ( i ) ;
+      if ( i != k ) { gsl_matrix_swap_columns ( m_matrix , i , k ) ; }      
+    }
+  return *this ;
+}
+// ============================================================================
+// Are all elements numerically equal to zero?      
+// ============================================================================
+bool Ostap::GSL::Matrix::iszero   () const
+{
+  for ( std::size_t i = 0 ; i < nRows() ; ++i )
+    { for ( std::size_t j = 0 ; j < nCols() ; ++j )
+        { if ( !s_zero ( get ( i ,j ) ) ) { return false ; } } }
+  return true ;
+}
+// ============================================================================
+// Are all elements finite ? 
+// ============================================================================
+bool Ostap::GSL::Matrix::isfinite () const
+{
+  for ( std::size_t i = 0 ; i < nRows() ; ++i )
+    { for ( std::size_t j = 0 ; j < nCols() ; ++j )
+        { if ( !std::isfinite ( get ( i ,j ) ) ) { return false ; } } }
+  return true ;  
 }
 // ============================================================================
 // scale matrix 
@@ -362,7 +421,7 @@ Ostap::GSL::Matrix&
 Ostap::GSL::Matrix::imul
 ( const Ostap::GSL::Matrix& right )
 {
-  Ostap::Assert ( this->nCols () == right.nCols() ,
+  Ostap::Assert ( this->nCols () == right.nRows () ,
                   "Cannot multiply matrices of incompatible structure" ,
                   "Ostap::GSL::Martix::multiply"  ,
                   INVALID_GMATRIX , __FILE__ , __LINE__ ) ;
@@ -546,6 +605,24 @@ Ostap::GSL::Vector::resize
 void Ostap::GSL::Vector::swap
 ( Ostap::GSL::Vector& right )
 { std::swap ( m_vector , right.m_vector ) ; }
+// ============================================================================
+// Are all elements numerically equal to zero?      
+// ============================================================================
+bool Ostap::GSL::Vector::iszero   () const
+{
+  for ( std::size_t i = 0 ; i < size ()  ; ++i )
+    { if ( !s_zero ( get ( i ) ) ) { return false ; } }
+  return true ;
+}
+// ============================================================================
+// Are all elements finite ? 
+// ============================================================================
+bool Ostap::GSL::Vector::isfinite () const
+{
+  for ( std::size_t i = 0 ; i < size ()  ; ++i )
+    { if ( !std::isfinite ( get ( i ) ) ) { return false ; } }
+  return true ;
+}
 // ============================================================================
 // dot product of two vect
 // ============================================================================
@@ -750,7 +827,6 @@ Ostap::GSL::Permutation::operator=
   std::swap ( m_permutation , right.m_permutation ) ;
   return *this ;
 }
-
 // ============================================================================
 // swap two permutation 
 // ============================================================================
@@ -758,7 +834,30 @@ void Ostap::GSL::Permutation::swap
 ( Ostap::GSL::Permutation& right )
 { std::swap ( m_permutation , right.m_permutation ) ; }
 // ============================================================================
+// valid permutation ?
+// ============================================================================
+bool
+Ostap::GSL::Permutation::valid () const
+{ return GSL_SUCCESS == gsl_permutation_valid ( m_permutation ) ; }
 
+// ============================================================================
+// apply permutation to the matrix 
+// ============================================================================
+Ostap::GSL::Matrix
+Ostap::GSL::Permutation::apply 
+( const Ostap::GSL::Matrix& value ) const 
+{
+  Ostap::Assert ( size() == value.nRows()                      ,
+                  "Mismatch for permutation/matrix structure!" ,
+                  "Ostap::GLS::Permutaton::apply"              , 
+                  INVALID_PERMUTATION  , __FILE__ , __LINE__   ) ;
+  //
+  // Matrix result { value } ;
+  // result.permute_rows ( *this  ) ;
+  //
+  Matrix result { *this } ;
+  return result * value ;
+}
 // ============================================================================
 // print matrix to the stream
 // ============================================================================
@@ -977,14 +1076,14 @@ Ostap::GSL::PLU
   const std::size_t N { A.nCols () } ;
   const std::size_t K { std::min ( M , N ) } ; 
   //
-  L.resize ( M , K , Ostap::GSL::Matrix::Zero     () ) ; 
-  U.resize ( K , N , Ostap::GSL::Matrix::Identity () ) ; 
+  L.resize ( M , K , Ostap::GSL::Matrix::Id   () ) ; 
+  U.resize ( K , N , Ostap::GSL::Matrix::Zero () ) ; 
   //
   // =========================================================================
-  // Fill L-mattrix 
+  // Fill L-matrix 
   // =========================================================================
   for ( std::size_t i = 0 ; i < K ; ++i )
-    { for ( std::size_t j = 0 ; j <= i  ; ++j )
+    { for ( std::size_t j = 0 ; j < i  ; ++j )
         { L.set ( i , j , LU ( i , j ) ) ; } } 
   for ( std::size_t i = K ; i < M ; ++i )
     { for ( std::size_t j = 0 ; j < K ; ++j )
@@ -993,11 +1092,7 @@ Ostap::GSL::PLU
   // Fill U-matrix 
   // =========================================================================
   for ( std::size_t i = 0 ; i < K ; ++i )
-    {
-      //  U.set ( i , i , 1.0 ) ; // already set as "Identity"
-      for ( unsigned j = i + 1 ; j < N ; ++j )
-        { U.set ( i , j , LU ( i , j ) ) ; }
-    }
+    { for ( std::size_t j = i ; j < N ; ++j ) { U.set ( i , j , LU ( i , j ) ) ; } }
   //
   return P ;
 }

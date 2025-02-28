@@ -12,7 +12,9 @@
  - suppress many version-related `if`s
  - large imporovements in LinAlg
  - re-write AddBranch/AddBuffer machinery 
-   
+ - add (P)LU decomposition for matrices (+test)
+    
+       
 ## New features
 
     

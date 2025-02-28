@@ -9,7 +9,6 @@
 """ Test module for ostap/math/linalg2.py
 """
 # ============================================================================= 
-from   sys                  import version_info as python_version
 from   ostap.math.linalg    import checkops 
 from   ostap.core.core      import Ostap
 from   ostap.math.base      import numpy 
@@ -68,11 +67,9 @@ def test_linalg2_vct () :
     logger.info ( 'l1 /= 2     : \n%s '  % l1 )
     
 
-    ## if ( 3 , 5 ) <= python_version :
-    
-    ##     logger.info ( 'l1 @ l2 : %s    '  % ( l1 @ l2  ) )
-    ##     logger.info ( 'l1 @  2 : %s    '  % ( l1 @  2  ) )
-    ##     logger.info ( ' 2 @ l2 : %s    '  % ( 2  @ l2  ) )
+    logger.info ( 'l1 @ l2 : %s    '  % ( l1 @ l2  ) )
+    logger.info ( 'l1 @  2 : %s    '  % ( l1 @  2  ) )
+    logger.info ( ' 2 @ l2 : %s    '  % ( 2  @ l2  ) )
 
     ##summary table for allowed  binary operations
     checkops ( l1 , l2 , logger = logger ) 
@@ -171,12 +168,10 @@ def test_linalg2_mtrx () :
     logger.info ( 'equality   s22 != s22*1.1 : %s ' % (  s22 != s22 * 1.1 ) )
 
         
-    ## if ( 3 , 5 ) <= python_version :
-        
-    ##     logger.info ( 'm23 @ 3   :\n%s' % ( m23 @ 3   ) ) 
-    ##     logger.info ( 'm22 @ m23 :\n%s' % ( m22 @ m23 ) ) 
-    ##     logger.info ( 'm22 @  l2 : %s ' % ( m22 @ l2  ) ) 
-    ##     logger.info ( 'm23 @  l3 : %s ' % ( m23 @ l3  ) ) 
+    logger.info ( 'm23 @ 3   :\n%s' % ( m23 @ 3   ) ) 
+    logger.info ( 'm22 @ m23 :\n%s' % ( m22 @ m23 ) ) 
+    logger.info ( 'm22 @  l2 : %s ' % ( m22 @ l2  ) ) 
+    logger.info ( 'm23 @  l3 : %s ' % ( m23 @ l3  ) ) 
 
     logger.info ( 'sim        s22.sim(l2)   : %s  ' % (  s22.sim ( l2  ) ) )
     logger.info ( 'sim        s22.sim(s22)  :\n%s ' % (  s22.sim ( s22 ) ) )

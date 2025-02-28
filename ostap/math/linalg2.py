@@ -1384,7 +1384,8 @@ class LinAlg(object) :
         row   = []
         for v in vct :
             vv = v / scale
-            if  iszero ( v ) or iszero ( vv ) : item = ' 0'
+            if    0 == v or 0 == vv            : item = ''
+            elif iszero ( v ) or iszero ( vv ) : item = ' 0'
             else :
                 item = fmtv % vv
                 if item in zeros : item = ' 0.0'
@@ -1394,6 +1395,29 @@ class LinAlg(object) :
         table = T.table  ( table , alignment = N*'c' , prefix = prefix , title = title , colorize_header = False )
         ## 
         return table, expo 
+
+
+    # =============================================================================
+    ## self-printout of S-vectors
+    #  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+    #  @date 2009-09-12
+    @staticmethod
+    def P_PRETTY ( vct , fmt = '%.g' , title = '' , prefix = '' , width = 6 , precision = 4 ) :
+        """ Self-printout of Permutations : (...)
+        >>> vct = ...
+        >>> result, expo = vct.pretty_print( ... ) 
+        """
+        
+        N = len ( vct )
+
+        if not title : title = typename ( vct )
+
+        row  = [ ( '%d' % v ) for v in vct ]
+            
+        table = [ row ]
+        table = T.table  ( table , alignment = N*'c' , prefix = prefix , title = title , colorize_header = False )
+        ## 
+        return table, 0 
 
     
     # =============================================================================
@@ -1459,7 +1483,8 @@ class LinAlg(object) :
         row    = [ infostr ( 'V' )  ] 
         for v in values :
             vv = v / scale 
-            if iszero ( v ) or iszero ( vv ) : item = ' 0'
+            if   0 == v or 0 == vv             : item = ''
+            elif iszero ( v ) or iszero ( vv ) : item = ' 0'
             else             :
                 item = fmtv % vv
                 if item in zeros : item = ' 0.0' 
@@ -1518,7 +1543,26 @@ class LinAlg(object) :
                                        width     = width     ,
                                        precision = precision )
         return result
-    
+
+    # =============================================================================
+    ## self-printout of permutations 
+    #  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+    #  @date 2009-09-12
+    @staticmethod
+    def P_STR ( vct , fmt = '%.g' , title = '' , prefix = '' , width = 6 , precision = 4 ) :
+        """ Self-printout of permutatons (...)
+        >>> vct = ...
+        >>> print ( vct ) 
+        """
+        N = len ( vct ) 
+        if 15 < N  : return '[ ' + ( ', '.join ( fmt % v for v in vct ) ) + ' ]'
+
+        result, _ = vct.pretty_print ( title     = title     ,
+                                       prefix    = prefix    ,
+                                       width     = width     ,
+                                       precision = precision )
+        return result
+            
     # =============================================================================
     ## self-printout of S-vectors-with-errors
     #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -1709,7 +1753,8 @@ class LinAlg(object) :
             for j in range ( cols ) :                
                 v     = mtrx ( i , j ) 
                 value = v / scale 
-                if  iszero ( v ) or iszero ( value ) : item = ' 0'
+                if   0 == v or 0 == value             : item = ''
+                elif iszero ( v ) or iszero ( value ) : item = '0'
                 else :
                     item = fmtv % value
                     if item in zeros : item = ' 0.0'
@@ -1838,11 +1883,12 @@ class LinAlg(object) :
         for i in range ( rows ) :
             row = [ infostr ( '%d' % i ) ]
             for j in range ( cols ) : 
-                if j < i : item = '' 
+                if j < i : item = '.' 
                 else     :
                     v     = mtrx ( i , j ) 
                     value = v / scale
-                    if  iszero ( v ) or iszero ( value ) : item = ' 0'
+                    if   0 == v or 0 == value             : item = ''
+                    elif iszero ( v ) or iszero ( value ) : item = ' 0'
                     else :
                         item = fmtv % value
                         if item in zeros : item = ' 0.0'
