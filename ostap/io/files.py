@@ -709,7 +709,7 @@ def copy_files ( files_to_copy           ,
     ## 1) no input 
     if   not the_files : pairs = [] 
     ## 1) input: list of files :
-    elif all ( isinstance ( f , path_types ) and os.path.exists ( f ) and os.path.osfile ( f ) for f in the_files ) :
+    elif all ( isinstance ( f , path_types ) and os.path.exists ( f ) and os.path.isfile ( f ) for f in the_files ) :
 
         ## use  temporary directory
         if new_dir is None or new_dir == '' :
