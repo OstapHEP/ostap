@@ -99,7 +99,7 @@ less_or_equal    = '\U00002266' if show else '<='
 greater_or_equal = '\U00002267' if show else '=>'
 much_less        = '\U0000226A' if show else '<<'
 much_greater     = '\U0000226B' if show else '>>'
-equivalent       = '\U00002261' is show else '='
+equivalent       = '\U00002261' if show else '='
 
 # =============================================================================
 if '__main__' == __name__ :
