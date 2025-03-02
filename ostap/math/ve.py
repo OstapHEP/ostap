@@ -81,6 +81,11 @@ for t in ( Ostap.Math.ValueWithError         ,
         t.__str__   = t.toString
         t.__repr__  = t.toString
 
+from ostap.logger.symbols import plus_minus
+ve_fmt = '%%+.4g %s %%-.4g' % plus_minus 
+def _ve_str_ ( ve ) : return ve.toString ( ve_fmt )  
+Ostap.Math.ValueWithError .__str__  = _ve_str_
+Ostap.Math.ValueWithError .__repr__ = _ve_str_
 # ============================================================================= 
 ## Calculate the "effective" background-to-signal ratio from the valeu 
 #  and its uncertainty using the identity

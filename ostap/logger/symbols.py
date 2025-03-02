@@ -17,21 +17,30 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2013-02-10"
 # =============================================================================
 __all__     = (
-    'checked_yes'     ,   
-    'checked_no'      ,
-    'question_mark'   ,
-    'hand_ok'         ,
-    'squared_ok'      ,
-    'thumb_up'        ,
-    'thumb_down'      ,
-    'clock'           ,
-    'ram'             ,
-    'runner'          ,
-    'finish'          , 
-    'clock_ticks'     ,
-    'arrow_left'      ,   
-    'arrow_right'     ,  
-    'arrow_rightleft' , 
+    'checked_yes'      ,   
+    'checked_no'       ,
+    'question_mark'    ,
+    'hand_ok'          ,
+    'squared_ok'       ,
+    'thumb_up'         ,
+    'thumb_down'       ,
+    'clock'            ,
+    'ram'              ,
+    'runner'           ,
+    'finish'           , 
+    'clock_ticks'      ,
+    'arrow_left'       ,   
+    'arrow_right'      ,  
+    'arrow_rightleft'  , 
+    'times'            , 
+    'ditto'            , 
+    'plus_minus'       , 
+    'minus_plus'       ,
+    'less_or_equal'    ,
+    'greater_or_equal' , 
+    'much_less'        , 
+    'much_greater'     , 
+    'equivalent'       ,
 )
 # ===========================================================================
 from   ostap.utils.basic import isatty, has_unicode 
@@ -80,6 +89,17 @@ clock_ticks      = ''.join ( ( '\U0001f558' , '\U0001f567' ,
                                '\U0001f559' , '\U0001f565' , 
                                '\U0001f55A' , '\U0001f566' ) ) \
                                if show else '|/-\\'
+
+times            = '\U00002a2f' if show else 'x'
+plus_minus       = '\U000000B1' if show else '+/-'
+minus_plus       = '\U00002213' if show else '-/+'
+ditto            = '\U00003003' if show else '//'
+
+less_or_equal    = '\U00002266' if show else '<='
+greater_or_equal = '\U00002267' if show else '=>'
+much_less        = '\U0000226A' if show else '<<'
+much_greater     = '\U0000226B' if show else '>>'
+equivalent       = '\U00002261' is show else '='
 
 # =============================================================================
 if '__main__' == __name__ :

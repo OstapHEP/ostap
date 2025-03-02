@@ -65,6 +65,7 @@ from   ostap.logger.mute      import ( mute   , mute_py ,
                                        MuteC  , MutePy  ,
                                        TeeCpp , TeePy   , OutputC    )
 from   ostap.utils.basic      import NoContext, typename, prntrf, items_loop  
+from   ostap.logger.symbols   import plus_minus 
 import time, os, sys, math  ## attention here!!
 # =============================================================================
 # logging 
@@ -241,7 +242,7 @@ def fmt_pretty_err1 ( value              ,
                                            width     = width     ,
                                            precision = precision ) 
     
-    fmt = '%s +/- %s' % ( fmtv , fmte ) 
+    fmt = '%s %s %s' % ( fmtv , plus_minus , fmte ) 
     if parentheses : fmt = '( ' + fmt + ' )'
     
     return fmt, fmtv, fmte , expo
@@ -343,17 +344,17 @@ def pretty_err1 ( value              ,
     fine = isfinite ( e )
     
     if not finv and not fine  :
-        fmt = '%%+%ds +/- %%-%ds' % ( width , width ) 
+        fmt = '%%+%ds %s %%-%ds' % ( width , plus_minus , width ) 
         if parentheses : fmt = '( ' + fmt + ' )'
         return fmt % ( v , e ) , 0 
     elif not finv  :
         fe , ne = pretty_float ( value = e , width = width , precision = precision ) 
-        fmt = '%%+%ds +/- %%-%ds' % ( width , width ) 
+        fmt = '%%+%ds %s %%-%ds' % ( width , plus_minus , width ) 
         if parentheses : fmt = '( ' + fmt + ' )'
         return fmt % ( v , fe ) , ne 
     elif not fine  :
         fv , nv = pretty_float ( value = v , width = width , precision = precision ) 
-        fmt = '%%%ds +/- %%-%ds' % ( width , width ) 
+        fmt = '%%%ds %s %%-%ds' % ( width , plus_miuns , width ) 
         if parentheses : fmt = '( ' + fmt + ' )'
         return fmt % ( fv , e ) , nv
     
