@@ -25,6 +25,7 @@ from   ostap.core.ostap_types import num_types , integer_types
 from   ostap.utils.clsgetter  import classgetter
 from   ostap.logger.pretty    import pretty_array, fmt_pretty_float, fmt_pretty_err1   
 from   ostap.logger.colorized import infostr
+from   ostap.logger.symbols   import ditto 
 import ostap.logger.table     as     T
 import ROOT, math, re, ctypes, array, random 
 # =============================================================================
@@ -1883,7 +1884,7 @@ class LinAlg(object) :
         for i in range ( rows ) :
             row = [ infostr ( '%d' % i ) ]
             for j in range ( cols ) : 
-                if j < i : item = '.' 
+                if j < i : item = ditto 
                 else     :
                     v     = mtrx ( i , j ) 
                     value = v / scale
@@ -2272,7 +2273,7 @@ class LinAlg(object) :
         """ Convert SVecto/TVector objects into GSL Vector
         """
         return Ostap.GSL.vector ( vct )
-
+    
     # =========================================================================
     ## (P)LU decomposition
     #  @see Ostap::GSL::PLU
@@ -2281,20 +2282,52 @@ class LinAlg(object) :
     #  P , L , U = matrix.PLU() 
     #  @endcode    
     @staticmethod
-    def M_PLU  ( mtrx ) :
+    def S_PLU  ( mtrx ) :
         """ Perform (P)LU decomposition of the matrix 
         >>> matrix = ...\
         >>> P, L, U = matarix.PLU() 
         - see `Ostap.GSL.PLU` 
         """
+        ## convert to GLS 
         A = mtrx.to_GSL()
-        M , N = A.nRows() , A.nCols()
-        K     = min ( M , N )
-        L = Ostap.GSL.Matrix ( M , K )
-        U = Ostap.GSL.Matrix ( K , N )
-        P = Ostap.GSL.PLU ( A , L , U )
+        ## mape (P)LU decomposiiton 
+        P, L, U = A.PLU ()
+        ## convert BACK:
+        P = Ostap.GSL.Matrix ( P )
+        ## 
+        P = P.to_SMatrix()
+        L = L.to_SMatrix()
+        U = U.to_SMatrix()
+        ## 
         return P , L , U 
-        
+
+    # =========================================================================
+    ## (P)QR decomposition
+    #  @see Ostap::GSL::PQR
+    #  @code
+    #  matrix = ...
+    #  P , Q , R = matrix.PQR() 
+    #  @endcode    
+    @staticmethod
+    def S_PQR  ( mtrx ) :
+        """ Perform (P)QR decomposition of the matrix 
+        >>> matrix = ...\
+        >>> P, Q, R = matarix.PQR() 
+        - see `Ostap.GSL.PQR` 
+        """
+        ## convert to GLS 
+        A = mtrx.to_GSL()
+        ## mape (P)LU decomposiiton 
+        P, Q, R = A.PQR ()
+        ## convert BACK:
+        P = Ostap.GSL.Matrix ( P )
+        ## 
+        P = P.to_SMatrix()
+        Q = Q.to_SMatrix()
+        R = R.to_SMatrix()
+        ## 
+        return P , Q , R 
+    
     # =========================================================================
     ## Decorate SVector 
     @staticmethod
@@ -2488,7 +2521,8 @@ class LinAlg(object) :
         m.to_GSL        = LinAlg.M_2GSL 
         m.as_GSL        = LinAlg.M_2GSL 
 
-        m.PLU           = LinAlg.M_PLU 
+        m.PLU           = LinAlg.S_PLU 
+        m.PQR           = LinAlg.S_PQR
         
         s = remtx.search ( m.__name__ )
         if s :

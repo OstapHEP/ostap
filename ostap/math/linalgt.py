@@ -207,7 +207,61 @@ class LinAlgT(LA.LinAlg) :
                 result [ i,j ] = 0.5 * ( obj (i,j) + obj(j,i) )                
         return result 
 
+
+    # =========================================================================
+    ## (P)LU decomposition
+    #  @see Ostap::GSL::PLU
+    #  @code
+    #  matrix = ...
+    #  P , L , U = matrix.PLU() 
+    #  @endcode    
+    @staticmethod
+    def T_PLU  ( mtrx ) :
+        """ Perform (P)LU decomposition of the matrix 
+        >>> matrix = ...\
+        >>> P, L, U = matarix.PLU() 
+        - see `Ostap.GSL.PLU` 
+        """
+        ## convert to GLS 
+        A = mtrx.to_GSL()
+        ## mape (P)LU decomposiiton 
+        P, L, U = A.PLU ()
+        ## convert BACK:
+        P = Ostap.GSL.Matrix ( P )
+        ## 
+        P = P.to_TMatrix()
+        L = L.to_TMatrix()
+        U = U.to_TMatrix()
+        ## 
+        return P , L , U 
         
+    # =========================================================================
+    ## (P)QR decomposition
+    #  @see Ostap::GSL::PQR
+    #  @code
+    #  matrix = ...
+    #  P , Q , R = matrix.PQR() 
+    #  @endcode    
+    @staticmethod
+    def T_PQR  ( mtrx ) :
+        """ Perform (P)QR decomposition of the matrix 
+        >>> matrix = ...\
+        >>> P, Q, R = matarix.PQR() 
+        - see `Ostap.GSL.PQR` 
+        """
+        ## convert to GLS 
+        A = mtrx.to_GSL()
+        ## mape (P)LU decomposiiton 
+        P, Q, R = A.PQR ()
+        ## convert BACK:
+        P = Ostap.GSL.Matrix ( P )
+        ## 
+        P = P.to_TMatrix()
+        Q = Q.to_TMatrix()
+        R = R.to_TMatrix()
+        ## 
+        return P , Q , R 
+
     # =========================================================================
     ## Decorate TVector 
     @staticmethod
@@ -368,7 +422,8 @@ class LinAlgT(LA.LinAlg) :
         m.to_GSL        = LinAlgT.M_2GSL 
         m.as_GSL        = LinAlgT.M_2GSL 
 
-        m.PLU           = LinAlgT.M_PLU 
+        m.PLU           = LinAlgT.T_PLU 
+        m.PQR           = LinAlgT.T_PQR
 
         s = remtx.search ( m.__name__ )
         if s :

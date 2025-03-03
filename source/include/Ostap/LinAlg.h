@@ -189,6 +189,13 @@ namespace Ostap
       // ========================================================================
     public:
       // ========================================================================
+      /// transpose the matrix
+      Matrix T () const ; 
+      /// transose the matrux
+      inline Matrix transpose () const { return T() ; }
+      // ========================================================================
+    public:
+      // ========================================================================
       /// swap two rows in the matrix 
       Matrix& swap_rows
       ( const std::size_t i1 ,
@@ -592,6 +599,27 @@ namespace Ostap
      */
     Permutation PLU ( const Matrix& A , Matrix& L, Matrix& U  ) ;    
     // ========================================================================
+    
+    // ========================================================================
+    // QR decomposition with column pivoting 
+    // ========================================================================
+    /** mape QR Decomposion of matrix A : \f$ AP = QR\f$ where 
+     *  - A is input                 MxN matrix  
+     *  - P is permuutation matrix   NxN 
+     *  - Q is orthogonal matrix     MxM 
+     *  - R is right triaular matrix MxN 
+     *  
+     *  @param A  (input) the matrix to decopose 
+     *  @param Q  (outpt/update) orthogonal matrix Q 
+     *  @param R  (outpt/update) rigth triangular matrix R 
+     *  @return permutation P 
+     */
+    Permutation PQR ( const Matrix& A, Matrix& Q , Matrix& R ) ;
+		       
+    
+    
+
+    // ========================================================================    
   } //                                          The end of namespace Ostap::GSL
   // ==========================================================================
   namespace Math

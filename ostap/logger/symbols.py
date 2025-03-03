@@ -17,6 +17,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2013-02-10"
 # =============================================================================
 __all__     = (
+    'show'             , ## 
     'checked_yes'      ,   
     'checked_no'       ,
     'question_mark'    ,
@@ -95,8 +96,8 @@ plus_minus       = '\U000000B1' if show else '+/-'
 minus_plus       = '\U00002213' if show else '-/+'
 ditto            = '\U00003003' if show else '//'
 
-less_or_equal    = '\U00002266' if show else '<='
-greater_or_equal = '\U00002267' if show else '=>'
+less_or_equal    = '\U00002264' if show else '<='
+greater_or_equal = '\U00002265' if show else '=>'
 much_less        = '\U0000226A' if show else '<<'
 much_greater     = '\U0000226B' if show else '>>'
 equivalent       = '\U00002261' if show else '='

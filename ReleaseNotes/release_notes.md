@@ -13,10 +13,11 @@
  - large imporovements in LinAlg
  - re-write AddBranch/AddBuffer machinery 
  - add (P)LU decomposition for matrices (+test)
-    
+ - fix several bugs&typos
+ - add (P)QR Decompositoon for matrices (+tests)
+ 
        
 ## New features
-
     
     1. further improvemetn dfor wrapped columns in the table
     1. remove std::uniqu_otr from Ostap::Trees::Branches for ROOT < 6.32.00 due to failure in dictionary generation)

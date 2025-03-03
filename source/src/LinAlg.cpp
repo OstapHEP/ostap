@@ -463,13 +463,17 @@ Ostap::GSL::Matrix::multiply
   //
   return result ;
 }
-
-
-
-
-
-
-
+// ===========================================================================
+// transpose the matrix
+// ===========================================================================
+Ostap::GSL::Matrix
+Ostap::GSL::Matrix::T () const
+{
+  // preare result 
+  Matrix result { nCols() , nRows() } ;
+  gsl_matrix_transpose_memcpy ( result.matrix() , matrix () ) ;
+  return result; 
+}
 // ============================================================================
 // allocate GSL-Vector 
 // ============================================================================
@@ -1096,6 +1100,52 @@ Ostap::GSL::PLU
   //
   return P ;
 }
+// ============================================================================
+
+
+// ============================================================================
+// QR decomposition with column pivoting 
+// ============================================================================
+/*  mape QR Decomposion of matrix A : \f$ AP = QR\f$ where 
+ *  - A is input                 MxN matrix  
+ *  - P is permuutation matrix   NxN 
+ *  - Q is orthogonal matrix     MxM 
+ *  - R is right triaular matrix MxN 
+ *  
+ *  @param A  (input) the matrix to decopose 
+ *  @param Q  (outpt/update) orthogonal matrix Q 
+ *  @param R  (outpt/update) rigth triangular matrix R 
+ *  @return permutation P 
+ */
+// ============================================================================
+Ostap::GSL::Permutation
+Ostap::GSL::PQR
+( const Ostap::GSL::Matrix& A ,
+  Ostap::GSL::Matrix&       Q ,
+  Ostap::GSL::Matrix&       R )
+{
+  const std::size_t M = A.nRows() ;
+  const std::size_t N = A.nCols() ;
+  const std::size_t K = std::min ( M , N ) ; 
+  //
+  //
+  Q.resize ( M , M ) ;
+  R.resize ( M , N , Ostap::GSL::Matrix::Zero() ) ;
+  //
+  Permutation P    { N } ;
+  Vector      tau  { K } ;
+  Vector      norm { N } ;
+  //
+  int signum = 0 ;
+  gsl_linalg_QRPT_decomp2
+    ( A.matrix()   , Q.matrix() , R.matrix() ,
+      tau.vector() , P.permutation() , &signum , norm.vector() ) ;
+  //
+  return P ;
+}
+
+
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

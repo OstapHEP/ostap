@@ -36,7 +36,7 @@ def copy_files ( file_pairs      ,
                  progress = True ,
                  copier   = None ,
                  copy_cmd = ''   , **kwargs ) :
-    """Copy files in parallel using GNU parallel or xargs 
+    """ Copy files in parallel using GNU parallel or xargs 
     - see https://www.gnu.org/software/parallel/
     - switch to multiprocess-based parallelisation when GNU parallel is not available 
     """
@@ -53,8 +53,10 @@ def copy_files ( file_pairs      ,
     ## sequential processing 
     # ======================================================================
     nfiles = len ( pairs ) 
-    from ostap.utils.basic import numcpu 
-    if nfiles <= 1 or numcpu () <=1  :
+    from ostap.utils.basic import numcpu
+    ncpu = numcpu()
+    
+    if nfiles <= 1 or ncpu <= 1  :
         from ostap.utils.progress_bar import progress_bar
         silent = nfiles <= 1 or not progress 
         copied = [] 
@@ -87,25 +89,26 @@ def copy_files ( file_pairs      ,
     from ostap.utils.basic import make_dirs 
     while ddirs : make_dirs ( ddirs.pop() , exist_ok = True ) 
 
-    if parallel :
-        command = 'parallel --bar :::' if progress else 'parallel :::'
-        thecmd  = '%s %%s %%s\n' % copy_cmd
-    else        :
-        command = 'xargs -P%d -L1 %s ' % ( numcpu() , copy_cmd ) 
-        if progress and 'cp' == copy_cmd : command += ' -v ' 
-        thecmd  = '%s %s\n' 
+    if parallel : thecmd  = '%s %%s %%s\n' % copy_cmd
+    else        : thecmd  = '%s %s\n' 
 
     ## (3) prepare the input file with the commands
     import ostap.utils.cleanup as CU
     tmpfile = CU.CleanUp.tempfile( suffix = '.lst' )  
     with open ( tmpfile , 'w' ) as cmd :
         for f, nf in pairs :
-            cmd.write ( thecmd % ( f , nf ) )
+            line = thecmd % ( f , nf ) 
+            cmd.write ( line )
+
+    if parallel :
+        command = 'parallel -j %d --bar :::: %s' %  ( ncpu , tmpfile ) if progress else 'parallel -j%d :::: %s' % ( ncpu , tmpfile )
+    else :
+        command = 'xargs -P%d -L1 -a %s %s ' % ( ncpu , tmpfile , copy_cmd ) 
+        if progress and 'cp' == copy_cmd : command += ' -v ' 
 
     ## (4) finally, call GNU parallel/xargs command 
     import subprocess, shlex 
-    with open ( tmpfile , 'r' ) as input :
-        subprocess.check_call ( shlex.split ( command ) , stdin = input )
+    subprocess.check_call ( shlex.split ( command )  )
 
     ## (5) check the final results 
     results = set() 

@@ -9,7 +9,6 @@
 """ Test module for ostap/math/linalgt.py
 """
 # ============================================================================= 
-from   sys                  import version_info as python_version
 from   ostap.core.meta_info import root_info
 from   ostap.math.linalg    import checkops 
 from   ostap.core.core      import Ostap
@@ -446,11 +445,10 @@ def test_linalgt_old () :
     l1 *= 2 
     logger.info ( 'l1 *= 2 : \n%s    '  % l1 )
 
-    ## if ( 3 , 5 ) <= python_version :
-
-    ##     logger.info ( 'l1 @ l2 : %s    '  % ( l1 @ l2  ) )
-    ##     logger.info ( 'l1 @  2 : %s    '  % ( l1 @  2  ) )
-    ##     logger.info ( ' 2 @ l2 : %s    '  % ( 2  @ l2  ) )
+    
+    logger.info ( 'l1 @ l2 : %s    '  % ( l1 @ l2  ) )
+    logger.info ( 'l1 @  2 : %s    '  % ( l1 @  2  ) )
+    logger.info ( ' 2 @ l2 : %s    '  % ( 2  @ l2  ) )
         
 
     logger.info('TEST matrices: ')
@@ -472,12 +470,10 @@ def test_linalgt_old () :
     logger.info ( 'l2 , l3 : \n%s \n%s '  % ( l2 , l3  ) )
 
     
-    ## if ( 3 , 5 ) <= python_version :
-        
-    ##     logger.info ( 'm23 @ 3   :\n%s' % ( m23 @ 3   ) ) 
-    ##     logger.info ( 'm22 @ m23 :\n%s' % ( m22 @ m23 ) ) 
-    ##     logger.info ( 'm22 @  l2 : %s ' % ( m22 @ l2  ) ) 
-    ##     logger.info ( 'm23 @  l3 : %s ' % ( m23 @ l3  ) ) 
+    logger.info ( 'm23 @ 3   :\n%s' % ( m23 @ 3   ) ) 
+    logger.info ( 'm22 @ m23 :\n%s' % ( m22 @ m23 ) ) 
+    logger.info ( 'm22 @  l2 : %s ' % ( m22 @ l2  ) ) 
+    logger.info ( 'm23 @  l3 : %s ' % ( m23 @ l3  ) ) 
          
 
     m22[0,0] = 1
@@ -625,6 +621,60 @@ def test_linalgt_arr () :
 
         logger.info ('Test with TMatrixDSym(%2d) is %s' % ( k , m == m2 ) ) 
 
+
+def test_linalgt_PLU ( M = 4 , N = 4 ) :
+    
+    logger = getLogger ( 'test_linalg_(P)LU(%s,%s)' % ( M , N )  )
+    
+    A = Ostap.Math.TMatrix( M , N )
+    for i in range ( A.kRows ) :
+        for j in range ( A.kCols ) :
+            A[ i , j ] = i + j + random.gauss ( 1 , 1 ) 
+            
+    logger.info ( '(P)LU The matrix is:\n%s' % A )
+
+    ## PLU decomposiiton 
+    P, L, U = A.PLU () 
+    
+    logger.info ( '(P)LU decomposition: P :\n%s' % P )
+    logger.info ( '(P)LU decomposition: L :\n%s' % L )
+    logger.info ( '(P)LU decomposition: U :\n%s' % U )
+
+    D     = L * U - P * A
+    delta = Ostap.Math.maxabs_element ( D ) 
+
+    logger.info ( '(P)LU max-difference %.3g :\n%s' % ( delta , D ) ) 
+
+
+def test_linalgt_PQR ( M = 4 , N = 4 ) :
+    
+    logger = getLogger ( 'test_linalgt_(P)QR(%s,%s)' % ( M , N )  )
+    
+    A = Ostap.Math.TMatrix( M , N )
+    for i in range ( A.kRows ) :
+        for j in range ( A.kCols ) :
+            A[ i , j ] = i + j + random.gauss ( 1 , 1 ) 
+            
+    logger.info ( '(P)QR The matrix is:\n%s' % A )
+
+    ## PLU decomposiiton 
+    P, Q, R = A.PQR () 
+    
+    logger.info ( '(P)QR decomposition: P :\n%s' % P )
+    logger.info ( '(P)QR decomposition: Q :\n%s' % Q )
+    logger.info ( '(P)QR decomposition: R :\n%s' % R )
+
+    
+    D     = Q * R - A * P
+    delta = Ostap.Math.maxabs_element ( D ) 
+    
+    logger.info ( '(P)QR max-difference %.3g :\n%s' % ( delta , D ) ) 
+
+    QQ  = Q*Q.T()
+    QQ -= 1 
+    delta2 = Ostap.Math.maxabs_element ( QQ )    
+    logger.info ( '(P)QR non-orthogonality of Q %.3g \n%s' % ( delta2 , QQ ) ) 
+          
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -633,6 +683,14 @@ if '__main__' == __name__ :
     test_linalgt_mtrx () 
     test_linalgt_old  ()
     test_linalgt_arr  ()
+    
+    test_linalgt_PLU  ( 3 , 6 )
+    test_linalgt_PLU  ( 3 , 3 )
+    test_linalgt_PLU  ( 6 , 3 )
+
+    test_linalgt_PQR  ( 3 , 6 )
+    test_linalgt_PQR  ( 3 , 3 )
+    test_linalgt_PQR  ( 6 , 3 )
 
 
 # =============================================================================

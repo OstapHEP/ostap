@@ -80,7 +80,7 @@ class StatVarTask(Task) :
         first   = item.first
         last    = min ( n_large , first + item.nevents if 0 < item.nevents else n_large )
         
-        from   ostap.stats.starvars import data_statistics 
+        from   ostap.stats.statvars import data_statistics 
         self.__output = data_statistics ( chain , self.what , self.cuts , first , last )
 
         return self.__output 

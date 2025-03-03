@@ -19,7 +19,9 @@ __all__     = (
     'LinAlgT'  , ## LinAlgenra type&decorator store 
     )
 # =============================================================================
-import ROOT 
+from   ostap.math.linalg2   import mgetter, checkops  
+from   ostap.math.linalgt   import LinAlgT         
+import ostap.math.linalgg
 # =============================================================================
 # logging 
 # =============================================================================
@@ -27,8 +29,6 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.linalg2' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
-from ostap.math.linalg2 import mgetter, checkops  
-from ostap.math.linalgt import LinAlgT         
 
 # =============================================================================
 if '__main__' == __name__ :

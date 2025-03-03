@@ -8750,16 +8750,18 @@ def _h1_table_ ( h1 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     row = 'all ints?' , '%s' % h1.allInts ()  , '' 
     rows.append ( row )
 
-    row = 'all >0/>=0/<0/<=0/=0?', '%s/%s/%s/%s/%s' % ( 'True' if h1.all_positive    () else 'False' ,
-                                                        'True' if h1.all_nonnegative () else 'False' ,
-                                                        'True' if h1.all_negative    () else 'False' ,
-                                                        'True' if h1.all_nonpositive () else 'False' ,
-                                                        'True' if h1.all_zero        () else 'False' ) , ''
+    from ostap.logger.symbols import less_or_equal, greater_or_equal, equivalent, show 
+    row = 'all >0/%s0/<0/%s0/%s0?' % ( greater_or_equal , less_or_equal , equivalent ) 
+    row = row , '%s/%s/%s/%s/%s' % ( 'True' if h1.all_positive    () else 'False' ,
+                                     'True' if h1.all_nonnegative () else 'False' ,
+                                     'True' if h1.all_negative    () else 'False' ,
+                                     'True' if h1.all_nonpositive () else 'False' ,
+                                     'True' if h1.all_zero        () else 'False' ) , ''
     rows.append ( row )
 
-    
+    riemann = '\U000003a3y\U00000394x' if show else "Riemann sum"
     rsum , expo  = pretty_float ( h1.riemann_sum ()   , width = width , precision = precision ) 
-    row = 'Riemann sum' , rsum  ,  '10^%+d' % expo if expo else '' 
+    row =  riemann , rsum  ,  '10^%+d' % expo if expo else '' 
     rows.append ( row )
 
     if h1.nEff() and not h1.all_zero () :

@@ -705,7 +705,7 @@ def copy_files ( files_to_copy           ,
     """
     
     the_files = [ f for f in files_to_copy ] 
-        
+
     ## 1) no input 
     if   not the_files : pairs = [] 
     ## 1) input: list of files :
@@ -819,8 +819,8 @@ def sync_files ( files_to_copy          ,
     """
 
     from   ostap.utils.utils  import which
-    if not which ( 'rsync' ) :        
-        from ostap.utils.basic  import copy_file
+    if not which ( 'rsync' ) :
+        from ostap.utils.basic import copy_file
         return copy_files ( files_to_copy        ,
                             new_dir  = new_dir   ,
                             parallel = parallel  ,
@@ -831,7 +831,7 @@ def sync_files ( files_to_copy          ,
     if not copy_cmd : copy_cmd = 'rsync -a'
     if not copier : 
         from ostap.utils.basic  import sync_file
-        copier = sync_file 
+        copier = sync_file
         
     return copy_files ( files_to_copy        ,
                         new_dir  = new_dir   ,
@@ -888,7 +888,6 @@ def sync_dirs  ( source_dir             ,
     assert os.path.exists ( new_dir ) and os.path.isdir ( new_dir ) and writeable ( new_dir ) , \
         'Invalid new directory %s' % new_dir 
 
-    
     source = os.path.abspath  ( source_dir )
     source = os.path.normpath ( source     )
 

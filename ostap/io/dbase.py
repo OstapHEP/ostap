@@ -295,9 +295,9 @@ def dbopen ( file               ,
     # 'n' flag is specified  or dbase does not exist and c flag is specified 
     if 'n' in flag or ( check is None and 'c' in flag ) : 
         
-        if isinstance ( dbtype , str ) : db_types = [ dbtype.lower() ]
+        if isinstance ( dbtype , str ) : db_types = dbtype.lower() ,  
         elif not dbtype                : db_types = () 
-        else                           : db_types = [ db.lower()  for db in dbtype ] 
+        else                           : db_types = tuple (  db.lower() for db in dbtype ) 
 
         ## check the preferred database type:
         for db in db_types :
@@ -311,10 +311,10 @@ def dbopen ( file               ,
             elif db             in ( 'sqlite3' , 'sqlite'  , 'sql' ) : 
                 return SqliteDict      ( filename = file , flag = flag , **kwargs )
 
-            if   db_gnu  and db in ( 'dbm.gnu'  , 'gdbm' ) :
+            if   db_gnu  and db in ( 'dbm.gnu'  , ) :
                 if kwargs : logger.warning ( 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] ) ) 
                 return db_gnu.open ( file , flag , mode )
-            elif db_dbm  and db in ( 'dbm.ndbm' , 'dbm' ) :
+            elif db_dbm  and db in ( 'dbm.ndbm' , ) :
                 if kwargs : logger.warning ( 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] ) ) 
                 return db_dbm.open ( file , flag , mode )
             elif db_hash and db in ( 'dbhash' , ) :
@@ -330,7 +330,6 @@ def dbopen ( file               ,
         if db_types :
             logger.warning  ( 'DB-type hints not used: [%s]' %  (  ','.join ( db for fn in db_types ) ) ) 
         
-                             
         if concurrent and use_berkeleydb :
             return berkeleydb_open ( file , flag , mode , **kwargs ) 
 

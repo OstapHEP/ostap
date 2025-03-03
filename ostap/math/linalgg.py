@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
 #  @date 2009-09-12
 # =============================================================================
-"""Few utilities to simplify linear algebra manipulations unisg GSL 
+""" Few utilities to simplify linear algebra manipulations unisg GSL 
 """
 # =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
@@ -187,6 +187,9 @@ Matrix.__radd__     = _m_radd_
 Matrix.__rsub__     = _m_rsub_ 
 Matrix.__rmul__     = _m_rmul_ 
 
+Matrix.__imatmul__  = _m_imul_ 
+Matrix.__matmul__   = _m_mul_ 
+
 # ================================================================================
 ## vector += value 
 def _v_iadd_ ( v , value ) :
@@ -344,7 +347,7 @@ def _p_mul_ ( p , value ) :
     """ permutation * matrix 
     """
     if isinstance ( value , Matrix ) :
-        if p.size() != value.nRows() : return NotImplemenetd
+        if p.size() != value.nRows() : return NotImplemented
     else                             : return NotImplemented 
     return p.apply ( value ) 
 
@@ -356,7 +359,7 @@ def _to_smatrix_ ( mtrx ) :
     """ Convert GSL matrix to SMatrix 
     """
     ## get dimension 
-    nr , nr = mtrx.nRows() , mtrx.nCols()
+    nr , nc = mtrx.nRows() , mtrx.nCols()
     ## get the result 
     result  = Ostap.Math.Matrix ( nr , nc )() 
     ## fill it!
@@ -377,7 +380,7 @@ def _to_ssymmatrix_ ( mtrx ) :
     """ Convert GSL matrix to (symmetric) SMatrix 
     """
     ## get dimension 
-    nr , nr = mtrx.nRows() , mtrx.nCols()
+    nr , nc = mtrx.nRows() , mtrx.nCols()
     assert nr and nr == nc , "Impossible to crrate symmetruc from rectangular matrix!"
     
     ## get the result 
@@ -402,7 +405,7 @@ def _to_tmatrix_ ( mtrx ) :
     """ Convert GSL matrix to TMatrix 
     """
     ## get dimension 
-    nr , nr = mtrx.nRows() , mtrx.nCols()
+    nr , nc = mtrx.nRows() , mtrx.nCols()
     ## get the result 
     result  = Ostap.Math.TMatrixD ( nr , nc ) 
     ## fill it!
@@ -424,7 +427,7 @@ def _to_symtmatrix_ ( mtrx ) :
     """ Convert GSL matrix to (symmetric) TMatrix 
     """
     ## get dimension 
-    nr , nr = mtrx.nRows() , mtrx.nCols()
+    nr , nc = mtrx.nRows() , mtrx.nCols()
     assert nr and nr == nc , "Impossible to crrate symmetruc from rectangular matrix!"
     
     ## get the result 
@@ -483,9 +486,11 @@ Permutation.__str__       = _p_str_
 Permutation.__repr__      = _p_str_ 
 
 # =============================================================================
-# True LinearAlebra stuff
+# True LinearAlgebra stuff
 # =============================================================================
-## Get (P)LU decomposition of matrix into P,L,U , sch  as \f$  PA = LU \f$, where 
+
+# =============================================================================
+## Get (P)LU decomposition of matrix into P,L,U , such  as \f$  PA = LU \f$, where 
 #  - P is permutation
 #  - L is lower triangular matrix
 #  - U is upper triangular matrix with all diagonal elements equal to 1  
@@ -507,9 +512,36 @@ def _m_PLU_ ( A ) :
     U    = Matrix ( K , N )
     P    = Ostap.GSL.PLU ( A , L , U )
     ##
-    return P, L , U 
+    return P, L , U
+
+# ===============================================================================
+## Get QR decompositoon with column piviting such as  \f$ AP = QR\f$
+#  - A is input MxN matrix 
+#  - P is permutation (NxN) 
+#  - Q is orthogonal MxM matrix
+#  - R is right triangular MxN matrix
+def _m_PQR_ ( A ) :
+    """ Get QR decompositoon with column piviting such as  AP = QR
+    - A is input MxN matrix 
+    - P is permutation (NxN) 
+    - Q is orthogonal MxM matrix
+    - R is right triangular MxN matrix
+    
+    >>> A = ...
+    >>> P, Q, R = A.PQR() 
+    """
+    M, N = A.nRows() , A.nCols ()
+    Q    = Matrix ( M , M )
+    R    = Matrix ( M , N )
+    P    = Ostap.GSL.PQR( A , Q , R )
+    ##
+    return P, Q , R 
+
 
 Matrix.PLU  = _m_PLU_
+Matrix.PQR  = _m_PQR_ 
+
+
 
 _new_methods_ = (
     ##
@@ -592,6 +624,7 @@ _new_methods_ = (
     Permutation.__repr__      , 
     ##
     Matrix.PLU                , 
+    Matrix.PQR                , 
 )
 # =============================================================================
 if '__main__' == __name__ :

@@ -13,7 +13,7 @@ from   ostap.math.linalg    import checkops
 from   ostap.core.core      import Ostap
 from   ostap.math.base      import numpy 
 from   ostap.utils.utils    import batch_env 
-import math 
+import math, random  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -384,6 +384,60 @@ def test_linalg2_ve () :
     r2 = v2.transform ( rho  )
     logger.info ( " -> rho      \n%s " % r2 )
     
+
+    
+def test_linalg2_PLU ( M = 4 , N = 4 ) :
+    
+    logger = getLogger ( 'test_linalg_(P)LU(%s,%s)' % ( M , N )  )
+    
+    A = Ostap.Math.Matrix ( M , N )()
+    for i in range ( A.kRows ) :
+        for j in range ( A.kCols ) :
+            A[ i , j ] = i + j + random.gauss ( 1 , 1 ) 
+            
+    logger.info ( '(P)LU The matrix is:\n%s' % A )
+
+    ## PLU decomposiiton 
+    P, L, U = A.PLU () 
+    
+    logger.info ( '(P)LU decomposition: P :\n%s' % P )
+    logger.info ( '(P)LU decomposition: L :\n%s' % L )
+    logger.info ( '(P)LU decomposition: U :\n%s' % U )
+
+    D     = L * U - P * A
+    delta = Ostap.Math.maxabs_element ( D ) 
+
+    logger.info ( '(P)LU max-difference %.3g :\n%s' % ( delta , D ) )
+    
+def test_linalg2_PQR ( M = 4 , N = 4 ) :
+    
+    logger = getLogger ( 'test_linalg2_(P)QR(%s,%s)' % ( M , N )  )
+    
+    A = Ostap.Math.Matrix ( M , N )()
+    for i in range ( A.kRows ) :
+        for j in range ( A.kCols ) :
+            A [ i , j ] = i + j + random.gauss ( 1 , 1 ) 
+            
+    logger.info ( '(P)QR The matrix is:\n%s' % A )
+
+    ## PLU decomposiiton 
+    P, Q, R = A.PQR () 
+    
+    logger.info ( '(P)QR decomposition: P :\n%s' % P )
+    logger.info ( '(P)QR decomposition: Q :\n%s' % Q )
+    logger.info ( '(P)QR decomposition: R :\n%s' % R )
+
+    
+    D     = Q * R - A * P
+    delta = Ostap.Math.maxabs_element ( D ) 
+    
+    logger.info ( '(P)QR max-difference %.3g :\n%s' % ( delta , D ) ) 
+    
+    ## QQ  = Q*Q.T()
+    ## QQ -= 1 
+    ## delta2 = Ostap.Math.maxabs_element ( QQ )    
+    ## logger.info ( '(P)QR non-orthogonality of Q %.3g \n%s' % ( delta2 , QQ ) ) 
+
     
 # =============================================================================
 if '__main__' == __name__ :
@@ -393,6 +447,14 @@ if '__main__' == __name__ :
     test_linalg2_np   ()
     test_linalg2_ve   ()
     
+    test_linalg2_PLU  ( 3 , 6 )
+    test_linalg2_PLU  ( 3 , 3 )
+    test_linalg2_PLU  ( 6 , 3 )
+
+    test_linalg2_PQR  ( 3 , 6 )
+    test_linalg2_PQR  ( 3 , 3 )
+    test_linalg2_PQR  ( 6 , 3 )
+
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
