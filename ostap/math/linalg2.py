@@ -1832,16 +1832,15 @@ class LinAlg(object) :
             
         return maev
     
-
     # =============================================================================
-    ## Get the matrix the same type with with diagonal elements, other elements are zeros
+    ## Get the matrix the same type with diagonal elements, other elements are zeros
     #  @code
     #  matrix = ..
     #  diag   = matrix.diagonal() 
     #  @endcode 
     @staticmethod
     def M_DIAGONAL ( mtrx ) :
-        """ Get the matrix the same type with with diagonal elements, other elements are zeros
+        """ Get the matrix the same typewith diagonal elements, other elements are zeros
         >>> matrix = ..
         >>> diag   = matrix.diagonal() 
         """
@@ -1852,7 +1851,25 @@ class LinAlg(object) :
         ## copy diagonal elements 
         for  i in range ( nd ) : newm [ i , i ] = mtrx ( i , i )
         return newm 
-        
+
+    # ============================================================================
+    # transpose the matrix 
+    @staticmethod
+    def S_T ( mtrx ) :
+        """ Transpose the matrix (make a copy)
+        """
+        nr, nc  = mtrx.kRows , mtrx.kCols 
+        return Ostap.Math.Matrix( nc , nr ) ( ROOT.Math.Transpose ( mtrx ) ) 
+
+    # ============================================================================
+    # trabnspose the matrix 
+    @staticmethod
+    def MS_T ( mtrx ) :
+        """ Transpose the matrix (makea copy) 
+        """
+        nr, nc  = mtrx.kRows , mtrx.kCols 
+        return Ostap.Math.SymMatrix( nc ) ( mtrx ) 
+    
     # =============================================================================
     ##  Self-printout of symmetric matrices
     #   @code  
@@ -2320,13 +2337,123 @@ class LinAlg(object) :
         ## mape (P)LU decomposiiton 
         P, Q, R = A.PQR ()
         ## convert BACK:
-        P = Ostap.GSL.Matrix ( P )
+        P = Ostap.GSL.Matrix ( P ).transpose() 
         ## 
         P = P.to_SMatrix()
         Q = Q.to_SMatrix()
         R = R.to_SMatrix()
         ## 
         return P , Q , R 
+
+    # ==========================================================================
+    ## Perform LQ decomposition of the matrix
+    @staticmethod
+    def S_LQ ( mtrx ) :
+        """ Perfrom LQ decompositionof matrix A : A = LQ 
+        - A is input MxN matrix 
+        - L is lower trapezoidal  MxN matrix
+        - Q is orthogonal NxN matrix    
+        >>> A = ...
+        >>> L, Q = A.LQ() 
+        """
+        ## convert matrix to GSL 
+        A = mtrx.to_GSL()
+        ## make decomposition
+        L , Q = A.LQ()
+        ## convert back
+        L = L.to_SMatrix()
+        Q = Q.to_SMatrix()
+        return L, Q
+    
+    # ==========================================================================
+    ## Perform QL decomposition of the matrix
+    @staticmethod
+    def S_QL ( mtrx ) :
+        """ Perfrom LQ decompositionof matrix A : A = QL 
+        - A is input MxN matrix 
+        - Q is orthogonal NxN matrix    
+        - L is lower trapezoidal  MxN matrix
+        >>> A = ...
+        >>> Q , L = A.QL () 
+        """
+        ## convert matrix to GSL 
+        A = mtrx.to_GSL()
+        ## make decomposition
+        Q , L = A.QL ()
+        ## convert back
+        Q = Q.to_SMatrix()
+        L = L.to_SMatrix()
+        return Q , L 
+
+    # =========================================================================
+    ## COD: Complete orthogonal decomposition AP = Q R Z^T
+    @staticmethod
+    def S_COD ( mtrx ) :
+        """ COD - Complete Orthogonal Decomposion: AP = Q R Z^T 
+        - A input MxN matrix 
+        - P is permutation matrix 
+        - Q is MxM orthogonal matrix 
+        - Z is NxN orthogonal matrix 
+        - R is 2x2 block matrix with top-left blobck being right triangular matrix and
+        other blocks are zeroes   
+        >>> A = ...
+        >>> P , Q , R , Z = A.COD() 
+        """
+        ## convert matrix to GSL 
+        A = mtrx.to_GSL()
+        ## make decomposition
+        P , Q , R , Z = A.COD()
+        ## convert BACK:
+        P = Ostap.GSL.Matrix ( P ).transpose() 
+        ## 
+        P = P.to_SMatrix()
+        Q = Q.to_SMatrix()
+        R = R.to_SMatrix()
+        Z = Z.to_SMatrix()
+        return P, Q, R , Z 
+    
+    # ===============================================================================
+    ## SVD : singular Value Decomposition  \f$ A = U S V^T\f$
+    def S_SVD ( mtrx , golub = True ) : 
+        """ SVD : singular Value Decomposition  A = U S V^T 
+        - A input MxN matrix 
+        - K = min ( M , N ) : 
+        - U MxK orthogonal matrix 
+        - S KxK Diagonal matrix of singular values 
+        - V NxK orthogonal matrix 
+        >>> A = ...
+        >>> S , U , V = A.SVD() 
+        """
+        ## convert matrix to GSL 
+        A = mtrx.to_GSL()
+        ## make decomposition
+        S , U , V = A.SVD() 
+        ## convert BACK:
+        N = S.size() 
+        M = Ostap.Math.SymMatrix ( N )()
+        for i in range ( N ) : M [ i , i ] = S ( i )
+        S = M 
+        U = U.to_SMatrix()
+        V = V.to_SMatrix()
+        return S , U , V 
+
+    # ===============================================================================
+    ## POLAR : Polar Decomposition  \f$ A = UP \f$ 
+    def S_POLAR ( mtrx ) :
+        """ Polar decomposition of the square matrix A: A = UP
+        - U is orthogonal 
+        - P is positive semi-definitive 
+        >>> A = ...,
+        >>> U , P = A.POLAR() 
+        """
+        ## convert matrix to GSL 
+        A = mtrx.to_GSL()
+        ## make decomposition
+        U , P = A.POLAR() 
+        ## convert BACK:
+        P = P.to_SMatrix()
+        U = U.to_SMatrix()
+        return U , P 
     
     # =========================================================================
     ## Decorate SVector 
@@ -2474,6 +2601,9 @@ class LinAlg(object) :
         m.rows          = LinAlg.M_ROWS
         m.columns       = LinAlg.M_COLUMNS
 
+        m.t             = LinAlg.S_T   
+        m.transpose     = LinAlg.S_T   
+        
         m.tmatrix       = LinAlg.M_TM 
 
         m.min_element          = LinAlg.M_MINELEMENT
@@ -2523,7 +2653,14 @@ class LinAlg(object) :
 
         m.PLU           = LinAlg.S_PLU 
         m.PQR           = LinAlg.S_PQR
-        
+        m.LQ            = LinAlg.S_LQ 
+        m.QL            = LinAlg.S_QL
+        m.COD           = LinAlg.S_COD
+        m.SVD           = LinAlg.S_SVD
+
+        if m.kRows == m.kCols :
+            m.POLAR     = LinAlg.S_POLAR
+                        
         s = remtx.search ( m.__name__ )
         if s :
             stype = s.group('TYPE')
@@ -2560,6 +2697,9 @@ class LinAlg(object) :
         m.sim            = LinAlg.SIM
         m.SimT           = LinAlg.SIMT
         m.simT           = LinAlg.SIMT
+        
+        m.t               = LinAlg.MS_T   
+        m.transpose       = LinAlg.MS_T   
         
         m.eigenValues    = LinAlg.MS_EIGENVALUES 
         m.eigenVectors   = LinAlg.MS_EIGENVECTORS

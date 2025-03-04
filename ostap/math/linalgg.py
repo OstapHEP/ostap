@@ -28,7 +28,7 @@ else                       : logger = getLogger ( __name__             )
 Matrix      = Ostap.GSL.Matrix
 Vector      = Ostap.GSL.Vector
 Permutation = Ostap.GSL.Permutation
-
+Zero        = Matrix.Zero 
 # =============================================================================
 ## matrix += value 
 def _m_iadd_ ( m , value ) :
@@ -122,6 +122,8 @@ def _m_mul_ ( m ,  value ) :
     if   isinstance ( value , Matrix ) :
         if m.nCols() != value.nRows () : return NotImplemented
     elif isinstance ( value , Vector ) :
+        if m.nCols() != value.size  () : return NotImplemented
+    elif isinstance ( value , Permutation  ) :
         if m.nCols() != value.size  () : return NotImplemented
     elif isinstance ( value , num_types ) : value = float ( value ) 
     else                               : return NotImplemented 
@@ -453,7 +455,8 @@ Matrix.GetNcols      = Matrix.nCols
 
 Matrix.kRows = property ( Matrix.nRows , None , None , "`kRows` : number of rows "    )
 Matrix.kCols = property ( Matrix.nCols , None , None , "`kCols` : number of columns " )
-
+_m_shape_    = lambda m : ( m.nRows(), m.nCols() ) 
+Matrix.shape = property ( _m_shape_ , None , None , "`shape` : shape f matrix: (#rows,#columns)" )
 
 def _m_pretty_print_ ( mtrx , **kwargs ) :    
     return LA.LinAlgT.M_PRETTY ( mtrx , **kwargs )
@@ -508,14 +511,14 @@ def _m_PLU_ ( A ) :
     """
     M, N = A.nRows() , A.nCols ()
     K    = min ( M , N ) 
-    L    = Matrix ( M , K )
-    U    = Matrix ( K , N )
+    L    = Matrix ( M , K , Zero () )
+    U    = Matrix ( K , N , Zero () )
     P    = Ostap.GSL.PLU ( A , L , U )
     ##
     return P, L , U
 
 # ===============================================================================
-## Get QR decompositoon with column piviting such as  \f$ AP = QR\f$
+## Get (P)QR decompositoon with column piviting such as  \f$ AP = QR\f$
 #  - A is input MxN matrix 
 #  - P is permutation (NxN) 
 #  - Q is orthogonal MxM matrix
@@ -532,16 +535,132 @@ def _m_PQR_ ( A ) :
     """
     M, N = A.nRows() , A.nCols ()
     Q    = Matrix ( M , M )
-    R    = Matrix ( M , N )
+    R    = Matrix ( M , N , Zero () )
     P    = Ostap.GSL.PQR( A , Q , R )
     ##
     return P, Q , R 
 
 
-Matrix.PLU  = _m_PLU_
-Matrix.PQR  = _m_PQR_ 
+# ===============================================================================
+## Get LQ decompositionn with column piviting such as  \f$ A = LQ\f$
+#  - A is input MxN matrix 
+#  - L is lower trapezoidal  MxN matrix
+#  - Q is orthogonal NxN matrix
+def _m_LQ_ ( A ) :
+    """ Get LQ decomposition with column piviting such as  A = LQ
+    - A is input MxN matrix 
+    - L is lower trapezoidal  MxN matrix
+    - Q is orthogonal NxN matrix    
+    >>> A = ...
+    >>> L, Q = A.LQ() 
+    """
+    M, N = A.nRows() , A.nCols ()
+    L    = Matrix ( M , N , Zero ()  )
+    Q    = Matrix ( N , N )
+    Ostap.GSL.LQ ( A , L , Q )
+    return L , Q 
 
 
+# ===============================================================================
+## Get QL decompositionn with column piviting such as  \f$ A = QL \f$
+#  - A is input MxN matrix 
+#  - Q is orthogonal MxM matrix
+#  - L is lower trapezoidal  MxN matrix
+def _m_QL_ ( A ) :
+    """ Get QL decomposition with column piviting such as  A = QL
+    - A is input MxN matrix 
+    - Q is orthogonal MxM matrix    
+    - L is lower trapezoidal  MxN matrix
+    >>> A = ...
+    >>> Q, L = A.QL() 
+    """
+    M, N = A.nRows() , A.nCols ()
+    Q    = Matrix ( M , M )
+    L    = Matrix ( M , N , Zero() )
+    Ostap.GSL.QL ( A , Q , L )
+    return Q , L
+
+# ===============================================================================
+##  COD - Complete Orthogonal Decomposion
+#   \f$ AP = Q R Z^T \f$ 
+#  - A input MxN matrix 
+#  - P is permutation matrix 
+#  - Q is MxM orthogonal matrix 
+#  - Z is NxN orthogonal matrix 
+#  - R is 2x2 block matrix with top-left blobck being right triangular matrix and
+#    other blocks are zeroes   
+def _m_COD_ ( A ) :
+    """ COD - Complete Orthogonal Decomposion: AP = Q R Z^T 
+    - A input MxN matrix 
+    - P is permutation matrix 
+    - Q is MxM orthogonal matrix 
+    - Z is NxN orthogonal matrix 
+    - R is 2x2 block matrix with top-left blobck being right triangular matrix and
+    other blocks are zeroes   
+    >>> A = ...
+    >>> P , Q , R , Z = A.COD() 
+    """
+    M, N = A.nRows() , A.nCols ()
+    Q    = Matrix ( M , M )
+    R    = Matrix ( M , N , Zero () )
+    Z    = Matrix ( N , N )
+    P    = Ostap.GSL.COD ( A , Q , R , Z )
+    return P , Q , R , Z 
+
+# ===============================================================================
+## SVD : singular Value Decomposition  \f$ A = U S V^T\f$
+#   - A input MxN matrix 
+#   - K = min ( M , N ) : 
+#   - U MxK orthogonal matrix 
+#   - S KxK Diagonal matrix of singular values 
+#   - V NxK orthogonal matrix 
+#   @param golub (input) use Golub or Jacobi algorithm 
+#   @return vector of singular values 
+#  -  Jacobi algorithm is more prrcise  and Golub algorithm is more CPU efficient 
+def _m_SVD_ ( A , golub = True ) :
+    """ SVD : singular Value Decomposition  \f$ A = U S V^T\f$
+    - A input MxN matrix 
+    - K = min ( M , N ) : 
+    - U MxK orthogonal matrix 
+    - S KxK Diagonal matrix of singular values 
+    - V NxK orthogonal matrix 
+    >>> A = ...
+    >>> S , U , V = A.SVD() 
+    """
+    M, N = A.nRows() , A.nCols ()
+    U = Matrix ( M , N )
+    V = Matrix ( N , N )
+    S = Ostap.GSL.SVD ( A , U , V , True if golub else False )
+    return S , U , V 
+
+
+# ===============================================================================
+## Polar decompositon of the square matrix A: \f$ A = UP \f$
+#  - U is orthogonal 
+#  - P is positive semi-definitive 
+def _m_POLAR_ ( A ) :
+    """ Polar decomposition of the square matrix A: A = UP
+    - U is orthogonal 
+    - P is positive semi-definitive 
+    >>> A = ...,
+    >>> U , P = A.POLAR() 
+    """
+    M, N = A.nRows() , A.nCols ()
+    assert M == N , "Polar decomposition is defined only for square matrices!"
+    U = Matrix ( M , M )
+    P = Matrix ( M , M )
+    Ostap.GSL.POLAR ( A , U , P )
+    return U , P 
+
+Matrix.PLU       = _m_PLU_
+Matrix.PQR       = _m_PQR_ 
+Matrix.LQ        = _m_LQ_ 
+Matrix.QL        = _m_QL_ 
+Matrix.COD       = _m_COD_ 
+Matrix.SVD       = _m_SVD_ 
+Matrix.POLAR     = _m_POLAR_ 
+Matrix.t         = Matrix.T
+Matrix.transpose = Matrix.T
 
 _new_methods_ = (
     ##
@@ -608,6 +727,9 @@ _new_methods_ = (
     Matrix.GetNrows           , 
     Matrix.GetNcols           , 
     ##
+    Matrix.t                  , 
+    Matrix.transpose          , 
+    ##
     Matrix.pretty_print       , 
     Matrix.table              , 
     Matrix.__str__            , 
@@ -625,6 +747,12 @@ _new_methods_ = (
     ##
     Matrix.PLU                , 
     Matrix.PQR                , 
+    Matrix.LQ                 ,
+    Matrix.QL                 ,
+    Matrix.COD                ,
+    Matrix.SVD                ,
+    Matrix.POLAR              ,
+    ##
 )
 # =============================================================================
 if '__main__' == __name__ :

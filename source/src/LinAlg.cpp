@@ -107,6 +107,15 @@ Ostap::GSL::Matrix::Matrix
       set ( j , k , 1 ) ;
     }
 }
+// ==========================================================================
+Ostap::GSL::Matrix::Matrix
+( const Ostap::GSL::Vector & v ) 
+  : m_matrix ( gsl_matrix_calloc ( v.size () , v.size () ) ) 
+{
+  const std::size_t N = v.size() ;
+  for ( std::size_t i = 0 ; i < N ; ++i )
+    { set ( i , i , v.get ( i ) ) ; }
+}
 // ============================================================================
 // copy constructor 
 // ============================================================================
@@ -462,6 +471,19 @@ Ostap::GSL::Matrix::multiply
                    result.vector () ) ;
   //
   return result ;
+}
+// ============================================================================
+// multiply matrix abd vector using CBLAS dgemv function 
+// ============================================================================
+Ostap::GSL::Matrix
+Ostap::GSL::Matrix::multiply
+( const Ostap::GSL::Permutation& right ) const
+{
+  Ostap::Assert ( nCols() == right.size()                      ,
+                  "Mismatch for permutation/matrix structure!" ,
+                  "Ostap::GLS::Matrix::multiply"               , 
+                  INVALID_PERMUTATION  , __FILE__ , __LINE__   ) ;
+  return (*this) * Matrix ( right ) .T() ;
 }
 // ===========================================================================
 // transpose the matrix
@@ -1037,8 +1059,13 @@ Ostap::GSL::Permutation
 Ostap::GSL::PLU ( Ostap::GSL::Matrix& A )
 {
   Permutation P { A.nRows() } ;
-  int sign = 0 ;
-  gsl_linalg_LU_decomp ( A.matrix() , P.permutation() , &sign ) ;
+  int signum = 0 ;
+  int status = gsl_linalg_LU_decomp ( A.matrix() , P.permutation() , &signum ) ;
+  Ostap::Assert ( GSL_SUCCESS == status                    ,
+		  "Error from gsl_linalg_LU_decomp"        ,
+		  "Ostap::GSL::PLU"                        ,
+		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;  
+  //
   return P ;
 }
 // ============================================================================
@@ -1137,14 +1164,277 @@ Ostap::GSL::PQR
   Vector      norm { N } ;
   //
   int signum = 0 ;
-  gsl_linalg_QRPT_decomp2
+  int status = gsl_linalg_QRPT_decomp2
     ( A.matrix()   , Q.matrix() , R.matrix() ,
       tau.vector() , P.permutation() , &signum , norm.vector() ) ;
+  Ostap::Assert ( GSL_SUCCESS == status                    ,
+		  "Error from gsl_linalg_QRPT_decomp2"     ,
+		  "Ostap::GSL::PQR"                        ,
+		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+  
   //
   return P ;
 }
+// ============================================================================
 
+// ============================================================================
+// LQ decomposition
+// ============================================================================
+/* LQ decomposition of matrix A: \f$ A = LQ\f$, where 
+ *  - L is lower trapezoidal MxN 
+ *  - Q is orthogonal NxN 
+ */ 
+// ============================================================================
+void Ostap::GSL::LQ
+( const Ostap::GSL::Matrix& A ,
+  Ostap::GSL::Matrix&       L ,
+  Ostap::GSL::Matrix&       Q )
+{
+  const std::size_t M = A.nRows  () ;
+  const std::size_t N = A.nCols  () ;
+  const std::size_t K = std::min ( M , N ) ;
+  //
+  L.resize ( M , N , Ostap::GSL::Matrix::Zero() ) ;
+  Q.resize ( N , N ) ;
+  //
+  Vector tau { K } ;
+  Matrix R   { A } ;
+  //
+  int status = gsl_linalg_LQ_decomp ( R.matrix() , tau.vector() ) ;
+  Ostap::Assert ( GSL_SUCCESS == status                    ,
+		  "Error from gsl_linalg_LQ_decomp"        ,
+		  "Ostap::GSL::LQ"                         ,
+		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+  //
+  status = gsl_linalg_LQ_unpack ( R.matrix   () ,
+				  tau.vector () ,
+				  Q.matrix   () , 
+				  L.matrix   () ) ; 
+  Ostap::Assert ( GSL_SUCCESS == status                    ,
+		  "Error from gsl_linalg_LQ_unpack"        ,
+		  "Ostap::GSL::LQ"                         ,
+		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+  //
+}
+// ============================================================================
 
+// ============================================================================
+// QL decomposition
+// ============================================================================
+/*  QL decomposition of matrix A: \f$ A = QL\f$, where 
+ *  - Q is orthogonal MxM
+ *  - L is lower trapezoidal MxN 
+ */ 
+// ============================================================================
+void Ostap::GSL::QL
+( const Ostap::GSL::Matrix& A ,
+  Ostap::GSL::Matrix&       Q ,
+  Ostap::GSL::Matrix&       L )
+{
+  const std::size_t M = A.nRows  () ;
+  const std::size_t N = A.nCols  () ;
+  //
+  Q.resize ( M , M ) ;
+  L.resize ( M , N , Ostap::GSL::Matrix::Zero() ) ;
+  //
+  Vector tau { N } ;
+  Matrix R   { A } ;
+  //
+  int status = gsl_linalg_QL_decomp ( R.matrix() , tau.vector() ) ;
+  Ostap::Assert ( GSL_SUCCESS == status                    ,
+		  "Error from gsl_linalg_QL_decomp"        ,
+		  "Ostap::GSL::QL"                         ,
+		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+  //
+  status = gsl_linalg_QL_unpack ( R.matrix   () ,
+				  tau.vector () ,
+				  Q.matrix   () , 
+				  L.matrix   () ) ; 
+  Ostap::Assert ( GSL_SUCCESS == status                    ,
+		  "Error from gsl_linalg_QL_unpack"        ,
+		  "Ostap::GSL::QL"                         ,
+		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+  //
+}
+// ============================================================================
+
+// ============================================================================
+// COD decomposition
+// ============================================================================
+/*  COD - Complete Orthogonal Decomposion
+ *  \f$ AP = Q R Z^T \f$ 
+ *  - A input MxN matrix 
+ *  - P is permutation matrix 
+ *  - Q is MxM orthogonal matrix 
+ *  - R is 2x2 block matrix with top-left blobck being right triangular matrix and
+ *    other blocks are zeroes 
+ *  - Z is NxN orthogonal matrix 
+ */
+// ============================================================================
+Ostap::GSL::Permutation
+Ostap::GSL::COD
+( const Ostap::GSL::Matrix& A ,
+  Ostap::GSL::Matrix& Q ,
+  Ostap::GSL::Matrix& R ,
+  Ostap::GSL::Matrix& Z )
+{
+  const std::size_t M = A.nRows  () ;
+  const std::size_t N = A.nCols  () ;
+  const std::size_t K = std::min ( M , N ) ;
+  //
+  Permutation P { N } ;
+  //
+  Q.resize ( M , M ) ;
+  R.resize ( M , N , Ostap::GSL::Matrix::Zero() ) ;
+  Z.resize ( N , N ) ;
+  //
+  Matrix D     { A } ;
+  Vector tau_Q { K } ; 
+  Vector tau_Z { K } ;
+  Vector work  { N } ;
+  //
+  std::size_t  rank ;
+  int status = gsl_linalg_COD_decomp
+    ( D.matrix      () ,
+      tau_Q.vector  () , 
+      tau_Z.vector  () ,
+      P.permutation () ,
+      &rank            ,
+      work.vector()  ) ;
+  Ostap::Assert ( GSL_SUCCESS == status                    ,
+		  "Error from gsl_linalg_COD_decomp"       ,
+		  "Ostap::GSL::COD"                        ,
+		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+  //
+  status = gsl_linalg_COD_unpack
+    ( D.matrix() ,
+      tau_Q.vector () ,
+      tau_Z.vector () ,
+      rank            ,
+      Q.matrix     () ,
+      R.matrix     () ,
+      Z.matrix     () ) ;
+  Ostap::Assert ( GSL_SUCCESS == status                    ,
+		  "Error from gsl_linalg_COD_unpack"       ,
+		  "Ostap::GSL::COD"                        ,
+		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+  //
+  return P ;
+}
+// ============================================================================
+// SVD decomposition
+// ============================================================================
+/* SVD : Singular Value Decomposition  \f$ A = U S V^T\f$   
+ *  - A input MxN matrix 
+ *  - K = min ( M , N ) : 
+ *  - U MxK orthogonal matrix 
+ *  - S KxK Diagonal matrix of singular values 
+ *  - V NxK orthogonal matrix 
+ *  @param A (input)  input matrix A 
+ *  @param U (update) orthogonal matrix U 
+ *  @param V (update) orthogonal matrix V 
+ *  @param golub (input) use Golub or Jacobi algorithm? 
+ *  @return vector of singular values 
+ * -  Jacobi algorithm is more prrcise  and Golub algorithm is more CPU efficient 
+ */
+// ============================================================================
+Ostap::GSL::Vector
+Ostap::GSL::SVD
+( const Ostap::GSL::Matrix& A     ,
+  Ostap::GSL::Matrix&       U     ,
+  Ostap::GSL::Matrix&       V     ,
+  const bool                golub )
+{
+  //
+  const std::size_t M = A.nRows  () ;
+  const std::size_t N = A.nCols  () ;
+  //
+  if ( M < N ) { return SVD ( A.T() , V , U ) ; }
+  //
+  // replace U with A 
+  U = A ;
+  V.resize ( N , N ) ;
+  //
+  Vector S    { N } ;
+  //
+  /// Use one sided JAcobi orthogonalization 
+  if ( !golub )
+    {
+      int status = gsl_linalg_SV_decomp_jacobi 
+	( U.matrix () ,
+	  V.matrix () ,
+	  S.vector () ) ; 
+      Ostap::Assert ( GSL_SUCCESS == status                    ,
+		      "Error from gsl_linalg_SV_decomp_jacobi" ,
+		      "Ostap::GSL::SVD"                        ,
+		      ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+      
+      return S ;  // RETURN 
+    }
+  //
+  // workspace 
+  Vector work { N } ;
+  //
+  /// standard Golub' algorithms 
+  if ( M < 4 * N )
+    {
+      int status = gsl_linalg_SV_decomp
+	( U.matrix    () ,
+	  V.matrix    () ,
+	  S.vector    () ,
+	  work.vector () ) ;
+      Ostap::Assert ( GSL_SUCCESS == status                    ,
+		      "Error from gsl_linalg_SV_decomp"        ,
+		      "Ostap::GSL::SVD"                        ,
+		      ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+      return S ;  
+    }
+  
+  /// additional workspace 
+  Matrix X { N , N } ;
+  
+  /// modified Golub algorithm for M>>N
+  int status = gsl_linalg_SV_decomp_mod 
+    ( U.matrix    () ,
+      X.matrix    () , 
+      V.matrix    () ,
+      S.vector    () ,
+      work.vector () ) ;
+  Ostap::Assert ( GSL_SUCCESS == status                    ,
+		  "Error from gsl_linalg_SV_decomp_mod"    ,
+		  "Ostap::GSL::SVD"                        ,
+		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+  return S ; 
+}
+// ============================================================================
+/*  Polar decompositon of the square matrix A: \f$ A = UP \f$
+ *  - U ius orthogonal 
+ *  - P is positiev semi-definitive 
+ */
+// ============================================================================
+void Ostap::GSL::POLAR
+( const Ostap::GSL::Matrix& A ,
+  Ostap::GSL::Matrix      & U ,
+  Ostap::GSL::Matrix      & P )
+{
+  //
+  const std::size_t M = A.nRows  () ;
+  const std::size_t N = A.nCols  () ;
+  const std::size_t K = std::min ( M , N ) ;
+  //
+  Ostap::Assert ( M == N ,
+		  "Polar decomposition exists only for square matrices!" ,
+		  "Ostap::GSL::POLAR" ,
+		  INVALID_GMATRIX     , __FILE__ , __LINE__ ) ;
+  //
+  Matrix auxu { M  , K } ;
+  Matrix auxv { N  , K } ;
+  //
+  Matrix S    { SVD ( A , auxu , auxv ) }  ;
+  //
+  U = auxu     * auxv.T() ;
+  P = auxv * S * auxv.T() ;
+}
 
 // ============================================================================
 //                                                                      The END 

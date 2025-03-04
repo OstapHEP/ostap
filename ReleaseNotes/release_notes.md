@@ -15,6 +15,7 @@
  - add (P)LU decomposition for matrices (+test)
  - fix several bugs&typos
  - add (P)QR Decompositoon for matrices (+tests)
+ - add LQ,QL,COD,SVD and POLAR decomposition of matrices (+tests)
  
        
 ## New features

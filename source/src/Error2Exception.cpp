@@ -18,6 +18,7 @@
 // local 
 // ============================================================================
 #include "Exception.h"
+#include "status_codes.h"
 // ============================================================================
 /** Implementation file
  * 
@@ -57,7 +58,7 @@ namespace
         Ostap::Assert ( false                                              ,
                         tag + message                                      ,
                         ( location && location [ 0 ] ) ? location : "ROOT" ,
-                        1000000 + level                                    ) ; 
+                        ERROR_ROOT + level                                 ) ; 
       }
     else if ( kWarning <= level && Py_IsInitialized() ) 
       {

@@ -140,6 +140,24 @@ class LinAlgT(LA.LinAlg) :
         if i != j :
             mtrx._old_setitem_ ( ( j , i ) , value )
 
+    # ============================================================================
+    # transpose the matrix 
+    @staticmethod
+    def T_T ( mtrx ) :
+        """ Transpose the matrix (make a copy)
+        """
+        newmatrix = Ostap.Math.TMatrix ( mtrx )
+        newmatrix.T() 
+        return newmatrix 
+
+    # ============================================================================
+    # transpose the matrix 
+    @staticmethod
+    def TS_T ( mtrx ) :
+        """ Transpose the matrix (make a copy) 
+        """
+        return Ostap.Math.TMatrixSym ( mtrx )
+    
     # =========================================================================
     ## convert matrix/vector-like-object to TMatrixT/TVectorT
     # @code
@@ -254,7 +272,7 @@ class LinAlgT(LA.LinAlg) :
         ## mape (P)LU decomposiiton 
         P, Q, R = A.PQR ()
         ## convert BACK:
-        P = Ostap.GSL.Matrix ( P )
+        P = Ostap.GSL.Matrix ( P ).T() 
         ## 
         P = P.to_TMatrix()
         Q = Q.to_TMatrix()
@@ -262,6 +280,117 @@ class LinAlgT(LA.LinAlg) :
         ## 
         return P , Q , R 
 
+    # ==========================================================================
+    ## Perform LQ decomposition of the matrix
+    @staticmethod
+    def T_LQ ( mtrx ) :
+        """ Perfrom LQ decompositionof matrix A : A = LQ 
+        - A is input MxN matrix 
+        - L is lower trapezoidal  MxN matrix
+        - Q is orthogonal NxN matrix    
+        >>> A = ...
+        >>> L, Q = A.LQ() 
+        """
+        ## convert matrix to GSL 
+        A = mtrx.to_GSL()
+        ## make decomposition
+        L , Q = A.LQ()
+        ## convert back
+        L = L.to_SMatrix()
+        Q = Q.to_SMatrix()
+        return L, Q
+
+    ## Perform QL decomposition of the matrix
+    @staticmethod
+    def T_QL ( mtrx ) :
+        """ Perfrom LQ decompositionof matrix A : A = QL 
+        - A is input MxN matrix 
+        - Q is orthogonal NxN matrix    
+        - L is lower trapezoidal  MxN matrix
+        >>> A = ...
+        >>> Q , L = A.QL () 
+        """
+        ## convert matrix to GSL 
+        A = mtrx.to_GSL()
+        ## make decomposition
+        Q , L = A.QL ()
+        ## convert back
+        Q = Q.to_TMatrix()
+        L = L.to_TMatrix()
+        return Q , L 
+
+    # =========================================================================
+    ## COD: Complete orthogonal decomposition AP = Q R Z^T
+    @staticmethod
+    def T_COD ( mtrx ) :
+        """ COD - Complete Orthogonal Decomposion: AP = Q R Z^T 
+        - A input MxN matrix 
+        - P is permutation matrix 
+        - Q is MxM orthogonal matrix 
+        - Z is NxN orthogonal matrix 
+        - R is 2x2 block matrix with top-left blobck being right triangular matrix and
+        other blocks are zeroes   
+        >>> A = ...
+        >>> P , Q , R , Z = A.COD() 
+        """
+        ## convert matrix to GSL 
+        A = mtrx.to_GSL()
+        ## make decomposition
+        P , Q , R , Z = A.COD()
+        ## convert BACK:
+        P = Ostap.GSL.Matrix ( P ).T() 
+        ## 
+        P = P.to_TMatrix()
+        Q = Q.to_TMatrix()
+        R = R.to_TMatrix()
+        Z = Z.to_TMatrix()
+        return P, Q, R , Z 
+    
+    # ===============================================================================
+    ## SVD : singular Value Decomposition  \f$ A = U S V^T\f$
+    def T_SVD ( mtrx , golub = True ) : 
+        """ SVD : singular Value Decomposition  A = U S V^T 
+        - A input MxN matrix 
+        - K = min ( M , N ) : 
+        - U MxK orthogonal matrix 
+        - S KxK Diagonal matrix of singular values 
+        - V NxK orthogonal matrix 
+        >>> A = ...
+        >>> S , U , V = A.SVD() 
+        """
+        ## convert matrix to GSL 
+        A = mtrx.to_GSL()
+        ## make decomposition
+        S , U , V = A.SVD() 
+        ## convert BACK:
+        N = S.size() 
+        M = Ostap.TMatrixSym ( N )
+        for i in range ( N ) : M [ i , i ] = S ( i )
+        S = M 
+        U = U.to_TMatrix()
+        V = V.to_TMatrix()
+        return S , U , V
+    
+   # ===============================================================================
+    ## POLAR : Polar Decomposition  \f$ A = UP \f$ 
+    def T_POLAR ( mtrx ) :
+        """ Polar decomposition of the square matrix A: A = UP
+        - U is orthogonal 
+        - P is positive semi-definitive 
+        >>> A = ...,
+        >>> U , P = A.POLAR() 
+        """
+        ## convert matrix to GSL 
+        A = mtrx.to_GSL()
+        ## make decomposition
+        U , P = A.POLAR() 
+        ## convert BACK:
+        P = P.to_TMatrix()
+        U = U.to_TMatrix()
+        return U , P 
+    
+    # ==========================================================================
+    
     # =========================================================================
     ## Decorate TVector 
     @staticmethod
@@ -323,7 +452,6 @@ class LinAlgT(LA.LinAlg) :
 
         t.to_array      = LinAlgT.V_ARRAY  ## plain array.array
 
-        
         if LinAlgT.with_numpy : 
             t.to_numpy  = LinAlgT.V_NUMPY ## numpy array
 
@@ -378,11 +506,10 @@ class LinAlgT(LA.LinAlg) :
         m.__rmul__      = LinAlgT.RMUL 
         m.__imul__      = LinAlgT.IMUL 
 
-        if ( 3 , 5 ) <= python_version : 
-            m. __matmul__   = LinAlgT. MUL ## Py3
-            m.__rmatmul__   = LinAlgT.RMUL ## Py3 
-            m.__imatmul__   = LinAlgT.IMUL ## Py3 
-            
+        m. __matmul__   = LinAlgT. MUL ## Py3
+        m.__rmatmul__   = LinAlgT.RMUL ## Py3 
+        m.__imatmul__   = LinAlgT.IMUL ## Py3 
+        
         m. __div__      = LinAlgT. DIV 
         m.__idiv__      = LinAlgT.IDIV 
         m. __truediv__  = LinAlgT. DIV 
@@ -401,6 +528,9 @@ class LinAlgT(LA.LinAlg) :
         m.rows          = LinAlgT.M_ROWS
         m.columns       = LinAlgT.M_COLUMNS
         
+        m.t             = LinAlgT.T_T   
+        m.transpose     = LinAlgT.T_T   
+
         m.__pow__       = LinAlgT.M_POW 
         m.sym           = LinAlgT.M_SYM
         m.asym          = LinAlgT.M_ASYM
@@ -424,6 +554,12 @@ class LinAlgT(LA.LinAlg) :
 
         m.PLU           = LinAlgT.T_PLU 
         m.PQR           = LinAlgT.T_PQR
+        m.LQ            = LinAlgT.T_LQ 
+        m.QL            = LinAlgT.T_QL
+        m.COD           = LinAlgT.T_COD
+        m.SVD           = LinAlgT.T_SVD
+
+        m.POLAR          = LinAlgT.T_POLAR
 
         s = remtx.search ( m.__name__ )
         if s :
@@ -454,6 +590,9 @@ class LinAlgT(LA.LinAlg) :
         m.__repr__      = LinAlgT.MS_STR 
         m.table         = LinAlgT.MS_STR
         m.pretty_print  = LinAlgT.MS_PRETTY 
+
+        m.t             = LinAlgT.TS_T   
+        m.transpose     = LinAlgT.TS_T   
 
 
         m.Sim            = LinAlgT.SIM
