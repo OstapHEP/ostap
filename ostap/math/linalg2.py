@@ -25,6 +25,7 @@ from   ostap.core.ostap_types import num_types , integer_types
 from   ostap.utils.clsgetter  import classgetter
 from   ostap.logger.pretty    import pretty_array, fmt_pretty_float, fmt_pretty_err1   
 from   ostap.logger.colorized import infostr
+from   ostap.utils.gsl        import gsl_info
 from   ostap.logger.symbols   import ditto 
 import ostap.logger.table     as     T
 import ROOT, math, re, ctypes, array, random 
@@ -2654,10 +2655,12 @@ class LinAlg(object) :
         m.PLU           = LinAlg.S_PLU 
         m.PQR           = LinAlg.S_PQR
         m.LQ            = LinAlg.S_LQ 
-        m.QL            = LinAlg.S_QL
         m.COD           = LinAlg.S_COD
         m.SVD           = LinAlg.S_SVD
 
+        if  ( 2  , 7 ) <= gsl_info :
+            m.QL        = LinAlg.S_QL
+            
         if m.kRows == m.kCols :
             m.POLAR     = LinAlg.S_POLAR
                         

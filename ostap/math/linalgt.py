@@ -18,7 +18,8 @@ __all__     = ( )
 from   sys                    import version_info as python_version
 from   ostap.math.base        import isequal , iszero , std, Ostap
 from   ostap.core.ostap_types import num_types, integer_types
-from   ostap.utils.clsgetter  import classgetter 
+from   ostap.utils.clsgetter  import classgetter
+from   ostap.utils.gsl        import gsl_info  
 import ostap.math.linalg2     as     LA 
 import ROOT, re 
 # =============================================================================
@@ -554,13 +555,15 @@ class LinAlgT(LA.LinAlg) :
 
         m.PLU           = LinAlgT.T_PLU 
         m.PQR           = LinAlgT.T_PQR
-        m.LQ            = LinAlgT.T_LQ 
-        m.QL            = LinAlgT.T_QL
+        m.LQ            = LinAlgT.T_LQ    
         m.COD           = LinAlgT.T_COD
         m.SVD           = LinAlgT.T_SVD
-
+        
+        if  ( 2  , 7 ) <= gsl_info :
+            m.QL        = LinAlgT.T_QL
+            
         m.POLAR          = LinAlgT.T_POLAR
-
+        
         s = remtx.search ( m.__name__ )
         if s :
             stype = s.group('TYPE')

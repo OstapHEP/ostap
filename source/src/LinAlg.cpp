@@ -1256,7 +1256,7 @@ void Ostap::GSL::QL
   Ostap::GSL::Matrix&       L )
 {
 #if OSTAP_GSL_CODE_VERSION < OSTAP_GSL_VERSION ( 2 , 7 )
-  Ostap::Assert ( False  , 
+  Ostap::Assert ( false  , 
     "For A=QL decomposition need GSL version>2.6", 
     "Ostap::GSL::QL"      , 
     ERROR_GSL    , __FILE__ , __LINE__ ) ;
