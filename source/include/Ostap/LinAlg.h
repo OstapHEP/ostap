@@ -702,6 +702,19 @@ namespace Ostap
     // ========================================================================
 
     // ========================================================================
+    // Schur decomposiiton of squre matrix
+    // ========================================================================
+    /** Schur decomposition of square matrix \f$ A = Z T Z^T\f$, where 
+     *  - A is inpur MxM (square) matrix
+     *  - T is Schur form of matix  
+     *  - Z is orthogonam matrix 
+     */
+    void SCHUR 
+    ( const Matrix&  A ,  
+      Matrix&        Z , 
+      Matrix&        T ) ; 
+      
+    // ========================================================================
     // Polar decomposition of square matrix 
     // ========================================================================
     /** Polar decompositon of the square matrix A: \f$ A = UP \f$

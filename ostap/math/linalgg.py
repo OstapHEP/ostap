@@ -639,6 +639,23 @@ def _m_SVD_ ( A , golub = True ) :
     S = Ostap.GSL.SVD ( A , U , V , True if golub else False )
     return S , U , V 
 
+# ===============================================================================
+## Schur decompositon of the square matrix A: \f$ A = Z T z^t \f$
+#  - Z is orthogonal 
+#  - T is a Schur form  
+def _m_SCHUR_ ( A ) :
+    """ Schur decomposition of the square matrix A: A = Z T Z^T
+    - Z is orthogonal 
+    - T is a Schur forms  
+    >>> A = ...,
+    >>> Z , T = A.SCHUR () 
+    """
+    M, N = A.nRows() , A.nCols ()
+    assert M == N , "Schur decomposition is defined only for square matrices!"
+    Z = Matrix ( M , M )
+    T = Matrix ( M , M )
+    Ostap.GSL.SCHUR ( A , Z , T )
+    return Z , T  
 
 # ===============================================================================
 ## Polar decompositon of the square matrix A: \f$ A = UP \f$
@@ -661,9 +678,9 @@ def _m_POLAR_ ( A ) :
 Matrix.PLU       = _m_PLU_
 Matrix.PQR       = _m_PQR_ 
 Matrix.LQ        = _m_LQ_ 
-
 Matrix.COD       = _m_COD_ 
-Matrix.SVD       = _m_SVD_ 
+Matrix.SVD       = _m_SVD_
+Matrix.SCHUR     = _m_SCHUR_  
 Matrix.POLAR     = _m_POLAR_ 
 Matrix.t         = Matrix.T
 Matrix.transpose = Matrix.T
@@ -763,6 +780,7 @@ _new_methods_ += (
    
     Matrix.COD                ,
     Matrix.SVD                ,
+    Matrix.SCHUR              , 
     Matrix.POLAR              ,
     ##
 )

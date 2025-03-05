@@ -1,6 +1,10 @@
 // ============================================================================
 // Include files 
 // ============================================================================
+// STD/STL
+// ============================================================================
+#include <complex>
+// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/LinAlg.h"
@@ -10,6 +14,8 @@
 // ============================================================================
 #include "gsl/gsl_linalg.h"
 #include "gsl/gsl_cblas.h"
+#include "gsl/gsl_eigen.h"
+#include "gsl/gsl_complex.h"
 #include "gsl/gsl_version.h"
 // ============================================================================
 // local
@@ -1467,6 +1473,111 @@ void Ostap::GSL::POLAR
   P = auxv * S * auxv.T() ;
 }
 
-// ============================================================================
+
+namespace Ostap
+{
+  namespace GSL
+    {
+      class SchurWorkspace 
+        {
+          public :
+          explicit SchurWorkspace 
+            ( const std::size_t M )
+            : m_ws ( gsl_eigen_nonsymm_alloc  ( M ) )
+          {}
+          ~SchurWorkspace ()  
+          { if ( m_ws ) { gsl_eigen_nonsymm_free( m_ws ) ; m_ws = nullptr ;} }
+          public:
+            gsl_eigen_nonsymm_workspace* workspace () const { return m_ws ; }
+          private:
+            gsl_eigen_nonsymm_workspace* m_ws { nullptr } ;
+        };
+      // =======================================================================
+      class ComplexVector
+      {
+        public:
+        ComplexVector 
+        ( const std::size_t N )
+        : m_v ( gsl_vector_complex_alloc ( N ) )
+        {}
+        ~ComplexVector () 
+        {
+          if ( m_v ) { gsl_vector_complex_free ( m_v ) ; m_v = nullptr ; }
+        } 
+        public:
+          gsl_vector_complex* vector() { return m_v ; }
+        private:
+          gsl_vector_complex* m_v { nullptr } ;
+      };
+      // ========================================================================
+    }
+}
+// ===============================================================================
+/* Schur decomposition of square matrix \f$ A = Z T Z^T\f$, where 
+  *  - A is inpur MxM (square) matrix
+  *  - T is Schur form of matix  
+  *  - Z is orthogonam matrix 
+  */
+ // ==============================================================================
+ #include <iostream>
+
+void Ostap::GSL::SCHUR 
+( const Ostap::GSL::Matrix&  A ,  
+  Ostap::GSL::Matrix&        Z , 
+  Ostap::GSL::Matrix&        T ) 
+  {
+    Ostap::Assert( A.nRows() == A.nCols() , 
+                  "Schur decomposiiton is only for square matrices!" ,
+                  "Ostap::GSL::SCHUR" , 
+                  INVALID_GMATRIX , __FILE__  , __LINE__ ) ;
+
+    const std::size_t N { A.nRows() } ; 
+
+    T = A ;
+    Z.resize ( N , N ) ;
+    Ostap::GSL::SchurWorkspace ws   { N } ;
+    Ostap::GSL::ComplexVector  eval { N } ;
+    //
+    gsl_eigen_nonsymm_params ( 1 , 0 , ws.workspace () ) ;
+    int status = gsl_eigen_nonsymm_Z ( T.matrix     () , 
+                                       eval.vector  () , 
+                                       Z.matrix     () , 
+                                       ws.workspace () ) ; 
+    Ostap::Assert ( GSL_SUCCESS == status                     , 
+                    "Error from gsl_eigwn_nonsymm_Z"          , 
+                    "Ostap::GSL::SCHUR"                       , 
+                     ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+  // need to clean the lower left part of T
+  // ,, 
+  gsl_vector_complex_fprintf  ( stderr , eval.vector() , "%.4g") ; 
+  //
+  bool prev_cmplx = false ; 
+  for  ( std::size_t i = 0 ; i < N ; ++i   )
+  {
+    std:size_t k = N - i - 1 ; 
+    const double re = GSL_REAL ( gsl_vector_complex_get ( eval.vector() , k ) ) ;
+    const double im = GSL_IMAG ( gsl_vector_complex_get ( eval.vector() , k ) ) ; 
+    //
+    std::cout << " i " 
+              << " re: " << re 
+              << " im: " << im 
+              << " T:  " << T  ( i , i ) << std::endl ;
+
+    if ( !im  || prev_cmplx ) 
+    {
+      for ( std::size_t j = i + 1 ; j < N ; ++ j ) { T.set ( j , i , 0.0 ) ; }
+      prev_cmplx = false ; 
+    }
+    else
+    {
+      for ( std::size_t j = i + 2 ; j < N ; ++ j ) { T.set ( j , i , 0.0 ) ; }
+      prev_cmplx = true  ; 
+    }
+  }
+}
+
+
+
+// ===x=========================================================================
 //                                                                      The END 
 // ============================================================================
