@@ -10,7 +10,7 @@
 """
 # ============================================================================= 
 from   ostap.core.meta_info import root_info
-from   ostap.math.linalg    import checkops 
+from   ostap.math.linalg    import checkops, gsl_info  
 from   ostap.core.core      import Ostap
 from   ostap.utils.basic    import typename
 from   ostap.utils.utils    import batch_env
@@ -725,6 +725,10 @@ def test_linalgt_LQ ( M = 4 , N = 4 ) :
 def test_linalgt_QL ( M = 4 , N = 4 ) :
     
     logger = getLogger ( 'test_linalgt_QL(%s,%s)' % ( M , N )  )
+    
+    if gsl_info < ( 2 , 7 ) :
+        logger.info ( 'Test is disbaled for GSL<2.7')
+        return 
     
     A = Ostap.Math.TMatrix( M , N )
     for i in range ( A.kRows ) :

@@ -16,11 +16,13 @@ __version__ = ""
 __all__     = (
     'mgetter'  , ## get  (i,j) element from matrix-like object
     'checkops' , ## check the allowed operations
-    'LinAlgT'  , ## LinAlgenra type&decorator store 
+    'LinAlgT'  , ## LinAlgenra type&decorator store
+    'gsl_info' , ## version of GSL use dfor Linear ALgebra  
     )
 # =============================================================================
 from   ostap.math.linalg2   import mgetter, checkops  
-from   ostap.math.linalgt   import LinAlgT         
+from   ostap.math.linalgt   import LinAlgT   
+from   ostap.utils.gsl      import gsl_info 
 import ostap.math.linalgg
 # =============================================================================
 # logging 

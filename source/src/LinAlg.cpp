@@ -10,6 +10,7 @@
 // ============================================================================
 #include "gsl/gsl_linalg.h"
 #include "gsl/gsl_cblas.h"
+#include "gsl/gsl_version.h"
 // ============================================================================
 // local
 // ============================================================================
@@ -22,6 +23,25 @@
  *  @date 2020-09-22 
  *  @author Vanya BELYAEV IvanBelyaev@iter.ru
  */
+// ============================================================================
+// GSL version major 
+// ============================================================================
+std::size_t Ostap::GSL::GSL_version_major () 
+{ return GSL_MAJOR_VERSION ; }
+// ============================================================================
+// GSL version minor
+// ============================================================================
+std::size_t Ostap::GSL::GSL_version_minor () 
+{ return GSL_MINOR_VERSION ; }
+// ============================================================================
+// GSL versionmajor  x 1000 + GAL version minor  
+// ============================================================================
+std::size_t Ostap::GSL::GSL_version_int   () 
+{ return 1000 * GSL_MAJOR_VERSION + GSL_MINOR_VERSION ; }
+// ============================================================================
+// GSL version as string
+// ============================================================================
+std::string Ostap::GSL::GSL_version () { return gsl_version ; }
 // ============================================================================
 // allocate GSL-matrix 
 // ============================================================================
@@ -1226,11 +1246,21 @@ void Ostap::GSL::LQ
  *  - L is lower trapezoidal MxN 
  */ 
 // ============================================================================
+
+#define OSTAP_GSL_VERSION(a,b) (1000*(a)+(b))
+#define OSTAP_GSL_CODE_VERSION OSTAP_GSL_VERSION(GSL_MAJOR_VERSION, GSL_MINOR_VERSION)
+
 void Ostap::GSL::QL
 ( const Ostap::GSL::Matrix& A ,
   Ostap::GSL::Matrix&       Q ,
   Ostap::GSL::Matrix&       L )
 {
+#if OSTAP_GSL_CODE_VERSION < OSTAP_GSL_VERSION ( 2 , 7 )
+  Ostap::Assert ( False  , 
+    "For A=QL decomposition need GSL version>2.6", 
+    "Ostap::GSL::QL"      , 
+    ERROR_GSL    , __FILE__ , __LINE__ ) ;
+#else 
   const std::size_t M = A.nRows  () ;
   const std::size_t N = A.nCols  () ;
   //
@@ -1255,6 +1285,7 @@ void Ostap::GSL::QL
 		  "Ostap::GSL::QL"                         ,
 		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
   //
+#endif 
 }
 // ============================================================================
 

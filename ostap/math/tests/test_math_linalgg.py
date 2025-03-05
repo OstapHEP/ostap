@@ -10,7 +10,7 @@
 """
 # =============================================================================
 from   ostap.math.base    import Ostap
-from   ostap.math.linalgg import Matrix
+from   ostap.math.linalgg import Matrix, gsl_info
 from   ostap.utils.utils  import batch_env
 import math, random  
 # =============================================================================
@@ -122,6 +122,10 @@ def test_linalg_LQ ( M = 4 , N = 4 ) :
 def test_linalg_QL ( M = 4 , N = 4 ) :
     
     logger = getLogger ( 'test_linalg_QL(%s,%s)' % ( M , N )  )
+    
+    if gsl_info < ( 2 , 7 ) :
+        logger.info ( 'Test is disbaled for GSL<2.7')
+        return 
     
     A = Matrix ( M , N )
     for i in range ( A.kRows ) :

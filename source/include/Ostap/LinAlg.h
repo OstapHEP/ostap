@@ -24,6 +24,15 @@ namespace Ostap
     class Vector      ;
     class Permutation ;
     // =========================================================================
+    // GSL version major 
+    std::size_t GSL_version_major () ;
+    /// GSL version minor
+    std::size_t GSL_version_minor () ;
+    /// GSL versionmajor  x 1000 + GAL version minor  
+    std::size_t GSL_version_int   () ;
+    /// GSL version as string
+    std::string GSL_version () ;
+    // =========================================================================
     /** @class Ostap::GSL::Matrix
      *  Internal class to  hold GSL-Matrix
      */

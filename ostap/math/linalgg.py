@@ -13,10 +13,15 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
 __date__    = "2009-09-12"
 __version__ = ""
 # =============================================================================
-__all__     = ( )
+__all__     = ( 
+    'Matrix'      , 
+    'Vector'      , 
+    'Permutation' 
+)
 # =============================================================================
 from   ostap.core.ostap_types import num_types 
 from   ostap.math.base        import Ostap
+from   ostap.utils.gsl        import gsl_info 
 import ostap.math.linalg      as     LA 
 # =============================================================================
 # logging 
@@ -25,6 +30,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.linalgg' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
+
 Matrix      = Ostap.GSL.Matrix
 Vector      = Ostap.GSL.Vector
 Permutation = Ostap.GSL.Permutation
@@ -655,14 +661,20 @@ def _m_POLAR_ ( A ) :
 Matrix.PLU       = _m_PLU_
 Matrix.PQR       = _m_PQR_ 
 Matrix.LQ        = _m_LQ_ 
-Matrix.QL        = _m_QL_ 
+
 Matrix.COD       = _m_COD_ 
 Matrix.SVD       = _m_SVD_ 
 Matrix.POLAR     = _m_POLAR_ 
 Matrix.t         = Matrix.T
 Matrix.transpose = Matrix.T
 
-_new_methods_ = (
+_new_methods_ = () 
+
+if  ( 2 , 7 ) <= gsl_info : 
+    Matrix.QL = _m_QL_ 
+    _new_methods_ = Matrix.QL ,  
+
+_new_methods_ += (
     ##
     Matrix.__iadd__          , 
     Matrix.__isub__          , 
@@ -748,12 +760,13 @@ _new_methods_ = (
     Matrix.PLU                , 
     Matrix.PQR                , 
     Matrix.LQ                 ,
-    Matrix.QL                 ,
+   
     Matrix.COD                ,
     Matrix.SVD                ,
     Matrix.POLAR              ,
     ##
 )
+
 # =============================================================================
 if '__main__' == __name__ :
         

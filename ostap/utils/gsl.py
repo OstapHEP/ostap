@@ -14,6 +14,7 @@ __date__    = "2013-02-10"
 # =============================================================================
 __all__     = (
     #
+    'gsl_info'           , ## GSL version
     'gslIgnore'          , ## context manager to ignore GSL errore
     'gslCount'           , ## context manager to count  GSL errore
     'gslError'           , ## context manager to print  GSL errors 
@@ -26,8 +27,11 @@ __all__     = (
     'useHandler'         , ## ditto 
     )
 # =============================================================================
+from collections import namedtuple
 from ostap.core.core import Ostap 
 # =============================================================================
+GSLInfo  = namedtuple ( 'GSLInfo'  , ( 'major' , 'minor' ) )
+gsl_info = GSLInfo ( Ostap.GSL.GSL_version_major() , Ostap.GSL.GSL_version_minor() )
 
 ## helper base class/context manager  
 class ErrHandler(object) :
