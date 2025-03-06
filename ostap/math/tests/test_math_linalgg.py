@@ -240,6 +240,39 @@ def test_linalg_SVD ( M = 4 , N = 4 ) :
     if not delta3 < tolerance2 : logger.error ( "delta3 is too large: %.3g" % delta3 )
 
 # ==========================================================================
+def test_linalg_SCHUR ( M = 4 ) :
+    
+    logger = getLogger ( 'test_linalg_SCHUR (%s)' % ( M )  )
+    
+    A = Matrix ( M , M )
+    for i in range ( A.kRows ) :
+        for j in range ( A.kCols ) :
+            A.set ( i , j , i + j + random.gauss ( 1 , 1 ) )
+            
+    logger.info ( 'SCHUR The matrix is:\n%s' % A )
+
+    ## COD-decomposition 
+    Z , T = A.SCHUR() 
+    
+    logger.info ( 'SCHUR decomposition: Z :\n%s' % Z )
+    logger.info ( 'SCHUR decomposition: T :\n%s' % T )
+    
+    D      = Z * T * Z.t() - A 
+    delta1 = Ostap.Math.maxabs_element ( D ) 
+    logger.info ( 'SCHUR max-difference %.3g :\n%s' % ( delta1 , D ) ) 
+    
+    UU      = Z * Z.t() 
+    UU     -= 1 
+    delta2  = Ostap.Math.maxabs_element ( UU )    
+    logger.info ( 'SCHUR non-orthogonality of Z %.3g \n%s' % ( delta2 , UU ) ) 
+    
+    assert delta1 < tolerance1 , 'SCHUR: result are inconsistent delta1=%.3g' % delta1
+    assert delta2 < tolerance1 , 'SCHUR: result are inconsistent delta2=%.3g' % delta2
+    
+    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %.3g" % delta1 )
+    if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %.3g" % delta2 )
+
+# ==========================================================================
 def test_linalg_POLAR( M = 4 ) :
     
     logger = getLogger ( 'test_linalg_POLAR(%s)' % ( M )  )
@@ -266,8 +299,8 @@ def test_linalg_POLAR( M = 4 ) :
     delta2  = Ostap.Math.maxabs_element ( UU )    
     logger.info ( 'POLAR non-orthogonality of U %.3g \n%s' % ( delta2 , UU ) ) 
     
-    assert delta1 < tolerance1 , 'SVD: result are inconsistent delta1=%.3g' % delta1
-    assert delta2 < tolerance1 , 'SVD: result are inconsistent delta2=%.3g' % delta2
+    assert delta1 < tolerance1 , 'POLAR: result are inconsistent delta1=%.3g' % delta1
+    assert delta2 < tolerance1 , 'POLAR: result are inconsistent delta2=%.3g' % delta2
     
     if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %.3g" % delta1 )
     if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %.3g" % delta2 )
@@ -275,7 +308,6 @@ def test_linalg_POLAR( M = 4 ) :
 # =============================================================================
 if '__main__' == __name__ :
 
-    """
     test_linalg_PLU   ( 3, 6 )
     test_linalg_PLU   ( 3, 3 )
     test_linalg_PLU   ( 6, 3 )
@@ -295,12 +327,15 @@ if '__main__' == __name__ :
     test_linalg_COD   ( 3, 6 )
     test_linalg_COD   ( 3, 3 )
     test_linalg_COD   ( 6, 3 )
-    """
     
     test_linalg_SVD   ( 3, 6 )
     test_linalg_SVD   ( 3, 3 )
     test_linalg_SVD   ( 6, 3 )
 
+    test_linalg_SCHUR ( 3 )
+    test_linalg_SCHUR ( 6 )
+    test_linalg_SCHUR ( 8 )
+    
     test_linalg_POLAR ( 3 )
     test_linalg_POLAR ( 6 )
     

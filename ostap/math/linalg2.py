@@ -2439,6 +2439,24 @@ class LinAlg(object) :
         return S , U , V 
 
     # ===============================================================================
+    ## SCHUR : Schur Decomposition  \f$ A = Z T Z^T \f$ 
+    def S_SCHUR ( mtrx ) :
+        """ Schur  decomposition of the square matrix A: A = Z T Z^T
+        - Z is orthogonal 
+        - T is Shur's form 
+        >>> A = ...,
+        >>> Z , T = A.SCHUR () 
+        """
+        ## convert matrix to GSL 
+        A = mtrx.to_GSL()
+        ## make decomposition
+        Z , T = A.SCHUR() 
+        ## convert BACK:
+        Z = Z.to_SMatrix()
+        T = T.to_SMatrix()
+        return Z , T  
+
+    # ===============================================================================
     ## POLAR : Polar Decomposition  \f$ A = UP \f$ 
     def S_POLAR ( mtrx ) :
         """ Polar decomposition of the square matrix A: A = UP
@@ -2455,6 +2473,7 @@ class LinAlg(object) :
         P = P.to_SMatrix()
         U = U.to_SMatrix()
         return U , P 
+
     
     # =========================================================================
     ## Decorate SVector 
@@ -2662,6 +2681,7 @@ class LinAlg(object) :
             m.QL        = LinAlg.S_QL
             
         if m.kRows == m.kCols :
+            m.SCHUR     = LinAlg.S_SCHUR
             m.POLAR     = LinAlg.S_POLAR
                         
         s = remtx.search ( m.__name__ )

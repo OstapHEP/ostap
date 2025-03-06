@@ -31,7 +31,7 @@ namespace Ostap
     /// GSL versionmajor  x 1000 + GAL version minor  
     std::size_t GSL_version_int   () ;
     /// GSL version as string
-    std::string GSL_version () ;
+    std::string GSL_version       () ;
     // =========================================================================
     /** @class Ostap::GSL::Matrix
      *  Internal class to  hold GSL-Matrix

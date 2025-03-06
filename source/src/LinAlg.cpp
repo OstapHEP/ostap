@@ -1514,70 +1514,44 @@ namespace Ostap
 }
 // ===============================================================================
 /* Schur decomposition of square matrix \f$ A = Z T Z^T\f$, where 
-  *  - A is inpur MxM (square) matrix
-  *  - T is Schur form of matix  
-  *  - Z is orthogonam matrix 
-  */
- // ==============================================================================
- #include <iostream>
-
+ *  - A is inpur MxM (square) matrix
+ *  - T is Schur form of matix  
+ *  - Z is orthogonam matrix 
+ */
+// ==============================================================================
 void Ostap::GSL::SCHUR 
 ( const Ostap::GSL::Matrix&  A ,  
   Ostap::GSL::Matrix&        Z , 
   Ostap::GSL::Matrix&        T ) 
-  {
-    Ostap::Assert( A.nRows() == A.nCols() , 
-                  "Schur decomposiiton is only for square matrices!" ,
-                  "Ostap::GSL::SCHUR" , 
-                  INVALID_GMATRIX , __FILE__  , __LINE__ ) ;
-
-    const std::size_t N { A.nRows() } ; 
-
-    T = A ;
-    Z.resize ( N , N ) ;
-    Ostap::GSL::SchurWorkspace ws   { N } ;
-    Ostap::GSL::ComplexVector  eval { N } ;
-    //
-    gsl_eigen_nonsymm_params ( 1 , 0 , ws.workspace () ) ;
-    int status = gsl_eigen_nonsymm_Z ( T.matrix     () , 
-                                       eval.vector  () , 
-                                       Z.matrix     () , 
-                                       ws.workspace () ) ; 
-    Ostap::Assert ( GSL_SUCCESS == status                     , 
-                    "Error from gsl_eigwn_nonsymm_Z"          , 
-                    "Ostap::GSL::SCHUR"                       , 
-                     ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+{
+  Ostap::Assert( A.nRows() == A.nCols()                 , 
+		 "Schur decomposiiton is only for square matrices!" ,
+		 "Ostap::GSL::SCHUR"                    , 
+		 INVALID_GMATRIX , __FILE__  , __LINE__ ) ;
+  //
+  const std::size_t N { A.nRows() } ; 
+  //
+  T = A ;
+  Z.resize ( N , N ) ;
+  Ostap::GSL::SchurWorkspace ws   { N } ;
+  Ostap::GSL::ComplexVector  eval { N } ;
+  //
+  gsl_eigen_nonsymm_params ( 1 , 0 , ws.workspace () ) ;
+  int status = gsl_eigen_nonsymm_Z ( T.matrix     () , 
+				     eval.vector  () , 
+				     Z.matrix     () , 
+				     ws.workspace () ) ; 
+  Ostap::Assert ( GSL_SUCCESS == status                    , 
+		  "Error from gsl_eigwn_nonsymm_Z"         , 
+		  "Ostap::GSL::SCHUR"                      , 
+		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
   // need to clean the lower left part of T
-  // ,, 
-  gsl_vector_complex_fprintf  ( stderr , eval.vector() , "%.4g") ; 
+  // gsl_vector_complex_fprintf  ( stderr , eval.vector() , "%+.4g") ; 
   //
   bool prev_cmplx = false ; 
-  for  ( std::size_t i = 0 ; i < N ; ++i   )
-  {
-    std:size_t k = N - i - 1 ; 
-    const double re = GSL_REAL ( gsl_vector_complex_get ( eval.vector() , k ) ) ;
-    const double im = GSL_IMAG ( gsl_vector_complex_get ( eval.vector() , k ) ) ; 
-    //
-    std::cout << " i " 
-              << " re: " << re 
-              << " im: " << im 
-              << " T:  " << T  ( i , i ) << std::endl ;
-
-    if ( !im  || prev_cmplx ) 
-    {
-      for ( std::size_t j = i + 1 ; j < N ; ++ j ) { T.set ( j , i , 0.0 ) ; }
-      prev_cmplx = false ; 
-    }
-    else
-    {
-      for ( std::size_t j = i + 2 ; j < N ; ++ j ) { T.set ( j , i , 0.0 ) ; }
-      prev_cmplx = true  ; 
-    }
-  }
+  for  ( std::size_t j = 0 ; 0 < N ; ++j   )
+    { for ( std::size_t i = j + 2 ; i < N ; ++i ) { T.set ( i , j , 0.0 ) ; } }
 }
-
-
-
 // ===x=========================================================================
 //                                                                      The END 
 // ============================================================================

@@ -16,7 +16,7 @@
  - fix several bugs&typos
  - add (P)QR Decompositoon for matrices (+tests)
  - add LQ,QL,COD,SVD and POLAR decomposition of matrices (+tests)
- 
+ - add SCHUR decomposition for squared matrices 
        
 ## New features
     

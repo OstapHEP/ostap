@@ -241,6 +241,7 @@ class LinAlgT(LA.LinAlg) :
         >>> P, L, U = matarix.PLU() 
         - see `Ostap.GSL.PLU` 
         """
+        assert mtrx.IsValid () , 'Matrix is not valid!'
         ## convert to GLS 
         A = mtrx.to_GSL()
         ## mape (P)LU decomposiiton 
@@ -267,7 +268,8 @@ class LinAlgT(LA.LinAlg) :
         >>> matrix = ...\
         >>> P, Q, R = matarix.PQR() 
         - see `Ostap.GSL.PQR` 
-        """
+        """ 
+        assert mtrx.IsValid () , 'Matrix is not valid!'
         ## convert to GLS 
         A = mtrx.to_GSL()
         ## mape (P)LU decomposiiton 
@@ -292,6 +294,7 @@ class LinAlgT(LA.LinAlg) :
         >>> A = ...
         >>> L, Q = A.LQ() 
         """
+        assert mtrx.IsValid () , 'Matrix is not valid!'
         ## convert matrix to GSL 
         A = mtrx.to_GSL()
         ## make decomposition
@@ -311,6 +314,7 @@ class LinAlgT(LA.LinAlg) :
         >>> A = ...
         >>> Q , L = A.QL () 
         """
+        assert mtrx.IsValid () , 'Matrix is not valid!'
         ## convert matrix to GSL 
         A = mtrx.to_GSL()
         ## make decomposition
@@ -334,6 +338,7 @@ class LinAlgT(LA.LinAlg) :
         >>> A = ...
         >>> P , Q , R , Z = A.COD() 
         """
+        assert mtrx.IsValid () , 'Matrix is not valid!'
         ## convert matrix to GSL 
         A = mtrx.to_GSL()
         ## make decomposition
@@ -359,6 +364,7 @@ class LinAlgT(LA.LinAlg) :
         >>> A = ...
         >>> S , U , V = A.SVD() 
         """
+        assert mtrx.IsValid () , 'Matrix is not valid!'
         ## convert matrix to GSL 
         A = mtrx.to_GSL()
         ## make decomposition
@@ -372,7 +378,28 @@ class LinAlgT(LA.LinAlg) :
         V = V.to_TMatrix()
         return S , U , V
     
-   # ===============================================================================
+    # ===============================================================================
+    ## SCHUR : Schur Decomposition  \f$ A = Z T Z^T \f$ 
+    def T_SCHUR ( mtrx ) :
+        """ Schur decomposition of the square matrix A: A = Z T Z^T
+        - Z is orthogonal 
+        - T is Schur form 
+        >>> A = ...,
+        >>> Z , T = A.SCHUR() 
+        """
+        assert mtrx.IsValid () , 'Matrix is not valid!'
+        assert mtrx.GetNrows() == mtrx.GetNcols() , \
+            "Schur decomposition is defined only for square matrices!"
+        ## convert matrix to GSL 
+        A = mtrx.to_GSL()
+        ## make decomposition
+        Z , T = A.SCHUR () 
+        ## convert BACK:
+        Z = Z.to_TMatrix()
+        T = T.to_TMatrix()
+        return Z, T 
+
+    # ===============================================================================
     ## POLAR : Polar Decomposition  \f$ A = UP \f$ 
     def T_POLAR ( mtrx ) :
         """ Polar decomposition of the square matrix A: A = UP
@@ -381,6 +408,9 @@ class LinAlgT(LA.LinAlg) :
         >>> A = ...,
         >>> U , P = A.POLAR() 
         """
+        assert mtrx.IsValid () , 'Matrix is not valid!'
+        assert mtrx.GetNrows() == mtrx.GetNcols() , \
+            "Polar decomposition is defined only for square matrices!"
         ## convert matrix to GSL 
         A = mtrx.to_GSL()
         ## make decomposition
@@ -562,6 +592,7 @@ class LinAlgT(LA.LinAlg) :
         if  ( 2  , 7 ) <= gsl_info :
             m.QL        = LinAlgT.T_QL
             
+        m.SCHUR          = LinAlgT.T_SCHUR
         m.POLAR          = LinAlgT.T_POLAR
         
         s = remtx.search ( m.__name__ )
