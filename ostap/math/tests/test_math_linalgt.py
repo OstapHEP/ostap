@@ -676,7 +676,7 @@ def test_linalgt_PQR ( M = 4 , N = 4 ) :
     
     logger.info ( '(P)QR max-difference %.3g :\n%s' % ( delta1 , D ) ) 
 
-    QQ  = Q*Q.T()
+    QQ  = Q*Q.t()
     QQ -= 1 
     delta2 = Ostap.Math.maxabs_element ( QQ )    
     logger.info ( '(P)QR non-orthogonality of Q %.3g \n%s' % ( delta2 , QQ ) ) 
@@ -710,7 +710,7 @@ def test_linalgt_LQ ( M = 4 , N = 4 ) :
     
     logger.info ( 'LQ max-difference %.3g :\n%s' % ( delta1 , D ) ) 
 
-    QQ     = Q*Q.T()
+    QQ     = Q*Q.t()
     QQ    -= 1 
     delta2 = Ostap.Math.maxabs_element ( QQ )    
     logger.info ( 'LQ non-orthogonality of Q %.3g \n%s' % ( delta2 , QQ ) ) 
@@ -748,7 +748,7 @@ def test_linalgt_QL ( M = 4 , N = 4 ) :
     
     logger.info ( 'QL max-difference %.3g :\n%s' % ( delta1 , D ) ) 
 
-    QQ     = Q*Q.T()
+    QQ     = Q*Q.t()
     QQ    -= 1 
     delta2 = Ostap.Math.maxabs_element ( QQ )    
     logger.info ( 'QL non-orthogonality of Q %.3g \n%s' % ( delta2 , QQ ) ) 

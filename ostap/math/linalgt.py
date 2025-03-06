@@ -275,7 +275,7 @@ class LinAlgT(LA.LinAlg) :
         ## mape (P)LU decomposiiton 
         P, Q, R = A.PQR ()
         ## convert BACK:
-        P = Ostap.GSL.Matrix ( P ).T() 
+        P = Ostap.GSL.Matrix ( P ).t() 
         ## 
         P = P.to_TMatrix()
         Q = Q.to_TMatrix()

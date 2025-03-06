@@ -1548,8 +1548,7 @@ void Ostap::GSL::SCHUR
   // need to clean the lower left part of T
   // gsl_vector_complex_fprintf  ( stderr , eval.vector() , "%+.4g") ; 
   //
-  bool prev_cmplx = false ; 
-  for  ( std::size_t j = 0 ; 0 < N ; ++j   )
+  for  ( std::size_t j = 0 ; j < N ; ++j   )
     { for ( std::size_t i = j + 2 ; i < N ; ++i ) { T.set ( i , j , 0.0 ) ; } }
 }
 // ===x=========================================================================
