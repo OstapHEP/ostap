@@ -94,8 +94,8 @@ class Files(object):
                   sorted      = False ,    ## sort the list of files  ? 
                   parallel    = False ) :  ## collect them in parallel?
         #
-        if   isinstance ( files , str   ) : files = [ files ]
-        elif isinstance ( files , Files ) : files = files.files   
+        if   isinstance ( files , path_types ) : files = [ files ]
+        elif isinstance ( files , Files      ) : files = files.files   
         #
         
         self.__description  = description

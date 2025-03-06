@@ -76,7 +76,7 @@ class Data(RootFiles):
     >>> flist = data.files 
     """
     def __init__( self                 ,
-                  chain                ,
+                  chains               , 
                   files        = []    ,
                   description  = ''    , 
                   maxfiles     = -1    ,
@@ -87,22 +87,32 @@ class Data(RootFiles):
                   transform    = None  ) : 
 
         ## we will need Ostap machinery for trees&chains here
-        import ostap.trees.trees 
+        import ostap.trees.trees
+        
+        if   isinstance ( chains , ROOT.TTree   ) : chains = chains.path , 
+        elif isinstance ( chains , string_types ) : chains = chains      ,
 
-        ## decorate files 
-        if isinstance ( files , str ) : files = [ files ]
+        assert chains and all ( isinsatnce ( c , chain_types ) for c in chains ) , \
+            "Invald type of `chains` %s" % str ( chains )
 
         self.__check = True if check else False
         
-        ## chain name 
-        self.__chain_name = chain if isinstance ( chain , str ) else chain.name 
+        ## chain names
+        self.__chain_names = tuple ( ( c.path if isinstance ( c , ROOT.TTree ) else c ) for c in chains ) 
 
         ## update description
-        if not description : description = "ROOT.TChain(%s)" % self.chain_name 
-        
+        if not description :
+            description = "Chains:{%s}" %  ( ', '.join ( self.__chain_names ) ) 
+            
         ## initialize the  base class 
-        RootFiles.__init__( self , files , description  , maxfiles , silent = silent , sorted = sorted , parallel = parallel )
-
+        RootFiles.__init__( self                       ,
+                            files        = files       ,
+                            descxription = description ,
+                            maxfiles     = maxfiles    ,
+                            silent       = silent      ,
+                            sorted       = sorted      ,
+                            parallel     = parallel    )
+        
     # =========================================================================    
     @property
     def validate ( self ) :
@@ -111,17 +121,45 @@ class Data(RootFiles):
         return self.__check
     
     @property
-    def chain_name ( self ) :
+    def chain_names ( self ) :
         """'chain_name' : the name of TTree/TChain object
         """
-        return self.__chain_name
+        return self.__chain_names
+
+    # ========================================================================
+    ## get the chain by index  
+    def get_chain ( self , index ) :
+        """ Get the chain by index
+        """
+        if not 0 <= index < len ( self.__chain_names ) :
+            raise IndexError ( "Index out the range!" )
+        ch    = ROOT.TChain ( self.__chain_names [ index ] )
+        files = self.files 
+        for f in files : ch.Add ( f ) 
+        return ch
     
     @property
+    def chains ( self ) :
+        """'chains' : (re)built and return all `TChain` objects"""
+        result = []
+        for i , _ in enunerate ( self.chain_names ) :
+            result.append ( self.get_chain ( i ) ) 
+        return tuple ( results )
+        
+    @property
     def chain ( self ) :
-        """'chain' : (re)built and return `TChain` object"""
-        ch = ROOT.TChain( self.chain_name )
-        for f in self.files : ch.Add ( f )
-        return ch
+        """'chain' : (re)built and return the fist `TChain` object , same as `chain1`"""
+        return self.get_chain ( 0 )
+    
+    @property
+    def chain1 ( self ) :
+        """'chain1' : (re)built and return the fist `TChain` object , same as `chain`"""
+        return self.get_chain ( 0 )
+
+    @property
+    def chain2 ( self ) :
+        """'chain2' : (re)built and return the second `TChain` object"""
+        return self.get_chain ( 1 )
     
     @property
     def check ( self ) :
@@ -152,40 +190,40 @@ class Data(RootFiles):
                 extra   = list ( sorted ( leaves2 - leaves1 ) ) 
                 if missing : logger.warning ( "TTree('%s'): %3d missing leaves:   %s in %s" %  ( tree1.GetName() , len ( missing ) , missing , the_file ) )
                 if extra   : logger.warning ( "TTree('%s'): %3d extra   leaves:   %s in %s" %  ( tree1.GetName() , len ( extra   ) , extra   , the_file ) )
-
                 
     # ===================================================================================================
     ## the specific action for each file 
     def treatFile ( self, the_file ) :
         """ Add the file to TChain
         """
-        ## (1) suppress Warning/Error messages from ROOT 
-        with rootError() :
+        
+        files = self.files 
+        for i, cname in enumerate ( self.chain_names ) :
             
-            ## new temporary chain/tree for this file 
-            tree  = ROOT.TChain ( self.chain_name )
-            tree.Add ( the_file )
+            ## (1) suppress Warning/Error messages from ROOT
+            with rootError() :
+            
+                ## new temporary chain/tree for this file 
+                tree  = ROOT.TChain ( cname )
+                tree.Add ( the_file )
 
-            if 1 <= len ( tree ) and 1 <= len ( tree.branches () ) :
-                
-                if self.check:
-                    files = self.files 
-                    if files :
-                        chain = ROOT.TChain ( self.chain_name )
-                        chain.Add ( files [ 0 ] ) 
-                        self.check_trees ( tree , chain , the_file )
-                        del chain
-                        
+                if not tree or 0 == len ( tree.branches () ) :
+                    self.bad_files.add ( the_file )
+                    if not self.silent : 
+                        logger.warning ( "No/empty chain '%s' in file '%s'" % ( cname , the_file ) )
+                    continue
+            
+                if self.check and files : 
+                    
+                    chain = ROOT.TChain ( cname )
+                    chain.Add ( files [ 0 ] ) 
+                    self.check_trees ( tree , chain , the_file )
+                    del chain
+                            
                 Files.treatFile ( self , the_file )
                 
-            else :
-                
-                self.bad_files.add ( the_file )
-                if not self.silent : 
-                    logger.warning ( "No/empty chain  '%s' in file '%s'" % ( self.chain_name , the_file ) )
-                    
-            del tree
-
+                del tree
+    
     # ===================================================================================================
     ## printout 
     def __str__(self):
@@ -267,18 +305,52 @@ class Data(RootFiles):
         """
         return isinstance ( other , Data ) and self.chain_name == other.chain_name
 
+    ## Get RDatataFrame for the given chain
+    def get_frame ( self , index ) :\
+        """ Get RDatataFrame for the given chain
+        """
+        from ostap.frames.frames import DataFrame, frame_progress
+        ch = self.get_chain ( index  ) 
+        fr = DataFrame ( ch )
+        if not self.filent:
+            pb = frame_progress ( fr , len ( ch ) ) 
+        return fr 
+
+    # =========================================================================
+    ## get DataFrame for the chain
+    #  @see ROOT::RDataFrame
+    @property
+    def frames ( self ) :
+        """'frames': get all DataFrame for the chain """
+        result = []
+        for index, _ inenumerate ( self.chain_names ) : 
+            result.append ( self.get_frame ( index ) )
+        return tuple ( result ) 
+
     # =========================================================================
     ## get DataFrame for the chain
     #  @see ROOT::RDataFrame
     @property
     def frame ( self ) :
         """'frame': get the DataFrame for the chain"""
-        from   ostap.frames.frames import DataFrame, frame_progress 
-        f = DataFrame ( self.chain )
-        if not self.filent:
-            pb = frame_progress ( f , len ( self.chain ) ) 
-        return f 
+        return self.get_frame ( 0 ) ;
     
+    # =========================================================================
+    ## get DataFrame for the chain
+    #  @see ROOT::RDataFrame
+    @property
+    def frame1 ( self ) :
+        """'frame1': get DataFrame for the first chain"""
+        return self.get_frame ( 1 ) ;
+    
+    # =========================================================================
+    ## get DataFrame for the chain
+    #  @see ROOT::RDataFrame
+    @property
+    def frame2 ( self ) :
+        """'frame2': get DataFrame for the second chain"""
+        return self.get_frame ( 2 ) ;
+
 
 # =============================================================================
 ## @class Data2
@@ -305,252 +377,25 @@ class Data2(Data):
                   parallel    = False ,
                   transform   = None  ) : 
 
-        ## decorate files 
-        if isinstance ( files , str ) : files = [ files ]
-
-        ## chain name 
-        self.__chain2_name = chain2 if isinstance ( chain2 , str ) else chain2.name 
-
-        if not description :
-            description = chain1.GetName() if hasattr ( chain1 , 'GetName' ) else str ( chain1 )
-            description = "%s&%s" % ( description , self.__chain2_name  )
-
-        Data.__init__( self                      ,
-                       chain       = chain1      ,
-                       files       = files       ,
-                       description = description ,
-                       maxfiles    = maxfiles    ,
-                       check       = check       ,
-                       silent      = silent      ,
-                       sorted      = sorted      , 
-                       parallel    = parallel    ,
-                       transform   = transform   ) 
+        Data.__init__ ( self ,
+                        chains      = ( chain1 , chain2 ) ,
+                        files       = files               ,
+                        description = description         ,
+                        maxfiles    = maxfiles            ,
+                        check       = check               ,
+                        silent      = silent              ,
+                        sorted      = sorted              ,
+                        parallel    = parallel            ,
+                        transform   = transform           )
         
-    @property 
-    def files1    ( self ) :
-        """'files1' : the list of files fore the first chain (same as 'files') """
-        return self.files 
-
-    @property 
-    def files2    ( self ) :
-        """'files2' : the list of files for the second chain (the same)"""
-        return self.files
-
-    @property
-    def chain1_name ( self ) :
-        """'chain1_name' : the name of the first TTree/TChain object (same as 'chain_name')
-        """
-        return self.chain_name
-
-    @property
-    def chain2_name ( self ) :
-        """'chain2_name' : the name of the second TTree/TChain object
-        """
-        return self.__chain2_name
-
-    @property
-    def chain1 ( self ) :
-        """'chain1' : (re)built and return the first `TChain` object (same as `chain')
-        """
-        return self.chain
-    
-    @property
-    def chain2 ( self ) :
-        """'chain2' : (re)built and return the second `TChain` object
-        """
-        ch = ROOT.TChain( self.chain2_name )
-        for f in self.files2 : ch.Add ( f )
-        return ch
-    
-    ## the specific action for each file 
-    def treatFile ( self, the_file ) :
-        """ Add the file to TChain
-        """
-        ## suppress Warning/Error messages from ROOT 
-        with rootError() :
-            
-            tree1 = ROOT.TChain ( self.chain1_name  )
-            tree1.Add ( the_file )
-            
-            tree2 = ROOT.TChain ( self.chain2_name  )
-            tree2.Add ( the_file )
-
-            ok1 = 1 <= len ( tree1 ) and 1 <= len ( tree1.branches () ) 
-            if self.check and ok1 :
-                files = self.files
-                if files :                    
-                    ch1 = ROOT.TChain( self.chain1_name )
-                    ch1.Add ( files [ 0 ] ) 
-                    self.check_trees ( tree1 , ch1 , the_file )
-                    del ch1
-                
-            ok2 = 1 <= len ( tree2 ) and 1 <= len ( tree2.branches () )
-            if self.check and ok2 :
-                files = self.files
-                if files :                    
-                    ch2 = ROOT.TChain( self.chain2_name )
-                    ch2.Add ( files [ 0 ] ) 
-                    self.check_trees ( tree2 , ch2 , the_file )
-                    del ch2
-
-            if  ok1 and ok2      :
-                
-                RootFiles.treatFile ( self , the_file ) 
-                
-            elif ok2 :
-                
-                self.bad_files.add ( the_file  )
-                if not self.silent : 
-                    logger.warning ( "No/empty chain1 '%s'      in file '%s'" % ( self.chain1_name , the_file ) )
-
-            elif ok1 :
-                
-                self.bad_files.add ( the_file )
-                if not self.silent : 
-                    logger.warning ( "No/empty chain2 '%s'      in file '%s'" % ( self.chain2_name , the_file ) ) 
-
-            else :
-                
-                self.bad_files.add ( the_file )
-                if not self.silent :                 
-                    logger.warning ( "No/empty chains '%s'/'%s' in file '%s'" % ( self.chain1_name ,
-                                                                                  self.chain2_name , the_file ) )
-            del tree1
-            del tree2
-            
-    ## printout 
-    def __str__(self):
-
-        with rootWarning() :
-            nf  = len ( self.files      )
-            nf2 = len ( self.files2     )
-            
-            nc   = '??'
-            nc2  = '??'
-            
-            if not self.silent :
-                chain1 = self.chain1
-                nc     = len ( chain1 )
-                del  chain1
-                chain2 = self.chain2
-                nc2    = len ( chain2 )
-                del  chain2
-                
-            ne  = len ( self.bad_files )
-            
-        sf  =  set ( self.files ) == set ( self.files2 )
-        
-        if not self.bad_files :
-            return "<#files: {}; Entries: {}/{}>"   .format ( nf ,      nc  , nc2 ) if sf else \
-                   "<#files: {}/{}; Entries: {}/{}>".format ( nf , nf2 , nc , nc2 )
-        else :
-            return "<#files: {}; Entries: {}/{}; No/empty :{}>"   .format ( nf ,       nc , nc2 , ne ) if sf else \
-                   "<#files: {}/{}; Entries: {}/{}; No/empty :{}>".format ( nf , nf2 , nc , nc2 , ne )
-        
-
-    def __nonzero__ ( self )  :
-        return bool ( self.files ) and bool ( self.files2 )
-
-
     # =========================================================================
     ## check operations
     def check_ops ( self , other ):
-        """Check operations
+        """ Check operations
         """
         return isinstance ( other , Data2 )          and \
                self.chain1_name == other.chain1_name and \
                self.chain2_name == other.chain2_name
-
-    # =========================================================================
-    ## get DataFrame for the first chain
-    #  @see ROOT::RDataFrame
-    @property
-    def frame1 ( self ) :
-        """'frame1': Get the DataFrame for the chain (same as 'frame')
-        """
-        return self.frame
-    
-    # =========================================================================
-    ## get DataFrame for the chain
-    #  @see ROOT::RDataFrame
-    @property
-    def frame2 ( self ) :
-        """'frame2': Get the DataFrame for the second chain"""
-        from   ostap.frames.frames import DataFrame, frame_progress 
-        f = DataFrame ( self.chain2  )
-        if not self.silent :
-            pb = frame_progres ( f , len ( self.chain2 ) ) 
-        return f
-
-    # =========================================================================
-    ## Print collection of files as table
-    #  @code
-    #  files = ...
-    #  print ( files.table() )    
-    #  @endcode
-    def table ( self , title = '' , prefix = '' , style = '' ) :
-        """ Print collection of files as table
-        """
-        
-        rows  = [ ( '#' , '#entries1' , '#entries2' , 'size' , 'name' ) ]
-        
-        files = self.files
-        bad   = sorted ( self.bad_files )
-        nn    = max ( len ( files ) , len ( bad ) ) 
-        nfmt  = '%%%dd' % ( math.floor ( math.log10 ( nn ) ) + 1 )
-
-        total_entries1 = 0
-        total_entries2 = 0
-        total_size     = 0
-        
-        from itertools          import chain 
-        for i , f in enumerate ( chain ( files , bad ) , start = 1 ) : 
-
-            row   = [ nfmt % i ]
-            fsize = self.get_file_size ( f )
-            
-            if 0 <= fsize :
-                
-                ch1 = ROOT.TChain ( self.chain1_name ) 
-                ch1.Add ( f )
-                entries1 = len ( ch1 )                
-                row.append ( '%d' % entries1 )
-
-                ch2 = ROOT.TChain ( self.chain2_name ) 
-                ch2.Add ( f )
-                entries2 = len ( ch2 )                
-                row.append ( '%d' % entries2 )
-                
-                vv , unit = fsize_unit ( fsize ) 
-                row.append ( '%3d %s' % ( vv , unit ) ) ## value 
-                
-                total_size     += fsize
-                total_entries1 += entries1
-                total_entries2 += entries2
-
-            else :
-                
-                row.append ( '???' ) ## entries1
-                row.append ( '???' ) ## entries2 
-                row.append ( '???' ) ## file size
-                
-            row .append ( f   ) 
-            rows.append ( row )
-
-        ## summary row
-        from ostap.logger.colorized import infostr 
-        vv , unit  = fsize_unit ( total_size )
-        row   = ''                               , \
-            infostr ( '%d' % total_entries1  )   , \
-            infostr ( '%d' % total_entries2  )   , \
-            infostr ( '%3d %s' % ( vv , unit ) ) , \
-            infostr ( self.commonpath ) 
-        rows.append ( row )
-
-        title = title if title else "Data2(chani1='%s',chani2='%s')" % ( self.chain1_name , self.chain2_name ) 
-        import ostap.logger.table as T
-        return T.table ( rows , title = title , prefix = prefix , alignment = 'rrrrw' , style = style ) 
-
 
 # =============================================================================
 if '__main__' == __name__ :
