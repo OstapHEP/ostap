@@ -58,11 +58,10 @@ __all__     = (
     'Files'       , ## collect files
     'RootFiles'   , ## collect ROOT files    
     'Data'        , ## collect files and create     TChain
-    'Data2'       , ## collect files and create two TChain objects 
     'DataAndLumi' , ## collect files and create two TChain objects (LHCb specific)
     )
 # =============================================================================
-from   ostap.trees.data_utils   import Files, RootFiles, Data, Data2, fsize_unit 
+from   ostap.trees.data_utils   import Files, RootFiles, Data, fsize_unit 
 from   ostap.contribs.lhcb.data import DataAndLumi 
 # =============================================================================
 # logging 

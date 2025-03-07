@@ -94,7 +94,7 @@ def test_modify_initial_tree ( NEXP =  10 ) :
         logger.info ( 'Add %s pseudoexepriments into TTree/TChain'  %   NEXP ) 
         
         logger.info ( '#files:    %s'  % len ( files ) )  
-        data = Data ( 'S' , files )
+        data = Data ( files , 'S' )
         logger.info ( 'Initial Tree/Chain:\n%s' % data.chain.table ( prefix = '# ' ) )
     
         ## pseudo experiments
@@ -103,7 +103,7 @@ def test_modify_initial_tree ( NEXP =  10 ) :
             func   = Ostap.Functions.FuncTH2 ( h2_new , 'pt' , 'eta' ) 
             data.chain.add_new_branch ( func , name = 'w%d' % e  )
             
-        data = Data ( 'S' , files )
+        data = Data ( files , 'S' )
         logger.info ( 'Tree/Chain after:\n%s' % data.chain.table ( prefix = '# ' ) )
         
         rows = [ ( 'Experiment' , 'eff [%]' ) ]
@@ -134,7 +134,7 @@ def test_add_to_dataset ( NEXP =  10 ) :
         
         
         logger.info ( '#files:    %s'  % len ( files ) )  
-        data = Data ( 'S' , files )
+        data = Data ( files , 'S' )
         logger.info ( 'Initial Tree/Chain:\n%s' % data.chain.table ( prefix = '# ' ) )
         
         import ostap.fitting.pyselectors 

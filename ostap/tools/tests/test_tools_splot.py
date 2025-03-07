@@ -118,7 +118,7 @@ def test_splotting  () :
     files = prepare_data ( 10 , 10000 )
     
     logger.info ( '#files:    %s'  % len ( files ) )  
-    data = Data ( 'S' , files )
+    data = Data  ( files , 'S' )
     logger.info ( 'Initial Tree/Chain:\n%s' % data.chain.table ( prefix = '# ' ) )
     
     chain  = data.chain 

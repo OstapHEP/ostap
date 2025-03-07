@@ -48,9 +48,11 @@ __all__     = (
     'Data'        , ## collect ROOT files and create TChain(s)
     )
 # =============================================================================
-from   ostap.core.core     import rootError, rootWarning
-from   ostap.io.files      import Files, fsize_unit 
-from   ostap.io.root_file  import RootFiles
+from   collections            import defaultdict 
+from   ostap.core.ostap_types import string_types 
+from   ostap.core.core        import rootError, rootWarning
+from   ostap.io.files         import Files, fsize_unit 
+from   ostap.io.root_file     import RootFiles
 import ROOT, os, math  
 # =============================================================================
 # logging 
@@ -105,12 +107,12 @@ class Data(RootFiles):
         self.__bad_files = defaultdict(set) 
         
         ## initialize the  base class 
-        RootFiles.__init__( self                       ,
-                            files                      ,
-                            descxription = description ,
-                            maxfiles     = maxfiles    ,
-                            silent       = silent      ,
-                            parallel     = parallel    )
+        RootFiles.__init__( self                      ,
+                            files                     ,
+                            description = description ,
+                            maxfiles    = maxfiles    ,
+                            silent      = silent      ,
+                            parallel    = parallel    )
         
     # =========================================================================    
     @property
@@ -131,8 +133,7 @@ class Data(RootFiles):
         """ Get the chain by index
         """
         if not 0 <= index < len ( self.__chain_names ) :
-            raise IndexError ( "Index out the range!" )
-        
+            raise IndexError ( "Index out the range!" )        
         cname     = self.chain_names [ index ] 
         ch        = ROOT.TChain ( cname )
         files     = self.files
@@ -151,9 +152,9 @@ class Data(RootFiles):
     def chains ( self ) :
         """'chains' : (re)built and return all `TChain` objects"""
         result = []
-        for i , _ in enunerate ( self.chain_names ) :
-            result.append ( self.get_chain ( i ) ) 
-        return tuple ( results )
+        for index in range ( self.nchains ) : 
+            result.append ( self.get_chain ( index ) ) 
+        return tuple ( result )
         
     @property
     def chain ( self ) :
@@ -329,16 +330,15 @@ class Data(RootFiles):
         return isinstance ( other , Data ) and self.chain_names == other.chain_names
 
     ## Get RDatataFrame for the given chain
-    def get_frame ( self , index ) :\
+    def get_frame ( self , index ) :
         """ Get RDatataFrame for the given chain
         """
         from ostap.frames.frames import DataFrame, frame_progress
         ch = self.get_chain ( index  ) 
         fr = DataFrame ( ch )
-        if not self.filent:
-            pb = frame_progress ( fr , len ( ch ) ) 
+        if not self.filent: pb = frame_progress ( fr , len ( ch ) ) 
         return fr 
-
+    
     # =========================================================================
     ## get DataFrame for the chain
     #  @see ROOT::RDataFrame
@@ -346,7 +346,7 @@ class Data(RootFiles):
     def frames ( self ) :
         """'frames': get all DataFrame for the chain """
         result = []
-        for index, _ inenumerate ( self.chain_names ) : 
+        for index in range ( self.nchains ) : 
             result.append ( self.get_frame ( index ) )
         return tuple ( result ) 
 

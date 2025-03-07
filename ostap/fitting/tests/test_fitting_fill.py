@@ -132,7 +132,7 @@ def test_fitting_fill_1 () :
     ## prepare data
     with timing ( "Prepare test data" , logger = logger ) : 
         files = prepare_data ( 4 , 5000 )
-        data  = Data ( 'S' ,  files )
+        data  = Data ( files , 'S' )
 
     chain = data.chain
 

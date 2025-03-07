@@ -93,7 +93,7 @@ def prepare_data ( nfiles   = 10  , nentries = 100 ) :
         files.append ( create_tree ( tmpfile , nentries ) ) 
 
     files.sort() 
-    return Data ( 'S' ,  files ) 
+    return Data ( files , 'S' ) 
 
 with timing ("Prepare data ", logger ) :
     data = prepare_data ( nfiles = 10 , nentries = 20000 ) 

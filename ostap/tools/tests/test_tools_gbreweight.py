@@ -250,8 +250,8 @@ def test_gbreweight() :
     # =========================================================================
     ## Input data/mc samples 
     # =========================================================================
-    data = Data ( 'DATA_tree' , testdata )
-    mc   = Data ( tag_mc      , testdata ) 
+    data = Data ( testdata , 'DATA_tree' )
+    mc   = Data ( testdata , tag_mc      ) 
     
     ddata , wdata = data.chain.slice ( 'x , y' , transpose = True )
     dmc   , wmc   = mc  .chain.slice ( 'x , y' , transpose = True )
@@ -266,8 +266,8 @@ def test_gbreweight() :
     mc.chain.add_new_buffer ( 'w' , wnew )
     
     ## reload data 
-    data = Data ( 'DATA_tree' , testdata )
-    mc   = Data ( tag_mc      , testdata ) 
+    data = Data ( testdata , 'DATA_tree' )
+    mc   = Data ( testdata , tag_mc      ) 
     
     wsum = mc.chain.sumVar ( 'w' )
     wvar = '%d*w/%s' % ( len ( data.chain ) , wsum.value() )

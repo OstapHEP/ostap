@@ -116,7 +116,7 @@ def test_addbranch() :
     files = prepare_data ( 1 , 100 )
     
     logger.info ( '#files:    %s'  % len ( files ) )  
-    data = Data ( 'S' , files )
+    data = Data ( files , 'S' )
     logger.info ( 'Initial Tree/Chain:\n%s' % data.chain.table ( prefix = '# ' ) )
 
     rows = [ ( 'Method' , 'CPU [s]' ) ]
@@ -456,7 +456,7 @@ def test_addbuffer() :
     files = prepare_data ( 5 , 100 )
 
     logger.info ( '#files:    %s'  % len ( files ) )  
-    data = Data ( 'S' , files )
+    data = Data ( files, 'S' )
     logger.info ( 'Initial Tree/Chain:\n%s' % data.chain.table ( prefix = '# ' ) )
 
     rows = [ ( 'Method' , 'CPU [s]' ) ]

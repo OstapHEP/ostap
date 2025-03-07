@@ -100,7 +100,7 @@ def prepare_data ( tmpdir , nfiles =  100 ,  nentries = 100 , ppservers = () , s
     from ostap.trees.data   import Data
     the_files = list( the_files )
     the_files.sort() 
-    return Data ( 'S' , list ( the_files ) ) 
+    return Data ( the_files , 'S' ) 
 
 with timing('Prepare data') :
     
