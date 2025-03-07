@@ -45,8 +45,7 @@ __date__    = "2014-06-08"
 __all__     = (
     'Files'       , ## collect files  
     'RootFiles'   , ## collect ROOT files  
-    'Data'        , ## collect ROOT files and create     TChain
-    'Data2'       , ## collect ROOT files and create two TChain objects 
+    'Data'        , ## collect ROOT files and create TChain(s)
     )
 # =============================================================================
 from   ostap.core.core     import rootError, rootWarning
@@ -62,7 +61,8 @@ else                       : logger = getLogger ( __name__     )
 # =============================================================================
 if not hasattr ( ROOT.TTree , '__len__' ) :  
     ROOT.TTree. __len__ = lambda s : s.GetEntries()
-    
+
+chain_types  = string_types + ( ROOT.TChain, ROOT.TTree ) 
 # =============================================================================
 ## @class Data
 #  Simple utility to access to certain chain in the set of ROOT-files
@@ -76,15 +76,13 @@ class Data(RootFiles):
     >>> flist = data.files 
     """
     def __init__( self                 ,
-                  chains               , 
-                  files        = []    ,
+                  files                , / , 
+                  *chains              , 
                   description  = ''    , 
                   maxfiles     = -1    ,
                   check        = True  , 
                   silent       = False ,
-                  sorted       = True  , 
-                  parallel     = False ,
-                  transform    = None  ) : 
+                  parallel     = False ) : 
 
         ## we will need Ostap machinery for trees&chains here
         import ostap.trees.trees
@@ -92,7 +90,7 @@ class Data(RootFiles):
         if   isinstance ( chains , ROOT.TTree   ) : chains = chains.path , 
         elif isinstance ( chains , string_types ) : chains = chains      ,
 
-        assert chains and all ( isinsatnce ( c , chain_types ) for c in chains ) , \
+        assert chains and all ( isinstance ( c , chain_types ) for c in chains ) , \
             "Invald type of `chains` %s" % str ( chains )
 
         self.__check = True if check else False
@@ -103,14 +101,15 @@ class Data(RootFiles):
         ## update description
         if not description :
             description = "Chains:{%s}" %  ( ', '.join ( self.__chain_names ) ) 
-            
+
+        self.__bad_files = defaultdict(set) 
+        
         ## initialize the  base class 
         RootFiles.__init__( self                       ,
-                            files        = files       ,
+                            files                      ,
                             descxription = description ,
                             maxfiles     = maxfiles    ,
                             silent       = silent      ,
-                            sorted       = sorted      ,
                             parallel     = parallel    )
         
     # =========================================================================    
@@ -122,7 +121,7 @@ class Data(RootFiles):
     
     @property
     def chain_names ( self ) :
-        """'chain_name' : the name of TTree/TChain object
+        """'chain_names' : the names of TTree/TChain objects
         """
         return self.__chain_names
 
@@ -133,10 +132,20 @@ class Data(RootFiles):
         """
         if not 0 <= index < len ( self.__chain_names ) :
             raise IndexError ( "Index out the range!" )
-        ch    = ROOT.TChain ( self.__chain_names [ index ] )
-        files = self.files 
-        for f in files : ch.Add ( f ) 
+        
+        cname     = self.chain_names [ index ] 
+        ch        = ROOT.TChain ( cname )
+        files     = self.files
+        bad_files = self.bad_files[cname] 
+        for f in files :
+            if not f in bad_files : ch.Add ( f ) 
         return ch
+
+    @property
+    def nchains ( self ) :
+        """`nchains` : number of chains 
+        """
+        return len ( self.chain_names )
     
     @property
     def chains ( self ) :
@@ -148,12 +157,12 @@ class Data(RootFiles):
         
     @property
     def chain ( self ) :
-        """'chain' : (re)built and return the fist `TChain` object , same as `chain1`"""
+        """'chain' : (re)built and return the first `TChain` object , same as `chain1`"""
         return self.get_chain ( 0 )
     
     @property
     def chain1 ( self ) :
-        """'chain1' : (re)built and return the fist `TChain` object , same as `chain`"""
+        """'chain1' : (re)built and return the first `TChain` object , same as `chain`"""
         return self.get_chain ( 0 )
 
     @property
@@ -167,6 +176,11 @@ class Data(RootFiles):
         """
         return self.__check
 
+    @property
+    def bad_files ( self ) :
+        """`bad_files` : dictionaryof bad files """
+        return self.__bad_files
+    
     ## check the content of the two trees
     @staticmethod 
     def check_trees ( tree1 , tree2 , the_file = '' ) :
@@ -180,16 +194,16 @@ class Data(RootFiles):
             leaves2   = set ( tree2.leaves   () )
 
             if branches1 != branches2 :
-                missing = list ( sorted ( branches1 - branches2 ) ) 
-                extra   = list ( sorted ( branches2 - branches1 ) ) 
-                if missing : logger.warning ( "TTree('%s'): %3d missing branches: %s in %s" %  ( tree1.GetName() , len ( missing ) , missing , the_file ) )
-                if extra   : logger.warning ( "TTree('%s'): %3d extra   branches: %s in %s" %  ( tree1.GetName() , len ( extra   ) , extra   , the_file ) )
+                missing = sorted ( branches1 - branches2 ) 
+                extra   = sorted ( branches2 - branches1 )
+                if missing : logger.warning ( "TTree('%s'): %3d missing branches: {%s} in %s" % ( tree1.GetName() , len ( missing ) , ', '.join ( missing ) , the_file ) )
+                if extra   : logger.warning ( "TTree('%s'): %3d extra   branches: {%s} in %s" % ( tree1.GetName() , len ( extra   ) , ', '.join ( extra   ) , the_file ) )
                 
             if ( ( branches1 != leaves1 ) or ( branches2 != leaves2 ) ) and leaves1 != leaves2 :
-                missing = list ( sorted ( leaves1 - leaves2 ) )
-                extra   = list ( sorted ( leaves2 - leaves1 ) ) 
-                if missing : logger.warning ( "TTree('%s'): %3d missing leaves:   %s in %s" %  ( tree1.GetName() , len ( missing ) , missing , the_file ) )
-                if extra   : logger.warning ( "TTree('%s'): %3d extra   leaves:   %s in %s" %  ( tree1.GetName() , len ( extra   ) , extra   , the_file ) )
+                missing = sorted ( leaves1 - leaves2 ) 
+                extra   = sorted ( leaves2 - leaves1 ) 
+                if missing : logger.warning ( "TTree('%s'): %3d missing leaves:   {%s} in %s" % ( tree1.GetName() , len ( missing ) , ', '.join ( missing ) , the_file ) )
+                if extra   : logger.warning ( "TTree('%s'): %3d extra   leaves:   {%s} in %s" % ( tree1.GetName() , len ( extra   ) , ', '.join ( extra   ) , the_file ) )
                 
     # ===================================================================================================
     ## the specific action for each file 
@@ -197,8 +211,12 @@ class Data(RootFiles):
         """ Add the file to TChain
         """
         
-        files = self.files 
+        files    = self.files
+        has_tree = False ## has at leas opne valid tree ?
+        
         for i, cname in enumerate ( self.chain_names ) :
+
+            bad_files = self.bad_files[cname]
             
             ## (1) suppress Warning/Error messages from ROOT
             with rootError() :
@@ -211,33 +229,39 @@ class Data(RootFiles):
                     self.bad_files.add ( the_file )
                     if not self.silent : 
                         logger.warning ( "No/empty chain '%s' in file '%s'" % ( cname , the_file ) )
+                    bad_files.add ( the_file ) 
                     continue
-            
-                if self.check and files : 
-                    
+                
+                has_tree = True 
+                if self.check and files :
+                    last_file = '' 
+                    if cname in self.bad_files :
+                        bf = self.bad_files[cname] 
+                        for f in reversed ( files ) :
+                            if f in self.bad_files : continue 
+                            
+                            
                     chain = ROOT.TChain ( cname )
                     chain.Add ( files [ 0 ] ) 
                     self.check_trees ( tree , chain , the_file )
                     del chain
-                            
-                Files.treatFile ( self , the_file )
-                
+
                 del tree
+                
+        if has_tree : Files.treatFile ( self , the_file )
     
     # ===================================================================================================
     ## printout 
     def __str__(self):
-        with rootWarning() :
-            nf = len ( self.files     )
-            nc = '??'
-            if not self.silent :
-                chain = self.chain
-                nc    = len ( chain )
-                del chain 
-            ne = len ( self.bad_files )
-        return "<#files: {}; Entries: {}>"              .format ( nf , nc ) if not self.bad_files else \
-               "<#files: {}; Entries: {}; No/empty: {}>".format ( nf , nc  ,  ne )
-
+        chains = self.chains 
+        result = 'Data(%s): #files=%d #entries={%s}' % (
+            ', '.join ( self.chain_names )  ,
+            len( self.files ) ,
+            ', '.join ( str ( len ( c ) ) for c in chains ) )
+        if any ( self.bad_files[c] for c in self.chain_names ) :
+            result += ' #bad={%s}' % ( ', '.join ( str ( len ( self.bad_files[c] ) )  for c in self.chain_names ) )
+        return result 
+    
     # =========================================================================
     ## Print collection of files as table
     #  @code
@@ -249,8 +273,7 @@ class Data(RootFiles):
         """
         rows  = [ ( '#' , '#entries' , 'size' , 'name' ) ]
         files = self.files
-        bad   = sorted ( self.bad_files )
-        nn    = max ( len ( files ) , len ( bad ) ) 
+        nn    = len ( files )
         nfmt  = '%%%dd' % ( math.floor ( math.log10 ( nn ) ) + 1 )
 
         total_size    = 0
@@ -303,7 +326,7 @@ class Data(RootFiles):
     def check_ops ( self , other ):
         """ Check operations
         """
-        return isinstance ( other , Data ) and self.chain_name == other.chain_name
+        return isinstance ( other , Data ) and self.chain_names == other.chain_names
 
     ## Get RDatataFrame for the given chain
     def get_frame ( self , index ) :\
@@ -332,7 +355,7 @@ class Data(RootFiles):
     #  @see ROOT::RDataFrame
     @property
     def frame ( self ) :
-        """'frame': get the DataFrame for the chain"""
+        """'frame': get the DataFrame for the first chain (same as `frame`)"""
         return self.get_frame ( 0 ) ;
     
     # =========================================================================
@@ -340,8 +363,8 @@ class Data(RootFiles):
     #  @see ROOT::RDataFrame
     @property
     def frame1 ( self ) :
-        """'frame1': get DataFrame for the first chain"""
-        return self.get_frame ( 1 ) ;
+        """'frame1': get DataFrame for the first chain (same ad `frame`)"""
+        return self.get_frame ( 0 ) ;
     
     # =========================================================================
     ## get DataFrame for the chain
@@ -349,53 +372,7 @@ class Data(RootFiles):
     @property
     def frame2 ( self ) :
         """'frame2': get DataFrame for the second chain"""
-        return self.get_frame ( 2 ) ;
-
-
-# =============================================================================
-## @class Data2
-#  Simple utility to access two chains in the set of ROOT-files
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @author Alexander BARANOV a.baranov@cern.ch
-#  @date   2014-06-08  
-class Data2(Data):
-    """ Simple utility to access to certain chain in the set of ROOT-files    
-    >>> data  = Data('Bc/MyTree', '*.root' )
-    >>> chain = data.chain
-    >>> flist = data.files 
-    """
-    
-    def __init__( self                ,
-                  chain1              ,
-                  chain2              , 
-                  files       = []    ,
-                  description = ''    ,
-                  maxfiles    = -1    ,
-                  check       = True  , 
-                  silent      = False ,
-                  sorted      = True  , 
-                  parallel    = False ,
-                  transform   = None  ) : 
-
-        Data.__init__ ( self ,
-                        chains      = ( chain1 , chain2 ) ,
-                        files       = files               ,
-                        description = description         ,
-                        maxfiles    = maxfiles            ,
-                        check       = check               ,
-                        silent      = silent              ,
-                        sorted      = sorted              ,
-                        parallel    = parallel            ,
-                        transform   = transform           )
-        
-    # =========================================================================
-    ## check operations
-    def check_ops ( self , other ):
-        """ Check operations
-        """
-        return isinstance ( other , Data2 )          and \
-               self.chain1_name == other.chain1_name and \
-               self.chain2_name == other.chain2_name
+        return self.get_frame ( 1 ) ;
 
 # =============================================================================
 if '__main__' == __name__ :

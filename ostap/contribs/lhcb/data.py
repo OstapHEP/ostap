@@ -55,7 +55,7 @@ __all__     = (
 # =============================================================================
 from copy                     import deepcopy
 from ostap.core.core          import rootError
-from ostap.trees.data_utils   import Data, Data2 
+from ostap.trees.data_utils   import Data
 from ostap.contribs.lhcb.lumi import getLumi
 # =============================================================================
 # logging 
@@ -69,7 +69,7 @@ else                       : logger = getLogger ( __name__     )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-08  
 class Lumi(Data):
-    """Simple utility to access to certain chain in the set of ROOT-files    
+    """ Simple utility to access to certain chain in the set of ROOT-files    
     >>> data  = DataAndLumi('Bc/MyTree', '*.root' )
     >>> chain = data.chain
     >>> flist = data.files 
@@ -78,49 +78,34 @@ class Lumi(Data):
     """
 
     def __init__( self                 ,
-                  files       = []     ,
+                  files                , / , 
+                  lumi        = 'GetIntegratedLuminosity/LumiTuple' , 
                   description = ''     , 
-                  chain       = 'GetIntegratedLuminosity/LumiTuple' , 
                   maxfiles    = 100000 ,
                   check       = True   ,
-                  silent      = False  ,
-                  sorted      = True   , 
-                  parallel    = False  ,
-                  treansform  = None   ) :  
-
-        chain      =      chain if isinstance (      chain , str ) else      chain.name
+                  silent      = False  , 
+                  parallel    = False  ) :  
         
-        if not description :
-            description = "ROOT.TChain(%s)+lumi %s" % ( chain , lumi_chain )
-            
-        Data.__init__ ( self                      ,
-                        chain       = chain       ,
-                        files       = files       ,
+        Data.__init__ ( self , files , lumi ,  
                         description = description ,
                         maxfiles    = maxfiles    ,
                         check       = check       , 
-                        silent      = silent      ,
-                        sorted      = sorted      , 
-                        parallel    = parallel    ,
-                        transform   = transform   )
+                        silent      = silent      , 
+                        parallel    = parallel    )
     # =========================================================================
     @property
     def lumi ( self ) :
-        """'lumi': recreate and return luminosity chain (same as ``chain2'')
+        """'lumi': recreate and return luminosity chain
         """
         return self.chain
     
     ## get the luminosity 
     def getLumi ( self ):
-        """Get the luminosity
+        """ Get the luminosity
         """
         ## suppress Warning/Error messages from ROOT 
-        with rootError() :
-            try :
-                return getLumi ( self.chain  )
-            except ImportError :
-                logger.error('Lumi:getLumi is not available!')
-                return -1.e+6
+        with rootError() : return getLumi ( self.chain  )
+        
     @property
     def luminosity ( self ) :
         """'luminosity': get the Luminosity"""
@@ -141,9 +126,9 @@ class Lumi(Data):
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @author Alexander BARANOV a.baranov@cern.ch
 #  @date   2014-06-08  
-class DataAndLumi(Data2):
-    """Simple utility to access to certain chain in the set of ROOT-files    
-    >>> data  = DataAndLumi('Bc/MyTree', '*.root' )
+class DataAndLumi(Data):
+    """ Simple utility to access to certain chain in the set of ROOT-files    
+    >>> data  = DataAndLumi( '*.root' , 'Bc/MyTree' )
     >>> chain = data.chain
     >>> flist = data.files 
     >>> lumi  = data.lumi
@@ -151,54 +136,37 @@ class DataAndLumi(Data2):
     """
 
     def __init__( self                 ,
-                  chain                ,
-                  files       = []     ,
-                  description = ''     , 
-                  lumi_chain  = 'GetIntegratedLuminosity/LumiTuple' , 
+                  files                , / , 
+                  *chains              ,
+                  description = ''     ,
+                  lumi        = 'GetIntegratedLuminosity/LumiTuple' , 
                   maxfiles    = 100000 ,
                   check       = True   ,
-                  silent      = False  ,
-                  sorted      = True   , 
-                  parallel    = False  ,
-                  transform   = None   ) :  
+                  silent      = False  , 
+                  parallel    = False  ) :  
 
-        chain      =      chain if isinstance (      chain , str ) else      chain.name
-
-        lumi_chain = lumi_chain if isinstance ( lumi_chain , str ) else lumi_chain.name
-        
-        if not description :
-            description = "ROOT.TChain(%s)+lumi %s" % ( chain , lumi_chain )
-            
-        Data2.__init__ ( self                      ,
-                         chain1      = chain       ,
-                         chain2      = lumi_chain  ,
-                         files       = files       ,
-                         description = description ,
-                         maxfiles    = maxfiles    ,
-                         check       = check       , 
-                         silent      = silent      ,
-                         sorted      = sorted      , 
-                         parallel    = parallel    ,
-                         transform   = transform   )
+        allchains = chains + ( lumi , ) 
+        Data.__init__ ( self  , files , *allchains ,
+                        description = description  ,
+                        maxfiles    = maxfiles     ,
+                        check       = check        , 
+                        silent      = silent       ,
+                        parallel    = parallel     )
         
     # =========================================================================
     @property
     def lumi ( self ) :
-        """'lumi': recreate and return luminosity chain (same as ``chain2'')
+        """'lumi': recreate and return luminosity (the last) chain
         """
-        return self.chain2
+        return self.get_chain ( self.nchains - 1 ) 
     
     ## get the luminosity 
     def getLumi ( self ):
-        """Get the luminosity
+        """ Get the luminosity
         """
         ## suppress Warning/Error messages from ROOT 
-        with rootError() :
-            try :
-                return getLumi ( self.chain2  )
-            except ImportError :
-                logger.error('DataAndLumi:getLumi is not available!')
-                return -1.e+6
+        with rootError() : return getLumi ( self.lumi  )
+
     @property
     def luminosity ( self ) :
         """'luminosity': get the Luminosity"""

@@ -87,11 +87,10 @@ class Files(object):
     >>> files = data.files
     """
     def __init__( self                ,
-                  files               ,
+                  files               , / , 
                   description = ""    ,
                   maxfiles    = -1    ,
                   silent      = False ,
-                  sorted      = False ,    ## sort the list of files  ? 
                   parallel    = False ) :  ## collect them in parallel?
         #
         if   isinstance ( files , path_types ) : files = [ files ]
@@ -106,9 +105,7 @@ class Files(object):
         self.__patterns     = tuple ( pats ) 
                 
         self.__maxfiles     = maxfiles
-        self.__sorted       = True if sorted else False 
         self.__files        = []        
-        self.__bad_files    = set()
  
         assert isinstance ( maxfiles , int ) , "Invalid type for 'maxfiles'!"
         
@@ -116,14 +113,14 @@ class Files(object):
         # convert list of patterns into the list of files 
         # =====================================================================
         
-        _files   = self.the_files ()
+        _files = self.the_files ()
+        nfiles = len ( _files )
 
         if not self.silent :
             logger.info ('Loading: %s  #patterns/files: %s/%d' % ( self.description   ,
                                                                    len(self.patterns) , 
-                                                                   len( _files )    ) )            
+                                                                   nfiles             ) )
         ## can use parallel processing here
-        nfiles = len ( _files )
 
         chunk_size = min ( 20 , max ( nfiles // 3 , 2 ) )         
         if parallel and chunk_size < nfiles and ( maxfiles < 0 or nfiles <= maxfiles ) :
@@ -148,7 +145,8 @@ class Files(object):
         else : 
 
             self.__add_files ( _files , maxfiles )
-        
+
+        self.__files.sort()
         if not self.silent : logger.info ('Loaded: %s' % self )
             
     @property 
@@ -190,16 +188,6 @@ class Files(object):
         """'maxfiles' : maximal number of files to collect"""
         return self.__maxfiles
     
-    @property
-    def sorted ( self ) :
-        """'sorted' : keep the list of files sorted?"""
-        return self.__sorted
-
-    @property
-    def bad_files ( self ) :
-        """'bad_files' : collection of bad/problematic files """
-        return self.__bad_files 
-
     # =========================================================================
     ## get the disk size of files, only existing files are counted 
     def getsize ( self ) :
@@ -220,7 +208,6 @@ class Files(object):
         """
         if os.path.exists ( fname ) and os.path.isfile ( fname ) :
             return os.path.getsize ( fname )
-
         return -1
     # =========================================================================
     ## check if the file is a part of collection
@@ -241,9 +228,7 @@ class Files(object):
         """ Get the list of files from the patterns"""
         
         _files = set ()
-        
         for pattern in  self.patterns :
-            
             for f in glob.iglob ( pattern ) :
                 f = os.path.abspath  ( f )
                 f = os.path.normpath ( f )                    
@@ -275,8 +260,7 @@ class Files(object):
             ## treat the file
             self.treatFile ( f )
 
-        if self.sorted :
-            self.__files.sort () 
+        self.__files.sort () 
 
     ## the specific action for each file 
     def treatFile ( self, the_file ) :
@@ -306,7 +290,7 @@ class Files(object):
     # =========================================================================
     ## check operations
     def check_ops ( self , other ):
-        """Check operations
+        """ Check operations
         """
         return isinstance ( other , Files ) 
 
@@ -318,7 +302,7 @@ class Files(object):
     #  ds1 == ds2 
     #  @endcode 
     def __eq__ ( self , other ) :
-        """Check that the list of fiels is the same
+        """ Check that the list of fiels is the same
         >>> ds1 = ...
         >>> ds2 = ...
         >>> ds1 == ds2 
@@ -341,7 +325,6 @@ class Files(object):
         description = "|".join ( "(%s)" for s in ( self.description , other.description ) )
         
         result = self.clone ( files = files , description = description )        
-        for f in other.bad_files : result.bad_files.add ( f )
         return result 
     
     ## get an intersection of two datasets 
@@ -358,7 +341,6 @@ class Files(object):
         description = "&".join ( "(%s)" for s in ( self.description , other.description ) )
         
         result = self.clone ( files = files , description = description )        
-        for f in other.bad_files : result.bad_files.add ( f )
         return result 
 
     ## get an exclusive OR for two datasets 
@@ -377,7 +359,6 @@ class Files(object):
         description = "^".join ( "(%s)" for s in ( self.description , other.description ) )
         
         result = self.clone ( files = files , description = description )        
-        for f in other.bad_files : result.bad_files.add ( f )
         return result 
 
     __add__  = __or__    
@@ -398,7 +379,6 @@ class Files(object):
         self.__files       = list ( files ) 
         self.__description = "|".join ( "(%s)" for s in ( self.description , other.description ) )
 
-        for f in other.bad_files : self.bad_files.add ( f )        
         return self
 
     __iadd__  = __ior__    
@@ -421,7 +401,7 @@ class Files(object):
     ## get symmetric difference of two datasets 
     def symmetric_difference  ( self , other ) :
         """ Symmetric Differfence of two datasets"""
-        return self ^ other
+        return  ( self | other ) - ( self & other ) 
 
     ## subtraction for datasets 
     def __sub__ (  self , other ) :
@@ -451,7 +431,6 @@ class Files(object):
         self.__files       = list ( files ) 
         self.__description = "-".join ( "(%s)" for s in ( self.description , other.description ) )
         
-        for f in other.bad_files : self.bad_files.add ( f )        
         return self
 
     # =========================================================================
@@ -531,13 +510,11 @@ class Files(object):
         """
         rows  = [ ( '#' , 'size' , 'name' ) ]
         files = self.files
-        bad   = sorted ( self.bad_files ) 
-        nn    = max ( len ( files ) , len ( bad ) ) 
+        nn    = len ( files ) 
         nfmt  = '%%%dd' % ( math.floor ( math.log10 ( nn ) ) + 1 )
 
-        from itertools  import chain
         total_size =  0 
-        for i , f in enumerate ( chain ( files , bad ) , start = 1 ) : 
+        for i , f in enumerate ( files , start = 1 ) : 
 
             row   = [ nfmt % i ]
             fsize = self.get_file_size ( f )
@@ -615,15 +592,13 @@ class Files(object):
     ## copy all the files to new directory
     #  - new directory will be created (if needed)
     #  - common path (prefix) for all files will be replaced by new directory
-    def copy_files ( self , new_dir = None , parallel = False , also_bad = False ) :
+    def copy_files ( self , new_dir = None , parallel = False ) :
         """ Copy all the files to new directory
         - new directory will be created (if needed)
         - common path (prefix) for all files will be replaced by new directory
         """
 
         files_to_copy = set ( self.__files )
-        if also_bad and self.bad_files :
-            files_to_copy |= set ( self.bad_files )
 
         ## use generic function 
         copied = copy_files ( files_to_copy              ,
@@ -643,15 +618,13 @@ class Files(object):
     ## Sync/copy all the files to new directory
     #  - new directory will be created (if needed)
     #  - common path (prefix) for all files will be replaced by new directory
-    def sync_files ( self , new_dir = None , parallel = False , also_bad = False ) :
+    def sync_files ( self , new_dir = None , parallel = False ) :
         """ Sync/copy all the files to new directory
         - new directory will be created (if needed)
         - common path (prefix) for all files will be replaced by new directory
         """
 
         files_to_copy = set ( self.__files )
-        if also_bad and self.bad_files :
-            files_to_copy |= set ( self.bad_files )
 
         ## use generic function 
         copied = sync_files ( files_to_copy              ,
