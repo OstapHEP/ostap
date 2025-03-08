@@ -285,6 +285,9 @@ def _rp_table_ ( plot , prefix = '' , title = '' ) :
     
     if not title  :
         title = 'RooPlot %s' % plot.name
+        from ostap.logger.symbols import palette as plot_symbol
+        if plot_symbol : title = '%s %s' % ( plot_symbol , title )
+        
     table = [ ( 'Index' , 'Type' , 'Option' , 'Binw' , 'Line' , 'Marker' , 'Fill' , 'Name' ) ]
 
     names = set() 

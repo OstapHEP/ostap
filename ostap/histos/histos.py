@@ -8750,7 +8750,7 @@ def _h1_table_ ( h1 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     row = 'all ints?' , '%s' % h1.allInts ()  , '' 
     rows.append ( row )
 
-    from ostap.logger.symbols import less_or_equal, greater_or_equal, equivalent, show 
+    from ostap.logger.symbols import less_or_equal, greater_or_equal, equivalent, show
     row = 'all >0/%s0/<0/%s0/%s0?' % ( greater_or_equal , less_or_equal , equivalent ) 
     row = row , '%s/%s/%s/%s/%s' % ( 'True' if h1.all_positive    () else 'False' ,
                                      'True' if h1.all_nonnegative () else 'False' ,
@@ -8815,8 +8815,10 @@ def _h1_table_ ( h1 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         for row in rows : new_rows.append ( row [ :-1] ) 
         rows = new_rows 
             
-
-    title = title if title else 'Summary of histogram %s(%s)' % ( typename ( h1 ) , h1.GetName() ) 
+    if not title :
+        title = 'Summary of histogram %s(%s)' % ( typename ( h1 ) , h1.GetName() ) 
+        from ostap.logger.symbols import histogram as histo_symbol 
+        if histo_symbol : title = '%s %s' % ( histo_symbol , title )
     
     table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lc' ) 
     return table 
@@ -8899,11 +8901,13 @@ def _h2_table_ ( h2 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     row = 'all ints?' , '%s' % h2.allInts ()  , '' 
     rows.append ( row )
 
-    row = 'all >0/>=0/<0/<=0/=0?', '%s/%s/%s/%s/%s' % ( 'True' if h2.all_positive    () else 'False' ,
-                                                        'True' if h2.all_nonnegative () else 'False' ,
-                                                        'True' if h2.all_negative    () else 'False' ,
-                                                        'True' if h2.all_nonpositive () else 'False' ,
-                                                        'True' if h2.all_zero        () else 'False' ) , '' 
+    from ostap.logger.symbols import less_or_equal, greater_or_equal, equivalent, show
+    row = 'all >0/%s0/<0/%s0/%s0?' % ( greater_or_equal , less_or_equal , equivalent ) 
+    row = row , '%s/%s/%s/%s/%s' % ( 'True' if h2.all_positive    () else 'False' ,
+                                     'True' if h2.all_nonnegative () else 'False' ,
+                                     'True' if h2.all_negative    () else 'False' ,
+                                     'True' if h2.all_nonpositive () else 'False' ,
+                                     'True' if h2.all_zero        () else 'False' ) , '' 
     rows.append ( row )
 
     rsum , expo  = pretty_float ( h2.riemann_sum ()   , width = width , precision = precision ) 
@@ -8967,8 +8971,11 @@ def _h2_table_ ( h2 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         for row in rows : new_rows.append ( row [ : -1 ] )
         rows = new_rows 
                 
-    title = title if title else 'Summary of histogram %s(%s)' % ( typename ( h2 ) , h2.GetName() ) 
-    
+    if not title :
+        title = 'Summary of histogram %s(%s)' % ( typename ( h2 ) , h2.GetName() ) 
+        from ostap.logger.symbols import hitogram as histo_symbol
+        if histo_symbol : title = '%s %s' % ( histo_symbol , title )
+        
     table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lc' ) 
     return table 
 
@@ -9030,7 +9037,6 @@ def _h3_table_ ( h3 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     row = 'z-max' , zmax , '10^%+d' % expo if expo else '' 
     rows.append ( row )
 
-
     xaxis = h3.GetXaxis() 
     row = '#xbins' , '%d/%s' %  ( xaxis.GetNbins()  , 'uniform' if xaxis.uniform() else 'no-uniform' ) , '' 
     rows.append ( row )
@@ -9063,11 +9069,13 @@ def _h3_table_ ( h3 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     row = 'all ints?' , '%s' % h3.allInts ()  , '' 
     rows.append ( row )
 
-    row = 'all >0/>=0/<0/<=0/=0?', '%s/%s/%s/%s/%s' % ( 'True' if h3.all_positive    () else 'False' ,
-                                                        'True' if h3.all_nonnegative () else 'False' ,
-                                                        'True' if h3.all_negative    () else 'False' ,
-                                                        'True' if h3.all_nonpositive () else 'False' ,
-                                                        'True' if h3.all_zero        () else 'False' ) , '' 
+    from ostap.logger.symbols import less_or_equal, greater_or_equal, equivalent, show
+    row = 'all >0/%s0/<0/%s0/%s0?' % ( greater_or_equal , less_or_equal , equivalent ) 
+    row = row , '%s/%s/%s/%s/%s' % ( 'True' if h3.all_positive    () else 'False' ,
+                                     'True' if h3.all_nonnegative () else 'False' ,
+                                     'True' if h3.all_negative    () else 'False' ,
+                                     'True' if h3.all_nonpositive () else 'False' ,
+                                     'True' if h3.all_zero        () else 'False' ) , '' 
     rows.append ( row )
 
     rsum , expo  = pretty_float ( h3.riemann_sum ()   , width = width , precision = precision ) 
@@ -9147,8 +9155,11 @@ def _h3_table_ ( h3 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         for row in rows : new_rows.append ( row [ : -1 ] )
         rows = new_rows 
                 
-    title = title if title else 'Summary of histogram %s(%s)' % ( typename ( h3 ) , h3.GetName() ) 
-    
+    if not title :
+        title = 'Summary of histogram %s(%s)' % ( typename ( h3 ) , h3.GetName() ) 
+        from ostap.logger.symbols import hitogram as histo_symbol
+        if histo_symbol : title = '%s %s' % ( histo_symbol , title )
+        
     table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lc' ) 
     return table 
 

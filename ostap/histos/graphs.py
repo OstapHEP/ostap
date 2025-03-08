@@ -2710,7 +2710,6 @@ def _gr_table_ ( graph            ,
     rows = [ ('#' , 'X' , '' , 'Y' , '' ) ]
     for i, x , y in graph.iteritems () :
 
-        
         if hasattr ( x , 'pretty_print' ) :
             xx , xexpo = x.pretty_print (     width = width , precision = precision )
         else :
@@ -2733,7 +2732,9 @@ def _gr_table_ ( graph            ,
     if title is None :
         t = typename( graph ) 
         title = "%s(%s,%s),#%d" % ( t , graph.GetName() , grpah.GetTitle() , len ( graph ) )
-
+        from ostap.logger.symbols import graph as graph_symbol 
+        if graph_symbol : title = '%s %s' % ( graph_symbol , title ) 
+        
     import ostap.logger.table as T
     return T.table ( rows , title = title , prefix = prefix ) 
 
