@@ -47,6 +47,10 @@ from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.scp_copy      import scp_copy
 from   ostap.utils.utils         import chunked, evt_range, LAST_ENTRY, implicitMT
 from   ostap.math.base           import numpy 
+from   ostap.logger.symbols      import tree           as tree_symbol
+from   ostap.logger.symbols      import branch         as branch_symbol
+from   ostap.logger.symbols      import leaves         as leaves_symbol
+from   ostap.logger.symbols      import tape_cartridge as file_symbol
 # 
 import ostap.trees.treereduce 
 import ostap.trees.param
@@ -1010,18 +1014,21 @@ def _rt_table_0_ ( tree ,
         
         tt = tree.GetTitle()
         if tt and tt != tree.GetName() : 
-            title  = '%s("%s","%s") %d entries,' % ( typename ( tree ) , tree.path , tt , len ( tree ) )
+            title  = '%s("%s","%s"): %d#,' % ( typename ( tree ) , tree.path , tt , len ( tree ) )
         else :
-            title  = '%s("%s") %d entries,'      % ( typename ( tree ) , tree.path ,      len ( tree ) )
-
+            title  = '%s("%s"): %d#,'      % ( typename ( tree ) , tree.path ,      len ( tree ) )
+        if tree_symbol : title = '%s %s' %  ( tree_symbol , title )
+        
         nb = len ( tree.branches () )
-        title += '%d branches' % nb 
+        title += '%d%s' % ( nb , branch_symbol if branch_symbol else 'branches' ) 
         nl = len ( tree.leaves   () )
-        if nl != nb : title += '%d leaves' % nl
+        if nl != nb :            
+            title += '%d%s'  % ( nl , leaves_symbol if leaves_symbole else  'leaves' )  
         
         if isinstance ( tree , ROOT.TChain ) :
             nfiles = len ( tree.files() )
-            if 1 < nfiles : title += '/%d files ' % nfiles 
+            if -11 < nfiles : title += ',%d%s' %  ( nfiles , files_symbol if files_symbol else 'files' )
+             
 
     import ostap.logger.table as T
     if table_data : table_data = T.remove_empty_columns ( table_data ) 

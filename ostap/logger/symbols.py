@@ -28,20 +28,40 @@ __all__     = (
     'clock'            ,
     'ram'              ,
     'runner'           ,
-    'finish'           , 
+    'finish'           ,
+    ## 
     'clock_ticks'      ,
     'arrow_left'       ,   
     'arrow_right'      ,  
-    'arrow_rightleft'  , 
+    'arrow_rightleft'  ,
+    ##
     'times'            , 
     'ditto'            , 
+    ##
     'plus_minus'       , 
     'minus_plus'       ,
+    #3
     'less_or_equal'    ,
     'greater_or_equal' , 
     'much_less'        , 
     'much_greater'     , 
     'equivalent'       ,
+    ##
+    'langle'           , 
+    'rangle'           , 
+    'ellipsis'         , 
+    ##
+    'tree'             ,    
+    'branch'           , 
+    'leaves'           , 
+    'cabinet'          , 
+    'frame'            ,       
+    'histogram'        ,  
+    'graph'            ,      
+    'palette'          ,    
+    'document'         ,   
+    'tape_cartridge'   , 
+    'weight_lifter'    ,
 )
 # ===========================================================================
 from   ostap.utils.basic import isatty, has_unicode 
@@ -71,11 +91,16 @@ arrow_left       = '\U00002190' if show else '<-'
 arrow_right      = '\U00002192' if show else '->'
 arrow_rightleft  = '\U00002194' if show else '<->'
 
+
 arrows_all       = ''.join ( ( '\U00002190' ,'\U00002196' ,
                                '\U00002191' ,'\U00002197' ,
                                '\U00002192' ,'\U00002198' ,
                                '\U00002193' ,'\U00002199' ) ) \
                                if show else ( '<-' , '\\' , '|' , '/' , '->' , '\\' , '|' , '/' )
+
+langle           = '\U00003008' if show else '<'
+rangle           = '\U00003009' if show else '>'
+ellipsis         = '\U00002026' if show else '...'
 
 clock_ticks      = ''.join ( ( '\U0001f558' , '\U0001f567' ,
                                '\U0001f550' , '\U0001f55C' , 
@@ -96,11 +121,24 @@ plus_minus       = '\U000000B1' if show else '+/-'
 minus_plus       = '\U00002213' if show else '-/+'
 ditto            = '\U00003003' if show else '//'
 
+tree             = '\U0001f334' if show else '' 
+branch           = '\U00002E19' if show else '' 
+leaves           = '\U0001F343' if show else '' 
+cabinet          = '\U0001F5c4' if show else '' 
+frame            = '\U0001F5BC' if show else '' 
+histogram        = '\U0001F4CA' if show else ''
+graph            = '\U0001F4C8' if show else '' 
+palette          = '\U0001f3A8' if show else '' 
+document         = '\U0001F5CE' if show else '' 
+tape_cartridge   = '\U0001F5AD' if show else '' 
+
 less_or_equal    = '\U00002264' if show else '<='
 greater_or_equal = '\U00002265' if show else '=>'
 much_less        = '\U0000226A' if show else '<<'
 much_greater     = '\U0000226B' if show else '>>'
 equivalent       = '\U00002261' if show else '='
+
+weight_lifter    = '\U0001F3CB' if show else '' 
 
 # =============================================================================
 if '__main__' == __name__ :

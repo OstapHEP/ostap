@@ -45,6 +45,7 @@ from   ostap.trees.cuts          import expression_types, vars_and_cuts, order_w
 from   ostap.utils.utils         import evt_range, LAST_ENTRY, ALL_ENTRIES 
 from   ostap.stats.statvars      import data_decorate, data_range 
 from   ostap.utils.valerrors     import VAE
+from   ostap.logger.symbols      import cabinet, weight_lifter 
 import ostap.fitting.roocollections
 import ostap.fitting.printable
 import ostap.io.root_file 
@@ -2207,13 +2208,15 @@ def _ds_table_0_ ( dataset                ,
     _vars.sort() 
         
     tt = dataset.GetTitle()
-    if not title :        
+    if not title :    
+            
         if  tt and tt != dataset.GetName()  : 
             title = '%s("%s","%s"):' % ( typename ( dataset ) , dataset.GetName () , tt ) 
         else :
             title = '%s("%s"):'      % ( typename ( dataset ) , dataset.GetName () )
-        title =  '%s %d entries' %  ( title , len ( dataset ) )
-
+        title =  '%s %d#' %  ( title , len ( dataset ) )
+        if cabinet : title = '%s %s' % ( cabinet , title )
+        
     if not _vars :
         return title , 120 
         ## return report , 120 
@@ -2277,7 +2280,7 @@ def _ds_table_0_ ( dataset                ,
                ( '{:^%d}' % min_l   ).format ( 'min'         ) ,
                ( '{:^%d}' % max_l   ).format ( 'max'         ) ]
 
-    if weight : header.append ( 'W' )
+    if weight : header.append ( weight_lifter+' ' if weight_lifter else 'W' )
         
     table_data = [ tuple  ( header ) ]
 
@@ -2293,8 +2296,8 @@ def _ds_table_0_ ( dataset                ,
                  fmt_max  %            v [ 5 ] ]
         
         if   weight and i + 1 == len ( _vars ) :
-            cols.append ( 'W' )
-            cols = [ allright (  c ) for c in cols ] 
+            cols.append ( weight_lifter+' ' if weight_lifter else 'W' )
+            cols = [ allright ( c ) for c in cols ] 
         elif weight      : cols.append ( ' ' )
         
         table_data.append ( tuple ( cols ) ) 
@@ -2800,20 +2803,16 @@ def ds_to_tree ( dataset , filename = '' , silent = True ) :
     >>> dataset = ...
     >>> tree    = dataset.asTree() 
     """
-
-    print ( 'T-TREE/0' )
     
     import ostap.io.root_file
     import ostap.trees.trees
 
     ## the simplest case
+    dataset.convertToTreeStore();
 
     tree = dataset.tree()
-    if valid_pointer ( tree ) :
-        print ( 'found-TREE/1', type ( tree ) )                 
-        return tree
+    if valid_pointer ( tree ) :  return tree
     
-    print ( 'make clooned-TREE/1' )                 
     return dataset.GetClonedTree()
         
     

@@ -586,18 +586,19 @@ def shorten_title ( title , size ) :
     """ Shorten the title
     """
     twidth = visible_width ( title )
-    size   = max ( size , 5 ) 
+    from ostap.logger.symbols import ellipsis 
+    inset  = '{%s}' % ellipsis 
+    insize  = len ( inset ) 
+    size   = max ( 5 , size , insize +  2  ) 
     if twidth <= size : return title , twidth
     title  = decolorize ( title )
 
-    if   5 == size : title = '%s<.>%s'   % ( title[0] , title[-1] )
-    elif 6 == size : title = '%s<.,>%s'  % ( title[0] , title[-1] )
-    elif 7 == size : title = '%s<...>%s' % ( title[0] , title[-1] )
-    else :
-        a , r = divmod ( size - 5 , 2 )
-        head = title [      : a ] 
-        tail = title [ -a-r :   ] if r else title [ -a : ]
-        title = '%s<...>%s' % ( head , tail )
+    a , r = divmod ( size - 5 , 2 )
+    head = title [      : a ] 
+    tail = title [ -a-r :   ] if r else title [ -a : ]
+    head = head.strip()
+    tail = tail.strip()
+    title = '%s%s%s' % ( head , inset , tail )
         
     title = allright ( title )
     return title , visible_width ( title ) 
