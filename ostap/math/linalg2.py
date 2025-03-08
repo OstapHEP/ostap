@@ -26,7 +26,8 @@ from   ostap.utils.clsgetter  import classgetter
 from   ostap.logger.pretty    import pretty_array, fmt_pretty_float, fmt_pretty_err1   
 from   ostap.logger.colorized import infostr
 from   ostap.utils.gsl        import gsl_info
-from   ostap.logger.symbols   import ditto 
+from   ostap.logger.symbols   import ditto, times
+from   ostap.logger.colorized import colored_string  
 import ostap.logger.table     as     T
 import ROOT, math, re, ctypes, array, random 
 # =============================================================================
@@ -36,11 +37,16 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.linalg2' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
-
 revct = re.compile ( r'SVector<(?P<TYPE>[^,>]+)' )
 remtx = re.compile ( r'SMatrix<(?P<TYPE>[^,>]+)' )
 NaN   = float('nan')
-
+# =============================================================================
+def diag ( what ) : 
+    return colored_string ( what             ,  
+                           foreground = 0    , 
+                           background = 7    ,
+                           fg_bright  = True , 
+                           underline  = True )
 # =============================================================================
 ## Helper method: get  i,j element from matrix-like object
 #  @code
@@ -1377,7 +1383,7 @@ class LinAlg(object) :
 
         if expo :
             scale = 10 ** expo
-            title = title + ( '[x10^%+d]' % expo ) 
+            title = ( '[%s10^%+d] ' % ( times , expo ) ) + title 
         else    :
             scale = 1
             
@@ -1459,7 +1465,7 @@ class LinAlg(object) :
 
         if expo :
             scale = 10 ** expo
-            title = title + ( '[x10^%+d]' % expo ) 
+            title = ( '[%s10^%+d] ' %( times , expo ) ) + title 
         else    : scale = 1
 
         if correlations :
@@ -1513,7 +1519,7 @@ class LinAlg(object) :
         for i in range ( rows ) :
             row = [ infostr ( '%d' % i ) ]
             for j in range ( cols ) : 
-                if j < i :  item = '' 
+                if j < i :  item = ditto  
                 else     :
                     v  = mtrx ( i , j )
                     vv = v / mscale
@@ -1521,6 +1527,7 @@ class LinAlg(object) :
                     else:
                         item = fmtm % vv
                         if item in zeros : item = ' 0.0'
+                if item and i == j : item = diag ( item )
                 row.append ( item ) 
             table.append ( row ) 
 
@@ -1745,7 +1752,7 @@ class LinAlg(object) :
         zeros = fmtv % ( +0.0 ) , fmtv % ( -0.0 )        
         if expo :
             scale  = 10 ** expo
-            title  = ( '[x10^%+d]' % expo ) + title 
+            title  = ( '[%s10^%+d] ' % ( times , expo ) ) + title 
         else    :
             scale = 1 
             
@@ -1760,6 +1767,7 @@ class LinAlg(object) :
                 else :
                     item = fmtv % value
                     if item in zeros : item = ' 0.0'
+                if item and i == j : item = diag ( item )
                 row.append ( item ) 
             table.append ( row )
             
@@ -1894,7 +1902,7 @@ class LinAlg(object) :
         zeros = fmtv % ( +0.0 ) , fmtv % ( -0.0 )        
         if expo :
             scale  = 10 ** expo
-            title  = title + ( '[x10^%+d]' % expo ) 
+            title  = ( '[%s10^%+d] ' % ( times , expo ) ) + title 
         else    :
             scale = 1 
             
@@ -1911,6 +1919,7 @@ class LinAlg(object) :
                     else :
                         item = fmtv % value
                         if item in zeros : item = ' 0.0'
+                if item and i == j : item = diag ( item ) 
                 row.append ( item )                     
             table.append ( row )
             
