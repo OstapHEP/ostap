@@ -50,7 +50,7 @@ from   ostap.math.base           import numpy
 from   ostap.logger.symbols      import tree           as tree_symbol
 from   ostap.logger.symbols      import branch         as branch_symbol
 from   ostap.logger.symbols      import leaves         as leaves_symbol
-from   ostap.logger.symbols      import tape_cartridge as file_symbol
+from   ostap.logger.symbols      import tape_cartridge as files_symbol
 # 
 import ostap.trees.treereduce 
 import ostap.trees.param
@@ -1027,7 +1027,7 @@ def _rt_table_0_ ( tree ,
         
         if isinstance ( tree , ROOT.TChain ) :
             nfiles = len ( tree.files() )
-            if -11 < nfiles : title += ',%d%s' %  ( nfiles , files_symbol if files_symbol else 'files' )
+            if 1 < nfiles : title += ',%d%s' %  ( nfiles , files_symbol if files_symbol else 'files' )
              
 
     import ostap.logger.table as T
@@ -2782,8 +2782,8 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
         assert tfile.IsWritable() , 'The file:%s is not writeable!'
         
         ## Add the branch!
-        table = print_args ( *args ) 
-        logger.always ( 'ARGUMETS:\n%s' % table )
+        ## table = print_args ( *args ) 
+        ## logger.always ( 'ARGUMETS:\n%s' % table )
         sc    = Ostap.Trees.add_branch ( ttree , *args  )
         assert sc.isSuccess () , "Error from Ostap.Trees.add_branch %s" % sc
 
