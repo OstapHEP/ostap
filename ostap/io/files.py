@@ -22,6 +22,7 @@ __all__     = (
     'sync_dirs'   , ## synchonize the directories     
 )
 # =============================================================================
+from   collections            import defaultdict 
 from   ostap.core.ostap_types import integer_types, path_types, sized_types  
 from   ostap.parallel.task    import Task
 import os, glob, random, math   
@@ -106,7 +107,8 @@ class Files(object):
                 
         self.__maxfiles     = maxfiles
         self.__files        = []        
- 
+        self.__bad_files    = defaultdict(set)
+        
         assert isinstance ( maxfiles , int ) , "Invalid type for 'maxfiles'!"
         
         #  =====================================================================
@@ -146,13 +148,18 @@ class Files(object):
 
             self.__add_files ( _files , maxfiles )
 
-        self.__files.sort()
+        self.__files = tuple  ( sorted ( self.__files ) ) 
         if not self.silent : logger.info ('Loaded: %s' % self )
             
     @property 
     def files     ( self ) :
         """'files' : the list(tuple) of files"""
-        return tuple ( self.__files )
+        return self.__files
+    
+    @property
+    def bad_files ( self ) :
+        """`bad_files`: files classified as `bad' """
+        return self.__bad_files 
     
     @property
     def description ( self ) :
@@ -245,7 +252,7 @@ class Files(object):
         if isinstance ( files  , str ) : files  = [ files  ]
 
         ## eliminate duplicates and sort 
-        files = tuple ( sorted ( set ( files ) ) )
+        files = set ( files ) - set ( self.files )
         
         nfiles    = len ( files )
         max_files = max_files if 0 <= max_files <= nfiles else nfiles 
@@ -260,12 +267,12 @@ class Files(object):
             ## treat the file
             self.treatFile ( f )
 
-        self.__files.sort () 
+        self.__files = tuple ( sorted ( self.__files ) )  
 
     ## the specific action for each file 
     def treatFile ( self, the_file ) :
         if not the_file in self.__files :
-            self.__files.append ( the_file )
+            self.__files += ( the_file , )
 
     # ===============================================================================
     ## clone it! 
@@ -279,11 +286,11 @@ class Files(object):
         
         if not files       is None :
             if isinstance ( files , str ) : files = files , 
-            result.__files        =  [ f for f in files ] 
-            result.__patterns     = ()
-            if result.sorted : result.__files.sort()            
+            result.__files     = tuple ( sorted ( set ( f for f in files ) ) )  
+            result.__patterns  = ()
+                    
         if not description is None :
-            result.descrpiption = str ( description )
+            result.description = str ( description )
             
         return result
     
@@ -311,6 +318,28 @@ class Files(object):
         ##
         return set ( self.files ) == set ( other.files ) 
 
+    ## union of seevral file collections 
+    def union ( self , *others ) :
+        """ Union of several file collections 
+        """
+        assert all ( isinstance ( o , Files  ) for o in others ) , "Invalid arguments"
+        files = set ( files ) 
+        for s in others : files |= set ( s.files )
+        result = self.clone ( files = files ) 
+        result.combine_bad_files ( *others ) 
+        return result 
+    
+    ## union of several file collections 
+    def intersection ( self , *others ) :
+        """ Intersection of several file collections 
+        """
+        assert all ( isinstance ( o , Files  ) for o in others ) , "Invalid arguments"
+        files = set ( files ) 
+        for s in others : files &= set ( s.files )
+        result = self.clone ( files = files ) 
+        result.combine_bad_files ( *others ) 
+        return result 
+    
     ## merge two sets together
     def __or__ ( self , other ) :
         """ Merge two sets together
@@ -320,31 +349,21 @@ class Files(object):
         >>> ds  = ds1 | ds2 ## ditto
         """
         if not self.check_ops ( other ) : return NotImplemented
-
-        files       = self.files + tuple ( f for f in other.files if not f in self.files ) 
-        description = "|".join ( "(%s)" for s in ( self.description , other.description ) )
-        
-        result = self.clone ( files = files , description = description )        
-        return result 
+        return self.union ( other ) 
     
     ## get an intersection of two datasets 
-    def __and__ (  self , other ) :
+    def __and__ (  self , others ) :
         """ Get intersection of two sets
         >>> ds1 = ...
         >>> ds2 = ...
         >>> ds  = ds1 & ds2 ## get intersection 
         >>> ds  = ds1 * ds2 ## ditto
         """
-        if not self.check_ops ( other ) : return NotImplemented
-
-        files       = tuple ( f for f in self.files if f in other.files )
-        description = "&".join ( "(%s)" for s in ( self.description , other.description ) )
-        
-        result = self.clone ( files = files , description = description )        
-        return result 
+        if not self.check_ops ( others ) : return NotImplemented
+        return self.intersectin ( others ) 
 
     ## get an exclusive OR for two datasets 
-    def __xor__ (  self , other ) :
+    def __xor__ (  self , others ) :
         """ Get an exclusive OR for  two sets
         >>> ds1 = ...
         >>> ds2 = ...
@@ -352,13 +371,11 @@ class Files(object):
         """
         if not self.check_ops ( other ) : return NotImplemented
 
-        files1 = [ f for f in self .files if not f in other.files ]
-        files2 = [ f for f in other.files if not f in self.files  ]
-        files  = tuple ( files1 + files2 ) 
-        
-        description = "^".join ( "(%s)" for s in ( self.description , other.description ) )
-        
-        result = self.clone ( files = files , description = description )        
+        files1 = set (   self.files )
+        files2 = set ( others.files )
+        files  = ( files1 - files2 ) + ( files2 - files1 )
+        result = self.clone ( files = files )         
+        result.combine_bad_files ( *others ) 
         return result 
 
     __add__  = __or__    
@@ -374,30 +391,41 @@ class Files(object):
         """
         if not self.check_ops ( other ) : return NotImplemented
 
-        files       = self.files + tuple ( f for f in other.files if not f in self.files )
-        
-        self.__files       = list ( files ) 
+        self.__files = tuple ( sorted ( set ( self.files ) | set ( other.files ) ) )    
         self.__description = "|".join ( "(%s)" for s in ( self.description , other.description ) )
-
+        self.combine_bad_files ( other ) 
         return self
 
+    ## append with another dataset
+    def __iand__ ( self , other ) :
+        """ Append with another dataset 
+        >>> ds1 = ...
+        >>> ds2 = ...
+        >>> ds  &= ds2 
+        >>> ds  *= ds2 ## ditto
+        """
+        if not self.check_ops ( other ) : return NotImplemented
+        self.__files       = tuple ( sorted ( set ( self.files ) & set ( other.files ) ) )    
+        self.__description = "&".join ( "(%s)" for s in ( self.description , other.description ) )
+        self.combine_bad_files ( other ) 
+        return self
+    
     __iadd__  = __ior__    
+    __imul__  = __iand__ 
     
-    ## get union of two datasets 
-    def union ( self , other ) :
-        """ Union of two datasets"""
-        return self | other
-    
-    ## get intersection of two datasets 
-    def intersection ( self , other ) :
-        """ Intersection of two datasets"""
-        return self & other
-
-    ## get difference of two datasets 
-    def difference  ( self , other ) :
-        """ Differfence of two datasets"""
-        return self - other
-
+    ## append with another dataset
+    def __isub__ ( self , other ) :
+        """ Subtract with another dataset 
+        >>> ds1 = ...
+        >>> ds2 = ...
+        >>> ds  -= ds2 
+        """
+        if not self.check_ops ( other ) : return NotImplemented
+        self.__files       = tuple ( sorted ( set ( self.files ) - set ( other.files ) ) )    
+        self.__description = "-".join ( "(%s)" for s in ( self.description , other.description ) )
+        self.combine_bad_files ( other ) 
+        return self
+  
     ## get symmetric difference of two datasets 
     def symmetric_difference  ( self , other ) :
         """ Symmetric Differfence of two datasets"""
@@ -410,29 +438,53 @@ class Files(object):
         >>> ds2 = ...
         >>> ds  = ds1 - ds2 ## get subtraction 
         """
-        if not isinstance ( other , Files ) : return NotImplemented
-
-        files       = tuple ( f for f in self.files if not f in other.files )
-        description = "-".join ( "(%s)" for s in ( self.description , other.description ) ) 
-
-        return self.clone ( files = files , description = description )
-
-    ## remove the files from  another dataset 
-    def __isub__ (  self , other ) :
-        """ Remove file from another dataset 
+        if not self.check_ops ( other ) : return NotImplemented
+        result  = self.clone()
+        result -= other  
+        return result 
+    
+    ## subtraction for datasets 
+    def __add__ (  self , other ) :
+        """ Add two sets
         >>> ds1 = ...
         >>> ds2 = ...
-        >>> ds1 -= ds2 ## get subtraction 
+        >>> ds  = ds1 + ds2 ## add them  
         """
-        if not isinstance ( other , Files ) : return NotImplemented
-
-        files       = tuple ( f for f in self.files if not f in other.files )
-
-        self.__files       = list ( files ) 
-        self.__description = "-".join ( "(%s)" for s in ( self.description , other.description ) )
+        if not self.check_ops ( other ) : return NotImplemented
+        result  = self.clone()
+        result += other  
+        return result 
+         
+    ## intersection for datasets 
+    def __and__ (  self , other ) :
+        """ Intersection two sets
+        >>> ds1 = ...
+        >>> ds2 = ...
+        >>> ds  = ds1 & ds2 ## intersection   
+        """
+        if not self.check_ops ( other ) : return NotImplemented
+        result  = self.clone()
+        result &= other  
+        return result 
+    
+    __or__  = __add__
+    __mul__ = __and__ 
+      
+    # =================================================================================
+    def combine_bad_files ( self , *others ) :
+        """ Combine bad files from several file collections 
+        """
+        ## combine all bad files 
+        for another in others :
+            for key, items in another.bad_files.items () :
+                self.__bad_files[key] |= item
+                 
+        ## clean up unnesessay bad files 
+        files = set ( self.files )      
+        for keys, item  in self.bad_files.items () : item -= files
+    
+        return self  
         
-        return self
-
     # =========================================================================
     ## get a sample of at most  n-elements (if n is integer and >=1 )  or n-fraction 
     def sample_files ( self ,  n , sort ) :
