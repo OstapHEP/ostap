@@ -103,9 +103,7 @@ class Data(RootFiles):
         ## update description
         if not description :
             description = "Chains:{%s}" %  ( ', '.join ( self.__chain_names ) ) 
-
-        self.__bad_files = defaultdict(set) 
-        
+ 
         ## initialize the  base class 
         RootFiles.__init__( self                      ,
                             files                     ,
@@ -177,10 +175,6 @@ class Data(RootFiles):
         """
         return self.__check
 
-    @property
-    def bad_files ( self ) :
-        """`bad_files` : dictionaryof bad files """
-        return self.__bad_files
     
     ## check the content of the two trees
     @staticmethod 
@@ -227,25 +221,21 @@ class Data(RootFiles):
                 tree.Add ( the_file )
 
                 if not tree or 0 == len ( tree.branches () ) :
-                    self.bad_files.add ( the_file )
-                    if not self.silent : 
-                        logger.warning ( "No/empty chain '%s' in file '%s'" % ( cname , the_file ) )
-                    bad_files.add ( the_file ) 
+                    bad_files.add ( the_file )
+                    if not self.silent : logger.warning ( "No/empty chain '%s' in file '%s'" % ( cname , the_file ) )
                     continue
                 
                 has_tree = True 
                 if self.check and files :
                     last_file = '' 
-                    if cname in self.bad_files :
-                        bf = self.bad_files[cname] 
+                    if cname in self.bad_files : 
                         for f in reversed ( files ) :
-                            if f in self.bad_files : continue 
-                            
-                            
-                    chain = ROOT.TChain ( cname )
-                    chain.Add ( files [ 0 ] ) 
-                    self.check_trees ( tree , chain , the_file )
-                    del chain
+                            if f in bad_files : continue 
+                    if last_file :
+                        chain = ROOT.TChain ( cname )
+                        chain.Add ( last_file ) 
+                        self.check_trees ( tree , chain , the_file )
+                        del chain
 
                 del tree
                 
