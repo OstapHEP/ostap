@@ -270,8 +270,7 @@ class Data(RootFiles):
         total_size    = 0
         total_entries = 0
         
-        from itertools          import chain 
-        for i , f in enumerate ( chain ( files , bad ) , start = 1 ) : 
+        for i , f in enumerate ( files , start = 1 ) : 
 
             row   = [ nfmt % i ]
             fsize = self.get_file_size ( f )
