@@ -477,7 +477,7 @@ class Files(object):
         ## combine all bad files 
         for another in others :
             for key, items in another.bad_files.items () :
-                self.__bad_files[key] |= item
+                self.__bad_files[key] |= items
                  
         ## clean up unnesessay bad files 
         files = set ( self.files )      
