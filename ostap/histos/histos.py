@@ -8973,7 +8973,7 @@ def _h2_table_ ( h2 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
                 
     if not title :
         title = 'Summary of histogram %s(%s)' % ( typename ( h2 ) , h2.GetName() ) 
-        from ostap.logger.symbols import hitogram as histo_symbol
+        from ostap.logger.symbols import histogram as histo_symbol
         if histo_symbol : title = '%s %s' % ( histo_symbol , title )
         
     table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lc' ) 
@@ -9157,7 +9157,7 @@ def _h3_table_ ( h3 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
                 
     if not title :
         title = 'Summary of histogram %s(%s)' % ( typename ( h3 ) , h3.GetName() ) 
-        from ostap.logger.symbols import hitogram as histo_symbol
+        from ostap.logger.symbols import histogram as histo_symbol
         if histo_symbol : title = '%s %s' % ( histo_symbol , title )
         
     table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lc' ) 

@@ -1036,9 +1036,9 @@ models.append ( PSPol2D3sym_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
 class ExpoPSPol2D_pdf(PolyBase2) :
-    """Product of exponential and phase space factor,
+    """ Product of exponential and phase space factor,
     modulated by the positive polynom in 2D
-
+    
     f(x,y) = exp(tau*x) * PS(y) * Pnk(x,y)
     where
     - PS (y) is a phase space function for y-axis (Ostap::Math::PhaseSpaceNL)

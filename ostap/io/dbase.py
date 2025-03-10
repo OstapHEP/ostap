@@ -74,7 +74,6 @@ try : # =======================================================================
         'c' : berkeleydb.db.DB_CREATE , 
         'n' : berkeleydb.db.DB_CREATE
     }
-
     ## open Berkeley DB 
     def berkeleydb_open ( filename                          ,
                           flag     = 'c'                    ,
@@ -297,21 +296,20 @@ def dbopen ( file               ,
         
         if isinstance ( dbtype , str ) : db_types = dbtype.lower() ,  
         elif not dbtype                : db_types = () 
-        else                           : db_types = tuple (  db.lower() for db in dbtype ) 
+        else                           : db_types = tuple ( db.lower() for db in dbtype ) 
 
         ## check the preferred database type:
         for db in db_types :
-            
-            if   use_berkeleydb and db in ( 'berkeleydb' , 'berkeley' , 'berkeley-db' ) : 
+                        
+            if   use_berkeleydb and db in ( 'berkeleydb' , 'berkeley' , 'berkeley-db' , '' ) :  ## NB!!
                 return berkeleydb_open ( file            , flag , mode , **kwargs ) 
             elif use_bsddb3     and 'bsddb3'     == db :
                 return bsddb3_open     ( file            , flag , mode , **kwargs ) 
             elif use_lmdb       and 'lmdb'       == db :
                 return LmdbDict        ( path     = file , flag = flag , **kwargs )
-            elif db             in ( 'sqlite3' , 'sqlite'  , 'sql' ) : 
-                return SqliteDict      ( filename = file , flag = flag , **kwargs )
-
-            if   db_gnu  and db in ( 'dbm.gnu'  , ) :
+            elif db             in ( 'sqlite3' , 'sqlite'  , 'sql'                    , '' ) : ## NB!! 
+                return SqliteDict      ( filename = file , flag = flag , **kwargs )            
+            elif db_gnu  and db in ( 'dbm.gnu'  , ) :
                 if kwargs : logger.warning ( 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] ) ) 
                 return db_gnu.open ( file , flag , mode )
             elif db_dbm  and db in ( 'dbm.ndbm' , ) :
@@ -323,10 +321,11 @@ def dbopen ( file               ,
             elif db in ( 'dbm.dumb' , 'dumbdbm' , 'dumb' ) :
                 if kwargs : logger.warning ( 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] ) ) 
                 return db_dumb.open ( file , flag , mode )
-            elif db in  ( 'std' , 'standard' ) or not db :
+            elif db in  ( 'std' , 'standard' ) or not db :                                     ## NB !! 
                 if kwargs : logger.warning ( 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] ) )                 
                 return std_db.open ( file , flag , mode )
 
+        
         if db_types :
             logger.warning  ( 'DB-type hints not used: [%s]' %  (  ','.join ( db for fn in db_types ) ) ) 
         

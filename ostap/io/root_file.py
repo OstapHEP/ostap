@@ -1288,11 +1288,15 @@ class RootFiles(Files) :
         fsize = Files.get_file_size ( self , fname )
         if 0 <= fsize : return fsize                      ## RETURN
 
-        ## (2) try to open it as ROOT file 
-        try : 
+        ## (2) try to open it as ROOT file
+        # ====================================================================+
+        try : # ==============================================================+
+            # ================================================================+
             with ROOT.TFile.Open ( fname , 'r' , exception = True ) as r :
-                return r.GetSize()                        ## RETURN 
-        except ( OSError , IOError ) : 
+                return r.GetSize()                        ## RETURN
+            # ================================================================+
+        except ( OSError , IOError ) : # =====================================+
+            # ================================================================+
             pass
 
         return -1

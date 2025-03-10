@@ -103,7 +103,10 @@ class Data(RootFiles):
         ## update description
         if not description :
             description = "Chains:{%s}" %  ( ', '.join ( self.__chain_names ) ) 
- 
+
+        ## bas files (per chain) :   { chain : set }
+        self.__bad_files = defaultdict(set)
+        
         ## initialize the  base class 
         RootFiles.__init__( self                      ,
                             files                     ,
@@ -112,19 +115,44 @@ class Data(RootFiles):
                             silent      = silent      ,
                             parallel    = parallel    )
         
-    # =========================================================================    
+    # ========================================================================    
     @property
     def validate ( self ) :
         """'check' : make check for `TTree`/`TChain` structures
         """
         return self.__check
-    
+
+    # ========================================================================
     @property
     def chain_names ( self ) :
         """'chain_names' : the names of TTree/TChain objects
         """
         return self.__chain_names
 
+    # ========================================================================
+    @property
+    def bad_files ( self ) :
+        """ Bad files (per chain) : { chain : set } 
+        """
+        return self.__bad_files
+
+    # =================================================================================
+    def extra_action ( self , *others ) :
+        """ Extra action: Combine bad files from several file collections 
+        """
+        ## combine all bad files 
+        for s in others :
+            if not isinstance ( s , Data ) : continue 
+            for key, items in s.bad_files.items () :
+                if items : self.bad_files [ key ] |= items
+                
+        ## clean up unnesessary bad files
+        if self.bad_files : 
+            files = set ( self.files )      
+            for keys, item  in self.bad_files.items () : item -= files
+        
+        return self  
+        
     # ========================================================================
     ## get the chain by index  
     def get_chain ( self , index ) :
@@ -148,7 +176,8 @@ class Data(RootFiles):
     
     @property
     def chains ( self ) :
-        """'chains' : (re)built and return all `TChain` objects"""
+        """'chains' : (re)built and return all `TChain` objects
+        """
         result = []
         for index in range ( self.nchains ) : 
             result.append ( self.get_chain ( index ) ) 
