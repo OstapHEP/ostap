@@ -146,8 +146,8 @@ def test_splotting2 () :
     model.SB.setMin ( -100000 )  
     model.BS.setMin ( -100000 )  
 
-    model.SB = 0.0
-    model.BS = 0.0
+    model.SB.fix ( 5.0 ) 
+    model.BS.fix ( 0.0 ) 
     
     with FIXVAR ( [ model.SB , model.BS ] ) : 
         result , _ = model.fitTo ( dataset , silent = True , refit = 5 )

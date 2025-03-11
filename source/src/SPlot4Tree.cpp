@@ -156,7 +156,10 @@ Ostap::MoreRooFit::SPlot4Tree::~SPlot4Tree() {}
  *  @param suffix suffix for the branch names 
  *  @return StatusCode
  */
-// ========================================================================
+// ============================================================================
+
+#include <iostream>
+
 Ostap::StatusCode
 Ostap::Trees::add_branch
 ( TTree*                               tree     ,
@@ -193,14 +196,14 @@ Ostap::Trees::add_branch
         const RooAbsArg*       aa = the_splot.fitresult().floatParsFinal().find ( c->GetName() ) ;
         if ( nullptr == aa ) { aa = the_splot.fitresult().constPars()     .find ( c->GetName() ) ; }
         Ostap::Assert ( nullptr != aa  ,
-                        "Coeffcient is not found:" + Ostap::Utils::toString ( *c ) ,
+                        "Coefficient is not found:" + Ostap::Utils::toString ( *c ) ,
                         "Ostap::Trees::add_branch"           ,                      
                         INVALID_ABSARG , __FILE__ , __LINE__ ) ;
         const RooAbsReal*      rv = dynamic_cast<const RooAbsReal*>     ( c ) ;
         const RooAbsCategory*  cv = nullptr ;
         if ( nullptr == rv ) { cv = dynamic_cast<const RooAbsCategory*> ( c ) ; }
         Ostap::Assert ( ( nullptr != rv ) || ( nullptr != cv ) ,
-                        "Invalid Coeffcient:" + Ostap::Utils::toString ( *c ) , 
+                        "Invalid coeffcient:" + Ostap::Utils::toString ( *c ) , 
                         "Ostap::Trees::add_branch"           ,                      
                         INVALID_ABSARG , __FILE__ , __LINE__ ) ;
         items.push_back ( ITEM () ) ;
@@ -216,7 +219,34 @@ Ostap::Trees::add_branch
                   "Ostap::Trees::add_branch"           ,                      
                   INVALID_ARGSET , __FILE__ , __LINE__ ) ;
   //
-  const TMatrixDSym cov { the_splot.fitresult().conditionalCovarianceMatrix ( the_splot.coefficients() ) } ;
+  // const TMatrixDSym cov { the_splot.fitresult().conditionalCovarianceMatrix ( the_splot.coefficients() ) } ;
+  const TMatrixDSym& cm = the_splot.fitresult().covarianceMatrix () ;
+  const Int_t NN = N ;
+  // extended covarinace matrix 
+  TMatrixDSym cov { NN } ;
+  if ( N == cm.GetNrows() ) { cov = cm ; }
+  else
+    {
+      // fill the matrix with conten & zeroes 
+      const RooArgList& floatParsFinal = the_splot.fitresult().floatParsFinal() ;
+      const RooArgList& coefficients   = the_splot.coefficients() ;
+      for ( const RooAbsArg* ci : coefficients  )
+	{
+	  const int i   = floatParsFinal.index ( ci->GetName () ) ;
+	  const int row = coefficients  .index ( ci ) ; 
+	  for ( const RooAbsArg* cj : coefficients)
+	    {
+	      const int j   = floatParsFinal.index ( cj->GetName()  ) ;
+	      const int col = coefficients  .index ( cj ) ;
+	      //
+	      const double cij = ( i < 0 || j < 0 ) ? 0.0 : cm ( i , j ) ;
+	      //
+	      cov ( row , col ) = cij  ;
+	      if  ( row != col ) { cov ( col , row ) = cij ; }
+	    }
+	}
+    }
+  //
   Ostap::Assert ( cov.IsValid () &&
 		  ( N == cov.GetNcols () ) &&
 		  ( N == cov.GetNrows () )            ,
@@ -267,7 +297,7 @@ Ostap::Trees::add_branch
         {
           const RooAbsReal* cmp = static_cast<RooAbsReal*> ( the_splot.components().at ( i ) ) ;
           Ostap::Assert ( nullptr != cmp                       ,
-                          "Invalid fit ocmponent"              , 
+                          "Invalid fit component"              , 
                           "Ostap::Trees::add_branch"           , 
                           INVALID_ABSARG , __FILE__ , __LINE__ ) ;
           // get the component value 

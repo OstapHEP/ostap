@@ -333,7 +333,12 @@ class sPlot(object) :
                 self.pdf.vars  ,
             )
 
-            kwargs = { 'prefix' : prefix , 'suffix' : suffix , 'progress' : self.progress , 'report' : True }
+            kwargs  = { 'prefix' : prefix , 'suffix' : suffix , 'progress' : self.progress , 'report' : True }
+            
+            mapping = {} 
+            for a,b in zip ( vars , self.pdf.vars ) : mapping [ b.name ] =  a
+            kwargs [ 'mapping' ]  = mapping
+            
             if parallel : result = tree.padd_new_branch ( splot , **kwargs ) 
             else        : result = tree. add_new_branch ( splot , **kwargs )
 
