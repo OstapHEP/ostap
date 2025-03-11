@@ -3208,7 +3208,7 @@ class APDF2 (APDF1) :
             else :                
                 ## convert it!
                 self.debug ('Create new H2D_dset'        ) 
-                self.histo_data = H2D_dset ( histo , self.xvar , self.yvar  , density , silent )
+                self.histo_data = H2D_dset ( histo , self.xvar , self.yvar , density = density , silent = silent )
                 data = self.histo_data.dset 
             
             ## fit it!!
@@ -4434,7 +4434,8 @@ class APDF3 (APDF2) :
                                              self.xvar ,
                                              self.yvar ,
                                              self.zvar ,
-                                             density   , silent )
+                                             density = density ,
+                                             silent  = silent   )
                 data = self.histo_data
                 
             if chi2 : return self.chi2fitTo ( data              ,

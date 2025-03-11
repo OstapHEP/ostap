@@ -22,7 +22,8 @@ from   ostap.core.core          import Ostap, VE, valid_pointer, iszero, isequal
 from   ostap.core.ostap_types   import string_types , integer_types
 from   ostap.utils.valerrors    import ValWithErrors, AsymErrors   
 from   ostap.logger.colorized   import allright, attention, attstr 
-from   ostap.logger.pretty      import pretty_float, pretty_ve, pretty_err2 
+from   ostap.logger.pretty      import pretty_float, pretty_ve, pretty_err2
+from   ostap.logger.symbols     import show 
 import ostap.math.linalg        as     LA 
 import ostap.fitting.variables     
 import ostap.fitting.printable
@@ -793,7 +794,7 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
 
         dist = limits.get ( a.name , None )
         if not dist is None :
-            item = '%.1fs' % dist 
+            item = '%.1f%s' % ( dist , '\U000003C3' if show else 's' ) 
             if   dist <= 3 : item = attention ( item )
             elif dist <= 5 : item = attstr    ( item )
             row += ( item , )

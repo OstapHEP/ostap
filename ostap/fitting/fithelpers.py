@@ -2842,14 +2842,15 @@ class H2D_dset(XVar,YVar,VarMaker) :
                         self.__dset.add ( self.__vset , v.value() , v.error() ) 
 
             ## create binned dataset 
-            else : 
-                self.__vlst  = ROOT.RooArgList    ( self.xaxis , self.yaxis )
-                self.__vimp  = ROOT.RooFit.Import ( histo , density )
+            else :
+                
+                self.__vlst  = ROOT.RooArgList    ( self.xaxis , self.yaxis   )
+                self.__vimp  = ROOT.RooFit.Import ( self.histo , self.density )
                 self.__dset  = ROOT.RooDataHist   (
                     rootID ( 'bhds_' ) , "Binned sata set for histogram '%s'" % histo.GetTitle() ,
                     self.__vlst  ,
                     self.__vimp  )
-            
+
     @property     
     def xaxis  ( self ) :
         """The histogram x-axis variable (same as 'xvar')"""

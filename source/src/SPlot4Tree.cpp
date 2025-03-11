@@ -291,7 +291,7 @@ Ostap::Trees::add_branch
       //
       /// assign the observables 
       getter.assign ( the_splot.observables () , tree ) ;
-      /// (1) get thc omponent values and the total 
+      /// (1) get the component values and the total 
       double total = 0 ; // sum_i ci*d_i
       for  ( unsigned int i = 0 ; i < N ; ++i )
         {
@@ -311,7 +311,7 @@ Ostap::Trees::add_branch
           double sum = 0 ;
           for ( unsigned int j = 0 ; j < N ; ++j )
             { sum += cov ( i , j ) * std::get<2> ( items [ j ] ) ; }    // get<2> 
-          std::get<3> ( items [ i ] ) = sum / total ;                    // get<3> 
+          std::get<3> ( items [ i ] ) = sum / total ;                   // get<3> 
         }
       /// (3) commit branches 
       for ( auto* branch : branches ) { branch->Fill() ; }
