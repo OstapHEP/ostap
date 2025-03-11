@@ -191,7 +191,7 @@ class DataAndLumi(Data):
             ','.join ( self.chain_names[:-1] ) ,
             str ( l )                    , 
             len ( self.chain_names ) - 1 ,
-            tree_symbol+chain_symbol if tree_symbol and chain_symbol else 'chains' ,            
+            tree_symbol + chain_symbol if tree_symbol and chain_symbol else 'chains' ,            
             len ( self.files       ) , 
             file_symbol  if file_symbol  else 'files'  )
         

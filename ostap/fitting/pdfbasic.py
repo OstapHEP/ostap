@@ -1105,8 +1105,8 @@ class APDF1 ( Components ) :
         >>> r,f = model.fitHisto ( histo , draw = True ) 
         
         """
-        with RangeVar ( self.xvar , *(histo.xminmax()) ) : 
-
+        with RangeVar ( self.xvar , *(histo.xminmax()) ) :
+            
             hdata = getattr ( self , 'histo_data' , None )
             if hdata and isinstance ( hdata , H1D_dset ) and \
                    hdata.histo      is histo             and \

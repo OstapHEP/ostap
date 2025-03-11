@@ -5,7 +5,7 @@
  - stop support python < 3.8 
  - split `add_new_branch` into `add_newbranch` and `adD_new_buffer`
  - fix Py <-> c++ functions
- - imporve `Ostap::StatusCode`
+ - improve `Ostap::StatusCode`
  - more use of `Ostap::Assert`
  - remove all appearecnes of `from bultins import rane`
  - reomve all appearenced of `from __future__ import ptint_function`
@@ -21,10 +21,15 @@
  
 ## New features
     
-    1. further improvemetn dfor wrapped columns in the table
-    1. remove std::uniqu_otr from Ostap::Trees::Branches for ROOT < 6.32.00 due to failure in dictionary generation)
-    
-## Backward incompatible1
+   1. further improvemets for the wrapped columns in the tables
+   1. add unbined splot-related stuff, includinn machinery for
+      adding the splot results to TTree/TChain
+   
+## Backward incompatible
+
+   1. Reorder arguments for `Data` &`DataandLumi`, from now the first argumenet - files/pattersn and then chains
+   1. Remove `Data2`
+   1. `add_new_branch` and `add_new_buffer` are complete;y rewritten
     
 ## Bug fixes
 

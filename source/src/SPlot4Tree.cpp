@@ -66,23 +66,23 @@ Ostap::MoreRooFit::SPlot4Tree::SPlot4Tree
   , m_result      { std::make_unique<Ostap::Utils::FitResults>( fitresult ) }
 {
   // 
-  Ostap::Assert ( pdf().canBeExtended()                   ,
-                  "PDF canot be extended"                 ,
-                  "Ostap::MoreRooFit::Splot2Tree"         ,
-                  INVALID_PDF , __FILE__ , __LINE__       ) ;
+  Ostap::Assert ( pdf().canBeExtended()                    ,
+                  "PDF cannoot be extended"                ,
+                  "Ostap::MoreRooFit::SPlot2Tree"          ,
+                  INVALID_PDF , __FILE__ , __LINE__        ) ;
   /// get all components 
   m_cmps = std::make_unique<RooArgList> ( pdf().pdfList () ) ;
   /// get original fractios 
   bool recursive ;
   m_coefs = std::make_unique<RooArgList> ( fractions ( pdf () , recursive ) ) ;
-  Ostap::Assert ( ::size ( *m_cmps ) == ::size ( *m_coefs )  ,
-                  "Mismatch in cmponent/coefficients size" ,
-                  "Ostap::MoreRoofit:Splot2Tree"           , 
-                  INVALID_PDF , __FILE__ , __LINE__        ) ;
-  Ostap::Assert ( !recursive                               ,
-                  "Fractions cannot be recursive"          ,
-                  "Ostap::MoreRoofit:Splot2Tree"           , 
-                  INVALID_PDF , __FILE__ , __LINE__        ) ;
+  Ostap::Assert ( ::size ( *m_cmps ) == ::size ( *m_coefs ) ,
+                  "Mismatch in component/coefficients size" ,
+                  "Ostap::MoreRoofit:SPlot2Tree"            , 
+                  INVALID_PDF , __FILE__ , __LINE__         ) ;
+  Ostap::Assert ( !recursive                                ,
+                  "Fractions cannot be recursive"           ,
+                  "Ostap::MoreRoofit:SPlot2Tree"            , 
+                  INVALID_PDF , __FILE__ , __LINE__         ) ;
   // ==========================================================================
   // check validity of coefficiencts
   // ==========================================================================
@@ -90,10 +90,10 @@ Ostap::MoreRooFit::SPlot4Tree::SPlot4Tree
     for ( auto* c : *m_coefs )
       {
         // ====================================================================
-        Ostap::Assert ( nullptr != c                                ,
-                        "Invalid/nullptr coefficient"               , 
-                        "Ostap::MoreRoofit::SPlot4Tree"             ,
-                        INVALID_ABSARG , __FILE__ , __LINE__        ) ;
+        Ostap::Assert ( nullptr != c                         ,
+                        "Invalid/nullptr coefficient"        , 
+                        "Ostap::MoreRoofit::SPlot4Tree"      ,
+                        INVALID_ABSARG , __FILE__ , __LINE__ ) ;
         //
         const RooAbsReal*  rv = dynamic_cast<RooAbsReal*> ( c ) ;
         Ostap::Assert ( nullptr != rv , 
@@ -105,7 +105,7 @@ Ostap::MoreRooFit::SPlot4Tree::SPlot4Tree
     // ========================================================================
   } //                                                      The end of if-block
   // ==========================================================================
-  // Check that all floaitng parameters are correficients
+  // Check that all floaitng parameters are coefficients  
   // ==========================================================================
   auto fparams = std::make_unique<RooArgList> ( m_result->floatParsFinal() ) ;
   // ==========================================================================
@@ -118,7 +118,7 @@ Ostap::MoreRooFit::SPlot4Tree::SPlot4Tree
                         "Ostap::MoreRoofit::SPlot4Tree"             ,
                         INVALID_ABSARG , __FILE__ , __LINE__        ) ;
         Ostap::Assert ( m_coefs->contains ( *p ) ,
-                        "Parameteter '" + std::string ( p->GetName() ) + "' is not coefficient!" ,
+                        "Parameter `" + std::string ( p->GetName() ) + "' is not coefficient!" ,
                         "Ostap::MoreRoofit::SPlot4Tree"      ,
                         INVALID_ABSARG , __FILE__ , __LINE__ ) ;
         // ====================================================================
@@ -212,14 +212,15 @@ Ostap::Trees::add_branch
   } // ========================================================================
   // ==========================================================================
   Ostap::Assert ( items.size () == N                   , 
-                  "Invalid coefficients"               ,
+                  "Invalid coefficients!"              ,
                   "Ostap::Trees::add_branch"           ,                      
                   INVALID_ARGSET , __FILE__ , __LINE__ ) ;
   //
   const TMatrixDSym cov { the_splot.fitresult().conditionalCovarianceMatrix ( the_splot.coefficients() ) } ;
-  Ostap::Assert (  ( N == cov.GetNcols () ) &&
-                   ( N == cov.GetNrows () )            ,
-                  "Invalid covarinace matrix"          ,
+  Ostap::Assert ( cov.IsValid () &&
+		  ( N == cov.GetNcols () ) &&
+		  ( N == cov.GetNrows () )            ,
+                  "Invalid covariance matrix"          ,
                   "Ostap::Trees::add_branch"           ,                      
                   INVALID_ARGSET , __FILE__ , __LINE__ ) ;
   //

@@ -969,7 +969,7 @@ class FitHelper(VarMaker) :
                 _args.append ( ROOT.RooFit.SumW2Error ( True ) )                
             elif sw2 and aer :
                 self.warning ( "parse_args: Both 'SumW2Error' and 'AsymptoticError' are specified" )                
-            elif weighted   and sw2 :
+            elif weighted and sw2 :
                 value = bool ( sw2.getInt( 0 ) )
                 if not value : self.warning ("parse_args: 'SumW2=False' is specified for the weighted  dataset!")
             elif weighted and aer : 
