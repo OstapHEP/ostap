@@ -57,6 +57,9 @@ from copy                     import deepcopy
 from ostap.core.core          import rootError
 from ostap.trees.data_utils   import Data
 from ostap.contribs.lhcb.lumi import getLumi
+from ostap.utils.basic        import typename
+from ostap.logger.symbols     import light_bulb as lumi_symbol 
+from ostap.logger.symbols     import folder     as folder_symbol 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -113,12 +116,17 @@ class Lumi(Data):
         
     ## printout 
     def __str__(self):
+        """ The specific printout
+        """
+        l = self.getLumi() 
+        result = '%s%s: %s/pb %d%s' % (
+            lumi_symbol             ,
+            typename ( self )       ,
+            str ( l )               , 
+            len      ( self.files ) , 
+            file_symbol if file_symbol else 'files' )
         
-        l   = self.getLumi()
-        nf  = len ( self.files      )
-        ne  = len ( self.bad_files  )
-        
-        return "Lumi({}pb-1,#files={},#no/empty={}>)".format( l , nf , ne )
+        return result
 
 # =============================================================================
 ## @class DataAndLumi
@@ -174,13 +182,20 @@ class DataAndLumi(Data):
         
     ## printout 
     def __str__(self):
+        """ The specific printout
+        """
+        l = self.getLumi() 
+        result = '%s%s(%s): %s/pb %d%s  %d%s' % (
+            folder_symbol + lumi_symbol        ,
+            typename ( self )                  , 
+            ','.join ( self.chain_names[:-1] ) ,
+            str ( l )                    , 
+            len ( self.chain_names ) - 1 ,
+            tree_symbol+chain_symbol if tree_symbol and chain_symbol else 'chains' ,            
+            len ( self.files       ) , 
+            file_symbol  if file_symbol  else 'files'  )
         
-        l   = self.getLumi()
-        nf  = len ( self.files      )
-        nc  = len ( self.chain      )
-        ne  = len ( self.bad_files  )
-        
-        return "DataAndLumi({}pb-1,#files={},#entries={},#no/empty={}>)".format( l , nf , nc , ne )
+        return result 
     
 # =============================================================================
 if '__main__' == __name__ :

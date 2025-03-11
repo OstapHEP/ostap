@@ -38,7 +38,7 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.meta_info import root_info 
-from   ostap.core.core      import VE, hID, rootError 
+from   ostap.core.core      import VE, hID, rootError
 import ostap.trees.trees 
 import ostap.io.root_file
 import ROOT, os  
@@ -73,7 +73,7 @@ lumi_cuts = '0<=%s && 0<=%s' % ( lumi , lumi_err )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-09-20
 def getLumi ( data , *args ) :
-    """Get lumi :
+    """ Get lumi :
     
     >>> l1 = getLumi ( 'myfile.root' )
     >>> l2 = getLumi ( tree  )
@@ -93,7 +93,7 @@ def getLumi ( data , *args ) :
         data = os.path.expanduser ( data )
         data = os.path.expandvars ( data )
         data = os.path.expandvars ( data )
-        
+
         try :    
             tree = ROOT.TChain ( lumi_tree ) 
             tree.Add ( data )   

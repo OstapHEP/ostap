@@ -17,7 +17,8 @@
  - add (P)QR Decompositoon for matrices (+tests)
  - add LQ,QL,COD,SVD and POLAR decomposition of matrices (+tests)
  - add SCHUR decomposition for squared matrices 
-       
+ - more improvements for Files/RootFiles/Data/Lumi/DataAndLumi
+ 
 ## New features
     
     1. further improvemetn dfor wrapped columns in the table

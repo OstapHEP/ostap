@@ -23,7 +23,10 @@ __all__     = (
 )
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, path_types, sized_types  
+from   ostap.utils.basic      import typename 
 from   ostap.parallel.task    import Task
+from   ostap.logger.symbols   import tape           as file_symbol
+from   ostap.logger.symbols   import folder         as folder_symbol
 import os, glob, random, math   
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -33,10 +36,10 @@ del getLogger
 # =============================================================================
 ## @class TreatFileTask
 #  Helper class for parallel processing of long list of files 
-#  It defiend the basic teatemtn of the, calling `Files.treatFile` method
+#  It defines the basic teatment of the, calling `Files.treatFile` method
 class TreatFileTask(Task) :
     """ Helper class for parallel processing of long list of files 
-    It defiens the basic teatemtn of the, calling `Files.treatFile` method
+    It defines the basic teatment of the, calling `Files.treatFile` method
     """
     def __init__ ( self , data ) :
         self.__data  = data.clone ( files = [] ) 
@@ -518,7 +521,13 @@ class Files(object):
     def __str__(self):
         """ The specific printout
         """
-        return "<#files: %4d>" % len ( self.files ) 
+        result = '%s%s: %d%s' % (
+            folder_symbol           ,
+            typename ( self )       , 
+            len      ( self.files ) , 
+            file_symbol if file_symbol else 'files' )
+        
+        return result
     
     def __repr__    ( self ) : return self.__str__()
     def __nonzero__ ( self ) : return bool ( self.files )
@@ -555,15 +564,17 @@ class Files(object):
             rows.append ( row )
 
         ## the last row: summary
-        from ostap.logger.colorized import infostr 
+        from ostap.logger.colorized import infostr
+        from ostap.logger.symbols   import show 
         vv , unit  = fsize_unit ( total_size  )
-        row   = '' , \
+        row   = infostr ( ' \U000003A3 ' ) if show else ''   , \
             infostr ( '%3d %s' % ( vv , unit ) ) , \
             infostr ( self.commonpath )  
         rows.append ( row )
 
         if not title :
-            title = 'Files %s' % s.description
+            title = '%s %s' % ( typename ( self ) , self.description )
+            if folder_symbol : title = '%s %s' % ( folder_symbol , title )
             
         import ostap.logger.table as T
         return T.table ( rows , title = title , prefix = prefix , alignment = 'rrw' ) 

@@ -52,6 +52,7 @@ __all__     = (
     'ellipsis'         , 
     ##
     'tree'             ,    
+    'chain'            ,    
     'branch'           , 
     'leaves'           , 
     'cabinet'          , 
@@ -60,7 +61,10 @@ __all__     = (
     'graph'            ,      
     'palette'          ,    
     'document'         ,   
-    'tape_cartridge'   , 
+    'tape'             ,
+    'tape_cartridge'   ,
+    'folder'           ,
+    'light_bulb'       , 
     'weight_lifter'    ,
 )
 # ===========================================================================
@@ -121,7 +125,8 @@ plus_minus       = '\U000000B1' if show else '+/-'
 minus_plus       = '\U00002213' if show else '-/+'
 ditto            = '\U00003003' if show else '//'
 
-tree             = '\U0001f334' if show else '' 
+tree             = '\U0001f334' if show else ''
+chain            = '\U000026d3' if show else '' 
 branch           = '\U00002E19' if show else '' 
 leaves           = '\U0001F343' if show else '' 
 cabinet          = '\U0001F5c4' if show else '' 
@@ -130,7 +135,10 @@ histogram        = '\U0001F4CA' if show else ''
 graph            = '\U0001F4C8' if show else '' 
 palette          = '\U0001f3A8' if show else '' 
 document         = '\U0001F5CE' if show else '' 
+tape             = '\U00002707' if show else '' 
 tape_cartridge   = '\U0001F5AD' if show else '' 
+folder           = '\U0001F4C2' if show else '' 
+light_bulb       = '\U0001F4A1' if show else '' 
 
 less_or_equal    = '\U00002264' if show else '<='
 greater_or_equal = '\U00002265' if show else '=>'

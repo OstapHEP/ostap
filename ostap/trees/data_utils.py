@@ -53,6 +53,12 @@ from   ostap.core.ostap_types import string_types
 from   ostap.core.core        import rootError, rootWarning
 from   ostap.io.files         import Files, fsize_unit 
 from   ostap.io.root_file     import RootFiles
+from   ostap.utils.basic      import typename 
+from   ostap.logger.symbols   import chain          as chain_symbol
+from   ostap.logger.symbols   import tree           as tree_symbol
+from   ostap.logger.symbols   import branch         as branch_symbol
+from   ostap.logger.symbols   import tape           as file_symbol
+from   ostap.logger.symbols   import folder         as folder_symbol
 import ROOT, os, math  
 # =============================================================================
 # logging 
@@ -273,72 +279,42 @@ class Data(RootFiles):
     # ===================================================================================================
     ## printout 
     def __str__(self):
-        chains = self.chains 
-        result = 'Data(%s): #files=%d #entries={%s}' % (
-            ', '.join ( self.chain_names )  ,
-            len( self.files ) ,
-            ', '.join ( str ( len ( c ) ) for c in chains ) )
-        if any ( self.bad_files[c] for c in self.chain_names ) :
-            result += ' #bad={%s}' % ( ', '.join ( str ( len ( self.bad_files[c] ) )  for c in self.chain_names ) )
+        
+        result = '%s%s(%s): %d%s  %d%s' % (
+            folder_symbol                  ,
+            typename ( self )              , 
+            ','.join ( self.chain_names )  ,
+            len ( self.chain_names ) ,
+            tree_symbol+chain_symbol if tree_symbol and chain_symbol else 'chains' ,            
+            len ( self.files       ) , 
+            file_symbol  if file_symbol  else 'files'  )
+        
         return result 
     
     # =========================================================================
-    ## Print collection of files as table
+    ## Print collection of chain as table
     #  @code
     #  files = ...
-    #  print ( files.table() )    
+    #  print ( files.summary() )    
     #  @endcode
-    def table ( self , title = '' , prefix = '' , style = '' ) :
-        """ Print collection of files as table
+    def summary ( self , title = '' , prefix = '' , style = '' ) :
+        """ Print collection of chains as table
         """
-        rows  = [ ( '#' , '#entries' , 'size' , 'name' ) ]
-        files = self.files
-        nn    = len ( files )
-        nfmt  = '%%%dd' % ( math.floor ( math.log10 ( nn ) ) + 1 )
-
-        total_size    = 0
-        total_entries = 0
+        rows  = [ ( ' %s '  % ( tree_symbol + chain_symbol  if chain_symbol and tree_symbol else 'Chain' ) ,
+                    ' Entries '                                                   ,
+                    ' %s '  % ( branch_symbol if branch_symbol else 'Branches'   ) ,
+                    ' %s  ' % ( file_symbol   if file_symbol   else 'Files'      ) ) ] 
         
-        for i , f in enumerate ( files , start = 1 ) : 
-
-            row   = [ nfmt % i ]
-            fsize = self.get_file_size ( f )
-            
-            if 0 <= fsize :
-                
-                ch = ROOT.TChain ( self.chain_name ) 
-                ch.Add ( f )
-                entries = len ( ch )
-                
-                row.append ( '%d' % entries )
-
-                vv , unit = fsize_unit ( fsize )
-                row.append ( '%3d %s' % ( vv , unit) ) ## file size  
-
-                total_size    += fsize
-                total_entries += entries
-                
-            else :
-                
-                row.append ( '???' ) ## entries 
-                row.append ( '???' ) ## filezies
-                
-            row .append ( f   ) 
+        for c,t  in zip ( self.chain_names , self.chains ) :
+            row = c , '%d' % len ( t ) , '%d' % len ( t.branches () ) , '%s' % len ( t.files() )
             rows.append ( row )
-
-        ## summary row
-        from ostap.logger.colorized import infostr 
-        vv , unit  = fsize_unit ( total_size )
-        row   = ''                               , \
-            infostr ( '%d' % total_entries     ) , \
-            infostr ( '%3d %s' % ( vv , unit ) ) , \
-            infostr ( self.commonpath )
-        
-        rows.append ( row )
-
-        title = title if title else "Data(chain='%s')" % self.chain_name 
+            
+        if not title :
+            title = '%s summary' % typename ( self ) 
+            if folder_symbol : title = '%s %s' % ( folder_symbol , title )
+                
         import ostap.logger.table as T
-        return T.table ( rows , title = title , prefix = prefix , alignment = 'rrrw' , style = style ) 
+        return T.table ( rows , title = title , prefix = prefix , alignment = 'lrcc' , style = style ) 
 
     # =========================================================================
     ## check operations
