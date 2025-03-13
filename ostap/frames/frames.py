@@ -720,7 +720,7 @@ def frame_project ( frame            ,
     -- `ROOT.ROOT.RDF.TH3DModel` objects 
     
     """
-    
+
     if progress and isinstance ( frame , ROOT.TTree ) : progress = len ( frame )
 
     if isinstance ( model , _types_nD ) : 
@@ -729,7 +729,7 @@ def frame_project ( frame            ,
 
     ## decode expressons & cuts 
     current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts , progress = progress )
-    
+
     ## convert histogram-like objects into 'models'
 
     histo = None
@@ -753,7 +753,7 @@ def frame_project ( frame            ,
     else :
         raise TypeError ('Invalid model/what objects %s %s ' % ( type ( model ) , str ( pvars ) ) ) 
 
-    ## if true histo is specified, the aciton is NOT lazy!
+    ## if true histo is specified, the action is NOT lazy!
     if histo :
         histo += action.GetValue() 
         result = histo 

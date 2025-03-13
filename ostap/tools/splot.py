@@ -314,7 +314,7 @@ class sPlot(object) :
         """
         assert tree and isinstance ( tree , ROOT.TTree   ) , "sPlot: Ivalid tree!"
         for var in vars : 
-            assert var  and isinstance ( var  , string_types ) and var in tree, "sPlot: Variable '%s' not in the tree" % var 
+            assert var and isinstance ( var , string_types ) and var in tree, "sPlot: Variable '%s' not in the tree" % var 
 
         if parallel :
             import ostap.parallel.parallel_add_branch
@@ -322,8 +322,9 @@ class sPlot(object) :
         suffix = suffix.replace ( ' ' , '_' ).replace ( '-' , '_' ).strip() 
         prefix = prefix.replace ( ' ' , '_' ).replace ( '-' , '_' ).strip() 
 
-        ## process!! 
-        if unbinned :
+        # ======================================================================
+        if unbinned : # Unbined version  =======================================
+            # ==================================================================
             
             ## add to tree using Splti4tree machinery :
             splot = Ostap.MoreRooFit.SPlot4Tree (
@@ -336,13 +337,15 @@ class sPlot(object) :
             kwargs  = { 'prefix' : prefix , 'suffix' : suffix , 'progress' : self.progress , 'report' : True }
             
             mapping = {} 
-            for a,b in zip ( vars , self.pdf.vars ) : mapping [ b.name ] =  a
+            for a , b in zip ( vars , self.pdf.vars ) : mapping [ b.name ] =  a
             kwargs [ 'mapping' ]  = mapping
             
             if parallel : result = tree.padd_new_branch ( splot , **kwargs ) 
             else        : result = tree. add_new_branch ( splot , **kwargs )
 
-        else : 
+            # ==================================================================
+        else : # Binned version ================================================
+            # ==================================================================
         
             fmap   = {}
             for ww in self.hweights  :            
@@ -666,10 +669,6 @@ class sPlot3D(sPlot) :
         """
         return Ostap.Functions.FuncTH3 ( histo , xvar , yvar , zvar )
     
-
-
-
-
 # =============================================================================
 ## reconstrucct SPlot4Tree object
 def _sp4t_factory_ ( *args ) :

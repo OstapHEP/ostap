@@ -97,7 +97,7 @@ __date__     = "2011-12-01"
 __all__      = (
     "ProgressBar"   , ## Progress bas as it is 
     "RunningBar"    , ## Running bar 
-    "progress_bar"  , ## helper function fro ProgressBar 
+    "progress_bar"  , ## helper function for ProgressBar 
     "running_bar"     ## helper function for RunningBar 
     )
 # =============================================================================
@@ -317,9 +317,12 @@ class ProgressBar(object):
             feta  = int ( ( 100 - done ) *  ( now -  self.__start ) / done )
             h , _ = divmod ( feta            , 3600 )
             m , s = divmod ( feta - h * 3600 ,   60 )
-            if   h     : eta = 'ETA %02dh%02d\'%02d" ' % ( h , m , s )
-            elif m     : eta = 'ETA %02d\'%02d" '      % (     m , s )
-            elif s >=1 : eta = 'ETA %02d" '            %           s 
+            if   h     : eta = '%02dh%02d\'%02d" ' % ( h , m , s )
+            elif m     : eta = '%02d\'%02d" '      % (     m , s )
+            elif s >=1 : eta = '%02d" '            %           s
+            ## 
+            if clock   : eta = clock + ' ' + eta
+            eta  = 'ETA ' + eta 
             leta = len ( eta )
             
         elif ( not self.__end is None ) and 6 < num_hashes :
@@ -330,10 +333,12 @@ class ProgressBar(object):
             m , s = divmod ( feta - h * 3600 ,   60 )
             if   h     : eta = '%02dh%02d\'%02d" ' % ( h , m , s )
             elif m     : eta = '%02d\'%02d" '      % (     m , s )
-            elif s >=1 : eta = '%d" '              %           s 
+            elif s >=1 : eta = '%d" '              %           s
+            ## 
+            if clock   : eta = clock + ' ' + eta
             leta = len ( eta )
 
-        if finish   and 100 <= done : 
+        if finish   and 100 <= done :
             eta   = finish + ' ' + eta
             leta += 2
         elif runner and done < 100 :

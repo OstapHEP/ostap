@@ -27,6 +27,10 @@ from   ostap.utils.basic      import typename
 from   ostap.parallel.task    import Task
 from   ostap.logger.symbols   import tape           as file_symbol
 from   ostap.logger.symbols   import folder         as folder_symbol
+from   ostap.logger.symbols   import union          as union_symbol
+from   ostap.logger.symbols   import intersection   as intersection_symbol
+from   ostap.logger.symbols   import exclusive_or   as xor_symbol
+from   ostap.logger.symbols   import difference     as diff_symbol
 import os, glob, random, math   
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -96,8 +100,7 @@ class Files(object):
         #
         if   isinstance ( files , path_types ) : files = [ files ]
         elif isinstance ( files , Files      ) : files = files.files   
-        #
-        
+        #        
         self.__description  = description
         self.__silent       = silent 
 
@@ -324,23 +327,40 @@ class Files(object):
         """ Union of several file collections 
         """
         assert others and all ( isinstance ( o , Files  ) for o in others ) , "Invalid arguments"
-        files = set ( files ) 
+        files = set ( self.files ) 
         for s in others : files |= set ( s.files )
-        result = self.clone ( files = files ) 
+        joiner      = union_symbol if union_symbol else '|'
+        description = self.join_description ( joiner , *others ) 
+        result = self.clone ( files = files , description = description ) 
         result.extra_action ( *others ) 
         return result 
     
-    ## union of several file collections 
+    ## Intersection of several file collections 
     def intersection ( self , *others ) :
         """ Intersection of several file collections 
         """
         assert others and all ( isinstance ( o , Files  ) for o in others ) , "Invalid arguments"
-        files = set ( files ) 
+        files = set ( self.files ) 
         for s in others : files &= set ( s.files )
-        result = self.clone ( files = files ) 
+        joiner      = intersection_symbol if intersection_symbol else '&'
+        description = self.join_description ( joiner , *others ) 
+        result = self.clone ( files = files , description = description ) 
         result.extra_action ( *others ) 
         return result 
-    
+
+    ## Differenvr of several file collections 
+    def difference ( self , *others ) :
+        """ Difference of several file collections 
+        """
+        assert others and all ( isinstance ( o , Files  ) for o in others ) , "Invalid arguments"
+        files = set ( self.files ) 
+        for s in others : files -= set ( s.files )
+        joiner      = diff_symbol if diff_symbol else '-'
+        description = self.join_description ( joiner , *others ) 
+        result = self.clone ( files = files , description = description ) 
+        result.extra_action ( *others ) 
+        return result 
+
     ## merge two sets together
     def __or__ ( self , right ) :
         """ Merge two sets together
@@ -361,7 +381,17 @@ class Files(object):
         >>> ds  = ds1 * ds2 ## ditto
         """
         if not self.check_ops ( right ) : return NotImplemented
-        return self.intersectin ( right ) 
+        return self.intersection ( right )
+    
+    ## subtraction for datasets 
+    def __sub__ (  self , right ) :
+        """ Get subtraction of two sets
+        >>> ds1 = ...
+        >>> ds2 = ...
+        >>> ds  = ds1 - ds2 ## get subtraction 
+        """
+        if not self.check_ops ( right ) : return NotImplemented
+        return self.difference ( right )
 
     ## get an exclusive OR for two datasets 
     def __xor__ (  self , right ) :
@@ -371,8 +401,10 @@ class Files(object):
         >>> ds  = ds1 ^ ds2 ## get an exclusive OR 
         """
         if not self.check_ops ( right ) : return NotImplemented
-        files  = set ( self.files ) & set ( right.files )
-        result = self.clone ( files = files )         
+        files  = set ( self.files ) ^ set ( right.files )
+        joiner      = xor_symbol if xor_symbol else '^'
+        description = self.join_description ( joiner , *others )         
+        result = self.clone ( files = files , description = description )
         result.extra_action ( right ) 
         return result 
 
@@ -388,8 +420,9 @@ class Files(object):
         >>> ds  += ds2 ## ditto
         """
         if not self.check_ops ( right ) : return NotImplemented
-        self.__files = tuple ( sorted ( set ( self.files ) | set ( right.files ) ) ) 
-        self.__description = "|".join ( "(%s)" for s in ( self.description , right.description ) )
+        self.__files      = tuple ( sorted ( set ( self.files ) | set ( right.files ) ) )
+        joiner             = union_symbol if union_symbol else '|'
+        self.__description = self.join_description ( joiner , right )
         self.extra_action ( right ) 
         return self
 
@@ -402,65 +435,28 @@ class Files(object):
         >>> ds  *= ds2 ## ditto
         """
         if not self.check_ops ( right ) : return NotImplemented
-        self.__files = tuple ( sorted ( set ( self.files ) & set ( right.files ) ) ) 
-        self.__description = "&".join ( "(%s)" for s in ( self.description , right.description ) )
+        self.__files       = tuple ( sorted ( set ( self.files ) & set ( right.files ) ) )
+        joiner             = intersection_symbol if intersection_symbol else '&'        
+        self.__description = self.join_description ( joiner , right )
         self.extra_action ( right ) 
         return self
 
-    __iadd__  = __ior__    
-    __imul__  = __iand__ 
-    
-    ## append with another dataset
+    ## subtract another dataset
     def __isub__ ( self , right) :
-        """ Subtract with another dataset 
+        """ Subtract another dataset 
         >>> ds1 = ...
         >>> ds2 = ...
         >>> ds  -= ds2 
         """
         if not self.check_ops ( right ) : return NotImplemented
         self.__files = tuple ( sorted ( set ( self.files ) - set ( right.files ) ) ) 
-        self.__description = "-".join ( "(%s)" for s in ( self.description , right.description ) )
+        joiner             = diff_symbol if diff_symbol else '-'        
+        self.__description = self.join_description ( joiner , right )
         self.extra_action ( right ) 
         return self
 
-    ## subtraction for datasets 
-    def __add__ (  self , right ) :
-        """ Add two sets
-        >>> ds1 = ...
-        >>> ds2 = ...
-        >>> ds  = ds1 + ds2 ## add them  
-        """
-        if not self.check_ops ( right ) : return NotImplemented
-        result  = self.clone()
-        result += right 
-        return result 
-         
-    ## intersection for datasets 
-    def __and__ (  self , right ) :
-        """ Intersection two sets
-        >>> ds1 = ...
-        >>> ds2 = ...
-        >>> ds  = ds1 & ds2 ## intersection   
-        """
-        if not self.check_ops ( right ) : return NotImplemented
-        result  = self.clone()
-        result &= right   
-        return result
-    
-    __or__  = __add__
-    __mul__ = __and__ 
-      
-    ## subtraction for datasets 
-    def __sub__ (  self , right ) :
-        """ Get subtraction of two sets
-        >>> ds1 = ...
-        >>> ds2 = ...
-        >>> ds  = ds1 - ds2 ## get subtraction 
-        """
-        if not self.check_ops ( right ) : return NotImplemented
-        result  = self.clone()
-        result -= right 
-        return result 
+    __iadd__  = __ior__    
+    __imul__  = __iand__ 
     
     # =========================================================================
     ## get a sample of at most  n-elements (if n is integer and >=1 )  or n-fraction 
@@ -628,6 +624,17 @@ class Files(object):
         cp = commonpath ( files )
         return cp if os.path.isdir ( cp ) else os.path.dirname ( cp ) 
 
+    # ======================================================================
+    ## Helper method to join descriptions
+    def join_description ( self , joiner , *others ) :
+        """ Helper methofd to join the descriptions
+        """
+        if not others : return self.description
+        lst = [ self.description ] + [ o.description for o in others ]
+        j   = ' ' + joiner + ' ' 
+        ## return '( ' + j.join ( lst ) + ' )'
+        return j.join ( lst ) 
+    
     # =========================================================================
     ## copy all the files to new directory
     #  - new directory will be created (if needed)

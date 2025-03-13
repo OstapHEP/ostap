@@ -10,62 +10,68 @@
 #  @date   2013-02-10
 #  
 # =============================================================================
-"""Module with some simple but useful utilities"""
+""" Module with some simple but useful utilities """
 # =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2013-02-10"
 # =============================================================================
 __all__     = (
-    'show'             , ## 
-    'checked_yes'      ,   
-    'checked_no'       ,
-    'question_mark'    ,
-    'hand_ok'          ,
-    'squared_ok'       ,
-    'thumb_up'         ,
-    'thumb_down'       ,
-    'clock'            ,
-    'ram'              ,
-    'runner'           ,
-    'finish'           ,
+    'show'                , ## 
+    'checked_yes'         ,   
+    'checked_no'          ,
+    'question_mark'       ,
+    'hand_ok'             ,
+    'squared_ok'          ,
+    'thumb_up'            ,
+    'thumb_down'          ,
+    'clock'               ,
+    'ram'                 ,
+    'runner'              ,
+    'finish'              ,
     ## 
-    'clock_ticks'      ,
-    'arrow_left'       ,   
-    'arrow_right'      ,  
-    'arrow_rightleft'  ,
+    'clock_ticks'         ,
+    'arrow_left'          ,   
+    'arrow_right'         ,  
+    'arrow_rightleft'     ,
     ##
-    'times'            , 
-    'ditto'            , 
+    'times'               , 
+    'ditto'               , 
     ##
-    'plus_minus'       , 
-    'minus_plus'       ,
+    'plus_minus'          , 
+    'minus_plus'          ,
     #3
-    'less_or_equal'    ,
-    'greater_or_equal' , 
-    'much_less'        , 
-    'much_greater'     , 
-    'equivalent'       ,
+    'less_or_equal'       ,
+    'greater_or_equal'    , 
+    'much_less'           , 
+    'much_greater'        , 
+    'equivalent'          ,
+    'similar'             ,
+    'approximate'         ,
+    'not_equal'           ,
     ##
-    'langle'           , 
-    'rangle'           , 
-    'ellipsis'         , 
+    'langle'              , 
+    'rangle'              , 
+    'ellipsis'            ,
     ##
-    'tree'             ,    
-    'chain'            ,    
-    'branch'           , 
-    'leaves'           , 
-    'cabinet'          , 
-    'frame'            ,       
-    'histogram'        ,  
-    'graph'            ,      
-    'palette'          ,    
-    'document'         ,   
-    'tape'             ,
-    'tape_cartridge'   ,
-    'folder'           ,
-    'light_bulb'       , 
-    'weight_lifter'    ,
+    'union'               , 
+    'intersection         '
+    ##
+    'tree'                ,    
+    'chain'               ,    
+    'branch'              , 
+    'leaves'              , 
+    'cabinet'             , 
+    'frame'               ,       
+    'histogram'           ,  
+    'graph'               ,      
+    'palette'             ,    
+    'document'            ,   
+    'tape'                ,
+    'tape_cartridge'      ,
+    'folder'              ,
+    'light_bulb'          , 
+    'weight_lifter'       ,
 )
 # ===========================================================================
 from   ostap.utils.basic import isatty, has_unicode 
@@ -145,8 +151,32 @@ greater_or_equal = '\U00002265' if show else '=>'
 much_less        = '\U0000226A' if show else '<<'
 much_greater     = '\U0000226B' if show else '>>'
 equivalent       = '\U00002261' if show else '='
+similar          = '\U0000223C' if show else '~'
+approximate      = '\U00002248' if show else '~='
+not_equal        = '\U00002260' if show else '!='
+
 
 weight_lifter    = '\U0001F3CB' if show else '' 
+
+union            = '\U000022C3' if show else ''
+intersection     = '\U000022C2' if show else ''
+exclusive_or     = '\U000022BB' if show else '^'
+difference       = '\U000022BB' if show else '-'
+
+## capital Greek Sigma 
+sum_symbol       = '\U00002211'           if show else 'sum '
+## lowercase Greek sigma 
+rms_symbol       = '\U000003C3'           if show else 'rms '
+## squared lower case Greek sigma 
+dispersion_sym   = '\U000003c3\U000000B2' if show else 'D '
+## squared lower case Greek sigma 
+variance_sym     = '\U000003c3\U000000B2' if show else 'var '
+
+
+# ==================================================
+def the_sum  ( what ) : return '%s%s'   % ( sum_symbol , what ) 
+def the_mean ( what ) : return '%s%s%s' % ( langle , what , rangle ) 
+def the_rms  ( what ) : return '%s%d'   % ( rms_symbol , what ) 
 
 # =============================================================================
 if '__main__' == __name__ :
