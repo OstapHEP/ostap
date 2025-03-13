@@ -55,7 +55,7 @@ __all__     = (
     'ellipsis'            ,
     ##
     'union'               , 
-    'intersection         '
+    'intersection'        ,
     ##
     'tree'                ,    
     'chain'               ,    
