@@ -16,10 +16,12 @@ __date__    = "2020-05-16"
 __version__ = "$Revision:$" 
 # =============================================================================
 __all__ = (
-    'whichdb'    , ## guess database type  
+    'whichdb'    , ## guess database type
+    'isdbase'    , ## ditto 
     'dbopen'     , ## open database
     'Item'       , ## item: named tuple (time,payload)
-    'TmpDB'      , ## mixing for tempoirary database 
+    'TmpDB'      , ## mixing for tempoirary database
+    
     )
 # =============================================================================
 import sys, os, collections
@@ -249,6 +251,10 @@ def whichdb ( filename  ) :
 
     ## unknown 
     return ""
+
+# ============================================================================
+## another name for <code>whichdb</code>
+isdbase = whichdb
 
 # ============================================================================
 ## Open or create database at path given by *file*.
