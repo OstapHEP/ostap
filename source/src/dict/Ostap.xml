@@ -58,8 +58,10 @@
     <class pattern = "ROOT::Math::LorentzVector*"      />
     <class pattern = "ROOT::Math::Impl::Plane3D*"      />
 
-    <class    pattern = "gsl_*" />
-    <function pattern = "gsl_*" />
+    <class    pattern = "gsl_*"    />
+    <function pattern = "gsl_*"    />
+    <class    pattern = "TMatrix*" />
+    <class    pattern = "TVector*" />
     
     <class name    = "Ostap::Utils::Tee">
       <field name  = "m_file"   />      

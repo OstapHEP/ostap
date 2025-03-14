@@ -115,7 +115,7 @@ def test_splotting  () :
                                                                       root_info.patch ) )
         return
     
-    files = prepare_data ( 10 , 10000 )
+    files = prepare_data ( 1 , 10000 )
     
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data  ( files , 'S' )
@@ -133,7 +133,7 @@ def test_splotting  () :
                                sigma = ( sigma , 0.5 * sigma , 2.0 * sigma           ) )
     
     gauss.sigma.fix()    
-    model = Models.Fit1D( signal = gauss , background = 0 )
+    model = Models.Fit1D ( signal = gauss , background = 0 )
     NS = 0.5 * ( histo.Integral() )
     NB = 0.5 * ( histo.Integral() )
     
@@ -175,16 +175,26 @@ def test_splotting  () :
             db ['splot,f;fast=%s' % fast ] = fnsp  
             db.ls()
 
-
         with timing ( "Adding   BINNED sPlot results to TTree/TChain" , logger = logger ) :
             chain = data.chain
-            sp.add_to_tree ( chain , 'x' , prefix = 'f' if fast else 'n' ,  unbinned = False , parallel = True )
+            sp.add_to_tree ( chain , 'x' , prefix = 'f' if fast else 'n' ,  unbinned = False , parallel = False  )
 
-            
+    
     with timing ( "Adding UNBINNED sPlot results to TTree/TChain" , logger = logger ) :
         chain = data.chain 
         sp    = sPlot1D ( model , dataset = histo  , nbins = 500 , fast = fast ) ## SPLOT IT! 
         sp.add_to_tree ( chain , 'x' , prefix = 'u' , unbinned = True , parallel = True )
+
+
+    ## 
+    ## COWs
+    ##
+    print ( 'COWS' ) 
+    cows = Ostap.MoreRooFit.COWs ( model.pdf             ,
+                                   model.histo_data.dset ,
+                                   model.vars             )
+
+    """
 
     chain = data.chain
     
@@ -240,7 +250,8 @@ def test_splotting  () :
 
         chain.project ( hbf , 'y' , 'fB_sw'   )        
         hbf.draw ('same')
-
+    """
+    
 # =============================================================================
 if '__main__' ==  __name__  :
 

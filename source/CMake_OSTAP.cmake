@@ -17,6 +17,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Chi2Fit.cpp
                          src/Combine.cpp
                          src/Covariance.cpp
+                         src/COWs.cpp
                          src/Dalitz.cpp
                          src/DalitzIntegrator.cpp
                          src/DataFrameActions.cpp

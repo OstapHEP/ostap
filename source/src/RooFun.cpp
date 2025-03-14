@@ -72,10 +72,38 @@ Ostap::MoreRooFit::RooFun::RooFun
   , m_parameters  () 
   , m_normset     () 
 {
+  this->Init ( observables , normalization ) ;
+}
+// ============================================================================
+/*  @param fun the function 
+ *  @param data input data 
+ *  @param normalzation normalization set 
+ */
+// ============================================================================
+Ostap::MoreRooFit::RooFun::RooFun 
+( const RooAbsReal&       fun           ,
+  const RooAbsData&       data          ,
+  const RooAbsCollection* normalization )
+  : m_fun         { static_cast<RooAbsReal*> ( fun.clone () ) }
+  , m_observables () 
+  , m_parameters  () 
+  , m_normset     () 
+{
   // ==========================================================================
-  /// get observables
+  const std::unique_ptr<RooArgSet> observables { m_fun->getObservables ( data ) } ; 
+  this->Init ( *observables , normalization ) ;
+  // ==========================================================================
+}
+// ============================================================================
+// perform initialization 	  
+// ============================================================================
+void Ostap::MoreRooFit::RooFun::Init
+( const RooAbsCollection& observables   ,
+  const RooAbsCollection* normalization )
+{  
+  /// the get observables
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,26,0)
- // ===========================================================================
+  // ===========================================================================
   RooArgSet obsset {} ; ::copy ( observables , obsset ) ;
   // ==========================================================================
 #else // ======================================================================
@@ -101,15 +129,15 @@ Ostap::MoreRooFit::RooFun::RooFun
                         "Invalid/nullptr observable"             , 
                         "Ostap::MoreRoofit::RooFun"              ,
                         INVALID_OBSERVABLE , __FILE__ , __LINE__ ) ;
-      //
-      const RooAbsRealLValue*     rv = dynamic_cast<RooAbsRealLValue*> ( o ) ;
-      const RooAbsCategoryLValue* cv = nullptr ;
-      if (  nullptr == rv ) { cv = dynamic_cast<RooAbsCategoryLValue*> ( o ) ; }
-      Ostap::Assert ( ( nullptr != rv ) || ( nullptr != cv ) , 
-                      "Illegal observable " + Ostap::Utils::toString ( *o ) , 
-                      "Ostap::MoreRoofit::RooFun"                           ,
-                      INVALID_OBSERVABLE , __FILE__ , __LINE__              ) ;
-      // ======================================================================
+	//
+	const RooAbsRealLValue*     rv = dynamic_cast<RooAbsRealLValue*> ( o ) ;
+	const RooAbsCategoryLValue* cv = nullptr ;
+	if (  nullptr == rv ) { cv = dynamic_cast<RooAbsCategoryLValue*> ( o ) ; }
+	Ostap::Assert ( ( nullptr != rv ) || ( nullptr != cv ) , 
+			"Illegal observable " + Ostap::Utils::toString ( *o ) , 
+			"Ostap::MoreRoofit::RooFun"                           ,
+			INVALID_OBSERVABLE , __FILE__ , __LINE__              ) ;
+	// ======================================================================
       } //                                                  The end of the loop
     // ========================================================================
   } //                                                       The en of if-block
@@ -135,6 +163,9 @@ Ostap::MoreRooFit::RooFun::RooFun
     }
   // ==========================================================================
 }
+// ============================================================================
+
+
 // ============================================================================
 // Copy constuctor
 // ============================================================================

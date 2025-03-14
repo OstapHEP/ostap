@@ -44,7 +44,7 @@ const RooAddPdf&
 Ostap::MoreRooFit::SPlot4Tree::pdf () const
 { return static_cast<const RooAddPdf&> ( *m_fun ) ; }
 // ============================================================================
-// size of object: number of ocmponnent
+// size of object: number of componnent
 // ============================================================================
 std::size_t
 Ostap::MoreRooFit::SPlot4Tree::size      () const
@@ -77,11 +77,11 @@ Ostap::MoreRooFit::SPlot4Tree::SPlot4Tree
   m_coefs = std::make_unique<RooArgList> ( fractions ( pdf () , recursive ) ) ;
   Ostap::Assert ( ::size ( *m_cmps ) == ::size ( *m_coefs ) ,
                   "Mismatch in component/coefficients size" ,
-                  "Ostap::MoreRoofit:SPlot2Tree"            , 
+                  "Ostap::MoreRooFit::SPlot2Tree"           , 
                   INVALID_PDF , __FILE__ , __LINE__         ) ;
   Ostap::Assert ( !recursive                                ,
                   "Fractions cannot be recursive"           ,
-                  "Ostap::MoreRoofit:SPlot2Tree"            , 
+                  "Ostap::MoreRooFit::SPlot2Tree"           , 
                   INVALID_PDF , __FILE__ , __LINE__         ) ;
   // ==========================================================================
   // check validity of coefficiencts
@@ -149,55 +149,72 @@ Ostap::MoreRooFit::SPlot4Tree::SPlot4Tree
 // ============================================================================
 Ostap::MoreRooFit::SPlot4Tree::~SPlot4Tree() {}
 // ============================================================================
-/*  Add sPlot information to the tree 
- *  @param tree  input tree 
- *  @param splot sPlot object 
- *  @param prefix prefix for the branch names 
- *  @param suffix suffix for the branch names 
- *  @return StatusCode
- */
-// ============================================================================
 
 #include <iostream>
 
-Ostap::StatusCode
-Ostap::Trees::add_branch
-( TTree*                               tree     ,
-  const Ostap::MoreRooFit::SPlot4Tree& splot    ,
-  const std::string&                   prefix   ,
-  const std::string&                   suffix   , 
-  const Ostap::Trees::DCT&             mapping  ,
-  const Ostap::Utils::ProgressConf&    progress )
+namespace
 {
-  //
-  if ( !tree )                       { return INVALID_TREE ; }
-  //
-  // keep a local copy
-  const Ostap::MoreRooFit::SPlot4Tree the_splot { splot                   } ;
-  const Ostap::Trees::RooGetter       getter    ( mapping                 ,
-                                                  the_splot.observables() ,
-                                                  tree                    ) ;
-  //
-  const std::size_t N = the_splot.size()   ;
-  //                  name/0      c/1   d/2    b/3 
-  typedef std::tuple<std::string,double,double, double> ITEM  ;
-  typedef std::vector<ITEM>                             ITEMS ; 
-  ITEMS items {} ; items.reserve ( N ) ;
   // ==========================================================================
-  { // ========================================================================
-    // ========================================================================
-    for ( const RooAbsArg* c : the_splot.coefficients () )
+  /*  Add sPlot/COW information to the tree 
+   *  @param tree  input tree 
+   *  @param splot sPlot object 
+   *  @param prefix prefix for the branch names 
+   *  @param suffix suffix for the branch names 
+   *  @return StatusCode
+   */
+  // ============================================================================
+  Ostap::StatusCode
+  _add_branch_
+  ( TTree*                            tree          ,
+    // PDF 
+    const RooAddPdf&                  total         ,
+    const RooArgList&                 components    ,
+    const RooArgList&                 coefficients  ,
+    /// varibales
+    const RooArgSet&                  observables   ,
+    const RooArgSet*                  normalization ,
+    // The matrix 
+    const TMatrixDSym&                matrix        ,
+    // names 
+    const std::string&                prefix        ,
+    const std::string&                suffix        , 
+    const Ostap::Trees::DCT&          mapping       ,
+    const Ostap::Utils::ProgressConf& progress      )
+  {
+    //
+    if ( !tree )            { return INVALID_TREE ; }
+    //
+    Ostap::Assert ( components.size() == coefficients.size()     ,
+		    "Invalid components/coefficiencts structure" ,
+		    "Ostap::Trees::add_branch"                   ,		   
+		    INVALID_ARGSET , __FILE__ , __LINE__         ) ;
+    //
+    Ostap::Assert ( matrix.IsValid ()                      &&
+		    components.size() == matrix.GetNrows() &&
+		    components.size() == matrix.GetNcols() , 
+		    "Invalid matrix structure"             ,
+		    "Ostap::Trees::add_branch"             ,
+		    INVALID_TMATRIX , __FILE__ , __LINE__  ) ;
+    //
+    matrix.Print("vvv") ;
+    //
+    std::unique_ptr<RooArgSet>    obsset { std::make_unique<RooArgSet> ( observables ) } ;
+    const Ostap::Trees::RooGetter getter ( mapping , *obsset , tree ) ;
+    // the size of the problem:
+    const std::size_t N = components.size()   ;
+    //                  name/0      c/1    d/2    b/3 
+    typedef std::tuple<std::string,double,double, double> ITEM  ;
+    typedef std::vector<ITEM>                             ITEMS ; 
+    ITEMS items {} ; items.reserve ( N ) ;
+    // ==========================================================================
+    { // ========================================================================
+      // ========================================================================
+      for ( const RooAbsArg* c : coefficients  )
       {
         // =====================================================================
         Ostap::Assert ( nullptr != c                         ,
                         "Invalid coefficient"                ,
                         "Ostap::Trees::add_branch"           ,
-                        INVALID_ABSARG , __FILE__ , __LINE__ ) ;
-        const RooAbsArg*       aa = the_splot.fitresult().floatParsFinal().find ( c->GetName() ) ;
-        if ( nullptr == aa ) { aa = the_splot.fitresult().constPars()     .find ( c->GetName() ) ; }
-        Ostap::Assert ( nullptr != aa  ,
-                        "Coefficient is not found:" + Ostap::Utils::toString ( *c ) ,
-                        "Ostap::Trees::add_branch"           ,                      
                         INVALID_ABSARG , __FILE__ , __LINE__ ) ;
         const RooAbsReal*      rv = dynamic_cast<const RooAbsReal*>     ( c ) ;
         const RooAbsCategory*  cv = nullptr ;
@@ -219,15 +236,127 @@ Ostap::Trees::add_branch
                   "Ostap::Trees::add_branch"           ,                      
                   INVALID_ARGSET , __FILE__ , __LINE__ ) ;
   //
-  // const TMatrixDSym cov { the_splot.fitresult().conditionalCovarianceMatrix ( the_splot.coefficients() ) } ;
+  // ==========================================================================
+  // create branches 
+  typedef std::vector<TBranch*> BRANCHES ; 
+  BRANCHES branches {} ; branches.reserve ( N ) ;
+  { // ========================================================================
+    for ( auto& item : items ) 
+      {
+        const std::string cname = std::get<0> ( item  ) ;
+        const std::string bname { prefix + cname + suffix } ;
+        const std::string bspec { bname  + "/D" } ;
+        TBranch* branch = tree->Branch ( bname.c_str() , &std::get<3> ( item ) , bspec.c_str () ) ; // get<3>!
+        Ostap::Assert ( branch                         ,
+                        "Cannot create branch " + bname             ,
+                        "Ostap::Trees::add_branch"                 , 
+                        CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;
+        //
+        branches.push_back ( branch ) ;
+      } // ====================================================================
+    // ========================================================================
+  } // ========================================================================
+  // check branches 
+  Ostap::Assert ( N == branches.size()                       ,
+                  "Missing branch"                           , 
+                  "Ostap::Trees::add_branch"                 , 
+                  CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;
+  
+  // loop over the TTree entries
+  const Long64_t nentries = tree->GetEntries(); 
+  Ostap::Utils::ProgressBar bar ( nentries , progress  ) ;
+  for ( Long64_t entry = 0 ; entry < nentries ; ++entry , ++bar )
+    {
+      if ( tree->GetEntry ( entry ) < 0 ) { break ; };
+      //
+      /// assign the observables 
+      getter.assign ( *obsset, tree ) ;
+      
+      /// (1) get the component values and the total 
+      double total = 0 ; // sum_i ci*d_i
+      for  ( unsigned int i = 0 ; i < N ; ++i )
+        {
+          const RooAbsReal* cmp = static_cast<RooAbsReal*> ( components.at ( i ) ) ;
+          Ostap::Assert ( nullptr != cmp                       ,
+                          "Invalid fit component"              , 
+                          "Ostap::Trees::add_branch"           , 
+                          INVALID_ABSARG , __FILE__ , __LINE__ ) ;
+          // get the component value 
+          const double dval = normalization ? cmp->getVal ( normalization ) : cmp->getVal() ;
+          total += dval * std::get<1> ( items [ i ] ) ;                  // get<1>
+          std::get<2> ( items [ i ] ) = dval ;                           // get<2> 
+        }
+      /// (2) calculate s-weights   
+      for ( unsigned int i = 0 ; i < N ; ++i )
+        {
+          double sum = 0 ;
+          for ( unsigned int j = 0 ; j < N ; ++j )
+            { sum += matrix ( i , j ) * std::get<2> ( items [ j ] ) ; }    // get<2> 
+          std::get<3> ( items [ i ] ) = sum / total ;                   // get<3> 
+        }
+      /// (3) commit branches 
+      for ( auto* branch : branches ) { branch->Fill() ; }
+      // ======================================================================
+    } //                                   The end of th loop over Tree-entries
+  // ==========================================================================
+  //
+  return Ostap::StatusCode::SUCCESS ;
+  // ==========================================================================
+  }
+  // ==========================================================================
+} //                                            The end of anynymous nampespace 
+// ==========================================================================
+/*  Add sPlot information to the tree 
+ *  @param tree  input tree 
+ *  @param splot sPlot object 
+ *  @param prefix prefix for the branch names 
+ *  @param suffix suffix for the branch names 
+ *  @return StatusCode
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch
+( TTree*                               tree     ,
+  const Ostap::MoreRooFit::SPlot4Tree& splot    ,
+  const std::string&                   prefix   ,
+  const std::string&                   suffix   , 
+  const Ostap::Trees::DCT&             mapping  ,
+  const Ostap::Utils::ProgressConf&    progress )
+{
+  //
+  if ( !tree )                       { return INVALID_TREE ; }
+  //
+  // keep a local copy
+  const Ostap::MoreRooFit::SPlot4Tree the_splot { splot } ;
+  const std::size_t                   N         { the_splot.size() } ; 
+  // ==========================================================================
+  { // ========================================================================
+    // ========================================================================
+    for ( const RooAbsArg* c : the_splot.coefficients () )
+      {
+        // ====================================================================
+        Ostap::Assert ( nullptr != c                         ,
+                        "Invalid coefficient"                ,
+                        "Ostap::Trees::add_branch"           ,
+                        INVALID_ABSARG , __FILE__ , __LINE__ ) ;
+        const RooAbsArg*       aa = the_splot.fitresult().floatParsFinal().find ( c->GetName() ) ;
+        if ( nullptr == aa ) { aa = the_splot.fitresult().constPars()     .find ( c->GetName() ) ; }
+        Ostap::Assert ( nullptr != aa  ,
+                        "Coefficient is not found:" + Ostap::Utils::toString ( *c ) ,
+                        "Ostap::Trees::add_branch"           ,                      
+                        INVALID_ABSARG , __FILE__ , __LINE__ ) ;
+      } // ====================================================================
+  } // ========================================================================
+  // ==========================================================================
+  // Get the matrim for the fit and extend it if needed 
   const TMatrixDSym& cm = the_splot.fitresult().covarianceMatrix () ;
   const Int_t NN = N ;
-  // extended covarinace matrix 
+  // extended covariance matrix 
   TMatrixDSym cov { NN } ;
   if ( N == cm.GetNrows() ) { cov = cm ; }
   else
     {
-      // fill the matrix with conten & zeroes 
+      // fill the matrix with content & zeroes 
       const RooArgList& floatParsFinal = the_splot.fitresult().floatParsFinal() ;
       const RooArgList& coefficients   = the_splot.coefficients() ;
       for ( const RooAbsArg* ci : coefficients  )
@@ -254,74 +383,94 @@ Ostap::Trees::add_branch
                   "Ostap::Trees::add_branch"           ,                      
                   INVALID_ARGSET , __FILE__ , __LINE__ ) ;
   //
-  // create branches 
-  typedef std::vector<TBranch*> BRANCHES ; 
-  BRANCHES branches {} ; branches.reserve ( N ) ;
-  { // ========================================================================
-    for ( auto& item  : items ) 
-      {
-        const std::string  cname = std::get<0> ( item  ) ;
-        const std::string  bname { prefix + cname + suffix } ;
-        const std::string  bspec { bname  + "/D" } ;
-        TBranch* branch = tree->Branch ( bname.c_str() , &std::get<3> ( item ) , bspec.c_str () ) ; // get<3>!
-        Ostap::Assert ( branch                         ,
-                        "Cannot create branch " + bname             ,
-                        "Ostap::Trees::add_branch"                 , 
-                        CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;
-        //
-        branches.push_back ( branch ) ;
-      } // ====================================================================
-    // ========================================================================
-  } // ========================================================================
-  // check branches 
-  Ostap::Assert ( N == branches.size()                       ,
-                  "Missing branch"                           , 
-                  "Ostap::Trees::add_branch"                 , 
-                  CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;
-  //
-  // normalization 
-  const RooArgSet* normset = the_splot.normalization() ;
-  //
-  // loop over the TTree entries
-  const Long64_t nentries = tree->GetEntries(); 
-  Ostap::Utils::ProgressBar bar ( nentries , progress  ) ;
-  for ( Long64_t entry = 0 ; entry < nentries ; ++entry , ++bar )
-    {
-      if ( tree->GetEntry ( entry ) < 0 ) { break ; };
-      //
-      /// assign the observables 
-      getter.assign ( the_splot.observables () , tree ) ;
-      /// (1) get the component values and the total 
-      double total = 0 ; // sum_i ci*d_i
-      for  ( unsigned int i = 0 ; i < N ; ++i )
-        {
-          const RooAbsReal* cmp = static_cast<RooAbsReal*> ( the_splot.components().at ( i ) ) ;
-          Ostap::Assert ( nullptr != cmp                       ,
-                          "Invalid fit component"              , 
-                          "Ostap::Trees::add_branch"           , 
-                          INVALID_ABSARG , __FILE__ , __LINE__ ) ;
-          // get the component value 
-          const double dval = normset ? cmp->getVal ( normset ) : cmp->getVal() ;
-          total += dval * std::get<1> ( items [ i ] ) ;                  // get<1>
-          std::get<2> ( items [ i ] ) = dval ;                           // get<2> 
-        }
-      /// (2) calculate s-weights   
-      for ( unsigned int i = 0 ; i < N ; ++i )
-        {
-          double sum = 0 ;
-          for ( unsigned int j = 0 ; j < N ; ++j )
-            { sum += cov ( i , j ) * std::get<2> ( items [ j ] ) ; }    // get<2> 
-          std::get<3> ( items [ i ] ) = sum / total ;                   // get<3> 
-        }
-      /// (3) commit branches 
-      for ( auto* branch : branches ) { branch->Fill() ; }
-      // ======================================================================
-    } //                                   The end of th loop over Tree-entries
-  // ==========================================================================
-  //
-  return Ostap::StatusCode::SUCCESS ;
-  // ===========================================================================
+  // delegat the job to generi methpd
+  return _add_branch_ ( tree                       ,
+			the_splot.pdf           () , 
+			the_splot.components    () ,
+			the_splot.coefficients  () ,
+			the_splot.observables   () ,
+			the_splot.normalization () ,
+			cov                        ,
+			prefix                     ,
+			suffix                     ,
+			mapping                    ,
+			progress                   ) ;
 }
+
+  
+//   // create branches 
+//   typedef std::vector<TBranch*> BRANCHES ; 
+//   BRANCHES branches {} ; branches.reserve ( N ) ;
+//   { // ========================================================================
+//     for ( auto& item  : items ) 
+//       {
+//         const std::string  cname = std::get<0> ( item  ) ;
+//         const std::string  bname { prefix + cname + suffix } ;
+//         const std::string  bspec { bname  + "/D" } ;
+//         TBranch* branch = tree->Branch ( bname.c_str() , &std::get<3> ( item ) , bspec.c_str () ) ; // get<3>!
+//         Ostap::Assert ( branch                         ,
+//                         "Cannot create branch " + bname             ,
+//                         "Ostap::Trees::add_branch"                 , 
+//                         CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;
+//         //
+//         branches.push_back ( branch ) ;
+//       } // ====================================================================
+//     // ========================================================================
+//   } // ========================================================================
+//   // check branches 
+//   Ostap::Assert ( N == branches.size()                       ,
+//                   "Missing branch"                           , 
+//                   "Ostap::Trees::add_branch"                 , 
+//                   CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;
+//   //
+//   // normalization 
+//   const RooArgSet* normset = the_splot.normalization() ;
+//   //
+
+//   std::cout << " SPLOT!!!" << std::endl ; 
+//   cov.Print("vvv") ; 
+//   //
+  
+//   // loop over the TTree entries
+//   const Long64_t nentries = tree->GetEntries(); 
+//   Ostap::Utils::ProgressBar bar ( nentries , progress  ) ;
+//   for ( Long64_t entry = 0 ; entry < nentries ; ++entry , ++bar )
+//     {
+//       if ( tree->GetEntry ( entry ) < 0 ) { break ; };
+//       //
+//       /// assign the observables 
+//       getter.assign ( the_splot.observables () , tree ) ;
+//       /// (1) get the component values and the total 
+//       double total = 0 ; // sum_i ci*d_i
+//       for  ( unsigned int i = 0 ; i < N ; ++i )
+//         {
+//           const RooAbsReal* cmp = static_cast<RooAbsReal*> ( the_splot.components().at ( i ) ) ;
+//           Ostap::Assert ( nullptr != cmp                       ,
+//                           "Invalid fit component"              , 
+//                           "Ostap::Trees::add_branch"           , 
+//                           INVALID_ABSARG , __FILE__ , __LINE__ ) ;
+//           // get the component value 
+//           const double dval = normset ? cmp->getVal ( normset ) : cmp->getVal() ;
+//           total += dval * std::get<1> ( items [ i ] ) ;                  // get<1>
+//           std::get<2> ( items [ i ] ) = dval ;                           // get<2> 
+//         }
+//       /// (2) calculate s-weights   
+//       for ( unsigned int i = 0 ; i < N ; ++i )
+//         {
+//           double sum = 0 ;
+//           for ( unsigned int j = 0 ; j < N ; ++j )
+//             { sum += cov ( i , j ) * std::get<2> ( items [ j ] ) ; }    // get<2> 
+//           std::get<3> ( items [ i ] ) = sum / total ;                   // get<3> 
+//         }
+//       /// (3) commit branches 
+//       for ( auto* branch : branches ) { branch->Fill() ; }
+//       // ======================================================================
+//     } //                                   The end of th loop over Tree-entries
+//   // ==========================================================================
+//   //
+//   return Ostap::StatusCode::SUCCESS ;
+//   // ===========================================================================
+// }
 
 // ============================================================================
 //                                                                      The END 

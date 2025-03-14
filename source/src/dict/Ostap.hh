@@ -25,6 +25,7 @@
 #include "Ostap/Clenshaw.h"
 #include "Ostap/Combine.h"
 #include "Ostap/Covariance.h"
+#include "Ostap/COWs.h"
 #include "Ostap/Dalitz.h"
 #include "Ostap/DalitzIntegrator.h"
 #include "Ostap/DataFrameActions.h"

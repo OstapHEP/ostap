@@ -37,6 +37,7 @@ class RooAbsCollection ;
 // ============================================================================
 // Forward declarations from Ostap 
 // ============================================================================
+namespace  Ostap { namespace MoreRooFit { class COWs       ; } }  // Ostap 
 namespace  Ostap { namespace MoreRooFit { class SPlot4Tree ; } }  // Ostap 
 namespace  Ostap { namespace MoreRooFit { class RooFun     ; } }  // Ostap 
 namespace  Ostap { namespace Math       { class Histo1D    ; } }  // Ostap 
@@ -474,6 +475,22 @@ namespace Ostap
     add_branch
     ( TTree*                               tree              ,
       const Ostap::MoreRooFit::SPlot4Tree& splot             ,
+      const std::string&                   prefix   = ""     ,
+      const std::string&                   suffix   = "_sw"  , 
+      const DCT&                           mapping  = DCT () , 
+      const Ostap::Utils::ProgressConf&    progress = false  ) ; 
+    // ========================================================================
+    /** Add sPlot/COWs  information to the tree 
+     *  @param tree  input tree 
+     *  @param cows  COWs object 
+     *  @param prefix prefix for the branch names 
+     *  @param suffix suffix for the branch names 
+     *  @return StatusCode
+     */
+    StatusCode
+    add_branch
+    ( TTree*                               tree              ,
+      const Ostap::MoreRooFit::COWs&       cows              ,
       const std::string&                   prefix   = ""     ,
       const std::string&                   suffix   = "_sw"  , 
       const DCT&                           mapping  = DCT () , 

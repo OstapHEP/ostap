@@ -50,6 +50,15 @@ namespace Ostap
         const RooAbsCollection& observables             ,
         const RooAbsCollection* normalization = nullptr ) ;
       // ======================================================================
+      /** @param fun the function 
+       *  @param observabels list of observables 
+       *  @param normalzation normalisation set 
+       */
+      RooFun 
+      ( const RooAbsReal&       fun                     ,
+        const RooAbsData&       data                    ,
+        const RooAbsCollection* normalization = nullptr ) ;
+      // ======================================================================
       RooFun ( const RooFun&  right ) ;
       RooFun (       RooFun&& right ) = default ;
       RooFun (                      ) = default ;
@@ -81,6 +90,13 @@ namespace Ostap
       // ======================================================================
       /// evaluate it! 
       double evaluate () const ; 
+      // ======================================================================      
+    private :
+      // ======================================================================
+      /// perform initialization 	  
+      void Init
+      ( const RooAbsCollection& observables   ,
+        const RooAbsCollection* normalization ) ;
       // ======================================================================      
     protected : 
       // ======================================================================

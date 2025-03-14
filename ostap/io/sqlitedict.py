@@ -9,7 +9,6 @@
 # This code was inspired by:
 #  * http://code.activestate.com/recipes/576638-draft-for-an-sqlite3-based-dbm/
 #  * http://code.activestate.com/recipes/526618/
-
 """
 A lightweight wrapper around Python's sqlite3 database, with a dict-like interface
 and multi-thread access support::
@@ -28,7 +27,7 @@ don't forget to call `mydict.commit()` when done with a transaction.
 # =============================================================================
 __all__ = (
     'SqliteDict' , ## sqlite3-persisten disctionary
-    'issqlite3'  , ##  is is sqlite3- file?
+    'issqlite3'  , ## is it a  sqlite3 file?
     )
 # =============================================================================
 from   collections import UserDict      as     DictClass
@@ -71,7 +70,7 @@ def reraise ( tp , value , tb = None):
 ## @class Connect
 #  Helper class to implement "read-only" access to database 
 class Connect ( object ) :
-    """Helper class to implement ``read-only'' access to database 
+    """ Helper class to implement ``read-only'' access to database 
     """
     def __init__ ( self , filename , flag , *args , **kwargs ) :
         
@@ -171,7 +170,8 @@ class SqliteDict(DictClass):
           'n': create a new database (erasing any existing tables, not just `tablename`!).
 
         """
-
+        tablename = 'Dict'
+        
         ## temporary DB ?
         self.in_temp = filename is None
         if self.in_temp:
