@@ -115,7 +115,7 @@
 #include "Ostap/RooFun.h"
 #include "Ostap/RootID.h"
 #include "Ostap/SFactor.h"
-#include "Ostap/SPlot4Tree.h"
+#include "Ostap/SPLOT.h"
 #include "Ostap/StatEntity.h"
 #include "Ostap/StatVar.h"
 #include "Ostap/StatusCode.h"

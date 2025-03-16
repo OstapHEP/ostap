@@ -35,8 +35,11 @@ namespace Ostap
    *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
    *  @date 2019-11-21
    */
-  namespace MoreRooFit 
+  namespace Utils
   {
+    // ========================================================================
+    // forward declaration 
+    class ProgressConf ;
     // ========================================================================
     /** @class COWs 
      * (over) simplified version of COWS
@@ -53,14 +56,39 @@ namespace Ostap
     public :
       // ======================================================================
       /** Constuctor
-       *  @param addpdf input extended RooAddPdf 
-       *  @param data   input data
-       *  @param normalzation normalisation set 
+       *  @param addpdf    input extended RooAddPdf 
+       *  @param data      input data
+       *  @param normalzation normalisation set
+       *  @param progress  show progress bar? 
        */
       COWs
-	( const RooAddPdf&        addpdf                  ,
-	  const RooAbsData&       data                    ,
-	  const RooAbsCollection* normalization = nullptr ) ;
+	    ( const RooAddPdf&                  addpdf                  ,
+	      const RooAbsData&                 data                    ,
+	      const RooAbsCollection*           normalization = nullptr , 
+        const Ostap::Utils::ProgressConf& progress      = true    ) ;
+      // ======================================================================= 
+       /** Constuctor
+       *  @param addpdf    input extended RooAddPdf 
+       *  @param data      input data
+       *  @param normalzation normalisation set
+       *  @param progress  show progress bar? 
+       */
+      COWs
+	    ( const RooAddPdf&                  addpdf                  ,
+	      const RooAbsData&                 data                    ,
+        const Ostap::Utils::ProgressConf& progress      = true    ) ; 
+     //   ======================================================================
+      /** "Recovery constructor
+       *  @param addpdf input extended RooAddPdf 
+       *  @param observables  observables set  
+       *  @param normalzation normalisation set 
+       *  @param cows         the symmetric matrix of weights 
+       */
+      COWs
+	    ( const RooAddPdf&        addpdf        ,
+	      const RooAbsCollection& observables   , 
+	      const RooAbsCollection* normalization , 
+	      const TMatrixDSym&      cows          ) ;
       // ======================================================================
       /** "Recovery constructor
        *  @param addpdf input extended RooAddPdf 
@@ -69,22 +97,10 @@ namespace Ostap
        *  @param cows         the symmetric matrix of weights 
        */
       COWs
-	( const RooAddPdf&        addpdf        ,
-	  const RooAbsCollection& observables   , 
-	  const RooAbsCollection* normalization , 
-	  const TMatrixDSym&      cows          ) ;
-      // ======================================================================
-      /** "Recovery constructor
-       *  @param addpdf input extended RooAddPdf 
-       *  @param observables  observables set  
-       *  @param normalzation normalisation set 
-       *  @param cows         the symmetric matrix of weights 
-       */
-      COWs
-	( const RooAddPdf&        addpdf        ,
-	  const RooAbsCollection& observables   , 
-	  const TMatrixDSym&      cows          , 
-	  const RooAbsCollection* normalization = nullptr ) ; 	 
+	    ( const RooAddPdf&        addpdf        ,
+	      const RooAbsCollection& observables   , 
+	      const TMatrixDSym&      cows          , 
+	      const RooAbsCollection* normalization = nullptr ) ; 	 
       // ======================================================================
       // copy constructor 
       COWs( const COWs& right ) ;
@@ -93,32 +109,45 @@ namespace Ostap
       // ======================================================================
       // destructore 
       virtual ~COWs() ;
+      // ======================================================================
+      /// clone funcntion/virtual constructire 
+      COWs* clone() const override ;  
+      // ======================================================================
+    protected:    
       // ======================================================================      
-    public:
+     /** protected constructor fro SPLOT 
+       *  @param addpdf input extended RooAddPdf 
+       *  @param observables  observables set  
+       *  @param normalzation normalisation set 
+       *  @param cows         the symmetric matrix of weights 
+       */
+      COWs
+	    ( const RooAddPdf&        addpdf        ,
+	      const RooAbsCollection& observables   , 
+	      const RooAbsCollection* normalization ) ; 
+      // ======================================================================
+     public:
       // ======================================================================
       /// get the pdf 
       const RooAddPdf&   pdf          () const ; 
-      /// g`et list of components
+      /// get list of components
       const RooArgList&  components   () const { return *m_cmps   ; }
-      /// get list of coefficiencts  
-      const RooArgList&  coefficients () const { return *m_coefs  ; }
+      // ======================================================================  
       /// get he matrix
       const TMatrixDSym& A            () const { return m_A       ; }
       /// size of object: number of componnents
-      std::size_t        size         () const ; 
+      std::size_t        size         () const ;
       // ======================================================================      
-    private:
-      // ======================================================================
+    protected :
+       // ======================================================================
       /// components 
-      std::unique_ptr<RooArgList>               m_cmps   {} ; // components 
-      /// coefficients
-      std::unique_ptr<RooArgList>               m_coefs  {} ; // coefficients
+      std::unique_ptr<RooArgList> m_cmps   {} ; // components 
       /// the matrix A
-      TMatrixDSym                               m_A      {} ; // the matix A 
+      TMatrixDSym                 m_A      {} ; // the matix A 
       // ======================================================================    
-    } ; // ====================================================================
+    } ; //                              The end of the class Ostap::Utils::COWs
     // ========================================================================
-  } //                                   The END of namespace Ostap::MoreRooFit
+  } //                                        The END of namespace Ostap::Utils 
   // ==========================================================================
 } //                                                 The END of namespace Ostap
 // ============================================================================

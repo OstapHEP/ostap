@@ -20,6 +20,7 @@ namespace
     INVALID_BRANCH        = 714 , 
     CANNOT_CREATE_BRANCH  = 715 , 
     CANNOT_CREATE_FORMULA = 716 , 
+    INVALID_NAME          = 717 , 
     // ========================================================================
     INVALID_TREEFUNCTION  = 720 ,
     INVALID_TH3           = 721 , 
@@ -34,6 +35,7 @@ namespace
     INVALID_ABSREAL       = 733 ,   
     INVALID_OBSERVABLE    = 734 , 
     INVALID_OBSERVABLES   = 735 ,
+    INVALID_ABSPDF        = 736 ,
     //
     INVALID_PDF           = 740 ,
     INVALID_FITRESULT     = 741 ,

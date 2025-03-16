@@ -37,12 +37,12 @@ class RooAbsCollection ;
 // ============================================================================
 // Forward declarations from Ostap 
 // ============================================================================
-namespace  Ostap { namespace MoreRooFit { class COWs       ; } }  // Ostap 
-namespace  Ostap { namespace MoreRooFit { class SPlot4Tree ; } }  // Ostap 
-namespace  Ostap { namespace MoreRooFit { class RooFun     ; } }  // Ostap 
-namespace  Ostap { namespace Math       { class Histo1D    ; } }  // Ostap 
-namespace  Ostap { namespace Math       { class Histo2D    ; } }  // Ostap 
-namespace  Ostap { namespace Math       { class Histo3D    ; } }  // Ostap 
+namespace  Ostap { namespace Utils { class COWs       ; } }  // Ostap 
+namespace  Ostap { namespace Utils { class SPLOT      ; } }  // Ostap 
+namespace  Ostap { namespace Utils { class RooFun     ; } }  // Ostap 
+namespace  Ostap { namespace Math  { class Histo1D    ; } }  // Ostap 
+namespace  Ostap { namespace Math  { class Histo2D    ; } }  // Ostap 
+namespace  Ostap { namespace Math  { class Histo3D    ; } }  // Ostap 
 // ============================================================================
 namespace Ostap
 {  
@@ -442,7 +442,7 @@ namespace Ostap
     add_branch
     ( TTree*                            tree              ,
       const std::string&                bname             , 
-      const Ostap::MoreRooFit::RooFun&  fun               ,
+      const Ostap::Utils::RooFun&       fun               ,
       const DCT&                        mapping  = DCT () , 
       const Ostap::Utils::ProgressConf& progress = false  ) ;  
     // ============================================================
@@ -464,37 +464,38 @@ namespace Ostap
       const DCT&                        mapping       = DCT ()  , 
       const Ostap::Utils::ProgressConf& progress      = false   ) ;
     // ========================================================================
-    /** Add sPlot information to the tree 
+     /** Add sPlot/COWs  information to the tree 
      *  @param tree  input tree 
-     *  @param splot sPlot object 
-     *  @param prefix prefix for the branch names 
-     *  @param suffix suffix for the branch names 
+     *  @param cows  COWs object 
+     *  @param names names for branches
+     *  @param mapping mapping of branch names to RooFit varibabls
+     *  @param progress  progress bar 
      *  @return StatusCode
      */
     StatusCode
     add_branch
-    ( TTree*                               tree              ,
-      const Ostap::MoreRooFit::SPlot4Tree& splot             ,
-      const std::string&                   prefix   = ""     ,
-      const std::string&                   suffix   = "_sw"  , 
-      const DCT&                           mapping  = DCT () , 
-      const Ostap::Utils::ProgressConf&    progress = false  ) ; 
-    // ========================================================================
+    ( TTree*                            tree              ,
+      const Ostap::Utils::COWs&         cows              ,
+      const std::vector<std::string>&   names             , 
+      const DCT&                        mapping  = DCT () , 
+      const Ostap::Utils::ProgressConf& progress = false  ) ; 
+    // =========================================================================
     /** Add sPlot/COWs  information to the tree 
      *  @param tree  input tree 
      *  @param cows  COWs object 
-     *  @param prefix prefix for the branch names 
-     *  @param suffix suffix for the branch names 
+     *  @param names names for branches
+     *  @param mapping mapping of branch names to RooFit varibabls
+     *  @param progress  progress bar 
      *  @return StatusCode
      */
     StatusCode
     add_branch
-    ( TTree*                               tree              ,
-      const Ostap::MoreRooFit::COWs&       cows              ,
-      const std::string&                   prefix   = ""     ,
-      const std::string&                   suffix   = "_sw"  , 
-      const DCT&                           mapping  = DCT () , 
-      const Ostap::Utils::ProgressConf&    progress = false  ) ; 
+    ( TTree*                            tree              ,
+      const Ostap::Utils::SPLOT&        cows              ,
+      const std::string&                prefix   = ""     ,
+      const std::string&                suffix   = "_sw"  , 
+      const DCT&                        mapping  = DCT () , 
+      const Ostap::Utils::ProgressConf& progress = false  ) ; 
     // ========================================================================
   } //                                        The end of namespace Ostap::Trees 
   // ==========================================================================

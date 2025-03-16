@@ -38,23 +38,23 @@
 // ============================================================================
 // destructor
 // ============================================================================
-Ostap::MoreRooFit::RooFun::~RooFun() {}
+Ostap::Utils::RooFun::~RooFun() {}
 // ============================================================================
 // evaluate it!
 // ============================================================================
 double
-Ostap::MoreRooFit::RooFun::evaluate () const
+Ostap::Utils::RooFun::evaluate () const
 { return m_normset ? m_fun->getVal ( *m_normset ) : m_fun->getVal() ; }
 // ============================================================================
 /// assign observables 
 // ============================================================================
 void
-Ostap::MoreRooFit::RooFun::set_observables
+Ostap::Utils::RooFun::set_observables
 ( const RooAbsCollection& obs  ) const
 { m_observables -> assignValueOnly ( obs  ) ; }
 // ============================================================================
 void
-Ostap::MoreRooFit::RooFun::set_parameters
+Ostap::Utils::RooFun::set_parameters
 ( const RooAbsCollection& pars ) const
 { m_parameters  -> assignValueOnly ( pars ) ; }
 // ============================================================================
@@ -63,7 +63,7 @@ Ostap::MoreRooFit::RooFun::set_parameters
  *  @param normalzation normalization set 
  */
 // ============================================================================
-Ostap::MoreRooFit::RooFun::RooFun 
+Ostap::Utils::RooFun::RooFun 
 ( const RooAbsReal&       fun           ,
   const RooAbsCollection& observables   ,
   const RooAbsCollection* normalization )
@@ -80,7 +80,7 @@ Ostap::MoreRooFit::RooFun::RooFun
  *  @param normalzation normalization set 
  */
 // ============================================================================
-Ostap::MoreRooFit::RooFun::RooFun 
+Ostap::Utils::RooFun::RooFun 
 ( const RooAbsReal&       fun           ,
   const RooAbsData&       data          ,
   const RooAbsCollection* normalization )
@@ -97,7 +97,7 @@ Ostap::MoreRooFit::RooFun::RooFun
 // ============================================================================
 // perform initialization 	  
 // ============================================================================
-void Ostap::MoreRooFit::RooFun::Init
+void Ostap::Utils::RooFun::Init
 ( const RooAbsCollection& observables   ,
   const RooAbsCollection* normalization )
 {  
@@ -118,7 +118,7 @@ void Ostap::MoreRooFit::RooFun::Init
   Ostap::Assert ( ::size (    observables ) == ::size ( obsset ) &&
                   ::size ( *m_observables ) == ::size ( obsset )  ,
                   "Invalid input observables"                     ,
-                  "Ostap::MoreRoofit::Roofun"                     ,
+                  "Ostap::Utils::Roofun"                          ,
                   INVALID_OBSERVABLES , __FILE__ , __LINE__       ) ;                   
   // ==========================================================================
   { // ========================================================================
@@ -134,10 +134,10 @@ void Ostap::MoreRooFit::RooFun::Init
 	const RooAbsCategoryLValue* cv = nullptr ;
 	if (  nullptr == rv ) { cv = dynamic_cast<RooAbsCategoryLValue*> ( o ) ; }
 	Ostap::Assert ( ( nullptr != rv ) || ( nullptr != cv ) , 
-			"Illegal observable " + Ostap::Utils::toString ( *o ) , 
-			"Ostap::MoreRoofit::RooFun"                           ,
-			INVALID_OBSERVABLE , __FILE__ , __LINE__              ) ;
-	// ======================================================================
+			            "Illegal observable " + Ostap::Utils::toString ( *o ) , 
+			            "Ostap::Utils::RooFun"                           ,
+			            INVALID_OBSERVABLE , __FILE__ , __LINE__              ) ;
+	      // ====================================================================
       } //                                                  The end of the loop
     // ========================================================================
   } //                                                       The en of if-block
@@ -164,16 +164,19 @@ void Ostap::MoreRooFit::RooFun::Init
   // ==========================================================================
 }
 // ============================================================================
-
-
-// ============================================================================
 // Copy constuctor
 // ============================================================================
-Ostap::MoreRooFit::RooFun::RooFun
-  ( const Ostap::MoreRooFit::RooFun& right )
+Ostap::Utils::RooFun::RooFun
+  ( const Ostap::Utils::RooFun& right )
   : RooFun ( *right.m_fun , *right.m_observables , right.m_normset.get() )
 {}
 // ============================================================================
+// clone
+// ============================================================================
+Ostap::Utils::RooFun* 
+Ostap::Utils::RooFun::clone () const 
+{ return new RooFun ( *this ) ; }
+
 
 // ============================================================================
 // RooFun -> TTree 
@@ -189,7 +192,7 @@ Ostap::StatusCode
 Ostap::Trees::add_branch
 ( TTree*                            tree      ,
   const std::string&                bname     , 
-  const Ostap::MoreRooFit::RooFun&  fun       ,
+  const Ostap::Utils::RooFun&       fun       ,
   const DCT&                        mapping   ,
   const Ostap::Utils::ProgressConf& progress  ) 
 {
@@ -197,8 +200,8 @@ Ostap::Trees::add_branch
   if ( !tree )                       { return INVALID_TREE ; }
   //
   // Pair of helper objects  
-  Ostap::MoreRooFit::RooFun the_fun  ( fun ) ;
-  Ostap::Trees::RooGetter   getter   ( mapping , the_fun.observables() , tree ) ;
+  std::unique_ptr<Ostap::Utils::RooFun> the_fun { fun.clone() } ;
+  Ostap::Trees::RooGetter               getter  ( mapping , the_fun->observables() , tree ) ;
   //
   // create the branch 
   Double_t bvalue = 0  ;
@@ -218,9 +221,9 @@ Ostap::Trees::add_branch
       if ( tree->GetEntry ( i ) < 0 ) { break ; };
       //
       /// assign the observables 
-      getter.assign ( the_fun.observables () , tree ) ;
+      getter.assign ( the_fun->observables () , tree ) ;
       /// assign the branch  
-      bvalue = the_fun.evaluate () ;
+      bvalue = the_fun->evaluate () ;
       //
       branch->Fill () ;
     }
@@ -250,10 +253,11 @@ Ostap::Trees::add_branch
   //
   if ( !tree )                       { return INVALID_TREE ; }
   //
-  const Ostap::MoreRooFit::RooFun the_fun { fun , observables , normalization } ;
+  const std::unique_ptr<Ostap::Utils::RooFun> 
+  the_fun { std::make_unique<Ostap::Utils::RooFun>( fun , observables , normalization ) } ;
   return add_branch ( tree     ,
                       bname    , 
-                      the_fun  ,
+                      *the_fun ,
                       mapping  ,
                       progress ) ;
 }

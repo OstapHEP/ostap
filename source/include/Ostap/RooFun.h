@@ -25,12 +25,7 @@ class RooArgSet        ; // ROOT/Roofit
 namespace Ostap 
 {
   // ==========================================================================
-  /** @namespace Ostap::MoreRooFit   Ostap/MoreRooFit.h
-   *  Collection of small additions to RooFit 
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
-   *  @date 2019-11-21
-   */
-  namespace MoreRooFit 
+  namespace Utils 
   {
     // ========================================================================
     /** @class RooFun
@@ -63,7 +58,9 @@ namespace Ostap
       RooFun (       RooFun&& right ) = default ;
       RooFun (                      ) = default ;
       // ======================================================================
-      virtual ~RooFun() ;
+      virtual ~RooFun() ;  
+      /// clone funcntion/virtual constructire 
+      virtual RooFun* clone() const ;  
       // ======================================================================      
     public: // constant getters 
       // ======================================================================
@@ -110,7 +107,7 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
-  } //                                   The end of namespace Ostap::MoreRooFit
+  } //                                        The end of namespace Ostap::Utils
   // ==========================================================================
 } //                                                 The end of namesapce Ostap
 // ============================================================================

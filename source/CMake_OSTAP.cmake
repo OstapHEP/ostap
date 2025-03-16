@@ -98,7 +98,7 @@ add_library(ostap SHARED src/format.cpp
                          src/RootID.cpp
                          src/RooFun.cpp
                          src/SFactor.cpp
-                         src/SPlot4Tree.cpp
+                         src/SPLOT.cpp
                          src/StatEntity.cpp
                          src/StatVar.cpp
                          src/StatusCode.cpp

@@ -327,7 +327,7 @@ class sPlot(object) :
             # ==================================================================
             
             ## add to tree using Splti4tree machinery :
-            splot = Ostap.MoreRooFit.SPlot4Tree (
+            splot = Ostap.Utils.SPLOT (
                 self.pdf.pdf   ,
                 self.pdf.vars  ,
                 self.fitresult , 
@@ -670,24 +670,44 @@ class sPlot3D(sPlot) :
         return Ostap.Functions.FuncTH3 ( histo , xvar , yvar , zvar )
     
 # =============================================================================
-## reconstrucct SPlot4Tree object
-def _sp4t_factory_ ( *args ) :
-    """ Reconstrucct SPlot4Tree object
+## reconstrucct COWs object
+def _cows_factory_ ( *args ) :
+    """ Reconstrucct SPLOT object
     """
-    result = Ostap.MoreRooFit.SPlot4Tree ( *args )
+    result = Ostap.Utils.COWS ( *args )
+    result._args = args
+    return result
+# =============================================================================
+## reduce COWS object 
+def _cows_reduce_  ( cows   ) :
+    """ Reduce COWS object
+    """
+    return _cows_factory_ , ( cows.pdf           () ,
+                              cows.observables   () ,                            
+                              cows.normalization () , 
+                              cows. A            () )
+
+Ostap.Utils.COWs.__reduce__ = _cows_reduce_
+
+# =============================================================================
+## reconstrucct SPLOT object
+def _splot_factory_ ( *args ) :
+    """ Reconstrucct SPLOT object
+    """
+    result = Ostap.Utils.SPLOT ( *args )
     result._args = args
     return result
 # =============================================================================
 ## reduce SPlit3Tree object 
-def _sp4t_reduce_  ( sp4t   ) :
-    """ Reduce SPlit3Tree object
+def _splot_reduce_  ( sp4t   ) :
+    """ Reduce SPLOT object
     """
-    return _sp4t_factory_ , ( sp4t.pdf           () ,
+    return _splot_factory_ , ( sp4t.pdf           () ,
                               sp4t.observables   () ,
                               sp4t.fitresult     () ,                            
                               sp4t.normalization () )
 
-Ostap.MoreRooFit.SPlot4Tree.__reduce__ = _sp4t_reduce_
+Ostap.Utils.SPLOT.__reduce__ = _splot_reduce_
 
 ## =============================================================================
 if '__main__' == __name__ :
