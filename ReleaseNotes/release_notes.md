@@ -18,6 +18,7 @@
  - add LQ,QL,COD,SVD and POLAR decomposition of matrices (+tests)
  - add SCHUR decomposition for squared matrices 
  - more improvements for Files/RootFiles/Data/Lumi/DataAndLumi
+ - add COWs (both in C++ and python) and split python'  `sPlot` into `COWs`, `sPLOT` & `hPlot*`
  
 ## New features
     
@@ -30,7 +31,8 @@
    1. Reorder arguments for `Data` &`DataandLumi`, from now the first argumenet - files/pattersn and then chains
    1. Remove `Data2`
    1. `add_new_branch` and `add_new_buffer` are complete;y rewritten
-    
+   1. `sPlot` is completely rewritten: split into `COWs` , `sPLOT` and `hPlot*`
+   
 ## Bug fixes
 
 

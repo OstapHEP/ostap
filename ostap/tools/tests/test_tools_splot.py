@@ -22,7 +22,7 @@ from   ostap.utils.basic        import typename
 from   ostap.utils.timing       import timing 
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.fitting.variables  import FIXVAR 
-from   ostap.tools.splot        import sPlot1D
+from   ostap.tools.splot        import COWs, sPLOT, hPlot1D
 from   ostap.plotting.canvas    import use_canvas 
 from   ostap.utils.utils        import wait, batch_env
 import ostap.fitting.models     as     Models 
@@ -115,19 +115,18 @@ def test_splotting  () :
                                                                       root_info.patch ) )
         return
     
-    files = prepare_data ( 1 , 10000 )
+    files = prepare_data ( 10 , 10000 )
     
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data  ( files , 'S' )
     logger.info ( 'Initial Tree/Chain:\n%s' % data.chain.table ( prefix = '# ' ) )
     
     chain  = data.chain 
-    histo = ROOT.TH1D       ( hID() , 'x-distibution' , 200 , xmin , xmax  )
+    histo = ROOT.TH1D ( hID() , 'x-distibution' , 200 , xmin , xmax  )
 
     chain.project ( histo , 'x' )
     
-    xvar   = ROOT.RooRealVar ( 'x' , 'c-variable' , xmin , xmax )
-    
+    xvar   = ROOT.RooRealVar ( 'x' , 'c-variable' , xmin , xmax )    
     gauss = Models.Gauss_pdf ( 'G' , xvar = xvar ,
                                mean  = ( mean  , mean - 2 * sigma , mean + 2 * sigma ) ,
                                sigma = ( sigma , 0.5 * sigma , 2.0 * sigma           ) )
@@ -154,10 +153,10 @@ def test_splotting  () :
     title = "Fit results for" 
     logger.info ('%s:\n%s' % ( title  , r.table ( title = title , prefix = '# ') ) ) 
 
-    ## binnings  
+    ## Binned machinery with binnings  
     for fast in ( True , False ) :
 
-        sp  = sPlot1D ( model , dataset = histo  , nbins = 500 , fast = fast ) ## SPLOT IT! 
+        sp  = hPlot1D ( model , dataset = histo  , nbins = 500 , fast = fast ) ## SPLOT IT! 
         sph = sp.hweights['S']
         
         with use_canvas ( 'test_tools_splot: sPlot') :
@@ -177,41 +176,47 @@ def test_splotting  () :
 
         with timing ( "Adding   BINNED sPlot results to TTree/TChain" , logger = logger ) :
             chain = data.chain
-            sp.add_to_tree ( chain , 'x' , prefix = 'f' if fast else 'n' ,  unbinned = False , parallel = False  )
+            sp.add_to_tree ( chain , 'x' , prefix = 'f' if fast else 'n' , parallel = False  )
 
-    
-    with timing ( "Adding UNBINNED sPlot results to TTree/TChain" , logger = logger ) :
+
+    ds = model.histo_data.dset 
+    ## unbineed machinery 
+    with timing ( "Adding UNBINNED sPLOT results to TTree/TChain" , logger = logger ) :
+        
         chain = data.chain 
-        sp    = sPlot1D ( model , dataset = histo  , nbins = 500 , fast = fast ) ## SPLOT IT! 
-        sp.add_to_tree ( chain , 'x' , prefix = 'u' , unbinned = True , parallel = True )
+        sp    = sPLOT ( model , dataset = ds ) ## SPLOT IT! 
+        sp.splot2tree ( chain , 'x' , prefix = 'u' , parallel = True )
 
-
-    ## 
     ## COWs
-    ##
-    print ( 'COWS' ) 
-    cows = Ostap.MoreRooFit.COWs ( model.pdf             ,
-                                   model.histo_data.dset ,
-                                   model.vars             )
-
-    """
-
+    with timing ( "Adding UNBINNED COWs results to TTree/TChain" , logger = logger ) :
+        
+        chain = data.chain 
+        sp    = COWs ( model , dataset = ds ) ## SPLOT IT!
+        names = tuple ( v.name + '_cw' for v in model.alist2 ) 
+        sp.cows2tree ( chain , 'x' , names = names  , parallel = True )
+          
     chain = data.chain
     
-    nS_sw = chain.statVar ( 'nS_sw' )
-    fS_sw = chain.statVar ( 'fS_sw' )
+    nS_hw = chain.statVar ( 'nS_hw' )
+    fS_hw = chain.statVar ( 'fS_hw' )
     uS_sw = chain.statVar ( 'uS_sw' )
+    S_cw  = chain.statVar ( 'S_cw'  )
+    B_cw  = chain.statVar ( 'B_cw'  )
 
-    dun   = chain.statVar ( 'uS_sw - nS_sw' )
-    duf   = chain.statVar ( 'uS_sw - fS_sw' )
-    dnf   = chain.statVar ( 'nS_sw - fS_sw' )
+    dun   = chain.statVar ( 'uS_sw - nS_hw' )
+    duf   = chain.statVar ( 'uS_sw - fS_hw' )
+    dnf   = chain.statVar ( 'nS_hw - fS_hw' )
+    duc   = chain.statVar ( 'uS_sw -  S_cw' )
     
-    logger.info ( 'nS_sw: %s' % nS_sw )
-    logger.info ( 'fS_sw: %s' % fS_sw )    
+    logger.info ( 'nS_hw: %s' % nS_hw )
+    logger.info ( 'fS_hw: %s' % fS_hw )    
     logger.info ( 'uS_sw: %s' % uS_sw )
+    logger.info ( 'S_cw : %s' %  S_cw )
+    
     logger.info ( 'u-n  : %s' % dun   )
     logger.info ( 'u-f  : %s' % duf   )
     logger.info ( 'n-f  : %s' % dnf   )
+    logger.info ( 'u-c  : %s' % duc   )
 
     hsn  = ROOT.TH1D( hID() , 'y for signal'     , 100 , ymin , ymax )
     hbn  = ROOT.TH1D( hID() , 'y for background' , 100 , ymin , ymax )
@@ -219,6 +224,8 @@ def test_splotting  () :
     hbf  = ROOT.TH1D( hID() , 'y for background' , 100 , ymin , ymax )
     hsu  = ROOT.TH1D( hID() , 'y for signal'     , 100 , ymin , ymax )
     hbu  = ROOT.TH1D( hID() , 'y for background' , 100 , ymin , ymax )
+    hsc  = ROOT.TH1D( hID() , 'y for signal'     , 100 , ymin , ymax )
+    hbc  = ROOT.TH1D( hID() , 'y for background' , 100 , ymin , ymax )
     
     hsn.red  ()
     hbn.blue ()
@@ -226,6 +233,8 @@ def test_splotting  () :
     hbf.blue ()
     hsu.red  ()
     hbu.blue ()
+    hsc.red  ()
+    hbc.blue ()
 
     with use_canvas ( 'test_tools_splot: y/n (UNBINNED)', wait = 2 ) :
             
@@ -237,21 +246,28 @@ def test_splotting  () :
 
     with use_canvas ( 'test_tools_splot: y/n (N-BINNED)', wait = 2 ) :
             
-        chain.project ( hsn , 'y' , 'nS_sw'   )
+        chain.project ( hsn , 'y' , 'nS_hw'   )
         hsn.draw ()
 
-        chain.project ( hbn , 'y' , 'nB_sw'   )        
+        chain.project ( hbn , 'y' , 'nB_hw'   )        
         hbn.draw ('same')
 
     with use_canvas ( 'test_tools_splot: y/n (F-BINNED)', wait = 2 ) :
             
-        chain.project ( hsf , 'y' , 'fS_sw'   )
+        chain.project ( hsf , 'y' , 'fS_hw'   )
         hsf.draw ()
 
-        chain.project ( hbf , 'y' , 'fB_sw'   )        
+        chain.project ( hbf , 'y' , 'fB_hw'   )        
         hbf.draw ('same')
-    """
-    
+
+    with use_canvas ( 'test_tools_splot: y/n (COWs)', wait = 2 ) :
+            
+        chain.project ( hsc , 'y' , 'S_cw'   )
+        hsc.draw ()
+
+        chain.project ( hbc , 'y' , 'B_cw'   )        
+        hbc.draw ('same')
+        
 # =============================================================================
 if '__main__' ==  __name__  :
 

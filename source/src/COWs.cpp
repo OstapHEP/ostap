@@ -97,16 +97,15 @@ Ostap::Utils::COWs::COWs
   std::unique_ptr<RooArgSet> obs     { pdf().getObservables ( data ) } ;
   const RooArgSet*           normset { this->normalization () ? this->normalization() : obs.get() } ;
   const RooAbsPdf*           pdffun  { &pdf() } ;
- 
   //
   // value of N-components 
   std::vector<double>  cmp_val ( N , 0.0 ) ;
   // the matrix W
   TMatrixDSym W { static_cast<Int_t> ( N ) };
-  
   // loop over the entries
   const bool        weighted = data.isWeighted () ;
   const std::size_t nEntries = data.numEntries () ;
+  //
   long double sumw = 0 ;
   Ostap::Utils::ProgressBar bar ( nEntries , progress ) ;
   for ( std::size_t entry = 0 ; entry < nEntries ; ++entry, ++bar )
@@ -114,14 +113,14 @@ Ostap::Utils::COWs::COWs
       //
       const RooArgSet* item = data.get  ( entry ) ;
       Ostap::Assert ( nullptr != item                       ,
-            		      "Invalid/null  entry in datatset!"    ,
-		                  "Ostap::Utils::COWs"                  ,
-		                  INVALID_ABSDATA , __FILE__ , __LINE__ ) ;
+		      "Invalid/null  entry in datatset!"    ,
+		      "Ostap::Utils::COWs"                  ,
+		      INVALID_ABSDATA , __FILE__ , __LINE__ ) ;
       //
       const double weight = weighted ? data.weight() : 1.0 ;
-      if ( !weight ) { continue ; } 
+      if ( !weight ) { continue ; }
       //
-      sumw += weight ;   
+      sumw += weight ;
       //
       ::assign ( *obs , *item ) ;
       // evalute pdf 
@@ -132,42 +131,50 @@ Ostap::Utils::COWs::COWs
       // evaluate all components
       std::size_t i = 0 ;
       for ( const RooAbsArg* c : *m_cmps )
-	    {
-	      const RooAbsReal* r = static_cast<const RooAbsReal*> ( c ) ;
-	      cmp_val [ i ] = normset ? r->getVal ( normset ) : r->getVal () ;	  
-	      ++i ;
-      }
+	{
+	  const RooAbsReal* r = static_cast<const RooAbsReal*> ( c ) ;
+	  cmp_val [ i ] = normset ? r->getVal ( normset ) : r->getVal () ;	  
+	  ++i ;
+	}
       //
       const double factor = weight / ( pdf_val * pdf_val ) ;
       for ( std::size_t k = 0 ; k < N ; ++k )
-	      {
-	        const double kval = cmp_val [ k ] ;
-	        if ( !kval ) { continue ; }                    // CONTINUE 
-	        W ( k , k ) += factor * kval * kval ;
-	        for ( std::size_t l = k + 1  ; l < N ; ++l  )
-	          {
-	            const double wkl = factor * kval * cmp_val [ l ] ;
-	            W ( k , l ) += 0.5 * wkl ;
-	            W ( l , k ) += 0.5 * wkl ;							      
-	          }
-	      } 
+	{
+	  const double kval = cmp_val [ k ] ;
+	  if ( !kval ) { continue ; }                    // CONTINUE 
+	  W ( k , k ) += factor * kval * kval ;
+	  for ( std::size_t l = k + 1  ; l < N ; ++l  )
+	    {
+	      const double wkl = factor * kval * cmp_val [ l ] ;
+	      W ( l , k ) += 1.0 * wkl ;
+	      W ( k , l ) += 1.0 * wkl ;
+	    }
+	} 
     }
+  //
+  // W.Print ( "vvv" ) ;
+  // ensure it is symmetrical 
+  for ( std::size_t k = 0 ; k < N ; ++k )
+    { for ( std::size_t l = 0 ; l < k ; ++ l )
+	{ W ( l , k ) = 1.0 * W ( k , l ) ;  } }
+  //
+  // W.Print ( "vvv" ) ;
   //
   if ( weighted  ) { W *= ( 1.0L / sumw     ) ; }
   else             { W *= ( 1.0L / nEntries ) ; }
   //
-  W.Print ( "vvv" ) ;
+  // W.Print ( "vvv" ) ;
   // invert the matrix
   double det = 0 ;
   W.Invert ( &det ) ;
   Ostap::Assert ( W.IsValid ()                          ,
-		              "Matrix W cannot be inverted!"        ,
-		              "Ostap::Utils::COWs"                  ,
-		              INVALID_ABSDATA , __FILE__ , __LINE__ ) ;
+		  "Matrix W cannot be inverted!"        ,
+		  "Ostap::Utils::COWs"                  ,
+		  INVALID_ABSDATA , __FILE__ , __LINE__ ) ;
   /// finally store matrix A
   m_A.ResizeTo ( W ) ;
   m_A = W ;
-  m_A.Print ( "vvv" ) ;    
+  // m_A.Print ( "vvv" ) ;    
 }
 // ============================================================================
 // copy constructor
@@ -219,28 +226,28 @@ Ostap::Utils::COWs::COWs
   // check the components
   for ( const RooAbsArg* cmp : *m_cmps )
     {
-       Ostap::Assert ( nullptr != cmp ,
-                       "Invaild component!" , 
-                       "Ostap::Utils::COWs" ,
-                       INVALID_ABSARG  , __FILE__ , __LINE__ ) ;
-       const RooAbsPdf*  a = dynamic_cast<const RooAbsPdf*> ( cmp ) ; 
+      Ostap::Assert ( nullptr != cmp ,
+		      "Invaild component!" , 
+		      "Ostap::Utils::COWs" ,
+		      INVALID_ABSARG  , __FILE__ , __LINE__ ) ;
+      const RooAbsPdf*  a = dynamic_cast<const RooAbsPdf*> ( cmp ) ; 
       Ostap::Assert ( nullptr != a                         , 
                       "Invalid component!"                 , 
                       "Ostap::Utils::COWs"                 , 
                       INVALID_ABSPDF , __FILE__ , __LINE__ ) ;
-     }
+    }
   // ==========================================================================
   // check the matrix
   Ostap::Assert ( m_A.IsValid()                          ,
-  	          	  "Input matrix is invalid"              ,
-	  	            "Ostap::Utils::COWs"                   ,
-		              INVALID_TMATRIX  , __FILE__ , __LINE__ ) ;
+		  "Input matrix is invalid"              ,
+		  "Ostap::Utils::COWs"                   ,
+		  INVALID_TMATRIX  , __FILE__ , __LINE__ ) ;
   // check the matrix
   Ostap::Assert ( m_A.GetNrows() == size () &&
-            		  m_A.GetNcols() == size ()              , 
-		              "Wrong structure of input matrix"      ,
-		              "Ostap::Utils::COWs"                   ,
-		              INVALID_TMATRIX  , __FILE__ , __LINE__ ) ;
+		  m_A.GetNcols() == size ()              , 
+		  "Wrong structure of input matrix"      ,
+		  "Ostap::Utils::COWs"                   ,
+		  INVALID_TMATRIX  , __FILE__ , __LINE__ ) ;
 }
 // ============================================================================
 /* protected constructor fro SPLOT 
@@ -284,7 +291,6 @@ Ostap::Utils::COWs*
 Ostap::Utils::COWs::clone() const 
 { return new Ostap::Utils::COWs ( *this ) ; }
 
-
 // =============================================================================
 /* Add sPlot/COWs  information to the tree 
  *  @param tree  input tree 
@@ -312,26 +318,26 @@ Ostap::Trees::add_branch
                   "Invalid vector of names"  , 
                   "Ostap::Trees::add_branch" ,
                   INVALID_NAME , __FILE__  , __LINE__ ) ; 
-//                   bname/0   bvalue/1 
-typedef std::tuple<std::string,double> ITEM  ;
-typedef std::vector<ITEM>                             ITEMS ; 
-ITEMS items {} ; items.reserve ( N ) ;
-// ==========================================================================
-for ( const auto& name : names ) { items.emplace_back ( name , 0.0 ) ; }
-// create branches 
-typedef std::vector<TBranch*> BRANCHES ; 
-BRANCHES branches {} ; branches.reserve ( N ) ;
-for ( auto& item : items ) 
-  {
-    const std::string& bname = std::get<0> ( item  ) ;
-    const std::string  bspec { bname  + "/D" } ;
-    TBranch* branch = tree->Branch ( bname.c_str() , &std::get<1> ( item ) , bspec.c_str () ) ; // get<1>
-    Ostap::Assert ( nullptr != branch                          ,
-                    "Cannot create branch '" + bname  + "'"    ,
-                    "Ostap::Trees::add_branch"                 , 
-                    CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;
-    branches.push_back ( branch ) ;
-  } //
+  //                   bname/0   bvalue/1 
+  typedef std::tuple<std::string,double> ITEM  ;
+  typedef std::vector<ITEM>                             ITEMS ; 
+  ITEMS items {} ; items.reserve ( N ) ;
+  // ==========================================================================
+  for ( const auto& name : names ) { items.emplace_back ( name , 0.0 ) ; }
+  // create branches 
+  typedef std::vector<TBranch*> BRANCHES ; 
+  BRANCHES branches {} ; branches.reserve ( N ) ;
+  for ( auto& item : items ) 
+    {
+      const std::string& bname = std::get<0> ( item  ) ;
+      const std::string  bspec { bname  + "/D" } ;
+      TBranch* branch = tree->Branch ( bname.c_str() , &std::get<1> ( item ) , bspec.c_str () ) ; // get<1>
+      Ostap::Assert ( nullptr != branch                          ,
+		      "Cannot create branch '" + bname  + "'"    ,
+		      "Ostap::Trees::add_branch"                 , 
+		      CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;
+      branches.push_back ( branch ) ;
+    } //
   
   /// observables 
   std::unique_ptr<RooArgSet>    obsset  { std::make_unique<RooArgSet> ( the_cows->observables() ) } ;
@@ -350,11 +356,11 @@ for ( auto& item : items )
       getter.assign ( *obsset, tree ) ;
       //
       for ( std::size_t i = 0 ; i < N ; ++i )
-      {
-        const RooAbsReal* cmp = static_cast<const RooAbsReal*> ( the_cows->components().at(i) ) ;
-        // get the value of componet 
-        cmpvals [ i ] = normset ? cmp->getVal ( normset ) : cmp->getVal() ;
-      }
+	{
+	  const RooAbsReal* cmp = static_cast<const RooAbsReal*> ( the_cows->components().at(i) ) ;
+	  // get the value of componet 
+	  cmpvals [ i ] = normset ? cmp->getVal ( normset ) : cmp->getVal() ;
+	}
       /// get the total PDF
       const double total = normset ? pdffun->getVal ( normset ) : pdffun->getVal() ;
       TVectorD sweights { the_cows->A() * cmpvals } ; sweights *= 1.0L / total ; 

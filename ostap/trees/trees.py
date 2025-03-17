@@ -2516,7 +2516,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         args = branch ,
         logger.debug ( 'prepare_branches: case [1] %s' % typename ( branch ) ) 
 
-    elif isinstance ( branch , Ostap.MoreRooFit.SPlot4Tree ) and not 'name' in kwargs :        
+    elif isinstance ( branch , Ostap.Utils.SPLOT ) and not 'name' in kwargs :        
         ## (very) special case
         
         prefix   = kwargs.pop ( 'prefix'  , ''    )
@@ -2524,9 +2524,21 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         mapping  = kwargs.pop ( 'mapping' , {}    )
         the_map  = Ostap.Trees.DCT()
         for key, value in loop_items ( mapping ) : the_map[ key ] = value
-        for c in branch.coefficients() : new_branches.add ( prefix + c.name  + suffix )        
+        for c in branch.coefficients() : new_branches.add ( prefix + c.name + suffix )        
         args     = branch , prefix , suffix , the_map 
         logger.debug ( 'prepare_branches: case [2] %s' % typename ( branch ) ) 
+
+    elif isinstance ( branch , Ostap.Utils.COWs ) and ( not 'name' in kwargs ) : 
+    
+        ## (very) special case
+        names    = tuple ( 'CMP%02d_cw' % i for i in range ( branch.size() ) ) 
+        names    = kwargs.pop ( 'names' , names ) 
+        names    = strings    ( names ) 
+        mapping  = kwargs.pop ( 'mapping' , {} )
+        the_map  = Ostap.Trees.DCT()
+        for name in names : new_branches.add ( name )        
+        args     = branch , names , the_map 
+        logger.debug ( 'prepare_branches: case [3] %s' % typename ( branch ) ) 
 
     elif isinstance ( branch , Ostap.IFuncTree ) and 'name' in kwargs :
         ## a simple function        
@@ -2538,7 +2550,8 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         args     = branch , 
         logger.debug ( 'prepare_branches: case [3] %s' % typename ( branch ) ) 
 
-    elif isinstance ( branch , string_types ) and 1 == sum ( key in kwargs for key in func_keywords ) and not 'name' in kwargs :
+    elif isinstance ( branch , string_types ) and \
+         1 == sum ( key in kwargs for key in func_keywords ) and not 'name' in kwargs :
         ## branch is actually the name of the branch
         for key in func_keywords :
             if key in kwargs : 
@@ -2555,7 +2568,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         args , nb , kw , keep = prepare_branches ( tree , formula , name = branch , **kwargs )
         return args , nb , kw , keeper + keep  
         
-    elif isinstance ( branch , Ostap.MoreRooFit.RooFun )  and 'name' in kwargs :
+    elif isinstance ( branch , Ostap.Utils.RooFun )  and 'name' in kwargs :
         ## RooFit construction 
         mapping  = kwargs.pop ( 'mapping' , {}  )
         the_map  = Ostap.Trees.DCT()

@@ -30,7 +30,7 @@ namespace Ostap
   namespace Utils
   {
     // ========================================================================
-   /** @class SPLOT
+    /** @class SPLOT
      *  Hellper class to add sPlot results to the TTree 
      */
     class SPLOT : public COWs

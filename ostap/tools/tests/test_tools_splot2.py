@@ -20,7 +20,7 @@ from   ostap.trees.data           import Data
 from   ostap.utils.timing         import timing 
 from   ostap.utils.progress_bar   import progress_bar
 from   ostap.fitting.variables    import FIXVAR 
-from   ostap.tools.splot          import sPlot2D
+from   ostap.tools.splot          import COWs, sPLOT, hPlot2D
 from   ostap.plotting.canvas      import use_canvas 
 from   ostap.utils.utils          import wait, batch_env 
 import ostap.fitting.models       as     Models
@@ -119,7 +119,7 @@ def test_splotting2 () :
     """
     
     ## files = prepare_data ( 10 , 100000 )
-    files = prepare_data ( 10 , 12345 )
+    files = prepare_data ( 10 , 123456 )
     
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data ( files , 'S' )
@@ -157,15 +157,31 @@ def test_splotting2 () :
     
     with use_canvas ( 'test_splot2: X' ) : model.draw1 ( dataset , nbins = 50 )
     with use_canvas ( 'test_splot2: Y' ) : model.draw2 ( dataset , nbins = 50 )
-    
-    with timing ( "Splotting!" , logger = logger ) :
-        splot = sPlot2D ( model , dataset , xbins = 100 , ybins = 100  ) ## SPLOT IT!
 
+    
+    with timing ( "(s)Plotting!" , logger = logger ) :
+        splot = sPLOT ( model , dataset ) ## SPLOT IT!
+        
     with timing ( "Adding sPlot results to TTree/TChain" , logger = logger ) :
         chain = data.chain
-        splot.add_to_tree ( chain , 'x' , 'y' , unbinned = True  , parallel = False ) 
+        splot.splot2tree ( chain , 'x' , 'y' , parallel = False ) 
+
+    with timing ( "(h)Plotting!" , logger = logger ) :
+        hplot = hPlot2D ( model , dataset , xbins = 100 , ybins = 100  ) ## SPLOT IT!
         
-    with use_canvas ( 'test_splot2: Z ' , wait = 5 ) :
+    with timing ( "Adding hPlot results to TTree/TChain" , logger = logger ) :
+        chain = data.chain
+        hplot.add_to_tree ( chain , 'x' , 'y' , parallel = False ) 
+
+    with timing ( "COWS!" , logger = logger ) :
+        cows= COWs ( model , dataset ) ## SPLOT IT!
+        
+    with timing ( "Adding COWS  results to TTree/TChain" , logger = logger ) :
+        chain = data.chain
+        names = tuple ( v.name + '_cw' for v in model.alist2 ) 
+        cows.cows2tree ( chain , 'x' , 'y' , names = names , parallel = False ) 
+    
+    with use_canvas ( 'test_splot2: sPlot Z ' , wait = 2 ) :
 
         chain = data.chain
         
@@ -174,15 +190,39 @@ def test_splotting2 () :
         chain.draw ( 'z' , 'SB_sw' , 'same' , color = 6 )
         chain.draw ( 'z' , 'BS_sw' , 'same' , color = 7 )
 
-        title = 'TTree with sPlot-results'
-        logger.info ( '%s:\n%s' % ( title , chain.table ( title  = title , prefix = '# ' ) ) ) 
+    with use_canvas ( 'test_splot2: hPlot Z ' , wait = 2 ) :
 
-    for var in ( 'SS_sw' , 'BB_sw' , 'SB_sw' , 'BS_sw' ) :
+        chain = data.chain
+        
+        chain.draw ( 'z' , 'SS_hw' ,          color = 2 )
+        chain.draw ( 'z' , 'BB_hw' , 'same' , color = 4 )
+        chain.draw ( 'z' , 'SB_hw' , 'same' , color = 6 )
+        chain.draw ( 'z' , 'BS_hw' , 'same' , color = 7 )
+
+    with use_canvas ( 'test_splot2: COWs  Z ' , wait = 2 ) :
+
+        chain = data.chain
+        
+        chain.draw ( 'z' , 'SS_cw' ,          color = 2 )
+        chain.draw ( 'z' , 'BB_cw' , 'same' , color = 4 )
+        chain.draw ( 'z' , 'SB_cw' , 'same' , color = 6 )
+        chain.draw ( 'z' , 'BS_cw' , 'same' , color = 7 )
+        
+        
+    title = 'TTree with sPlot-results'
+    logger.info ( '%s:\n%s' % ( title , chain.table ( title  = title , prefix = '# ' ) ) ) 
+
+        
+    for var in ( 'SS_sw' , 'BB_sw' , 'SB_sw' , 'BS_sw' ,
+                 'SS_hw' , 'BB_hw' , 'SB_hw' , 'BS_hw' ,
+                 'SS_cw' , 'BB_cw' , 'SB_cw' , 'BS_cw' ) :
         logger.info  ('%s variable sum : %s' % ( var , chain.sumVar  ( var ) ) )
         
     with DBASE.tmpdb()  as db :
         db [ 'histo'  ] = histo 
-        db [ 'splot2' ] = splot
+        db [ 'splot'  ] = splot
+        db [ 'hplot'  ] = hplot
+        db [ 'cows'   ] = cows 
         db.ls()
             
 # =============================================================================

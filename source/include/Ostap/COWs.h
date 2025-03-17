@@ -62,22 +62,22 @@ namespace Ostap
        *  @param progress  show progress bar? 
        */
       COWs
-	    ( const RooAddPdf&                  addpdf                  ,
-	      const RooAbsData&                 data                    ,
-	      const RooAbsCollection*           normalization = nullptr , 
-        const Ostap::Utils::ProgressConf& progress      = true    ) ;
+      ( const RooAddPdf&                  addpdf                  ,
+	const RooAbsData&                 data                    ,
+	const RooAbsCollection*           normalization           , 
+        const Ostap::Utils::ProgressConf& progress      = false   ) ;
       // ======================================================================= 
-       /** Constuctor
+      /** Constuctor
        *  @param addpdf    input extended RooAddPdf 
        *  @param data      input data
        *  @param normalzation normalisation set
        *  @param progress  show progress bar? 
        */
       COWs
-	    ( const RooAddPdf&                  addpdf                  ,
-	      const RooAbsData&                 data                    ,
-        const Ostap::Utils::ProgressConf& progress      = true    ) ; 
-     //   ======================================================================
+      ( const RooAddPdf&                  addpdf                  ,
+	const RooAbsData&                 data                    ,
+        const Ostap::Utils::ProgressConf& progress      = false   ) ; 
+      //   ======================================================================
       /** "Recovery constructor
        *  @param addpdf input extended RooAddPdf 
        *  @param observables  observables set  
@@ -85,10 +85,10 @@ namespace Ostap
        *  @param cows         the symmetric matrix of weights 
        */
       COWs
-	    ( const RooAddPdf&        addpdf        ,
-	      const RooAbsCollection& observables   , 
-	      const RooAbsCollection* normalization , 
-	      const TMatrixDSym&      cows          ) ;
+      ( const RooAddPdf&        addpdf        ,
+	const RooAbsCollection& observables   , 
+	const RooAbsCollection* normalization , 
+	const TMatrixDSym&      cows          ) ;
       // ======================================================================
       /** "Recovery constructor
        *  @param addpdf input extended RooAddPdf 
@@ -97,15 +97,15 @@ namespace Ostap
        *  @param cows         the symmetric matrix of weights 
        */
       COWs
-	    ( const RooAddPdf&        addpdf        ,
-	      const RooAbsCollection& observables   , 
-	      const TMatrixDSym&      cows          , 
-	      const RooAbsCollection* normalization = nullptr ) ; 	 
+      ( const RooAddPdf&        addpdf                  ,
+	const RooAbsCollection& observables             , 
+	const TMatrixDSym&      cows                    , 
+	const RooAbsCollection* normalization = nullptr ) ; 	 
       // ======================================================================
       // copy constructor 
-      COWs( const COWs& right ) ;
+      COWs ( const COWs& right ) ;
       // move constructor 
-      COWs(      COWs&& right ) = default ;
+      COWs (      COWs&& right ) = default ;
       // ======================================================================
       // destructore 
       virtual ~COWs() ;
@@ -115,16 +115,16 @@ namespace Ostap
       // ======================================================================
     protected:    
       // ======================================================================      
-     /** protected constructor fro SPLOT 
+      /** protected constructor fro SPLOT 
        *  @param addpdf input extended RooAddPdf 
        *  @param observables  observables set  
        *  @param normalzation normalisation set 
        *  @param cows         the symmetric matrix of weights 
        */
       COWs
-	    ( const RooAddPdf&        addpdf        ,
-	      const RooAbsCollection& observables   , 
-	      const RooAbsCollection* normalization ) ; 
+      ( const RooAddPdf&        addpdf        ,
+	const RooAbsCollection& observables   , 
+	const RooAbsCollection* normalization ) ; 
       // ======================================================================
      public:
       // ======================================================================

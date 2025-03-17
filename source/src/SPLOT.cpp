@@ -56,20 +56,21 @@ Ostap::Utils::SPLOT::SPLOT
                   "PDF must be extended!"            ,
                   "Ostap::Utils::SPLOT"              ,
                   INVALID_PDF , __FILE__ , __LINE__  ) ;
- /// get original fractions 
- bool recursive ;
- m_coefs = std::make_unique<RooArgList> ( Ostap::MoreRooFit::fractions ( pdf () , recursive ) ) ;
- Ostap::Assert ( ::size ( *m_cmps ) == ::size ( *m_coefs )  ,
-                 "Mismatch in components/coefficients size" ,
-                 "Ostap::Utils::COWs"                       , 
-                 INVALID_PDF , __FILE__ , __LINE__          ) ;
- Ostap::Assert ( !recursive                                ,
-                 "Fractions cannot be recursive"           ,
+  /// get original fractions 
+  bool recursive ;
+  m_coefs = std::make_unique<RooArgList> ( Ostap::MoreRooFit::fractions ( pdf () , recursive ) ) ;
+  Ostap::Assert ( ::size ( *m_cmps ) == ::size ( *m_coefs )  ,
+		  "Mismatch in components/coefficients size" ,
+		  "Ostap::Utils::COWs"                       , 
+		  INVALID_PDF , __FILE__ , __LINE__          ) ;
+  Ostap::Assert ( !recursive                                ,
+		  "Fractions cannot be recursive"           ,
                  "Ostap::Utils::COWs"                      , 
-                 INVALID_PDF , __FILE__ , __LINE__         ) ;
+		  INVALID_PDF , __FILE__ , __LINE__         ) ;
   // ==========================================================================
-  // check validity of coefficiencts
+  // check validity of coefficiencts & get the notal integral 
   // ==========================================================================
+  double total = 0 ;
   { // ========================================================================
     for ( auto* c : *m_coefs )
       {
@@ -83,6 +84,7 @@ Ostap::Utils::SPLOT::SPLOT
                         "Illegal coefficient: " + Ostap::Utils::toString ( *c ) , 
                         "Ostap::Utils::SPLOT"                                  ,
                         INVALID_ABSARG , __FILE__ , __LINE__                   ) ;
+	total += rv->getVal() ;
         // ====================================================================
       } //                                                  The enf of the loop
     // ========================================================================
@@ -126,28 +128,30 @@ Ostap::Utils::SPLOT::SPLOT
       const RooArgList& floatParsFinal = m_result->floatParsFinal() ;
       const RooArgList& coefficients   = this->coefficients() ;
       for ( const RooAbsArg* ci : coefficients  )
-	      {
-	        const int i   = floatParsFinal.index ( ci->GetName () ) ;
-	        const int row = coefficients  .index ( ci ) ; 
-	        for ( const RooAbsArg* cj : coefficients)
-	          {
-	            const int j   = floatParsFinal.index ( cj->GetName()  ) ;
-	            const int col = coefficients  .index ( cj ) ;
-	            //
-	            const double cij = ( i < 0 || j < 0 ) ? 0.0 : cm ( i , j ) ;
-	            //
-	            cov ( row , col ) = cij  ;
-	            if  ( row != col ) { cov ( col , row ) = cij ; }
-	          }
+	{
+	  const int i   = floatParsFinal.index ( ci->GetName () ) ;
+	  const int row = coefficients  .index ( ci ) ; 
+	  for ( const RooAbsArg* cj : coefficients)
+	    {
+	      const int j   = floatParsFinal.index ( cj->GetName()  ) ;
+	      const int col = coefficients  .index ( cj ) ;
+	      //
+	      const double cij = ( i < 0 || j < 0 ) ? 0.0 : cm ( i , j ) ;
+	      //
+	      cov ( row , col ) = cij  ;
+	      if  ( row != col ) { cov ( col , row ) = cij ; }
+	    }
         }
     }
   //
   Ostap::Assert ( cov.IsValid () &&
-		            ( N == cov.GetNcols () ) &&
-		            ( N == cov.GetNrows () )               ,
-                "Invalid covariance matrix"            ,
-                "Ostap::Utils::SPLOT"                  ,                      
-                INVALID_ARGSET , __FILE__ , __LINE__ ) ;
+		  ( N == cov.GetNcols () ) &&
+		  ( N == cov.GetNrows () )               ,
+		  "Invalid covariance matrix"            ,
+		  "Ostap::Utils::SPLOT"                  ,                      
+		  INVALID_ARGSET , __FILE__ , __LINE__ ) ;
+  // scale it! 
+  cov *= 1.0L / total ; 
   // copy matrux to COWs :
   m_A.ResizeTo ( cov ) ;  
   m_A = cov ;
@@ -161,9 +165,9 @@ Ostap::Utils::SPLOT::SPLOT
   , m_coefs  {}
   , m_result { right.m_result ? right.m_result->Clone() : nullptr }
 {
- /// get original fractios 
- bool recursive ;
- m_coefs = std::make_unique<RooArgList> ( Ostap::MoreRooFit::fractions ( pdf () , recursive ) ) ;
+  /// get original fractios 
+  bool recursive ;
+  m_coefs = std::make_unique<RooArgList> ( Ostap::MoreRooFit::fractions ( pdf () , recursive ) ) ;
 }
 // ============================================================================
 // destructor 
@@ -175,7 +179,6 @@ Ostap::Utils::SPLOT::~SPLOT() {}
 Ostap::Utils::SPLOT* 
 Ostap::Utils::SPLOT::clone () const 
 { return new Ostap::Utils::SPLOT  ( *this ) ; } 
-
 
 // ==========================================================================
 /*  Add sPlot information to the tree 
@@ -211,9 +214,9 @@ Ostap::Trees::add_branch
       const RooAbsArg*       aa = splot.fitresult().floatParsFinal().find ( c->GetName() ) ;
       if ( nullptr == aa ) { aa = splot.fitresult().constPars()     .find ( c->GetName() ) ; }
       Ostap::Assert ( nullptr != aa  ,
-                     "Coefficient is not found:" + Ostap::Utils::toString ( *c ) ,
-                     "Ostap::Trees::add_branch"           ,                      
-                     INVALID_ABSARG , __FILE__ , __LINE__ ) ;
+		      "Coefficient is not found:" + Ostap::Utils::toString ( *c ) ,
+		      "Ostap::Trees::add_branch"           ,                      
+		      INVALID_ABSARG , __FILE__ , __LINE__ ) ;
       names.push_back (  prefix + aa->GetName() + suffix ) ;
     }
   // =========================================================================
@@ -223,7 +226,6 @@ Ostap::Trees::add_branch
                       mapping  ,  
                       progress ) ;  
 }
-
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
