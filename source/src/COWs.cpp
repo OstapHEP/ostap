@@ -16,6 +16,7 @@
 #include "RooRealVar.h"
 #include "RooAbsRealLValue.h"
 #include "RooAbsCategoryLValue.h"
+#include "RooAbsData.h"
 // ============================================================================
 // Ostap
 // ============================================================================
