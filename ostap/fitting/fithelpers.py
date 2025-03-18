@@ -542,11 +542,14 @@ class VarMaker (object) :
             elif isinstance ( fix , bool       ) : var.setConstant ( fix )
             elif isinstance ( fix , num_types  ) :                
                 vfix = float ( fix )
-                if var.hasMin() and vfix < var.getMin () : self.warning ("make_var('%s'): fix value %s < min %s" % ( var.name , vfix , vmin ) ) 
-                if var.hasMax() and vfix > var.getMax () : self.warning ("make_var('%s'): fix value %s > max %s" % ( var.name , vfix , vmax ) )
+                if var.hasMin() and vfix < var.getMin () :
+                    self.warning ("make_var('%s'): fix value %s < min %s" % ( var.name , vfix , vmin ) ) 
+                if var.hasMax() and vfix > var.getMax () :
+                    self.warning ("make_var('%s'): fix value %s > max %s" % ( var.name , vfix , vmax ) )
                 var.setVal      ( vfix )
                 value = float ( var ) 
-                if ( value != vfix ) : self.warning ("make_var('%s'): the value for %s variable %s is not fixed at the value of %s" % ( var.name , value , vfix ) )                    
+                if ( value != vfix ) :
+                    self.warning ("make_var('%s'): the value for %s variable %s is not fixed at the value of %s" % ( var.name , value , vfix ) )                    
                 var.setConstant ( True )
             else :
                 self.warning ("make_var('%s'): ignore 'fix' of %s" % ( var.name , str ( fix ) ) )
@@ -916,11 +919,9 @@ class FitHelper(VarMaker) :
                 
                 _args.append   (  ROOT.RooFit.NewStyle ( a ) )
 
-            elif key in args_parallel and \
-                          isinstance ( a , sized_types )       and \
-                          1<= len ( a ) <= 3                   and ( 6 , 27 ) <= root_info :
+            elif key in args_parallel and isinstance ( a , integer_types ) and ( 6 , 27 ) <= root_info :
                 
-                _args.append   (  ROOT.RooFit.Parallelize ( *a ) )
+                _args.append   (  ROOT.RooFit.Parallelize ( a ) )
                 
             elif key in args_recover and isinstance ( a , bool      ) :
                 

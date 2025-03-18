@@ -561,6 +561,7 @@ class APDF1 ( Components ) :
         if for_refit and 0 < refit :
             if not silent : self.info ( 'fitTo: call for refit:  %s/%s'  % ( for_refit , refit ) )
             refit -= 1 
+            logger.error ( 'REFIT IT!!! %s %s' % ( for_refit , refit ) ) 
             return  self.fitTo ( dataset         ,
                                  draw   = draw   ,
                                  nbins  = nbins  ,
@@ -568,12 +569,14 @@ class APDF1 ( Components ) :
                                  refit  = refit  ,
                                  args   = args   , **kwargs ) 
 
-        if   result and 0 == result.status() and not silent :
-            self.info      ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
-        elif result and ( not cov2_good )    and not silent : 
-            self.warning   ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
+        if   result and  0 == result.status () and not silent :
+            self.info    ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
+        elif result and  0 != result.status () and not silent : 
+            self.warning ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
+        elif result and  ( not cov2_good )     and not silent : 
+            self.warning ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
         elif result and not silent :
-            self.warning   ( "Fit result is\n%s" % result.table ( prefix = "# " ) )
+            self.warning ( "Fit result is\n%s" % result.table ( prefix = "# " ) )
 
         frame = None
         
@@ -635,7 +638,35 @@ class APDF1 ( Components ) :
                 return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
             
         return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
-    
+
+    # ===============================================================================
+    ## refit up-to N-times till good fit result/cov nmarix quality 
+    def reFit ( self , *args , **kwargs ) :
+        """ efit up-to N-times till good fit result/cov nmarix quality 
+        """
+        N           = kwargs.pop ( "repeat"      , 1 )
+        good_status = kwargs.pop ( "good_status" , 0 )
+        good_cov    = kwargs.pop ( "good_cov"    , ( 3 , -1 ) ) 
+        ## 
+        if isinstance ( good_status , int ) : good_status = good_status ,
+        if isinstance ( good_cov    , int ) : good_cov    = good_cov    ,
+        
+        assert isinstance ( N , it ) and 1 <= N , "reFit: Invalid N=%s" % N
+        assert all ( isinstance ( a , int ) and  0 <= a <=5 for a in good_status ) , \
+            "Invalid `good_status' list: %s" % str ( good_status )
+        assert all ( isinstance ( a , int ) and -1 <= a <=3 for a in good_covs   ) , \
+            "Invalid `good_cov' list: %s" % str ( good_cov )
+        
+        for n in range ( N ) :
+            
+            r , f = self.fitTo ( *args , **kwargs )
+            s = r.status()
+            c = r.covQual() 
+            if s in good_status and c in good_covs : return r , f
+            
+        self.warning ( "reFit: status:%s covQual:%s" % ( fit_status ( s ) , cov_qual   ( c ) ) )
+        return r , f 
+        
     # ================================================================================
     ## helper method to draw set of components 
     def _draw ( self , what , frame , options , style = None , args = () ) :
@@ -1015,16 +1046,21 @@ class APDF1 ( Components ) :
 
             ## calculate chi2/ndf
             frame.chi2ndf = None 
-            if dataset and not silent :             
-                pars          = self.params ( dataset )
-                frame.chi2ndf = frame.chiSquare ( len ( pars ) )
+            if dataset and not silent :
+                if self.fit_result :
+                    npf = len ( self.fit_result.floatParsFinal() )
+                    frame.chi2ndf = frame.chiSquare ( npf )
+                else : 
+                    npf = len ( self.params ( dataset ) ) 
+                    frame.chi2ndf = frame.chiSquare ( npf )
+                ## 
                 binw          = -1 
                 if nbins and isinstance ( nbins , integer_types ) and 1 < nbins :
                     if hasattr ( drawvar , 'xminmax' ) and drawvar.xminmax () :
                         xmn , xmx =  drawvar.xminmax()
                         binw = ( xmx - xmn ) / float ( nbins )
-                if 0 < binw : self.info ( 'chi2/ndf: %.3f, binwidth: %s' %  ( frame.chi2ndf , binw ) )
-                else        : self.info ( 'chi2/ndf: %.3f' %                  frame.chi2ndf          )
+                if 0 < binw : self.info ( 'chi2/ndf: %.3f, binwidth: %.4g' % ( frame.chi2ndf , binw ) )
+                else        : self.info ( 'chi2/ndf: %.3f' %                   frame.chi2ndf          )
 
 
             if not residual and not pull:

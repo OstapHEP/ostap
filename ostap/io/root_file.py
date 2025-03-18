@@ -1138,7 +1138,6 @@ def copy_file ( source , destination , progress = True ) :
 ## alias 
 copy_root_file = copy_file
 
-
 # =============================================================================
 ## @class RootFiles
 #  Some specialzation of gheneric class Files for ROOT files
@@ -1272,7 +1271,7 @@ class RootFiles(Files) :
         if not self.silent :
             logger.info ( "copy_files: #%d files are copied to '%s'" %  ( len ( copied ) , nd ) )
             
-        return self.clone ( files = sorted ( copied ) )
+        return self.clone ( files = copied )
 
     # ==========================================================================
     ## Get the size of the file

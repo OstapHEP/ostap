@@ -89,6 +89,11 @@ namespace Ostap
     /// clone operation
     virtual Exception* clone() const ;
     // ========================================================================
+  public: // 
+    // ========================================================================
+    /// default constructor 
+    Exception () = default ;
+    // ========================================================================
   public: // standard getters 
     // ========================================================================
     /// const std::string&       message  () const { return m_message ; }
@@ -131,13 +136,13 @@ namespace Ostap
     /// status code 
     Ostap::StatusCode          m_code { Ostap::StatusCode::FAILURE } ;  // status code for exception
     /// file name
-    std::string                m_file     {}    ;
+    std::string                m_file     {   } ;
     /// line number 
     std::size_t                m_line     { 0 } ;
     /// "what"
     std::string                m_what     {   } ; 
     /// "previous" element in the linked list
-    std::unique_ptr<Exception> m_previous {} ;
+    std::unique_ptr<Exception> m_previous {}    ;
     // ========================================================================
   } ;
   // ==========================================================================

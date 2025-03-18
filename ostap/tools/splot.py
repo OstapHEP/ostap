@@ -135,8 +135,6 @@ class COWs ( object ) :
         for a , b in zip ( vars , self.pdf.vars ) : mapping [ b.name ] = a
         kwargs [ 'mapping' ]  = mapping
 
-        print ( 'KWARGS:' , kwargs )
-        
         if parallel : result = tree.padd_new_branch ( self.cows , **kwargs ) 
         else        : result = tree. add_new_branch ( self.cows , **kwargs )
         

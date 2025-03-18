@@ -143,7 +143,7 @@ class SqliteDict(DictClass):
     def __init__ ( self                    ,
                    filename     = None     ,
                    flag         = 'c'      ,
-                   tablename    = 'ostap'  ,
+                   tablename    = 'Dict'   ,
                    autocommit   = False    ,
                    ## journal_mode = "DELETE" ,
                    journal_mode = "OFF"    ,
