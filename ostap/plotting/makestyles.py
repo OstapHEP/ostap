@@ -122,10 +122,14 @@ class StyleStore(object) :
     """
     __styles     = {}
     __own_styles = {}
-    @classprop 
+    @classprop
+    ## @classmethod
+    ## @property
     def styles     ( kls ) :
         return kls.__styles 
     @classprop 
+    ## @classmethod
+    ## @property
     def own_styles ( kls ) :
         return kls.__own_styles 
 

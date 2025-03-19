@@ -438,7 +438,8 @@ if ( 3 , 9 ) <= python_info : # ===============================================
         # =====================================================================        
         import terminaltables3
         has_tt3 = True 
-        row = 'terminaltables3' , terminaltables3.__version__  , terminaltables3.__file__
+        version = getattr ( terminaltables3 , '__version__' , '' ) 
+        row = 'terminaltables3' , version  , terminaltables3.__file__
         rows.append  ( row )        
         # =====================================================================
     except ImportError : # ====================================================
@@ -451,7 +452,8 @@ if not has_tt3 : # ============================================================
     try : # ===================================================================
         # =====================================================================        
         import terminaltables
-        row = 'terminaltables' , terminaltables.__version__  , terminaltables.__file__
+        version = getattr ( terminaltables , '__version__' , '' ) 
+        row = 'terminaltables' , version  , terminaltables.__file__
         rows.append  ( row )        
         # =====================================================================
     except ImportError : # ====================================================
@@ -462,7 +464,8 @@ if not has_tt3 : # ============================================================
 try : # =======================================================================
     # =========================================================================
     import tabulate
-    row = 'tabulate' , tabulate.__version__  , tabulate.__file__
+    version = getattr ( tabulate , '__version__' , '' ) 
+    row = 'tabulate' , version  , tabulate.__file__
     rows.append  ( row )
     # =========================================================================
 except ImportError : # ========================================================

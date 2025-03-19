@@ -1578,7 +1578,20 @@ def absproperty ( func ) :
     return property ( abc.abstractmethod ( func ) ) 
     
 # =============================================================================
-if  ( 3 , 9 ) <= python_info : # ==============================================
+if  ( 3 , 12 ) <= python_info : # =============================================
+    # =========================================================================
+    ## class property decorator
+    #  @see https://stackoverflow.com/questions/76249636/class-properties-in-python-3-11
+    class classprop :
+        """ Class property decorator
+        - see https://stackoverflow.com/questions/76249636/class-properties-in-python-3-11
+        """
+        def __init__(self, func):
+            self.fget = func
+        def __get__(self, instance, owner):
+            return self.fget(owner)
+    # =========================================================================
+elif  ( 3 , 9 ) <= python_info : # ============================================
     # =========================================================================
     ## class property decorator
     #  @code
