@@ -181,7 +181,7 @@ def opts_replace ( opts , expr , direct = True ) :
 #  normal creation of tar-gile raises OSError
 #  @code
 #  files =...
-#  t = make_tarfile ( 'outptu.tgz' , files , varbose = True , tmp = True )  
+#  t = make_tarfile ( 'output.tgz' , files , varbose = True , tmp = True )  
 #  @endcode
 def make_tarfile ( output , files , verbose = False , tmp = False ) :
     """ Create the tar file from components, optionally create it as tmp,
@@ -189,10 +189,10 @@ def make_tarfile ( output , files , verbose = False , tmp = False ) :
     (Sometime for unreliable file systems (like EOS via fsmount)
     normal creation of tar-gile raises OSError
     >>> files =...
-    >>> t = make_tarfile ( 'outptu.tgz' , files , varbose = True , tmp = True )  
+    >>> t = make_tarfile ( 'output.tgz' , files , varbose = True , tmp = True )  
     """
     
-    assert not os.path.exists ( output ) or os.path.isfile ( outptu ) , \
+    assert not os.path.exists ( output ) or os.path.isfile ( output ) , \
            "Invalid destination for output tar-file: `%s'" % output
     
     if os.path.exists ( output ) and os.path.isfile ( output ) :

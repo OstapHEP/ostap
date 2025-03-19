@@ -75,7 +75,7 @@ class  CopyTask(Task) :
 
 # =============================================================================
 ## Copy files in parallel:
-#  @return sequence of niput,outptu pairs
+#  @return sequence of (input,output) pairs
 def copy_files ( file_pairs , progress = True , maxfiles = 5 , copier = None , **kwargs ) :
     """Copy files in parallel: 
     - return sequence of (input,output) pairs
