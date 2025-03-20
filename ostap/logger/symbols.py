@@ -72,6 +72,8 @@ __all__     = (
     'folder'              ,
     'light_bulb'          , 
     'weight_lifter'       ,
+    ##
+    'delta_symbol'        , 
 )
 # ===========================================================================
 from   ostap.utils.basic import isatty, has_unicode 
@@ -171,6 +173,8 @@ rms_symbol       = '\U000003C3'           if show else 'rms '
 dispersion_sym   = '\U000003c3\U000000B2' if show else 'D '
 ## squared lower case Greek sigma 
 variance_sym     = '\U000003c3\U000000B2' if show else 'var '
+## Delta symbol 
+delta_symbol     = '\U00000394'           if show else 'delta'
 
 
 # ==================================================

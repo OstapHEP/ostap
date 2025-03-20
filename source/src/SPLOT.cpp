@@ -121,29 +121,26 @@ Ostap::Utils::SPLOT::SPLOT
   // extended covariance matrix 
   const std::size_t N { size() } ;
   TMatrixDSym cov { static_cast<Int_t> ( N ) } ;
-  if ( N == cm.GetNrows() ) { cov = cm ; }
-  else
+  // fill the matrix with the content & zeroes 
+  const RooArgList& floatParsFinal = m_result->floatParsFinal() ;
+  const RooArgList& coefficients   = this->coefficients() ;
+  for ( const RooAbsArg* ci : coefficients  )
     {
-      // fill the matrix with the content & zeroes 
-      const RooArgList& floatParsFinal = m_result->floatParsFinal() ;
-      const RooArgList& coefficients   = this->coefficients() ;
-      for ( const RooAbsArg* ci : coefficients  )
+      const int i   = floatParsFinal.index ( ci->GetName () ) ;
+      const int row = coefficients  .index ( ci ) ; 
+      for ( const RooAbsArg* cj : coefficients)
 	{
-	  const int i   = floatParsFinal.index ( ci->GetName () ) ;
-	  const int row = coefficients  .index ( ci ) ; 
-	  for ( const RooAbsArg* cj : coefficients)
-	    {
-	      const int j   = floatParsFinal.index ( cj->GetName()  ) ;
-	      const int col = coefficients  .index ( cj ) ;
-	      //
-	      const double cij = ( i < 0 || j < 0 ) ? 0.0 : cm ( i , j ) ;
-	      //
-	      cov ( row , col ) = cij  ;
-	      if  ( row != col ) { cov ( col , row ) = cij ; }
-	    }
-        }
+	  const int j   = floatParsFinal.index ( cj->GetName()  ) ;
+	  const int col = coefficients  .index ( cj ) ;
+	  //
+	  const double cij = ( i < 0 || j < 0 ) ? 0.0 : cm ( i , j ) ;
+	  //
+	  cov ( row , col ) = cij  ;
+	  if  ( row != col ) { cov ( col , row ) = cij ; }
+	}
     }
   //
+  // cm.Print ( "vvv" ) ;
   Ostap::Assert ( cov.IsValid () &&
 		  ( N == cov.GetNcols () ) &&
 		  ( N == cov.GetNrows () )               ,

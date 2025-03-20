@@ -22,9 +22,11 @@ from   ostap.utils.progress_bar   import progress_bar
 from   ostap.fitting.variables    import FIXVAR 
 from   ostap.tools.splot          import COWs, sPLOT, hPlot2D
 from   ostap.plotting.canvas      import use_canvas 
-from   ostap.utils.utils          import wait, batch_env 
+from   ostap.utils.utils          import wait, batch_env
+from   ostap.logger.symbols       import sum_symbol, delta_symbol 
 import ostap.fitting.models       as     Models
-import ostap.io.zipshelve         as     DBASE 
+import ostap.io.zipshelve         as     DBASE
+import ostap.logger.table         as     T 
 import ostap.fitting.pyselectors 
 import ostap.trees.trees
 import ostap.histos.histos
@@ -77,14 +79,14 @@ def create_tree ( fname , nentries = 1000 ) :
             
             xv , yv, zv = -100 , -100 , -100
             
-            if 0 == i % 2 :  
-                while not xmin < xv < xmax : xv = random.gauss   ( mean , sigma )
-                while not ymin < yv < ymax : yv = random.gauss   ( mean , sigma )
-                while not zmin < zv < zmax : zv = random.gauss   (    5 , 0.5   ) 
-            else :
+            if 0 == i % 3 :
                 while not xmin < xv < xmax : xv = random.uniform ( xmin , xmax  ) 
                 while not ymin < yv < ymax : yv = random.uniform ( ymin , ymax  ) 
-                while not zmin < zv < zmax : zv = random.gauss   (   15 , 0.5   ) 
+                while not zmin < zv < zmax : zv = random.gauss   (   12 , 1.0   )
+            else : 
+                while not xmin < xv < xmax : xv = random.gauss   ( mean , sigma )
+                while not ymin < yv < ymax : yv = random.gauss   ( mean , sigma )
+                while not zmin < zv < zmax : zv = random.gauss   (    8 , 1.0   ) 
 
             x [ 0 ] = xv
             y [ 0 ] = yv
@@ -119,7 +121,7 @@ def test_splotting2 () :
     """
     
     ## files = prepare_data ( 10 , 100000 )
-    files = prepare_data ( 10 , 123456 )
+    files = prepare_data ( 1 , 100000 )
     
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data ( files , 'S' )
@@ -146,8 +148,8 @@ def test_splotting2 () :
     model.SB.setMin ( -100000 )  
     model.BS.setMin ( -100000 )  
 
-    model.SB.fix ( 5.0 ) 
-    model.BS.fix ( 0.0 ) 
+    ## model.SB.fix ( 0.0 ) 
+    ## model.BS.fix ( 0.0 ) 
     
     with FIXVAR ( [ model.SB , model.BS ] ) : 
         result , _ = model.fitTo ( dataset , silent = True , refit = 5 )
@@ -157,15 +159,15 @@ def test_splotting2 () :
     
     with use_canvas ( 'test_splot2: X' ) : model.draw1 ( dataset , nbins = 50 )
     with use_canvas ( 'test_splot2: Y' ) : model.draw2 ( dataset , nbins = 50 )
-
     
     with timing ( "(s)Plotting!" , logger = logger ) :
         splot = sPLOT ( model , dataset ) ## SPLOT IT!
         
     with timing ( "Adding sPlot results to TTree/TChain" , logger = logger ) :
         chain = data.chain
-        splot.splot2tree ( chain , 'x' , 'y' , parallel = False ) 
-
+        splot.splot2tree ( chain , 'x' , 'y' , parallel = False )
+        
+        
     with timing ( "(h)Plotting!" , logger = logger ) :
         hplot = hPlot2D ( model , dataset , xbins = 100 , ybins = 100  ) ## SPLOT IT!
         
@@ -174,13 +176,19 @@ def test_splotting2 () :
         hplot.add_to_tree ( chain , 'x' , 'y' , parallel = False ) 
 
     with timing ( "COWS!" , logger = logger ) :
+        model.load_params ( result ) 
         cows= COWs ( model , dataset ) ## SPLOT IT!
-        
+
+    m1 = splot.splot.A()
+    m2 = cows.cows  .A()
+    dm = Ostap.Math.maxabs_element ( m1 - m2 )
+    logger.info ( 'MAximal difference: %.5g' % dm )
+    
     with timing ( "Adding COWS  results to TTree/TChain" , logger = logger ) :
         chain = data.chain
         names = tuple ( v.name + '_cw' for v in model.alist2 ) 
         cows.cows2tree ( chain , 'x' , 'y' , names = names , parallel = False ) 
-    
+        
     with use_canvas ( 'test_splot2: sPlot Z ' , wait = 2 ) :
 
         chain = data.chain
@@ -212,12 +220,24 @@ def test_splotting2 () :
     title = 'TTree with sPlot-results'
     logger.info ( '%s:\n%s' % ( title , chain.table ( title  = title , prefix = '# ' ) ) ) 
 
-        
-    for var in ( 'SS_sw' , 'BB_sw' , 'SB_sw' , 'BS_sw' ,
-                 'SS_hw' , 'BB_hw' , 'SB_hw' , 'BS_hw' ,
-                 'SS_cw' , 'BB_cw' , 'SB_cw' , 'BS_cw' ) :
-        logger.info  ('%s variable sum : %s' % ( var , chain.sumVar  ( var ) ) )
-        
+    rows = [ ( 'Variable' , sum_symbol ) ]
+    for var in sorted ( ( 'SS_sw' , 'BB_sw' , 'SB_sw' , 'BS_sw' ,
+                          'SS_hw' , 'BB_hw' , 'SB_hw' , 'BS_hw' ,
+                          'SS_cw' , 'BB_cw' , 'SB_cw' , 'BS_cw' ) ) :
+        row = var , str ( chain.sumVar ( var ) )
+        rows.append ( row )
+
+    title = 'sPlot variable sums'
+    logger.info ( '%s:\n%s' % ( title , T.table ( rows , title  = title , prefix = '# ' ) ) ) 
+
+    logger.info ( '%s_cw      : %s' % ( sum_symbol , chain.statVar ( 'SS_cw+SB_cw+BS_cw+BB_cw' ) ) ) 
+    logger.info ( '%s_sw      : %s' % ( sum_symbol , chain.statVar ( 'SS_sw+SB_sw+BS_sw+BB_sw' ) ) ) 
+    logger.info ( '%s_hw      : %s' % ( sum_symbol , chain.statVar ( 'SS_hw+SB_hw+BS_hw+BB_hw' ) ) )
+    
+    logger.info ( '%sSS_cw-sw : %s' % ( delta_symbol , chain.statVar ( 'SS_cw-SS_sw' ) ) ) 
+    logger.info ( '%sSS_cw-hw : %s' % ( delta_symbol , chain.statVar ( 'SS_cw-SS_hw' ) ) ) 
+    logger.info ( '%sSS_sw-hw : %s' % ( delta_symbol , chain.statVar ( 'SS_sw-SS_hw' ) ) ) 
+                                                      
     with DBASE.tmpdb()  as db :
         db [ 'histo'  ] = histo 
         db [ 'splot'  ] = splot

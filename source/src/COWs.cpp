@@ -125,18 +125,17 @@ Ostap::Utils::COWs::COWs
       sumw += weight ;
       //
       ::assign ( *obs , *item ) ;
-      // evalute pdf 
+      //
+      // evalute the total pdf 
       const double pdf_val = normset ? pdffun->getVal ( normset ) : pdffun->getVal () ;
       //
       if ( !pdf_val ) { continue ; } // skip it...  Is it correct? 
       //      
-      // evaluate all components
-      std::size_t i = 0 ;
-      for ( const RooAbsArg* c : *m_cmps )
+      // evaluate all individual components
+      for ( std::size_t i = 0 ; i < N ; ++i ) 
 	{
-	  const RooAbsReal* r = static_cast<const RooAbsReal*> ( c ) ;
+	  const RooAbsReal* r  = static_cast<const RooAbsReal*> ( components().at ( i ) ) ;
 	  cmp_val [ i ] = normset ? r->getVal ( normset ) : r->getVal () ;	  
-	  ++i ;
 	}
       //
       const double factor = weight / ( pdf_val * pdf_val ) ;
@@ -147,7 +146,9 @@ Ostap::Utils::COWs::COWs
 	  W ( k , k ) += factor * kval * kval ;
 	  for ( std::size_t l = k + 1  ; l < N ; ++l  )
 	    {
-	      const double wkl = factor * kval * cmp_val [ l ] ;
+	      const double lval = cmp_val [ l ] ;
+	      const double wkl  = factor * kval * lval ;
+	      // strange "feature" of TMatrixTSym ....
 	      W ( l , k ) += 1.0 * wkl ;
 	      W ( k , l ) += 1.0 * wkl ;
 	    }
@@ -170,7 +171,7 @@ Ostap::Utils::COWs::COWs
   double det = 0 ;
   W.Invert ( &det ) ;
   Ostap::Assert ( W.IsValid ()                          ,
-		  "Matrix W cannot be inverted!"        ,
+		  "The matrix `W' cannot be inverted!"  ,
 		  "Ostap::Utils::COWs"                  ,
 		  INVALID_ABSDATA , __FILE__ , __LINE__ ) ;
   /// finally store matrix A
@@ -340,13 +341,13 @@ Ostap::Trees::add_branch
 		      CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;
       branches.push_back ( branch ) ;
     } //
-  
+  // =========================================================================
   /// observables 
   std::unique_ptr<RooArgSet>    obsset  { std::make_unique<RooArgSet> ( the_cows->observables() ) } ;
   const Ostap::Trees::RooGetter getter  ( mapping , *obsset , tree ) ;
   const RooArgSet*              normset { the_cows->normalization ()   ? the_cows->normalization () : obsset.get() } ;
   const RooAddPdf*              pdffun  { &the_cows->pdf() } ;  
-  
+  // 
   // loop over the TTree entries
   const Long64_t nentries = tree->GetEntries(); 
   Ostap::Utils::ProgressBar bar ( nentries , progress  ) ;
@@ -356,10 +357,10 @@ Ostap::Trees::add_branch
       if ( tree->GetEntry ( entry ) < 0 ) { break ; };
       /// assign the observables 
       getter.assign ( *obsset, tree ) ;
-      //
+      // evalaute all individual components:
       for ( std::size_t i = 0 ; i < N ; ++i )
 	{
-	  const RooAbsReal* cmp = static_cast<const RooAbsReal*> ( the_cows->components().at(i) ) ;
+	  const RooAbsReal* cmp = static_cast<const RooAbsReal*> ( the_cows->components().at ( i ) ) ;
 	  // get the value of componet 
 	  cmpvals [ i ] = normset ? cmp->getVal ( normset ) : cmp->getVal() ;
 	}
