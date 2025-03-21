@@ -1269,16 +1269,11 @@ namespace Ostap
      *  ``Crystal Ball-function'' suitable for \f$J/\psi/\Upsilon\f$-peaks     
      *  - thanks to Matthew Needham
      *
-     *  Recommended constants for \f$J/psi\f$-peak:
-     *    -  \f$a_0 =  1.975   \f$
-     *    -  \f$a_1 =  0.0011  \f$
-     *    -  \f$a_2 = -0.00018 \f$
+     *  - N i s fixed at 1 
+     *  - alpha is parametereised as functio of sigma 
+     *  \f$ \alpha(\sigma) = c_0\frac{ (\sigma/c_1)^{c_2}}{ 1 + (\sigma/c_1)^{c_2} }\f$ 
      *
-     *  Recommended constants for \f$\Upsilon\f$-peaks:
-     *    -  \f$a_0 =  1.91    \f$
-     *    -  \f$a_1 =  0.0017  \f$
-     *    -  \f$a_2 = -5.22\times10^{-6} \f$
-     *
+     
      *  @see Ostap::Math::CrystalBall
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2012-05-13
@@ -1295,11 +1290,11 @@ namespace Ostap
        *  @param a2     a2       parameter
        */
       Needham
-      ( const double m0    = 3096.0     ,  // for J/psi
-        const double sigma =   13.5     ,
-        const double a0    =    1.975   ,
-        const double a1    =    0.0011  ,
-        const double a2    =   -0.00018 ) ;
+      ( const double m0    = 3096.0 ,  // for J/psi
+        const double sigma =   13.5 ,
+        const double a0    =    2.5 ,
+        const double a1    =   13.5 ,
+        const double a2    =   10   ) ;
       /// destructor
       ~Needham() ;
       // ======================================================================
@@ -1318,7 +1313,11 @@ namespace Ostap
       double a0    () const { return m_a0          ; }
       double a1    () const { return m_a1          ; }
       double a2    () const { return m_a2          ; }
-      double alpha () const { return a0 () + sigma() * ( a1() + sigma() * a2 () ) ; }
+      double alpha () const { return alpha ( m_cb.sigma() ) ; } 
+      // ======================================================================
+    public: // show alpha as function of sigma 
+      // ======================================================================
+      double alpha ( const double sigma ) const ;
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
@@ -1332,8 +1331,6 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get (possibly truncated) integral
-      double integral () const { return m_cb.integral() ; }
       /// get integral between low and high
       double integral
       ( const double low ,

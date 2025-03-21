@@ -19,7 +19,9 @@
  - add SCHUR decomposition for squared matrices 
  - more improvements for Files/RootFiles/Data/Lumi/DataAndLumi
  - add COWs (both in C++ and python) and split python'  `sPlot` into `COWs`, `sPLOT` & `hPlot*`
- 
+ - modify the `alpha(sigma)` dependency for Needham's functions
+
+
 ## New features
     
    1. further improvemets for the wrapped columns in the tables

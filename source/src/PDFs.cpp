@@ -1958,12 +1958,8 @@ Double_t Ostap::Models::Needham::analyticalIntegral
 // ============================================================================
 double Ostap::Models::Needham::alpha   () const 
 {
-  const double s  =         m_sigma  ;
-  double       a  =         m_a0     ;
-  a              += s *     m_a1     ;
-  a              += s * s * m_a2     ;
-  //
-  return a ;
+  setPars () ;
+  return m_needham.alpha () ;
 }
 // ============================================================================
 

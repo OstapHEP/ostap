@@ -625,7 +625,7 @@ class Needham_pdf(PEAK) :
     - n = 1 
     - alpha(sigma) = a_0 + sigma*(a_1+sigma*a_2)
     
-    The function is well sutable to fit dimuon final states: 
+    The function is well suitable to fit dimuon final states: 
     - J/psi   -> mu+ mu-
     - psi'    -> mu+ mu-
     - Upsilon -> mu+ mu-
@@ -635,11 +635,11 @@ class Needham_pdf(PEAK) :
     def __init__ ( self                 ,
                    name                 ,
                    xvar                 ,
-                   mean     = 3.096     ,   ## GeV  
-                   sigma    = 0.013     ,   ## GeV 
-                   a0       = 1.975     ,
+                   mean     =  3.096    ,   ## GeV  
+                   sigma    =  0.013    ,   ## GeV 
+                   a0       =  1.975    ,
                    a1       = -0.0011   ,   ## GeV^-1
-                   a2       = -0.00018  ) : ## GeV^-2  
+                   a2       =   10      ) : ## GeV^-2  
         
         PEAK.__init__ ( self , name , xvar , mean , sigma )
         

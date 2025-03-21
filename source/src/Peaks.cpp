@@ -2094,9 +2094,9 @@ Ostap::Math::Needham::Needham
   const double a2    )
 /// @see Ostap::Math:CrystalBall
   : m_cb  ( m0 , sigma , 1 , 0 ) // Ostap::Math:CrystalBall
-  , m_a0  ( std::abs ( a0 )  )
-  , m_a1  (            a1    )
-  , m_a2  (            a2    )
+  , m_a0  ( std::abs ( a0 ) )
+  , m_a1  ( std::abs ( a1 ) )
+  , m_a2  (            a2   )
 {
   m_cb.setAlpha ( alpha () ) ;
 }
@@ -2115,8 +2115,9 @@ bool Ostap::Math::Needham::setA0 ( const double value )
 // ============================================================================
 bool Ostap::Math::Needham::setA1 ( const double value )
 {
-  if ( s_equal ( value , m_a1 ) ) { return false ; }
-  m_a1 = value ;
+  const double value_ = std::fabs ( value );
+  if ( s_equal ( value_ , m_a1 ) ) { return false ; }
+  m_a1 = value_ ;
   return m_cb.setAlpha ( alpha () ) ;
 }
 // ============================================================================
@@ -2140,8 +2141,14 @@ std::size_t Ostap::Math::Needham::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_cb.tag() ,  m_a0 , m_a1 , m_a2 ) ; 
 }
 // ============================================================================
-
-
+// show alpha as functon of sigma 
+// ============================================================================
+double Ostap::Math::Needham::alpha
+( const double sigma ) const 
+{
+  const double q = std::pow ( std::abs ( sigma / m_a1 ) , m_a2 ) ;
+  return m_a0 * q / ( 1 + q ) ;
+}
 // ============================================================================
 /*  constructor from all parameters
  *  @param m0 m0 parameter

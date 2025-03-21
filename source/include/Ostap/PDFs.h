@@ -1249,9 +1249,9 @@ namespace Ostap
         RooAbsReal&          x         ,
         RooAbsReal&          m0        ,
         RooAbsReal&          sigma     ,
-        RooAbsReal&          a0        ,
-        RooAbsReal&          a1        ,
-        RooAbsReal&          a2        ) ;
+        RooAbsReal&          c0        ,
+        RooAbsReal&          c1        ,
+        RooAbsReal&          c2        ) ;
       /// "copy" constructor
       Needham ( const Needham& right , const char* name = 0 ) ;
       /// virtual destructor

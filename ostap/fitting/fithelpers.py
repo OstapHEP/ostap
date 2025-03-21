@@ -1080,7 +1080,7 @@ class FitHelper(VarMaker) :
         if minmax :
             mn , mx = minmax
             if not ( mn <= value <= mx or isequal ( mn , value ) or isequal ( mx , value ) ) :
-                raise ValueError ( "set_value: value %g is outside of the [%s,%s] region for " % ( value , mn , mx , var.name ) ) 
+                raise ValueError ( "set_value: value %g is outside of the [%s,%s] region for %s" % ( value , mn , mx , var.name ) ) 
             if isequal ( value , mn ) and value <= mn : value = mn
             if isequal ( value , mx ) and value >= mx : value = mx 
             
