@@ -89,7 +89,7 @@ namespace Ostap
   public:
     // ========================================================================
     /// get the tree 
-    TTree* get_tree() const ;
+    TTree* get_tree () const { return m_tree ; } 
     ///  set the tree 
     void   set_tree  ( TTree* tree ) ;
     // ========================================================================
@@ -110,7 +110,7 @@ namespace Ostap
     /// number of processed events 
     unsigned long long  m_event { 0 } ; // number of processed events 
     // ========================================================================
-  protected :
+  private : 
     // ========================================================================
     /// the tree 
     TTree* m_tree { nullptr } ; // the tree 

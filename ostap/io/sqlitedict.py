@@ -72,11 +72,10 @@ def reraise ( tp , value , tb = None):
 class Connect ( object ) :
     """ Helper class to implement ``read-only'' access to database 
     """
-    def __init__ ( self , filename , flag , *args , **kwargs ) :
+    def __init__ ( self , filename , flag , **kwargs ) :
         
         self.__filename = filename
         self.__flag     = flag
-        self.__args     = args
         self.__kwargs   = kwargs
         self.__connect  = None
         self.__fd       = None
@@ -87,9 +86,9 @@ class Connect ( object ) :
 
         if 'r' in self.flag :
             filename  = 'file:%s?mode=ro' % self.filename 
-            self.__connect = sqlite3.connect ( filename , uri = True , *self.args , **self.kwargs )
+            self.__connect = sqlite3.connect ( filename , uri = True , **self.kwargs )
         else :
-            self.__connect = sqlite3.connect ( self.filename , *self.args , **self.kwargs )
+            self.__connect = sqlite3.connect ( self.filename         , **self.kwargs )
             
         return self.connect
 
@@ -204,7 +203,7 @@ class SqliteDict(DictClass):
         self.timeout      = timeout 
 
         ## check it! 
-        with Connect ( self.filename , self.flag , self.timeout ) :
+        with Connect ( self.filename , self.flag , timeout = self.timeout ) :
             pass  
 
         logger.debug ( "opening Sqlite table %r in %s" % ( tablename , filename ) )
@@ -466,7 +465,7 @@ class SqliteDict(DictClass):
             raise IOError('file %s does not exist' % (filename))
         GET_TABLENAMES = 'SELECT name FROM sqlite_master WHERE type="table"'
         
-        with Connect ( filename , 'r' , self.timeout ) as conn:
+        with Connect ( filename , 'r' , timeout = self.timeout ) as conn:
             cursor = conn.execute ( GET_TABLENAMES )
             res    = cursor.fetchall()
 
@@ -580,9 +579,9 @@ class SqliteMultithread(Thread):
     def run ( self ) :
         
         if self.autocommit :
-            connect = Connect ( self.filename , self.flag , self.timeout , isolation_level = None, check_same_thread = False )
+            connect = Connect ( self.filename , self.flag , timeout = self.timeout , isolation_level = None, check_same_thread = False )
         else:
-            connect = Connect ( self.filename , self.flag , self.timeout , check_same_thread = False)
+            connect = Connect ( self.filename , self.flag , timeout = self.timeout , check_same_thread = False)
             
         with connect as conn :
             return self.run__ (  conn )

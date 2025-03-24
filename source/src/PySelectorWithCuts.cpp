@@ -60,8 +60,8 @@ Ostap::SelectorWithCuts::SelectorWithCuts
   , m_formula          ()
   , m_good             ( 0              )            
 {
- Ostap:Assert ( !m_tree || m_cuts.empty() || make_formula ( tree ) , 
-                "Invalid formula "        ,
+ Ostap:Assert ( !get_tree() || m_cuts.empty() || make_formula ( tree ) , 
+                "Invalid formula"        ,
                 "Ostap::SelectorWithCuts" ,
                 INVALID_FORMULA , __FILE__ , __LINE__ ) ;
 }
@@ -86,7 +86,7 @@ void Ostap::SelectorWithCuts::reset_formula ( TTree* tree )
   set_tree ( tree ) ;
   m_formula.reset() ;
   //
- Ostap:Assert ( !m_tree || m_cuts.empty() || make_formula ( tree ) , 
+ Ostap:Assert ( !get_tree() || m_cuts.empty() || make_formula ( tree ) , 
                 "Invalid formula "        ,
                 "Ostap::SelectorWithCuts" ,
                 INVALID_FORMULA , __FILE__ , __LINE__ ) ;

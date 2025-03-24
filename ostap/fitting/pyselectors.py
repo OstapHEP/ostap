@@ -132,7 +132,7 @@ _new_methods_ = []
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-09
 class Selector ( Ostap.Selector ) :
-    """Useful intermediate class for implementation of (py)selectors     
+    """ Useful intermediate class for implementation of (py)selectors     
     """
     ## constructor 
     def __init__ ( self , tree = None , silence = False  ) :
@@ -156,15 +156,14 @@ class Selector ( Ostap.Selector ) :
         """
         raise NotImplementedError ("Selector: process_entry is not implemented!")
         return True
-    
-    ## reduce the object 
-    def __reduce__ ( self ) :
-        """ Reduce the object"""
-        tree = self.tree 
-        if tree : return root_factory , ( type ( self ) , Chain ( tree ) ) 
-        else    : return root_factory , ( type ( self ) , ) 
-        
-    
+
+    ## ## reduce the object 
+    ## def __reduce__ ( self ) :
+    ##   """ Reduce the object"""
+    ##    tree = self.tree 
+    ##    if tree : return root_factory , ( type ( self ) , Chain ( tree ) ) 
+    ##    else    : return root_factory , ( type ( self ) , ) 
+     
 # =============================================================================
 ## @class SelectorWithCuts
 #  Efficient selector that runs only for "good"-events  
