@@ -70,7 +70,7 @@ def reraise ( tp , value , tb = None):
 ## @class Connect
 #  Helper class to implement "read-only" access to database 
 class Connect ( object ) :
-    """ Helper class to implement ``read-only'' access to database 
+    """ Helper class to implement `read-only' access to database 
     """
     def __init__ ( self , filename , flag , **kwargs ) :
         
@@ -111,11 +111,6 @@ class Connect ( object ) :
     def flag ( self ) :
         """`flag' : the access flag"""
         return self.__flag
-
-    @property
-    def args ( self ) :
-        """`args` : addtional positional arguments"""
-        return self.__args
 
     @property
     def kwargs ( self ) :
