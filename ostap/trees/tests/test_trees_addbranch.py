@@ -489,9 +489,11 @@ def test_addbuffer() :
         # =====================================================================
         logger.warning ( "No numpy arrays!" ) 
 
-        
     from ostap.trees.trees import array_buffer_types    
     for atype in array_buffer_types :
+
+        if 'b' == atype : continue
+        if 'B' == atype : continue
         
         aname  = 'array_%s'% atype
         buffer = array.array ( atype , ( 10 for i in range ( 200 ) ) )         

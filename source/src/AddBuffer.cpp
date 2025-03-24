@@ -168,22 +168,6 @@ Ostap::StatusCode
 Ostap::Trees::add_buffer
 ( TTree*                                 tree     ,
   const std::string&                     name     ,
-  const Ostap::Trees::Buffer<Char_t>&    buffer   ,
-  const Ostap::Utils::ProgressConf&      progress )                  
-{ return ::_add_buffer_ ( tree , progress , name , "/B" , buffer ) ; }
-// ============================================================================
-Ostap::StatusCode
-Ostap::Trees::add_buffer
-( TTree*                                 tree     ,
-  const std::string&                     name     ,
-  const Ostap::Trees::Buffer<UChar_t>&   buffer   ,
-  const Ostap::Utils::ProgressConf&      progress )                  
-{ return ::_add_buffer_ ( tree , progress , name , "/b" , buffer ) ; }
-// ============================================================================
-Ostap::StatusCode
-Ostap::Trees::add_buffer
-( TTree*                                 tree     ,
-  const std::string&                     name     ,
   const Ostap::Trees::Buffer<Short_t>&   buffer   ,
   const Ostap::Utils::ProgressConf&      progress )                  
 { return ::_add_buffer_ ( tree , progress , name , "/S" , buffer ) ; }
@@ -258,7 +242,22 @@ Ostap::Trees::add_buffer
   const Ostap::Utils::ProgressConf&      progress )                  
 { return ::_add_buffer_ ( tree , progress , name , buffer ) ; }
 // ============================================================================
-
+Ostap::StatusCode
+Ostap::Trees::add_buffer
+( TTree*                                     tree     ,
+  const std::string&                         name     ,
+  const Ostap::Trees::Buffer<signed char>&   buffer   ,
+  const Ostap::Utils::ProgressConf&          progress )                  
+{ return ::_add_buffer_ ( tree , progress , name , "/B" , buffer ) ; }
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_buffer
+( TTree*                                     tree     ,
+  const std::string&                         name     ,
+  const Ostap::Trees::Buffer<unsigned char>& buffer   ,
+  const Ostap::Utils::ProgressConf&          progress )                  
+{ return ::_add_buffer_ ( tree , progress , name , "/b" , buffer ) ; }
+// ============================================================================
 
 // ============================================================================
 //                                                                      The END 

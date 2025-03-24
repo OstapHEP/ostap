@@ -183,13 +183,21 @@ namespace Ostap
       const DATA        value = DATA() )
     { return Buffer<DATA> ( data , size , value ) ; }
     // =========================================================================
+    inline 
+    Buffer<signed char>
+    schar_buffer
+    ( const void*       data       ,
+      const std::size_t size       ,
+      const signed char value = 0  )
+    { return Buffer<signed char> ( static_cast<const signed char*> ( data ) , size , value ) ; }
+    // =========================================================================
     inline
-    Buffer<char>
-    char_buffer
-    ( const void*       data              ,
-      const std::size_t size              ,
-      const char        value = char( 0 ) )
-    { return Buffer<char> ( static_cast<const  char*> ( data ) , size , value ) ; }
+    Buffer<unsigned char>
+    uchar_buffer
+    ( const void*         data       ,
+      const std::size_t   size       ,
+      const unsigned char value = 0  )
+    { return Buffer<unsigned char> ( static_cast<const unsigned char*> ( data ) , size , value ) ; }
     // =========================================================================    
     /** @class Buffers 
      *  a collection of several named buffers 
@@ -248,20 +256,6 @@ namespace Ostap
     ( TTree* tree                                ,
       const std::string&                name     ,
       const Buffer<Float_t>&            buffer   ,
-      const Ostap::Utils::ProgressConf& progress = false ) ; 
-    // ========================================================================
-    Ostap::StatusCode
-    add_buffer
-    ( TTree*                            tree     ,
-      const std::string&                name     ,
-      const Buffer<Char_t>&             buffer   , 
-      const Ostap::Utils::ProgressConf& progress = false ) ; 
-    // ========================================================================
-    Ostap::StatusCode
-    add_buffer
-    ( TTree*                            tree     ,
-      const std::string&                name     ,
-      const Buffer<UChar_t>&            buffer   , 
       const Ostap::Utils::ProgressConf& progress = false ) ; 
     // ========================================================================
     Ostap::StatusCode
@@ -329,6 +323,20 @@ namespace Ostap
       const std::string&                name     ,
       const Buffer<long double>&        buffer   , 
       const Ostap::Utils::ProgressConf& progress = false ) ;                 
+    // ========================================================================
+    Ostap::StatusCode
+    add_buffer
+    ( TTree*                            tree     ,
+      const std::string&                name     ,
+      const Buffer<signed char>&      buffer   , 
+      const Ostap::Utils::ProgressConf& progress = false ) ; 
+    // ========================================================================
+    Ostap::StatusCode
+    add_buffer
+    ( TTree*                            tree     ,
+      const std::string&                name     ,
+      const Buffer<unsigned char>&      buffer   , 
+      const Ostap::Utils::ProgressConf& progress = false ) ; 
     // ========================================================================
   } //                                        The end of namespace Ostap::Trees 
   // ==========================================================================

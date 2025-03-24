@@ -2943,10 +2943,12 @@ def add_new_buffer ( tree , name , buffer , **kwargs ) :
         ctype      = numpy.ctypeslib._ctype_from_dtype( dtype  )
         raw_buffer = buffer.ctypes.data_as ( ctypes.POINTER ( ctype ) )
 
-        if buffer.dtype in ( numpy.int8 , numpy.byte ) :
-            the_buffer = Ostap.Trees.char_buffer ( raw_buffer , len ( buffer ) ) ## CHAR_MAKE 
+        if   buffer.dtype in ( numpy.int8  , numpy.byte  ) :
+            the_buffer = Ostap.Trees.schar_buffer ( raw_buffer , len ( buffer ) ) ## SCHAR_MAKE 
+        elif buffer.dtype in ( numpy.uint8 , numpy.ubyte ) :
+            the_buffer = Ostap.Trees.uchar_buffer ( raw_buffer , len ( buffer ) ) ## CCHAR_MAKE 
         else :
-            the_buffer = Ostap.Trees.make_buffer ( raw_buffer , len ( buffer ) )
+            the_buffer = Ostap.Trees.make_buffer  ( raw_buffer , len ( buffer ) )
                         
         keep.append ( raw_buffer ) 
         value      = kwargs.pop ( 'value' , 0 )
@@ -2955,8 +2957,9 @@ def add_new_buffer ( tree , name , buffer , **kwargs ) :
     elif isinstance ( buffer , array.array ) and buffer.typecode in array_buffer_types :
         ## arra.array f valied types
 
-        if   'b' == buffer.typecode : the_buffer = Ostap.Trees.char_buffer ( buffer , len ( buffer ) )
-        else                        : the_buffer = Ostap.Trees.make_buffer ( buffer , len ( buffer ) )
+        if   'b' == buffer.typecode : the_buffer = Ostap.Trees.schar_buffer ( buffer , len ( buffer ) )
+        elif 'B' == buffer.typecode : the_buffer = Ostap.Trees.uchar_buffer ( buffer , len ( buffer ) )
+        else                        : the_buffer = Ostap.Trees.make_buffer  ( buffer , len ( buffer ) )
 
         value      = kwargs.pop ( 'value' , 0  )
         if value : the_buffer.setValue ( value )

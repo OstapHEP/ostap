@@ -100,8 +100,8 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
                 logger.info ( 'WorkManager is ipyparallel'  )
                 if self.__kwargs :
                     rows = [ ( 'Parameter' , 'value' ) ]
-                    for k, v in self.__kwargs :
-                        row = k  , str ( v  )
+                    for k, v in self.__kwargs.items()  :
+                        row = k , str ( v  )
                         rows.append ( row )
                     import ostap.logger.table as T
                     title = 'ipyparallel'
