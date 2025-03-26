@@ -428,7 +428,7 @@ class Trainer(object):
                     _sig_vars.update ( { a : b } )  ## ATTENTION HERE 
                     _bkg_vars.update ( { a : b } )  ## ATTENTION HERE 
             else :
-                if 6 < len ( v ) : nicknames [ 'VAR%03d' % i ] = v 
+                if 10 < len ( v ) : nicknames [ 'VAR%03d' % i ] = v 
                 vars.append ( v )
 
         if signal_vars     : _sig_vars.update ( signal_vars     )
