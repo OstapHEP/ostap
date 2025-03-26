@@ -1600,7 +1600,7 @@ class Trainer(object):
             ##
             ## ( ROOT.TMVA.paracoor       ,  ( name , output     ) ) ,
             ##
-            ( ROOT.TMVA.mvaeffs        ,  ( name , output     ) ) , 
+            ## ( ROOT.TMVA.mvaeffs        ,  ( name , output     ) ) , 
             ]
 
         if hasattr ( ROOT.TMVA , 'network'                ) :
