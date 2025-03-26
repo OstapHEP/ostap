@@ -39,6 +39,7 @@ from   ostap.core.ostap_types  import num_types, string_types, integer_types
 from   ostap.core.core         import Ostap, WSE , rootWarning
 from   ostap.utils.cleanup     import CleanUp
 from   ostap.utils.basic       import items_loop 
+from   ostap.utils.timing      import timing
 import ostap.io.root_file
 import ROOT, os, glob, math, tarfile, shutil, itertools 
 # =============================================================================
@@ -395,9 +396,22 @@ class Trainer(object):
 
         _sig_vars = {}
         _bkg_vars = {}
-        
-        vars = []
-        for v in variables  :
+
+        vars      = []
+        nicknames = {}
+        variables = sorted ( set ( v.strip() for v in variables ) )
+
+        print ( 'VARIABLES/1' , variables ) 
+        for i , v in enumerate ( variables ) :
+
+            a , s1 , b  = v.partition ( ':=' )
+            a = a.strip ()
+            b = b.strip ()
+            if a and s1 and b :
+                vars.append ( b )
+                nicknames [ a ] = b 
+                continue 
+            
             a , s1 , b  = v.partition ( ':' )
             a = a.strip ()
             b = b.strip ()
@@ -414,6 +428,7 @@ class Trainer(object):
                     _sig_vars.update ( { a : b } )  ## ATTENTION HERE 
                     _bkg_vars.update ( { a : b } )  ## ATTENTION HERE 
             else :
+                if 6 < len ( v ) : nicknames [ 'VAR%03d' % i ] = v 
                 vars.append ( v )
 
         if signal_vars     : _sig_vars.update ( signal_vars     )
@@ -422,11 +437,15 @@ class Trainer(object):
         signal_vars      = _sig_vars 
         background_vars  = _bkg_vars 
 
+        self.__nicknames = nicknames
+        
         variables = vars 
         variables.sort ()
-        self.__variables         = tuple ( variables )
+        self.__variables = tuple ( variables ) 
 
-        self.__configuration     = configuration
+        print ( 'VARIABLES/2' , self.variables , signal_vars, background_vars ) 
+
+        self.__configuration = configuration
         
         self.__signal_train_fraction     = signal_train_fraction     if 0 <= signal_train_fraction     < 1 else -1.0 
         self.__background_train_fraction = background_train_fraction if 0 <= background_train_fraction < 1 else -1.0 
@@ -553,6 +572,8 @@ class Trainer(object):
         self.__methods = tuple (  _methods ) 
 
         self.__bookingoptions = str ( opts )
+
+        print ( 'VARIABLES/9' , self.variables , signal_vars, background_vars ) 
         
         pattern_xml = pattern_XML   % ( self.dirname ,  self.dirname )
         pattern_C   = pattern_CLASS % ( self.dirname ,  self.dirname )
@@ -583,6 +604,10 @@ class Trainer(object):
             row = 'Variables'      , ' '.join ( self.variables )
             rows.append ( row )
 
+            if self.nicknames :
+                row = 'Nicknames'  , ' '.join ( [ '%s:%s ' % ( k,v ) for k,v in items_loop ( self.nicknames ) ] )
+                rows.append ( row )
+                                            
             if self.signal_vars :
                 row = 'Signal vars'  , str ( self.signal_vars  ) 
                 rows.append ( row )
@@ -664,8 +689,8 @@ class Trainer(object):
             import ostap.logger.table as T
             title = "TMVA Trainer %s created" % self.name 
             table = T.table (  rows , title = title , prefix = "# " , alignment = "lw" )
-            self.logger.info ( "%s\n%s" % ( title , table ) ) 
-
+            self.logger.info ( "%s\n%s" % ( title , table ) )
+            
     @property
     def name    ( self ) :
         """'name'    : the name of TMVA trainer"""
@@ -691,6 +716,11 @@ class Trainer(object):
         """'variables' : the list of variables  to be used for training"""
         return tuple(self.__variables)
 
+    @property
+    def nicknames ( self ) :
+        """'nicknames' : short names for the certain long expressions"""
+        return self.__nicknames 
+    
     @property
     def spectators ( self ) :
         """'spectators' : the list of spectators to be used"""
@@ -1249,6 +1279,10 @@ class Trainer(object):
                 row = 'Variables'      , ' '.join ( vv )
                 rows.append ( row )
                 
+                if self.nicknames :
+                    row = 'Nicknames'  , ' '.join ( [ '%s : %s ' % ( k, v ) for k,v in items_loop ( self.nicknames ) ] )
+                    rows.append ( row )
+                    
                 if self.spectators :
                     row = 'Spectators' , ' '.join ( self.spectators )
                     rows.append ( row )
@@ -1357,8 +1391,13 @@ class Trainer(object):
             for v in avars :
                 vv = v
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )
-                all_vars.append ( vv[0] ) 
-                dataloader.AddVariable  ( *vv )    
+                all_vars.append ( vv [ 0 ] )
+                vv , qq = vv
+                if not ":=" in vv :
+                    for k , v in items_loop ( self.nicknames ) :
+                        if vv == v : vv = '%s := %s' % ( k , v )
+                dataloader.AddVariable  ( vv , qq )
+                
             self.logger.info ( "Variables           : %s" % str ( self.variables ) ) 
 
             for v in self.spectators :
@@ -1457,9 +1496,7 @@ class Trainer(object):
         del dataloader
         del factory 
 
-
-        if  self.make_plots :
-            self.makePlots ()                
+        if  self.make_plots : self.makePlots ()                
         
         import glob, os 
         self.__weights_files = tuple ( [ f for f in glob.glob ( self.__pattern_xml   ) ] )
@@ -1520,9 +1557,9 @@ class Trainer(object):
     ## make selected standard TMVA plots 
     def makePlots ( self , name = None , output = None , ) :
         """ Make selected standard TMVA plots"""
-
-        self.logger.warning ( "makePlots: method is (temporarily?) disabled!" )
-        return 
+        
+        ## self.logger.warning ( "makePlots: method is (temporarily?) disabled!" )
+        ## return 
 
         name   = name   if name   else self.name
         output = output if output else self.output_file
@@ -1562,39 +1599,36 @@ class Trainer(object):
             ( ROOT.TMVA.efficiencies   ,  ( name , output , 3 ) ) ,
             ##
             ## ( ROOT.TMVA.paracoor       ,  ( name , output     ) ) ,
-            ## 
+            ##
+            ( ROOT.TMVA.mvaeffs        ,  ( name , output     ) ) , 
             ]
 
-        ## it crashes if runnig on-line 
-        ## if  ( 6 , 24 ) <= root_info :
-        ## plots.append ( ( ROOT.TMVA.mvaeffs        ,  ( name , output ) ) ) 
+        if hasattr ( ROOT.TMVA , 'network'                ) :
+            plots.append ( ( ROOT.TMVA.network            , ( name , output ) ) ) 
+        if hasattr ( ROOT.TMVA , 'nannconvergencetest'    ) :
+            plots.append ( ( ROOT.TMVA.annconvergencetest , ( name , output ) ) )
 
-        ## if hasattr ( ROOT.TMVA , 'network'                ) :
-        ##     plots.append ( ( ROOT.TMVA.network            , ( name , output ) ) ) 
-        ## if hasattr ( ROOT.TMVA , 'nannconvergencetest'    ) :
-        ##     plots.append ( ( ROOT.TMVA.annconvergencetest , ( name , output ) ) )
+        if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kLikelihood ] :
+            plots.append ( ( ROOT.TMVA.likelihoodrefs     , ( name , output ) ) )
 
-        ## if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kLikelihood ] :
-        ##    plots.append ( ( ROOT.TMVA.likelihoodrefs     , ( name , output ) ) )
-
-        ## if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kBDT ] :            
-        ##     if hasattr ( ROOT.TMVA , 'BDT'                    ) :
-        ##         plots.append ( ( ROOT.TMVA.BDT                , ( name , output ) ) )                
-        ##     if hasattr ( ROOT.TMVA , 'BDTControlPlots'        ) :
-        ##         plots.append ( ( ROOT.TMVA.BDTControlPlots    , ( name , output ) ) )
+        if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kBDT ] :            
+            if hasattr ( ROOT.TMVA , 'BDT'                    ) :
+                plots.append ( ( ROOT.TMVA.BDT                , ( name , output ) ) )                
+            if hasattr ( ROOT.TMVA , 'BDTControlPlots'        ) :
+                plots.append ( ( ROOT.TMVA.BDTControlPlots    , ( name , output ) ) )
             
-        ## if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kBoost ] :                
-        ##     if hasattr ( ROOT.TMVA , 'BoostControlPlots'      ) :
-        ##         plots.append ( ( ROOT.TMVA.BoostControlPlots  , ( name , output ) ) ) 
+        if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kBoost ] :                
+            if hasattr ( ROOT.TMVA , 'BoostControlPlots'      ) :
+                plots.append ( ( ROOT.TMVA.BoostControlPlots  , ( name , output ) ) ) 
 
         ## change to some temporary directory
-                
-        from ostap.utils.utils import batch, keepCanvas    
-        for fun, args  in plots :            
-            with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) , keepCanvas() , rootWarning ()  :            
-                logger.info ( 'makePlots: Execute macro ROOT.TMVA.%s%s' % ( fun.__name__ , str ( args ) ) )
-                fun ( *args )
-
+        
+        from ostap.utils.utils import batch, keepCanvas
+        with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) :
+            for fun, args  in plots :
+                tag  = "Execute macro ROOT.TMVA.%s%s" % ( fun.__name__ , str ( args ) ) 
+                with timing ( tag , logger = self.logger ) : fun ( *args )
+                    
 # =============================================================================
 ## make selected standard TMVA plots 
 def make_Plots ( name , output , show_plots = True ) :
@@ -2199,11 +2233,10 @@ def _inputs2map_ ( inputs ) :
                 a , s , b = i.partition ( ':' ) 
                 a = a.strip()
                 b = b.strip()
-                if a and s and b :
-                    k , v = a , b
-                else : 
-                    k , v = i , i
-            else                      : k , v = i
+                if a and s and b : k , v = a , b
+                else             : k , v = i , i
+                
+            else                 : k , v = i
             _inputs[k] = v 
 
     ## 

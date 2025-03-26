@@ -142,9 +142,12 @@ from   ostap.utils.memory     import memory, virtualMemory, Memory
 from   ostap.utils.env        import get_env , OSTAP_BATCH
 import ROOT, time, os , sys, math, time, functools, abc, array, random, datetime  ## attention here!!
 # =============================================================================
-try :
-    from string import ascii_letters, digits 
-except ImportError :
+try : # =======================================================================
+    # =========================================================================
+    from string import ascii_letters, digits
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     from string import letters as ascii_letters
     from string import digits
 # =============================================================================
@@ -558,7 +561,9 @@ class KeepCanvas(Wait) :
     def __enter__ ( self ) :
         Wait.__enter__ ( self ) 
         import ROOT
-        cnv  = ROOT.gPad.GetCanvas() if ROOT.gPad else None 
+        ## pad  = ROOT.TVirtualPad.Pad()
+        pad     = ROOT.Ostap.Utils.get_pad()  
+        cnv     = pad.GetCanvas()  if pad  else None 
         self.__old_canvas = cnv if cnv else None 
     def __exit__  ( self , *_ ) :
         Wait.__exit__ ( self , *_ )         

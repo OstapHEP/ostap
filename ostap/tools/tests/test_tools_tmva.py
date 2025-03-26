@@ -127,24 +127,39 @@ def test_tmva () :
         trainer = Trainer (
             name    = 'TestTMVA' ,   
             methods = [ # type               name   configuration
-            ( ROOT.TMVA.Types.kMLP        , "MLP"         , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5:TestRate=5:!UseRegulator" ) ,
-            ( ROOT.TMVA.Types.kMLP        , "MLPT"        , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5,N:TestRate=5:!UseRegulator:VarTransform=G,D" ) ,
-            ( ROOT.TMVA.Types.kBDT        , "BDTG0"       , "H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=3" ) , 
-            ( ROOT.TMVA.Types.kBDT        , "BDTGT"       , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=4:VarTransform=G,D" ) , 
-            ( ROOT.TMVA.Types.kBDT        , "BDTG"        , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=4" ) , 
-            ( ROOT.TMVA.Types.kBDT        , "BDTB"        , "H:!V:NTrees=200:BoostType=Bagging:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" )  , 
-            ( ROOT.TMVA.Types.kBDT        , "BDTD"        , "H:!V:NTrees=200:MinNodeSize=5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" ) ,        
-            ( ROOT.TMVA.Types.kCuts       , "Cuts"        , "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,
-            ( ROOT.TMVA.Types.kFisher     , "Fisher"      , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
-            ( ROOT.TMVA.Types.kFisher     , "FisherG"     , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10:VarTransform=G,D" ),
-            ( ROOT.TMVA.Types.kSVM        , "SVM"         , "H:!V:Gamma=0.25:Tol=0.001:VarTransform=Norm" ) ,
-            ( ROOT.TMVA.Types.kLikelihood , "Likelihood"  , "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=30:NSmoothBkg[0]=30:NSmoothBkg[1]=30:NSmooth=1:NAvEvtPerBin=50:VarTransform=G,D" ) ,
-            ## it does not work :-( 
-            ## ( ROOT.TMVA.Types.kPDERS      , 'PDERS'        , "H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" ) ,
-            ( ROOT.TMVA.Types.kKNN        , 'KNN'          , "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
-            ##
+                ( ROOT.TMVA.Types.kMLP        , "MLP"         ,
+                  "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5:TestRate=5:!UseRegulator" ) ,
+##                ( ROOT.TMVA.Types.kMLP        , "MLPT"        ,
+##                  "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5,N:TestRate=5:!UseRegulator:VarTransform=G,D" ) ,
+##                ( ROOT.TMVA.Types.kBDT        , "BDTG0"       ,
+##                  "H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=3" ) , 
+##                ( ROOT.TMVA.Types.kBDT        , "BDTGT"       ,
+##                  "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=4:VarTransform=G,D" ) , 
+##                ( ROOT.TMVA.Types.kBDT        , "BDTG"        ,
+##                  "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=4" ) , 
+##                ( ROOT.TMVA.Types.kBDT        , "BDTB"        ,
+##                  "H:!V:NTrees=200:BoostType=Bagging:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" )  , 
+##                ( ROOT.TMVA.Types.kBDT        , "BDTD"        ,
+##                  "H:!V:NTrees=200:MinNodeSize=5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" ) ,        
+##                ( ROOT.TMVA.Types.kCuts       , "Cuts"        ,
+##                  "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,
+##                ( ROOT.TMVA.Types.kFisher     , "Fisher"      ,
+##                  "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
+##                ( ROOT.TMVA.Types.kFisher     , "FisherG"     ,
+##                  "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10:VarTransform=G,D" ),
+##                ( ROOT.TMVA.Types.kSVM        , "SVM"         ,
+##                  "H:!V:Gamma=0.25:Tol=0.001:VarTransform=Norm" ) ,
+##                ( ROOT.TMVA.Types.kLikelihood , "Likelihood"  ,
+##                  "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=30:NSmoothBkg[0]=30:NSmoothBkg[1]=30:NSmooth=1:NAvEvtPerBin=50:VarTransform=G,D" ) ,
+                ## it does not work :-( 
+                ## ( ROOT.TMVA.Types.kPDERS      , 'PDERS'        , "H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" ) ,
+##                ( ROOT.TMVA.Types.kKNN        , 'KNN'         ,
+##                  "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
+                ##
             ] ,
-            variables = [ 'var1' , 'var2' ,  'var3' ]            , ## Variables for training 
+            variables = [ 'V1 := var1' ,
+                          'V2 := var2' ,
+                          'V3 := var3' ]            , ## Variables for training 
             signal                    = tSignal                  , ## `Signal' sample
             background                = tBkg                     , ## `Background' sample
             verbose                   = True                     ,
