@@ -354,6 +354,7 @@ class Trainer(object):
                    make_plots           = True    ,
                    workdir              = ''      , 
                    category             = -1      ,
+                   maxvarlen            = 12      , ## maximal lenth of the variable name 
                    multithread          = False   ,
                    logger               = None    ) :
         
@@ -374,8 +375,15 @@ class Trainer(object):
         see http://www.slac.stanford.edu/grp/eg/minos/ROOTSYS/cvs/tmva/test/TMVAClassification.py.
         """
 
-        self.__name   = name 
-        self.__logger = logger if logger else getLogger ( self.name )
+        self.__name      = name 
+        self.__logger    = logger if logger else getLogger ( self.name )
+
+        if isinstance ( maxvarlen , integer_types ) and 0 < maxvarlen :
+            self.__maxvarlen = maxvarlen
+        else :
+            self.__maxvarlen = 12 
+            
+        self.__vartable = [] 
 
         dirname         = dir_name        ( self.name )
         self.__dirname  = dirname
@@ -394,42 +402,9 @@ class Trainer(object):
         
         variables                = list  ( variables  ) 
 
-        _sig_vars = {}
-        _bkg_vars = {}
-
-        vars      = []
-        nicknames = {}
         variables = sorted ( set ( v.strip() for v in variables ) )
 
-        print ( 'VARIABLES/1' , variables ) 
-        for i , v in enumerate ( variables ) :
-
-            a , s1 , b  = v.partition ( ':=' )
-            a = a.strip ()
-            b = b.strip ()
-            if a and s1 and b :
-                vars.append ( b )
-                nicknames [ a ] = b 
-                continue 
-            
-            a , s1 , b  = v.partition ( ':' )
-            a = a.strip ()
-            b = b.strip ()
-            if a and s1 and b :
-                c , s2 , d = b.partition ( '?' )
-                c = c.strip()
-                d = d.strip()
-                if c and s2 and d :
-                    vars.append ( a )
-                    _sig_vars.update ( { a : c } ) ## ATTENTION HERE 
-                    _bkg_vars.update ( { a : d } ) ## ATTENTION HERE 
-                else :
-                    vars.append ( a )
-                    _sig_vars.update ( { a : b } )  ## ATTENTION HERE 
-                    _bkg_vars.update ( { a : b } )  ## ATTENTION HERE 
-            else :
-                if 10 < len ( v ) : nicknames [ 'VAR%03d' % i ] = v 
-                vars.append ( v )
+        vars, nicknames, _sig_vars, _bkg_vars = decode_vars ( variables )
 
         if signal_vars     : _sig_vars.update ( signal_vars     )
         if background_vars : _bkg_vars.update ( background_vars )
@@ -439,11 +414,9 @@ class Trainer(object):
 
         self.__nicknames = nicknames
         
-        variables = vars 
-        variables.sort ()
+        variables = list ( vars ) 
+        variables.sort ()        
         self.__variables = tuple ( variables ) 
-
-        print ( 'VARIABLES/2' , self.variables , signal_vars, background_vars ) 
 
         self.__configuration = configuration
         
@@ -573,8 +546,6 @@ class Trainer(object):
 
         self.__bookingoptions = str ( opts )
 
-        print ( 'VARIABLES/9' , self.variables , signal_vars, background_vars ) 
-        
         pattern_xml = pattern_XML   % ( self.dirname ,  self.dirname )
         pattern_C   = pattern_CLASS % ( self.dirname ,  self.dirname )
 
@@ -605,9 +576,12 @@ class Trainer(object):
             rows.append ( row )
 
             if self.nicknames :
-                row = 'Nicknames'  , ' '.join ( [ '%s:%s ' % ( k,v ) for k,v in items_loop ( self.nicknames ) ] )
+                row = 'Nicknames' , ''
                 rows.append ( row )
-                                            
+                for k , v  in items_loop ( self.nicknames ) :
+                    row = ' - ' + k , v
+                    rows.append ( row )
+                    
             if self.signal_vars :
                 row = 'Signal vars'  , str ( self.signal_vars  ) 
                 rows.append ( row )
@@ -704,8 +678,8 @@ class Trainer(object):
     @property
     def method_names ( self ) :
         """'method_names' : tuple of method names"""
-        return tuple ( m[1] for m in self.__methods ) 
-        
+        return tuple ( m[1] for m in self.__methods )
+    
     @property
     def logger ( self ) :
         """'logger' : the logger instace for this Trainer"""
@@ -720,7 +694,14 @@ class Trainer(object):
     def nicknames ( self ) :
         """'nicknames' : short names for the certain long expressions"""
         return self.__nicknames 
-    
+
+    @property
+    def maxvarlen ( self ) :
+        """`maxvarlen` : maximal length of varibale name/expression beforw autimatich 
+        switch to a shorted name 
+        """
+        return  self.__maxvarlen
+        
     @property
     def spectators ( self ) :
         """'spectators' : the list of spectators to be used"""
@@ -886,7 +867,7 @@ class Trainer(object):
     def show_plots ( self ) :
         """'show_plots': show plots?"""
         return self.verbose and ( self.category in ( 0 , -1 ) )
-        
+
     # =========================================================================
     ## train TMVA 
     #  @code
@@ -953,7 +934,14 @@ class Trainer(object):
             
             row  = 'Variables', ', '.join( vv )
             rows.append ( row )
- 
+
+            if self.nicknames :
+                row = 'Nicknames' , ''
+                rows.append ( row )
+                for k , v  in items_loop ( self.nicknames ) :
+                    row = ' - ' + k , v
+                    rows.append ( row )
+            
             if self.signal_vars :
                 row = 'Signal vars'  , str ( self.signal_vars  ) 
                 rows.append ( row )
@@ -1075,7 +1063,7 @@ class Trainer(object):
             os.remove ( f )
         if rf : self.logger.debug ( "Remove existing xml/class-files %s" % rf  ) 
 
-        ## open root file ...
+        ## open the output ROOT file ...
         with ROOT.TFile.Open ( self.output_file, 'RECREATE' )  as outFile :
 
             self.logger.debug ( 'Output ROOT file: %s ' %  outFile.GetName() )
@@ -1117,7 +1105,7 @@ class Trainer(object):
             for v in self.spectators :
                 vv = v
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )
-                all_vars.append ( vv[0] )
+                all_vars.append ( vv [ 0 ] )
 
             ## if self.prefilter         : all_vars.append ( self.prefilter         )                
             ## if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
@@ -1264,7 +1252,6 @@ class Trainer(object):
             # =================================================================            
 
             if self.verbose :
-                ## if 1 < 2 : 
                 
                 rows = [ ( 'Item' , 'Value' ) ]
                 
@@ -1278,10 +1265,13 @@ class Trainer(object):
                 
                 row = 'Variables'      , ' '.join ( vv )
                 rows.append ( row )
-                
+        
                 if self.nicknames :
-                    row = 'Nicknames'  , ' '.join ( [ '%s : %s ' % ( k, v ) for k,v in items_loop ( self.nicknames ) ] )
+                    row = 'Nicknames:' , ''
                     rows.append ( row )
+                    for k , v  in items_loop ( self.nicknames ) :
+                        row = ' - ' + k , v
+                        rows.append ( row )
                     
                 if self.spectators :
                     row = 'Spectators' , ' '.join ( self.spectators )
@@ -1332,7 +1322,7 @@ class Trainer(object):
                     rows.append ( row ) 
                     
                 if 0 < self.background_train_fraction < 1 :
-                    row = 'Backgroundtrain fraction' , '%.1f%%' % ( 100 *  self.background_train_fraction ) 
+                    row = 'Background train fraction' , '%.1f%%' % ( 100 *  self.background_train_fraction ) 
                     rows.append ( row )
                     
                 ## for m in self.methods :
@@ -1379,27 +1369,43 @@ class Trainer(object):
         
             ## 
             dataloader = ROOT.TMVA.DataLoader ( self.name )
-
             
             avars = set ( self.variables )
             for v in self.signal_vars     : avars.add ( v ) 
             for v in self.background_vars : avars.add ( v )
             avars = sorted ( avars )
-                
+
             all_vars = [] 
             ## for v in self.variables :
-            for v in avars :
+            self.__vartable = [ ( '#', 'Label' , 'Variable' ) ]
+            for i,v in enumerate ( avars ) :
                 vv = v
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )
                 all_vars.append ( vv [ 0 ] )
                 vv , qq = vv
                 if not ":=" in vv :
                     for k , v in items_loop ( self.nicknames ) :
-                        if vv == v : vv = '%s := %s' % ( k , v )
+                        if vv == v :
+                            vv = '%s := %s' % ( k , v )
+                            break
+                    else :
+                        if self.maxvarlen < len ( vv ) :
+                            key = 'VAR%03d'  % i
+                            self.nicknames.update (  { key : vv } ) 
+                            vv  = '%s := %s' % ( key , vv )
+                            
+                a , s , b = vv.partition ( ':=' )
+                if   not b : b = a
+                elif not a : a = b                
+                self.__vartable.append ( ( '%d' % i , a.strip() , b.strip() ) ) 
                 dataloader.AddVariable  ( vv , qq )
-                
-            self.logger.info ( "Variables           : %s" % str ( self.variables ) ) 
 
+            ##
+            import ostap.logger.table as T
+            title = "TMVA Inputs"
+            table = T.table ( self.__vartable , title = title , prefix = "# " , alignment = "clw" )
+            self.logger.info ( "%s\n%s" % ( title , table ) )
+            
             for v in self.spectators :
                 vv = v
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )             
@@ -1599,7 +1605,6 @@ class Trainer(object):
             ( ROOT.TMVA.efficiencies   ,  ( name , output , 3 ) ) ,
             ##
             ## ( ROOT.TMVA.paracoor       ,  ( name , output     ) ) ,
-            ##
             ## ( ROOT.TMVA.mvaeffs        ,  ( name , output     ) ) , 
             ]
 
@@ -1624,7 +1629,7 @@ class Trainer(object):
         ## change to some temporary directory
         
         from ostap.utils.utils import batch, keepCanvas
-        with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) :
+        with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) : 
             for fun, args  in plots :
                 tag  = "Execute macro ROOT.TMVA.%s%s" % ( fun.__name__ , str ( args ) ) 
                 with timing ( tag , logger = self.logger ) : fun ( *args )
@@ -1727,7 +1732,56 @@ def make_Plots ( name , output , show_plots = True ) :
             return tfile 
                 
         return '' 
-            
+
+    
+# =============================================================================
+## Decode the varibales
+#  - 'varname'
+#  - 'nlabel := long_expression'
+#  - 'var    : expression4signal ? expression_for_backgroud'
+def decode_vars ( variables ) :
+    """ Decode the varibales
+    - 'varname'
+    - 'nlabel := long_expression'
+    - 'var    : expression4signal ? expression_for_backgroud'        
+    """
+    assert all ( isinstance ( v , string_types ) for v in variables ) , \
+        "Variables must be of string types!" 
+    
+    vars, nicks, sig_vars, bkg_vars = [] , {} , {} , {} 
+    
+    for i , v in enumerate ( variables ) :
+
+        ## ' label := expression 
+        a , s1 , b  = v.partition ( ':=' )
+        a = a.strip ()
+        b = b.strip ()
+        if a and s1 and b :
+            vars.append ( b )
+            nicks [ a ] = b 
+            continue 
+
+        ## 
+        a , s1 , b  = v.partition ( ':' )
+        a = a.strip ()
+        b = b.strip ()
+        if a and s1 and b :
+            c , s2 , d = b.partition ( '?' )
+            c = c.strip()
+            d = d.strip()
+            if c and s2 and d :
+                vars.append ( a )
+                sig_vars.update ( { a : c } ) ## ATTENTION HERE 
+                bkg_vars.update ( { a : d } ) ## ATTENTION HERE 
+            else :
+                vars.append ( a )
+                sig_vars.update ( { a : b } )  ## ATTENTION HERE 
+                bkg_vars.update ( { a : b } )  ## ATTENTION HERE 
+        else :
+            vars.append ( v )
+
+    return tuple ( vars ) , nicks, sig_vars, bkg_vars
+    
 # =============================================================================
 ## @class Reader
 #  Rather generic python interface to TMVA-reader
@@ -1940,7 +1994,7 @@ class Reader(object)  :
         
         ## declare all variables to TMVA.Reader 
         for v in self.__variables :
-            self.__reader.AddVariable ( v[0] , v[2] )            
+            self.__reader.AddVariable ( v [ 0 ] , v [ 2 ] )            
         
         self.__methods = self.weights.methods
 

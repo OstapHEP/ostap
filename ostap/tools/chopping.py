@@ -96,7 +96,8 @@ from   ostap.tools.tmva        import Trainer as TMVATrainer
 from   ostap.tools.tmva        import Reader  as TMVAReader
 from   ostap.tools.tmva        import ( dir_name      , good_for_negative ,
                                         trivial_opts  , make_tarfile      ,
-                                        NO_PROCESSING ) 
+                                        decode_vars   , NO_PROCESSING     )
+from   ostap.utils.basic       import items_loop 
 import ostap.trees.trees 
 import ostap.trees.cuts
 import ostap.utils.utils       as     Utils 
@@ -184,19 +185,19 @@ class Trainer(object) :
     >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
     """
     def __init__ ( self                              ,
-                   category                          ,   # accessor to category 
-                   N                                 ,   # number of categories 
-                   methods                           ,   # list of TMVA methods
-                   variables                         ,   # list of variables
+                   category                          ,  ## accessor to category 
+                   N                                 ,  ## number of categories 
+                   methods                           ,  ## list of TMVA methods
+                   variables                         ,  ## list of variables
                    ##
-                   signal                            ,   # signal tree
-                   background                        ,   # background tree
+                   signal                            ,  ## signal tree
+                   background                        ,  ## background tree
                    ##
-                   signal_vars       = {}       ,  ## dictionary with new variables for signal sample 
-                   background_vars   = {}       ,  ## dictionary with new variables for background sample 
+                   signal_vars       = {}            ,  ## dictionary with new variables for signal sample 
+                   background_vars   = {}            ,  ## dictionary with new variables for background sample 
                    ##                   
-                   signal_cuts       = ''            ,   # signal cuts 
-                   background_cuts   = ''            ,   # background cuts 
+                   signal_cuts       = ''            ,  ## signal cuts 
+                   background_cuts   = ''            ,  ## background cuts 
                    spectators        = []            ,
                    bookingoptions    = "Transformations=I;D;P;G,D" , 
                    configuration     = "SplitMode=Random:NormMode=NumEvents:!V" ,
@@ -205,8 +206,7 @@ class Trainer(object) :
                    ## 
                    prefilter            = ''      ,  ## prefilter cuts before TMVA data loader
                    prefilter_signal     = ''      ,  ## separate prefilter for signal data 
-                   prefilter_background = ''      ,  ## separate prefilter for background data 
-
+                   prefilter_background = ''      ,  ## separate prefilter for background data                    
                    ##
                    signal_train_fraction     = -1 , ## fraction of signal events used for training     : 0<=f<1 
                    background_train_fraction = -1 , ## fraction of background events used for training : 0<=f<1
@@ -252,7 +252,8 @@ class Trainer(object) :
         self.__name   = name
         self.__logger = logger if logger else getLogger ( self.name )
 
-
+        self.__verbose         = True if verbose    else False 
+        self.__make_plots      = True if make_plots else False
 
         self.__chop_signal     = True if chop_signal     else False 
         self.__chop_background = True if chop_background else False 
@@ -317,48 +318,22 @@ class Trainer(object) :
                     self.logger.info ( 'Redefine Background weight to be %s' % background_weight )
             background = Chain ( background.tree () ) 
 
-        self.__signal            = signal     
-        self.__background        = background 
-
-        self.__methods           = tuple ( methods) 
-        self.__signal_weight     = signal_weight 
-        self.__signal_cuts       = ROOT.TCut ( signal_cuts )     
+        self.__signal               = signal     
+        self.__background           = background 
+        
+        self.__methods              = tuple ( methods)
+        
+        self.__signal_weight        = signal_weight 
+        self.__signal_cuts          = ROOT.TCut ( signal_cuts )     
+        self.__background_weight    = background_weight 
+        self.__background_cuts      = ROOT.TCut ( background_cuts ) 
         
         self.__prefilter            = ROOT.TCut ( prefilter   )
         self.__prefilter_signal     = prefilter_signal     if prefilter_signal     else '' 
         self.__prefilter_background = prefilter_background if prefilter_background else ''    
         
-        self.__background_weight = background_weight 
-        self.__background_cuts   = ROOT.TCut ( background_cuts ) 
-
-
-        variables                = list ( variables ) 
-        
-        _sig_vars = {}
-        _bkg_vars = {}
-        
-        vars = []
-        for v in variables  :
-            a , s1 , b  = v.partition ( ':' )    ## a : b 
-            a = a.strip ()
-            b = b.strip ()
-            if a and s1 and b :
-                c , s2 , d = b.partition ( '?' ) ## a : c ? d 
-                c = c.strip()
-                d = d.strip()
-                if c and s2 and d :
-                    vars.append ( a )
-                    signal_vars    .update ( { a : c } ) ## ATTENTION HERE 
-                    background_vars.update ( { a : d } ) ## ATTENTION HERE 
-                else :
-                    vars.append ( a )
-                    signal_vars    .update ( { a : b } )  ## ATTENTION HERE 
-                    background_vars.update ( { a : b } )  ## ATTENTION HERE 
-            else :
-                vars.append ( v )
-                
-        variables = vars 
-        variables.sort ()
+        variables                   = list ( variables ) 
+        the_vars, _ , _sig_vars, _bkg_vars = decode_vars ( variables )
         
         if signal_vars     : _sig_vars.update ( signal_vars     )
         if background_vars : _bkg_vars.update ( background_vars )
@@ -371,16 +346,11 @@ class Trainer(object) :
         self.__background_vars      = {}
         if background_vars : self.__background_vars.update ( background_vars ) 
         
-
         self.__variables         = tuple ( variables  )
         
         self.__spectators        = tuple ( spectators )
-
         self.__bookingoptions    = bookingoptions
-        self.__configuration     = configuration
-        
-        self.__verbose           = True if verbose    else False 
-        self.__make_plots        = True if make_plots else False
+        self.__configuration     = configuration        
         
         self.__sig_histos        = ()
         self.__bkg_histos        = ()
@@ -403,35 +373,21 @@ class Trainer(object) :
         self.__workdir = os.path.abspath ( workdir ) 
         self.logger.info ("Working directory is %s" % self.__workdir )
 
-        
         # =====================================================================
         ## prefilter if required 
         # =====================================================================
         
-        
         ##if self.verbose :
-        all_vars = []           
-        for v in self.variables  :
-            vv = v
-            if isinstance ( vv , str ) : vv = ( vv , 'F' )
-            
-            varexp = vv [ 0 ].strip()  
-            nick , sep , expr = varexp.partition ( ":=" )
-            nick = nick.strip()
-            expr = expr.strip() 
-            if nick and sep and expr : varexp = expr
-            else                     : nick   = varexp 
-            
-            if   varexp in self.signal_vars     or ( nick and nick in self.signal_vars     ) : continue
-            elif varexp in self.background_vars or ( nick and nick in self.background_vars ) : continue 
-            else  : all_vars.append ( varexp )
-            
+        all_vars = list ( the_vars ) 
+        ## for v in the_vars :
+        ##     all_vars.append ( varexp )            
         for v in self.spectators :
             vv = v
             if isinstance ( vv , str ) : vv = ( vv , 'F' )
-            all_vars.append ( vv[0] )
+            all_vars.append ( vv [ 0 ] )
             
-        if self.prefilter         : all_vars.append ( self.prefilter         )                
+        if self.prefilter         : all_vars.append ( self.prefilter )
+        
         ## if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
         ## if self.signal_weight     : all_vars.append ( self.signal_weight     )
         ## if self.background_cuts   : all_vars.append ( self.background_cuts   )
@@ -439,14 +395,17 @@ class Trainer(object) :
         
         ## do not forget to process the chopping category index!
         all_vars.append ( self.category ) 
-        
+
         ## prefilter signal if required 
         if self.prefilter_signal or self.prefilter or 1 != self.prescale_signal or self.signal_vars :
 
             if self.signal_weight : all_vars.append ( self.signal_weight )
 
             import ostap.trees.trees
-            avars = self.signal.the_variables ( all_vars )
+            
+            the_vars = list ( all_vars )
+            for k, v in items_loop ( self.signal_vars ) : the_vars.append ( v ) 
+            avars = self.signal.the_variables ( the_vars )
             
             keys  = set   ( self.background_vars.keys () ) - set ( self.signal_vars    .keys () )
             avars = tuple ( sorted ( set ( avars ).union ( keys ) ) ) 
@@ -458,19 +417,20 @@ class Trainer(object) :
             
             import ostap.frames.frames 
             import ostap.frames.tree_reduce       as TR
-                
+                        
             silent = not self.verbose or not self.category in ( 0, -1 )
             self.logger.info ( 'Pre-filter Signal     before processing' )
             self.__SigTR = TR.reduce ( self.signal        ,
                                        selection = scuts  ,
                                        save_vars = avars  ,
-                                       new_vars  = self.signal_vars     , 
+                                       ## new_vars  = self.signal_vars     , 
                                        prescale  = self.prescale_signal ,  
                                        silent    = False  )
+
             
             self.__signal      = self.__SigTR
             self.__signal_cuts = ROOT.TCut() 
-
+            
         missvars = [ v for v in self.signal_vars if not v in self.signal ]
         assert not missvars , "Variables %s are not in signal sample!" % missvars                          
         
@@ -481,7 +441,11 @@ class Trainer(object) :
             if self.background_weight : all_vars.append ( self.background_weight )
 
             import ostap.trees.trees
-            bvars = self.background.the_variables ( all_vars )
+
+            the_vars = list ( all_vars )
+            for k, v in items_loop ( self.background_vars ) : the_vars.append ( v )             
+            bvars = self.background.the_variables ( the_vars )
+            
             
             keys  = set   ( self.signal_vars.keys () ) - set ( self.background_vars    .keys () )
             bvars = tuple ( sorted ( set ( bvars ).union ( keys ) ) ) 
@@ -499,7 +463,7 @@ class Trainer(object) :
             self.__BkgTR = TR.reduce ( self.background    ,
                                        selection = bcuts  ,
                                        save_vars = bvars  ,
-                                       new_vars  = self.background_vars     , 
+                                       ## new_vars  = self.background_vars     , 
                                        prescale  = self.prescale_background ,  
                                        silent    = False  )
             
@@ -1550,7 +1514,7 @@ class Reader(object) :
     #  val = var ( entry )
     #  @endcode
     class Method(TMVAReader.Var) :
-        """Helper class to get the decision of `chopper'
+        """ Helper class to get the decision of `chopper'
         >>> reader = ...
         >>> var = reader[ method ]
         >>> val = var ( entry )
@@ -1572,7 +1536,7 @@ class Reader(object) :
         #  print('Response %s' % method ( category , pt , y , phi ))
         #  @endcode 
         def __call__ ( self , arg ,  *args ) :
-            """Evaluate the chopper from TTree/TChain/RooAbsData:
+            """ Evaluate the chopper from TTree/TChain/RooAbsData:
             >>>tree = ...
             >>> method = reader.MLP
             >>> print('Response %s' % method ( tree ))
@@ -1594,7 +1558,7 @@ class Reader(object) :
         # print('Response is %s'    % method.evaluate ( category , pt ,  eta , phi ) )
         # @endcode 
         def evaluate ( self , category , *args ) :
-            """Evaluate the method from parameters 
+            """ Evaluate the method from parameters 
             >>> method       = ...
             >>> pt, eta, phi = 5 ,  3.0 , 0  ## variables
             >>> category     = ...
@@ -1610,7 +1574,7 @@ class Reader(object) :
         #  print ('Mean  response is %s' % method.mean (  pt , eta , phi ) )
         #  @endcode
         def mean ( self , *args ) :
-            """Get the  mean over all categories
+            """ Get the  mean over all categories
             >>> method = ...
             >>> pt, eta, phi = 5 ,  3.0 , 0  ## variables
             >>> print('Mean  response is %s' % method (  pt , eta , phi ) )
@@ -1649,7 +1613,7 @@ class Reader(object) :
     #  ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg))
     # @endcode        
     def __getitem__ ( self , method ) :
-        """Helper utility to  get the correspondig function from the  reader:
+        """ Helper utility to  get the correspondig function from the  reader:
         - Use the reader
         >>> tree =  ....  ## TTree/TChain/RooDataSet with data
         >>> mlp_fun  =  reader['MLP']  ## <-- here! 
@@ -1675,7 +1639,7 @@ class Reader(object) :
     #  ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg))
     # @endcode        
     def __getattr__ ( self , method ) :
-        """Helper utility to  get the correspondig function from the  reader:
+        """ Helper utility to  get the correspondig function from the  reader:
         - Use the reader
         >>> tree =  ....  ## TTree/TChain/RooDataSet with data
         >>> mlp_fun  =  reader.MLP  ## <-- here! 
@@ -1703,7 +1667,7 @@ class Reader(object) :
     #  Ugly trick with arrays is needed due to some technical problems
     #  (actually TMVA reader needs the address of `float'(in C++ sense) variable
     def __call__ ( self , method , entry , cut_efficiency = 0.90 ) :
-        """The main method - evaluate of TMVA from the certain category reader 
+        """ The main method - evaluate of TMVA from the certain category reader 
         
         - Use the reader
         >>> tree =  ....  ## TTree/TChain/RooDataSet with data
@@ -1728,7 +1692,7 @@ class Reader(object) :
     #  print( 'MLP response is: ', reader.evaluate ( category , 'MLP' , pt , y ))
     #  @endcode
     def evaluate ( self , category , method , *args ) :
-        """Evaluate TMVA
+        """ Evaluate TMVA
         >>> reader = ...
         >>> pt, y  = ...  ##
         >>> print('MLP response is: ', reader.evaluate ( category , 'MLP' , pt , y ))
