@@ -1561,7 +1561,7 @@ class Trainer(object):
 
     # =========================================================================
     ## make selected standard TMVA plots 
-    def makePlots ( self , name = None , output = None , ) :
+    def makePlots ( self , name = None , output = None , tmva_style = False ) :
         """ Make selected standard TMVA plots"""
         
         ## self.logger.warning ( "makePlots: method is (temporarily?) disabled!" )
@@ -1588,52 +1588,101 @@ class Trainer(object):
         #
         ## make the plots in TMVA  style
         #
-        
+
+        style = { 'tmva_style' : tmva_style } 
         plots = [
             ##
-            ( ROOT.TMVA.variables      ,  ( name , output     ) ) ,
-            ( ROOT.TMVA.correlations   ,  ( name , output     ) ) ,
+            ## ( ROOT.TMVA.variables      ,  ( name , output     ) ) ,
+            ( show_variables     , ( name , output     ) , style ) ,  
+            ( show_correlations  , ( name , output     ) , style ) ,  
             ##
-            ( ROOT.TMVA.mvas           ,  ( name , output , 0 ) ) ,
-            ( ROOT.TMVA.mvas           ,  ( name , output , 1 ) ) ,
-            ( ROOT.TMVA.mvas           ,  ( name , output , 2 ) ) ,
-            ( ROOT.TMVA.mvas           ,  ( name , output , 3 ) ) ,
+            ( show_mvas          , ( name , output , 0 ) , style ) ,  
+            ( show_mvas          , ( name , output , 1 ) , style ) ,  
+            ( show_mvas          , ( name , output , 2 ) , style ) ,  
+            ( show_mvas          , ( name , output , 3 ) , style ) ,  
             ##
-            ( ROOT.TMVA.efficiencies   ,  ( name , output , 0 ) ) ,
-            ( ROOT.TMVA.efficiencies   ,  ( name , output , 1 ) ) ,
-            ( ROOT.TMVA.efficiencies   ,  ( name , output , 2 ) ) ,
-            ( ROOT.TMVA.efficiencies   ,  ( name , output , 3 ) ) ,
+            ( show_efficiencies  , ( name , output , 0 ) , style ) ,
+            ( show_efficiencies  , ( name , output , 1 ) , style ) ,
+            ( show_efficiencies  , ( name , output , 2 ) , style ) ,
+            ( show_efficiencies  , ( name , output , 3 ) , style ) ,
             ##
             ## ( ROOT.TMVA.paracoor       ,  ( name , output     ) ) ,
             ## ( ROOT.TMVA.mvaeffs        ,  ( name , output     ) ) , 
             ]
 
-        if hasattr ( ROOT.TMVA , 'network'                ) :
-            plots.append ( ( ROOT.TMVA.network            , ( name , output ) ) ) 
-        if hasattr ( ROOT.TMVA , 'nannconvergencetest'    ) :
-            plots.append ( ( ROOT.TMVA.annconvergencetest , ( name , output ) ) )
+        if hasattr ( ROOT.TMVA , 'network' ) :
+            plots.append ( ( show_network  , ( name , output ) , {} ) )
+            
+        if hasattr ( ROOT.TMVA , 'annconvergencetest'    ) :
+            plots.append ( ( show_annconvergencetest , ( name , output ) , style ) )
 
         if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kLikelihood ] :
-            plots.append ( ( ROOT.TMVA.likelihoodrefs     , ( name , output ) ) )
+            plots.append ( ( ROOT.TMVA.likelihoodrefs     , ( name , output ) , style ) )
 
         if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kBDT ] :            
             if hasattr ( ROOT.TMVA , 'BDT'                    ) :
-                plots.append ( ( ROOT.TMVA.BDT                , ( name , output ) ) )                
+                plots.append ( ( ROOT.TMVA.BDT                , ( name , output ) , {} ) )                
             if hasattr ( ROOT.TMVA , 'BDTControlPlots'        ) :
-                plots.append ( ( ROOT.TMVA.BDTControlPlots    , ( name , output ) ) )
+                plots.append ( ( ROOT.TMVA.BDTControlPlots    , ( name , output ) , {} ) )
             
         if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kBoost ] :                
             if hasattr ( ROOT.TMVA , 'BoostControlPlots'      ) :
-                plots.append ( ( ROOT.TMVA.BoostControlPlots  , ( name , output ) ) ) 
+                plots.append ( ( ROOT.TMVA.BoostControlPlots  , ( name , output ) , {} ) ) 
 
         ## change to some temporary directory
         
         from ostap.utils.utils import batch, keepCanvas
         with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) : 
-            for fun, args  in plots :
-                tag  = "Execute macro ROOT.TMVA.%s%s" % ( fun.__name__ , str ( args ) ) 
-                with timing ( tag , logger = self.logger ) : fun ( *args )
+            for fun, args, kwargs in plots :
+                tag  = "Execute macro %s%s" % ( fun.__name__ , str ( args ) ) 
+                with timing ( tag , logger = self.logger ) :
+                    if kwargs : fun ( *args , **kwargs )
+                    else      : fun ( *args )
                     
+
+# ========================================================================================
+## Simple wrapper for `ROOT.TMVA.variables` macro
+def show_variables ( name , output , tmva_style = False ) :
+    """ Simple wrapper for `ROOT.TMVA.variables` macro
+    """
+    return ROOT.TMVA.variables ( name                ,
+                                 output              , 
+                                 "InputVariables_Id" ,
+                                 "TMVA Inputs"       ,
+                                 False               , tmva_style )
+# ========================================================================================
+## Simple wrapper for `ROOT.TMVA.correlations` macro
+def show_correlations ( name , output , tmva_style = False ) :
+    """ Simple wrapper for `ROOT.TMVA.correlations` macro
+    """
+    return ROOT.TMVA.correlations ( name , output , False , False , tmva_style )
+# ========================================================================================
+## Simple wrapper for `ROOT.TMVA.mvas` macro
+def show_mvas         ( name , output , htype , tmva_style = False ) :
+    """ Simple wrapper for `ROOT.TMVA.mvas` macro
+    """
+    return ROOT.TMVA.mvas ( name , output , htype , tmva_style )
+# ========================================================================================
+## Simple wrapper for `ROOT.TMVA.efficiencies` macro
+def show_efficiencies ( name , output , htype , tmva_style = False ) :
+    """ Simple wrapper for `ROOT.TMVA.efficiencies` macro
+    """
+    return ROOT.TMVA.efficiencies ( name , output , htype , tmva_style )
+# ========================================================================================
+## Simple wrapper for `ROOT.TMVA.network` macro
+def show_network ( name , output , tmva_style = False ) :
+    """ Simple wrapper for `ROOT.TMVA.network` macro
+    """
+    return ROOT.TMVA.network ( name , output , True ) ## , tmva_style )
+# =========================================================================================
+## Simple wrapper for `ROOT.TMVA.annconvergencetest` macro
+def show_annconvergencetest ( name , output , tmva_style = False ) :
+    """ Simple wrapper for `ROOT.TMVA.annconvergencetest` macro
+    """
+    return ROOT.TMVA.annconvergencetest( name , output , tmva_style )
+
+
+
 # =============================================================================
 ## make selected standard TMVA plots 
 def make_Plots ( name , output , show_plots = True ) :
@@ -1966,7 +2015,7 @@ class Reader(object)  :
         
         variables = list  ( variables ) ; variables.sort ()
         variables = tuple ( variables )
-        
+
         for v in variables : 
 
             if   isinstance ( v , str ) :
@@ -1992,7 +2041,7 @@ class Reader(object)  :
 
         self.__variables = tuple ( self.__variables )
         
-        ## declare all variables to TMVA.Reader 
+        ## declare all variables to TMVA.Reader
         for v in self.__variables :
             self.__reader.AddVariable ( v [ 0 ] , v [ 2 ] )            
         
@@ -2169,7 +2218,7 @@ class Reader(object)  :
     #  ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg))
     # @endcode        
     def __getattr__ ( self , method ) :
-        """ Helper utility to  get the correspondig function from the  reader:
+        """ Helper utility to  get the corresponding function from the  reader:
         - Use the reader
         >>> tree =  ....  ## TTree/TChain/RooDataSet with data
         >>> mlp_fun  =  reader.MLP  ## <-- here! 
@@ -2279,21 +2328,27 @@ def _inputs2map_ ( inputs ) :
            'Invalid type of "inputs": %s' % inputs
     
     if   isinstance ( inputs , dict  ) :
-        for k , v  in items_loop ( inputs ) : _inputs[k] = v
+        for k , v  in items_loop ( inputs ) : _inputs [ k ] = v
     elif isinstance ( inputs , ( tuple , list ) ) :
         for i in inputs :
+            
             if isinstance ( i , str ) :
                 ##
-                a , s , b = i.partition ( ':' ) 
-                a = a.strip()
-                b = b.strip()
-                if a and s and b : k , v = a , b
-                else             : k , v = i , i
+                a , s , b = i.partition ( ':=' ) 
+                if a and b and s :
+                    b = b.strip () 
+                    k , v = b , b 
+                else : 
+                    a , s , b = i.partition ( ':' ) 
+                    a = a.strip()
+                    b = b.strip()
+                    if a and s and b : k , v = a , b
+                    else             : k , v = i , i
                 
             else                 : k , v = i
-            _inputs[k] = v 
+            _inputs [ k ] = v 
 
-    ## 
+    ##    
     assert not _inputs .empty() and _inputs.size() == len ( inputs ), \
            'Invalid MAP size %s for %s' % ( _inputs.size() , inputs ) 
 

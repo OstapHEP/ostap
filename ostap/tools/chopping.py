@@ -1704,8 +1704,9 @@ class Reader(object) :
 
 
 # =============================================================================
+## Specific action to ROOT.TTree
 def _add_response_tree ( tree , verbose , *args ) :
-    """Specific action to ROOT.TTree
+    """ Specific action to ROOT.TTree
     """
     
     import ostap.trees.trees
@@ -1741,13 +1742,10 @@ def _add_response_tree ( tree , verbose , *args ) :
         
         if sc.isFailure() :
             logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
-        
-        if tfile.IsWritable() :
-            tfile.Write( "" , ROOT.TFile.kOverwrite )
-        else :
-            logger.error ( "Can't write TTree back to the file" )
-
-
+            
+        if tfile.IsWritable () : tfile.Write( "" , ROOT.TFile.kOverwrite )
+        else : logger.error ( "Can't write TTree back to the file" )
+            
     return sc , tdir.Get ( tree.GetName() )    ## RETURN
 
 ## status = sc
@@ -1767,9 +1765,10 @@ def _add_response_tree ( tree , verbose , *args ) :
     
 
 
-# =============================================================================
+# =============================================================================d
+## Specific action to ROOT.TChain
 def _add_response_chain ( chain , verbose , *args ) :
-    """Specific action to ROOT.TChain
+    """ Specific action to ROOT.TChain
     """
     
     import ostap.trees.trees
@@ -1857,7 +1856,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     
     if isinstance ( dataset , ROOT.TTree ) :
         import ostap.trees.trees        
-        vars    = set( dataset.branches() ) | set( dataset.leaves () ) 
+        vars    = set ( dataset.branches() ) | set( dataset.leaves () ) 
         matched = sorted ( v for v in vars if v.startswith ( prefix ) and v.endswith (  suffix ) ) 
         if matched or category_name in vars :
             matched = ','.join ( matched )
@@ -1869,7 +1868,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     from ostap.tools.tmva import _inputs2map_ , _weights2map_ , opts_replace
     
     _inputs = _inputs2map_  ( inputs )
-
+    
     weights_files = WeightsFiles  ( weights_files )
     files         = weights_files.files
     files__       = [ _weights2map_ ( f ) for f in files ]
@@ -1890,7 +1889,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     options = opts_replace ( options , 'Color:'  , verbose and isatty() )
 
     args = chopper , category_name , N , _inputs , _maps , options , prefix , suffix , aux
-    
+
     if   isinstance ( dataset , ROOT.TChain  ) :
         
         sc , newdata = _add_response_chain ( dataset , verbose , *args ) 

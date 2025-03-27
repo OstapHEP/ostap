@@ -104,7 +104,6 @@ def test_tmva () :
     "Test TMVA machinery"
     
     logger = getLogger ( 'test_tmva' )
-
     
     logger.info('Prepare data for training/testing')
 
@@ -115,11 +114,15 @@ def test_tmva () :
     
     logger.info('Create and train TMVA')
     
+    input_vars = tuple ( [ 'V1 := var1' ,
+                           'V2 := var2' ,
+                           'V3 := var3' ] ) ## Variables for training 
+    
     with ROOT.TFile.Open( data_file ,'READ') as datafile : 
         datafile.ls()
         tSignal  = datafile['S']
         tBkg     = datafile['B']
-        
+    
         #
         ## book TMVA trainer
         #
@@ -157,9 +160,9 @@ def test_tmva () :
 ##                  "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
                 ##
             ] ,
-            variables = [ 'V1 := var1' ,
-                          'V2 := var2' ,
-                          'V3 := var3' ]            , ## Variables for training 
+            ## 
+            variables = input_vars , ## Variables for training
+            ## 
             signal                    = tSignal                  , ## `Signal' sample
             background                = tBkg                     , ## `Background' sample
             verbose                   = True                     ,
@@ -187,16 +190,18 @@ def test_tmva () :
     with timing ( "Add TMVA response to signal TTree" , logger =logger ) : 
         tSignal = ROOT.TChain ( 'S' ) ;  tSignal.Add ( data_file )
         addTMVAResponse ( tSignal ,
-                          inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
-                          weights_files = tar_file ,
+                          ## inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
+                          inputs        = input_vars  ,
+                          weights_files = tar_file    ,
                           prefix        = 'tmva_'     ,
                           suffix        = '_response' )
         
     with timing ( "Add TMVA response to background TTree" , logger =logger ) :     
         tBkg    = ROOT.TChain ( 'B' ) ;  tBkg.Add    ( data_file )
         addTMVAResponse ( tBkg    ,
-                          inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
-                          weights_files = tar_file ,
+                          ## inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
+                          inputs        = input_vars ,
+                          weights_files = tar_file  ,
                           prefix        = 'tmva_'     ,
                           suffix        = '_response' )
         
@@ -233,15 +238,17 @@ def test_tmva () :
     logger.info ( '(3) Add TMVA decision directly into existing RooDataSet (fast)' ) 
     with timing ( "Add TMVA response to signal RooDataSet" , logger =logger ) : 
         addTMVAResponse ( ds_S1  ,
-                          inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
-                          weights_files = tar_file ,
+                          ## inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
+                          inputs        = input_vars ,
+                          weights_files = tar_file   ,
                           prefix        = 'tmva2_'     ,
                           suffix        = '_response' )
         
     with timing ( "Add TMVA response to background TTree" , logger =logger ) :     
         addTMVAResponse ( ds_B1   ,
-                          inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
-                          weights_files = tar_file ,
+                          ## inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
+                          inputs        = input_vars  ,
+                          weights_files = tar_file    ,
                           prefix        = 'tmva2_'    ,
                           suffix        = '_response' )
         
