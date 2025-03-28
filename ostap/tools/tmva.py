@@ -1610,14 +1610,14 @@ class Trainer(object):
             ## ( ROOT.TMVA.mvaeffs        ,  ( name , output     ) ) , 
             ]
 
-        if hasattr ( ROOT.TMVA , 'network' ) :
-            plots.append ( ( show_network  , ( name , output ) , {} ) )
-            
-        if hasattr ( ROOT.TMVA , 'annconvergencetest'    ) :
-            plots.append ( ( show_annconvergencetest , ( name , output ) , style ) )
+        if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kMLP ] :
+            if hasattr ( ROOT.TMVA , 'network' ) :
+                plots.append ( ( show_network  , ( name , output ) , {} ) )            
+            if hasattr ( ROOT.TMVA , 'annconvergencetest'    ) :
+                plots.append ( ( show_annconvergencetest , ( name , output ) , style ) )
 
         if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kLikelihood ] :
-            plots.append ( ( ROOT.TMVA.likelihoodrefs     , ( name , output ) , style ) )
+            plots.append ( ( ROOT.TMVA.likelihoodrefs         , ( name , output ) , {} ) )
 
         if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kBDT ] :            
             if hasattr ( ROOT.TMVA , 'BDT'                    ) :
