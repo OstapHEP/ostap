@@ -1315,7 +1315,7 @@ class Trainer(object):
                     rows.append ( row )
                     row = 'Background total'     , '%s' % NB
                     rows.append ( row ) 
-                    row = 'Bacgground weighted'  , '%s' % BW
+                    row = 'Background weighted'  , '%s' % BW
                     rows.append ( row ) 
                 else :
                     row = 'Background total'     , '%s' % NB
