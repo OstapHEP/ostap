@@ -308,8 +308,15 @@ if level <= logging.INFO :
     
     _vars = vars ( arguments )
     _keys = _vars.keys()
+    rows = [ ( 'Argument' , 'Value' ) ] 
     logger.info ( 'Arguments  : ')
-    for _k in sorted ( _keys ) : logger.info ( '  %15s : %-s ' % ( _k , _vars[_k] ) )
+    for _k in sorted ( _keys ) :
+        row = _k , str ( _vars [ _k  ] ) 
+        rows.append ( row )
+    title = 'Ostap arguments'
+    import ostap.logger.table as T
+    rows  = T.table ( rows , title = title , prefix = '# ' , alignment = 'rw' )
+    logger.info ( '%s:\n%s' % ( title , rows ) ) 
     del _keys,_vars,_k,level  
     
 # =============================================================================
@@ -429,8 +436,10 @@ for _s in _startups :
     if not os.path.isfile     ( _ss ) : continue
     _ss =  os.path.abspath    ( _ss )
     if _ss in _executed           : continue
-    ## execute it! 
-    try :
+    ## execute it!
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
 
         import runpy
         globs = runpy.run_path ( _ss , globals() , run_name = '__main__')
@@ -441,7 +450,10 @@ for _s in _startups :
         
         _executed.add ( _ss )
         logger.info   ( "Startup file '%s' is executed"      % _s )
-    except:
+        
+        # =====================================================================
+    except: # =================================================================
+        # =====================================================================
         logger.error  ( "Error in execution of '%s' startup" % _s , exc_info = True )
         
 
@@ -582,8 +594,10 @@ def treat_file ( f ) :
     elif fok and name and dot and ext in ( 'ost' , 'ostp' , 'ostap' , 'opy' ) :
         
         logger.debug  ("Try    to execute '%s'" % f )
-        
-        try :
+
+        # =====================================================================
+        try : # ===============================================================
+            # =================================================================
             
             ## this one is always executed with the context!!!
             import runpy
@@ -595,16 +609,20 @@ def treat_file ( f ) :
             
             python_scripts.append ( f )
             logger.info  ("Executed       '%s'" % f )
-            
-        except :
+
+            # =================================================================
+        except : # ============================================================
+            # =================================================================
                 
             # - Batch mode:       just re-raise exception
             if arguments.batch :  raise
             
             # - Interactive mode: print traceback and continue 
             logger.error ('Failure to execute "%s"'     % f  , exc_info = True ) 
-            
-    else :
+
+        # =====================================================================
+    else : # ==================================================================
+        # =====================================================================
                 
         ## collect the argument as parameters
         PARAMETERS.append ( f )
