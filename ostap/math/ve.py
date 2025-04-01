@@ -86,6 +86,7 @@ ve_fmt = '%%+.4g %s %%-.4g' % plus_minus
 def _ve_str_ ( ve ) : return ve.toString ( ve_fmt )  
 Ostap.Math.ValueWithError .__str__  = _ve_str_
 Ostap.Math.ValueWithError .__repr__ = _ve_str_
+
 # ============================================================================= 
 ## Calculate the "effective" background-to-signal ratio from the valeu 
 #  and its uncertainty using the identity
@@ -98,22 +99,15 @@ Ostap.Math.ValueWithError .__repr__ = _ve_str_
 #  v = VE( ... )
 #  print 'B/S=', v.b2s() 
 #  @endcode
+#  @see Ostap::Math::b2s 
 def _ve_b2s_ ( s )  :
-    """Get background-over-signal ratio B/S estimate from the equation:
+    """ Get background-over-signal ratio B/S estimate from the equation:
     error(S) = 1/sqrt(S) * sqrt ( 1 + B/S).
     >>> v = ...
     >>> b2s = v.b2s() ## get B/S estimate
+    - see `Ostap.Math/b2s`
     """
-    #
-    vv = s.value ()
-    if   vv <= 0 or iszero ( vv ) : return VE(-1,0)
-    #
-    c2 = s.cov2  ()
-    if   c2 <= 0 or iszero ( c2 ) : return VE(-1,0)
-    elif isequal ( vv , c2 )      : return VE( 1,0)
-    elif c2 < vv                  : return VE(-1,0)
-    #
-    return c2 / s - 1.0
+    return Ostap.Math.b2s ( VE ( s ) ) 
 
 # =============================================================================
 ## Calculate the "effective purity" ratio using the identity
@@ -125,50 +119,57 @@ def _ve_b2s_ ( s )  :
 #  @see Ostap::Math::b2s 
 #  @see Ostap::Math::purity 
 #  @param v the value 
-#  @return the effective purity or -1 
+#  @return the effective purity or -1
+#  @see Ostap.Math.purity 
 def _ve_purity_ ( s ) :
-    """Calculate the ``effective purity'' ratio using the identity
+    """ Calculate the ``effective purity'' ratio using the identity
     p = S/(S+B) = 1/( 1 + B/S ), 
     - and the effective ``background-to-signal'' ratio B/S is estimated as
     B/S = sigma^2(S)/S - 1
     - Finally one gets
     p = S / sigma^2(S) 
-    - see Ostap::Math::b2s 
-    - see Ostap::Math::purity
+    - see `Ostap.Math.b2s` 
+    - see `Ostap.Math.purity`
     """
-    #
-    vv = s.value ()
-    if   vv <= 0 or iszero ( vv ) : return VE ( -1 , 0 )
-    #
-    c2 = s.cov2()
-    #
-    if   c2 <= 0 or iszero ( c2 ) : return VE ( -1 , 0 )
-    elif isequal ( vv , c2  )     : return VE (  1 , 0 )
-    elif c2 < vv                  : return VE ( -1 , 0 )
-    #
-    return s / c2 
+    return Ostap.Math.purity  ( VE ( s ) ) 
 
 # ============================================================================= 
 ## Get precision with ``some'' error estimate.
-def _ve_prec2_ ( s )  :
-    """Get precision with ``some'' error estimate.
+#  @see Ostap::Math::precision 
+def _ve_precision_ ( s )  :
+    """ Get precision with `some' error estimate.
     >>> v = ...
     >>> p = v.prec()
+    - see `Ostap.Math.precision`
     """
-    if not hasattr ( s , 'value' ) :
-        return _prec_ ( VE ( s , 0 ) )
-    #
-    c =       s.error ()
-    #
-    if     c <  0 or s.value() == 0  : return VE(-1,0)
-    elif   c == 0                    : return VE( 0,0)
-    #
-    return c / abs ( s ) 
+    return Ostap.Math.precision ( VE ( s ) )
+
+# =============================================================================
+## Calculate the useful Figure-of-merit, aka "significance" :  S/(S+B)
+#  @see Ostap::Math::FoM
+def _ve_fom_  ( s ) :
+    """ Calculate the useful Figure-of-merit, aka "significance" :  S/(S+B)
+    - see `Ostap.Math.FoM`
+    """
+    return Ostap.Math.FoM ( VE ( s ) )
+
+# =============================================================================
+## Calculate the useful Figure-of-merit, aka "significance times purity" 
+#  @see Ostap::Math::FoM2
+def _ve_fom2_  ( s ) :
+    """ Calculate the useful Figure-of-merit, aka "significance times purity" 
+    - see `Ostap.Math.FoM2`
+    """
+    return Ostap.Math.FoM2 ( VE ( s ) )
 
 VE . b2s        = _ve_b2s_
-VE . prec       = _ve_prec2_
-VE . precision  = _ve_prec2_
+VE . B2S        = _ve_b2s_
 VE . purity     = _ve_purity_
+VE . precision  = _ve_precision_
+VE . prec       = _ve_precision_
+VE . FoM        = _ve_fom_
+VE . FoM1       = _ve_fom_
+VE . FoM2       = _ve_fom2_
 
 _is_le_    = Ostap.Math.LessOrEqual ( 'double' )()
 
@@ -176,7 +177,7 @@ _is_le_    = Ostap.Math.LessOrEqual ( 'double' )()
 ## Comparison of ValueWithError object with other objects
 #  @attention it is comparison by value only, errors are ignored 
 def _ve_lt_ ( self , other ) :
-    """Comparison of ValueWithError object with other objects
+    """ Comparison of ValueWithError object with other objects
     >>> a = VE( ... )
     >>> print a < b 
     Attention: comparison by value only!
@@ -187,7 +188,7 @@ def _ve_lt_ ( self , other ) :
 ## Comparison of ValueWithError object with other objects
 #  @attention it is comparison by value only, errors are ignored 
 def _ve_le_ ( self , other ) :
-    """Comparison of ValueWithError object with other objects
+    """ Comparison of ValueWithError object with other objects
     >>> a = VE( ... )
     >>> print a <= b 
     Attention: comparison by value only!
@@ -198,7 +199,7 @@ def _ve_le_ ( self , other ) :
 ## Comparison of ValueWithError object with other objects
 #  @attention it is comparison by value only, errors are ignored 
 def _ve_gt_ ( self , other ) :
-    """Comparison of ValueWithError object with other objects
+    """ Comparison of ValueWithError object with other objects
     >>> a = VE( ... )
     >>> print a > b 
     Attention: comparison by value only!
@@ -209,7 +210,7 @@ def _ve_gt_ ( self , other ) :
 ## Comparison of ValueWithError object with other objects
 #  @attention it is comparison by value only, errors are ignored 
 def _ve_ge_ ( self , other ) :
-    """Comparison of ValueWithError object with other objects
+    """ Comparison of ValueWithError object with other objects
     >>> a = VE( ... )
     >>> print a >= b 
     Attention: comparison by value only!
@@ -249,7 +250,7 @@ def _ve_eq_ ( self , other ) :
 # =============================================================================
 ## inequality for ValueWithError objects
 def _ve_ne_ ( self , other ) :
-    """Inequality for ValueWithError objects
+    """ Inequality for ValueWithError objects
     >>> a = VE( ... )
     >>> b = VE( ... )
     >>> print a != b 
@@ -294,7 +295,7 @@ VE.minmax = _ve_minmax_
 #  h = hash ( v   ) 
 #  @endcode
 def _ve_hash_ ( v ) :
-    """HAshing function for VE objecte
+    """ Hashing function for VE objecte
     >>> v = VE   ( ... )
     >>> h = hash ( v   ) 
     """
@@ -498,9 +499,13 @@ _new_methods_ = (
     VVE.Vector . __repr__ , 
     VVE.Vector . __len__  , 
     VE . b2s              , 
-    VE . purity           , 
-    VE . prec             , 
+    VE . B2S              , 
+    VE . purity           ,  
     VE . precision        , 
+    VE . prec             , 
+    VE . FoM              , 
+    VE . FoM1             , 
+    VE . FoM2             , 
     VE . __lt__           ,
     VE . __le__           , 
     VE . __gt__           , 

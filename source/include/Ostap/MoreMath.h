@@ -1293,6 +1293,21 @@ namespace Ostap
      ( const double u ,
        const double m ) ;
     // ========================================================================
+    
+    // ========================================================================
+    /** Dilogarith function (real case) 
+     *  \f$ Li_2(x) = - Re \int\limits_0^{x}\draf{\log ( 1-s) } {s} ds  \f$ 
+     */
+    double dilog ( const double x ) ;
+    // ========================================================================
+    /** Dilogarith function (complex case) 
+     *  \f$ Li_2(x) = - \int\limits_0^{x}\draf{\log ( 1-s) } {s} ds  \f$ 
+     */
+    std::complex<double> dilog ( const std::complex<double>& z ) ;  
+    // ========================================================================
+    
+    
+    // ========================================================================
     /** \f$ \left| \frac{\Gamma(x+iy)}{\Gamma(x)} \right|^2 \f$ for 
      *  \f$  x> 0\f$.
      *  

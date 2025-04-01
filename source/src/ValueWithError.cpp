@@ -920,8 +920,12 @@ Ostap::Math::ValueWithError
 Ostap::Math::ValueWithError::__E__      () const 
 { return elliptic_E ( *this ) ; }
 // ============================================================================
-
-
+// real part of dilogarithm
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__dilog__  () const 
+{ return dilog ( *this ) ; }
+// ============================================================================
 
 // ============================================================================
 /* Does this object represent natural number?
@@ -2047,6 +2051,27 @@ Ostap::Math::ValueWithError Ostap::Math::elliptic_E
   const double dfdx = ( r - k ) / xv ;
   return ValueWithError ( r , c2 * dfdx * dfdx ) ;  
 }
+// =============================================================================
+/* Dilogarithm function (real case) 
+ *  \f$ Li_2(x) = - Re \int\limits_0^{x}\draf{\log ( 1-s) } {s} ds  \f$ 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::dilog
+( const Ostap::Math::ValueWithError& x )
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  if ( c2 <= 0 || s_zero ( c2 ) ) { return dilog ( xv ) ; }
+  //
+  const double r = dilog ( xv ) ;
+  //
+  const double dFdX = 
+    std::abs ( xv ) < 0.5 ? log1p_x ( -xv ) :
+    std::log ( std::abs ( 1 - xv ) ) / xv   ;
+  //
+  return ValueWithError ( r , c2 * dFdX ) ;
+}
 // ============================================================================
 /* evaluate fma(x,y,z) = x*y+x 
  *  @param y    (INPUT) the parameter 
@@ -2378,13 +2403,65 @@ Ostap::Math::ValueWithError Ostap::Math::b2s
 ( const Ostap::Math::ValueWithError& v ) 
 {
   const double value = v.value () ;
-  if ( value <= 0 || s_zero ( value ) ) { return -1 ; } //
+  if ( value <= 0 || s_zero ( value ) ) { return -1 ; } 
   const double cov2  = v.cov2  () ;
   if ( cov2  <= 0 || s_zero ( cov2 )  ) { return -1 ; } 
   else if ( s_equal ( value , cov2 )  ) { return  0 ; }    
   else if ( cov2 < value              ) { return -1 ; }    
   //
   return  cov2 / v -  1.0 ; 
+}
+// ============================================================================
+/* calculate the useful Figure-of-merit, aka "significance" 
+ *  \f$ \frac{S}{\sqrt{S+B}} = \frac{S}{\sigma} \f$
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::FoM 
+( const Ostap::Math::ValueWithError& v )
+{
+  //
+  const double cov2  = v.cov2  () ;
+  if ( cov2  <= 0 || s_zero ( cov2 )  ) { return -1 ; } 
+  const double value = v.value () ;
+  if ( value <= 0 || s_zero ( value ) ) { return -1 ; }
+  //
+  return value / std::sqrt ( cov2 ) ; 
+}
+// ============================================================================
+/*  Another Figure-of-merit, aka "significance times purity"
+ *  \f$ \frac{S}{\sqrt{S+B}} \frac{S}{S+B}  \f$
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::FoM2
+( const Ostap::Math::ValueWithError& v )
+{
+  //
+  const double cov2  = v.cov2  () ;
+  if ( cov2  <= 0 || s_zero ( cov2 )  ) { return -1 ; } 
+  const double value = v.value () ;
+  if ( value <= 0 || s_zero ( value ) ) { return -1 ; }
+  //
+  return ( v * v ) * std::pow ( cov2 , -1.5 ) ;
+}
+// ============================================================================
+/*  calculate the precision \f$ \frac{\sigma}{ \left| v \right| }\f$ 
+ *  @param v the value 
+ *  @return the effective preciison or -1 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::precision 
+( const Ostap::Math::ValueWithError& v )
+{
+  const double cov2  = v.cov2  () ;
+  if ( 0 == cov2  || !s_zero ( cov2 ) ) { return  0 ; }
+  if ( cov2  < 0                      ) { return -1 ; }
+  const double value = v.value () ;
+  if ( 0 == value || s_zero ( value ) ) { return -1 ; }
+  //
+  return std::sqrt ( cov2 ) / abs ( v ) ;
 }
 // ============================================================================
 /* calculate the "effective purity" ratio using the identity

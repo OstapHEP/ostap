@@ -354,6 +354,8 @@ namespace Ostap
       ValueWithError __K__      () const ;
       /// complete elliptic integral E(k) 
       ValueWithError __E__      () const ;
+      /// real part of dilogarithm  
+      ValueWithError __dilog__  () const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1309,6 +1311,13 @@ namespace Ostap
      */ 
     ValueWithError elliptic_E
     ( const ValueWithError& x ) ;
+    // ========================================================================
+    /* Dilogarithm function (real case) 
+     *  \f$ Li_2(x) = - Re \int\limits_0^{x}\draf{\log ( 1-s) } {s} ds  \f$ 
+     */
+    // ============================================================================
+    ValueWithError dilog
+    ( const ValueWithError& x ) ;
     // ========================================================================    
     /** evaluate <code>fma(x,y,z)</code>: \f$ xy+z \f$  
      *  @param y    (INPUT) the parameter 
@@ -1522,6 +1531,25 @@ namespace Ostap
      *  @return the effective backround-to-signal ratio or -1 
      */
     ValueWithError b2s   
+    ( const ValueWithError& v ) ;
+    // ========================================================================
+    /** calculate the useful Figure-of-merit, aka "significance"
+     *  \f$ \frac{S}{\sqrt{S+B}} = \frac{S}{\sigma} \f$
+     */
+    ValueWithError FoM 
+    ( const ValueWithError& v ) ;
+    // ========================================================================
+    /** Another Figure-of-merit, aka "significance times purity"
+     *  \f$ \frac{S}{\sqrt{S+B}} \frac{S}{S+B} = \frac{S}{\sigma} \f$
+     */
+    ValueWithError FoM2
+    ( const ValueWithError& v ) ;
+    // ========================================================================
+    /** calculate the precision \f$ \frac{\sigma}{ \left| v \right| }\f$ 
+     *  @param v the value 
+     *  @return the effective preciison or -1 
+     */
+    ValueWithError precision 
     ( const ValueWithError& v ) ;
     // ========================================================================
     /** calculate the "effective purity" ratio using the identity

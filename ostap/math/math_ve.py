@@ -42,7 +42,8 @@ __all__     = (
     'bring'        , 'BR'         ,
     'am'           , 'dn'         ,            ## elliptic functions 
     'sn'           , 'cn'         , 'sc'     , ## elliptic functions
-    'elliptic_K'   , 'elliptic_K' ,            ## elliptic integrals 
+    'elliptic_K'   , 'elliptic_K' ,            ## elliptic integrals
+    'dilog'        , 
     'significance' , 'nsigmas'    , 'nsigma'
     )
 # =============================================================================
@@ -1048,6 +1049,21 @@ def elliptic_E ( k ) :
     fun = getattr ( k , '__E__' , None )
     if fun : return fun (   )
     return _elliptic_E_ ( k )
+
+# =============================================================================
+_dilog_ = Ostap.Math.dilog
+# =============================================================================
+## Dilogarithm function
+#  - for real    argument (x>=1), get the real part 
+#  - for complex argument, get the full complex values 
+def dilog ( x ) :
+    """ Dilogarithm function 
+    - for real    argument (x>=1), get the real part 
+    - for complex argument, get the full complex values 
+    """
+    fun = getattr ( x , '__dilog__' , None )
+    if fun : return fun (   )
+    return _dilog_ ( x )
 
 # =============================================================================
 ## FIX

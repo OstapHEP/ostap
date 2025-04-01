@@ -25,6 +25,7 @@
 #include "gsl/gsl_sf_bessel.h"
 #include "gsl/gsl_sf_ellint.h"
 #include "gsl/gsl_sf_lambert.h"
+#include "gsl/gsl_sf_dilog.h"
 // ============================================================================
 // LHCbMath
 // ============================================================================
@@ -3153,6 +3154,59 @@ double Ostap::Math::sc
   //
   return std::tan ( a ) ;
 }
+// ============================================================================
+
+// ============================================================================
+/* Dilogarithm function (real case) 
+ *  \f$ Li_2(x) = - Re \int\limits_0^{x}\draf{\log ( 1-s) } {s} ds  \f$ 
+ */
+// ============================================================================
+double Ostap::Math::dilog ( const double x )
+{
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_dilog_e ( x , &result) ;
+  if ( ierror ) 
+    {
+      //
+      gsl_error ( "Error from gsl_sf_dilog_e function" , __FILE__ , __LINE__ , ierror ) ;
+      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+        { return std::numeric_limits<double>::quiet_NaN() ; }
+      //
+    }
+  return result.val ;
+}
+// ============================================================================
+/* Dilogarithm function (complex case) 
+ *  \f$ Li_2(x) = - \int\limits_0^{x}\draf{\log ( 1-s) } {s} ds  \f$ 
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::dilog ( const std::complex<double>& z ) 
+{
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result_re ;
+  gsl_sf_result result_im ;
+  const int ierror = gsl_sf_complex_dilog_e ( std::abs ( z ) ,
+                                              std::arg ( z ) ,
+                                              &result_re     ,
+                                              &result_im     ) ;
+  if ( ierror ) 
+    {
+      //
+      gsl_error ( "Error from gsl_sf_dilog_e function" , __FILE__ , __LINE__ , ierror ) ;
+      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+        { return std::numeric_limits<double>::quiet_NaN() ; }
+      //
+    }
+  return std::complex<double>( result_re.val , result_im.val ) ;
+}
+// ============================================================================
+
 // ============================================================================
 /* Mill's ratio for normal distribution
  *  - \f$ m (x) = \frac{1 - \Phi(x)}{\phi(x)}\f$  
