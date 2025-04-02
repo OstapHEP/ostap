@@ -43,7 +43,9 @@ __all__     = (
     'am'           , 'dn'         ,            ## elliptic functions 
     'sn'           , 'cn'         , 'sc'     , ## elliptic functions
     'elliptic_K'   , 'elliptic_K' ,            ## elliptic integrals
-    'dilog'        , 
+    'dilog'        ,
+    'zeta'         , 'zetam1'     , 'eta'    , 
+    'hurwitz'      , 'hzeta'      , 
     'significance' , 'nsigmas'    , 'nsigma'
     )
 # =============================================================================
@@ -1064,6 +1066,55 @@ def dilog ( x ) :
     fun = getattr ( x , '__dilog__' , None )
     if fun : return fun (   )
     return _dilog_ ( x )
+
+# =============================================================================
+_zeta_ = Ostap.Math.zeta
+# =============================================================================
+## Riemann' Zeta function
+#  \f$ f ( s ) = \zeta ( s ) =  \sum_k k^{-s}\f$ 
+def zeta ( x ) :
+    """ Riemann's Zeta function 
+    """
+    fun = getattr ( x , '__zeta__' , None )
+    if fun : return fun (   )
+    return _zeta_ ( x )
+
+# =============================================================================
+_zetam1_ = Ostap.Math.zetam1
+# =============================================================================
+## Riemann' Zeta function minus 1 
+#  \f$ f ( s ) = \zeta ( s ) - 1 =  -1 +\sum_k k^{-s}\f$ 
+def zetam1 ( x ) :
+    """ Riemann's Zeta function minus 1 
+    """
+    fun = getattr ( x , '__zetam1__' , None )
+    if fun : return fun (   )
+    return _zetam1_ ( x )
+
+
+# =============================================================================
+_hurwitz_ = Ostap.Math.hurwitz
+# =============================================================================
+## Hurwitz Zeta function
+def hurwitz ( x , y = 1 ) :
+    """ Hurwitz  Zeta function
+    """
+    return _hurwitz_ ( x )
+
+# =============================================================================
+## alias for Hurwitz Zeta function 
+hzeta = hurwitz
+
+# =============================================================================
+_eta_ = Ostap.Math.eta
+# =============================================================================
+## Direchlet's  Eta function
+def eta ( x ) :
+    """ Dirichlet's Eta function 
+    """
+    fun = getattr ( x , '__eta__' , None )
+    if fun : return fun (   )
+    return _eta_ ( x )
 
 # =============================================================================
 ## FIX

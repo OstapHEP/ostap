@@ -76,9 +76,7 @@ namespace
   *  representation of positive INFINITY_LOG 
   */
   const double  s_INFINITY_LOG_POS = std::log ( s_INFINITY ) ;
-  /** @var s_INFINITY_LOG
-  *  representation of positive INFINITY_LOG 
-  */
+  // ==========================================================================
   /** @var s_INFINITY_LOG_NEG
   *  representation of negative INFINITY_LOG
   */

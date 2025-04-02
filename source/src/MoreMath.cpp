@@ -26,6 +26,7 @@
 #include "gsl/gsl_sf_ellint.h"
 #include "gsl/gsl_sf_lambert.h"
 #include "gsl/gsl_sf_dilog.h"
+#include "gsl/gsl_sf_zeta.h"
 // ============================================================================
 // LHCbMath
 // ============================================================================
@@ -949,20 +950,17 @@ Ostap::Math::tgamma
 // ============================================================================G
 double Ostap::Math::psi ( const double x ) 
 {
-  //
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
   //
   gsl_sf_result result ;
   const int ierror = gsl_sf_psi_e ( x , &result ) ;
   if ( ierror ) 
-  {
-    //
-    gsl_error ( "Error from gsl_sf_psi_e" , __FILE__ , __LINE__ , ierror ) ;
-    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-    { return std::numeric_limits<double>::quiet_NaN(); }
-    //
-  }
+    {
+      gsl_error ( "Error from gsl_sf_psi_e" , __FILE__ , __LINE__ , ierror ) ;
+      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+        { return std::numeric_limits<double>::quiet_NaN(); }
+    }
   //
   return result.val ;
 }
@@ -3206,6 +3204,190 @@ Ostap::Math::dilog ( const std::complex<double>& z )
   return std::complex<double>( result_re.val , result_im.val ) ;
 }
 // ============================================================================
+
+
+// ============================================================================
+/*  Riemann's Zeta function \f$ n\ne 1\f$:
+ *  \f$ \zeta ( n ) = \sum_k k^{-n}\f$ 
+ */
+// ============================================================================
+double Ostap::Math::zeta ( const int n  )
+{
+  if ( 1 == n ) { return std::numeric_limits<double>::quiet_NaN() ; }
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_zeta_int_e ( n , &result) ;
+  if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_zeta_int_e function" , __FILE__ , __LINE__ , ierror ) ;
+      if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+        { return std::numeric_limits<double>::quiet_NaN() ; }
+    }
+  return result.val ;
+}
+// ============================================================================
+/*  Riemann's Zeta function \f$ s\ne 1\f$:
+ *  \f$ \zeta ( s ) = \sum_k k^{-s}\f$ 
+ */
+// ============================================================================
+double Ostap::Math::zeta ( const double s   )
+{
+  if ( 1 == s || s_equal ( s , 1.0 ) )
+    { return std::numeric_limits<double>::quiet_NaN() ; }
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_zeta_e ( s , &result) ;
+  if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_zeta_e function" , __FILE__ , __LINE__ , ierror ) ;
+      if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+        { return std::numeric_limits<double>::quiet_NaN() ; }
+    }
+  return result.val ;
+}
+// ============================================================================
+/* Riemann's Zeta function minus 1 \f$ n\ne 1\f$:
+ *  \f$ f ( n ) = \zeta ( n ) - 1 = -1 + \sum_k k^{-n}\f$ 
+ */
+// ============================================================================
+double Ostap::Math::zetam1 ( const int n  )
+{
+  if ( 1 == n ) { return std::numeric_limits<double>::quiet_NaN() ; }
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_zetam1_int_e ( n , &result) ;
+  if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_zetam1_int_e function" , __FILE__ , __LINE__ , ierror ) ;
+      if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+        { return std::numeric_limits<double>::quiet_NaN() ; }
+    }
+  return result.val ;
+}
+// ============================================================================
+/*  Riemann's Zeta function minus 1 \f$ s \ne 1\f$:
+ *  \f$ f ( s ) = \zeta ( s ) - 1 = -1 + \sum_k k^{-s}\f$ 
+ */
+// ============================================================================
+double Ostap::Math::zetam1 ( const double s   )
+{
+  if ( 1 == s || s_equal ( s , 1.0 ) )
+    { return std::numeric_limits<double>::quiet_NaN() ; }
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_zetam1_e ( s , &result) ;
+  if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_zetam1_e function" , __FILE__ , __LINE__ , ierror ) ;
+      if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+        { return std::numeric_limits<double>::quiet_NaN() ; }
+    }
+  return result.val ;
+}
+// ============================================================================
+
+// ============================================================================
+/* Hurwitz Zeta function 
+ *  \f$ zeta ( s , q ) = \sum_k  ( k + q )^{-s}\f$
+ *  - \f$ 1 < s \f$
+ *  - \f$ 0 < q \f$
+ */
+// ============================================================================
+double Ostap::Math::hurwitz 
+( const double s ,
+  const double q )
+{
+  if ( s <= 1 || q <= 0 )
+    { return std::numeric_limits<double>::quiet_NaN() ; }
+  //
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_hzeta_e ( s , q , &result) ;
+  if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_hzeta_e function" , __FILE__ , __LINE__ , ierror ) ;
+      if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+        { return std::numeric_limits<double>::quiet_NaN() ; }
+    }
+  return result.val ;
+}
+// ============================================================================
+
+
+// ============================================================================
+/* Dirichlet's Eta function 
+ *  \f$ \eta ( z ) = ( 1 - 2 ^{1-s} ) \zeta ( s ) 
+ */
+// ============================================================================
+double Ostap::Math::eta ( const int n  )
+{
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_eta_int_e ( n , &result) ;
+  if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_eta_int_e function" , __FILE__ , __LINE__ , ierror ) ;
+      if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+        { return std::numeric_limits<double>::quiet_NaN() ; }
+    }
+  return result.val ;
+}
+// ============================================================================
+/*  Dirichlet's Eta function 
+ *  \f$ \eta ( z ) = ( 1 - 2 ^{1-s} ) \zeta ( s ) 
+ */
+// ============================================================================
+double Ostap::Math::eta ( const double s   )
+{
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_eta_e ( s , &result) ;
+  if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_eta_e function" , __FILE__ , __LINE__ , ierror ) ;
+      if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+        { return std::numeric_limits<double>::quiet_NaN() ; }
+    }
+  return result.val ;
+}
+// ============================================================================
+
+// ============================================================================
+/* Harmonic number 
+ *  \f$ H_n = \sum_{k=1}^{n}  \frac{1}{k} \f$ 
+ */
+// ============================================================================
+double Ostap::Math::harmonic ( const unsigned int n )
+{
+  long double result = 0 ;
+  if ( n <= 100 )
+    {
+      for ( unsigned int k = 1 ; k <= n ; ++k ) { result += 1.0L / k ; }
+      return result ; 
+    }
+  return M_EULER + psi ( 1.0 + n )  ;
+}
+// ============================================================================
+/* Harmonic number (generalized) 
+ *  \f$ H(x) = \gamma + \psi ( 1 + x ) \f$ 
+ */
+// ============================================================================
+double Ostap::Math::harmonic ( const double x  )
+{ return M_EULER + psi ( 1.0 + x ) ; }
 
 // ============================================================================
 /* Mill's ratio for normal distribution
