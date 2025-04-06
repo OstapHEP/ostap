@@ -1116,6 +1116,7 @@ def _ombernulli_reduce_ ( s ) :
     return root_factory , ( type ( s ) , s.degree ()  )
 
 Ostap.Math.Bernulli. __reduce__ = _ombernulli_reduce_
+Ostap.Math.Binomial. __reduce__ = _ombernulli_reduce_
 
 # =============================================================================
 ## Reduce Ostap::Math::CutOffGauss
@@ -1581,6 +1582,7 @@ _decorated_classes_  = (
     Ostap.Math.LegendreSum4                 ,
     ## 
     Ostap.Math.Bernulli                     ,
+    Ostap.Math.Binomial                     ,
     )
 
 for t in _decorated_classes_ :

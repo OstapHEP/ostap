@@ -1246,6 +1246,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.CutOffStudent          ,
                ##
                Ostap.Math.Bernulli               ,               
+               Ostap.Math.Binomial               ,               
                ##
                ) :
     model.tf1          =  tf1 

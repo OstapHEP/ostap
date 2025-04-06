@@ -2901,7 +2901,18 @@ Ostap::Math::JacobiBase::JacobiBase
 }
 // ============================================================================
 
-
+double
+Ostap::Math::Binomial::evaluate
+( const double x ) const
+{
+  if ( 0 == m_N ) { return 1 ; }
+  const long double y      = x ; 
+  long double       result = y / m_N ;
+  for ( unsigned int k = 1 ; k < m_N ; ++k ) { result *= ( y - k ) / ( m_N - k ) ; }
+  //
+  return result ;
+}
+     
 // ============================================================================
 //                                                                      The END  
 // ============================================================================
