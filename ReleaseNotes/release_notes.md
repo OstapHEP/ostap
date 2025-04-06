@@ -20,7 +20,8 @@
  - more improvements for Files/RootFiles/Data/Lumi/DataAndLumi
  - add COWs (both in C++ and python) and split python'  `sPlot` into `COWs`, `sPLOT` & `hPlot*`
  - modify the `alpha(sigma)` dependency for Needham's functions
-
+ - Add Bernulli numbers and Bernulli polynoials
+ - Add Clausen & Gleisher-Clausen functions 
 
 ## New features
     

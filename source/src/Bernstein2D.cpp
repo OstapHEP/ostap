@@ -1054,10 +1054,11 @@ void Ostap::Math::Positive2D::swap ( Ostap::Math::Positive2D& right )
 // ============================================================================
 bool Ostap::Math::Positive2D::setPar 
 ( const unsigned int k     , 
-  const double       value )
+  const double       value ,
+  const bool         force )
 {
   //
-  const bool update = m_sphere.setPhase ( k , value ) ;
+  const bool update = m_sphere.setPhase ( k , value , force ) ;
   if ( !update ) { return false ; }   // no actual change 
   //
   return updateBernstein () ;
@@ -1153,12 +1154,12 @@ void Ostap::Math::Positive2DSym::swap ( Ostap::Math::Positive2DSym& right )
 // ============================================================================
 bool Ostap::Math::Positive2DSym::setPar 
 ( const unsigned int k     , 
-  const double       value )
+  const double       value ,
+  const bool         force ) 
 {
   //
-  const bool update = m_sphere.setPhase ( k , value ) ;
+  const bool update = m_sphere.setPhase ( k , value , force ) ;
   if ( !update ) { return false ; }   // no actual change 
-  //
   return updateBernstein () ;
 }
 // =============================================================================

@@ -29,23 +29,24 @@ __all__     = (
     'beta'         , 'lnbeta'     ,
     'gd'           , 'gd_inv'     ,
     'Ai'           , 'Bi'         ,
-    'li'           , 'Li'         ,           ## integral logarithms 
-    'Ei'           , 'Ein'        , 'E1'    , ## integral exponents 
-    'Si'           , 'Ci'         , 'Cin'   , ## integral trigonometry
+    'li'           , 'Li'         ,              ## integral logarithms 
+    'Ei'           , 'Ein'        , 'E1'      ,  ## integral exponents 
+    'Si'           , 'Ci'         , 'Cin'     ,  ## integral trigonometry
     'exp2'         , 'log2'       ,
-    'bessel_J'     , 'bessel_Y'   ,           ## Bessel functions  
-    'bessel_I'     , 'bessel_K'   ,           ## Bessel functions 
-    'gauss_pdf'    , 'gauss_cdf'  ,           ## Gaussian PDF and CDF 
-    'hypot'        , 'sigmoid'    , 'fma'   ,
+    'bessel_J'     , 'bessel_Y'   ,              ## Bessel functions  
+    'bessel_I'     , 'bessel_K'   ,              ## Bessel functions 
+    'gauss_pdf'    , 'gauss_cdf'  ,              ## Gaussian PDF and CDF 
+    'hypot'        , 'sigmoid'    , 'fma'    ,
     'minv'         , 'maxv'       ,
     'agm'          , 'ghm'        ,
     'bring'        , 'BR'         ,
-    'am'           , 'dn'         ,            ## elliptic functions 
-    'sn'           , 'cn'         , 'sc'     , ## elliptic functions
-    'elliptic_K'   , 'elliptic_K' ,            ## elliptic integrals
+    'am'           , 'dn'         ,             ## elliptic functions 
+    'sn'           , 'cn'         , 'sc'      , ## elliptic functions
+    'elliptic_K'   , 'elliptic_K' ,             ## elliptic integrals
     'dilog'        ,
-    'zeta'         , 'zetam1'     , 'eta'    , 
-    'hurwitz'      , 'hzeta'      , 
+    'zeta'         , 'zetam1'     , 'eta'     , 
+    'hurwitz'      , 'hzeta'      ,
+    'Cl'           , 'Sl'         , 'clausen' , 
     'significance' , 'nsigmas'    , 'nsigma'
     )
 # =============================================================================
@@ -1115,6 +1116,56 @@ def eta ( x ) :
     fun = getattr ( x , '__eta__' , None )
     if fun : return fun (   )
     return _eta_ ( x )
+
+
+_Cl_n_    = Ostap.Math.Cl
+_Sl_n_    = Ostap.Math.Sl
+_clausen_ = Ostap.Math.clausen
+
+
+# =============================================================================
+## Standard Clausen functions
+#   \f[ \begin{array}{lcc}
+#       Cl_{2m+2} ( x ) & = \sum_k \frac{ \sin kx }{k^{2m+2}}& \\ 
+#       Cl_{2m+1} ( x ) & = \sum_k \frac{ \cos kx }{k^{2m+1}}& \\ 
+#      \end{array}   \f] 
+# @see https://en.wikipedia.org/wiki/Clausen_function       
+def Cl ( n , x ) :
+    """ Standard Clausen functions
+     - see https://en.wikipedia.org/wiki/Clausen_function       
+    """
+    assert isinstance ( n , integer_types ) and 0 <= n , 'Invalid parameter n!'
+    fun = getattr ( x , '__Cl__' , None )
+    if fun : return fun ( n )
+    return _Cl_ ( n , x )
+
+# =============================================================================
+## Standard Clausen functions, aka Gleisher-Clausen fnuctions  
+#  \f[ \begin{array}{lcc}
+#      Sl_{2m+2} ( x ) & = \sum_k \frac{ \cos kx }{k^{2m+2}}& \\ 
+#      Sl_{2m+1} ( x ) & = \sum_k \frac{ \sin kx }{k^{2m+1}}& \\ 
+#      \end{array}   \f] 
+# The function are related to Bernulli polynomials 
+# @see https://en.wikipedia.org/wiki/Clausen_function    
+def Sl ( n , x ) :
+    """ Standard Clausen functions
+     - see https://en.wikipedia.org/wiki/Clausen_function       
+    """
+    assert isinstance ( n , integer_types ) and 0 <= n , 'Invalid parameter n!'
+    fun = getattr ( x , '__Sl__' , None )
+    if fun : return fun ( n )
+    return _Sl_ ( n , x )
+
+# =============================================================================
+## Standard Clausen functions Cl_2 
+# @see https://en.wikipedia.org/wiki/Clausen_function       
+def clausen ( x ) :
+    """ Standard Clausen function Cl2 
+     - see https://en.wikipedia.org/wiki/Clausen_function       
+    """
+    fun = getattr ( x , '__clausen__' , None )
+    if fun : return fun ()
+    return _clausen_ ( x )
 
 # =============================================================================
 ## FIX

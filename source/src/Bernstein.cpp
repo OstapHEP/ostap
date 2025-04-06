@@ -322,42 +322,6 @@ double Ostap::Math::Bernstein::integral () const
     std::accumulate ( m_pars.begin() , m_pars.end() , 0.0L ) / npars() ;
 }
 // ============================================================================
-/*  filter out very small terms
- *  the term is considered to be very small if
- *   - it is numerically zero
- *   - or if epsilon > 0,
- *          abs ( c(k) ) < epsilon
- *   - or if scale   > 0  , 
- *           scale + par ==  scale 
- *   - or if scale   <= 0 ,
- *           norm  + pars == norm    
- *  Since the maximum value for each term of
- *  \f$ c_k C^n_k \frac{ k^k (n-k)^{n-k}}{ n^n}\f$
- *  @param  epsilon  parameter to define "smalness" of terms
- *  @param  scale    parameter to define "smalness" of terms
- *  @return number of nullified terms
- */
-// ============================================================================
-unsigned short 
-Ostap::Math::Bernstein::remove_noise
-( const double epsilon , 
-  const double scale   )
-{
-  unsigned short       num = 0           ;
-  const unsigned short N   = degree()    ;
-  const bool           eps = 0 < epsilon ;
-  const double        n    = norm () ;
-  for ( unsigned short k = 0 ; k <= N ; ++k ) 
-  {
-    if      (                        s_zero ( m_pars[k] )           ) { m_pars[k] = 0 ; ++num ; }
-    else if ( eps && ( 0 == k ) && std::abs ( m_pars[k] ) < epsilon ) { m_pars[k] = 0 ; ++num ; }
-    else if ( eps && ( N == k ) && std::abs ( m_pars[k] ) < epsilon ) { m_pars[k] = 0 ; ++num ; }
-    else if ( 0 <  scale && s_equal ( scale + m_pars[k]   , scale ) ) { m_pars[k] = 0 ; ++num ; }
-    else if ( 0 >= scale && s_equal ( n     + m_pars[k]   , n )     ) { m_pars[k] = 0 ; ++num ; }
-  }
-  return num ;
-}    
-// ============================================================================
 /*  get indefinite integral  as function object 
  *  \f$ I(x) = \int^{x}_{x_{min}} B(t) dt + C \f$
  *  @param C the integration constant   
@@ -379,8 +343,8 @@ Ostap::Math::Bernstein::indefinite_integral
     { (*ic) += C ; }
   }
   //
-  return Ostap::Math::Bernstein ( m_aux.begin() , 
-                                  m_aux.begin() + npars() + 1 , m_xmin , m_xmax ) ;
+  return Ostap::Math::Bernstein
+    ( m_aux.begin() , m_aux.begin() + npars() + 1 , m_xmin , m_xmax ) ;
 }
 // ============================================================================
 double

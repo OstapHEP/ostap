@@ -1803,6 +1803,34 @@ namespace Ostap
      */
     double ramanudjan_sum ( const double x ) ;
     // ========================================================================
+
+    // ========================================================================
+    /** get Clausen function \f$ Cl_2 \f$ 
+     *  @param x argument 
+     *  @return value of clausen fnction \f$ Cl_2 \f$
+     */
+    double clausen ( const double x ) ; 
+    // ========================================================================
+    /** standard Clausen function
+     *  \f[ \begin{array}{lcc}
+     *      Cl_{2m+2} ( x ) & = \sum_k \frac{ \sin kx }{k^{2m+2}}& \\ 
+     *      Cl_{2m+1} ( x ) & = \sum_k \frac{ \cos kx }{k^{2m+1}}& \\ 
+     *      \end{array}   \f] 
+     */
+    double Cl
+      ( const unsigned short n , 
+        const double         x ) ;
+    // ========================================================================
+    /** standard Clausen function
+     *  \f[ \begin{array}{lcc}
+     *      Sl_{2m+2} ( x ) & = \sum_k \frac{ \cos kx }{k^{2m+2}}& \\ 
+     *      Sl_{2m+1} ( x ) & = \sum_k \frac{ \sin kx }{k^{2m+1}}& \\ 
+     *      \end{array}   \f] 
+     */
+    double Sl
+      ( const unsigned short n , 
+        const double         x ) ;    
+    // ========================================================================
     
     // ========================================================================
     /** Bring radical or ultra-radical, the real solution of

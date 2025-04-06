@@ -931,13 +931,12 @@ def _gre_setitem_ ( graph , ipoint , point )  :
     x , y = point
     
     x = VE ( x ) 
-    v = VE ( y ) 
+    y = VE ( y ) 
 
-    _gr_setitem_ ( graph , ipoint , ( x.value() , y.value() ) ) 
-
-    graph.SetPointError ( ipoint , x . error () , v . error () )
-
-
+    _gr_setitem_ ( graph , ipoint , ( x.value() , y.value() ) )
+    
+    graph.SetPointError ( ipoint , x . error () , y . error () )
+    
 # =============================================================================
 ## represent TGraph as TF1
 #  @code

@@ -10,11 +10,13 @@ add_library(ostap SHARED src/format.cpp
                          src/Bernstein1D.cpp
                          src/Bernstein2D.cpp
                          src/Bernstein3D.cpp
+                         src/Bernulli.cpp
                          src/Binomial.cpp
                          src/BreitWigner.cpp
                          src/ChebyshevApproximation.cpp
                          src/Choose.cpp
                          src/Chi2Fit.cpp
+                         src/Clausen.cpp
                          src/Combine.cpp
                          src/Covariance.cpp
                          src/COWs.cpp

@@ -14,6 +14,7 @@
 // ============================================================================
 // Ostap 
 // ============================================================================
+#include "Ostap/MakeArray.h"
 #include "Ostap/Math.h"
 #include "Ostap/Parameters.h"
 #include "Ostap/Clenshaw.h"
@@ -37,16 +38,6 @@ namespace Ostap
   // ==========================================================================
   namespace Math
   {
-    // ========================================================================
-    namespace detail 
-    {
-      // ======================================================================
-      template <typename F, std::size_t ... Is>
-      auto make_array(F f, std::index_sequence<Is...>)
-        -> std::array<std::decay_t<decltype(f(0u))>, sizeof...(Is)>
-      { return {{f(Is)...}}; }
-      // ======================================================================
-    }
     // ========================================================================
     // Chebyshev 
     // ========================================================================
@@ -282,9 +273,8 @@ namespace Ostap
     inline const std::array<double,N>& Chebyshev_<N>::roots ()
     {
       auto root = []( unsigned int k ) -> double  
-        { return -std::cos ( ( 2 * k + 1 ) * M_PIl / ( 2 * N ) ) ; } ;
-      static const std::array<double,N> s_roots = 
-        detail::make_array ( root , std::make_index_sequence<N>() ) ;
+      { return -std::cos ( ( 2 * k + 1 ) * M_PIl / ( 2 * N ) ) ; } ;
+      static const std::array<double,N> s_roots { make_array ( root , std::make_index_sequence<N>() ) } ;
       return s_roots ;
     }
     // ========================================================================
@@ -293,9 +283,8 @@ namespace Ostap
     inline const std::array<double,N-1>& Chebyshev_<N>::extrema ()
     {
       auto extremum = []( unsigned int k ) -> double 
-        { return -std::cos ( ( k + 1 ) * M_PIl / N ) ; } ;
-      static const std::array<double,N-1> s_extrema = 
-        detail::make_array ( extremum , std::make_index_sequence<N-1>() ) ;
+      { return -std::cos ( ( k + 1 ) * M_PIl / N ) ; } ;
+      static const std::array<double,N-1> s_extrema { make_array ( extremum , std::make_index_sequence<N-1>() ) } ;
       return s_extrema ;
     }
     // ========================================================================
@@ -409,8 +398,7 @@ namespace Ostap
     {
       auto root = []( unsigned int k ) -> double 
         { return - std::cos ( ( k + 1 ) * M_PIl / ( N + 1 ) ) ; } ;
-      static const std::array<double,N> s_roots = 
-        detail::make_array ( root , std::make_index_sequence<N>() ) ;
+      static const std::array<double,N> s_roots { make_array ( root , std::make_index_sequence<N>() ) } ;
       return s_roots ;
     }
     // ========================================================================
@@ -494,9 +482,8 @@ namespace Ostap
     inline const std::array<double,N>& Chebyshev3_<N>::roots ()
     {
       auto root = []( unsigned int k ) -> double 
-        { return std::cos ( ( 2 * N - 2 * k - 1 ) * M_PIl / ( 2 * N + 1 ) ) ; } ;
-      static const std::array<double,N> s_roots = 
-        detail::make_array ( root , std::make_index_sequence<N>() ) ;
+      { return std::cos ( ( 2 * N - 2 * k - 1 ) * M_PIl / ( 2 * N + 1 ) ) ; } ;
+      static const std::array<double,N> s_roots { make_array ( root , std::make_index_sequence<N>() ) } ;
       return s_roots ;
     }
     // ========================================================================
@@ -540,9 +527,8 @@ namespace Ostap
     inline const std::array<double,N>& Chebyshev4_<N>::roots ()
     {
       auto root = []( unsigned int k ) -> double 
-        { return std::cos ( ( 2 * N - 2 * k ) * M_PIl / ( 2 * N + 1 ) ) ; } ;
-      static const std::array<double,N> s_roots = 
-        detail::make_array ( root , std::make_index_sequence<N>() ) ;
+      { return std::cos ( ( 2 * N - 2 * k ) * M_PIl / ( 2 * N + 1 ) ) ; } ;
+      static const std::array<double,N> s_roots { make_array ( root , std::make_index_sequence<N>() ) } ;
       return s_roots ;
     }
     // ========================================================================
@@ -715,8 +701,7 @@ namespace Ostap
     inline const std::array<double,N>& Legendre_<N>::roots ()
     {
       auto root = []( unsigned int k ) -> double { return legendre_root ( k , N ) ; } ;
-      static const std::array<double,N> s_roots = 
-        detail::make_array ( root , std::make_index_sequence<N>() ) ;
+      static const std::array<double,N> s_roots { make_array ( root , std::make_index_sequence<N>() ) } ;
       return s_roots ;
     }
     // =======================================================================
@@ -930,23 +915,21 @@ namespace Ostap
         static inline long double a ( const unsigned int J ) 
         {
           auto   afun = [] ( const unsigned int K ) -> long  double 
-            {
-              const unsigned int I = K + M + 1 ;
-              return std::sqrt ( ( 2 * I - 1 ) * 1.0L * ( 2 * I + 1 ) / ( I * I - M * M ) ) ;
-            } ;
-          static const std::array<long double, L-M> s_a = 
-            detail::make_array ( afun , std::make_index_sequence<L-M>() ) ;
+          {
+            const unsigned int I = K + M + 1 ;
+            return std::sqrt ( ( 2 * I - 1 ) * 1.0L * ( 2 * I + 1 ) / ( I * I - M * M ) ) ;
+          } ;
+          static const std::array<long double, L-M> s_a { make_array ( afun , std::make_index_sequence<L-M>() ) } ;
           return s_a [ J - ( M + 1 ) ] ;
         }
         static inline long double b ( const unsigned int J ) 
         { 
           auto   bfun = [] ( const unsigned int K ) -> long  double 
-            { 
-              const unsigned int I = K + M + 2 ;
-              return  PLegendre_helper_<L,M>::a(I)/PLegendre_helper_<L,M>::a(I-1) ;
-            } ;
-          static const std::array<long double, L-M-1> s_b = 
-            detail::make_array ( bfun , std::make_index_sequence<L-M-1>() ) ;
+          { 
+            const unsigned int I = K + M + 2 ;
+            return  PLegendre_helper_<L,M>::a(I)/PLegendre_helper_<L,M>::a(I-1) ;
+          } ;
+          static const std::array<long double, L-M-1> s_b { make_array ( bfun , std::make_index_sequence<L-M-1>() ) } ;
           return s_b [ J - ( M + 2 ) ] ;
         }
         // ====================================================================
@@ -1653,6 +1636,7 @@ namespace Ostap
     class Monotonic     ; // forward declaration 
     class Convex        ; // forward declaration 
     class ConvexOnly    ; // forward declaration 
+    class Bernulli      ; // forward declaration 
     // ========================================================================
     // Polynomial sums
     // ========================================================================
@@ -1754,6 +1738,8 @@ namespace Ostap
       explicit Polynomial ( const Convex&        poly ) ;
       ///  constructor from convex-only Bernstein polynomial (efficient) 
       explicit Polynomial ( const ConvexOnly&    poly ) ;
+      ///  constructor from Bernulli polynomial 
+      explicit Polynomial ( const Bernulli&      poly ) ;
       // ======================================================================
     public:
       // ======================================================================

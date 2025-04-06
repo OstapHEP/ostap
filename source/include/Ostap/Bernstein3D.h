@@ -107,40 +107,24 @@ namespace Ostap
       // ======================================================================
     public: // getters & setters
       // ======================================================================
-#if ROOT_VERSION_CODE<ROOT_VERSION(6,22,0)
-      // ======================================================================
-      // old ROOT does not export in python the "using" methods 
-      // ======================================================================
-      /// get the parameter value
-      inline double  par          
-      ( const std::size_t k ) const
-      { return Ostap::Math::Parameters::par ( k ) ; }
-      // ======================================================================
-      /// set k-parameter
-      inline bool    setPar          
-      ( const std::size_t  k     , 
-        const double       value ) 
-      { return Ostap::Math::Parameters::setPar ( k , value ) ;}
-      // ======================================================================
-#else 
-      // ======================================================================
       using Ostap::Math::Parameters::par    ;
       using Ostap::Math::Parameters::setPar ;
       // ======================================================================
-#endif 
+    public:
       // ======================================================================
       /// set (l,m,n)-parameter
       inline bool setPar
-      ( const unsigned short l     ,
-        const unsigned short m     ,
-        const unsigned short n     ,
-        const double         value )
+      ( const unsigned short l             ,
+        const unsigned short m             ,
+        const unsigned short n             ,
+        const double         value         ,
+        const bool           force = false ) 
       {
         return 
           m_nx < l ? false :
           m_ny < m ? false :
           m_nz < n ? false :
-          Ostap::Math::Parameters::setPar ( index ( l , m , n ) , value ) ;
+          Ostap::Math::Parameters::setPar ( index ( l , m , n ) , value , force ) ;
       }
       // ======================================================================
       /// get (l,m,n)-parameter
@@ -703,35 +687,19 @@ namespace Ostap
       // ======================================================================
     public: // getters & setters
       // ======================================================================
-#if ROOT_VERSION_CODE<ROOT_VERSION(6,22,0)
-      // ======================================================================
-      // old ROOT does not export in python the "using" methods 
-      // ======================================================================
-      /// get the parameter value
-      inline double  par          
-      ( const std::size_t k ) const
-      { return Ostap::Math::Parameters::par ( k ) ; }
-      // ======================================================================== 
-      /// set k-parameter
-      inline bool    setPar          
-      ( const std::size_t  k     , 
-        const double       value ) 
-      { return Ostap::Math::Parameters::setPar ( k , value ) ;}
-      // ======================================================================
-#else 
-      // ======================================================================
       using Ostap::Math::Parameters::par    ;
       using Ostap::Math::Parameters::setPar ;
       // ======================================================================
-#endif
+    public:
       // ======================================================================
       /// set (l,m,n)-parameter
       inline bool setPar
-      ( const unsigned short l     ,
-        const unsigned short m     ,
-        const unsigned short n     ,
-        const double         value ) 
-      { return Ostap::Math::Parameters::setPar ( index ( l , m , n ) , value ) ; }
+      ( const unsigned short l             ,
+        const unsigned short m             ,
+        const unsigned short n             ,
+        const double         value         ,
+        const bool           force = false )
+      { return Ostap::Math::Parameters::setPar ( index ( l , m , n ) , value , false ) ; }
       // ======================================================================
       /// get (l,m,n)-parameter
       inline double  par 
@@ -1117,35 +1085,19 @@ namespace Ostap
       // ======================================================================
     public: // getters & setters
       // ======================================================================
-#if ROOT_VERSION_CODE<ROOT_VERSION(6,22,0)
-      // ======================================================================
-      // old ROOT does not export in python the "using" methods 
-      // ======================================================================
-      /// get the parameter value
-      inline double  par          
-      ( const std::size_t k ) const
-      { return Ostap::Math::Parameters::par ( k ) ; }
-      // ======================================================================
-      /// set k-parameter
-      inline bool    setPar          
-      ( const std::size_t  k     , 
-        const double       value ) 
-      { return Ostap::Math::Parameters::setPar ( k , value ) ;}
-      // ======================================================================
-#else 
-      // ======================================================================
       using Ostap::Math::Parameters::par    ;
       using Ostap::Math::Parameters::setPar ;
       // ======================================================================
-#endif
+    public:
       // ======================================================================
       /// set (l,m,n)-parameter
       inline bool setPar
-      ( const unsigned short l     ,
-        const unsigned short m     ,
-        const unsigned short n     ,
-        const double         value ) 
-      { return Ostap::Math::Parameters::setPar ( index ( l , m , n )  , value )  ; }
+      ( const unsigned short l             ,
+        const unsigned short m             ,
+        const unsigned short n             ,
+        const double         value         ,
+        const bool           force = false ) 
+      { return Ostap::Math::Parameters::setPar ( index ( l , m , n )  , value , force )  ; }
       // ======================================================================
       /// get (l,m,n)-parameter
       inline double  par
@@ -1542,10 +1494,16 @@ namespace Ostap
       /// get number of parameters
       std::size_t npars () const { return m_sphere.nPhi () ; }
       /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value ) ;
+      bool setPar
+      ( const unsigned int k             ,
+        const double       value         , 
+        const bool         force = false ) ;
       /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value )
-      { return setPar   ( k , value ) ; }
+      bool setParameter
+      ( const unsigned int k             ,
+        const double       value         ,
+        const bool         force = false )         
+      { return setPar   ( k , value , force ) ; }
       /// get the parameter value
       double  par       ( const unsigned int k ) const 
       { return m_sphere.phase ( k ) ; }        
@@ -1833,10 +1791,16 @@ namespace Ostap
       /// get number of parameters
       std::size_t npars () const { return m_sphere.nPhi () ; }
       /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value ) ;
+      bool setPar
+      ( const unsigned int k             ,
+        const double       value         ,
+        const bool         force = false ) ;
       /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value )
-      { return setPar   ( k , value ) ; }
+      bool setParameter
+      ( const unsigned int k             ,
+        const double       value         ,  
+        const bool         force = false ) 
+      { return setPar   ( k , value , force ) ; }
       /// get the parameter value
       double  par       ( const unsigned int k ) const 
       { return m_sphere.phase ( k ) ; }        
@@ -2131,10 +2095,16 @@ namespace Ostap
       /// get number of parameters
       std::size_t npars () const { return m_sphere.nPhi () ; }
       /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value ) ;
+      bool setPar
+      ( const unsigned int k             ,
+        const double       value         ,
+        const bool         force = false ) ;
       /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value )
-      { return setPar   ( k , value ) ; }
+      bool setParameter
+      ( const unsigned int k             ,
+        const double       value         ,
+        const bool         force = false ) 
+      { return setPar   ( k , value , force ) ; }
       /// get the parameter value
       double  par       ( const unsigned int k ) const 
       { return m_sphere.phase ( k ) ; }        

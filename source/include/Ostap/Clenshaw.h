@@ -37,7 +37,7 @@ namespace Ostap
        *   with initial conditions \f$ \phi_0(x) \f$ and \f$ \phi_1(x)\f$ 
        *  @param x the value of x 
        *  @param N the order of the coefficient
-       *  @param alpha  Callable <code>alpha(k,x)</code> corresponding to \f$ \alpha_k(x) \f$ 
+       *  @param alpha Callable <code>alpha(k,x)</code> corresponding to \f$ \alpha_k(x) \f$ 
        *  @param beta  Callable <code>beta(k,x)</code> corresponding to \f$ \beta_k(x) \f$ 
        *  @param phi0  Callable <code>phi0(x)</code> corresponding to \f$ \phi_0(x) \f$ 
        *  @param phi1  Callable <code>phi1(x)</code> corresponding to \f$ \phi_1(x) \f$ 
@@ -358,7 +358,7 @@ namespace Ostap
       // Trigonometric sums 
       // ======================================================================      
       /** Clenshaw algorithm for summation of cosine-series 
-       *  \f$ f(x) = \frac{a_0}{2} + \sum_{i=k}^{n} a_k \cos( k x) \f$
+       *  \f$ f(x) = \frac{a_0}{2} + \sum_{k=1}^{n} a_k \cos k x \f$
        *  @see https://en.wikipedia.org/wiki/Clenshaw_algorithm
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2015-02-10
@@ -390,7 +390,7 @@ namespace Ostap
       }
       // ======================================================================      
       /** Clenshaw algorithm for summation of sine-series 
-       *  \f$ f(x) = \sum_{i=k}^{n} a_k \sin( k x) \f$
+       *  \f$ f(x) = \sum_{k=1}^{n} a_k \sin  k x \f$
        *  @see https://en.wikipedia.org/wiki/Clenshaw_algorithm
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2015-02-10
@@ -417,7 +417,7 @@ namespace Ostap
           b2 = b1 ;
           b1 = b0 ;
           if ( first == last ) { break ; }  // BREAK 
-          --last  ;   // advace 
+          --last  ;   // advance 
           b0 = std::fma ( 2 * cosx  , b1 , *last - b2 ) ;
         }
         //

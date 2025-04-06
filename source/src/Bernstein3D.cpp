@@ -2568,10 +2568,11 @@ void Ostap::Math::Positive3D::swap ( Ostap::Math::Positive3D&  right )
 // ============================================================================
 bool Ostap::Math::Positive3D::setPar 
 ( const unsigned int k     , 
-  const double       value )
+  const double       value ,
+  const bool         force )
 {
   //
-  const bool update = m_sphere.setPhase ( k , value ) ;
+  const bool update = m_sphere.setPhase ( k , value , force ) ;
   if ( !update ) { return false ; }   // no actual change 
   //
   return updateBernstein () ;
@@ -2675,10 +2676,11 @@ void Ostap::Math::Positive3DSym::swap ( Ostap::Math::Positive3DSym&  right )
 // ============================================================================
 bool Ostap::Math::Positive3DSym::setPar 
 ( const unsigned int k     , 
-  const double       value )
+  const double       value ,
+  const bool         force )
 {
   //
-  const bool update = m_sphere.setPhase ( k , value ) ;
+  const bool update = m_sphere.setPhase ( k , value , force ) ;
   if ( !update ) { return false ; }   // no actual change 
   //
   return updateBernstein () ;
@@ -2789,10 +2791,11 @@ void Ostap::Math::Positive3DMix::swap ( Ostap::Math::Positive3DMix&  right )
 // ============================================================================
 bool Ostap::Math::Positive3DMix::setPar 
 ( const unsigned int k     , 
-  const double       value )
+  const double       value ,
+  const bool         force )
 {
   //
-  const bool update = m_sphere.setPhase ( k , value ) ;
+  const bool update = m_sphere.setPhase ( k , value , force ) ;
   if ( !update ) { return false ; }   // no actual change 
   //
   return updateBernstein () ;

@@ -1105,6 +1105,18 @@ def _omdini_reduce_ ( s ) :
 Ostap.Math.HORNSdini. __reduce__ = _omdini_reduce_
 Ostap.Math.HILLdini . __reduce__ = _omdini_reduce_
 
+
+# =============================================================================
+## reduce Ostap::Math::BErnulli
+#  @see Ostap::math::Bernullli
+def _ombernulli_reduce_ ( s ) :
+    """Reduce `Ostap.Math.Bernuli`
+    - see `Ostap.Math.Bernulli`
+    """
+    return root_factory , ( type ( s ) , s.degree ()  )
+
+Ostap.Math.Bernulli. __reduce__ = _ombernulli_reduce_
+
 # =============================================================================
 ## Reduce Ostap::Math::CutOffGauss
 #  @see Ostap::Math::CutOffGauss
@@ -1567,6 +1579,8 @@ _decorated_classes_  = (
     Ostap.Math.LegendreSum2                 ,
     Ostap.Math.LegendreSum3                 ,
     Ostap.Math.LegendreSum4                 ,
+    ## 
+    Ostap.Math.Bernulli                     ,
     )
 
 for t in _decorated_classes_ :

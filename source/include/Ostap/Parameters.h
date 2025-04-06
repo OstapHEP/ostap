@@ -58,9 +58,10 @@ namespace Ostap
        *  @return true if parameter is actually changed 
        */
       inline bool setPar          
-      ( const std::size_t  k     , 
-        const double       value ) 
-      { return k < m_pars.size() ?  _setPar ( k , value ) : false ; }
+      ( const std::size_t  k             , 
+        const double       value         ,
+        const bool         force = false ) 
+      { return k < m_pars.size() ?  _setPar ( k , value , force ) : false ; }
       // ======================================================================
       /** set several/all parameters at once 
        *  @param begin  start iterator for the sequence of coefficients 
@@ -71,13 +72,14 @@ namespace Ostap
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
                 typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
       inline bool setPars 
-      ( ITERATOR begin  , 
-        ITERATOR end    ) 
+      ( ITERATOR   begin         , 
+        ITERATOR   end           ,
+        const bool force = false ) 
       {
         bool update = false ;
         const unsigned int   N = m_pars.size()  ;
         for ( unsigned short k ; k < N && begin != end ;  ++k, ++begin ) 
-        { update = this->_setPar ( k  , *begin ) ? true : update ; }
+          { update = this->_setPar ( k  , *begin , force ) ? true : update ; }
         return update ;
       }
       // ======================================================================
@@ -85,8 +87,10 @@ namespace Ostap
        *  @param pars (NIPUT) vector of parameters 
        *  @return true if at least one parameter is actually changed 
        */
-      inline bool setPars ( const std::vector<double>& pars ) 
-      { return setPars ( pars.begin() , pars.end() ) ; }
+      inline bool setPars
+      ( const std::vector<double>& pars          ,
+        const bool                 force = false ) 
+      { return setPars ( pars.begin() , pars.end() , force ) ; }
       // ======================================================================
       /// all parameters are zero ?
       bool           zero   () const ;
@@ -97,6 +101,21 @@ namespace Ostap
       void reset() ;
       /// reset all parameters to zero 
       void Reset() { reset () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** Filter out very small terms/parameters 
+       *  the term is considered to be very small if
+       *   - it is numerically zero: \f$ c_k \approx 0 \f% 
+       *   - or if epsilon  > 0: \f$ \left| c_k \right| \le \epsilon \f$ 
+       *   - or if scale   != 0: \f$ \left| s \right| + \left| c_k \right| \approx \left| s \right| \f$ 
+       *  @param  epsilon  parameter to define "smalness" of terms
+       *  @param  scale    parameter to define "smalness" of terms
+       *  @return number of nullified terms
+       */
+      std::size_t remove_noise 
+      ( const double epsilon = 0 , 
+        const double scale   = 0 ) ;
       // ======================================================================
     public: // simple  manipulations with parameters 
       // ======================================================================
@@ -125,9 +144,10 @@ namespace Ostap
        *  @param value new value 
        *  @return true if parameter is actually changed 
        */
-      bool _setPar 
-      ( const std::size_t k     , 
-        const double      value ) ;
+    bool _setPar 
+    ( const std::size_t k             , 
+      const double      value         ,
+      const bool        force = false ) ;
       // ======================================================================
     protected :
       // ======================================================================

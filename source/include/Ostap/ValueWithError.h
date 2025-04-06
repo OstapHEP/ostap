@@ -356,6 +356,10 @@ namespace Ostap
       ValueWithError __E__      () const ;
       /// real part of dilogarithm  
       ValueWithError __dilog__  () const ;
+      /// Clausen function Cl
+      ValueWithError __Cl__     ( const unsigned int n ) const ;
+      /// Clausen function Sl
+      ValueWithError __Sl__     ( const unsigned int n ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1318,7 +1322,35 @@ namespace Ostap
     // ============================================================================
     ValueWithError dilog
     ( const ValueWithError& x ) ;
-    // ========================================================================    
+    // ========================================================================
+    /** Clausen function \f$ Cl_n \f$ 
+     *  \f[ \begin{array}{lcc}
+     *      Cl_{2m+2} ( x ) & = \sum_k \frac{ \sin kx }{k^{2m+2}}& \\ 
+     *      Cl_{2m+1} ( x ) & = \sum_k \frac{ \cos kx }{k^{2m+1}}& \\ 
+     *      \end{array}   \f] 
+     *  @see https://en.wikipedia.org/wiki/Clausen_function     
+     */
+    ValueWithError Cl
+    ( const unsigned int    n , 
+      const ValueWithError& x ) ;
+    // ========================================================================
+    /** standard Clausen functions, aka Gleisher-Clausen fnuctions  
+     *  \f[ \begin{array}{lcc}
+     *      Sl_{2m+2} ( x ) & = \sum_k \frac{ \cos kx }{k^{2m+2}}& \\ 
+     *      Sl_{2m+1} ( x ) & = \sum_k \frac{ \sin kx }{k^{2m+1}}& \\ 
+     *      \end{array}   \f] 
+     * The function are related to Bernulli polynomials 
+     * @see https://en.wikipedia.org/wiki/Clausen_function    
+     */
+    ValueWithError Sl
+    ( const unsigned int    n , 
+      const ValueWithError& x ) ;
+    // =========================================================================
+    /** Clausen function \f$ Cl_2 \f$
+     * @see https://en.wikipedia.org/wiki/Clausen_function
+     */
+    ValueWithError clausen ( const ValueWithError& x ) ;
+    // ========================================================================       
     /** evaluate <code>fma(x,y,z)</code>: \f$ xy+z \f$  
      *  @param y    (INPUT) the parameter 
      *  @param x    (INPUT) the parameter 

@@ -14,6 +14,7 @@
 #include "Ostap/Math.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/Clenshaw.h"
+#include "Ostap/Clausen.h"
 #include "Ostap/Combine.h"
 #include "Ostap/Interpolation.h"
 #include "Ostap/ValueWithError.h"
@@ -926,6 +927,19 @@ Ostap::Math::ValueWithError
 Ostap::Math::ValueWithError::__dilog__  () const 
 { return dilog ( *this ) ; }
 // ============================================================================
+// Clausen Cl_n
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__Cl__  ( const unsigned int n ) const 
+{ return Cl ( n  , *this ) ; }
+// ============================================================================
+// Clausen Sl_n
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__Sl__  ( const unsigned int n ) const 
+{ return Sl ( n  , *this ) ; }
+// ============================================================================
+
 
 // ============================================================================
 /* Does this object represent natural number?
@@ -3915,6 +3929,64 @@ Ostap::Math::two_samples
 }
 // =============================================================================
 
+
+// =============================================================================
+/*  Clausen function \f$ Cl_n \f$ 
+ *  \f[ \begin{array}{lcc}
+ *      Cl_{2m+2} ( x ) & = \sum_k \frac{ \sin kx }{k^{2m+2}}& \\ 
+ *      Cl_{2m+1} ( x ) & = \sum_k \frac{ \cos kx }{k^{2m+1}}& \\ 
+ *      \end{array}   \f] 
+ *  @see https://en.wikipedia.org/wiki/Clausen_function     
+ */
+// =============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::Cl
+( const unsigned int    n , 
+  const ValueWithError& x )
+{
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::Cl  ( n , xv ) ;
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get the derivative 
+  const double d = 1 <= n ?
+    Ostap::Math::Cl ( n - 1  , xv  ) :
+    0.25 / std::pow ( std::sin ( xv ) , 2 ) ;
+  //
+  return Ostap::Math::ValueWithError ( value  , d * d * x.cov2 () ) ;  
+}
+// =============================================================================
+/*  standard Clausen functions, aka Gleisher-Clausen fnuctions  
+ *  \f[ \begin{array}{lcc}
+ *      Sl_{2m+2} ( x ) & = \sum_k \frac{ \cos kx }{k^{2m+2}}& \\ 
+ *      Sl_{2m+1} ( x ) & = \sum_k \frac{ \sin kx }{k^{2m+1}}& \\ 
+ *      \end{array}   \f] 
+ * The function are related to Bernulli polynomials 
+ * @see https://en.wikipedia.org/wiki/Clausen_function    
+ */
+// =============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::Sl
+( const unsigned int    n , 
+  const ValueWithError& x )
+{
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::Sl  ( n , xv ) ;
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) || n == 0 ) { return value ; }
+  //
+  /// get the derivative 
+  const double d = Ostap::Math::Sl ( n - 1  , xv  ) ;
+  return Ostap::Math::ValueWithError ( value  , d * d * x.cov2 () ) ;  
+}
+// =============================================================================
+/* Clausen function \f$ Cl_2 \f$
+ * @see https://en.wikipedia.org/wiki/Clausen_function
+ */
+// =============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::clausen 
+( const ValueWithError& x ) { return Cl ( 2 , x ) ; } 
+// ============================================================================
 
 
 // =============================================================================

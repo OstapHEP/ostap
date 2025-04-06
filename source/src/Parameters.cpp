@@ -62,10 +62,11 @@ bool Ostap::Math::Parameters::zero  () const { return s_vzero ( m_pars ) ; }
 // ============================================================================
 bool Ostap::Math::Parameters::_setPar 
 ( const std::size_t k     , 
-  const double      value ) 
+  const double      value ,
+  const bool        force ) 
 {
-  if ( m_pars.size() <= k               ) { return false ; }
-  if ( s_equal ( m_pars [ k ] , value ) ) { return false ; }
+  if ( m_pars.size() <= k                         ) { return false ; }
+  if ( s_equal ( m_pars [ k ] , value ) && !force ) { return false ; }
   m_pars [ k ] = value ;
   return true ;
 }
@@ -79,6 +80,39 @@ void Ostap::Math::Parameters::reset ()
 // ============================================================================
 void Ostap::Math::Parameters::swap (  Ostap::Math::Parameters& right ) 
 { std::swap ( m_pars ,  right.m_pars ); }
+// ============================================================================
+/*  filter out very small terms/parameters 
+ *  the term is considered to be very small if
+ *   - it is numerically zero: \f$ c_k \approx 0 \f% 
+ *   - or if epsilon  > 0: \f$ \left| c_k \right| \le \epsilon \f$ 
+ *   - or if scale   != 0: \f$ \left| s \right| + \left| c_k \right| \approx \left| s \right| \f$ 
+ *  @param  epsilon  parameter to define "smalness" of terms
+ *  @param  scale    parameter to define "smalness" of terms
+ *  @return number of nullified terms
+ */
+// ============================================================================
+std::size_t
+Ostap::Math::Parameters::remove_noise
+( const double epsilon , 
+  const double scale   )
+{
+  std::size_t  num    = 0                  ;
+  const bool   eps    = 0 <  epsilon       ;
+  const bool   sca    = scale              ;
+  const double ascale = std::abs ( scale ) ;
+  //
+  const std::size_t NN { m_pars.size() } ;
+  for ( std::size_t k = 0 ; k < NN ; ++k )
+    {
+      const double absp = std::abs ( m_pars [ k ] ) ;
+      if      ( s_zero ( absp )                           ) { m_pars [ k ] = 0 ; ++num ; }
+      else if ( eps && absp <= epsilon                    ) { m_pars [ k ] = 0 ; ++num ; }
+      else if ( sca && s_equal ( ascale + absp , ascale ) ) { m_pars [ k ] = 0 ; ++num ; }
+    }
+  //
+  return num ;
+}    
+// ============================================================================
 
 
 // ============================================================================

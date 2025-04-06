@@ -86,8 +86,25 @@ namespace Ostap
       // ======================================================================
     public: // convert to ChebyshevSum
       // ======================================================================
-      /// convert it to pure chebyshev sum 
-      ChebyshevSum polynomial() const ;      
+      /** convert it to pure chebyshev sum,
+       *  suppressing the coefficients that are small enough 
+       *   - it is numerically zero: \f$ c_k \approx 0 \f% 
+       *   - or if epsilon  > 0: \f$ \left| c_k \right| \le \epsilon \f$ 
+       *   - or if scale   != 0: \f$ \left| s \right| + \left| c_k \right| \approx \left| s \right| \f$        
+       */
+      ChebyshevSum polynomial
+      ( const double limit = 0 ,
+        const double scale = 0 ) const ;
+      // ======================================================================
+      /** Get sum of all small/neglected terms 
+       *  Coefficients are small if 
+       *   - it is numerically zero: \f$ c_k \approx 0 \f% 
+       *   - or if epsilon  > 0: \f$ \left| c_k \right| \le \epsilon \f$ 
+       *   - or if scale   != 0: \f$ \left| s \right| + \left| c_k \right| \approx \left| s \right| \f$        
+       */
+      ChebyshevSum noise   
+      ( const double limit = 0 ,
+        const double scale = 0 ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -102,12 +119,14 @@ namespace Ostap
     public:
       // ======================================================================
       ///  the main method: evaluate the approximation sum 
-      double evaluate ( const double         x ) const ;
+      double evaluate
+      ( const double         x ) const ;
       /** the main method: evaluate the approximation sum, 
        *  using at most <code>n</code> terms 
        */
-      double evaluate ( const double         x , 
-                        const unsigned short n ) const ;
+      double evaluate
+      ( const double         x , 
+        const unsigned short n ) const ;
       // ======================================================================
     public: // trivial accessors 
       // ======================================================================
@@ -131,14 +150,17 @@ namespace Ostap
        *  @return the approximation with the error estimate 
        */
       Ostap::Math::ValueWithError
-      eval_err ( const double         x ) const ;
+      eval_err
+      ( const double         x ) const ;
+      // =====================================================================
       /** the main method: evaluate the approximation sum
        *  using at most <code>n</code> terms 
        *  @return the approximation with the error estimate 
        */
       Ostap::Math::ValueWithError 
-      eval_err ( const double         x , 
-                 const unsigned short n ) const ;
+      eval_err
+      ( const double         x , 
+        const unsigned short n ) const ;
       // ======================================================================
     public: // derivatives and integrals 
       // ======================================================================
@@ -163,7 +185,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /** Build chebyshev approximation for the function 
+      /** Build Chebyshev approximation for the function 
        *  @param f the function 
        *  @param a low   edge 
        *  @param b high edge 
@@ -171,10 +193,11 @@ namespace Ostap
        */
       template <class FUNCTION>
       static inline ChebyshevApproximation
-      create ( FUNCTION             f ,  
-               const double         a , 
-               const double         b , 
-               const unsigned short N ) 
+      create
+      ( FUNCTION             f ,  
+        const double         a , 
+        const double         b , 
+        const unsigned short N ) 
       { return ChebyshevApproximation ( f ,  a , b , N ) ; }
       // ======================================================================
     public:
@@ -185,9 +208,9 @@ namespace Ostap
     private :
       // ======================================================================
       /// low edge 
-      double m_a ;                                       // low edge 
+      double         m_a ;                               // low edge 
       /// high edge 
-      double m_b ;                                       // high edge 
+      double         m_b ;                               // high edge 
       /// approximation order
       unsigned short m_N ;                               // approximation order
       // ======================================================================
@@ -245,12 +268,14 @@ namespace Ostap
      */
     template <class FUNCTION>
     inline Ostap::Math::ChebyshevSum 
-    approximate ( FUNCTION             f ,  
-                  const double         a , 
-                  const double         b , 
-                  const unsigned short N ) 
+    approximate ( FUNCTION             f         ,  
+                  const double         a         , 
+                  const double         b         , 
+                  const unsigned short N         ,
+                  const double         limit = 0 ,
+                  const double         scale = 0 ) 
     { return Ostap::Math::ChebyshevApproximation 
-        ( std::cref ( f ) ,  a , b , N ).polynomial () ; }
+        ( std::cref ( f ) ,  a , b , N ).polynomial ( limit , scale ) ; }
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================

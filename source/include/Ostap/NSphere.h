@@ -137,8 +137,9 @@ namespace Ostap
        *  @return true is new value is really set 
        */
       bool setPhase
-      ( const unsigned short index , 
-        const double         value ) ;
+      ( const unsigned short index         , 
+        const double         value         ,
+        const bool           force = false ) ;
       // ======================================================================
     public: // "par"-like interface
       // ======================================================================
@@ -156,9 +157,10 @@ namespace Ostap
        *  @return true is new value is really set 
        */
       bool setPar
-      ( const unsigned short index , 
-        const double         value ) 
-      { return index < m_phases.size() ? setPhase ( index , value ) : false ; }
+      ( const unsigned short index         , 
+        const double         value         ,
+        const bool           force = false ) 
+      { return index < m_phases.size() ? setPhase ( index , value , force ) : false ; }
       // ======================================================================
       /** set several/all parameters at once 
        *  @param begin  start iterator for the sequence of coefficients 
@@ -167,15 +169,18 @@ namespace Ostap
        */
       template <class ITERATOR>
       bool setPars
-      ( ITERATOR begin  , 
-        ITERATOR end    ) ;
+      ( ITERATOR   begin         , 
+        ITERATOR   end           ,
+        const bool force = false ) ; 
       // ======================================================================
       /** set several/all parameters at once 
        *  @param pars (NIPUT) vector of parameters 
        *  @return true if at least one parameter is actually changed 
        */
-      inline bool setPars ( const std::vector<double>& pars ) 
-      { return setPars ( pars.begin() , pars.end() ) ; }
+      inline bool setPars
+      ( const std::vector<double>& pars          , 
+        const bool                 force = false ) 
+      { return setPars ( pars.begin() , pars.end() , force ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -264,13 +269,14 @@ inline double Ostap::Math::NSphere::x
 template <class ITERATOR>
 inline bool
 Ostap::Math::NSphere::setPars
-( ITERATOR begin  , 
-  ITERATOR end    ) 
+( ITERATOR   begin  , 
+  ITERATOR   end    ,
+  const bool force  ) 
 {
   bool update = false ;
   const unsigned int   N = nPhi ()  ;
   for ( unsigned short k ; k < N && begin != end ; ++k, ++begin ) 
-  { update = setPar ( k , *begin ) || update ; }
+    { update = setPar ( k , *begin , force ) || update ; }
   return update ;
 }
 // ============================================================================

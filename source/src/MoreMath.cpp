@@ -27,14 +27,18 @@
 #include "gsl/gsl_sf_lambert.h"
 #include "gsl/gsl_sf_dilog.h"
 #include "gsl/gsl_sf_zeta.h"
+#include "gsl/gsl_sf_clausen.h"
 // ============================================================================
 // LHCbMath
 // ============================================================================
 #include "Ostap/Math.h"
+#include "Ostap/MakeArray.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/Clenshaw.h"
+#include "Ostap/Clausen.h"
 #include "Ostap/Choose.h"
 #include "Ostap/Interpolants.h"
+#include "Ostap/ChebyshevApproximation.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -4860,6 +4864,28 @@ double Ostap::Math::Cin  ( const double x )
   //
   return s_EULER + std::log ( ax ) - result ; 
 }
+// =============================================================================
+/** get Clausen function \f$ Cl_2 \f$ using GSL 
+ *  @param x argument 
+ *  @return value of clausen fnction \f$ Cl_2 \f$
+ */
+// =============================================================================
+double Ostap::Math::clausen ( const double x )
+{
+  // ===========================================================================
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_clausen_e ( x , &result ) ;
+  if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_clausen_e" , __FILE__ , __LINE__ , ierror ) ;
+      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+        { return std::numeric_limits<double>::quiet_NaN(); }
+    }
+  
+  return result.val ;      
+}
+// ======================================================================
+
 // =============================================================================
 /* get the integral cosine  
  *  \f$ Ci(x) = - \int\limits_{x}^{+\infrty} \frac{\cos t}{t}dt \f$ 

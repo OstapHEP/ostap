@@ -184,12 +184,13 @@ Ostap::Math::NSphere::~NSphere() {}
 // ============================================================================
 bool Ostap::Math::NSphere::setPhase 
 ( const unsigned short index , 
-  const double         value ) 
+  const double         value ,
+  const bool           force ) 
 {
   // 
   if ( nPhi () <= index ) { return false ; } // no change in unphysical phases 
   //
-  if ( s_equal ( m_phases [ index ] , value ) ) { return false ; }
+  if ( s_equal ( m_phases [ index ] , value ) && !force ) { return false ; }
   //
   const double phase  = value + m_delta [ index ] ;
   //

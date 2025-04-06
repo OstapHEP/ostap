@@ -6259,9 +6259,8 @@ double Ostap::Math::Up::eval ( const double z )  const
 {
   //
   auto fourrier = []( unsigned int k ) -> double  
-    { return k == 0 || 1 == k % 2 ?  Ostap::Math::up_F ( M_PI * k ) : 0.0 ; } ;
-  static const std::array<double,120> s_fourrier = 
-    detail::make_array( fourrier , std::make_index_sequence<120>() ) ;
+  { return k == 0 || 1 == k % 2 ?  Ostap::Math::up_F ( M_PI * k ) : 0.0 ; } ;
+  static const std::array<double,120> s_fourrier { make_array ( fourrier , std::make_index_sequence<120>() ) } ;
   //
   return 1 <= std::abs ( z ) ? 0.0 : 
     std::max ( 0.0L , Ostap::Math::Clenshaw::cosine_sum 
@@ -6381,7 +6380,7 @@ Ostap::Math::FupN::FupN
     auto fourrier = [this]( unsigned int k ) -> double
       { return Ostap::Math::fupN_F ( this->m_N , M_PI * k / ( this->m_N + 1 ) ) ; } ;
     //
-    const RESULT res = detail::make_array( fourrier , std::make_index_sequence<120>() ) ;
+    const RESULT res { make_array( fourrier , std::make_index_sequence<120>() ) } ;
     s_FupN_cache->insert ( std::make_pair ( m_N , res ) ) ;  
   }
 }

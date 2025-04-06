@@ -226,15 +226,18 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-03-08
      */
-    unsigned long long stirling1 ( const unsigned short n ,
-                                   const unsigned short k ) ;
+    unsigned long long
+    stirling1
+    ( const unsigned short n ,
+      const unsigned short k ) ;
     // =========================================================================
     /** calculate unsigned Stirling number of 1st kind 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-03-08
      */
-    double stirling1_double ( const unsigned short n ,
-                              const unsigned short k ) ;
+    double stirling1_double
+    ( const unsigned short n ,
+      const unsigned short k ) ;
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

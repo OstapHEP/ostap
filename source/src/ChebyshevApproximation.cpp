@@ -23,6 +23,8 @@
 // Local
 // ============================================================================
 #include "Exception.h"
+#include "local_math.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file
  *  Implementation file for class Ostap::Math::ChebyshevApproximation
@@ -91,8 +93,6 @@ Ostap::Math::ChebyshevApproximation::ChebyshevApproximation
 {}
 // ============================================================================
 
-
-
 // ============================================================================
 // default (protected) constructor 
 // ============================================================================
@@ -157,6 +157,12 @@ Ostap::Math::ChebyshevApproximation::~ChebyshevApproximation()
 double Ostap::Math::ChebyshevApproximation::evaluate 
 ( const double x ) const 
 {
+  //
+  Ostap::Assert ( m_chebyshev ,
+                  s_ERROR     ,
+                  s_METHOD6   ,
+                  INVALID_CHEBYSHEV , __FILE__ , __LINE__  ) ;
+  //
   Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD1 , s_SC ) ;
   //
   gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
@@ -171,7 +177,11 @@ double Ostap::Math::ChebyshevApproximation::evaluate
 ( const double         x , 
   const unsigned short n ) const 
 {
-  Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD1 , s_SC ) ;
+  //
+  Ostap::Assert ( m_chebyshev ,
+                  s_ERROR     ,
+                  s_METHOD6   ,
+                  INVALID_CHEBYSHEV , __FILE__ , __LINE__  ) ;
   //
   gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
   return x < m_a ? 0.0 : x > m_b ? 0.0 : gsl_cheb_eval_n ( cs , n , x ) ;
@@ -185,7 +195,11 @@ Ostap::Math::ValueWithError
 Ostap::Math::ChebyshevApproximation::eval_err 
 ( const double         x ) const 
 {
-  Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD1 , s_SC ) ;
+  //
+  Ostap::Assert ( m_chebyshev ,
+                  s_ERROR     ,
+                  s_METHOD6   ,
+                  INVALID_CHEBYSHEV , __FILE__ , __LINE__  ) ;
   //
   if ( x < m_a || x > m_b ) { return 0 ; }
   //
@@ -209,7 +223,10 @@ Ostap::Math::ChebyshevApproximation::eval_err
 ( const double         x ,
   const unsigned short n ) const 
 {
-  Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD1 , s_SC ) ;
+  Ostap::Assert ( m_chebyshev ,
+                  s_ERROR     ,
+                  s_METHOD6   ,
+                  INVALID_CHEBYSHEV , __FILE__ , __LINE__  ) ;
   //
   if ( x < m_a || x > m_b ) { return 0 ; }
   //
@@ -229,7 +246,10 @@ Ostap::Math::ChebyshevApproximation
 Ostap::Math::ChebyshevApproximation::derivative () const 
 {
   //
-  Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD2 , s_SC ) ;
+  Ostap::Assert ( m_chebyshev ,
+                  s_ERROR     ,
+                  s_METHOD6   ,
+                  INVALID_CHEBYSHEV , __FILE__ , __LINE__  ) ;
   //
   gsl_cheb_series*       ds = gsl_cheb_alloc ( m_N ) ;
   const gsl_cheb_series* cs = (const gsl_cheb_series*) m_chebyshev ;
@@ -252,7 +272,10 @@ Ostap::Math::ChebyshevApproximation::integral
 ( const double C ) const 
 {
   //
-  Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD3 , s_SC ) ;
+  Ostap::Assert ( m_chebyshev ,
+                  s_ERROR     ,
+                  s_METHOD6   ,
+                  INVALID_CHEBYSHEV , __FILE__ , __LINE__  ) ;
   //
   gsl_cheb_series*       ds = gsl_cheb_alloc ( m_N ) ;
   const gsl_cheb_series* cs = (const gsl_cheb_series*) m_chebyshev ;
@@ -275,7 +298,10 @@ Ostap::Math::ChebyshevApproximation::integral
 Ostap::Math::ChebyshevApproximation&
 Ostap::Math::ChebyshevApproximation::operator+= ( const double a )
 {
-  Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD4 , s_SC ) ;
+  Ostap::Assert ( m_chebyshev ,
+                  s_ERROR     ,
+                  s_METHOD6   ,
+                  INVALID_CHEBYSHEV , __FILE__ , __LINE__  ) ;
   //
   gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
   //
@@ -289,7 +315,10 @@ Ostap::Math::ChebyshevApproximation::operator+= ( const double a )
 Ostap::Math::ChebyshevApproximation&
 Ostap::Math::ChebyshevApproximation::operator*= ( const double a )
 {
-  Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD5 , s_SC ) ;
+  Ostap::Assert ( m_chebyshev ,
+                  s_ERROR     ,
+                  s_METHOD6   ,
+                  INVALID_CHEBYSHEV , __FILE__ , __LINE__  ) ;
   //
   gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
   std::transform ( cs->c                 ,
@@ -300,20 +329,71 @@ Ostap::Math::ChebyshevApproximation::operator*= ( const double a )
   return *this ;
 }
 // ============================================================================
-// convert it to pure chebyshev sum 
-// ============================================================================
+/**  convert it to pure chebyshev sum 
+ *  suppressing the coefficients that are small enough 
+ *   - it is numerically zero: \f$ c_k \approx 0 \f% 
+ *   - or if epsilon  > 0: \f$ \left| c_k \right| \le \epsilon \f$ 
+ *   - or if scale   != 0: \f$ \left| s \right| + \left| c_k \right| \approx \left| s \right| \f$        
+ */
+ // ============================================================================
 Ostap::Math::ChebyshevSum
-Ostap::Math::ChebyshevApproximation::polynomial() const
+Ostap::Math::ChebyshevApproximation::polynomial
+( const double epsilon ,
+  const double scale   ) const
 {
-  Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD6 , s_SC ) ;
+  //
+  Ostap::Assert ( m_chebyshev ,
+                  s_ERROR     ,
+                  s_METHOD6   ,
+                  INVALID_CHEBYSHEV , __FILE__ , __LINE__  ) ;
+  //
   gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
   Ostap::Math::ChebyshevSum cp { cs->c , cs->c + cs->order + 1 , cs->a , cs->b } ;
-  cp.setPar ( 0 , 0.5 * cp.par(0) ) ;
+  cp.setPar ( 0 , 0.5 * cp.par ( 0 ) ) ;
+  //
+  cp.remove_noise ( epsilon , scale ) ; 
   return cp ;
 }
 // ============================================================================
-
-
+/** Get sum of all small/neglected terms 
+ *  Coefficients are small if 
+ *   - it is numerically zero: \f$ c_k \approx 0 \f% 
+ *   - or if epsilon  > 0: \f$ \left| c_k \right| \le \epsilon \f$ 
+ *   - or if scale   != 0: \f$ \left| s \right| + \left| c_k \right| \approx \left| s \right| \f$        
+ */
+// ============================================================================
+Ostap::Math::ChebyshevSum
+Ostap::Math::ChebyshevApproximation::noise 
+( const double epsilon ,
+  const double scale   ) const
+{
+  //
+  Ostap::Assert ( m_chebyshev ,
+                  s_ERROR     ,
+                  s_METHOD6   ,
+                  INVALID_CHEBYSHEV , __FILE__ , __LINE__  ) ;
+  //
+  gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
+  Ostap::Math::ChebyshevSum cp { cs->c , cs->c + cs->order + 1 , cs->a , cs->b } ;
+  cp.setPar ( 0 , 0.5 * cp.par ( 0 ) ) ;
+  //
+  const bool   eps    = 0 < epsilon        ;
+  const bool   sca    = scale              ;
+  const double ascale = std::abs ( scale ) ;
+  //
+  const std::size_t NN { cp.npars() } ;
+  for ( std::size_t k = 0 ; k < NN ; ++k )
+    {
+      const double absp = std::abs ( cp.par ( k ) ) ;
+      //
+      if      ( s_zero ( absp )                           ) {} 
+      else if ( eps && absp <= epsilon                    ) {} 
+      else if ( sca && s_equal ( ascale + absp , ascale ) ) {}
+      else    { cp.setPar ( k , 0.0 , true ) ;  }
+    }
+  //
+  return cp ;
+}
 
 // ============================================================================
 //                                                                      The END 

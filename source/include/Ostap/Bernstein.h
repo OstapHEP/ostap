@@ -403,25 +403,6 @@ namespace Ostap
       ( const Bernstein& other     ,
         const double     q_inv = 0 ) const ;
       // ======================================================================
-      /** filter out very small terms
-       *  the term is considered to be very small if
-       *   - it is numerically zero
-       *   - or if epsilon > 0,
-       *          abs ( c(k) ) < epsilon
-       *   - or if scale   > 0  , 
-       *           scale + par ==  scale 
-       *   - or if scale   <= 0 ,
-       *           norm  + pars == norm    
-       *  Since the maximum value for each term of
-       *  \f$ c_k C^n_k \frac{ k^k (n-k)^{n-k}}{ n^n}\f$
-       *  @param  epsilon  parameter to define "smalness" of terms
-       *  @param  scale    parameter to define "smalness" of terms
-       *  @return number of nullified terms
-       */
-      unsigned short remove_noise 
-      ( const double epsilon = 0 , 
-        const double scale   = 0 ) ;
-      // ======================================================================
     public:  // polynomial division
       // ======================================================================
       /** polynomial division
