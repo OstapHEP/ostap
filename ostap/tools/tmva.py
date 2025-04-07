@@ -900,10 +900,13 @@ class Trainer(object):
         self.__log_file = None
 
         if  log :
-
-            try :
+            # =================================================================            
+            try : # ===========================================================
+                # =============================================================
                 if os.path.exists ( log ) and os.path.isfile ( log ) : os.remove ( log )
-            except :
+                # =============================================================
+            except : # ========================================================
+                # =============================================================
                 pass
 
             from ostap.logger.utils import TeeCpp , OutputC  
@@ -1053,6 +1056,11 @@ class Trainer(object):
         >>> trainer.train () 
         """
 
+        # =========================================================================
+        ROOT.TMVA.gConfig().GetVariablePlotting().fMaxNumOfAllowedVariablesForScatterPlots = 0 
+        ROOT.TMVA.gConfig().GetVariablePlotting().fPlotFormat = 2 
+        # =========================================================================                
+        
         rf = []
         import os, glob
         for f in glob.glob ( self.__pattern_xml ) :
@@ -1453,9 +1461,9 @@ class Trainer(object):
         ## ROC curves 
         if ( self.make_plots or self.verbose ) :
             import ostap.plotting.canvas
-            from ostap.utils.utils import batch , keepCanvas
-            with batch ( ROOT.ROOT.GetROOT().IsBatch() or not self.show_plots ) , keepCanvas() : 
-            ## cnv = factory.GetROCCurve ( dataloader )
+            from ostap.plotting.style import useStyle 
+            from ostap.utils.utils    import batch , keepCanvas
+            with batch ( ROOT.ROOT.GetROOT().IsBatch() or not self.show_plots ) , useStyle() , keepCanvas() : 
                 cnv = factory.GetROCCurve ( self.name )
                 if cnv :
                     cnv.Draw()
@@ -1610,12 +1618,6 @@ class Trainer(object):
             ## ( ROOT.TMVA.mvaeffs        ,  ( name , output     ) ) , 
             ]
 
-        if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kMLP ] :
-            if hasattr ( ROOT.TMVA , 'network' ) :
-                plots.append ( ( show_network  , ( name , output ) , {} ) )            
-            if hasattr ( ROOT.TMVA , 'annconvergencetest'    ) :
-                plots.append ( ( show_annconvergencetest , ( name , output ) , style ) )
-
         if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kLikelihood ] :
             plots.append ( ( ROOT.TMVA.likelihoodrefs         , ( name , output ) , {} ) )
 
@@ -1627,15 +1629,22 @@ class Trainer(object):
             
         if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kBoost ] :                
             if hasattr ( ROOT.TMVA , 'BoostControlPlots'      ) :
-                plots.append ( ( ROOT.TMVA.BoostControlPlots  , ( name , output ) , {} ) ) 
+                plots.append ( ( ROOT.TMVA.BoostControlPlots  , ( name , output ) , {} ) )
+                
+        if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kMLP ] :
+            if hasattr ( ROOT.TMVA , 'network' ) :
+                plots.append ( ( show_network  , ( name , output ) , {} ) )            
+            if hasattr ( ROOT.TMVA , 'annconvergencetest'    ) :
+                plots.append ( ( show_annconvergencetest , ( name , output ) , style ) )
 
         ## change to some temporary directory
         
-        from ostap.utils.utils import batch, keepCanvas
+        from ostap.utils.utils    import batch, keepCanvas
+        from ostap.plotting.style import useStyle 
         with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) : 
             for fun, args, kwargs in plots :
                 tag  = "Execute macro %s%s" % ( fun.__name__ , str ( args ) ) 
-                with timing ( tag , logger = self.logger ) :
+                with timing ( tag , logger = self.logger ) , useStyle () :                    
                     if kwargs : fun ( *args , **kwargs )
                     else      : fun ( *args )
                     
