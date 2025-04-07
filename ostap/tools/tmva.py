@@ -1057,8 +1057,9 @@ class Trainer(object):
         """
 
         # =========================================================================
-        ROOT.TMVA.gConfig().GetVariablePlotting().fMaxNumOfAllowedVariablesForScatterPlots = 0 
-        ROOT.TMVA.gConfig().GetVariablePlotting().fPlotFormat = 2 
+        ROOT.TMVA.gConfig().GetVariablePlotting().fMaxNumOfAllowedVariablesForScatterPlots = 0
+        VP = ROOT.TMVA.Config.VariablePlotting
+        ROOT.TMVA.gConfig().GetVariablePlotting().fPlotFormat = VP.kPDF 
         # =========================================================================                
         
         rf = []
