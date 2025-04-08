@@ -32,6 +32,18 @@
 // ============================================================================
 //  Shape1D
 // ============================================================================
+Ostap::Models::Shape1D::Shape1D
+( const std::string&            name    , 
+  const std::string&            title   , 
+  RooAbsReal&                   x       ,
+  std::function<double(double)> f       , 
+  const std::size_t             tag     )
+  : RooAbsPdf   (  name.c_str() ,  title.c_str() ) 
+  , m_x         ( "!x" , "Variable" , this , x ) 
+  , m_function  ( f   ) 
+  , m_tag       ( tag ) 
+{}
+// ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::Models::Shape1D::Shape1D
@@ -71,7 +83,7 @@ Double_t Ostap::Models::Shape1D::analyticalIntegral
     { return this->func ( x  ) ; } ;
   //
   return s_integrator.integrate 
-    ( fun , 
+    ( fun                   , 
       m_x.min ( rangeName ) , 
       m_x.max ( rangeName ) , 
       m_tag                 ,
@@ -82,6 +94,20 @@ Double_t Ostap::Models::Shape1D::analyticalIntegral
 }
 // ============================================================================
 //  Shape2D
+// ============================================================================
+Ostap::Models::Shape2D::Shape2D
+( const std::string&                   name    ,  
+  const std::string&                   title   ,  
+  RooAbsReal&                          x       ,
+  RooAbsReal&                          y       ,
+  std::function<double(double,double)> f       , 
+  const std::size_t                    tag     ) 
+  : RooAbsPdf  (  name.c_str () ,  title.c_str()  ) 
+  , m_x        ( "!x"   , "x-variable" , this , x ) 
+  , m_y        ( "!y"   , "y-variable" , this , y ) 
+  , m_function ( f   ) 
+  , m_tag      ( tag ) 
+{}
 // ============================================================================
 // copy constructor 
 // ============================================================================
@@ -168,6 +194,22 @@ Double_t Ostap::Models::Shape2D::analyticalIntegral
 }
 // ============================================================================
 //  Shape3D
+// ============================================================================
+Ostap::Models::Shape3D::Shape3D
+( const std::string&                          name    , 
+  const std::string&                          title   , 
+  RooAbsReal&                                 x       ,
+  RooAbsReal&                                 y       ,
+  RooAbsReal&                                 z       ,
+  std::function<double(double,double,double)> f       , 
+  const std::size_t                           tag     )
+  : RooAbsPdf  (  name.c_str()  ,  title.c_str() ) 
+  , m_x        ( "!x"   , "x-variable" , this , x ) 
+  , m_y        ( "!y"   , "y-variable" , this , y ) 
+  , m_z        ( "!z"   , "z-variable" , this , z ) 
+  , m_function ( f ) 
+  , m_tag      ( tag ) 
+{}
 // ============================================================================
 // copy constructor 
 // ============================================================================

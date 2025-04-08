@@ -85,7 +85,7 @@ endif()
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   #message(STATUS "YES" "${CMAKE_CXX_COMPILER_ID}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-register")
-  set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -undefined dynamic_lookup")
+## set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -undefined dynamic_lookup")
 endif()
 
 configure_file(

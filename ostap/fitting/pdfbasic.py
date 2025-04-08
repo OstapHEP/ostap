@@ -5668,7 +5668,7 @@ class Shape1D_pdf(PDF1) :
             shape      = Ostap.Math.Histo1D     ( shape )
             tag        = Ostap.Utils.hash_histo ( shape )
             
-        elif hasattr ( shape , 'tag' ) and not tag : 
+        elif hasattr  ( shape , 'tag' ) and not tag : 
 
             tag = shape.tag() 
             
@@ -5690,12 +5690,12 @@ class Shape1D_pdf(PDF1) :
         else :
 
             ## create the actual pdf
-            self.pdf = Ostap.Models.Shape1D.create  (
+            self.pdf = Ostap.Models.Shape1D ( ## create ? 
                 self.roo_name ( 'shape1_' ) , 
-                "Shape-1D %s" % self.name ,
-                self.xvar                 ,
-                self.shape                ,
-                self.tag                  ) 
+                "Shape-1D %s" % self.name   ,
+                self.xvar                   ,
+                self.shape                  ,
+                self.tag                    ) 
             
         ## save the configuration
         self.config = {
@@ -5762,7 +5762,7 @@ class Shape2D_pdf(PDF2) :
         else :
 
             ## create the actual pdf
-            self.pdf = Ostap.Models.Shape2D.create  (
+            self.pdf = Ostap.Models.Shape2D (
                 self.roo_name  ( 'shape2_' ) , 
                 "Shape-2D %s" % self.name    ,
                 self.xvar                    ,
@@ -5835,14 +5835,14 @@ class Shape3D_pdf(PDF3) :
         else :
             
             ## create the actual pdf
-            self.pdf = Ostap.Models.Shape3D.create  (
-                    self.roo_name ( 'shape3_' ) , 
-                    "Shape-3D %s" % self.name   ,
-                    self.xvar                   ,
-                    self.yvar                   ,
-                    self.zvar                   ,
-                    self.shape                  ,
-                    self.tag                    )
+            self.pdf = Ostap.Models.Shape3D (
+                self.roo_name ( 'shape3_' ) , 
+                "Shape-3D %s" % self.name   ,
+                self.xvar                   ,
+                self.yvar                   ,
+                self.zvar                   ,
+                self.shape                  ,
+                self.tag                    )
             
         ## save the configuration
         self.config = {

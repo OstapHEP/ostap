@@ -22,8 +22,9 @@
  - modify the `alpha(sigma)` dependency for Needham's functions
  - Add Bernulli numbers and Bernulli polynoials
  - Add Clausen & Gleisher-Clausen functions 
-
-    
+ - `Ostap::Math::Moments` : turn the class with static functions onito namescpace  
+ - add non-templated constructor to `Ostap::Models::Shape`d/2D/3D`
+       
 ## New features
     
    1. further improvemets for the wrapped columns in the tables
