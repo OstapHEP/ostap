@@ -73,7 +73,9 @@ __all__     = (
     'light_bulb'          , 
     'weight_lifter'       ,
     ##
-    'delta_symbol'        , 
+    'delta_symbol'        ,
+    ##
+    'labels'               
 )
 # ===========================================================================
 from   ostap.utils.basic import isatty, has_unicode 
@@ -166,12 +168,21 @@ exclusive_or     = '\U000022BB' if show else '^'
 difference       = '\U000022BB' if show else '-'
 
 ## indices: circled numbes from 0 to 50 (inclusive) 
-indices = '\U000024FF' + \
+indices2 = '\U000024FF' + \
     '\U0000278A\U0000278B\U0000278C\U0000278D\U0000278E\U0000278F\U00002790\U00002791\U00002792\U00002793' + \
     '\U000024EB\U000024EC\U000024ED\U000024EE\U000024EF\U000024F0\U000024F1\U000024F2\U000024F3\U000024F4' + \
     '\U00003251\U00003252\U00003253\U00003254\U00003255\U00003256\U00003257\U00003258\U00003259\U0000325A' + \
     '\U0000325B\U0000325C\U0000325D\U0000325E\U0000325F\U000032B1\U000032B2\U000032B3\U000032B4\U000032B5' + \
     '\U000032B6\U000032B7\U000032B8\U000032B9\U000032BA\U000032BB\U000032BC\U000032BD\U000032BE\U000032BF' if show else tuple ( '%s' % i for i in range ( 51 ) ) 
+
+## indices = '\U000024EA' + \
+indices = '\U0001F10B' + \
+    '\U00002780\U00002781\U00002782\U00002783\U00002784\U00002785\U00002786\U00002787\U00002788\U00002789' + \
+    '\U0000246A\U0000246B\U0000246C\U0000246D\U0000246E\U0000246F\U00002470\U00002471\U00002472\U00002473' + \
+    '\U00003251\U00003252\U00003253\U00003254\U00003255\U00003256\U00003257\U00003258\U00003259\U0000325A' + \
+    '\U0000325B\U0000325C\U0000325D\U0000325E\U0000325F\U000032B1\U000032B2\U000032B3\U000032B4\U000032B5' + \
+    '\U000032B6\U000032B7\U000032B8\U000032B9\U000032BA\U000032BB\U000032BC\U000032BD\U000032BE\U000032BF' if show else tuple ( '%s' % i for i in range ( 51 ) ) 
+
 
 ## capital Greek Sigma 
 sum_symbol       = '\U00002211'           if show else 'sum '
@@ -190,23 +201,35 @@ def the_sum  ( what ) : return '%s%s'   % ( sum_symbol , what )
 def the_mean ( what ) : return '%s%s%s' % ( langle , what , rangle ) 
 def the_rms  ( what ) : return '%s%d'   % ( rms_symbol , what ) 
 
-
 # ==============================================================================
-## generate alphanumeric labels from names and insices 
-## def labels ( N , names , start = 0 ) :
-##    """ Generate alphanumeric labels from names and insices 
-##    """
-##    assert isinstance ( N , int ) and 0 < N , "Invalid N (number of labels) : %s" % N
-##    k = 0 
-##    i = start 
-##    for n in names :
-##        if k < M : yield n
-##        k += 1
-##        i += 1
-##    if k < len ( indices ) :
-##        for j in range ( k , len
-## """
+## Generate sequence of numerical labels
+#  @code
+#  for l in labels ( 10 , 'ABC' ) : ..
+#  @endcode 
+def labels ( N , labs = () )  :
+    """ Generate sequence of numerical labels
+    >>>  for l in labels ( 10 , 'ABC' ) : ..
+    """ 
+    assert isinstance ( N , int ) and 0 <= N , 'Invalid number of labels!'
 
+    q = 0 
+    for i , l in enumerate ( labs ) :
+        if i < N :
+            q += 1 
+            yield l 
+        else     : return
+
+    for j in range ( q , len ( indices ) ) : 
+        if j < N :
+            q += 1
+            c  = indices  [ j ]
+            if show and q < 22 : yield c + ' '
+            else               : yield c 
+            
+        else     : return
+        
+    for k in range ( q , N ) : yield '%d' % k
+    
 # =============================================================================
 if '__main__' == __name__ :
 

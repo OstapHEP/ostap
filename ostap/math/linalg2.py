@@ -26,7 +26,7 @@ from   ostap.utils.clsgetter  import classgetter
 from   ostap.logger.pretty    import pretty_array, fmt_pretty_float, fmt_pretty_err1   
 from   ostap.logger.colorized import infostr
 from   ostap.utils.gsl        import gsl_info
-from   ostap.logger.symbols   import ditto, times
+from   ostap.logger.symbols   import ditto, times, labels 
 from   ostap.logger.colorized import colored_string  
 import ostap.logger.table     as     T
 import ROOT, math, re, ctypes, array, random 
@@ -1380,8 +1380,9 @@ class LinAlg(object) :
         fmtv , expo = fmt_pretty_float ( value     = maev      ,
                                          width     = width     ,
                                          precision = precision )
-
-        if expo :
+        
+        # =====================================================================
+        if expo : # ===========================================================
             scale = 10 ** expo
             title = ( '[%s10^%+d] ' % ( times , expo ) ) + title 
         else    :
@@ -1398,9 +1399,10 @@ class LinAlg(object) :
                 item = fmtv % vv
                 if item in zeros : item = ' 0.0'
             row.append ( item )
+
             
         table = [ row ]
-        table = T.table  ( table , alignment = N*'c' , prefix = prefix , title = title , colorize_header = False )
+        table = T.table  ( table , alignment = N*'c' , prefix = prefix , title = title , colorize_header = True )
         ## 
         return table, expo 
 
@@ -1485,7 +1487,8 @@ class LinAlg(object) :
             zeros.append ( f % ( -0 ) )
         zeros = tuple ( zeros )
         
-        table = [ tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) ] 
+        ## table = [ tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) ] 
+        table = [ tuple ( [ '\\' ] + [ l for l in labels ( cols ) ] ) ] 
 
         ## 1st row : values
         row    = [ infostr ( 'V' )  ] 
@@ -1756,9 +1759,11 @@ class LinAlg(object) :
         else    :
             scale = 1 
             
-        table = [ tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) ]        
-        for i in range ( rows ) :
-            row = [ infostr ( '%d' % i )  ]
+        ## table = [ tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) ]
+        table = [ tuple ( [ '\\' ] + [ l for l in labels ( cols ) ] ) ]
+
+        for i,l in enumerate ( labels ( rows ) ) :
+            row = [ infostr ( l )  ]
             for j in range ( cols ) :                
                 v     = mtrx ( i , j ) 
                 value = v / scale 
@@ -1906,9 +1911,11 @@ class LinAlg(object) :
         else    :
             scale = 1 
             
-        table = [ tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) ]
-        for i in range ( rows ) :
-            row = [ infostr ( '%d' % i ) ]
+        ## table = [ tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) ]
+        table = [ tuple ( [ '\\' ] + [ l for l in labels ( cols ) ] ) ]
+        ## for i,l in range ( rows ) :
+        for i,l in enumerate ( labels ( rows ) ) :
+            row = [ infostr ( l ) ]
             for j in range ( cols ) : 
                 if j < i : item = ditto 
                 else     :
