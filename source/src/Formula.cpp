@@ -72,6 +72,10 @@ Ostap::Formula::Formula
   : Formula ( formula_name ( "formula_" , expression.GetName() , tree ) , expression , tree ) 
 {}
 // ============================================================================
+Ostap::Formula::Formula() 
+  : Formula ( std::string ( "1" ) , nullptr )
+{}
+// ============================================================================
 // destructor 
 // ============================================================================
 Ostap::Formula::~Formula()

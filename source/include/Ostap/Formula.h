@@ -52,7 +52,7 @@ namespace Ostap
     ( const TCut&        expression ,
       const TTree*       tree       ) ;
     /// default constructor, needed for serialisationn 
-    Formula () = default  ;
+    Formula () ;
     /// virtual destructor 
     virtual ~Formula () ;
     // ========================================================================

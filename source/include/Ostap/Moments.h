@@ -104,20 +104,19 @@ namespace  Ostap
        */
       inline double moment ( const unsigned short k ) const
       { return 
-	  N <  k       ? 0 :
-	  0 == k       ? 1 :
-	  1 == k       ? 0 :
-	  !this->ok () ? 0 : ( this->M ( k ) / this->size() ) ; }
+          N <  k       ? 0 :
+          0 == k       ? 1 :
+          1 == k       ? 0 :
+          !this->ok () ? 0 : ( this->M ( k ) / this->size() ) ; }
       // ======================================================================
       /// get value of the kth standartized moment for \f$  k \le N \f$
       inline double std_moment ( const unsigned short k ) const
-      { 
-        return 
+      { return 
           N <  k    ? 0 : 
           0 == k    ? 1 : 
           1 == k    ? 0 :
           2 == k    ? 1 :
-	  !this->ok ? 0 : this->moment ( k ) / std::pow ( this->moment ( 2 ) , 0.5 * k ) ;
+          !this->ok () ? 0 : this->moment ( k ) / std::pow ( this->moment ( 2 ) , 0.5 * k ) ;
       }
       // ======================================================================
       /// get number of entries

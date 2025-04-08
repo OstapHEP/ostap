@@ -231,7 +231,7 @@ void Ostap::Math::Integrator::set_precision_cube3
 void Ostap::Math::Integrator::set_qag_rule ( const int rule ) 
 {
   m_qag_rule = 
-    GSL_INTEG_GAUSS15 <= rule && rule <= GSL_INTEG_GAUSS61 <= rule ? rule :
+    GSL_INTEG_GAUSS15 <= rule && rule <= GSL_INTEG_GAUSS61 ? rule :
     GSL_INTEG_GAUSS41 ; 
 } 
 // =============================================================================
