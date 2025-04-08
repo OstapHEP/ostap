@@ -23,6 +23,7 @@
  - Add Bernulli numbers and Bernulli polynoials
  - Add Clausen & Gleisher-Clausen functions 
 
+    
 ## New features
     
    1. further improvemets for the wrapped columns in the tables
