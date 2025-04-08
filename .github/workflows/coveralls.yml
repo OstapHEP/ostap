@@ -18,7 +18,6 @@ jobs:
             - { build: 2, lcg: dev3/latest, platform: x86_64-el9-clang16-opt }
             - { build: 3, lcg: dev3/latest, platform: x86_64-el9-gcc14-opt   }
             - { build: 4, lcg: dev3/latest, platform: x86_64-el9-gcc13-opt   }
-            - { build: 5, lcg: dev3/latest, platform: x86_64-el8-gcc11-opt   }
     
       fail-fast: false
      runs-on: ubuntu-latest 
