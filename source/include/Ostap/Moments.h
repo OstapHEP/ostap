@@ -2762,14 +2762,11 @@ namespace  Ostap
       inline Ostap::Math::ValueWithError     mean ( const Moment_<N>& m )
       {
         const unsigned long long n = m.size () ;
-        if ( !m.ok () || n  < 2  ) { return m.mu (); }  // ATTENTION! 
+        // if ( !m.ok () || n  < 2  ) { return m.mu (); }  // ATTENTION! 
         const  double _mu  = m.mu ()            ;
         const  double _m2  = unbiased_2nd ( m ) ;        // ATTENTION! 
-        return Ostap::Math::ValueWithError ( _mu , _m2 / n ) ;
+        return Ostap::Math::ValueWithError { _mu , _m2 / n } ;
       }
-      // ======================================================================
-      /// get the mean
-      inline double mean ( const Moment_<1>& m ) { return m.mu () ; }
       // ======================================================================
 
       // ======================================================================
@@ -2777,13 +2774,19 @@ namespace  Ostap
       template <unsigned short N, typename std::enable_if<(N>1),int>::type = 0 >
       inline Ostap::Math::ValueWithError     mean ( const WMoment_<N>& m )
       {
-        if ( !m.ok() || m.size() < 2 ) { return m.mu() ; }
+        // if ( !m.ok() || m.size() < 2 ) { return m.mu() ; }
         //
         const auto n = m.nEff () ;
         const  double _mu  = m.mu     (   ) ;
         const  double _m2  = m.template moment_<2> () ;
-        return Ostap::Math::ValueWithError ( _mu , _m2 / n ) ;
+        return Ostap::Math::ValueWithError { _mu , _m2 / n } ;
       }    
+
+
+      // ======================================================================
+      /// get the mean
+      inline double mean ( const Moment_<1>& m ) { return m.mu () ; }
+
       // ======================================================================
       /// get the mean 
       inline double mean ( const WMoment_<1>& m ) { return m.mu () ; }

@@ -9687,16 +9687,24 @@ namespace Ostap
       // ======================================================================
       /// templated constructor 
       template <class FUNCTION> 
-        Shape1D ( const char*       name    , 
-                  const char*       title   , 
-                  RooAbsReal&       x       ,
-                  FUNCTION          f       , 
-                  const std::size_t tag = 0 )
-        : RooAbsPdf   (  name ,  title ) 
-        , m_x         ( "x"   , "Variable" , this , x ) 
+      Shape1D
+      ( const std::string& name    , 
+        const std::string& title   , 
+        RooAbsReal&        x       ,
+        FUNCTION           f       , 
+        const std::size_t  tag = 0 )
+        : RooAbsPdf   (  name.c_str() ,  title.c_str()  ) 
+        , m_x         ( "!x"   , "x-variable" , this , x ) 
         , m_function  ( f   ) 
         , m_tag       ( tag ) 
       {}
+      /// non-templated constructor 
+      Shape1D
+      ( const std::string& name                , 
+        const std::string&             title   , 
+        RooAbsReal&                    x       ,
+        std::function<double(double)>  f       ,         
+        const std::size_t              tag = 0 ) ;
       /// copy constructor 
       Shape1D ( const Shape1D& right , const char* name = nullptr ) ;
       /// clone method
@@ -9706,14 +9714,14 @@ namespace Ostap
       // ======================================================================
       /// templated constructor 
       template <class FUNCTION> 
-        static inline Shape1D 
-        create
-        ( const std::string& name     , 
-          const std::string& title    , 
-          RooAbsReal&        x        ,
-          FUNCTION           f        , 
-          const std::size_t  tag = 0  ) 
-      { return Shape1D  ( name.c_str () , title.c_str () , x , f , tag ) ; }
+      static inline Shape1D 
+      create
+      ( const std::string& name     , 
+        const std::string& title    , 
+        RooAbsReal&        x        ,
+        FUNCTION           f        , 
+        const std::size_t  tag = 0  ) 
+      { return Shape1D  ( name , title , x , f , tag ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -9761,18 +9769,27 @@ namespace Ostap
       // ======================================================================
       /// templated constructor 
       template <class FUNCTION> 
-      Shape2D ( const char*       name    , 
-                const char*       title   , 
-                RooAbsReal&       x       ,
-                RooAbsReal&       y       ,
-                FUNCTION          f       , 
-                const std::size_t tag = 0 ) 
-        : RooAbsPdf  (  name ,  title ) 
-        , m_x        ( "x"   , "x-variable" , this , x ) 
-        , m_y        ( "y"   , "y-variable" , this , y ) 
+      Shape2D
+      ( const std::string& name    ,  
+        const std::string& title   ,  
+        RooAbsReal&        x       ,
+        RooAbsReal&        y       ,
+        FUNCTION           f       , 
+        const std::size_t  tag = 0 ) 
+        : RooAbsPdf  (  name.c_str()  ,  title.c_str()  ) 
+        , m_x        ( "!x"  , "x-variable" , this , x ) 
+        , m_y        ( "!y"  , "y-variable" , this , y ) 
         , m_function ( f   ) 
         , m_tag      ( tag ) 
       {}
+      /// non-templated constructor
+      Shape2D
+      ( const std::string&                   name    ,  
+        const std::string&                   title   ,  
+        RooAbsReal&                          x       ,
+        RooAbsReal&                          y       ,
+        std::function<double(double,double)> f       , 
+        const std::size_t                    tag = 0 ) ;
       /// copy constructor 
       Shape2D ( const Shape2D& right , const char* name = nullptr ) ;
       /// clone method
@@ -9782,15 +9799,15 @@ namespace Ostap
       // ======================================================================
       /// templated constructor 
       template <class FUNCTION> 
-        static inline Shape2D
-        create
-        ( const std::string& name    ,  
-          const std::string& title   ,  
-          RooAbsReal&        x       ,
-          RooAbsReal&        y       ,
-          FUNCTION           f       ,
-          const std::size_t  tag = 0 ) 
-      { return Shape2D ( name.c_str() , title.c_str () , x , y , f , tag ) ; }
+      static inline Shape2D
+      create
+      ( const std::string& name    ,  
+        const std::string& title   ,  
+        RooAbsReal&        x       ,
+        RooAbsReal&        y       ,
+        FUNCTION           f       ,
+        const std::size_t  tag = 0 ) 
+      { return Shape2D ( name , title , x , y , f , tag ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -9845,20 +9862,30 @@ namespace Ostap
       // ======================================================================
       /// templated constructor 
       template <class FUNCTION> 
-      Shape3D ( const char*       name    , 
-                const char*       title   , 
-                RooAbsReal&       x       ,
-                RooAbsReal&       y       ,
-                RooAbsReal&       z       ,
-                FUNCTION          f       , 
-                const std::size_t tag = 0 )
-        : RooAbsPdf  (  name ,  title ) 
-        , m_x        ( "x"   , "x-variable" , this , x ) 
-        , m_y        ( "y"   , "y-variable" , this , y ) 
-        , m_z        ( "z"   , "z-variable" , this , z ) 
+      Shape3D
+      ( const std::string& name    , 
+        const std::string& title   , 
+        RooAbsReal&        x       ,
+        RooAbsReal&        y       ,
+        RooAbsReal&        z       ,
+        FUNCTION           f       , 
+        const std::size_t tag = 0 )
+        : RooAbsPdf  (  name.c_str()  ,  title.c_str()  ) 
+        , m_x        ( "!x"   , "x-variable" , this , x ) 
+        , m_y        ( "!y"   , "y-variable" , this , y ) 
+        , m_z        ( "!z"   , "z-variable" , this , z ) 
         , m_function ( f ) 
         , m_tag      ( tag ) 
       {}
+      /// no-templated constructor 
+      Shape3D
+      ( const std::string& name    , 
+        const std::string& title   , 
+        RooAbsReal&        x       ,
+        RooAbsReal&        y       ,
+        RooAbsReal&        z       ,
+        std::function<double(double,double,double)> f , 
+        const std::size_t  tag = 0 ) ; 
       /// copy constructor 
       Shape3D ( const Shape3D& right , const char* name = nullptr ) ;
       /// clone method
@@ -9870,15 +9897,14 @@ namespace Ostap
       template <class FUNCTION> 
       static inline Shape3D 
       create
-        ( const std::string& name    , 
-          const std::string& title   , 
-          RooAbsReal&        x       ,
-          RooAbsReal&        y       ,
-          RooAbsReal&        z       ,
-          FUNCTION           f       , 
-          const std::size_t  tag = 0 )
-      { return Shape3D ( name.c_str() , title.c_str() ,
-                         x , y , z , f , tag ) ; }
+      ( const std::string& name    , 
+        const std::string& title   , 
+        RooAbsReal&        x       ,
+        RooAbsReal&        y       ,
+        RooAbsReal&        z       ,
+        FUNCTION           f       , 
+        const std::size_t  tag = 0 )
+      { return Shape3D ( name , title , x , y , z , f , tag ) ; }
       // ======================================================================
     public:
       // ======================================================================

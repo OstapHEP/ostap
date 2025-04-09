@@ -5682,7 +5682,7 @@ class Shape1D_pdf(PDF1) :
             assert (6,18) <= root_info , 'Shape1D_pdf with generic function requires ROOT>=6.18!'
             
             ## create the actual pdf
-            self.pdf = Ostap.Models.Shape1D.create  (
+            self.pdf = Ostap.Models.Shape1D (
                 self.roo_name ( 'shape1_' ) , 
                 "Shape-1D %s" % self.name ,
                 self.xvar                 ,
@@ -5757,7 +5757,7 @@ class Shape2D_pdf(PDF2) :
             
             
             ## create the actual pdf
-            self.pdf = Ostap.Models.Shape2D.create  (
+            self.pdf = Ostap.Models.Shape2D (
                 self.roo_name  ( 'shape2_' ) , 
                 "Shape-2D %s" % self.name    ,
                 self.xvar                    ,
@@ -5832,7 +5832,7 @@ class Shape3D_pdf(PDF3) :
             assert (6,18) <= root_info , 'Shape3D_pdf with generic function requires ROOT>=6.18!'
             
             ## create the actual pdf
-            self.pdf = Ostap.Models.Shape3D.create  (
+            self.pdf = Ostap.Models.Shape3D (
                     self.roo_name ( 'shape3_' ) , 
                     "Shape-3D %s" % self.name   ,
                     self.xvar                   ,
