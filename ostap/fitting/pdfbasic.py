@@ -5634,6 +5634,7 @@ class Constrained3D(PDF3,Constrained) :
 # =============================================================================
 ## generic shapes
 # =============================================================================
+
 # =============================================================================
 ## Generic 1D-shape from C++ callable
 #  @see Ostap::Models:Shape1D
@@ -5679,15 +5680,22 @@ class Shape1D_pdf(PDF1) :
             
         else :
 
-            assert (6,18) <= root_info , 'Shape1D_pdf with generic function requires ROOT>=6.18!'
-            
             ## create the actual pdf
-            self.pdf = Ostap.Models.Shape1D (
-                self.roo_name ( 'shape1_' ) , 
-                "Shape-1D %s" % self.name ,
-                self.xvar                 ,
-                self.shape                ,
-                self.tag                  ) 
+            if ( 6 , 18 ) <= root_info < ( 6 , 24 ) :
+                self.pdf = Ostap.Models.Shape1D. create (
+                    self.roo_name ( 'shape1_' ) , 
+                    "Shape-1D %s" % self.name ,
+                    self.xvar                 ,
+                    self.shape                ,
+                    self.tag                  )
+            else :
+                self.pdf = Ostap.Models.Shape1D (
+                    self.roo_name ( 'shape1_' ) , 
+                    "Shape-1D %s" % self.name ,
+                    self.xvar                 ,
+                    self.shape                ,
+                    self.tag                  )
+                
             
         ## save the configuration
         self.config = {
@@ -5753,18 +5761,24 @@ class Shape2D_pdf(PDF2) :
                 self.shape                  )            
         else :
 
-            assert (6,18) <= root_info , 'Shape1D_pdf with generic function requires ROOT>=6.18!'
-            
-            
             ## create the actual pdf
-            self.pdf = Ostap.Models.Shape2D (
-                self.roo_name  ( 'shape2_' ) , 
-                "Shape-2D %s" % self.name    ,
-                self.xvar                    ,
-                self.yvar                    ,
-                self.shape                   ,
-                self.tag                     )
-            
+            if ( 6 , 18 ) <= root_info < ( 6 , 24 ) :                
+                self.pdf = Ostap.Models.Shape2D.create (
+                    self.roo_name  ( 'shape2_' ) , 
+                    "Shape-2D %s" % self.name    ,
+                    self.xvar                    ,
+                    self.yvar                    ,
+                    self.shape                   ,
+                    self.tag                     )
+            else : 
+                self.pdf = Ostap.Models.Shape2D (
+                    self.roo_name  ( 'shape2_' ) , 
+                    "Shape-2D %s" % self.name    ,
+                    self.xvar                    ,
+                    self.yvar                    ,
+                    self.shape                   ,
+                    self.tag                     )
+                
         ## save the configuration
         self.config = {
             'name'    : self.name    , 
@@ -5829,10 +5843,8 @@ class Shape3D_pdf(PDF3) :
                                               self.shape                  )
         else :
             
-            assert (6,18) <= root_info , 'Shape3D_pdf with generic function requires ROOT>=6.18!'
-            
-            ## create the actual pdf
-            self.pdf = Ostap.Models.Shape3D (
+            if ( 6 , 18 ) <= root_info < ( 6 , 24 ) :                
+                self.pdf = Ostap.Models.Shape3D.create (
                     self.roo_name ( 'shape3_' ) , 
                     "Shape-3D %s" % self.name   ,
                     self.xvar                   ,
@@ -5840,7 +5852,16 @@ class Shape3D_pdf(PDF3) :
                     self.zvar                   ,
                     self.shape                  ,
                     self.tag                    )
-            
+            else : 
+                self.pdf = Ostap.Models.Shape3D (
+                    self.roo_name ( 'shape3_' ) , 
+                    "Shape-3D %s" % self.name   ,
+                    self.xvar                   ,
+                    self.yvar                   ,
+                    self.zvar                   ,
+                    self.shape                  ,
+                    self.tag                    )
+                
         ## save the configuration
         self.config = {
             'name'    : self.name    , 
