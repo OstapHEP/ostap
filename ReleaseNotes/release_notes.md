@@ -1,7 +1,8 @@
-# v1.14.1.-
+# v1.14.1.0
 
     - Several fixes for different compilers
-    
+    - Fixed for ROOT>6.24
+
 # v1.14.0.0
 
     ## New features
