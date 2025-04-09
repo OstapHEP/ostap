@@ -310,13 +310,13 @@ def dbopen ( file               ,
         ## check the preferred database type:
         for db in db_types :
             
-            if   use_berkeleydb and db in ( 'berkeleydb' , 'berkeley' , 'berkeley-db' ) : 
+            if   use_berkeleydb and db in ( 'berkeleydb' , 'berkeley' , 'berkeley-db' , '' ) : 
                 return berkeleydb_open ( file            , flag , mode , **kwargs ) 
             elif use_bsddb3     and 'bsddb3'     == db :
                 return bsddb3_open     ( file            , flag , mode , **kwargs ) 
             elif use_lmdb       and 'lmdb'       == db :
                 return LmdbDict        ( path     = file , flag = flag , **kwargs )
-            elif db             in ( 'sqlite3' , 'sqlite'  , 'sql' ) : 
+            elif db             in ( 'sqlite3' , 'sqlite'  , 'sql' , '' ) : 
                 return SqliteDict      ( filename = file , flag = flag , **kwargs )
 
             if   db_gnu  and db in ( 'dbm.gnu'  , 'gdbm' ) :

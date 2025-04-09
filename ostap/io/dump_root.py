@@ -195,7 +195,7 @@ if '__main__' == __name__ :
         ROOT.RooArgList    () ,
         v1 , v2 , vars , varl , v3 , 
         ROOT.RooDataSet    ( 'ds', '', vars ) ,
-        ROOT.TTreeFormula  () ,
+        ROOT.TTreeFormula  ('f1','1',ROOT.nullptr) ,
         ROOT.TPaletteAxis  () , 
         ROOT.TGaxis        ()
         ]

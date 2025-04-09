@@ -63,7 +63,8 @@ def _om_mean ( obj ) :
     assert 1 <= o , 'mean: the order must be >=1!'
     if root_info < ( 6, 18 ) :
         return obj.mu () 
-    return Ostap.Math.Moments.mean ( obj )  
+    return Ostap.Math.QQ.mean ( obj )
+    ## return Ostap.Math.Moments.mean ( obj )  
 
 # =============================================================================
 ## get a variance for the moment-counter
