@@ -11,7 +11,8 @@
 from   ostap.stats.ustat     import USTAT 
 from   ostap.plotting.canvas import use_canvas
 from   ostap.logger.pretty   import pretty_float
-from   ostap.utils.utils     import vrange, batch_env  
+from   ostap.utils.utils     import vrange, batch_env
+from   ostap.utils.timing    import timing 
 from   ostap.math.math_ve    import significance
 import ostap.fitting.models  as     M 
 import ostap.stats.gof1d     as     G1D 
@@ -30,7 +31,7 @@ xvar  = ROOT.RooRealVar ( 'x', '', 0, 10)
 gauss = M.Gauss_pdf     ( 'G' , xvar = xvar , mean = 5 , sigma = 1 )
 model = M.Fit1D         ( signal = gauss , background = 'flat'     )
 
-ND    = 100 
+ND    = 100
 
 # =============================================================================
 ## data_g: pure gaussian
@@ -62,12 +63,13 @@ def run_PPD ( pdf , data, result , logger ) :
     Ns    = 3 
     logger.info ( 'Run Point-to-Point Dissimilarity GoF-test for %d different values of sigma' % Ns  ) 
     for sigma in vrange ( 0.1 , 1.0 , Ns ) :
-        
-        ppd = GnD.PPD ( nToys = 200 , sigma = sigma )
-        pdf.load_params ( result , silent = True ) 
-        tvalue         = ppd          ( pdf , data )
-        tvalue, pvalue = ppd.pvalue   ( pdf , data )
-        nsigma         = significance ( pvalue ) 
+
+        with timing ( 'PPD-test' , logger = logger ) :             
+            ppd = GnD.PPD ( nToys = 200 , sigma = sigma )
+            pdf.load_params ( result , silent = True ) 
+            tvalue         = ppd          ( pdf , data )
+            tvalue, pvalue = ppd.pvalue   ( pdf , data )
+            nsigma         = significance ( pvalue ) 
         
         tv , texpo = pretty_float ( tvalue )
         pvalue *= 100
@@ -95,13 +97,12 @@ def run_DNN  ( pdf , data, result , logger ) :
     
     rows  =  [ ( 't-value'  , 'x[..]', 'p-value [%]' , '#sigma' ) ]
 
-    dnn = GnD.DNN ( nToys = 200 , histo = 50 )
-    
-    pdf.load_params ( result , silent = True )
-    
-    tvalue         = dnn          ( pdf , data )
-    tvalue, pvalue = dnn.pvalue   ( pdf , data )
-    nsigma         = significance ( pvalue ) 
+    with timing ( 'DNN-test' , logger = logger ) : 
+        dnn = GnD.DNN ( nToys = 200 , histo = 50 )        
+        pdf.load_params ( result , silent = True )        
+        tvalue         = dnn          ( pdf , data )
+        tvalue, pvalue = dnn.pvalue   ( pdf , data )
+        nsigma         = significance ( pvalue ) 
 
     tv , texpo = pretty_float ( tvalue )
     pvalue *= 100
@@ -129,9 +130,10 @@ def run_USTAT  ( pdf , data, result , logger ) :
     
     pdf.load_params ( result , silent = True )
     
-    tvalue         = ustat        ( pdf , data )    
-    tvalue, pvalue = ustat.pvalue ( pdf , data )
-    nsigma         = significance ( pvalue ) 
+    with timing ( 'uStat-test' , logger = logger ) : 
+        tvalue         = ustat        ( pdf , data )    
+        tvalue, pvalue = ustat.pvalue ( pdf , data )
+        nsigma         = significance ( pvalue ) 
 
     tv , texpo = pretty_float ( tvalue )
     pvalue *= 100
@@ -164,7 +166,8 @@ def test_good_fit_1 ( ) :
         logger.info ( 'Goodness-of-fit:\n%s' % gof )
 
         gauss.load_params ( r , silent = True ) 
-        got = G1D.GoF1DToys ( gauss , data_g , 200 )
+        with timing ( 'GoF1D-toys' , logger = logger ) : 
+            got = G1D.GoF1DToys ( gauss , data_g , 200 )
         logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( got.nToys , got ) ) 
 
         del gof
@@ -202,7 +205,8 @@ def test_good_fit_2 ( ) :
         logger.info ( 'Goodness-of-fit:\n%s' % gof )
 
         model.load_params ( r , silent = True ) 
-        got = G1D.GoF1DToys ( model , data_g , 200 )
+        with timing ( 'GoF1D-toys' , logger = logger ) : 
+            got = G1D.GoF1DToys ( model , data_g , 200 )
         logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( got.nToys , got ) ) 
 
     ## Try to use multidimensional methods
@@ -234,7 +238,8 @@ def test_good_fit_3 ( ) :
         logger.info ( 'Goodness-of-fit:\n%s' % gof )
 
         model.load_params ( r , silent = True ) 
-        got = G1D.GoF1DToys ( model , data_b , 200 )
+        with timing ( 'GoF1D-toys' , logger = logger ) : 
+            got = G1D.GoF1DToys ( model , data_b , 200 )
         logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( got.nToys , got ) ) 
 
     ## Try to use multidimensional methods
@@ -268,8 +273,9 @@ def test_bad_fit_1 ( ) :
         gof.draw()
         
         gauss.load_params ( r , silent = True ) 
-        got = G1D.GoF1DToys ( gauss , data_b , 200 )
-        got.run ( 1000 ) 
+        with timing ( 'GoF1D-toys' , logger = logger ) : 
+            got = G1D.GoF1DToys ( gauss , data_b , 200 )
+            got.run ( 1000 ) 
         logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( got.nToys , got ) ) 
        
     with use_canvas ( 'test_bad_fit_1: GoF/Kolmogorov-Smirnov' , wait = 1 ) :

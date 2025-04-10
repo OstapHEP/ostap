@@ -110,12 +110,13 @@ __all__     = (
     'pos_infinity'   , ## positive infinity  
     'neg_infinity'   , ## negative infinity
     ##
-    'numpy'          , ## numpy or None 
+    'numpy'          , ## numpy or None
+    'np2raw'         , ## numnpy array to raw C++ buffer 
     ) 
 # =============================================================================
 from   ostap.core.meta_info    import python_info
 from   collections.abc         import Iterable
-import ROOT, cppyy, sys, math 
+import ROOT, cppyy, sys, math, ctypes  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -898,9 +899,35 @@ except ImportError : # ========================================================
     # =========================================================================
     numpy = None 
 
-# ==============================================================================
-if not '__main__' == __name__ : # ==============================================
-    # ==========================================================================
+# =============================================================================
+if numpy : # ==================================================================
+    # =========================================================================
+    ## Converrt numpy array into raw C++ buffer
+    #  @code
+    #  data = ...
+    #  raw , size = np2raw ( data ) 
+    #  @endcoder 
+    def np2raw ( data ) :
+        """ Converrt numpy array into raw C++ buffer
+        >>> data = ...
+        >>> raw , size = np2raw ( data ) 
+        """
+        assert numpy and isinstance ( data , numpy.ndarray ) , \
+            "np2raw: argument must be `numpy.ndarray`"
+        size   = len ( data ) 
+        dtype  = data.dtype
+        ctype  = numpy.ctypeslib._ctype_from_dtype ( dtype  )
+        buffer = data.ctypes.data_as ( ctypes.POINTER ( ctype ) )
+        # 
+        return buffer , size      
+    # =========================================================================
+else : # ======================================================================
+    # =========================================================================
+    np2raw = None 
+
+# =============================================================================
+if not '__main__' == __name__ : # =============================================
+    # =========================================================================
     from ostap.io.checker import PickleChecker as Checker 
     checker = Checker ()
 

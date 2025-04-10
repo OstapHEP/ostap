@@ -46,7 +46,7 @@ from   ostap.utils.cidict        import cidict, cidict_fun
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.scp_copy      import scp_copy
 from   ostap.utils.utils         import chunked, evt_range, LAST_ENTRY, implicitMT
-from   ostap.math.base           import numpy 
+from   ostap.math.base           import numpy, np2raw  
 from   ostap.logger.symbols      import tree           as tree_symbol
 from   ostap.logger.symbols      import branch         as branch_symbol
 from   ostap.logger.symbols      import leaves         as leaves_symbol
@@ -56,7 +56,7 @@ import ostap.trees.treereduce
 import ostap.trees.param
 import ostap.trees.funcs 
 import ostap.io.root_file 
-import ROOT, os, math, array, sys, ctypes   
+import ROOT, os, math, array, sys   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -2929,7 +2929,7 @@ def add_new_buffer ( tree , name , buffer , **kwargs ) :
     extra_floats = () if not numpy else ( numpy.float16 , )
     extra_ints   = () if not numpy else ( numpy.int8    , )
     
-    if numpy and ctypes and isinstance ( buffer , numpy.ndarray ) and buffer.dtype in numpy_buffer_types :
+    if numpy and np2raw and isinstance ( buffer , numpy.ndarray ) and buffer.dtype in numpy_buffer_types :
         ## numpy array of valid types
 
         keep.append ( buffer )
@@ -2938,17 +2938,17 @@ def add_new_buffer ( tree , name , buffer , **kwargs ) :
         if   buffer.dtype == numpy.float16 :
             buffer = numpy.asarray ( buffer , dtype = numpy.float32 )
             return add_new_buffer ( tree , name , buffer , **kwargs ) 
-        
-        dtype      = buffer.dtype
-        ctype      = numpy.ctypeslib._ctype_from_dtype( dtype  )
-        raw_buffer = buffer.ctypes.data_as ( ctypes.POINTER ( ctype ) )
+
+        buflen = len ( buffer ) 
+        ## convert ndarray into raw C++ buffer 
+        raw_buffer, _ = np2raw ( buffer ) 
 
         if   buffer.dtype in ( numpy.int8  , numpy.byte  ) :
-            the_buffer = Ostap.Trees.schar_buffer ( raw_buffer , len ( buffer ) ) ## SCHAR_MAKE 
+            the_buffer = Ostap.Utils.schar_buffer ( raw_buffer , buflen ) ## SCHAR_MAKE 
         elif buffer.dtype in ( numpy.uint8 , numpy.ubyte ) :
-            the_buffer = Ostap.Trees.uchar_buffer ( raw_buffer , len ( buffer ) ) ## CCHAR_MAKE 
+            the_buffer = Ostap.Utils.uchar_buffer ( raw_buffer , buflen ) ## CCHAR_MAKE 
         else :
-            the_buffer = Ostap.Trees.make_buffer  ( raw_buffer , len ( buffer ) )
+            the_buffer = Ostap.Utils.make_buffer  ( raw_buffer , buflen  )
                         
         keep.append ( raw_buffer ) 
         value      = kwargs.pop ( 'value' , 0 )
@@ -2957,14 +2957,14 @@ def add_new_buffer ( tree , name , buffer , **kwargs ) :
     elif isinstance ( buffer , array.array ) and buffer.typecode in array_buffer_types :
         ## arra.array f valied types
 
-        if   'b' == buffer.typecode : the_buffer = Ostap.Trees.schar_buffer ( buffer , len ( buffer ) )
-        elif 'B' == buffer.typecode : the_buffer = Ostap.Trees.uchar_buffer ( buffer , len ( buffer ) )
-        else                        : the_buffer = Ostap.Trees.make_buffer  ( buffer , len ( buffer ) )
+        if   'b' == buffer.typecode : the_buffer = Ostap.Utils.schar_buffer ( buffer , len ( buffer ) )
+        elif 'B' == buffer.typecode : the_buffer = Ostap.Utils.uchar_buffer ( buffer , len ( buffer ) )
+        else                        : the_buffer = Ostap.Utils.make_buffer  ( buffer , len ( buffer ) )
 
         value      = kwargs.pop ( 'value' , 0  )
         if value : the_buffer.setValue ( value )
 
-    elif numpy and ctypes and isinstance ( buffer ,  ( bytes , bytearray , memoryview ) ) :
+    elif numpy and isinstance ( buffer ,  ( bytes , bytearray , memoryview ) ) :
 
         ## construct numpyarray from raw buffer 
         the_array = numpy.frombuffer ( buffer , dtype = numpy.byte )
@@ -2980,7 +2980,7 @@ def add_new_buffer ( tree , name , buffer , **kwargs ) :
         keep.append ( the_array )                
         return add_new_buffer ( tree , name , the_array , **kwargs )
     
-    elif numpy and ctypes and isinstance ( buffer , sequence_types ) :
+    elif numpy and isinstance ( buffer , sequence_types ) :
         ## seqence convertivel to numpy
 
         ## construct arrat from the sequence 

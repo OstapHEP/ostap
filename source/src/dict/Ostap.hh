@@ -46,6 +46,7 @@
 #include "Ostap/GenericVectorTypes.h"
 #include "Ostap/GeomFun.h"
 #include "Ostap/GetWeight.h"
+#include "Ostap/GoF.h"
 #include "Ostap/Hesse.h"
 #include "Ostap/HFuncs.h"
 #include "Ostap/Hilbert.h"

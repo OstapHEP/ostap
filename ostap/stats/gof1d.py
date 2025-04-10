@@ -31,14 +31,14 @@ from   ostap.core.meta_info     import root_info
 from   ostap.fitting.funbasic   import AFUN1
 from   ostap.fitting.pdfbasic   import PDF1
 from   ostap.core.core          import SE, VE, Ostap
-from   ostap.math.base          import doubles, axis_range, numpy   
+from   ostap.math.base          import doubles, axis_range, numpy, np2raw    
 from   ostap.math.models        import f1_draw
 from   ostap.utils.basic        import numcpu, loop_items  
 from   ostap.stats.gof_utils    import Estimators,Summary
 from   ostap.fitting.fithelpers import ConfigReducer
 import ostap.fitting.ds2numpy 
 import ostap.fitting.roofit
-import ROOT, math  
+import ROOT, math
 # =============================================================================
 # logging 
 # =============================================================================
@@ -50,6 +50,10 @@ logger.debug ( 'Simple utilities for goodness-of-1D-fit studies' )
 # =============================================================================
 if  ( 6 , 32 ) <= root_info : data2vct = lambda s : s
 else                        : data2vct = lambda s : doubles ( s ) 
+# =============================================================================
+## @var NL
+#  use C++ if length od data exceeds NL, otherwise Python is OK 
+NL  = 100 
 # =============================================================================
 ## Get Kolmogorov-Smirnov statistics KS
 #  @code
@@ -64,9 +68,25 @@ def kolmogorov_smirnov ( cdf_data ) :
     >>> cdf_data =...
     >>> ks2  = kolmogorov_smirnov ( cdf_data )
     """
-    n      = len ( cdf_data ) 
-    result = max ( max ( ( i + 1.0 ) / n - Fi , Fi - float ( i ) / n ) for ( i, Fi )  in enumerate ( cdf_data )  ) ** 2  
-    return math.sqrt ( result )
+
+    n = len ( cdf_data )
+    
+    ## Long numpy arrays 
+    if NL < n and numpy and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
+        if cdf_data.dtype in ( numpy.float32 , numpy.float64 ) :
+            raw_buffer , n = np2raw ( cdf_data )
+            the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
+            return Ostap.GoF.kolmogorov_smirnov ( the_buffer )
+
+    ## Long arrays to be cnverted to numpy 
+    if NL < n and numpy : 
+        data = numpy.asarray ( cdf_data , dtype = numpy.float64 ) 
+        return kolmogorov_smirnov ( data ) 
+
+    ## for short arraya python is OK 
+    result = max ( max ( ( i + 1.0 ) / n - Fi , Fi - float ( i ) / n ) for ( i , Fi )  in enumerate ( cdf_data )  ) ## ** 2 
+    return result
+
 # =============================================================================
 ## Get Anderson-Darling  statistiscs AD^2
 #  @code
@@ -81,12 +101,25 @@ def anderson_darling ( cdf_data ) :
     >>> cdf_data =...
     >>> ad2      = anderson_darling ( cdf_data )    
     """
-    n       = len ( cdf_data ) 
+    n       = len ( cdf_data )
+    
+    ## Long numpy arrays 
+    if NL < n and numpy and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
+        if cdf_data.dtype in ( numpy.float32 , numpy.float64 ) :
+            raw_buffer , n = np2raw ( cdf_data )
+            the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
+            return Ostap.GoF.anderson_darling ( the_buffer )
+        
+    ## Long arrays to be cnverted to numpy 
+    if NL < n and numpy : 
+        data = numpy.asarray ( cdf_data , dtype = numpy.float64 ) 
+        return anderson_darling ( data ) 
+
+    ## for short array pure python is OK     
     flog    = math.log
     result  = sum ( ( i + 0.5 ) * flog ( Fi ) + ( n - i -  0.5 ) * flog ( 1 - Fi ) for ( i , Fi )  in enumerate ( cdf_data ) ) 
-    result *= -2.0 / n
-    result -= n
-    return result 
+    ## 
+    return -2.0 * result / n - n 
 # =============================================================================
 ## Get Cramer-von Mises statistics CM^2
 #  @code
@@ -101,10 +134,23 @@ def cramer_von_mises ( cdf_data  ) :
     >>> cdf_data =...
     >>> cm2     = cramer_von_mises ( cdf_data )    
     """
-    n       = len ( cdf_data ) 
+    n       = len ( cdf_data )
+
+    ## Long numpy arrays 
+    if NL < n and numpy and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
+        if cdf_data.dtype in ( numpy.float32 , numpy.float64 ) :
+            raw_buffer , n = np2raw ( cdf_data )
+            the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
+            return Ostap.GoF.cramer_von_mises  ( the_buffer )
+        
+    ## Long arrays to be cnverted to numpy 
+    if NL < n and numpy : 
+        data = numpy.asarray ( cdf_data , dtype = numpy.float64 ) 
+        return cramer_von_mises ( data ) 
+    
+    ## for short array pure python is OK     
     result  = sum ( ( Fi - ( i + 0.5 ) / n ) ** 2 for ( i, Fi ) in enumerate ( cdf_data ) ) 
-    result += 12.0 / n
-    return result#
+    return result + 1 / ( 12.0 * n ) 
 # =============================================================================
 ## Get Kuiper's statistis K
 #  @code
@@ -119,31 +165,24 @@ def kuiper ( cdf_data ) :
     >>> cdf_data =...
     >>> ks2  = kolmogorov_smirnov ( cdf_data )
     """
-    n       = len ( cdf_data ) 
+    n       = len ( cdf_data )
+    
+    ## Long numpy arrays 
+    if NL < n and numpy and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
+        if cdf_data.dtype in ( numpy.float32 , numpy.float64 ) :
+            raw_buffer , n = np2raw ( cdf_data )
+            the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
+            return Ostap.GoF.kuiper  ( the_buffer )
+        
+    ## Long arrays to be cnverted to numpy 
+    if NL < n and numpy : 
+        data = numpy.asarray ( cdf_data , dtype = numpy.float64 ) 
+        return kuiper ( data ) 
+    
+    ## for short array pure python is OK     
     d_plus  = max ( ( i + 1.0 ) / n - Fi for ( i, Fi ) in enumerate ( cdf_data ) )
     d_minus = max ( Fi - ( i + 1.0 ) / n for ( i, Fi ) in enumerate ( cdf_data ) )
-    result  = d_plus + d_minus  
-    return result 
-# =============================================================================
-## Get ZK statististics
-#  @code
-#  cdf_data = ...
-#  zk       = ZK ( cdf_data )
-#  @endcode
-#  @see https://doi.org/10.1111/1467-9868.00337
-#  @param cdf_data sorted array of F0(X_i) - values of CDF at X data points
-#  @return ZK statistics ZK 
-def ZK  ( cdf_data ) :
-    """ Get ZK statististics 
-    - `cdf_data` : sorted array of F0(X_i) - values of CDF at X data points
-    >>> cdf_data =...
-    >>> zk       = ZK ( cdf_data )    
-    """
-    n      = len ( cdf_data ) 
-    flog   = math.log 
-    result = max ( ( i     + 0.5 ) * flog ( ( i + 0.5     ) / ( n *       Fi   ) ) +
-                   ( n - i - 0.5 ) * flog ( ( n - i - 0.5 ) / ( n * ( 1 - Fi ) ) ) for ( i , Fi ) in enumerate ( cdf_data ) )
-    return result 
+    return d_plus + d_minus  
 # =============================================================================
 ## Get ZA statististics
 #  @code
@@ -159,11 +198,56 @@ def ZA  ( cdf_data ) :
     >>> cdf_data =...
     >>> za       = ZA ( cdf_data )    
     """
-    n       = len ( cdf_data ) 
+    n       = len ( cdf_data )
+    
+    ## Long numpy arrays 
+    if NL < n and numpy and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
+        if cdf_data.dtype in ( numpy.float32 , numpy.float64 ) :
+            raw_buffer , n = np2raw ( cdf_data )
+            the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
+            return Ostap.GoF.ZA  ( the_buffer )
+        
+    ## Long arrays to be cnverted to numpy 
+    if NL < n and numpy : 
+        data = numpy.asarray ( cdf_data , dtype = numpy.float64 ) 
+        return ZA ( data ) 
+    
     flog    = math.log
     result  = sum ( flog ( Fi ) / ( n - i - 0.5 ) + flog ( 1 - Fi ) / ( i + 0.5 ) for ( i , Fi )  in enumerate ( cdf_data ) )
-    result *= -1 
-    return result    
+    return -1 * result    
+# =============================================================================
+## Get ZK statististics
+#  @code
+#  cdf_data = ...
+#  zk       = ZK ( cdf_data )
+#  @endcode
+#  @see https://doi.org/10.1111/1467-9868.00337
+#  @param cdf_data sorted array of F0(X_i) - values of CDF at X data points
+#  @return ZK statistics ZK 
+def ZK  ( cdf_data ) :
+    """ Get ZK statististics 
+    - `cdf_data` : sorted array of F0(X_i) - values of CDF at X data points
+    >>> cdf_data =...
+    >>> zk       = ZK ( cdf_data )    
+    """
+    n      = len ( cdf_data )
+
+    ## Long numpy arrays 
+    if NL < n and numpy and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
+        if cdf_data.dtype in ( numpy.float32 , numpy.float64 ) :
+            raw_buffer , n = np2raw ( cdf_data )
+            the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
+            return Ostap.GoF.ZK  ( the_buffer )
+        
+    ## Long arrays to be cnverted to numpy 
+    if NL < n and numpy : 
+        data = numpy.asarray ( cdf_data , dtype = numpy.float64 ) 
+        return ZK ( data ) 
+    
+    flog   = math.log 
+    result = max ( ( i     + 0.5 ) * flog ( ( i + 0.5     ) / ( n *       Fi   ) ) +
+                   ( n - i - 0.5 ) * flog ( ( n - i - 0.5 ) / ( n * ( 1 - Fi ) ) ) for ( i , Fi ) in enumerate ( cdf_data ) )
+    return result 
 # =============================================================================
 ## Get ZC statististics
 #  @code
@@ -179,7 +263,20 @@ def ZC  ( cdf_data ) :
     >>> cdf_data =...
     >>> zc       = ZC ( cdf_data )    
     """
-    n      = len ( cdf_data ) 
+    n      = len ( cdf_data )
+    
+    ## Long numpy arrays 
+    if NL < n and numpy and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
+        if cdf_data.dtype in ( numpy.float32 , numpy.float64 ) :
+            raw_buffer , n = np2raw ( cdf_data )
+            the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
+            return Ostap.GoF.ZC  ( the_buffer )
+        
+    ## Long arrays to be cnverted to numpy 
+    if NL < n and numpy : 
+        data = numpy.asarray ( cdf_data , dtype = numpy.float64 ) 
+        return ZC ( data ) 
+    
     flog   = math.log
     result = sum ( ( flog ( ( 1.0 / Fi - 1 ) / ( ( n - 0.5 ) / ( i + 0.25 ) - 1 ) ) ) ** 2 for ( i , Fi ) in enumerate ( cdf_data ) )
     return result 
@@ -457,11 +554,8 @@ class GoF1DToys(GoF1D,Summary) :
             dset     = self.__pdf.generate ( self.N  , sample = True )
             data     = dset.tonumpy ( varname ) [ varname ] 
             data     = numpy.sort ( data )
-
             
             cdf_data = self.clip ( vct_cdf ( data ) ) 
-
-
             
             ks       = kolmogorov_smirnov ( cdf_data )
             k        = kuiper             ( cdf_data )

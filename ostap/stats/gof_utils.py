@@ -374,10 +374,10 @@ Labels = {
     'KS' : 'Kolmogorov-Smirnov' ,
     'K'  : 'Kuiper'             ,
     'AD' : 'Anderson-Darling'   ,
-    'CM' : 'Cramers-von Mises'  ,
-    'ZK' : 'Zhang-ZK'           ,
-    'ZA' : 'Zhang-ZA'           ,
-    'ZC' : 'Zhang-ZC'           ,        
+    'CM' : 'Cramer-von Mises'   ,
+    'ZK' : 'Zhang/ZK'           ,
+    'ZA' : 'Zhang/ZA'           ,
+    'ZC' : 'Zhang/ZC'           ,        
 }
 # ============================================================================
 ## @class Estimators
@@ -468,15 +468,16 @@ class Summary(object) :
         if expo : scale = 10**expo
         else    : scale = 1
         fmt2 = '%s/%s' % ( fmtv , fmtv ) 
-        
+
+        from ostap.logger.symbols import plus_minus as pm 
         return ( what  ,
                  fmtv  %  ( value / scale )                      ,
                  ( mean / scale ).toString ( fmt )               ,
                  fmtv  %  ( rms  / scale )                       ,
                  fmt2  %  ( vmin / scale , vmax / scale )        ,
                  ( '10^%+d' % expo  if expo else '' )            ,                  
-                 ( 100 * pvalue ) .toString ( '%.3f +/- %-.3f' ) , 
-                 ( nsigma       ) .toString ( '%.2f +/- %-.2f' ) )
+                 ( 100 * pvalue ) .toString ( '%%.2f %s %%-.2f' % pm ) , 
+                 ( nsigma       ) .toString ( '%%.2f %s %%-.2f' % pm ) )
     
     # =========================================================================
     ## Make a summary table
@@ -528,15 +529,15 @@ class Summary(object) :
         elif key in self.ZK_keys  and 'ZK' in self.ecdfs : 
             result = self.result  ( 'ZK' )
             ecdf   = self.ecdfs   [ 'ZK' ]
-            logger.info ( 'Toy resuls for Zhang ZK estimate' ) 
+            logger.info ( 'Toy resuls for Zhang/ZK estimate' ) 
         elif key in self.ZA_keys  and 'ZA' in self.ecdfs :  
             result = self.result  ( 'ZA' )
             ecdf   = self.ecdfs   [ 'ZA' ]
-            logger.info ( 'Toy resuls for Zhang ZA estimate' ) 
+            logger.info ( 'Toy resuls for Zhang/ZA estimate' ) 
         elif key in self.ZC_keys and 'ZC' in self.ecdfs : 
             result = self.result  ( 'ZC' )
             ecdf   = self.ecdfs   [ 'ZC' ]
-            logger.info ( 'Toy resuls for Zhang ZC estimate' ) 
+            logger.info ( 'Toy resuls for Zhang/ZC estimate' ) 
         else :
             raise KeyError (  "draw: Invalid `what`:%s" % what )
             
