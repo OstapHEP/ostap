@@ -1483,12 +1483,32 @@ Double_t Ostap::Models::Voigt::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                  ,
+                  "Invaild Integration code" ,
+                  "Ostap::Models::Voigt"     ,
+                  INVALID_INTEGRATION_CODE   , __FILE__ , __LINE__  ) ;
   //
   setPars() ;
-  return m_voigt.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+  return m_voigt.integral ( m_x.min ( rangeName) , m_x.max ( rangeName ) ) ;
 }
+// // ===========================================================================
+// Int_t  Ostap::Models::Voigt:getMaxVal ( RooArgSet& vars ) const 
+// {
+//   RooArgSet dummy{};
+//   if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+//   return 0 ;
+// }
+// // ============================================================================
+// double Ostap::Models::Voigt::maxVal  ( Int_t      code ) const
+// {
+//   Ostap::Assert ( 1 == code               ,
+//                   "Invaild MaxVal code"   ,
+//                   "Ostap::Models::Voigt"  ,
+//                   INVALID_MAXVAL_CODE     , __FILE__ , __LINE__  ) ;
+//   setPars() ;
+//   return 1.01 * m_voigt ( m_m0 ) ;
+// }
+// // ============================================================================
 
 
 

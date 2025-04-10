@@ -304,26 +304,29 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the Breit-Wigner
-      BWI ( const char*                         name      , 
-            const char*                         title     ,
-            const Ostap::Models::BreitWigner&   bw        ,
-            RooAbsReal&                         magnitude ,  
-            RooAbsReal&                         phase     ,
-            RooAbsReal&                         scale1    ,
-            RooAbsReal&                         scale2    ) ;
+      BWI
+      ( const char*                         name      , 
+        const char*                         title     ,
+        const Ostap::Models::BreitWigner&   bw        ,
+        RooAbsReal&                         magnitude ,  
+        RooAbsReal&                         phase     ,
+        RooAbsReal&                         scale1    ,
+        RooAbsReal&                         scale2    ) ;
       /// constructor from the Breit-Wigner
-      BWI ( const char*                         name      , 
-            const char*                         title     , 
-            const Ostap::Models::BreitWigner&   bw        ,
-            RooAbsReal&                         magnitude ,  
-            RooAbsReal&                         phase     ,
-            RooAbsReal&                         scale1    ) ;
+      BWI
+      ( const char*                         name      , 
+        const char*                         title     , 
+        const Ostap::Models::BreitWigner&   bw        ,
+        RooAbsReal&                         magnitude ,  
+        RooAbsReal&                         phase     ,
+        RooAbsReal&                         scale1    ) ;
       /// constructor from the Breit-Wigner
-      BWI ( const char*                         name      , 
-            const char*                         title     , 
-            const Ostap::Models::BreitWigner&   bw        ,
-            RooAbsReal&                         magnitude ,  
-            RooAbsReal&                         phase     ) ;
+      BWI
+      ( const char*                         name      , 
+        const char*                         title     , 
+        const Ostap::Models::BreitWigner&   bw        ,
+        RooAbsReal&                         magnitude ,  
+        RooAbsReal&                         phase     ) ;
       /// "copy" constructor
       BWI ( const BWI& , const char* name = 0 ) ;
       /// virtual destructor
@@ -765,6 +768,11 @@ namespace Ostap
       Double_t analyticalIntegral
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      // Int_t  getMaxVal ( RooArgSet& vars ) const override ;
+      // double maxVal    ( Int_t      code ) const override ;
       // ======================================================================
     public:
       // ======================================================================
