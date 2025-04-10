@@ -1484,32 +1484,31 @@ Double_t Ostap::Models::Voigt::analyticalIntegral
   const char* rangeName ) const 
 {
   Ostap::Assert ( 1 == code                  ,
-                  "Invaild Integration code" ,
+                  "Invalid Integration code" ,
                   "Ostap::Models::Voigt"     ,
                   INVALID_INTEGRATION_CODE   , __FILE__ , __LINE__  ) ;
   //
   setPars() ;
   return m_voigt.integral ( m_x.min ( rangeName) , m_x.max ( rangeName ) ) ;
 }
-// // ===========================================================================
-// Int_t  Ostap::Models::Voigt:getMaxVal ( RooArgSet& vars ) const 
-// {
-//   RooArgSet dummy{};
-//   if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
-//   return 0 ;
-// }
-// // ============================================================================
-// double Ostap::Models::Voigt::maxVal  ( Int_t      code ) const
-// {
-//   Ostap::Assert ( 1 == code               ,
-//                   "Invaild MaxVal code"   ,
-//                   "Ostap::Models::Voigt"  ,
-//                   INVALID_MAXVAL_CODE     , __FILE__ , __LINE__  ) ;
-//   setPars() ;
-//   return 1.01 * m_voigt ( m_m0 ) ;
-// }
-// // ============================================================================
-
+// ===========================================================================
+Int_t  Ostap::Models::Voigt::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::Voigt::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code               ,
+                  "Invalid MaxVal code"   ,
+                  "Ostap::Models::Voigt"  ,
+                  INVALID_MAXVAL_CODE     , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_voigt ( m_m0 ) ;
+}
+// ============================================================================
 
 
 
@@ -1598,13 +1597,33 @@ Double_t Ostap::Models::PseudoVoigt::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                    ,
+                  "Invalid Integration code"   ,
+                  "Ostap::Models::PseudoVoigt" ,
+                  INVALID_INTEGRATION_CODE     , __FILE__ , __LINE__  ) ;
   //
   setPars() ;
   return m_voigt.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::PseudoVoigt::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::PseudoVoigt::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                     ,
+                  "Invalid MaxVal code"         ,
+                  "Ostap::Models::PseudoVoigt"  ,
+                  INVALID_MAXVAL_CODE           , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_voigt ( m_m0 ) ;
+}
+// ============================================================================
+
 
 
 
@@ -1695,11 +1714,30 @@ Double_t Ostap::Models::CrystalBall::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                    ,
+                  "Invalid Integration code"   ,
+                  "Ostap::Models::CrystalBall" ,
+                  INVALID_INTEGRATION_CODE     , __FILE__ , __LINE__  ) ;
   //
   setPars ();
   return m_cb.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+Int_t  Ostap::Models::CrystalBall::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::CrystalBall::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                     ,
+                  "Invalid MaxVal code"         ,
+                  "Ostap::Models::CrystalBall"  ,
+                  INVALID_MAXVAL_CODE           , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_cb ( m_m0 ) ;
 }
 // ============================================================================
 
@@ -1794,13 +1832,38 @@ Double_t Ostap::Models::CrystalBallRS::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                      ,
+                  "Invalid Integration code"     ,
+                  "Ostap::Models::CrystalBallRS" ,
+                  INVALID_INTEGRATION_CODE       , __FILE__ , __LINE__  ) ;
   //
-  setPars () ;
+  setPars ();
   return m_cb.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::CrystalBallRS::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::CrystalBallRS::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::CrystalBallRS"  ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_cb ( m_m0 ) ;
+}
+// ============================================================================
+
+
+
+
+
+
 
 
 // ============================================================================
@@ -1880,9 +1943,7 @@ void Ostap::Models::CrystalBallDS::setPars () const
 // ============================================================================
 Double_t Ostap::Models::CrystalBallDS::evaluate() const 
 {
-  //
   setPars () ;
-  //
   return m_cb2     ( m_x      ) ;
 }
 // ============================================================================
@@ -1899,11 +1960,30 @@ Double_t Ostap::Models::CrystalBallDS::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                      ,
+                  "Invalid Integration code"     ,
+                  "Ostap::Models::CrystalBallDS" ,
+                  INVALID_INTEGRATION_CODE       , __FILE__ , __LINE__  ) ;
   //
-  setPars() ;
+  setPars ();
   return m_cb2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+Int_t  Ostap::Models::CrystalBallDS::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::CrystalBallDS::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::CrystalBallDS"  ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_cb2 ( m_m0 ) ;
 }
 // ============================================================================
 
@@ -2009,11 +2089,30 @@ Double_t Ostap::Models::Needham::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                      ,
+                  "Invalid Integration code"     ,
+                  "Ostap::Models::Neeedham"      ,
+                  INVALID_INTEGRATION_CODE       , __FILE__ , __LINE__  ) ;
   //
-  setPars () ;
+  setPars ();
   return m_needham.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+Int_t  Ostap::Models::Needham::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::Needham::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::Needham"  ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_needham ( m_m0 ) ;
 }
 // ============================================================================
 // get current alpha 
@@ -2126,13 +2225,35 @@ Double_t Ostap::Models::Apollonios::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                      ,
+                  "Invalid Integration code"     ,
+                  "Ostap::Models::Apollonios"    ,
+                  INVALID_INTEGRATION_CODE       , __FILE__ , __LINE__  ) ;
   //
-  setPars () ;
+  setPars ();
   return m_apo.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::Apollonios::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::Apollonios::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::Apollonios"     ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_apo ( m_m0 ) ;
+}
+// ============================================================================
+
+
+
 
 
 // ============================================================================
@@ -2222,13 +2343,34 @@ Double_t Ostap::Models::Apollonios2::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                      ,
+                  "Invalid Integration code"     ,
+                  "Ostap::Models::Apollonios2"   ,
+                  INVALID_INTEGRATION_CODE       , __FILE__ , __LINE__  ) ;
   //
-  setPars () ;
+  setPars ();
   return m_apo2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::Apollonios2::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::Apollonios2::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::Apollonios2"    ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_apo2 ( m_m0 ) ;
+}
+// ============================================================================
+
+
 
 
 
@@ -2315,13 +2457,36 @@ Double_t Ostap::Models::BifurcatedGauss::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid Integration code"        ,
+                  "Ostap::Models::BifurcatedGauss"  ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
-  setPars () ;
+  setPars ();
   return m_bg.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::BifurcatedGauss::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::BifurcatedGauss::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                        ,
+                  "Invalid MaxVal code"            ,
+                  "Ostap::Models::BifurcatedGauss" ,
+                  INVALID_MAXVAL_CODE              , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_bg ( m_peak ) ;
+}
+// ============================================================================
+
+
+
+
 
 
 // ============================================================================
@@ -2409,13 +2574,33 @@ Double_t Ostap::Models::GenGaussV1::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid Integration code"        ,
+                  "Ostap::Models:GenGaussV1"        ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
-  setPars() ;
+  setPars ();
   return m_ggv1.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::GenGaussV1::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::GenGaussV1::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::GenGaussV1"     ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_ggv1 ( m_mu ) ;
+}
+// ============================================================================
+
 
 
 // ============================================================================
@@ -2503,13 +2688,48 @@ Double_t Ostap::Models::GenGaussV2::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid Integration code"        ,
+                  "Ostap::Models:GenGaussV2"        ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
-  setPars () ;
+  setPars ();
   return m_ggv2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::GenGaussV2::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::GenGaussV2::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::GenGaussV2"     ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  //
+  const double sigma  = m_ggv2.sigma  () ;
+  const double mean   = m_ggv2.mean   () ;
+  const double median = m_ggv2.median () ;
+  //
+  const double m0 = std::max ( m_ggv2 ( mean                 ) , m_ggv2 ( median               ) ) ;
+  const double m1 = std::max ( m_ggv2 ( mean   +       sigma ) , m_ggv2 ( mean   -       sigma ) ) ;
+  const double m2 = std::max ( m_ggv2 ( mean   + 0.5 * sigma ) , m_ggv2 ( mean   - 0.5 * sigma ) ) ;
+  const double m3 = std::max ( m_ggv2 ( median +       sigma ) , m_ggv2 ( median -       sigma ) ) ;
+  const double m4 = std::max ( m_ggv2 ( median + 0.5 * sigma ) , m_ggv2 ( median - 0.5 * sigma ) ) ;
+  //
+  const double m5 = std::max ( m1 , m2 ) ;
+  const double m6 = std::max ( m3 , m5 ) ;
+  //
+  return 1.5 * std::max ( m0 , std::max ( m5 , m6 ) ) ;  
+}
+// ============================================================================
+
+
 
 
 // ============================================================================
@@ -2597,13 +2817,43 @@ Double_t Ostap::Models::SkewGauss::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid Integration code"        ,
+                  "Ostap::Models:SkewGauss"         ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
-  setPars () ;
+  setPars ();
   return m_sg.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::SkewGauss::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::SkewGauss::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::SkewGauss"      ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  //
+  const double sigma  = m_sg.sigma  () ;
+  const double mean   = m_sg.peak   () ;
+  //
+  const double m1 = std::max ( m_sg ( mean   +       sigma ) , m_sg ( mean   -       sigma ) ) ;
+  const double m2 = std::max ( m_sg ( mean   + 0.5 * sigma ) , m_sg ( mean   - 0.5 * sigma ) ) ;
+  //
+  return 1.5 * std::max ( m_sg ( mean ) , std::max ( m1 , m2 ) ) ;  
+}
+// ============================================================================
+
+
+
+
 
 
 // ============================================================================
@@ -2685,13 +2935,34 @@ Double_t Ostap::Models::ExGauss::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid Integration code"        ,
+                  "Ostap::Models:ExGauss"           ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
-  setPars () ;
+  setPars ();
   return m_eg.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::ExGauss::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::ExGauss::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::ExGauss"        ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.05 * m_eg ( m_eg.mode() ) ;
+}
+// ============================================================================
+
+
 
 
 // ============================================================================
@@ -2773,11 +3044,30 @@ Double_t Ostap::Models::ExGauss2::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid Integration code"        ,
+                  "Ostap::Models:ExGauss2"          ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
-  setPars () ;
+  setPars ();
   return m_eg.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+Int_t  Ostap::Models::ExGauss2::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::ExGauss2::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::ExGauss2"       ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.05 * m_eg ( m_eg.mode() ) ;
 }
 // ============================================================================
 
@@ -2876,13 +3166,34 @@ Double_t Ostap::Models::Bukin2::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid Integration code"        ,
+                  "Ostap::Models:Bukin2"            ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
-  setPars () ;
+  setPars ();
   return m_b2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::Bukin2::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::Bukin2::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::Bukin2"         ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.05 * m_b2 ( m_b2.mode() ) ;
+}
+// ============================================================================
+
+
 
 
 

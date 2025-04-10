@@ -678,7 +678,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /* @class ExGauss2 
-     * Raparameterization of Exponentiallymodified Gaussian distribution
+     * Reparameterization of Exponentiallymodified Gaussian distribution
      * using the mode as parameters
      * @see Ostap::Math::ExGauss 
      */

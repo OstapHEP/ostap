@@ -771,8 +771,8 @@ namespace Ostap
       // ======================================================================
     public: // max-values (for generation)
       // ======================================================================
-      // Int_t  getMaxVal ( RooArgSet& vars ) const override ;
-      // double maxVal    ( Int_t      code ) const override ;
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -854,6 +854,11 @@ namespace Ostap
       Double_t analyticalIntegral
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -970,7 +975,6 @@ namespace Ostap
 //     };
 //     // ========================================================================
 
-
     // ========================================================================
     // Resolution models
     // ========================================================================
@@ -1025,6 +1029,11 @@ namespace Ostap
       Double_t analyticalIntegral
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1109,6 +1118,11 @@ namespace Ostap
       Double_t analyticalIntegral
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1195,6 +1209,11 @@ namespace Ostap
       Double_t analyticalIntegral
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1286,6 +1305,11 @@ namespace Ostap
       Double_t analyticalIntegral
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1383,6 +1407,11 @@ namespace Ostap
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
       // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ======================================================================
     public:
       // ======================================================================
       /// set all parameters
@@ -1472,6 +1501,11 @@ namespace Ostap
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
       // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ======================================================================
     public:
       // ======================================================================
       /// set all parameters
@@ -1554,6 +1588,11 @@ namespace Ostap
       Double_t analyticalIntegral
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1638,6 +1677,11 @@ namespace Ostap
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
       // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ======================================================================
     public:
       // ======================================================================
       /// set all parameters
@@ -1720,6 +1764,11 @@ namespace Ostap
       Double_t analyticalIntegral
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1804,6 +1853,11 @@ namespace Ostap
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
       // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ======================================================================
     public:
       // ======================================================================
       /// set all parameters
@@ -1839,7 +1893,7 @@ namespace Ostap
      *  Exponentially modified Gaussian function, EMG
      *  @see https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
      *  @see Ostap::Math::ExGauss 
-     *  It is a distibutiin for the varibale that is a 
+     *  It is a distibution for the varibale that is a 
      *  sum (or difference for negative \f$ k\f$) 
      *  of a Gaussian and exponential variables: \f$ X \sim Y + sign(k) Z \f$,  
      *  where 
@@ -1905,6 +1959,11 @@ namespace Ostap
       Double_t analyticalIntegral
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1990,6 +2049,11 @@ namespace Ostap
       Double_t analyticalIntegral
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2077,6 +2141,11 @@ namespace Ostap
       Double_t analyticalIntegral
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
       // ======================================================================
     public:
       // ======================================================================
