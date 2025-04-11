@@ -2697,40 +2697,6 @@ Double_t Ostap::Models::GenGaussV2::analyticalIntegral
   return m_ggv2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-Int_t  Ostap::Models::GenGaussV2::getMaxVal ( const RooArgSet& vars ) const 
-{
-  RooArgSet dummy{};
-  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
-  return 0 ;
-}
-// ============================================================================
-double Ostap::Models::GenGaussV2::maxVal  ( Int_t      code ) const
-{
-  Ostap::Assert ( 1 == code                       ,
-                  "Invalid MaxVal code"           ,
-                  "Ostap::Models::GenGaussV2"     ,
-                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
-  setPars() ;
-  //
-  const double sigma  = m_ggv2.sigma  () ;
-  const double mean   = m_ggv2.mean   () ;
-  const double median = m_ggv2.median () ;
-  //
-  const double m0 = std::max ( m_ggv2 ( mean                 ) , m_ggv2 ( median               ) ) ;
-  const double m1 = std::max ( m_ggv2 ( mean   +       sigma ) , m_ggv2 ( mean   -       sigma ) ) ;
-  const double m2 = std::max ( m_ggv2 ( mean   + 0.5 * sigma ) , m_ggv2 ( mean   - 0.5 * sigma ) ) ;
-  const double m3 = std::max ( m_ggv2 ( median +       sigma ) , m_ggv2 ( median -       sigma ) ) ;
-  const double m4 = std::max ( m_ggv2 ( median + 0.5 * sigma ) , m_ggv2 ( median - 0.5 * sigma ) ) ;
-  //
-  const double m5 = std::max ( m1 , m2 ) ;
-  const double m6 = std::max ( m3 , m5 ) ;
-  //
-  return 1.5 * std::max ( m0 , std::max ( m5 , m6 ) ) ;  
-}
-// ============================================================================
-
-
-
 
 // ============================================================================
 //         SkewGauss
@@ -2826,33 +2792,6 @@ Double_t Ostap::Models::SkewGauss::analyticalIntegral
   return m_sg.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-Int_t  Ostap::Models::SkewGauss::getMaxVal ( const RooArgSet& vars ) const 
-{
-  RooArgSet dummy{};
-  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
-  return 0 ;
-}
-// ============================================================================
-double Ostap::Models::SkewGauss::maxVal  ( Int_t      code ) const
-{
-  Ostap::Assert ( 1 == code                       ,
-                  "Invalid MaxVal code"           ,
-                  "Ostap::Models::SkewGauss"      ,
-                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
-  setPars() ;
-  //
-  const double sigma  = m_sg.sigma  () ;
-  const double mean   = m_sg.peak   () ;
-  //
-  const double m1 = std::max ( m_sg ( mean   +       sigma ) , m_sg ( mean   -       sigma ) ) ;
-  const double m2 = std::max ( m_sg ( mean   + 0.5 * sigma ) , m_sg ( mean   - 0.5 * sigma ) ) ;
-  //
-  return 1.5 * std::max ( m_sg ( mean ) , std::max ( m1 , m2 ) ) ;  
-}
-// ============================================================================
-
-
-
 
 
 
@@ -3383,13 +3322,35 @@ Double_t Ostap::Models::Bukin::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid Integration code"        ,
+                  "Ostap::Models:Bukin"             ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
-  setPars() ;
+  setPars ();
   return m_bukin.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::Bukin::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::Bukin::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::Bukin"          ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.10 * m_bukin ( m_bukin.peak() ) ;
+}
+// ============================================================================
+
+
+
 
 
 
@@ -3564,13 +3525,35 @@ Double_t Ostap::Models::StudentT::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid Integration code"        ,
+                  "Ostap::Models:StudentT"          ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
-  setPars () ;
+  setPars ();
   return m_stt.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::StudentT::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::StudentT::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::StudentT"       ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.05 * m_stt ( m_stt.m0() ) ;
+}
+// ============================================================================
+
+
+
 
 
 // ============================================================================
@@ -3662,13 +3645,33 @@ Double_t Ostap::Models::BifurcatedStudentT::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid Integration code"        ,
+                  "Ostap::Models:BifurcatedStudentT"          ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
-  setPars () ;
+  setPars ();
   return m_stt.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::BifurcatedStudentT::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::BifurcatedStudentT::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::BifurcatedStudentT"       ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.05 * m_stt ( m_stt.m0() ) ;
+}
+// ============================================================================
+
 
 
 
@@ -3759,13 +3762,35 @@ Double_t Ostap::Models::PearsonIV::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid Integration code"        ,
+                  "Ostap::Models:PearsonIV"          ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
-  setPars () ;
+  setPars ();
   return m_p4.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::PearsonIV::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::PearsonIV::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::PearsonIV"      ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.05 * m_p4 ( m_p4.mode() ) ;
+}
+// ============================================================================
+
+
+
 
 
 // ============================================================================

@@ -1765,11 +1765,6 @@ namespace Ostap
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
       // ======================================================================
-    public: // max-values (for generation)
-      // ======================================================================
-      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
-      double maxVal    ( Int_t            code ) const override ;
-      // ======================================================================
     public:
       // ======================================================================
       /// set all parameters
@@ -1852,11 +1847,6 @@ namespace Ostap
       Double_t analyticalIntegral
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
-      // ======================================================================
-    public: // max-values (for generation)
-      // ======================================================================
-      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
-      double maxVal    ( Int_t            code ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2437,6 +2427,11 @@ namespace Ostap
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
       // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ======================================================================
     public:
       // ======================================================================
       /// set all parameters
@@ -2530,6 +2525,11 @@ namespace Ostap
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
       // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ======================================================================
     public:
       // ======================================================================
       /// set all parameters
@@ -2576,17 +2576,19 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      BifurcatedStudentT ( const char*          name      ,
-                           const char*          title     ,
-                           RooAbsReal&          x         ,
-                           RooAbsReal&          mu        ,
-                           RooAbsReal&          sigmaL    ,
-                           RooAbsReal&          sigmaR    ,
-                           RooAbsReal&          nL        ,
-                           RooAbsReal&          nR        ) ;
+      BifurcatedStudentT
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mu        ,
+        RooAbsReal&          sigmaL    ,
+        RooAbsReal&          sigmaR    ,
+        RooAbsReal&          nL        ,
+        RooAbsReal&          nR        ) ;
       /// "copy constructor"
-      BifurcatedStudentT ( const BifurcatedStudentT& right     ,
-                           const char*               name  = 0 )  ;
+      BifurcatedStudentT
+      ( const BifurcatedStudentT& right     ,
+        const char*               name  = 0 )  ;
       /// destructor
       virtual ~BifurcatedStudentT() ;
       /// clone
@@ -2612,7 +2614,12 @@ namespace Ostap
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
       // ======================================================================
-    public:
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ====================================================================== 
+   public:
       // ======================================================================
       /// set all parameters
       void setPars () const ; // set all parameters
@@ -2706,6 +2713,11 @@ namespace Ostap
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
       // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ====================================================================== 
     public:
       // ======================================================================
       /// set all parameters
