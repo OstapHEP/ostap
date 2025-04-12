@@ -25,7 +25,8 @@
  - `Ostap::Math::Moments` : turn the class with static functions onito namescpace  
  - add non-templated constructor to `Ostap::Models::Shape`d/2D/3D`
  - improve matrix tables
-          
+ = add more operations to `ROOT.TCut` objects
+    
 ## New features
     
    1. further improvemets for the wrapped columns in the tables
