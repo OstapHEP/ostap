@@ -1461,10 +1461,10 @@ class Trainer(object):
 
         ## ROC curves 
         if ( self.make_plots or self.verbose ) :
-            import ostap.plotting.canvas
-            from ostap.plotting.style import useStyle 
-            from ostap.utils.utils    import batch , keepCanvas
-            with batch ( ROOT.ROOT.GetROOT().IsBatch() or not self.show_plots ) , useStyle() , keepCanvas() : 
+            import ostap.plotting.canvas 
+            from   ostap.plotting.style import useStyle 
+            from   ostap.utils.utils    import batch 
+            with batch ( ROOT.ROOT.GetROOT().IsBatch() or not self.show_plots ) , useStyle() : 
                 cnv = factory.GetROCCurve ( self.name )
                 if cnv :
                     cnv.Draw()
@@ -1507,6 +1507,7 @@ class Trainer(object):
             except :
                 pass
 
+        
 
         del dataloader
         del factory 
@@ -1640,7 +1641,7 @@ class Trainer(object):
 
         ## change to some temporary directory
         
-        from ostap.utils.utils    import batch, keepCanvas
+        from ostap.utils.utils    import batch
         from ostap.plotting.style import useStyle 
         with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) : 
             for fun, args, kwargs in plots :
@@ -1722,7 +1723,7 @@ def make_Plots ( name , output , show_plots = True ) :
     ## make the plots in TMVA  style
     #
     logger.info ('make_Plots: Making the standard TMVA plots') 
-    from ostap.utils.utils import batch , cmd_exists, keepCanvas
+    from ostap.utils.utils import batch , cmd_exists
 
     plots = [
         ##
@@ -1775,7 +1776,7 @@ def make_Plots ( name , output , show_plots = True ) :
         
         for fun, args  in plots :
             
-            with batch ( ROOT.ROOT.GetROOT().IsBatch () or not show_plots ) , keepCanvas() , rootWarning ()  :            
+            with batch ( ROOT.ROOT.GetROOT().IsBatch () or not show_plots ) , rootWarning ()  :            
                 logger.info ( 'make_Plots: Execute macro ROOT.TMVA.%s%s' % ( fun.__name__ , str ( args ) ) )
                 fun ( *args )
 

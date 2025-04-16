@@ -165,8 +165,8 @@ def _rca_print_ ( self ) :
     elif 'GlobalObservablesTag' == name : return "GlobalObservablesTag('%s')"  % self.getString ( 0 )
     elif 'Constrained'          == name : return "Constrained()"
     elif 'ExternalConstraints'  == name : return "ExternalConstraints({.})"
-    elif 'PrintEvalErrors'      == name : return 'PrintEvalErrors(%d)' %  self.getInt  ( 0 ) 
-    elif 'EvalErrorWall'        == name : return 'EvalErrorWall(%s)'   %  self.getBool (   ) 
+    elif 'PrintEvalErrors'      == name : return 'PrintEvalErrors(%d)' %   self.getInt  ( 0 ) 
+    elif 'EvalErrorWall'        == name : return 'EvalErrorWall(%s)'   %   self.getBool (   ) 
     elif 'SumW2Error'           == name : return 'SumW2Error(%s)'      %   self.getBool () 
     elif 'CloneData'            == name : return 'CloneData(%s)'       %   self.getBool () 
     elif 'Integrate'            == name : return 'Integrate(%s)'       %   self.getBool () 
@@ -177,6 +177,7 @@ def _rca_print_ ( self ) :
     elif 'AsymptoticError'      == name : return 'AsymptoticError(%s)'  %   self.getBool () 
 
     elif 'IntegrateBins'        == name : return 'IntegrateBins(%.16g)' %   self.getDouble ( 0 ) 
+    elif 'MaxCalls'             == name : return 'MaxCalls(%s)'         %   self.getInt    ( 0 ) 
     
     ## RooAbsPdf::paramOn arguments
     if   'Label'                == name : return "Label('%s')"         %    self.getString ( 0 )

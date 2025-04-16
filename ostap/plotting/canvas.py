@@ -31,14 +31,14 @@ __all__     = (
     'use_canvas'       , ## context manager to create currect canvas
     )
 # =============================================================================
-from   ostap.core.ostap_types  import ordered_dict 
-from   ostap.utils.cidict      import cidict, cidict_fun 
-from   ostap.utils.utils       import KeepCanvas, keepCanvas 
-from   ostap.core.core         import rootWarning
-from   ostap.utils.utils       import which
-from ostap.plotting.makestyles import ( canvas_width , canvas_height ,
-                                        margin_left  , margin_right  ,
-                                        margin_top   , margin_bottom )
+from   ostap.core.ostap_types    import ordered_dict 
+from   ostap.utils.cidict        import cidict, cidict_fun 
+from   ostap.utils.utils         import KeepCanvas, keepCanvas 
+from   ostap.core.core           import rootWarning
+from   ostap.utils.utils         import which
+from   ostap.plotting.makestyles import ( canvas_width , canvas_height ,
+                                          margin_left  , margin_right  ,
+                                          margin_top   , margin_bottom )
 import ostap.core.core         
 import ostap.plotting.style
 import ROOT, os, tempfile, math   
@@ -1113,7 +1113,7 @@ class Canvas(KeepCanvas) :
         self.__kwargs = kwargs
         self.__cnv    = None
 
-        if plot :
+        if plot : 
             plot = plot.strip() 
             while '  ' in plot : plot = plot.replace ( '  ' , ' ' )                
             plot = plot.strip().replace ( ' ' , '_' )
@@ -1180,7 +1180,7 @@ def use_canvas ( name   = ''            ,
                  height = canvas_height ,   ## canvas height
                  wait   = 0             ,   ## pause before exit 
                  **kwargs               ) : ## Pad configuration
-    """Helper context manager to create and configure a canvas (and pad)
+    """ Helper context manager to create and configure a canvas (and pad)
     >>> with use_canvas ( title = 'Canvas #2' , width = 1000 ) :
     >>> ... 
     """

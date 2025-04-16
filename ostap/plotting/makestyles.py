@@ -86,6 +86,8 @@ logger.verbose ( '  margin_bottom : %s ' % margin_bottom )
 logger.verbose ( '  margin_left   : %s ' % margin_left   )
 logger.verbose ( '  margin_right  : %s ' % margin_right  )
 
+
+
 # =============================================================================
 ## default font 
 ostap_font       = 132     ## Times-Roman 
@@ -182,27 +184,32 @@ def style_methods () :
         
         fun = getattr ( _style , 'Set' + s , None )
         if not fun : continue
-        
-        try :
+        # =====================================================================
+        try : # ===============================================================
+            # =================================================================
             fun ( 0.0 )
             _setters_float.add ( s )
             continue
-        except :
-            pass
+        except : # =============================================================
+            pass # =============================================================
 
-        try :
+        # ======================================================================
+        try : # ================================================================
+            # ==================================================================
             fun ( 1 )
             _setters_int.add   ( s )
             continue
-        except :
-            pass
+        except : # =============================================================
+            pass # =============================================================
 
-        try :
+        # ======================================================================
+        try : # ================================================================
+            # ==================================================================
             fun ( '' )
             _setters_str.add   ( s )
             continue
-        except :
-            pass
+        except : # =============================================================
+            pass # =============================================================
         
     del _style
     
@@ -274,7 +281,6 @@ def dump_style ( style ) :
     config ['PaperSize_Y' ] = y.value 
 
     ## special... 
-    config [ 'TGaxisMaxDigits' ] = ROOT.TGaxis.GetMaxDigits()
     
     ## very special attribute
     for i in range(31) :
@@ -305,7 +311,7 @@ def table_style ( style , prefix = '' , title = '' ) :
 
     title = title if title else 'Style %s/%s' % ( style.GetName() , style.GetTitle () )
     import ostap.logger.table as T
-    return T.table ( table , title = title , prefix = prefix , alignment = 'll' )
+    return T.table ( table , title = title , prefix = prefix , alignment = 'lrl' )
 
 ROOT.TStyle.table = table_style
 # =============================================================================
@@ -573,9 +579,6 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
             changed [ key ] = style.GetLineStyleString ( i )                         
             style.SetLineStyleString ( i , conf.pop ( k ) .strip() ) 
 
-    if 'TGaxisMaxDigits' in conf : 
-        ROOT.TGaxis.SetMaxDigits ( conf.pop ( 'TGaxisMaxDigits' ) )
-        
     if 'palette' in conf :
         style.SetPalette ( conf.pop ( 'palette' ) )
 
@@ -935,8 +938,8 @@ def make_ostap_style ( name                      ,
     conf [ 'TextSize'          ] = get_float ( config , 'TextSize'            , 0.08 * scale )
 
     ## maximal number of digits for the axis labels 
-    conf [ 'TGaxisMaxDigits'   ] = 3
-
+    conf [ 'AxisMaxDigits'     ] = 3
+    
     ## create the style
     style = root_style ( name )
 
@@ -955,7 +958,7 @@ def make_ostap_style ( name                      ,
 make_styles () 
 
 
-
+# =============================================================================
 import atexit
 @atexit.register
 def styles_clean () :

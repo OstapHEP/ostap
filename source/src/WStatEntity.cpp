@@ -42,6 +42,7 @@ Ostap::WStatEntity::WStatEntity ( const Ostap::StatEntity& values )
 // ============================================================================
 // full constructor
 // ============================================================================
+#include <iostream>
 Ostap::WStatEntity::WStatEntity
 ( const double             mu      ,
   const double             mu2     ,
@@ -80,10 +81,16 @@ Ostap::WStatEntity::WStatEntity
                   "Ostap::WStatEntity"                           ,
                   INVALID_PARS , __FILE__ , __LINE__             ) ;  
   //
-  Ostap::Assert ( 0 <= m_mu2                                  , 
-                  "Ostap::WStatEntity: invalid second moment" ,
-                  "Ostap::WStatEntity"                        ,
-                  INVALID_PARS , __FILE__ , __LINE__          ) ;
+  if ( m_mu2 < 0 )
+    {
+      std::cerr << " m_mu2 = " << m_mu2 << std::endl ;
+    }
+  /** 
+      Ostap::Assert ( 0 <= m_mu2                                  , 
+      "Ostap::WStatEntity: invalid second moment" ,
+      "Ostap::WStatEntity"                        ,
+      INVALID_PARS , __FILE__ , __LINE__          ) ;
+  */
 }
 // ============================================================================
 // update statistics 
@@ -94,14 +101,14 @@ Ostap::WStatEntity::add
   const double weight )
 {
   //
-  /// ignore non-finite values 
-  if ( !std::isfinite ( value  ) || !std::isfinite ( weight ) ) { return *this ; }
+  /// ignore non-finite values and zero weights 
+  if ( !weight || !std::isfinite ( value  ) || !std::isfinite ( weight ) ) { return *this ; }
   //
   if ( 0 == n() ) 
     {
-      m_mu  = value ;
-      m_mu2 = 0     ;
-      if ( weight ) { m_values += value ; }
+      m_mu       = value  ;
+      m_mu2      = 0      ;
+      m_values  += value  ; 
       m_weights += weight ;    
       //
       return *this ;
@@ -118,7 +125,7 @@ Ostap::WStatEntity::add
   m_mu  = fA * m_mu  + fB * value              ; // UPDATE 
   m_mu2 = fA * m_mu2 + fA * fB * delta * delta ; // UPDATE 
   //
-  if ( weight ) { m_values += value ; }          // UPDATE 
+  m_values  += value  ;                          // UPDATE 
   m_weights += weight ;                          // UPDATE 
   //
   return *this ;

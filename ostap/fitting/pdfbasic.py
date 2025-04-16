@@ -511,13 +511,13 @@ class APDF1 ( Components ) :
 
         for_refit = False
         if 0 != st   :
-            for_refit = 'status' 
+            for_refit = 'status: %s' % fit_status ( st ) 
             if not silent : self.warning ( 'fitTo: Fit status is %s ' % fit_status ( st ) )
         #
         qual = result.covQual()
         cov2_good = ( qual == 3 ) or ( dataset.isWeighted() and qual == -1 )
         if not cov2_good :
-            for_refit = 'covariance'
+            for_refit = 'covariance: %s' % cov_qual ( qual ) 
             if not silent : self.warning ( 'fitTo: covQual    is %s ' % cov_qual ( qual ) )
 
         #
@@ -559,9 +559,8 @@ class APDF1 ( Components ) :
         ## call for refit if needed
         #
         if for_refit and 0 < refit :
-            if not silent : self.info ( 'fitTo: call for refit:  %s/%s'  % ( for_refit , refit ) )
+            if not silent : self.warning ( 'fitTo: call for refit %2d :  %s '  % ( refit , for_refit ) )
             refit -= 1 
-            logger.error ( 'REFIT IT!!! %s %s' % ( for_refit , refit ) ) 
             return  self.fitTo ( dataset         ,
                                  draw   = draw   ,
                                  nbins  = nbins  ,
