@@ -114,9 +114,7 @@ Ostap::WStatEntity::add
   //
   const long double W     = wA + wB               ;
   //
-  // if      ( !W )
-  //  {
-  //  }
+  // if      ( !W ) { /* soem action is needed ? */ } 
   if ( !wA )
     {
       m_mu  = value ;
