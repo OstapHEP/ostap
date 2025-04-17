@@ -1091,11 +1091,12 @@ namespace  Ostap
     {
       /// invalid value aand weights are ignored 
       if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
-      /// ZERO weights are ignored 
-      if ( !w )                                       { return *this ; }  // ZERO weights are ignored 
+      /// ZERO weights are also ignored 
+      if ( !w )                                           { return *this ; }  // ZERO weights are ignored 
       //
       const long double wA    = this->w () ;
       const long double wB    =       w    ;
+      //
       const long double wW    = wA + wB    ;
       const long double delta = x - this->mu() ;
       //
@@ -1124,12 +1125,13 @@ namespace  Ostap
       if      ( x     . empty () ) {               return *this ; }
       else if ( this -> empty () ) { (*this) = x ; return *this ; }
       //
-      const long double wB    =    x. w () ;
-      if ( !wB ) { return *this ; }                    // RETURN! 
+      const long double wB    =  x. w () ;
+      if ( !wB ) {               return *this ; }                    // RETURN! 
       //
       const long double wA    = this->w () ;
+      //
       const long double wW    = wA + wB    ;
-      const long double delta = x.mu() - this->mu()  ;
+      const long double delta = x.mu () - this->mu ()  ;
       const long double b_n   =  ( -1.0L * wB ) / wW ;
       const long double a_n   =  (  1.0L * wA ) / wW ;
       //
@@ -1145,7 +1147,7 @@ namespace  Ostap
         a   *= a_n   ;
         b   *= b_n   ;
         d   *= delta ;        
-        m_M += s_Ck [ k ] * d * ( this-> M( N - k ) * b + x. M ( N - k ) * a ) ;
+        m_M += s_Ck [ k ] * d * ( this -> M ( N - k ) * b + x. M ( N - k ) * a ) ;
       }
       /// update previous 
       this->m_prev += x.m_prev ; // update previous

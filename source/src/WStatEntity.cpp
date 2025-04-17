@@ -81,16 +81,11 @@ Ostap::WStatEntity::WStatEntity
                   "Ostap::WStatEntity"                           ,
                   INVALID_PARS , __FILE__ , __LINE__             ) ;  
   //
-  if ( m_mu2 < 0 )
-    {
-      std::cerr << " m_mu2 = " << m_mu2 << std::endl ;
-    }
-  /** 
-      Ostap::Assert ( 0 <= m_mu2                                  , 
-      "Ostap::WStatEntity: invalid second moment" ,
-      "Ostap::WStatEntity"                        ,
-      INVALID_PARS , __FILE__ , __LINE__          ) ;
-  */
+  //  Ostap::Assert ( 0 <= m_mu2                                  , 
+  //                   "Ostap::WStatEntity: invalid second moment" ,
+  //                   "Ostap::WStatEntity"                        ,
+  //                   INVALID_PARS , __FILE__ , __LINE__          ) ;
+  //
 }
 // ============================================================================
 // update statistics 
@@ -118,12 +113,24 @@ Ostap::WStatEntity::add
   const long double wB    = weight                ; 
   //
   const long double W     = wA + wB               ;
-  const long double fA    = wA / W                ;
-  const long double fB    = 1.0L - fA             ;
-  const long double delta = 1.0L * value - m_mu   ;
   //
-  m_mu  = fA * m_mu  + fB * value              ; // UPDATE 
-  m_mu2 = fA * m_mu2 + fA * fB * delta * delta ; // UPDATE 
+  // if      ( !W )
+  //  {
+  //  }
+  if ( !wA )
+    {
+      m_mu  = value ;
+      m_mu2 = 0     ;
+    }
+  else 
+    {
+      const long double fA    = wA / W                ;
+      const long double fB    = 1.0L - fA             ;
+      const long double delta = 1.0L * value - m_mu   ;
+      //
+      m_mu  = fA * m_mu  + fB * value              ; // UPDATE 
+      m_mu2 = fA * m_mu2 + fA * fB * delta * delta ; // UPDATE
+    }
   //
   m_values  += value  ;                          // UPDATE 
   m_weights += weight ;                          // UPDATE 
