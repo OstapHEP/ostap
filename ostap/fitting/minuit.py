@@ -763,9 +763,9 @@ def _mn_table_ ( self , title =  '' , prefix = '' ) :
     header = ( 'Parameter' , '' , 'Value' )
     rows   = [] 
 
-    from ostap.fitting.utils import fit_status  , cov_qual
-    from ostap.logger.pretty import pretty_float, pretty_ve, pretty_vae 
-
+    from ostap.fitting.utils   import fit_status  , cov_qual
+    from ostap.logger.pretty   import pretty_float
+    
     status = self.GetStatus()
     if status :
         status = fit_status ( status ) 
@@ -866,9 +866,9 @@ def _mn_table_ ( self , title =  '' , prefix = '' ) :
         mn_minus = pdict.pop ( 'minos-' , None )
 
         if   ( not mn_plus is None and not mn_minus is None ) :
-            s , n = pretty_vae ( VAE ( value , mn_minus , mn_plus ) , parentheses = False ) 
+            s , n = VAE ( value , mn_minus , mn_plus ) . pretty_print ( parentheses = False ) 
         elif not error is None :
-            s , n = pretty_ve  ( VE  ( value , error    * error   ) , parentheses = False ) 
+            s , n = VE  ( value , error    * error   ) . pretty_print ( parentheses = False ) 
         else : 
             s , n = pretty_float ( value )
             s = "%s(fixed)" % s

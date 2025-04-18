@@ -29,7 +29,6 @@ from   ostap.math.operations  import Mul  as MULT       ## needed for proper abs
 import ostap.io.zipshelve     as     DBASE              ## needed to store the weights&histos
 from   ostap.trees.funcs      import FuncTree, FuncData ## add weight to TTree/RooDataSet
 from   ostap.utils.utils      import CallThem, is_formula  
-from   ostap.math.ve          import pretty_ve
 from   ostap.math.reduce      import root_factory
 import ostap.core.core 
 import ostap.histos.histos 

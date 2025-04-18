@@ -437,10 +437,6 @@ def _ve_poisson_ ( s , fluctuate , accept = lambda s : True ) :
 VE.gauss   = _ve_gauss_
 VE.poisson = _ve_poisson_ 
 
-
-
-
-
 # ===================================================================================
 ## Formats f0r nice printout of the ValueWithError object  ( string + exponent)
 #  @code

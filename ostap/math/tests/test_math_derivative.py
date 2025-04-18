@@ -11,7 +11,6 @@
 It tests local implementation of numerical derivatives 
 """
 # ============================================================================= 
-from   math                   import exp, sin, cos, pi, tanh
 from   ostap.core.core        import VE 
 from   ostap.math.models      import f1_draw
 from   ostap.math.derivative  import ( Derivative  , iszero      , Eval2VE     ,
@@ -21,9 +20,10 @@ from   ostap.math.finitediffs import CentralRule, ForwardOpen, BackwardOpen
 from   ostap.stats.counters   import SE
 from   ostap.utils.timing     import timing
 import ostap.logger.table     as     T
-from   ostap.logger.pretty    import pretty_ve
+from   ostap.math.ve          import pretty_ve
 from   ostap.utils.utils      import wait, batch_env 
 from   ostap.plotting.canvas  import use_canvas
+from   math                   import exp, sin, cos, pi, tanh
 import ROOT, random, math 
 # ============================================================================= 
 # logging 

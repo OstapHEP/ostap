@@ -45,7 +45,6 @@ from   ostap.fitting.utils     import ( make_name   , numcpu , ncpu , get_i ,
                                         roo_poisson , roo_gaussian  )
 from   ostap.fitting.roocmdarg import check_arg 
 from   ostap.fitting.variables import SETVAR, make_formula
-from   ostap.math.ve           import pretty_ve
 from   ostap.utils.utils       import make_iterable
 from   ostap.utils.basic       import typename , items_loop
 import ROOT, sys, random, math
@@ -1855,7 +1854,7 @@ class FitHelper(VarMaker) :
         if   isinstance ( value , ROOT.RooAbsReal ) and isinstance ( error , ROOT.RooAbsReal ) :
             title = title if title else 'Gaussian Constraint[%s,%s+/-%s]' % ( var_name , value.name , error.name )
         elif isinstance ( value , num_types       ) and isinstance ( error , num_types       ) :
-            sv , expo = pretty_ve ( VE ( value , error * error ) )
+            sv , expo = VE ( value , error * error ).pretty_print ()
             sv = sv if not expo else ( '%sx10^%+d' % expo )
             title = title if title else 'Gaussian Constraint[%s,%s] '     % ( var_name , sv )
         elif isinstance ( value , ROOT.RooAbsReal ) :

@@ -25,14 +25,19 @@
  - `Ostap::Math::Moments` : turn the class with static functions onito namescpace  
  - add non-templated constructor to `Ostap::Models::Shape`d/2D/3D`
  - improve matrix tables
- = add more operations to `ROOT.TCut` objects
-    
+ - add more operations to `ROOT.TCut` objects
+ - reshuffle the code around `pretty_ve` to reduce explciti apprearenc of this&related  functions
+        
 ## New features
     
    1. further improvemets for the wrapped columns in the tables
    1. add unbined splot-related stuff, includinn machinery for
       adding the splot results to TTree/TChain
-   
+   1. OSTAP_BATCH environemtn variable now is effectivey used for all scrpts via
+      `ostap.core.core.py` (should it be  `otap.core.__init__.py` ?)
+   1. `-b` or `--batch` command line arguments now are effectivey used for all scrpts via
+      `ostap.core.core.py` (should it be  `otap.core.__init__.py` ?)
+    
 ## Backward incompatible
 
    1. Reorder arguments for `Data` &`DataandLumi`, from now the first argumenet - files/pattersn and then chains

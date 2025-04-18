@@ -459,7 +459,7 @@ class Summary(object) :
         
         mxv = max ( abs ( value ) , abs ( mean.value() ) , mean.error() , rms , abs ( vmin )  , abs ( vmax ) ) 
         
-        from   ostap.logger.pretty import fmt_pretty_ve         
+        from   ostap.math.ve import fmt_pretty_ve         
         fmt, fmtv , fmte , expo = fmt_pretty_ve ( VE ( mxv ,  mean.cov2() ) ,
                                                   width       = width       ,
                                                   precision   = precision   , 
@@ -600,13 +600,7 @@ class GoFSummary ( object) :
         rows = T.remove_empty_columns ( rows )
         title = title if title else 'Goodness of 1D-fit' 
         return T.table ( rows , title = title , prefix = prefix , alignment = 'lclcc', style = style  )
-        
-        
-  
-            
-
-        
-    
+                
 # =============================================================================
 if '__main__' == __name__ :
     

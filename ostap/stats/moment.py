@@ -36,7 +36,6 @@ from   ostap.core.ostap_types import integer_types, num_types
 from   ostap.math.base        import isfinite, isequal, pos_infinity, neg_infinity  
 from   ostap.core.core        import Ostap, VE
 from   ostap.logger.pretty    import pretty_float
-from   ostap.math.ve          import pretty_ve
 import ROOT 
 # =============================================================================
 # logging 
@@ -353,7 +352,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         v  = obj.mean ()
         vv = float   ( v ) 
         if IM != float ( v ) and isfinite ( vv ) : 
-            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
             else                     : field , n = pretty_float ( v )
             row = "mean" , '' if not n else '[10^%+d]' % n , field 
             rows.append ( row )
@@ -364,7 +363,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
             v  = obj.rms (    )
             vv = float   ( v  )                             
             if isfinite  ( vv ) and IM != vv and 0 <= vv :                    
-                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+                if isinstance ( v , VE ) : field , n = v.pretty_print () 
                 else                     : field , n = pretty_float ( v )
                 row = "rms"  , '' if not n else '[10^%+d]' % n , field 
                 rows.append ( row )
@@ -373,7 +372,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
             v  = obj.variance (    )
             vv = float   ( v  )                             
             if isfinite  ( vv ) and IM != vv and 0 <= vv :                    
-                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+                if isinstance ( v , VE ) : field , n = v.pretty_print ()
                 else                     : field , n = pretty_float ( v )
                 row = "variance"  , '' if not n else '[10^%+d]' % n , field 
                 rows.append ( row )
@@ -383,7 +382,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         v  = obj.skewness ()
         vv = float   ( v )                         
         if isfinite ( vv ) and IM != vv :
-            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
             else                     : field , n = pretty_float ( v )
             row = "skewness"  , '' if not n else '[10^%+d]' % n , field 
             rows.append ( row )
@@ -393,7 +392,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         v  = obj.kurtosis ()
         vv = float   ( v )                                     
         if isfinite ( vv ) and IM != float ( v ) :
-            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
             else                     : field , n = pretty_float ( v )
             row = "kurtosis"  , '' if not n else '[10^%+d]' % n , field 
             rows.append ( row )
@@ -403,7 +402,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         v  = obj.unbiased_2nd ()
         vv = float   ( v )                         
         if isfinite ( vv ) and IM != float ( v ) :
-            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            if isinstance ( v , VE ) : field , n = v.pretty_print ()  
             else                     : field , n = pretty_float ( v )
             row = "M[2]/unb" , '' if not n else '[10^%+d]' % n , field 
             rows.append ( row )
@@ -413,7 +412,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         v  = obj.unbiased_3rd ()
         vv = float   ( v )                         
         if isfinite ( vv ) and IM != float ( v ) :
-            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
             else                     : field , n = pretty_float ( v )
             row = "M[3]/unb" , '' if not n else '[10^%+d]' % n , field 
             rows.append ( row )
@@ -423,7 +422,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         v  = obj.unbiased_4th ()
         vv = float   ( v )                         
         if isfinite ( vv ) and IM != float ( v ) :
-            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
             else                     : field , n = pretty_float ( v )
             row = "M[4]/unb" , '' if not n else '[10^%+d]' % n , field 
             rows.append ( row )
@@ -433,7 +432,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         v  = obj.unbiased_5th ()
         vv = float   ( v )                         
         if isfinite ( vv ) and IM != float ( v ) :
-            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
             else                     : field , n = pretty_float ( v )
             row = "M[5](unb)" , '' if not n else '[10^%+d]' % n , field 
             rows.append ( row )
@@ -443,7 +442,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         v  = obj.cumulant_1st ()
         vv = float   ( v )                         
         if isfinite ( vv ) and IM != float ( v ) :
-            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
             else                     : field , n = pretty_float ( v )
             row = "K[1](unb)" , '' if not n else '[10^%+d]' % n , field 
             rows.append ( row )
@@ -453,7 +452,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         v  = obj.cumulant_2nd ()
         vv = float   ( v )                         
         if isfinite ( vv ) and IM != float ( v ) :
-            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
             else                     : field , n = pretty_float ( v )
             row = "K[2](unb)" , '' if not n else '[10^%+d]' % n , field 
             rows.append ( row )
@@ -463,7 +462,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         v  = obj.cumulant_3rd ()
         vv = float   ( v )                         
         if isfinite ( vv ) and IM != float ( v ) :
-            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
             else                     : field , n = pretty_float ( v )
             row = "K[3](unb)" , '' if not n else '[10^%+d]' % n , field 
             rows.append ( row )
@@ -473,7 +472,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         v  = obj.cumulant_4th ()
         vv = float   ( v )                         
         if isfinite ( vv ) and IM != float ( v ) :
-            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
             else                     : field , n = pretty_float ( v )
             row = "K[4](unb)" , '' if not n else '[10^%+d]' % n , field 
             rows.append ( row )
@@ -486,7 +485,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
             v  = obj.cumulant ( k )
             vv = float   ( v )                         
             if isfinite ( vv ) and IM != float ( v ) :
-                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+                if isinstance ( v , VE ) : field , n = v.pretty_print () 
                 else                     : field , n = pretty_float ( v )
                 row = ( "K" + fmt + "/raw" )  % k , '' if not n else '[10^%+d]' % n , field 
                 rows.append ( row )
@@ -502,7 +501,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
             v  = obj.std_moment ( i )
             vv = float   ( v )                         
             if isfinite ( vv ) and IM != float ( v ) :                
-                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+                if isinstance ( v , VE ) : field , n = v.pretty_print () 
                 else                     : field , n = pretty_float ( v )
                 row = ( "M" + fmt + "/std" )  % i , '' if not n else '[10^%+d]' % n , field 
                 rows.append ( row )
@@ -512,7 +511,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
             v  = obj.central_moment ( i )
             vv = float   ( v )                         
             if isfinite ( vv ) and IM != float ( v ) :                
-                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+                if isinstance ( v , VE ) : field , n = v.pretty_print () 
                 else                     : field , n = pretty_float ( v )
                 row = ( "M" + fmt + "/raw" )  % i  , '' if not n else '[10^%+d]' % n , field 
                 rows.append ( row )

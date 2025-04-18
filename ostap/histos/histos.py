@@ -52,6 +52,7 @@ from   ostap.math.random_ext          import poisson
 from   ostap.utils.utils              import accumulate
 from   ostap.utils.cidict             import cidict, cidict_fun  
 from   ostap.utils.basic              import typename 
+from   ostap.logger.pretty            import pretty_float 
 import ostap.logger.table             as     T 
 import ostap.stats.moment 
 import ostap.plotting.draw_attributes 
@@ -8682,7 +8683,7 @@ def _h1_table_ ( h1 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     >>> histo = ...
     >>> print ( histo.table() )   
     """
-    from ostap.logger.pretty import pretty_float , pretty_ve 
+    from ostap.logger.pretty import pretty_float
     rows = [ ( '' , 'value' , 'scale' ) ]
 
     row = 'Name' , h1.GetName() , '' 
@@ -8768,25 +8769,29 @@ def _h1_table_ ( h1 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         
         row = 'density?'   , '%s' % h1.isDensity() , '' 
         rows.append ( row )
-        
-        mean , expo = pretty_ve ( h1.mean() , width = width , precision = precision , parentheses = False )
-        row = 'x-mean' , mean, '10^%+d' % expo if expo else '' 
+
+        value = VE ( h1.mean() )
+        mean  , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
+        row   = 'x-mean' , mean, '10^%+d' % expo if expo else '' 
         rows.append ( row )
         
-        rms , expo = pretty_ve ( h1.rms  () , width = width , precision = precision , parentheses = False )
-        row = 'x-rms' , rms, '10^%+d' % expo if expo else '' 
+        value = VE ( h1.rms () )
+        rms   , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
+        row   = 'x-rms' , rms, '10^%+d' % expo if expo else '' 
         rows.append ( row )
         
-        skew , expo = pretty_ve ( h1.skewness  () , width = width , precision = precision , parentheses = False )
-        row = 'skewness' , skew, '10^%+d' % expo if expo else '' 
+        value = VE ( h1.skewness () )
+        skew  , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
+        row   = 'skewness' , skew, '10^%+d' % expo if expo else '' 
         rows.append ( row )
-        
-        kurt , expo = pretty_ve ( h1.kurtosis  () , width = width , precision = precision , parentheses = False )
-        row = 'kurtosis' , kurt, '10^%+d' % expo if expo else '' 
+
+        value = VE ( h1.kurtosis () )
+        kurt  , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
+        row   = 'kurtosis' , kurt, '10^%+d' % expo if expo else '' 
         rows.append ( row )
         
         stat = h1.stat()
-        
+
         ymin , expo = pretty_float ( stat.min () , width = width , precision = precision )    
         row = 'y-min' , ymin , '10^%+d' % expo if expo else '' 
         rows.append ( row )
@@ -8794,8 +8799,9 @@ def _h1_table_ ( h1 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         ymax , expo = pretty_float ( stat.max () , width = width , precision = precision )    
         row = 'y-max' , ymax , '10^%+d' % expo if expo else '' 
         rows.append ( row )
-        
-        ymean , expo = pretty_ve ( stat.mean  () , width = width , precision = precision , parentheses = False )
+
+        value = VE ( stat.mean() )
+        ymean , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
         row = 'y-mean' , ymean , '10^%+d' % expo if expo else '' 
         rows.append ( row )
         
@@ -8834,7 +8840,7 @@ def _h2_table_ ( h2 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     >>> histo = ...
     >>> print ( histo.table() )   
     """
-    from ostap.logger.pretty import pretty_float , pretty_ve 
+    from ostap.logger.pretty import pretty_float 
     rows = [ ( '' , 'value' , 'scale' ) ]
 
     row = 'Name' , h2.GetName() , '' 
@@ -8921,21 +8927,25 @@ def _h2_table_ ( h2 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         
         xmean, ymean = h2.mean () 
         xrms , yrms  = h2.rms  () 
-        
-        xmean , expo = pretty_ve ( xmean , width = width , precision = precision , parentheses = False )
-        row = 'x-mean' , xmean, '10^%+d' % expo if expo else '' 
+
+        value = VE ( xmean ) 
+        xmean , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
+        row   = 'x-mean' , xmean, '10^%+d' % expo if expo else '' 
         rows.append ( row )
         
-        xrms , expo = pretty_ve ( xrms  , width = width , precision = precision , parentheses = False )
-        row = 'x-rms' , xrms, '10^%+d' % expo if expo else '' 
+        value = VE ( xrms ) 
+        xrms  , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
+        row   = 'x-rms' , xrms, '10^%+d' % expo if expo else '' 
         rows.append ( row )
         
-        ymean , expo = pretty_ve ( ymean , width = width , precision = precision , parentheses = False )
-        row = 'y-mean' , ymean, '10^%+d' % expo if expo else '' 
+        value = VE ( ymean ) 
+        ymean , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
+        row   = 'y-mean' , ymean, '10^%+d' % expo if expo else '' 
         rows.append ( row )
         
-        yrms , expo = pretty_ve ( yrms  , width = width , precision = precision , parentheses = False )
-        row = 'y-rms' , yrms, '10^%+d' % expo if expo else '' 
+        value = VE ( yrms ) 
+        yrms  , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
+        row   = 'y-rms' , yrms, '10^%+d' % expo if expo else '' 
         rows.append ( row )
 
         xyc , expo = pretty_float ( h2.xycorr() , width = width , precision = precision )
@@ -8951,8 +8961,9 @@ def _h2_table_ ( h2 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         zmax , expo = pretty_float ( stat.max () , width = width , precision = precision )    
         row = 'z-max' , zmax , '10^%+d' % expo if expo else '' 
         rows.append ( row )
-        
-        zmean , expo = pretty_ve ( stat.mean  () , width = width , precision = precision , parentheses = False )
+
+        value = VE ( stat.mean() ) 
+        zmean , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
         row = 'z-mean' , zmean , '10^%+d' % expo if expo else '' 
         rows.append ( row )
         
@@ -8991,7 +9002,6 @@ def _h3_table_ ( h3 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     >>> histo = ...
     >>> print ( histo.table() )   
     """
-    from ostap.logger.pretty import pretty_float , pretty_ve 
     rows = [ ( '' , 'value' , 'scale' ) ]
 
     row = 'Name' , h3.GetName() , '' 
@@ -9089,29 +9099,35 @@ def _h3_table_ ( h3 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         
         xmean, ymean, zmean = h3.mean () 
         xrms , yrms , zrms  = h3.rms  () 
-        
-        xmean , expo = pretty_ve ( xmean , width = width , precision = precision , parentheses = False )
-        row = 'x-mean' , xmean, '10^%+d' % expo if expo else '' 
+
+        value = VE ( xmean ) 
+        xmean , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
+        row   = 'x-mean' , xmean, '10^%+d' % expo if expo else '' 
         rows.append ( row )
 
-        xrms , expo = pretty_ve ( xrms  , width = width , precision = precision , parentheses = False )
-        row = 'x-rms' , xrms, '10^%+d' % expo if expo else '' 
+        value = VE ( xrms ) 
+        xrms  , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )        
+        row   = 'x-rms' , xrms, '10^%+d' % expo if expo else '' 
         rows.append ( row )
-        
-        ymean , expo = pretty_ve ( ymean , width = width , precision = precision , parentheses = False )
-        row = 'y-mean' , ymean, '10^%+d' % expo if expo else '' 
+
+        value = VE ( ymean ) 
+        ymean , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
+        row   = 'y-mean' , ymean, '10^%+d' % expo if expo else '' 
         rows.append ( row )
-        
-        yrms , expo = pretty_ve ( yrms  , width = width , precision = precision , parentheses = False )
-        row = 'y-rms' , yrms, '10^%+d' % expo if expo else '' 
+
+        value = VE ( yrms ) 
+        yrms  , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )        
+        row   = 'y-rms' , yrms, '10^%+d' % expo if expo else '' 
         rows.append ( row )
-        
-        zmean , expo = pretty_ve ( zmean , width = width , precision = precision , parentheses = False )
+
+        value = VE ( zmean ) 
+        zmean , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
         row = 'z-mean' , zmean, '10^%+d' % expo if expo else '' 
         rows.append ( row )
-        
-        zrms , expo = pretty_ve ( zrms  , width = width , precision = precision , parentheses = False )
-        row = 'z-rms' , zrms, '10^%+d' % expo if expo else '' 
+
+        value = VE ( zrms ) 
+        zrms  , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )        
+        row   = 'z-rms' , zrms, '10^%+d' % expo if expo else '' 
         rows.append ( row )
         
         xyc , expo = pretty_float ( h3.xycorr() , width = width , precision = precision )
@@ -9135,8 +9151,9 @@ def _h3_table_ ( h3 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         vmax , expo = pretty_float ( stat.max () , width = width , precision = precision )    
         row = 'v-max' , vmax , '10^%+d' % expo if expo else '' 
         rows.append ( row )
-        
-        vmean , expo = pretty_ve ( stat.mean  () , width = width , precision = precision , parentheses = False )
+
+        value = VE ( stat.mean() )        
+        vmean , expo = value.pretty_print (  width = width , precision = precision , parentheses = False )
         row = 'v-mean' , vmean , '10^%+d' % expo if expo else '' 
         rows.append ( row )
         

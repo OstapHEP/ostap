@@ -18,7 +18,7 @@ __all__     = ()
 from   ostap.core.core        import hID , VE 
 from   ostap.logger.colorized import allright  
 from   ostap.logger.pretty    import pretty_float
-from   ostap.math.ve          import pretty_ve
+import ostap.math.math_ve     as     MVE 
 import ostap.histos.histos 
 import ostap.histos.param
 import ostap.fitting.param 
@@ -1546,14 +1546,14 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         rows.append ( row  )
         
     if ddistance :
-        value = h1.cmp_ddist ( h2 , density = density )
-        v , n = pretty_ve ( value  , parentheses = False )
+        value = VE ( h1.cmp_ddist ( h2 , density = density ) ) 
+        v , n = value.pretty_print ( parentheses = False )
         row   = allright ( ddistance ) , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if ddistance and histo2 :
-        value = h2.cmp_ddist ( h1 , density = density )
-        v , n = pretty_ve ( value  , parentheses = False )
+        value = VE ( h2.cmp_ddist ( h1 , density = density ) ) 
+        v , n = value.pretty_print ( parentheses = False )
         row   = allright ( ddistance ) , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
@@ -1579,35 +1579,31 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         row   = allright ( diffpos ) , '[%]' , value.toString( fmt ( value ) ) 
         rows.append ( row  )
 
-    acos = lambda x : ME.acos ( max ( min ( x , 1.0 ) , -1.0 ) )  
+    acos = lambda x : MVE.acos ( max ( min ( x , 1.0 ) , -1.0 ) )  
     
     if angle :
-        value = h1.cmp_cos ( h2 , density = density )
-        ## value = math.acos    ( value )
-        value = acos ( value ) 
-        v , n = pretty_float ( value )
+        value = VE ( h1.cmp_cos ( h2 , density = density ) ) 
+        value = MVE.acos    ( value )
+        v , n = value.pretty_print ( parentheses = False )
         row   = allright ( angle ) , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if dangle :
-        value = h1.cmp_dcos ( h2 , density = density )
-        ## value = ME.acos     ( value )
-        value = acos ( value ) 
-        v , n = pretty_ve ( value  , parentheses = False )
+        value = VE ( h1.cmp_dcos ( h2 , density = density ) ) 
+        value = MVE.acos  ( value )
+        v , n = value.pretty_print ( parentheses = False )
         row   = allright ( dangle ) , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if dangle and histo2 :
-        value = h2.cmp_dcos ( h1 , density = density )
-        ## value = ME.acos     ( value )
-        value = acos ( value ) 
-        v , n = pretty_ve ( value  , parentheses = False )
+        value = VE ( h2.cmp_dcos ( h1 , density = density ) ) 
+        value = MVE.acos ( value ) 
+        v , n = value.pretty_print ( parentheses = False )
         row   = allright ( dangle ) , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if chi2ndf :
         chi2, prob = h1.cmp_chi2 ( h2 , density = density )
-
         value = chi2
         v , n = pretty_float ( value )
         row   = allright ( chi2ndf ) , '[10^%d]' %n if  n  else  '' , v 
@@ -1636,7 +1632,6 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
     if probchi2 and histo2 :
         
         chi2, prob = h2.cmp_chi2 ( h1 , density = density )
-
         value = prob
         v , n = pretty_float ( value )
         row   = allright ( probchi2 ) , '[10^%d]' %n if  n  else  '' , v 
@@ -1727,14 +1722,14 @@ def _h2_cmp_diff_prnt_ ( h1                             ,
     ##     rows.append ( row  )
         
     if ddistance :
-        value = h1.cmp_ddist ( h2 , density = density )
-        v , n = pretty_ve ( value  , parentheses = False )
+        value = VE ( h1.cmp_ddist ( h2 , density = density ) ) 
+        v , n = value.pretty_print ( parentheses = False )
         row   = allright ( ddistance ) , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if ddistance and histo2 :
-        value = h2.cmp_ddist ( h1 , density = density )
-        v , n = pretty_ve ( value  , parentheses = False )
+        value = VE ( h2.cmp_ddist ( h1 , density = density ) ) 
+        v , n = value.pretty_print ( parentheses = False )
         row   = allright ( ddistance ) , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
@@ -1768,16 +1763,16 @@ def _h2_cmp_diff_prnt_ ( h1                             ,
     ##     rows.append ( row  )
 
     if dangle :
-        value = h1.cmp_dcos ( h2 , density = density )
-        value = ME.acos     ( value ) 
-        v , n = pretty_ve ( value  , parentheses = False )
+        value = VE ( h1.cmp_dcos ( h2 , density = density ) ) 
+        value = MVE.acos     ( value ) 
+        v , n = value.pretty_print ( parentheses = False )
         row   = allright ( dangle ) , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if dangle and histo2 :
-        value = h2.cmp_dcos ( h1 , density = density )
-        value = ME.acos     ( value ) 
-        v , n = pretty_ve ( value  , parentheses = False )
+        value = VE ( h2.cmp_dcos ( h1 , density = density ) ) 
+        value = MVE.acos     ( value ) 
+        v , n = value.pretty_print ( parentheses = False )
         row   = allright ( dangle ) , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 

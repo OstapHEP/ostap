@@ -1105,6 +1105,17 @@ else :
         logger.debug ("Implicit MT is disabled")
         ROOT.ROOT.DisableImplicitMT ()
 
+
+# =============================================================================
+## Use/Force BATCH processing ? 
+if not ROOT.ROOT.GetROOT().IsBatch() :
+    if any ( k.lower() in ( '-b' , '--batch' ) for k in sys.argv ) : 
+        ROOT.ROOT.GetROOT().SetBatch ( True )
+        logger.attention ( "BATCH processing is activated (command line) " )
+    else : 
+        from ostap.utils.utils import batch_env
+        batch_env ( logger )
+    
 # =============================================================================
 ## Are we in CMAKE-test regime?
 def in_test () :

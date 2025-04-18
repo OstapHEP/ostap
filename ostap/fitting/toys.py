@@ -27,7 +27,6 @@ __all__     = (
 from   ostap.core.ostap_types import string_types, integer_types
 from   ostap.core.core        import VE, SE, Ostap 
 from   ostap.logger.pretty    import pretty_float, fmt_pretty_float
-from   ostap.math.ve          import pretty_ve 
 from   ostap.logger.colorized import attention
 import ROOT
 # =============================================================================
@@ -136,11 +135,11 @@ def print_stats ( stats , ntoys = '' , logger = logger ) :
     def make_row ( c ) :    
         
         n      = '%d' % c.nEntries() 
-        mean   = c.mean ()
+        mean   = VE ( c.mean () ) 
         rms    = c.rms  ()
         minmax = c.min() , c.max() 
         
-        mean , expo1 = pretty_ve    ( mean , precision = 6 , width = 8 , parentheses = False )
+        mean , expo1 = mean.pretty_print ( precision = 6 , width = 8 , parentheses = False )
         rms  , expo2 = pretty_float ( rms  , precision = 4 , width = 6 )        
         fmt  , expo3 = fmt_pretty_float ( max ( abs ( c.min() ) , abs ( c.max() ) ) , precision = 3 , width = 5 )
         fmt  = '%s / %s ' % ( fmt , fmt )
@@ -269,8 +268,8 @@ def print_jackknife  ( fitresult          , ## restl of the fit of th e total da
         
         scale = theta     .error () / theta_jack.error () 
         
-        th1 , expo1 = pretty_ve ( theta      , precision = 4 , width = 6 , parentheses = False )
-        th2 , expo2 = pretty_ve ( jackknife  , precision = 4 , width = 6 , parentheses = False )
+        th1 , expo1 = theta    .pretty_print ( precision = 4 , width = 6 , parentheses = False )
+        th2 , expo2 = jackknife.pretty_print ( precision = 4 , width = 6 , parentheses = False )
         
         ## th3 , expo3 = pretty_ve ( theta_jack , precision = 4 , width = 6 , parentheses = False )
         th3 , expo3 = pretty_float ( bias       , precision = 4 , width = 6 )
@@ -306,7 +305,7 @@ def print_jackknife  ( fitresult          , ## restl of the fit of th e total da
         statistics = stats [ name ]
         jackknife  = jackknife_statistics ( statistics ) 
 
-        th2, expo2 =  pretty_ve ( jackknife , precision = 4 , width = 6 , parentheses = False )
+        th2, expo2 =  jackknife.pretty_print ( precision = 4 , width = 6 , parentheses = False )
 
         if expo2 : expo2 = '10^%+d' % expo2
         else     : expo2 = ''
@@ -366,8 +365,8 @@ def print_bootstrap  ( fitresult          ,
         bias  = theta_boot.value () - theta     .value ()        
         scale = theta     .error () / theta_boot.error ()
         
-        th1 , expo1 = pretty_ve ( theta      , precision = 4 , width = 6 , parentheses = False )
-        th2 , expo2 = pretty_ve ( theta_boot , precision = 4 , width = 6 , parentheses = False )
+        th1 , expo1 = theta     .pretty_print ( precision = 4 , width = 6 , parentheses = False )
+        th2 , expo2 = theta_boot.pretty_print ( precision = 4 , width = 6 , parentheses = False )
 
         if expo1 : expo1 = '10^%+d' % expo1
         else     : expo1 = ''
@@ -395,7 +394,7 @@ def print_bootstrap  ( fitresult          ,
         statistics = stats [ name ]
         theta_boot = VE ( statistics.mean().value() , statistics.mu2() ) 
 
-        th2 , expo2 = pretty_ve ( theta_boot , precision = 4 , width = 6 , parentheses = False )
+        th2 , expo2 = theta_boot.pretty_print ( precision = 4 , width = 6 , parentheses = False )
         
         if expo2 : expo2 = '10^%+d' % expo2
         else     : expo2 = ''

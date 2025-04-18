@@ -368,9 +368,9 @@ def batch_env  ( logger = logger ) :
     """
     groot = ROOT.ROOT.GetROOT()
     if not groot.IsBatch () :
-        if get_env ( OSTAP_BATCH , '' ).lower() not in ( '' , '0' , 'off' , 'false' ) :        
+        if get_env ( OSTAP_BATCH , '' ).lower() not in ( '' , '0' , 'not' , 'off' , 'false' ) :        
             groot.SetBatch ( True )
-            logger.attention ( "BATCH processing is activated" )
+            logger.attention ( "BATCH processing is activated (environment)  " )                    
     return groot.IsBatch() 
         
 # =============================================================================

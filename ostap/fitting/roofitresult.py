@@ -23,7 +23,6 @@ from   ostap.core.ostap_types   import string_types , integer_types
 from   ostap.utils.valerrors    import ValWithErrors, AsymErrors   
 from   ostap.logger.colorized   import allright, attention, attstr 
 from   ostap.logger.pretty      import pretty_float, pretty_error2
-from   ostap.math.ve            import pretty_ve
 from   ostap.logger.symbols     import show 
 import ostap.math.linalg        as     LA 
 import ostap.fitting.variables     
@@ -759,9 +758,9 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
         v , a = pars_float [ p ]
 
         if not a.hasAsymError () :
-            s , n = pretty_ve     ( v , parentheses = False ) 
+            s , n = v.pretty_print ( parentheses = False ) 
         else :
-            s , n = pretty_error2 (  a.getVal() , a.getAsymErrorLow() , a.getAsymErrorHigh() , parentheses = False )
+            s , n = pretty_error2  ( a.getVal() , a.getAsymErrorLo() , a.getAsymErrorHi() , parentheses = False )
 
         if n : n = '[10^%+d]' % n
         else : n = '' 
@@ -810,7 +809,7 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
         
         v     = func ( r )
         
-        s , n = pretty_ve  ( v ) 
+        s , n = v.pretty_print()  
         
         if n : n = '[10^%+d]' % n
         else : n = '' 

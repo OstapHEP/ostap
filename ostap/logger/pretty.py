@@ -41,8 +41,9 @@ __all__     = (
 )
 
 # =============================================================================
-from ostap.core.ostap_types import num_types, sequence_types
-from ostap.logger.symbols   import plus_minus, times 
+from   ostap.core.ostap_types import integer_types, num_types, sequence_types
+from   ostap.logger.symbols   import plus_minus, times
+import math 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -67,13 +68,16 @@ def fmt_pretty_values ( *values         ,
     """ Formats for nice printout of the object with errors  ( strings + exponent)
     >>> fmtv , expo = fmt_pretty_values ( e1 , e2 , e3 ) 
     """
-    assert values , "At least one value must to be speified!"
+    if not values : values = (  0, )  
     assert isinstance ( width  , integer_types ) and \
         isinstance ( precision , integer_types ) and 2 <= precision < width, \
         "Invalid width/precision parameters: %s/%s" % ( width , precision ) 
 
+    assert values and all ( isinstance ( v , num_types ) for v in values ) , "Invalid type of `values'"
+    
     av = max ( abs ( float ( v )  ) for v in values )
     
+    from ostap.math.base import iszero, frexp10  
     if   100 <= av < 1000 : return '%%+%d.%df' %  ( width , precision - 2 ) , 0 
     elif 10  <= av < 100  : return '%%+%d.%df' %  ( width , precision - 1 ) , 0 
     elif 0.1 <= av < 10   : return '%%+%d.%df' %  ( width , precision     ) , 0 
@@ -109,16 +113,20 @@ def fmt_pretty_errors ( value            ,
     """ Formats for nice printout of the object with errors  ( strings + exponent)
     >>> fmtv , fmte , expo = fmt_pretty_errs ( number , ( e1 , e2 , e3 )  ) 
     """
-    
     assert isinstance ( width  , integer_types ) and \
         isinstance ( precision , integer_types ) and 2 <= precision < width, \
         "Invalid width/precision parameters: %s/%s" % ( width , precision ) 
+
+    assert isinstance ( value , num_types ) and errors and \
+        all ( isinstance ( e , num_types ) for e in errors ) , "Invalid value/errors!"
     
-    v = value
-    e = max ( abs ( e ) for e in errors ) if errors else abs ( v ) 
+    from ostap.math.base import iszero, frexp10 
+
+    v = float ( value ) 
+    e = max   ( abs ( float ( q ) ) for q in errors ) if errors else abs ( v ) 
     
     ## quantity that actually defines the format 
-    av    = max ( abs ( v ) , e )
+    av = max ( abs ( v ) , e )
 
     if   100 <= av < 1000 :
         
@@ -148,17 +156,17 @@ def fmt_pretty_errors ( value            ,
     #
     
     v_a , v_e = frexp10 ( av )
-    v_ee  = v_e - 1
+    v_ee   = v_e - 1
     n , r  = divmod  ( v_ee , 3 )    
 
     scale  = 10** ( r - v_ee  )    
     v     *= scale
-    errs   = [ e*scale for e in errors ]  
+    errs   = tuple ( e * scale for e in errors ) 
 
     #
     ## get formats for scaled data
     # 
-    fmtv , fmte , expo = fmt_pretty_errors ( value                 ,
+    fmtv , fmte , expo = fmt_pretty_errors ( v                     ,
                                              *errs                 , 
                                              width     = width     ,
                                              precision = precision )
@@ -185,7 +193,8 @@ def fmt_pretty_float ( value         ,
     value = float ( value )
 
     ## finite?
-    if not isfinite ( value ) : return "%s" , 0
+    if   math.isinf ( value ) : return "%s" , 0
+    elif math.isnan ( value ) : return "%s" , 0
 
     ## get the format 
     return fmt_pretty_values ( value , width = width , precision = precision ) 
@@ -318,8 +327,8 @@ def pretty_error ( value              ,
     v =             float ( value ) 
     e = max ( 0.0 , float ( error ) ) 
     
-    finv = isfinite ( v )
-    fine = isfinite ( e )
+    finv = not ( math.isinf ( v ) or math.isnan ( v ) ) 
+    fine = not ( math.isinf ( e ) or math.isnan ( e ) ) 
     
     if not finv and not fine  :
         fmt = '%%+%ds %s %%-%ds' % ( width , plus_minus , width ) 
@@ -382,10 +391,10 @@ def pretty_error2 ( value              ,
     elif 0     <= elow and 0 <= ehigh : elow = -elow
 
     ## get the format 
-    fmt , _ , _ , expo = fmt_pretty_errror2 ( v , elow , ehigh ,
-                                              width       = width       ,
-                                              precision   = precision   ,
-                                              parentheses = parentheses )
+    fmt , _ , _ , expo = fmt_pretty_error2 ( v , elow , ehigh ,
+                                             width       = width       ,
+                                             precision   = precision   ,
+                                             parentheses = parentheses )
     
     values = value , abs ( elow ) , ehigh    
     if expo :

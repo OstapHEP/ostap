@@ -1138,9 +1138,9 @@ def pretty_vae ( value              ,
         "Invalid type of `value`: %s" % type ( value )
 
     from ostap.logger.pretty import pretty_error2
-    return pretty_error2 ( value ,
-                           value.negative            ,
-                           value.positive            ,
+    return pretty_error2 ( value.value               ,
+                           value.neg_error           ,
+                           value.pos_error           ,
                            width       = width       , 
                            precision   = precision   ,
                            parentheses = parentheses ) 
