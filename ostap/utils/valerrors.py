@@ -24,13 +24,16 @@ __all__     = (
     'ValWithMultiErrors' ,    
     'AE'                 , ## shortcut for AsymErrors 
     'VAE'                , ## shortcut for ValWithErrors 
-    'VME'                , ## shortcut for ValWithMultiErrors     
+    'VME'                , ## shortcut for ValWithMultiErrors
+    ##
+    'pretty_ae'          , ## pretty printotu for AsymErrors
+    'pretty_vae'         , ## pretty printotu for ValWithAsymErrors
+    'pretty_vme'         , ## pretty printotu for ValWithMultiErrors    
 ) 
 # =============================================================================
 from   ostap.core.ostap_types import num_types, sized_types, sequence_types   
 from   ostap.core.core        import VE
 from   ostap.math.base        import iszero, isequal
-from   ostap.logger.utils     import fmt_pretty_errs, fmt_pretty_err2  
 import math, copy  
 # =============================================================================
 # logging 
@@ -1012,7 +1015,7 @@ class ValWithMultiErrors(object) :
 ## Format for  pretty print of asymmetric errors
 #  @code
 #  ae = AsymErrors ( -5 , 10000 )
-#  fmte , expo = fmt_pretty_ae ( ae , width = 8, precision = 6 ) 
+#  fmt , fmte , expo = fmt_pretty_ae ( ae , width = 8, precision = 6 ) 
 #  @endcode
 def fmt_pretty_ae ( errors             ,
                     width       = 6    ,
@@ -1020,21 +1023,22 @@ def fmt_pretty_ae ( errors             ,
                     parentheses = True )  :
     """ Format for  pretty print of asymmetric errors
     >>> ae = AsymErrors ( -5 , 10000 )
-    >>> fmte , expo = fmt_pretty_ae ( ae , width = 8, precision = 6 ) 
+    >>> fmt, fmte , expo = fmt_pretty_ae ( ae , width = 8, precision = 6 ) 
     """
     assert isinstance ( errors , AsymErrors ), \
         "Invalid type of `errors`: %s" % type ( errors )
 
-    errs = errors.negative , errors.positive 
-    _ , fmte , expo = fmt_pretty_errs ( value     = 0.0       ,
-                                        errors    = errs      ,
-                                        width     = width     ,
-                                       precision = precision )
-
+    ## get the formats 
+    from ostap.logger.pretty import fmt_pretty_errors
+    fmtv , fmte , expo = fmt_pretty_errors ( 0.0 ,
+                                             errors.positive       ,
+                                             errors.negative       ,
+                                             width     = width     ,
+                                             precision = precision ) 
+    
     fmt = '-/%s +/%s' % ( fmte , fmte )
-    ## 
-    if parentheses : fmt = '( ' + fmt + ' )'
-    return fmt , expo 
+    if parentheses : fmt = '( ' + fmt + ' )' 
+    return fmt , fmte , expo 
 
 # =============================================================================
 ## Formats for  pretty print of value with asymmetric errors
@@ -1052,14 +1056,14 @@ def fmt_pretty_vae (  value              ,
     """
     assert isinstance ( value , ValWithErrors ), \
         "Invalid type of `value`: %s" % type ( value)
-
-    v , errlow , errhigh = value.value , value.neg_error , value.pos_error
-    return fmt_pretty_err2 ( value       = v           ,
-                             errlow      = errlow      ,
-                             errhigh     = errhigh     ,
-                             width       = width       ,
-                             precision   = precision   ,
-                             parentheses = parentheses )
+    
+    from ostap.logger.pretty import fmt_pretty_error2
+    return fmt_pretty_error2 ( value.value               ,
+                               value.neg_error           ,
+                               value.pos_error           ,
+                               width       = width       ,
+                               precision   = precision   ,
+                               parentheses = parentheses ) 
 
 # =============================================================================
 ## Formats for  pretty print of value with multiple asymmetric errors
@@ -1077,18 +1081,20 @@ def fmt_pretty_vme ( value              ,
     """
     assert isinstance ( value , ValWithMultiErrors ), \
         "Invalid type of `value`: %s" % type ( value )
-    
+
     errors  = tuple ( e.negative for e in value.errors ) 
     errors += tuple ( e.positive for e in value.errors ) 
 
-    fmtv , fmte , expo = fmt_pretty_errs ( value     = value.value ,
-                                           errors    = errors      , 
-                                           width     = width       ,
-                                           precision = precision   )
+    from ostap.logger.pretty import fmt_pretty_errors
+    fmtv , fmte , expo = fmt_pretty_errors ( value.value           ,
+                                             *errors               , 
+                                             width     = width     ,
+                                             precision = precision )
     fmt = " %s" % fmtv
     for e in value.errors : fmt += " -/%s +/%s"
     if parentheses : fmt = '( ' + fmt + ' )'
     return fmt , fmtv , fmte , expo
+
 
 # =============================================================================
 ## pretty print for asymemtric errors
@@ -1106,19 +1112,13 @@ def pretty_ae ( errors             ,
     """
     assert isinstance ( errors , AsymErrors ), \
         "Invalid type of `errors`: %s" % type ( errors )
-    
-    fmt , expo = fmt_pretty_ae ( errors                    ,
-                                 width       = width       ,
-                                 precision   = precision   ,
-                                 parentheses = parentheses ) 
 
-    values = abs ( errors.negative )  , errors.positive
-    
-    if expo:
-        scale  = 10 ** expo 
-        values = tuple ( v / scale for v in values )
-
-    return fmt % values , expo 
+    from ostap.logger.pretty import pretty_errors
+    return pretty_errors ( errors.negative          ,
+                           errors.positive           ,
+                           width       = width       , 
+                           precision   = precision   ,
+                           parentheses = parentheses ) 
 
 # =============================================================================
 ## pretty print for value with asymmetric errors
@@ -1136,19 +1136,15 @@ def pretty_vae ( value              ,
     """    
     assert isinstance ( value , ValWithErrors ), \
         "Invalid type of `value`: %s" % type ( value )
-    
-    fmt, _ , _ , expo = fmt_pretty_vae ( value                     , 
-                                         width       = width       ,
-                                         precision   = precision   ,
-                                         parentheses = parentheses ) 
-    
-    values  = value.value , abs ( value.neg_error ) , value.pos_error    
-    if expo:
-        scale  = 10 ** expo 
-        values = tuple ( v / scale for v in values )
 
-    return fmt % values , expo 
-
+    from ostap.logger.pretty import pretty_error2
+    return pretty_error2 ( value ,
+                           value.negative            ,
+                           value.positive            ,
+                           width       = width       , 
+                           precision   = precision   ,
+                           parentheses = parentheses ) 
+    
 # =============================================================================
 ## pretty print for value with multiple asymmetric errors
 #  @code

@@ -25,11 +25,11 @@ from   ostap.core.pyrouts     import VE, SE, Ostap
 from   ostap.math.base        import iszero
 from   ostap.utils.basic      import split_string 
 from   ostap.core.ostap_types import string_types, list_types, num_types, sized_types, sequence_types    
-from   ostap.math.operations  import Mul as MULT  ## needed for proper abstract multiplication
-import ostap.io.zipshelve     as     DBASE ## needed to store the weights&histos
-from   ostap.trees.funcs      import FuncTree, FuncData ## add weigth to TTree/RooDataSet
+from   ostap.math.operations  import Mul  as MULT       ## needed for proper abstract multiplication
+import ostap.io.zipshelve     as     DBASE              ## needed to store the weights&histos
+from   ostap.trees.funcs      import FuncTree, FuncData ## add weight to TTree/RooDataSet
 from   ostap.utils.utils      import CallThem, is_formula  
-from   ostap.logger.pretty    import pretty_ve
+from   ostap.math.ve          import pretty_ve
 from   ostap.math.reduce      import root_factory
 import ostap.core.core 
 import ostap.histos.histos 

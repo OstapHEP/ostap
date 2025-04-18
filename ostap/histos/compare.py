@@ -17,7 +17,8 @@ __all__     = ()
 # =============================================================================
 from   ostap.core.core        import hID , VE 
 from   ostap.logger.colorized import allright  
-from   ostap.logger.pretty    import pretty_float, pretty_ve
+from   ostap.logger.pretty    import pretty_float
+from   ostap.math.ve          import pretty_ve
 import ostap.histos.histos 
 import ostap.histos.param
 import ostap.fitting.param 

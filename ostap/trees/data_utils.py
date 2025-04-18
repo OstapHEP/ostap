@@ -59,7 +59,7 @@ from   ostap.logger.symbols   import tree           as tree_symbol
 from   ostap.logger.symbols   import branch         as branch_symbol
 from   ostap.logger.symbols   import tape           as file_symbol
 from   ostap.logger.symbols   import folder         as folder_symbol
-import ROOT, os, math  
+import ROOT, os, math, re   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -195,22 +195,31 @@ class Data(RootFiles):
         return self.get_chain ( 0 )
     
     @property
-    def chain1 ( self ) :
-        """'chain1' : (re)built and return the first `TChain` object , same as `chain`"""
-        return self.get_chain ( 0 )
-
-    @property
-    def chain2 ( self ) :
-        """'chain2' : (re)built and return the second `TChain` object"""
-        return self.get_chain ( 1 )
-    
-    @property
     def check ( self ) :
         """'check' : make check for `TTree`/`TChain` structures
         """
         return self.__check
 
-    
+    # =========================================================================
+    ## Get `chain<N>` attribute
+    #  @code
+    #  data = ...
+    #  chain2 = data.chain2 
+    #  @endcode 
+    def __getattr__ ( self , name ) :
+        """ Get `chain<N>` attribute
+        >>> data = ...
+        >>> chain2 = data.chain2 
+        """
+        if name.startswith ( 'chain' ) :
+            index = re.search ( r'chain(?P<index>\d{1,2})' , name  )
+            if index :
+                index = int ( index.group ( 'index' ) ) 
+                if 1 <= index <= self.nchains :
+                    return self.get_chain ( index - 1 ) 
+        raise AttributeError ( "Data: No attribute `%s' is found!" % name  )
+
+    # =======================================================================================
     ## check the content of the two trees
     @staticmethod 
     def check_trees ( tree1 , tree2 , the_file = '' ) :

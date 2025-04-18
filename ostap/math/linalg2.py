@@ -23,7 +23,9 @@ from   ostap.math.base        import isequal   , iszero, std , Ostap, numpy
 from   ostap.utils.basic      import typename 
 from   ostap.core.ostap_types import num_types , integer_types
 from   ostap.utils.clsgetter  import classgetter
-from   ostap.logger.pretty    import pretty_array, fmt_pretty_float, fmt_pretty_err1   
+from   ostap.logger.pretty    import fmt_pretty_float, fmt_pretty_error 
+from   ostap.math.base        import pretty_array
+
 from   ostap.logger.colorized import infostr
 from   ostap.utils.gsl        import gsl_info
 from   ostap.logger.symbols   import ditto, times, labels 
@@ -1460,10 +1462,10 @@ class LinAlg(object) :
             maec   = abs ( Ostap.Math.maxabs_element  ( cov2   ) )
             perror = maec 
             
-        _ , fmtv , fmte , expo = fmt_pretty_err1 ( value     = maev      ,
-                                                   error     = perror    , 
-                                                   width     = width     ,
-                                                   precision = precision )
+        _ , fmtv , fmte , expo = fmt_pretty_error ( maev      ,
+                                                    perror    , 
+                                                    width     = width     ,
+                                                    precision = precision )
 
         if expo :
             scale = 10 ** expo

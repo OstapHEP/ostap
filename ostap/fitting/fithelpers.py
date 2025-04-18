@@ -45,9 +45,9 @@ from   ostap.fitting.utils     import ( make_name   , numcpu , ncpu , get_i ,
                                         roo_poisson , roo_gaussian  )
 from   ostap.fitting.roocmdarg import check_arg 
 from   ostap.fitting.variables import SETVAR, make_formula
+from   ostap.math.ve           import pretty_ve
 from   ostap.utils.utils       import make_iterable
 from   ostap.utils.basic       import typename , items_loop
-from   ostap.logger.pretty     import pretty_ve
 import ROOT, sys, random, math
 # =============================================================================
 from   ostap.logger.logger   import getLogger

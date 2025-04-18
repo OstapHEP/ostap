@@ -723,6 +723,78 @@ _decorated_classes_  = (
     COMPLEXl ,
     )
 
+
+# =======================================================================
+## nice printout of complex numbers ( string + exponent)
+#  @code
+#  ae = complex ( ... ) 
+#  s , expo = pretty_complex (  ae ) 
+#  @endcode
+#  @return nice string and the separate exponent 
+def pretty_complex ( value              ,
+                     width       = 6    ,
+                     precision   = 4    ,
+                     parentheses = True ) :
+    """ Nice printout of complex number ( string + exponent)
+    - return nice stirng and the separate exponent 
+    >>> s , expo = pretty_complex( number ) 
+    """
+    v  = complex ( value )
+    ##
+    from ostap.logger.pretty import fmt_pretty_values 
+    fmtv , expo = fmt_pretty_values ( v.real () ,
+                                      v.imag () ,
+                                      width       = width     ,
+                                      precision   = precision ,
+                                      parentheses = False     )
+    ## 
+    fmt = '%s%sj' % ( fmtv , fmtv ) 
+    if parentheses : fmt = '( ' + fmt + ' )' 
+    ##
+    if expo :
+        scale = 10 ** expo
+        v /= scale
+    ## 
+    return fmt % ( v.real , v.imag ) , expo
+
+# =======================================================================
+## Nice pritout of arrays of numerical values
+#  @code
+#  array = ...
+#  result, expo = pretty_array ( array ) 
+#  @endcode 
+#  @return nice string and the separate exponent 
+def pretty_array ( values             ,
+                   width       = 6    ,
+                   precision   = 4    ,
+                   parentheses = True ) :
+    """ Nice pritout of arrays of numerical values
+    - return nice stirng and the separate exponent 
+    >>> array = ...
+    >>> result, expo = pretty_array ( array ) 
+    """
+    assert isinstance ( values , sequence_types ) , \
+        "Invalid type of `values':%s" % type ( values )
+    
+    if not values : return '' if not parentheses else '[]'
+    
+    assert all ( isinstance ( v , num_types ) for v in values ) , \
+        "Invalid content of `value': %s" % str ( values ) 
+
+    from ostap.logger.pretty import fmt_pretty_values 
+    fmtv , expo = fmt_pretty_values ( *values                 , 
+                                      width       = width     ,
+                                      precision   = precision )
+    
+    if expo :
+        scale  = 10 ** expo
+        result = ', '.join ( fmtv % ( float ( v ) / scale ) for v in values )
+    else :
+        result = ', '.join ( fmtv %   float ( v )           for v in values )
+    ## 
+    if parentheses : result = '[ ' + result + ' ]'
+    return result, expo
+
 # =============================================================================
 ## C++ version of frexp with radix 10 
 cpp_frexp10 = Ostap.Math.frexp10 

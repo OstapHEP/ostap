@@ -2240,7 +2240,7 @@ class Reader(object)  :
         ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg) )
         """        
         if not method in self.__methods :
-            return AttributeError( 'No method %s is booked!' %  method )
+            raise AttributeError( "No method `%s' is booked!" %  method )
         return Reader.Var  ( self , method ) 
 
     # =========================================================================

@@ -35,7 +35,8 @@ __all__     = ()
 from   ostap.core.ostap_types import integer_types, num_types
 from   ostap.math.base        import isfinite, isequal, pos_infinity, neg_infinity  
 from   ostap.core.core        import Ostap, VE
-from   ostap.logger.pretty    import pretty_float, pretty_ve
+from   ostap.logger.pretty    import pretty_float
+from   ostap.math.ve          import pretty_ve
 import ROOT 
 # =============================================================================
 # logging 
