@@ -27,7 +27,8 @@
  - improve matrix tables
  - add more operations to `ROOT.TCut` objects
  - reshuffle the code around `pretty_ve` to reduce explciti apprearenc of this&related  functions
-        
+ - add possibility to disable automatic construction of SB&BS components for `Fit2D` and `Fit2DSym` models 
+    
 ## New features
     
    1. further improvemets for the wrapped columns in the tables

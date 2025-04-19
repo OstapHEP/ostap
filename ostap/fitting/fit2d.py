@@ -236,7 +236,9 @@ class Fit2D (PDF2) :
                    components = []    ,
                    xvar       = None  ,
                    yvar       = None  ,
-                   fix_norm   = False ,                   
+                   fix_norm   = False ,
+                   make_SB    = True  ,    ## make SB component?
+                   make_BS    = True  ,    ## make BS component?                   
                    name       = ''    ) :
         
         ## collect all the arguments 
@@ -260,6 +262,9 @@ class Fit2D (PDF2) :
             ##
             'suffix'     : suffix   ,
             'name'       : name     ,
+            ## 
+            'make_SB'    : make_SB  , 
+            'make_BS'    : make_BS  , 
             }
         
         
@@ -366,23 +371,30 @@ class Fit2D (PDF2) :
     
         self.__ss = self.make_var ( ss   , "SS"               + suffix ,
                                     "Signal(x,y)"             + suffix , None , 1000  , 0 , 1.e+7 )
-        self.__sb = self.make_var ( sb   ,  "SB"              + suffix ,
-                                    "Signal(x)&Background(y)" + suffix , None ,  100  , 0 , 1.e+7 )
         self.__bs = self.make_var ( bs   , "BS"               + suffix ,
                                     "Background(x)&Signal(y)" + suffix , None ,  100  , 0 , 1.e+7 )        
         self.__bb = self.make_var ( bb   , "BB"               + suffix ,
                                     "Background(x,y)"         + suffix , None ,   10  , 0 , 1.e+7 )
+
+        ## create this component if needed 
+        self.__sb = self.make_var ( sb if make_SB else ROOT.RooFit.RooConst ( 0 )  ,
+                                    "SB"              + suffix ,
+                                    "Signal(x)&Background(y)" + suffix , None ,  100  , 0 , 1.e+7 )
         
-        self.alist1 = ROOT.RooArgList (
-            self.__ss_cmp.pdf ,
-            self.__sb_cmp.pdf ,
-            self.__bs_cmp.pdf ,
-            self.__bb_cmp.pdf )
-        self.alist2 = ROOT.RooArgList (
-            self.__ss ,
-            self.__sb ,
-            self.__bs ,
-            self.__bb )
+        ## create this component if needed 
+        self.__bs = self.make_var ( bs if make_BS else ROOT.RooFit.RooConst ( 0 )  ,
+                                    "BS"               + suffix ,
+                                    "Background(x)&Signal(y)" + suffix , None ,  100  , 0 , 1.e+7 )        
+
+        ## SS & BB components 
+        self.alist1 = ROOT.RooArgList ( self.__ss_cmp.pdf , self.__bb_cmp.pdf )
+        self.alist2 = ROOT.RooArgList ( self.__ss         , self.__bb         )
+        if make_SB :
+            self.alist1.add ( self.__sb_cmp.pdf )
+            self.alist2.add ( self.__sb         )
+        if make_BS :
+            self.alist1.add ( self.__bs_cmp.pdf )
+            self.alist2.add ( self.__bs         )
 
         ## treat additional components (if specified)
         self.__nums_components = [] 
@@ -421,8 +433,8 @@ class Fit2D (PDF2) :
 
         self.signals     .add ( self.__ss_cmp.pdf )
         self.backgrounds .add ( self.__bb_cmp.pdf )
-        self.crossterms1 .add ( self.__sb_cmp.pdf ) ## cross-terms 
-        self.crossterms2 .add ( self.__bs_cmp.pdf ) ## cross-terms 
+        if make_SB : self.crossterms1 .add ( self.__sb_cmp.pdf ) ## cross-terms 
+        if make_BS : self.crossterms2 .add ( self.__bs_cmp.pdf ) ## cross-terms 
 
         ## save configuration
         self.config = {
@@ -443,7 +455,9 @@ class Fit2D (PDF2) :
             'xvar'       : self.xvar            , 
             'yvar'       : self.yvar            ,
             'fix_norm'   : self.fix_norm        , 
-            'name'       : self.name    
+            'name'       : self.name            , 
+            'make_SB'    : make_SB              , ## make SB-somponent 
+            'make_BS'    : make_BS              , ## make SB-somponent             
             }
         
         self.checked_keys.add  ( 'xvar' )
@@ -702,7 +716,8 @@ class Fit2DSym (PDF2) :
                    components = []    ,
                    xvar       = None  ,
                    yvar       = None  ,                   
-                   fix_norm   = False , 
+                   fix_norm   = False ,
+                   make_SB    = True  ,    ## make SB component?
                    name       = ''    ) : 
         
         ## collect all the arguments 
@@ -724,7 +739,10 @@ class Fit2DSym (PDF2) :
             ##
             'xvar'       : xvar       ,
             'yvar'       : yvar       ,            
-            'fix_norm'   : fix_norm   , 
+            'fix_norm'   : fix_norm   ,
+            ##  
+            'make_SB'    : make_SB    ,
+            ##
             }
         
         self.__suffix      = suffix
@@ -832,23 +850,22 @@ class Fit2DSym (PDF2) :
         
         self.__bb = self.make_var ( bb , "BB"             + suffix ,
                                     "Background(x,y)"     + suffix , None ,   10  , 0 ,  1.e+7 )
-        
-        self.__sb = self.make_var ( sb , "SB"             + suffix ,
+
+        ## NB!!
+        self.__sb = self.make_var ( sb if make_SB else ROOT.RooFit.RooConst ( 0 ) ,
+                                    "SB"             + suffix ,
                                     "Signal(x)&Background(y)+Background(x)&Signal(y)" + suffix , None ,  100  , 0 ,  1.e+7 )
         
         ## duplicate
         
         self.__bs = self.__sb
         
-        self.alist1 = ROOT.RooArgList (
-            self.__ss_cmp.pdf ,
-            self.__sb_cmp.pdf ,
-            self.__bb_cmp.pdf )
-        self.alist2 = ROOT.RooArgList (
-            self.__ss         ,
-            self.__sb         ,
-            self.__bb         )
-
+        self.alist1 = ROOT.RooArgList ( self.__ss_cmp.pdf , self.__bb_cmp.pdf )
+        self.alist2 = ROOT.RooArgList ( self.__ss         , self.__bb         )
+        if make_SB : 
+            self.alist1.add ( self.__sb_cmp.pdf ) 
+            self.alist2.add ( self.__sb         )
+            
         ## treat additional components (if specified)
         self.__nums_components = [] 
         icmp = 0
@@ -885,8 +902,9 @@ class Fit2DSym (PDF2) :
 
         self.signals     .add ( self.__ss_cmp.pdf )
         self.backgrounds .add ( self.__bb_cmp.pdf )
-        self.crossterms1 .add ( self.__sb_cmp.pdf ) ## cross-terms 
-        self.crossterms2 .add ( self.__bs_cmp.pdf ) ## cross-terms 
+        if make_SB : 
+            self.crossterms1 .add ( self.__sb_cmp.pdf ) ## cross-terms 
+            self.crossterms2 .add ( self.__bs_cmp.pdf ) ## cross-terms 
 
         ## save configuration
         self.config = {
@@ -905,6 +923,7 @@ class Fit2DSym (PDF2) :
             'yvar'       : self.yvar            ,
             'fix_norm'   : self.fix_norm        ,
             'name'       : self.name            ,
+            'make_SB'    : make_SB              
             }
 
         self.checked_keys.add ( 'xvar' )

@@ -469,7 +469,7 @@ class Fit1D (PDF1) :
     >>> gauss = Gauss_pdf( ... ) 
     >>> pdf   = Fit1D ( signal = gauss , background = 0 ) ## Gauss as signal and exponent as background 
     """
-    def __init__ ( self                          , 
+    def __init__ ( self                            , 
                    signal                = None    ,    ## the main signal 
                    background            = None    ,    ## the main background 
                    othersignals          = ()      ,    ## additional signal         components
@@ -495,7 +495,7 @@ class Fit1D (PDF1) :
                    fS                    = ()      ,    ## fraction for combined signal
                    fB                    = ()      ,    ## fraction for combined background
                    fC                    = ()      ,    ## fraction for combined components
-                   fix_norm              = False   ,    ## SetCoefNoralization.getCoefNormalization 
+                   fix_norm              = False   ,    ## SetCoefNoralization.getCoefNormalization
                    **kwargs                        ) :  ## other arguments (e.g. drawing)
 
         
@@ -735,7 +735,8 @@ class Fit1D (PDF1) :
             'C'                     : self.C                     ,
             'F'                     : self.F                     ,
             ##
-            'fix_norm'              : self.fix_norm 
+            'fix_norm'              : self.fix_norm
+            ##
             }
 
         self.checked_keys.add  ( 'xvar' )
