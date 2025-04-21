@@ -35,10 +35,12 @@ from   ostap.math.base          import doubles, axis_range, numpy, np2raw
 from   ostap.math.models        import f1_draw
 from   ostap.utils.basic        import numcpu, loop_items  
 from   ostap.stats.gof_utils    import Estimators,Summary
-from   ostap.fitting.fithelpers import ConfigReducer
 import ostap.fitting.ds2numpy 
 import ostap.fitting.roofit
 import ROOT, math
+
+
+from ostap.utils.timing import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -284,67 +286,105 @@ def ZC  ( cdf_data ) :
 ## @class GoF1D
 #  Goodness of 1D-fits 
 #  @see https://doi.org/10.1111/1467-9868.00337
-class GoF1D(Estimators,ConfigReducer) :
+class GoF1D(Estimators) :
     """ Goodness-of-fit 1D-case 
     - see https://doi.org/10.1111/1467-9868.00337
     """
-    def __init__ ( self    ,
-                   pdf     ,
-                   dataset ) :
+    def __init__ ( self           ,
+                   pdf            ,
+                   dataset        ,
+                   cdf     = None ) :
         
         assert isinstance ( pdf     , PDF1            ) , 'Invalid type of `pdf`:%s'     % type ( pdf     )
-        assert isinstance ( dataset , ROOT.RooDataSet ) , 'Invalid type of `daatset`:%s' % type ( dataset )
+        assert isinstance ( dataset , ROOT.RooDataSet ) , 'Invalid type of `dataset`:%s' % type ( dataset )
+
         
         vars = pdf.vars
         assert 1 == len ( vars )   , 'GoF1D: Only 1D-pdfs are allowed!'
         assert pdf.xvar in dataset , 'GoF1D: `xvar`:%s is not in dataset!' % ( self.xvar.name ) 
-        
-        cdf = pdf.cdf ()
-        if hasattr ( pdf.pdf , 'setPars'  ) : pdf.pdf.setPars() 
-        if hasattr ( pdf.pdf , 'function' ) :
-            if hasattr ( pdf.pdf , 'setPars'  ) : pdf.pdf.setPars() 
-            fun = pdf.pdf.function()
-            if hasattr ( fun , 'cdf' ) :
-                try :                    
-                    a = fun.cdf ( 0.0 )
-                    self.__store = pdf, fun 
-                    def cdf ( x ) : return fun.cdf ( x ) 
-                except TypeError : pass 
 
+        original_cdf = cdf
+        
+        cdf_ok = cdf and callable ( cdf )
+
+        self.__store = () 
+        if not cdf_ok :
+            cdf = pdf.cdf ()
+            ## make atry to get underlying c++ cdf-function from PDF 
+            if hasattr ( pdf.pdf , 'setPars'  ) : pdf.pdf.setPars() 
+            if hasattr ( pdf.pdf , 'function' ) :
+                if hasattr ( pdf.pdf , 'setPars'  ) : pdf.pdf.setPars() 
+                fun = pdf.pdf.function()
+                if hasattr ( fun , 'cdf' ) :
+                    # =========================================================
+                    try : # ===================================================
+                        # =====================================================
+                        a = fun.cdf ( 0.0 )
+                        def cdf ( x ) : return fun.cdf ( x ) 
+                        self.__store = pdf , cdf , fun
+                        # =====================================================
+                    except TypeError : # ======================================
+                        # =====================================================
+                        pass 
+
+        ## store PDF 
+        self.__pdf        = pdf        
+        self.__parameters = pdf.parameters ( dataset ) 
+
+        ## store CDF 
         self.__cdf   = cdf
-        self.__xmnmx = pdf.xminmax()
-        
+
         ## vectorized version of CDF 
-        self.__vct_cdf = numpy.vectorize ( cdf )
+        self.__vct_cdf = numpy.vectorize ( self.__cdf )
         
-        ## data in form of numpy sructured array
+        ## data in a form of numpy sructured array
         varname = pdf.xvar.name 
         data    = dataset.tonumpy ( varname ) [ varname ] 
 
         ## sorted data 
-        self.__data     = numpy.sort  ( data )
+        data    = numpy.sort  ( data )
 
         ## empirical CDF function 
-        self.__ecdf     = Ostap.Math.ECDF ( data2vct ( self.__data ) )
+        self.__ecdf = Ostap.Math.ECDF ( data2vct ( data ) )
 
         ## evalute CDF for sorted data 
-        self.__cdf_data = self.clip ( self.__vct_cdf ( self.__data ) ) 
+        cdf_data = self.clip ( self.__vct_cdf ( data ) ) 
         
         self.__estimators = {
-            'KS'  : kolmogorov_smirnov ( self.__cdf_data ) , 
-            'K'   : kuiper             ( self.__cdf_data ) , 
-            'AD'  : anderson_darling   ( self.__cdf_data ) , 
-            'CM'  : cramer_von_mises   ( self.__cdf_data ) , 
-            'ZK'  : ZK                 ( self.__cdf_data ) , 
-            'ZA'  : ZA                 ( self.__cdf_data ) , 
-            'ZC'  : ZC                 ( self.__cdf_data ) , 
+            'KS'  : kolmogorov_smirnov ( cdf_data ) , 
+            'K'   : kuiper             ( cdf_data ) , 
+            'AD'  : anderson_darling   ( cdf_data ) , 
+            'CM'  : cramer_von_mises   ( cdf_data ) , 
+            'ZK'  : ZK                 ( cdf_data ) , 
+            'ZA'  : ZA                 ( cdf_data ) , 
+            'ZC'  : ZC                 ( cdf_data ) ,
         }
         
-        self.config = {
-            'pdf'     : pdf     ,
-            'dataset' : dataset , 
-        }
-        
+
+    ## serialize the object 
+    def __getstate__ ( self ) :
+        """ Serialize the object"""
+        self.pdf.load_params ( self.__parameters , silent = True )
+        return { 'pdf'        : self.pdf          ,
+                 'parameters' : self.__parameters , 
+                 'cdf'        : self.cdf          ,
+                 'ecdf'       : self.ecdf         ,
+                 'estimators' : self.estimators   , 
+                 'store'      : self.__store      }
+    
+    ## De-serialize th eobject 
+    def __setstate__ ( self , state ) :
+        """ De-serialize the object """         
+        self.__pdf        = state.pop ( 'pdf'        ) 
+        self.__parameters = state.pop ( 'parameters' ) 
+        self.__cdf        = state.pop ( 'cdf'        )
+        self.__ecdf       = state.pop ( 'ecdf'       )
+        self.__estimators = state.pop ( 'estimators' ) 
+        self.__store      = state.pop ( 'store' , () )
+        ## vectorized form of CDF 
+        self.__vct_cdf    = numpy.vectorize ( self.cdf )
+        self.pdf.load_params ( self.__parameters , silent = True )
+                               
     # =========================================================================
     @property
     def estimators ( self ) :
@@ -356,7 +396,14 @@ class GoF1D(Estimators,ConfigReducer) :
     @property 
     def N  ( self ) :
         """`N` : size of dataset"""
-        return len ( self.__data ) 
+        return len ( self.__ecdf ) 
+    
+    # =========================================================================
+    ## fit-PDF 
+    @property
+    def pdf ( self ) :
+        """`pdf` : PDF for fit-function"""
+        return self.__pdf
     
     # =========================================================================
     ## fit-CDF
@@ -374,20 +421,17 @@ class GoF1D(Estimators,ConfigReducer) :
     
     # =========================================================================
     ## empirical CDF for data
+    @property 
     def ecdf ( self ) :
         """`ecdf` : empirical CDF for data"""
         return self.__ecdf
+
+    # =========================================================================
+    @property
+    def parameters ( self ) :
+        """ PDF parameters """
+        return self.__parameters
     
-    @property
-    def data ( self ) :
-        """`data` : sorted input data (as numpy array)"""
-        return self.__data
-
-    @property
-    def cdf_data ( self ) :
-        """`cdata` : vector of CDF(x) data (as numpy array)"""
-        return self.__cdf_data 
-
     # =========================================================================
     ## Get Kolmogorov-Smirnov statistiscs 
     @property 
@@ -493,6 +537,7 @@ class GoF1D(Estimators,ConfigReducer) :
         
         r2 = ecdf.draw ( optsame  , color = 2 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
         return r1 , r2
+    
 # =============================================================================
 ## @class GoF1DToys
 #  Check Goodness of 1D-fits using toys 
@@ -502,29 +547,50 @@ class GoF1DToys(GoF1D,Summary) :
     ## result of GoF-toys 
     Result = namedtuple ( 'Result' , 'statistics counter pvalue nsigma' )
     # =========================================================================
-    def __init__ ( self              ,
-                   pdf               ,
-                   dataset           ,
-                   nToys     = 1000  ,
-                   parallel  = False ,
-                   nSplit    = 0     , 
-                   silent    = False ) :
-        
-        assert isinstance ( nToys , int ) and 0 < nToys , "Invalid `nToys` argument!"
+    ## Initialize Gof!D toys object :
+    #  @code
+    #  gof  = GoF1D     ( ... ) 
+    #  toys = GoF1DToys ( gof )
+    #  @endcode 
+    def __init__ ( self , gof ) :
+        """ Initialize GoF1D toys object :
+        >>> gof  = GoF1D     ( ... ) 
+        >>> toys = GoF1DToys ( gof ) 
+        """
+        assert isinstance ( gof , GoF1D ) , "Invalid `gof`-parameter"
 
-        ## initialize the base
-        GoF1D.__init__ ( self , pdf , dataset ) 
+        ## mimic the copy-constructor for the base class 
+        state = GoF1D.__getstate__ ( gof ) 
+        GoF1D.__setstate__ ( self , state )
 
-        self.__pdf      = pdf
-        self.__dataset  = dataset
-        
         self.__counters = defaultdict(SE) 
-        self.__ecdfs    = {}
-        
+        self.__ecdfs    = {}        
         self.__nToys    = 0
         
-        if 0 < nToys :
-            self.run ( nToys , parallel = parallel , silent = silent , nSplit = nSplit ) 
+    ## serialize the object 
+    def __getstate__ ( self ) :
+        """ Serialize the object 
+        """
+        #
+        ## (1) serialize the base 
+        state = GoF1D.__getstate__ ( self )
+        # 
+        state [ 'counters' ] = self.__counters
+        state [ 'ecdfs'    ] = self.__ecdfs 
+        state [ 'nToys'    ] = self.__nToys
+        # 
+        return state 
+    
+    ## De-serialize the object 
+    def __setstate__ ( self , state ) :
+        """ De-serialize the object """
+        
+        ## (1) de-serialize the base 
+        GoF1D.__setstate__ ( self , state )
+        # 
+        self.__counters   = state.pop ( 'counters'   )
+        self.__ecdfs      = state.pop ( 'ecdfs'      )
+        self.__nToys      = state.pop ( 'nToys'    , 0  )
 
     # ===============================================================================
     ## run toys 
@@ -535,27 +601,30 @@ class GoF1DToys(GoF1D,Summary) :
 
         if parallel :
             from ostap.parallel.parallel_gof1d import parallel_gof1dtoys as parallel_toys 
-            self += parallel_toys ( self.__pdf            ,
-                                    self.__dataset        ,
+            self += parallel_toys ( gof      = self       ,
                                     nToys    = nToys      ,
                                     nSplit   = nSplit     ,
                                     silent   = True       ,
                                     progress = not silent )
-            return 
-
-        varname = self.__pdf.xvar.name        
+            return self 
+        
+        varname  = self.pdf.xvar.name        
         results  = defaultdict(list)
         counters = self.counters 
         vct_cdf  = self.vcdf
-        
-        from ostap.utils.progress_bar import progress_bar 
+
+        from ostap.utils.progress_bar import progress_bar
+
+        cnt = SE() 
         for i in progress_bar ( nToys , silent = silent , description = 'Toys:') :
-        
-            dset     = self.__pdf.generate ( self.N  , sample = True )
+
+            self.pdf.load_params ( self.parameters , silent = True )            
+            dset     = self.pdf.generate ( self.N  , sample = True )                
             data     = dset.tonumpy ( varname ) [ varname ] 
             data     = numpy.sort ( data )
-            
-            cdf_data = self.clip ( vct_cdf ( data ) ) 
+
+            ## CLIP... does one need it? 
+            cdf_data = self.clip ( vct_cdf ( data ) )
             
             ks       = kolmogorov_smirnov ( cdf_data )
             k        = kuiper             ( cdf_data )
@@ -564,7 +633,7 @@ class GoF1DToys(GoF1D,Summary) :
             zk       = ZK                 ( cdf_data )
             za       = ZA                 ( cdf_data )
             zc       = ZC                 ( cdf_data )
-            
+
             counters [ 'KS' ] += ks
             counters [ 'K'  ] += k
             counters [ 'AD' ] += ad
@@ -581,6 +650,7 @@ class GoF1DToys(GoF1D,Summary) :
             results  [ 'ZA' ].append ( za ) 
             results  [ 'ZC' ].append ( zc ) 
 
+            cnt += ks 
             ## delete data
             if isinstance ( dset , ROOT.RooDataSet ) : 
                 dset = Ostap.MoreRooFit.delete_data ( dset )
@@ -588,7 +658,7 @@ class GoF1DToys(GoF1D,Summary) :
             del dset
             del data
             del cdf_data            
-            
+
         ## accumulate number of toys 
         self.__nToys += nToys 
 
@@ -598,8 +668,9 @@ class GoF1DToys(GoF1D,Summary) :
             if not data : continue
             if not key in self.__ecdfs : self.__ecdfs [ key ] = ECDF ( data , True ) ## complementary ECDF!
             else                       : self.__ecdfs [ key ]  .add  ( data2vct ( data ) ) 
-            
+
         del results 
+        return self
     
     # =========================================================================
     ## number of toys 
@@ -622,7 +693,7 @@ class GoF1DToys(GoF1D,Summary) :
         return self.__counters
 
     # =========================================================================
-    ## Get Kolmogorov-Smirnov statistiscs 
+    ## Get Kolmogorov-Smirnov statistics 
     @property 
     def kolmogorov_smirnov ( self ) :
         """ Get Kolmogorov-Smirnov statistiscs KS
@@ -630,7 +701,7 @@ class GoF1DToys(GoF1D,Summary) :
         return self.result ( 'KS' ) 
     
     # ===============================================
-    ## Get Anderson-Darling  statistiscs 
+    ## Get Anderson-Darling  statistics
     @property 
     def anderson_darling ( self ) :
         """ Get Anderson-Darling statistiscs 
@@ -646,7 +717,7 @@ class GoF1DToys(GoF1D,Summary) :
         return self.result ( 'CM' ) 
         
     # =========================================================================
-    ## Get ZK statististics 
+    ## Get ZK statistics
     @property 
     def ZK  ( self ) :
         """ Get ZK statistics 
@@ -654,7 +725,7 @@ class GoF1DToys(GoF1D,Summary) :
         return self.result ( 'ZK' ) 
         
     # =========================================================================
-    ## Get ZA statististics 
+    ## Get ZA statistics
     @property 
     def ZA  ( self ) :
         """ Get ZA statistics
@@ -662,7 +733,7 @@ class GoF1DToys(GoF1D,Summary) :
         return self.result ( 'ZA' ) 
     
     # =========================================================================
-    ## Get ZC statististics 
+    ## Get ZC statistics
     @property 
     def ZC  ( self ) :
         """ Get ZC statistics 
@@ -670,7 +741,7 @@ class GoF1DToys(GoF1D,Summary) :
         return self.result ( 'ZC' ) 
 
     # =========================================================================
-    ## Get Kuiper statististics 
+    ## Get Kuiper statistics
     @property 
     def kuiper ( self ) :
         """ Get Kuiper statistics 
@@ -689,7 +760,7 @@ class GoF1DToys(GoF1D,Summary) :
     
     ## merge two objects:
     def __iadd__ ( self , other ) :
-        """ Merge two objects """        
+        """ Merge two GoF-toys objects """        
         if not isinstance ( other , GoF1DToys ) : return NotImplemented 
 
         ecdfs = other.ecdfs        
@@ -702,7 +773,9 @@ class GoF1DToys(GoF1D,Summary) :
             if key in self.__counters : self.__counters [ key ] += counter 
             else                      : self.__counters [ key ]  = counter 
 
-        self.__nToys += other.nToys 
+        self.__nToys += other.nToys
+        ##
+
         return self 
 
     plot = Summary.draw 

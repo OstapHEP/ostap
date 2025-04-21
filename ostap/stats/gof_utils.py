@@ -387,7 +387,7 @@ class Estimators(object) :
     """
     # ==========================================================================
     ## Print the summary as Table
-    def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 , style = None ) :
+    def table ( self , title = '' , prefix = '' , width = 6 , precision = 4 , style = None ) :
         """ Print the summary as Table
         """
         import ostap.logger.table  as     T 
@@ -445,7 +445,7 @@ class Summary(object) :
                              nsigma  )
     # =========================================================================
     ## format a row in the summary table
-    def row  ( self , what , result , width = 5 , precision = 3 ) :
+    def row  ( self , what , result , width = 6 , precision = 4 ) :
         """ Format a row in the sumamry table
         """
         value      = result.statistics
@@ -457,7 +457,10 @@ class Summary(object) :
         rms        = counter.rms    () 
         vmin, vmax = counter.minmax () 
         
-        mxv = max ( abs ( value ) , abs ( mean.value() ) , mean.error() , rms , abs ( vmin )  , abs ( vmax ) ) 
+        mxv = max ( abs ( value        ) ,
+                    abs ( mean.value() ) ,
+                    mean.error()         , rms ,
+                    abs ( vmin )  , abs ( vmax ) ) 
         
         from   ostap.math.ve import fmt_pretty_ve         
         fmt, fmtv , fmte , expo = fmt_pretty_ve ( VE ( mxv ,  mean.cov2() ) ,
@@ -467,21 +470,28 @@ class Summary(object) :
         
         if expo : scale = 10**expo
         else    : scale = 1
+        
         fmt2 = '%s/%s' % ( fmtv , fmtv ) 
 
-        from ostap.logger.symbols import plus_minus as pm 
+        vs  = value / scale
+        vm  = mean  / scale
+        vr  = rms   / scale
+        vmn = vmin  / scale
+        vmx = vmax  / scale
+        
+        from ostap.logger.symbols import plus_minus, times         
         return ( what  ,
-                 fmtv  %  ( value / scale )                      ,
-                 ( mean / scale ).toString ( fmt )               ,
-                 fmtv  %  ( rms  / scale )                       ,
-                 fmt2  %  ( vmin / scale , vmax / scale )        ,
-                 ( '10^%+d' % expo  if expo else '' )            ,                  
-                 ( 100 * pvalue ) .toString ( '%%.2f %s %%-.2f' % pm ) , 
-                 ( nsigma       ) .toString ( '%%.2f %s %%-.2f' % pm ) )
+                 fmtv  % vs ,
+                 fmt   % ( vm.value() , vm.error() ) ,
+                 fmtv  % vr                          ,
+                 fmt2  %  ( vmn , vmx )              ,
+                 ( '%s10^%+d' %  ( times , expo )  if expo else '' )   ,                  
+                 ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) , 
+                 ( nsigma       ) .toString ( '%%.2f %s %%-.2f' % plus_minus ) )
     
     # =========================================================================
     ## Make a summary table
-    def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 , style = None ) :
+    def table ( self , title = '' , prefix = '' , width = 6 , precision = 4 , style = None ) :
         """ Make a summary table
         """
         import ostap.logger.table  as     T                 
@@ -495,13 +505,13 @@ class Summary(object) :
             the_label = Labels.get ( label , label )
             row = self.row ( the_label , result , width = width , precision = precision )
             rows.append ( row ) 
-
-        rows = T.remove_empty_columns ( rows )
+                    
+        if rows : rows = T.remove_empty_columns ( rows )
         if   not title and self.nToys :
             title = 'Goodness of 1D-fit with #%d toys' % self.nToys  
         elif not title :
             title = 'Goodness of 1D-fit'
-        
+
         return T.table ( rows , title = title , prefix = prefix , alignment = 'lccccccc' , style = style )
 
     # =========================================================================
@@ -549,6 +559,7 @@ class Summary(object) :
 
         kwargs [ 'xmin' ] = kwargs.get ( 'xmin' , xmin ) 
         kwargs [ 'xmax' ] = kwargs.get ( 'xmax' , xmax )
+        
         result    = ecdf.draw  ( opts , *args , **kwargs ) 
         line      = ROOT.TLine ( value , 0 , value , 1 )
         ## 
@@ -556,7 +567,7 @@ class Summary(object) :
         line.SetLineColor ( 8 ) 
         line.draw('same')
         ##
-        self._line = line 
+        self._line = line
         return result, line  
 
 # =============================================================================
@@ -572,8 +583,7 @@ class GoFSummary ( object) :
     def items  ( self ) :
         """`items`: get all items"""
         return tuple ( self.__items )
-    
-    
+        
     def add_row ( self , method , tvalue , pvalue , nToys ) :
         item = method, tvalue, pvalue, nToys 
         self.__items.append ( item ) 

@@ -1562,12 +1562,12 @@ ROOT.RooDataSet.clear = _ds_clear_
 ROOT.RooDataSet.clean = _ds_clear_ 
 ROOT.RooDataSet.erase = _ds_clear_ 
 
-ROOT.RooDataSet.get_var       = get_var
+ROOT.RooAbsData.get_var= get_var
 
 _new_methods_ += [
     ROOT.RooDataSet .clear   ,
     ROOT.RooDataSet .erase   ,    
-    ROOT.RooDataSet .get_var ,
+    ROOT.RooAbsData .get_var ,
     ]
 
 # =============================================================================

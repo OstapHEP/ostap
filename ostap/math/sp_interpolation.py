@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2020-02-28
 # =============================================================================
-"""Useful scipy-based utilities for dealing with spline interpolation.
+""" Useful scipy-based utilities for dealing with spline interpolation.
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -21,7 +21,7 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.sp_interpolation' )
 else                       : logger = getLogger ( __name__                      )
 # =============================================================================
-with warnings.catch_warnings():
+with warnings.catch_warnings(): # =============================================
     warnings.simplefilter ( "ignore" )
     import scipy.interpolate as SI
 

@@ -213,9 +213,9 @@ def knots_from_abscissas ( abscissas , order , convert = True ) :
 def interpolate ( func , abscissas , spline , *args ) :
     """ Construct the interpolation B-spline
     
-    func      : the ``function''
+    func      : the `function'
     abscissas : abscissas, if None/Empty,  Greville's abscissas from the spline will be used
-    spline    : the spline will be constructed from ``spline'' and ``args''
+    spline    : the spline will be constructed from `spline` and `args`
     
     :Example:
     
@@ -230,7 +230,7 @@ def interpolate ( func , abscissas , spline , *args ) :
 
         if isinstance ( spline , int ) and 0 <= spline and not args :
             ## get initial spline
-            a  = [ p[0] for p in func ]
+            a  = [ p [ 0 ] for p in func ]
             a.sort()
             bs = Ostap.Math.BSpline ( a , spline )
             ## get the Greville's abscissas 
@@ -248,10 +248,11 @@ def interpolate ( func , abscissas , spline , *args ) :
             bs = Ostap.Math.BSpline ( spline , *args )
             
         sc = Ostap.Math.Interpolation.bspline ( func , bs )
-        if sc.isFailure() : raise TypeError("Ostap.Math.Bspline/1: Can't iterpolate!%s" %  sc )
+        if sc.isFailure() : raise TypeError ( "Ostap.Math.Bspline/1: Can't iterpolate!%s" %  sc )
         return bs
     
     elif not abscissas :
+        
         bs        = Ostap.Math.BSpline ( spline , *args )
         abscissas = bs.greville_abscissas () 
     
@@ -261,7 +262,7 @@ def interpolate ( func , abscissas , spline , *args ) :
     table = points ( func , abscissas )
 
     sc    = Ostap.Math.Interpolation.bspline ( table , bs )
-    if sc.isFailure () : raise TypeError("Ostap.Math.Bspline/2: Can't iterpolate!%s" %  sc )
+    if sc.isFailure () : raise TypeError ( "Ostap.Math.Bspline/2: Can't iterpolate!%s" %  sc )
     
     return bs 
 
@@ -288,14 +289,14 @@ try : # =======================================================================
     def interpolation ( table          ,
                         degree  = 3    ,
                         bc_type = None ) :
-        """Create interpolation spline using scipy machinery
+        """ Create interpolation spline using scipy machinery
         >>> table = ... ## interpolation table
         >>> spline  = intepolation ( table , degree = 3 ) 
-        - see `scipy.interpolation.make_innterp_spline` 
+        - see `scipy.interpolation.make_interp_spline` 
         - see `Ostap.Math.Interpolaiton.Table` 
         """
         assert isinstance ( table  , Ostap.Math.Interpolation.Table ), \
-               "Inavalid interpolation type "
+               "Invalid interpolation table "
         assert isinstance ( degree  , integer_types )  \
                and 0 <= degree < len ( table )         \
                and ( 0 == degree or 1 == degree %2 ) , \
@@ -332,19 +333,18 @@ except ImportError : # ========================================================
 #  @param order     (INPUT) the order of spline
 #  @return interpolation spline 
 def approximate ( func , spline , *args ) : 
-    """Construct the interpolation B-spline
+    """ Construct the interpolation B-spline
     """
     bs = Ostap.Math.BSpline ( spline , *args )
     xv = bs.greville_abscissas()
     N  =  bs.npars()
-    for i in  range(N) : bs.setPar ( i , func ( xv[i] ) )
+    for i in  range ( N ) : bs.setPar ( i , func ( xv [ i ] ) )
     return bs
-
 
 # =============================================================================
 ## merge duplicated roots together 
 def _merge_ ( roots , dx ) :
-    """Merge duplicated roots together 
+    """ Merge duplicated roots together 
     """
     merged = []
     for x in roots :
@@ -367,7 +367,7 @@ from ostap.math.bernstein import _scale_
 #  @param C  (INPUT) right-hand side
 #  @return solutions 
 def solve ( bs , C = 0 , split = 5 ) :
-    """Solve equation B(x) = C
+    """ Solve equation B(x) = C
     
     bs : (input)  b-spline
     C  : (input) right-hand side
@@ -420,7 +420,6 @@ def solve ( bs , C = 0 , split = 5 ) :
     ## if no convergency....
     ## if not cps or 1 == len(cps) or split <= 0 : return cps 
     if not cps or split <= 0 : return cps
-
     
     ## come  back to the original spline 
     _bs =  bs - C
@@ -511,7 +510,6 @@ def solve ( bs , C = 0 , split = 5 ) :
     
     return roots
 
-
 # =============================================================================
 ## generate random numbers from b-spline-distribuitions
 #  @code
@@ -544,7 +542,7 @@ def generate ( fun , num ) :
 #  >>> for x in func.generate( 1000 ) : print x 
 #  @endcode
 def _random_generate_bspline_ ( fun , num ) :
-    """Generate random numbers from bspline-like distribuitions
+    """ Generate random numbers from bspline-like distribuitions
     >>> func = ...
     >>> for x in func.generate( 1000 ) : print x 
     """
@@ -567,7 +565,7 @@ def _random_generate_bspline_ ( fun , num ) :
 #  >>> print fun.shoot() 
 #  @endcode
 def shoot ( fun ) :
-    """Get random number from bspline-like distribuitions
+    """ Get random number from bspline-like distribuitions
     >>> func = ...
     >>> print func.shoot()  
     """
@@ -580,7 +578,7 @@ def shoot ( fun ) :
 # - std::vector<double> 
 # - std::vector<std::complex<double> >
 def _new_init_ ( t ,  *args )  :
-    """(Redefine standard constructor to allow usage of python lists&tuples)
+    """ (Redefine standard constructor to allow usage of python lists & tuples)
     Lists and tuples are  converted on flight to :
     - std::vector<double> 
     """
@@ -643,8 +641,6 @@ for  p in ( Ostap.Math.BSpline          ,
         _p_new_init_.__doc__ += '\n' + p._old_init_.__doc__ 
         p.__init__ = _p_new_init_ 
 
-
-
 for  p in ( Ostap.Math.BSpline2D           ,
             Ostap.Math.BSpline2DSym        ,
             Ostap.Math.PositiveSpline2D    ,
@@ -663,7 +659,7 @@ for  p in ( Ostap.Math.BSpline2D           ,
 #  fun[1] = 10.0
 #  @endcode 
 def _p2_set_par_ ( o , index , value ) :
-    """Set parameter for polynomial/spline function
+    """ Set parameter for polynomial/spline function
     >>> fun = ...
     >>> fun[1]   = 10.0
     >>> fun[1,2] = 15.0
@@ -697,7 +693,7 @@ def _p2_set_par_ ( o , index , value ) :
 #  print fun[:3] , fun[4:], fun[2:8] ,  fun [2::2] 
 #  @endcode 
 def _p2_get_par_ ( o , index ) :
-    """Get parameter from polynomial/spline function
+    """ Get parameter from polynomial/spline function
     >>> fun = ...
     >>> print fun[ 1], fun[2,4]
     >>> print fun[-1]

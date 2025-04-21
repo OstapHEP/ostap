@@ -3041,10 +3041,11 @@ class APDF2 (APDF1) :
         if in_range and isinstance ( in_range , tuple ) and 2 == len ( in_range ) :
             range_name = 'aux2_rng2_%s' % self.name 
             with roo_silent ( silent , 3 ) : 
-              self.yvar.setRange ( range_name , in_range[0] , in_range[1] )
-              if dataset:
-                dataset.get_var(self.yvar.GetName()).setRange ( range_name , in_range[0] , in_range[1] )
-
+                self.yvar.setRange ( range_name , in_range[0] , in_range[1] )
+                if dataset :
+                    dsyvar = dataset.get_var ( self.yvar.name ) 
+                    if dsyvar : dsyvar.setRange ( range_name , in_range[0] , in_range[1] )
+                
             in_range = range_name 
 
         return self.draw ( drawvar  = self.xvar , 
@@ -3089,8 +3090,9 @@ class APDF2 (APDF1) :
             range_name = 'aux2_rng1_%s' % self.name 
             with roo_silent ( silent , 3 ) : 
                 self.xvar.setRange ( range_name , in_range[0] , in_range[1] )
-                if dataset:
-                    dataset.get_var(self.xvar.GetName()).setRange ( range_name , in_range[0] , in_range[1] )
+                if dataset :
+                    dsxvar = dataset.get_var ( self.xvar.name )
+                    if dsxvar : dsxvar.setRange ( range_name , in_range[0] , in_range[1] )
                     
             in_range = range_name
 

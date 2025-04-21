@@ -7,8 +7,8 @@
  - fix Py <-> c++ functions
  - improve `Ostap::StatusCode`
  - more use of `Ostap::Assert`
- - remove all appearecnes of `from bultins import rane`
- - reomve all appearenced of `from __future__ import ptint_function`
+ - remove all appearances of `from bultins import rane`
+ - remove all appearanced of `from __future__ import ptint_function`
  - suppress many version-related `if`s
  - large imporovements in LinAlg
  - re-write AddBranch/AddBuffer machinery 
@@ -28,6 +28,9 @@
  - add more operations to `ROOT.TCut` objects
  - reshuffle the code around `pretty_ve` to reduce explciti apprearenc of this&related  functions
  - add possibility to disable automatic construction of SB&BS components for `Fit2D` and `Fit2DSym` models 
+ - Largely re-write and improve `Gof1D` and `GoF1DToys` machinery for Goodness-of-1D-fits
+ - Speed-up Goodnes-of-fit estimators (rely on C++ when it has sense)
+ - Allow to provdie the extedn CDF for GoF1D-toys (it can drastically speedup the pseudoexperiments)
     
 ## New features
     
@@ -45,7 +48,8 @@
    1. Remove `Data2`
    1. `add_new_branch` and `add_new_buffer` are complete;y rewritten
    1. `sPlot` is completely rewritten: split into `COWs` , `sPLOT` and `hPlot*`
-   
+   1. The public intefrace for `GoF1DToys` is mofified 
+      
 ## Bug fixes
 
 

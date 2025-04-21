@@ -245,18 +245,17 @@ def random_random ( *jobid ) :
     random.seed ( jhid )
     ## 
     njumps = jhid % 9967
-    for j in range ( njumps ) :
-        random.uniform ( 0 , 1 )
-    ## 
-
-    ## sleep a bit (up to hals a second) 
-    time.sleep ( random.uniform ( 0.01 , 0.5 ) )
+    for j in range ( njumps ) : random.uniform ( 0 , 1 )
+    ##
+    
+    ## sleep a bit (up to half a second) 
+    time.sleep ( random.uniform ( 0.05 , 0.5 ) )
     
     ## now  initialize ROOT
-    ROOT.gRandom.SetSeed ()
-    
+    ROOT.gRandom.SetSeed ( abs ( jhid ) ) 
+
     ## ... and Roofit
-    ROOT.RooRandom.randomGenerator().SetSeed()
+    ROOT.RooRandom.randomGenerator().SetSeed ( abs ( jhid ) ) 
 
     ## .. and numpy
     # =========================================================================
@@ -271,7 +270,6 @@ def random_random ( *jobid ) :
     # 
     state = random.getstate() , ROOT.gRandom.GetSeed() , ROOT.RooRandom.randomGenerator().GetSeed() 
     
-
 # =============================================================================
 ## ping the remote host 
 def ping ( host ) :

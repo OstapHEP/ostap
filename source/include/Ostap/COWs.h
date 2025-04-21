@@ -55,7 +55,7 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      /** Constuctor
+      /** Constuctor: build COW object from PDF & data
        *  @param addpdf    input extended RooAddPdf 
        *  @param data      input data
        *  @param normalzation normalisation set
@@ -63,11 +63,11 @@ namespace Ostap
        */
       COWs
       ( const RooAddPdf&                  addpdf                  ,
-	const RooAbsData&                 data                    ,
-	const RooAbsCollection*           normalization           , 
+        const RooAbsData&                 data                    ,
+        const RooAbsCollection*           normalization           , 
         const Ostap::Utils::ProgressConf& progress      = false   ) ;
       // ======================================================================= 
-      /** Constuctor
+      /** Constructor: build COW object from PDF & data
        *  @param addpdf    input extended RooAddPdf 
        *  @param data      input data
        *  @param normalzation normalisation set
@@ -75,10 +75,10 @@ namespace Ostap
        */
       COWs
       ( const RooAddPdf&                  addpdf                  ,
-	const RooAbsData&                 data                    ,
+        const RooAbsData&                 data                    ,
         const Ostap::Utils::ProgressConf& progress      = false   ) ; 
       //   ======================================================================
-      /** "Recovery constructor
+      /** "Recovery" constructor: reconstruct COW object from components
        *  @param addpdf input extended RooAddPdf 
        *  @param observables  observables set  
        *  @param normalzation normalisation set 
@@ -86,11 +86,11 @@ namespace Ostap
        */
       COWs
       ( const RooAddPdf&        addpdf        ,
-	const RooAbsCollection& observables   , 
-	const RooAbsCollection* normalization , 
-	const TMatrixDSym&      cows          ) ;
+        const RooAbsCollection& observables   , 
+        const RooAbsCollection* normalization , 
+        const TMatrixDSym&      cows          ) ;
       // ======================================================================
-      /** "Recovery constructor
+      /** "Recovery" constructor: reconstruct COW object from components
        *  @param addpdf input extended RooAddPdf 
        *  @param observables  observables set  
        *  @param normalzation normalisation set 
@@ -98,9 +98,9 @@ namespace Ostap
        */
       COWs
       ( const RooAddPdf&        addpdf                  ,
-	const RooAbsCollection& observables             , 
-	const TMatrixDSym&      cows                    , 
-	const RooAbsCollection* normalization = nullptr ) ; 	 
+        const RooAbsCollection& observables             , 
+        const TMatrixDSym&      cows                    , 
+        const RooAbsCollection* normalization = nullptr ) ; 	 
       // ======================================================================
       // copy constructor 
       COWs ( const COWs& right ) ;
@@ -110,7 +110,7 @@ namespace Ostap
       // destructore 
       virtual ~COWs() ;
       // ======================================================================
-      /// clone funcntion/virtual constructire 
+      /// clone function/virtual constructire 
       COWs* clone() const override ;  
       // ======================================================================
     protected:    
@@ -123,8 +123,8 @@ namespace Ostap
        */
       COWs
       ( const RooAddPdf&        addpdf        ,
-	const RooAbsCollection& observables   , 
-	const RooAbsCollection* normalization ) ; 
+        const RooAbsCollection& observables   , 
+        const RooAbsCollection* normalization ) ; 
       // ======================================================================
      public:
       // ======================================================================

@@ -316,7 +316,7 @@ if not hasattr ( Abscissas , '_old_init_' ) :
 #  print a 
 #  @endcode 
 def _p_str_ ( self , nmax = 7 ) :
-    """Printout for interpolation Table
+    """ Printout for interpolation Table
     >>> print a  
     """
     n = self.size ()
@@ -408,7 +408,7 @@ def _p_getitem_ ( self , i ) :
 # =============================================================================
 ## convert interpolation table to Graph
 def _p_graph_ ( self ) :
-    """Convert interpolation table to Graph
+    """ Convert interpolation table to Graph
     """
     N  = len ( self ) 
     gr = ROOT.TGraph ( N )
@@ -500,7 +500,7 @@ def uniform_abscissas ( low , high , N ) :
 #  ... print ( a ) 
 #  @endcode 
 def chebyshev_abscissas ( low , high , N ) : 
-    """Chebyshev interpolation abscissas - optimal for polynoimial interpolation 
+    """ Chebyshev interpolation abscissas - optimal for polynoimial interpolation 
     >>> for a in chebyshev_abscissas ( 0, 1 , 10 ) :
     >>> ... print ( a ) 
     """
@@ -518,7 +518,7 @@ def chebyshev_abscissas ( low , high , N ) :
 #  ... print ( a ) 
 #  @endcode 
 def lobatto_abscissas ( low , high , N ) : 
-    """Lobatto interpolation abscissas - optimal for polynoimial interpolation 
+    """ Lobatto interpolation abscissas - optimal for polynoimial interpolation 
     >>> for a in Lobatto_abscissas ( 0, 1 , 10 ) :
     >>> ... print ( a ) 
     """
@@ -528,7 +528,6 @@ def lobatto_abscissas ( low , high , N ) :
         x = math.cos ( a )
         yield 0.5 * (  ( 1 - x ) * low + ( 1 + x ) * high )
         
-
 # ==================================================================================
 ## Neville, Lagrange, & Berrut  interpolants
 # ==================================================================================
@@ -572,7 +571,7 @@ Ostap.Math.Barycentric     .__str__   = lambda s : print_interpolant ( s , 'Bary
 # =============================================================================
 ## print Thiele rational interpolant 
 def _thiele_prnt_ ( self , nmax = 7 ) :
-    """Print Thiele rational interpolant
+    """ Print Thiele rational interpolant
     """
     n = len ( self ) 
     
@@ -596,7 +595,6 @@ Ostap.Math.Thiele.graph       = _p_graph_
 Ostap.Math.Thiele.xmin        = lambda s : min ( [ x for x in s.x() ] )
 Ostap.Math.Thiele.xmax        = lambda s : max ( [ x for x in s.x() ] )
 
-    
     
 # ==================================================================================
 ## Barycentric Lagrange interpolant 
@@ -627,7 +625,7 @@ Table     = Ostap.Math.Interpolation.Table
 #  @endcode 
 #  @param func  the function or list of function values
 def lagrange ( func , abscissas  = None ) :
-    """Construct very efficient Barycentric Lagrange interpolant
+    """ Construct very efficient Barycentric Lagrange interpolant
     
     - it takes O(n)   flops for initialization with Chebyshev/Lobatto or uniform abscissas 
     - it takes O(n^2) flops for initialization with arbitrary interpolation      abscissas
@@ -716,7 +714,7 @@ barycentric = lagrange
 #  @endcode 
 #  @param func  the function or list of function values
 def points ( func , abscissas  = None ) :
-    """Construct collection of interpolation points
+    """ Construct collection of interpolation points
     
     func      : the ``function''
     abscissas : abscissas
@@ -853,24 +851,27 @@ for t in ( Ostap.Math.Berrut1st      ,
 # =============================================================================
 from ostap.math.bernstein import interpolate as interpolate_bernstein
 from ostap.math.bspline   import interpolate as interpolate_bspline
-
-try :
+# =============================================================================
+try : # =======================================================================
     from ostap.math.bspline import interpolation as bspline_interpolate
-    __all__ =  __all__ + ( 'bspline_interpolate', ) 
-except ImportError:
+    __all__ =  __all__ + ( 'bspline_interpolate', )
+    # =========================================================================
+except ImportError: # =========================================================
+    # =========================================================================
     pass
 # =============================================================================
-
 
 # =============================================================================
 ## Scipy-based spline interpolation
 # =============================================================================
-try :
+try : # =======================================================================
+    # =========================================================================
     from ostap.math.sp_interpolation import SplineInterpolator
-    __all__ =  __all__ + ( 'SplineInterpolator', ) 
-except  ImportError :
+    __all__ =  __all__ + ( 'SplineInterpolator', )
+    # =========================================================================
+except  ImportError : # =======================================================
+    # =========================================================================
     pass 
-
 
 # =============================================================================
 from operator import mul as op_mul

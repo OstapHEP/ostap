@@ -72,6 +72,11 @@ __all__     = (
     'folder'              ,
     'light_bulb'          , 
     'weight_lifter'       ,
+    'scissors'            ,
+    'oil_drum'            , ## old drum
+    'brain'               ,
+    'kitchen_knife'       ,
+    'axe'                 , 
     ##
     'delta_symbol'        ,
     ##
@@ -158,9 +163,12 @@ equivalent       = '\U00002261' if show else '='
 similar          = '\U0000223C' if show else '~'
 approximate      = '\U00002248' if show else '~='
 not_equal        = '\U00002260' if show else '!='
-
-
 weight_lifter    = '\U0001F3CB' if show else '' 
+scissors         = '\U00002704' if show else '' ## ...02 ? 
+oil_drum         = '\U0001F6E2' if show else '' 
+brain            = '\U0001F9E0' if show else ''
+kitchen_knife    = '\U00002796' if show else ''
+axe              = '\U0001FA93' if show else ''
 
 union            = '\U000022C3' if show else ''
 intersection     = '\U000022C2' if show else ''

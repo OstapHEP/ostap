@@ -167,11 +167,12 @@ def test_good_fit_1 ( ) :
 
         gauss.load_params ( r , silent = True ) 
         with timing ( 'GoF1D-toys' , logger = logger ) : 
-            got = G1D.GoF1DToys ( gauss , data_g , 200 )
-        logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( got.nToys , got ) ) 
+            toys = G1D.GoF1DToys ( gof )
+            toys = toys.run ( nToys = 500 )
+        logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( toys.nToys , toys ) ) 
 
-        del gof
-        del got
+    del gof
+    del toys 
 
     ## Try to use multidimensional methods
     run_PPD ( gauss , data_g , r , logger )
@@ -206,9 +207,13 @@ def test_good_fit_2 ( ) :
 
         model.load_params ( r , silent = True ) 
         with timing ( 'GoF1D-toys' , logger = logger ) : 
-            got = G1D.GoF1DToys ( model , data_g , 200 )
-        logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( got.nToys , got ) ) 
+            toys = G1D.GoF1DToys ( gof )
+            toys = toys.run ( nToys = 200 ) 
+        logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( toys.nToys , toys ) ) 
 
+    del gof
+    del toys
+        
     ## Try to use multidimensional methods
     run_PPD ( model , data_g , r , logger )
     udist1 = run_DNN ( model , data_g , r , logger )
@@ -222,7 +227,6 @@ def test_good_fit_2 ( ) :
         with use_canvas ( 'test_good_fit_2: USTAT' , wait = 1 ) :
             udist2.draw()
     
-
 # =============================================================================
 def test_good_fit_3 ( ) :
     
@@ -239,9 +243,13 @@ def test_good_fit_3 ( ) :
 
         model.load_params ( r , silent = True ) 
         with timing ( 'GoF1D-toys' , logger = logger ) : 
-            got = G1D.GoF1DToys ( model , data_b , 200 )
-        logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( got.nToys , got ) ) 
+            toys = G1D.GoF1DToys ( gof  )
+            toys = toys.run ( 500 )
+        logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( toys.nToys , toys ) ) 
 
+    del gof
+    del toys
+    
     ## Try to use multidimensional methods
     run_PPD ( model , data_b , r , logger )
     udist1 = run_DNN ( model , data_b , r , logger )
@@ -274,24 +282,25 @@ def test_bad_fit_1 ( ) :
         
         gauss.load_params ( r , silent = True ) 
         with timing ( 'GoF1D-toys' , logger = logger ) : 
-            got = G1D.GoF1DToys ( gauss , data_b , 200 )
-            got.run ( 1000 ) 
-        logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( got.nToys , got ) ) 
-       
+            toys = G1D.GoF1DToys ( gof )
+            toys = toys.run ( nToys = 1000 ) 
+        logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( toys.nToys , toys ) ) 
+
+    
     with use_canvas ( 'test_bad_fit_1: GoF/Kolmogorov-Smirnov' , wait = 1 ) :
-        dks = got.draw('Kolmogorov-Smirnov')
+        dks = toys.draw('Kolmogorov-Smirnov')
     with use_canvas ( 'test_bad_fit_1: GoF/Andersen-Darling' , wait = 1 ) :
-        dad = got.draw('Andersen-Darling')
+        dad = toys.draw('Andersen-Darling')
     with use_canvas ( 'test_bad_fit_1: GoF/Cramer-von Mises' , wait = 1 ) :
-        dcm = got.draw('Cramer-von Mises')
+        dcm = toys.draw('Cramer-von Mises')
     with use_canvas ( 'test_bad_fit_1: GoF/Kuiper'           , wait = 1 ) :
-        dcm = got.draw('Kuiper')
+        dcm = toys.draw('Kuiper')
     with use_canvas ( 'test_bad_fit_1: GoF/ZK' , wait = 1 ) :
-        dzk = got.draw('ZK')
+        dzk = toys.draw('ZK')
     with use_canvas ( 'test_bad_fit_1: GoF/ZA' , wait = 1 ) :
-        dza = got.draw('ZA')
+        dza = toys.draw('ZA')
     with use_canvas ( 'test_bad_fit_1: GoF/ZC' , wait = 1 ) :
-        dzc = got.draw('ZC')
+        dzc = toys.draw('ZC')
     
     ## Try to use multidimensional methods
     run_PPD ( gauss , data_b , r , logger )
@@ -306,6 +315,8 @@ def test_bad_fit_1 ( ) :
         with use_canvas ( 'test_bad_fit_3: USTAT' , wait = 1 ) :
             udist2.draw()
             
+    del gof
+    del toys
     
 # ===============================================================================
 if '__main__' == __name__ :

@@ -19,10 +19,12 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.interpolation2' )
 else                       : logger = getLogger ( __name__                    )
 # =============================================================================
-try :
+try : # =======================================================================
     from ostap.math.sp_interpolation import SplineInterpolator
-    __all__ =  'SplineInterpolator', 
-except  ImportError :
+    __all__ =  'SplineInterpolator',
+    # =========================================================================
+except  ImportError : # =======================================================
+    # =========================================================================
     pass 
 
 # =============================================================================

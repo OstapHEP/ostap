@@ -36,13 +36,10 @@ class GoF1DTask (Task) :
     """ The GoF task object
     """
     ## 
-    def __init__ ( self    ,
-                   pdf     ,                                   
-                   dataset ) : 
+    def __init__ ( self , gof  ) : 
         
-        self.__pdf        = pdf
-        self.__dataset    = dataset
-        self.__the_output = ()
+        self.__gof        = gof 
+        self.__the_output = None 
         
     @property
     def the_output ( self ) :
@@ -52,7 +49,7 @@ class GoF1DTask (Task) :
         self.__the_output = value 
     
     ## initialize the local task, no action 
-    def initialize_local   ( self ) : self.__the_output = ()
+    def initialize_local   ( self ) : self.__the_output = None 
 
     ## initialize the remote task, treat the random numbers  
     def initialize_remote  ( self , jobid = -1 ) :
@@ -79,25 +76,25 @@ class GoF1DTask (Task) :
     def process ( self , jobid , nToys ) :
         """ The actual processing of toys 
         """        
-        from   ostap.stats.gof1d import GoF1DToys        
-        result = GoF1DToys ( pdf      = self.__pdf     ,
-                             dataset  = self.__dataset ,
-                             nToys    = nToys          ,
-                             parallel = False          ,
-                             silent   = True           )
-        del self.__pdf
-        del self.__dataset
-        return result 
+        from   ostap.stats.gof1d import GoF1DToys
+        
+        toys = GoF1DToys ( gof = self.__gof )
+        toys.run ( nToys    = nToys ,
+                   parallel = False ,
+                   silent   = True  )
+        
+        ## del self.__gof        
+        #
+        return toys 
 
 # =============================================================================
 ## Run GoF1D toys in parallel 
-def parallel_gof1dtoys ( pdf             ,
-                         dataset         ,
+def parallel_gof1dtoys ( gof             ,
                          nToys    = 1000 ,
                          nSplit   = 0    ,
                          silent   = True , 
                          progress = True , **kwargs ) :
-    
+
     assert isinstance ( nToys  , integer_types ) and 0 < nToys  ,\
         'Invalid "nToys"  argument %s/%s' % ( nToys  , type ( nToys  ) )
     
@@ -108,22 +105,24 @@ def parallel_gof1dtoys ( pdf             ,
 
     if nSplit < 2 or numcpu ()  < 2 :
         from   ostap.stats.gof1d import GoF1DToys        
-        return GoF1DToys ( pdf      = pdf          ,
-                           dataset  = dataset      ,
-                           nToys    = nToys        ,
-                           parallel = False        ,
-                           silent   = not progress ) 
-    
+        toys = GoF1DToys ( gof = gof )
+        toys.run ( nToys    = nToys                  ,
+                   parallel = False                  ,
+                   silent   = silent or not progress ) 
+        return toys
+        
     ## create work manager 
     wmgr  = WorkManager ( silent   = silent and not progress ,
                           progress = progress or not silent  , **kwargs )
     
-    task  = GoF1DTask ( pdf , dataset )
+    task  = GoF1DTask ( gof = gof )
 
-    size , rem = divmod ( nToys , nSplit )
-    if rem : params = [ size + rem ] + ( nSplit - 1 ) * [ size ]
-    else   : params =                    nSplit       * [ size ]
-    
+    if nToys <= nSplit : params = nToys * [ 1 ]
+    else : 
+        size , rem = divmod ( nToys , nSplit )
+        if rem : params = [ size + rem ] + ( nSplit - 1 ) * [ size ]
+        else   : params =                    nSplit       * [ size ]
+
     ## start parallel processing! 
     wmgr.process ( task , params  )
     
