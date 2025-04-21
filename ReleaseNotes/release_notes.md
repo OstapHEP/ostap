@@ -30,7 +30,7 @@
  - add possibility to disable automatic construction of SB&BS components for `Fit2D` and `Fit2DSym` models 
  - Largely re-write and improve `Gof1D` and `GoF1DToys` machinery for Goodness-of-1D-fits
  - Speed-up Goodnes-of-fit estimators (rely on C++ when it has sense)
- - Allow to provdie the extedn CDF for GoF1D-toys (it can drastically speedup the pseudoexperiments)
+ - Allow to provdie the external CDF for GoF1D-toys (it can drastically speedup the pseudoexperiments)
     
 ## New features
     
@@ -48,7 +48,7 @@
    1. Remove `Data2`
    1. `add_new_branch` and `add_new_buffer` are complete;y rewritten
    1. `sPlot` is completely rewritten: split into `COWs` , `sPLOT` and `hPlot*`
-   1. The public intefrace for `GoF1DToys` is mofified 
+   1. The public interface for `GoF1DToys` is mofified 
       
 ## Bug fixes
 
