@@ -117,12 +117,11 @@ if sys.version_info < ( 3 , 10 ) :
         # =====================================================================
         import bsddb3
         ## open bsddb3 database 
-        def bsddb3_open ( filelame          ,
-                          flag    = 'c'     ,
-                          mode    = '0o660' , **kwargs ) :
+        def bsddb3_open ( filename        ,
+                          flag    = 'c'   ,
+                          mode    = 0o660 , **kwargs ) :
             """ Open `bsddb3` database """
-            return bsddb3.hasopen ( filename , flag , mode , **kwargs )
-        
+            return bsddb3.hashopen ( filename , flag = flag  , mode = mode , **kwargs )        
         use_bsddb3  = True
         # =====================================================================
     except ImportError  : # ===================================================

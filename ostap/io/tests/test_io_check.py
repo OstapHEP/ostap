@@ -37,7 +37,7 @@ def test_io_check() :
 
     if  python_info < ( 3 , 10 ) :
         if DB.use_bsddb3 and DB.bsddb3 : 
-            row = 'BSDDB3'  , DB.bsddb3.__name__ , DB.bdsdb3.__file__ ,
+            row = 'BSDDB3'  , DB.bsddb3.__name__ , DB.bsddb3.__file__ ,
         else :
             row = attention ( 'BSDDB3' ) , attention ( '---' )   , attention ( '---' ) 
         rows.append ( row )

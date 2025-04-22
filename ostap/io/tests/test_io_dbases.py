@@ -59,7 +59,7 @@ if python_info < ( 3 , 10 ) :
         # ====================================================================
         import bsddb3 
         from ostap.io.dbase import bsddb3_open 
-        item = 'BSDDB3' , CleanUp.tempfile ( prefix = 'ostap-BSDDB3-' , suffix = '.db'  ) , bsbdb3_open 
+        item = 'BSDDB3' , CleanUp.tempfile ( prefix = 'ostap-BSDDB3-' , suffix = '.db'  ) , bsddb3_open 
         dbases.append ( item )
         # ====================================================================
     except ImportError: # ====================================================

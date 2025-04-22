@@ -51,8 +51,9 @@
    1. The public interface for `GoF1DToys` is mofified 
       
 ## Bug fixes
-
-
+    
+   1. fix the bug in treatment of `bdsdb3`
+     
  # v1.14.0.0
 
     ## New features
