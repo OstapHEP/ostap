@@ -45,3 +45,8 @@ _templates
 # ROOT files
 ############
 *.root
+
+# OSTAP
+.ostaprc
+.ostap_config.txt
+.ostap_history 
