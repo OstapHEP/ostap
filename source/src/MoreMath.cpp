@@ -49,6 +49,7 @@
 #include "local_math.h"
 #include "local_gsl.h"
 #include "Integrator1D.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file
  *  implementation file for function from file LHCbMath/MoreFunctions.h
@@ -1132,7 +1133,7 @@ double Ostap::Math::gauss_pdf
   const double mu    ,
   const double sigma )
 {
-  static const double s_norm = 1.0/std::sqrt( 2.0 * M_PI ) ;
+  static const double s_norm = 1.0 / std::sqrt ( 2.0 * M_PI ) ;
   const double dx = ( x  - mu ) / std::abs ( sigma ) ;
   return s_norm * std::exp ( -0.5 * dx * dx ) / std::abs ( sigma ) ;
 }
@@ -1149,9 +1150,8 @@ double Ostap::Math::gauss_cdf
   const double mu    ,
   const double sigma )
 {
-  //
-  static const double s_sqrt2 = std::sqrt( 2.0 ) ;
-  const double y = ( x - mu ) / ( s_sqrt2 * std::abs ( sigma ) ) ;
+  static const double s_isqrt2 = 1.0 / std::sqrt ( 2.0 ) ;
+  const double y = ( x - mu ) * s_isqrt2 / std::abs ( sigma ) ;
   return 0.5 * ( 1 + std::erf ( y ) ) ;
 }
 // ============================================================================
@@ -1172,9 +1172,9 @@ double Ostap::Math::gauss_int
   const double mu    ,
   const double sigma )
 {
-  static const double s_sqrt2 = std::sqrt( 2.0 ) ;
+  static const double s_isqrt2 = 1.0 / std::sqrt( 2.0 ) ;
   //
-  const double i_s = 1 / ( s_sqrt2 * std::abs ( sigma ) ) ;
+  const double i_s = s_isqrt2 / std::abs ( sigma ) ;
   //
   const double ya = ( a - mu ) * i_s ;
   const double yb = ( b - mu ) * i_s ;
@@ -1185,6 +1185,152 @@ double Ostap::Math::gauss_int
     ( std::min ( ya , yb ) >  3 ) ? 
     0.5 * ( std::erfc (            ya   ) - std::erfc (            yb   ) ) :
     0.5 * ( std::erf ( yb ) - std::erf ( ya ) ) ;
+}
+// ============================================================================
+namespace
+{
+  // ==========================================================================
+  /** trivial Cavalieri's integral 
+   *  \f[ I = \int\limits_{x_{low}}^{x_{high}} x^n dx   \f]
+   *  @see https://en.wikipedia.org/wiki/Cavalieri%27s_quadrature_formula
+   *  - for n<0 , it is assumed that function is continuous between x_low and xhigh 
+   */
+  inline double _cavalieri_ 
+  ( const int    n     ,
+    const double xlow  ,
+    const double xhigh )
+  {
+    // (1) trivial checks 
+    if      ( !n                       ) { return xhigh - xlow ; }
+    else if ( s_equal ( xlow , xhigh ) ) { return 0 ; }
+    else if ( xhigh < xlow             ) { return -_cavalieri_ ( n , xhigh , xlow ) ; }
+    //
+    // (0) log-case
+    if ( -1 == n ) { return std::log ( std::abs ( xhigh / xlow ) ) ; }
+    //
+    if ( 0 > n && ( s_zero ( xlow ) || s_zero ( xhigh ) ) ) 
+      { return std::numeric_limits<double>::quiet_NaN() ; }   // return NaN 
+    //
+    // the basic/best case 
+    if      ( 0 <= xlow  ) { return ( std::pow ( xhigh , n + 1 ) - std::pow ( xlow  , n + 1 ) ) / ( n + 1 ) ;}
+    else if ( 0 >= xhigh )
+      {     
+        const double result = ( std::pow ( std::abs ( xhigh ) , n + 1 ) - 
+                                std::pow ( std::abs ( xlow  ) , n + 1 ) ) / ( n + 1 ) ;
+        return ( 0 == n % 2 ? +1 : -1 ) * result ;   
+      }
+    else if ( n < 0 ) { return std::numeric_limits<double>::quiet_NaN() ; }   // return NaN 
+    //
+    const double v1 = std::pow (            xhigh  , n + 1 ) ;
+    const double v2 = std::pow ( std::abs ( xlow ) , n + 1 ) ;
+    //
+    return ( v1 + ( 0 == n % 2 ? +1 : -1 ) * v2 ) / ( n + 1 ) ;
+  }
+  // ==========================================================================
+  /** trivial Cavalieri's integral 
+   *  \f[ I = \int\limits_{x_{low}}^{x_{high}} x^n dx   \f]
+   *  @see https://en.wikipedia.org/wiki/Cavalieri%27s_quadrature_formula
+   *  - for n<0 , it is assumed that function is continuous between x_low and xhigh 
+   */
+  inline double _cavalieri_ 
+  ( const double n     ,
+    const double xlow  ,
+    const double xhigh )
+  {
+    // (1) trivial checks 
+    if      ( !n                       ) { return xhigh - xlow ; }
+    else if ( s_equal ( xlow , xhigh ) ) { return 0 ; }
+    else if ( xhigh < xlow             ) { return -_cavalieri_ ( n , xhigh , xlow ) ; }
+    //
+    // (2) integer argument: covers also the log-case
+    if ( Ostap::Math::isint ( n ) )
+      {
+        const int nn = std::lround ( n ) ;
+        return _cavalieri_ ( nn , xlow , xhigh ) ;
+      }
+    //
+    if ( std::abs ( n + 1 ) <= 0.10 ) // almost log
+      {
+        const double lyl    = std::log ( std::abs ( xlow  ) ) ;
+        const double lyh    = std::log ( std::abs ( xhigh ) ) ;
+        //
+        const double d   = n + 1 ;
+        //
+        double logl    = lyl ;
+        double logh    = lyh ;
+        double dd      = 1 ;
+        double invfact = 1 ;
+        //
+        double result = logl - logh ;
+        for ( unsigned short i = 2 ; i < 100 ; ++i )
+          {
+            invfact  /= i   ;
+            logl     *= lyl ;
+            logh     *= lyh ;
+            dd       *= d   ;
+            //
+            const double term = ( logl - logh ) * dd * invfact ;
+            if ( !term || s_zero ( term ) || s_equal ( result , result + term ) )
+              {
+                result   += term ;
+                break ;
+              } 
+            result   += term ;
+          }
+        //
+        return result ;
+      }
+    ///
+    if ( xlow <= 0 && n + 1 < 0 )
+      { return std::numeric_limits<double>::quiet_NaN() ; }   // return NaN 
+    /// regular  case
+    return ( std::pow ( xhigh  , n + 1 ) - std::pow ( xlow  , n + 1 ) ) / ( n + 1 ) ;
+  }
+  // ==========================================================================
+}
+// ============================================================================
+/** trivial Cavalieri's integral 
+ *  \f[ I = \int\limits_{x_{low}}^{x_{high}} \left( ax + b \right)^n dx   \f]
+ *  @see https://en.wikipedia.org/wiki/Cavalieri%27s_quadrature_formula
+ *  - for n<0 , it is assumed that function is continuous between x_low and xhigh 
+ */
+// ============================================================================
+double Ostap::Math::cavalieri
+( const double n     ,
+  const double xlow  ,
+  const double xhigh ,
+  const double a     ,
+  const double b     )
+{
+  if      ( !n                          ) { return                        xhigh - xlow   ; }
+  else if ( !a  &&  ( 0 < b || 0 <= n ) ) { return std::pow ( b , n ) * ( xhigh - xlow ) ; }  
+  else if ( s_equal ( xlow , xhigh )    ) { return 0 ; }
+  //
+  if ( !a ) { return std::numeric_limits<double>::quiet_NaN() ; }   // return NaN
+  //
+  // y -> a * x + b
+  return _cavalieri_  ( n , a * xlow + b , a * xhigh + b ) / a ;
+  //
+}
+// ======================================================================
+/** trivial Cavalieri's integral 
+ *  \f[ I = \int\limits_{x_{low}}^{x_{high}} \left( ax + b \right)^n dx   \f]
+ *  @see https://en.wikipedia.org/wiki/Cavalieri%27s_quadrature_formula
+ */
+// ======================================================================
+double Ostap::Math::cavalieri
+( const int    n     ,
+  const double xlow  ,
+  const double xhigh , 
+  const double a     ,
+  const double b     ) 
+{
+  if      ( !n                      ) { return                         xhigh - xlow   ; }
+  else if ( !a                      ) { return  std::pow ( b , n ) * ( xhigh - xlow ) ; }  
+  else if ( s_equal ( xlow ,xhigh ) ) { return 0 ; }
+  //
+  // y -> a * x + b
+  return _cavalieri_  ( n , a * xlow + b , a * xhigh + b ) / a ;
 }
 // ============================================================================
 /*  Student's t-CDF 

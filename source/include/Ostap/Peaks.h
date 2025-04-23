@@ -1164,23 +1164,39 @@ namespace Ostap
      *  ``Crystal Ball-function'' for description of gaussian with the tail
      *  @see http://en.wikipedia.org/wiki/Crystal_Ball_function
      *
-     *  for \f$\alpha>0\f$
+     *  @see http://www.slac.stanford.edu/cgi-wrap/getdoc/slac-r-255.pdf
+     *  @see http://www.slac.stanford.edu/cgi-wrap/getdoc/slac-r-236.pdf
+     *  @see http://inspirehep.net/record/230779/files/f31-86-02.pdf
      *
-     *  \f[ f(x;\alpha,n,x_0,\sigma) = \frac{1}{ \sqrt{2\pi\sigma^2} } \left\{
+     *  - J. E. Gaiser, Appendix-F Charmonium Spectroscopy from Radiative Decays of the J/Psi and Psi-Prime, 
+     *    Ph.D. Thesis, SLAC-R-255 (1982)
+     *  - M. J. Oreglia, A Study of the Reactions psi prime --> gamma gamma psi, 
+     *    Ph.D. Thesis, SLAC-R-236 (1980), Appendix D.
+     *  - T. Skwarnicki, A study of the radiative CASCADE transitions between the Upsilon-Prime and Upsilon resonances, 
+     *    Ph.D Thesis, DESY F31-86-02(1986)
+     *  
+     *  However, here we adopt a bit different normalization:
+     *
+     *  \f[ f(x;\alpha,n,x_0,\sigma) \propto \frac{1}{ \sqrt{2\pi\sigma^2} } \left\{
      *  \begin{array}{ll}
-     *  \mathrm{e}^{-\frac{1}{2}\left(\frac{x-x_0}{\sigma}\right)^2}
-     *  & \text{for}~\frac{x-x_0}{\sigma}\ge-\alpha \\
-     *  \mathrm{e}^{-\frac{\alpha^2}{2}} \times
-     *  \left(  \frac{n+1}{ n+1 - \alpha^2 - \left|\alpha\right|\frac{x-x_0}{\sigma}}\right)^{n+1}
-     *  & \text{for}~\frac{x-x_0}{\sigma}\le-\alpha
+     *  \mathrm{e}^{ -\frac{1}{2}\delta^2} 
+     *  & \text{for}~\frac{x-x_0}{\sigma}\ge-\left|\alpha\right| \  \
+     *  A \times \left( B - \delta )^{-N}}
+     *  & \text{for}~\frac{x-x_0}{\sigma}\le-\left|\alpha\right| 
      *  \end{array}
      *  \right.\f]
+     *  where :
+     *  - \f$ \delta \equiv \frac{x-m_0}{\sigma}\f$ 
+     *  - \f$ A \equiv \left( \frac{N}{\left| \alpha\right|}\right)^N \mathrm{e}^{-\frac{1}{2}\alpha^2}} \f$ 
+     *  - \f$ B \equiv \frac{N}{\left|\alpha|} - \left|\alpha\right| \f$ 
+     *  - \f$ N \equiv \sqrt { 1 + n^2} \f$ 
      *
-     * where
+     *  The function "almost nirmnalized". It allowed to avoid the pathological 
+     *  situations with \f$ \alpha \rigtharrow 0\f$ and \f$ M \le 1 f\$
      *
-     * \f[ C = \frac{n+1}{\left|\alpha\right|\times \frac{1}{n} \times \mathrm{e}^{-\frac{\alpha^2}{2}}}  \f]
-     * \f[ B = \sqrt{\frac{\pi}{2}}\left(1+\mathrm{erf}\left(-\frac{\alpha}{\sqrt{2}}\right)\right) \f]
+     *  @see https://en.wikipedia.org/wiki/Crystal_Ball_function
      *
+     *  @attention: unlike the ff in Tomas'z theses, this function is NOT
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-05-25
      */
@@ -1192,7 +1208,7 @@ namespace Ostap
        *  @param m0     m0       parameter
        *  @param sigma  sigma    parameter
        *  @param alpha  alpha    parameter
-       *  @param n      n        parameter (equal for N-1 for "standard" definition)
+       *  @param n      n        (external) parameter (not the same as *internal* N)
        */
       CrystalBall
       ( const double m0    = 0 ,
@@ -1211,15 +1227,19 @@ namespace Ostap
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
-      double m0    () const { return m_m0    ; }
-      double peak  () const { return   m0 () ; }
-      double sigma () const { return m_sigma ; }
-      double alpha () const { return m_alpha ; }
-      double n     () const { return m_n     ; }
+      inline double m0    () const { return m_m0    ; }
+      inline double mu    () const { return m_m0    ; }
+      inline double peak  () const { return m_m0    ; }
+      inline double sigma () const { return m_sigma ; }
+      inline double alpha () const { return m_alpha ; }
+      inline double n     () const { return m_n     ; }      
       // ======================================================================
-      double aa    () const { return std::abs ( m_alpha ) ; }
-      double np1   () const { return n()  + 1 ; } // n+1 
-      double N     () const { return n()  + 1 ; } // n+1 
+    public:            
+      // ======================================================================
+      /// mode of the distribution 
+      inline double mode  () const { return m_m0    ; }
+      /// Internal N-parameter
+      inline double N     () const { return m_n + 1 ; } // internal N parameter
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
@@ -1228,16 +1248,14 @@ namespace Ostap
       bool setMass  ( const double value ) { return setPeak ( value ) ; }
       bool setSigma ( const double value ) ;
       bool setAlpha ( const double value ) ;
-      bool setN     ( const double value ) ;
+      bool setN     ( const double value ) ; // set n,N-parameters 
       // ======================================================================
     public:
       // ======================================================================
-      /// get (possibly truncated, if n==0 or alpha=0) integral
-      double integral () const ;
       /// get the integral between low and high
       double integral
       ( const double low ,
-	const double high ) const ;
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1258,9 +1276,7 @@ namespace Ostap
     private :
       // ======================================================================
       /// helper constants
-      double m_A        ;  // exp(-0.5*alpha^2)
-      double m_B        ;  // integral over the gaussian part
-      double m_C        ;  // integral over the power-law tail
+      double m_A { -1 } ;  // exp ( -0.5 * alpha * alpha ) 
       // ======================================================================
     } ;
     // ========================================================================
@@ -1392,7 +1408,6 @@ namespace Ostap
       double sigma () const { return m_cb.sigma () ; }
       double alpha () const { return m_cb.alpha () ; }
       double n     () const { return m_cb.n     () ; }
-      double np1   () const { return m_cb.np1   () ; }
       double N     () const { return m_cb.N     () ; }
       // ======================================================================
     public: // trivial accessors
@@ -1406,11 +1421,10 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get (possibly truncated, if n==0 or alpha=0) integral
-      double integral () const ;
       /// get the integral between low and high
-      double integral ( const double low ,
-                        const double high ) const ;
+      double integral
+      ( const double low ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1468,8 +1482,6 @@ namespace Ostap
       double alpha_R () const { return m_alpha_R  ; }
       double n_L     () const { return m_n_L      ; }
       double n_R     () const { return m_n_R      ; }
-      double np1_L   () const { return m_n_L  + 1 ; } // nL+1
-      double np1_R   () const { return m_n_R  + 1 ; } // nR+1
       double NL      () const { return m_n_L  + 1 ; } // nL+1
       double NR      () const { return m_n_R  + 1 ; } // nR+1      
       // ======================================================================
@@ -1486,12 +1498,10 @@ namespace Ostap
       // ======================================================================
     public: //
       // ======================================================================
-      /// get (possibly truncated) integral
-      double integral () const ;
       /// get integral between low and high
       double integral
       ( const double low  ,
-	const double high ) const ;
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1516,11 +1526,8 @@ namespace Ostap
     private:
       // ======================================================================
       /// helper constants
-      double m_AL       ;  // exp(-0.5*alpha_L^2)
-      double m_AR       ;  // exp(-0.5*alpha_R^2)
-      double m_B        ;  // integral over the gaussian part
-      double m_TL       ;  // integral over the left  power-law tail
-      double m_TR       ;  // integral over the right power-law tail
+      double m_AL  { -1 } ;  // exp(-0.5*alpha_L^2)
+      double m_AR  { -1 } ;  // exp(-0.5*alpha_R^2)
       // ======================================================================
     } ;
 

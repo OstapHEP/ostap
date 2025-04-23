@@ -68,7 +68,9 @@ namespace
     INVALID_CHEBYSHEV        = 815 ,
     //
     INVALID_INTEGRATION_CODE = 820 ,
-    INVALID_MAXVAL_CODE      = 821 ,    
+    INVALID_MAXVAL_CODE      = 821 ,
+    //
+    INVALID_PARAMETER        = 825 , 
     // =========================================================================
     // =========================================================================
     ERROR_ROOT            = 1000000 ,
