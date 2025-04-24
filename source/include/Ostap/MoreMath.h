@@ -755,22 +755,22 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Cavalieri%27s_quadrature_formula
      */
     double cavalieri
-      ( const double n        ,
-        const double xlow     ,
-        const double xhigh    , 
-        const double a    = 1 ,
-        const double b    = 0 ) ; 
+    ( const double n        ,
+      const double xlow     ,
+      const double xhigh    , 
+      const double a    = 1 ,
+      const double b    = 0 ) ; 
     // ======================================================================
     /** trivial Cavalieri's integral 
      *  \f[ I = \int\limits_{x_{low}}^{x_{high}} \left( ax + b \right)^n dx   \f]
      *  @see https://en.wikipedia.org/wiki/Cavalieri%27s_quadrature_formula
      */
     double cavalieri
-      ( const int    n        ,
-        const double xlow     ,
-        const double xhigh    , 
-        const double a    = 1 ,
-        const double b    = 0 ) ;
+    ( const int    n        ,
+      const double xlow     ,
+      const double xhigh    , 
+      const double a    = 1 ,
+      const double b    = 0 ) ;
     // ========================================================================
     /** Student's t-CDF 
      *  \f[ f(t;\nu) = \left\{

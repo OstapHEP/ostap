@@ -31,6 +31,7 @@
 #include "Ostap/MoreVars.h"
 #include "Ostap/MoreRooFit.h"
 #include "Ostap/RooFitUtils.h"
+#include "Ostap/Peaks.h"
 #include "Ostap/ToStream.h"
 // ============================================================================
 // local
@@ -96,6 +97,7 @@ ClassImp(Ostap::MoreRooFit::Maximal       )
 ClassImp(Ostap::MoreRooFit::Rank          )
 ClassImp(Ostap::MoreRooFit::ABC           )
 ClassImp(Ostap::MoreRooFit::Clamp         )
+ClassImp(Ostap::MoreRooFit::CrystalBallN  )
 // ============================================================================
 namespace 
 {
@@ -1958,6 +1960,43 @@ Double_t Ostap::MoreRooFit::Clamp::evaluate () const
     xx <= m_a || s_equal ( xx , m_a ) ? m_a : 
     xx >= m_b || s_equal ( xx , m_b ) ? m_b : xx ;
 }
+
+
+// ============================================================================
+// constructor with one variables 
+// ============================================================================
+Ostap::MoreRooFit::CrystalBallN::CrystalBallN
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        n     )
+  : OneVar ( name , title , n )
+{}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::MoreRooFit::CrystalBallN::CrystalBallN
+( const Ostap::MoreRooFit::CrystalBallN& right ,
+  const char*                            name  ) 
+  : OneVar ( right , name )
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::CrystalBallN::~CrystalBallN(){}
+// ============================================================================
+// clone method 
+// ============================================================================
+Ostap::MoreRooFit::CrystalBallN*
+Ostap::MoreRooFit::CrystalBallN::clone ( const char* newname ) const
+{ return new Ostap::MoreRooFit::CrystalBallN ( *this , newname ) ; }
+// ============================================================================
+// the actual evaluation of the result 
+// ================m===========================================================
+Double_t Ostap::MoreRooFit::CrystalBallN::evaluate () const
+{ return Ostap::Math::CrystalBall::N ( m_x ) ; }
+// ============================================================================
+
+
 // ============================================================================
 /* reset RooabsData and ubnderlying store 
  *  @see RooAbsData

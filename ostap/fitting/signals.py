@@ -284,8 +284,8 @@ class CrystalBall_pdf(PEAK) :
                                        'n_{CB}(%s)'      % name ,
                                        None , 5.0 , 1.e-6 , 100 )
 
-        ## N = |n| + 1 
-        self.__N    = Ostap.MoreRooFit.AbsAplusB ( self.__n , 1.0 )
+        ## N = Ostap.Math.CrystalBall.N ( n ) 
+        self.__N    = Ostap.MoreRooFit.CrystalBallN ( 'N_%s' % name , self.__n )
         
         #
         ## finally build PDF 
@@ -334,7 +334,7 @@ class CrystalBall_pdf(PEAK) :
         
     @property
     def n ( self ) :
-        """N-parameter for Crystal Ball tail (actually 'n+1' is used), same as nL"""
+        """n-parameter for Crystal Ball tail , same as nL"""
         return self.__n
     @n.setter
     def n ( self, value ) :
@@ -342,7 +342,7 @@ class CrystalBall_pdf(PEAK) :
 
     @property
     def nL ( self ) :
-        """N-parameter for Crystal Ball tail (actually 'n+1' is used), same as n"""
+        """N-parameter for Crystal Ball tail , same as n"""
         return self.__n
     @nL.setter
     def nL ( self, value ) :
@@ -350,7 +350,7 @@ class CrystalBall_pdf(PEAK) :
 
     @property
     def N ( self ) :
-        """`N` : actual |n|+1 parameter used for Crystal Ball """
+        """`N` : actual N-parameter used for Crystal Ball """
         return self.__N
 
 models.append ( CrystalBall_pdf )    
@@ -386,8 +386,8 @@ class CrystalBallRS_pdf(PEAK) :
                                        'n_{CB}(%s)'      % name ,
                                        None , 5.0 , 1.e-6 , 100 )
         
-        ## N = |n| + 1 
-        self.__N    = Ostap.MoreRooFit.AbsAplusB ( self.__n , 1.0 )
+        ## N = Ostap.Math.CrystalBall.N ( n ) 
+        self.__N    = Ostap.MoreRooFit.CrystalBallN ( 'N_%s' % name , self.__n )
         
         ## finally build PDF 
         #
@@ -436,7 +436,7 @@ class CrystalBallRS_pdf(PEAK) :
         
     @property
     def n ( self ) :
-        """N-parameter for Crystal Ball tail (actually 'n+1' is used)"""
+        """N-parameter for Crystal Ball tail"""
         return self.__n
     @n.setter
     def n ( self, value ) :
@@ -444,7 +444,7 @@ class CrystalBallRS_pdf(PEAK) :
 
     @property
     def nR ( self ) :
-        """N-parameter for Crystal Ball tail (actually 'n+1' is used), same as n"""
+        """N-parameter for Crystal Ball tailsame as n"""
         return self.__n
     @nR.setter
     def nR ( self, value ) :
@@ -452,7 +452,7 @@ class CrystalBallRS_pdf(PEAK) :
 
     @property
     def N ( self ) :
-        """`N` : actual |n|+1 parameter used for Crystal Ball """
+        """`N` : actual N-parameter used for Crystal Ball """
         return self.__N
 
 models.append ( CrystalBallRS_pdf )    
@@ -514,13 +514,10 @@ class CB2_pdf(PEAK) :
                                        "nR_%s"          % name ,
                                        "n_{R}(%s)"      % name ,
                                        None  , 5 , 1.e-6 , 100 )
-        
-        
-        ## NL = |nL| + 1 
-        self.__NL    = Ostap.MoreRooFit.AbsAplusB ( self.__nL , 1.0 )
-        ## NR = |nR| + 1 
-        self.__NR    = Ostap.MoreRooFit.AbsAplusB ( self.__nR , 1.0 )
-        
+                
+        ## N = Ostap.Math.CrystalBall.N ( n ) 
+        self.__NL   = Ostap.MoreRooFit.CrystalBallN ( 'NL_%s' % name , self.__nL )
+        self.__NR   = Ostap.MoreRooFit.CrystalBallN ( 'NR_%s' % name , self.__nR )
 
         self.pdf = Ostap.Models.CrystalBallDS(
             self.roo_name ( 'cb2_' ) , 
@@ -595,12 +592,12 @@ class CB2_pdf(PEAK) :
         
     @property
     def NL ( self ) :
-        """`NL` : actual NL=|nL|+1 parameter used for Crystal Ball """
+        """`NL` : actual NL-parameter used for Crystal Ball """
         return self.__NL
 
     @property
     def NR ( self ) :
-        """`NR` : actual NR=|nR|+1 parameter used for Crystal Ball """
+        """`NR` : actual NR-parameter used for Crystal Ball """
         return self.__NR
 
 models.append ( CB2_pdf )    

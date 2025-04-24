@@ -1737,13 +1737,9 @@ double Ostap::Models::CrystalBall::maxVal  ( Int_t      code ) const
                   "Ostap::Models::CrystalBall"  ,
                   INVALID_MAXVAL_CODE           , __FILE__ , __LINE__  ) ;
   setPars() ;
-  return 1.01 * m_cb ( m_m0 ) ;
+  return 1.01 * m_cb ( m_cb.mode ()  ) ;
 }
 // ============================================================================
-
-
-
-
 
 // ============================================================================
 // constructor form all parameters 
@@ -1855,15 +1851,9 @@ double Ostap::Models::CrystalBallRS::maxVal  ( Int_t      code ) const
                   "Ostap::Models::CrystalBallRS"  ,
                   INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
   setPars() ;
-  return 1.01 * m_cb ( m_m0 ) ;
+  return 1.01 * m_cb ( m_cb.mode () ) ;
 }
 // ============================================================================
-
-
-
-
-
-
 
 
 // ============================================================================
@@ -1929,13 +1919,12 @@ Ostap::Models::CrystalBallDS::clone( const char* name ) const
 void Ostap::Models::CrystalBallDS::setPars () const 
 {
   //
-  m_cb2.setM0      ( m_m0     ) ;
-  m_cb2.setSigma   ( m_sigma  ) ;
-  m_cb2.setAlpha_L ( m_alphaL ) ;
-  m_cb2.setAlpha_R ( m_alphaR ) ;
-  m_cb2.setN_L     ( m_nL     ) ;
-  m_cb2.setAlpha_R ( m_alphaR ) ;
-  m_cb2.setN_R     ( m_nR     ) ;
+  m_cb2.setM0     ( m_m0     ) ;
+  m_cb2.setSigma  ( m_sigma  ) ;
+  m_cb2.setAlphaL ( m_alphaL ) ;
+  m_cb2.setAlphaR ( m_alphaR ) ;
+  m_cb2.setNL     ( m_nL     ) ;
+  m_cb2.setNR     ( m_nR     ) ;
   //
 }
 // ============================================================================
@@ -1983,17 +1972,9 @@ double Ostap::Models::CrystalBallDS::maxVal  ( Int_t      code ) const
                   "Ostap::Models::CrystalBallDS"  ,
                   INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
   setPars() ;
-  return 1.01 * m_cb2 ( m_m0 ) ;
+  return 1.01 * m_cb2 ( m_cb2.mode () ) ;
 }
 // ============================================================================
-
-
-
-
-
-
-
-
 
 // ============================================================================
 // Needham
@@ -2112,7 +2093,7 @@ double Ostap::Models::Needham::maxVal  ( Int_t      code ) const
                   "Ostap::Models::Needham"  ,
                   INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
   setPars() ;
-  return 1.01 * m_needham ( m_m0 ) ;
+  return 1.01 * m_needham ( m_needham.mode( ) ) ;
 }
 // ============================================================================
 // get current alpha 
@@ -2123,16 +2104,6 @@ double Ostap::Models::Needham::alpha   () const
   return m_needham.alpha () ;
 }
 // ============================================================================
-
-
-
-
-
-
-
-
-
-
 
 // ============================================================================
 // Apollonios
@@ -2248,7 +2219,7 @@ double Ostap::Models::Apollonios::maxVal  ( Int_t      code ) const
                   "Ostap::Models::Apollonios"     ,
                   INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
   setPars() ;
-  return 1.01 * m_apo ( m_m0 ) ;
+  return 1.01 * m_apo ( m_apo.mode ()  ) ;
 }
 // ============================================================================
 
@@ -2366,7 +2337,7 @@ double Ostap::Models::Apollonios2::maxVal  ( Int_t      code ) const
                   "Ostap::Models::Apollonios2"    ,
                   INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
   setPars() ;
-  return 1.01 * m_apo2 ( m_m0 ) ;
+  return 1.01 * m_apo2 ( m_apo2.mode() ) ;
 }
 // ============================================================================
 
@@ -2480,13 +2451,9 @@ double Ostap::Models::BifurcatedGauss::maxVal  ( Int_t      code ) const
                   "Ostap::Models::BifurcatedGauss" ,
                   INVALID_MAXVAL_CODE              , __FILE__ , __LINE__  ) ;
   setPars() ;
-  return 1.01 * m_bg ( m_peak ) ;
+  return 1.01 * m_bg ( m_bg.mode()  ) ;
 }
 // ============================================================================
-
-
-
-
 
 
 // ============================================================================

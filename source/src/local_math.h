@@ -82,6 +82,23 @@ namespace
   */
   const double  s_INFINITY_LOG_NEG = std::log ( 2 * s_SMALL2 ) ;
   // ==========================================================================
+  /** @var S_EXP_OVERFLOW 
+   *  For IEEE-compatible type double, overflow is guaranteed if 709.8 < num
+   *  and underflow is guaranteed if num < -708.4.
+   */
+  const double s_EXP_OVERFLOW = 709.8 ;
+  // ===========================================================================
+  /** @var S_EXP_UNDERFLOW 
+   *  For IEEE-compatible type double, overflow is guaranteed if 709.8 < num
+   *  and underflow is guaranteed if num < -708.4.
+   */
+  const double s_EXP_UNDERFLOW = -708.4 ;
+  // ==========================================================================
+  /** @var S_INFINITY_ERFC_UNDERFLOW 
+   *  For the IEEE-compatible type double, underflow is guaranteed if num > 26.55.
+   */
+  const double s_ERFC_UNDERFLOW = 26.55 ;
+  // ==========================================================================
   // Constants
   // ==========================================================================
   /** @var s_LN10

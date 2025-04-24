@@ -1117,8 +1117,57 @@ double Ostap::Math::gaussian_integral_left
   return details::gaussian_int_L ( alpha * alpha , beta , high ) ;
 }
 // ============================================================================
-
-
+namespace
+{
+  // ==========================================================================
+  // standard Gauss PDF 
+  inline double _gauss_pdf_ ( const double x )
+  {
+    static const double s_norm  = 1.0 / std::sqrt ( 2.0 * M_PI ) ;
+    const double arg = -0.5 * x * x ;
+    if ( arg < s_EXP_UNDERFLOW ) { return 0 ; } // RETURN
+    return s_norm * std::exp ( arg ) ;
+  } // ========================================================================
+  // ==========================================================================
+  /// standard Gauss CDF
+  inline double _gauss_cdf_ ( const double x ) 
+  {
+    static const double s_isqrt2    = 1.0 / std::sqrt ( 2.0 ) ;
+    static const double s_high      =  6                * s_isqrt2 ;
+    static const double s_underflow = -s_ERFC_UNDERFLOW * s_isqrt2 ;
+    //
+    if      ( x >= s_high      ) { return 1 ; }
+    else if ( x <= s_underflow ) { return 0 ; }
+    //  
+    const double y = x * s_isqrt2 ;
+    //
+    return y < -2 ? 0.5 * std::erfc ( -y ) : 0.5 * ( 1 + std::erf ( y ) ) ;
+  } // ========================================================================
+  // ==========================================================================
+  /// Gauss integral
+  inline double _gauss_int_ ( const double a , const double b )
+  {
+    //
+    static const double s_isqrt2    = 1.0 / std::sqrt ( 2.0 ) ;
+    static const double s_high      = 6                * s_isqrt2 ;
+    static const double s_underflow = s_ERFC_UNDERFLOW * s_isqrt2 ;
+    //     
+    const double xmin = std::min ( a , b ) ;
+    const double xmax = std::max ( a , b ) ;
+    //
+    if      ( xmax <= -s_underflow || xmin   >= s_underflow ) { return 0 ; }
+    else if ( xmin <= -s_high      && s_high <= xmax        ) { return 1 ; }
+    //
+    const double ya = a * s_isqrt2 ;
+    const double yb = b * s_isqrt2 ;
+    //
+    if      ( xmax <= -2 ) { return 0.5 * ( std::erfc ( std::abs ( yb ) ) - std::erfc ( std::abs ( ya ) ) ) ; } 
+    else if ( xmin >= +2 ) { return 0.5 * ( std::erfc (            ya   ) - std::erfc (            yb   ) ) ; }
+    //
+    return 0.5 * ( std::erf ( yb ) - std::erf ( ya ) ) ;
+  } // =======================================================================
+  // ==========================================================================
+} //                                             The end of anonymous namespace 
 // ============================================================================
 /*  get the standard gaussian pdf 
  *  @see https://en.wikipedia.org/wiki/Normal_distribution
@@ -1133,9 +1182,9 @@ double Ostap::Math::gauss_pdf
   const double mu    ,
   const double sigma )
 {
-  static const double s_norm = 1.0 / std::sqrt ( 2.0 * M_PI ) ;
-  const double dx = ( x  - mu ) / std::abs ( sigma ) ;
-  return s_norm * std::exp ( -0.5 * dx * dx ) / std::abs ( sigma ) ;
+  const double aisigma = 1.0 / std::abs ( sigma ) ;
+  const double dx  = ( x  - mu ) * aisigma ;
+  return _gauss_pdf_ ( dx ) * aisigma ;
 }
 // ============================================================================
 /*  get the standard gaussian cdf 
@@ -1150,9 +1199,8 @@ double Ostap::Math::gauss_cdf
   const double mu    ,
   const double sigma )
 {
-  static const double s_isqrt2 = 1.0 / std::sqrt ( 2.0 ) ;
-  const double y = ( x - mu ) * s_isqrt2 / std::abs ( sigma ) ;
-  return 0.5 * ( 1 + std::erf ( y ) ) ;
+  const double y = ( x - mu ) / std::abs ( sigma ) ;
+  return _gauss_cdf_ ( y ) ;
 }
 // ============================================================================
 /*  get the Gaussian integral 
@@ -1172,19 +1220,13 @@ double Ostap::Math::gauss_int
   const double mu    ,
   const double sigma )
 {
-  static const double s_isqrt2 = 1.0 / std::sqrt( 2.0 ) ;
+  if ( s_equal ( a , b ) ) { return 0 ; }
   //
-  const double i_s = s_isqrt2 / std::abs ( sigma ) ;
+  const double iasigma = 1.0 / std::abs ( sigma ) ;
+  const double as      = ( a - mu ) * iasigma ;
+  const double bs      = ( b - mu ) * iasigma ;
   //
-  const double ya = ( a - mu ) * i_s ;
-  const double yb = ( b - mu ) * i_s ;
-  //
-  return 
-    ( std::max ( ya , yb ) < -3 ) ? 
-    0.5 * ( std::erfc ( std::abs ( yb ) ) - std::erfc ( std::abs ( ya ) ) ) :
-    ( std::min ( ya , yb ) >  3 ) ? 
-    0.5 * ( std::erfc (            ya   ) - std::erfc (            yb   ) ) :
-    0.5 * ( std::erf ( yb ) - std::erf ( ya ) ) ;
+  return s_equal ( as , bs ) ? 0 : _gauss_int_ ( as , bs ) ;
 }
 // ============================================================================
 namespace
@@ -1193,7 +1235,7 @@ namespace
   /** trivial Cavalieri's integral 
    *  \f[ I = \int\limits_{x_{low}}^{x_{high}} x^n dx   \f]
    *  @see https://en.wikipedia.org/wiki/Cavalieri%27s_quadrature_formula
-   *  - for n<0 , it is assumed that function is continuous between x_low and xhigh 
+   *  - for n<0 , it is assumed that function is continuous between xlow and xhigh 
    */
   inline double _cavalieri_ 
   ( const int    n     ,
@@ -1270,7 +1312,7 @@ namespace
             dd       *= d   ;
             //
             const double term = ( logl - logh ) * dd * invfact ;
-            if ( !term || s_zero ( term ) || s_equal ( result , result + term ) )
+            if ( 5 <= i && ( !term || s_zero ( term ) || s_equal ( result , result + term ) ) ) 
               {
                 result   += term ;
                 break ;
@@ -1281,7 +1323,7 @@ namespace
         return result ;
       }
     ///
-    if ( xlow <= 0 && n + 1 < 0 )
+    if ( ( ( xlow <= 0 ) || ( xhigh <= 0 ) ) && n + 1 < 0 )
       { return std::numeric_limits<double>::quiet_NaN() ; }   // return NaN 
     /// regular  case
     return ( std::pow ( xhigh  , n + 1 ) - std::pow ( xlow  , n + 1 ) ) / ( n + 1 ) ;

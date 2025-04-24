@@ -3352,57 +3352,57 @@ namespace Ostap
       /// constructor with two variables 
       Rank 
       ( const std::string& name  , 
-	const std::string& title ,
-	const int          rank  , 
-	RooAbsReal&        a1    ,
-	RooAbsReal&        a2    ) ;
+        const std::string& title ,
+        const int          rank  , 
+        RooAbsReal&        a1    ,
+        RooAbsReal&        a2    ) ;
       // =======================================================================
       /// constructor with three variables 
       Rank 
       ( const std::string& name  , 
-	const std::string& title ,
-	const int          rank  ,
-	RooAbsReal&        a1    ,
-	RooAbsReal&        a2    ,
-	RooAbsReal&        a3    ) ;
+        const std::string& title ,
+        const int          rank  ,
+        RooAbsReal&        a1    ,
+        RooAbsReal&        a2    ,
+        RooAbsReal&        a3    ) ;
       // =======================================================================	  
       /// constructor with four variables 
       Rank 
       ( const std::string& name  , 
-	const std::string& title ,
-	const int          rank  ,
-	RooAbsReal&        a1    ,
-	RooAbsReal&        a2    ,
-	RooAbsReal&        a3    ,
-	RooAbsReal&        a4    ) ;
+        const std::string& title ,
+        const int          rank  ,
+        RooAbsReal&        a1    ,
+        RooAbsReal&        a2    ,
+        RooAbsReal&        a3    ,
+        RooAbsReal&        a4    ) ;
       // =======================================================================	  
       /// constructor with five variables 
       Rank 
       ( const std::string& name  , 
-	const std::string& title ,
-	const int          rank  ,
-	RooAbsReal&        a1    ,
-	RooAbsReal&        a2    ,
-	RooAbsReal&        a3    ,
-	RooAbsReal&        a4    ,
-	RooAbsReal&        a5    ) ;
+        const std::string& title ,
+        const int          rank  ,
+        RooAbsReal&        a1    ,
+        RooAbsReal&        a2    ,
+        RooAbsReal&        a3    ,
+        RooAbsReal&        a4    ,
+        RooAbsReal&        a5    ) ;
       // =======================================================================
       /// constructor with six variables 
       Rank 
       ( const std::string& name  , 
-	const std::string& title ,
-	const int          rank  ,
-	RooAbsReal&        a1    ,
-	RooAbsReal&        a2    ,
-	RooAbsReal&        a3    ,
-	RooAbsReal&        a4    ,
-	RooAbsReal&        a5    ,
-	RooAbsReal&        a6    ) ;      
+        const std::string& title ,
+        const int          rank  ,
+        RooAbsReal&        a1    ,
+        RooAbsReal&        a2    ,
+        RooAbsReal&        a3    ,
+        RooAbsReal&        a4    ,
+        RooAbsReal&        a5    ,
+        RooAbsReal&        a6    ) ;      
       // ======================================================================
       /// constructor with many variables 
       Rank 
       ( const std::string&      name  , 
-	const std::string&      title ,
+        const std::string&      title ,
 	const int               rank  ,
 	const RooAbsCollection& vars  ) ;
       // ======================================================================
@@ -3519,7 +3519,44 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-        
+
+    // ========================================================================
+    /** @class CrystalBallN
+     *  \f$ n \rigtharrow N \f$ transformastion fo r CrystalBall & frinds 
+     *  @see Ostap::Math::CrustalBall
+     *  @see Ostap::Math::CrustalBall::
+     */
+    class CrystalBallN final : public OneVar
+    {
+      // ========================================================================
+      ClassDefOverride(Ostap::MoreRooFit::CrystalBallN , 1 ) ;  
+      // ========================================================================
+    public:
+      // =======================================================================
+      /// constructor with three variables 
+      CrystalBallN 
+      ( const std::string&  name  , 
+        const std::string&  title , 
+        RooAbsReal&         n     ) ;
+      /// copy 
+      CrystalBallN 
+      ( const CrystalBallN& right       ,        
+        const char*         newname = 0 ) ;
+      /// clone 
+      CrystalBallN* clone ( const char* newname ) const override ;
+      /// fake default constructor (needed for serisalization)
+      CrystalBallN () = default ;
+      // virtual destructor 
+      virtual ~CrystalBallN () ;
+      // ======================================================================
+    protected : 
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ; 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    
     // ========================================================================
     /** @class ProductPdf
      *  Oversimplified product of two PDF

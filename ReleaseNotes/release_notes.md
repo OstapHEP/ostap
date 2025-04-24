@@ -41,6 +41,8 @@
       `ostap.core.core.py` (should it be  `otap.core.__init__.py` ?)
    1. `-b` or `--batch` command line arguments now are effectivey used for all scrpts via
       `ostap.core.core.py` (should it be  `otap.core.__init__.py` ?)
+   1. switch from `N=|n|+1`  to `N = sqrt ( 1 +n*n)` for CrystalBall & friends 
+
     
 ## Backward incompatible
 

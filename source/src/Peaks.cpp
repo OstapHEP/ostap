@@ -53,13 +53,13 @@ namespace
   {
     //
     if      ( s_equal   ( x , 0 )    ) { return 1 ; }
-    else if ( std::fabs ( x ) < 0.1  )
+    else if ( std::abs ( x ) < 0.1  )
     {
       double result = 1.0  ;
       double delta  = x    ;
       //
-      precision = std::fabs ( precision ) ;
-      precision = std::min  ( precision , std::fabs ( s_APRECISION_TAIL ) ) ;
+      precision = std::abs ( precision ) ;
+      precision = std::min ( precision , std::abs ( s_APRECISION_TAIL ) ) ;
       unsigned int n = 1 ;
       //
       do
@@ -68,12 +68,12 @@ namespace
         result += delta ;
         n      += 2 ;
       }
-      while ( std::fabs ( delta ) > 0.1 * precision && n < 10000 ) ;
+      while ( std::abs ( delta ) > 0.1 * precision && n < 10000 ) ;
       //
       return result ;
     }
     //
-    if ( 100 < std::fabs ( x )  ) { return  s_INFINITY ; }
+    if ( 100 < std::abs ( x )  ) { return  s_INFINITY ; }
     //
     // the generic evaluation
     //
@@ -185,8 +185,8 @@ namespace
     const double sigmaL ,
     const double sigmaR )
   : m_peak    ( peak )
-  , m_sigmaL  ( std::fabs ( sigmaL ) )
-  , m_sigmaR  ( std::fabs ( sigmaR ) )
+  , m_sigmaL  ( std::abs ( sigmaL ) )
+  , m_sigmaR  ( std::abs ( sigmaR ) )
 //
 {}
 // ============================================================================
@@ -217,13 +217,13 @@ double Ostap::Math::BifurcatedGauss::cdf ( const double x ) const
 {
   // left half-gaussian
   if ( x <= m_peak )
-  {
-  const double sigma = sigmaL () ;
-  const double sf    = s_SQRT2i  / sigma  ;
-  const double nf    = sigma    / ( sigmaL() + sigmaR() ) ;
-  const double b     = ( x - m_peak ) * sf ;
-    return std::erfc ( -b ) * nf ; // RETURN
-  }
+    {
+      const double sigma = sigmaL () ;
+      const double sf    = s_SQRT2i / sigma  ;
+      const double nf    = sigma    / ( sigmaL() + sigmaR() ) ;
+      const double b     = ( x - m_peak ) * sf ;
+      return std::erfc ( -b ) * nf ; // RETURN
+    }
   //
   const double bias = sigmaL() / ( sigmaL() + sigmaR() ) ;
   return bias + integral ( m_peak , x ) ;
@@ -231,32 +231,33 @@ double Ostap::Math::BifurcatedGauss::cdf ( const double x ) const
 // ============================================================================
 // get the integral between low and high limits
 // ============================================================================
-double Ostap::Math::BifurcatedGauss::integral ( const double low  ,
-                                                const double high ) const 
+double Ostap::Math::BifurcatedGauss::integral
+( const double low  ,
+  const double high ) const 
 {
   if ( s_equal ( low , high ) ) { return 0 ; }                         // RETURN
   if (           low > high   ) { return - integral ( high , low ) ; } // RETURN
   //
   // left half-gaussian
   if       ( high <= m_peak )
-  {
-    const double sigma = sigmaL () ;
-    const double sf    = s_SQRT2i  / sigma  ;
-    const double nf    = sigma    / ( sigmaL() + sigmaR() ) ;
-    const double a     = ( low  - m_peak ) * sf ;
-    const double b     = ( high - m_peak ) * sf ;
-    return  ( std::erf ( b ) -  std::erf ( a ) ) * nf ; // RETURN
-  }
+    {
+      const double sigma = sigmaL () ;
+      const double sf    = s_SQRT2i  / sigma  ;
+      const double nf    = sigma    / ( sigmaL() + sigmaR() ) ;
+      const double a     = ( low  - m_peak ) * sf ;
+      const double b     = ( high - m_peak ) * sf ;
+      return  ( std::erf ( b ) -  std::erf ( a ) ) * nf ; // RETURN
+    }
   // right half-gaussian
   else if ( low >= m_peak )
-  {
-    const double sigma = sigmaR () ;
-    const double sf    = s_SQRT2i  / sigma  ;
-    const double nf    = sigma    / ( sigmaL() + sigmaR() ) ;
-    const double a     = ( low  - m_peak ) * sf ;
-    const double b     = ( high - m_peak ) * sf ;
-    return  ( std::erf ( b ) -  std::erf ( a ) ) * nf ; // RETURN
-  }
+    {
+      const double sigma = sigmaR () ;
+      const double sf    = s_SQRT2i  / sigma  ;
+      const double nf    = sigma    / ( sigmaL() + sigmaR() ) ;
+      const double a     = ( low  - m_peak ) * sf ;
+      const double b     = ( high - m_peak ) * sf ;
+      return  ( std::erf ( b ) -  std::erf ( a ) ) * nf ; // RETURN
+    }
   // split into two intervals 
   return
     integral ( low    , m_peak ) +
@@ -275,7 +276,7 @@ std::size_t Ostap::Math::BifurcatedGauss::tag () const
 // ============================================================================
 bool Ostap::Math::BifurcatedGauss::setSigmaL ( const double value )
 {
-  const double value_ = std::fabs ( value ) ;
+  const double value_ = std::abs ( value ) ;
   if ( s_equal ( m_sigmaL , value_ ) ) { return false ; }
   m_sigmaL = value_ ;
   //
@@ -284,7 +285,7 @@ bool Ostap::Math::BifurcatedGauss::setSigmaL ( const double value )
 // ============================================================================
 bool Ostap::Math::BifurcatedGauss::setSigmaR ( const double value )
 {
-  const double value_ = std::fabs ( value ) ;
+  const double value_ = std::abs ( value ) ;
   if ( s_equal ( m_sigmaR , value_ ) ) { return false ; }
   m_sigmaR = value_ ;
   //
@@ -438,10 +439,6 @@ std::size_t Ostap::Math::DoubleGauss::tag () const
 }
 // ============================================================================
 
-
-
-
-
 // ============================================================================
 // Gauss
 // ============================================================================
@@ -455,7 +452,7 @@ Ostap::Math::Gauss::Gauss
 ( const double peak   ,
   const double sigma  )
   : m_peak  ( peak )
-  , m_sigma ( std::fabs ( sigma ) )
+  , m_sigma ( std::abs ( sigma ) )
     //
 {}
 // ============================================================================
@@ -466,12 +463,7 @@ Ostap::Math::Gauss::~Gauss (){}
 // evaluate Bifurcated Gaussian
 // ============================================================================
 double Ostap::Math::Gauss::evaluate ( const double x ) const
-{
-  const double dx   = ( x - m_peak ) / m_sigma ;
-  const double norm = s_SQRTPIHALF * m_sigma  ;
-  //
-  return my_exp ( -0.5 * dx * dx ) / norm ;
-}
+{ return Ostap::Math::gauss_pdf ( x , m_peak , m_sigma ) ; }
 // ============================================================================
 // get the integral
 // ============================================================================
@@ -480,28 +472,21 @@ double Ostap::Math::Gauss::integral () const { return 1 ; }
 //  get CDF 
 // ============================================================================
 double Ostap::Math::Gauss::cdf ( const double x ) const 
-{
-  const double dx =  s_SQRT2i * ( x - m_peak ) / m_sigma ;
-  return 0.5 * ( 1 + std::erf ( dx ) ) ;
-}
+{ return Ostap::Math::gauss_cdf ( x , m_peak , m_sigma ) ; }
 // ============================================================================
 // get the integral between low and high limits
 // ============================================================================
-double Ostap::Math::Gauss::integral ( const double low  ,
-                                      const double high ) const 
+double Ostap::Math::Gauss::integral
+( const double low  ,
+  const double high ) const 
 {
   if ( s_equal ( low , high ) ) { return 0 ; }                         // RETURN
-  //
-  const double c = s_SQRT2i / m_sigma ;
-  const double l = c * ( low  - m_peak ) ;
-  const double h = c * ( high - m_peak ) ;
-  //
-  return 0.5 * ( std::erf ( h ) - std::erf ( l ) ) ;
+  return Ostap::Math::gauss_int ( low , high , m_peak , m_sigma ) ;
 }
 // ============================================================================
 bool Ostap::Math::Gauss::setSigma ( const double value )
 {
-  const double value_ = std::fabs ( value ) ;
+  const double value_ = std::abs ( value ) ;
   if ( s_equal ( m_sigma , value_ ) ) { return false ; }
   m_sigma = value_ ;
   return true ;
@@ -1477,7 +1462,7 @@ bool Ostap::Math::Bukin::setPeak  ( const double value )
 bool Ostap::Math::Bukin::setSigma ( const double value )
 {
   //
-  const double value_ = std::fabs ( value ) ;
+  const double value_ = std::abs ( value ) ;
   if ( s_equal ( value_ , m_sigma ) ) { return false ; }
   //
   m_sigma  = value_ ;
@@ -1540,7 +1525,7 @@ bool Ostap::Math::Bukin::setXi    ( const double value )
 bool Ostap::Math::Bukin::setRhoL  ( const double value )
 {
   //
-  const double value_ = std::fabs ( value ) ;
+  const double value_ = std::abs ( value ) ;
   if ( s_equal ( value_ , m_rho_L  ) ) { return false ; }
   //
   m_rho_L    = value_ ;
@@ -1904,6 +1889,14 @@ std::size_t Ostap::Math::Novosibirsk::tag () const
 // ============================================================================
 // Crystal Ball & Co
 // ============================================================================
+/** \f$ n \rightarrow N \f$ transformation
+ *  @param    n (input) n-paameter (external) 
+ *  @return transformed N-parameter (internal)
+ */
+// ============================================================================
+double Ostap::Math::CrystalBall::N ( const double n )
+{ return std::hypot ( 1.0 , n ) ;}
+// ============================================================================
 /*  constructor from all parameters
  *  @param m0 m0 parameter
  *  @param alpha alpha parameter
@@ -1930,7 +1923,7 @@ Ostap::Math::CrystalBall::CrystalBall
                   "Ostap::Math::CrystalBall" ,
                   INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
-  m_A = std::exp ( -0.5 * m_alpha * m_alpha ) * s_SQRT2PIi   ;
+  if ( 0 > m_A ) { m_A = std::exp ( -0.5 * m_alpha * m_alpha ) * s_SQRT2PIi ; } 
 }
 // ============================================================================
 // destructor
@@ -1991,9 +1984,9 @@ double Ostap::Math::CrystalBall::pdf ( const double x ) const
   // the tail: power law  
   if  ( delta < -m_alpha )
     {
-      const double NN = N () ;
-      const double y  = ( NN - m_alpha * ( m_alpha + delta ) ) / NN ;
-      return m_A * std::pow ( y , -NN ) / m_sigma ;
+      const double nn = N () ;
+      const double y  = 1 - m_alpha * ( m_alpha + delta ) / nn ;
+      return m_A * std::pow ( y , -nn ) / m_sigma ;
     }
   //
   // the peak: Gaussian 
@@ -2103,7 +2096,7 @@ double Ostap::Math::Needham::pdf ( const double x ) const
 std::size_t Ostap::Math::Needham::tag () const 
 {
   static const std::string s_name = "Needham" ;
-  return Ostap::Utils::hash_combiner ( s_name , m_cb.tag() ,  m_a0 , m_a1 , m_a2 ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_cb.tag() , m_a0 , m_a1 , m_a2 ) ; 
 }
 // ============================================================================
 // show alpha as functon of sigma 
@@ -2126,7 +2119,7 @@ Ostap::Math::CrystalBallRightSide::CrystalBallRightSide
   const double sigma ,
   const double alpha ,
   const double n     )
-  : m_cb         ( m0 , sigma , alpha , n ) 
+  : m_cb   ( m0 , sigma , alpha , n ) 
 {}
 // ============================================================================
 // destructor
@@ -2168,16 +2161,16 @@ std::size_t Ostap::Math::CrystalBallRightSide::tag () const
 Ostap::Math::CrystalBallDoubleSided::CrystalBallDoubleSided
 ( const double m0      ,
   const double sigma   ,
-  const double alpha_L ,
-  const double n_L     ,
-  const double alpha_R ,
-  const double n_R     )
+  const double alphaL  ,
+  const double nL      ,
+  const double alphaR  ,
+  const double nR      )
   : m_m0         (  m0 )
   , m_sigma      (   1 )
-  , m_alpha_L    (   2 )
-  , m_n_L        (   2 )
-  , m_alpha_R    (   2 )
-  , m_n_R        (   2 )
+  , m_alphaL     (   2 )
+  , m_nL         (   2 )
+  , m_alphaR     (   2 )
+  , m_nR         (   2 )
 //
   , m_AL         ( -1000 ) 
   , m_AR         ( -1000 )
@@ -2185,13 +2178,13 @@ Ostap::Math::CrystalBallDoubleSided::CrystalBallDoubleSided
   //
   setM0       ( m0      ) ;
   setSigma    ( sigma   ) ;
-  setAlpha_L  ( alpha_L ) ;
-  setAlpha_R  ( alpha_R ) ;
-  setN_L      ( n_L     ) ;
-  setN_R      ( n_R     ) ;
+  setAlphaL   ( alphaL  ) ;
+  setAlphaR   ( alphaR  ) ;
+  setNL       ( nL      ) ;
+  setNR       ( nR      ) ;
   //
-  m_AL = std::exp ( -0.5 * m_alpha_L * m_alpha_L ) * s_SQRT2PIi  ;
-  m_AR = std::exp ( -0.5 * m_alpha_R * m_alpha_R ) * s_SQRT2PIi  ;
+  if ( m_AL < 0 ) { m_AL = std::exp ( -0.5 * m_alphaL * m_alphaL ) * s_SQRT2PIi ; } 
+  if ( m_AR < 0 ) { m_AR = std::exp ( -0.5 * m_alphaR * m_alphaR ) * s_SQRT2PIi ; } 
   //
 }
 // ============================================================================
@@ -2202,53 +2195,51 @@ Ostap::Math::CrystalBallDoubleSided::~CrystalBallDoubleSided(){}
 bool Ostap::Math::CrystalBallDoubleSided::setM0 ( const double value )
 {
   if ( s_equal ( value , m_m0 ) ) { return false ; }
-  //
   m_m0       = value ;
-  //
   return true ;
 }
 // ============================================================================
 bool Ostap::Math::CrystalBallDoubleSided::setSigma ( const double value )
 {
-  const double value_ = std::fabs ( value );
+  const double value_ = std::abs ( value );
   if ( s_equal ( value_ , m_sigma ) ) { return false ; }
   m_sigma    = value_ ;
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::CrystalBallDoubleSided::setAlpha_L ( const double value )
+bool Ostap::Math::CrystalBallDoubleSided::setAlphaL ( const double value )
 {
-  const double value_ = std::fabs ( value );
-  if ( s_equal ( value_ , m_alpha_L ) && 0 < m_AL ) { return false ; }
-  m_alpha_L  = value_  ;
-  m_AL = std::exp ( -0.5 * m_alpha_L * m_alpha_L ) * s_SQRT2PIi  ;
+  const double value_ = std::abs ( value );
+  if ( s_equal ( value_ , m_alphaL ) && 0 < m_AL ) { return false ; }
+  m_alphaL  = value_  ;
+  m_AL = std::exp ( -0.5 * m_alphaL * m_alphaL ) * s_SQRT2PIi  ;
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::CrystalBallDoubleSided::setAlpha_R ( const double value )
+bool Ostap::Math::CrystalBallDoubleSided::setAlphaR ( const double value )
 {
-  const double value_ = std::fabs ( value );  
-  if ( s_equal ( value_ , m_alpha_R ) && 0 < m_AR ) { return false ; }
+  const double value_ = std::abs ( value );  
+  if ( s_equal ( value_ , m_alphaR ) && 0 < m_AR ) { return false ; }
   //
-  m_alpha_R  = value_  ;
-  m_AR = std::exp ( -0.5 * m_alpha_L * m_alpha_L ) * s_SQRT2PIi  ;
+  m_alphaR  = value_  ;
+  m_AR = std::exp ( -0.5 * m_alphaL * m_alphaL ) * s_SQRT2PIi  ;
   //
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::CrystalBallDoubleSided::setN_L     ( const double value )
+bool Ostap::Math::CrystalBallDoubleSided::setNL     ( const double value )
 {
-  const double value_ = std::fabs ( value );
-  if ( s_equal ( value_ , m_n_L    ) ) { return false ; }
-  m_n_L      = value_ ;
+  const double value_ = std::abs ( value );
+  if ( s_equal ( value_ , m_nL    ) ) { return false ; }
+  m_nL      = value_ ;
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::CrystalBallDoubleSided::setN_R     ( const double value )
+bool Ostap::Math::CrystalBallDoubleSided::setNR     ( const double value )
 {
-  const double value_ = std::fabs ( value );
-  if ( s_equal ( value_ , m_n_R    ) ) { return false ; }
-  m_n_R      = value_ ;
+  const double value_ = std::abs ( value );
+  if ( s_equal ( value_ , m_nR    ) ) { return false ; }
+  m_nR      = value_ ;
   return true ;
 }
 // ============================================================================
@@ -2260,18 +2251,18 @@ double Ostap::Math::CrystalBallDoubleSided::pdf ( const double x ) const
   const double delta   = ( x - m_m0 ) / m_sigma ;
   //
   // the left tail
-  if      ( delta  < -m_alpha_L )  // left tail
+  if      ( delta  < -m_alphaL )  // left tail
     {
-      const double NN = NL () ;
-      const double y  = ( NN - m_alpha_L * ( m_alpha_L + delta ) ) / NN ;    
-      return m_AL * std::pow ( y , -NN ) / m_sigma ;
+      const double n  = NL () ;
+      const double y  = ( n - m_alphaL * ( m_alphaL + delta ) ) / n ;    
+      return m_AL * std::pow ( y , -n ) / m_sigma ;
     }
   // right tail 
-  else if  ( delta >  m_alpha_R )  // right tail
+  else if  ( delta >  m_alphaR )  // right tail
     {
-      const double NN = NR () ;
-      const double y  = ( NN - m_alpha_R * ( m_alpha_R - delta ) ) / NN ;    
-      return m_AR * std::pow ( y , -NN ) / m_sigma ;
+      const double n  = NR () ;
+      const double y  = ( n - m_alphaR * ( m_alphaR - delta ) ) / n ;    
+      return m_AR * std::pow ( y , -n ) / m_sigma ;
     }
   //
   // the peak: Gaussian 
@@ -2288,8 +2279,8 @@ double Ostap::Math::CrystalBallDoubleSided::integral
   if      ( s_equal ( low , high ) ) { return 0.0 ; } // RETURN
   else if (           low > high   ) { return - integral ( high , low ) ; }
   //
-  const double xL = m_m0 - m_alpha_L * m_sigma ;
-  const double xR = m_m0 + m_alpha_R * m_sigma ;
+  const double xL = m_m0 - m_alphaL * m_sigma ;
+  const double xR = m_m0 + m_alphaR * m_sigma ;
   //
   // split into proper subintervals
   //
@@ -2306,22 +2297,22 @@ double Ostap::Math::CrystalBallDoubleSided::integral
   // left tail 
   else if ( high <= xL ) 
     {
-      const double NN = NL () ;
+      const double n  = NL () ;
       /// tail
-      const double a  =   - m_alpha_L             / NN ;
-      const double b  = 1 - m_alpha_L * m_alpha_L / NN ;
+      const double a  =   - m_alphaL            / n ;
+      const double b  = 1 - m_alphaL * m_alphaL / n ;
       //  
-      return m_AL * Ostap::Math::cavalieri ( -NN , zlow , zhigh , a , b ) ;      
+      return m_AL * Ostap::Math::cavalieri ( -n , zlow , zhigh , a , b ) ;      
     }
   // right tail
   else if ( xR <= low )
     {
-      const double NN = NR () ;
+      const double n  = NR () ;
       /// tail
-      const double a  =   + m_alpha_R             / NN ;
-      const double b  = 1 - m_alpha_R * m_alpha_L / NN ;
+      const double a  =   + m_alphaR            / n ;
+      const double b  = 1 - m_alphaR * m_alphaR / n ;
       //  
-      return m_AR * Ostap::Math::cavalieri ( -NN , zlow , zhigh , a , b ) ;      
+      return m_AR * Ostap::Math::cavalieri ( -n , zlow , zhigh , a , b ) ;      
     }
   //
   return 0 ;
@@ -2334,14 +2325,14 @@ std::size_t Ostap::Math::CrystalBallDoubleSided::tag () const
   static const std::string s_name = "CrystalBallDoubleSided" ;
   return Ostap::Utils::hash_combiner ( s_name    , 
                                        m_m0      , m_sigma , 
-                                       m_alpha_L , m_n_L   , 
-                                       m_alpha_R , m_n_R   ) ; 
+                                       m_alphaL  , m_nL    , 
+                                       m_alphaR  , m_nR    ) ; 
 }
 // ============================================================================
 
 
 // ============================================================================
-// apolonios 
+// Apolonios 
 // ============================================================================
 /*  constructor from all parameters
  *  @param m0 m0 parameter
@@ -2361,9 +2352,10 @@ Ostap::Math::Apollonios::Apollonios
   , m_alpha      (  2 )
   , m_n          (  2 )
   , m_b          (  2 )
-//
-  , m_A  ( -1000 ) 
-//
+    //
+  , m_A1        ( -1000 ) 
+  , m_A2        ( -1000 ) 
+    //
   , m_workspace () 
 {
   //
@@ -2373,7 +2365,8 @@ Ostap::Math::Apollonios::Apollonios
   setN      ( n     ) ;
   setB      ( bp    ) ;
   //
-  m_A = my_exp ( -b () * a1 () ) ;
+  if ( 0 > m_A1 ) { m_A1 = std::hypot ( 1 , m_alpha      ) ; } 
+  if ( 0 > m_A2 ) { m_A2 = std::exp   ( m_b - m_b * m_A1 ) ; } 
 }
 // ============================================================================
 // destructor
@@ -2384,9 +2377,7 @@ bool  Ostap::Math::Apollonios::setM0 ( const double value )
 {
   //
   if ( s_equal ( value , m_m0 ) ) { return false ; }
-  //
   m_m0       = value ;
-  //
   return true ;
 }
 // ============================================================================
@@ -2394,48 +2385,45 @@ bool Ostap::Math::Apollonios::setSigma ( const double value )
 {
   const double value_ = std::abs ( value );
   if ( s_equal ( value_ , m_sigma ) ) { return false ; }
-  //
   m_sigma    = value_ ;
-  //
   return true ;
 }
 // ============================================================================
 bool Ostap::Math::Apollonios::setAlpha  ( const double value )
 {
+  const double value_ = std::abs ( value );  
+  if ( s_equal ( value , m_alpha ) && 0 < m_A1 ) { return false ; }
+  m_alpha    = value_ ;
   //
-  if ( s_equal ( value , m_alpha ) ) { return false ; }
-  //
-  m_alpha    = value  ;
-  //
-  m_A = my_exp ( -b() * a1 () ) ; 
+  m_A1 = std::hypot ( 1 , m_alpha      )  ;
+  m_A2 = std::exp   ( m_b - m_b * m_A1 ) ; 
   //
   return true ;
 }
 // ============================================================================
 bool Ostap::Math::Apollonios::setN      ( const double value )
 {
-  const double value_ = std::fabs ( value );
+  const double value_ = std::abs ( value );
   if ( s_equal ( value_ , m_n     ) ) { return false ; }
-  //
   m_n        = value_ ;
-  if ( s_equal ( m_n , 0 ) ) { m_n = 0 ; }
+  if      ( s_equal ( m_n , 0 ) ) { m_n = 0 ; }
+  else if ( s_equal ( m_n , 1 ) ) { m_n = 1 ; }
   //
   return true ;
 }
 // ============================================================================
 bool Ostap::Math::Apollonios::setB  ( const double value )
 {
-  //
   const double value_ = std::abs ( value );
-  if ( s_equal ( value_ , m_b ) ) { return false ; }
-  //
+  if ( s_equal ( value_ , m_b ) && 0 < m_A1 && 0 < m_A2 ) { return false ; }
   m_b    = value_  ;
   //
-  if ( s_equal ( m_b , 0 ) ) { m_b = 0 ; }
-  if ( s_equal ( m_b , 1 ) ) { m_b = 1 ; }
+  if      ( s_equal ( m_b , 0 ) ) { m_b = 0 ; }
+  else if ( s_equal ( m_b , 1 ) ) { m_b = 1 ; }
   //
-  m_A = my_exp ( -b () * a1 () ) ;
-  //
+  m_A1 = std::hypot ( 1 , m_alpha      )  ;
+  m_A2 = std::exp   ( m_b - m_b * m_A1 ) ; 
+  //  
   return true ;
 }
 // ============================================================================
@@ -2444,19 +2432,21 @@ bool Ostap::Math::Apollonios::setB  ( const double value )
 double Ostap::Math::Apollonios::pdf ( const double x ) const
 {
   //
-  const double dx    = ( x - m_m0 ) / m_sigma ;
+  const double delta  = ( x - m_m0 ) / m_sigma ;
   //
   // the tail
   //
-  if  ( dx < -m_alpha )
-  {
-    const double frac = np1 () / ( np1 () - ( m_alpha + dx ) * aa () )  ;
-    return std::pow ( frac , np1 () ) * m_A * s_SQRT2PIi / sigma() ;
-  }
+  if  ( delta < -m_alpha )
+    {
+      const double nn = N () ;
+      const double y  = 1 - m_b * m_alpha * ( m_alpha + delta ) / ( nn * m_A1 ) ;
+      return m_A2 * std::pow ( y , -nn ) * m_b / m_sigma ;
+    }
   //
   // the peak
   //
-  return my_exp ( -b() * std::sqrt ( 1 + dx*dx ) ) * s_SQRT2PIi / sigma() ;  
+  const double arg = m_b * ( 1 - std::hypot ( 1 , delta ) ) ;
+  return my_exp ( arg ) * m_b / m_sigma ;
 }
 // ============================================================================
 // get the integral between low and high
@@ -2465,7 +2455,6 @@ double Ostap::Math::Apollonios::integral
 ( const double low ,
   const double high ) const
 {
-  //
   if      ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
   else if (           low > high   ) { return - integral ( high ,
                                                            low  ) ; } // RETURN
@@ -2474,52 +2463,48 @@ double Ostap::Math::Apollonios::integral
   //
   // split into proper subintervals
   //
-  if      ( low < x0 && x0 < high )
-  { return integral ( low , x0 ) + integral ( x0 , high ) ; }
+  if      ( low < x0 && x0 < high ) { return integral ( low , x0 ) + integral ( x0 , high ) ; }
   //
   // Z = (x-x0)/sigma 
   //
   const double zlow  = ( low  - m_m0 ) / sigma() ;
   const double zhigh = ( high - m_m0 ) / sigma() ;
   //
-  // peak
-  //
+  // Integrate the peak
   if ( x0 <= low  )
-  {
-    //
-    // use GSL to evaluate the integral
-    //
-    static const Ostap::Math::GSL::Integrator1D<Apollonios> s_integrator {} ;
-    static char s_message[] = "Integral(Apollonios)" ;
-    //
-    const auto F = s_integrator.make_function ( this ) ;
-    int    ierror   =  0 ;
-    double result   =  1 ;
-    double error    = -1 ;
-    std::tie ( ierror , result , error ) = s_integrator.qag_integrate
-      ( tag () , 
-        &F     , 
-        low    , high  ,               // low & high edges
-        workspace ( m_workspace ) ,    // workspace
-        s_APRECISION         ,          // absolute precision
-        s_RPRECISION         ,          // relative precision
-        m_workspace.size()              ,          // size of workspace
-        s_message           , 
-        __FILE__ , __LINE__ ) ;
-    //  
-    return result ;
-  }
+    {
+      //
+      // use GSL to evaluate the integral
+      //
+      static const Ostap::Math::GSL::Integrator1D<Apollonios> s_integrator {} ;
+      static char s_message[] = "Integral(Apollonios)" ;
+      //
+      const auto F = s_integrator.make_function ( this ) ;
+      int    ierror   =  0 ;
+      double result   =  1 ;
+      double error    = -1 ;
+      std::tie ( ierror , result , error ) = s_integrator.qag_integrate
+        ( tag () , 
+          &F     , 
+          low    , high  ,               // low & high edges
+          workspace ( m_workspace ) ,    // workspace
+          s_APRECISION         ,         // absolute precision
+          s_RPRECISION         ,         // relative precision
+          m_workspace.size()   ,         // size of workspace
+          s_message           , 
+          __FILE__ , __LINE__ ) ;
+      //  
+      return result ;
+    }
   //
-  // tail
+  // power-law tail
   //
-  const double A = np1 () ;
-  const double B = np1 () ;
-  const double C = - std::abs ( alpha () * b () ) / a1 ()  ;
+  const double nn = N() ;
   //
-  const double result = s_SQRT2PIi * m_A * 
-    tail_integral ( A , B , C , np1 () , zlow + alpha() , zhigh + alpha() ) ;
+  const double a =   - m_b * m_alpha           / nn ;
+  const double b = 1 - m_n * m_alpha * m_alpha / nn ; 
   //
-  return result ;
+  return m_A2 * m_b * Ostap::Math::cavalieri ( -nn , zlow , zhigh , a , b ) ;
 }
 // ============================================================================
 // get the tag 
@@ -2532,7 +2517,7 @@ std::size_t Ostap::Math::Apollonios::tag () const
 // ============================================================================
 
 // ============================================================================
-// apolonios2 
+// Apolonios2 
 // ============================================================================
 /*  constructor from all parameters
  *  @param m0 m0 parameter

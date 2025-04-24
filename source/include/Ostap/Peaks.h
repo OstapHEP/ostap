@@ -62,39 +62,43 @@ namespace Ostap
     public:
       // ======================================================================
       /// peak position
-      double peak    () const { return m_peak    ; }
-      /// peak position
-      double m0      () const { return peak()    ; }
+      inline double peak    () const { return m_peak   ; }
+      inline double m0      () const { return m_peak   ; }
+      inline double mu      () const { return m_peak   ; }
+      inline double mode    () const { return m_peak   ; }
+      inline double mass    () const { return m_peak   ; }
       /// left sigma
-      double sigmaL  () const { return m_sigmaL  ; }
+      inline double sigmaL  () const { return m_sigmaL ; }
       /// right sigma
-      double sigmaR  () const { return m_sigmaR  ; }
+      inline double sigmaR  () const { return m_sigmaR ; }
       // ======================================================================
       /// ssigma 
-      double sigma   () const { return 0.5  * ( m_sigmaL + m_sigmaR )            ; }
+      inline double sigma   () const { return 0.5  * ( m_sigmaL + m_sigmaR )            ; }
       /// sigma-asymmetry 
-      double asym    () const { return 0.5  * ( m_sigmaL - m_sigmaR ) / sigma () ; }
+      inline double asym    () const { return 0.5  * ( m_sigmaL - m_sigmaR ) / sigma () ; }
       // ======================================================================
     public:
       // ======================================================================
       /// peak position 
       bool setPeak    ( const double value ) ;
-      /// peak position 
-      bool setM0      ( const double value ) { return setPeak ( value ) ; }
-      /// peak position 
-      bool setMass    ( const double value ) { return setPeak ( value ) ; }
       /// left sigma 
       bool setSigmaL  ( const double value ) ;
       /// right sigma 
       bool setSigmaR  ( const double value ) ;
+      // ======================================================================
+      inline bool setM0   ( const double value ) { return setPeak ( value ) ; } 
+      inline bool setMu   ( const double value ) { return setPeak ( value ) ; } 
+      inline bool setMode ( const double value ) { return setPeak ( value ) ; } 
+      inline bool setMass ( const double value ) { return setPeak ( value ) ; } 
       // ======================================================================
     public: // integrals & CDF
       // ======================================================================
       /// get the integral
       double integral () const ;
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       ///  get CDF 
       double cdf      ( const double x    ) const ;
       // ======================================================================
@@ -145,30 +149,27 @@ namespace Ostap
     public:
       // ======================================================================
       /// peak position
-      double peak     () const { return m_peak    ; }
-      /// peak position
-      double mean     () const { return peak ()   ; }
-      /// peak position
-      double m0       () const { return peak ()   ; }
+      inline double peak     () const { return m_peak    ; }
+      inline double mean     () const { return m_peak    ; }
+      inline double m0       () const { return m_peak    ; }
+      inline double mu       () const { return m_peak    ; }
+      inline double mode     () const { return m_peak    ; }      
+      inline double mass     () const { return m_peak    ; }      
       /// sigma 
-      double sigma    () const { return m_sigma   ; }
+      inline double sigma    () const { return m_sigma   ; }
       /// sigma-1
-      double sigma1   () const { return m_sigma   ; }
+      inline double sigma1   () const { return m_sigma   ; }
       /// sigma-2
-      double sigma2   () const { return m_sigma * m_scale ; }
+      inline double sigma2   () const { return m_sigma * m_scale ; }
       /// scale 
-      double scale    () const { return m_scale    ; }
+      inline double scale    () const { return m_scale    ; }
       /// fraction 
-      double fraction () const { return m_fraction ; }
+      inline double fraction () const { return m_fraction ; }
       // ======================================================================
     public:
       // ======================================================================
       /// peak positon
       bool setPeak     ( const double value ) ;
-      /// peak positon
-      bool setM0       ( const double value ) { return setPeak ( value ) ; }
-      /// peak positon
-      bool setMass     ( const double value ) { return setPeak ( value ) ; }
       /// sigma 
       bool setSigma    ( const double value ) ;
       /// scale 
@@ -176,6 +177,11 @@ namespace Ostap
       /// fraction 
       bool setFraction ( const double value ) ;
       // ======================================================================
+      inline bool setM0   ( const double value ) { return setPeak ( value ) ; }
+      inline bool setMu   ( const double value ) { return setPeak ( value ) ; }
+      inline bool setMode ( const double value ) { return setPeak ( value ) ; }
+      inline bool setMass ( const double value ) { return setPeak ( value ) ; }
+      // ======================================================================      
     public:
       // ======================================================================
       /// get the cdf 
@@ -183,8 +189,9 @@ namespace Ostap
       /// get the integral
       double integral () const { return 1  ; }  ;
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -237,8 +244,10 @@ namespace Ostap
       // ======================================================================
       /// peak position
       double peak    () const { return m_peak    ; }
-      /// peak position
-      double m0      () const { return peak()    ; }
+      double m0      () const { return m_peak    ; }
+      double mu      () const { return m_peak    ; }
+      double mode    () const { return m_peak    ; }
+      double mass    () const { return m_peak    ; }
       /// sigma
       double sigma   () const { return m_sigma   ; }
       // ======================================================================
@@ -246,12 +255,14 @@ namespace Ostap
       // ======================================================================
       /// peak position 
       bool setPeak    ( const double value ) ;
-      /// peak position 
-      bool setM0      ( const double value ) { return setPeak ( value ) ; }
-      /// peak position 
-      bool setMass    ( const double value ) { return setPeak ( value ) ; }
       /// left sigma 
       bool setSigma   ( const double value ) ;
+      // ======================================================================
+      /// peak position 
+      inline bool setM0   ( const double value ) { return setPeak ( value ) ; }
+      inline bool setMu   ( const double value ) { return setPeak ( value ) ; }
+      inline bool setMode ( const double value ) { return setPeak ( value ) ; }
+      inline bool setMass ( const double value ) { return setPeak ( value ) ; }
       // ======================================================================
     public: // integrals & CDF
       // ======================================================================
@@ -307,19 +318,19 @@ namespace Ostap
     public: // primary getters
       // ======================================================================
       /// peak position 
-      double mu          () const { return m_mu       ; }
+      inline double mu          () const { return m_mu       ; }
       /// peak position 
-      double peak        () const { return   mu    () ; }
+      inline double peak        () const { return   mu    () ; }
       /// peak position 
-      double location    () const { return   mu    () ; }
+      inline double location    () const { return   mu    () ; }
       ///  alpha 
-      double alpha       () const { return m_alpha    ; }
+      inline double alpha       () const { return m_alpha    ; }
       ///  scale 
-      double scale       () const { return   alpha () ; }
+      inline double scale       () const { return   alpha () ; }
       ///   beta 
-      double beta        () const { return m_beta     ; }
+      inline double beta        () const { return m_beta     ; }
       ///  shape 
-      double shape       () const { return   beta  () ; }
+      inline double shape       () const { return   beta  () ; }
       // ======================================================================
     public: // setters
       // ======================================================================
@@ -331,22 +342,22 @@ namespace Ostap
       bool  setBeta      ( const double value ) ;
       //
       ///  set position 
-      bool  setPeak      ( const double value ) { return setMu    ( value ) ; }
+      inline bool  setPeak      ( const double value ) { return setMu    ( value ) ; }
       ///  set position 
-      bool  setLocation  ( const double value ) { return setMu    ( value ) ; }
+      inline bool  setLocation  ( const double value ) { return setMu    ( value ) ; }
       ///  scale 
-      bool  setScale     ( const double value ) { return setAlpha ( value ) ; }
+      inline bool  setScale     ( const double value ) { return setAlpha ( value ) ; }
       ///  shape 
-      bool  setShape     ( const double value ) { return setBeta  ( value ) ; }
+      inline bool  setShape     ( const double value ) { return setBeta  ( value ) ; }
       // ======================================================================
     public: // derived getters
       // ======================================================================
       /// mean
-      double mean        () const { return   mu    () ; }
+      inline double mean        () const { return   mu    () ; }
       /// median
-      double median      () const { return   mu    () ; }
+      inline double median      () const { return   mu    () ; }
       /// mode 
-      double mode        () const { return   mu    () ; }
+      inline double mode        () const { return   mu    () ; }
       /// variance 
       double variance    () const ;
       /// dispersion 
@@ -363,7 +374,7 @@ namespace Ostap
     public :
       // ======================================================================
       /// get pdf
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
       /// get pdf
       double pdf        ( const double x ) const ;
       // ======================================================================
@@ -373,8 +384,9 @@ namespace Ostap
       /// get the integral
       double integral () const { return 1 ; }
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -924,8 +936,9 @@ namespace Ostap
       /// get the integral
       double integral   () const ;
       /// get the integral between low and high limits
-      double integral   ( const double low  ,
-                          const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public: // properties 
       // ======================================================================
@@ -1112,11 +1125,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      double m0    () const { return m_m0       ; }
-      double peak  () const { return   m0    () ; }
-      double mass  () const { return   m0    () ; }
-      double sigma () const { return m_sigma    ; }
-      double tau   () const { return m_tau      ; }
+      inline double m0    () const { return m_m0       ; }
+      inline double peak  () const { return   m0    () ; }
+      inline double mass  () const { return   m0    () ; }
+      inline double sigma () const { return m_sigma    ; }
+      inline double tau   () const { return m_tau      ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1204,6 +1217,14 @@ namespace Ostap
     {
     public:
       // ======================================================================
+      /** \f$ n \rightarrow N \f$ transformation
+       *  @param    n (input) n-paameter (external) 
+       *  @return transformed N-parameter (internal)
+       */
+      static double N ( const double n ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
       /** constructor from all parameters
        *  @param m0     m0       parameter
        *  @param sigma  sigma    parameter
@@ -1237,18 +1258,20 @@ namespace Ostap
     public:            
       // ======================================================================
       /// mode of the distribution 
-      inline double mode  () const { return m_m0    ; }
+      inline double mode () const { return m_m0      ; }
       /// Internal N-parameter
-      inline double N     () const { return m_n + 1 ; } // internal N parameter
+      inline double N    () const { return N ( m_n ) ; } // internal N parameter
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
-      bool setM0    ( const double value ) ;
-      bool setPeak  ( const double value ) { return setM0 ( value ) ; }
-      bool setMass  ( const double value ) { return setPeak ( value ) ; }
-      bool setSigma ( const double value ) ;
-      bool setAlpha ( const double value ) ;
-      bool setN     ( const double value ) ; // set n,N-parameters 
+      bool        setM0    ( const double value ) ;
+      inline bool setMu    ( const double value ) { return setM0 ( value ) ; }
+      inline bool setPeak  ( const double value ) { return setM0 ( value ) ; }
+      inline bool setMode  ( const double value ) { return setM0 ( value ) ; }
+      inline bool setMass  ( const double value ) { return setM0 ( value ) ; }
+      bool        setSigma ( const double value ) ;
+      bool        setAlpha ( const double value ) ;
+      bool        setN     ( const double value ) ; // set n,N-parameters 
       // ======================================================================
     public:
       // ======================================================================
@@ -1323,34 +1346,41 @@ namespace Ostap
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
-      double m0    () const { return m_cb.m0    () ; }
-      double peak  () const { return      m0    () ; }
-      double sigma () const { return m_cb.sigma () ; }
-      double a0    () const { return m_a0          ; }
-      double a1    () const { return m_a1          ; }
-      double a2    () const { return m_a2          ; }
-      double alpha () const { return alpha ( m_cb.sigma() ) ; } 
+      inline double m0    () const { return m_cb.m0    () ; }
+      inline double mu    () const { return m_cb.mu    () ; }
+      inline double peak  () const { return m_cb.peak  () ; }
+      inline double mode  () const { return m_cb.mode  () ; }
+      inline double sigma () const { return m_cb.sigma () ; }
+      inline double a0    () const { return m_a0          ; }
+      inline double a1    () const { return m_a1          ; }
+      inline double a2    () const { return m_a2          ; }
+      inline double alpha () const { return alpha ( m_cb.sigma() ) ; }
+      inline double n     () const { return m_cb.n () ; }
+      inline double N     () const { return m_cb.N () ; }      
       // ======================================================================
     public: // show alpha as function of sigma 
       // ======================================================================
+      /// alpha as function of sigma 
       double alpha ( const double sigma ) const ;
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
-      bool setM0    ( const double value ) { return m_cb.setM0    ( value ) ; }
-      bool setPeak  ( const double value ) { return      setM0    ( value ) ; }
-      bool setMass  ( const double value ) { return      setPeak  ( value ) ; }
-      bool setSigma ( const double value ) { return m_cb.setSigma ( value ) ; }
-      bool setA0    ( const double value ) ;
-      bool setA1    ( const double value ) ;
-      bool setA2    ( const double value ) ;
+      inline bool setM0    ( const double value ) { return m_cb.setM0    ( value ) ; }
+      inline bool setMu    ( const double value ) { return m_cb.setMu    ( value ) ; }
+      inline bool setPeak  ( const double value ) { return m_cb.setPeak  ( value ) ; }
+      inline bool setMode  ( const double value ) { return m_cb.setMode  ( value ) ; }
+      inline bool setMass  ( const double value ) { return m_cb.setMass  ( value ) ; }
+      inline bool setSigma ( const double value ) { return m_cb.setSigma ( value ) ; }
+      bool        setA0    ( const double value ) ;
+      bool        setA1    ( const double value ) ;
+      bool        setA2    ( const double value ) ;
       // ======================================================================
     public:
       // ======================================================================
       /// get integral between low and high
       double integral
       ( const double low ,
-	const double high ) const
+        const double high ) const
       { return m_cb.integral ( low , high ) ; }
       // ======================================================================
     public:
@@ -1403,21 +1433,25 @@ namespace Ostap
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
-      double m0    () const { return m_cb.m0    () ; }
-      double peak  () const { return      m0    () ; }
-      double sigma () const { return m_cb.sigma () ; }
-      double alpha () const { return m_cb.alpha () ; }
-      double n     () const { return m_cb.n     () ; }
-      double N     () const { return m_cb.N     () ; }
+      inline double m0    () const { return m_cb.m0    () ; }
+      inline double mu    () const { return m_cb.mu    () ; }
+      inline double peak  () const { return m_cb.peak  () ; }
+      inline double mode  () const { return m_cb.mode  () ; }
+      inline double sigma () const { return m_cb.sigma () ; }
+      inline double alpha () const { return m_cb.alpha () ; }
+      inline double n     () const { return m_cb.n     () ; }
+      inline double N     () const { return m_cb.N     () ; }      
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
-      bool setM0    ( const double value ) { return m_cb.setM0    ( value ) ; }
-      bool setPeak  ( const double value ) { return setM0 ( value ) ; }
-      bool setMass  ( const double value ) { return setPeak ( value ) ; }
-      bool setSigma ( const double value ) { return m_cb.setSigma ( value ) ; }
-      bool setAlpha ( const double value ) { return m_cb.setAlpha ( value ) ; }
-      bool setN     ( const double value ) { return m_cb.setN     ( value ) ; }
+      inline bool setM0    ( const double value ) { return m_cb.setM0    ( value ) ; }
+      inline bool setMu    ( const double value ) { return m_cb.setMu    ( value ) ; }
+      inline bool setPeak  ( const double value ) { return m_cb.setPeak  ( value ) ; }
+      inline bool setMode  ( const double value ) { return m_cb.setMode  ( value ) ; }
+      inline bool setMass  ( const double value ) { return m_cb.setMass  ( value ) ; }
+      inline bool setSigma ( const double value ) { return m_cb.setSigma ( value ) ; }
+      inline bool setAlpha ( const double value ) { return m_cb.setAlpha ( value ) ; }
+      inline bool setN     ( const double value ) { return m_cb.setN     ( value ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1475,27 +1509,33 @@ namespace Ostap
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
-      double m0      () const { return m_m0       ; }
-      double peak    () const { return   m0 ()    ; }
-      double sigma   () const { return m_sigma    ; }
-      double alpha_L () const { return m_alpha_L  ; }
-      double alpha_R () const { return m_alpha_R  ; }
-      double n_L     () const { return m_n_L      ; }
-      double n_R     () const { return m_n_R      ; }
-      double NL      () const { return m_n_L  + 1 ; } // nL+1
-      double NR      () const { return m_n_R  + 1 ; } // nR+1      
-      // ======================================================================
+      inline double m0      () const { return m_m0     ; }
+      inline double mu      () const { return m_m0     ; }
+      inline double peak    () const { return m_m0     ; }
+      inline double mode    () const { return m_m0     ; }
+      inline double mass    () const { return m_m0     ; }
+      inline double sigma   () const { return m_sigma  ; }
+      inline double alphaL  () const { return m_alphaL ; }
+      inline double alphaR  () const { return m_alphaR ; }      
+      inline double nL      () const { return m_nL     ; }      
+      inline double nR      () const { return m_nR     ; }      
+      inline double NL      () const { return Ostap::Math::CrystalBall::N ( m_nL ) ; } //
+      inline double NR      () const { return Ostap::Math::CrystalBall::N ( m_nR ) ; } //
+      // =====================================================================
     public: // trivial accessors
       // ======================================================================
-      bool setM0      ( const double value ) ;
-      bool setPeak    ( const double value ) { return setM0   ( value ) ; }
-      bool setMass    ( const double value ) { return setPeak ( value ) ; }
-      bool setSigma   ( const double value ) ;
-      bool setAlpha_L ( const double value ) ;
-      bool setN_L     ( const double value ) ;
-      bool setAlpha_R ( const double value ) ;
-      bool setN_R     ( const double value ) ;
+      bool        setM0     ( const double value ) ;
+      bool        setSigma  ( const double value ) ;
+      bool        setAlphaL ( const double value ) ;
+      bool        setAlphaR ( const double value ) ;
+      bool        setNL     ( const double value ) ; // set n,N-parameters 
+      bool        setNR     ( const double value ) ; // set n,N-parameters 
       // ======================================================================
+      inline bool setMu     ( const double value ) { return setM0 ( value ) ; }
+      inline bool setPeak   ( const double value ) { return setM0 ( value ) ; }
+      inline bool setMode   ( const double value ) { return setM0 ( value ) ; }
+      inline bool setMass   ( const double value ) { return setM0 ( value ) ; }
+      // ======================================================================      
     public: //
       // ======================================================================
       /// get integral between low and high
@@ -1515,13 +1555,13 @@ namespace Ostap
       /// the peak resolution
       double m_sigma    ;  // the peak resolution
       /// parameter alpha
-      double m_alpha_L  ;  // parameter alpha
+      double m_alphaL   ;  // parameter alpha
       /// parameter N
-      double m_n_L      ;  // parameter N
+      double m_nL       ;  // parameter N
       /// parameter alpha_R
-      double m_alpha_R  ;  // parameter alpha
+      double m_alphaR   ;  // parameter alpha
       /// parameter N_R
-      double m_n_R      ;  // parameter N
+      double m_nR       ;  // parameter N
       // ======================================================================
     private:
       // ======================================================================
@@ -1530,7 +1570,6 @@ namespace Ostap
       double m_AR  { -1 } ;  // exp(-0.5*alpha_R^2)
       // ======================================================================
     } ;
-
     // ========================================================================
     /** @class Apollonios
      *  A modified gaussian with power-law tail on right side
@@ -1587,33 +1626,39 @@ namespace Ostap
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
-      double m0    () const { return m_m0     ; }
-      double peak  () const { return   m0 ()  ; }
-      double sigma () const { return m_sigma  ; }
-      double alpha () const { return m_alpha  ; }
-      double n     () const { return m_n      ; }
-      double b     () const { return m_b      ; }
+      inline double m0    () const { return m_m0     ; }
+      inline double mu    () const { return m_m0     ; }
+      inline double peak  () const { return m_m0     ; }
+      inline double mode  () const { return m_m0     ; }
+      inline double sigma () const { return m_sigma  ; }
+      inline double alpha () const { return m_alpha  ; }
+      inline double n     () const { return m_n      ; }
+      inline double b     () const { return m_b      ; }
       // ======================================================================
-      double a1    () const { return std::sqrt ( 1 + alpha() * alpha() ) ; }
-      double aa    () const { return std::abs ( alpha() * b() ) / a1 ()  ; }
-      double np1   () const { return n()  + 1 ; } // n+1 
-      double N     () const { return n()  + 1 ; } // n+1
+    public:
+      // ======================================================================
+      /// the actual parameter N 
+      inline double N     () const { return Ostap::Math::CrystalBall::N ( m_n ) ; }
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
       bool setM0    ( const double value ) ;
-      bool setPeak  ( const double value ) { return setM0 ( value ) ; }
-      bool setMass  ( const double value ) { return setPeak ( value ) ; }
       bool setSigma ( const double value ) ;
       bool setAlpha ( const double value ) ;
       bool setN     ( const double value ) ; // setter for "n"! 
       bool setB     ( const double value ) ;
       // ======================================================================
+      inline bool setMu   ( const double value ) { return setM0 ( value ) ; }
+      inline bool setPeak ( const double value ) { return setM0 ( value ) ; }
+      inline bool setMass ( const double value ) { return setM0 ( value ) ; }
+      inline bool setMode ( const double value ) { return setM0 ( value ) ; }
+      // ======================================================================
     public:
       // ======================================================================
       /// get the integral between low and high
-      double integral ( const double low ,
-                        const double high ) const ;
+      double integral
+      ( const double low ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1632,8 +1677,12 @@ namespace Ostap
       double m_n        ;  // parameter
       /// parameter b
       double m_b        ;  // parameter n
+      // =======================================================================
+    private: 
+      // =======================================================================
       /// helper constants
-      double m_A        ;  // exp(-0.5*alpha^2)
+      double m_A1  { -1 } ; // std::hypot ( 1 , alpha ) 
+      double m_A2  { -1 } ; // exp ( b - b * std::hypot ( 1 , alpha ) ) 
       // ======================================================================
     private:
       // ======================================================================
@@ -1693,31 +1742,36 @@ namespace Ostap
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
-      double m0     () const { return m_m0     ; }
-      double peak   () const { return   m0 ()  ; }
-      double sigmaL () const { return m_sigmaL ; }
-      double sigmaR () const { return m_sigmaR ; }
-      double beta   () const { return m_beta   ; }
+      inline double m0    () const { return m_m0     ; }
+      inline double mu    () const { return m_m0     ; }
+      inline double peak  () const { return m_m0     ; }
+      inline double mode  () const { return m_m0     ; }
+      inline double sigmaL () const { return m_sigmaL ; }
+      inline double sigmaR () const { return m_sigmaR ; }
+      inline double beta   () const { return m_beta   ; }
       // ======================================================================
-      double sigma  () const { return 0.5 * ( m_sigmaL + m_sigmaR )           ; }
-      double asym   () const { return 0.5 * ( m_sigmaL - m_sigmaR ) / sigma() ; }
-      double b2     () const { return m_beta * m_beta ; }
+      inline double sigma  () const { return 0.5 * ( m_sigmaL + m_sigmaR )           ; }
+      inline double asym   () const { return 0.5 * ( m_sigmaL - m_sigmaR ) / sigma() ; }
+      inline double b2     () const { return m_beta * m_beta ; }
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
       bool setM0     ( const double value ) ;
-      bool setPeak   ( const double value ) { return setM0 ( value ) ; }
-      bool setMass   ( const double value ) { return setPeak ( value ) ; }
       bool setSigmaL ( const double value ) ;
       bool setSigmaR ( const double value ) ;
       bool setBeta   ( const double value ) ;
       // ======================================================================
+      inline bool setMu   ( const double value ) { return setM0 ( value ) ; }
+      inline bool setPeak ( const double value ) { return setM0 ( value ) ; }
+      inline bool setMass ( const double value ) { return setM0 ( value ) ; }
+      inline bool setMode ( const double value ) { return setM0 ( value ) ; }
+      // ======================================================================      
     public:
       // ======================================================================
       /// get the integral between low and high
       double integral
       ( const double low ,
-	const double high ) const ;
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1780,31 +1834,35 @@ namespace Ostap
       // ======================================================================
       // variables
       // ======================================================================
-      double M      () const  { return m_M      ; }
-      double m0     () const  { return   M   () ; }
-      double mass   () const  { return   M   () ; }
-      double peak   () const  { return   M   () ; }
+      inline double M      () const  { return m_M      ; }
+      inline double m0     () const  { return m_M      ; }
+      inline double mu     () const  { return m_M      ; }
+      inline double mass   () const  { return m_M      ; }
+      inline double peak   () const  { return m_M      ; }
+      inline double mode   () const  { return m_M      ; }
       // ======================================================================
-      double sigma  () const  { return m_s      ; }
-      double s      () const  { return sigma () ; }
-      double gamma  () const  { return sigma () ; }
-      double width  () const  { return sigma () ; }
+      inline double sigma  () const  { return m_s      ; }
+      inline double s      () const  { return m_s      ; }
+      inline double gamma  () const  { return m_s      ; }
+      inline double width  () const  { return m_s      ; }
       // ======================================================================
-      double nu     () const  { return m_n      ; }
-      double n      () const  { return m_n      ; }
-      double N      () const  { return m_n + 1  ; }
+      inline double nu     () const  { return m_n      ; }
+      inline double n      () const  { return m_n      ; }
+      inline double N      () const  { return m_n + 1  ; }
       // ======================================================================
       bool setM     ( const double value  ) ;
-      bool setM0    ( const double value  ) { return setM  ( value ) ; }
-      bool setMass  ( const double value  ) { return setM  ( value ) ; }
-      bool setPeak  ( const double value  ) { return setM  ( value ) ; }
-      // ======================================================================
       bool setSigma ( const double value  ) ;
       bool setS     ( const double value  ) { return setSigma ( value ) ; }
       bool setGamma ( const double value  ) { return setSigma ( value ) ; }
       bool setWidth ( const double value  ) { return setSigma ( value ) ; }
       // ======================================================================
       bool setN     ( const double value  ) ; // setter for n! 
+      // ======================================================================
+      inline bool setM0    ( const double value  ) { return setM  ( value ) ; }
+      inline bool setMu    ( const double value  ) { return setM  ( value ) ; }
+      inline bool setMass  ( const double value  ) { return setM  ( value ) ; }
+      inline bool setPeak  ( const double value  ) { return setM  ( value ) ; }
+      inline bool setMode  ( const double value  ) { return setM  ( value ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1818,7 +1876,7 @@ namespace Ostap
       /// get the integral between low and high limits
       double integral
       ( const double low  ,
-	const double high ) const ;
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1875,50 +1933,56 @@ namespace Ostap
       // ======================================================================
       // variables
       // ======================================================================
-      double M       () const  { return m_M      ; }
-      double m0      () const  { return   M   () ; }
-      double mass    () const  { return   M   () ; }
-      double peak    () const  { return   M   () ; }
+      inline double M       () const  { return m_M ; }
+      inline double m0      () const  { return m_M ; }
+      inline double mu      () const  { return m_M ; }
+      inline double mass    () const  { return m_M ; }
+      inline double peak    () const  { return m_M ; }
+      inline double mode    () const  { return m_M ; }
       // ======================================================================
-      double sigmaL  () const  { return m_sL      ; }
-      double sL      () const  { return sigmaL () ; }
-      double gammaL  () const  { return sigmaL () ; }
-      double widthL  () const  { return sigmaL () ; }
+      inline double sigmaL  () const  { return m_sL      ; }
+      inline double sL      () const  { return sigmaL () ; }
+      inline double gammaL  () const  { return sigmaL () ; }
+      inline double widthL  () const  { return sigmaL () ; }
       // ======================================================================
-      double sigmaR  () const  { return m_sR      ; }
-      double sR      () const  { return sigmaR () ; }
-      double gammaR  () const  { return sigmaR () ; }
-      double widthR  () const  { return sigmaR () ; }
+      inline double sigmaR  () const  { return m_sR      ; }
+      inline double sR      () const  { return sigmaR () ; }
+      inline double gammaR  () const  { return sigmaR () ; }
+      inline double widthR  () const  { return sigmaR () ; }
       // ======================================================================
-      double nuL     () const  { return m_nL      ; }
-      double nL      () const  { return m_nL      ; }
-      double NL      () const  { return m_nL + 1  ; } // nL + 1 
+      inline double nuL     () const  { return m_nL      ; }
+      inline double nL      () const  { return m_nL      ; }
+      inline double NL      () const  { return m_nL + 1  ; } // nL + 1 
       // =========== ===========================================================
-      double nuR     () const  { return m_nR      ; }
-      double nR      () const  { return m_nR      ; }
-      double NR      () const  { return m_nR + 1  ; } // nR + 1 
+      inline double nuR     () const  { return m_nR      ; }
+      inline double nR      () const  { return m_nR      ; }
+      inline double NR      () const  { return m_nR + 1  ; } // nR + 1 
       // ======================================================================
-      bool setM      ( const double value  ) ;
-      bool setM0     ( const double value  ) { return setM  ( value ) ; }
-      bool setMass   ( const double value  ) { return setM  ( value ) ; }
-      bool setPeak   ( const double value  ) { return setM  ( value ) ; }
+      bool        setM      ( const double value  ) ;      
+      inline bool setM0     ( const double value  ) { return setM  ( value ) ; }
+      inline bool setMu     ( const double value  ) { return setM  ( value ) ; }
+      inline bool setMass   ( const double value  ) { return setM  ( value ) ; }
+      inline bool setPeak   ( const double value  ) { return setM  ( value ) ; }
+      inline bool setMode   ( const double value  ) { return setM  ( value ) ; }
       // ======================================================================
-      bool setSigmaL ( const double value  ) ;
-      bool setSL     ( const double value  ) { return setSigmaL ( value ) ; }
-      bool setGammaL ( const double value  ) { return setSigmaL ( value ) ; }
-      bool setWidthL ( const double value  ) { return setSigmaL ( value ) ; }
+      bool        setSigmaL ( const double value  ) ;
+      inline bool setSL     ( const double value  ) { return setSigmaL ( value ) ; }
+      inline bool setGammaL ( const double value  ) { return setSigmaL ( value ) ; }
+      inline bool setWidthL ( const double value  ) { return setSigmaL ( value ) ; }
       // ======================================================================
       bool setSigmaR ( const double value  ) ;
-      bool setSR     ( const double value  ) { return setSigmaR ( value ) ; }
-      bool setGammaR ( const double value  ) { return setSigmaR ( value ) ; }
-      bool setWidthR ( const double value  ) { return setSigmaR ( value ) ; }
+      inline bool setSR     ( const double value  ) { return setSigmaR ( value ) ; }
+      inline bool setGammaR ( const double value  ) { return setSigmaR ( value ) ; }
+      inline bool setWidthR ( const double value  ) { return setSigmaR ( value ) ; }
       // ======================================================================
       bool setNL     ( const double value  ) ; // setter for nL 
       bool setNR     ( const double value  ) ; // setter for nR 
       // ======================================================================
     public:
       // ======================================================================
+      /// PDF 
       double pdf    ( const double x ) const ;
+      // CDF 
       double cdf    ( const double x ) const ;
       // ======================================================================
     public:
@@ -1928,7 +1992,7 @@ namespace Ostap
       /// get the integral between low and high limits
       double integral
       ( const double low  ,
-	const double high ) const ;
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2049,7 +2113,7 @@ namespace Ostap
       double beta2           () const ; // beta2 parameter of Pearson family 
       /** distance between two infection points:
        *  distance between two points with \f$ f^{\prime\prime}=0\f$.
-       *  the twp points are equidstance fro mthe mode 
+       *  the twp points are equidstance from the mode 
        */
       double infection_width () const ;
       // ======================================================================      
@@ -2135,14 +2199,14 @@ namespace Ostap
       // ======================================================================
     public: // direct getters
       // ======================================================================
-      double location () const { return mu    () ; }
-      double scale    () const { return sigma () ; }
+      inline double location () const { return mu    () ; }
+      inline double scale    () const { return sigma () ; }
       // ======================================================================
-      double mu       () const { return m_mu      ; }
-      double sigma    () const { return m_sigma   ; }
-      double epsilon  () const { return m_epsilon ; }
-      double delta    () const { return m_delta   ; }
-      double peak     () const { return m_mu      ; }
+      inline double mu       () const { return m_mu      ; }
+      inline double sigma    () const { return m_sigma   ; }
+      inline double epsilon  () const { return m_epsilon ; }
+      inline double delta    () const { return m_delta   ; }
+      inline double peak     () const { return m_mu      ; }
       // ======================================================================
     public: // setters
       // ======================================================================
@@ -2260,8 +2324,9 @@ namespace Ostap
     public: // integrals
       // ======================================================================
       double cdf      ( const double x    ) const ;
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2330,8 +2395,9 @@ namespace Ostap
       // ======================================================================
     public: // integrals
       // ======================================================================
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       /// integral from -infinity to +infinity
       double integral () const ;
       // ======================================================================
@@ -2426,8 +2492,9 @@ namespace Ostap
     public: // integrals
       // ======================================================================
       /// get integral from low to high
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       /// integral from -infinity to +infinity
       double integral () const ;
       /// evaluate atlas function
@@ -2515,8 +2582,9 @@ namespace Ostap
     public: // integrals
       // ======================================================================
       /// get integral from low to high
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       /// integral from -infinity to +infinity
       double integral () const ;
       /// evaluate Logistc CDF function
@@ -2722,8 +2790,9 @@ namespace Ostap
       /** get the integral between low and high values 
        *  \f$ \int_{low}^{high}f(x) dx\f$
        */
-      double integral ( const double low  , 
-                        const double high ) const ;
+      double integral
+      ( const double low  , 
+        const double high ) const ;
       // ======================================================================      
     private :
       // ======================================================================
@@ -2795,8 +2864,9 @@ namespace Ostap
     public: // integrals
       // ======================================================================
       /// get integral from low to high
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       /// integral from -infinity to +infinity
       double integral () const { return 1 ; }
       /// evaluate sslash CDF function
@@ -2877,8 +2947,9 @@ namespace Ostap
     public: // integrals
       // ======================================================================
       /// get integral from low to high
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       /// integral from -infinity to +infinity
       double integral () const {  return  1 ; }
       /// evaluate CDF function
@@ -2966,8 +3037,9 @@ namespace Ostap
       /// get CDF 
       double cdf      ( const double x ) const ;
       /// evaluate the integral
-      double integral ( const double low  , 
-                        const double high ) const ;
+      double integral
+      ( const double low  , 
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -3355,8 +3427,9 @@ namespace Ostap
       /// get the integral 
       double integral () const { return 1 ; }
       /// get the integral 
-      double integral ( const double low  , 
-                        const double high ) const ;      
+      double integral
+      ( const double low  , 
+        const double high ) const ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -3918,10 +3991,10 @@ namespace Ostap
     } ;  
     // ========================================================================
     /** @class SkewGenError 
-     *  Skewed gheneralised error districbution 
+     *  Skewed gheneralised error distribution 
      *  @see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#Skewed_generalized_error_distribution
      *
-     *  The Special  case of Skewwed Generaliaed T-distribution 
+     *  The Special  case of Skewed Generaliaed T-distribution 
      *  @see Ostap::Math::SkewGenT 
      * 
      *  Original function is parameterised in terms of parameters 
@@ -4089,7 +4162,6 @@ namespace Ostap
     } ;
     // ========================================================================
 
-
     // ========================================================================
     /// some finite functions 
     // ========================================================================
@@ -4134,7 +4206,7 @@ namespace Ostap
       /// set varsigma 
       bool setVarsigma  ( const double value ) ;
       // ======================================================================
-    public: // some properteis 
+    public: // some properties 
       // ======================================================================
       /// get the mean     of the distribution 
       double mean     () const { return m_mu; }      
@@ -4197,7 +4269,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class Up 
-     *  Finite stomic function <code>up</code>,  a finite soltuion  
+     *  Finite atomic function <code>up</code>,  a finite soltuion  
      *  of the equation 
      *  \f[ f^{\prime(x) = 2 \left( f( 2x+1) - f(2x-1)\right) }\f] with
      *  \f$ f(0) = 1 \f$ 

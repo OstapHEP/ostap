@@ -109,7 +109,7 @@ class Bkg_pdf(PolyBase) :
                    the_phis = None  ) : ## the phis...
         
         ##            
-        PolyBase.__init__  ( self , name , power , xvar , the_phis )
+        PolyBase.__init__  ( self , name , power , xvar , the_phis = the_phis )
         #                
         self.__power = len ( self.phis ) 
         #
@@ -194,7 +194,7 @@ class PolyPos_pdf(PolyBase) :
                    xmax     = None  ,  ## optional x-max 
                    the_phis = None  ) : 
         #
-        PolyBase.__init__ ( self , name , power , xvar , the_phis )
+        PolyBase.__init__ ( self , name , power , xvar , the_phis = the_phis )
         #
         self.__power = len ( self.phis ) 
         #
@@ -254,7 +254,7 @@ class KarlinShapley_pdf(PolyBase) :
                    xmax     = None  ,  ## optional x-max 
                    the_phis = None  ) : 
         #
-        PolyBase.__init__ ( self , name , power , xvar , the_phis )
+        PolyBase.__init__ ( self , name , power , xvar , the_phis = the_phis )
         #
         self.__power = len ( self.phis ) 
         #
@@ -338,7 +338,7 @@ class KarlinStudden_pdf(PolyBase) :
                    scale    = None  ,  ## scale 
                    the_phis = None  ) : 
         #
-        PolyBase.__init__ ( self , name , power , xvar , the_phis )
+        PolyBase.__init__ ( self , name , power , xvar , the_phis = the_phis )
         #
         self.__power = len ( self.phis ) 
         #
@@ -442,7 +442,7 @@ class Rational_pdf(PolyBase) :
         assert isinstance ( nq , int ) and 0 <= nq , "Invalid `nq'-parameter"
         
         ## initialize the base 
-        PolyBase.__init__ ( self , name , np + nq , xvar , the_phis )
+        PolyBase.__init__ ( self , name , np + nq , xvar , the_phis = the_phis )
         #
         n  = len ( self.phis )
         np = min ( n , np )
@@ -624,7 +624,7 @@ class PolyEven_pdf(PolyBase) :
                    xmax     = None  ,  ## optional x-max 
                    the_phis = None  ) :
         #
-        PolyBase.__init__ ( self , name , power , xvar , the_phis )
+        PolyBase.__init__ ( self , name , power , xvar , the_phis = the_phis )
         self.__power = power
         #        
         ## xmin/xmax
@@ -688,7 +688,7 @@ class Monotonic_pdf(PolyBase) :
                    xmax       = None ,  ## optional x-max 
                    the_phis   = None ) : 
         #
-        PolyBase.__init__ ( self , name , power , xvar )
+        PolyBase.__init__ ( self , name , power , xvar , the_phis = the_phis )
         #
         self.__power      = power
         self.__increasing = True if increasing else False 
@@ -742,7 +742,7 @@ models.append ( Monotonic_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class Convex_pdf(PolyBase) :
-    """Positive monotonic (Bernstein) polynomial with fixed-sign second derivative:
+    """ Positive monotonic (Bernstein) polynomial with fixed-sign second derivative:
     
     f(x) = Pol_n(x)
     with f(x)>= 0 over the whole range and
@@ -773,7 +773,7 @@ class Convex_pdf(PolyBase) :
                    xmax       = None ,   ## optional x-max 
                    the_phis   = None ) : ## 
         #
-        PolyBase.__init__ ( self , name , power , xvar )
+        PolyBase.__init__ ( self , name , power , xvar , the_phis = the_phis )
         #
         self.__power      = power
         self.__increasing = True if increasing else False 
@@ -842,7 +842,7 @@ models.append ( Convex_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class ConvexOnly_pdf(PolyBase) :
-    """Positive (Bernstein) polynomial with fixed-sign second derivative:
+    """ Positive (Bernstein) polynomial with fixed-sign second derivative:
     
     f(x) = Pol_n(x)
     with f(x)>= 0 over the whole range and
@@ -863,7 +863,7 @@ class ConvexOnly_pdf(PolyBase) :
                    xmax     = None  ,   ## optional x-max 
                    the_phis = None  ) :
         #
-        PolyBase.__init__ ( self , name , power , xvar , the_phis )
+        PolyBase.__init__ ( self , name , power , xvar , the_phis = the_phis )
         #
         self.__power      = power
         self.__convex     = True if convex else False 
@@ -920,7 +920,7 @@ models.append ( ConvexOnly_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class PSPol_pdf(PolyBase) :
-    """The phase space function modified with positive polynomial 
+    """ The phase space function modified with positive polynomial 
     
     f(x) ~ PS( x ) * Pol_n(x)
     where
@@ -941,7 +941,7 @@ class PSPol_pdf(PolyBase) :
         
         #
         #
-        PolyBase.__init__  ( self , name , power , xvar , the_phis )
+        PolyBase.__init__  ( self , name , power , xvar , the_phis = the_phis )
         #
         if   isinstance ( phasespace , Ostap.Math.PhaseSpaceNL ) : pass
         elif isinstance ( phasespace , tuple ) and phasespace :
@@ -1030,7 +1030,7 @@ class PSLeftExpoPol_pdf(PolyBase) :
                "Invalid type of ``phasespace'' %s/%s" % ( phasespace , type ( phasespace ) )
 
         ## initialize the base 
-        PolyBase.__init__  ( self , name , power , xvar , the_phis )
+        PolyBase.__init__  ( self , name , power , xvar , the_phis = the_phis )
         #
 
         self.__phasespace = phasespace 
@@ -1140,7 +1140,7 @@ class TwoExpoPoly_pdf(PolyBase) :
                    xmax     = None  ,   ## optional x-max                    
                    the_phis = None  ) : 
         #
-        PolyBase.__init__  ( self , name , power , xvar , the_phis )
+        PolyBase.__init__  ( self , name , power , xvar , the_phis = the_phis  )
         #                
         self.__power = power
         #
@@ -1260,7 +1260,7 @@ class Sigmoid_pdf(PolyBase) :
                    the_phis = None  ) :
         #
         #
-        PolyBase.__init__ ( self , name , power , xvar , the_phis )
+        PolyBase.__init__ ( self , name , power , xvar , the_phis = the_phis )
         #
         self.__power      = power
         #
@@ -1381,7 +1381,7 @@ class PSpline_pdf(PolyBase) :
             spline = Ostap.Math.PositiveSpline ( *spline )
             logger.debug ( 'Spline created %s' % spline ) 
             
-        PolyBase.__init__ ( self , name , spline.npars() , xvar , the_phis )
+        PolyBase.__init__ ( self , name , spline.npars() , xvar , the_phis = the_phis )
         #
         self.__spline = spline
         #
@@ -1445,7 +1445,7 @@ class MSpline_pdf(PolyBase) :
                    spline           ,   ## the spline object Ostap::Math::MonotonicSpline
                    the_phis = None  ) : 
         #
-        PolyBase.__init__ ( self , name , spline.npars() , xvar , the_phis )
+        PolyBase.__init__ ( self , name , spline.npars() , xvar , the_phis = the_phis  )
         #
         self.__spline = spline
         # 
@@ -1508,7 +1508,7 @@ class CSpline_pdf(PolyBase) :
                    spline           ,   ## the spline object Ostap::Math::ConvexSpline
                    the_phis = None  ) : ##
         #
-        PolyBase.__init__ ( self , name , spline.npars() , xvar , the_phis )
+        PolyBase.__init__ ( self , name , spline.npars() , xvar , the_phis = the_phis )
         self.__spline = spline
         #
         self.pdf  = Ostap.Models.ConvexSpline (
@@ -1568,7 +1568,7 @@ class CPSpline_pdf(PolyBase) :
                    spline           ,   ## the spline object Ostap::Math::ConvexOnlySpline
                    the_phis = None  ) : 
         #
-        PolyBase.__init__ ( self , name , spline.npars() , xvar , the_phis )
+        PolyBase.__init__ ( self , name , spline.npars() , xvar , the_phis , the_phis )
         self.__spline = spline
         #
         self.pdf  = Ostap.Models.ConvexOnlySpline (
