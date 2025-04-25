@@ -1972,6 +1972,14 @@ Ostap::MoreRooFit::CrystalBallN::CrystalBallN
   : OneVar ( name , title , n )
 {}
 // ============================================================================
+// constructor with one variables 
+// ============================================================================
+Ostap::MoreRooFit::CrystalBallN::CrystalBallN
+( const std::string& name  , 
+  RooAbsReal&        n     )
+  : CrystalBallN ( name , "N-parameter: n -> N transformation" , n )
+{}
+// ============================================================================
 // "copy" constructor 
 // ============================================================================
 Ostap::MoreRooFit::CrystalBallN::CrystalBallN

@@ -3538,6 +3538,10 @@ namespace Ostap
       ( const std::string&  name  , 
         const std::string&  title , 
         RooAbsReal&         n     ) ;
+      /// constructor with three variables 
+      CrystalBallN 
+      ( const std::string&  name  , 
+        RooAbsReal&         n     ) ;
       /// copy 
       CrystalBallN 
       ( const CrystalBallN& right       ,        

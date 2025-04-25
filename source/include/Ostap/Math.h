@@ -1007,10 +1007,7 @@ namespace Ostap
     // ========================================================================
     /// signed sqrt 
     inline double signed_sqrt ( const double value ) 
-    {
-      return 
-        0 <= value ? std::sqrt ( value ) : -std::sqrt( std::abs ( value ) ) ;
-    }  
+    { return 0 <= value ? std::sqrt ( value ) : -std::sqrt( std::abs ( value ) ) ; }  
     // ========================================================================
     /** make dot-multiplication of two sequences using std::fma 
      *  \f$ r = \sum_i  x_i y_i \f$

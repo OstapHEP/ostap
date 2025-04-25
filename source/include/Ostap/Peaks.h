@@ -320,9 +320,9 @@ namespace Ostap
       /// peak position 
       inline double mu          () const { return m_mu       ; }
       /// peak position 
-      inline double peak        () const { return   mu    () ; }
+      inline double peak        () const { return m_mu       ; }
       /// peak position 
-      inline double location    () const { return   mu    () ; }
+      inline double location    () const { return m_mu       ; }
       ///  alpha 
       inline double alpha       () const { return m_alpha    ; }
       ///  scale 
@@ -353,11 +353,11 @@ namespace Ostap
     public: // derived getters
       // ======================================================================
       /// mean
-      inline double mean        () const { return   mu    () ; }
+      inline double mean   () const { return m_mu ; }
       /// median
-      inline double median      () const { return   mu    () ; }
+      inline double median () const { return m_mu ; }
       /// mode 
-      inline double mode        () const { return   mu    () ; }
+      inline double mode   () const { return m_mu ; }
       /// variance 
       double variance    () const ;
       /// dispersion 
@@ -431,13 +431,13 @@ namespace Ostap
       // ======================================================================
     public: // primary getters
       // ======================================================================
-      double xi          () const { return m_xi       ; }
-      double peak        () const { return   xi    () ; }
-      double location    () const { return   xi    () ; }
-      double alpha       () const { return m_alpha    ; }
-      double scale       () const { return   alpha () ; }
-      double kappa       () const { return m_kappa    ; }
-      double shape       () const { return   kappa () ; }
+      inline double xi          () const { return m_xi       ; }
+      inline double peak        () const { return   xi    () ; }
+      inline double location    () const { return   xi    () ; }
+      inline double alpha       () const { return m_alpha    ; }
+      inline double scale       () const { return   alpha () ; }
+      inline double kappa       () const { return m_kappa    ; }
+      inline double shape       () const { return   kappa () ; }
       // ======================================================================
     public: // setters
       // ======================================================================
@@ -445,10 +445,10 @@ namespace Ostap
       bool  setAlpha     ( const double value ) ;
       bool  setKappa     ( const double value ) ;
       //
-      bool  setPeak      ( const double value ) { return setXi    ( value ) ; }
-      bool  setLocation  ( const double value ) { return setXi    ( value ) ; }
-      bool  setScale     ( const double value ) { return setAlpha ( value ) ; }
-      bool  setShape     ( const double value ) { return setKappa ( value ) ; }
+      inline bool  setPeak      ( const double value ) { return setXi    ( value ) ; }
+      inline bool  setLocation  ( const double value ) { return setXi    ( value ) ; }
+      inline bool  setScale     ( const double value ) { return setAlpha ( value ) ; }
+      inline bool  setShape     ( const double value ) { return setKappa ( value ) ; }
       // ======================================================================
     public: // derived getters
       // ======================================================================
@@ -465,18 +465,21 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      /// get pdf
-      double operator() ( const double x ) const { return pdf ( x ) ; }
-      double pdf        ( const double x ) const ;
+      /// get PDF
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
+      /// get PDF
+      double pdf               ( const double x ) const ;
       // ======================================================================
     public:  // integrals
       // ======================================================================
+      /// get the CDF 
       double cdf        ( const double x ) const ;
       /// get the integral
       double integral   () const { return 1 ; }
       /// get the integral between low and high limits
-      double integral   ( const double low  ,
-                          const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -559,8 +562,9 @@ namespace Ostap
       /// get the integral
       double integral   () const { return 1 ; }
       /// get the integral between low and high limits
-      double integral   ( const double low  ,
-                          const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -623,11 +627,11 @@ namespace Ostap
     public: // getters 
       // ======================================================================
       /// parameter mu
-      double mu       () const { return m_mu        ; }
+      inline  double mu       () const { return m_mu        ; }
       /// parameter varsigma
-      double varsigma () const { return m_varsigma  ; }
+      inline double varsigma () const { return m_varsigma  ; }
       /// parameter k 
-      double k        () const { return m_k         ; }
+      inline double k        () const { return m_k         ; }
       // ======================================================================
     public: // setters 
       // ======================================================================
@@ -805,28 +809,28 @@ namespace Ostap
       // ======================================================================
     public: // getters  
       // ======================================================================
-      double mu        () const { return m_A.mu       () ; }
-      double varsigmaA () const { return m_A.varsigma () ; }
-      double varsigmaB () const { return m_B.varsigma () ; }
-      double kA        () const { return m_A.k        () ; }
-      double kB        () const { return m_B.k        () ; }
-      double phi       () const { return m_phi           ; }
+      inline double mu        () const { return m_A.mu       () ; }
+      inline double varsigmaA () const { return m_A.varsigma () ; }
+      inline double varsigmaB () const { return m_B.varsigma () ; }
+      inline double kA        () const { return m_A.k        () ; }
+      inline double kB        () const { return m_B.k        () ; }
+      inline double phi       () const { return m_phi           ; }
       // ======================================================================
     public: // derived parameters 
       // ======================================================================
       /// fraction of "A" componet 
-      double fA        ()  const { return m_fA ; }
+      inline double fA        ()  const { return m_fA ; }
       /// fraction of "B" componet 
-      double fB        ()  const { return m_fB ; }
+      inline double fB        ()  const { return m_fB ; }
       // ======================================================================
     public: // setters 
       // ======================================================================
-      bool setMu         ( const double value  ) ;
-      bool setVarsigmaA  ( const double value  ) { return m_A.setVarsigma ( value ) ; }
-      bool setVarsigmaB  ( const double value  ) { return m_B.setVarsigma ( value ) ; }
-      bool setKA         ( const double value  ) { return m_A.setK        ( value ) ; }
-      bool setKB         ( const double value  ) { return m_B.setK        ( value ) ; }
-      bool setPhi        ( const double value  ) ;
+      bool        setMu         ( const double value  ) ;
+      bool        setPhi        ( const double value  ) ;
+      inline bool setVarsigmaA  ( const double value  ) { return m_A.setVarsigma ( value ) ; }
+      inline bool setVarsigmaB  ( const double value  ) { return m_B.setVarsigma ( value ) ; }
+      inline bool setKA         ( const double value  ) { return m_A.setK        ( value ) ; }
+      inline bool setKB         ( const double value  ) { return m_B.setK        ( value ) ; }
       // ======================================================================
     public:  // integrals
       // ======================================================================
@@ -907,13 +911,13 @@ namespace Ostap
     public: // getters 
       // ======================================================================
       /// parameter mu
-      double mu       () const { return m_mu        ; }
+      inline double mu       () const { return m_mu        ; }
       /// parameter varsigma
-      double varsigma () const { return m_varsigma  ; }
+      inline double varsigma () const { return m_varsigma  ; }
       /// left  exponential 
-      double kL       () const { return m_kL        ; }
+      inline double kL       () const { return m_kL        ; }
       /// right exponential 
-      double kR       () const { return m_kR        ; }
+      inline double kR       () const { return m_kR        ; }
       // ======================================================================
     public: // original parameterisation 
       // ======================================================================
@@ -1013,35 +1017,39 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      double peak  () const { return m_peak    ; }
-      double m0    () const { return   peak () ; }
-      double sigma () const { return m_sigma   ; }
-      double xi    () const { return m_xi      ; }
-      double rho_L () const { return m_rho_L   ; }
-      double rho_R () const { return m_rho_R   ; }
+      inline double peak  () const { return m_peak    ; }
+      inline double m0    () const { return m_peak    ; }
+      inline double mu    () const { return m_peak    ; }
+      inline double mass  () const { return m_peak    ; }
+      inline double mode  () const { return m_peak    ; }
+      inline double sigma () const { return m_sigma   ; }
+      inline double xi    () const { return m_xi      ; }
+      inline double rho_L () const { return m_rho_L   ; }
+      inline double rho_R () const { return m_rho_R   ; }
       // ======================================================================
-      double x1    () const { return m_x1      ; }
-      double x2    () const { return m_x2      ; }
+      inline double x1    () const { return m_x1      ; }
+      inline double x2    () const { return m_x2      ; }
       // ======================================================================
     public:
       // ======================================================================
-      bool setPeak  ( const double value ) ;
-      bool setM0    ( const double value ) { return setPeak ( value ) ; }
-      bool setMass  ( const double value ) { return setPeak ( value ) ; }
-      bool setSigma ( const double value ) ;
-      bool setXi    ( const double value ) ;
-      bool setRhoL  ( const double value ) ;
-      bool setRhoR  ( const double value ) ;
-      bool setRho_L ( const double value ) { return setRhoL ( value ) ; }
-      bool setRho_R ( const double value ) { return setRhoR ( value ) ; }
+      bool        setPeak  ( const double value ) ;
+      bool        setSigma ( const double value ) ;
+      bool        setXi    ( const double value ) ;
+      bool        setRhoL  ( const double value ) ;
+      bool        setRhoR  ( const double value ) ;
+      inline bool setM0    ( const double value ) { return setPeak ( value ) ; }
+      inline bool setMu    ( const double value ) { return setPeak ( value ) ; }
+      inline bool setMode  ( const double value ) { return setPeak ( value ) ; }
+      inline bool setMass  ( const double value ) { return setPeak ( value ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get the integral
       double integral () const ;
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1124,20 +1132,23 @@ namespace Ostap
       double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public:
-      // ======================================================================
-      inline double m0    () const { return m_m0       ; }
-      inline double peak  () const { return   m0    () ; }
-      inline double mass  () const { return   m0    () ; }
+      // ====================================================================== 
+      inline double m0    () const { return m_m0       ; } 
+      inline double mu    () const { return m_m0       ; }
+      inline double peak  () const { return m_m0       ; }
+      inline double mass  () const { return m_m0       ; }
       inline double sigma () const { return m_sigma    ; }
       inline double tau   () const { return m_tau      ; }
       // ======================================================================
     public:
       // ======================================================================
-      bool setM0    ( const double value ) ;
-      bool setPeak  ( const double value ) { return setM0 ( value ) ; }
-      bool setMass  ( const double value ) { return setM0 ( value ) ; }
-      bool setSigma ( const double value ) ;
-      bool setTau   ( const double value ) ;
+      bool        setM0    ( const double value ) ;
+      bool        setSigma ( const double value ) ;
+      bool        setTau   ( const double value ) ;
+      // ======================================================================
+      inline bool setMu    ( const double value ) { return setM0 ( value ) ; }
+      inline bool setPeak  ( const double value ) { return setM0 ( value ) ; }
+      inline bool setMass  ( const double value ) { return setM0 ( value ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1265,13 +1276,14 @@ namespace Ostap
     public: // trivial accessors
       // ======================================================================
       bool        setM0    ( const double value ) ;
+      bool        setSigma ( const double value ) ;
+      bool        setAlpha ( const double value ) ;
+      bool        setN     ( const double value ) ; // set n,N-parameters
+      // ======================================================================
       inline bool setMu    ( const double value ) { return setM0 ( value ) ; }
       inline bool setPeak  ( const double value ) { return setM0 ( value ) ; }
       inline bool setMode  ( const double value ) { return setM0 ( value ) ; }
       inline bool setMass  ( const double value ) { return setM0 ( value ) ; }
-      bool        setSigma ( const double value ) ;
-      bool        setAlpha ( const double value ) ;
-      bool        setN     ( const double value ) ; // set n,N-parameters 
       // ======================================================================
     public:
       // ======================================================================
@@ -1371,6 +1383,7 @@ namespace Ostap
       inline bool setMode  ( const double value ) { return m_cb.setMode  ( value ) ; }
       inline bool setMass  ( const double value ) { return m_cb.setMass  ( value ) ; }
       inline bool setSigma ( const double value ) { return m_cb.setSigma ( value ) ; }
+      // =====================================================================
       bool        setA0    ( const double value ) ;
       bool        setA1    ( const double value ) ;
       bool        setA2    ( const double value ) ;
@@ -1756,15 +1769,15 @@ namespace Ostap
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
-      bool setM0     ( const double value ) ;
-      bool setSigmaL ( const double value ) ;
-      bool setSigmaR ( const double value ) ;
-      bool setBeta   ( const double value ) ;
+      bool        setM0     ( const double value ) ;
+      bool        setSigmaL ( const double value ) ;
+      bool        setSigmaR ( const double value ) ;
+      bool        setBeta   ( const double value ) ;
       // ======================================================================
-      inline bool setMu   ( const double value ) { return setM0 ( value ) ; }
-      inline bool setPeak ( const double value ) { return setM0 ( value ) ; }
-      inline bool setMass ( const double value ) { return setM0 ( value ) ; }
-      inline bool setMode ( const double value ) { return setM0 ( value ) ; }
+      inline bool setMu     ( const double value ) { return setM0 ( value ) ; }
+      inline bool setPeak   ( const double value ) { return setM0 ( value ) ; }
+      inline bool setMass   ( const double value ) { return setM0 ( value ) ; }
+      inline bool setMode   ( const double value ) { return setM0 ( value ) ; }
       // ======================================================================      
     public:
       // ======================================================================
@@ -1828,7 +1841,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// calculate StudentT's shape
-      double operator() ( const double x ) const{ return pdf ( x )  ; }
+      inline double operator() ( const double x ) const{ return pdf ( x )  ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1850,13 +1863,15 @@ namespace Ostap
       inline double n      () const  { return m_n      ; }
       inline double N      () const  { return m_n + 1  ; }
       // ======================================================================
-      bool setM     ( const double value  ) ;
-      bool setSigma ( const double value  ) ;
-      bool setS     ( const double value  ) { return setSigma ( value ) ; }
-      bool setGamma ( const double value  ) { return setSigma ( value ) ; }
-      bool setWidth ( const double value  ) { return setSigma ( value ) ; }
+    public:
       // ======================================================================
-      bool setN     ( const double value  ) ; // setter for n! 
+      bool        setM     ( const double value  ) ;
+      bool        setSigma ( const double value  ) ;
+      bool        setN     ( const double value  ) ; // setter for n! 
+      // ======================================================================
+      inline bool setS     ( const double value  ) { return setSigma ( value ) ; }
+      inline bool setGamma ( const double value  ) { return setSigma ( value ) ; }
+      inline bool setWidth ( const double value  ) { return setSigma ( value ) ; }
       // ======================================================================
       inline bool setM0    ( const double value  ) { return setM  ( value ) ; }
       inline bool setMu    ( const double value  ) { return setM  ( value ) ; }
@@ -1927,7 +1942,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// calculate bifurcated StudentT's shape
-      double operator() ( const double x ) const{ return pdf ( x )  ; }
+      inline double operator() ( const double x ) const { return pdf ( x )  ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1958,31 +1973,33 @@ namespace Ostap
       inline double nR      () const  { return m_nR      ; }
       inline double NR      () const  { return m_nR + 1  ; } // nR + 1 
       // ======================================================================
-      bool        setM      ( const double value  ) ;      
+    public:
+      // ======================================================================
+      bool        setM      ( const double value  ) ;
+      bool        setSigmaL ( const double value  ) ;
+      bool        setSigmaR ( const double value  ) ;
+      bool        setNL     ( const double value  ) ; // setter for nL 
+      bool        setNR     ( const double value  ) ; // setter for nR 
+      // ======================================================================      
       inline bool setM0     ( const double value  ) { return setM  ( value ) ; }
       inline bool setMu     ( const double value  ) { return setM  ( value ) ; }
       inline bool setMass   ( const double value  ) { return setM  ( value ) ; }
       inline bool setPeak   ( const double value  ) { return setM  ( value ) ; }
       inline bool setMode   ( const double value  ) { return setM  ( value ) ; }
       // ======================================================================
-      bool        setSigmaL ( const double value  ) ;
       inline bool setSL     ( const double value  ) { return setSigmaL ( value ) ; }
       inline bool setGammaL ( const double value  ) { return setSigmaL ( value ) ; }
       inline bool setWidthL ( const double value  ) { return setSigmaL ( value ) ; }
       // ======================================================================
-      bool setSigmaR ( const double value  ) ;
       inline bool setSR     ( const double value  ) { return setSigmaR ( value ) ; }
       inline bool setGammaR ( const double value  ) { return setSigmaR ( value ) ; }
       inline bool setWidthR ( const double value  ) { return setSigmaR ( value ) ; }
-      // ======================================================================
-      bool setNL     ( const double value  ) ; // setter for nL 
-      bool setNR     ( const double value  ) ; // setter for nR 
       // ======================================================================
     public:
       // ======================================================================
       /// PDF 
       double pdf    ( const double x ) const ;
-      // CDF 
+      /// CDF 
       double cdf    ( const double x ) const ;
       // ======================================================================
     public:
@@ -2065,13 +2082,13 @@ namespace Ostap
     public: // getters 
       // ======================================================================
       /// location parameter 
-      double mu       () const { return m_mu       ; } ;
+      inline double mu       () const { return m_mu       ; } ;
       /// width/scale parameter 
-      double varsigma () const { return m_varsigma ; } ;
+      inline double varsigma () const { return m_varsigma ; } ;
       /// n-parameter 
-      double n        () const { return m_n        ; } ;
+      inline double n        () const { return m_n        ; } ;
       /// 
-      double kappa    () const { return m_kappa    ; } ;
+      inline double kappa    () const { return m_kappa    ; } ;
       // ======================================================================      
     public : // derived parameters 
       // ======================================================================      
@@ -2183,7 +2200,7 @@ namespace Ostap
        *  @param delta    \f$\delta\f$-parameter    \f$0<\epsilon<+\infty\f$
        */
       SinhAsinh  
-      ( const double location  = 1   ,
+      ( const double location  = 0   ,
         const double scale     = 1   ,
         const double epsilon   = 0   ,
         const double delta     = 1   ) ;
@@ -2210,12 +2227,13 @@ namespace Ostap
       // ======================================================================
     public: // setters
       // ======================================================================
-      bool setLocation ( const double value ) { return setMu    ( value ) ; }
-      bool setScale    ( const double value ) { return setSigma ( value ) ; }
-      bool setMu       ( const double value ) ;
-      bool setSigma    ( const double value ) ;
-      bool setEpsilon  ( const double value ) ;
-      bool setDelta    ( const double value ) ;
+      bool        setMu       ( const double value ) ;
+      bool        setSigma    ( const double value ) ;
+      bool        setEpsilon  ( const double value ) ;
+      bool        setDelta    ( const double value ) ;
+      // ======================================================================
+      inline bool setLocation ( const double value ) { return setMu    ( value ) ; }
+      inline bool setScale    ( const double value ) { return setSigma ( value ) ; }
       // ======================================================================
     public : 
       // ======================================================================
@@ -2242,10 +2260,10 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      double m_mu      ;
-      double m_sigma   ;
-      double m_epsilon ;
-      double m_delta   ;
+      double m_mu      { 0 } ;
+      double m_sigma   { 1 } ;
+      double m_epsilon { 0 } ;
+      double m_delta   { 1 } ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -2296,23 +2314,16 @@ namespace Ostap
       /// evaluate JohnsonSU-distributions
       double pdf        ( const double x ) const ;
       /// evaluate JohnsonSU-distributions
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // direct getters
       // ======================================================================
-      double xi       () const { return m_xi       ; }
-      double lam      () const { return m_lambda   ; }
-      double lambda   () const { return m_lambda   ; }
-      double lambd    () const { return m_lambda   ; }
-      double delta    () const { return m_delta    ; }
-      double gamma    () const { return m_gamma    ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      double mean       () const ;
-      double variance   () const ;
-      double dispersion () const { return variance () ; }
-      double sigma      () const { return std::sqrt ( variance() ) ; }
+      inline double xi       () const { return m_xi       ; }
+      inline double lam      () const { return m_lambda   ; }
+      inline double lambda   () const { return m_lambda   ; }
+      inline double lambd    () const { return m_lambda   ; }
+      inline double delta    () const { return m_delta    ; }
+      inline double gamma    () const { return m_gamma    ; }
       // ======================================================================
     public: // setters
       // ======================================================================
@@ -2320,6 +2331,14 @@ namespace Ostap
       bool setLambda   ( const double value ) ;
       bool setDelta    ( const double value ) ;
       bool setGamma    ( const double value ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      double        mean       () const ;
+      double        variance   () const ;
+      // ======================================================================      
+      inline double dispersion () const { return variance () ; }
+      inline double sigma      () const { return std::sqrt ( variance() ) ; }
       // ======================================================================
     public: // integrals
       // ======================================================================
@@ -2335,10 +2354,10 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      double m_xi      ;
-      double m_lambda  ;
-      double m_delta   ;
-      double m_gamma   ;
+      double m_xi      { 0 } ;
+      double m_lambda  { 1 } ;
+      double m_delta   { 1 } ;
+      double m_gamma   { 0 } ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -2369,20 +2388,23 @@ namespace Ostap
       /// evaluate atlas function
       double pdf        ( const double x ) const ;
       /// evaluate atlas function
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // direct getters
       // ======================================================================
-      double mean   () const { return m_mean   ; }
+      inline double mean   () const { return m_mean   ; }
       /// get parameters "sigma"
-      double sigma  () const { return m_sigma  ; }
+      inline double sigma  () const { return m_sigma  ; }
       // ======================================================================
     public:
       // ======================================================================
       /// peak position
-      double peak     () const { return mean () ; }
+      inline double peak     () const { return mean () ; }
       /// get mode
-      double mode     () const { return mean () ; }
+      inline double mode     () const { return mean () ; }
+      // ======================================================================
+    public:
+      // ======================================================================      
       /// get variance:  good numerical approximation
       double variance () const ;
       /// get rms :  good numerical approximation
@@ -2457,23 +2479,25 @@ namespace Ostap
       /// evaluate sech function
       double pdf        ( const double x ) const ;
       /// evaluate sech function
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // direct getters
       // ======================================================================
-      double mean   () const { return m_mean    ; }
-      double peak   () const { return   mean () ; }
+      inline double mean   () const { return m_mean ; }
+      inline double peak   () const { return m_mean ; }
+      inline double mu     () const { return m_mean ; }
+      inline double m0     () const { return m_mean ; }
       /// get parameters "sigma"
       double sigma  () const { return m_sigma   ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get mode
-      double mode     () const { return mean()            ; }
+      inline double mode     () const { return m_mean ; }
       /// get variance
-      double variance () const { return m_sigma * m_sigma ; }
+      inline double variance () const { return m_sigma * m_sigma ; }
       /// get rms
-      double rms      () const { return m_sigma           ; }
+      inline double rms      () const { return m_sigma           ; }
       /// get skewness
       double skewness () const { return 0 ; }
       /// get kurtosis
@@ -2542,28 +2566,28 @@ namespace Ostap
       /// evaluate sech function
       double pdf        ( const double x ) const ;
       /// evaluate sech function
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // direct getters
       // ======================================================================
-      double mean   () const { return m_mean   ; }
+      inline double mean   () const { return m_mean   ; }
       /// get parameters "sigma"
-      double sigma  () const { return m_sigma  ; }
+      inline double sigma  () const { return m_sigma  ; }
       /// get "s"
       double s      () const ;
       // ======================================================================
     public:
       // ======================================================================
       /// get peak
-      double peak     () const { return peak () ; }
+      inline double peak     () const { return peak () ; }
       /// get mode
-      double mode     () const { return mean () ; }
+      inline double mode     () const { return mean () ; }
       /// get median
-      double median   () const { return mean () ; }
+      inline double median   () const { return mean () ; }
       /// get variance
-      double variance () const { return m_sigma * m_sigma ; }
+      inline double variance () const { return m_sigma * m_sigma ; }
       /// get rms
-      double rms      () const { return m_sigma ; }
+      inline double rms      () const { return m_sigma ; }
       /// get skewness
       double skewness () const { return   0 ; }
       /// get kurtosis
@@ -2754,18 +2778,18 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate the function 
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
       /// evaluate the function 
       double pdf        ( const double x ) const ;
       // ======================================================================
     public:
       // ======================================================================
       /// parameter mu 
-      double mu    () const { return m_mu    ; }
+      inline double mu    () const { return m_mu    ; }
       /// parameter alpha
-      double alpha () const { return m_alpha ; }
+      inline double alpha () const { return m_alpha ; }
       /// parameter beta 
-      double beta  () const { return m_beta  ; }      
+      inline double beta  () const { return m_beta  ; }      
       // ======================================================================
     public:
       // ======================================================================
@@ -2839,27 +2863,32 @@ namespace Ostap
       /// evaluate slash function
       double pdf        ( const double x ) const ;
       /// evaluate slash function
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // direct getters
       // ======================================================================
-      double mu       () const { return m_mu    ; }
+      inline double mu       () const { return m_mu    ; }
       /// get parameters "scale"
-      double scale    () const { return m_scale ; }
+      inline double scale    () const { return m_scale ; }
       // ======================================================================
     public: //   derived getters  
       // ======================================================================
-      double mean     () const { return mu ()   ; }
-      double peak     () const { return mu ()   ; }
-      double location () const { return mu ()   ; }
+      inline double m0       () const { return m_mu    ; }
+      inline double mode     () const { return m_mu    ; }
+      inline double mean     () const { return m_mu    ; }
+      inline double peak     () const { return m_mu    ; }
+      inline double location () const { return m_mu    ; }
       // ======================================================================
     public: // direct setters
       // ======================================================================
-      bool setMu       ( const double value ) ;
-      bool setScale    ( const double value ) ;
+      bool        setMu       ( const double value ) ;
+      bool        setScale    ( const double value ) ;
       // ======================================================================      
-      bool setMean     ( const double value ) { return setMu ( value ) ; }
-      bool setLocation ( const double value ) { return setMu ( value ) ; }
+      inline bool setM0       ( const double value ) { return setMu ( value ) ; }
+      inline bool setMean     ( const double value ) { return setMu ( value ) ; }
+      inline bool setMode     ( const double value ) { return setMu ( value ) ; }
+      inline bool setPeak     ( const double value ) { return setMu ( value ) ; }
+      inline bool setLocation ( const double value ) { return setMu ( value ) ; }
       // ======================================================================
     public: // integrals
       // ======================================================================
@@ -2889,7 +2918,8 @@ namespace Ostap
     /** @class AsymmetricLaplace
      *  @see https://en.wikipedia.org/wiki/Asymmetric_Laplace_distribution
      *  Here we use the ``inversed'' slopes
-     *  \f$ f(x) \propto e^{ \pm\frac {x-\mu} { \lambda_{L,R}}} \f$ 
+     *  \f$ f(x) \propto e^{ \pm\frac {x-\mu} { \lambda_{L,R}}} \f$
+     *  @see https://en.wikipedia.org/wiki/Asymmetric_Laplace_distribution 
      */ 
     class AsymmetricLaplace
     {
@@ -2897,8 +2927,8 @@ namespace Ostap
       // ======================================================================
       /** constructor from all parameters 
        *  @param mu  peak location
-       *  @param lambdaL ``left''  exponential slope  (lambdaL>0)
-       *  @param lambdaR ``right'' exponential slope  (lambdaR>0)
+       *  @param lambdaL `left'  exponential slope  (lambdaL>0)
+       *  @param lambdaR `right' exponential slope  (lambdaR>0)
        */
       AsymmetricLaplace 
       ( const double mu      = 0 ,   // location 
@@ -2912,37 +2942,61 @@ namespace Ostap
       /// evaluate asymmetic laplace function
       double pdf        ( const double x ) const ;
       /// evaluate asymmetric laplace function
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // direct getters
       // ======================================================================
-      double mu       () const { return m_mu      ; }
-      /// get ``left'' lambda parameter 
-      double lambdaL  () const { return m_lambdaL ; }
-      /// get ``right'' lambda parameter 
-      double lambdaR  () const { return m_lambdaR ; }
+      inline double mu       () const { return m_mu      ; }
+      /// get `left' lambda parameter 
+      inline double lambdaL  () const { return m_lambdaL ; }
+      /// get `right' lambda parameter 
+      inline double lambdaR  () const { return m_lambdaR ; }
       // ======================================================================
     public: //   derived getters  
       // ======================================================================
-      double mean     () const { return mu ()   ; }
-      double peak     () const { return mu ()   ; }
-      double location () const { return mu ()   ; }
+      inline double mode     () const { return m_mu ; }
+      inline double peak     () const { return m_mu ; }
+      inline double location () const { return m_mu ; }      
+      inline double m0       () const { return m_mu ; }      
       // ======================================================================
     public: // the standard parameterization (slopes are inverse)
       // ======================================================================
-      double lambda   () const { return 1.0 / std::sqrt ( m_lambdaL * m_lambdaR ) ; }
-      double lambd    () const { return lambda ()  ; }
-      /// get the ``asymmetry''   0<k<+inf 
-      double k        () const { return       std::sqrt ( m_lambdaR / m_lambdaL ) ; }
+      ///  \f$ \lambda ^2 \f$ 
+      inline double lambda2  () const { return 1.0 * ( m_lambdaL * m_lambdaR ) ; } 
+      inline double Lambda   () const { return std:sqrt ( lambda2 () ) ; }
+      inline double lambda   () const { return Lambda () ; }
+      /// get the `asymmetry' \f$ k^2 \f$ 
+      inline double k2       () const { return m_lambdaL / m_lambdaR ; }
+      /// get the `asymmetry' \f$ k  \f$ 
+      inline double k        () const { return std::sqrt ( k2 () )   ; }      
       // ======================================================================
     public: // direct setters
       // ======================================================================
-      bool   setMu       ( const double value ) ;
-      bool   setLambdaL  ( const double value ) ;
-      bool   setLambdaR  ( const double value ) ;
+      bool        setMu       ( const double value ) ;
+      bool        setLambdaL  ( const double value ) ;
+      bool        setLambdaR  ( const double value ) ;
       // ======================================================================      
-      bool   setMean     ( const double value ) { return setMu ( value ) ; }
-      bool   setLocation ( const double value ) { return setMu ( value ) ; }
+      inline bool setMode     ( const double value ) { return setMu ( value ) ; }
+      inline bool setLocation ( const double value ) { return setMu ( value ) ; }
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// get mean 
+      double mean     () const ;
+      /// get median 
+      double median   () const ; 
+      /// get variance
+      double variance () const ;
+      /// get skewness 
+      double skewness () const ;
+      /// get kurtosis 
+      double kurtosis () const ;
+      /// get RMS
+      inline double rms        () const { return std::sqrt ( variance () ) ; };
+      /// get sigma
+      inline double sigma      () const { return rms      () ; }
+      // get dispersion
+      inline double dispersion () const { return variance () ; }
       // ======================================================================
     public: // integrals
       // ======================================================================
@@ -2994,43 +3048,44 @@ namespace Ostap
       /// evaluate raising cosine distribution
       double pdf (  const double x ) const ;
       /// evaluate raising cosine distribution
-      double operator() ( const double x ) const { return pdf ( x ) ; }      
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }      
       // ======================================================================
     public: // main getters 
       // ======================================================================
-      double mu    () const { return  m_mu ; }
-      double s     () const { return  m_s  ; }
+      inline double mu    () const { return  m_mu ; }
+      inline double s     () const { return  m_s  ; }
       // ======================================================================
     public: // derived getters 
       // ======================================================================
-      double location () const { return mu () ; }
-      double peak     () const { return mu () ; }
-      double scale    () const { return s  () ; }
+      inline double location () const { return m_mu ; }
+      inline double peak     () const { return m_mu ; }
+      inline double m0       () const { return m_mu ; }
+      inline double scale    () const { return m_s  ; }
       // ======================================================================
     public: //  setters 
       // ======================================================================
-      bool setMu       ( const double value ) ;
-      bool setS        ( const double value ) ;
-      bool setScale    ( const double value ) { return setS  ( value ) ; }
-      bool setLocation ( const double value ) { return setMu ( value ) ; }      
-      bool setMean     ( const double value ) { return setMu ( value ) ; }      
+      bool        setMu       ( const double value ) ;
+      bool        setS        ( const double value ) ;
+      inline bool setScale    ( const double value ) { return setS  ( value ) ; }
+      inline bool setLocation ( const double value ) { return setMu ( value ) ; }      
+      inline bool setMean     ( const double value ) { return setMu ( value ) ; }      
       // ======================================================================
     public: // derived getters & stats 
       // ======================================================================
       /// mean 
-      double mean     () const {  return  mu() ; }
+      inline double mean     () const {  return m_mu ; }
       /// mode 
-      double mode     () const {  return  mu() ; }
+      inline double mode     () const {  return m_mu ; }
       ///  median
-      double median   () const {  return  mu() ; }
+      inline double median   () const {  return m_mu ; }
       ///  variance  
       double variance () const ;
       ///  rms   
       double rms      () const ;
-      /// skewness
-      double skewness () const { return 0 ; }
       /// kurtosis
       double kurtosis () const ;
+      /// skewness
+      inline double skewness () const { return 0 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -3085,24 +3140,24 @@ namespace Ostap
       /// evaluate  pdf  for q-Gaussian distribution
       double pdf ( const  double x ) const ;
       /// evaluate  pdf  for q-Gaussian distribution
-      double operator() ( const double x ) const { return pdf ( x ) ; }      
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }      
       // ======================================================================
     public : // primary getters 
       // ======================================================================
-      double mean   () const { return  m_mean  ; }
-      double scale  () const { return  m_scale ; }
-      double q      () const { return  m_q     ; }
+      inline double mean   () const { return  m_mean  ; }
+      inline double scale  () const { return  m_scale ; }
+      inline double q      () const { return  m_q     ; }
       // ======================================================================
     public : // derived getters 
       // ======================================================================
-      double peak     () const { return mean  () ; }
-      double mu       () const { return mean  () ; }
-      double mode     () const { return mean  () ; }
-      double median   () const { return mean  () ; }
-      double location () const { return mean  () ; }
-      double sigma    () const { return scale () ; }
+      inline double peak     () const { return mean  () ; }
+      inline double mu       () const { return mean  () ; }
+      inline double mode     () const { return mean  () ; }
+      inline double median   () const { return mean  () ; }
+      inline double location () const { return mean  () ; }
+      inline double sigma    () const { return scale () ; }
       /// get the original beta 
-      double beta     () const { return 0.5 / ( m_scale * m_scale ) ; }
+      inline double beta     () const { return 0.5 / ( m_scale * m_scale ) ; }
       // ======================================================================
     public : // primay getters 
       // ======================================================================
@@ -3115,9 +3170,12 @@ namespace Ostap
       // ======================================================================
     public : // derived setters 
       // ======================================================================
-      bool setMu       ( const double value ) { return setMean  ( value )  ; }
-      bool setLocation ( const double value ) { return setMean  ( value )  ; }
-      bool setSigma    ( const double value ) { return setScale ( value )  ; }      
+      inline bool setMu       ( const double value ) { return setMean  ( value )  ; }
+      inline bool setM0       ( const double value ) { return setMean  ( value )  ; }
+      inline bool setMode     ( const double value ) { return setMean  ( value )  ; }
+      inline bool setPeak     ( const double value ) { return setMean  ( value )  ; }
+      inline bool setLocation ( const double value ) { return setMean  ( value )  ; }
+      inline bool setSigma    ( const double value ) { return setScale ( value )  ; }      
       // ======================================================================
     public:
       // ======================================================================
@@ -3176,25 +3234,26 @@ namespace Ostap
       /// evaluate  pdf  for k-Gaussian distribution
       double pdf ( const  double x ) const ;
       /// evaluate  pdf  for k-Gaussian distribution
-      double operator() ( const double x ) const { return pdf ( x ) ; }      
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }      
       // ======================================================================
     public : // primary getters 
       // ======================================================================
-      double mean   () const { return  m_mean  ; }
-      double scale  () const { return  m_scale ; }
-      double k      () const { return  m_k     ; }
-      double kappa  () const { return  m_kappa ; }
+      inline double mean   () const { return  m_mean  ; }
+      inline double scale  () const { return  m_scale ; }
+      inline double k      () const { return  m_k     ; }
+      inline double kappa  () const { return  m_kappa ; }
       // ======================================================================
     public : // derived getters 
       // ======================================================================
-      double peak     () const { return mean  () ; }
-      double mu       () const { return mean  () ; }
-      double mode     () const { return mean  () ; }
-      double median   () const { return mean  () ; }
-      double location () const { return mean  () ; }
-      double sigma    () const { return scale () ; }
+      inline double peak     () const { return mean  () ; }
+      inline double mu       () const { return mean  () ; }
+      inline double m0       () const { return mean  () ; }
+      inline double mode     () const { return mean  () ; }
+      inline double median   () const { return mean  () ; }
+      inline double location () const { return mean  () ; }
+      inline double sigma    () const { return scale () ; }
       /// get the original beta 
-      double beta     () const { return 0.5 / ( m_scale * m_scale ) ; }
+      inline double beta     () const { return 0.5 / ( m_scale * m_scale ) ; }
       // ======================================================================
     public : // primay getters 
       // ======================================================================
@@ -3207,9 +3266,12 @@ namespace Ostap
       // ======================================================================
     public : // derived setters 
       // ======================================================================
-      bool setMu       ( const double value ) { return setMean  ( value )  ; }
-      bool setLocation ( const double value ) { return setMean  ( value )  ; }
-      bool setSigma    ( const double value ) { return setScale ( value )  ; }      
+      inline bool setMu       ( const double value ) { return setMean  ( value )  ; }
+      inline bool setM0       ( const double value ) { return setMean  ( value )  ; }
+      inline bool setMode     ( const double value ) { return setMean  ( value )  ; }
+      inline bool setPeak     ( const double value ) { return setMean  ( value )  ; }
+      inline bool setLocation ( const double value ) { return setMean  ( value )  ; }
+      inline bool setSigma    ( const double value ) { return setScale ( value )  ; }      
       // ======================================================================
     public:
       // ======================================================================
@@ -3345,47 +3407,47 @@ namespace Ostap
       /// evaluate  pdf  for Hyperbolic distribution
       double pdf ( const  double x ) const ;
       /// evaluate  pdf  for Hyperbolic distribution
-      double operator() ( const double x ) const { return pdf ( x ) ; }      
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }      
       // ======================================================================
     public: // getters 
       // ======================================================================
       /// location parameter 
-      double mu       () const { return m_mu    ; } // location parameter 
+      inline double mu       () const { return m_mu    ; } // location parameter 
       /// sigma-parameter 
-      double sigma    () const { return m_sigma ; } // sigma-parameter 
+      inline double sigma    () const { return m_sigma ; } // sigma-parameter 
       /// squared sigma parameter 
-      double sigma2   () const { return m_sigma * m_sigma  ; } 
+      inline double sigma2   () const { return m_sigma * m_sigma  ; } 
       /// zeta-parameter 
-      double zeta     () const { return m_zeta  ; } // zeta-parameter 
+      inline double zeta     () const { return m_zeta  ; } // zeta-parameter 
       /// squared zeta parameters
-      double zeta2    () const { return m_zeta  * m_zeta   ; }
+      inline double zeta2    () const { return m_zeta  * m_zeta   ; }
       /// asymmetry parameter kappa 
-      double kappa    () const { return m_kappa ; } // asymmetry parameter kappa 
+      inline double kappa    () const { return m_kappa ; } // asymmetry parameter kappa 
       /// squared asymmetry parameter
-      double kappa2   () const { return m_kappa * m_kappa ; }
+      inline double kappa2   () const { return m_kappa * m_kappa ; }
       // ======================================================================
     public : // original parameters 
       // ======================================================================
       /// alpha parameter 
-      double alpha    () const { return std::hypot ( beta () , gamma () ) ; }
+      inline double alpha    () const { return std::hypot ( beta () , gamma () ) ; }
       /// squared alpha 
-      double alpha2   () const { return beta2 () + gamma2 ()       ; }      
+      inline double alpha2   () const { return beta2 () + gamma2 ()       ; }      
       /// beta parameter 
-      double beta     () const { return m_kappa / m_sigma ; } // beta-parameter 
+      inline double beta     () const { return m_kappa / m_sigma ; } // beta-parameter 
       /// squared beta parameter 
-      double beta2    () const { return std:: pow ( beta  () , 2 ) ; }
+      inline double beta2    () const { return std:: pow ( beta  () , 2 ) ; }
       /// gamma parameter 
-      double gamma    () const { return m_AL    / m_sigma          ; }
+      inline double gamma    () const { return m_AL    / m_sigma          ; }
       /// squared gamma parameter  
-      double gamma2   () const { return std::pow  ( gamma () , 2 ) ; }
+      inline double gamma2   () const { return std::pow  ( gamma () , 2 ) ; }
       /// delta parameter  
-      double delta    () const { return m_zeta * m_sigma / m_AL    ; }
+      inline double delta    () const { return m_zeta * m_sigma / m_AL    ; }
       /// squared delta parameter  
-      double delta2   () const { return std::pow  ( delta () , 2 ) ; }
+      inline double delta2   () const { return std::pow  ( delta () , 2 ) ; }
       //  =====================================================================
     public : // features 
       // ======================================================================
-      double location    () const { return mu ()   ; }
+      inline double location    () const { return mu ()   ; }
       /// get the actual mode of the distribution
       double mode        () const ; 
       /// get mean value 
@@ -3393,19 +3455,19 @@ namespace Ostap
       /// get variance 
       double variance    () const ;
       /// get dispersion 
-      double dispersion  () const { return variance () ; }
+      inline double dispersion  () const { return variance () ; }
       /// get RMS 
-      double rms         () const { return std::sqrt ( variance () ) ; }
+      inline double rms         () const { return std::sqrt ( variance () ) ; }
       /// get RMS 
-      double RMS         () const { return rms ()      ; }
+      inlie double RMS         () const { return rms ()      ; }
       // ======================================================================
     public: // setters 
       // ======================================================================
-      bool setMu       ( const double value ) ;
-      bool setLocation ( const double value ) { return setMu ( value ) ; }
-      bool setSigma    ( const double value ) ;
-      bool setZeta     ( const double value ) ;
-      bool setKappa    ( const double value ) ;
+      bool        setMu       ( const double value ) ;
+      bool        setSigma    ( const double value ) ;
+      bool        setZeta     ( const double value ) ;
+      bool        setKappa    ( const double value ) ;
+      inline bool setLocation ( const double value ) { return setMu ( value ) ; }
       // ======================================================================
     public: // extended setter 
       // ======================================================================
@@ -4064,6 +4126,8 @@ namespace Ostap
       // other parameters 
       // ======================================================================
       /// original lambda parametter 
+      inline double Lambda  () const { return m_lambda  ; }
+      /// original lambda parametter 
       inline double lambda  () const { return m_lambda  ; }
       /// original lambda parametter 
       inline double lambd   () const { return m_lambda  ; }
@@ -4195,9 +4259,9 @@ namespace Ostap
     public: // getters 
       // ======================================================================
       /// get mu 
-      double mu       () const { return m_mu       ; }
+      inline double mu       () const { return m_mu       ; }
       /// get varsigma 
-      double varsigma () const { return m_varsigma ; } 
+      inline double varsigma () const { return m_varsigma ; } 
       // ======================================================================
     public: // setters 
       // ======================================================================
@@ -4209,11 +4273,11 @@ namespace Ostap
     public: // some properties 
       // ======================================================================
       /// get the mean     of the distribution 
-      double mean     () const { return m_mu; }      
+      inline double mean     () const { return m_mu; }      
       /// get the mode     of the distribution 
-      double mode     () const { return m_mu; }      
+      inline double mode     () const { return m_mu; }      
       /// get the median   of the distribution 
-      double median   () const { return m_mu; }      
+      inline double median   () const { return m_mu; }      
       /// get the variance of the distribution 
       double variance () const ;
       /// get the RMS  of the distribution 
@@ -4269,7 +4333,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class Up 
-     *  Finite atomic function <code>up</code>,  a finite soltuion  
+     *  Finite atomic function <code>up</code>, a finite solution  
      *  of the equation 
      *  \f[ f^{\prime(x) = 2 \left( f( 2x+1) - f(2x-1)\right) }\f] with
      *  \f$ f(0) = 1 \f$ 
@@ -4393,20 +4457,18 @@ namespace Ostap
       /// evaluate the function 
       double evaluate ( const double x ) const ;
       /// evaluate the function 
-      inline double pdf         ( const double x ) const 
-      { return evaluate ( x )  ; }
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; }
       /// evaluate the function 
-      inline double operator()  ( const double x ) const 
-      { return evaluate ( x )  ; }
+      inline double operator()  ( const double x ) const { return evaluate ( x ) ; }
       // ======================================================================
     public: // getters 
       // ======================================================================
       /// get N 
-      unsigned short N        () const { return m_N        ; }
+      inline unsigned short N        () const { return m_N        ; }
       /// get mu 
-      double         mu       () const { return m_mu       ; }
+      inline double         mu       () const { return m_mu       ; }
       /// get varsigma 
-      double         varsigma () const { return m_varsigma ; } 
+      inline double         varsigma () const { return m_varsigma ; } 
       // ======================================================================
     public: // setters 
       // ======================================================================
@@ -4418,13 +4480,13 @@ namespace Ostap
     public: // some properteis 
       // ======================================================================
       /// get the mean     of the distribution 
-      double mean     () const { return m_mu ; }      
+      inline double mean     () const { return m_mu ; }      
       /// get the mode     of the distribution 
-      double mode     () const { return m_mu ; }      
+      inline double mode     () const { return m_mu ; }      
       /// get the median   of the distribution 
-      double median   () const { return m_mu ; }      
+      inline double median   () const { return m_mu ; }      
       /// get the skewness 
-      double skewness () const { return 0    ; }
+      inline double skewness () const { return 0    ; }
       // ======================================================================
     public: // support 
       // ======================================================================

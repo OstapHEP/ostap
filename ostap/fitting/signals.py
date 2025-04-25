@@ -283,9 +283,9 @@ class CrystalBall_pdf(PEAK) :
                                        'n_%s'            % name ,
                                        'n_{CB}(%s)'      % name ,
                                        None , 5.0 , 1.e-6 , 100 )
-
+        
         ## N = Ostap.Math.CrystalBall.N ( n ) 
-        self.__N    = Ostap.MoreRooFit.CrystalBallN ( 'N_%s' % name , self.__n )
+        self.__N = Ostap.MoreRooFit.CrystalBallN ( 'N_%s' % name , self.__n )
         
         #
         ## finally build PDF 
