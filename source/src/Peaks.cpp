@@ -4414,15 +4414,43 @@ std::size_t Ostap::Math::AsymmetricLaplace::tag () const
 double Ostap::Math::AsymmetricLaplace::mean () const
 { return  m_mu + ( m_lambdaR - m_lambdaL ) ; }
 // ============================================================================
-// get variance 
+// get mediam
+// ============================================================================
+double Ostap::Math::AsymmetricLaplace::median () const
+{
+  if ( s_equal ( m_lambdaL , m_lambdaR ) ) { return m_mu ; }
+  //
+  const double l2 = m_lambdaL * m_lambdaL ;
+  const double r2 = m_lambdaR * m_lambdaR ;
+  //
+  return ( m_lambdaL >= m_lambdaR ) ? 
+    ( m_mu + m_lambdaL * std::log ( 0.5 * ( 1 + r2 / l2 ) ) ) :
+    ( m_mu - m_lambdaR * std::log ( 0.5 * ( 1 + l2 / r2 ) ) ) ; 
+}
+// ============================================================================
+// get skewness 
 // ============================================================================
 double Ostap::Math::AsymmetricLaplace::skewness () const
 {
   if ( s_equal ( m_lambdaL , m_lambdaR ) ) { return 0 ; }
-  const double l2 = m_lambdaL * m_lambdaL ;
-  const double r2 = m_lambdaR * m_lambdaR ;
   //
-  return 2 * ( r2 * m_lambdaR - l2 * m_lambdaL ) / std::pow ( l2 + r2 , 1.5 ) ; 
+  const double K2 = k2()    ;
+  const double K4 = K2 * K2 ;
+  const double K6 = K2 * K4 ;
+  //
+  return 2 * ( 1 - K6  ) / std::pow ( 1 + K4 , 1.5 ) ; 
+}
+// ============================================================================
+// get (excess) kurtosis 
+// ============================================================================
+double Ostap::Math::AsymmetricLaplace::kurtosis () const
+{
+  //
+  const double K2 = k2()    ;
+  const double K4 = K2 * K2 ;
+  const double K8 = K4 * K4 ;
+  //
+  return 6 * ( 1 + K8 ) / std::pow ( 1 + K4 , 2 ) ;
 }
 
 

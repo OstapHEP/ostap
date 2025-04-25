@@ -3258,11 +3258,11 @@ Ostap::Models::Bukin::clone( const char* name ) const
 void Ostap::Models::Bukin::setPars () const 
 {
   //
-  m_bukin.setPeak   ( m_peak  ) ;
-  m_bukin.setSigma  ( m_sigma ) ;
-  m_bukin.setXi     ( m_xi    ) ;
-  m_bukin.setRho_L  ( m_rhoL  ) ;
-  m_bukin.setRho_R  ( m_rhoR  ) ;
+  m_bukin.setPeak  ( m_peak  ) ;
+  m_bukin.setSigma ( m_sigma ) ;
+  m_bukin.setXi    ( m_xi    ) ;
+  m_bukin.setRhoL  ( m_rhoL  ) ;
+  m_bukin.setRhoR  ( m_rhoR  ) ;
   //
 }
 // ============================================================================

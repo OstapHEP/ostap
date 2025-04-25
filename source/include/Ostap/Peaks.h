@@ -2962,9 +2962,10 @@ namespace Ostap
     public: // the standard parameterization (slopes are inverse)
       // ======================================================================
       ///  \f$ \lambda ^2 \f$ 
-      inline double lambda2  () const { return 1.0 * ( m_lambdaL * m_lambdaR ) ; } 
-      inline double Lambda   () const { return std:sqrt ( lambda2 () ) ; }
-      inline double lambda   () const { return Lambda () ; }
+      inline double lambda2  () const { return 1.0 / ( m_lambdaL * m_lambdaR ) ; } 
+      inline double Lambda2  () const { return lambda2 () ; } 
+      inline double Lambda   () const { return std::sqrt ( lambda2 () ) ; }
+      inline double lambda   () const { return Lambda  () ; }
       /// get the `asymmetry' \f$ k^2 \f$ 
       inline double k2       () const { return m_lambdaL / m_lambdaR ; }
       /// get the `asymmetry' \f$ k  \f$ 
@@ -2976,7 +2977,9 @@ namespace Ostap
       bool        setLambdaL  ( const double value ) ;
       bool        setLambdaR  ( const double value ) ;
       // ======================================================================      
+      inline bool setM0       ( const double value ) { return setMu ( value ) ; }
       inline bool setMode     ( const double value ) { return setMu ( value ) ; }
+      inline bool setPeak     ( const double value ) { return setMu ( value ) ; }
       inline bool setLocation ( const double value ) { return setMu ( value ) ; }
       // ======================================================================
     public : 
@@ -3459,7 +3462,7 @@ namespace Ostap
       /// get RMS 
       inline double rms         () const { return std::sqrt ( variance () ) ; }
       /// get RMS 
-      inlie double RMS         () const { return rms ()      ; }
+      inline double RMS         () const { return rms ()      ; }
       // ======================================================================
     public: // setters 
       // ======================================================================
