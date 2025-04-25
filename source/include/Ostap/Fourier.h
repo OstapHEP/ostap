@@ -67,7 +67,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double operator () ( const double x ) const
+      inline double operator () ( const double x ) const
       { return m_fejer ? fejer_sum ( x ) : fourier_sum ( x ) ; }
       // ======================================================================
     public:
@@ -93,7 +93,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// degree  of polynomial
+      /// maximal trigonometric index 
       unsigned short degree () const { return ( m_pars.size() - 1 ) / 2 ; }
       /// get k-th cos-parameter
       double a ( const unsigned short k ) const { return par ( 2 * k     ) ; }
@@ -350,15 +350,17 @@ namespace Ostap
        *  @param sigma resoltuion parameter for gaussian
        *  @return convolution witgh gaussian
        */
-      CosineSum   convolve     ( const double sigma     ) const ;
+      CosineSum   convolve
+      ( const double sigma     ) const ;
       /** deconvolute with optional regularization
        *  @param sigma sigma of gaussian
        *  @param delta parameter of Tikhonov's regularization
        *  for delta<=0, no regularization
        *  @return regularised deconvolution
        */
-      CosineSum deconvolve     ( const double sigma     ,
-                                 const double delta = 0 ) const ;
+      CosineSum deconvolve
+      ( const double sigma     ,
+        const double delta = 0 ) const ;
       /** get the effective cut-off (==number of terms/harmonics)
        *  of Tikhonov's regularization
        *  \f$ n \equiv  \sqrt{2 \ln \delta} \frac{\pi\sigma}{L} \f$
@@ -366,8 +368,9 @@ namespace Ostap
        *  @param delta  regularization parameter
        *  @return number of effective harmonic
        */
-      double    regularization ( const double sigma     ,
-                                 const double delta     ) const ;
+      double    regularization
+      ( const double sigma     ,
+        const double delta     ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -446,7 +449,7 @@ namespace Ostap
     { return -a + b ; }
     inline CosineSum operator*( const double     b , const CosineSum& a )
     { return CosineSum ( a )*=  b ; }
-    // ========================================================================
+    // ========================================================================    
     /** make a sum of two fourier series (with the same interval!)
      *  @param s1 the first fourier sum
      *  @param s2 the first fourier sum

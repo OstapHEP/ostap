@@ -150,7 +150,7 @@ double Ostap::Math::Clausen::S10 ( const double x )
 // ============================================================================
 // C-functions 
 // ============================================================================
-double Ostap::Math::Clausen::C0 ( const double /* x */ ) { return 0.5 ; }
+double Ostap::Math::Clausen::C0 ( const double /* x */ ) { return - 0.5 ; }
 // ============================================================================
 double Ostap::Math::Clausen::C1 ( const double x )
 { return - std::log ( std::abs ( 2 * std::sin ( 1.0L * x / 2 ) ) ) ; }
