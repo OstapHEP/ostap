@@ -1568,7 +1568,7 @@ class CPSpline_pdf(PolyBase) :
                    spline           ,   ## the spline object Ostap::Math::ConvexOnlySpline
                    the_phis = None  ) : 
         #
-        PolyBase.__init__ ( self , name , spline.npars() , xvar , the_phis , the_phis )
+        PolyBase.__init__ ( self , name , spline.npars() , xvar , the_phis = the_phis )
         self.__spline = spline
         #
         self.pdf  = Ostap.Models.ConvexOnlySpline (

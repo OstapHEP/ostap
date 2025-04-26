@@ -31,7 +31,8 @@
  - Largely re-write and improve `Gof1D` and `GoF1DToys` machinery for Goodness-of-1D-fits
  - Speed-up Goodnes-of-fit estimators (rely on C++ when it has sense)
  - Allow to provdie the external CDF for GoF1D-toys (it can drastically speedup the pseudoexperiments)
-    
+ - update `makeWeighted` foir 6.36<=ROOT
+       
 ## New features
     
    1. further improvemets for the wrapped columns in the tables
@@ -55,7 +56,8 @@
 ## Bug fixes
     
    1. fix the bug in treatment of `bdsdb3`
-     
+   1. Fit recent typo in `backrgunds.py`
+        
  # v1.14.0.0
 
     ## New features

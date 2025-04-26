@@ -26,6 +26,7 @@ __all__     = (
 # =============================================================================
 from   ostap.utils.progress_bar  import progress_bar 
 from   collections               import defaultdict
+from   ostap.core.meta_info      import root_info
 from   ostap.core.core           import ( Ostap         ,
                                           VE , SE , hID , dsID ,
                                           strings       , 
@@ -1849,15 +1850,24 @@ def _rds_makeWeighted_ ( dataset           ,
     ## content
     varset = dataset.get()
 
-    ## make weighted dataset 
-    result = ROOT.RooDataSet ( dsID()             ,
-                               dataset.GetTitle() ,
-                               dataset            ,
-                               varset             , 
-                               cuts               ,
-                               weightvar          )
+    ## make weighted dataset
+    if root_info < ( 6, 36 ) : 
+        args = ( dsID()             ,
+                 dataset.GetTitle() ,
+                 dataset            ,
+                 varset             , 
+                 cuts               ,
+                 weightvar          )
+    else :
+        args = ( dsID()                              ,
+                 dataset.GetTitle()                  ,
+                 varset                              , 
+                 ROOT.RooFit.Import    ( dataset   ) ,
+                 ROOT.RooFit.Cut       ( cuts      ) ,
+                 ROOT.RooFit.WeightVar ( weightvar ) ) 
+        
+    return ROOT.RooDataSet ( *args )
 
-    return result 
     
 ROOT.RooDataSet.makeWeighted = _rds_makeWeighted_
 
