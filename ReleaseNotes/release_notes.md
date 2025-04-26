@@ -1,3 +1,17 @@
+
+# v1.14.2.0
+    
+## New features
+
+    - Fixed for ROOT>=6.36 
+
+## Backward incompatible1
+
+## Bug fixes
+    
+    - but fix in `background.py`
+    
+        
 # v1.14.1.0
 
     - Several fixes for different compilers

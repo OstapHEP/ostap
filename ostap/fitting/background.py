@@ -688,7 +688,7 @@ class Monotonic_pdf(PolyBase) :
                    xmax       = None ,  ## optional x-max 
                    the_phis   = None ) : 
         #
-        PolyBase.__init__ ( self , name , power , xvar )
+        PolyBase.__init__ ( self , name , power , xvar , the_phis = the_phis )
         #
         self.__power      = power
         self.__increasing = True if increasing else False 

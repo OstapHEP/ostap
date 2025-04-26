@@ -1862,15 +1862,25 @@ def _rds_makeWeighted_ ( dataset           ,
             result.add ( entry , float ( weight ) )        
         return result
     
-    ## make weighted dataset 
-    result = ROOT.RooDataSet ( dsID()             ,
-                               dataset.GetTitle() ,
-                               dataset            ,
-                               varset             , 
-                               cuts               ,
-                               weightvar          )
+    ## make weighted dataset
+    if root_info < ( 6 , 36 ) :        
+        args = ( dsID()             ,
+                 dataset.GetTitle() ,
+                 dataset            ,
+                 varset             , 
+                 cuts               ,
+                 weightvar          )
+    else :
+        args = ( dsID()                              ,
+                 dataset.GetTitle()                  ,
+                 varset                              , 
+                 ROOT.RooFit.Import    ( dataset   ) ,
+                 ROOT.RooFit.Cut       ( cuts      ) ,
+                 ROOT.RooFit.WeightVar ( weightvar ) ) 
+        
+    
+    return ROOT.RooDataSet ( *args )
 
-    return result 
     
 ROOT.RooDataSet.makeWeighted = _rds_makeWeighted_
 
