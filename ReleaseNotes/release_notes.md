@@ -33,7 +33,8 @@
  - Allow to provide the external CDF for GoF1D-toys (it can drastically speedup the pseudoexperiments)
  - update `makeWeighted` for 6.36<=ROOT
  - (re)fix (re)opened issue with serializations of enums @see https://github.com/root-project/root/issues/15104
-    
+ - add `SineSum`, fix nicorrectenens for `FourierSum` & `CosineSum`
+       
 ## New features
     
    1. further improvemets for the wrapped columns in the tables

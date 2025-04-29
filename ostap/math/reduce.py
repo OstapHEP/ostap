@@ -120,6 +120,9 @@ def poly_factory ( klass , params , *args ) :
 #  @see Ostap::Math::Bernstein
 #  @see Ostap::Math::BernsteinEven
 #  @see Ostap::Math::Positive 
+#  @see Ostap.Math.FourierSum
+#  @see Ostap.Math.CosineSum
+#  @see Ostap.Math.SineSum 
 def poly_reduce ( p ) : 
     """ Reduce polynomials with parameters
     - see Ostap.Math.Polynomial
@@ -130,6 +133,9 @@ def poly_reduce ( p ) :
     - see Ostap.Math.BernsteinEven
     - see Ostap.Math.Positive 
     - see Ostap.Math.PositiveEven 
+    - see Ostap.Math.FourierSum 
+    - see Ostap.Math.CosineSum 
+    - see Ostap.Math.SineSum 
     """
     return poly_factory , ( type ( p ) ,
                             array.array ( 'd' ,  p.pars() ) ,
@@ -143,7 +149,10 @@ for t in (  Ostap.Math.Polynomial     ,
             Ostap.Math.Bernstein      , 
             Ostap.Math.BernsteinEven  ,
             Ostap.Math.Positive       , 
-            Ostap.Math.PositiveEven   ) :
+            Ostap.Math.PositiveEven   ,
+            Ostap.Math.FourierSum     ,
+            Ostap.Math.CosineSum      ,
+            Ostap.Math.SineSum        ) :
     
     t.__reduce__ = poly_reduce
     

@@ -3521,37 +3521,37 @@ namespace Ostap
     // ========================================================================
 
     // ========================================================================
-    /** @class CrystalBallN
+    /** @class TailN
      *  \f$ n \rigtharrow N \f$ transformastion fo r CrystalBall & frinds 
      *  @see Ostap::Math::CrustalBall
-     *  @see Ostap::Math::CrustalBall::
+     *  @see Ostap::Math::CrustalBall::N 
      */
-    class CrystalBallN final : public OneVar
+    class TailN final : public OneVar
     {
       // ========================================================================
-      ClassDefOverride(Ostap::MoreRooFit::CrystalBallN , 1 ) ;  
+      ClassDefOverride(Ostap::MoreRooFit::TailN , 1 ) ;  
       // ========================================================================
     public:
       // =======================================================================
       /// constructor with three variables 
-      CrystalBallN 
+      TailN 
       ( const std::string&  name  , 
         const std::string&  title , 
         RooAbsReal&         n     ) ;
       /// constructor with three variables 
-      CrystalBallN 
+      TailN 
       ( const std::string&  name  , 
         RooAbsReal&         n     ) ;
       /// copy 
-      CrystalBallN 
-      ( const CrystalBallN& right       ,        
+      TailN 
+      ( const TailN&        right       ,        
         const char*         newname = 0 ) ;
       /// clone 
-      CrystalBallN* clone ( const char* newname ) const override ;
+      TailN* clone ( const char* newname ) const override ;
       /// fake default constructor (needed for serisalization)
-      CrystalBallN () = default ;
+      TailN () = default ;
       // virtual destructor 
-      virtual ~CrystalBallN () ;
+      virtual ~TailN () ;
       // ======================================================================
     protected : 
       // ======================================================================

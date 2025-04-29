@@ -1013,12 +1013,11 @@ def _p_new_init_ ( t ,  *args )  :
 def _p_set_par_ ( o , index , value ) :
     """ Set parameter for polynomial/spline function
     >>> fun = ...
-    >>> fun[1] = 10.0
+    >>> fun [ 1 ] = 10.0
     """
     n = o.npars() 
     if   index <  0 :  index += n
-    if not 0 <= index < n :
-        raise IndexError('[%s] index out of range [0,%d)' % ( index , n ) ) 
+    if not 0 <= index < n : raise IndexError( '[%s] index out of range [0,%d)' % ( index , n ) ) 
     return o.setPar ( index , value )
 
 # =============================================================================
@@ -1033,21 +1032,20 @@ def _p_set_par_ ( o , index , value ) :
 #  print fun[:3] , fun[4:], fun[2:8] ,  fun [2::2] 
 #  @endcode 
 def _p_get_par_ ( o , index ) :
-    """Get parameter from polynomial/spline function
+    """ Get parameter from polynomial/spline function
     >>> fun = ...
     >>> print fun[ 1]
     >>> print fun[-1]
     Slice  semantic is also supported:
     >>> print fun[:3]
     >>> print fun[2::3]
-    """
+    """    
     n = o.npars() 
     if  isinstance ( index , slice ) :
-        return tuple ( o.par(i) for i in range( *index.indices ( n ) ) )
+        return tuple ( o.par ( i ) for i in range ( *index.indices ( n ) ) )
     #
     if  index <  0 :  index += n
-    if not 0 <= index < n :
-        raise IndexError('[%s] index out of range [0,%d)' % ( index , n ) ) 
+    if not 0 <= index < n :  raise IndexError ( '[%s] index out of range [0,%d)' % ( index , n ) ) 
     return o.par ( index )
 
 # =============================================================================
@@ -1057,7 +1055,7 @@ def _p_get_par_ ( o , index ) :
 #  for i in fun  : print fun[i] 
 #  @endcode
 def _p_iter_ ( o ) :
-    """Iterator over parameters of polynomial function
+    """ Iterator over parameters of polynomial function
     >>> fun = ...
     >>> for i in fun  : print fun[i] 
     """

@@ -3767,13 +3767,13 @@ namespace Ostap
       // ======================================================================
       /// general
       PolyMonotonic
-        ( const char*          name       ,
-          const char*          title      ,
-          RooAbsReal&          x          ,
-          const RooArgList&    coeffs     ,
-          const double         xmin       ,
-          const double         xmax       ,
-          const bool           increasing ) ;
+      ( const char*          name       ,
+        const char*          title      ,
+        RooAbsReal&          x          ,
+        const RooArgList&    coeffs     ,
+        const double         xmin       ,
+        const double         xmax       ,
+        const bool           increasing ) ;
       /// copy
       PolyMonotonic
         ( const PolyMonotonic&     right     ,

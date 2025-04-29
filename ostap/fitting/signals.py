@@ -285,7 +285,7 @@ class CrystalBall_pdf(PEAK) :
                                        None , 5.0 , 1.e-6 , 100 )
         
         ## N = Ostap.Math.CrystalBall.N ( n ) 
-        self.__N = Ostap.MoreRooFit.CrystalBallN ( 'N_%s' % name , self.__n )
+        self.__N = Ostap.MoreRooFit.TailN ( 'N_%s' % name , self.__n )
         
         #
         ## finally build PDF 
@@ -387,7 +387,7 @@ class CrystalBallRS_pdf(PEAK) :
                                        None , 5.0 , 1.e-6 , 100 )
         
         ## N = Ostap.Math.CrystalBall.N ( n ) 
-        self.__N    = Ostap.MoreRooFit.CrystalBallN ( 'N_%s' % name , self.__n )
+        self.__N    = Ostap.MoreRooFit.TailN ( 'N_%s' % name , self.__n )
         
         ## finally build PDF 
         #
@@ -516,8 +516,8 @@ class CB2_pdf(PEAK) :
                                        None  , 5 , 1.e-6 , 100 )
                 
         ## N = Ostap.Math.CrystalBall.N ( n ) 
-        self.__NL   = Ostap.MoreRooFit.CrystalBallN ( 'NL_%s' % name , self.__nL )
-        self.__NR   = Ostap.MoreRooFit.CrystalBallN ( 'NR_%s' % name , self.__nR )
+        self.__NL   = Ostap.MoreRooFit.TailN ( 'NL_%s' % name , self.__nL )
+        self.__NR   = Ostap.MoreRooFit.TailN ( 'NR_%s' % name , self.__nR )
 
         self.pdf = Ostap.Models.CrystalBallDS(
             self.roo_name ( 'cb2_' ) , 

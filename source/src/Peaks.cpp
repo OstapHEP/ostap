@@ -2395,7 +2395,7 @@ bool Ostap::Math::Apollonios::setAlpha  ( const double value )
   if ( s_equal ( value , m_alpha ) && 0 < m_A1 ) { return false ; }
   m_alpha    = value_ ;
   //
-  m_A1 = std::hypot ( 1 , m_alpha      )  ;
+  m_A1 = std::hypot ( 1   , m_alpha    )  ;
   m_A2 = std::exp   ( m_b - m_b * m_A1 ) ; 
   //
   return true ;
@@ -2421,7 +2421,7 @@ bool Ostap::Math::Apollonios::setB  ( const double value )
   if      ( s_equal ( m_b , 0 ) ) { m_b = 0 ; }
   else if ( s_equal ( m_b , 1 ) ) { m_b = 1 ; }
   //
-  m_A1 = std::hypot ( 1 , m_alpha      )  ;
+  m_A1 = std::hypot ( 1   , m_alpha    ) ;
   m_A2 = std::exp   ( m_b - m_b * m_A1 ) ; 
   //  
   return true ;
@@ -2436,17 +2436,20 @@ double Ostap::Math::Apollonios::pdf ( const double x ) const
   //
   // the tail
   //
+  //
+  const double sqb = std::sqrt ( m_b ) ;
+  //
   if  ( delta < -m_alpha )
     {
       const double nn = N () ;
       const double y  = 1 - m_b * m_alpha * ( m_alpha + delta ) / ( nn * m_A1 ) ;
-      return m_A2 * std::pow ( y , -nn ) * m_b / m_sigma ;
+      return m_A2 * std::pow ( y , -nn ) * sqb / m_sigma ;
     }
   //
   // the peak
   //
   const double arg = m_b * ( 1 - std::hypot ( 1 , delta ) ) ;
-  return my_exp ( arg ) * m_b / m_sigma ;
+  return my_exp ( arg ) * sqb / m_sigma ;
 }
 // ============================================================================
 // get the integral between low and high
@@ -2472,30 +2475,30 @@ double Ostap::Math::Apollonios::integral
   //
   // Integrate the peak
   if ( x0 <= low  )
-    {
-      //
-      // use GSL to evaluate the integral
-      //
-      static const Ostap::Math::GSL::Integrator1D<Apollonios> s_integrator {} ;
-      static char s_message[] = "Integral(Apollonios)" ;
-      //
-      const auto F = s_integrator.make_function ( this ) ;
-      int    ierror   =  0 ;
-      double result   =  1 ;
-      double error    = -1 ;
-      std::tie ( ierror , result , error ) = s_integrator.qag_integrate
-        ( tag () , 
-          &F     , 
-          low    , high  ,               // low & high edges
-          workspace ( m_workspace ) ,    // workspace
-          s_APRECISION         ,         // absolute precision
-          s_RPRECISION         ,         // relative precision
-          m_workspace.size()   ,         // size of workspace
-          s_message           , 
-          __FILE__ , __LINE__ ) ;
-      //  
-      return result ;
-    }
+  {
+    //
+    // use GSL to evaluate the integral
+    //
+    static const Ostap::Math::GSL::Integrator1D<Apollonios> s_integrator {} ;
+    static char s_message[] = "Integral(Apollonios)" ;
+    //
+    const auto F = s_integrator.make_function ( this ) ;
+    int    ierror   =  0 ;
+    double result   =  1 ;
+    double error    = -1 ;
+    std::tie ( ierror , result , error ) = s_integrator.qag_integrate
+    ( tag () , 
+      &F     , 
+      low    , high  ,               // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      s_APRECISION         ,         // absolute precision
+      s_RPRECISION         ,         // relative precision
+      m_workspace.size()   ,         // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+    //  
+    return result ;
+  }
   //
   // power-law tail
   //

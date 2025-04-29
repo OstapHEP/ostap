@@ -229,15 +229,15 @@ namespace Ostap
       {
         if ( first == last ) { return std::make_pair(0,0) ; }
         //
-	typename std::complex<TYPE> p = *first  ;
-	typename std::complex<TYPE> q { 0 , 0 } ;
+        typename std::complex<TYPE> p = *first  ;
+        typename std::complex<TYPE> q { 0 , 0 } ;
         while ( ++first != last ) 
-        {
-          // q = std::fma ( x , q ,  p     ) ; // x * q + p       ;
-          // p = std::fma ( x , p , *first ) ; // x * p + *first  ;
-	  q = x * q + p ;
-	  p = x * p + std::complex<TYPE> ( *first );
-        }
+          {
+            // q = std::fma ( x , q ,  p     ) ; // x * q + p       ;
+            // p = std::fma ( x , p , *first ) ; // x * p + *first  ;
+            q = x * q + p ;
+            p = x * p + std::complex<TYPE> ( *first );
+          }
         //
         return std::make_pair ( p , q ) ;
       }
@@ -359,6 +359,18 @@ namespace Ostap
       // ======================================================================      
       /** Clenshaw algorithm for summation of cosine-series 
        *  \f$ f(x) = \frac{a_0}{2} + \sum_{k=1}^{n} a_k \cos k x \f$
+       *
+       *  The tree-term recurrent relation here :
+       *  \f[ \cos ( n + 1 ) x = 2 * \cos nx \cos x - \cos ( n-1) x  \f]  
+       *
+       *  - \f$ \alpha_k(x) = 2 * \cos x \f$ 
+       *  - \f$ \beta_k(x)  = -1         \f$ 
+       *  - \f$ \phi_k (x)  = \cos kx    \f$ 
+       
+       *  It is derived from 
+       *  \f[ \cos ( n + 1 ) x + \cos ( n-1) x = 2 \cos nx \cos x \f] 
+       *
+       *
        *  @see https://en.wikipedia.org/wiki/Clenshaw_algorithm
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2015-02-10
@@ -367,9 +379,9 @@ namespace Ostap
       inline 
       long double
       cosine_sum 
-      ( ITERATOR           first , 
-        ITERATOR           last  ,
-        const long double  x     ) 
+      ( ITERATOR           first         , 
+        ITERATOR           last          ,
+        const long double  x             ) 
       {
         if ( first == last ) { return 0 ; }
         //
@@ -377,20 +389,37 @@ namespace Ostap
         long double b1 = 0 ;
         long double b0 = 0 ;
         //
-        const long double cosx = std::cos ( x ) ;
+        const long double cosx  = std::cos ( x ) ;
+        const long double alpha = 2 * cosx ;
         while ( first != last ) 
         {
           --last  ;
           b2 = b1 ;
           b1 = b0 ;
-          b0 = std::fma ( 2 * cosx  , b1 , *last - b2 ) ;
+          /// b0 = c + alpha * b1 + beta * b2 
+          b0 = std::fma ( alpha , b1 , (*last) - b2 ) ;
         }
         //
-        return std::fma ( cosx ,  b1 , 0.5L * (*first) - b2 ) ;
+        const long double phi1 = cosx ;
+        const int         phi0 = 1    ;
+        //
+        //  a0/2 * phi0 + phi1 * b1 + beta * phi0 * b2 
+        return std::fma ( phi1 , b1 , 0.5L * (*first) -  b2 ) ;
       }
       // ======================================================================      
       /** Clenshaw algorithm for summation of sine-series 
        *  \f$ f(x) = \sum_{k=1}^{n} a_k \sin  k x \f$
+       *
+       *  The tree-term recurrent relation here is 
+       *  \f[ \sin ( n+1 ) x = 2 * \sin nx \cos - \sin ( n -1 ) x \f] 
+       *
+       *  - \f$ \alpha_k(x) = 2 * \cos x \f$ 
+       *  - \f$ \beta_k(x)  = -1         \f$ 
+       *  - \f$ \phi_k (x)  = \sin kx    \f$ 
+       *
+       *  It follows drom 
+       *  \f[ \sin ( n + 1) x + \sin ( n-1) x = 2 \sin nx \cos x \f] 
+       *
        *  @see https://en.wikipedia.org/wiki/Clenshaw_algorithm
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2015-02-10
@@ -399,9 +428,9 @@ namespace Ostap
       inline 
       long double
       sine_sum 
-      ( ITERATOR           first , 
-        ITERATOR           last  ,
-        const long double  x     ) 
+      ( ITERATOR           first         , 
+        ITERATOR           last          ,
+        const long double  x             ) 
       {
         if ( first == last ) { return 0 ; }
         //
@@ -409,23 +438,24 @@ namespace Ostap
         long double b1   = 0 ;
         long double b0   = 0 ;
         //
-        long double sinx = std::sin ( x ) ;
-        long double cosx = std::cos ( x ) ;
+        const long double sinx  = std::sin ( x ) ;
+        const long double cosx  = std::cos ( x ) ;
         //
-        while ( 1 < 2 )  
+        const long double alpha =  2 * cosx ;
+        while ( first != last ) 
         {
+          --last  ;
           b2 = b1 ;
           b1 = b0 ;
-          if ( first == last ) { break ; }  // BREAK 
-          --last  ;   // advance 
-          b0 = std::fma ( 2 * cosx  , b1 , *last - b2 ) ;
+          b0 = std::fma ( 2 * cosx , b1 , (*last) - b2 ) ;
         }
         //
-        return b1 * sinx ;
+        return b0 * sinx  ; // note b0 here!! 
       }
       // ======================================================================      
       /** Clenshaw algorithm for summation of Fourier-series 
        *  \f$ f(x) = \frac{a_0}{2} + \sum_{i=k}^{n} a_{2k-1}\sin(kx)+a_{2k}\cos(kx) \f$
+       *  @attention It is assumned to have odd number of terms! 
        *  @see https://en.wikipedia.org/wiki/Clenshaw_algorithm
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2015-02-10
@@ -440,39 +470,41 @@ namespace Ostap
       {
         if ( first == last ) { return 0 ; }
         //
-        long double b2s  = 0 ;
-        long double b1s  = 0 ;
-        long double b0s  = 0 ;
-        long double b2c  = 0 ;
-        long double b1c  = 0 ;
-        long double b0c  = 0 ;
+        long double b2c   = 0 ;
+        long double b1c   = 0 ;
+        long double b0c   = 0 ;
         //
-        long double sinx = std::sin ( x ) ;
-        long double cosx = std::cos ( x ) ;
+        long double b2s   = 0 ;
+        long double b1s   = 0 ;
+        long double b0s   = 0 ;
         //
-        while ( first != last ) 
+        const long double sinx  = std::sin ( x ) ;
+        const long double cosx  = std::cos ( x ) ;
+        //
+        const long double alpha =  2 * cosx ;
+        const int         beta  = -1        ;
+        //
+        while ( first != last )
         {
+          --last    ;
           //
-          // cosine 
-          //
-          --last    ;   // advance 
           b2c = b1c ;
           b1c = b0c ;
-          b0c = std::fma ( 2 * cosx   , b1c , *last - b2c ) ;
+          /// b0 = c + alpha * b1 + beta * b2 
+          b0c = std::fma ( alpha , b1c , (*last) - b2c ) ;
           //
-          // sine 
+          if ( first == last ) { break ; }
+          //
+          --last    ; 
           //
           b2s = b1s ;
           b1s = b0s ;
-          // 
-          if ( last == first )  { break ; }
-          //
-          --last    ;   // advance 
-          b0s = std::fma ( 2 * cosx   , b1s , *last - b2s ) ;
-          //
+          /// b0 = c + alpha * b1 + beta * b2 
+          b0s = std::fma ( alpha , b1s , (*last) - b2s ) ;
+          //          
         }
         //
-        return std::fma ( cosx ,  b1c , 0.5 * (*first) - b2c + b1s * sinx ) ;
+        return std::fma ( cosx  , b1c , 0.5L * (*first) - b2c  + b0s * sinx ) ;
       }
       // ======================================================================      
       /** Clenshaw algorithm for Fejer sums for cosine-series 

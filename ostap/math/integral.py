@@ -1053,7 +1053,7 @@ class IntegralBase(object) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class Integral(IntegralBase) :
-    """Calculate the integral for the 1D-function
+    """ Calculate the integral for the 1D-function
     
     >>> func  = lambda x : x * x      ## define function 
     >>> iint  = Integral ( func , 0 ) ## specify x_low 

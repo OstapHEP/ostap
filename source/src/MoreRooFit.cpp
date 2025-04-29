@@ -97,7 +97,7 @@ ClassImp(Ostap::MoreRooFit::Maximal       )
 ClassImp(Ostap::MoreRooFit::Rank          )
 ClassImp(Ostap::MoreRooFit::ABC           )
 ClassImp(Ostap::MoreRooFit::Clamp         )
-ClassImp(Ostap::MoreRooFit::CrystalBallN  )
+ClassImp(Ostap::MoreRooFit::TailsN        )
 // ============================================================================
 namespace 
 {
@@ -1965,7 +1965,7 @@ Double_t Ostap::MoreRooFit::Clamp::evaluate () const
 // ============================================================================
 // constructor with one variables 
 // ============================================================================
-Ostap::MoreRooFit::CrystalBallN::CrystalBallN
+Ostap::MoreRooFit::TailN::TailN
 ( const std::string& name  , 
   const std::string& title , 
   RooAbsReal&        n     )
@@ -1974,33 +1974,33 @@ Ostap::MoreRooFit::CrystalBallN::CrystalBallN
 // ============================================================================
 // constructor with one variables 
 // ============================================================================
-Ostap::MoreRooFit::CrystalBallN::CrystalBallN
+Ostap::MoreRooFit::TailN::TailN
 ( const std::string& name  , 
   RooAbsReal&        n     )
-  : CrystalBallN ( name , "N-parameter: n -> N transformation" , n )
+  : TailN ( name , "N-parameter: n -> N transformation" , n )
 {}
 // ============================================================================
 // "copy" constructor 
 // ============================================================================
-Ostap::MoreRooFit::CrystalBallN::CrystalBallN
-( const Ostap::MoreRooFit::CrystalBallN& right ,
-  const char*                            name  ) 
+Ostap::MoreRooFit::TailN::TailN
+( const Ostap::MoreRooFit::TailN& right ,
+  const char*                     name  ) 
   : OneVar ( right , name )
 {}
 // ============================================================================
 // destructor 
 // ============================================================================
-Ostap::MoreRooFit::CrystalBallN::~CrystalBallN(){}
+Ostap::MoreRooFit::TailN::~TailN(){}
 // ============================================================================
 // clone method 
 // ============================================================================
-Ostap::MoreRooFit::CrystalBallN*
-Ostap::MoreRooFit::CrystalBallN::clone ( const char* newname ) const
-{ return new Ostap::MoreRooFit::CrystalBallN ( *this , newname ) ; }
+Ostap::MoreRooFit::TailN*
+Ostap::MoreRooFit::TailN::clone ( const char* newname ) const
+{ return new Ostap::MoreRooFit::TailN ( *this , newname ) ; }
 // ============================================================================
 // the actual evaluation of the result 
-// ================m===========================================================
-Double_t Ostap::MoreRooFit::CrystalBallN::evaluate () const
+// ============================================================================
+Double_t Ostap::MoreRooFit::TailN::evaluate () const
 { return Ostap::Math::CrystalBall::N ( m_x ) ; }
 // ============================================================================
 
@@ -2020,11 +2020,11 @@ Ostap::MoreRooFit::reset_data
   //
   RooAbsDataStore* store = data->store() ;
   if ( store )
-    {
-      store -> resetCache   () ;
-      store -> resetBuffers () ;
-      store -> reset        () ; 
-    }
+  {
+    store -> resetCache   () ;
+    store -> resetBuffers () ;
+    store -> reset        () ; 
+  }
   //
   data -> resetBuffers () ;
   data -> reset        () ;

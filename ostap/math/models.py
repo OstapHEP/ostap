@@ -1056,6 +1056,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.HermiteSum             ,
                Ostap.Math.FourierSum             ,
                Ostap.Math.CosineSum              ,
+               Ostap.Math.SineSum                ,
                Ostap.Math.Polynomial             ,               
                Ostap.Math.Positive               ,
                Ostap.Math.PositiveEven           ,
@@ -1309,6 +1310,7 @@ for model in ( Ostap.Math.Bernstein         ,
                Ostap.Math.HermiteSum        ,               
                Ostap.Math.FourierSum        ,               
                Ostap.Math.CosineSum         ,               
+               Ostap.Math.SineSum           ,               
                Ostap.Math.Polynomial        ,               
                Ostap.Math.ExpoPositive      , 
                Ostap.Math.TwoExpoPositive   ,
@@ -1345,9 +1347,10 @@ Ostap.Math.Positive      .__str__  = lambda s : _f_print_ ( s , 'Positive'      
 Ostap.Math.PositiveEven  .__str__  = lambda s : _f_print_ ( s , 'PositiveEven'  )
 Ostap.Math.Convex        .__str__  = lambda s : _f_print_ ( s , 'Convex'        ) 
 Ostap.Math.ConvexOnly    .__str__  = lambda s : _f_print_ ( s , 'ConvexOnly'    )
-Ostap.Math.Monotonic     .__str__  = lambda s : _f_print_ ( s , 'Monotonic'    )
+Ostap.Math.Monotonic     .__str__  = lambda s : _f_print_ ( s , 'Monotonic'     )
 Ostap.Math.FourierSum    .__str__  = lambda s : _f_print_ ( s , 'FourierSum'    )
 Ostap.Math.CosineSum     .__str__  = lambda s : _f_print_ ( s , 'CosineSum'     )
+Ostap.Math.SineSum       .__str__  = lambda s : _f_print_ ( s , 'SineSum'       )
 
 Ostap.Math.LegendreSum   .__repr__ = lambda s : _f_print_ ( s , 'LegendreSum'   )
 Ostap.Math.ChebyshevSum  .__repr__ = lambda s : _f_print_ ( s , 'ChebyshevSum'  )
@@ -1359,9 +1362,10 @@ Ostap.Math.Positive      .__repr__ = lambda s : _f_print_ ( s , 'Positive'      
 Ostap.Math.PositiveEven  .__repr__ = lambda s : _f_print_ ( s , 'PositiveEven'  )
 Ostap.Math.Convex        .__repr__ = lambda s : _f_print_ ( s , 'Convex'        ) 
 Ostap.Math.ConvexOnly    .__repr__ = lambda s : _f_print_ ( s , 'ConvexOnly'    )
-Ostap.Math.Monotonic     .__repr__ = lambda s : _f_print_ ( s , 'Monotonic'    )
+Ostap.Math.Monotonic     .__repr__ = lambda s : _f_print_ ( s , 'Monotonic'     )
 Ostap.Math.FourierSum    .__repr__ = lambda s : _f_print_ ( s , 'FourierSum'    )
 Ostap.Math.CosineSum     .__repr__ = lambda s : _f_print_ ( s , 'CosineSum'     )
+Ostap.Math.SineSum       .__repr__ = lambda s : _f_print_ ( s , 'SineSum'       )
 
 Ostap.Math.LegendreSum2  .__repr__ = lambda s : "LegendreSum2(%d,%d)"       % ( s.nx() , s.ny() )
 Ostap.Math.LegendreSum3  .__repr__ = lambda s : "LegendreSum3(%d,%d,%d)"    % ( s.nx() , s.ny() , s.nz() )
@@ -1736,19 +1740,22 @@ for f in ( Ostap.Math.Bernstein2D    ,
            #
            Ostap.Math.PolySum             ,
            Ostap.Math.NSphere             , 
-           Ostap.Math.Parameters          ) :
+           Ostap.Math.Parameters          ,
+           ##
+           Ostap.Math.FourierSum          , 
+           Ostap.Math.CosineSum           , 
+           Ostap.Math.SineSum             ) :
 
     f.__setitem__  = _p_set_par_
     f.__getitem__  = _p_get_par_
-    f.__len__      = lambda s     : s.npars() 
-    f.__iter__     = _p_iter_
+    f.__iter__     = _p_iter_ 
+    f.__len__      = lambda s : s.npars() 
     f.__contains__ = lambda s , i : 0<=i<len(s)
 
 # =============================================================================
 ## random generators 
 # =============================================================================
 from random import uniform as _uniform_
-
 
 # =============================================================================
 ## generate random numbers from 2D bernstein-like distribuitions
@@ -2444,6 +2451,7 @@ _decorated_classes_ = set( [
     Ostap.Math.HermiteSum             ,
     Ostap.Math.FourierSum             ,
     Ostap.Math.CosineSum              ,
+    Ostap.Math.SineSum                ,
     Ostap.Math.Polynomial             ,               
     Ostap.Math.Positive               ,
     Ostap.Math.PositiveEven           ,
@@ -2545,7 +2553,7 @@ _decorated_classes_ = set( [
     Ostap.Math.BernsteinEven     , 
     Ostap.Math.Positive          ,
     Ostap.Math.PositiveEven      ,
-    Ostap.Math.Monotonic        ,
+    Ostap.Math.Monotonic         ,
     Ostap.Math.Convex            ,
     Ostap.Math.ConvexOnly        ,
     Ostap.Math.ChebyshevSum      ,               
@@ -2553,6 +2561,7 @@ _decorated_classes_ = set( [
     Ostap.Math.HermiteSum        ,               
     Ostap.Math.FourierSum        ,               
     Ostap.Math.CosineSum         ,               
+    Ostap.Math.SineSum           ,               
     Ostap.Math.Polynomial        ,               
     Ostap.Math.ExpoPositive      , 
     Ostap.Math.TwoExpoPositive   , 
@@ -2572,6 +2581,7 @@ _decorated_classes_ = set( [
     Ostap.Math.PositiveEven  ,
     Ostap.Math.FourierSum    ,
     Ostap.Math.CosineSum     ,
+    Ostap.Math.SineSum       ,
     Ostap.Math.LegendreSum   ,
     Ostap.Math.ChebyshevSum  ,
     Ostap.Math.HermiteSum    ,
@@ -2585,6 +2595,7 @@ _decorated_classes_ = set( [
     Ostap.Math.Monotonic     ,
     Ostap.Math.FourierSum    ,
     Ostap.Math.CosineSum     ,
+    Ostap.Math.SineSum       ,
     ##
     Ostap.Math.KarlinShapley ,
     Ostap.Math.KarlinStudden ,

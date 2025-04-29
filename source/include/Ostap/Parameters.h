@@ -24,12 +24,19 @@ namespace Ostap
     {
     public:
       // =======================================================================
+      /// actual type of parameters 
+      typedef std::vector<double>        PARAMETERS ;
+      /// iterator type 
+      typedef PARAMETERS::const_iterator iterator   ;
+      // =======================================================================
+    public:
+      // =======================================================================
       /// constructor from number of parameters 
       Parameters ( const std::size_t           np = 1 ) ; 
       /// constructor from  the list of parameters 
-      Parameters ( const std::vector<double>&  pars   ) ;
+      Parameters ( const PARAMETERS&  pars   ) ;
       /// constructor from  the list of parameters 
-      Parameters (       std::vector<double>&& pars   ) ;
+      Parameters (       PARAMETERS&& pars   ) ;
       /// templated constructor from the sequence of parameters 
       template <typename ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
@@ -47,10 +54,10 @@ namespace Ostap
       // ======================================================================
       /// get the parameter value
       inline double  par          ( const std::size_t k ) const
-      { return ( k < m_pars.size() ) ? m_pars[k] : 0.0 ; }
+      { return ( k < m_pars.size() ) ? m_pars [ k ] : 0.0 ; }
       // ======================================================================
       /// get all parameters:
-      const std::vector<double>& pars () const { return m_pars ; }
+      const PARAMETERS& pars () const { return m_pars ; }
       // ======================================================================
       /** set k-parameter
        *  @param k index
@@ -88,8 +95,8 @@ namespace Ostap
        *  @return true if at least one parameter is actually changed 
        */
       inline bool setPars
-      ( const std::vector<double>& pars          ,
-        const bool                 force = false ) 
+      ( const PARAMETERS& pars          ,
+        const bool        force = false ) 
       { return setPars ( pars.begin() , pars.end() , force ) ; }
       // ======================================================================
       /// all parameters are zero ?
@@ -126,7 +133,6 @@ namespace Ostap
       // ======================================================================
     public: // expose constant iterators 
       // ======================================================================
-      typedef std::vector<double>::const_iterator iterator ;
       /// begin iterator
       iterator begin () const { return m_pars.begin () ; }
       /// end   iterator
@@ -152,7 +158,7 @@ namespace Ostap
     protected :
       // ======================================================================
       /// parameters 
-      std::vector<double> m_pars ; //  vector of parameters 
+      PARAMETERS m_pars ; //  vector of parameters 
       // ======================================================================
     } ;
     // ========================================================================

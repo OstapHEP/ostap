@@ -2059,16 +2059,16 @@ namespace Ostap
     public: 
       // ========================================================================
       /** constructor from all parameters 
-       *  @param mu    location parameter 
-       *  @param sigma width/scale parameter 
-       *  @param n     n-parameter 
-       *  @param kappa asymmetry parameter 
+       *  @param mu    location parameter  
+       *  @param sigma width/scale paramete   ( == a       in Heinrich note ) 
+       *  @param n     n-parameter            ( == m - 1/2 in Henrich' note )
+       *  @param kappa asymmetry parameter    ( == nu      in Heinrich note )
        */
       PearsonIV
-      ( const double mu    = 0 , 
-        const double sigma = 1 , 
-        const double n     = 2 , 
-        const double kappa = 0 );
+      ( const double mu    = 0 ,  // == mu 
+        const double sigma = 1 ,  // == a 
+        const double n     = 2 ,  // == m - 1/2 
+        const double kappa = 0 ); // == nu 
       // ======================================================================
     public:
       // ======================================================================
@@ -2093,13 +2093,13 @@ namespace Ostap
     public : // derived parameters 
       // ======================================================================      
       /// parameteter m
-      inline double m  () const { return m_n + 0.5       ; }
-      /// parameteter nu
-      inline double nu () const { return m_kappa         ; }
+      inline double m  () const { return m_n + 0.5        ; }
+      /// parameteter nu 
+      inline double nu () const { return m_kappa          ; }
       /// parameter r 
-      inline double r  () const { return 2 * ( m () -1 ) ; }
+      inline double r  () const { return 2 * ( m () - 1 ) ; }
       /// parameter a  
-      inline double a  () const { return  m_varsigma     ; }
+      inline double a  () const { return  m_varsigma      ; }
       // ======================================================================      
     public: // setters 
       // ======================================================================

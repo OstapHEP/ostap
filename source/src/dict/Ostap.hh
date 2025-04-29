@@ -19,6 +19,7 @@
 #include "Ostap/Binomial.h"
 #include "Ostap/BreitWigner.h"
 #include "Ostap/Bit.h"
+#include "Ostap/Cesaro.h"
 #include "Ostap/ChebyshevApproximation.h"
 #include "Ostap/Chi2Fit.h"
 #include "Ostap/Chi2Solution.h"
