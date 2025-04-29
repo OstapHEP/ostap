@@ -31,6 +31,8 @@
  *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
  */
 // ============================================================================
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,36,0)
+// ============================================================================
 ClassImp(Ostap::Functions::FuncFormula)
 ClassImp(Ostap::Functions::FunTree)
 ClassImp(Ostap::Functions::Func1D)
@@ -41,6 +43,8 @@ ClassImp(Ostap::Functions::FuncTH2)
 ClassImp(Ostap::Functions::FuncTH3)
 ClassImp(Ostap::Functions::Expression)
 ClassImp(Ostap::Functions::RooTreeFun)
+// ============================================================================
+#endif 
 // ============================================================================
 Ostap::Functions::FunTree::~FunTree(){};
 //

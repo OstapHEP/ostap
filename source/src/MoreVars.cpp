@@ -279,6 +279,8 @@ namespace
   // ==========================================================================
 } //                                             The end of anonymous namespace 
 // ============================================================================
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,36,0)
+// ===========================================================================
 ClassImp ( Ostap::MoreRooFit::Bernstein         ) ;
 ClassImp ( Ostap::MoreRooFit::Monotonic         ) ;
 ClassImp ( Ostap::MoreRooFit::Convex            ) ;
@@ -286,6 +288,11 @@ ClassImp ( Ostap::MoreRooFit::ConvexOnly        ) ;
 ClassImp ( Ostap::MoreRooFit::BSpline           ) ;
 ClassImp ( Ostap::MoreRooFit::Rational          ) ;
 ClassImp ( Ostap::MoreRooFit::RationalBernstein ) ;
+ClassImp ( Ostap::MoreRooFit::Shape1D           ) ;
+ClassImp ( Ostap::MoreRooFit::Histo1D           ) ;
+ClassImp ( Ostap::MoreRooFit::ProfileLL ) ;
+// ============================================================================
+#endif 
 // ============================================================================
 // constructor from the variable, range and list of coefficients
 // ============================================================================
@@ -980,9 +987,6 @@ Double_t Ostap::MoreRooFit::BSpline::analyticalIntegral
   return m_bspline.integral ( xmin , xmax ) ;
 }
 // ============================================================================
-ClassImp ( Ostap::MoreRooFit::Shape1D ) ;
-ClassImp ( Ostap::MoreRooFit::Histo1D ) ;
-// ============================================================================
 // copy constructor 
 // =============================================================================
 Ostap::MoreRooFit::Shape1D::Shape1D
@@ -1288,8 +1292,6 @@ Ostap::MoreRooFit::get_offset
 
 
 
-// ============================================================================
-ClassImp ( Ostap::MoreRooFit::ProfileLL ) ;
 // ============================================================================
 // constructor
 // ============================================================================

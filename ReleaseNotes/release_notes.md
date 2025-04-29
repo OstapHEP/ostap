@@ -34,7 +34,9 @@
  - update `makeWeighted` for 6.36<=ROOT
  - (re)fix (re)opened issue with serializations of enums @see https://github.com/root-project/root/issues/15104
  - add `SineSum`, fix nicorrectenens for `FourierSum` & `CosineSum`
-       
+ - remove `fejer` arguments
+ - disable `ClassImp` for `ROOT>=-6.36/0`
+     
 ## New features
     
    1. further improvemets for the wrapped columns in the tables
@@ -59,7 +61,8 @@
     
    1. fix the bug in treatment of `bdsdb3`
    1. Fit recent typo in `backrgounds.py`
-        
+   1. fix recent typo in `MoreRooFit.cpp`
+            
  # v1.14.0.0
 
     ## New features

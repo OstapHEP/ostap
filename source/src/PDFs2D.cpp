@@ -1856,6 +1856,8 @@ Double_t Ostap::Models::Tsallis2::analyticalIntegral
 
 
 // ============================================================================
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,36,0)
+// ============================================================================
 ClassImp(Ostap::Models::Gauss2D              ) 
 ClassImp(Ostap::Models::Tsallis2             ) 
 ClassImp(Ostap::Models::Poly2DPositive       ) 
@@ -1871,6 +1873,8 @@ ClassImp(Ostap::Models::Expo2DPol            )
 ClassImp(Ostap::Models::Expo2DPolSym         ) 
 ClassImp(Ostap::Models::Spline2D             ) 
 ClassImp(Ostap::Models::Spline2DSym          )
+// ============================================================================
+#endif 
 // ============================================================================
 //                                                                      The END         
 // ============================================================================

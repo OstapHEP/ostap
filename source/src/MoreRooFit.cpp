@@ -3,6 +3,7 @@
 // ============================================================================
 // ROOT
 // ============================================================================
+#include "RVersion.h"
 #include "TClass.h"
 #include "TObject.h"
 #include "TNamed.h"
@@ -46,6 +47,8 @@
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
  *  @date 2019-11-21
  */
+// ============================================================================
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,36,0)
 // ============================================================================
 ClassImp(Ostap::MoreRooFit::Constant      )
 ClassImp(Ostap::MoreRooFit::Addition      )
@@ -97,7 +100,9 @@ ClassImp(Ostap::MoreRooFit::Maximal       )
 ClassImp(Ostap::MoreRooFit::Rank          )
 ClassImp(Ostap::MoreRooFit::ABC           )
 ClassImp(Ostap::MoreRooFit::Clamp         )
-ClassImp(Ostap::MoreRooFit::TailsN        )
+ClassImp(Ostap::MoreRooFit::TailN         )
+// ============================================================================
+#endif 
 // ============================================================================
 namespace 
 {

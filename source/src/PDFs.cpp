@@ -13,6 +13,7 @@
 // ============================================================================
 // ROOT 
 // ============================================================================
+#include "RVersion.h"
 #include "RooArgSet.h"
 #include "RooFitResult.h"
 #include "RooRealVar.h"
@@ -11176,6 +11177,8 @@ Double_t Ostap::Models::Rational::analyticalIntegral
 
 
 // ============================================================================
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,36,0)
+// ============================================================================
 ClassImp(Ostap::Models::Shape1D            ) 
 ClassImp(Ostap::Models::Shape2D            ) 
 ClassImp(Ostap::Models::Shape3D            ) 
@@ -11288,6 +11291,8 @@ ClassImp(Ostap::Models::MPERT              )
 ClassImp(Ostap::Models::FisherZ            )
 ClassImp(Ostap::Models::BirnbaumSaunders   )
 ClassImp(Ostap::Models::Rational           )
+// ============================================================================
+#endif
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

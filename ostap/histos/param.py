@@ -762,7 +762,7 @@ try : # ========================================================================
     #  @see Ostap::Math::FourierSum
     #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
     #  @date 2015-07-26
-    def _h1_fourier_sum_ ( h1 , N , fejer = False , **kwargs ) :
+    def _h1_fourier_sum_ ( h1 , N , **kwargs ) :
         """ Make a histogram representation in terms of Fourier serie
         >>> histo  = ...
         >>> fsum   = histo.fourier_sum ( 4 )
@@ -774,7 +774,7 @@ try : # ========================================================================
         xmin = max ( kwargs.get( 'xmin' , h1.xmin() ) , h1.xmin () ) 
         xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
         ##
-        return fourier_sum ( h1 , N , xmin , xmax , fejer )
+        return fourier_sum ( h1 , N , xmin , xmax )
 
     # =============================================================================
     ## represent 1D-histo as Fourier polynomial
@@ -794,7 +794,6 @@ try : # ========================================================================
     #  @endcode 
     def _h1_fourier_ ( h1 ,  
                        degree           ,
-                       fejer = False    ,
                        opts   = 'SQ0'   ,
                        xmin   = inf_neg ,
                        xmax   = inf_pos ,
@@ -823,7 +822,7 @@ try : # ========================================================================
         ## make reasonable approximation:
         xmin = max ( xmin , h1.xmin() ) 
         xmax = min ( xmax , h1.xmax() )
-        func = fourier_sum ( h1 , degree , xmin , xmax , fejer )
+        func = fourier_sum ( h1 , degree , xmin , xmax )
     
         ## make a fit 
         if not params : params = tuple ( [ p for p in func.pars() ] ) 
@@ -869,7 +868,7 @@ try : # ========================================================================
     #  @see Ostap::Math::CosineSum
     #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
     #  @date 2015-07-26
-    def _h1_cosine_sum_ ( h1 , N , fejer = False , **kwargs ) :
+    def _h1_cosine_sum_ ( h1 , N , **kwargs ) :
         """ Make a histogram representation in terms of cosine Fourier serie
         >>> histo  = ...
         >>> fsum   = histo.cosine_sum ( 4 )
@@ -881,7 +880,7 @@ try : # ========================================================================
         xmin = max ( kwargs.get( 'xmin' , h1.xmin() ) , h1.xmin () ) 
         xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
         ##
-        return cosine_sum ( h1 , N , xmin , xmax , fejer )
+        return cosine_sum ( h1 , N , xmin , xmax )
         
     # =============================================================================
     ## represent 1D-histo as cosine Fourier polynomial
@@ -901,7 +900,6 @@ try : # ========================================================================
     #  @endcode 
     def _h1_cosine_ ( h1 ,
                       degree           ,
-                      fejer = False    ,
                       opts   = 'SQ0'   ,
                       xmin   = inf_neg ,
                       xmax   = inf_pos ,
@@ -928,7 +926,7 @@ try : # ========================================================================
         ## make reasonable approximation:
         xmin = max ( xmin , h1.xmin() ) 
         xmax = min ( xmax , h1.xmax() )  
-        func = cosine_sum ( h1 , degree , xmin , xmax , fejer )
+        func = cosine_sum ( h1 , degree , xmin , xmax )
         
         ## make a fit 
         if not params : params = tuple ( [ p for p in func.pars() ] ) 

@@ -253,7 +253,7 @@ try : # =======================================================================
     #  @see Ostap::Math::FourierSum
     #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
     #  @date 2015-07-26
-    def fourier_sum ( func , N , xmin , xmax , fejer = False ) :
+    def fourier_sum ( func , N , xmin , xmax ) :
         """ Make a function/histogram representation in terms of Fourier series
         >>> func = lambda x : x * x
         >>> fsum = fourier_sum ( func , 4 , -1 , 1 )
@@ -294,7 +294,7 @@ try : # =======================================================================
         #
         ## prepare the output
         #
-        fsum = Ostap.Math.FourierSum ( N , xmin , xmax , fejer )
+        fsum = Ostap.Math.FourierSum ( N , xmin , xmax )
         
         #
         ## fill it!
@@ -339,7 +339,7 @@ try : # =======================================================================
     #  @see Ostap::Math::CosineSum
     #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
     #  @date 2015-07-26
-    def cosine_sum ( func , N , xmin , xmax , fejer = False ) :
+    def cosine_sum ( func , N , xmin , xmax ) :
         """ Make a function/histiogram representation in terms of Fourier series
         >>> func = lambda x : x * x
         >>> fsum = fourier_sum ( func , 4 , -1 , 1 )
@@ -370,7 +370,7 @@ try : # =======================================================================
         #
         ## decode the results & prepare the output
         #
-        csum = Ostap.Math.CosineSum ( N, xmin , xmax , fejer )
+        csum = Ostap.Math.CosineSum ( N, xmin , xmax )
         for i in range ( 0 , N + 1 ) : csum.setPar ( i , r[i] )
         
         return csum
