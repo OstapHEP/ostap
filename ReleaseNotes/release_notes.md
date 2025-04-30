@@ -1,5 +1,5 @@
 
-# Ostap-dev
+# v2.0.0.0 
 
  - stiop support ROOT < 6.24
  - stop support python < 3.8 
@@ -53,8 +53,8 @@
 
    1. Reorder arguments for `Data` &`DataandLumi`, from now the first argumenet - files/pattersn and then chains
    1. Remove `Data2`
-   1. `add_new_branch` and `add_new_buffer` are complete;y rewritten
-   1. `sPlot` is completely rewritten: split into `COWs` , `sPLOT` and `hPlot*`
+   1. `add_new_branch` and `add_new_buffer` are completely rewritten
+   1. `sPlot` is completely rewritten: split into `COWs` , `sPLOT` and `hPlot`
    1. The public interface for `GoF1DToys` is mofified 
       
 ## Bug fixes
