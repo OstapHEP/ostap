@@ -58,7 +58,6 @@ message ( "----> OS release        : " ${OSTAP_OS_RELEASE} )
 find_program(CMAKE_C_COMPILER   NAMES $ENV{CC}  gcc PATHS ENV PATH NO_DEFAULT_PATH)
 find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
 
-
     
 message ( "----> C-compiler        : " $ENV{CC}  )
 message ( "----> C++-compiler      : " $ENV{CXX} )
