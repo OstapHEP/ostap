@@ -1,7 +1,7 @@
 # OSTAP build configuration 
 # OSTAP  version : @OSTAP_VERSION@ 
 # ROOT   version : @ROOT_VERSION@
-# PYTHON version : @PYTHON_VERSION@ 
+# PYTHON version : @Python3_VERSION@ 
 # GSL    version : @GSL_VERSION@ 
 # Build          : @OSTAP_BUILD_TIMESTAMP@ at @OSTAP_DOMAIN@
 # System         : @CMAKE_HOST_SYSTEM_NAME@.@CMAKE_HOST_SYSTEM_PROCESSOR@
