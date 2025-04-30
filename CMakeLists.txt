@@ -100,8 +100,8 @@ endif ( )
 
 add_subdirectory(source)
 add_subdirectory(ostap)
-add_subdirectory(examples)
 add_subdirectory(scripts)
+add_subdirectory(examples)
 ## add_subdirectory(docs)
 
 configure_file(${CMAKE_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR})
@@ -114,6 +114,7 @@ set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 
 # build a CPack driven installer package
 include (InstallRequiredSystemLibraries)
+set (CPACK_OUTPUT_FILE_PREFIX    packages)
 set (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set (CPACK_PACKAGE_VERSION_MAJOR "${OSTAP_VERSION_MAJOR}")
 set (CPACK_PACKAGE_VERSION_MINOR "${OSTAP_VERSION_MINOR}")

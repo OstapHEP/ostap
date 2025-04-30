@@ -10,6 +10,7 @@ if sys.warnoptions or os.environ.get ( 'OSTAP_CMAKE_TEST', False ) :
         import cppyy
         
 import ostap.core.meta_info 
+import ostap.core.footprint 
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
