@@ -1,11 +1,3 @@
-configure_file (
-  "${CMAKE_CURRENT_SOURCE_DIR}/rootlogon.C.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/rootlogon.C" @ONLY
-  )
-
-install ( FILES ${CMAKE_CURRENT_BINARY_DIR}/rootlogon.C  
-           DESTINATION examples 
-           PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
            
 install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}  
           DESTINATION . 
@@ -32,7 +24,6 @@ install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
           FILES_MATCHING PATTERN "*.cxx"
           PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
    
-
 enable_testing() 
 
 file(GLOB pyfiles "${CMAKE_INSTALL_PREFIX}/examples/*/*.py")
@@ -70,6 +61,4 @@ foreach(cxxfilename ${cxxfiles})
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
    set_tests_properties(${cxxfname}CXX PROPERTIES TIMEOUT 5000 ) 
 endforeach() 
-
-
 

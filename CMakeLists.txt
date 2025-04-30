@@ -29,9 +29,22 @@ include(CTest)
 
 set(OSTAP_VERSION_MAJOR 2)
 set(OSTAP_VERSION_MINOR 0)
-set(OSTAP_VERSION_PATCH 0)
+set(OSTAP_VERSION_PATCH 1)
 set(OSTAP_VERSION_TWEAK 0)
 
+message ("                                                                     ")
+message ("       .oooooo.                .                          .oooo.     ")
+message ("       d8P'  `Y8b             .o8                        .dP\"\"Y88b   ")
+message ("      888      888  .oooo.o .o888oo  .oooo.   oo.ooooo.        ]8P'  ")
+message ("      888      888 d88(  \"8   888   `P  )88b   888' `88b     .d8P'   ")
+message ("      888      888 `\"Y88b.    888    .oP\"888   888   888   .dP'      ") 
+message ("      `88b    d88' o.  )88b   888 . d8(  888   888   888 .oP     .o  ")
+message ("       `Y8bood8P'  8\"\"888P'   \"888\" `Y888\"\"8o  888bod8P' 8888888888  ") 
+message ("                                               888                   ") 
+message ("                                              o888o                  ")
+message ("                                                                     ")
+
+    
 set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_PATCH}.${OSTAP_VERSION_TWEAK})
 
 message ( "----> OSTAP  version    : " ${OSTAP_VERSION} )
@@ -58,7 +71,6 @@ message ( "----> OS release        : " ${OSTAP_OS_RELEASE} )
 find_program(CMAKE_C_COMPILER   NAMES $ENV{CC}  gcc PATHS ENV PATH NO_DEFAULT_PATH)
 find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
 
-    
 message ( "----> C-compiler        : " $ENV{CC}  )
 message ( "----> C++-compiler      : " $ENV{CXX} )
 if ( CMAKE_C_COMPILER_ID ) 

@@ -1,7 +1,14 @@
 
+# v2.0.1.0
+
+## New features
+    
+  - add `footprint.py` : not soem meta-info abotu ostap sessions is saved in `$OSTPDIR/.footprints` (if exists and writeable)  and `$$OSTAP_CACHE_DIR/.footprints` files 
+
+    
 # v2.0.0.0 
 
- - stiop support ROOT < 6.24
+ - stop support ROOT < 6.24
  - stop support python < 3.8 
  - split `add_new_branch` into `add_newbranch` and `adD_new_buffer`
  - fix Py <-> c++ functions
