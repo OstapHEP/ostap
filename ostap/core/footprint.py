@@ -12,11 +12,10 @@ __author__  = "Vanya BELYAEV  Ivan.Belyaev@itep.ru"
 __date__    = "2014-03-10"
 __version__ = "$Revision$"
 __all__     = (
-    'footprint_files' ,  
+    'footprint_file' ,  
 )
 # =============================================================================
 from ostap.core.meta_info import python_info, root_info, ostap_info, user 
-from ostap.core.cache_dir import cache_dir
 import os, sys, datetime
 # =============================================================================
 # logging 
@@ -28,24 +27,24 @@ else                       : logger = getLogger ( __name__                )
 start_time = datetime.datetime.now()
 # =============================================================================
 #
-footprint_files = []
 ## central file, if exists and writeables 
-fpfile = '$OSTAPDIR/.footprints' 
-fpfile_ = os.path.expanduser ( os.path.expandvars ( fpfile ) )
-if os.path.exists ( fpfile_ ) and \
-   os.path.isfile ( fpfile_ ) and \
-   os.access      ( fpfile_ , os.W_OK ) : footprint_files.append ( fpfile_ )
-## luser file in (sriteavle) cache directory
-footprint_files .append ( os.path.join ( cache_dir , '.footprints' ) )
-footprint_files = tuple ( footprint_files ) 
-
-
-
+footprint_file = '$OSTAPDIR/.footprints' 
+footprint_file = os.path.expanduser ( os.path.expandvars ( footprint_file ) )
+if os.path.exists ( footprint_file ) and \
+   os.path.isfile ( footprint_file ) and \
+   os.access      ( footprint_file , os.W_OK ) : pass
+else :
+    footprint_file = None
+    
 # =============================================================================
 import atexit 
 @atexit.register 
 def add_footprint () :
     # =========================================================================
+    from ostap.core.cache_dir import cache_dir
+    footprint_files = []
+    if footprint_file : footprint_files.append ( footprint_file )
+    footprint_files.append ( os.path.join ( cache_dir , '.footprints') ) 
     nfp = len ( footprint_files ) 
     for i , fp_file in enumerate ( footprint_files ) : # ======================
         # =====================================================================
