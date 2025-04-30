@@ -39,16 +39,17 @@ if os.path.exists ( fpfile_ ) and \
 footprint_files .append ( os.path.join ( cache_dir , '.footprints' ) )
 footprint_files = tuple ( footprint_files ) 
 
-print ( footprint_files )
+
 
 # =============================================================================
 import atexit 
 @atexit.register 
 def add_footprint () :
     # =========================================================================
-    for fp_file in footprint_files : # ========================================
+    nfp = len ( footprint_files ) 
+    for i , fp_file in enumerate ( footprint_files ) : # ======================
         # =====================================================================
-        try : # ================================================================
+        try : # ===============================================================
             # =================================================================
             end_time = datetime.datetime.now ()
             ts       = start_time.strftime ( '%Y-%m-%d %H:%M:%S' )
@@ -60,9 +61,10 @@ def add_footprint () :
                 fp.write ( "   - USER           : %s\n"            % user        )
                 fp.write ( "   - CWD            : %s\n"            % os.getcwd() )
                 fp.write ( "   - argv           : %s\n"            % sys.argv    )
-                fp.write ( "   - ostap  version : %s.%s.%s.%s\n"   % ostap_info  )
-                fp.write ( "   - ROOT   version : %s.%s/%s\n"      % root_info   )
-                fp.write ( "   - python version : %s.%s.%s.%s%s\n" % python_info )
+                if ( i + 1 == nfp ) : 
+                    fp.write ( "   - ostap  version : %s.%s.%s.%s\n"   % ostap_info  )
+                    fp.write ( "   - ROOT   version : %s.%s/%s\n"      % root_info   )
+                    fp.write ( "   - python version : %s.%s.%s.%s%s\n" % python_info )
                 logger.debug ( "Footprint is added to %s"          % fp_file ) 
             # =====================================================================
         except : # ================================================================
