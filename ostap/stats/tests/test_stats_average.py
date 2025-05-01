@@ -8,11 +8,11 @@
 """ # Test averages for inconsistend data 
 """
 # =============================================================================
-from   ostap.math.ve         import VE 
-from   ostap.plotting.canvas import use_canvas 
-from   ostap.stats.average   import *
-from   ostap.utils.utils     import batch_env 
-import ostap.logger.table    as     T 
+from   ostap.math.ve          import VE 
+from   ostap.plotting.canvas  import use_canvas 
+from   ostap.stats.average    import *
+from   ostap.utils.root_utils import batch_env 
+import ostap.logger.table     as     T 
 import random, math 
 # =============================================================================
 from   ostap.logger.logger import getLogger 

@@ -14,8 +14,8 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-from   ostap.core.core      import hID, SE 
-from   ostap.utils.utils    import batch_env 
+from   ostap.core.core        import hID, SE 
+from   ostap.utils.root_utils import batch_env 
 import ostap.histos.histos  
 import ROOT, random
 # =============================================================================

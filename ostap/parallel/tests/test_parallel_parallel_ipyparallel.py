@@ -11,7 +11,7 @@ from   ostap.parallel.task      import Task, GenericTask
 from   ostap.parallel.utils     import pool_context 
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import batch_env 
+from   ostap.utils.root_utils   import batch_env 
 import ostap.histos.histos
 import ROOT, random, time, sys 
 # =============================================================================

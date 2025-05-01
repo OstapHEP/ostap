@@ -764,9 +764,9 @@ def task_executor ( item ) :
         logger.debug ( "Task %s: '.' is added to sys.path" % jobid )
         
     if task.batch_set :
-        from ostap.utils.utils    import Batch       as batch_context 
+        from ostap.utils.root_utils import Batch       as batch_context 
     else :
-        from ostap.utils.basic    import NoContext   as batch_context 
+        from ostap.utils.basic      import NoContext   as batch_context 
 
     if task.build_set :
         from ostap.core.build_dir import UseBuildDir as build_context
@@ -804,8 +804,8 @@ def func_executor ( item ) :
     args  = item [ 2: ]
     
     ##
-    from ostap.utils.cleanup import CleanUpPID as clean_context
-    from ostap.utils.utils   import batch 
+    from ostap.utils.cleanup    import CleanUpPID as clean_context
+    from ostap.utils.root_utils import batch 
     with clean_context () , batch ( True ) :        
         with Statistics ()  as stat :
             return jobid , fun ( jobid , *args ) , stat

@@ -8,15 +8,15 @@
 """ # Test averages for inconsistend data 
 """
 # ==============================================================================
-from   ostap.plotting.canvas import use_canvas
-from   ostap.utils.timing    import timing
-from   ostap.logger.pretty   import pretty_float
-from   ostap.plotting.canvas import use_canvas
-from   ostap.math.math_ve    import significance
-from   ostap.utils.utils     import batch_env 
-import ostap.fitting.models  as     M 
-import ostap.stats.gofnd     as     GnD 
-import ostap.logger.table    as     T 
+from   ostap.plotting.canvas  import use_canvas
+from   ostap.utils.timing     import timing
+from   ostap.logger.pretty    import pretty_float
+from   ostap.plotting.canvas  import use_canvas
+from   ostap.math.math_ve     import significance
+from   ostap.utils.root_utils import batch_env 
+import ostap.fitting.models   as     M 
+import ostap.stats.gofnd      as     GnD 
+import ostap.logger.table     as     T 
 import ROOT, random   
 # ==============================================================================
 from   ostap.logger.logger import getLogger 

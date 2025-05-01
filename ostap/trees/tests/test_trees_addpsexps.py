@@ -12,7 +12,7 @@ from   ostap.core.pyrouts       import Ostap, VE,   SE
 from   ostap.utils.timing       import timing 
 from   ostap.trees.data         import Data 
 from   ostap.utils.progress_bar import progress_bar
-from   ostap.utils.utils        import batch_env 
+from   ostap.utils.root_utils   import batch_env 
 import ostap.trees.trees
 import ostap.histos.histos
 import ROOT, math, random 

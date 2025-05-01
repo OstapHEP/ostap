@@ -9,23 +9,23 @@
 """
 # =============================================================================
 import math
-from   ostap.utils.utils   import batch_env 
-from   ostap.stats.moments import ( Mean          ,
-                                    Variance      ,
-                                    Median        ,
-                                    Mode          ,
-                                    Width         ,
-                                    RMS           ,
-                                    Moment        ,
-                                    CentralMoment ,
-                                    Skewness      ,
-                                    Kurtosis      ,
-                                    Quantile      ,
-                                    cl_symm       ,
-                                    cl_asymm      ,
-                                    skewness      ,
-                                    quantile      ,
-                                    kurtosis      )
+from   ostap.utils.root_utils import batch_env 
+from   ostap.stats.moments    import ( Mean          ,
+                                       Variance      ,
+                                       Median        ,
+                                       Mode          ,
+                                       Width         ,
+                                       RMS           ,
+                                       Moment        ,
+                                       CentralMoment ,
+                                       Skewness      ,
+                                       Kurtosis      ,
+                                       Quantile      ,
+                                       cl_symm       ,
+                                       cl_asymm      ,
+                                       skewness      ,
+                                       quantile      ,
+                                       kurtosis      )
 # ============================================================================= 
 # logging 
 # =============================================================================

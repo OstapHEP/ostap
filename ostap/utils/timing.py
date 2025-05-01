@@ -8,13 +8,19 @@
 """
 # =============================================================================
 __all__     = (
+    ## 
     'timing'         , ## context manager to count time 
     'timer'          , ## ditto
     'Timer'          , ## context manager to count time 
+    ##
+    'Wait'           , ## conitext manager to wait soem tiem bvefore and/or after action
+    'wait'           , ## conitext manager to wait soem tiem bvefore and/or after action 
+    ##
    )
 # =============================================================================
 from   timeit               import default_timer as _timer 
-from   ostap.logger.symbols import clock         as clock_symbol 
+from   ostap.logger.symbols import clock         as clock_symbol
+import time 
 # =============================================================================
 from   ostap.logger.logger  import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.utils.timing' )
@@ -180,6 +186,48 @@ def timing ( name = '' , logger = None , format = 'Timing %-18s %.3fs' , **kwarg
 
 ## ditto 
 timer = timing   # ditto
+
+
+# =============================================================================
+## context manager that invokes <code>time.sleep</code> before and after action
+#  @code
+#  with Wait ( after = 5 , before = 0 ) :
+#  ...
+#  @endcode
+class Wait(object):
+    """ Context manager that invokes <code>time.sleep</code> before and after action
+    >>> with Wait ( after = 5 , before = 0 ) :
+    >>> ...
+    """
+    def __init__ ( self , after = 0 , before = 0 ) :
+        self.__after  = after
+        self.__before = before 
+
+    def __enter__ ( self ) :
+        if 0 < self.__before : time.sleep  ( self.__before ) 
+    def __exit__ ( self , *_ ) :
+        if 0 < self.__after  : time.sleep  ( self.__after  ) 
+    @property
+    def before ( self ) :
+        """``before'': wait some time before the action"""
+        return self.__before    
+    @property
+    def after  ( self ) :
+        """``after'': wait some time after the action"""
+        return self.__after
+
+# =============================================================================
+## context manager that invokes <code>time.sleep</code> before and after action
+#  @code
+#  with wait ( after = 5 , before = 0 ) :
+#  ...
+#  @endcode
+def wait ( after = 0 , before = 0 ) :
+    """ Context manager that invokes <code>time.sleep</code> before and after action
+    >>> with wait ( after = 5 , before = 0 ) :
+    >>> ...
+    """    
+    return Wait ( after = after , before = before )
 
 # =============================================================================
 if '__main__' == __name__ :

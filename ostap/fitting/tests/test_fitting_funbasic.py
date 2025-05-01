@@ -16,7 +16,7 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.root_utils   import batch_env 
 from   ostap.fitting.funbasic   import Id, Fun1D
 from   ostap.math.math_ve       import *
 import ROOT, random, math 
@@ -52,38 +52,38 @@ def test_funbasic_1 () :
     X    = Id   ( x )
 
     
-    with wait ( 1 ), use_canvas ( 'Zero' ) :  Zero.draw ()
-    with wait ( 1 ), use_canvas ( 'One'  ) :  One .draw ()
-    with wait ( 1 ), use_canvas ( 'X'    ) :  X   .draw ()
+    with use_canvas ( 'Zero' , wait = 1 ) :  Zero.draw ()
+    with use_canvas ( 'One'  , wait = 1 ) :  One .draw ()
+    with use_canvas ( 'X'    , wait = 1 ) :  X   .draw ()
         
     x2 = X*X
     
-    with wait ( 1 ), use_canvas ( 'x2'    ) :  x2.draw ()
+    with use_canvas ( 'x2'    , wait = 1 ) :  x2.draw ()
 
     pp = ( X - 2 ) ** 2 - 2 
 
-    with wait ( 1 ), use_canvas ( '(x-2)**2-2'  ) :  pp.draw ()
+    with use_canvas ( '(x-2)**2-2'  , wait = 1 ) :  pp.draw ()
     
     aa = abs ( sin ( x2 ) ) 
-    with wait ( 1 ), use_canvas ( 'abs(sin(x2))'  ) : aa.draw ()
+    with use_canvas ( 'abs(sin(x2))' , wait = 1 ) : aa.draw ()
 
     f1 = minv ( x2 ,  2.0 )
-    with wait ( 1 ), use_canvas ( 'min(x2,2)'     ) : f1.draw ()
+    with use_canvas ( 'min(x2,2)'    , wait = 1 ) : f1.draw ()
 
     f2 = maxv ( 1 - X ,  x2 )
-    with wait ( 1 ), use_canvas ( 'max(x2,1-x)'   ) : f2.draw ()
+    with use_canvas ( 'max(x2,1-x)'   , wait = 1 ) : f2.draw ()
 
     ix = 1/X
-    with wait ( 1 ), use_canvas ( '1/x'           ) : ix.draw ()
+    with use_canvas ( '1/x'           , wait = 1 ) : ix.draw ()
 
     ex = 1-X
-    with wait ( 1 ), use_canvas ( '1-x'           ) : ex.draw ()
+    with use_canvas ( '1-x'           , wait = 1 ) : ex.draw ()
 
     wx = 3+X
-    with wait ( 1 ), use_canvas ( '3+x'           ) : wx.draw ()
+    with use_canvas ( '3+x'           , wait = 1 ) : wx.draw ()
 
     gf = exp ( -0.5 * ( X - 2.5) ** 2 )
-    with wait ( 1 ), use_canvas ( 'gauss'         ) : gf.draw ()
+    with use_canvas ( 'gauss'         , wait = 1 ) : gf.draw ()
     
 
     for ff in ( abs   ,
@@ -95,7 +95,7 @@ def test_funbasic_1 () :
 
         
         f = ff ( X )
-        with wait ( 1 ), use_canvas ( f.name  ) : f.draw ()
+        with use_canvas ( f.name  , wait = 1 ) : f.draw ()
         funs.add ( f ) 
                 
     funs.add ( Zero )
@@ -130,9 +130,9 @@ def test_funbasic_2 () :
     G = exp   ( ( -0.5 / sigma**2 ) * ( Y - mean ) ** 2 ) / ( sigma * (2*math.pi)**0.5 )
     U = Fun1D ( 1 , y )
     
-    with wait ( 1 ), use_canvas ( 'Y'           ) : Y.draw ()
-    with wait ( 1 ), use_canvas ( 'U'           ) : U.draw ()
-    with wait ( 1 ), use_canvas ( 'G'           ) : G.draw ()
+    with use_canvas ( 'Y' , wait = 1 ) : Y.draw ()
+    with use_canvas ( 'U' , wait = 1 ) : U.draw ()
+    with use_canvas ( 'G' , wait = 1 ) : G.draw ()
     
 
     header = 'Quantity' , 'uniform' , 'gauss'

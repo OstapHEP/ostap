@@ -80,7 +80,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.core         import cpp, Ostap
 from   ostap.core.ostap_types  import is_integer, num_types
-from   ostap.utils.utils       import crange 
+from   ostap.utils.ranges      import crange 
 import ostap.math.models
 import ROOT, ctypes
 # =============================================================================

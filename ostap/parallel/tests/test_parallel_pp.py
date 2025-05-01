@@ -10,7 +10,7 @@
 # =============================================================================
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.root_utils   import batch_env 
 import ostap.histos.histos
 import ROOT, random, time, sys, pp  
 # =============================================================================
@@ -96,7 +96,7 @@ def test_pp_function () :
     
     job_server.print_stats()
     
-    with wait ( 1 ) , use_canvas ( 'test_pp_function' ) : 
+    with use_canvas ( 'test_pp_function' , wait = 1 ) : 
         result.draw (   ) 
 
     return result 
@@ -130,7 +130,7 @@ def test_pp_method() :
     
     job_server.print_stats()
 
-    with wait ( 1 ) , use_canvas ( 'test_pp_method' ) : 
+    with use_canvas ( 'test_pp_method' , wait = 1 ) : 
         result.draw (   ) 
 
     return result 
@@ -162,7 +162,7 @@ def test_pp_callable () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_pp_callable' ) : 
+    with use_canvas ( 'test_pp_callable' , wait = 1 ) : 
         result.draw (   ) 
 
     return result 

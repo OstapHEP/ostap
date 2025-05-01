@@ -17,7 +17,7 @@ __all__    = () ## nothing to import
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.utils.timing     import timing
 from   ostap.math.models      import f1_draw 
-from   ostap.utils.utils      import wait, batch_env  
+from   ostap.utils.root_utils import batch_env  
 import ostap.histos.param
 import ostap.histos.histos
 import ostap.fitting.funcs
@@ -85,7 +85,7 @@ def test_legendre_sum () :
 
     from ostap.math.param import legendre_sum
 
-    with wait ( 3 ) , use_canvas ( 'test_legendre_sum' ) , timing ( logger = logger ) :
+    with use_canvas ( 'test_legendre_sum' , wait = 1 ) , timing ( logger = logger ) :
         make_test ( func , xmin , xmax , legendre_sum , range ( 1 , 11 ) , logger )
         
 
@@ -106,7 +106,7 @@ def test_chebyshev_sum () :
     from ostap.math.param import chebyshev_sum
 
     
-    with wait ( 3 ) , use_canvas ( 'test_chebyshev_sum' ) , timing ( logger = logger ) :
+    with use_canvas ( 'test_chebyshev_sum' , wait = 1 ) , timing ( logger = logger ) :
         make_test ( func , xmin , xmax , chebyshev_sum , range ( 1 , 11 ) , logger )
 
         
@@ -130,7 +130,7 @@ def test_fourier_sum () :
         logger.error ("Can't import fourier_sum!")
         return 
 
-    with wait ( 3 ) , use_canvas ( 'test_fourier_sum' ) , timing ( logger = logger ) :
+    with use_canvas ( 'test_fourier_sum' , wait = 1 ) , timing ( logger = logger ) :
         make_test ( func , xmin , xmax , fourier_sum , range ( 1 , 11 ) , logger )
 
 # =============================================================================
@@ -153,7 +153,7 @@ def test_cosine_sum () :
         return 
 
     
-    with wait ( 3 ) , use_canvas ( 'test_cosine_sum' ) , timing ( logger = logger ) :
+    with use_canvas ( 'test_cosine_sum' , wait = 1 ) , timing ( logger = logger ) :
         make_test ( func , xmin , xmax , cosine_sum , range ( 1 , 11 ) , logger )
 
 # =============================================================================
@@ -173,7 +173,7 @@ def test_bernstein_sum () :
     from ostap.math.param import bernstein_sum
 
     
-    with wait ( 3 ) , use_canvas ( 'test_bernstein_sum' ) , timing ( logger = logger ) :
+    with use_canvas ( 'test_bernstein_sum' , wait = 1 ) , timing ( logger = logger ) :
         make_test ( func , xmin , xmax , bernstein_sum , range ( 1 , 11 ) , logger )
 
 
@@ -192,7 +192,7 @@ def test_bernsteineven_sum1 () :
     from ostap.math.param import bernsteineven_sum
 
     
-    with wait ( 3 ) , use_canvas ( 'test_bernsteineven_sum' ) , timing ( logger = logger ) :
+    with use_canvas ( 'test_bernsteineven_sum' , wait = 1 ) , timing ( logger = logger ) :
         make_test ( func , xmin , xmax , bernsteineven_sum , range ( 1 , 11 ) , logger )
 
 # =============================================================================
@@ -210,7 +210,7 @@ def test_bernsteineven_sum2 () :
     from ostap.math.param import bernsteineven_sum
 
     
-    with wait ( 3 ) , use_canvas ( 'test_bernsteineven_sum2' ) , timing ( logger = logger ) :
+    with use_canvas ( 'test_bernsteineven_sum2' , wait = 1 ) , timing ( logger = logger ) :
         make_test ( func , xmin , xmax , bernsteineven_sum , range ( 1 , 21 ) , logger )
 
         

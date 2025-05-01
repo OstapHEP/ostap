@@ -20,7 +20,7 @@ from   ostap.utils.timing           import timing
 from   ostap.trees.data             import Data
 from   ostap.fitting.pyselectors    import Variable, SelectorWithVars, DataSet_NEW_FILL
 from   ostap.logger.colorized       import attention
-from   ostap.utils.utils            import batch_env 
+from   ostap.utils.root_utils       import batch_env 
 import ostap.logger.table           as     T
 import ostap.core.pyrouts 
 import ostap.fitting.roofit

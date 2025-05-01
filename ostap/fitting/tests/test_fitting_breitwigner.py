@@ -9,12 +9,12 @@
 """ Test module for soem BReit-Wigner models
 """
 # ============================================================================= 
-from   ostap.core.core       import Ostap, std, VE, dsID, rooSilent 
-from   ostap.utils.timing    import timing
-from   ostap.plotting.canvas import use_canvas 
-from   ostap.utils.utils     import batch_env 
-import ostap.fitting.models  as     Models 
-import ostap.io.zipshelve    as     DBASE
+from   ostap.core.core        import Ostap, std, VE, dsID, rooSilent 
+from   ostap.utils.timing     import timing
+from   ostap.plotting.canvas  import use_canvas 
+from   ostap.utils.root_utils import batch_env 
+import ostap.fitting.models   as     Models 
+import ostap.io.zipshelve     as     DBASE
 import ostap.fitting.roofit 
 import ROOT, time 
 # =============================================================================

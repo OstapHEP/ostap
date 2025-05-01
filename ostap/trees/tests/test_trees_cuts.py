@@ -8,7 +8,7 @@
 """
 # ============================================================================= 
 import ostap.trees.cuts
-from   ostap.utils.utils import batch_env 
+from   ostap.utils.root_utils import batch_env 
 import ROOT
 # =============================================================================
 # logging 

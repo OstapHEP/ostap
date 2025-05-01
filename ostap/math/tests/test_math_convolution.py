@@ -16,7 +16,7 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.math.models      import f1_draw
-from   ostap.utils.utils      import batch_env 
+from   ostap.utils.root_utils import batch_env 
 import ROOT, math
 # =============================================================================
 # logging 
@@ -39,11 +39,12 @@ def test_convolution() :
     logger = getLogger ( 'test_convolution' )
     logger.info ( 'Test convolution' ) 
 
-    try :
+    # =========================================================================
+    try : # ===================================================================
         # =====================================================================
         from ostap.math.sp_convolution import GaussConvolution
         # =====================================================================
-    except ImportError :
+    except ImportError : # ====================================================
         # =====================================================================
         logger.error ( "Gauss convolution is not available!" )
         return

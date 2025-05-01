@@ -11,7 +11,7 @@ from   ostap.plotting.canvas    import use_canvas
 from   ostap.parallel.task      import Task, GenericTask
 from   ostap.parallel.utils     import pool_context 
 from   ostap.utils.progress_bar import progress_bar 
-from   ostap.utils.utils        import wait, batch_env  
+from   ostap.utils.root_utils   import batch_env  
 import ostap.histos.histos
 import ROOT, time, sys, random  
 # =============================================================================
@@ -118,7 +118,7 @@ def test_parallel_pathos_mp_bare ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_parallel_pathos_mp_bare' ) : 
+    with use_canvas ( 'test_parallel_pathos_mp_bare' , wait = 1 ) : 
         result.draw (   ) 
 
     return result
@@ -147,7 +147,7 @@ def test_parallel_pathos_pp_bare ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_parallel_pathos_pp_bare' ) : 
+    with use_canvas ( 'test_parallel_pathos_pp_bare' , wait = 1 ) : 
         result.draw (   ) 
 
     return result 
@@ -177,7 +177,7 @@ def test_parallel_pathos_mp_task ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_parallel_pathos_mp_task' ) : 
+    with use_canvas ( 'test_parallel_pathos_mp_task' , wait = 1 ) : 
         result.draw (   ) 
         
     return result
@@ -207,7 +207,7 @@ def test_parallel_pathos_pp_task ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_parallel_pathos_pp_task' ) : 
+    with use_canvas ( 'test_parallel_pathos_pp_task' , wait = 1 ) : 
         result.draw (   ) 
         
     return result
@@ -234,7 +234,7 @@ def test_parallel_pathos_mp_func ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_parallel_pathos_mp_func' ) : 
+    with use_canvas ( 'test_parallel_pathos_mp_func' , wait = 1 ) : 
         result.draw (   ) 
 
     return result
@@ -261,7 +261,7 @@ def test_parallel_pathos_pp_func ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_parallel_pathos_pp_func' ) : 
+    with use_canvas ( 'test_parallel_pathos_pp_func' , wait = 1 ) : 
         result.draw (   ) 
 
     return result
@@ -292,7 +292,7 @@ def test_parallel_pathos_mp_generic ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_parallel_pathos_mp_generic' ) : 
+    with use_canvas ( 'test_parallel_pathos_mp_generic' , wait = 1 ) : 
         result.draw (   ) 
 
     return result
@@ -322,7 +322,7 @@ def test_parallel_pathos_pp_generic ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_parallel_pathos_pp_generic' ) : 
+    with use_canvas ( 'test_parallel_pathos_pp_generic' , wait = 1 ) : 
         result.draw (   ) 
 
     return result

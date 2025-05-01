@@ -9,9 +9,9 @@
 """
 # ============================================================================= 
 from   ostap.core.core          import Ostap, std, VE, dsID, rooSilent 
-from   ostap.utils.timing       import timing 
+from   ostap.utils.timing       import timing  
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.timing       import timing
 import ostap.fitting.models     as     Models 
 import ostap.io.zipshelve       as     DBASE
@@ -56,9 +56,9 @@ def test_gauss2D() :
     
     logger.info( 'Simple 2D-Gaussian model\n%s' % result.table ( prefix = "# " ) )
     
-    with wait ( 2 ), use_canvas ( 'test_gauss2D_x' ) : 
+    with use_canvas ( 'test_gauss2D_x' , wait = 1 ) : 
         model.draw1 (  dataset  )
-    with wait ( 2 ), use_canvas ( 'test_gauss2D_y' ) : 
+    with use_canvas ( 'test_gauss2D_y' , wait = 1 ) : 
         model.draw2 (  dataset  )
         
     models.add ( model )

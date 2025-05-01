@@ -14,7 +14,7 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.core.core          import dsID, hID, Ostap 
 from   ostap.plotting.canvas    import use_canvas 
-from   ostap.utils.utils        import batch_env 
+from   ostap.utils.root_utils   import batch_env 
 import ostap.logger.table       as     T
 import ostap.fitting.roofit 
 import ostap.trees.trees   

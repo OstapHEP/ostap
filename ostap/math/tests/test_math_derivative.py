@@ -21,7 +21,7 @@ from   ostap.stats.counters   import SE
 from   ostap.utils.timing     import timing
 import ostap.logger.table     as     T
 from   ostap.math.ve          import pretty_ve
-from   ostap.utils.utils      import wait, batch_env 
+from   ostap.utils.root_utils import batch_env 
 from   ostap.plotting.canvas  import use_canvas
 from   math                   import exp, sin, cos, pi, tanh
 import ROOT, random, math 
@@ -224,7 +224,7 @@ def test_derivative_6 ():
         )
 
     lines = [] 
-    with wait ( 5 ) , use_canvas ( 'test_derivative_6' ) :
+    with use_canvas ( 'test_derivative_6' , wait = 1 ) :
         xmin, xmax = -4 , 4 
         f1_draw ( fun , xmin = xmin , xmax = xmax  , linecolor=2 , linewidth = 3 , min = -12 , max = 12 )
         for i, d in enumerate ( derivs , start = 1 ) :

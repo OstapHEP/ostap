@@ -10,7 +10,7 @@
 # ============================================================================
 from   itertools                import count   
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env  
+from   ostap.utils.root_utils   import batch_env  
 from   ostap.utils.progress_bar import progress_bar 
 import ostap.histos.histos
 import ROOT, time, sys 
@@ -110,7 +110,7 @@ def test_multiprocess_function () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 20 ) )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_multiprocess_function' ) : 
+    with use_canvas ( 'test_multiprocess_function' , wait = 1 ) : 
         result.draw (   ) 
 
     return result 
@@ -151,7 +151,7 @@ def test_multiprocess_callable  () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 20 ) )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_multiprocess_callable' ) : 
+    with use_canvas ( 'test_multiprocess_callable' , wait = 1 ) : 
         result.draw (   ) 
 
     return result 

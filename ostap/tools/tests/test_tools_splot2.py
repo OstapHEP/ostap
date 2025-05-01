@@ -22,7 +22,7 @@ from   ostap.utils.progress_bar   import progress_bar
 from   ostap.fitting.variables    import FIXVAR 
 from   ostap.tools.splot          import COWs, sPLOT, hPlot2D
 from   ostap.plotting.canvas      import use_canvas 
-from   ostap.utils.utils          import wait, batch_env
+from   ostap.utils.root_utils     import batch_env
 from   ostap.logger.symbols       import sum_symbol, delta_symbol 
 import ostap.fitting.models       as     Models
 import ostap.io.zipshelve         as     DBASE

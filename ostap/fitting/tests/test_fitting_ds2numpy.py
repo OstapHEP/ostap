@@ -4,7 +4,7 @@
 from   ostap.utils.timing      import timing
 from   ostap.fitting.ds2numpy  import ds2numpy
 from   ostap.plotting.canvas   import use_canvas
-from   ostap.utils.utils       import batch_env 
+from   ostap.utils.root_utils  import batch_env 
 import ostap.fitting.models    as     Models
 import ostap.math.models 
 import ostap.fitting.roofit 

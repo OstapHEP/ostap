@@ -17,7 +17,8 @@ __all__    = () ## nothing to import
 from   ostap.core.core          import dsID, rooSilent 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.timing       import wait 
+from   ostap.utils.root_utils   import batch_env 
 from   ostap.fitting.simfit     import combined_data
 from   ostap.fitting.fithelpers import H1D_dset
 import ostap.fitting.models     as     Models 

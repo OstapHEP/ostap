@@ -26,7 +26,7 @@ from   ostap.stats.counters     import counters_table
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.tools.tmva         import Reader, addTMVAResponse
 from   ostap.utils.cleanup      import CleanUp
-from   ostap.utils.utils        import batch_env 
+from   ostap.utils.root_utils    import batch_env 
 import ostap.io.root_file 
 import ROOT, os, random 
 # =============================================================================

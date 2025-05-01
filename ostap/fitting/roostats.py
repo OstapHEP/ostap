@@ -55,11 +55,11 @@ from   ostap.core.ostap_types import ( string_types   ,
                                        dictlike_types )
 from   ostap.core.core        import Ostap , valid_pointer
 from   ostap.utils.basic      import ( zip_longest    ,
-                                       split_string   ,
                                        loop_items     , 
                                        typename       )
-import ostap.fitting.roofit
+from   ostap.utils.strings    import split_string   
 from   ostap.fitting.pdfbasic import APDF1
+import ostap.fitting.roofit
 import ROOT, abc, sys  
 # ==============================================================================
 from   ostap.logger.logger import getLogger
@@ -1585,7 +1585,7 @@ class HypoTestInverter(object) :
         >>> hti.scan (  [ 0, 1, 2, 3, 4 ] ) ## define custom scane    
         """
 
-        from ostap.utils.utils        import vrange
+        from ostap.utils.ranges       import vrange
         from ostap.utils.progress_bar import progress_bar 
         
         if    not values :

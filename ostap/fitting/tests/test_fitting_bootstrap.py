@@ -14,12 +14,12 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   ostap.core.pyrouts    import hID, VE 
-import ostap.fitting.models  as     Models
-import ostap.fitting.toys    as     Toys
-from   ostap.utils.timing    import timing
-from   ostap.plotting.canvas import use_canvas
-from   ostap.utils.utils     import batch_env 
+from   ostap.core.pyrouts     import hID, VE 
+import ostap.fitting.models   as     Models
+import ostap.fitting.toys     as     Toys
+from   ostap.utils.timing     import timing
+from   ostap.plotting.canvas  import use_canvas
+from   ostap.utils.root_utils import batch_env 
 import ostap.histos.histos
 import ROOT, time, random, math
 # =============================================================================

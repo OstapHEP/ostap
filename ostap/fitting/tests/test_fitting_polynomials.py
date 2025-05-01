@@ -16,7 +16,7 @@ from   ostap.core.meta_info     import root_info
 from   ostap.core.core          import cpp, VE, dsID, hID , rooSilent, Ostap 
 from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.root_utils   import batch_env 
 from   ostap.fitting.background import make_bkg
 from   ostap.logger.colorized   import attention
 import ostap.fitting.models     as     Models 

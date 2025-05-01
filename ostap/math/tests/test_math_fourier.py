@@ -13,7 +13,7 @@
 # ============================================================================= 
 from   ostap.core.core        import VE, SE, Ostap
 from   ostap.math.models      import f1_draw
-from   ostap.utils.utils      import batch_env
+from   ostap.utils.root_utils import batch_env
 from   ostap.plotting.canvas  import use_canvas 
 import ostap.math.derivative  as     D
 import ostap.math.integral    as     I 

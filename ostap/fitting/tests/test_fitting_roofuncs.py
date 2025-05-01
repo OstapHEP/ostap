@@ -16,7 +16,7 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.root_utils   import batch_env 
 from   ostap.fitting.funbasic   import Id, Fun1D
 from   ostap.math.math_ve       import *
 import ostap.fitting.roofuncs   as     RF 

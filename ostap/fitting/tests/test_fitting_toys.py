@@ -18,7 +18,7 @@ from   ostap.core.pyrouts       import hID, VE
 from   ostap.utils.timing       import timing
 from   ostap.utils.memory       import memory 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env  
+from   ostap.utils.root_utils   import batch_env  
 from   ostap.fitting.toys       import pull_var
 from   ostap.math.base          import num_range 
 from   ostap.utils.progress_bar import progress_bar

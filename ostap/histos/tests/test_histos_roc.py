@@ -13,11 +13,11 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-from   ostap.core.core       import hID 
-from   ostap.histos.roc      import roc_curve
-from   ostap.math.integral   import integral 
-from   ostap.plotting.canvas import use_canvas 
-from   ostap.utils.utils     import batch_env 
+from   ostap.core.core        import hID 
+from   ostap.histos.roc       import roc_curve
+from   ostap.math.integral    import integral 
+from   ostap.plotting.canvas  import use_canvas 
+from   ostap.utils.root_utils import batch_env 
 import ROOT, random, math 
 # =============================================================================
 # logging 

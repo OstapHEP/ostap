@@ -10,8 +10,8 @@
 - see ostap/stat/combine.py.
 """
 # =============================================================================
-from   ostap.stats.combine import Combine, Ostap, VE, covMatrix
-from   ostap.utils.utils   import batch_env 
+from   ostap.stats.combine    import Combine, Ostap, VE, covMatrix
+from   ostap.utils.root_utils import batch_env 
 import ROOT
 # =============================================================================
 from   ostap.logger.logger import getLogger 

@@ -15,7 +15,7 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.stats.counters   import SE, WSE
-from   ostap.utils.utils      import batch_env 
+from   ostap.utils.root_utils import batch_env 
 import ostap.logger.table     as     T
 import ROOT, random
 # =============================================================================

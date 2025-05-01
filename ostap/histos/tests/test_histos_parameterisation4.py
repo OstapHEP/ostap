@@ -14,9 +14,8 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-from   ostap.plotting.canvas import use_canvas
-from   ostap.utils.utils     import wait 
-from   ostap.utils.utils     import batch_env 
+from   ostap.plotting.canvas  import use_canvas
+from   ostap.utils.root_utils import batch_env 
 import ostap.histos.param
 import ostap.histos.histos
 import ostap.fitting.funcs
@@ -182,7 +181,7 @@ def test_generic_spline () :
         params = [ h.bSpline ( degree = 1 , knots = 4 ) for h in  histos ]
 
     for h , f in zip ( histos , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_generic_spline %s' % h.GetTitle()  ) : 
+        with use_canvas ( 'test_generic_spline %s' % h.GetTitle() , wait = 1 ) : 
             h    .draw()
             f.tf1.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
@@ -195,7 +194,7 @@ def test_positive_spline () :
         params = [ h.pSpline ( degree = 2 , knots = 2 ) for h in  histos ]
 
     for h , f in zip ( histos , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_positive_spline %s' % h.GetTitle()  ) : 
+        with use_canvas ( 'test_positive_spline %s' % h.GetTitle() , wait = 1 ) : 
             h    .draw()
             f.tf1.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
@@ -211,7 +210,7 @@ def test_monotonic_spline () :
                    h4.mSpline ( degree = 2 , knots = 2 , increasing = False ) ]
         
     for h , f in zip ( histos , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_monotonic_spline %s' % h.GetTitle()  ) : 
+        with use_canvas ( 'test_monotonic_spline %s' % h.GetTitle() , wait = 1 ) : 
             h    .draw()
             f.tf1.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
@@ -228,7 +227,7 @@ def test_convex_spline () :
                    h4.cSpline ( degree = 2 , knots = 2 , increasing = False , convex = False ) ]
         
     for h , f in zip ( histos , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_convex_spline %s' % h.GetTitle()  ) : 
+        with use_canvas ( 'test_convex_spline %s' % h.GetTitle() , wait = 1 ) : 
             h    .draw()
             f.tf1.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
@@ -247,7 +246,7 @@ def test_convex_only_spline () :
                    h6.concaveSpline ( degree = 2 , knots = 2 ) ]
         
     for h , f in zip ( histos , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_convex_only_spline %s' % h.GetTitle()  ) : 
+        with use_canvas ( 'test_convex_only_spline %s' % h.GetTitle() , wait = 1 ) : 
             h    .draw()
             f.tf1.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )

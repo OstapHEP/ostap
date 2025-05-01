@@ -14,7 +14,7 @@ from   ostap.math.interpolation import ( Berrut1st      ,
                                          Barycentric    ,
                                          FloaterHormann )
 from   ostap.core.core          import Ostap
-from   ostap.utils.utils        import batch_env 
+from   ostap.utils.root_utils   import batch_env 
 import ostap.math.linalg
 import ostap.math.models
 import ROOT, random, math  

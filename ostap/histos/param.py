@@ -143,7 +143,7 @@ from   ostap.math.param       import ( legendre_sum      ,
                                        beziereven_sum    ,
                                        bernsteineven_sum ,
                                        rational_fun      ) 
-from   ostap.utils.utils      import vrange 
+from   ostap.utils.ranges     import vrange 
 from   ostap.utils.basic      import typename
 from   collections            import namedtuple
 import ROOT, math 

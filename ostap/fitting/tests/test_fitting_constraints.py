@@ -16,7 +16,7 @@ from   ostap.core.core          import VE
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.timing       import timing
-from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.root_utils   import batch_env 
 import ostap.fitting.models     as     Models 
 import ostap.fitting.roofit 
 import ROOT, random, math 
@@ -58,7 +58,7 @@ def test_constraint () :
 
     r0 , f0 = model.fitTo ( data , silent = True )
     
-    with wait ( 1 ) , use_canvas ( "Unconstrained fit" ) : 
+    with use_canvas ( "Unconstrained fit" , wait = 1 ) : 
         r0 , f0 = model.fitTo ( data , silent = True , draw = True , nbins = 100 ,
                                 minos = ( 'S', 'mean_Gauss' , 'sigma_Gauss' ) )  
         logger.info ( "Uncontrained fit\n%s" % r0.table ( prefix = '# ' ) )
@@ -67,7 +67,7 @@ def test_constraint () :
     a0 = model.soft_constraint2 ( signal.sigma , 1 , -0.7  , 0.05 , name = 'constraint_asym_sigma') 
     a1 = model.soft_constraint2 ( signal.mean  , 5 , -0.05 , 5    , name = 'constraint_asym_mean' )
     
-    with wait ( 1 ) , use_canvas ( "Constrained (asymmetric) fit" ) : 
+    with use_canvas ( "Constrained (asymmetric) fit" , wait = 1 ) : 
         r1 , f1 = model.fitTo ( data , silent = True ,
                                 constraints = ( a0 , a1 ) )        
         r1 , f1 = model.fitTo ( data , silent = True , draw = True , nbins = 100 ,                                
@@ -79,7 +79,7 @@ def test_constraint () :
     s0 = model.soft_constraint ( signal.sigma , VE ( 1 , 0.15**2 ) , name = 'constraint_sym_sigma') 
     s1 = model.soft_constraint ( signal.mean  , VE ( 5 , 0.10**2 ) , name = 'constraint_sym_mean' )
     
-    with wait ( 1 ) , use_canvas ( "Constrained (symmetric) fit" ) : 
+    with use_canvas ( "Constrained (symmetric) fit" , wait = 1 ) : 
         r2 , f2 = model.fitTo ( data , silent = True ,
                                 constraints = ( s0 , s1 ) )        
         r2 , f2 = model.fitTo ( data , silent = True , draw = True , nbins = 100 ,                                

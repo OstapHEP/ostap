@@ -17,7 +17,7 @@ from   ostap.core.core          import cpp, VE, dsID, Ostap, rooSilent
 from   ostap.fitting.efficiency import Efficiency1D
 from   ostap.utils.utils        import timing
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env  
+from   ostap.utils.root_utils   import batch_env  
 from   ostap.fitting.roofit     import FIXVAR 
 from   ostap.fitting.pyvar      import PyVAR, PyVARLite 
 import ostap.fitting.models     as     Models 

@@ -15,7 +15,7 @@ from   ostap.math.interpolation import ( interpolate , points  ,
 from   ostap.math.base          import doubles 
 from   ostap.core.core          import Ostap,  SE
 from   ostap.math.models        import f1_draw 
-from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.progress_bar import progress_bar
@@ -34,7 +34,6 @@ batch_env ( logger )
 # =============================================================================
 #
 functions = set () 
-
 
 # =============================================================================
 def more_uniform ( a , b , N , N1 = 10 ) :
@@ -140,7 +139,7 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
         functions.add ( ( n , t ) ) 
             
     graphs = []         
-    with wait ( 3 ) , use_canvas ( name ) :
+    with use_canvas ( name , wait = 1 ) :
         ff = lambda x : fun  ( x )
         f1_draw ( ff , xmin = low , xmax = high , linecolor = 2 , linewidth = 2 )
 
@@ -291,7 +290,7 @@ def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logg
         functions.add ( ( n , t ) ) 
 
     graphs = [] 
-    with wait ( 1 ) , use_canvas ( name ) :
+    with use_canvas ( name , wait = 1 ) :
         
         ff = lambda x : tfunc  ( x )
         f1_draw ( ff , xmin = low , xmax = high , linecolor = 1 , linewidth = 3 )

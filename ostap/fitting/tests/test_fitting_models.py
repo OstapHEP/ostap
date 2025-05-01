@@ -18,7 +18,7 @@ from   ostap.core.meta_info     import root_info
 from   ostap.core.core          import cpp, VE, dsID, rooSilent 
 from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.root_utils   import batch_env 
 from   ostap.fitting.background import make_bkg
 from   ostap.logger.colorized   import attention
 import ostap.fitting.models     as     Models 
@@ -162,7 +162,7 @@ def make_print ( pdf , fitresult , title , logger = logger ) :
 
     stats [ model.name ] = row
 
-    with wait ( 1 ), use_canvas ( title ) : 
+    with use_canvas ( title , wait = 1 ) : 
         plots [ model.name ] = pdf.draw (  dataset0 )
         
 # =============================================================================

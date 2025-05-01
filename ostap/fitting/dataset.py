@@ -35,15 +35,15 @@ from   ostap.core.core           import ( Ostap         ,
 from   ostap.core.ostap_types    import ( integer_types , string_types   ,
                                           num_types     , dictlike_types , 
                                           list_types    , sequence_types )
-from   ostap.utils.basic         import ( split_string         , 
+from   ostap.utils.strings       import ( split_string         , 
                                           split_string_respect ,
-                                          var_separators       , 
-                                          loop_items           ,
-                                          typename             )
+                                          var_separators       )
+from   ostap.utils.basic         import loop_items  , typename            
 from   ostap.math.base           import islong
+from   ostap.utils.random_seed   import random_seed
 from   ostap.fitting.variables   import valid_formula, make_formula 
 from   ostap.trees.cuts          import expression_types, vars_and_cuts, order_warning
-from   ostap.utils.utils         import evt_range, LAST_ENTRY, ALL_ENTRIES 
+from   ostap.utils.ranges        import evt_range
 from   ostap.stats.statvars      import data_decorate, data_range 
 from   ostap.utils.valerrors     import VAE
 from   ostap.logger.symbols      import cabinet, weight_lifter 
@@ -65,6 +65,11 @@ _new_methods_ = []
 # =============================================================================
 _maxv =  0.99 * sys.float_info.max
 _minv = -0.99 * sys.float_info.max
+# =============================================================================
+## the last index for laooping over TTRee/RooAbsData
+LAST_ENTRY  = ROOT.TVirtualTreePlayer.kMaxEntries
+## the last index for laooping over TTRee/RooAbsData
+ALL_ENTRIES = 0 , LAST_ENTRY 
 # =============================================================================
 ## iterator for RooAbsData entries 
 #  @cdoe
@@ -1008,8 +1013,6 @@ def _rds_unique_entries_ ( dataset           ,
     rand   = choice in ( 'random' , 'rndm'  , 'rand' ) 
     minv   = criterium and choice in ( 'min' , 'minimal' , 'minimum' )
     maxv   = criterium and choice in ( 'max' , 'maximal' , 'maximum' )
-
-    from ostap.utils.utils import random_seed
 
     with random_seed ( seed ) :
 

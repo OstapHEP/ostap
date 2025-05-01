@@ -14,11 +14,11 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-from   ostap.math.ve         import VE 
-from   ostap.core.core       import hID 
-from   ostap.histos.histos   import h1_axis
-from   ostap.plotting.canvas import use_canvas 
-from   ostap.utils.utils     import batch_env 
+from   ostap.math.ve          import VE 
+from   ostap.core.core        import hID 
+from   ostap.histos.histos    import h1_axis
+from   ostap.plotting.canvas  import use_canvas 
+from   ostap.utils.root_utils import batch_env 
 import ostap.histos.compare
 import ostap.histos.graphs 
 import ROOT, random

@@ -32,7 +32,7 @@ else :
 # =============================================================================e
 ## create a file with tree 
 def create_tree ( item ) :
-    """Create a file with a tree
+    """ Create a file with a tree
     >>> create_tree ( ('1.root' ,  1000 ) ) 
     """
     

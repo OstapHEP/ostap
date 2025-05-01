@@ -13,7 +13,7 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import batch_env 
+from   ostap.utils.root_utils   import batch_env 
 import ostap.fitting.models     as     Models
 import ostap.histos.graphs
 import ROOT 

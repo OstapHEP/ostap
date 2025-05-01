@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2019-07-03
 # =============================================================================
-"""Case insensitive dictionary
+""" Case insensitive dictionary
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -20,13 +20,10 @@ __all__     = (
     'cidict_fun'      , ## key transformation for case-insensitive keys ingoring underscores/dahes/blancs
 )
 # =============================================================================
-from sys  import version_info as python_version
-if    3<= python_version.major : from collections.abc import  MutableMapping
-else                           : from collections     import  MutableMapping
+from collections.abc import  MutableMapping
 # =============================================================================
 ## for case-insensitive comparison 
-if (3,3) <= python_version : case_transform = lambda s : s.casefold() 
-else                       : case_transform = lambda s : s.lower()  
+case_transform = lambda s : s.casefold() 
 # =============================================================================
 ## @class cidict
 #  Case-insensitive dictionary
@@ -42,7 +39,7 @@ else                       : case_transform = lambda s : s.lower()
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2019-07-03
 class cidict(MutableMapping) :
-    """Case-insensitive dictionary
+    """ Case-insensitive dictionary
     >>> d = cidict ( a = 1 , A = 2 , b = 1 , B = 2 )
 
     Other key transformations are also possible:

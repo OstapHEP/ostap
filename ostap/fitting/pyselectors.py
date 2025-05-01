@@ -1914,8 +1914,8 @@ def fill_dataset2 ( self              ,
 
             selection = selector.selection
             
-            from ostap.utils.utils    import ImplicitMT 
-            from ostap.frames.frames  import DataFrame, frame_columns 
+            from ostap.utils.root_utils import ImplicitMT 
+            from ostap.frames.frames    import DataFrame, frame_columns 
             
             total  = len ( self )
 
@@ -1961,7 +1961,7 @@ def fill_dataset2 ( self              ,
                     logger.debug  ( 'PROCESS: define %s as %s ' % ( v.name , v.formula ) )
 
                     ## define new variable
-                    if ( 6 , 26 ) <=root_info and  v.name in columns : 
+                    if ( 6 , 26 ) <= root_info and  v.name in columns : 
                         frame = frame.Redefine ( v.name , v.formula )  ## REDEFINE 
                     else : 
                         frame = frame.Define   ( v.name , v.formula )  ## define new variable  for the frame

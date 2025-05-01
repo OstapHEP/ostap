@@ -9,12 +9,12 @@
 """ Test module for ostap/math/math_ve.py
 """
 # ============================================================================= 
-from   ostap.math.ve       import VE
-from   ostap.math.base     import cpp, iszero, isequal
-from   ostap.utils.basic   import typename 
-from   ostap.utils.utils   import batch_env 
-from   ostap.math.math_ve  import *
-import ostap.logger.table  as     T
+from   ostap.math.ve          import VE
+from   ostap.math.base        import cpp, iszero, isequal
+from   ostap.utils.basic      import typename 
+from   ostap.utils.root_utils import batch_env 
+from   ostap.math.math_ve     import *
+import ostap.logger.table     as     T
 import math, random 
 # ============================================================================= 
 from ostap.logger.logger import getLogger
@@ -170,7 +170,6 @@ def test_math_ve4 ():
     from   ostap.core.core       import Ostap, SE  
     from   ostap.math.models     import f1_draw
     from   ostap.plotting.canvas import use_canvas
-    from   ostap.utils.utils     import wait 
     from   ostap.utils.gsl       import gslCount
     
     functions = [
@@ -227,7 +226,7 @@ def test_math_ve4 ():
             
             title = '%s_%s' % ( fun.__name__ , nu )
             
-            with use_canvas ( title ) , wait ( 1 ) :
+            with use_canvas ( title , wait = 1 ) :
                 f1_draw ( fd , xmin = xmin , xmax = xmax , linecolor = 2 )
                 f1_draw ( dn , xmin = xmin , xmax = xmax , linecolor = 4 )
                 

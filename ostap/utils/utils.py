@@ -32,61 +32,16 @@ __all__     = (
     #
     'Profiler'           , ## context manager to perform profiling 
     ##
-    'takeIt'             , ## take and later delete ...
     'isatty'             , ## is the stream ``isatty'' ?
     'with_ipython'       , ## do we run IPython?
-    ##
-    'batch'              , ## context manager to keep/force certain ROOT ``batch''-mode
-    'batch_env'          , ## chek&set the bacth from environment 
-    ##
-    'keepCanvas'         , ## context manager to keep the current ROOT canvas
-    'invisibleCanvas'    , ## context manager to use the invisible current ROOT canvas
     ##
     'keepArgs'           , ## context manager to keep sys.argv
     ##
     'keepCWD'            , ## context manager to keep current working directory 
     ##
-    'implicitMT'         , ## context manager to enable/disable implicit MT in ROOT 
-    ##
-    'Batch'              , ## context manager to keep  ROOT ``batch''-mode
-    ##
-    'KeepCanvas'         , ## context manager to keep the current ROOT canvas
-    'InvisibleCanvas'    , ## context manager to use the invisible current ROOT canvas
-    ##
     'KeepArgs'           , ## context manager to keep sys.argv
     ##
-    'Wait'               , ## conitext manager to wait soem tiem bvefore and/or after action
-    ## 
-    'wait'               , ## conitext manager to wait soem tiem bvefore and/or after action 
-    ##
-    'ImplicitMT'         , ## context manager to enable/disable implicit MT in ROOT 
-    ##
-    'counted'            , ## decorator to create 'counted'-function
-    ##
-    'cmd_exists'         , ## check the existence of the certain command/executable
-    ##
-    'which'              , ## which command (from shutil)
-    ##
-    'gen_password'       , ## generate password/secret
-    ##
-    'vrange'             , ## helper loop over values between xmin and xmax
-    ## 
-    'log_range'          , ## helper loop over values between xmin and xmax in log
-    ## 
-    'lrange'             , ## helper loop over values between xmin and xmax in log
-    'prange'             , ## helper loop over values between xmin and xmax in log
-    'prange'             , ## helper loop over values between xmin and xmax in log
-    ##
-    'crange'             , ## helper loop over values between xmin and xmax using Chebyshev nodes 
-    ##
-    'split_range'        , ## helper generator to split large range into smaller chunks
-    'split_n_range'      , ## helper generator to split large range into smaller chunks of approximately same size 
-    ##
-    'chunked'            , ## break *iterable* into chunks of length *n*:
-    'divide'             , ## divide the elements from *iterable* into *n* parts
-    'grouper'            , ## collect data into fixed-length chunks or blocks"
-    ##
-    'make_iterable'      , ## create infinite or finite iterable 
+    'counted'            , ## decorator to create 'counted'-functioniterable'      , ## create infinite or finite iterable 
     ##
     'checksum_files'     , ## get SHA512 sum for sequence of files
     ##
@@ -95,8 +50,6 @@ __all__     = (
     'random_name'        , ## get some random name
     'short_hash_name'    , ## get some short hash name
     ##
-    'evt_range'          , ## trivial function to adjut first/last indiced for collictios of given size
-    ##
     'choices'            , ## `random.choices` function
     ## 
     'memoize'            , ## Simple lightweight unbounded cache
@@ -104,32 +57,11 @@ __all__     = (
     'classprop'          , ## class property decorator
     'numcalls'           , ## decorator for #ncalls
     ##
-    'file_size'          , ## get cumulative size of files/directories 
-    ##
-    'hadd'               , ## merge ROOT files using command `hadd`
-    'num_fds'            , ## get number of opened file descriptors 
-    'get_open_fds'       , ## get list of opened file descriptors
-    ##
     'slow'               , ## "slow" looping with delays at each step
     ##
-    'CallThem'           , ## convert sequence of callables into singel callable
-    'has_symbol'         , ## Has any of the symbols?
-    'is_formula'         , ## Is this string expression represent math formula?
+    'CallThem'           , ## convert sequence of callables into single callable
     ##
-    'RandomSeed'         , ## context manager to set/keep seed for the PYTOHN random generator
-    'randomSeed'         , ## context manager to set/keep seed for the PYTHON random generator
-    'random_seed'        , ## context manager to set/keep seed for the PYTHON random generator
-    ## 
-    'RootRandomSeed'     , ## context manager to set/keep seed for the ROOT random generator
-    'rootRandomSeed'     , ## context manager to set/keep seed for the ROOT random generator
-    'root_random_seed'   , ## context manager to set/keep seed for the ROOT random
-    ## 
-    'RooRandomSeed'      , ## context manager to set/keep seed for the RooFit random generator
-    'rooRandomSeed'      , ## context manager to set/keep seed for the RooFit random generator
-    'roo_random_seed'    , ## context manager to set/keep seed for the RooFit random generator
-    ## 
     )
-
 # =============================================================================
 from   itertools              import repeat, chain, islice
 from   ostap.core.meta_info   import python_info 
@@ -139,8 +71,12 @@ from   ostap.core.ostap_types import ( integer_types  , num_types ,
                                        string_types   ,
                                        dictlike_types , listlike_types )
 from   ostap.utils.memory     import memory, virtualMemory, Memory
-from   ostap.utils.env        import get_env , OSTAP_BATCH
 import ROOT, time, os , sys, math, time, functools, abc, array, random, datetime  ## attention here!!
+# =============================================================================
+from   ostap.logger.logger import getLogger
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.utils' )
+else                       : logger = getLogger( __name__            )
+del getLogger
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
@@ -150,11 +86,6 @@ except ImportError : # ========================================================
     # =========================================================================
     from string import letters as ascii_letters
     from string import digits
-# =============================================================================
-from   ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.utils' )
-else                       : logger = getLogger( __name__            )
-del getLogger
 # =============================================================================
 ## symbols for name generation 
 all_symbols = ascii_letters + digits 
@@ -171,7 +102,7 @@ all_symbols = ascii_letters + digits
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2016-07-25                     
 class Profiler(object) :
-    """Very simple profiler, based on cProfile module
+    """ Very simple profiler, based on cProfile module
     - see https://docs.python.org/2/library/profile.html
     
     with profiler() :
@@ -234,157 +165,6 @@ def profiler( name = '' ) :
     """
     return Profiler ( name )
             
-# =============================================================================
-## @class TakeIt
-#  Take some object, keep it and delete at the exit
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  date 2014-08-03    
-class TakeIt(object):
-    """Take some object, keep it and delete at the exit
-    
-    >>> ds = dataset.reduce('pt>1')
-    >>> with takeIt ( ds ) :
-    ...
-    
-    """
-    def __init__  ( self , other ) :
-        self.other = other
-        
-    def __enter__ ( self ) :
-        ROOT.SetOwnership ( self.other , True )
-        return self.other
-    
-    def __exit__  ( self , *_ ) :
-
-        o = self.other
-
-        ## delete it! 
-        del self.other
-        
-        if o and hasattr ( o , 'reset'  ) : o.reset  ()
-        if o and hasattr ( o , 'Reset'  ) : o.Reset  ()
-        if o and hasattr ( o , 'Delete' ) : o.Delete ()
-        
-        if o : del o
-                        
-    
-# =============================================================================
-## Take some object, keep it and delete at the exit
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  date 2014-08-03    
-def takeIt (  other ):
-    """Take some object, keep it and delete at the exit
-    >>> ds = dataset.reduce('pt>1')
-    >>> with takeIt ( ds ) :
-    ...    
-    """
-    return TakeIt ( other ) 
-
-    
-# =============================================================================
-## get all open file descriptors
-#  The actual code is copied from http://stackoverflow.com/a/13624412
-def get_open_fds():
-    """Get all open file descriptors    
-    The actual code is copied from http://stackoverflow.com/a/13624412
-    """
-    #
-    import resource
-    import fcntl
-    #
-    fds = []
-    soft , hard = resource.getrlimit(resource.RLIMIT_NOFILE)
-    for fd in range ( 0 , soft ) :
-        try:
-            flags = fcntl.fcntl(fd, fcntl.F_GETFD)
-        except IOError:
-            continue
-        fds.append ( fd )
-    return tuple ( fds ) 
-
-
-# =============================================================================
-try :
-    # =========================================================================
-    import psutil
-    ## get number of opened file descriptors 
-    def num_fds () :
-        "Get number of popened file descriptors"        
-        p = psutil.Process() 
-        return p.num_fds()
-    # =========================================================================
-except ImportError :
-    # =========================================================================
-    ## get number of opened file descriptors 
-    def num_fds () :
-        "Get number of popened file descriptors"        
-        return len ( get_open_fds () )
-    # =========================================================================
-    
-# =============================================================================
-## get the actual file name form file descriptor 
-#  The actual code is copied from http://stackoverflow.com/a/13624412
-#  @warning: it is likely to be "Linux-only" function
-def get_file_names_from_file_number(fds):
-    """Get the actual file name from file descriptor 
-    The actual code is copied from http://stackoverflow.com/a/13624412 
-    """
-    names = []
-    for fd in fds:
-        names.append(os.readlink('/proc/self/fd/%d' % fd))
-    return names
-
-# =============================================================================
-## context manager to keep ROOT ``batch'' state
-#  @code
-#  with Batch() :
-#  ... do something here 
-#  @endcode 
-class Batch(object) :
-    """ Context manager to keep ROOT ``batch'' state
-    >>> with Batch() :
-    ... do something here 
-    """
-    def __init__  ( self , batch = True ) :
-        self.__batch = batch 
-    ## contex manahger: ENTER
-    def __enter__ ( self ) :
-        groot = ROOT.ROOT.GetROOT()
-        self.old_state = groot.IsBatch()
-        if self.old_state != self.__batch : groot.SetBatch ( self.__batch ) 
-        return self
-    ## contex manager: EXIT
-    def __exit__  ( self , *_ ) :
-        groot = ROOT.ROOT.GetROOT()
-        if self.old_state != groot.IsBatch() : groot.SetBatch( self.old_state ) 
-
-# =============================================================================
-## check batch from environmen variables, set it ans issue the message
-def batch_env  ( logger = logger ) :
-    """ chek&set the bacth from environment 
-    - Check batch environmen variable
-    - set ROOT.TROOT.SetBatch(True) 
-    - issue the message 
-    """
-    groot = ROOT.ROOT.GetROOT()
-    if not groot.IsBatch () :
-        if get_env ( OSTAP_BATCH , '' ).lower() not in ( '' , '0' , 'not' , 'off' , 'false' ) :        
-            groot.SetBatch ( True )
-            logger.attention ( "BATCH processing is activated (environment)  " )                    
-    return groot.IsBatch() 
-        
-# =============================================================================
-## context manager to keep ROOT ``batch'' state
-#  @code
-#  with batch() :
-#  ... do something here 
-#  @endcode 
-def batch( batch = True ) :
-    """Context manager to keep ROOT ``batch'' state
-    >>> with batch() :
-    ... do something here 
-    """
-    return Batch ( batch )
 
 # =============================================================================
 ## context manager to keep the current working directory
@@ -394,7 +174,7 @@ def batch( batch = True ) :
 #  @endcode
 #  - No action if no directory is specified 
 class KeepCWD(object) :
-    """context manager to keep the current working directory
+    """ Context manager to keep the current working directory
     >>> with KeepCWD( new_dir ) :
     ...
     - No action if no directory is specified 
@@ -439,55 +219,12 @@ class KeepCWD(object) :
 #  @endcode 
 #  - No action if no directory is specified 
 def keepCWD ( new_dir = '' ) :
-    """Context manager to keep the current working directory
+    """ Context manager to keep the current working directory
     >>> with keepCWD( new_dir ) :
     ...
     - No action if no directory is specified 
     """
     return KeepCWD ( new_dir ) 
-
-
-# =============================================================================
-## context manager that invokes <code>time.sleep</code> before and after action
-#  @code
-#  with Wait ( after = 5 , before = 0 ) :
-#  ...
-#  @endcode
-class Wait(object):
-    """Context manager that invokes <code>time.sleep</code> before and after action
-    >>> with Wait ( after = 5 , before = 0 ) :
-    >>> ...
-    """
-    def __init__ ( self , after = 0 , before = 0 ) :
-        self.__after  = after
-        self.__before = before 
-
-    def __enter__ ( self ) :
-        if 0 < self.__before : time.sleep  ( self.__before ) 
-    def __exit__ ( self , *_ ) :
-        if 0 < self.__after  : time.sleep  ( self.__after  ) 
-    @property
-    def before ( self ) :
-        """``before'': wait some time before the action"""
-        return self.__before    
-    @property
-    def after  ( self ) :
-        """``after'': wait some time after the action"""
-        return self.__after
-
-# =============================================================================
-## context manager that invokes <code>time.sleep</code> before and after action
-#  @code
-#  with wait ( after = 5 , before = 0 ) :
-#  ...
-#  @endcode
-def wait ( after = 0 , before = 0 ) :
-    """Context manager that invokes <code>time.sleep</code> before and after action
-    >>> with wait ( after = 5 , before = 0 ) :
-    >>> ...
-    """    
-    return Wait ( after = after , before = before )
-
 
 # =============================================================================
 ## "slow" looping over some iterable with delay for each step
@@ -507,133 +244,6 @@ def slow ( iterable , wait = 0 ) :
         if 0 < wait : time.sleep ( wait )
         
 # =============================================================================
-## the last index for laooping over TTRee/RooAbsData
-LAST_ENTRY  = ROOT.TVirtualTreePlayer.kMaxEntries
-## the last index for laooping over TTRee/RooAbsData
-ALL_ENTRIES = 0, LAST_ENTRY 
-# =============================================================================
-### Get the event range from first/last
-#   @code
-#   data = ...
-#   first, last = ...
-#   first, last = evt_range ( len ( data ) , first ,  last ) 
-#   @endcode
-def evt_range ( size , first = 0  , last = LAST_ENTRY ) :
-    """ Get the event range from first/last
-    >>> data = ...
-    >>> first, last = ...
-    >>>  first, last = evt_range ( len ( data ) , first ,  last ) 
-    """
-    assert isinstance ( size  , integer_types ) and 0 <= size , "evt_range: Invalid type of `size'!"
-    assert isinstance ( first , integer_types ) , "evt_range: Invalid type of `first' : %s " % type ( first ) 
-    assert isinstance ( last  , integer_types ) , "evt_range: Invalid type of `last'  : %s " % type ( last  ) 
-    ## 
-    if not size : return 0, 0         ## empty contained
-    # 
-    if    0 <= first < size           : pass 
-    elif       first < 0 and 0 < size : first += size
-    ## 
-    if    first <= last               : pass 
-    elif  last  < 0 and 0 <= size     : last  += size
-    #+
-    assert 0 <= first <= last , 'evt_range(size=%d,first=%d,last=%d): invalid event range!' % ( size , first , last )
-    # 
-    return first, last 
-# =============================================================================
-
-
-
-# =============================================================================
-## @class KeepCanvas
-#  helper class to keep the current canvas
-#  @code
-#  with KeepCanvas() :
-#  ... do something here 
-#  @endcode 
-class KeepCanvas(Wait) :
-    """Helper class to keep the current canvas
-    >>> with KeepCanvas() :
-    ... do something here 
-    """
-    def __init__ ( self , wait = 0 ) :
-        Wait.__init__ ( self , after = wait ) 
-        self.__old_canvas  = None 
-    def __enter__ ( self ) :
-        Wait.__enter__ ( self ) 
-        import ROOT
-        ## pad  = ROOT.TVirtualPad.Pad()
-        pad     = ROOT.Ostap.Utils.get_pad()  
-        cnv     = pad.GetCanvas()  if pad  else None 
-        self.__old_canvas = cnv if cnv else None 
-    def __exit__  ( self , *_ ) :
-        Wait.__exit__ ( self , *_ )         
-        if self.__old_canvas:
-            self.__old_canvas.cd()
-        self.__old_canvas = None             
-    @property
-    def old_canvas ( self ) :
-        """``old_canvas'': canvas to be preserved"""
-        return self.__old_canvas
-    
-# =============================================================================
-#  Keep the current canvas
-#  @code
-#  with keepCanvas() :
-#  ... do something here 
-#  @endcode
-def keepCanvas() :
-    """Keep the current canvas
-    >>> with keepCanvas() :
-    ... do something here
-    """
-    return KeepCanvas()
-
-
-# =============================================================================
-## @class InvisibleCanvas
-#  Use context ``invisible canvas''
-#  @code
-#  with InvisibleCanvas() :
-#  ... do somehing here 
-#  @endcode
-class InvisibleCanvas(KeepCanvas) :
-    """Use context ``invisible canvas''
-    >>> with InvisibleCanvas() :
-    ... do something here 
-    """
-    ## context manager: ENTER 
-    def __enter__ ( self ) :
-        ## start from keeping the current canvas 
-        KeepCanvas.__enter__ ( self )
-        ## create new canvas in batch mode 
-        with Batch( True ) : 
-            import ROOT 
-            self.batch_canvas = ROOT.TCanvas()
-            self.batch_canvas.cd ()
-            return self.canvas
-
-    ## context manager: EXIT
-    def __exit__ ( self , *_ ) :
-        if self.batch_canvas :
-            self.batch_canvas.Close() 
-            del self.batch_canvas             
-        KeepCanvas.__exit__ ( self , *_ )
-
-# =============================================================================
-## Use context ``invisible canvas''
-#  @code
-#  with invisibleCanvas() :
-#  ... do something here 
-#  @endcode
-def invisibleCanvas() :
-    """ Use context ``invisible canvas''
-    >>> with invisibleCanvas() :
-    ... do something here 
-    """
-    return InvisibleCanvas() 
-
-
-# =============================================================================
 ## @class KeepArgs
 #  context manager to keep/preserve sys.argv
 #  @code
@@ -641,7 +251,7 @@ def invisibleCanvas() :
 #    ...  
 #  @endcode 
 class KeepArgs(object) :
-    """Context manager to keep/preserve sys.argv
+    """ Context manager to keep/preserve sys.argv
     >>> with KeepArgs() :
     ...  
     """
@@ -664,66 +274,11 @@ class KeepArgs(object) :
 #    ...  
 #  @endcode
 def keepArgs() :
-    """Context manager to keep/preserve sys.argv
+    """ Context manager to keep/preserve sys.argv
     >>> with keepArgs() :
     ...  
     """
     return KeepArgs()
-
-# =============================================================================
-## EnableImplicitMT
-#  Context manager to enable/disable implicit MT in ROOT 
-#  @see ROOT::EnableImplicitMT 
-#  @see ROOT::DisableImplicitMT 
-#  @see ROOT::IsImplicitMTEnabled
-#  @code
-#  with ImplicitMT( True ) :
-#  ...
-#  @endcode
-class ImplicitMT(object) :
-    """Context manager to enable/disable implicit MT in ROOT 
-    >>> with ImplicitMT( True ) :
-        ...
-    - see ROOT::EnableImplicitMT 
-    - see ROOT::DisableImplicitMT 
-    - see ROOT::IsImplicitMTEnabled
-    """
-    def __init__  ( self , enable = True ) :
-
-        if   isinstance ( enable , bool ) : 
-            self.__enable   =        enable
-            self.__nthreads =        0
-        elif isinstance ( enable , int  ) and 0 <= enable : 
-            self.__enable   = bool ( enable ) 
-            self.__nthreads =        enable 
-        else :
-            raise  TypeError ( "ImplicitMT: invalid ``enable'' flag :%s/%s" % ( enable , type ( enable ) ) )
-
-    @property
-    def enable   ( self ) : return self.__enable
-    @property
-    def nthreads ( self ) : return self.__nthreads
-    
-    ## Context manager: ENTER 
-    def __enter__ ( self ) :
-            
-        self.__initial = ROOT.ROOT. IsImplicitMTEnabled ()
-        
-        if bool ( self.__initial ) == bool ( self.enable ) : pass 
-        elif self.enable : ROOT.ROOT.EnableImplicitMT  ( self.__nthreads )
-        else             : ROOT.ROOT.DisableImplicitMT ()
-
-        return self
-    
-    ## Context manager: EXIT
-    def __exit__ ( self , *_ ) :
-
-        _current = ROOT.ROOT.IsImplicitMTEnabled()
-
-        if   _current == self.__initial : pass
-        elif _current                   : ROOT.ROOT.DisableImplicitMT ()
-        else                            : ROOT.ROOT.EnableImplicitMT  ()
-            
 
 # =============================================================================
 ## create 'counted' function to know number of function calls
@@ -736,7 +291,7 @@ class ImplicitMT(object) :
 #  def fun2 ( ...  ) : return ...
 #  @endcode
 def counted ( f ):
-    """create 'counted' function to know number of function calls
+    """ Create 'counted' function to know number of function calls
 
     Example
     -------
@@ -753,24 +308,6 @@ def counted ( f ):
     wrapped.calls = 0
     return wrapped
 
-# =============================================================================
-## Context manager to enable/disable implicit MT in ROOT 
-#  @see ROOT::EnableImplicitMT 
-#  @see ROOT::DisableImplicitMT 
-#  @see ROOT::IsImplicitMTEnabled
-#  @code
-#  with implicitMT( True ) :
-#  ...
-#  @endcode
-def implicitMT ( enable = True ) :
-    """Context manager to enable/disable implicit MT in ROOT 
-    >>> with implicitMT( True ) :
-        ...
-    - see ROOT::EnableImplicitMT 
-    - see ROOT::DisableImplicitMT 
-    - see ROOT::IsImplicitMTEnabled
-    """
-    return ImplicitMT ( enable ) 
 
 # =============================================================================
 ## Return the path to an executable which would be run if the given <code>cmd</code> was called.
@@ -843,10 +380,12 @@ def local_which ( cmd, mode=os.F_OK | os.X_OK, path=None):
     return None
 
 # =============================================================================
-
-try :
+try : # =======================================================================
+    # =========================================================================
     from shutil import which
-except ImportError :    
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     which  = local_which 
 
 # =============================================================================
@@ -856,307 +395,11 @@ except ImportError :
 #  @endcode 
 #  @see https://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
 def cmd_exists ( command ) :
-    """Check the existence of certain command/executable
+    """ Check the existence of certain command/executable
     >>> if cmd_exists ( 'epstopdf' ) : ...
     
     """
     return which ( command ) is not None
-
-# =============================================================================
-## @class VRange
-#  Helper looper over the values between vmin and vmax :
-#  @code
-#  for v in VRange ( vmin = 0 , vmax = 5 , n = 100 ) :
-#  ... print ( v ) 
-#  @endcode 
-class VRange(object) :
-    """Helper looper over the values between vmin and vmax :
-    >>> for v in VRange ( vmin = 0 , vmax = 5 , n = 100 ) :
-    >>> ... print ( v ) 
-    """
-    def __init__ ( self , vmin , vmax , n = 100 , edges = True ) :
-        
-        assert isinstance ( n , integer_types ) and 0 < n,\
-               'VRange: invalid N=%s/%s' % ( n  , type ( n ) ) 
-        
-        self.__vmin  = min ( vmin , vmax )
-        self.__vmax  = max ( vmin , vmax ) 
-        self.__n     = n
-        self.__edges = True if edges else False  
-
-    @property
-    def edges ( self ) :
-        """`edges`: include edges?"""
-        return self.__edges
-    
-    @property
-    def vmin  ( self ) :
-        """`vmin' : minimal value"""
-        return self.__vmin
-    @property
-    def vmax  ( self ) :
-        """`vmax' : maximal value"""
-        return self.__vmax    
-    @property
-    def n ( self )  :
-        """`n' : number of steps"""
-        return self.__n
-
-    def __len__     ( self ) :
-
-        n = self.__n
-        e = self.__edges 
-        return n + 1 if e else n - 1 
-
-    def __iter__    ( self ) :
-        
-        n  = self.n 
-        fn = 1.0 / float ( n ) 
-        e  = self.edges
-
-        vmn = self.vmin
-        vmx = self.vmax
-        
-        if e : yield vmn
-
-        for i in range ( 1 , n ) :
-            f2 = i * fn
-            f1 = 1 - f2
-            yield vmn * f1 + f2 * vmx
-            
-        if e : yield vmx
-                
-# =============================================================================
-## loop over values between xmin and xmax 
-#  @code
-#  for x in vrange ( xmin , xmax , 200 ) :
-#         print (x) 
-#  @endcode
-def vrange ( vmin , vmax , n = 100 , edges = True ) :
-    """ Loop  over range of values between xmin and xmax 
-    >>> for v in vrange ( vmin , vmax , 200 ) :
-    ...                print (v) 
-    """
-    return VRange ( vmin , vmax , n , edges )
-
-# =============================================================================
-## @class LRange
-#  Helper looper over the values between vmin and vmax using log-steps 
-#  @code
-#  for v in LRange ( vmin = 1 , vmax = 5 , n = 100 ) :
-#  ... print ( v ) 
-#  @endcode 
-class LRange(VRange) :
-    """Helper looper over the values between vmin and vmax using log-steps
-    >>> for v in LRange ( vmin = 1 , vmax = 5 , n = 100 ) :
-    >>> ... print ( v ) 
-    """
-    def __init__ ( self , vmin , vmax , n = 100 , edges = True ) :
-        
-        assert 0 < vmin  and 0 < vmax,\
-           'LRange: invalid  non-positive vmin/ymax values: %s/%s' %  ( vmin , vmax )
-
-        super ( LRange , self ).__init__ ( vmin , vmax , n , edges ) 
-
-        self.__lmin = math.log10 ( self.vmin )
-        self.__lmax = math.log10 ( self.vmax )
-                
-    @property
-    def lmin  ( self ) :
-        """``lmin'' : log10(minimal value)"""
-        return self.__lmin
-    @property
-    def lmax  ( self ) :
-        """``lmax'' : log10(maximal value)"""
-        return self.__lmax    
-
-    def __iter__    ( self ) :
-
-        n  = self.n 
-        fn = 1.0 / float ( n )
-        e  = self.edges
-
-        lmn = self.__lmin
-        lmx = self.__lmax
-        
-        if e : yield self.vmin
-        
-        for i in range ( 1 , n  ) :
-            #
-            f2 = i * fn
-            f1 = 1 - f2
-            yield 10.0 ** ( lmn * f1 + f2 * lmx ) 
-            
-        if e : yield self.vmax
-
-# =============================================================================
-## loop over values between xmin and xmax in log-scale 
-#  @code
-#  for x in log_range ( xmin , xmax , 200 ) :
-#         print (x) 
-#  @endcode
-def log_range ( vmin , vmax , n = 100 , edges = True ) :
-    """Loop over values between xmin and xmax in log-scale 
-    >>> for x in log_range ( xmin , xmax , 200 ) :
-    >>>      print (x) 
-    """
-    return LRange ( vmin , vmax , n , edges )
-
-# =============================================================================
-## loop over values between xmin and xmax in log-scale 
-#  @code
-#  for v in lrange ( vmin , vmax , 200 ) : ## ditto 
-#         print (v) 
-#  @endcode
-def lrange ( vmin , vmax , n = 100 , edges = True ) :
-    """:oop over values between vmin and vmax in log-scale 
-    >>> for v in lrange ( vmin , vmax , 200 ) :  ## ditto 
-    >>>      print (v) 
-    """
-    return LRange ( vmin , vmax , n , edges )
-
-# =============================================================================
-## @class CRange
-#  Generate sequence of numbers between vmin and vmax according to Chebyshev nodes
-#  It can be useful for e.g. interpolation nodes
-#  @code
-#  for c in CRange(-1,1,10) : print ( c ) 
-#  @endcode 
-class CRange(VRange):
-    """ Generate sequence of numbers between vmin and vmax accrording to Chebyshev nodes
-    It can be useful for e.g. interpolation nodes
-    >>> for c in CRange(-1,1,10) : print ( c ) 
-    """
-    __nodes = {}
-    
-    ## number of nodes 
-    def __len__     ( self ) : return self.n 
-    ## 
-    def __iter__    ( self ) :
-
-        n     = self.n
-        
-        if not n in self.__nodes :
-            nodes = array.array ( 'd' , n * [ 0.0 ] )
-            n2    = n // 2 
-            pn    = math.pi / ( 2 * n )
-            for k in range ( n2 ) :
-                vv  = math.cos ( ( 2 * k + 1 ) * pn )
-                nodes [     k     ] =  vv
-                nodes [ n - k - 1 ] = -vv
-            self.__nodes [ n ] = nodes 
-
-        nodes = self.__nodes [ n ]        
-        mid   = 0.5 * ( self.vmin + self.vmax )
-        scale = 0.5 * ( self.vmin - self.vmax )              
-        for x in nodes :             
-            yield mid + scale * x
-
-# =============================================================================
-### Generate sequence of numbers between vmin and vmax accrording to Chebyshev nodes
-#  It can be useful for e.g. interpolation nodes
-#  @code
-#  for c in crange(-1,1,10) : print ( c ) 
-#  @endcode 
-def crange ( vmin , vmax , n = 10 ) :
-    """ Generate sequence of numbers between vmin and vmax accrording to Chebyshev nodes
-    It can be usefor for e.g. interpolation nodes
-    >>> for c in crange(-1,1,10) : print ( c ) 
-    """
-    return CRange ( vmin , vmax , n )
-
-# =============================================================================
-## @class RRange
-#  Helper looper over the random values between vmin and vmax
-#  @code
-#  for v in RRange ( vmin = 1 , vmax = 5 , n = 100 , edges = True  ) :
-#  ... print ( v ) 
-#  @endcode 
-class RRange(VRange) :
-    """Helper looper over the values between vmin and vmax using log-steps
-    >>> for v in RRange ( vmin = 1 , vmax = 5 , n = 100 , edges = True ) :
-    >>> ... print ( v ) 
-    """
-    def __iter__    ( self ) :
-        
-        n   = self.n
-        vmn = self.vmin
-        vmx = self.vmax
-        e   = self.edges
-
-        if e : yield vmn
-        
-        for i in range ( 1 , n ) :
-            yield random.uniform ( vmn, vmx )
-
-        if e : yield vmx
-            
-# =============================================================================
-## Generate sequence of random numbers between vmin and vmax
-#  @code
-#  for c in rrange(-1,1,10) : print ( c ) 
-#  @endcode 
-def rrange ( vmin , vmax , n = 10 , edges = True  ) :
-    """ Generate random sequence of numbers between vmin and vmax 
-    >>> for c in crange(-1,1,10, edges = True ) : print ( c ) 
-    """
-    return RRange ( vmin , vmax , n , edges )
-
-# =============================================================================
-## @class PRange
-#  Helper looper over the values between vmin and vmax with non=unifomr power-law) distributed poinnts 
-#  @code
-#  for v in PRange ( vmin = 1 , vmax = 5 , n = 100 , power = 2 ) , edges = True :
-#  ... print ( v ) 
-#  @endcode 
-class PRange(VRange) :
-    """Helper looper over the values between vmin and vmax with non-unifomr  (power-low) points 
-    >>> for v in PRange ( vmin = 1 , vmax = 5 , n = 100 , power = 2 , edges = True ) :
-    >>> ... print ( v ) 
-    """
-    def __init__ ( self , vmin , vmax , n = 100 , power = 2 , edges = True ) :
-        
-        assert isinstance ( power , num_types ) and 0 < power , 'PRange: Invalid powr %s' % power  
-
-        super ( PRange , self ).__init__ ( vmin , vmax , n , edges ) 
-
-        self.__power = power
-
-    @property
-    def power ( self ) :
-        """`power`: the power-low exponent """
-        return self.__power
-    
-    def __iter__    ( self ) :
-
-        n     = self.n 
-        fn    = 1.0 / float ( n ) 
-        e     = self.edges
-        
-        p     = self.power
-        vmn   = self.vmin
-        vmx   = self.vmax
-        delta = vmx - vmn
-        
-        if e : yield vmn
-
-        for i in range ( 1 , n ) :
-            x = i * fn
-            yield vmn + delta * ( x ** p ) 
-
-        if e : yield vmx
-
-
-# =============================================================================
-## Loop over sequence of non-uniformly distributed  (power-low) unmpers
-#  @code
-#  for c in prange(-1,1,10, power = 2 , edges = True ) : print ( c ) 
-#  @endcode 
-def prange ( vmin , vmax , n = 10 , power = 2 , edges = True  ) :
-    """ Loop over the sequence of non-unifrmy distribited (power-low) numbers 
-    >>> for c in prange(-1,1,10, power = 2 , edges = True  ) : print ( c ) 
-    """
-    return PRange ( vmin , vmax , n , power = power  , edges = edges )
 
 
 # =============================================================================
@@ -1241,7 +484,7 @@ def split_n_range ( low , high , num ) :
 ## use accumulae form itertools
 from itertools import accumulate
 # ====================================================================================
-## use choinced from random 
+## use choiced from random 
 choices = random.choices
 # ====================================================================================
 ## Generate some random name of given name
@@ -1489,7 +732,7 @@ def make_iterable ( what , default = None , size = -1 ) :
 #  @param files  list of filenames
 #  @return checksum for these files 
 def checksum_files ( *files ) :
-    """Calculate SHA512-checksum for the files
+    """ Calculate SHA512-checksum for the files
     >>> s =  checksum_files ( 'a.txt', 'b.bin' ) 
     Non-existing files are ignored 
     - see `hashlib`
@@ -1730,7 +973,7 @@ class CallThem(object) :
 ## @class NumCalls
 #  Count a number of  times a callable object is invoked
 class NumCalls (object):
-    """Count a number of  times a callable object is invoked"""
+    """ Count a number of  times a callable object is invoked"""
     def __init__ ( self , func ) :
         self.__func  = func
         self.__count = 0
@@ -1747,244 +990,13 @@ class NumCalls (object):
 #  Count a number of  times a callable object is invoked
 numcalls = NumCalls
 
-
-# ==============================================================================
-## @class RandomSeed 
-#  Context manager to set/keep seed/state of PYTHON random generator
-#  @code
-#  import random 
-#  with RandomSeed ( 'this is seed' ) :
-#  ... for i in range ( 10 ) : print ( i, random.uniform (0,1) )
-#  @endcode
-#  Seed can be None, int,float,string, bytes, .
-class RandomSeed(object) :
-    """Context manager to set/keep seed/state of PYTHON random generator
-    >>> import random 
-    >>> with RandomSeed ( 'this is seed' ) :
-    >>> ... for i in range ( 10 ) : print ( i, random.uniform (0,1) )
-    - Seed can be None, int,float,string, bytes, .
-    """
-    def __init__ ( self , seed = None )  :
-        
-        self.__seed  = seed
-        self.__state = None  
-
-    def __enter__  ( self ) :
-        
-        self.__state = random.getstate ()
-        random.seed ( self.__seed )
-        return self
-    
-    def __exit__   ( self , *_ ) :
-        random.setstate ( self.__state )
-        
-    @property
-    def seed ( self ) :
-        """'seed' : the seed for random
-        """
-        return self.__seed 
-    
-# ==============================================================================
-## Context manager to set/keep seed/state of random generator
-#  @code
-#  import random 
-#  with randomSeed ( 'this is seed' ) :
-#  ... for i in range ( 10 ) : print ( i, random.uniform (0,1) )
-#  @endcode
-#  Seed can be None, int,float,string, bytes, ... 
-def randomSeed ( seed = None ) :
-    """Context manager to set/keep seed/state of random generator
-    >>> import random 
-    >>> with randomSeed ( 'this is seed' ) :
-    >>> ... for i in rnage ( 10 ) : print ( i, random.uniform (0,1) )
-    - Seed can be None, int,float,string, bytes, ...
-    """
-    return RandomSeed ( seed )
-
-# ==============================================================================
-## Context manager to set/keep seed/state of random generator
-#  @code
-#  import random 
-#  with random_seed ( 'this is seed' ) :
-#  ... for i in range ( 10 ) : print ( i, random.uniform (0,1) )
-#  @endcode
-#  Seed can be None, int,float,string, bytes, ...
-random_seed = randomSeed     
-
-# ==============================================================================
-## @class RootRandomSeed 
-#  Context manager to set/keep seed/state of ROOT random generator
-#  @code
-#  import random 
-#  with RootRandomSeed ( 'this is seed' ) :
-#  ... for i in range ( 10 ) : print ( i, ROOT.gRandom.Rndm () )
-#  @endcode
-#  Seed can be None, int,float,string, bytes, .
-class RootRandomSeed(object) :
-    """Context manager to set/keep seed/state of ROOT random generator
-    >>> import random 
-    >>> with RootRandomSeed ( 'this is seed' ) :
-    >>> ... for i in range ( 10 ) : print ( i, ROOT.gRandom.Rndm() )
-    - Seed can be None, int,float,string, bytes or any hashable object 
-    """
-    def __init__ ( self , seed = None )  :
-        
-        if   seed is None              : self.__seed = 0
-        elif isinstance ( seed , int ) : self.__seed = seed
-        else                           : self.__seed = hash ( seed ) 
-        
-        self.__old  = 0   
-        
-    def __enter__  ( self ) :
-
-        if ROOT.gRandom :
-            self.__old = ROOT.gRandom.GetSeed()
-            ROOT.gRandom.SetSeed ( self.__seed ) 
-            
-        return self
-    
-    def __exit__   ( self , *_ ) :
-        if ROOT.gRandom :
-            ROOT.gRandom.SetSeed ( self.__old ) 
-        
-    @property
-    def seed ( self ) :
-        """'seed' : the actual seed for random
-        """
-        return self.__seed 
-
-
-# ==============================================================================
-## get the total  size of files/directories
-#  @code
-#  size = file_size ( 'a.f' , 'b.f'  'c.dir' ) 
-#  @endfcode
-def file_size ( *files ) :
-    """ Get the total  size of files/directories
-    >>> size = file_size ( 'a.f' , 'b.f'  'c.dir' ) 
-    """
-    size = 0
-    for name in files :
-        if not os.path.exists ( name ) : continue 
-        elif   os.path.islink ( name ) : continue 
-        elif   os.path.isfile ( name ) : size += os.path.getsize ( name )
-        elif   os.path.isdir  ( name ) :
-            for dirpath , dirnames , filenames in os.walk ( name ) :
-                for f in filenames:
-                    fp = os.path.join ( dirpath , f )
-                    if not os.path.islink ( fp ):
-                        size += os.path.getsize ( fp )
-    return size
-
-# ==============================================================================
-## Context manager to set/keep seed/state of ROOT random generator
-#  @code
-#  import random 
-#  with rootRandomSeed ( 'this is seed' ) :
-#  ... for i in range ( 10 ) : print ( i, ROOT.gRandom.Rndm () )
-#  @endcode
-#  Seed can be None, int,float,string, bytes, .
-def rootRandomSeed ( seed = None ) :
-    """Context manager to set/keep seed/state of ROOT random generator
-    >>> import random 
-    >>> with rootRandomSeed ( 'this is seed' ) :
-    >>> ... for i in range ( 10 ) : print ( i, ROOT.gRandom.Rndm() )
-    - Seed can be None, int,float,string, bytes or any hashable object 
-    """
-    return RootRandomSeed ( seed ) 
-
-# ==============================================================================
-## Context manager to set/keep seed/state of ROOT random generator
-#  @code
-#  import random 
-#  with rootRandomSeed ( 'this is seed' ) :
-#  ... for i in range ( 10 ) : print ( i, ROOT.gRandom.Rndm () )
-#  @endcode
-#  Seed can be None, int,float,string, bytes or any hashable object 
-root_random_seed = rootRandomSeed
-
-
-# ==============================================================================
-## @class RooRandomSeed 
-#  Context manager to set/keep seed/state of RooFit random generator
-#  @code
-#  import random 
-#  with RooRandomSeed ( 'this is seed' ) :
-#  ... for i in range ( 10 ) : print ( i, ROOT.RooRandom.uniform () )
-#  @endcode
-#  Seed can be None, int,float,string, bytes, .
-class RooRandomSeed(object) :
-    """Context manager to set/keep seed/state of ROOT random generator
-    >>> import random 
-    >>> with RooRandomSeed ( 'this is seed' ) :
-    >>> ... for i in range ( 10 ) : print ( i, ROOT.RooRandom.uniform() )
-    - Seed can be None, int,float,string, bytes or any hashable object
-    """
-
-    def __init__ ( self , seed = None )  :
-        
-        if   seed is None              : self.__seed = 0
-        elif isinstance ( seed , int ) : self.__seed = seed
-        else                           : self.__seed = hash ( seed ) 
-        
-        self.__old  = 0   
-        
-
-    def __enter__  ( self ) :
-        
-        rg = ROOT.RooRandom.randomGenerator() 
-        if rg :
-            self.__old = rg.GetSeed()
-            rg.SetSeed ( self.__seed ) 
-            
-        return self
-    
-    def __exit__   ( self , *_ ) :
-        
-        rg = ROOT.RooRandom.randomGenerator() 
-        if rg : rg.SetSeed ( self.__old ) 
-        
-    @property
-    def seed ( self ) :
-        """'seed' : the actual seed for random
-        """
-        return self.__seed 
-
-# ==============================================================================
-## Context manager to set/keep seed/state of RooFit random generator
-#  @code
-#  import random 
-#  with rooRandomSeed ( 'this is seed' ) :
-#  ... for i in range ( 10 ) : print ( i, ROOT.RooRandom.uniform () )
-#  @endcode
-#  Seed can be None, int,float,string, bytes, .
-def rooRandomSeed ( seed = None ) :
-    """Context manager to set/keep seed/state of RooFit random generator
-    >>> import random 
-    >>> with rooRandomSeed ( 'this is seed' ) :
-    >>> ... for i in range ( 10 ) : print ( i, ROOT.RooRandom.uniform() )
-    - Seed can be None, int,float,string, bytes or any hashable object 
-    """
-    return RooRandomSeed ( seed ) 
-
-# ==============================================================================
-## Context manager to set/keep seed/state of RooFit random generator
-#  @code
-#  import random 
-#  with roo_random_seed ( 'this is seed' ) :
-#  ... for i in range ( 10 ) : print ( i, ROOT.RooRandom.uniform () )
-#  @endcode
-#  Seed can be None, int,float,string, bytes or any hashable object 
-roo_random_seed = rooRandomSeed
-
-
 # ==============================================================================
 ## Copy file with the progress
 #  @code
 #  copy_with_progress ( 'inputfilename.ext' , 'outputfilename.ext' ) 
 #  @endcode
 def copy_with_progress ( source  , destination ) :
-    """Copy file with progress
+    """ Copy file with progress
     >>> copy_with_progress ( 'inputfilename.ext' , 'outputfilename.ext' ) 
     """
     assert os.path.exists ( source ) and os.path.isfile ( source ), \
@@ -2020,122 +1032,6 @@ def copy_with_progress ( source  , destination ) :
         "Invalid ``destination'' %s " % destination
     
     return os.path.realpath ( destination )
-
-# =========================================================================
-## Has any of the symbols?
-def has_symbol ( expression , symbols ) :
-    """Has any of the symbols?"""
-    return any ( s in expression for s in symbols ) 
-# =========================================================================
-## markers of the math formulas 
-math_symbols = ' +-*/=><()[]^%&|'
-## Is this string expression represend math formula?
-def is_formula ( expr , symbols = math_symbols ) :
-    """Is this string expression represend math formula?"""
-    return has_symbol ( expr.strip() , symbols ) 
-
-# =========================================================================
-## merge all files using <code>hadd</code> script from ROOT
-#  @param output  name of the output merged file, if None,
-#                 the temporary name will be generated,
-#                 that will be deleted at the end of the session
-#  @param opts   options for command <code>hadd</code>
-#  @return the name of the merged file
-# OPTIONS:
-# -a                                   Append to the output
-# -k                                   Skip corrupt or non-existent files, do not exit
-# -T                                   Do not merge Trees
-# -O                                   Re-optimize basket size when merging TTree
-# -v                                   Explicitly set the verbosity level: 0 request no output, 99 is the default
-# -j                                   Parallelize the execution in multiple processes
-# -dbg                                 Parallelize the execution in multiple processes in debug mode (Does not delete partial files stored inside working directory)
-# -d                                   Carry out the partial multiprocess execution in the specified directory
-# -n                                   Open at most 'maxopenedfiles' at once (use 0 to request to use the system maximum)
-# -cachesize                           Resize the prefetching cache use to speed up I/O operations(use 0 to disable)
-# -experimental-io-features            Used with an argument provided, enables the corresponding experimental feature for output trees
-# -f                                   Gives the ability to specify the compression level of the target file(by default 4) 
-# -fk                                  Sets the target file to contain the baskets with the same compression
-#                                      as the input files (unless -O is specified). Compresses the meta data
-#                                      using the compression level specified in the first input or the
-#                                      compression setting after fk (for example 206 when using -fk206)
-# -ff                                  The compression level use is the one specified in the first input
-# -f0                                  Do not compress the target file
-# -f6                                  Use compression level 6. (See TFile::SetCompressionSettings for the support range of value.)  
-def hadd ( files , output = None , dir = None , opts = "-ff -O" ) :
-    """Merge all files using <code>hadd</code> script from ROOT
-    - `output`  name of the output merged file
-    - `opts`   options for command <code>hadd</code>
-    It returns the name of the merged file
-    
-    If no output file name is specified, the temporary name
-    will be generate and the temporary file will be deleted
-    at the end of the session
-    
-    OPTIONS:
-    # -a                                   Append to the output
-    # -k                                   Skip corrupt or non-existent files, do not exit
-    # -T                                   Do not merge Trees
-    # -O                                   Re-optimize basket size when merging TTree
-    # -v                                   Explicitly set the verbosity level: 0 request no output, 99 is the default
-    # -j                                   Parallelize the execution in multiple processes
-    # -dbg                                 Parallelize the execution in multiple processes in debug mode (Does not delete partial files stored inside working directory)
-    # -d                                   Carry out the partial multiprocess execution in the specified directory
-    # -n                                   Open at most 'maxopenedfiles' at once (use 0 to request to use the system maximum)
-    # -cachesize                           Resize the prefetching cache use to speed up I/O operations(use 0 to disable)
-    # -experimental-io-features            Used with an argument provided, enables the corresponding experimental feature for output trees
-    # -f                                   Gives the ability to specify the compression level of the target file(by default 4) 
-    # -fk                                  Sets the target file to contain the baskets with the same compression
-    #                                      as the input files (unless -O is specified). Compresses the meta data
-    #                                      using the compression level specified in the first input or the
-    #                                      compression setting after fk (for example 206 when using -fk206)
-    # -ff                                  The compression level use is the one specified in the first input
-    # -f0                                  Do not compress the target file
-    # -f6                                  Use compression level 6. (See TFile::SetCompressionSettings for the support range of value.)                            
-    """
-
-    if isinstance ( files , string_types ) : files = [ files ]
-
-    import glob
-    all_files = []
-    for p in files :
-        all_files += [ f for f in glob.iglob ( p ) ]
-
-    all_files = list  ( set ( all_files ) )
-    all_files.sort()
-    all_files = tuple ( all_files )
-    
-    if not output :
-        import ostap.utils.cleanup as CU
-        suffix = '.root'
-        if files :
-            base , suffix = os.path.splitext  ( all_files [0] )
-            if base : base    = os.path.basename ( base   )
-            if base : suffix  = '-%s%s' % ( base , suffix )            
-        output = CU.CleanUp.tempfile ( prefix = 'ostap-hadd-merged-' , suffix = suffix , dir = dir )
-            
-                            
-    cargs    = [ 'hadd' ] + opts.split() + [ output ] + [ f for f in all_files ]
-
-    import subprocess
-    subprocess.check_call ( cargs )
-    
-    if os.path.exists ( output ) and os.path.isfile ( output ) :
-        return output 
-    
-    raise IOError ( "The output file %s does not exist!" % output )
-
-
-# =============================================================================
-def hadd2 ( args ) :
-
-    if   isinstance ( args , string_types     ) : return hadd (  args )
-    elif isinstance ( args , listlike_types   ) \
-         and all ( ( isinstance ( i , string_types ) and i ) for i in args ) :
-        return hadd ( args )    
-    elif isinstance ( args , dictlike_types   ) :
-        return hadd ( **args )
-
-    return hadd  ( *args ) 
 
 
 # =============================================================================

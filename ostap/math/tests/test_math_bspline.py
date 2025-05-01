@@ -9,11 +9,11 @@
 """ Test module for ostap/math/bspline.py
 """
 # ============================================================================= 
-from   ostap.core.core       import Ostap, SE 
-from   ostap.utils.timing    import timing 
-from   ostap.plotting.canvas import use_canvas
-from   ostap.utils.utils     import wait, batch_env
-from   ostap.math.models     import f1_draw
+from   ostap.core.core        import Ostap, SE 
+from   ostap.utils.timing     import timing 
+from   ostap.plotting.canvas  import use_canvas
+from   ostap.utils.root_utils import batch_env
+from   ostap.math.models      import f1_draw
 import ostap.math.models 
 import ostap.math.bspline
 import random  
@@ -66,7 +66,7 @@ def test_solve ():
 
     functions.add ( bs )
 
-    with wait ( 3 ) , use_canvas ( 'test_solve' ) :
+    with use_canvas ( 'test_solve' , wait = 1 ) :
         bp.draw (          linecolor = 2 )
         bs.draw ( 'same' , linecolor = 4 )
         
@@ -95,7 +95,7 @@ def test_interpolation ():
 
     functions.add ( bs )
 
-    with wait ( 3 ) , use_canvas ( 'test_interpolation' ) :
+    with use_canvas ( 'test_interpolation' , wait = 1 ) :
         f1_draw ( fun , xmin = 0 , xmax = 1 , linecolor = 2 ) 
         bs.draw ( 'same' , linecolor = 4 )
         
@@ -121,7 +121,7 @@ def test_approximation  ():
 
     functions.add ( bs )
 
-    with wait ( 3 ) , use_canvas ( 'test_approximation' ) :
+    with use_canvas ( 'test_approximation' , wait = 1 ) :
         f1_draw ( fun , xmin = 0 , xmax = 1 , linecolor = 2 ) 
         bs.draw ( 'same' , linecolor = 4 )
 

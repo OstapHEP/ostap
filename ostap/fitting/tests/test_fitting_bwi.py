@@ -11,10 +11,10 @@
 # ============================================================================= 
 from   ostap.core.core         import Ostap
 from   ostap.utils.timing      import timing
-from   ostap.utils.utils       import wait
 from   ostap.plotting.canvas   import use_canvas
 from   ostap.fitting.variables import SETVAR 
-from   ostap.utils.utils       import vrange, batch_env  
+from   ostap.utils.ranges      import vrange
+from   ostap.utils.root_utils  import batch_env  
 import ostap.fitting.models    as     Models 
 import ostap.io.zipshelve      as     DBASE
 import ostap.logger.table      as     T 

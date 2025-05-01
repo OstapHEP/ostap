@@ -15,7 +15,7 @@ __all__    = () ## nothing to import
 from   ostap.core.core          import cpp, VE, dsID, rooSilent 
 from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.root_utils   import batch_env 
 from   ostap.logger.colorized   import attention
 from   ostap.fitting.models     import ( Hagedorn_pdf  ,
                                          Tsallis_pdf   ,
@@ -91,8 +91,7 @@ def test_hagedorn ( ) :
     else :
         logger.info    ('%s: fit result\n%s' % ( title , table ) )
 
-    with wait ( 2 ) , use_canvas ( 'Hagedorn model' ) :
-        model.draw ( dataset ) 
+    with use_canvas ( 'Hagedorn model' , wait = 1 ) : model.draw ( dataset ) 
 
     models.add ( model )
 
@@ -125,8 +124,7 @@ def test_tsallis ( ) :
     else :
         logger.info    ('%s: fit result\n%s' % ( title , table ) )
 
-    with wait ( 2 ) , use_canvas ( 'Tsallis model' ) :
-        model.draw ( dataset ) 
+    with use_canvas ( 'Tsallis model' , wait = 1 ) : model.draw ( dataset ) 
 
     models.add ( model )
 
@@ -158,8 +156,7 @@ def test_qgsm  ( ) :
     else :
         logger.info    ('%s: fit result\n%s' % ( title , table ) )
 
-    with wait ( 2 ) , use_canvas ( 'QGSM model' ) :
-        model.draw ( dataset ) 
+    with use_canvas ( 'QGSM model' , wait = 1 ) : model.draw ( dataset ) 
 
     models.add ( model )
 

@@ -18,7 +18,7 @@ from   ostap.fitting.efficiency import Efficiency1D
 from   ostap.fitting.variables  import FIXVAR 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.root_utils   import batch_env 
 from   ostap.logger.logger      import attention 
 import ostap.fitting.models     as     Models 
 import ROOT, random, math 
@@ -140,7 +140,7 @@ def test_eff_PDF () :
         logger.info ( "Compare with true efficiency (%s)\n%s" % ( title , make_table (
             eff2 , title = title ) ) ) 
         
-        with wait ( 2 ) , use_canvas ( 'test_eff_PDF_M%d' % power) : 
+        with use_canvas ( 'test_eff_PDF_M%d' % power , wait = 1 ) : 
             f2     = eff2.draw  ( ds , nbins = 25 )
             
         funs.add ( effPdf )
@@ -178,7 +178,7 @@ def test_eff_BP () :
         logger.info ( "Compare with true efficiency (%s)\n%s" % ( title , make_table (
             eff2 , title = title ) ) ) 
         
-        with wait ( 2 ) , use_canvas ( 'test_eff_BP_PB%s' % power  ) : 
+        with use_canvas ( 'test_eff_BP_PB%s' % power , wait = 1 ) : 
             f2     = eff2.draw  ( ds , nbins = 25 )
             
         funs.add ( f    ) 
@@ -210,7 +210,7 @@ def test_eff_MP () :
         logger.info ( "Compare with true efficiency (%s)\n%s" % ( title , make_table (
             eff2 , title = title ) ) ) 
         
-        with wait ( 2 ) , use_canvas ( 'test_eff_MP_MP%d' % power ) : 
+        with use_canvas ( 'test_eff_MP_MP%d' % power , wait = 1 ) : 
             f2     = eff2.draw  ( ds , nbins = 25 )
             
         funs.add ( f    ) 
@@ -241,7 +241,7 @@ def test_eff_BS () :
         logger.info ( "Compare with true efficiency (%s)\n%s" % ( title , make_table (
             eff2 , title = title ) ) ) 
         
-        with wait ( 2 ) , use_canvas ( 'test_eff_BS_%s' % power  ) : 
+        with use_canvas ( 'test_eff_BS_%s' % power , wait = 1 ) : 
             f2     = eff2.draw  ( ds , nbins = 25 )
         
         funs.add ( f      )
@@ -351,7 +351,7 @@ def test_eff_FUN () :
         eff2 , title = 'using Fnu1D') )
 
     
-    with wait ( 2 ) , use_canvas ( 'test_eff_FUN' ) : 
+    with use_canvas ( 'test_eff_FUN' , wait = 1 ) : 
         f2     = eff2.draw  ( ds , nbins = 25 )
     
     funs.add ( X    )

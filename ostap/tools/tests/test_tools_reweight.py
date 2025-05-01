@@ -12,7 +12,7 @@
 from   ostap.utils.timing     import timing
 from   ostap.logger.colorized import attention, allright
 from   ostap.plotting.canvas  import use_canvas
-from   ostap.utils.utils      import batch_env 
+from   ostap.utils.root_utils import batch_env 
 from   ostap.utils.cleanup    import CleanUp
 from   ostap.histos.histos    import h1_axis 
 import ostap.io.zipshelve     as     DBASE

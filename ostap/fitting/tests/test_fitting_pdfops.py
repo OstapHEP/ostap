@@ -16,7 +16,7 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.utils.timing        import timing
 from   ostap.plotting.canvas     import use_canvas
-from   ostap.utils.utils         import wait, batch_env 
+from   ostap.utils.root_utils    import batch_env 
 from   ostap.fitting.models      import Gauss_pdf 
 from   ostap.fitting.resolution  import ResoGauss 
 from   ostap.math.math_ve        import *
@@ -58,9 +58,9 @@ def test_pdfops_1 ( ) :
     logger.info ( 'gy       : %s' % gy )
     logger.info ( 'gz       : %s' % gz )
     
-    with wait ( 1 ), use_canvas ( 'test_pdfops_1:%s' % gx.name ) :  gx.draw ()
-    with wait ( 1 ), use_canvas ( 'test_pdfops_1:%s' % gy.name ) :  gx.draw ()
-    with wait ( 1 ), use_canvas ( 'test_pdfops_1:%s' % gz.name ) :  gx.draw ()
+    with use_canvas ( 'test_pdfops_1:%s' % gx.name , wait = 1 ) :  gx.draw ()
+    with use_canvas ( 'test_pdfops_1:%s' % gy.name , wait = 1 ) :  gx.draw ()
+    with use_canvas ( 'test_pdfops_1:%s' % gz.name , wait = 1 ) :  gx.draw ()
 
     gxy = gx*gy
     gyz = gy*gz
@@ -76,8 +76,8 @@ def test_pdfops_1 ( ) :
 
     for g in ( gxy , gyz , gxz ) :
 
-        with wait ( 1 ) , use_canvas ( 'test_pdfops_1:%s.draw1' % g.name ) :  g.draw1 ()
-        with wait ( 1 ) , use_canvas ( 'test_pdfops_1:%s.draw2' % g.name ) :  g.draw2 ()
+        with use_canvas ( 'test_pdfops_1:%s.draw1' % g.name , wait = 1 ) :  g.draw1 ()
+        with use_canvas ( 'test_pdfops_1:%s.draw2' % g.name , wait = 1 ) :  g.draw2 ()
         
     gxyz = gx*gy*gz
     gxyy = gx*gy*gy
@@ -90,17 +90,17 @@ def test_pdfops_1 ( ) :
     logger.info ( 'gx*gx*gx : %s' % gxxx )
 
     
-    with wait ( 1 ) , use_canvas ( 'test_pdfops_1:%s.draw1' % gxyz.name ) :  gxyz.draw1 ()
-    with wait ( 1 ) , use_canvas ( 'test_pdfops_1:%s.draw2' % gxyz.name ) :  gxyz.draw2 ()
-    with wait ( 1 ) , use_canvas ( 'test_pdfops_1:%s.draw3' % gxyz.name ) :  gxyz.draw3 ()
+    with use_canvas ( 'test_pdfops_1:%s.draw1' % gxyz.name , wait = 1 ) :  gxyz.draw1 ()
+    with use_canvas ( 'test_pdfops_1:%s.draw2' % gxyz.name , wait = 1 ) :  gxyz.draw2 ()
+    with use_canvas ( 'test_pdfops_1:%s.draw3' % gxyz.name , wait = 1 ) :  gxyz.draw3 ()
 
-    with wait ( 1 ) , use_canvas ( 'test_pdfops_1:%s.draw1' % gxyy.name ) :  gxyy.draw1 ()
-    with wait ( 1 ) , use_canvas ( 'test_pdfops_1:%s.draw2' % gxyy.name ) :  gxyy.draw2 ()
+    with use_canvas ( 'test_pdfops_1:%s.draw1' % gxyy.name , wait = 1 ) :  gxyy.draw1 ()
+    with use_canvas ( 'test_pdfops_1:%s.draw2' % gxyy.name , wait = 1 ) :  gxyy.draw2 ()
 
-    with wait ( 1 ) , use_canvas ( 'test_pdfops_1:%s.draw1' % gxyx.name ) :  gxyx.draw1 ()
-    with wait ( 1 ) , use_canvas ( 'test_pdfops_1:%s.draw2' % gxyx.name ) :  gxyx.draw2 ()
+    with use_canvas ( 'test_pdfops_1:%s.draw1' % gxyx.name , wait = 1 ) :  gxyx.draw1 ()
+    with use_canvas ( 'test_pdfops_1:%s.draw2' % gxyx.name , wait = 1 ) :  gxyx.draw2 ()
 
-    with wait ( 1 ) , use_canvas ( 'test_pdfops_1:%s.draw'  % gxxx.name ) :  gxxx.draw  ()
+    with use_canvas ( 'test_pdfops_1:%s.draw'  % gxxx.name , wait = 1 ) :  gxxx.draw  ()
 
     pdfs.add ( gxyz ) 
     pdfs.add ( gxyy ) 
@@ -118,19 +118,19 @@ def test_pdfops_2 ( ) :
     ## resoltuion object
     reso = ResoGauss ( 'R' , xvar = x , sigma = 1 )
 
-    with wait ( 1 ) , use_canvas ( 'test_pdfops_2/0: original' ) :  g0.draw ()
+    with use_canvas ( 'test_pdfops_2/0: original' , wait = 1 ) :  g0.draw ()
 
     g1 = g0 % reso
-    with wait ( 1 ) , use_canvas ( 'test_pdfops_2/1: %s' % g1.name ) :  g1.draw ()
+    with use_canvas ( 'test_pdfops_2/1: %s' % g1.name, wait = 1  ) :  g1.draw ()
 
     g2 = g0 % 0.5
-    with wait ( 1 ) , use_canvas ( 'test_pdfops_2/2: %s' % g2.name ) :  g2.draw ()
+    with use_canvas ( 'test_pdfops_2/2: %s' % g2.name , wait = 1 ) :  g2.draw ()
 
     ## g3 = g0 % ( 0.5 , 0.1 , 1.0 ) 
-    ## with wait ( 1 ) , use_canvas ( 'test_pdfops_2/3: %s' % g3.name ) :  g3.draw ()
+    ## with use_canvas ( 'test_pdfops_2/3: %s' % g3.name , wait = 1 ) :  g3.draw ()
 
     ## g4 = ( 0.5 , 0.1 , 1.0 ) % g0  
-    ## with wait ( 1 ) , use_canvas ( 'test_pdfops_2/4: %s' % g4.name ) :  g4.draw ()
+    ## with use_canvas ( 'test_pdfops_2/4: %s' % g4.name , wait = 1 ) :  g4.draw ()
 
         
     pdfs.add ( g0   ) 

@@ -12,7 +12,7 @@
 #  @date   2013-02-10
 #  
 # =============================================================================
-"""Module with some simple but useful utilities for Ostap
+""" Module with some simple but useful utilities for Ostap
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -29,12 +29,8 @@ __all__     = (
     'copy_file'            , ## copy fiel creating inetremadiet directorys if needed 
     'NoContext'            , ## empty context manager
     'mtime'                , ## last modication/creation time for the path (dir or file)
-    ##
     'loop_items'           , ## loop over dictionary items 
     'items_loop'           , ## ditto
-    ##
-    'has_env'              , ## case-insensitive check for environment variable   
-    'get_env'              , ## case-insensitive access to environment variable
     ##
     'numcpu'               , ## number of cores/CPUs
     ##
@@ -43,13 +39,15 @@ __all__     = (
     ##
     'zip_longest'          , ## itertools.(i)zip.longest
     ##
-    'var_separators'       , ## separators form the split  
-    'split_string_respect' , ## split the string  according to separators 
-    'split_string'         , ## split the string  according to separators
+    'file_size'            , ## get cumulative size of files/directories 
+    ##
+    'num_fds'              , ## get number of opened file descriptors 
+    'get_open_fds'         , ## get list of opened file descriptors
+    ##
     # =========================================================================
 ) # ===========================================================================
 # =============================================================================
-from   ostap.core.meta_info import python_info 
+from   ostap.core.meta_info import python_info, whoami  
 from   itertools            import zip_longest
 import sys, os, datetime, shutil 
 # =============================================================================
@@ -65,12 +63,13 @@ def isatty ( stream = None ) :
     >>> if isatty() : print('stdout is terminal!')
     """
     if not stream : stream = sys.stdout
-    ## 
+    # ==========================================================================
     if hasattr ( stream , 'isatty' ) : 
         try    : return stream.isatty()
         except : pass
-    ##     
-    if hasattr ( stream , 'fileno' ) : 
+    # ==========================================================================     
+    if hasattr ( stream , 'fileno' ) :
+        # ======================================================================
         try    : return os.isatty ( stream.fileno () ) 
         except : pass
     ## 
@@ -79,29 +78,12 @@ def isatty ( stream = None ) :
 # ==============================================================================
 ## does the atream support unicode? 
 def has_unicode ( stream = None ) :
-    """Does the stream support unicode?
+    """ Does the stream support unicode?
     """
     if stream is None : stream = sys.stdout
     encoding  = getattr ( stream , 'encoding' , '' )
     if not encoding : return False 
     return encoding.lower().startswith ( 'utf' )
-    
-# =============================================================================
-## Who am I ?
-#  @cdoe
-#  print ( 'I am :' % whoami() ) 
-#  @endcode 
-def whoami () :
-    """ Who am I ?
-    >>> print ( "I am ", whoami() ) 
-    """
-    try :
-        return os.getlogin()
-    except :
-        pass
-    
-    import getpass
-    return getpass.getuser() 
     
 # =============================================================================
 ## helper function that allows to detect running ipython
@@ -132,13 +114,17 @@ def make_dir ( bdir ) :
     >>> path = ...
     >>> make_dir ( path )
     """
-    try :
-        if bdir : 
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        if bdir : # ===========================================================
             os.mkdir ( bdir )
+            # =================================================================
             if os.path.exists ( bdir ) and os.path.isdir ( bdir ) :
                 return os.path.abspath ( bdir)
-            
-    except OSError :        
+        # =====================================================================
+    except OSError : # ========================================================
+        # =====================================================================
         pass
     
     return ''
@@ -155,16 +141,18 @@ def writeable ( adir ) :
     >>> if writeable ( my_dir ) : ...
     """
     if adir and os.path.exists ( adir ) and os.path.isdir ( adir ) :
-        
-        import tempfile 
-        try :
+        # =====================================================================
+        import tempfile
+        # =====================================================================
+        try : # ===============================================================
+            # =================================================================
             with tempfile.TemporaryFile ( dir = adir ) : pass
-            return True 
-        except :
+            return True
+        except : # ============================================================
+            # =================================================================
             return False
 
     return False    
-
 
 # =============================================================================
 ## get a common path(prefix) for list of paths 
@@ -184,7 +172,7 @@ make_dirs = os.makedirs
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  date 2013-01-12
 class NoContext(object) :
-    """Fake (empty) context manager to be used as empty placeholder
+    """ Fake (empty) context manager to be used as empty placeholder
     >>> with NoContext() :
     ...         do_something() 
     """
@@ -206,76 +194,6 @@ def loop_items ( dct ) :
 # =============================================================================
 ## Iterate over the dictionary items
 items_loop = loop_items 
-
-# =============================================================================
-## case-insensitive check for existence of the environment variable
-#  - case-insensitive
-#  - space ignored
-#  - underline ignored
-#  @code
-#  has_env ( 'Ostap_Table_Style' ) 
-#  @endcode
-def has_env ( variable ) :
-    """ Case-insensitive check for existence of the environment variable
-    
-    - case-insensitive
-    - space ignored
-    - underline ignored
-    
-    >>> has_env ( 'Ostap_Table_Style' )
-    
-    """
-    transform = lambda v : v.replace(' ','').replace('_','').lower()
-    new_var   = transform ( variable )
-    for key, _ in items_loop ( os.environ ) :
-        if transform ( key ) == new_var  : return True
-    return False
-
-# =============================================================================
-## case-insensitive access for the environment variable
-#  - case-insensitive
-#  - space ignored
-#  - underline ignored
-#  @code
-#  var = get_env ( 'Ostap_Table_Style' , '' ) 
-#  @endcode
-#  In ambiguous case warning message is printed and the last value is returned 
-def get_env ( variable , default , silent = False ) :
-    """
-    Case-insensitive access for the environment variable
-    
-    - case-insensitive
-    - space ignored
-    - underline ignored
-    
-    >>> var = has_env ( 'Ostap_Table_Style' , 'empty' )
-    
-    In ambiguous case  warning message is printed and the last value is returned 
-    """
-    transform = lambda v : v.replace(' ','').replace('_','').lower()
-    new_var   = transform ( variable )
-    found     = [] 
-    for key, value in items_loop ( os.environ ) :
-        if transform ( key ) == new_var  :
-            item = key, value
-            found.append  ( item )
-            
-    if not found : return default
-
-    if 1 < len ( found )  and not silent :
-        rows = [ ( 'Variable' , 'value' ) ]
-        for k, v in found  :
-            row = '%s' % k , '%s' % v
-            rows.append ( row )
-        title  = "'%s' matches" % variable
-        import ostap.logger.table as T 
-        table = T.table ( rows,  title = title  , prefix = '# ' , alignment = 'll' )
-        from ostap.logger.logger import getLogger
-        logger = getLogger ( 'ostap.get_env' ) 
-        title2 = "Found %s matches for '%s', the last is taken" % ( len ( found ) , variable )  
-        logger.warning ( '%s\n%s' %  ( title2 , table ) ) 
-    
-    return found [ -1] [ 1 ] 
 
 # =============================================================================
 ## Get the modification time for the path (including subdirectories)
@@ -426,101 +344,84 @@ def typename ( o ) :
                      getattr ( to , '__qualname__' ,\
                                getattr ( to , '__name__' ) ) )
     
-# =============================================================================
-## defalt separators for the string expressions
-var_separators = ',:;'
-## rx_separators  = re.compile ( r'[,:;]\s*(?![^()]*\))' )
-## rx_separators  = re.compile ( '[ ,:;](?!(?:[^(]*\([^)]*\))*[^()]*\))')
-# =============================================================================
-## mark for double columns: double column is a special for C++ namespaces 
-dc_mark = '_SSPPLLIITT_'
-# =============================================================================
-## split string using separators and respecting the (),[] and {} groups.
-#  - group can be nested
-def split_string_respect  ( text , separators = var_separators , strip = True ) :
-    """ Split string using separators and respecting the (),[] and {} groups.
-    - groups can be nested
-    """
-    protected = False 
-    if ':' in separators and '::' in text :
-        text      = text.replace ( '::' , dc_mark ) 
-        protected = True 
-    
-    flag1  = 0
-    flag2  = 0
-    flag3  = 0
-    item   = ''
-    items  = []
-    for c in text:
-        if   c == '(' : flag1 += 1
-        elif c == ')' : flag1 -= 1
-        elif c == '[' : flag2 += 1
-        elif c == ']' : flag2 -= 1
-        elif c == '{' : flag3 += 1
-        elif c == '}' : flag3 -= 1
-        elif 0 == flag1 and 0 == flag2 and 0 == flag3 and c in separators :
-            items .append ( item )
-            item = ''
-            continue
-        item += c
-        
-    if item : items.append ( item  )
 
-    if protected :
-        nlst = []
-        for item in items :
-            if dc_mark in item : nlst.append ( item.replace ( dc_mark , '::' ) )
-            else               : nlst.appenf ( item ) 
-        items = nlst 
-                              
-    ## strip items if required 
-    if strip : items = [ item.strip() for item in items ] 
-    ## remove empty items 
-    return tuple ( item for item in items if item  )
-
-# =============================================================================
-## split string using separators:
+# ==============================================================================
+## get the total  size of files/directories
 #  @code
-#  split_string ( ' a b cde,fg;jq', ',;:' )
-#  @endcode
-def split_string ( line                            ,
-                   separators     = var_separators ,
-                   strip          = False          ,
-                   respect_groups = False          ) :
-    """ Split the string using separators
-    >>> split_string ( ' a b cde,fg;jq', ',;:' )
+#  size = file_size ( 'a.f' , 'b.f'  'c.dir' ) 
+#  @endfcode
+def file_size ( *files ) :
+    """ Get the total  size of files/directories
+    >>> size = file_size ( 'a.f' , 'b.f'  'c.dir' ) 
     """
-    if respect_groups :
-        return split_string_respect ( line                    ,
-                                      separators = separators ,
-                                      strip      = strip      )
-    ##
-    protected = False 
-    if ':' in separators and '::' in line :
-        line      = line.replace ( '::' , dc_mark ) 
-        protected = True 
+    size = 0
+    for name in files :
+        if not os.path.exists ( name ) : continue 
+        elif   os.path.islink ( name ) : continue 
+        elif   os.path.isfile ( name ) : size += os.path.getsize ( name )
+        elif   os.path.isdir  ( name ) :
+            for dirpath , dirnames , filenames in os.walk ( name ) :
+                for f in filenames:
+                    fp = os.path.join ( dirpath , f )
+                    if not os.path.islink ( fp ):
+                        size += os.path.getsize ( fp )
+    return size
+
+# =============================================================================
+## get all open file descriptors
+#  The actual code is copied from http://stackoverflow.com/a/13624412
+def get_open_fds():
+    """ Get all open file descriptors    
+    The actual code is copied from http://stackoverflow.com/a/13624412
+    """
+    #
+    import resource
+    import fcntl
+    #
+    fds = []
+    soft , hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    for fd in range ( 0 , soft ) :
+        # =====================================================================
+        try: # ================================================================
+            # =================================================================
+            flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+            # =================================================================
+        except IOError: # =====================================================
+            # =================================================================
+            continue
+        fds.append ( fd )
+    return tuple ( fds ) 
+
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    import psutil
+    ## get number of opened file descriptors 
+    def num_fds () :
+        """ Get number of popened file descriptors """        
+        p = psutil.Process() 
+        return p.num_fds()
+    # =========================================================================
+except ImportError :
+    # =========================================================================
+    ## get number of opened file descriptors 
+    def num_fds () :
+        """ Get number of popened file descriptors"""        
+        return len ( get_open_fds () )
+    # =========================================================================
     
-    items = [ line ]
-    for s in separators :
-        result = []
-        for item in items :
-            if s in item : result += item.split ( s )
-            else         : result.append ( item ) 
-        items = result
-
-    if protected :
-        nlst = []
-        for item in items :
-            if dc_mark in item : nlst.append ( item.replace ( dc_mark , '::' ) )
-            else               : nlst.appenf ( item ) 
-        items = nlst 
-        
-    ## strip items if required 
-    if strip : items = [ i.strip() for i in items ] 
-    ## remove empty items 
-    return tuple ( item for item in items if item )
-
-
+# =============================================================================
+## get the actual file name form file descriptor 
+#  The actual code is copied from http://stackoverflow.com/a/13624412
+#  @warning: it is likely to be "Linux-only" function
+def get_file_names_from_file_number ( fds ) :
+    """ Get the actual file name from file descriptor 
+    The actual code is copied from http://stackoverflow.com/a/13624412 
+    """
+    names = []
+    for fd in fds:
+        names.append(os.readlink('/proc/self/fd/%d' % fd))
+    return names
 
 # =============================================================================
 ## Get number of cores/CPUs

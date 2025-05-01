@@ -31,22 +31,43 @@ __all__     = (
     'old_PyROOT'           , ## do we use "old" PyROOT ?
     )
 # =============================================================================
+from collections import namedtuple 
+from   ostap     import version      as ostap_version
+from   ostap     import version_info as ostap_info  
+from   ostap     import version_int  as ostap_version_int 
+import os, sys, socket, ROOT 
+# =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.meta_info' )
 else                       : logger = getLogger( __name__     )
 # =============================================================================
-from collections import namedtuple 
 MetaInfo = namedtuple ( 'MetaInfo'  , ( 'User' , 'Ostap' , 'Python' , 'ROOT'  ) ) 
 RootInfo = namedtuple ( 'RootInfo'  , ( 'major' , 'minor' , 'patch'           ) ) 
 
 # =============================================================================
-from   ostap             import version      as ostap_version
-from   ostap             import version_info as ostap_info  
-from   ostap             import version_int  as ostap_version_int 
-import sys, getpass, socket, ROOT 
-# =============================================================================
+## Who am I ?
+#  @cdoe
+#  print ( 'I am :' % whoami() ) 
+#  @endcode 
+def whoami () :
+    """ Who am I ?
+    >>> print ( "I am ", whoami() ) 
+    """
+    # ==========================================================================
+    try : # ====================================================================
+        # ======================================================================
+        return os.getlogin() # =================================================    
+    except : # =================================================================
+        # ======================================================================
+        pass
+    
+    import getpass
+    return getpass.getuser() 
 
-user           = "%s@%s" % ( getpass.getuser() , socket.getfqdn () )
+# ==============================================================================
+## Full user name
+user           = "%s@%s"    % ( whoami () , socket.getfqdn () )
+#
 python_version = '%d.%d.%d' % ( sys.version_info.major ,
                                 sys.version_info.minor ,
                                 sys.version_info.micro )

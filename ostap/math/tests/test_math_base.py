@@ -11,7 +11,7 @@
 # ============================================================================= 
 from   ostap.logger.pretty    import pretty_float
 from   ostap.logger.colorized import allright, attention
-from   ostap.utils.utils      import batch_env 
+from   ostap.utils.root_utils import batch_env 
 import ostap.math.base        as     MB
 import ostap.logger.table     as     T
 import random

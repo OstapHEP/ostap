@@ -20,7 +20,7 @@ from   ostap.fitting.transform_pdf import TrPDF
 from   ostap.fitting.funbasic      import Fun1D
 from   ostap.utils.timing          import timing 
 from   ostap.plotting.canvas       import use_canvas
-from   ostap.utils.utils           import wait, batch_env 
+from   ostap.utils.root_utils      import batch_env 
 import ostap.fitting.models        as     Models
 import ostap.fitting.roofit
 import ROOT, random
@@ -71,7 +71,7 @@ def  test_transform () :
                            mean  = ( mean  , mean  / 2 , mean  * 2 ) , 
                            sigma = ( sigma , sigma / 2 , sigma * 2 ) )
     
-    with use_canvas ( 'test_transform/x' ) , wait ( 1 ) : 
+    with use_canvas ( 'test_transform/x' , wait = 1 ) : 
         r1 , f1  = gauss.fitTo  ( dataset , draw = True  , silent = True )
         logger.info ( 'Fit x:\n%s' % r1.table() ) 
     
@@ -82,7 +82,7 @@ def  test_transform () :
     ## transformed PDF 
     tgauss  = TrPDF ( pdf = gauss , new_var = NX )
     
-    with use_canvas ( 'test_transform/log10' ) , wait ( 1 ): 
+    with use_canvas ( 'test_transform/log10' , wait = 1 ): 
         r2 , f2 = tgauss.fitTo  ( dataset , draw = True  , silent = True )
         logger.info ( 'Fit log10(x):\n%s' % r2.table() ) 
 

@@ -18,7 +18,7 @@ __all__    = () ## nothing to import
 from   ostap.core.core          import dsID, rooSilent
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env  
+from   ostap.utils.root_utils   import batch_env  
 import ostap.io.zipshelve       as     DBASE
 import ostap.fitting.models     as     Models 
 import ostap.fitting.roofit 
@@ -188,12 +188,12 @@ def test_simfit1 () :
         fB = model_sim.draw ( 'B' , dataset , nbins = 50 )            
         graphs.append ( fB )
     with use_canvas ( 'test_simfit1: graph-NLL for S_M2' , wait = 2 ) :
-        from ostap.utils.utils import vrange 
+        from ostap.utils.ranges import vrange 
         grs = model_sim.graph_nll     ( 'S_M2' , vrange ( 0 , 1000 , 100 ) , dataset , draw = True )
         grs.draw('apl')
         graphs.append ( grs )
     with use_canvas ( 'test_simfit1: graph-profile for S_M2' , wait = 2 ) :
-        from ostap.utils.utils import vrange 
+        from ostap.utils.ranges import vrange 
         grs = model_sim.graph_profile ( 'S_M2' , vrange ( 0 , 1000 , 50 ) , dataset , draw = True )
         grs.draw('apl')
         graphs.append ( grs )

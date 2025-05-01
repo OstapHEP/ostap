@@ -33,7 +33,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types    import ordered_dict 
 from   ostap.utils.cidict        import cidict, cidict_fun 
-from   ostap.utils.utils         import KeepCanvas, keepCanvas 
+from   ostap.utils.root_utils    import KeepCanvas, keepCanvas 
 from   ostap.core.core           import rootWarning
 from   ostap.utils.utils         import which
 from   ostap.plotting.makestyles import ( canvas_width , canvas_height ,

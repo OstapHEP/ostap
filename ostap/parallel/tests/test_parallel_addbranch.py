@@ -29,7 +29,7 @@ from   ostap.math.make_fun                import make_fun1, make_fun2, make_fun3
 from   ostap.utils.timing                 import timing 
 from   ostap.utils.progress_bar           import progress_bar
 from   ostap.parallel.parallel            import Checker
-from   ostap.utils.utils                  import batch_env 
+from   ostap.utils.root_utils             import batch_env 
 import ostap.logger.table                 as     T 
 import ostap.trees.trees
 import ostap.histos.histos

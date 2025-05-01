@@ -11,7 +11,7 @@
 from   ostap.core.core          import Ostap, hID, SE 
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.timing       import timing
-from   ostap.utils.utils        import batch_env 
+from   ostap.utils.root_utils   import batch_env 
 import ostap.math.integral      as     I 
 import ostap.math.integrator    as     II
 import ostap.logger.table       as     T 

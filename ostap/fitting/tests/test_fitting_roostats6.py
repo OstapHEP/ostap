@@ -16,9 +16,9 @@ from   ostap.core.meta_info     import root_info
 from   ostap.fitting.variables  import SETVAR, FIXVAR  
 from   ostap.core.core          import cpp, VE, dsID, hID , rooSilent, Ostap 
 from   ostap.utils.timing       import timing
-from   ostap.utils.utils        import vrange, lrange
+from   ostap.utils.ranges       import vrange, lrange
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.root_utils   import batch_env 
 from   ostap.fitting.simfit     import combined_data
 import ostap.fitting.models     as     Models
 import ostap.logger.table       as     T

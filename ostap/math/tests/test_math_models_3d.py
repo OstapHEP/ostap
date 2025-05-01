@@ -9,11 +9,11 @@
 """ Test module for 3D models
 """
 # ============================================================================= 
-from   ostap.core.core     import Ostap, SE
-from   ostap.math.integral import integral3
-from   ostap.math.integral import Integrate3D_X , Integrate3D_Y  , Integrate3D_Z
-from   ostap.math.integral import Integrate3D_XY, Integrate3D_XZ , Integrate3D_YZ
-from   ostap.utils.utils   import batch_env 
+from   ostap.core.core        import Ostap, SE
+from   ostap.math.integral    import integral3
+from   ostap.math.integral    import Integrate3D_X , Integrate3D_Y  , Integrate3D_Z
+from   ostap.math.integral    import Integrate3D_XY, Integrate3D_XZ , Integrate3D_YZ
+from   ostap.utils.root_utils import batch_env 
 import ostap.math.models 
 import ROOT, random  
 # ============================================================================= 

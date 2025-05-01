@@ -19,7 +19,7 @@ from   ostap.fitting.background import make_bkg
 from   ostap.utils.timing       import timing 
 from   ostap.core.meta_info     import root_info 
 from   ostap.plotting.canvas    import use_canvas 
-from   ostap.utils.utils        import batch_env 
+from   ostap.utils.root_utils   import batch_env 
 import ostap.fitting.models     as     Models 
 import ostap.fitting.roofit 
 import ROOT, random 

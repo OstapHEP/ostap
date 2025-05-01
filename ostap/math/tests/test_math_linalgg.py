@@ -9,9 +9,9 @@
 """ Test module for ostap/math/linalg2.py
 """
 # =============================================================================
-from   ostap.math.base    import Ostap
-from   ostap.math.linalgg import Matrix, gsl_info
-from   ostap.utils.utils  import batch_env
+from   ostap.math.base        import Ostap
+from   ostap.math.linalgg     import Matrix, gsl_info
+from   ostap.utils.root_utils import batch_env
 import math, random  
 # =============================================================================
 # logging 

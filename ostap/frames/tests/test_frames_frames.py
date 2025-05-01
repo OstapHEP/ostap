@@ -8,16 +8,15 @@
 """ Test module for ostap/frames/frames.py.
 """
 # ============================================================================= 
-from   ostap.core.pyrouts    import hID, Ostap  
-from   ostap.utils.cleanup   import CleanUp
-from   ostap.trees.trees     import Tree
-from   ostap.plotting.canvas import use_canvas
-from   ostap.utils.utils     import wait 
-from   ostap.core.meta_info  import root_info
-from   ostap.utils.utils     import implicitMT, batch_env 
-from   ostap.utils.timing    import timing
-from   ostap.frames.frames   import Frames_OK 
-import ostap.logger.table    as     T 
+from   ostap.core.pyrouts     import hID, Ostap  
+from   ostap.utils.cleanup    import CleanUp
+from   ostap.trees.trees      import Tree
+from   ostap.plotting.canvas  import use_canvas
+from   ostap.core.meta_info   import root_info
+from   ostap.utils.root_utils import implicitMT, batch_env 
+from   ostap.utils.timing     import timing
+from   ostap.frames.frames    import Frames_OK 
+import ostap.logger.table     as     T 
 import ROOT, os, sys
 # =============================================================================
 # logging 

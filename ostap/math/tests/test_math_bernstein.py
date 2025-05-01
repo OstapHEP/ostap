@@ -11,7 +11,8 @@
 # ============================================================================= 
 from   ostap.core.core        import Ostap, SE, isequal
 from   ostap.plotting.canvas  import use_canvas
-from   ostap.utils.utils      import vrange, crange, batch_env   
+from   ostap.utils.ranges     import vrange, crange
+from   ostap.utils.root_utils import batch_env   
 from   ostap.utils.timing     import timing
 from   ostap.logger.colorized import allright , attention 
 import ostap.logger.table     as     T

@@ -12,7 +12,7 @@ from   itertools                import count
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.parallel.utils     import pool_context
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env  
+from   ostap.utils.root_utils   import batch_env  
 import ostap.histos.histos
 import ROOT, time, sys 
 # =============================================================================
@@ -101,7 +101,7 @@ def test_pathos_mp_function () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_pathos_mp_function' ) : 
+    with use_canvas ( 'test_pathos_mp_function' , wait = 1 ) : 
         result.draw (   ) 
 
     return result 
@@ -142,7 +142,7 @@ def test_pathos_mp_callable  () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_pathos_mp_callable' ) : 
+    with use_canvas ( 'test_pathos_mp_callable' , wait = 1) : 
         result.draw (   ) 
 
     return result 
@@ -188,7 +188,7 @@ def test_pathos_pp_function () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_pathos_pp_function' ) : 
+    with use_canvas ( 'test_pathos_pp_function' , wait = 1 ) : 
         result.draw (   ) 
 
     return result 
@@ -231,7 +231,7 @@ def test_pathos_pp_method () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_pathos_pp_method' ) : 
+    with use_canvas ( 'test_pathos_pp_method' , wait = 1 ) : 
         result.draw (   ) 
 
     return result 
@@ -275,7 +275,7 @@ def test_pathos_pp_callable () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_pathos_pp_callable' ) : 
+    with use_canvas ( 'test_pathos_pp_callable' , wait = 1) : 
         result.draw (   ) 
 
     return result 

@@ -917,8 +917,8 @@ class Trainer(object):
             from ostap.logger.utils  import MuteC  , NoContext
             context  = NoContext () if self.verbose and self.category in ( 0 , -1 ) else MuteC     ()
             
-        from ostap.logger.utils import NoContext
-        from ostap.utils.utils  import ImplicitMT
+        from ostap.utils.basic      import NoContext
+        from ostap.utils.root_utils import ImplicitMT
         
         context2 = ImplicitMT ( True ) if self.multithread else NoContext () 
 
@@ -1462,8 +1462,8 @@ class Trainer(object):
         ## ROC curves 
         if ( self.make_plots or self.verbose ) :
             import ostap.plotting.canvas 
-            from   ostap.plotting.style import useStyle 
-            from   ostap.utils.utils    import batch 
+            from   ostap.plotting.style   import useStyle 
+            from   ostap.utils.root_utils import batch 
             with batch ( ROOT.ROOT.GetROOT().IsBatch() or not self.show_plots ) , useStyle() : 
                 cnv = factory.GetROCCurve ( self.name )
                 if cnv :
@@ -1641,8 +1641,8 @@ class Trainer(object):
 
         ## change to some temporary directory
         
-        from ostap.utils.utils    import batch
-        from ostap.plotting.style import useStyle 
+        from ostap.utils.root_utils import batch
+        from ostap.plotting.style   import useStyle 
         with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) : 
             for fun, args, kwargs in plots :
                 tag  = "Execute macro %s%s" % ( fun.__name__ , str ( args ) ) 
@@ -1723,7 +1723,8 @@ def make_Plots ( name , output , show_plots = True ) :
     ## make the plots in TMVA  style
     #
     logger.info ('make_Plots: Making the standard TMVA plots') 
-    from ostap.utils.utils import batch , cmd_exists
+    from ostap.utils.root_utils import batch
+    from ostap.utils.utils      import cmd_exists
 
     plots = [
         ##

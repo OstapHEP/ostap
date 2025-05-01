@@ -17,7 +17,8 @@ __all__    = () ## nothing to import
 from   ostap.core.pyrouts       import Ostap
 from   ostap.fitting.simfit     import combined_data 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env  
+from   ostap.utils.timing       import wait 
+from   ostap.utils.root_utils   import batch_env  
 import ostap.fitting.models     as     Models 
 import ROOT, random
 # ============================================================================= 

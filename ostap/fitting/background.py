@@ -59,7 +59,7 @@ from   ostap.core.ostap_types   import integer_types , num_types
 from   ostap.math.base          import iszero
 from   ostap.fitting.pdfbasic   import PDF1, Generic1D_pdf, Flat1D,  Sum1D
 from   ostap.fitting.fithelpers import Phases, ParamsPoly
-from   ostap.utils.utils        import vrange 
+from   ostap.utils.ranges       import vrange 
 import ROOT, math
 # =============================================================================
 from   ostap.logger.logger      import getLogger

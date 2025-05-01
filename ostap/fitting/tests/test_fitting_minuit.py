@@ -11,9 +11,9 @@
 - It tests decorations for <code>ROOT.TMinuit</code>
 """
 # ============================================================================= 
-from   ostap.core.meta_info import old_PyROOT 
-from   ostap.utils.timing   import timing
-from   ostap.utils.utils    import batch_env 
+from   ostap.core.meta_info   import old_PyROOT 
+from   ostap.utils.timing     import timing
+from   ostap.utils.root_utils import batch_env 
 import ostap.fitting.minuit
 import ROOT, random 
 # =============================================================================

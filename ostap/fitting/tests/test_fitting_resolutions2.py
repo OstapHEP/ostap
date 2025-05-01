@@ -19,7 +19,7 @@ from   ostap.core.core          import VE, dsID
 from   ostap.utils.gsl          import gslCount
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.root_utils   import batch_env 
 import ostap.logger.table       as     T 
 import ostap.fitting.roofit 
 import ROOT, random
@@ -109,7 +109,7 @@ def test_gauss () :
     
     result, frame = reso. fitTo ( dataset , silent = True )
     result, frame = reso. fitTo ( dataset , silent = True )
-    with wait ( 1 ) , use_canvas ( 'test_gauss' ) : 
+    with use_canvas ( 'test_gauss' , wait = 1 ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
 
     
@@ -137,7 +137,7 @@ def test_apo2 () :
                      kappa = ( 0.1 , -1    , +1  ) )
     
     result, frame = reso. fitTo ( dataset , silent = True )
-    with wait ( 1 ) , use_canvas ( 'test_apo2' ) : 
+    with use_canvas ( 'test_apo2' , wait = 1 ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -167,7 +167,7 @@ def test_cb2 () :
     
     result, frame = reso. fitTo ( dataset , silent = True )
     result, frame = reso. fitTo ( dataset , silent = True )
-    with wait ( 1 ) , use_canvas ( 'test_cb2' ) : 
+    with use_canvas ( 'test_cb2' , wait = 1 ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -197,7 +197,7 @@ def test_bukin () :
     
     result, frame = reso. fitTo ( dataset , silent = True )
     result, frame = reso. fitTo ( dataset , silent = True )
-    with wait ( 1 ) , use_canvas ( 'test_bukin' ) : 
+    with use_canvas ( 'test_bukin' , wait = 1 ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -223,7 +223,7 @@ def test_johnsonSU () :
                            
     result, frame = reso. fitTo ( dataset , silent = True )
     result, frame = reso. fitTo ( dataset , silent = True )
-    with wait ( 1 ) , use_canvas ( 'test_johnsonSU' ) : 
+    with use_canvas ( 'test_johnsonSU' , wait = 1 ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -254,7 +254,7 @@ def test_sinhasinh () :
     
     result, frame = reso. fitTo ( dataset , silent = True )
     result, frame = reso. fitTo ( dataset , silent = True )
-    with wait ( 1 ) , use_canvas ( 'test_sinhasinh' ) : 
+    with use_canvas ( 'test_sinhasinh' , wait = 1 ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -285,7 +285,7 @@ def test_hyperbolic () :
         
         result, frame = reso. fitTo ( dataset , silent = True )
         result, frame = reso. fitTo ( dataset , silent = True )
-        with wait ( 1 ) , use_canvas ( 'test_hyperbolic' ) : 
+        with use_canvas ( 'test_hyperbolic' , wait = 1 ) : 
             result, frame = reso. fitTo ( dataset , silent = True , draw = True )
             
         if 0 != result.status() or 3 != result.covQual() :
@@ -317,7 +317,7 @@ def test_genhyperbolic () :
         
         result, frame = reso. fitTo ( dataset , silent = True )
         result, frame = reso. fitTo ( dataset , silent = True )
-        with wait ( 1 ) , use_canvas ( 'test_genhyperbolic' ) : 
+        with use_canvas ( 'test_genhyperbolic' , wait = 1 ) : 
             result, frame = reso. fitTo ( dataset , silent = True , draw = True )
             
         if 0 != result.status() or 3 != result.covQual() :
@@ -349,7 +349,7 @@ def test_hypatia () :
         
         result, frame = reso. fitTo ( dataset , silent = True )
         result, frame = reso. fitTo ( dataset , silent = True )
-        with wait ( 1 ) , use_canvas ( 'test_hypatia' ) : 
+        with use_canvas ( 'test_hypatia' , wait = 1 ) : 
             result, frame = reso. fitTo ( dataset , silent = True , draw = True )
             
         if 0 != result.status() or 3 != result.covQual() :
@@ -379,7 +379,7 @@ def test_das () :
     
     result, frame = reso. fitTo ( dataset , silent = True )
     result, frame = reso. fitTo ( dataset , silent = True )
-    with wait ( 1 ) , use_canvas ( 'test_das' ) : 
+    with use_canvas ( 'test_das' , wait = 1 ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -413,7 +413,7 @@ def test_normlapl () :
     result, frame = reso. fitTo ( dataset , silent = True  )
 
     
-    with wait ( 1 ) , use_canvas ( 'test_normlapl' ) : 
+    with use_canvas ( 'test_normlapl' , wait  = 1 ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -449,7 +449,7 @@ def test_bukin2 () :
     result, frame = reso. fitTo ( dataset , silent = True  )
 
     
-    with wait ( 1 ) , use_canvas ( 'test_bukin2' ) : 
+    with use_canvas ( 'test_bukin2' , wait = 1 ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -481,7 +481,7 @@ def test_pearsonIV () :
     reso.kappa.release() 
     result, frame = reso. fitTo ( dataset , silent = True  )
 
-    with wait ( 1 ) , use_canvas ( 'test_pearsonIV' ) : 
+    with use_canvas ( 'test_pearsonIV' , wait = 1 ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -513,7 +513,7 @@ def test_skewgenT () :
     reso.kappa.release() 
     result, frame = reso. fitTo ( dataset , silent = True  )
 
-    with wait ( 1 ) , use_canvas ( 'test_skewgenT' ) : 
+    with use_canvas ( 'test_skewgenT' , wait = 1 ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -544,7 +544,7 @@ def test_skewgenerror () :
     reso.kappa.release() 
     result, frame = reso. fitTo ( dataset , silent = True  )
 
-    with wait ( 1 ) , use_canvas ( 'test_skewgenerror' ) : 
+    with use_canvas ( 'test_skewgenerror' , wait = 1 ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -577,7 +577,7 @@ def test_genlogistic4 () :
     reso.kappa.release() 
     result, frame = reso. fitTo ( dataset , silent = True  )
 
-    with wait ( 1 ) , use_canvas ( 'test_genlogistic4' ) : 
+    with use_canvas ( 'test_genlogistic4' , wait = 1 ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :

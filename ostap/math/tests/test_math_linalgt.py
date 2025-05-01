@@ -9,13 +9,13 @@
 """ Test module for ostap/math/linalgt.py
 """
 # ============================================================================= 
-from   ostap.core.meta_info import root_info
-from   ostap.math.linalg    import checkops, gsl_info  
-from   ostap.core.core      import Ostap
-from   ostap.utils.basic    import typename
-from   ostap.utils.utils    import batch_env
-from   ostap.math.base      import numpy 
-import ostap.logger.table   as     T 
+from   ostap.core.meta_info   import root_info
+from   ostap.math.linalg      import checkops, gsl_info  
+from   ostap.core.core        import Ostap
+from   ostap.utils.basic      import typename
+from   ostap.utils.root_utils import batch_env
+from   ostap.math.base        import numpy 
+import ostap.logger.table     as     T 
 import ROOT, array, random   
 # ============================================================================= 
 # logging 

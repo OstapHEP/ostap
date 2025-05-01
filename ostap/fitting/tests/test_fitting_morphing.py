@@ -15,10 +15,10 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.core.meta_info        import root_info 
-from   ostap.utils.utils           import vrange
+from   ostap.utils.ranges          import vrange
 from   ostap.utils.timing          import timing 
 from   ostap.plotting.canvas       import use_canvas
-from   ostap.utils.utils           import wait, batch_env 
+from   ostap.utils.root_utils      import batch_env 
 from   ostap.core.core             import roo_silent 
 from   ostap.fitting.morphing_pdf  import ( MorphingN1_pdf ,
                                             MorphingN2_pdf  ,
@@ -84,7 +84,7 @@ def test_morphingL () :
         with use_canvas ( 'test_morphingL' , wait = 0.5 ) :
             pdf.draw()
             
-    with wait ( 1 ) , use_canvas ( 'test_morphingL' ) :
+    with use_canvas ( 'test_morphingL' , wait = 1 ) :
         r , f = pdf.fitHisto ( h1 , draw = True , nbins = 100 , silent = True , **conf )
         logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
 
@@ -111,7 +111,7 @@ def test_morphing_N1s() :
     ## create morphing PDF 
     pdf  = MorphingN1_pdf ( 'N1s' , shapes , xvar =  mass )
             
-    with wait ( 1 ) , use_canvas ( 'test_morphing_N1s' ) :
+    with use_canvas ( 'test_morphing_N1s' , wait = 1 ) :
         r , f = pdf.fitHisto ( h1 , draw = True , nbins = 100 , silent = True , **conf )
         logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
 
@@ -140,7 +140,7 @@ def test_morphing_N1m () :
     ## create morphing PDF 
     pdf  = MorphingN1_pdf ( 'Nm1', shapes , xvar    =  mass ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_morphing_N1m' ) :
+    with use_canvas ( 'test_morphing_N1m' , wait = 1 ) :
         r , f = pdf.fitHisto ( h1 , draw = True  , nbins = 100 , silent = True , **conf )
         logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
     
@@ -172,7 +172,7 @@ def test_morphing_N2 () :
     
     pdf  = MorphingN2_pdf ( 'N2' , shapes , xvar =  mass )
             
-    with wait ( 1 ) , use_canvas ( 'test_morphing_N2' ) :
+    with use_canvas ( 'test_morphing_N2' , wait = 1) :
         r , f = pdf.fitHisto ( h1 , draw = True , nbins = 100 , silent = True , **conf )
         logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) )
 

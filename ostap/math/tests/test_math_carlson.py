@@ -12,7 +12,8 @@
 from   ostap.core.pyrouts     import Ostap, SE 
 from   ostap.utils.gsl        import gslCount
 from   ostap.logger.colorized import attention 
-from   ostap.utils.utils      import wait, vrange, batch_env 
+from   ostap.utils.ranges     import vrange
+from   ostap.utils.root_utils import batch_env 
 from   ostap.plotting.canvas  import use_canvas
 import ostap.logger.table     as     T
 import ROOT, math, random  
@@ -428,7 +429,7 @@ def test_carlson_K ( ) :
     def k4 ( k ) : return Ostap.Math.carlson_RF_int ( 0 , 1-k*k , 1 ) 
     def k5 ( k ) : return Ostap.Math.elliptic_K_gsl ( k ) 
 
-    with wait ( 3 ), use_canvas( 'test_carlson_K' ) :
+    with use_canvas( 'test_carlson_K' , wait = 1 ) :
         f1_draw ( k1 ,          xmin = 0 , xmax = 1-1.e-7 , min = 0 , linecolor = 2 , linewidth = 2 )
         f1_draw ( k2 , 'same' , xmin = 0 , xmax = 1-1.e-7 , min = 0 , linecolor = 4 , linewidth = 2 , linestyle = 9 )
         f1_draw ( k3 , 'same' , xmin = 0 , xmax = 1-1.e-7 , min = 0 , linecolor = 8 , linewidth = 2 , linestyle = 9 )
@@ -462,7 +463,7 @@ def test_carlson_E ( ) :
     def e4 ( k ) : return 2*Ostap.Math.carlson_RG_int ( 1-k*k , 1 , 0 ) 
     def e5 ( k ) : return   Ostap.Math.elliptic_E ( k ) 
 
-    with wait ( 3 ), use_canvas( 'test_carlson_E' ) :
+    with use_canvas( 'test_carlson_E' , wait = 1 ) :
         f1_draw ( e1 ,          xmin = 0 , xmax = 1 , min = 0 , linecolor = 2 , linewidth = 2 )
         f1_draw ( e2 , 'same' , xmin = 0 , xmax = 1 , min = 0 , linecolor = 4 , linewidth = 2 , linestyle = 9 )
         f1_draw ( e3 , 'same' , xmin = 0 , xmax = 1 , min = 0 , linecolor = 8 , linewidth = 2 , linestyle = 9 )
@@ -503,7 +504,7 @@ def test_carlson_KmE ( ) :
     def e3 ( k ) : return Ostap.Math.carlson_RF ( 1-k*k,1) - 2*Ostap.Math.carlson_RG(1-k*k,1) 
     def e4 ( k ) : return Ostap.Math.elliptic_KmE ( k )  
 
-    with wait ( 3 ), use_canvas( 'test_carlson_E' ) :
+    with use_canvas( 'test_carlson_E' , wait = 1 ) :
         f1_draw ( e1 ,          xmin = 0 , xmax = 1-1.e-10 , min = 0 , linecolor = 2 , linewidth = 2 )
         logger.info ( 'Red    line : K(k) - E(k) as they are ' ) 
         f1_draw ( e2 , 'same' , xmin = 0 , xmax = 1-1.e-10 , min = 0 , linecolor = 4 , linewidth = 2 , linestyle = 9 )
@@ -552,7 +553,7 @@ def test_carlson_PS3 ( ) :
     ps1 = Ostap.Math.PhaseSpace3  ( 3 , 1 , 0.1 ) 
     ps2 = Ostap.Math.PhaseSpace3s ( 3 , 1 , 0.1 ) ## <--- HERE
 
-    with wait ( 3 ), use_canvas( 'test_carlson_PS3' ) :
+    with use_canvas( 'test_carlson_PS3' , wait = 1 ) :
         ps1.draw (          xmin = ps1.threshold() , xmax = 50 , linecolor=2 , linewidth = 2 )
         logger.info ( 'Red  line - 3-body phase space via numerical integration' ) 
         ps2.draw ( 'same' , xmin = ps2.threshold() , xmax = 50 , linecolor=4 , linewidth = 2 )

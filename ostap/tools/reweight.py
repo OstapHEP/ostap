@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file
-#  Module with utilities for reweigting 
-#
+#  Module with utilities for iterative reweigting 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-05-10
 # =============================================================================
-"""Module with utilities for reweighting"""
+""" Module with utilities for iterative reweighting
+"""
 # =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -23,12 +23,13 @@ __all__     = (
 # =============================================================================
 from   ostap.core.pyrouts     import VE, SE, Ostap 
 from   ostap.math.base        import iszero
-from   ostap.utils.basic      import split_string 
+from   ostap.utils.strings    import split_string 
 from   ostap.core.ostap_types import string_types, list_types, num_types, sized_types, sequence_types    
 from   ostap.math.operations  import Mul  as MULT       ## needed for proper abstract multiplication
 import ostap.io.zipshelve     as     DBASE              ## needed to store the weights&histos
 from   ostap.trees.funcs      import FuncTree, FuncData ## add weight to TTree/RooDataSet
-from   ostap.utils.utils      import CallThem, is_formula  
+from   ostap.utils.utils      import CallThem
+from   ostap.utils.strings    import is_formula  
 from   ostap.math.reduce      import root_factory
 import ostap.core.core 
 import ostap.histos.histos 
@@ -48,7 +49,7 @@ _new_methods_ = []
 #  simple class to bypass <code>operator.attrgetter</code> that
 #  has some problem with multiprocessing
 class AttrGetter(object):
-    """Simple class to bypass operator.attrgetter that
+    """ Simple class to bypass operator.attrgetter that
     has some problem with multiprocessing
     """
     def __init__ ( self , *attributes ) :
@@ -1254,7 +1255,6 @@ def data_add_reweighting ( data , weighter , name = 'weight' , progress = False 
     return data.add_new_var ( name , wfun ) 
 
 ROOT.RooDataSet.add_reweighting = data_add_reweighting
-
 
 _new_methods_ += [
     ROOT.RooDataSet .add_reweighting , 

@@ -8,16 +8,17 @@
 """ Test Goddness-of-fits for 1D fits 
 """
 # ==============================================================================
-from   ostap.stats.ustat     import USTAT 
-from   ostap.plotting.canvas import use_canvas
-from   ostap.logger.pretty   import pretty_float
-from   ostap.utils.utils     import vrange, batch_env
-from   ostap.utils.timing    import timing 
-from   ostap.math.math_ve    import significance
-import ostap.fitting.models  as     M 
-import ostap.stats.gof1d     as     G1D 
-import ostap.stats.gofnd     as     GnD
-import ostap.logger.table    as     T
+from   ostap.stats.ustat      import USTAT 
+from   ostap.plotting.canvas  import use_canvas
+from   ostap.logger.pretty    import pretty_float
+from   ostap.utils.ranges     import vrange
+from   ostap.utils.root_utils import batch_env
+from   ostap.utils.timing     import timing 
+from   ostap.math.math_ve     import significance
+import ostap.fitting.models   as     M 
+import ostap.stats.gof1d      as     G1D 
+import ostap.stats.gofnd      as     GnD
+import ostap.logger.table     as     T
 import ROOT  
 # ==============================================================================
 from   ostap.logger.logger import getLogger 

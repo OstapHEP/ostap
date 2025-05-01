@@ -11,7 +11,7 @@ from   ostap.parallel.task           import Task, GenericTask
 from   ostap.parallel.utils          import pool_context 
 from   ostap.utils.progress_bar      import progress_bar 
 from   ostap.plotting.canvas         import use_canvas
-from   ostap.utils.utils             import wait, batch_env 
+from   ostap.utils.root_utils        import batch_env 
 from   ostap.parallel.parallel_gaudi import WorkManager
 import ostap.histos.histos
 import ROOT, time, sys 
@@ -99,7 +99,7 @@ def test_parallel_gaudi_mp_bare ( ) :
         if result is None  : result = res
         else               : result.Add ( res )  
 
-    with wait ( 1 ) , use_canvas ( 'test_parallel_gaudi_mp_bare' ) : 
+    with use_canvas ( 'test_parallel_gaudi_mp_bare' , wait = 1 ) : 
         logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
         logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) )         
         result.Draw (   ) 
@@ -128,7 +128,7 @@ def test_parallel_gaudi_mp_task ( ) :
     ## process the task 
     result   = manager.process ( task ,  inputs ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_parallel_gaudi_mp_task' ) : 
+    with use_canvas ( 'test_parallel_gaudi_mp_task' , wait = 1 ) : 
         logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
         logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) )         
         result.draw (   ) 
@@ -154,7 +154,7 @@ def test_parallel_gaudi_mp_func ( ) :
     ## process the function  
     result   = manager.process ( make_histo , inputs , merger = merge_histos )
     
-    with wait ( 1 ) , use_canvas ( 'test_parallel_gaudi_mp_func' ) : 
+    with use_canvas ( 'test_parallel_gaudi_mp_func' , wait = 1 ) : 
         logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
         logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) )         
         result.draw (   ) 
@@ -184,7 +184,7 @@ def test_parallel_gaudi_mp_generic ( ) :
     ## process the task 
     result   = manager.process ( task ,  inputs ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_parallel_gaudi_mp_generic' ) : 
+    with use_canvas ( 'test_parallel_gaudi_mp_generic' , wait = 1 ) : 
         logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
         logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) )         
         result.draw (   ) 

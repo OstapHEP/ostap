@@ -17,7 +17,7 @@ __all__    = () ## nothing to import
 from   ostap.core.core          import VE, dsID, Ostap
 from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env
+from   ostap.utils.root_utils   import batch_env
 from   ostap.utils.basic        import typename 
 from   ostap.fitting.models     import Gauss_pdf, Generic1D_pdf,  Fit1D  
 from   ostap.fitting.pypdf      import PyPDF, PyPDFLite

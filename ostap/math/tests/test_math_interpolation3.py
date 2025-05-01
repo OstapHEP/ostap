@@ -19,7 +19,8 @@ from   ostap.math.interpolation import ( Berrut1st           ,
                                         
 from   ostap.core.core          import Ostap
 from   ostap.math.models        import f1_draw 
-from   ostap.utils.utils        import vrange, wait, batch_env 
+from   ostap.utils.ranges       import vrange
+from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
 import ostap.fitting.models     as M 
@@ -82,7 +83,7 @@ def test_fitresults ()  :
         FloaterHormann ( results , i ) for i in range ( 10 ) ] 
 
     graphs = []
-    with wait ( 5 ) , use_canvas ( 'test_fitresults' ) : 
+    with use_canvas ( 'test_fitresults' , wait = 1 ) : 
         f1_draw ( sigma , linecolor=1 , linewidth = 4 , minimum = 0 , xmin = 0 , xmax = 100 )        
         gr.red()
         gr.draw ('pe1')

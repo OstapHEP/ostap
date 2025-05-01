@@ -14,10 +14,10 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   ostap.core.core      import cpp, VE, dsID, rooSilent 
-from   ostap.utils.timing   import timing 
-from   ostap.utils.utils    import batch_env 
-import ostap.fitting.models as     Models 
+from   ostap.core.core        import cpp, VE, dsID, rooSilent 
+from   ostap.utils.timing     import timing 
+from   ostap.utils.root_utils import batch_env 
+import ostap.fitting.models   as     Models 
 import ostap.fitting.roofit 
 import ROOT, random
 # =============================================================================

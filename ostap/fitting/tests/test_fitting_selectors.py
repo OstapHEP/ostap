@@ -21,7 +21,7 @@ from   ostap.utils.progress_bar     import progress_bar
 from   ostap.core.core              import ROOTCWD 
 from   ostap.core.meta_info         import root_version_int
 from   ostap.utils.timing           import timing
-from   ostap.utils.utils            import batch_env 
+from   ostap.utils.root_utils       import batch_env 
 import ostap.trees.trees       
 import ostap.fitting.roofit
 import ostap.fitting.dataset

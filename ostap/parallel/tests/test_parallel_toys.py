@@ -18,7 +18,7 @@ from   ostap.utils.timing           import timing
 from   ostap.utils.memory           import memory 
 from   ostap.core.core              import cpp, VE, dsID, hID, rooSilent
 from   ostap.plotting.canvas        import use_canvas
-from   ostap.utils.utils            import wait, batch_env 
+from   ostap.utils.root_utils       import batch_env 
 from   ostap.utils.basic            import numcpu 
 from   ostap.fitting.toys           import pull_var
 from   ostap.math.base              import num_range

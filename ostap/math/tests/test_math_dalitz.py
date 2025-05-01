@@ -12,7 +12,7 @@
 """
 # ============================================================================= 
 from   ostap.core.core          import Ostap, hID 
-from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.root_utils   import batch_env 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.plotting.style     import useStyle as use_style
 from   ostap.utils.progress_bar import progress_bar 
@@ -185,18 +185,18 @@ def test_dalitz2 () :
     gr32  = d.graph32 () 
     gr32m = d.graph32 ( masses = True ) 
     
-    with wait ( 2 ) , use_canvas( 'test_dalitz2, squared masses (21)' ) :
+    with use_canvas( 'test_dalitz2, squared masses (21)' , wait = 1 ) :
         gr21.draw  ( 'alcf' , linecolor = 2, linewidth = 2 , fillcolor = 2 )
-    with wait ( 2 ) , use_canvas( 'test_dalitz2, squared masses (31)' ) :
+    with use_canvas( 'test_dalitz2, squared masses (31)' , wait = 1 ) :
         gr31.draw  ( 'alcf' , linecolor = 2, linewidth = 2 , fillcolor = 2 )
-    with wait ( 2 ) , use_canvas( 'test_dalitz2, squared masses (32)' ) :
+    with use_canvas( 'test_dalitz2, squared masses (32)' , wait = 1 ) :
         gr32.draw  ( 'alcf' , linecolor = 2, linewidth = 2 , fillcolor = 2 )
 
-    with wait ( 2 ) , use_canvas( 'test_dalitz2, masses (21)' ) :
+    with use_canvas( 'test_dalitz2, masses (21)' , wait = 1 ) :
         gr21m.draw ( 'alcf' , linecolor = 2, linewidth = 2 , fillcolor = 2 )
-    with wait ( 2 ) , use_canvas( 'test_dalitz2, masses (31)' ) :
+    with use_canvas( 'test_dalitz2, masses (31)' , wait = 1 ) :
         gr31m.draw ( 'alcf' , linecolor = 2, linewidth = 2 , fillcolor = 2 )
-    with wait ( 2 ) , use_canvas( 'test_dalitz2, masses (32)' ) :
+    with use_canvas( 'test_dalitz2, masses (32)' , wait = 1 ) :
         gr32m.draw ( 'alcf' , linecolor = 2, linewidth = 2 , fillcolor = 2 )
 
 
@@ -207,7 +207,7 @@ def test_dalitz3 () :
 
     for i , p  in enumerate ( plots ) : 
         
-        with wait ( 2 ) , use_canvas( 'test_dalitz3 #%d'  % i ) :
+        with use_canvas( 'test_dalitz3 #%d'  % i , wait = 1 ) :
             
             if   i == 0 : logger.info ( "All masses are     zero" )
             elif i <  4 : logger.info ( "Two masses are     zero" )
@@ -233,7 +233,7 @@ def test_dalitz4 () :
         for s1,s2,s3  in p.random ( 10000 ) :
             h.Fill ( s1 , s2 )
             
-        with wait ( 2 ) , use_canvas( 'test_dalitz4 #%s'  % d ) :            
+        with use_canvas( 'test_dalitz4 #%s'  % d , wait = 1 ) :            
             gr  = p.graph21 ( masses = False ) 
             h.colz ()
             gr.draw  ( 'l' , linecolor = 2, linewidth = 5 )            
@@ -318,10 +318,10 @@ def test_dalitz6 () :
         h4.Fill ( s2 , s1 , J )
 
     with use_style ( 'Z' ) : 
-        with use_canvas( 'test_dalitz6 Dalitz(x1,x1)'          , wait = 2 ) : h1.colz ()
-        with use_canvas( 'test_dalitz6 Dalitz(x2,x1)'          , wait = 2 ) : h2.colz ()
-        with use_canvas( 'test_dalitz6 Dalitz(s2,s1)'          , wait = 2 ) : h3.colz ()
-        with use_canvas( 'test_dalitz6 Dalitz(s2,s1) weighted' , wait = 2 ) : h4.colz ()
+        with use_canvas( 'test_dalitz6 Dalitz(x1,x1)'          , wait = 1 ) : h1.colz ()
+        with use_canvas( 'test_dalitz6 Dalitz(x2,x1)'          , wait = 1 ) : h2.colz ()
+        with use_canvas( 'test_dalitz6 Dalitz(s2,s1)'          , wait = 1 ) : h3.colz ()
+        with use_canvas( 'test_dalitz6 Dalitz(s2,s1) weighted' , wait = 1 ) : h4.colz ()
         
     graphs.add ( h1 )
     graphs.add ( h2 )
@@ -364,9 +364,9 @@ def test_dalitz7 () :
         
 
     with use_style ( 'Z' ) : 
-        with use_canvas( 'test_dalitz7 Dalitz(s2,s1)'          , wait = 2 ) : h1.colz ()
-        with use_canvas( 'test_dalitz7 Dalitz(z2,z1)'          , wait = 2 ) : h2.colz ()
-        with use_canvas( 'test_dalitz7 Dalitz(z2,z1) weighted' , wait = 2 ) : h3.colz ()
+        with use_canvas( 'test_dalitz7 Dalitz(s2,s1)'          , wait = 1 ) : h1.colz ()
+        with use_canvas( 'test_dalitz7 Dalitz(z2,z1)'          , wait = 1 ) : h2.colz ()
+        with use_canvas( 'test_dalitz7 Dalitz(z2,z1) weighted' , wait = 1 ) : h3.colz ()
         
     graphs.add ( h1 )
     graphs.add ( h2 )
@@ -406,12 +406,12 @@ def test_dalitz8 () :
 
         h3.Fill ( s2 , s1 )
         h4.Fill ( s2 , s1 , Jz )
-
+        
     with use_style ( 'Z' ) : 
-        with use_canvas( 'test_dalitz8 Dalitz(z1,z1)'          , wait = 2 ) : h1.colz ()
-        with use_canvas( 'test_dalitz8 Dalitz(z2,z1)'          , wait = 2 ) : h2.colz ()
-        with use_canvas( 'test_dalitz8 Dalitz(s2,s1)'          , wait = 2 ) : h3.colz ()
-        with use_canvas( 'test_dalitz8 Dalitz(s2,s1) weighted' , wait = 2 ) : h4.colz ()
+        with use_canvas( 'test_dalitz8 Dalitz(z1,z1)'          , wait = 1 ) : h1.colz ()
+        with use_canvas( 'test_dalitz8 Dalitz(z2,z1)'          , wait = 1 ) : h2.colz ()
+        with use_canvas( 'test_dalitz8 Dalitz(s2,s1)'          , wait = 1 ) : h3.colz ()
+        with use_canvas( 'test_dalitz8 Dalitz(s2,s1) weighted' , wait = 1 ) : h4.colz ()
         
     graphs.add ( h1 )
     graphs.add ( h2 )
@@ -486,7 +486,7 @@ def test_dalitz9 () :
 
     with use_style ( 'Z' ) :
 
-        with use_canvas( 'test_dalitz9 Dalitz(s2,s1)'          , wait = 2 ) :
+        with use_canvas( 'test_dalitz9 Dalitz(s2,s1)'          , wait = 1 ) :
 
             histos[0][0].draw('box') 
             for h1,h2 in histos[1:] : 
@@ -497,7 +497,7 @@ def test_dalitz9 () :
             g2.SetLineWidth(2)
             g2.draw('c')
                 
-        with use_canvas( 'test_dalitz9 Dalitz(z2,z1)'          , wait = 2 ) :
+        with use_canvas( 'test_dalitz9 Dalitz(z2,z1)'          , wait = 1 ) :
 
             histos[0][1].draw('box') 
             for h1,h2 in histos[1:] : 
@@ -507,6 +507,7 @@ def test_dalitz9 () :
     graphs.add ( g1     )
     graphs.add ( g2     )
 
+    
 # =============================================================================
 def test_dalitz10 () :
     
@@ -574,7 +575,7 @@ def test_dalitz10 () :
 
     with use_style ( 'Z' ) :
 
-        with use_canvas( 'test_dalitz10  Dalitz(s2,s1)'          , wait = 2 ) :
+        with use_canvas( 'test_dalitz10  Dalitz(s2,s1)'          , wait = 1 ) :
 
             histos[0][0].draw('box') 
             for h1,h2 in histos[1:] : 
@@ -585,7 +586,7 @@ def test_dalitz10 () :
             g2.SetLineWidth(2)
             g2.draw('c')
                 
-        with use_canvas( 'test_dalitz10 Dalitz(z2,z1)'          , wait = 2 ) :
+        with use_canvas( 'test_dalitz10 Dalitz(z2,z1)'          , wait = 1 ) :
 
             histos[0][1].draw('box') 
             for h1,h2 in histos[1:] : 

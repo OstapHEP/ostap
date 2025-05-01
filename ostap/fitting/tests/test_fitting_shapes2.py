@@ -12,13 +12,13 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   ostap.core.meta_info  import root_info
-from   ostap.core.pyrouts    import hID, dsID, Ostap, VE 
-from   ostap.plotting.canvas import use_canvas
-from   ostap.utils.timing    import timing 
-from   ostap.utils.gsl       import gslCount
-from   ostap.utils.utils     import batch_env 
-import ostap.fitting.models  as     Models
+from   ostap.core.meta_info   import root_info
+from   ostap.core.pyrouts     import hID, dsID, Ostap, VE 
+from   ostap.plotting.canvas  import use_canvas
+from   ostap.utils.timing     import timing 
+from   ostap.utils.gsl        import gslCount
+from   ostap.utils.root_utils import batch_env 
+import ostap.fitting.models   as     Models
 import ostap.histos.histos
 import ostap.fitting.dataset
 import ROOT, random

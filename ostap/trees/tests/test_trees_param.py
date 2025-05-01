@@ -24,7 +24,7 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.core.core          import hID, SE, Ostap
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.timing       import timing
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.cleanup      import CleanUp
@@ -184,7 +184,7 @@ def test_parameterize_1D () :
             hz.SetMinimum(0)
             hu.SetMinimum(0)
 
-        with use_canvas ( 'test_trees_param:X-variable' ) , wait ( 1 ) , timing ( 'draw X-variable' , logger = logger ) :
+        with use_canvas ( 'test_trees_param:X-variable' , wait = 1 )  , timing ( 'draw X-variable' , logger = logger ) :
             
             with timing ( 'draw histogram' , logger= logger ) :
                 hx.draw()        
@@ -195,7 +195,7 @@ def test_parameterize_1D () :
             with timing ( 'draw Bernstein' , logger= logger ) :
                 bx.draw('same', linecolor=8)
             
-        with use_canvas ( 'test_trees_param:Y-variable' ) , wait ( 1 ) , timing ( 'draw Y-variable' , logger = logger ) : 
+        with use_canvas ( 'test_trees_param:Y-variable' , wait = 1 ) , timing ( 'draw Y-variable' , logger = logger ) : 
 
             with timing ( 'draw histogram' , logger= logger ) :
                 hy.draw()            
@@ -206,7 +206,7 @@ def test_parameterize_1D () :
             with timing ( 'draw Bernstein' , logger= logger ) :
                 by.draw('same', linecolor=8)
             
-        with use_canvas ( 'test_trees_param:Z-variable' ) , wait ( 1 ) , timing ( 'draw Z-variable' , logger = logger ) :
+        with use_canvas ( 'test_trees_param:Z-variable' , wait = 1 ) , timing ( 'draw Z-variable' , logger = logger ) :
 
             with timing ( 'draw histogram' , logger= logger ) :
                 hz.draw()
@@ -217,7 +217,7 @@ def test_parameterize_1D () :
             with timing ( 'draw Bernstein' , logger= logger ) :
                 bz.draw('same', linecolor=8)
             
-        with use_canvas ( 'test_trees_param:U-variable' ) , wait ( 1 ) , timing ( 'draw U-variable' , logger = logger ) :
+        with use_canvas ( 'test_trees_param:U-variable' , wait = 1 ) , timing ( 'draw U-variable' , logger = logger ) :
             
             with timing ( 'draw histogram' , logger= logger ) :
                 hu.draw()

@@ -11,7 +11,7 @@
 # ============================================================================= 
 from   ostap.core.core         import Ostap, VE
 from   ostap.math.covtransform import transform
-from   ostap.utils.utils       import batch_env 
+from   ostap.utils.root_utils  import batch_env 
 import ostap.math.linalg 
 import ROOT, math 
 # ============================================================================= 

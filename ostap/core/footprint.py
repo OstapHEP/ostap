@@ -11,12 +11,8 @@
 __author__  = "Vanya BELYAEV  Ivan.Belyaev@itep.ru"
 __date__    = "2014-03-10"
 __version__ = "$Revision$"
-__all__     = (
-    'footprint_files' ,  
-)
+__all__     = () 
 # =============================================================================
-from ostap.core.meta_info import python_info, root_info, ostap_info, user 
-from ostap.core.cache_dir import cache_dir
 import os, sys, datetime
 # =============================================================================
 # logging 
@@ -27,27 +23,29 @@ else                       : logger = getLogger ( __name__                )
 # =============================================================================
 start_time = datetime.datetime.now()
 # =============================================================================
-#
-footprint_files = []
 ## central file, if exists and writeables 
-fpfile = '$OSTAPDIR/.footprints' 
-fpfile_ = os.path.expanduser ( os.path.expandvars ( fpfile ) )
-if os.path.exists ( fpfile_ ) and \
-   os.path.isfile ( fpfile_ ) and \
-   os.access      ( fpfile_ , os.W_OK ) : footprint_files.append ( fpfile_ )
-## luser file in (sriteavle) cache directory
-footprint_files .append ( os.path.join ( cache_dir , '.footprints' ) )
-footprint_files = tuple ( footprint_files ) 
-
-
 
 # =============================================================================
 import atexit 
 @atexit.register 
 def add_footprint () :
     # =========================================================================
-    nfp = len ( footprint_files ) 
-    for i , fp_file in enumerate ( footprint_files ) : # ======================
+    from ostap.core.meta_info import python_info, root_info, ostap_info, user 
+    ## list of footprint-files 
+    files = []
+    ## (1) central file. common for everybody (is exists and writeable) 
+    footprints_file = os.path.join ( '$OSTAPDIR' , '.footprints' )
+    footprints_file = os.path.expanduser ( os.path.expandvars ( footprints_file ) )
+    if os.path.exists ( footprints_file ) and \
+       os.path.isfile ( footprints_file ) and \
+       os.access      ( footprints_file , os.W_OK ) :
+        files.append ( footprints_file )
+    ## (2) user file in (writeable) cache directory
+    from   ostap.core.cache_dir import cache_dir
+    if cache_dir : files . append ( os.path.join ( cache_dir , '.footprints' ) )
+    ## 
+    nfp = len ( files ) 
+    for i , fp_file in enumerate ( files ) : # ===============================
         # =====================================================================
         try : # ===============================================================
             # =================================================================

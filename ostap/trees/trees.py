@@ -36,16 +36,17 @@ from   ostap.logger.utils        import print_args
 from   ostap.math.reduce         import root_factory
 from   ostap.histos.histos       import histo_book2, histo_keys
 from   ostap.stats.statvars      import data_decorate , data_range 
-from   ostap.trees.cuts          import vars_and_cuts, order_warning
+from   ostap.trees.cuts          import vars_and_cuts , order_warning
 from   ostap.utils.basic         import ( isatty , terminal_size ,
-                                          NoContext, loop_items  , typename  ,
-                                          split_string           ,
+                                          NoContext, loop_items  , typename )
+from   ostap.utils.strings       import ( split_string           ,
                                           split_string_respect   ,
-                                          var_separators         )                                          
+                                          var_separators         )
 from   ostap.utils.cidict        import cidict, cidict_fun
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.scp_copy      import scp_copy
-from   ostap.utils.utils         import chunked, evt_range, LAST_ENTRY, implicitMT
+from   ostap.utils.utils         import chunked
+from   ostap.utils.ranges        import evt_range
 from   ostap.math.base           import numpy, np2raw  
 from   ostap.logger.symbols      import tree           as tree_symbol
 from   ostap.logger.symbols      import branch         as branch_symbol
@@ -65,6 +66,11 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.trees.trees' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some useful decorations for Tree/Chain objects')
+# =============================================================================
+## the last index for laooping over TTRee/RooAbsData
+LAST_ENTRY  = ROOT.TVirtualTreePlayer.kMaxEntries
+## the last index for laooping over TTRee/RooAbsData
+ALL_ENTRIES = 0 , LAST_ENTRY 
 # =============================================================================
 ## check validity/emptiness  of TTree/TChain
 #  require non-zero poniter and non-empty Tree/Chain
@@ -2785,8 +2791,6 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
     args = tuple ( a for a in config  ) 
     if progress : args += ( progress_conf ( progress ) , ) 
 
-
-    
     from ostap.io.root_file  import REOPEN     
     with ROOTCWD() , REOPEN ( tdir ) as tfile :
         
@@ -2803,6 +2807,7 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
         assert sc.isSuccess () , "Error from Ostap.Trees.add_branch %s" % sc
 
         if ( 6 , 26 ) <= root_info :
+            from ostap.utils.root_utils import implicitMT 
             with implicitMT ( False ) : tfile.Write ( "" , ROOT.TObject.kOverwrite )
         else                          : tfile.Write ( "" , ROOT.TObject.kOverwrite )
         
@@ -3064,6 +3069,7 @@ def buffer_2tree ( tree , name , buffer , progress = True , report = True ) :
         assert sc.isSuccess () , "Error from Ostap.Trees.add_branch %s" % sc
 
         if ( 6 , 26 ) <= root_info :
+            from ostap.utils.root_utils import implicitMT 
             with implicitMT ( False ) : tfile.Write ( "" , ROOT.TObject.kOverwrite )
         else                          : tfile.Write ( "" , ROOT.TObject.kOverwrite )
 

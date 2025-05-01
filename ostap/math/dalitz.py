@@ -77,7 +77,7 @@ def _dp0_points_ ( dp , M , npoints = 250 ) :
     
     pnts = []
 
-    from   ostap.utils.utils    import vrange 
+    from   ostap.utils.ranges import vrange 
 
     ## fill branches 1 and 3 
     for v in vrange ( s1_min , s1_max , npoints ) :

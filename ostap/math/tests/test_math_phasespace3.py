@@ -12,7 +12,7 @@
 from   ostap.core.pyrouts     import Ostap, SE 
 from   ostap.utils.gsl        import gslCount
 from   ostap.logger.colorized import attention 
-from   ostap.utils.utils      import wait, batch_env 
+from   ostap.utils.root_utils import batch_env 
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.math.models      import f1_draw
 from   ostap.math.minimize    import minimize_scalar 
@@ -70,7 +70,7 @@ def test_phasespace3 ( ) :
     
     ps3 = lambda x : Ostap.Kinematics.phasespace3a  ( x , *masses ) ## non-symmetric form 
 
-    with wait ( 3 ), use_canvas( 'test_phasespace3' ) :
+    with use_canvas( 'test_phasespace3' , wait = 1 ) :
         ps1.draw (          xmin = ps1.threshold()     , xmax = 50 , linecolor=2 , linewidth = 2 )
         logger.info ( 'Red   line - 3-body phase space via numerical integration' ) 
         ps2.draw ( 'same' , xmin = ps1.threshold()     , xmax = 50 , linecolor=4 , linewidth = 2 , linestyle = 9 )
@@ -92,7 +92,7 @@ def test_phasespace3i_permutations () :
     from ostap.math.models import f1_draw
     
     xmin = sum ( masses ) 
-    with wait ( 3 ), use_canvas( 'test_phasespace3i_permutations' ) :
+    with use_canvas( 'test_phasespace3i_permutations' , wait = 1 ) :
         for i, f  in enumerate ( funcs ) :
             color = i + 1 
             if i  == 0 :
@@ -114,7 +114,7 @@ def test_phasespace3a_permutations () :
     from ostap.math.models import f1_draw
     
     xmin = sum ( masses ) 
-    with wait ( 3 ), use_canvas( 'test_phasespace3i_permutations' ) :
+    with use_canvas( 'test_phasespace3i_permutations' , wait = 1 ) :
         for i, f  in enumerate ( funcs ) :
             color = i + 1 
             if i  == 0 :
@@ -134,7 +134,7 @@ def test_phasespace3s_permutations () :
         funcs.append ( f )
         
     xmin = sum ( masses ) 
-    with wait ( 3 ), use_canvas( 'test_phasespace3s_permutations' ) :
+    with use_canvas( 'test_phasespace3s_permutations' , wait = 1 ) :
         for i, f  in enumerate ( funcs ) :
             color = i + 1 
             if i  == 0 :
@@ -155,7 +155,7 @@ def test_phasespace3_compare () :
     
     xmin = sum ( masses ) 
         
-    with wait ( 3 ), use_canvas( 'test_phasespace3_compare' ) :
+    with use_canvas( 'test_phasespace3_compare' , wait = 1 ) :
 
         for i, f in enumerate ( ( fun1 , fun2 , fun3 , fun4 ) ) :
 

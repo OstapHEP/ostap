@@ -12,11 +12,11 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   ostap.core.core       import cpp, VE, dsID, rooSilent 
-from   ostap.utils.timing    import timing
-from   ostap.plotting.canvas import use_canvas
-from   ostap.utils.utils     import wait, batch_env  
-import ostap.fitting.models  as     Models 
+from   ostap.core.core        import cpp, VE, dsID, rooSilent 
+from   ostap.utils.timing     import timing
+from   ostap.plotting.canvas  import use_canvas
+from   ostap.utils.root_utils import batch_env  
+import ostap.fitting.models   as     Models 
 import ostap.fitting.roofit 
 import ROOT, random
 # =============================================================================
@@ -73,7 +73,7 @@ def test_minuit_weighted () :
     model.S = NS 
     model.B = NB 
 
-    with use_canvas ( "test_minuit_weighted" ) , wait ( 2 ) : 
+    with use_canvas ( "test_minuit_weighted" , wait = 1  ) : 
         r0 , _  = model.fitTo ( dataset , silent = True , draw = False )
         r0 , f0 = model.fitTo ( dataset , silent = True , draw = True  , nbins = 100 )
     
@@ -102,7 +102,7 @@ def test_minuit_weighted () :
     
     logger.info ('Weighted fit result (SumW2=True)\n%s' % r2.table ( 'SumW2=True')  )
     
-    with use_canvas ( "test_minuit_weighted" ) , wait ( 2 ) : 
+    with use_canvas ( "test_minuit_weighted" , wait = 1  ) : 
         ra , fa = expf.fitTo ( dsw , asymptotic = True , draw = False , silent = True )
         ra , fa = expf.fitTo ( dsw , asymptotic = True , draw = True  , silent = True , nbins = 50 )
         logger.info ('Weighted fit result (asymptotic=True)\n%s' % ra.table ( 'Asymptotic=True')  )

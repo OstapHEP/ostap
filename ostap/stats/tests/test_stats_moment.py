@@ -8,9 +8,9 @@
 """ Test module for ostap/stat/moment.py.
 """
 # =============================================================================
-from   ostap.core.core    import Ostap
-from   ostap.utils.utils  import batch_env 
-import ostap.logger.table as     T 
+from   ostap.core.core        import Ostap
+from   ostap.utils.root_utils import batch_env 
+import ostap.logger.table     as     T 
 import ostap.stats.moment
 import ROOT,random
 # ============================================================================= 

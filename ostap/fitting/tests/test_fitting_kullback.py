@@ -17,7 +17,7 @@ from   ostap.fitting.fithelpers import SETPARS
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env 
+from   ostap.utils.root_utils   import batch_env 
 import ostap.fitting.models     as     Models
 import ostap.fitting.roofit 
 import ostap.histos.histos  
@@ -75,7 +75,7 @@ def test_kullback () :
         ds.clear()
         del ds
             
-    with wait ( 2 ) , use_canvas ( 'test_kullback' ) :
+    with use_canvas ( 'test_kullback' , wait = 1 ) :
 
         hh.draw()
         logger.info ( 'Counter %s' % cnt )

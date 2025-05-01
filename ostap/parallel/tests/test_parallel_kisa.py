@@ -16,7 +16,7 @@ __all__     = ()  ## nothing to be imported
 # =============================================================================
 from   ostap.utils.timing             import timing
 from   ostap.trees.data               import Data
-from   ostap.utils.utils              import batch_env 
+from   ostap.utils.root_utils         import batch_env 
 import ostap.parallel.parallel        as     Parallel  
 import ostap.parallel.kisa              ## ATTENTION!
 import ostap.parallel.parallel_project  ## ATTENTION!

@@ -1113,7 +1113,7 @@ if not ROOT.ROOT.GetROOT().IsBatch() :
         ROOT.ROOT.GetROOT().SetBatch ( True )
         logger.attention ( "BATCH processing is activated (command line) " )
     else : 
-        from ostap.utils.utils import batch_env
+        from ostap.utils.root_utils import batch_env
         batch_env ( logger )
     
 # =============================================================================

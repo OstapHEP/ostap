@@ -8,7 +8,7 @@
 #  @date   2011-06-07
 #
 # =============================================================================
-"""Decoration of some ROOT.TCut objects for efficient use in python"""
+""" Decoration of some ROOT.TCut objects for efficient use in python"""
 # =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -21,7 +21,7 @@ __all__     = (
 from   ostap.core.meta_info   import ostap_info
 from   ostap.core.ostap_types import num_types, string_types, integer_types 
 from   ostap.core.core        import cpp, VE, hID, dsID
-from   ostap.utils.basic      import split_string 
+from   ostap.utils.strings    import split_string 
 from   ostap.utils.utils      import balanced 
 import ROOT
 # =============================================================================

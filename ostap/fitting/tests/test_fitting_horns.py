@@ -12,7 +12,7 @@
 from   ostap.core.core          import Ostap, VE, dsID, rooSilent,rootError 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env  
+from   ostap.utils.root_utils   import batch_env  
 import ostap.fitting.models     as     Models 
 import ostap.fitting.roofit 
 import ROOT, random, warnings 
@@ -52,7 +52,7 @@ def test_horns_1 () :
     horns.signal.a    .fix(7)
     horns.signal.delta.fix(1) 
     dataset = horns.generate ( 5000 ) 
-    with wait ( 1 ) , use_canvas ( 'Test HORNSdini' ) :
+    with use_canvas ( 'Test HORNSdini' , wait = 1 ) :
         horns.S = 5000
         horns.B =   50
         result , _ = horns.fitTo ( dataset , draw = False , silent = True , minimizer = 'minuit' ) 
@@ -87,7 +87,7 @@ def test_hill_1 () :
     horns.signal.a    .fix(7)
     horns.signal.delta.fix(1) 
     dataset = horns.generate ( 5000 ) 
-    with wait ( 1 ) , use_canvas ( 'Test HILLdini' ) : 
+    with use_canvas ( 'Test HILLdini' , wait = 1 ) : 
         horns.S = 5000
         horns.B =   50
         result , _ = horns.fitTo ( dataset , draw = False , silent = True , minimiser = 'minuit' ) 
@@ -125,7 +125,7 @@ def test_hh_1 () :
     horns.signal.delta.fix(1) 
     horns.signal.fL.fix(0.4)
     dataset = horns.generate ( 5000 ) 
-    with wait ( 1 ) , use_canvas ( 'Test HILLdini' ) :
+    with use_canvas ( 'Test HILLdini' , wait = 1 ) :
         horns.S = 5000
         horns.B =   50
         result , _ = horns.fitTo ( dataset , draw = False , silent = True , minimiser = 'minuit' )

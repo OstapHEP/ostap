@@ -17,7 +17,7 @@ __all__    = () ## nothing to import
 from   ostap.core.core          import cpp, VE, dsID, rooSilent 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait, batch_env  
+from   ostap.utils.root_utils   import batch_env  
 import ostap.fitting.models     as     Models 
 import ostap.fitting.roofit 
 import ROOT, random
@@ -66,7 +66,7 @@ def test_poly4 () :
     model = Models.PolyPos_pdf('P4'  , x , power = 3 )
     
     result,f  = model.fitTo ( dataset , silent = True , refit = 5 )
-    with wait ( 1 ) , use_canvas ( 'test_poly4' ) : 
+    with use_canvas ( 'test_poly4' , wait = 1 ) : 
         model.draw ( dataset )        
         
     title = 'Positive polynomial'
@@ -84,7 +84,7 @@ def test_monotonic5 () :
     model = Models.Monotonic_pdf( 'M4'  , x , power = 4, increasing = False  )
     
     result,f  = model.fitTo ( dataset , silent = True , refit = 5 )  
-    with wait ( 1 ) , use_canvas ( 'test_monotonic5' ) : 
+    with use_canvas ( 'test_monotonic5' , wait = 1 ) : 
         model.draw ( dataset )        
         
     title = 'Positive decreasing polynomial'
@@ -103,7 +103,7 @@ def test_convex4() :
     model = Models.Convex_pdf('C4'  , x , power = 4 , increasing = False , convex = True  )
     
     result,f  = model.fitTo ( dataset , silent = True , refit = 5 )  
-    with wait ( 1 ) , use_canvas ( 'test_convex4' ) : 
+    with use_canvas ( 'test_convex4' , wait = 1 ) : 
         model.draw ( dataset )        
         
     title = 'Positive decreasing convex polynomial'
@@ -125,7 +125,7 @@ def test_expopoly2() :
     result,f  = model.fitTo ( dataset , silent = True )
     model.tau.release() 
     result,f  = model.fitTo ( dataset , silent = True , refit = 5 )    
-    with wait ( 1 ) , use_canvas ( 'test_expopoly2' ) : 
+    with use_canvas ( 'test_expopoly2' , wait = 1 ) : 
         model.draw ( dataset )        
     
     title = 'Expo*polynom'
@@ -148,7 +148,7 @@ def test_pspline () :
 
     ## fit it! 
     result,f  = model.fitTo ( dataset , silent = True , refit = 5  )
-    with wait ( 1 ) , use_canvas ( 'test_pspline' ) : 
+    with use_canvas ( 'test_pspline' , wait = 1 ) : 
         model.draw ( dataset )        
         
     title = 'Positive spline'
@@ -169,7 +169,7 @@ def test_mspline () :
 
     ## fit it! 
     result,f  = model.fitTo ( dataset , silent = True , refit = 5 )
-    with wait ( 1 ) , use_canvas ( 'test_mspline' ) : 
+    with use_canvas ( 'test_mspline' , wait = 1 ) : 
         model.draw ( dataset )        
         
     title = 'Positive descreasing spline'
@@ -190,7 +190,7 @@ def test_cspline () :
 
     ## fit it! 
     result,f  = model.fitTo ( dataset , silent = True , refit = 5 )
-    with wait ( 1 ) , use_canvas ( 'test_cspline' ) : 
+    with use_canvas ( 'test_cspline' , wait = 1 ) : 
         model.draw ( dataset )        
 
     title = 'Positive descreasing convex spline'
