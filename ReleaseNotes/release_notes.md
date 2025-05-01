@@ -1,11 +1,17 @@
+## New features
+    
+## Backward incompatible
 
+## Bug fixes
+    
+    
 # v2.0.1.0
 
 ## New features
     
-  - add `footprint.py` : not soem meta-info abotu ostap sessions is saved in `$OSTPDIR/.footprints` (if exists and writeable)  and `$$OSTAP_CACHE_DIR/.footprints` files 
+  - add `footprint.py` : now somw meta-info abotu ostap sessions is saved in `$OSTAPDIR/.footprints` (if exists and writeable)
+    and `$OSTAP_CACHE_DIR/.footprints` files 
 
-    
 # v2.0.0.0 
 
  - stop support ROOT < 6.24
