@@ -2222,7 +2222,7 @@ bool Ostap::Math::CrystalBallDoubleSided::setAlphaR ( const double value )
   if ( s_equal ( value_ , m_alphaR ) && 0 < m_AR ) { return false ; }
   //
   m_alphaR  = value_  ;
-  m_AR = std::exp ( -0.5 * m_alphaL * m_alphaL ) * s_SQRT2PIi  ;
+  m_AR = std::exp ( -0.5 * m_alphaR * m_alphaR ) * s_SQRT2PIi  ;
   //
   return true ;
 }

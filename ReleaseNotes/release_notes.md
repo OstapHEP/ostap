@@ -1,10 +1,13 @@
+# v2.0.3.0
 
 ## New features
     
 ## Backward incompatible
 
 ## Bug fixes
-    
+
+   - fix recently intoruces bug in `Ostap::Math::CrystalBallDoubleSided::setAlphaR`
+    `  
 # v2.0.2.0
 
 Reshulffe code for the base utilities 
