@@ -1118,9 +1118,10 @@ class Trainer(object):
 
             ## if self.prefilter         : all_vars.append ( self.prefilter         )                
             ## if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
-            ## if self.signal_weight     : all_vars.append ( self.signal_weight     )
             ## if self.background_cuts   : all_vars.append ( self.background_cuts   )
-            ## if self.background_weight : all_vars.append ( self.background_weight )
+            
+            if self.signal_weight     : all_vars.append ( self.signal_weight     )
+            if self.background_weight : all_vars.append ( self.background_weight )
 
             # =================================================================
             ## prefilter/prescale signal if required 

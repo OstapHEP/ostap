@@ -1366,7 +1366,14 @@ class LinAlg(object) :
     #  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
     #  @date 2009-09-12
     @staticmethod
-    def V_PRETTY ( vct , fmt = '%.g' , title = '' , prefix = '' , width = 6 , precision = 4 ) :
+    def V_PRETTY ( vct               ,
+                   row_labs  = ()    , 
+                   fmt       = '%.g' ,
+                   title     = ''    ,
+                   prefix    = ''    ,
+                   style     = ''    , 
+                   width     = 6     ,
+                   precision = 4     ) :
         """ Self-printout of SVectors: (...)
         >>> vct = ...
         >>> result, expo = vct.pretty_print( ... ) 
@@ -1391,7 +1398,10 @@ class LinAlg(object) :
             scale = 1
             
         zeros =   fmtv % ( +0 ) , fmtv % ( -0 )
-        
+
+        if row_labs : rows = [ tuple (  v for v in labels ( N , row_labs ) ) ] 
+        else        : rows = []
+
         row   = []
         for v in vct :
             vv = v / scale
@@ -1401,10 +1411,16 @@ class LinAlg(object) :
                 item = fmtv % vv
                 if item in zeros : item = ' 0.0'
             row.append ( item )
+        rows.append ( row )
 
-            
-        table = [ row ]
-        table = T.table  ( table , alignment = N*'c' , prefix = prefix , title = title , colorize_header = True )
+        
+        table = T.table  ( rows                     ,
+                           alignment       = N*'c'  ,
+                           prefix          = prefix ,
+                           title           = title  ,
+                           style           = style  ,
+                           colorize_header = True   )
+
         ## 
         return table, expo 
 
@@ -1741,7 +1757,15 @@ class LinAlg(object) :
     #   result, expo = matrix.pretty_print ( ... ) 
     #   @endcode
     @staticmethod 
-    def M_PRETTY ( mtrx , fmt = '' , prefix = '' , title = '' , width = 6 , precision = 4 ) :
+    def M_PRETTY ( mtrx           ,
+                   row_labs  = () , ## labels for rows 
+                   col_labs  = () , ## labels for rcolumns 
+                   fmt       = '' ,
+                   prefix    = '' ,
+                   title     = '' ,
+                   style     = '' , 
+                   width     =  6 ,
+                   precision =  4 ) :
         """ Self-printout of matrices
         >>> matrix = ...
         >>> result , expo = matrix.pretty_print ( ... )
@@ -1762,9 +1786,9 @@ class LinAlg(object) :
             scale = 1 
             
         ## table = [ tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) ]
-        table = [ tuple ( [ '\\' ] + [ l for l in labels ( cols ) ] ) ]
+        table = [ tuple ( [ '\\' ] + [ l for l in labels ( cols , col_labs ) ] ) ]
 
-        for i,l in enumerate ( labels ( rows ) ) :
+        for i,l in enumerate ( labels ( rows , row_labs ) ) :
             row = [ infostr ( l )  ]
             for j in range ( cols ) :                
                 v     = mtrx ( i , j ) 
@@ -1778,7 +1802,7 @@ class LinAlg(object) :
                 row.append ( item ) 
             table.append ( row )
             
-        table = T.table  ( table , title = title , alignment = 'r'+cols*'c' , prefix = prefix )
+        table = T.table  ( table , title = title , alignment = 'r'+cols*'c' , prefix = prefix , style = style )
         return table, expo 
 
     # =============================================================================
@@ -1893,7 +1917,15 @@ class LinAlg(object) :
     #   result, exp = matrix.pretty_print ( ... ) 
     #   @endcode
     @staticmethod 
-    def MS_PRETTY ( mtrx , fmt = '' , prefix = '' , title = '' , width = 6 , precision = 4 ) :
+    def MS_PRETTY ( mtrx           ,
+                    fmt       = '' ,
+                    row_labs  = () , ## labels for rows 
+                    col_labs  = () , ## labels for rcolumns 
+                    prefix    = '' ,
+                    title     = '' ,
+                    style     = '' , 
+                    width     = 6  ,
+                    precision = 4  ) :
         """ Self-printout of symmetric matrices
         >>> matrix = ...
         >>> result, expo = matrix.pretty_print ( ... ) 
@@ -1914,9 +1946,9 @@ class LinAlg(object) :
             scale = 1 
             
         ## table = [ tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) ]
-        table = [ tuple ( [ '\\' ] + [ l for l in labels ( cols ) ] ) ]
+        table = [ tuple ( [ '\\' ] + [ l for l in labels ( cols , col_labs ) ] ) ]
         ## for i,l in range ( rows ) :
-        for i,l in enumerate ( labels ( rows ) ) :
+        for i,l in enumerate ( labels ( rows , row_labs ) ) :
             row = [ infostr ( l ) ]
             for j in range ( cols ) : 
                 if j < i : item = ditto 
@@ -1932,7 +1964,7 @@ class LinAlg(object) :
                 row.append ( item )                     
             table.append ( row )
             
-        table = T.table  ( table , alignment = 'r'+cols*'c' , prefix = prefix , title = title )
+        table = T.table  ( table , alignment = 'r'+cols*'c' , prefix = prefix , title = title , style = style )
         return table, expo 
     
     # =========================================================================
