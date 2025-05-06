@@ -23,7 +23,7 @@ from   ostap.plotting.canvas       import use_canvas
 from   ostap.utils.root_utils      import batch_env 
 import ostap.fitting.models        as     Models
 import ostap.fitting.roofit
-import ROOT, random
+import ROOT, random, math 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -39,13 +39,9 @@ batch_env ( logger )
 
 # =============================================================================
 def  test_transform () :
-
+    
     logger = getLogger ( 'test_transform' )
     
-    if not (6,20) <= root_info :
-        logger.info ("Not for this version of ROOT!")
-        return 
-
     lmin = 0
     lmax = 5
     
@@ -53,6 +49,8 @@ def  test_transform () :
     mean  =  1000
     sigma =  1000 
 
+    xmin,xmax = x.minmax() 
+    
     ## book very simple data set
     varset  = ROOT.RooArgSet  ( x  )
     dataset = ROOT.RooDataSet ( dsID() , 'Test Data set' , varset )  
@@ -66,6 +64,10 @@ def  test_transform () :
     dataset.lx.setMin ( lmin ) 
     dataset.lx.setMax ( lmax )
     
+    lx = dataset.lx
+    lx.setMin ( lmin ) 
+    lx.setMax ( lmax ) 
+
     ## original PDF 
     gauss = Models.Gauss_pdf ( 'G' , xvar = x ,
                            mean  = ( mean  , mean  / 2 , mean  * 2 ) , 
@@ -75,15 +77,18 @@ def  test_transform () :
         r1 , f1  = gauss.fitTo  ( dataset , draw = True  , silent = True )
         logger.info ( 'Fit x:\n%s' % r1.table() ) 
     
-    lx = dataset.lx
-    LX = Fun1D (  lx , lx )
+    LX = Fun1D ( lx , lx )
     NX = 10 ** LX
-    
+
     ## transformed PDF 
-    tgauss  = TrPDF ( pdf = gauss , new_var = NX )
-    
-    with use_canvas ( 'test_transform/log10' , wait = 1 ): 
-        r2 , f2 = tgauss.fitTo  ( dataset , draw = True  , silent = True )
+    ## tgauss  = TrPDF ( pdf = gauss , new_var = NX )
+
+    J = math.log(10) * ( 10 ** LX ) 
+    ## J = math.log(10) * NX  
+    tgauss  = TrPDF ( pdf = gauss , new_var = NX , jacob = J )
+
+    with use_canvas ( 'test_transform/log10(x)' , wait = 1 ): 
+        r2 , f2 = tgauss.fitTo  ( dataset , draw = False  , silent = True )
         logger.info ( 'Fit log10(x):\n%s' % r2.table() ) 
 
     

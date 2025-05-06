@@ -39,6 +39,7 @@
 // ============================================================================
 #include "Exception.h"
 #include "local_math.h"
+#include "local_utils.h"
 #include "local_roofit.h"
 #include "status_codes.h"
 // ============================================================================
@@ -116,8 +117,9 @@ namespace
     const TNamed&       a    ,
     const TNamed&       b    )
   { 
-    return 
-      name.empty () ? ( oper + "_" + a.GetName() + "_" + b.GetName() ) : name ; 
+    // return name.empty () ? ( oper + "_" + a.GetName() + "_" + b.GetName() ) : name ; 
+    return !name.empty () ? name :
+      Ostap::tmp_name ( oper + "_" + a.GetName() + "_" + b.GetName() , "" , &a , true ) ;
   }  
   // ==========================================================================
   inline std::string  title_ 
@@ -141,8 +143,9 @@ namespace
     const std::string&  oper , 
     const TNamed&       b    )
   { 
-    return 
-      name.empty () ? ( oper + "_" + b.GetName() ) : name ; 
+    // return name.empty () ? ( oper + "_" + b.GetName() ) : name ; 
+    return !name.empty () ? name :
+      Ostap::tmp_name ( oper + "_" + b.GetName() , "" , &b , true ) ;
   }  
   // ==========================================================================
   inline std::string  title2_ 
@@ -155,7 +158,6 @@ namespace
   inline bool a_zero ( const double x ) { return s_zero ( x ) ; }
   // ==========================================================================
 }
-
 // ============================================================================
 // constructor with no variables 
 // ============================================================================

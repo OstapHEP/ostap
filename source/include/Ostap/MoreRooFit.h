@@ -105,20 +105,21 @@ namespace Ostap
       {}
       /// construct x + y + .... 
       template<typename... Args>
-      Addition ( const std::string& name  ,  
-		 const std::string& title ,
-		 RooAbsReal&        x     ,
-		 RooAbsReal&        y     ,
-		 Args const&...     args  ) 	
-	: Addition ( name , title , x , y ) { this->add ( args... ) ;  }
+      Addition
+      ( const std::string& name  ,  
+        const std::string& title ,
+        RooAbsReal&        x     ,
+        RooAbsReal&        y     ,
+        Args const&...     args  ) 	
+        : Addition ( name , title , x , y ) { this->add ( args... ) ;  }
       /// several variables 
       Addition ( const std::string& name  ,  
-		 const std::string& title ,
+                 const std::string& title ,
 		 const RooArgList&  vars  ) ;
       /// copy 
       Addition
-      ( const Addition&    right       , 
-	const char*        newname = 0 ) ;
+      ( const Addition&    right       ,        
+        const char*        newname = 0 ) ;
       /// destructor
       virtual ~Addition () ;
       /// clone 
@@ -134,8 +135,8 @@ namespace Ostap
       template <typename ...ARGS>
       void add ( const RooAbsReal& v , ARGS const&... args )
       {
-	add ( v       ) ;
-	add ( args... ) ;
+        add ( v       ) ;
+        add ( args... ) ;
       }
       // ======================================================================
     public:

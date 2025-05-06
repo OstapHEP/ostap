@@ -1445,7 +1445,7 @@ class FUN1(AFUN1,F1AUX) :
     # =========================================================================
     ## operations with FUN1 object: self (op) fun2 
     def __f1_op__ ( self , fun2 , ftype , pattern ) :
-        """Operations with FUN1 object: self (op) fun2
+        """ Operations with FUN1 object: self (op) fun2
         """
 
         fun_name = lambda  name1 , name2 : \
@@ -1514,7 +1514,7 @@ class FUN1(AFUN1,F1AUX) :
     # =========================================================================
     ## operations with FUN1 object: fun2 (op) self 
     def __f1_rop__ ( self , fun2 , ftype , pattern  ) :
-        """operations with FUN1 object: fun2 (op) self 
+        """ operations with FUN1 object: fun2 (op) self 
         """
         
         fun_name = lambda  name1 , name2 : self.generate_name ( pattern % ( name1 , name2 ) )
@@ -1721,7 +1721,6 @@ class FUN1(AFUN1,F1AUX) :
         if   isinstance ( other    , constant_types ) and iszero  ( other     ) : return self.__constant ( 0 )
         elif isinstance ( self.fun , ROOT.RooAbsPdf ) and \
              isinstance ( other    , constant_types ) and isequal ( other , 1 ) : return self
-        
         return self.__f1_op__ ( other ,  Ostap.MoreRooFit.Abs , pattern = "abs(%s*%s)" )  
         
     # ==============================================================================
@@ -2140,7 +2139,7 @@ class FUN1(AFUN1,F1AUX) :
 #  f1d  = Fun1D ( func , xvar = xvar ) 
 #  @endcode 
 class Fun1D ( FUN1 ) :
-    """Simple wrapper for 1D-function
+    """ Simple wrapper for 1D-function
     >>> func = ...
     >>> xvar = ...
     >>> f1d  = Fun1D ( func , xvar = xvar ) 
@@ -2148,6 +2147,8 @@ class Fun1D ( FUN1 ) :
     def __init__ ( self ,  fun , xvar , name = '' , fixdeps = False ) :
 
         assert xvar and isinstance ( xvar , ROOT.RooAbsReal ) , "'xvar' must be ROOT.RooAbsReal"
+
+        if fun is xvar : fun = Id ( xvar ) 
 
         self.__argfun = fun
         
@@ -2164,9 +2165,6 @@ class Fun1D ( FUN1 ) :
         if not name : name = 'Fun1D_%s' % fun.GetName() 
 
         FUN1.__init__ ( self , name , xvar = xvar )
-
-        if fun is xvar :
-            fun = Ostap.MoreRooFit.Id ( "Id_%s" % xvar.name , "Id:%s" % xvar.title , xvar )            
 
         self.__aux = fun 
         if not fun.depends_on ( xvar ) :
@@ -2215,7 +2213,7 @@ class Id ( FUN1 ) :
 ## @class AFUN2
 #  The base class for 2D-function
 class AFUN2(AFUN1,YVar) :
-    """Base class for 2D-function
+    """ Base class for 2D-function
     """
     def __init__ ( self , name , xvar , yvar , tricks = True , **kwargs ) :
 
@@ -2634,7 +2632,7 @@ class FUN2(AFUN2) :
     #  ff = f1 ** f2 
     #  @endcode 
     def __pow__ ( self , other ) :
-        """Power function  for two functions
+        """ Power function  for two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 ** f2 
@@ -2651,7 +2649,7 @@ class FUN2(AFUN2) :
     #  ff = f1 + f2
     #  @endcode 
     def __radd__ ( self , other ) :
-        """Add two functions
+        """ Add two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 + f2 
@@ -2718,7 +2716,7 @@ class FUN2(AFUN2) :
     #  ff = f1 ** f2 
     #  @endcode 
     def __rpow__ ( self , other ) :
-        """Power function  for two functions
+        """ Power function  for two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 ** f2 
@@ -3644,7 +3642,7 @@ class FUN3(AFUN3) :
     #  ff = f1 / f2 
     #  @endcode 
     def __div__ ( self , other ) :
-        """Divide two functions
+        """ Divide two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 / f2 
@@ -3663,7 +3661,7 @@ class FUN3(AFUN3) :
     #  ff = f1 ** f2 
     #  @endcode 
     def __pow__ ( self , other ) :
-        """Power function  for two functions
+        """ Power function  for two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 ** f2 
@@ -3680,7 +3678,7 @@ class FUN3(AFUN3) :
     #  ff = f1 + f2
     #  @endcode 
     def __radd__ ( self , other ) :
-        """Add two functions
+        """ Add two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 + f2 
@@ -3696,7 +3694,7 @@ class FUN3(AFUN3) :
     #  ff = f1 - f2
     #  @endcode 
     def __rsub__ ( self , other ) :
-        """Subtract two functions
+        """ Subtract two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 - f2 
@@ -3712,7 +3710,7 @@ class FUN3(AFUN3) :
     #  ff = f1 * f2 
     #  @endcode 
     def __rmul__ ( self , other ) :
-        """Multiply two functions
+        """ Multiply two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 * f2 
@@ -3729,7 +3727,7 @@ class FUN3(AFUN3) :
     #  ff = f1 / f2 
     #  @endcode 
     def __rdiv__ ( self , other ) :
-        """Divide two functions
+        """ Divide two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 / f2 
@@ -3747,12 +3745,13 @@ class FUN3(AFUN3) :
     #  ff = f1 ** f2 
     #  @endcode 
     def __rpow__ ( self , other ) :
-        """Power function  for two functions
+        """ Power function  for two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 ** f2 
         """
-        if   isinstance ( other , constant_types ) and isequal ( other , 1 ) : return self.__constant ( 1 ) 
+        if   isinstance ( other , constant_types ) and isequal ( other , 1 ) : return self.__constant ( 1 )
+        elif isinstance ( other , constant_types ) and iszero  ( other     ) : return self.__constant ( 0 ) 
         return self.__f3_rop__ ( other ,  Ostap.MoreRooFit.Power    , pattern = 'pow(%s,%s)' )  
 
 
@@ -3763,7 +3762,7 @@ class FUN3(AFUN3) :
     #  ff = abs ( f ) 
     #  @endcode
     def __abs__ ( self , other = 1 ) :
-        """Absolute value : |f(x)|
+        """ Absolute value : |f(x)|
         >>>  f1 = ...
         >>> ff = abs ( f ) 
         """
@@ -4370,7 +4369,7 @@ class Fun3D ( FUN3 ) :
 ## @class Fun1op
 #  Helper function to define operations 
 class Fun1op(FUN1) :
-    """Helper function to define operations
+    """ Helper function to define operations
     """    
     def __init__  ( self         ,
                     fun1         ,
