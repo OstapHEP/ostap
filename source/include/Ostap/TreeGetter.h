@@ -188,13 +188,15 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the results 
-      Ostap::StatusCode  assign
+      bool assign
       ( RooAbsCollection& result           ,
-        const TTree*      tree   = nullptr ) const ;
+        const TTree*      tree   = nullptr ,
+        const bool        check  = false   ) const ;
       /// get the results
-      Ostap::StatusCode  assign
+      bool assign
       ( const TTree&      tree             , 
-        RooAbsCollection& result           ) const ;
+        RooAbsCollection& result           ,
+        const bool        check  = false   ) const ;
       // ======================================================================
     } ; //                              The end of class Ostap::Trees:RooGetter    
     // ========================================================================

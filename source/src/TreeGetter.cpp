@@ -172,10 +172,10 @@ Ostap::Trees::Getter::eval
 {
   // trivial case 
   if ( m_map.empty() )
-    {
-      result.clear() ;
-      return Ostap::StatusCode::SUCCESS ;
-    }
+  {
+    result.clear() ;
+    return Ostap::StatusCode::SUCCESS ;
+  }
   //
   const Ostap::StatusCode sc = ok ( tree ) ;
   Ostap::Assert ( sc.isSuccess () , "Invalid Getter" , "Ostap::Trees::Getter::eval" ,  sc , __FILE__ , __LINE__ ) ;
@@ -303,24 +303,26 @@ bool Ostap::Trees::RooGetter::add
 // ============================================================================
 // get the results
 // ============================================================================
-Ostap::StatusCode
+bool 
 Ostap::Trees::RooGetter::assign
 ( const TTree&      tree   , 
-  RooAbsCollection& result ) const 
+  RooAbsCollection& result ,
+  const bool        check  ) const 
 { return assign ( result , &tree ) ; }
 // ===========================================================================
 Ostap::Trees::RooGetter::~RooGetter() {}
 // ============================================================================
 // get the results
 // ============================================================================
-Ostap::StatusCode
+bool 
 Ostap::Trees::RooGetter::assign
 ( RooAbsCollection& result ,
-  const TTree*      tree   ) const
+  const TTree*      tree   ,
+  const bool        check  ) const
 {
   // 
-  if ( 0 == ::size ( result ) ) { return Ostap::StatusCode::SUCCESS ; }
-  if ( m_map.empty()          ) { return Ostap::StatusCode::SUCCESS ; }
+  if ( 0 == ::size ( result ) ) { return false ; }
+  if ( m_map.empty()          ) { return false ; }
   //
   typedef RMAP::const_iterator RIT ;
   RMAP rmap {} ;
@@ -339,14 +341,20 @@ Ostap::Trees::RooGetter::assign
       RIT found = rmap.find ( o->GetName() ) ;
       if ( rmap.end() == found ) { continue ; }
       //
-      if      ( rlv ) { rlv->setVal    (                      found->second   ) ; }
-      else if ( clv ) { clv->setIndex  ( Ostap::Math::round ( found->second ) ) ; }
+      const double value = found -> second ;
+      //
+      if ( check && rlv && ( rlv->hasMin() || rlv->hasMax() ) )
+        {
+          const bool ok = rlv->getMin() <= value && value <= rlv->getMax () ;
+          if ( !ok ) { return  false ; }               // RETURN
+          rlv -> setVal ( value ) ;          
+        }
+      else if ( rlv ) { rlv -> setVal    (                      value )   ; } 
+      else if ( clv ) { clv -> setIndex  ( Ostap::Math::round ( value ) ) ; }  
       // ======================================================================
     } //                                       The end of the loop over results
   // ==========================================================================
-  //
-  return Ostap::StatusCode::SUCCESS ;
-  //
+  return true ;
 }    
 // ============================================================================
 /// ROOT technicalities 

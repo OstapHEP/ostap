@@ -1,6 +1,10 @@
 // ============================================================================
 // Include files 
 // ============================================================================
+// STD&STL
+// ============================================================================
+#include <map> 
+// ============================================================================
 // ROOT
 // ============================================================================
 #include "TDecompChol.h"
@@ -64,7 +68,7 @@ Ostap::Utils::COWs::COWs
   : COWs ( addpdf , data , nullptr , progress ) 
 {}
 // =============================================================================
-/* @param addpdf input extended RooAddPdf 
+/*  @param addpdf  input extended RooAddPdf 
  *  @param datax   input data
  *  @param normalzation normalisation set 
  *  @param progress   configraton of progreess bar 
@@ -133,26 +137,26 @@ Ostap::Utils::COWs::COWs
       //      
       // evaluate all individual components
       for ( std::size_t i = 0 ; i < N ; ++i ) 
-	{
-	  const RooAbsReal* r  = static_cast<const RooAbsReal*> ( components().at ( i ) ) ;
-	  cmp_val [ i ] = normset ? r->getVal ( normset ) : r->getVal () ;	  
-	}
+      {
+        const RooAbsReal* r  = static_cast<const RooAbsReal*> ( components().at ( i ) ) ;
+        cmp_val [ i ] = normset ? r->getVal ( normset ) : r->getVal () ;	  
+      }
       //
       const double factor = weight / ( pdf_val * pdf_val ) ;
       for ( std::size_t k = 0 ; k < N ; ++k )
-	{
-	  const double kval = cmp_val [ k ] ;
-	  if ( !kval ) { continue ; }                    // CONTINUE 
-	  W ( k , k ) += factor * kval * kval ;
-	  for ( std::size_t l = k + 1  ; l < N ; ++l  )
-	    {
-	      const double lval = cmp_val [ l ] ;
-	      const double wkl  = factor * kval * lval ;
-	      // strange "feature" of TMatrixTSym ....
-	      W ( l , k ) += 1.0 * wkl ;
-	      W ( k , l ) += 1.0 * wkl ;
-	    }
-	} 
+      {
+        const double kval = cmp_val [ k ] ;
+        if ( !kval ) { continue ; }                    // CONTINUE 
+        W ( k , k ) += factor * kval * kval ;
+        for ( std::size_t l = k + 1  ; l < N ; ++l  )
+        {
+          const double lval = cmp_val [ l ] ;
+          const double wkl  = factor * kval * lval ;
+          // strange "feature" of TMatrixTSym ....
+          W ( l , k ) += 1.0 * wkl ;
+          W ( k , l ) += 1.0 * wkl ;
+        }
+      } 
     }
   //
   // W.Print ( "vvv" ) ;
@@ -356,18 +360,25 @@ Ostap::Trees::add_branch
     {
       if ( tree->GetEntry ( entry ) < 0 ) { break ; };
       /// assign the observables 
-      getter.assign ( *obsset, tree ) ;
-      // evalaute all individual components:
-      for ( std::size_t i = 0 ; i < N ; ++i )
-	{
-	  const RooAbsReal* cmp = static_cast<const RooAbsReal*> ( the_cows->components().at ( i ) ) ;
-	  // get the value of componet 
-	  cmpvals [ i ] = normset ? cmp->getVal ( normset ) : cmp->getVal() ;
-	}
-      /// get the total PDF
-      const double total = normset ? pdffun->getVal ( normset ) : pdffun->getVal() ;
-      TVectorD sweights { the_cows->A() * cmpvals } ; sweights *= 1.0L / total ; 
-      for ( std::size_t i = 0 ; i < N ; ++i ) { std::get<1> ( items [ i ] ) = sweights [ i ] ; }
+      if ( !getter.assign ( *obsset, tree , true ) )
+        {
+          /// Nullify the content 
+          for ( std::size_t i = 0 ; i < N ; ++i ) { std::get<1> ( items [ i ] ) = 0 ; }
+        }
+      else 
+        {
+          // evalaute all individual components:
+          for ( std::size_t i = 0 ; i < N ; ++i )
+            {
+              const RooAbsReal* cmp = static_cast<const RooAbsReal*> ( the_cows->components().at ( i ) ) ;
+              // get the value of componet 
+              cmpvals [ i ] = normset ? cmp->getVal ( normset ) : cmp->getVal() ;
+            }
+          /// get the total PDF
+          const double total = normset ? pdffun->getVal ( normset ) : pdffun->getVal() ;
+          TVectorD sweights { the_cows->A() * cmpvals } ; sweights *= 1.0L / total ; 
+          for ( std::size_t i = 0 ; i < N ; ++i ) { std::get<1> ( items [ i ] ) = sweights [ i ] ; }
+        }
       /// (3) commit branches 
       for ( auto* branch : branches ) { branch->Fill() ; }
       // ====================================================================
