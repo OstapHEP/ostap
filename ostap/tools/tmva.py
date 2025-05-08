@@ -36,7 +36,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info    import python_info 
 from   ostap.core.ostap_types  import num_types, string_types, integer_types 
-from   ostap.core.core         import Ostap, WSE , rootWarning
+from   ostap.core.core         import Ostap, WSE, VE, rootWarning
 from   ostap.utils.cleanup     import CleanUp
 from   ostap.utils.basic       import items_loop 
 from   ostap.utils.timing      import timing
@@ -1222,22 +1222,25 @@ class Trainer(object):
             
             if 0<= self.signal_train_fraction <1 or 0<= self.background_train_fraction < 1 or self.verbose :
                 
-                sc = ROOT.TCut ( self.    signal_cuts )
-                bc = ROOT.TCut ( self.background_cuts )
-                if self.    signal_weight : sc *= self.    signal_weight
-                if self.background_weight : sc *= self.background_weight
-
-                from ostap.frames.frames import frame_statVar 
+                from ostap.frames.frames import frame_statVar
+                
+                sc = ROOT.TCut     ( self.    signal_cuts )
+                bc = ROOT.TCut     ( self.background_cuts )
                 ss = frame_statVar ( self.signal     , '1' , sc )
                 sb = frame_statVar ( self.background , '1' , bc )
-                    
-                if isinstance ( ss , WSE ) : ss = ss.values()
-                if isinstance ( sb , WSE ) : sb = sb.values()
+                NS = ss.nEntries()
+                NB = sb.nEntries()
                 
-                NS = ss.nEntries ()
-                SW = ss.sum      ()            
-                NB = sb.nEntries ()
-                BW = sb.sum      ()
+                if self.    signal_weight :
+                    scw  = sc * self.    signal_weight
+                    sw   = frame_statVar ( self.signal     , '1' , scw )
+                    sw   = WSE ( sw ) 
+                    SW   = VE  ( sw.sum () , sw.sum2() ) 
+                if self.background_weight :
+                    bcw  = bc * self.background_weight                    
+                    bw   = frame_statVar ( self.backgrund  , '1' , bcw )
+                    bw   = WSE ( bw ) 
+                    BW   = VE  ( bw.sum () , bw.sum2() ) 
                 
                 if 0 < self.signal_train_fraction < 1 :
                     nt = math.ceil ( NS * self.signal_train_fraction )

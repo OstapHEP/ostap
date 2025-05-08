@@ -24,9 +24,9 @@ namespace Ostap
     /// empty constructor 
     WStatEntity () = default ;
     /// constructor from StatEntity of values 
-    WStatEntity					\
+    WStatEntity					
     ( const StatEntity& values ) ;
-    /// full consrctor
+    /// full consructor
     WStatEntity
     ( const double      mu      ,
       const double      mu2     ,
