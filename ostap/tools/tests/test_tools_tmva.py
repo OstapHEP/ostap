@@ -40,11 +40,10 @@ else                       : logger = getLogger ( __name__ )
 batch_env ( logger )
 # =============================================================================
 
-
 # =============================================================================
 ## Prepare trainig and testing data for TMVA 
 def prepare_data ( nB = 10000 , nS = 10000 )  :
-    """Prepare trainig and testing data for TMVA"""
+    """ Prepare trainig and testing data for TMVA"""
     
     data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-test-tools-tmva-' )
 
