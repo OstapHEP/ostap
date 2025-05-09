@@ -1,4 +1,5 @@
-## New features
+
+    ## New features
     
 ## Backward incompatible
 
@@ -12,7 +13,7 @@
 
 ## Bug fixes
 
-   - fix recently intoruces bug in `Ostap::Math::CrystalBallDoubleSided::setAlphaR`
+   - fix recently intoruced bug in `Ostap::Math::CrystalBallDoubleSided::setAlphaR`
     `  
 # v2.0.2.0
 
@@ -36,7 +37,7 @@ Reshulffe code for the base utilities
 
  - stop support ROOT < 6.24
  - stop support python < 3.8 
- - split `add_new_branch` into `add_newbranch` and `adD_new_buffer`
+ - split `add_new_branch` into `add_newbranch` and `add_new_buffer`
  - fix Py <-> c++ functions
  - improve `Ostap::StatusCode`
  - more use of `Ostap::Assert`
