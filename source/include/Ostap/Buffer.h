@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <map>
 // ============================================================================
-#if defined ( __cplusplus ) && ( 202002L <= __cplusplus ) // ==================
+#if defined ( __cplusplus ) && ( 202002L <= __cplusplus ) && defined ( __cpp_lib_span ) 
 #include <span> 
 #endif 
 // ============================================================================
@@ -20,7 +20,7 @@ namespace Ostap
   namespace Utils
   {
     // ========================================================================
-#if defined ( __cplusplus ) && ( 202002L <= __cplusplus ) // ==================
+#if defined ( __cplusplus ) && ( 202002L <= __cplusplus ) && defined ( __cpp_lib_span )
     // ========================================================================
     /** @class Buffer 
      *  Helper class to add the content of buffer to TTrer
