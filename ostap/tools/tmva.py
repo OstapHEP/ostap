@@ -1498,20 +1498,26 @@ class Trainer(object):
 
             if self.output_file == '%s.root' % self.name and os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) : 
                 import shutil
-                try :
+                # =============================================================
+                try : # =======================================================
+                    # =========================================================
                     shutil.move ( self.output_file , self.dirname )
                     noof = os.path.join ( self.dirname , self.output_file )
                     if os.path.exists ( noof ) : self.__output_file = noof
-                except :
-                    pass  
-            try : 
+                    # =========================================================
+                except : # ====================================================
+                    # =========================================================
+                    pass
+            # ================================================================
+            try : # ==========================================================
+                # ============================================================
                 with ROOT.TFile.Open ( self.output_file, 'READ' ) as outFile : 
                     self.logger.debug ( "Output ROOT file is %s" % outFile.GetName() ) 
                     if self.verbose : outFile.ls()
-            except :
+                # ===========================================================
+            except : # ======================================================
+                # ===========================================================
                 pass
-
-        
 
         del dataloader
         del factory 
@@ -1522,40 +1528,12 @@ class Trainer(object):
         self.__weights_files = tuple ( [ f for f in glob.glob ( self.__pattern_xml   ) ] )
         self.__class_files   = tuple ( [ f for f in glob.glob ( self.__pattern_C     ) ] ) 
         self.__plots         = tuple ( [ f for f in glob.glob ( self.__pattern_plots ) ] )
-
         
         tfile = make_tarfile ( output  = '.'.join ( [ self.name , 'tgz'] ) ,
                                files   = self.weights_files + self.class_files + self.plots + ( self.log_file , ) ,
                                verbose = self.verbose  ,
                                tmp     = True          ) 
         
-        ## if os.path.exists ( tfile ) :
-        ##     self.logger.debug  ( "Remove existing tar-file %s" % tfile ) 
-        ##     try :
-        ##         os.remove ( tfile )
-        ##     except :
-        ##         pass 
-            
-        ## # create temporary tar-file
-        
-        ## tmptar = CleanUp.tempfile ( prefix = 'ostap-tmp-tarfile-' , suffix = '.tgz' )                
-        ## with tarfile.open ( tmptar , 'w:gz' ) as tar :
-        ##     for x in self.weights_files : tar.add ( x )
-        ##     for x in self.  class_files : tar.add ( x )
-        ##     for x in self.  plots       : tar.add ( x )
-        ##     if self.log_file and os.path.exists ( self.log_file ) and os.path.isfile ( self.log_file ) :
-        ##         tar.add ( self.log_file )
-                
-        ## assert os.path.exists ( tmptar ) and os.path.isfile ( tmptar ) and tarfile.is_tarfile ( tmptar ) , \
-        ##        'Non-existing or invalid temporary tar-file!'
-
-        ## ## copy it
-        ## import shutil
-        ## shutil.move ( tmptar , tfile )
-
-        ## assert os.path.exists ( tfile ) and os.path.isfile ( tfile ) and tarfile.is_tarfile ( tfile ) , \
-        ##        'Non-existing or invalid tar-file!'
-          
         self.__weights_files = tuple ( [ os.path.abspath ( f ) for f in self.weights_files ] ) 
         self.__class_files   = tuple ( [ os.path.abspath ( f ) for f in self.class_files   ] ) 
         self.__plots         = tuple ( [ os.path.abspath ( f ) for f in self.__plots       ] ) 
@@ -1563,11 +1541,15 @@ class Trainer(object):
         ## finally set tar-file 
         if os.path.exists ( tfile ) and tarfile.is_tarfile( tfile ) :            
             if os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) :
-                try :
+                # =============================================================
+                try : # =======================================================
+                    # =========================================================
                     shutil.move ( tfile , self.dirname )
                     ntf = os.path.join ( self.dirname , tfile )
                     if os.path.exists ( ntf ) and tarfile.is_tarfile( ntf ) : tfile = os.path.abspath ( ntf )
-                except :
+                    # =========================================================
+                except : # ====================================================
+                    # =========================================================
                     pass 
             self.__tar_file = os.path.abspath ( tfile ) 
                         
@@ -1590,12 +1572,16 @@ class Trainer(object):
         if not os.path.exists ( output ) or not os.path.isfile ( output ) :
             self.logger.error   ('No output file %s is found !' % output )
             return
-        
-        try :
+
+        # =====================================================================
+        try : # ===============================================================
+            # =================================================================
             import ostap.io.root_file
             with ROOT.TFile.Open ( output , 'READ' , exception = True ) as o :
-                pass   
-        except IOError :
+                pass
+            # =================================================================
+        except IOError : # ====================================================
+            # =================================================================
             self.logger.error ("Output file %s can't be opened!"   % output )
             return
           
@@ -2149,7 +2135,7 @@ class Reader(object)  :
         # print('Response is %s' % method.eval ( tree ) )
         # @endcode 
         def eval ( self , entry , cut_efficiency = 0.9 ) :
-            """Evaluate the method fomr TTree/RooAbsData using the
+            """ Evaluate the method from TTree/RooAbsData using the
             accessors, defined  early
             >>> tree   = ...
             >>> method = ...
@@ -2587,7 +2573,6 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-
     
 # =============================================================================
 ##                                                                      The END 
