@@ -171,18 +171,20 @@ else()
    execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --cxxstandard
                     OUTPUT_VARIABLE CXX_ROOT
                     OUTPUT_STRIP_TRAILING_WHITESPACE )
-
+    
+   message ( "----> C++/ROOT standard : " ${CXX_ROOT} )
+    
    if     ( ${CXX_ROOT} STREQUAL "26" ) 
       target_compile_features (ostap PUBLIC cxx_std_26 )
-      message ( "----> C++    standard    : C++26 " )    
+      message ( "----> C++    standard   : C++26 " )    
       set_property(TARGET ostap PROPERTY CXX_STANDARD 26 )
    elseif ( ${CXX_ROOT} STREQUAL "23" ) 
       target_compile_features (ostap PUBLIC cxx_std_23 )
-      message ( "----> C++    standard    : C++23 " )    
+      message ( "----> C++    standard   : C++23 " )    
       set_property(TARGET ostap PROPERTY CXX_STANDARD 23 )
    elseif ( ${CXX_ROOT} STREQUAL "20" ) 
       target_compile_features (ostap PUBLIC cxx_std_20 )  
-      message ( "----> C++    standard    : C++20 " )    
+      message ( "----> C++    standard   : C++20 " )    
       set_property(TARGET ostap PROPERTY CXX_STANDARD 20 )
    elseif ( ${CXX_ROOT} STREQUAL "17" ) 
       target_compile_features (ostap PUBLIC cxx_std_17 )
