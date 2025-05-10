@@ -449,21 +449,22 @@ def tree_project ( tree                    ,
     from ostap.trees.param import param_types_nD        
     assert input_histo or  isinstance ( target , param_types_nD ) , 'Invalid target/histo type %s' % type ( target ) 
 
+    ## 3) parse input expressions
+    varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
+
     ## use frame if requested and if/when possible 
     if use_frame and 0 == first and len ( tree ) < last : 
         if input_histo or ( 6 , 25 ) <= root_info :
             import ostap.frames.frames as F 
             frame  = F.DataFrame ( tree )
             if progress : frame , _ = F.frame_progress ( frame , len ( tree ) )
-            with ActiveBranches  ( tree , cuts , what ) :            
+            with ActiveBranches  ( tree , cuts , *varlst ) :            
                 return F.frame_project ( frame , target , expressions = what , cuts = cuts , lazy = False  )
 
     ## dimension of the target 
     dim = target.dim ()
     assert 1 <= dim <= 4 , 'Invalid dimension of target: %s' % dim  
 
-    ## 3) parse input expressions
-    varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
     if input_string and 2 <= len ( varlst ) and order_warning :
         vv = ' ; '.join  ( varlst  ) 
         logger.attention ("project: from v1.10.1.9 variables are in natural order [x;y;..]=[ %s ]" % vv  )
