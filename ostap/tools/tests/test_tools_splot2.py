@@ -132,9 +132,13 @@ def test_splotting2 () :
     title = 'Input TTree/TChain'
     logger.info ( '%s:\n%s' % ( title , chain.table ( title = title , prefix = '# ' ) ) ) 
 
-    histo = ROOT.TH2F ( hID() , 'input histogram' , 200 , xmin , xmax , 200 , ymin , ymax )
-    data.chain.project ( histo , 'x, y' ) 
+    chain  = data.chain
 
+    histo = ROOT.TH2F ( hID() , 'input histogram' , 200 , xmin , xmax , 200 , ymin , ymax )
+    chain.project ( histo , 'x, y' ) 
+
+    chain = data.chain
+    
     dataset  = histo 
 
     signalx  = Models.Gauss_pdf ( 'GX' , xvar = xvar , mean = ( mean ,  xmin , xmax  ) , sigma = ( sigma, 0.5 * sigma , 2.0 * sigma ) )
