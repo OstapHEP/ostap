@@ -4,7 +4,7 @@
   1.  Add `defined(__cpp_lib_span)` check into `Ostap/AddBugger/h`
   1.  Several tweaks aroubns `ActiveBRanches` contetx manager to activate/deactivate TTree branches
   1.  Explciitely add `ActiveBranches` for many functions that operate with `TTree/TChain`c
-  1.  Fix form misterosy failures in several reweighting tests 
+  1.  Fix for misterious failures in several reweighting tests 
 
 ## Backward incompatible
 
