@@ -1308,7 +1308,7 @@ def ds_project  ( dataset                ,
         if not first < last : return target                             ## RETURN        
         tail = cuts , cut_range , first , last
 
-    ## somethinug convertible to DataFrame/Frame/Node
+    ## something convertible to DataFrame/Frame/Node
     else :
         
         assert not cut_range                   , "ds_project: `cut-range' is not allowed!"
@@ -1320,36 +1320,43 @@ def ds_project  ( dataset                ,
         tail    = ()
         
     from ostap.utils.progress_conf import progress_conf
-    
+    from ostap.trees.trees import ActiveBranches
+    active = ActiveBranches ( dataset , cuts , *varlst ) 
+                              
     the_args = ( target , ) + varlst + tail 
     ## very special case of projection several expressions into the same target 
     if 1 == dim and dim < nvars : 
         ## very special case of projection several expressions into the same target 
         htmp  = target_copy ( target )  ## prepare temporary object 
         for var in varlst :
-            htmp = target_reset ( htmp ) ## rest the temporary object 
-            args = ( htmp , var ) + tail 
-            if progress : sc = Ostap.HistoProject.project  ( dataset , progress_conf () , *args )
-            else        : sc = Ostap.HistoProject.project  ( dataset ,                    *args )
+            htmp = target_reset ( htmp ) ## reset the temporary object 
+            args = ( htmp , var ) + tail
+            with active : 
+                if progress : sc = Ostap.HistoProject.project  ( dataset , progress_conf () , *args )
+                else        : sc = Ostap.HistoProject.project  ( dataset ,                    *args )
             if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project %s" % sc )
             ## update results 
             target += htmp
             del htmp 
     elif 1 == dim :
-        if progress : sc = Ostap.HistoProject.project  ( dataset , progress_conf () , *the_args )
-        else        : sc = Ostap.HistoProject.project  ( dataset ,                    *the_args )
+        with active : 
+            if progress : sc = Ostap.HistoProject.project  ( dataset , progress_conf () , *the_args )
+            else        : sc = Ostap.HistoProject.project  ( dataset ,                    *the_args )
         if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project  %s" % sc )
     elif 2 == dim : 
-        if progress : sc = Ostap.HistoProject.project2 ( dataset , progress_conf () , *the_args )
-        else        : sc = Ostap.HistoProject.project2 ( dataset ,                    *the_args )
+        with active : 
+            if progress : sc = Ostap.HistoProject.project2 ( dataset , progress_conf () , *the_args )
+            else        : sc = Ostap.HistoProject.project2 ( dataset ,                    *the_args )
         if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
     elif 3 == dim : 
-        if progress : sc = Ostap.HistoProject.project3 ( dataset , progress_conf () , *the_args )
-        else        : sc = Ostap.HistoProject.project3 ( dataset ,                    *the_args )
+        with active : 
+            if progress : sc = Ostap.HistoProject.project3 ( dataset , progress_conf () , *the_args )
+            else        : sc = Ostap.HistoProject.project3 ( dataset ,                    *the_args )
         if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
     elif 4 == dim : 
-        if progress : sc = Ostap.HistoProject.project4 ( dataset , progress_conf () , *the_args )
-        else        : sc = Ostap.HistoProject.project4 ( dataset ,                    *the_args )
+        with active : 
+            if progress : sc = Ostap.HistoProject.project4 ( dataset , progress_conf () , *the_args )
+            else        : sc = Ostap.HistoProject.project4 ( dataset ,                    *the_args )
         if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
         
     return target if sc.isSuccess() else None 

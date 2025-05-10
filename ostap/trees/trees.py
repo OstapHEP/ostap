@@ -116,9 +116,9 @@ def _iter_cuts_ ( tree , cuts = '' , first = 0 , last = LAST_ENTRY , progress = 
     no need in second call
 
     - If only (small) fraction of branches is used in 'cuts' and/or
-    only small fraction of branches wil lbe used in the loop,
+    only small fraction of branches will be used in the loop,
     the processing can be speed up siginificantly
-    by specification of ``active'' branches:
+    by specification of `active' branches:
 
     >>> tree = ...
     >>> sum_y = 0 
@@ -454,8 +454,9 @@ def tree_project ( tree                    ,
         if input_histo or ( 6 , 25 ) <= root_info :
             import ostap.frames.frames as F 
             frame  = F.DataFrame ( tree )
-            if progress : frame , _ = F.frame_progress ( frame , len ( tree ) )            
-            return F.frame_project ( frame , target , expressions = what , cuts = cuts , lazy = False  )
+            if progress : frame , _ = F.frame_progress ( frame , len ( tree ) )
+            with ActiveBranches  ( tree , cuts , what ) :            
+                return F.frame_project ( frame , target , expressions = what , cuts = cuts , lazy = False  )
 
     ## dimension of the target 
     dim = target.dim ()
@@ -487,10 +488,7 @@ def tree_project ( tree                    ,
                     
     ## get the list of active branches 
     active = tree.the_variables ( cuts , *varlst )
-    from ostap.utils.progress_conf import progress_conf
-    
     with ActiveBranches  ( tree , *active ) :
-
         ## very special case of projection several expressions into the same target 
         if 1 == dim and dim < nvars : 
             ## very special case of projection several expressions into the same target 
@@ -561,7 +559,7 @@ def tree_draw ( tree                    ,
     kw = cidict ( transform = cidict_fun , **kwargs )
         
     if native and 1 == nvars :
-        with ROOTCWD () :
+        with ROOTCWD () , ActiveBranches ( tree , cuts , *varlst ) :
             groot  = ROOT.ROOT.GetROOT()
             groot.cd()            
             hname  = hID ()
@@ -608,7 +606,8 @@ def tree_draw ( tree                    ,
     elif 3 == nvars : varexp = '%s : %s : %s' % ( varlst [ 2 ] , varlst [ 1 ] , varlst [ 0 ] ) 
     
     ## fill the histoigram 
-    tree.Project ( histo.GetName() , varexp , cuts , ''   , last  - first , first       )
+    with ActiveBranches ( tree , cuts , varexp , *varlst ) :
+        tree.Project ( histo.GetName() , varexp , cuts , ''   , last  - first , first       )
     ## draw the histogram 
     histo.draw ( opts , **kw  )
     return histo
@@ -627,7 +626,7 @@ ROOT.TChain.draw = tree_draw
 #  - integer value is "in tree" if it corresponds to the valid entry number
 #  - string  value is "in tree" if it corresponds to the name of branch or leaf 
 def _rt_contains_ ( tree , obj ) :
-    """Check if object is in tree/chain  :
+    """ Check if object is in tree/chain  :
     >>> tree = ...
     >>> if obj in tree : 
     ...
@@ -772,20 +771,23 @@ def tree_branches ( t , pattern = '' , *args ) :
     vlst =  [ b.GetName() for b in t.GetListOfBranches() ]
     if not vlst : return tuple()
 
-    if pattern :        
-        try : 
+    if pattern :
+        # ======================================================================
+        try : # ================================================================
+            # ==================================================================
             import re
             c  =  re.compile ( pattern , *args )
             lst  = [ v for v in vlst if c.match ( v  ) ]
             lst.sort()
-            return tuple ( lst ) 
-        except :
+            return tuple ( lst )
+            # ================================================================
+        except : # ===========================================================
+            # ================================================================
             logger.error ('branches: exception is caught, skip it' , exc_info = True ) 
             
     lst  = [ v for v in vlst  ]
     lst.sort()
     return tuple ( lst ) 
-
 
 ROOT.TTree.branches = tree_branches
 
@@ -1635,7 +1637,7 @@ ROOT.TTree.topdir = property ( top_dir , None , None )
 #  vars = the_variables ( tree , [ 'x>0&& y<13' , 'zzz*15' ] ) ## ditto
 #  @endcode 
 def the_variables ( tree , expression , *args ) :
-    """Get all variables needed to evaluate the expressions for the given tree
+    """ Get all variables needed to evaluate the expressions for the given tree
     >>> tree = 
     >>> vars = tree.the_variables ( tree , [ 'x>0&& y<13' , 'zzz' ]  )
     >>> vars =      the_variables (        [ 'x>0&& y<13' , 'zzz' ]  ) ##  ditto
@@ -1659,11 +1661,12 @@ def the_variables ( tree , expression , *args ) :
         if not e : continue
         
         tf = Ostap.Formula ( fID() , str ( e ) , tree )
+        assert tf.ok () , "the_variables: Invalid expression : `%s'" % e 
         if not tf.ok()  :
-            logger.error ('the_variables: Invalid formula "%s"' % e )
+            logger.error ("the_variables: Invalid expression : `%s'" % e )
             del tf 
             return None
-        
+
         i    =  0
         leaf = tf.GetLeaf ( i )
         while leaf :
@@ -1834,7 +1837,7 @@ ROOT.TTree.array_vars = _rt_array_vars_
 #        print tree.pt_Lb, tree.eta_Lc 
 #  @endcode
 class ActiveBranches(object) :
-    """Context manager to activate only certain branches in the tree.
+    """ Context manager to activate only certain branches in the tree.
     - It drastically speeds up the iteration over the tree.
     >>> tree = ...
     >>> with ActiveBraches( tree , '*_Lb', 'eta_Lc') :
@@ -1844,26 +1847,38 @@ class ActiveBranches(object) :
     """
     def __init__ ( self , tree , *vars ) :
         
-        assert tree and vars , 'ActiveBrnaches: both tree and vars must be valid!'
+        ## assert tree and vars , 'ActiveBranches: both tree and vars must be valid!'
         
-        self.__tree = tree
-        self.__vars = vars 
+        self.__tree = tree if  tree and isinstance ( tree , ROOT.TTree )          else None 
+        self.__vars = self.__tree.the_variables ( *vars ) if vars and self.__tree else () 
         
     ## context manager: ENTER 
     def __enter__ ( self ) :
-        ## deactivate the all branches 
-        self.__tree.SetBranchStatus ( '*' , 0 )     ## deactivate *ALL* branches
-        for var in self.__vars :
-            ##  activate certain branches 
-            self.__tree.SetBranchStatus ( var , 1 )  ## activate only certain branches
-            
+        
+        if self.__vars : ## and self.__tree : 
+            ## deactivate the all branches
+            self.__tree.SetBranchStatus ( '*' , 0 )     ## deactivate *ALL* branches
+            for var in self.__vars :
+                ##  activate certain branches 
+                self.__tree.SetBranchStatus ( var , 1 )  ## activate only certain branches
         return self.__tree 
     
     ## context manager: EXIT 
     def __exit__ ( self , *_ ) :
-        ## reactivate all branches again 
-        self.__tree.SetBranchStatus ( '*' , 1 )     ## reactivate *ALL* branches
-        
+        ## reactivate all branches again
+        if self.__vars : ## and self.__tree :
+            self.__tree.SetBranchStatus ( '*' , 1 )     ## reactivate *ALL* branches
+            
+    @property
+    def vars ( self ) :
+        """`vars' : list of activated Tree variabes, or () """
+        return self.__vars
+    
+    @property
+    def tree ( self ) :
+        """`tree` : the actual TTree or None """
+        return self.__tree 
+
 # ===============================================================================
 ## Context manager to activate only certain branches in the tree.
 #  It drastically speeds up the iteration over the tree.
@@ -1885,6 +1900,21 @@ def active_branches ( tree , *vars ) :
     """
     return ActiveBranches ( tree , *vars ) 
     
+# =============================================================================
+## get the list of actiev branches
+#  @code
+#  tree = ...
+#  active = tree.active_branches() 
+#  @endcode 
+def tree_active_branches ( tree ) :
+    """ Get the list of actiev branches
+    >>> tree = ...
+    >>> active = tree.active_branches() 
+    """
+    return tuple ( sorted ( b.GetName() for b in tree.GetListOfBranches() if tree.GetBranchStatus ( b.GetName () ) ) ) 
+
+ROOT.TTree.active_branches = tree_active_branches
+
 # =============================================================================
 ## files and utilisties for TTree/TChain "serialization"
 # =============================================================================
@@ -2717,7 +2747,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
 
 
 # ===============================================================================
-## Add new brnach to the tree
+## Add new branch to the tree
 #  @see Ostap::Trees::adD_branch 
 def add_new_branch ( tree , branch , / , **kwargs ) :
     """ Add new branch to the tree
@@ -3217,10 +3247,12 @@ _new_methods_  += (
     #
     ROOT.TTree .vminmax   ,
     ROOT.TChain.vminmax   ,
-    #
-    ROOT.TTree .branches  , 
-    ROOT.TTree .__repr__  , 
-    ROOT.TTree .__str__   ,
+    #  
+    ROOT.TTree.branches        , 
+    ROOT.TTree.active_branches , 
+    ## 
+    ROOT.TTree .__repr__     , 
+    ROOT.TTree .__str__      ,
     #
     ROOT.TChain.files        ,
     ROOT.TChain.__getslice__ ,

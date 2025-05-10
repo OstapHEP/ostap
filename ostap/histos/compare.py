@@ -16,7 +16,8 @@ __date__    = "2011-06-07"
 __all__     = () 
 # =============================================================================
 from   ostap.core.core        import hID , VE 
-from   ostap.logger.colorized import allright  
+from   ostap.logger.colorized import allright
+from   ostap.logger.symbols   import plus_minus 
 from   ostap.logger.pretty    import pretty_float
 import ostap.math.math_ve     as     MVE 
 import ostap.histos.histos 
@@ -1297,7 +1298,7 @@ def _h1_cmp_prnt_ ( h1                  ,
     if not head1 : head1 = h1.GetName() 
     if not head2 : head2 = h2.GetName()
 
-    fmt    = '%+11.4g +- %-10.4g'
+    fmt    = '%%+11.4g %s %%-10.4g' % plus_minus
     wid0   = 25
 
     values = [ 'Integral' ,
@@ -1390,7 +1391,7 @@ def _h2_cmp_prnt_ ( h1              ,
     if not head1 : head1 = h1.GetName() 
     if not head2 : head2 = h2.GetName()
 
-    fmt1   = '%+11.4g +- %-10.4g'
+    fmt1   = '%%+11.4g %s %%-10.4g' % plus_minus 
     fmt    = '%+12.5g'
     wid0   = 25
     
@@ -1559,24 +1560,26 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
 
     def fmt (  v  ) :
         vv  = abs ( v.value() )
-        if   100 <= vv : return '%+8.4f +/- %-08f'
-        elif  10 <= vv : return '%+8.5f +/- %-08f'
-        return                  '%+8.6f +/- %-08f'
+        if   100 <= vv : return '%%+8.4f %s %%-08f' % plus_minus 
+        elif  10 <= vv : return '%%+8.5f %s %%-08f' % plus_minus 
+        return                  '%%+8.6f %s %%-08f' % plus_minus 
         
     if diffneg :        
         dmn , _ = h1.cmp_minmax ( h2                     ,
                                   density = density      ,
-                                  diff    = lambda a , b : 2 * a.asym ( b ) )
-        value = dmn [ -1 ] * 100        
-        row   = allright ( diffneg ) , '[%]' , value.toString( fmt ( value ) ) 
+                                  diff    = lambda a , b : 2 * a.asym ( b ) )        
+        value = dmn [ -1 ] * 1 
+        v , n = value.pretty_print ( parentheses = False )
+        row   = allright ( diffneg   ) , '[10^%+d]' % n if n else '' , v 
         rows.append ( row  )
         
     if diffpos :        
         _ , dmx  = h1.cmp_minmax ( h2                     ,
                                    density = density      ,
                                    diff    = lambda a , b : 2 * a.asym ( b ) )         
-        value = dmx [ -1 ]  * 100       
-        row   = allright ( diffpos ) , '[%]' , value.toString( fmt ( value ) ) 
+        value = dmx [ -1 ]  * 1
+        v , n = value.pretty_print ( parentheses = False )
+        row   = allright ( diffpos  ) , '[10^%+d]' % n if n else '' , v 
         rows.append ( row  )
 
     acos = lambda x : MVE.acos ( max ( min ( x , 1.0 ) , -1.0 ) )  

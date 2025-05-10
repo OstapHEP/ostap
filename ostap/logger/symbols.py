@@ -80,6 +80,13 @@ __all__     = (
     ##
     'delta_symbol'        ,
     ##
+    'union'               , 
+    'intersection'        , 
+    'exclusive_or'        ,  
+    'difference'          ,
+    ## 
+    'iteration'           , 
+    ##    
     'labels'               
 )
 # ===========================================================================
@@ -174,6 +181,8 @@ union            = '\U000022C3' if show else ''
 intersection     = '\U000022C2' if show else ''
 exclusive_or     = '\U000022BB' if show else '^'
 difference       = '\U000022BB' if show else '-'
+
+iteration        = '\U00003005' if show else ''
 
 ## indices: circled numbes from 0 to 50 (inclusive) 
 indices2 = '\U000024FF' + \

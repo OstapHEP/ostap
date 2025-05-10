@@ -42,15 +42,13 @@ batch_env ( logger )
 
 testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-gbreweight-' )
 ## dbname     = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-gbreweight-'   )
-## testdata = 'testdata.root'
-## dbname   = 'testdb.db'
 
 tag_data   = 'DATA2_histogram'
 tag_datax  = 'DATAX_histogram'
 tag_datay  = 'DATAY_histogram'
 tag_mc     = 'MC2_tree'
  
-## if os.path.exists ( testdata ) : os.remove ( testdata ) 
+if os.path.exists ( testdata ) : os.remove ( testdata ) 
 ## if os.path.exists ( dbname   ) : os.remove ( dbname   )
 
 import ostap.parallel.kisa
@@ -118,7 +116,6 @@ def prepare_data ( ) :
             yvar [ 0 ] = y
             
             datatree.Fill()
-
             
         for i in  range ( N1 ) :
 
@@ -230,19 +227,18 @@ def prepare_data ( ) :
 # =============================================================================
 def test_gbreweight() :
 
-
     logger = getLogger("test_gbreweight")
-    
-    try :
-        
+
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
         from ostap.tools.reweighter import Reweighter
         rw = Reweighter ()
-        
-    except ImportError :
-    
+        # =====================================================================
+    except ImportError : # ====================================================
+        # =====================================================================
         logger.error ('GBReweighter is not available!')
         return 
-
 
     if not os.path.exists( testdata ) :
         with timing ( "Prepare input data" , logger = logger ) :
@@ -257,7 +253,6 @@ def test_gbreweight() :
     ddata , wdata = data.chain.slice ( 'x , y' , transpose = True )
     dmc   , wmc   = mc  .chain.slice ( 'x , y' , transpose = True )
 
-        
     ## train BDT
     rw.reweight ( original = dmc , target = ddata ) 
     
@@ -273,13 +268,21 @@ def test_gbreweight() :
     wsum = mc.chain.sumVar ( 'w' )
     wvar = '%d*w/%s' % ( len ( data.chain ) , wsum.value() )
     
-    nn   = '%s' % ( len(data.chain)*1.0 / len ( mc.chain) ) 
+    nn   = '%s' % ( len ( data.chain ) * 1.0 / len ( mc.chain) ) 
+
+    print ( ' IAM HERE-1' )
     
-    for phi in vrange ( 0 , 2*math.pi , 10 ) :
+    for i, phi in enumerate ( vrange ( 0 , 2*math.pi , 10 ) ) :
         
-        dvar = '%.5f*x+%.5f*y' % ( math.cos ( phi ) , math.sin ( phi ) )
+        print ( ' IAM HERE-2' , i , phi ) 
+
         
-        mn , mx = data.chain.statVar ( dvar ).minmax() 
+        dvar = '%.6f*x+%.6f*y' % ( math.cos ( phi ) , math.sin ( phi ) )
+        
+        mn , mx = data.chain.statVar ( dvar ).minmax()
+
+        continue
+    
         h1 = ROOT.TH1D ( hID() , '' , 100 , *axis_range ( mn , mx , delta = 0.05 ) ) 
         h2 = h1.clone()
         h3 = h1.clone()
@@ -299,7 +302,7 @@ def test_gbreweight() :
         h2.draw ( 'same hist')
         h3.draw ( 'same')
         
-        time.sleep ( 2 ) 
+        time.sleep ( 1 ) 
         
 # =============================================================================
 if '__main__' == __name__ :

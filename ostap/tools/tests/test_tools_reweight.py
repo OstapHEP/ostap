@@ -10,11 +10,13 @@
 """
 # =============================================================================
 from   ostap.utils.timing     import timing
+from   ostap.core.core        import Ostap 
 from   ostap.logger.colorized import attention, allright
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.utils.root_utils import batch_env 
 from   ostap.utils.cleanup    import CleanUp
-from   ostap.histos.histos    import h1_axis 
+from   ostap.histos.histos    import h1_axis
+from   ostap.logger.symbols   import iteration 
 import ostap.io.zipshelve     as     DBASE
 import ostap.io.root_file
 import ostap.trees.trees
@@ -104,16 +106,15 @@ hmc = ROOT.TH1D('hMC','histo-template for MC', 77 ,0,100 ) ; hmc.Sumw2()
 maxIter = 10  
 
 ## check database 
-import os
-if not os.path.exists( dbname ) :
-    with DBASE.open ( dbname , 'c' ) :
+if not os.path.exists ( dbname ) :
+    with DBASE.open   ( dbname , 'c' ) :
         logger.info("Create new weights DBASE '%s'" % dbname ) 
 else :
     logger.info("Existing weights DBASE '%s' will be used" % dbname ) 
 
-#
+# =============================================================================
 ## make reweighting iterations
-# 
+# =============================================================================
 from   ostap.tools.reweight         import Weight, makeWeights, WeightingPlot, W2Data
 from   ostap.fitting.pyselectors    import SelectorWithVars, Variable 
 import ostap.parallel.parallel_fill
@@ -125,11 +126,12 @@ weighting = ( Weight.Var     ( 'x'       ,  address = 'x-reweight'  ) , )
 ## variables to be used in MC-dataset 
 variables  = [ Variable ( 'x'  , 'x-variable' , 0  , 100 ) ]
 
+converged = False 
 # =============================================================================
 ## start iterations:
 for iter in range ( 1 , maxIter + 1  ) :    
     
-    tag = 'Reweighting iteration #%d' % iter
+    tag = 'Reweighting iteration #%d%s' %  ( iter , iteration ) 
     logger.info ( allright ( tag ) ) 
 
     with timing ( tag + ': prepare MC-dataset:' , logger = logger ) : 
@@ -155,9 +157,9 @@ for iter in range ( 1 , maxIter + 1  ) :
       
         ## 1b) add "weight" variable to the dataset
         mcds.add_reweighting ( weighter , name = 'weight' )
-        if 1 == iter % 10  : logger.info ( ( tag + ' MCDATA:\n%s' ) %  mcds )
+        if 1 == iter % 10  : logger.info ( ( tag + ' MCDATA:\n%s' ) % mcds )
         
-    with timing ( tag + ': make actual reweighting:' , logger = logger ) :
+    with timing ( tag + ': make the actual reweighting:' , logger = logger ) :
         # ==============================================================================
         ## 2) update weights
         plots      = [ WeightingPlot( 'x'   , 'weight' , 'x-reweight'  , hdata , hmc ) ]    
@@ -171,15 +173,15 @@ for iter in range ( 1 , maxIter + 1  ) :
                                    tag        = tag   )
         
     with timing ( tag + ': project weighted MC-dataset:' , logger = logger ) : 
-       # ==============================================================================
-       ## 3) make MC-histogram 
-       mcds .project  ( hmc , 'x' , 'weight'  )
+        # ==============================================================================
+        ## 3) make MC-histogram 
+        hmc = mcds .project  ( hmc , 'x' , 'weight'  )
 
     with timing ( tag + ': compare DATA and MC distributions:' , logger = logger ) :  
         # ==============================================================================
         ## 4) compare "Data" and "MC"  after the reweighting on the given iteration    
-        logger.info  ( tag + ': compare DATA and MC for iteration #%d' % iter )
-        
+        logger.info  ( tag + ': compare DATA and MC for iteration #%d%s' %  ( iter , iteration ) ) 
+
         hh = 'Iteration#%d: ' % iter 
 
         ## 4a) compare the basic properties: mean, rms, skewness and kurtosis 
@@ -193,7 +195,8 @@ for iter in range ( 1 , maxIter + 1  ) :
                                     ( hmc , density = True , title = title , prefix = '# ' ) ) )
 
     if not active and 3 < iter :
-        logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
+        
+        logger.info    ( allright ( 'No more iterations, converged after #%d%s' % ( iter , iteration ) ) )
         title = 'Reweighted dataset after #%d iterations' % iter 
         logger.info ( '%s:\n%s' % ( title , mcds.table2 ( variables = [ 'x' ]  ,
                                                           title     = title    ,
@@ -202,30 +205,41 @@ for iter in range ( 1 , maxIter + 1  ) :
         ## dump data as CVS file 
         cvs_file = CleanUp.tempfile ( suffix = '.csv' , prefix ='ostap-test-tools-reweight-' )
         mcds.to_csv ( cvs_file , dialect = 'excel-tab' )
+
+        converged = True 
+        ## mcds.clear () 
+        ## del mcds 
         break
-    
-    mcds.clear () 
+
+    ## delete the dataset 
+    mcds.clear() 
     del mcds 
-    
+
 else :
 
+    converged = False 
     logger.error ( "No convergency!" )
-
 
 # ===========================================================================
 title = 'Weighter object'
 logger.info ( '%s:\n%s' % ( title , weighter.table ( prefix = '# ' ) ) )
 # ============================================================================
+
 ## draw the convergency graphs 
 graphs = weighter.graphs ()
 for key in graphs : 
-    with use_canvas ( "Convergency graph for '%s'" % key ) :
+    with use_canvas ( "Convergency graph for '%s'" % key , wait = 1 ) :
         graph = graphs [ key ]
         graph.draw ( 'a' )
 # =============================================================================
-
-
-time.sleep ( 5 )
+if converged :
+    with timing ( "Add reweigitng resuls to original MC-tree" , logger = logger ) :
+        mctree.add_reweighting ( weighter , name = 'weight' )
+    title = 'MC-tree with weights'
+    logger.info ( '%s:\n%s' % ( title , mctree.table ( title = title , prefix = '# ') ) ) 
+        
+    
+del mcds 
 
 # =============================================================================
 ##                                                                      The END 

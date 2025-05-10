@@ -48,7 +48,7 @@ class FuncTree(Ostap.Functions.PyFuncTree) :
         if tree is None : tree = ROOT.nullptr
         ##
         assert isinstance ( tree  , ROOT.TTree ) or not tree , \
-            "FuncTree: inbalid 'tree'  type %s" % typename ( tree ) 
+            "FuncTree: invalid 'tree'  type %s" % typename ( tree ) 
         assert not clone or isinstance ( clone , FuncTree ) , \
             "FuncTree: Invalid 'clone' type:%s" % typename ( clone )
         ## 

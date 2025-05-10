@@ -21,6 +21,7 @@ __all__     = (
     'W2Data'          , ## helper to add the clacualted weight to ROOT.RooAbsData
     ) 
 # =============================================================================
+from   ostap.core.meta_info   import root_info 
 from   ostap.core.pyrouts     import VE, SE, Ostap 
 from   ostap.math.base        import iszero
 from   ostap.utils.strings    import split_string 
@@ -31,6 +32,7 @@ from   ostap.trees.funcs      import FuncTree, FuncData ## add weight to TTree/R
 from   ostap.utils.utils      import CallThem
 from   ostap.utils.strings    import is_formula  
 from   ostap.math.reduce      import root_factory
+from   ostap.logger.symbols   import plus_minus 
 import ostap.core.core 
 import ostap.histos.histos 
 import ostap.histos.compare 
@@ -289,7 +291,7 @@ class Weight(object) :
 
     ## format information as a table 
     def table ( self , title = None , prefix = ' ' ) :
-        """Format weighting information as table
+        """ Format weighting information as table
         """
         import ostap.logger.table as T
         if title is None : title = "Weight('%s')" % self.__dbase 
@@ -301,7 +303,7 @@ class Weight(object) :
     #  for the regular case, it will be graphs that illustrates the convergency
     #  for reweighting iterations 
     def graphs ( self ) :
-        """Get the dictionary of graphs
+        """ Get the dictionary of graphs
         """
         grphs = {}
 
@@ -647,7 +649,7 @@ _store = set()
 # =============================================================================
 ## draw comparison plots
 def _cmp_draw_ ( self ) :
-    """Draw comparison plots
+    """ Draw comparison plots
     """
     hd   = self.data
     hmc  = self.mc
@@ -968,7 +970,7 @@ def makeWeights  ( dataset                    ,
         elif good2  : row.append ( allright  ( '+' ) )
         else        : row.append ( attention ( '-' ) )
         
-        row.append ( (wvar * 100).toString('%6.2f+-%-6.2f') )
+        row.append ( ( wvar * 100 ).toString('%%6.2f %s %%-6.2f' % plus_minus ) )
 
         if   ignore : row.append ( ''                )
         elif good1  : row.append ( allright  ( '+' ) )
@@ -1106,12 +1108,14 @@ def w2t_factory ( *args ) : return W2Tree ( *args )
 #  tree.add_new_branch ( 'weight' , wf ) 
 #  @endcode
 class W2Tree(FuncTree) :
-    """Helper class to add the weight into ROOT.TTree
+    """ Helper class to add the weight into ROOT.TTree
     >>> w    = Weight ( ... )      ## the weighting object
     >>> tree = ...                 ## The tree
     >>> wf   = W2Tree ( w , tree ) ## create the weighting function
     >>> tree.add_new_branch ( 'weight' , wf )
     """
+    store = set()
+    
     def __init__ ( self , weight = None , tree = None , clone = None ) :
 
         assert not clone or isinstance ( clone , W2Tree ) , \
@@ -1130,6 +1134,7 @@ class W2Tree(FuncTree) :
         """ Clone it! """
         cloned = W2Tree ( weight = self.weight , tree = self.the_tree , clone = self )
         ROOT.SetOwnership ( cloned , False )
+        if ( 6 , 32 ) <= root_info : self.store.add ( cloned )         
         return cloned 
 
     ## evaluate the weighter for the given TTree entry 
@@ -1157,7 +1162,7 @@ class W2Tree(FuncTree) :
 #  ds.add_new_var ( 'weight' , wf ) 
 #  @endcode
 class W2Data(FuncData) :
-    """Helper class to add the weight into <code>RooDataSet</code>
+    """ Helper class to add the weight into <code>RooDataSet</code>
     >>> w    = Weight ( ... )      ## the weighting object
     >>> ds   = ...                 ## dataset 
     >>> wf   = W2Data ( w , tree ) ## create the weighting function
@@ -1199,9 +1204,9 @@ class W2Data(FuncData) :
 def tree_add_reweighting ( tree                 ,
                            weighter             ,
                            name      = 'weight' ,
-                           verbose   = True     ,
+                           progress  = True     ,
                            report    = True     ) :
-    """Add specific re-weighting information into ROOT.TTree
+    """ Add specific re-weighting information into ROOT.TTree
     
     >>> w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
     >>> data = ...
@@ -1217,7 +1222,7 @@ def tree_add_reweighting ( tree                 ,
     wfun = W2Tree ( weighter )
     
     ## return tree.add_new_branch (  name , wfun , verbose = verbose  , report = report ) 
-    return tree.add_new_branch ( wfun , name = name  , verbose = verbose  , report = report ) 
+    return tree.add_new_branch ( wfun , name = name  , progress = progress , report = report ) 
 
 ROOT.TTree.add_reweighting = tree_add_reweighting    
 
@@ -1232,8 +1237,11 @@ ROOT.TTree.add_reweighting = tree_add_reweighting
 #  data = ...
 #  data.add_reweighting ( w ) 
 #  @endcode 
-def data_add_reweighting ( data , weighter , name = 'weight' , progress = False ) :
-    """Add specific re-weighting information into dataset
+def data_add_reweighting ( data                ,
+                           weighter            ,
+                           name     = 'weight' ,
+                           progress = False    ) :
+    """ Add specific re-weighting information into dataset
     
     >>> w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
     >>> data = ...

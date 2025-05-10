@@ -299,7 +299,8 @@ variables  = [
     ]
 
 with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
-    
+
+    mctree    = ROOT.TChain ( tag_mc      ) ; mctree.Add   ( testdata ) 
     mcds_ , _ = mctree.make_dataset ( variables = variables      ,
                                       selection = '0<x && x<20 && 0<y && y<20' ,
                                       silent    = True           ) 
@@ -317,7 +318,11 @@ plots  = [
 ## table of global statistics 
 glob_stat   = [ ( '#' , 'Mahalanobis' , 'Hotelling' , 'KL/S-C' , 'KL/C-S' , 'KL-sym' ) ]
 n_data      = len ( datatree ) 
-n_mc        = len ( mctree   ) 
+n_mc        = len ( mctree   )
+##
+datatree = ROOT.TChain ( 'DATA_tree' ) ; datatree.Add ( testdata ) 
+mctree   = ROOT.TChain ( tag_mc      ) ; mctree.Add   ( testdata ) 
+##
 vct_data    = datatree.statVct ( 'x,y' )
 vct_init    = mctree  .statVct ( 'x,y' )
 trow = ( '%d'    % 0 ,

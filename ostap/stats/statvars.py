@@ -134,8 +134,10 @@ def data_get_moment ( data , order , center , expression , cuts = '' , *args ) :
 
     expression = str ( expression ).strip() 
     cuts       = str ( cuts       ).strip() 
-    
-    with rootException() : 
+
+    ## Branches to be activated
+    from ostap.trees.trees import ActiveBranches
+    with rootException() , ActiveBranches ( data , cuts , expression ) : 
         return StatVar.get_moment ( data       ,
                                     order      ,
                                     expression ,
@@ -164,7 +166,9 @@ def  data_moment ( data , order , expression , cuts  = ''  , *args ) :
     expression = str ( expression ).strip() 
     cuts       = str ( cuts       ).strip() 
     
-    with rootException() : 
+    ## Branches to be activated
+    from ostap.trees.trees import ActiveBranches
+    with rootException() , ActiveBranches ( data , cuts , expression ) : 
         return StatVar.moment ( data       ,
                                 order      ,
                                 expression ,
@@ -201,7 +205,9 @@ def  data_central_moment ( data       ,
     expression = str ( expression ).strip() 
     cuts       = str ( cuts       ).strip() 
 
-    with rootException() : 
+    ## Branches to be activated
+    from ostap.trees.trees import ActiveBranches
+    with rootException() , ActiveBranches ( data , cuts , expression ) : 
         return StatVar.central_moment ( data       ,
                                         order      ,
                                         expression ,
@@ -237,13 +243,17 @@ def data_get_stat ( data        ,
     expression = str ( expression ).strip() 
     cuts       = str ( cuts       ).strip()
     
+    ## Branches to be activated
+    from ostap.trees.trees import ActiveBranches
+    active = ActiveBranches ( data , cuts , expression )
+
     if isinstance ( data , ROOT.TTree ) and isinstance ( statobj , Ostap.Math.Statistic ) and not cuts : 
-        with rootException() :
+        with rootException() , active :
             sc = StatVar.the_moment ( data , statobj , expression , *args )
             assert sc.isSuccess() , 'Error %s from StatVar::the_moment' % sc 
             return statobj
         
-    with rootException() :
+    with rootException() , active :
         sc = StatVar.the_moment ( data , statobj , expression , cuts , *args )
         assert sc.isSuccess() , 'Error %s from StatVar::the_moment' % sc 
         return statobj
@@ -271,17 +281,21 @@ def data_statistics ( data , expressions , cuts = '' , *args ) :
     ## decode expressions & cuts
     var_lst, cuts, input_string = vars_and_cuts ( expressions , cuts )
 
+    ## Branches to be activated
+    from ostap.trees.trees import ActiveBranches
+    active = ActiveBranches ( data , cuts , *var_lst )
+    
     ## only one name is specified as string
     if   input_string :         
         var    = var_lst [ 0 ]
-        with rootException() :
+        with rootException(), active :
             result = StatVar.statVar ( data , var , cuts , *args )
             if not result.isfinite() : logger.error ( "Invalid statistics for `%s`" % var )
             return result
         
     elif 1 == len ( var_lst ) :
         var    = var_lst [ 0 ]
-        with rootException() :
+        with rootException() , active :
             result = StatVar.statVar ( data , var , cuts , *args )
             if not result.isfinite() : logger.error ( "Invalid statistics for `%s`" % var )
         result = { var : result }
@@ -291,7 +305,7 @@ def data_statistics ( data , expressions , cuts = '' , *args ) :
     from ostap.core.core import strings 
     names   = strings ( *var_lst )
     results = StatVar.Statistics()
-    with rootException() :
+    with rootException() , active :
         
         if cuts : StatVar.statVars ( data , results , names , cuts , *args )
         else    : StatVar.statVars ( data , results , names        , *args )        
@@ -348,7 +362,7 @@ def data_minmax ( data , expressions , cuts = '' , *args ) :
 def data_range ( data              ,
                  expressions       ,
                  cuts      = ''    ,
-                 delta     = 0.01  , *args             ) : 
+                 delta     = 0.01  , *args ) : 
     """ Get suitable ranges for drawing expressions/variables
     - In case there is no suitable range None is returned 
     >>> data = ...
@@ -359,9 +373,19 @@ def data_range ( data              ,
     if isinstance ( results , dictlike_types ) :
         for k , r in loop_items ( results ) :
             mn, mx = r
-            if mx <= mn : return None                         ## ATTENTION!!
+            if mx < mn and cuts :
+                ## recalculate without cuts 
+                rr = data_statistics  ( data , k , '' , *args )
+                mn , mx = rr.min () , rr.max() 
+            if mx < mn : return None               ## ATTENTION!                    
             results [ k ] = axis_range ( mn , mx , delta = delta ) 
-    else : results = axis_range ( *results , delta = delta )
+    else :
+        mn , mx = results
+        if mx < mn and cuts :
+            rr = data_statistics  ( data , k , '' , *args )
+            mn , mx = rr.min () , rr.max() 
+        if mx < mn : return None               ## ATTENTION!                            
+        results = axis_range ( *results , delta = delta )
     ##
     return results 
 
@@ -390,7 +414,9 @@ def data_covariance ( data , expression1 , expression2 , cuts = '' , *args ) :
     expression2 = str ( expression2 )
     cuts        = str ( cuts        ).strip() 
 
-    with rootException() :
+    ## Branches to be activated
+    from ostap.trees.trees import ActiveBranches
+    with rootException() , ActiveBranches ( data , cuts , expression1, expression2 ) : 
         if isinstance ( data , ROOT.TTree ) and not cuts : 
             return StatVar.statCov ( data , expression1 , expression2 ,        *args )
         else  :
@@ -410,7 +436,7 @@ def data_covariance ( data , expression1 , expression2 , cuts = '' , *args ) :
 def data_covariances ( tree         ,
                        expressions  ,
                        cuts    = '' , *args  ) :
-    """Get the statistic for the list of expressions 
+    """ Get the statistic for the list of expressions 
     >>> tree  = ...
     >>> stats , cov2 , len = data_covariances ( data , ['x' , 'y'] )
     Apply some cuts 
@@ -422,7 +448,7 @@ def data_covariances ( tree         ,
     ## decode expressions & cuts 
     var_lst, cuts, input_string = vars_and_cuts ( expressions , cuts )
     
-    assert 2 <= len ( var_lst ) , 'Invalid number of varibales!'
+    assert 2 <= len ( var_lst ) , 'Invalid number of variables!'
     
     from ostap.core.core import strings 
     vars   = strings ( var_lst ) 
@@ -437,7 +463,9 @@ def data_covariances ( tree         ,
     N      = len  ( var_lst  )
     cov2   = Ostap.TMatrixSymD  ( N ) 
 
-    with rootException() : 
+    ## Branches to be activated
+    from ostap.trees.trees import ActiveBranches
+    with rootException() , ActiveBranches ( tree , cuts , *var_lst ) : 
         length = Ostap.StatVar.statCov ( tree  ,
                                          vars  ,
                                          cuts  ,
@@ -465,12 +493,12 @@ def data_covariances ( tree         ,
 def data_statvector ( data        ,
                       expressions , 
                       cuts  = ''  , *args ) :
-    """Get the effective vector of mean-values with covariances for the dataset
+    """ Get the effective vector of mean-values with covariances for the dataset
     >>> vct = data_statvct ( data , 'a,y,z' ,'w' ) 
     """
     
     stats , cov2, _  = data_covariances ( data , expressions , cuts , *args )
-    
+
     N  = len  ( stats )
     v  = Ostap.Vector ( N ) ()
     for i in range ( N ) : v [ i ] = stats [ i ].mean()
@@ -519,11 +547,14 @@ def data_nEff ( data , expression = '' , *args ) :
     >>> result  = data_nEff ( data , 'x/y+z' )
     - see Ostap.StatVar.nEff
     """
-
+    
     assert isinstance ( expression , expression_types ) , 'Invalid type of expression!'
-    expression = str ( expression ).strip() 
+    expression = str ( expression ).strip()
 
-    return StatVar.nEff ( data , expression )
+    ## Branches to be activated
+    from ostap.trees.trees import ActiveBranches    
+    with ActiveBranches ( data , expression  ) : 
+        return StatVar.nEff ( data , expression )
         
 # =============================================================================
 ## Get harmonic mean over the data
@@ -545,7 +576,8 @@ def data_harmonic_mean ( data , expression , cuts = '' , *args ) :
     - see `Ostap.Math::HarmonicMean`
     - see `Ostap.Math::WHarmonicMean`
     - see `Ostap.statVar.the_moment`
-    """    
+    """
+    
     if isinstance ( data , ROOT.TTree ) and not cuts : 
         statobj = Ostap.Math.HarmonicMean()
         return data_get_stat ( data , statobj , expression , '' , *args )  
@@ -685,7 +717,7 @@ def data_lehmer_mean ( data , p , expression , cuts = '' , *args ) :
 #  @see Ostap::Math::Moment 
 #  @see Ostap::Math::WMoment
 def data_the_moment ( data , order , expression , cuts = '' , *args ) :
-    """Get the moments or order <code>order</code> as <code>Ostap::Math::(W)Moment_<order></code>
+    """ Get the moments or order <code>order</code> as <code>Ostap::Math::(W)Moment_<order></code>
     >>> data = ...
     >>> moment = data.the_moment ( 5 , 'x/y+z' , '0<qq' )
     - see Ostap.Math.Moment 
@@ -699,17 +731,21 @@ def data_the_moment ( data , order , expression , cuts = '' , *args ) :
     expression = str ( expression ).strip() 
     cuts       = str ( cuts       ).strip() 
     
+    ## Branches to be activated
+    from ostap.trees.trees import ActiveBranches
+    active = ActiveBranches ( data , cuts , expression )
+            
     if isinstance ( data , ROOT.TTree ) and not cuts :
         M      = Ostap.Math. Moment_(order)
         moment = M ()
-        with rootException() : 
+        with rootException() , active : 
             sc = StatVar.the_moment ( data , moment , expression , *args )
             assert sc.isSuccess() , 'Error %s from StatVar::the_moment' % sc 
             return moment 
 
     M      = Ostap.Math.WMoment_(order)
     moment = M ()
-    with rootException() :
+    with rootException() , active :
         sc = StatVar.the_moment ( data , moment , expression , cuts , *args )
         assert sc.isSuccess() , 'Error %s from StatVar::the_moment' % sc 
         return moment 
@@ -721,7 +757,7 @@ def data_the_moment ( data , order , expression , cuts = '' , *args ) :
 #  value = data_the_mean ( data , 'x' ,'0<y' ).mean()  
 #  @endcode
 def data_the_mean ( data , expressions , cuts , errors = True , *args ) :
-    """Get the mean as the moment
+    """ Get the mean as the moment
     >>> data  = ...
     >>> value = data_the_mean ( data , 'x' ,'0<y' ).mean()  
     """
@@ -733,7 +769,7 @@ def data_the_mean ( data , expressions , cuts , errors = True , *args ) :
 #  value = data_the_rms ( data , 'x' ,'0<y' ).rms()  
 #  @endcode
 def data_the_rms ( data , expressions , cuts , errors = True , *args ) :
-    """Get the mean as the moment
+    """ Get the mean as the moment
     >>> data  = ...
     >>> value = data_the_rmsn ( data , 'x' ,'0<y' ).rms()  
     """
@@ -745,7 +781,7 @@ def data_the_rms ( data , expressions , cuts , errors = True , *args ) :
 #  value = data_the_variance ( data , 'x' ,'0<y' ).variance()  
 #  @endcode
 def data_the_variance  ( data , expressions , cuts , errors = True , *args ) :
-    """Get the mean as the moment
+    """ Get the mean as the moment
     >>> data  = ...
     >>> value = data_the_variance  ( data , 'x' ,'0<y' ).variance ()  
     """
@@ -757,7 +793,7 @@ def data_the_variance  ( data , expressions , cuts , errors = True , *args ) :
 #  value = data_the_skewness  ( data , 'x' ,'0<y' ).skewness ()  
 #  @endcode
 def data_the_skewness ( data , expressions , cuts , errors = True , *args ) :
-    """Get the skewness as the moment
+    """ Get the skewness as the moment
     >>> data  = ...
     >>> value = data_the_skewness  ( data , 'x' ,'0<y' ).skewness ()  
     """
@@ -769,7 +805,7 @@ def data_the_skewness ( data , expressions , cuts , errors = True , *args ) :
 #  value = data_the_kurtosis  ( data , 'x' ,'0<y' ).kurtosis ()  
 #  @endcode
 def data_the_kurtosis ( data , expressions , cuts , errors = True , *args ) :
-    """Get the kurtosis as the moment
+    """ Get the kurtosis as the moment
     >>> data  = ...
     >>> value = data_the_kurtosis  ( data , 'x' ,'0<y' ).kurtosis ()  
     """
@@ -785,7 +821,7 @@ def data_the_kurtosis ( data , expressions , cuts , errors = True , *args ) :
 #  @endcode
 #  @see Ostap::StatVar::skewness
 def data_skewness ( data , expression , cuts  = '' , *args ) :
-    """Get the  skewness
+    """ Get the  skewness
     >>> data =  ...
     >>> print data_skewness ( data , 'mass' , 'pt>1' ) 
     >>> print data.skewness (        'mass' , 'pt>1' ) ## ditto
@@ -797,8 +833,10 @@ def data_skewness ( data , expression , cuts  = '' , *args ) :
     
     expression = str ( expression ).strip() 
     cuts       = str ( cuts       ).strip()
-    
-    with rootException() : 
+        
+    ## Branches to be activated
+    from ostap.trees.trees import ActiveBranches
+    with rootException() , ActiveBranches ( data , cuts , expression ) : 
         return StatVar.skewness ( data , expression , cuts , *args )
 
 # =============================================================================
@@ -810,13 +848,15 @@ def data_skewness ( data , expression , cuts  = '' , *args ) :
 #  @endcode
 #  @see Ostap::StatVar::kurtosis
 def data_kurtosis ( data , expression , cuts  = '' , *args ) :
-    """Get the kurtosis
+    """ Get the kurtosis
     >>> data =  ...
     >>> print data_kurtosis ( data , 'mass' , 'pt>1' ) 
     >>> print data.kurtosis (        'mass' , 'pt>1' ) ## ditto
     - see Ostap::StatVar::kurtosis
     """
-    with rootException() : 
+    ## Branches to be activated
+    from ostap.trees.trees import ActiveBranches
+    with rootException() , ActiveBranches ( data , cuts , expression ) : 
         return StatVar.kurtosis ( data , expression , cuts , *args )
 
 # =============================================================================
@@ -829,7 +869,7 @@ def data_kurtosis ( data , expression , cuts  = '' , *args ) :
 #  @see Ostap::StatVar::quantile
 #  @see Ostap::StatVar::p2quantile
 def  data_quantile ( data , q , expression , cuts  = '' , exact = QEXACT , *args ) :
-    """Get the quantile
+    """ Get the quantile
     >>> data =  ...
     >>> print data_quantile ( data , 0.1 , 'mass' , 'pt>1' ) 
     >>> print data.quantile (        0.1 , 'mass' , 'pt>1' ) ## ditto
@@ -844,24 +884,27 @@ def  data_quantile ( data , q , expression , cuts  = '' , exact = QEXACT , *args
     expression = str ( expression ).strip() 
     cuts       = str ( cuts       ).strip()
     
+    from ostap.trees.trees import ActiveBranches
+    active = ActiveBranches ( data , cuts , expression )
+
     if   exact is True  :
         ##  exact slow algorithm 
-        with rootException() : 
+        with rootException() , active : 
             qn = StatVar.  quantile ( data , q , expression , cuts , *args )
 
     elif exact is False :
         ## approximate fast formula 
-        with rootException() : 
+        with rootException() , active : 
             qn = StatVar.p2quantile ( data , q , expression , cuts , *args )
             
     elif isinstance ( exact , int ) and len ( data ) <= exact  :
         ## exact slow algorithm 
-        with rootException() : 
+        with rootException() , active : 
             qn = StatVar.  quantile ( data , q , expression , cuts , *args )
 
     else :
         ## approximate fast algorithm 
-        with rootException() : 
+        with rootException() , active : 
             qn = StatVar.p2quantile ( data , q , expression , cuts , *args )
 
     return qn
@@ -876,7 +919,7 @@ def  data_quantile ( data , q , expression , cuts  = '' , exact = QEXACT , *args
 #  @see Ostap::StatVar::interval
 #  @see Ostap::StatVar::p2interval
 def data_interval ( data , qmin ,  qmax , expression , cuts = '' , exact = QEXACT , *args ) :
-    """Get the interval 
+    """ Get the interval 
     >>> data =  ...
     >>> print data_interval ( data , 0.05 , 0.95 , 'mass' , 'pt>1' ) ## get 90% interval
     >>> print data.interval (        0.05 , 0.95 , 'mass' , 'pt>1' ) ## get 90% interval
@@ -893,24 +936,27 @@ def data_interval ( data , qmin ,  qmax , expression , cuts = '' , exact = QEXAC
 
     qmin, qmax = min ( qmin ,  qmax ) , max  ( qmin, qmax  )
     
+    from ostap.trees.trees import ActiveBranches
+    active = ActiveBranches ( data , cuts , expression )
+
     if   exact is True  :
         ##  exact slow algorithm 
-        with rootException() : 
+        with rootException() , active : 
             rn = StatVar.  interval ( data , qmin , qmax  , expression , cuts , *args )
 
     elif exact is False :
         ## approximate fast formula 
-        with rootException() : 
+        with rootException() , active : 
             rn = StatVar.p2interval ( data , qmin , qmax , expression , cuts , *args )
 
     elif isinstance ( exact , int ) and len ( data ) <= exact  :
         ## exact slow algorithm 
-        with rootException() : 
+        with rootException() , active : 
             rn = StatVar.  interval ( data , qmin , qmax  , expression , cuts , *args )
 
     else :
         ## approximate fast formula 
-        with rootException() : 
+        with rootException() , active : 
             rn = StatVar.p2interval ( data , qmin , qmax , expression , cuts , *args )
 
     ## x
@@ -925,14 +971,13 @@ def data_interval ( data , qmin ,  qmax , expression , cuts = '' , exact = QEXAC
 #  @endcode 
 #  @see Ostap::StatVar::quantile
 def data_median ( data , expression , cuts = '' , exact = QEXACT , *args ) :
-    """Get the median
+    """ Get the median
     >>> data =  ...
     >>> print data_median ( data , 'mass' , 'pt>1' ) 
     >>> print data.median (        'mass' , 'pt>1' ) ##  ditto
     - see Ostap::StatVar::quantile
     """
-    with rootException() : 
-        return data_quantile ( data , 0.5 , expression , cuts  , exact , *args ) 
+    return data_quantile ( data , 0.5 , expression , cuts  , exact , *args ) 
 
 # =============================================================================
 ## get the  quantiles 
@@ -947,7 +992,7 @@ def data_median ( data , expression , cuts = '' , exact = QEXACT , *args ) :
 #  @endcode
 #  @see Ostap::StatVar::quantile
 def data_quantiles ( data , quantiles , expression , cuts  = '' , exact = QEXACT , *args ) :
-    """Get the quantiles
+    """ Get the quantiles
     >>> data =  ...
     >>> print data_quantiles ( data , 0.1       , 'mass' , 'pt>1' ) ## quantile 
     >>> print data_quantiles ( data , (0.1,0.5) , 'mass' , 'pt>1' )
@@ -978,24 +1023,27 @@ def data_quantiles ( data , quantiles , expression , cuts  = '' , exact = QEXACT
     from ostap.math.base import doubles
     qqq = doubles ( qq )
 
+    from ostap.trees.trees import ActiveBranches
+    active = ActiveBranches ( data , cuts , expression )
+
     if   exact is True  :
         ##  exact slow algorithm 
-        with rootException() : 
+        with rootException() , active : 
             qn = StatVar.  quantiles ( data , qqq , expression , cuts , *args )
 
     elif exact is False :
         ## approximate fast formula 
-        with rootException() : 
+        with rootException() , active : 
             qn = StatVar.p2quantiles ( data , qqq , expression , cuts , *args )
             
     elif isinstance ( exact , int ) and len ( data ) <= exact  :
         ## exact slow algorithm 
-        with rootException() : 
+        with rootException() , active : 
             qn = StatVar.  quantiles ( data , qqq , expression , cuts , *args )
 
     else :
         ## approximate fast algorithm 
-        with rootException() : 
+        with rootException() , active : 
             qn = StatVar.p2quantiles ( data , qqq , expression , cuts , *args )
 
     return qn 
@@ -1009,7 +1057,7 @@ def data_quantiles ( data , quantiles , expression , cuts  = '' , exact = QEXACT
 #  @endcode 
 #  @see Ostap::StatVar::quantile
 def data_terciles ( data , expression , cuts = '' , exact = QEXACT , *args ) :
-    """Get the terciles
+    """ Get the terciles
     >>> data =  ...
     >>> print data_terciles ( data , 'mass' , 'pt>1' ) 
     >>> print data.terciles (        'mass' , 'pt>1' ) ## ditto
@@ -1026,7 +1074,7 @@ def data_terciles ( data , expression , cuts = '' , exact = QEXACT , *args ) :
 #  @endcode 
 #  @see Ostap::StatVar::quantile
 def data_quartiles ( data , expression , cuts = '' , exact = QEXACT , *args ) :
-    """Get the quartiles
+    """ Get the quartiles
     >>> data =  ...
     >>> print data_quartiles ( data , 'mass' , 'pt>1' ) 
     >>> print data.quartiles (        'mass' , 'pt>1' ) ##  ditto
@@ -1043,7 +1091,7 @@ def data_quartiles ( data , expression , cuts = '' , exact = QEXACT , *args ) :
 #  @endcode 
 #  @see Ostap::StatVar::quantile
 def data_quintiles ( data , expression , cuts = '' , exact = QEXACT , *args ) :
-    """Get the quartiles
+    """ Get the quartiles
     >>> data =  ...
     >>> print data.quintiles ( 'mass' , 'pt>1' ) 
     >>> print data.quintiles ( 'mass' , 'pt>1' ) ## ditto
@@ -1060,7 +1108,7 @@ def data_quintiles ( data , expression , cuts = '' , exact = QEXACT , *args ) :
 #  @endcode 
 #  @see Ostap::StatVar::quantile
 def data_deciles ( data , expression , cuts = '' , exact = QEXACT , *args ) :
-    """Get the deciles
+    """ Get the deciles
     >>> data =  ...
     >>> print data_deciles ( data , 'mass' , 'pt>1' ) 
     >>> print data.deciles (        'mass' , 'pt>1' ) ## ditto
@@ -1077,7 +1125,7 @@ def data_deciles ( data , expression , cuts = '' , exact = QEXACT , *args ) :
 #  @endcode 
 #  @see Ostap::StatVar::moment
 def data_mean ( data  , expression , cuts  = '' , *args ) :
-    """Get the   mean (with uncertainty):
+    """ Get the   mean (with uncertainty):
     >>> data = ...
     >>> data_mean( data , 'mass*mass', 'pt>0')
     >>> data.mean(        'mass*mass', 'pt>0') ## ditto
@@ -1093,7 +1141,7 @@ def data_mean ( data  , expression , cuts  = '' , *args ) :
 #  @endcode 
 #  @see Ostap::StatVar::central_moment
 def data_variance ( data , expression , cuts  = '' , *args ) :
-    """Get the variance (with uncertainty):
+    """ Get the variance (with uncertainty):
     >>> data = ...
     >>> data_variance ( data , 'mass*mass', 'pt>0')
     >>> data.variance (        'mass*mass', 'pt>0') ## ditto
@@ -1109,7 +1157,7 @@ def data_variance ( data , expression , cuts  = '' , *args ) :
 #  @endcode 
 #  @see Ostap::StatVar::central_moment
 def data_dispersion ( data , expression , cuts  = '' , *args ) :
-    """Get the variance (with uncertainty):
+    """ Get the variance (with uncertainty):
     >>> data = ...
     >>> data_variance ( data , 'mass*mass', 'pt>0')
     >>> data.variance (        'mass*mass', 'pt>0') ## ditto
@@ -1125,7 +1173,7 @@ def data_dispersion ( data , expression , cuts  = '' , *args ) :
 #  @endcode 
 #  @see Ostap::StatVar::central_moment
 def data_rms ( data , expression , cuts  = '' , *args ) :
-    """Get the rms (with uncertainty):
+    """ Get the rms (with uncertainty):
     >>> data = ...
     >>> data_rms( data , 'mass*mass', 'pt>0')
     >>> data.rms(        'mass*mass', 'pt>0') ## ditto
@@ -1145,7 +1193,7 @@ data_interval        .__doc__ += '\n' + StatVar.interval       .__doc__
 # =============================================================================
 ## decorate certain class with some useful  methods 
 def data_decorate ( klass ) :
-    """Decorate certain class with some useful  methods
+    """ Decorate certain class with some useful  methods
     """
     
     if hasattr ( klass , 'get_moment'     ) : klass.orig_get_moment     = klass.get_moment
