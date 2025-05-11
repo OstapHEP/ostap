@@ -70,7 +70,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.math.ve     import VE
-from   ostap.math.base   import isequal, iszero
+from   ostap.math.base   import isequal, iszero, scipy 
 from   ostap.utils.basic import items_loop
 from   ostap.utils.utils import memoize 
 import ROOT, warnings, math, array 
@@ -421,12 +421,10 @@ def clenshaw_curtis ( fun                 ,
 # =============================================================================
 ## 1D integration 
 # =============================================================================
-try : # =======================================================================
+if scipy : 
     # =========================================================================
-    with warnings.catch_warnings():
-        warnings.simplefilter ( "ignore" )
-        from scipy.integrate import quad                as scipy_quad
-        from scipy.integrate import IntegrationWarning  as scipy_IW  
+    from scipy.integrate import quad                as scipy_quad
+    from scipy.integrate import IntegrationWarning  as scipy_IW  
     # =========================================================================
     ## Calculate the integral (from x0 to x) for the 1D-function 
     #  @code 
@@ -450,14 +448,13 @@ try : # =======================================================================
         kwargs [ 'limit' ] = kwargs.pop ( 'limit'  , 200 )             
         import warnings
         with warnings.catch_warnings():
-            ## warnings.simplefilter ( "always" )
             warnings.simplefilter ( "ignore" , category = scipy_IW  ) 
             result = scipy_quad ( func , xmin , xmax , **kwargs )
             return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
     # =========================================================================
-except ImportError : # ========================================================
+else : # ======================================================================
     # =========================================================================
-    ## logger.warning ("scipy.integrate is not available, use local ``romberg''-replacement")
+    ## logger.warning ("scipy.integrate is not available, use local `romberg'-replacement")
     ## Use Romberg integration as default method when scipy is not available
     def integral ( fun                 ,
                    xmin                ,
@@ -712,7 +709,7 @@ def _split3_ ( xlims , ylims , zlims ) :
 #  @see http://www.sciencedirect.com/science/article/pii/0771050X8090039X)
 def _genzmalik_( func , limits , basic_rule , splitter ,
                  args = () ,  epsabs = 1.5e-7 , epsrel = 1.5e-7 ) :
-    """Driving routine for Adaptive numerical 2D/3D integration using Genz&Malik's basic rule
+    """ Driving routine for Adaptive numerical 2D/3D integration using Genz&Malik's basic rule
     
     A.C. Genz, A.A. Malik, ``Remarks on algorithm 006: An adaptive algorithm for
     numerical integration over an N-dimensional rectangular region'',
@@ -881,16 +878,12 @@ def genzmalik3 ( func   ,
     
     return VE ( r , e * e )  if err else r 
 
-
 # =============================================================================
 ## 2D integration 
 # =============================================================================
-try :
+if scipy : # ==================================================================
     # =========================================================================
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        from scipy.integrate import dblquad as scipy_dblquad
-        
+    from scipy.integrate import dblquad as scipy_dblquad        
     # =========================================================================
     ## Calculate the integral (from ) for the 2D-function 
     #  @code 
@@ -905,38 +898,32 @@ try :
                     args  =  ()   ,
                     err   = False ,
                     **kwargs      ) :
-        """Calculate the integral for the 2D-function using scipy
+        """ Calculate the integral for the 2D-function using scipy
         
         >>> func = lambda x,y : x*x+y*y 
         >>> v = integral2(func,0,1,-2,2)
         """
         func   = lambda x,y : float ( fun ( x , y , *args ) ) 
-        import warnings
-        with warnings.catch_warnings():
-            warnings.simplefilter ( "always" )
-            result = scipy_dblquad ( func ,
-                                     ymin , ymax     ,
-                                     lambda x : xmin ,
-                                     lambda x : xmax , **kwargs )
-            return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
-        
-except ImportError :
+        result = scipy_dblquad ( func ,
+                                 ymin , ymax     ,
+                                 lambda x : xmin ,
+                                 lambda x : xmax , **kwargs )
+        return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
+
+    # =========================================================================
+else : # ======================================================================
     # =========================================================================
     ## logger.warning ("scipy.integrate is not available, use local ``genz&malik''-replacement")
     ## use Genz&Malik integration as default method when scipy is not available 
     integral2 = genzmalik2 
 # =============================================================================
 
-
-
 # =============================================================================
 ## 3D integration 
 # =============================================================================
-try :
+if scipy : # ==================================================================
     # =========================================================================
-    with warnings.catch_warnings():
-        warnings.simplefilter ( "ignore" )
-        from scipy.integrate import tplquad as scipy_tplquad
+    from scipy.integrate import tplquad as scipy_tplquad
     # =========================================================================
     ## Calculate the inteegral for the 3D-function 
     #  @code 
@@ -952,30 +939,26 @@ try :
                     args  =  ()   ,
                     err   = False ,
                     **kwargs      ) :
-        """Calculate the integral for the 3D-function using scipy
+        """ Calculate the integral for the 3D-function using scipy
         
         >>> func = lambda x,y,z : x*x+y*y+z*z
         >>> v = integral3(func,0,1,0,2,0,3)
         """
         func   = lambda x,y,z : float ( fun ( x , y , z , *args ) ) 
-        import warnings
-        with warnings.catch_warnings () :
-            warnings.simplefilter ( "always" )  
-            result = scipy_tplquad ( func ,
-                                     zmin , zmax ,
-                                     lambda z   : ymin ,
-                                     lambda z   : ymax ,
-                                     lambda y,z : xmin ,
-                                     lambda y,z : xmax , **kwargs )
-            return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
-        
-except ImportError :
+        result = scipy_tplquad ( func ,
+                                 zmin , zmax ,
+                                 lambda z   : ymin ,
+                                 lambda z   : ymax ,
+                                 lambda y,z : xmin ,
+                                 lambda y,z : xmax , **kwargs )
+        return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
+    # ========================================================================    
+else : # =====================================================================
     # ========================================================================
     ## logger.warning ("scipy.integrate is not available, use local ``genz&malik''-replacement")
     ## use Genz&Malik integration as default method when scipy is not available 
     integral3 = genzmalik3 
 # =============================================================================
-
 
 # =============================================================================
 ## @class IntegralBase
@@ -983,11 +966,11 @@ except ImportError :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class IntegralBase(object) :
-    """Helper class to implement numerical integration 
+    """ Helper class to implement numerical integration 
     """
     ## Calculate the integral for the 1D-function
     def __init__ ( self , func , args = () , err = False , **kwargs ) :
-        """Calculate the integral for the 1D-function
+        """ Calculate the integral for the 1D-function
         
         >>> func   = ...
         >>> func_0 = Integral(func,0)
@@ -1024,7 +1007,7 @@ class IntegralBase(object) :
     
     @property
     def func ( self ) :
-        """The integrand"""
+        """ The integrand"""
         return self.__func
 
     @property
@@ -1061,7 +1044,7 @@ class Integral(IntegralBase) :
     """
     ## Calculate the integral for the 1D-function
     def __init__ ( self , func , xlow = 0 , args = () , err = False , **kwargs ) :
-        """Calculate the integral for the 1D-function
+        """ Calculate the integral for the 1D-function
         
         >>> func   = ...
         >>> func_0 = Integral(func,0)
@@ -1072,7 +1055,7 @@ class Integral(IntegralBase) :
         
     ## Calculate the integral for the 1D-function 
     def __call__ ( self , x , *args ) :
-        """Calculate the integral for the 1D-function 
+        """ Calculate the integral for the 1D-function 
         
         >>> func = ...
         >>> func_0 = Integral(func,0)
@@ -1097,14 +1080,14 @@ class Integral(IntegralBase) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class IntegralCache(Integral) :
-    """Calculate the integral for the 1D-function
+    """ Calculate the integral for the 1D-function
     >>> func   = lambda x : x*x 
     >>> iint   = IntegralCache ( func , 0 ) ## specify x_low 
     >>> value  = iint ( 10 )                ## specify x_high
     """
     ## Calculate the integral for the 1D-function using scipy
     def __init__ ( self , func , xlow = 0 , args = () , err = False , **kwargs ) :
-        """Calculate the integral for the 1D-function
+        """ Calculate the integral for the 1D-function
         
         >>> func = ...
         >>> func_0 = Integral(func,0)
@@ -1114,7 +1097,7 @@ class IntegralCache(Integral) :
         
     ## Calculate the numerical integral for the 1D-function
     def __call__ ( self , x , **args ) :
-        """Calculate the integral for the 1D-function
+        """ Calculate the integral for the 1D-function
         
         >>> func = ...
         >>> func_0 = Integral(func,0)
@@ -1150,7 +1133,7 @@ class IntegralCache(Integral) :
 
     @property
     def prev ( self ) :
-        """``prev'': result of the previos integral evaluation"""
+        """`prev': result of the previos integral evaluation"""
         return self.__prev 
 
 # =============================================================================
@@ -1168,7 +1151,7 @@ class IntegralCache(Integral) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class Integral2(Integral) :
-    """Calculate the integral for the 2D-function
+    """ Calculate the integral for the 2D-function
     
     >>> func  = lambda x,y : x*x+y*y  ## define function 
     >>> iint  = Integral ( func , 0 , 0 ) ## specify x_low,  y_low  
@@ -1179,7 +1162,7 @@ class Integral2(Integral) :
                    xlow = 0  ,
                    ylow = 0  ,
                    args = () , err = False , **kwargs ) :
-        """Calculate the integral for the 2D-function
+        """ Calculate the integral for the 2D-function
         
         >>> func   = ...
         >>> func_0 = Integral(func,0,0)
@@ -1199,7 +1182,7 @@ class Integral2(Integral) :
     
     ## Calculate the integral for the 2D-function 
     def __call__ ( self , x , y , *args ) :
-        """Calculate the integral for the 2D-function
+        """ Calculate the integral for the 2D-function
         
         >>> func = ...
         >>> func_0 = Integral(func,0,0)
@@ -1211,7 +1194,7 @@ class Integral2(Integral) :
 
     @property 
     def ymin ( self ) :
-        """Low integration limit"""
+        """ Low integration limit"""
         return self.__ymin
 
 # =============================================================================
@@ -1225,7 +1208,7 @@ class Integral2(Integral) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class Integral3(Integral2) :
-    """Calculate the integral for the 3D-function
+    """ Calculate the integral for the 3D-function
     
     >>> func  = lambda x,y : x*x+y*y+z*z  ## define function 
     >>> iint  = Integral ( func , 0 , 0 , 0 ) ## specify x_low,  y_low, z_low
@@ -1237,7 +1220,7 @@ class Integral3(Integral2) :
                    ylow = 0  ,
                    zlow = 0  ,
                    args = () , err = False , **kwargs ) :
-        """Calculate the integral for the 3D-function 
+        """ Calculate the integral for the 3D-function 
         
         >>> func   = ...
         >>> func_0 = Integral(func,0,0,0)
@@ -1248,7 +1231,7 @@ class Integral3(Integral2) :
         
     ## Calculate the integral for the 3D-function 
     def __call__ ( self , x , y , z , *args ) :
-        """Calculate the integral for the 3D-function
+        """ Calculate the integral for the 3D-function
         
         >>> func = ...
         >>> func_0 = Integral(func,0,0,0)
@@ -1270,7 +1253,6 @@ class Integral3(Integral2) :
 # Partial integrations  of 2D-functions 
 # =============================================================================
 
-
 # =============================================================================
 ## @class Integrate2D_X
 # helper class to perform (partial) integration of 2D function
@@ -1281,7 +1263,7 @@ class Integral3(Integral2) :
 # print fy ( 1 ) 
 # @endcode 
 class Integrate2D_X(IntegralBase) :
-    r"""Helper class to perform (partial) integration of 2D function
+    r""" Helper class to perform (partial) integration of 2D function
     
     f(y) = \int_{x_{min}}^{x_{max}} f_{2D}(x,y) dx
     
@@ -1292,7 +1274,7 @@ class Integrate2D_X(IntegralBase) :
 
     ## construct the integration object 
     def __init__  ( self , fun2d , xmin , xmax , args = () , err = False , **kwargs ) :
-        r"""Construct the integration object
+        r""" Construct the integration object
         
         f(y) = \int_{x_{min}}^{x_{max}} f_{2D}(x,y) dx
         
@@ -1307,7 +1289,7 @@ class Integrate2D_X(IntegralBase) :
 
     ##  evaluate the function (perform y-integration) 
     def __call__ ( self , y  , *args ) :
-        """Evaluate the function (perform y-integration)
+        """ Evaluate the function (perform y-integration)
         >>> fun2d  = ... ## 2D-function
         >>> fy     = Integral2D_X( fun2d , xmin = 0 , xmax = 1 )
         >>> print fy ( 1 )        
@@ -1338,7 +1320,7 @@ class Integrate2D_X(IntegralBase) :
 # print fx ( 1 ) 
 # @endcode 
 class Integrate2D_Y(IntegralBase) :
-    r"""Helper class to perform (partial) integration of 2D function
+    r""" Helper class to perform (partial) integration of 2D function
     
     f(x) = \int_{y_{min}}^{y_{max}} f_{2D}(x,y) dy
     
@@ -1349,7 +1331,7 @@ class Integrate2D_Y(IntegralBase) :
 
     ## construct the integration object 
     def __init__  ( self , fun2d , ymin , ymax , args = () , err = False , **kwargs ) :
-        r"""Construct the integration object
+        r""" Construct the integration object
         
         f(x) = \int_{y_{min}}^{y_{max}} f_{2D}(x,y) dy
         
@@ -1363,7 +1345,7 @@ class Integrate2D_Y(IntegralBase) :
         
     ##  evaluate the function (perform y-integration) 
     def __call__ ( self , x  , *args ) :
-        """Evaluate the function (perform y-integration)
+        """ Evaluate the function (perform y-integration)
         >>> fun2d  = ... ## 2D-function
         >>> fx     = Integral2D_Y( fun2d , ymin = 0 , ymax = 1 )
         >>> print fx ( 1 )        
@@ -1388,7 +1370,6 @@ class Integrate2D_Y(IntegralBase) :
 # Partial (1D)-integrations  of 3D-functions 
 # =============================================================================
 
-
 # =============================================================================
 ## @class Integrate3D_X
 # helper class to perform (partial) integration of 3D function
@@ -1399,7 +1380,7 @@ class Integrate2D_Y(IntegralBase) :
 # print fyz ( 1 , 2 ) 
 # @endcode 
 class Integrate3D_X(Integrate2D_X) :
-    r"""Helper class to perform (partial) integration of 3D function
+    r""" Helper class to perform (partial) integration of 3D function
     
     f(y,z) = \int_{x_{min}}^{x_{max}} f_{3D}(x,y,z) dx
     
@@ -1410,7 +1391,7 @@ class Integrate3D_X(Integrate2D_X) :
 
     ## construct the integration object 
     def __init__  ( self , fun3d , xmin , xmax , args = () , err = False , **kwargs ) :
-        r"""Construct the integration object
+        r""" Construct the integration object
         
         f(y,z) = \int_{x_{min}}^{x_{max}} f_{3D}(x,y,z) dx
         
@@ -1422,7 +1403,7 @@ class Integrate3D_X(Integrate2D_X) :
         
     ##  evaluate the function (perform y-integration) 
     def __call__ ( self , y  , z , *args ) :
-        r"""Evaluate the function (perform y-integration)
+        r""" Evaluate the function (perform y-integration)
         
         f(y,z) = \int_{x_{min}}^{x_{max}} f_{3D}(x,y,z) dx
         
@@ -1446,7 +1427,7 @@ class Integrate3D_X(Integrate2D_X) :
 # print fxy ( 1 , 2 ) 
 # @endcode 
 class Integrate3D_Y(Integrate2D_Y) :
-    r"""Helper class to perform (partial) integration of 3D function
+    r""" Helper class to perform (partial) integration of 3D function
     
     f(x,z) = \int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dy
     
@@ -1457,7 +1438,7 @@ class Integrate3D_Y(Integrate2D_Y) :
 
     ## construct the integration object 
     def __init__  ( self , fun3d , ymin , ymax , args = () , err = False , **kwargs ) :
-        r"""Construct the integration object
+        r""" Construct the integration object
         
         f(x,z) = \int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dy
         
@@ -1494,7 +1475,7 @@ class Integrate3D_Y(Integrate2D_Y) :
 # print fxy ( 1 , 2 ) 
 # @endcode 
 class Integrate3D_Z(IntegralBase) :
-    r"""Helper class to perform (partial) integration of 3D function
+    r""" Helper class to perform (partial) integration of 3D function
     
     f(x,y) = \int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dz
     
@@ -1505,7 +1486,7 @@ class Integrate3D_Z(IntegralBase) :
 
     ## construct the integration object 
     def __init__  ( self , fun3d , zmin , zmax , args = () , err = False , **kwargs ) :
-        r"""Construct the integration object
+        r""" Construct the integration object
         
         f(x,y) = \int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dz
         
@@ -1519,7 +1500,7 @@ class Integrate3D_Z(IntegralBase) :
         
     ##  evaluate the function (perform z-integration) 
     def __call__ ( self , x  , y , *args ) :
-        r"""Evaluate the function (perform z-integration)
+        r""" Evaluate the function (perform z-integration)
         
         f(x,y) = \int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dz
         
@@ -1547,9 +1528,6 @@ class Integrate3D_Z(IntegralBase) :
 # =============================================================================
 # Partial (2D)-integrations  of 3D-functions 
 # =============================================================================
-
-
-# =============================================================================
 ## @class Integrate3D_XY
 # helper class to perform (partial) integration of 3D function
 # \f{displaymath} f(z) = \int_{x_{min}}^{x_{max}}\int^{y_{max}}_{y_{min}} f_{2D}(x,y,z) dx dy \f} 
@@ -1559,7 +1537,7 @@ class Integrate3D_Z(IntegralBase) :
 # print fz ( 1 ) 
 # @endcode 
 class Integrate3D_XY(Integrate3D_X) :
-    r"""Make (partial 2D) integration of 3D function
+    r""" Make (partial 2D) integration of 3D function
     
     f(z) = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dx dy
     
@@ -1570,7 +1548,7 @@ class Integrate3D_XY(Integrate3D_X) :
 
     ## construct the integration object 
     def __init__  ( self , fun3d , xmin , xmax , ymin , ymax , args = () , err = False , **kwargs ) :
-        r"""Construct the integration object
+        r""" Construct the integration object
         
         f(z) = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dx dy
         
@@ -1585,7 +1563,7 @@ class Integrate3D_XY(Integrate3D_X) :
         
     ##  evaluate the function (perform xy-integration) 
     def __call__ ( self , z , *args ) :
-        r"""Evaluate the function (perform (xy)-integration)
+        r""" Evaluate the function (perform (xy)-integration)
         
         f(z) = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dx dy
         
@@ -1620,7 +1598,7 @@ class Integrate3D_XY(Integrate3D_X) :
 #  print fy ( 1 ) 
 #  @endcode 
 class Integrate3D_XZ(Integrate3D_X) :
-    r"""Make (partial 2D) integration of 3D function
+    r""" Make (partial 2D) integration of 3D function
     
     f(y) = \int_{x_{min}}^{x_{max}}\int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dx dz
     
@@ -1682,7 +1660,7 @@ class Integrate3D_XZ(Integrate3D_X) :
 #  print fx ( 1 ) 
 #  @endcode 
 class Integrate3D_YZ(Integrate3D_Y) :
-    r"""Make (partial 2D) integration of 3D function
+    r""" Make (partial 2D) integration of 3D function
     
     f(x) = \int_{y_{min}}^{y_{max}}\int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dy dz
     
@@ -1693,7 +1671,7 @@ class Integrate3D_YZ(Integrate3D_Y) :
 
     ## construct the integration object 
     def __init__  ( self , fun3d , xmin , xmax , zmin , zmax , args = () , err = False , **kwargs ) :
-        r"""Construct the integration object
+        r""" Construct the integration object
         f(x) = \int_{y_{min}}^{y_{max}}\int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dy dz
         
         >>> fun3d  = ... ## 3D-function
@@ -1707,7 +1685,7 @@ class Integrate3D_YZ(Integrate3D_Y) :
         
     ##  evaluate the function (perform yz-integration) 
     def __call__ ( self , x , *args ) :
-        r"""Evaluate the function (perform (yz)-integration)
+        r""" Evaluate the function (perform (yz)-integration)
         
         f(x) = \int_{y_{min}}^{y_{max}}\int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dy dz
         
@@ -1840,7 +1818,7 @@ def complex_polygon_integral ( func            ,
                                args    = ()    ,
                                err     = False ,
                                **kwargs        ) :
-    """Get a contour integral over the closed polygon
+    """ Get a contour integral over the closed polygon
     >>> func = ...
     >>> r = complex_polygon_integral( func , ( -1 , 1 , 1+1j , -1+1j ) )
     """
@@ -1897,7 +1875,7 @@ def complex_circle_integral ( func                         ,
                               args   = ()                  ,
                               err    = False               ,
                               **kwargs                     ) :
-    """Calculate the contour integral over the circle in the complex plane
+    """ Calculate the contour integral over the circle in the complex plane
     >>> result = complex_circle_integral ( lambda z : 1.0/z , center = 0+0j , radius = 1 )
     """
     
@@ -1924,12 +1902,12 @@ if '__main__' == __name__ :
 
     # ========================================================================
     if integral is romberg : 
-        logger.warning ("scipy.integrate.quad    is not available, use local ``romberg''-replacement")    
+        logger.warning ( "scipy.integrate.quad    is not available, use local `romberg'-replacement")    
     if integral2 is genzmalik2 : 
-        logger.warning ("scipy.integrate.dblquad is not available, use local ``genz&malik''-replacement")
+        logger.warning ( "scipy.integrate.dblquad is not available, use local `genz&malik'-replacement")
         # ========================================================================
     if integral3 is genzmalik3 : 
-        logger.warning ("scipy.integrate.tplquad is not available, use local ``genz&malik''-replacement")
+        logger.warning ( "scipy.integrate.tplquad is not available, use local `genz&malik'-replacement")
 
 # =============================================================================
 ##                                                                      The END 

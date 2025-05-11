@@ -47,7 +47,7 @@ __all__     = (
 # =============================================================================
 from    ostap.core.ostap_types import is_integer, integer_types
 from    ostap.core.core        import Ostap, funID
-from    ostap.math.base        import iszero, isequal, signum, doubles
+from    ostap.math.base        import iszero, isequal, signum, doubles, scipy 
 import  ostap.math.reduce 
 import  ostap.math.bernstein 
 import  ostap.math.polynomials
@@ -64,7 +64,7 @@ BSpline = Ostap.Math.BSpline
 # =============================================================================
 ## get control polygon for BSpline
 def control_polygon ( bs )  :
-    """Get control polygon for BSpline
+    """ Get control polygon for BSpline
     >>>  bspline = ...
     >>>  cp = bspline.control_polygon ()
     >>>  cp = control_polygon( bspline )  ##  ditto 
@@ -73,7 +73,7 @@ def control_polygon ( bs )  :
 # =============================================================================
 ## get upper convex hull for  BSpline
 def upper_convex_hull ( bs ) :
-    """Get upper convex hull for  BSpline
+    """ Get upper convex hull for  BSpline
     >>> bspline = ...
     >>> upper = bspline.upper_convex_hull  ()
     >>> upper = upper_convex_hull ( bspline ) ## ditto
@@ -83,7 +83,7 @@ def upper_convex_hull ( bs ) :
 # =============================================================================
 ## get lower convex hull for  BSpline
 def lower_convex_hull ( bs ) :
-    """Get lower convex hull for  BSpline
+    """ Get lower convex hull for  BSpline
     >>> bspline = ...
     >>> lower = bspline.lower_convex_hull ()
     >>> lower = lower_convex_hull ( bspline )
@@ -93,7 +93,7 @@ def lower_convex_hull ( bs ) :
 # =============================================================================
 ## get upper & lower convex hulls for  Bspline
 def  convex_hull ( bs ) :
-    """Get lower& upper convex hulls for  BSpline
+    """ Get lower& upper convex hulls for  BSpline
     >>> bspline = ...
     >>> lower,upper = bspline.convex_hull  ()
     >>> lower,upper = convex_hull ( bspline ) ## ditto  
@@ -106,7 +106,7 @@ def  convex_hull ( bs ) :
 #  @param  b bernstein polynomial
 #  @return abscissas of crossing points of the control  polygon with x-axis 
 def crossing_points  ( bp , all = False ) :
-    """Get abscissas of crosssing point of the control polygon with x-axis 
+    """ Get abscissas of crosssing point of the control polygon with x-axis 
     >>> bspline = ...
     >>> xps = bspline.crossing_points()
     >>> xps = crossing_points ( bspline) ## ditto 
@@ -126,7 +126,7 @@ def deboor ( x      ,
              order  ,
              knots  ,
              points ) :
-    """Evaluate the spline given by the set of knots, control points and the order
+    """ Evaluate the spline given by the set of knots, control points and the order
     using de Boor's algorithm
     - see https://en.wikipedia.org/wiki/De_Boor%27s_algorithm
     """
@@ -141,7 +141,7 @@ def deboor ( x      ,
 # =============================================================================
 ## reconstruct knot vector from greville abscissas and spline degree 
 def knots_from_abscissas ( abscissas , order , convert = True ) :
-    """Reconstruct knot vector from greville abscissas and spline degree
+    """ Reconstruct knot vector from greville abscissas and spline degree
     abscissas : vector of abscissas
     order     : the order/degree  of spline
     convert   : convert to tuple ?
@@ -269,13 +269,9 @@ def interpolate ( func , abscissas , spline , *args ) :
 # =============================================================================
 ## For b-spline interpolation we need scipy!
 # =============================================================================
-try : # =======================================================================
+if scipy : 
     # =========================================================================    
-    with warnings.catch_warnings():
-        warnings.simplefilter ( "ignore" )
-        import scipy 
-        import scipy.interpolate
-        from   scipy.interpolate import make_interp_spline as _scipy_interpolate_make_interp_spline
+    from   scipy.interpolate import make_interp_spline as _scipy_interpolate_make_interp_spline
     # =========================================================================
     ## create interpolation spline using scipy machinery
     #  @code
@@ -316,11 +312,6 @@ try : # =======================================================================
         return Ostap.Math.BSpline ( knots , pars )
     
     __all__ = __all__ + ( 'interpolation', )
-
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    scipy = None 
 
 # =============================================================================    
 ## Construct the variation diminishing approximation 
@@ -518,7 +509,7 @@ def solve ( bs , C = 0 , split = 5 ) :
 #  >>> for x in func.generate( 1000 ) : print x 
 #  @endcode
 def generate ( fun , num ) :
-    """Generate random numbers from bspline-like distribuitions
+    """ Generate random numbers from bspline-like distribuitions
     >>> func = ...
     >>> for x in func.generate( 1000 ) : print x 
     """

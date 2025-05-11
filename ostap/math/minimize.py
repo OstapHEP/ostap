@@ -24,7 +24,8 @@ __all__     = (
     'minimize_scalar' , ## the main entry
     )
 # =============================================================================
-import warnings, math 
+import warnings, math
+from   ostap.math.base import scipy, numpy  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -32,23 +33,16 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.minimize' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
-scipy_OK = False
-# =============================================================================
-try :
+if scipy : # ==================================================================
     # =========================================================================
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        from scipy.optimize import minimize_scalar 
-        scipy_OK = True
+    minimize_scalar = scipy.optimize.minimize_scalar 
     # =========================================================================
-except ImportError :
+else : # ======================================================================
     # =========================================================================
     from ostap.math.local_minimize import scalar_minimize as minimize_scalar 
-    scipy_OK = False
-    # =========================================================================
 
 # =============================================================================
-if scipy_OK : # ===============================================================        
+if numpy and scipy : # ========================================================
     # =========================================================================
     ## get a minimum for 1D-function
     #  @code
@@ -56,15 +50,14 @@ if scipy_OK : # ===============================================================
     #  x = model.minimum() 
     #  @endcode 
     def sp_minimum_1D ( fun , xmin , xmax , x0 = None , *args ) :
-        """Get a minimum for 1D-function
+        """ Get a minimum for 1D-function
         >>> model = ...
         >>> x = model.minimum () 
         >>>
         """
         if x0 == None : x0 = 0.5 * ( xmin + xmax )
         
-        import numpy as np
-        x0     = np.array ( [ x0 ] )
+        x0     = numpy.array ( [ x0 ] )
         
         bounds = [ ( xmin , xmax ) ]
         
@@ -81,7 +74,7 @@ if scipy_OK : # ===============================================================
     #  x = model.maximum() 
     #  @endcode 
     def sp_maximum_1D ( fun , xmin , xmax , x0 = None , *args ) :
-        """Get a maximum for 1D-function
+        """ Get a maximum for 1D-function
         >>> model = ...
         >>> x = model.maximum () 
         >>>
@@ -98,14 +91,14 @@ if scipy_OK : # ===============================================================
     def sp_minimum_2D ( fun  ,
                         xmin , xmax ,
                         ymin , ymax , x0 = () , *args ) :
-        """Get a maximum for 2D-function
+        """ Get a maximum for 2D-function
         >>> model2 = ...
         >>> x , y = model2.maximum() 
         >>>
         """
         if not x0 :  x0 = 0.5 * ( xmin + xmax ) , 0.5 * ( ymin + ymax ) 
-        import numpy as np
-        x0     = np.array ( *x0  )
+
+        x0     = numpy.array ( *x0  )
         
         bounds = [ ( xmin , xmax ) , ( ymin , ymax ) ]
         
@@ -124,7 +117,7 @@ if scipy_OK : # ===============================================================
     def sp_maximum_2D ( fun ,
                         xmin , xmax ,
                         ymin , ymax , x0 = () , *args ) :
-        """Get a maximum for 2D-function
+        """ Get a maximum for 2D-function
         >>> model2 = ...
         >>> x , y = model2.maximum () 
         >>>
@@ -144,14 +137,14 @@ if scipy_OK : # ===============================================================
                         xmin , xmax ,
                         ymin , ymax ,
                         zmin , zmax , x0 = () , *args ) :
-        """Get a minimum for 3D-function
+        """ Get a minimum for 3D-function
         >>> model3 = ...
         >>> x , y , z = model3.minimum() 
         >>>
         """
         if not x0 :  x0 = 0.5 * ( xmin + xmax ) , 0.5 * ( ymin + ymax ) , 0.5 * ( zmin + zmax ) 
-        import numpy as np
-        x0     = np.array ( *x0  )
+
+        x0     = numpy.array ( *x0  )
         
         bounds = [ ( xmin , xmax ) , ( ymin , ymax ) , ( zmin , zmax ) ]
         
@@ -171,7 +164,7 @@ if scipy_OK : # ===============================================================
                         xmin , xmax ,
                         ymin , ymax ,
                         zmin , zmax , x0 = () , *args ) :
-        """Get a maximum for 3D-function
+        """ Get a maximum for 3D-function
         >>> model3 = ...
         >>> x, y , z  = model3.maximum () 
         >>>

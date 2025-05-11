@@ -80,7 +80,8 @@ __all__     = (
 # =============================================================================
 from   ostap.core.core         import cpp, Ostap
 from   ostap.core.ostap_types  import is_integer, num_types
-from   ostap.utils.ranges      import crange 
+from   ostap.utils.ranges      import crange
+from   ostap.math.base         import numpy, scipy 
 import ostap.math.models
 import ROOT, ctypes
 # =============================================================================
@@ -238,9 +239,7 @@ def chebyshev_sum ( func , N , xmin , xmax ) :
     return csum
 
 # =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import numpy
+if numpy : 
     # =========================================================================
     ## make a function representation in terms of Fourier series
     #  @code 
@@ -313,19 +312,12 @@ try : # =======================================================================
 
     __all__ = __all__ + (
         'fourier_sum' , ## Fourier        sum for the given function/object
-        )
-    
+        )    
     # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    numpy = None 
-    pass
 
 # =============================================================================
-try : # =======================================================================
+if scipy and numpy : 
     # =========================================================================
-    import numpy
-    import scipy 
     from   scipy.fftpack import dct as _scipy_fftpack_dct 
     # =========================================================================
     ## make a function representation in terms of cosine Fourier series
@@ -378,12 +370,6 @@ try : # =======================================================================
     __all__ = __all__ + (
         'cosine_sum' , ## Cosine Fourier sum for the given function/object 
         )
-    
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    scipy = None
-    numpy = None
     
 # =============================================================================
 ## make a function representation in terms of Bezier sum

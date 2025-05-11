@@ -16,6 +16,7 @@ __all__     = ()
 # =============================================================================
 import warnings 
 from   ostap.math.operations import Function
+from   ostap.math.base       import numpy, scipy 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.sp_convolution' )
@@ -25,7 +26,7 @@ try : # =======================================================================
     # =========================================================================
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")        
-        from scopy.signal import fftconvolve as _scipy_signal_fftconvolve 
+        from scipy.signal import fftconvolve as _scipy_signal_fftconvolve 
     import numpy        as np
     # =========================================================================
     # =========================================================================
@@ -248,7 +249,7 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
     if not __all__ :
-        logger.error ( "No convolution is available" )
+        logger.error ( "No scipy-convolution is available" )
         
 # =============================================================================
 ##                                                                      The END 

@@ -31,39 +31,36 @@ from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.utils        import split_n_range
 from   ostap.utils.basic        import numcpu 
 from   ostap.stats.gof          import AGoFnp
-from   ostap.utils.memory       import memory, memory_enough 
+from   ostap.utils.memory       import memory, memory_enough
+from   ostap.math.base          import numpy, scipy, scipy_version  
 import os, abc, warnings, ROOT   
 # =============================================================================
-try : # =======================================================================
+s2u,cdist = None , None
+# =============================================================================
+if numpy and scipy :
     # =========================================================================
-    with warnings.catch_warnings(): 
-        warnings.simplefilter ( "ignore" , category = UserWarning  )
-        import numpy                                                  as np   
-        import scipy                                                  as sp  
+    try : # ===================================================================
+        # =====================================================================
         from numpy.lib.recfunctions import structured_to_unstructured as s2u
         from scipy.spatial.distance import cdist                      as cdist
-        sp_version = tuple ( int ( i ) for i in sp.__version__.split('.') )
-        ## 
-        if (1,6,0) <= sp_version :
+        ## =====================================================================
+        if ( 1 , 6 , 0 ) <= scipy_version :
             qconf = { 'k' : [ 2 ] , 'workers' : -1 }
             def neighbour_distances ( tree , data ) :
                 dist , xx = tree.query ( data , **qconf )
                 del xx 
                 return dist.flatten() 
-        else :
+        else : # ==============================================================
             qconf = { 'k' :   2                    }
             def neighbour_distances ( tree , data ) :
                 dist , xx = tree.query ( data , **qconf )
                 del xx 
-                return np.delete ( dist , 0 , axis = 1 ).flatten() 
-        
-    # =========================================================================
-except ImportError :
-    # =========================================================================
-    np    = None
-    sp    = None    
-    s2u   = None
-    cdist = None     
+                return np.delete ( dist , 0 , axis = 1 ).flatten()         
+        # =====================================================================
+    except ImportError :
+        # =====================================================================
+        s2u        = None
+        cdist      = None
 # =============================================================================
 # logging 
 # =============================================================================
@@ -130,10 +127,10 @@ class GoFnp (AGoFnp) :
          ...
         """
         n1     = len ( data1 )
-        pooled = np.concatenate ( [ data1 , data2 ] )
+        pooled = numpy.concatenate ( [ data1 , data2 ] )
         ## 
         for i in progress_bar ( nToys , silent = self.silent ) : 
-            np.random.shuffle ( pooled )
+            numpy.random.shuffle ( pooled )
             yield pooled [ : n1 ] , pooled [ n1 : ]
 
         del pooled 
@@ -176,9 +173,9 @@ def psi_conf ( psi , scale = 1.0 ) :
     elif psi in ( 'inverse'    , 'coulomb' ) :                 ## psi = 1/x 
         return 'euclidean'   , lambda x : 1.0/x               , False 
     elif psi in ( 'log'   , 'logarithm'    ) :                 ## psi = -log(x)
-        return 'sqeuclidean' , lambda x : -np.log ( x )       , False 
+        return 'sqeuclidean' , lambda x : -numpy.log ( x )    , False 
     elif psi in ( 'gauss' , 'gaussian'     ) :                 ## psi = exp (-x*x/0.5)
-        return 'sqeuclidean' , lambda x :  np.exp ( scale*x ) , False 
+        return 'sqeuclidean' , lambda x :  numpy.exp ( scale*x ) , False 
     elif isinstance ( psi , string_types ) :
         return psi , None , True         
 
@@ -273,7 +270,7 @@ class PPDnp(GoFnp) :
         distances = distances [ distances > 0 ] 
         if transform : distances = transform ( distances )
         ## 
-        return np.sum ( distances )         
+        return numpy.sum ( distances )         
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
     def t_value ( self , ds1 , ds2 ) :
@@ -326,8 +323,8 @@ class PPDnp(GoFnp) :
         uds2    = s2u ( data2 , copy = False )
 
         ## For 1D-arrays add a fictive second dimension to please `cdist`-function
-        if 1 == uds1.shape [ 1 ] : uds1 = np.c_[ uds1 , np.zeros ( len ( uds1 ) ) ] 
-        if 1 == uds2.shape [ 1 ] : uds2 = np.c_[ uds2 , np.zeros ( len ( uds2 ) ) ] 
+        if 1 == uds1.shape [ 1 ] : uds1 = numpy.c_[ uds1 , numpy.zeros ( len ( uds1 ) ) ] 
+        if 1 == uds2.shape [ 1 ] : uds2 = numpy.c_[ uds2 , numpy.zeros ( len ( uds2 ) ) ] 
         
         return self.t_value ( uds1 , uds2 )
     
@@ -354,8 +351,8 @@ class PPDnp(GoFnp) :
         uds2 = s2u ( ds2 , copy = False )
 
         ## For 1D-arrays add a fictive second dimension to please `cdist`-function
-        if 1 == uds1.shape [ 1 ] : uds1 = np.c_[ uds1 , np.zeros ( len ( uds1 ) ) ] 
-        if 1 == uds2.shape [ 1 ] : uds2 = np.c_[ uds2 , np.zeros ( len ( uds2 ) ) ] 
+        if 1 == uds1.shape [ 1 ] : uds1 = numpy.c_[ uds1 , numpy.zeros ( len ( uds1 ) ) ] 
+        if 1 == uds2.shape [ 1 ] : uds2 = numpy.c_[ uds2 , numpy.zeros ( len ( uds2 ) ) ] 
         
         t_value    = self.t_value ( uds1 , uds2 )
 
@@ -434,19 +431,19 @@ class DNNnp(GoFnp) :
         if 1 != D : uvalues = uvalues ** D
         
         uvalues *= C
-        uvalues  = np.exp ( uvalues * vpdf ) 
+        uvalues  = numpy.exp ( uvalues * vpdf ) 
         
         ## fill the histogram if defined 
         if self.__histo : 
             for u in uvalues : self.__histo.Fill ( float ( u ) ) 
         
-        uvalues  = np.sort ( uvalues )
+        uvalues  = numpy.sort ( uvalues )
 
         n        = len ( uvalues )
         aux      = np.linspace ( 1 , n , n ) / n 
         uvalues -= aux
 
-        return   np.sum ( uvalues ** 2 ) 
+        return   numpy.sum ( uvalues ** 2 ) 
         
     # ===========================================================================
     ## Calculate the t-value
@@ -467,7 +464,7 @@ class DNNnp(GoFnp) :
         self.__D = uds1.shape[1] 
         
         ## For 1D-arrays add a fictive second dimension to please `cKDTree`-structure
-        if 1 == uds1.shape [ 1 ] : uds1 = np.c_[ uds1 , np.zeros ( len ( uds1 ) ) ]
+        if 1 == uds1.shape [ 1 ] : uds1 = numpy.c_[ uds1 , numpy.zeros ( len ( uds1 ) ) ]
         
         return self.t_value ( uds1 , vpdf  )
 
@@ -489,12 +486,12 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     
-    if not np    : logger.warning ( 'Numpy  is not available' ) 
-    if not sp    : logger.warning ( 'Scipy  is not available' ) 
+    if not numpy : logger.warning ( 'Numpy  is not available' ) 
+    if not numpy : logger.warning ( 'Scipy  is not available' ) 
     if not s2u   : logger.warning ( 's2u    is not available' ) 
     if not cdist : logger.warning ( 'cdist  is not available' )
-    if sp and sp_version < (1,6,0) : 
-        logger.warning ( 'very ancient version of scipy: %s' % str ( sp_version ) )
+    if scipy_version < ( 1 , 6 , 0 ) : 
+        logger.warning ( 'very ancient version of scipy: %s' % str ( scipy_version ) )
     
 # =============================================================================
 ##                                                                      The END 
