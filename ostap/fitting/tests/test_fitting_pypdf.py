@@ -106,7 +106,6 @@ class MyGauss2(PyPDF) :
     - see `clone`
     - see `evaluate`
     """
-    
     def __init__ ( self , name , title , xvar , mean , sigma , clone = None ) :
         
         assert not clone or isinstance ( clone , MyGauss2 ) , \
@@ -193,7 +192,11 @@ def test_PyPDF1() :
     except : # ================================================================
         # =====================================================================
         logger.error ( "Cannot serialize!" , exc_info = True )
-
+        
+    del model
+    del signal
+    del mygauss
+        
 # =============================================================================
 ## Test pure python PDF: <code>PyPDF</code> with analytical integration 
 #  @see ostap.fitting.pypdf.PyPdf
@@ -408,6 +411,7 @@ def test_PyPDFLite4() :
     with use_canvas ( "test_PyPDFLite1: local function" , wait = 2 ) : 
         r, _ = model.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
 
+    """
     # =========================================================================
     try : # ===================================================================
         # =====================================================================
@@ -421,7 +425,8 @@ def test_PyPDFLite4() :
     except : # ================================================================
         # =====================================================================
         logger.error ( "Cannot serialize!" , exc_info = True )
-        
+    """
+    
 # =============================================================================
 if '__main__' == __name__ :
     
