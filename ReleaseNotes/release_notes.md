@@ -1,3 +1,12 @@
+## New features
+    
+  1. Add more protections for missing scipy
+    
+## Backward incompatible
+
+## Bug fixes
+
+
 # v2.0.4.0
 
 ## New features
