@@ -275,6 +275,7 @@ try : # =======================================================================
         warnings.simplefilter ( "ignore" )
         import scipy 
         import scipy.interpolate
+        from   scipy.interpolate import make_interp_spline as _scipy_interpolate_make_interp_spline
     # =========================================================================
     ## create interpolation spline using scipy machinery
     #  @code
@@ -304,8 +305,8 @@ try : # =======================================================================
         
         N   = len ( table )
         K   = degree        
-        spl = scipy.interpolate.make_interp_spline( [ table.x ( i ) for i in range ( N ) ] ,
-                                      table.values() , k = K , bc_type = bc_type )
+        spl = _scipy_interpolate_make_interp_spline ( [ table.x ( i ) for i in range ( N ) ] ,
+                                                      table.values() , k = K , bc_type = bc_type )
 
         if 0 < K : knots = doubles ( spl.t[K:-K] )
         else     : knots = doubles ( spl.t       )

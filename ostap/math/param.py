@@ -326,7 +326,7 @@ try : # =======================================================================
     # =========================================================================
     import numpy
     import scipy 
-    import scipy.fftpack 
+    from   scipy.fftpack import dct as _scipy_fftpack_dct 
     # =========================================================================
     ## make a function representation in terms of cosine Fourier series
     #  @code 
@@ -365,7 +365,7 @@ try : # =======================================================================
         vfunc = numpy.vectorize ( the_fun )
         
         ## make cosine fourier transform 
-        r = scipy.fftpack.dct ( vfunc ( t ) , 1 ) / N 
+        r = _scipy_fftpack_dct ( vfunc ( t ) , 1 ) / N 
         
         #
         ## decode the results & prepare the output

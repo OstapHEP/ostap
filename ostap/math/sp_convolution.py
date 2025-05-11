@@ -25,7 +25,7 @@ try : # =======================================================================
     # =========================================================================
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")        
-        import scipy.signal as SS
+        from scopy.signal import fftconvolve as _scipy_signal_fftconvolve 
     import numpy        as np
     # =========================================================================
     # =========================================================================
@@ -50,7 +50,7 @@ try : # =======================================================================
             >>> sp = ArrayConvolution (x , y )
             """            
             self.__result = None 
-            self.__result = SS.fftconvolve ( x , y , mode ) 
+            self.__result = _scipy_signal_fftconvolve ( x , y , mode ) 
             
         @property
         def result( self ) :
