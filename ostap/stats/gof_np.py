@@ -55,7 +55,7 @@ if numpy and scipy :
             def neighbour_distances ( tree , data ) :
                 dist , xx = tree.query ( data , **qconf )
                 del xx 
-                return np.delete ( dist , 0 , axis = 1 ).flatten()         
+                return numpy.delete ( dist , 0 , axis = 1 ).flatten()         
         # =====================================================================
     except ImportError :
         # =====================================================================
@@ -80,7 +80,7 @@ class GoFnp (AGoFnp) :
                    silent   = False  , 
                    parallel = False  ,
                    method   = 'GoF'  ) : 
-        
+
         assert isinstance ( nToys , int ) and 0 <= nToys  , \
             "Invalid number of permulations/toys:%s" % nToys
         
@@ -185,13 +185,15 @@ def psi_conf ( psi , scale = 1.0 ) :
 ## @class PPD
 #  Implementation of concrete method "Point-To-Point Dissimilarity"
 #  for probing of Goodness-Of-Fit
-#  @see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
+#  @see M.Williams, "How good are your fits?
+#       Unbinned multivariate goodness-of-fit tests in high energy physics"
 #  @see https://doi.org/10.1088/1748-0221/5/09/P09004
 #  @see http://arxiv.org/abs/arXiv:1003.1768 
 class PPDnp(GoFnp) : 
     """ Implementation of concrete method "Point-To-Point Dissimilarity"
     for probing of Goodness-Of-Fit
-    - see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
+    - see M.Williams, "How good are your fits? 
+                       Unbinned multivariate goodness-of-fit tests in high energy physics"
     - see https://doi.org/10.1088/1748-0221/5/09/P09004    
     - see http://arxiv.org/abs/arXiv:1003.1768 
     """
@@ -370,7 +372,6 @@ class PPDnp(GoFnp) :
 
         return t_value , p_value 
 
-
 # =============================================================================
 ## @class DNNnp
 #  Distance-to-Nearest-Neighour GoF-method 
@@ -419,7 +420,7 @@ class DNNnp(GoFnp) :
         assert 2 == len ( sh1 ) and 1 == len ( sh2 ) and len ( ds1 ) == len ( vpdf ) , \
             "Invalid arrays: %s , %s" % ( sh1 , sh2 )
 
-        tree = sp.spatial.KDTree ( ds1 )
+        tree = scipy.spatial.KDTree ( ds1 )
         ## uvalues , _ = tree.query ( ds1 , **qconf )
         ## uvalues     = uvalues.flatten ()
         uvalues = neighbour_distances ( tree , ds1 ) 
@@ -440,7 +441,7 @@ class DNNnp(GoFnp) :
         uvalues  = numpy.sort ( uvalues )
 
         n        = len ( uvalues )
-        aux      = np.linspace ( 1 , n , n ) / n 
+        aux      = numpy.linspace ( 1 , n , n ) / n 
         uvalues -= aux
 
         return   numpy.sum ( uvalues ** 2 ) 

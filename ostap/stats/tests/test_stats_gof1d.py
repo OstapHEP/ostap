@@ -52,10 +52,14 @@ keep = set()
 ## Run Point-to_pint dissimilatity Goodness-of-Fit test
 def run_PPD ( pdf , data, result , logger ) :
     """ Run Point-to_point dissimilarity Goodness-of-Fit test"""
-    
-    from ostap.stats.gof_np import np,sp,s2u,cdist
-    if not np or not sp or not s2u or not cdist:
-        logger.warning ('No numpy/scipy/s4u/cdist: skip the PPD estimate!')
+
+    from ostap.math.base    import numpy, scipy 
+    if not numpy or not scipy :
+        logger.warning ('No numpy/scipy: skip the PPD estimate!')
+        return
+    from ostap.stats.gof_np import s2u,cdist
+    if not s2u or not cdist:
+        logger.warning ('No s4u/cdist: skip the PPD estimate!')
         return
         
     # =========================================================================
@@ -91,10 +95,14 @@ def run_DNN  ( pdf , data, result , logger ) :
     """ Run Distance-to-Nearest-Neighbour Goodness-of-Fit test
     """
     
-    from ostap.stats.gof_np import np,sp,s2u,cdist
-    if not np or not sp or not s2u or not cdist:
-        logger.warning ('No numpy/scipy/s4u/cdist: skip the PPD estimate!')
-        return         
+    from ostap.math.base    import numpy, scipy 
+    if not numpy or not scipy :
+        logger.warning ('No numpy/scipy: skip the PPD estimate!')
+        return
+    from ostap.stats.gof_np import s2u,cdist
+    if not s2u or not cdist:
+        logger.warning ('No s4u/cdist: skip the PPD estimate!')
+        return
     
     rows  =  [ ( 't-value'  , 'x[..]', 'p-value [%]' , '#sigma' ) ]
 

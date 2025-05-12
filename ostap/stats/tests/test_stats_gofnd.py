@@ -58,9 +58,13 @@ def test_PPD () :
     
     logger = getLogger ("test_PPD")
 
-    from ostap.stats.gof_np import np,sp,s2u,cdist
-    if not np or not sp or not s2u or not cdist:
-        logger.warning ('No numpy/scipy/s4u/cdist: skip the test!')
+    from ostap.math.base    import numpy, scipy 
+    if not numpy or not scipy :
+        logger.warning ('No numpy/scipy: skip the PPD estimate!')
+        return
+    from ostap.stats.gof_np import s2u,cdist
+    if not s2u or not cdist:
+        logger.warning ('No s4u/cdist: skip the PPD estimate!')
         return
 
     ## 't/good', 'x[..]' ,
@@ -120,11 +124,15 @@ def test_DNN () :
     
     logger = getLogger ("test_DNN")
 
-    from ostap.stats.gof_np import np,sp,s2u,cdist
-    if not np or not sp or not s2u or not cdist:
-        logger.warning ('No numpy/scipy/s4u/cdist: skip the test!')
-        return         
-
+    from ostap.math.base    import numpy, scipy 
+    if not numpy or not scipy :
+        logger.warning ('No numpy/scipy: skip the PPD estimate!')
+        return
+    from ostap.stats.gof_np import s2u,cdist
+    if not s2u or not cdist:
+        logger.warning ('No s4u/cdist: skip the PPD estimate!')
+        return
+    
     ## 't/good', 'x[..]' ,
     ## 't/bad' , 'x[..]' ,
     rows  = [ ( 'p-value/good[%]' , 'p-value/bad[%]' , '#sigma/good' , '#sigma/bad') ]
