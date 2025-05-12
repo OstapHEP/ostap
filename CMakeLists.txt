@@ -47,46 +47,46 @@ message ("                                                                     "
     
 set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_PATCH}.${OSTAP_VERSION_TWEAK})
 
-message ( "----> OSTAP  version    : " ${OSTAP_VERSION} )
-message ( "----> OSTAP  timestamp  : " ${OSTAP_BUILD_TIMESTAMP} )
+message ( "----> OSTAP           version    : " ${OSTAP_VERSION} )
+message ( "----> OSTAP           timestamp  : " ${OSTAP_BUILD_TIMESTAMP} )
 
 set(OSTAP_PYTHON_SITE_DIR "")
 
 cmake_host_system_information(RESULT OSTAP_HOSTNAME QUERY HOSTNAME)
 cmake_host_system_information(RESULT OSTAP_DOMAIN   QUERY FQDN    )
 
-message ( "----> Host name         : " ${OSTAP_HOSTNAME}  )
-message ( "----> Domain            : " ${OSTAP_DOMAIN}    )
+message ( "----> Host name                  : " ${OSTAP_HOSTNAME}  )
+message ( "----> Domain                     : " ${OSTAP_DOMAIN}    )
 
 cmake_host_system_information(RESULT OSTAP_OS_NAME    QUERY OS_NAME)
 cmake_host_system_information(RESULT OSTAP_OS_VERSION QUERY OS_VERSION)
 cmake_host_system_information(RESULT OSTAP_OS_RELEASE QUERY OS_RELEASE)
 
-message ( "----> OS name           : " ${OSTAP_OS_NAME}    )
-message ( "----> OS version        : " ${OSTAP_OS_VERSION} )
-message ( "----> OS release        : " ${OSTAP_OS_RELEASE} )
+message ( "----> OS name                    : " ${OSTAP_OS_NAME}    )
+message ( "----> OS version                 : " ${OSTAP_OS_VERSION} )
+message ( "----> OS release                 : " ${OSTAP_OS_RELEASE} )
             
 # Use compiler from PATH, not the system one
 # http://stackoverflow.com/a/29904501/504346
 find_program(CMAKE_C_COMPILER   NAMES $ENV{CC}  gcc PATHS ENV PATH NO_DEFAULT_PATH)
 find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
 
-message ( "----> C-compiler        : " $ENV{CC}  )
-message ( "----> C++-compiler      : " $ENV{CXX} )
+message ( "----> C-compiler                 : " $ENV{CC}  )
+message ( "----> C++-compiler               : " $ENV{CXX} )
 if ( CMAKE_C_COMPILER_ID ) 
-  message ( "----> C-compiler   ID   : " ${CMAKE_C_COMPILER_ID}   )
+  message ( "----> C-compiler      ID         : " ${CMAKE_C_COMPILER_ID}   )
 endif() 
 if ( CMAKE_CXX_COMPILER_ID ) 
-  message ( "----> C++-compiler ID   : " ${CMAKE_CXX_COMPILER_ID} )
+  message ( "----> C++-compiler    ID         : " ${CMAKE_CXX_COMPILER_ID} )
 endif() 
 if ( CMAKE_C_COMPILER_VERSION ) 
-  message ( "----> C-compiler   vers : " ${CMAKE_C_COMPILER_VERSION}   )
+  message ( "----> C-compiler      version    : " ${CMAKE_C_COMPILER_VERSION}   )
 endif() 
 if ( CMAKE_CXX_COMPILER_VERSION ) 
-  message ( "----> C++-compiler vers : " ${CMAKE_CXX_COMPILER_VERSION} ) 
+  message ( "----> C++-compiler    version    : " ${CMAKE_CXX_COMPILER_VERSION} ) 
 endif()
 if ( CMAKE_CXX_COMPILER_LAUNCHER )
-  message ( "----> C++-launcher      : " ${CMAKE_CXX_COMPILER_LAUNCHER} ) 
+  message ( "----> C++             launcher   : " ${CMAKE_CXX_COMPILER_LAUNCHER} ) 
 endif() 
 # You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
 # - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake

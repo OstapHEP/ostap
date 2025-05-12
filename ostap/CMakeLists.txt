@@ -30,6 +30,18 @@ macro(find_python_module module)
 	## find_package_handle_standard_args(PY_${module}   REQUIRED_VARS PY_${module_upper} )
 endmacro(find_python_module)
 
+macro(find_python_module_version module)
+  execute_process(COMMAND "${PYTHON_EXECUTABLE}" -c 
+    "import ${module}; print ( getattr ( ${module} , '__version__' , '?' ) ) "
+    RESULT_VARIABLE _${module}_status 
+    OUTPUT_VARIABLE _${module}_version
+    ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(NOT _${module}_status)
+        set( PY_${module}_VERSION ${_${module}_version} CACHE STRING 
+        "Version of Python module ${module}")
+    endif(NOT _${module}_status)
+endmacro(find_python_module_version)
+
 if(DEFINED ENV{VIRTUAL_ENV} OR DEFINED ENV{CONDA_PREFIX})
 ##   set(PIP_ARGS)
    set(PIP_ARGS "--user")
@@ -43,7 +55,10 @@ endif()
     
 find_python_module ( numpy QUIET )
 if ( NOT ${PY_numpy_FOUND} )
-   message ( "----> warning (optional)           numpy is NOT found!" ) 
+  message ( "----> warning (optional)           numpy is NOT found!" )
+ else() 
+  find_python_module_version ( numpy ) 
+  message ( "----> numpy           version    : " ${PY_numpy_VERSION} )  
 endif()
 find_python_module ( scipy QUIET )
 if ( NOT ${PY_scipy_FOUND} )
@@ -51,32 +66,11 @@ if ( NOT ${PY_scipy_FOUND} )
 endif()
 find_python_module ( scipy QUIET )
 if ( NOT ${PY_scipy_FOUND} )
-   message ( "----> warning (optional)           scipy is NOT found!" ) 
+  message ( "----> warning (optional)           scipy is NOT found!" )
+else ()
+  find_python_module_version ( scipy ) 
+  message ( "----> scipy           version    : " ${PY_scipy_VERSION} )  
 endif()
-
-# ========================================================================================
-## ipyparallel 
-# ========================================================================================
-find_python_module ( ipyparallel          QUIET )
-if ( NOT ${PY_ipyparallel_FOUND} )
-   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install ipyparallel ${PIP_ARGS})
-endif()
-find_python_module ( ipyparallel          QUIET )
-if ( NOT ${PY_ipyparallel_FOUND} )
-   message ( "----> warning (optional)     ipyparallel is NOT found!" ) 
-endif()
-
-# ========================================================================================
-## zstandard
-# ========================================================================================
-find_python_module ( zstandard QUIET )
-if ( NOT ${PY_zstandard_FOUND} )
-   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install zstandard ${PIP_ARGS})    
-endif()
-find_python_module ( zstandard QUIET )
-if ( NOT ${PY_zstandard_FOUND} )
-   message ( "----> warning (optional)       zstandard   is NOT found!" ) 
-endif()    
 
 # ========================================================================================
 ## Check for PATHOS & friends
@@ -87,16 +81,22 @@ if ( NOT ${PY_dill_FOUND} )
 endif()
 find_python_module ( dill          QUIET )
 if ( NOT ${PY_dill_FOUND} )
-   message ( "----> warning (optional)            dill is NOT found!" ) 
+  message ( "----> warning (optional)            dill is NOT found!" ) 
+else ()
+  find_python_module_version ( dill ) 
+  message ( "----> dill            version    : " ${PY_dill_VERSION} )  
 endif()
 ##
 find_python_module ( ppft          QUIET )
 if ( NOT ${PY_ppft_FOUND} )
-   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install ppft ${PIP_ARGS})
+  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install ppft ${PIP_ARGS})
 endif()
 find_python_module ( ppft          QUIET )
 if ( NOT ${PY_ppft_FOUND} )
-   message ( "----> warning (optional)            ppft is NOT found!" ) 
+  message ( "----> warning (optional)            ppft is NOT found!" )
+else ()
+  find_python_module_version ( ppft ) 
+  message ( "----> ppft            version    : " ${PY_ppft_VERSION} )    
 endif()
 ##
 find_python_module ( multiprocess  QUIET )
@@ -104,7 +104,10 @@ if ( NOT ${PY_multiprocess_FOUND} )
    execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install multiprocess ${PIP_ARGS})
 endif()
 if ( NOT ${PY_multiprocess_FOUND} )
-   message ( "----> warning (optional)    multiprocess is NOT found!" ) 
+  message ( "----> warning (optional)    multiprocess is NOT found!" )
+else ()
+  find_python_module_version ( multiprocess ) 
+  message ( "----> multiprocess    version    : " ${PY_multiprocess_VERSION} )      
 endif()
 ##
 find_python_module ( pathos        QUIET )
@@ -112,32 +115,28 @@ if ( NOT ${PY_pathos_FOUND} )
    execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install pathos ${PIP_ARGS})
 endif()
 if ( NOT ${PY_pathos_FOUND} )
-   message ( "----> warning (optional)          pathos is NOT found!" ) 
+  message ( "----> warning (optional)          pathos is NOT found!" )
+else ()
+  find_python_module_version ( pathos ) 
+  message ( "----> pathos          version    : " ${PY_pathos_VERSION} )        
 endif()
 ##
-if ( ${PY_pathos_FOUND} AND ${PY_dill_FOUND} AND ${PY_multiprocess_FOUND} AND ${PY_ppft_FOUND} ) 
-   message ( "----> Full pathos (pathos,dill,multiprocess,ppft) is found" )
-else()
-   message ( "----> warning (optional) pathos          is NOT found!" )    
-endif()
 
 # ========================================================================================
-    
+## ipyparallel 
 # ========================================================================================
-## lmdb : check&install only if mdb_stat exists ...
-# ========================================================================================  
-find_program(MDB_STAT_EXECUTABLE NAMES mdb_stat)
-   if ( ${MDB_STAT_EXECUTABLE} )
-      find_python_module ( lmdb        QUIET )
-   if ( NOT ${PY_lmdb_FOUND} )
-      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install lmdb ${PIP_ARGS})
-   endif()    
-   find_python_module ( lmdb        QUIET )
-   if ( NOT ${PY_lmdb_FOUND} )
-      message ( "----> warning (optional)            lmdb is NOT found!" )
-   endif() 
+find_python_module ( ipyparallel          QUIET )
+if ( NOT ${PY_ipyparallel_FOUND} )
+  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install ipyparallel ${PIP_ARGS})
 endif()
-        
+find_python_module ( ipyparallel          QUIET )
+if ( NOT ${PY_ipyparallel_FOUND} )
+  message ( "----> warning (optional)     ipyparallel is NOT found!" )
+else ()
+  find_python_module_version ( ipyparallel ) 
+  message ( "----> ipyparallel     version    : " ${PY_ipyparallel_VERSION} )        
+endif()
+
 # =======================================================================================
 ## joblib: run some numpy-related code in parallel
 # =======================================================================================
@@ -147,8 +146,27 @@ if ( NOT ${PY_joblib_FOUND} )
 endif()
 find_python_module ( joblib          QUIET )
 if ( NOT ${PY_joblib_FOUND} )
-   message ( "----> warning (optional)          joblib is NOT found!" ) 
+  message ( "----> warning (optional)          joblib is NOT found!" ) 
+else ()
+  find_python_module_version ( joblib ) 
+  message ( "----> joblib          version    : " ${PY_joblib_VERSION} )             
+endif() 
+
+# ========================================================================================
+## zstandard
+# ========================================================================================
+find_python_module ( zstandard QUIET )
+if ( NOT ${PY_zstandard_FOUND} )
+  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install zstandard ${PIP_ARGS})    
 endif()
+find_python_module ( zstandard QUIET )
+if ( NOT ${PY_zstandard_FOUND} )
+  message ( "----> warning (optional)       zstandard   is NOT found!" )
+else ()
+  find_python_module_version ( zstandard ) 
+  message ( "----> zstandard       version    : " ${PY_zstandard_VERSION} )        
+endif()    
+# ========================================================================================
     
 # ========================================================================================
 ## terminaltables3 & terminaltables 
@@ -161,6 +179,9 @@ if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.9" )
    find_python_module ( terminaltables3 QUIET )
    if ( NOT ${PY_terminaltables3_FOUND} )
       message ( "----> warning (optional) terminaltables3 is NOT found!" )    
+    else ()
+      find_python_module_version ( terminaltables3 ) 
+      message ( "----> terminaltables3 version    : " ${PY_terminaltables3_VERSION} )        
    endif ()                        
 else  ()
    find_python_module ( terminaltables QUIET )
@@ -170,6 +191,9 @@ else  ()
    find_python_module ( terminaltables QUIET )
    if ( NOT ${PY_terminaltables_FOUND} )
       message ( "----> warning (optional)  terminaltables is NOT found!" )    
+    else ()
+      find_python_module_version ( terminaltables ) 
+      message ( "----> terminaltables  version    : " ${PY_terminaltables_VERSION} )        
    endif ()            
 endif ()
 
@@ -183,7 +207,10 @@ if ( NOT ${PY_tabulate_FOUND} )
 endif()
 find_python_module ( tabulate QUIET )
 if ( NOT ${PY_tabulate_FOUND} )
-   message ( "----> warning (optional)        tabulate is NOT found!" )
+  message ( "----> warning (optional)        tabulate is NOT found!" )
+else ()
+  find_python_module_version ( tabulate ) 
+  message ( "----> tabulate        version    : " ${PY_tabulate_VERSION} )        
 endif()
 
 # ========================================================================================
@@ -196,7 +223,10 @@ if ( NOT ${PY_more_itertools_FOUND} )
 endif()
 find_python_module ( more_itertools QUIET )
 if ( NOT ${PY_more_itertools_FOUND} )
-   message ( "----> warning (optional)  more_itertools is NOT found!" ) 
+  message ( "----> warning (optional)  more_itertools is NOT found!" ) 
+else ()
+  find_python_module_version ( more_itertools ) 
+  message ( "----> more_itertools  version    : " ${PY_more_itertools_VERSION} )             
 endif()
     
 # ========================================================================================
@@ -209,18 +239,13 @@ if ( NOT ${PY_psutil_FOUND} )
 endif()
 find_python_module ( psutil QUIET )
 if ( NOT ${PY_psutil_FOUND} )
-   message ( "----> warning (optional)         psutils is NOT found!" ) 
+  message ( "----> warning (optional)         psutils is NOT found!" ) 
+else ()
+  find_python_module_version ( psutil ) 
+  message ( "----> psutil          version    : " ${PY_psutil_VERSION} )             
 endif()
 
-# ========================================================================================
-## tkrzw 
-# ========================================================================================
-##
-find_python_module ( tkrzw QUIET )
-if ( NOT ${PY_tkrzw_FOUND} )
-   message ( "----> warning (optional)           tkrzw is NOT found!" ) 
-endif()
-    
+
 # ========================================================================================
 ## BerkeleyDB
 # ========================================================================================
@@ -235,8 +260,31 @@ if ( NOT ${PY_berkeleydb_FOUND} )
 endif()
 find_python_module ( berkeleydb QUIET )
 if ( NOT ${PY_berkeleydb_FOUND} )
-   message ( "----> warning (optional)      berkeleydb is NOT found!" ) 
+  message ( "----> warning (optional)      berkeleydb is NOT found!" ) 
+else ()
+  find_python_module_version ( berkeleydb ) 
+  message ( "----> berkeleydb      version    : " ${PY_berkeleydb_VERSION} )             
 endif()
+
+    
+# ========================================================================================
+## lmdb : check&install only if mdb_stat exists ...
+# ========================================================================================  
+find_program(MDB_STAT_EXECUTABLE NAMES mdb_stat)
+   if ( ${MDB_STAT_EXECUTABLE} )
+      find_python_module ( lmdb        QUIET )
+   if ( NOT ${PY_lmdb_FOUND} )
+      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install lmdb ${PIP_ARGS})
+   endif()    
+   find_python_module ( lmdb        QUIET )
+   if ( NOT ${PY_lmdb_FOUND} )
+     message ( "----> warning (optional)            lmdb is NOT found!" )
+   else ()
+     find_python_module_version ( lmdb ) 
+     message ( "----> lmdb            version    : " ${PY_lmdb_VERSION} )             
+   endif() 
+endif()
+
 
 # ========================================================================================
 ## BDDDB3
@@ -248,10 +296,25 @@ if ( ${PYTHON_VERSION} VERSION_LESS       "3.10" )
    endif()
    find_python_module ( bsddb3 QUIET )
    if ( NOT ${PY_bsddb3_FOUND} )
-      message ( "----> warning (optional)          bsddb3 is NOT found!" ) 
+     message ( "----> warning (optional)          bsddb3 is NOT found!" ) 
+   else ()
+     find_python_module_version ( bdsdb3 ) 
+     message ( "----> bsddb3          version    : " ${PY_bsddb3_VERSION} )             
    endif()
 endif()
 
+# ========================================================================================
+## tkrzw 
+# ========================================================================================
+##
+find_python_module ( tkrzw QUIET )
+if ( NOT ${PY_tkrzw_FOUND} )
+   message ( "----> warning (optional)           tkrzw is NOT found!" ) 
+else ()
+  find_python_module_version ( tkrzw ) 
+  message ( "----> tkrzw           version    : " ${PY_tkrzw_VERSION} )             
+endif()
+    
 # ========================================================================================
 ## hep_ml
 # ========================================================================================
@@ -262,10 +325,19 @@ if ( ${PYTHON_VERSION} VERSION_LESS       "3.12" )
    endif()
    find_python_module ( hep_ml QUIET )
    if ( NOT ${PY_hep_ml_FOUND} )
-      message ( "----> warning (optional)          hep_ml is NOT found!" ) 
+     message ( "----> warning (optional)          hep_ml is NOT found!" ) 
+   else ()
+     find_python_module_version ( hep_ml ) 
+     message ( "----> hep_ml          version    : " ${PY_hep_ml_VERSION} )             
    endif()
 endif()
-        
+
+if ( ${PY_pathos_FOUND} AND ${PY_dill_FOUND} AND ${PY_multiprocess_FOUND} AND ${PY_ppft_FOUND} ) 
+   message ( "----> Full pathos (pathos,dill,multiprocess,ppft) is found" )
+else()
+   message ( "----> warning (optional) pathos          is NOT found!" )    
+endif()
+
 # =========================================================================================
 ## INSTALLATION
 # =========================================================================================

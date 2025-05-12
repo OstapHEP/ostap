@@ -1,7 +1,8 @@
 ## New features
     
   1. Add more protections for missing scipy
-    
+  1. polish `CMakeList.txt` files
+  
 ## Backward incompatible
 
 ## Bug fixes
