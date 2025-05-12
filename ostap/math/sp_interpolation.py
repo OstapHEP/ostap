@@ -15,8 +15,7 @@ __date__    = "2020-02-28"
 __all__     = (
     )
 # =============================================================================
-import warnings
-from   ostap.math.bas import scipy 
+from   ostap.math.base import scipy 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.sp_interpolation' )
@@ -24,7 +23,7 @@ else                       : logger = getLogger ( __name__                      
 # =============================================================================
 if scipy : # ==================================================================
     # =========================================================================
-    import scipy.interpolate as SI    
+    from scipy.interpolate  import InterpolatedUnivariateSpline  as scipy_IUS 
     # =========================================================================
     ## simple class for scipy-based interpolation  
     class SplineInterpolator(object) :
@@ -50,10 +49,10 @@ if scipy : # ==================================================================
             x , y = data
 
             ## create the interpolation spline 
-            self.__spline = SI.InterpolatedUnivariateSpline ( x   = x     ,
-                                                              y   = y     ,
-                                                              k   = order ,
-                                                              ext = ext   )
+            self.__spline = scipy_IUS ( x   = x     ,
+                                        y   = y     ,
+                                        k   = order ,
+                                        ext = ext   )
             self.__antiderivative = None
             self.__derivative     = None
             

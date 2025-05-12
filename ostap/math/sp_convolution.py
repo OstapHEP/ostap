@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2020-02-28
 # =============================================================================
-"""NumPy/SciPy-based utilities for convolution 
+""" NumPy/SciPy-based utilities for convolution 
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -24,15 +24,11 @@ else                       : logger = getLogger ( __name__                    )
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")        
-        from scipy.signal import fftconvolve as _scipy_signal_fftconvolve 
-    import numpy        as np
+    from scipy.signal import fftconvolve as _scipy_signal_fftconvolve 
     # =========================================================================
-    # =========================================================================
-    ## simple class for scipy-based interpolation  
+    ## Simple class for scipy-based convolution  
     class ArrayConvolution(object) :
-        """ Simple class for SciPy-based convolution 
+        """ Simple class for SciPy-based convolution of two arrays 
         >>> x = ... ##
         >>> y = ... ##
         >>> sp = ArrayConvolution ( x , y , ... )
@@ -45,7 +41,7 @@ try : # =======================================================================
         #  >>> sp = ArrayConvolution (x , y )
         #  @endcode
         def __init__ ( self , x , y , mode = 'full' ) :
-            """ Create the convolution 
+            """ Create the convolution of two arrays 
             >>> x  = ... ##
             >>> y  = ... ##
             >>> sp = ArrayConvolution (x , y )
@@ -97,11 +93,11 @@ try : # =======================================================================
             from ostap.math.math_ve import gauss_pdf         
             gpdf   = lambda x : gauss_pdf ( x , sigma = self.sigma )
             
-            vgauss = np.vectorize ( gpdf )            
+            vgauss = numpy.vectorize ( gpdf )            
             dx = float ( xmax - xmin ) / N 
             a  = float ( xmax - xmin ) / 2 
             
-            x  = np.arange ( -a , a , dx ) 
+            x  = numpy.arange ( -a , a , dx ) 
             dgauss = vgauss ( x )  
             
             ## make the real convolution
@@ -129,7 +125,7 @@ try : # =======================================================================
             """ `spline' : get the spline function for the result of convolution"""
             if self.__spline  : return self.__spline
             from ostap.math.sp_interpolation import SplineInterpolator 
-            x = np.linspace ( self.xmin() , self.xmax() , self.N )
+            x = numpy.linspace ( self.xmin() , self.xmax() , self.N )
             self.__spline = SplineInterpolator ( ( x , self.result ) , 3 )
             return self.__spline
 
@@ -215,9 +211,9 @@ try : # =======================================================================
             @property
             def spline ( self ) :
                 """`spline' : get the spline function for the result of convolution"""
-                if self.__spline  : return self.__spline
+                if self.__spline  : return self.__spline                
                 from ostap.math.sp_interpolation import SplineInterpolator 
-                x = np.linspace ( self.xmin() , self.xmax() , self.N )
+                x = numpy.linspace ( self.xmin() , self.xmax() , self.N )
                 self.__spline = SplineInterpolator ( ( x , self.result ) , 3 )
                 return self.__spline
             

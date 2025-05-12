@@ -171,7 +171,7 @@ def halley_newton ( fun            ,    ## the function
 #      print i, x
 #  @endcode 
 def steffensen ( fun  ,  x  , fx = None , args = () ) :
-    """Single step of Steffensen's method
+    """ Single step of Steffensen's method
 
     Parameters
     ----------
@@ -223,7 +223,7 @@ def steffensen ( fun  ,  x  , fx = None , args = () ) :
 #                       Point ( xb , fun ( xb ) ) ) 
 #  @endcode 
 def inverse_linear ( a , b ) :
-    """Make a linear interpolation, aka ''secant'', aka ''regular falsi''
+    """ Make a linear interpolation, aka ''secant'', aka ''regular falsi''
 
     Parameters
     ----------
@@ -277,7 +277,7 @@ regular_falsi = inverse_linear
 #                          Point ( xc , fun ( xc ) ) )
 #  @endcode
 def inverse_parabolic ( a , b , c ) :
-    """Inverse parabolic interpolation via the points:
+    """ Inverse parabolic interpolation via the points:
     - ( xa , fun ( xa ) ), ( xb , fun ( xb ) ), ( xc , fun ( xc ) )
 
     Parameters
@@ -335,7 +335,7 @@ def inverse_parabolic ( a , b , c ) :
 #                      Point ( xd , fun ( xd ) ) )
 #  @endcode
 def inverse_cubic ( a , b , c , d ) :
-    """Inverse cubic interpolaton via the last four approximations to the root
+    """ Inverse cubic interpolaton via the last four approximations to the root
 
     Parameters
     ----------
@@ -403,7 +403,7 @@ def inverse_cubic ( a , b , c , d ) :
 #                           Point ( xn , fun ( xn ) ) )
 #  @endcode 
 def inverse_polynomial ( a , b , *other ) :
-    """Make an inverse polynomial interpolation
+    """ Make an inverse polynomial interpolation
     - Actually switch to cubic/parabolic or linear interpolation
 
     Parameters
@@ -447,7 +447,7 @@ def inverse_polynomial ( a , b , *other ) :
 #  @endcode 
 #  @see https://en.wikipedia.org/wiki/Bisection_method
 def bisection ( fun , a  , b , args = () ) :
-    """Trivial bisection method
+    """ Trivial bisection method
 
     Parameters
     ----------
@@ -495,7 +495,7 @@ def bisection ( fun , a  , b , args = () ) :
 #  @endcode 
 #  @see https://en.wikipedia.org/wiki/Aitken%27s_delta-squared_process
 def aitken_delta2 ( xl , xl1 , xl2 , *others ) :
-    """Try to find next approximation to the root using Aitken delta-squared process.
+    """ Try to find next approximation to the root using Aitken delta-squared process.
     
     It often helps hear the multiple root, where all sophisticated schemes result
     in very  slow (linear) convergency 
@@ -561,7 +561,7 @@ def counted ( f ):
 #  It is very similar (almost clone) of corresponding class
 #  <code>RootResults</code> from <code>scipy.optimize.zeros</code>
 class RootResults ( object ):
-
+    
     __slots__ = ( 'converged'            ,
                   'flag'                 ,
                   'function_calls'       ,
@@ -1242,19 +1242,16 @@ def find_root ( f                   , ## the function
     
     return solver.find ( a , b )
 
-# =============================================================================
-try : 
-    # =========================================================================
-    with warnings.catch_warnings():
-        warnings.simplefilter ( "ignore" )
-        from scipy.optimize import brentq as scipy_brentq 
-        findroot = scipy_brentq
-    # =========================================================================
-except ImportError :
-    # =========================================================================
+# =========================================================================
+try : # =================================================================== 
+    # =====================================================================
+    from scipy.optimize import brentq as scipy_brentq 
+    findroot = scipy_brentq
+    # =====================================================================
+except ImportError : # ====================================================
+    # =====================================================================
     ## logger.warning ("scipy.optimize.brentq is not available, use local ``find_root''-replacement")
     findroot = find_root
-    # =========================================================================
 
 # =============================================================================
 ## solve equation \f$ f(x)=C \f$
@@ -1287,7 +1284,7 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
     if findroot is find_root : 
-        logger.warning ("scipy.optimize.brentq is not available, use local ``find_root''-replacement")
+        logger.warning ("scipy.optimize.brentq is not available, use local `find_root'-replacement")
 
 # =============================================================================
 ##                                                                      The END 

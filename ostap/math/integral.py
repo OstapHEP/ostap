@@ -303,7 +303,7 @@ def clenshaw_curtis_rule ( N ) :
 # =============================================================================
 ## Single step of Clenshaw-Curtis quadrature of order N (N+1 points)
 def clenshaw_curtis_step ( f , xmin , xmax , N ) :
-    """Single step of Clenshaw-Curtis quadrature of order N (N+1 points)
+    """ Single step of Clenshaw-Curtis quadrature of order N (N+1 points)
     """
 
     mid     = 0.5 * ( xmin + xmax )
@@ -445,8 +445,7 @@ if scipy :
         >>> v = integral(func,0,1)
         """
         func   = lambda x : float ( fun ( x , *args ) )
-        kwargs [ 'limit' ] = kwargs.pop ( 'limit'  , 200 )             
-        import warnings
+        kwargs [ 'limit' ] = kwargs.pop ( 'limit'  , 200 )              
         with warnings.catch_warnings():
             warnings.simplefilter ( "ignore" , category = scipy_IW  ) 
             result = scipy_quad ( func , xmin , xmax , **kwargs )
@@ -673,7 +672,7 @@ def _split2_ ( xlims , ylims ) :
 #  for nr in  newregions : print nr
 #  @endcode 
 def _split3_ ( xlims , ylims , zlims ) :
-    """Split 3D-region into eight smaller pieces
+    """ Split 3D-region into eight smaller pieces
 
     Example
     -------
@@ -883,7 +882,8 @@ def genzmalik3 ( func   ,
 # =============================================================================
 if scipy : # ==================================================================
     # =========================================================================
-    from scipy.integrate import dblquad as scipy_dblquad        
+    from scipy.integrate import dblquad             as scipy_dblquad        
+    from scipy.integrate import IntegrationWarning  as scipy_IW  
     # =========================================================================
     ## Calculate the integral (from ) for the 2D-function 
     #  @code 
@@ -904,11 +904,13 @@ if scipy : # ==================================================================
         >>> v = integral2(func,0,1,-2,2)
         """
         func   = lambda x,y : float ( fun ( x , y , *args ) ) 
-        result = scipy_dblquad ( func ,
-                                 ymin , ymax     ,
-                                 lambda x : xmin ,
-                                 lambda x : xmax , **kwargs )
-        return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
+        with warnings.catch_warnings():
+            warnings.simplefilter ( "ignore" , category = scipy_IW  ) 
+            result = scipy_dblquad ( func ,
+                                     ymin , ymax     ,
+                                     lambda x : xmin ,
+                                     lambda x : xmax , **kwargs )
+            return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
 
     # =========================================================================
 else : # ======================================================================
@@ -923,7 +925,8 @@ else : # ======================================================================
 # =============================================================================
 if scipy : # ==================================================================
     # =========================================================================
-    from scipy.integrate import tplquad as scipy_tplquad
+    from scipy.integrate import tplquad             as scipy_tplquad
+    from scipy.integrate import IntegrationWarning  as scipy_IW  
     # =========================================================================
     ## Calculate the inteegral for the 3D-function 
     #  @code 
@@ -944,21 +947,22 @@ if scipy : # ==================================================================
         >>> func = lambda x,y,z : x*x+y*y+z*z
         >>> v = integral3(func,0,1,0,2,0,3)
         """
-        func   = lambda x,y,z : float ( fun ( x , y , z , *args ) ) 
-        result = scipy_tplquad ( func ,
-                                 zmin , zmax ,
-                                 lambda z   : ymin ,
-                                 lambda z   : ymax ,
-                                 lambda y,z : xmin ,
-                                 lambda y,z : xmax , **kwargs )
-        return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
+        func   = lambda x,y,z : float ( fun ( x , y , z , *args ) )        
+        with warnings.catch_warnings():
+            warnings.simplefilter ( "ignore" , category = scipy_IW  ) 
+            result = scipy_tplquad ( func ,
+                                     zmin , zmax ,
+                                     lambda z   : ymin ,
+                                     lambda z   : ymax ,
+                                     lambda y,z : xmin ,
+                                     lambda y,z : xmax , **kwargs )
+            return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
     # ========================================================================    
 else : # =====================================================================
     # ========================================================================
     ## logger.warning ("scipy.integrate is not available, use local ``genz&malik''-replacement")
     ## use Genz&Malik integration as default method when scipy is not available 
     integral3 = genzmalik3 
-# =============================================================================
 
 # =============================================================================
 ## @class IntegralBase
@@ -1902,10 +1906,13 @@ if '__main__' == __name__ :
 
     # ========================================================================
     if integral is romberg : 
-        logger.warning ( "scipy.integrate.quad    is not available, use local `romberg'-replacement")    
+        logger.warning ( "scipy.integrate.quad    is not available, use local `romberg'-replacement")
+        
+    # ========================================================================
     if integral2 is genzmalik2 : 
         logger.warning ( "scipy.integrate.dblquad is not available, use local `genz&malik'-replacement")
-        # ========================================================================
+        
+    # ========================================================================
     if integral3 is genzmalik3 : 
         logger.warning ( "scipy.integrate.tplquad is not available, use local `genz&malik'-replacement")
 

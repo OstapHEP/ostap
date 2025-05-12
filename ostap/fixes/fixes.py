@@ -15,27 +15,6 @@ __date__    = '2016-02-23'
 __all__     = () ## noting to import 
 # =============================================================================
 import os 
-# =============================================================================
-## print 'FIXES! before '
-## cpp = cppyy.gbl 
-## ## suppress welcome message from RooFit
-## from ostap.logger.utils import mute
-## with mute( True , True ) :
-##     v = ROOT.RooRealVar()
-##     del v
-## print 'FIXES! after!'
-    
-## try :
-##     enabled = ROOT.ROOT.IsImplicitMTEnabled ()
-##     if enabled : logger.debug ("ImplicitMT is  enabled")
-##     else       : logger.debug ("ImplicitMT is disabled")
-## except AttributeError :
-##     ROOT.ROOT.IsImplicitMTEnabled  = lambda *_ : False
-##     ROOT.ROOT.EnableImplicitMT     = lambda *_ : False
-##     ROOT.ROOT.DisableImplicitMT    = lambda *_ : False 
-##     logger.info ("``Enable/Disable''Implicit MT is not available") 
-
-
 # ============================================================================
 ## @class MuteC
 #  context manager to suppress pythion prinout
@@ -44,7 +23,7 @@ import os
 #  A fix is added for "IOError: [Errno 24] Too many open files" :
 #  original code leaks the file descriptors
 class MuteC(object):
-    """A context manager for doing a ``deep suppression'' of stdout and stderr in 
+    """ A context manager for doing a ``deep suppression'' of stdout and stderr in 
     Python, i.e. will suppress all print, even if the print originates in a 
     compiled C/Fortran sub-function.
     This will not suppress raised exceptions, since exceptions are printed
@@ -107,6 +86,7 @@ class MuteC(object):
         os.close ( self.save_fds[1] ) 
         os.close ( self.save_fds[0] )
 
+# =============================================================================
 with MuteC ( True , True ) : 
     import ROOT
     ROOT.PyConfig.IgnoreCommandLineOptions = True

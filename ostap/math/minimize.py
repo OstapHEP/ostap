@@ -35,7 +35,7 @@ else                       : logger = getLogger ( __name__              )
 # =============================================================================
 if scipy : # ==================================================================
     # =========================================================================
-    minimize_scalar = scipy.optimize.minimize_scalar 
+    from scipy.optimize import minimize_scalar 
     # =========================================================================
 else : # ======================================================================
     # =========================================================================
@@ -44,6 +44,8 @@ else : # ======================================================================
 
 # =============================================================================
 if numpy and scipy : # ========================================================
+    # =========================================================================
+    from scipy.optimize import minimize  as scipy_minimize 
     # =========================================================================
     ## get a minimum for 1D-function
     #  @code
@@ -62,8 +64,7 @@ if numpy and scipy : # ========================================================
         
         bounds = [ ( xmin , xmax ) ]
         
-        import scipy.optimize as spo
-        res    = spo.minimize ( fun , x0 = x0 , bounds = bounds )
+        res    = scipy_minimize ( fun , x0 = x0 , bounds = bounds )
         if not res.success :
             logger.error ( "Can't minimize the function: %s" % res.message )
         return res.x[0]
@@ -103,8 +104,7 @@ if numpy and scipy : # ========================================================
         
         bounds = [ ( xmin , xmax ) , ( ymin , ymax ) ]
         
-        import scipy.optimize as spo
-        res    = spo.minimize ( fun , x0 = x0 , bounds = bounds )
+        res    = scipy_minimize ( fun , x0 = x0 , bounds = bounds )
         if not res.success :
             logger.error ( "Can't minimize the function: %s" % res.message )
         return res.x[0] , res.x[1] 
@@ -149,8 +149,7 @@ if numpy and scipy : # ========================================================
         
         bounds = [ ( xmin , xmax ) , ( ymin , ymax ) , ( zmin , zmax ) ]
         
-        import scipy.optimize as spo
-        res    = spo.minimize ( fun , x0 = x0 , bounds = bounds )
+        res    = scipuy_minimize ( fun , x0 = x0 , bounds = bounds )
         if not res.success :
             logger.error ( "Can't minimize the function: %s" % res.message )
         return res.x[0] , res.x[1] , res.x[2] 
