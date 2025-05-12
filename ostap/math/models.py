@@ -966,7 +966,6 @@ def sp_integrate_3D_  ( pdf   ,
     func = pdf.function()
     return func.sp_integrate_3D ( xmin , xmax , ymin , ymax , zmin , zmax , *args , **kwargs ) 
 
-
 from ostap.stats.moments import moment           as sp_moment
 from ostap.stats.moments import central_moment   as sp_central_moment
 from ostap.stats.moments import mean             as sp_mean
@@ -988,7 +987,7 @@ from ostap.stats.moments import cl_asymm         as sp_cl_asymm
 #  f.SetLineWidth(2) ## delegate to TF1
 #  @endcode 
 def _tf1_getattr_ ( self , attr ) :
-    """Delegate some methods/attributes to TF1
+    """ Delegate some methods/attributes to TF1
     >>> f = ...
     >>> f.SetLineColor(4) ## delegate to TF1
     >>> f.SetLineWidth(2) ## delegate to TF1
@@ -1034,10 +1033,14 @@ def _tf3_getattr_ ( self , attr ) :
     
     raise AttributeError("Can't get attribute: %s" % attr )
 
-try : 
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
     from ostap.math.minimize   import sp_minimum_1D, sp_maximum_1D 
-    from ostap.math.rootfinder import sp_solve 
-except ImportError :
+    from ostap.math.rootfinder import sp_solve
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
     sp_minimum_1D = None 
     sp_maximum_1D = None 
     sp_solve      = None 

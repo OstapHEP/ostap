@@ -695,7 +695,7 @@ class Quantile(Median) :
 #  @date   2015-07-12
 #  @attention it is not very efficient, could be (and should be) improved 
 class Mode(Median) :
-    """Calculate the mode for the distribution or function  
+    """ Calculate the mode for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> mode      = Mode ( xmin,xmax )  ## specify min/max
     >>> value     = mode ( math.sin  )

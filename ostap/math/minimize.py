@@ -25,7 +25,7 @@ __all__     = (
     )
 # =============================================================================
 import warnings, math
-from   ostap.math.base import scipy, numpy  
+from   ostap.math.base import scipy, numpy , numpy_version  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -33,9 +33,14 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.minimize' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
-if scipy : # ==================================================================
+if numpy and scipy : # ==================================================================
     # =========================================================================
-    from scipy.optimize import minimize_scalar 
+    if ( 1 , 22 ) <= numpy_version < ( 1 , 23 ) :
+        with warnings.catch_warnings():
+            warnings.simplefilter ( "ignore" , category = UserWarning ) 
+            from scipy.optimize import minimize_scalar
+    else :
+        from scipy.optimize import minimize_scalar        
     # =========================================================================
 else : # ======================================================================
     # =========================================================================
