@@ -25,6 +25,7 @@ else                       : logger = getLogger ( __name__                    )
 try : # =======================================================================
     # =========================================================================
     if ( 1 , 22 ) <= numpy_version < ( 1 , 23 ) :
+        import warnings 
         with warnings.catch_warnings():
             warnings.simplefilter ( "ignore" , category = UserWarning )
             from scipy.signal import fftconvolve as _scipy_signal_fftconvolve
