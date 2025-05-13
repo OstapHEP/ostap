@@ -857,7 +857,7 @@ def num_range ( value , N = 1 ) :
     NN = 10 ** N
     
     if not isfinite ( a * 2* NN ):
-        logger.error ( "num_range: not finite: %s %s %s " % ( value , N , a , b , NN ) )
+        logger.error ( "num_range: not finite: %s %s %s %s %s" % ( value , N , a , b , NN ) )
         
     af = math.floor ( a * 2 * NN )
     ac = math.ceil  ( a * 2 * NN )
