@@ -1,3 +1,5 @@
+# v2.0.5.0
+
 ## New features
     
   1. Add more protections for missing scipy
