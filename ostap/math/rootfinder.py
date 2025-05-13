@@ -82,6 +82,7 @@ __all__     = (
 )
 # =============================================================================
 from   ostap.math.base            import isequal, iszero , samesign
+from   ostap.math.base            import scipy, numpy_version 
 import sys, collections, warnings 
 # =============================================================================
 # logging 
@@ -1243,9 +1244,15 @@ def find_root ( f                   , ## the function
     return solver.find ( a , b )
 
 # =========================================================================
-try : # =================================================================== 
+# =========================================================================
+try : # ===================================================================
     # =====================================================================
-    from scipy.optimize import brentq as scipy_brentq 
+    if ( 1 , 22 ) <= numpy_version < ( 1 , 23 ) :
+        with warnings.catch_warnings():
+            warnings.simplefilter ( "ignore" , category = UserWarning )
+            from scipy.optimize import brentq as scipy_brentq 
+    else : 
+        from scipy.optimize import brentq as scipy_brentq  
     findroot = scipy_brentq
     # =====================================================================
 except ImportError : # ====================================================
