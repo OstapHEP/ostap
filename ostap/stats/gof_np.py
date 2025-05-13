@@ -32,7 +32,7 @@ from   ostap.utils.utils        import split_n_range
 from   ostap.utils.basic        import numcpu 
 from   ostap.stats.gof          import AGoFnp
 from   ostap.utils.memory       import memory, memory_enough
-from   ostap.math.base          import numpy, scipy, scipy_version  
+from   ostap.math.base          import numpy, scipy, scipy_version, numpy_version  
 import os, abc, warnings, ROOT   
 # =============================================================================
 s2u,cdist = None , None
@@ -41,8 +41,14 @@ if numpy and scipy :
     # =========================================================================
     try : # ===================================================================
         # =====================================================================
-        from numpy.lib.recfunctions import structured_to_unstructured as s2u
-        from scipy.spatial.distance import cdist                      as cdist
+        if ( 1 , 22 ) <= numpy_version < ( 1 , 23 ) :
+            with warnings.catch_warnings():
+                warnings.simplefilter ( "ignore" , category = UserWarning )
+                from numpy.lib.recfunctions import structured_to_unstructured as s2u
+                from scipy.spatial.distance import cdist                      as cdist
+        else :  
+            from numpy.lib.recfunctions import structured_to_unstructured as s2u
+            from scipy.spatial.distance import cdist                      as cdist
         ## =====================================================================
         if ( 1 , 6 , 0 ) <= scipy_version :
             qconf = { 'k' : [ 2 ] , 'workers' : -1 }
