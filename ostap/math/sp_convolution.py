@@ -16,7 +16,7 @@ __all__     = ()
 # =============================================================================
 import warnings 
 from   ostap.math.operations import Function
-from   ostap.math.base       import numpy, scipy 
+from   ostap.math.base       import numpy, scipy, numpy_version
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.sp_convolution' )
@@ -24,7 +24,12 @@ else                       : logger = getLogger ( __name__                    )
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
-    from scipy.signal import fftconvolve as _scipy_signal_fftconvolve 
+    if ( 1 , 22 ) <= numpy_version < ( 1 , 23 ) :
+        with warnings.catch_warnings():
+            warnings.simplefilter ( "ignore" , category = UserWarning )
+            from scipy.signal import fftconvolve as _scipy_signal_fftconvolve
+    else :
+        from scipy.signal import fftconvolve as _scipy_signal_fftconvolve    
     # =========================================================================
     ## Simple class for scipy-based convolution  
     class ArrayConvolution(object) :
@@ -139,92 +144,92 @@ try : # =======================================================================
         
         __repr__ = __str__
 
-        # =====================================================================
-        ## simple class for SciPy/FFT-based convolution 
-        class Convolution ( ArrayConvolution,Function) :
-            """ Simple class for SciPy/FFT-based convolution 
-            >>> func  = ...
-            >>> reso  = ...
-            >>> sp    = Convolution ( func1 = func , xmin1 = 0 , xmax1 = 1  , 
-            >>>                       func2 = reso , xmin2 = 0 , xmax2 = 10 , N = 2048 ) 
-            """
-            # =================================================================
-            ## Create the convolution 
-            #  @code
-            #  >>> x  = ... ##
-            #  >>> y  = ... ##
-            #  >>> sp = Convolution (x , y )
-            #  @endcode
-            def __init__ ( self           ,
-                           func1          ,
-                           xmin1          ,
-                           xmax1          ,
-                           func2          ,
-                           xmin2          ,
-                           xmax2          ,
-                           N     = 1024   ,
-                           mode  = 'same' ) :
-                """ Create the convolution 
-                >>> x  = ... ##
-                >>> y  = ... ##
-                >>> sp = Convolution (x , y )
-                """                
-                from ostap.core.ostap_types import integer_types
-                assert isinstance ( N , integer_types ) and 1 < N , 'Illegal N %s!' % N 
+    # =====================================================================
+    ## simple class for SciPy/FFT-based convolution 
+    class Convolution ( ArrayConvolution,Function) :
+        """ Simple class for SciPy/FFT-based convolution 
+        >>> func  = ...
+        >>> reso  = ...
+        >>> sp    = Convolution ( func1 = func , xmin1 = 0 , xmax1 = 1  , 
+        >>>                       func2 = reso , xmin2 = 0 , xmax2 = 10 , N = 2048 ) 
+        """
+        # =================================================================
+        ## Create the convolution 
+        #  @code
+        #  >>> x  = ... ##
+        #  >>> y  = ... ##
+        #  >>> sp = Convolution (x , y )
+        #  @endcode
+        def __init__ (  self           ,
+                        func1          ,
+                        xmin1          ,
+                        xmax1          ,
+                        func2          ,
+                        xmin2          ,
+                        xmax2          ,
+                        N     = 1024   ,
+                        mode  = 'same' ) :
+            """ Create the convolution 
+            >>> x  = ... ##
+            >>> y  = ... ##
+            >>> sp = Convolution (x , y )
+            """                
+            from ostap.core.ostap_types import integer_types
+            assert isinstance ( N , integer_types ) and 1 < N , 'Illegal N %s!' % N 
                 
-                self.__func1   = func1
-                self.__params1 = xmin1 , xmax1 , N
+            self.__func1   = func1
+            self.__params1 = xmin1 , xmax1 , N
                 
-                self.__func2   = func2 
-                self.__params2 = xmin2 , xmax2 
+            self.__func2   = func2 
+            self.__params2 = xmin2 , xmax2 
                 
-                from ostap.math.operations import digitize
-                dfunc1 = digitize ( func1 , xmin1 , xmax1 , N )
+            from ostap.math.operations import digitize
+            dfunc1 = digitize ( func1 , xmin1 , xmax1 , N )
                 
-                dx     = float ( xmax1 - xmin1 ) / N 
+            dx     = float ( xmax1 - xmin1 ) / N 
                 
-                dfunc2 = digitize ( func2 , xmin12 , xmax2 , dx )
+            dfunc2 = digitize ( func2 , xmin12 , xmax2 , dx )
                 
-                ## make the real convolution
-                super(Convolution,self).__init__ ( dfunc1 , dfunc2 , mode )
+            ## make the real convolution
+            super(Convolution,self).__init__ ( dfunc1 , dfunc2 , mode )
                 
-                r  = self.result
-                r *= dx 
+            r  = self.result
+            r *= dx 
 
-                self.__spline = None
+            self.__spline = None
                 
-            def xmin    ( self ) : return self.__params1 [ 0 ]
-            def xmax    ( self ) : return self.__params1 [ 1 ]
-            def xmin1   ( self ) : return self.__params1 [ 0 ]
-            def xmax1   ( self ) : return self.__params1 [ 1 ]
-            def xmin2   ( self ) : return self.__params2 [ 0 ]
-            def xmax2   ( self ) : return self.__params2 [ 1 ]
+        def xmin    ( self ) : return self.__params1 [ 0 ]
+        def xmax    ( self ) : return self.__params1 [ 1 ]
+        def xmin1   ( self ) : return self.__params1 [ 0 ]
+        def xmax1   ( self ) : return self.__params1 [ 1 ]
+        def xmin2   ( self ) : return self.__params2 [ 0 ]
+        def xmax2   ( self ) : return self.__params2 [ 1 ]
             
-            @property
-            def N       ( self ) : return self.__params1 [ 2 ]
+        @property
+        def N       ( self ) : return self.__params1 [ 2 ]
             
-            @property
-            def params1 ( self ) : return self.__params1
-            @property
-            def params2 ( self ) : return self.__params2
+        @property
+        def params1 ( self ) : return self.__params1
+        @property
+        def params2 ( self ) : return self.__params2
             
-            @property
-            def spline ( self ) :
-                """`spline' : get the spline function for the result of convolution"""
-                if self.__spline  : return self.__spline                
-                from ostap.math.sp_interpolation import SplineInterpolator 
-                x = numpy.linspace ( self.xmin() , self.xmax() , self.N )
-                self.__spline = SplineInterpolator ( ( x , self.result ) , 3 )
-                return self.__spline
+        @property
+        def spline ( self ) :
+            """`spline' : get the spline function for the result of convolution"""
+            if self.__spline  : return self.__spline                
+            from ostap.math.sp_interpolation import SplineInterpolator 
+            x = numpy.linspace ( self.xmin() , self.xmax() , self.N )
+            self.__spline = SplineInterpolator ( ( x , self.result ) , 3 )
+            return self.__spline
             
-            def __call__ ( self , x  ) :
-                if not self.__spline : self.spline
-                return self.__spline ( x )
+        def __call__ ( self , x  ) :
+            if not self.__spline : self.spline
+            return self.__spline ( x )
             
-            def __str__ ( self ) :
-                return "(%s{*}%s)" % ( self.__func1 , self.__func2 ) 
+        def __str__ ( self ) :
+            return "(%s{*}%s)" % ( self.__func1 , self.__func2 ) 
             
-            __repr__ = __str__
+        __repr__ = __str__
 
     __all__     = (
         'ArrayConvolution' , ## SciPy' FFT-based convolution for two arrays 
