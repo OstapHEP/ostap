@@ -70,7 +70,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.math.ve     import VE
-from   ostap.math.base   import isequal, iszero, scipy 
+from   ostap.math.base   import isequal, iszero, numpy, scipy, numpy_version 
 from   ostap.utils.basic import items_loop
 from   ostap.utils.utils import memoize 
 import ROOT, warnings, math, array 
@@ -423,8 +423,14 @@ def clenshaw_curtis ( fun                 ,
 # =============================================================================
 if scipy : 
     # =========================================================================
-    from scipy.integrate import quad                as scipy_quad
-    from scipy.integrate import IntegrationWarning  as scipy_IW  
+    if ( 1 , 22 ) <= numpy_version < ( 1 , 23 ) :
+        with warnings.catch_warnings():
+            warnings.simplefilter ( "ignore" , category = UserWarning )
+            from scipy.integrate import quad                as scipy_quad
+            from scipy.integrate import IntegrationWarning  as scipy_IW 
+    else :  
+        from scipy.integrate import quad                as scipy_quad
+        from scipy.integrate import IntegrationWarning  as scipy_IW  
     # =========================================================================
     ## Calculate the integral (from x0 to x) for the 1D-function 
     #  @code 
@@ -644,7 +650,7 @@ def _genzmalik3_ ( func , xlims , ylims , zlims , args =  () ) :
 #  for nr in  newregions : print nr
 #  @endcode 
 def _split2_ ( xlims , ylims ) :
-    """Split 2D-region into   four smaller pieces
+    """ Split 2D-region into   four smaller pieces
 
     Example
     -------
@@ -882,8 +888,14 @@ def genzmalik3 ( func   ,
 # =============================================================================
 if scipy : # ==================================================================
     # =========================================================================
-    from scipy.integrate import dblquad             as scipy_dblquad        
-    from scipy.integrate import IntegrationWarning  as scipy_IW  
+    if ( 1 , 22 ) <= numpy_version < ( 1 , 23 ) :
+          with warnings.catch_warnings():
+            warnings.simplefilter ( "ignore" , category = UserWarning )
+            from scipy.integrate import dblquad             as scipy_dblquad
+            from scipy.integrate import IntegrationWarning  as scipy_IW 
+    else :
+        from scipy.integrate import dblquad             as scipy_dblquad
+        from scipy.integrate import IntegrationWarning  as scipy_IW  
     # =========================================================================
     ## Calculate the integral (from ) for the 2D-function 
     #  @code 
@@ -925,8 +937,14 @@ else : # ======================================================================
 # =============================================================================
 if scipy : # ==================================================================
     # =========================================================================
-    from scipy.integrate import tplquad             as scipy_tplquad
-    from scipy.integrate import IntegrationWarning  as scipy_IW  
+    if ( 1 , 22 ) <= numpy_version < ( 1 , 23 ) :
+        with warnings.catch_warnings():
+            warnings.simplefilter ( "ignore" , category = UserWarning )
+            from scipy.integrate import tplquad             as scipy_tplquad
+            from scipy.integrate import IntegrationWarning  as scipy_IW 
+    else :
+        from scipy.integrate import tplquad             as scipy_tplquad
+        from scipy.integrate import IntegrationWarning  as scipy_IW  
     # =========================================================================
     ## Calculate the inteegral for the 3D-function 
     #  @code 
