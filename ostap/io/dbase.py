@@ -147,6 +147,25 @@ except ImportError  : # =======================================================
     use_lmdb = False 
 
 # =============================================================================
+if (3,13) <= sys.version_info : # =============================================
+    # =========================================================================
+    try : # ===================================================================
+        import dbm.sqlite3
+        def sqlite3_open ( filename   ,
+                           flag = 'c' ,
+                           mode    = 0o660 , **kwargs ) :
+            return dbm.sqlite3.open ( filename , flag = flag , mode = mode )
+        use_sqlite3 = True 
+        # ====================================================================
+    except ImportError : # ===================================================
+        # ====================================================================        
+        use_sqlite3 = False
+    # ========================================================================
+else : # =====================================================================
+    # ========================================================================
+    use_sqlite3 = False
+    
+# =============================================================================
 ##  Guess which db package to use to open a db file.
 #  
 #   Return values:
@@ -309,10 +328,13 @@ def dbopen ( file               ,
         ## check the preferred database type:
         for db in db_types :
                         
-            if db             in ( 'sqlite3' , 'sqlite'  , 'sql'                      , '' ) : ## NB!! 
-                return SqliteDict      ( filename = file , flag = flag , **kwargs )            
-            elif use_berkeleydb and db in ( 'berkeleydb' , 'berkeley' , 'berkeley-db' , '' ) :  ## NB!!
+            if   use_berkeleydb and db in ( 'berkeleydb' , 'berkeley' , 'berkeley-db' , ''    ) :  ## NB!!
                 return berkeleydb_open ( file            , flag , mode , **kwargs ) 
+            elif use_sqlite3    and db in ( 'dbm.sqlite3' , 'sqlite3' , 'sqlite' , 'sql3' , 'sql' , '' ) : ## NB 
+                if kwargs : logger.warning ( message ) 
+                return sqlite3_open ( file , flag , mode )
+            elif                    db in ( 'sqlite3'     , 'sqlite'  , 'sql3' , 'sql' , ''  ) : ## NB!! 
+                return SqliteDict      ( filename = file , flag = flag , **kwargs )                        
             elif use_bsddb3     and 'bsddb3'     == db :
                 return bsddb3_open     ( file            , flag , mode , **kwargs ) 
             elif use_lmdb       and 'lmdb'       == db :
@@ -396,10 +418,12 @@ def dbsize  ( filename  ) :
 def dbfiles ( dbtype , basename ) :
     """ Expected DB file names for the given basename
     """
-    if   dbtype in ( 'dbm.ndbm' , ) : 
+    if   dbtype in ( 'dbm.ndbm'    , ) : 
         return '%s.pag' % basename , '%s.dir' % basename , 
-    elif dbtype in ( 'dbm.dumb' , ) : 
+    elif dbtype in ( 'dbm.dumb'    , ) : 
         return '%s.dat' % basename , '%s.dir' % basename , 
+    elif dbtype in ( 'dbm.sqlite3' , ) : 
+        return basename , ## '%s-wal' % basename , ## '%s-shm' % basename , 
     elif dbtype in ( 'lmdb', ) : 
         return ( os.path.join ( basename , ''         ) , ## directory 
                  os.path.join ( basename , 'data.mdb' ) ,
