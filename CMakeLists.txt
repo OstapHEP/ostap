@@ -30,7 +30,7 @@ include(CTest)
 set(OSTAP_VERSION_MAJOR 2)
 set(OSTAP_VERSION_MINOR 0)
 set(OSTAP_VERSION_PATCH 5)
-set(OSTAP_VERSION_TWEAK 0)
+set(OSTAP_VERSION_TWEAK 1)
 
 message ("                                                                     ")
 message ("       .oooooo.                .                          .oooo.     ")
@@ -44,7 +44,6 @@ message ("                                               888                   "
 message ("                                              o888o                  ")
 message ("                                                                     ")
 
-    
 set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_PATCH}.${OSTAP_VERSION_TWEAK})
 
 message ( "----> OSTAP           version    : " ${OSTAP_VERSION} )
@@ -94,9 +93,8 @@ endif()
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 
 if ( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
-   set ( CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install CACHE PATH "..." FORCE )
+  set ( CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install CACHE PATH "..." FORCE )
 endif ( )
-
 
 add_subdirectory(source)
 add_subdirectory(ostap)
