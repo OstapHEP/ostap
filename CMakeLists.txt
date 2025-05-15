@@ -109,8 +109,10 @@ set(LIBRARY_OUTPUT_PATH    "${CMAKE_BINARY_DIR}/lib")
 ### where to put the executables
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 
-
+# ===============================================================================
 # build a CPack driven installer package
+# ===============================================================================
+
 include (InstallRequiredSystemLibraries)
 set (CPACK_OUTPUT_FILE_PREFIX    packages)
 set (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")

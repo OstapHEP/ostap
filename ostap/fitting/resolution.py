@@ -93,7 +93,7 @@ models = set()
 ## @class ResoGauss
 #  Trivial single gaussian resolution model
 class ResoGauss(RESOLUTION) :
-    """Trivial single gaussian resolution model
+    """ Trivial single gaussian resolution model
     """
     def __init__ ( self         ,
                    name         ,   ## the  name 
@@ -192,7 +192,7 @@ models.add ( ResoGauss )
 #  - ratio of wide/core widths
 #  - fraction of core(narrow) component
 class ResoGauss2(RESOLUTION) :
-    """Double-gaussian resolution model
+    """ Double-gaussian resolution model
     - sigma of core Gaussian
     - ratio of wide/core widths
     - fraction of core component
@@ -279,7 +279,7 @@ models.add ( ResoGauss2 )
 #  @see Ostap::Models::Apollonios2 
 #  @see Ostap::Math::Apollonios2 
 class ResoApo2(RESOLUTION) :
-    """Symmetric variant of Apollonios model for the resolution function
+    """ Symmetric variant of Apollonios model for the resolution function
     - Gaussian core 
     - exponential tails
     see Ostap.Models.Apollonios2 
@@ -389,7 +389,7 @@ models.add ( ResoApo2 )
 #  @see Ostap::Math::CrystalBallDS
 #  @see Ostap::Models::CrystalBallDS
 class ResoCB2(RESOLUTION) :
-    """Symmetric double-sided Crystal Ball model for resolution
+    """ Symmetric double-sided Crystal Ball model for resolution
     - Gaussian core 
     - power-law tails
     see Ostap.Math.CrystalBallDS
@@ -403,10 +403,9 @@ class ResoCB2(RESOLUTION) :
                    n      = 5    ,   ## power-law exponent
                    fudge  = 1    ,   ## fudge-factor 
                    mean   = None ,   ## the mean value
-                   kappaN = None ,   ## asymmetru for N
-                   kappaA = None ) : ## asymmetru for alpha
-                   
-
+                   kappaN = None ,   ## asymmetry for N
+                   kappaA = None ) : ## asymmetry for alpha
+        
         ## initialize the base 
         super(ResoCB2,self).__init__ ( name  = name  ,
                                        xvar  = xvar  ,
@@ -423,7 +422,7 @@ class ResoCB2(RESOLUTION) :
                                        'n_'         + name ,
                                        'n(%s)'      % name ,
                                        None , 5 , 1.e-6 , 200 )
-        
+    
         if kappaN is None :
 
             self.__kappaN = ZERO

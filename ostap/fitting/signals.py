@@ -4878,7 +4878,7 @@ models.append ( Voigt_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-06-15
 class PseudoVoigt_pdf(Voigt_pdf) :
-    """Voigt function:
+    """ Voigt function:
     Convolution of non-relativistic Breit-Wigner with gaussian resolution
     
     CPU-efficient Approximation of Voight profile
@@ -4938,7 +4938,7 @@ models.append ( PseudoVoigt_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class BreitWigner_pdf(PEAK) :
-    """Relativistic Breit-Wigner function using Jackson's parameterization
+    """ Relativistic Breit-Wigner function using Jackson's parameterization
     J.D.Jackson, 'Remarks on the Phenomenological Analysis of Resonances',
     In Nuovo Cimento, Vol. XXXIV, N.6
     http://www.springerlink.com/content/q773737260425652/

@@ -29,11 +29,11 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.convolution' )
 else                       : logger = getLogger ( __name__         )
 # =============================================================================
-## helper class to keep convoltuon configuration
+## helper class to keep convolution configuration
 class CnvConfig(object) :
     """ Helper class to keep convolution configuration"""
     CONFIG = {}
-    ## retreive (copy) of current configuration
+    ## retrive (copy) of current configuration
     @classmethod 
     def config ( klass ) :
         """ Return currrent configuration
@@ -299,7 +299,7 @@ class Convolution(object):
 
     ## serialize the convolution object object 
     def __reduce__ ( self ) :
-        """Serialize the convolution object object"""
+        """ Serialize the convolution object object"""
         return root_store_factory  , ( type ( self )    ,
                                        self.old_pdf     , 
                                        self.xvar        , 
