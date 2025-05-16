@@ -274,7 +274,7 @@ if ( ${PYTHON_VERSION} VERSION_LESS       "3.12" )
 endif()
 
 if ( ${PY_pathos_FOUND} AND ${PY_dill_FOUND} AND ${PY_multiprocess_FOUND} AND ${PY_ppft_FOUND} ) 
-   message ( "----> Full pathos (pathos,dill,multiprocess,ppft) is found" )
+   message ( "----> Full pathos (pathos+dill+multiprocess+ppft) is found" )
 else()
    message ( "----> warning (optional) pathos          is NOT found!" )    
 endif()
