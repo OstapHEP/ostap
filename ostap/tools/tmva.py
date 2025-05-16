@@ -1233,12 +1233,12 @@ class Trainer(object):
                 
                 if self.    signal_weight :
                     scw  = sc * self.    signal_weight
-                    sw   = frame_statVar ( self.signal     , '1' , scw )
+                    sw   = frame_statVar ( self.signal      , '1' , scw )
                     sw   = WSE ( sw ) 
                     SW   = VE  ( sw.sum () , sw.sum2() ) 
                 if self.background_weight :
                     bcw  = bc * self.background_weight                    
-                    bw   = frame_statVar ( self.backgrund  , '1' , bcw )
+                    bw   = frame_statVar ( self.background  , '1' , bcw )
                     bw   = WSE ( bw ) 
                     BW   = VE  ( bw.sum () , bw.sum2() ) 
                 
