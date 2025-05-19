@@ -166,19 +166,19 @@ class Convolution(object):
         if self.useFFT : ## Use Fast Fourier transform  (fast) # ==============
             # =================================================================
             
-            assert isinstance ( nbins  , integer_types ) and 500   <  abs ( nbins  )  , \
+            assert isinstance ( nbins  , integer_types ) and 100  <= abs ( nbins  )  , \
                    "Invalid `nbins'  parameter %s/%s for fast Fourier transform"  % ( nbins  , type ( nbins  ) )
-            assert isinstance ( buffer ,  float        ) and 0.03  <= buffer <=0.9    , \
+            assert isinstance ( buffer , float         ) and 0.05 <= buffer <= 0.95  , \
                    "Invalid `buffer' parameter %s/%s for `setBufferFraction'"   % ( buffer , type ( buffer ) )
 
-            ## adjust #bins if positive. keep it as it is if negavtive 
-            if hasattr ( self.__resolution , 'sigma' ) and self.__xvar.minmax() and  self.__nbins > 0 :
+            ## adjust #bins if positive. keep it as it is if negative 
+            if hasattr ( self.__resolution , 'sigma' ) and self.__xvar.minmax() and  0 < self.__nbins :
                 mn , mx = self.xvar.minmax()
                 dm  = mx - mn
                 sv  = self.__resolution.sigma.getVal() 
                 dm /= sv
                 nb  = min ( 50 * ( int ( dm ) + 1  ) , 2**14 )
-                nb  = 2**math.frexp(nb)[1]
+                nb  = 2 ** math.frexp(nb)[1]
                 if nb > self.nbinsFFT : 
                     self.__nbins  = nb       
                     logger.info('Convolution: choose #bins %d' % self.__nbins )
