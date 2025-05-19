@@ -1,3 +1,4 @@
+# v2.0.5.1
 
 ## New features
 
@@ -5,6 +6,8 @@
 
 ## Bug fixes
 
+  1. fix typo in `tmva.py`
+  
 # v2.0.5.0
 
 ## New features
