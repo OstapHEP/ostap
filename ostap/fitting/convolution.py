@@ -43,7 +43,7 @@ class CnvConfig(object) :
     @classmethod
     def clean  ( klass ) :
         ## clean the global configuraiton 
-        while klass.CONFIG : klass.CONFIG.pop ()
+        while klass.CONFIG : klass.CONFIG.popitem ()
         
 # ============================================================================
 ## Context manager to treat the convoluton nconfiguration
