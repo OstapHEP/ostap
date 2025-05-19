@@ -55,6 +55,7 @@ __all__     = (
     ## 
 )
 # =============================================================================
+from   ostap.core.meta_info     import root_info
 from   ostap.core.ostap_types   import ( is_integer     , string_types   , 
                                          integer_types  , num_types      ,
                                          list_types     , all_numerics   ) 
@@ -71,8 +72,8 @@ from   ostap.fitting.funbasic   import FUN1, FUN2, FUN3, Fun1D , Fun2D , Fun3D
 from   ostap.fitting.variables  import SETVAR
 from   ostap.utils.cidict       import select_keys
 from   ostap.utils.basic        import typename 
-from   ostap.fitting.roocmdarg  import check_arg , nontrivial_arg , flat_args , command  
-from   ostap.core.meta_info     import root_info
+from   ostap.fitting.roocmdarg  import check_arg , nontrivial_arg , flat_args , command
+from   ostap.logger.pretty      import pretty_float 
 # 
 import ostap.fitting.roofit 
 import ostap.fitting.dataset 
@@ -483,6 +484,22 @@ class APDF1 ( Components ) :
                 if not silent : 
                     self    .info ('Set binning cache %s for variable %s in dataset' %  ( nb1 , xv.name )  )
 
+        if not silent :
+            params = self.params ( dataset )
+            rows = [  ( 'Parameter' , 'Value' , 'Factor' ) ]
+            for p in params :
+                name = p.name 
+                v    = float ( p * 1 )
+                v , expo = pretty_float ( v , precision = 4 , width = 6 )
+                if expo : row = name , v , '10^%+d' % expo  
+                else    : row = name , v , '' 
+                rows.append ( row )
+            import ostap.logger.table as T
+            rows  = T.remove_empty_columns ( rows ) 
+            title = 'Before fit'
+            table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rl' )            
+            self.info ( '%s:\n%s' % ( title , table ) ) 
+            
         ## define silent context
         with roo_silent ( silent ) :            
             if self.fit_result : self.fit_result = None
@@ -6434,7 +6451,6 @@ class Flat3D(PDF3) :
 ## Sum*D
 # =============================================================================
 
-
 # =============================================================================
 ## @class Sum1D
 #  Non-extended sum of several PDFs
@@ -6498,7 +6514,24 @@ class Sum1D (PDF1,Fractions) :
             'recursive' : self.recursive ,
             'fix_norm'  : self.fix_norm  
             }
-        
+
+    # ==========================================================================
+    ## Get the parameter by name or component by oindex 
+    #  @code
+    #  pdf = ...
+    #  a   = pdf['A']
+    #  c   = pdf[2] 
+    #  @endcode
+    def __getitem__ ( self , index ) :
+        """ Get the component by index (or parameter by name) 
+        >>> pdf = ...
+        >>> a   = pdf['A']
+        >>> c   = pdf[2] 
+        """
+        if isinstance ( index , integer_types  ) or isinstance ( index , slice ) :
+            return self.pdfs [ index ] 
+        return super().__getitem__ ( index ) 
+
     @property
     def fix_norm ( self ) :
         """`fix-norm`: 
@@ -6579,6 +6612,23 @@ class Sum2D (PDF2,Fractions) :
             'fix_norm'  : self.fix_norm  
             }
   
+    # ==========================================================================
+    ## Get the parameter by name or component by oindex 
+    #  @code
+    #  pdf = ...
+    #  a   = pdf['A']
+    #  c   = pdf[2] 
+    #  @endcode
+    def __getitem__ ( self , index ) :
+        """ Get the component by index (or parameter by name) 
+        >>> pdf = ...
+        >>> a   = pdf['A']
+        >>> c   = pdf[2] 
+        """
+        if isinstance ( index , integer_types  ) or isinstance ( index , slice ) :
+            return self.pdfs [ index ] 
+        return super().__getitem__ ( index )
+    
     @property
     def fix_norm ( self ) :
         """`fix-norm`: 
@@ -6660,6 +6710,23 @@ class Sum3D (PDF3,Fractions) :
             'recursive' : self.recursive , 
             'fix_norm'  : self.fix_norm  
             }
+
+    # ==========================================================================
+    ## Get the parameter by name or component by oindex 
+    #  @code
+    #  pdf = ...
+    #  a   = pdf['A']
+    #  c   = pdf[2] 
+    #  @endcode
+    def __getitem__ ( self , index ) :
+        """ Get the component by index (or parameter by name) 
+        >>> pdf = ...
+        >>> a   = pdf['A']
+        >>> c   = pdf[2] 
+        """
+        if isinstance ( index , integer_types  ) or isinstance ( index , slice ) :
+            return self.pdfs [ index ] 
+        return super().__getitem__ ( index ) 
 
     @property
     def fix_norm ( self ) :

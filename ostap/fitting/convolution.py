@@ -19,7 +19,7 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.fitting.pdfbasic  import PDF1, Generic1D_pdf
-from   ostap.core.ostap_types  import num_types ,  integer_types
+from   ostap.core.ostap_types  import num_types, integer_types, string_types 
 from   ostap.fitting.rooreduce import root_store_factory
 from   ostap.utils.basic       import typename 
 import ostap.logger.table      as     T 
@@ -104,19 +104,19 @@ class Convolution(object):
     >>> cnv = Convolution ('CNV' , pdf , xvar  =  xvar , resolution = resolution )
     >>> cnv_pdf = cnv.pdf 
     """
-    def __init__ ( self              ,
-                   pdf               ,   ## the PDF to be convoluted 
-                   xvar              ,   ## the axis variable
-                   resolution        ,   ## the resolution
-                   name     = ''     ,   ## name for Gaussian resolution pdf 
-                   useFFT   = True   ,   ## use FFT ? 
-                   nbins    = 10000  ,   ## number of bins for FFT
-                   buffer   = 0.25   ,   ## buffer fraction use for setBufferFraction
-                   bufstrat = None   ,   ## "Buffer strategy" : (0,1,2)
-                   shift1   = None   ,   ## shift1 parameter
-                   shift2   = None   ,   ## shift2 parameter
-                   nsigmas  = 6      ,   ## number of sigmas for setConvolutionWindow
-                   silent   = False  ) : 
+    def __init__ ( self                ,
+                   pdf                 ,  ## the PDF to be convoluted 
+                   xvar                ,  ## the axis variable
+                   resolution          ,  ## the resolution
+                   name     = ''       ,  ## name for Gaussian resolution pdf 
+                   useFFT   = True     ,  ## use FFT ? 
+                   nbins    = 10000    ,  ## number of bins for FFT
+                   buffer   = 0.25     ,  ## buffer fraction use for setBufferFraction
+                   bufstrat = 'Extend' ,  ## "Buffer strategy" : (0,1,2)
+                   shift1   = None     ,  ## shift1 parameter
+                   shift2   = None     ,  ## shift2 parameter
+                   nsigmas  = 6        ,  ## number of sigmas for setConvolutionWindow
+                   silent   = False    ) : 
         
         ## the axis 
         assert isinstance ( xvar , ROOT.RooAbsReal ) or not xvar , "`xvar' must be ROOT.RooAbsReal"
@@ -137,7 +137,7 @@ class Convolution(object):
             self.__old_pdf = Generic1D_pdf ( pdf , xvar = self.__xvar )
         else :
             raise TypeError("Convolution: invalid ``pdf'' %s/%s"  % ( pdf , type ( pdf ) ) )
-        
+
         ## resolution  function 
         if   isinstance ( resolution , PDF1           ) :
             assert resolution.xvar == self.xvar, "Invalid 'xvar/resolution' setting!"
@@ -148,10 +148,11 @@ class Convolution(object):
             ## use   Gaussian resolution
             import ostap.fitting.resolution as OFR
             rname  = name if name else 'ResoGauss'
-            rname  = self.old_pdf.generate_name ( prefix = rname )            
+            rname  = self.old_pdf.generate_name ( prefix = rname )
             self.__resolution = OFR.ResoGauss ( rname              ,
                                                 self.__xvar        ,
                                                 sigma = resolution )
+
         self.__nbins    = nbins
         self.__buffer   = buffer
         self.__bufstrat = bufstrat 
@@ -165,7 +166,26 @@ class Convolution(object):
         # =====================================================================
         if self.useFFT : ## Use Fast Fourier transform  (fast) # ==============
             # =================================================================
-            
+
+            bs = self.__bufstrat
+            if isinstance   ( bs , string_types ) :
+                bs = bs.lower ()
+                if   'extend' == bs : self.__bufstrat = ROOT.RooFFTConvPdf.Extend
+                elif 'flat'   == bs : self.__bufstrat = ROOT.RooFFTConvPdf.Flat
+                elif 'mirror' == bs : self.__bufstrat = ROOT.RooFFTConvPdf.Mirror
+                else :
+                    logger.error ( "Unknown bufstrat %s" % bs )
+                    self.__bufstrat = ROOT.RooFFTConvPdf.Extend
+            elif isinstance   ( bs , integer_types ) :
+                if not bs in ( ROOT.RooFFTConvPdf.Extend ,
+                               ROOT.RooFFTConvPdf.Flat   ,
+                               ROOT.RooFFTConvPdf.Mirror ) :
+                    logger.error ( "Unknown bufstrat %s" % bs )
+                    self.__bufstrat = ROOT.RooFFTConvPdf.Extend
+            else :
+                logger.error ( "Unknown bufstrat %s" % bs )
+                self.__bufstrat = ROOT.RooFFTConvPdf.Extend
+
             assert isinstance ( nbins  , integer_types ) and 100  <= abs ( nbins  )  , \
                    "Invalid `nbins'  parameter %s/%s for fast Fourier transform"  % ( nbins  , type ( nbins  ) )
             assert isinstance ( buffer , float         ) and 0.05 <= buffer <= 0.95  , \
@@ -192,20 +212,20 @@ class Convolution(object):
                 self.__old_pdf    .pdf   ,
                 self.__resolution .pdf   )            
             self.__pdf.setBufferFraction ( self.buffer )
-            
-            if isinstance ( self.bufstrat , int ) and 0 <= self.bufstrat <= 2 : 
-                self.__pdf.setBufferStrategy ( self.bufstrat )
+
+            ## buffer strategy 
+            self.__pdf.setBufferStrategy ( self.__bufstrat )
 
             ## set shift-parameters
             if ( not self.shift1 is None ) and ( not self.shift2 is None ) :             
                 self.__pdf.setShift ( self.shift1 , self.shift2 )
 
             # =================================================================
-        else : ##  Use plain numerical integration (could be slow) # ==========
+        else : ##  Use plain numerical integration (could be VERY slow) # =====
             # =================================================================
             
             assert isinstance ( nsigmas  , num_types ) and 2.5 <= nsigmas , \
-                   "Invalid `nsigmas'  parameter  %s/%s for ``setConvolutionWindow''"  % ( nsigmas , type ( nsigmas ) )
+                   "Invalid `nsigmas'  parameter  %s/%s for `setConvolutionWindow'"  % ( nsigmas , type ( nsigmas ) )
             
             self.__pdf = ROOT.RooNumConvPdf (
                 self.old_pdf.new_roo_name ( 'numcnv' ) ,
@@ -223,8 +243,7 @@ class Convolution(object):
         if not silent :
             title = 'Convolution'
             logger.info ( 'Convolution configuration:\n%s' % self.table ( title = title , prefix = '# ' ) ) 
-            
-            
+                        
     @property
     def name ( self ) :
         """'name' : the bname of convolution object"""
@@ -239,54 +258,54 @@ class Convolution(object):
         return self.__useFFT
     @property
     def resolution ( self  ) :
-        """``resolution'': pdf for resolution function"""
+        """`resolution': pdf for resolution function"""
         return self.__resolution 
     @property
     def old_pdf ( self ) :
-        """``old'' - the original pdf before convolution"""
+        """`old' - the original pdf before convolution"""
         return self.__old_pdf
     @property
     def pdf ( self ) :
-        """``new'' (convoluted) PDF"""
+        """`new' (convoluted) PDF"""
         return self.__pdf
     @property
     def nbinsFFT ( self ) :
-        """number of cache bins for Fast Fourier Transform"""
+        """`nbinsFFT`: number of cache bins for Fast Fourier Transform"""
         return abs ( self.__nbins )
     @property
     def nbins    ( self ) :
-        """number of cache bins for Fast Fourier Transform"""
+        """`nbins`: number of cache bins for Fast Fourier Transform"""
         return abs ( self.__nbins ) 
     @property
     def buffer ( self ) :
-        """``buffer'' : buffer fraction for Fast Fourier Transform"""
+        """`buffer' : buffer fraction for Fast Fourier Transform"""
         return self.__buffer
     @property
     def bufstrat ( self ) :
-        """``bufstrat'' : buffer strategy:
+        """`bufstrat' : buffer strategy:
         - 'Extend/0' means is that the input p.d.f convolution observable range is widened to include the buffer range
         - 'Flat/1'   means that the buffer is filled with the p.d.f. value at the boundary of the observable range
         - 'Mirror/2' means that the buffer is filled with a mirror image of the p.d.f. around the convolution observable boundary
         """
-        return self.__bufstrat
+        return ( 'Extend'     if ROOT.RooFFTConvPdf.Extend == self.__bufstrat else
+                 ( 'flat'     if ROOT.RooFFTConvPdf.Flat   == self.__bufstrat else
+                   ( 'Mirror' if ROOT.RooFFTConvPdf.Mirror == self.__bufstrat else '????' ) ) ) 
     @property
     def shift1 ( self ) :
-        """''shift1' : parameter for RooFFTConvPdf"""
+        """`shift1` : parameter for RooFFTConvPdf"""
         return self.__shift1
     @property
     def shift2 ( self ) :
-        """''shift2' : parameter for RooFFTConvPdf"""
-        return self.__shift2
-    
+        """`shift2` : parameter for RooFFTConvPdf"""
+        return self.__shift2    
     @property
     def nsigmas ( self ) :
-        """``nsigmas'' : convolution window for RooNumConvPdf"""
+        """`nsigmas' : convolution window for RooNumConvPdf"""
         return self.__nsigmas
     @property
     def name    ( self ) :
-        """``name'' : name of this convoltuoon object/name of pdf"""
+        """`name' : name of this convoltuoon object/name of pdf"""
         return self.__pdf.name
-
     def __str__ ( self ) :
         part1 = "pdf=%s,resolution=%s"                      % ( self.old_pdf    ,
                                                                 self.resolution ) 
@@ -318,27 +337,36 @@ class Convolution(object):
         """ Get the convolution result as table """
         
         rows = [ ( 'Parameter' , 'value' ) ]        
-        row  = 'name' , '%s' % self.name
+        row  = 'name'       , '%s' % self.name
         rows.append ( row )        
-        row  = 'pdf/type' , '%s' % typename ( self.old_pdf )
+        row  = 'pdf'        , '%s' % typename ( self.old_pdf )
         rows.append ( row )        
-        row  = 'xvar'     , '%s' % self.xvar.name             
+        row  = 'xvar'       , '%s' % self.xvar.name             
         rows.append ( row )        
-        row  = 'resolution/type' , '%s' % typename ( self.resolution )
+        row  = 'resolution' , '%s' % typename ( self.resolution )
         rows.append ( row )        
-        row  = 'use FFT?' , '%s' % self.useFFT 
-        rows.append ( row )        
-        row  = 'nbins/FFt/cache' , '%s' % self.nbinsFFT 
-        rows.append ( row )        
-        row  = 'buffer' , '%s' % self.buffer
-        rows.append ( row )        
-        row  = 'bufstrat' , '%s' % self.bufstrat
-        rows.append ( row )        
-        row  = 'shift1' , '%s' % self.shift1
-        rows.append ( row )        
-        row  = 'shift2' , '%s' % self.shift2
+        row  = 'use FFT?'   , '%s' % self.useFFT 
         rows.append ( row )
-        
+        if self.useFFT : 
+            row  = 'nbins/cache' , '%s' % self.nbinsFFT 
+            rows.append ( row )        
+            row  = 'buffer'   , '%s' % self.buffer
+            rows.append ( row )
+            if   self.__bufstrat == ROOT.RooFFTConvPdf.Extend : bs = 'Extend'
+            elif self.__bufstrat == ROOT.RooFFTConvPdf.Flat   : bs = 'Flat'
+            elif self.__bufstrat == ROOT.RooFFTConvPdf.Mirror : bs = 'Mirror'
+            else : bs = self.bufstrat 
+            ## row  = 'bufstrat' , '%s' % self.bufstrat
+            row  = 'bufstrat' , '%s' % bs 
+            rows.append ( row )        
+            row  = 'shift1'   , '%s' % self.shift1
+            rows.append ( row )        
+            row  = 'shift2'   , '%s' % self.shift2
+            rows.append ( row )
+        else :
+            row  = 'nsigmas' , '%s' % self.sigmas
+            rows.append ( row )
+            
         title = title if title else 'Convolution config'
         return T.table ( rows , title = title , prefix = prefix , alignment = 'll' )
 
@@ -385,9 +413,9 @@ class Convolution_pdf(PDF1) :
             assert resolution.xvar is xvar, "Mismatch in ``xvar'': %s vs %s" % ( xvar , resolution.xvar )
             self.__cnv = resolution
         else :
-            self.__cnv = Convolution ( pdf        = self.old_pdf.pdf ,
-                                       xvar       = xvar             ,
-                                       resolution = resolution       , **kwargs ) 
+            self.__cnv = Convolution ( pdf        = self.old_pdf ,
+                                       xvar       = xvar         ,
+                                       resolution = resolution   , **kwargs ) 
 
         name = name if name else self.generate_name ( prefix = '(%s)@(%s)' % ( pdf.name , self.resolution.name ) ) 
                             
@@ -412,24 +440,24 @@ class Convolution_pdf(PDF1) :
 
     @property
     def convolution ( self ) :
-        """``convolution'' : the actual convolution object (same as ``cnv'')"""
+        """`convolution' : the actual convolution object (same as ``cnv'')"""
         return self.__cnv
     @property
     def cnv         ( self ) :
-        """``cnv'' : the actual convolution object (same as ``convolution'')"""
+        """`cnv' : the actual convolution object (same as ``convolution'')"""
         return self.__cnv
     @property
     def old_pdf ( self ):
-        """``old_pdf''  : original (non-convolved) PDF"""
+        """`old_pdf'  : original (non-convolved) PDF"""
         return self.__old_pdf
     @property
     def original_pdf ( self ):
-        """``original_pdf''  : original (non-convolved) PDF"""
+        """`original_pdf'  : original (non-convolved) PDF"""
         return self.__old_pdf
     
     @property
     def resolution ( self ) :
-        """``resolution'' :  the actual resolution function/PDF"""
+        """`resolution' :  the actual resolution function/PDF"""
         return self.cnv.resolution
         
 # =============================================================================

@@ -357,22 +357,23 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         return result 
 
     # ==========================================================================
-    ## get parameter by name 
+    ## get the parameter by name 
     #  @code
     #  pdf = ...
     #  a   = pdf['A']
     #  @endcode
     def __getitem__ ( self , param ) :
-        """ Get parameter by name 
+        """ Get the parameter by name 
         >>> pdf = ...
         >>> a   = pdf['A']
         """
-        ## get the list of the actual parameters 
-        pars = self.params ( )
-        for p in pars :
-            if p.name == param : return p
+        ## get the list of the actual parameters
+        if isinstance ( param , string_types ) : 
+            pars = self.params ()
+            for p in pars :
+                if p.name == param : return p
+                
         raise KeyError ( "No parameter %s defined" % param )
-
 
     # =========================================================================
     ## Load parameters from:

@@ -1,3 +1,14 @@
+# v2.0.5.2
+
+## New features
+
+  1. improvement in convolutions
+  2. automatically convert the convolution of sum into the sum of convolutions
+  
+## Backward incompatible
+
+## Bug fixes
+
 # v2.0.5.1
 
 ## New features

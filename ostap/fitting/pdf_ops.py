@@ -649,13 +649,29 @@ def pdf_convolution ( pdf , resolution ) :
     """
     import ostap.fitting.convolution as     CNV
     from   ostap.fitting.fit1d       import RESOLUTION
-    from   ostap.fitting.pdfbasic    import Generic1D_pdf 
+    from   ostap.fitting.pdfbasic    import Generic1D_pdf, Sum1D 
     ##
     if not isinstance ( pdf , PDF1 ) : return NotImplemented
     ##
     config = {}
     config.update ( CNV.CnvConfig.config() )
-    ## 
+    ##
+    # =================================================================
+    ## special treatment of Sum1D -
+    #  due to some strange (?)  reasons the sum of convolutions
+    #  is *MUCH* faster in RooFit then a convolution of sum
+    # ==================================================================
+    
+    if isinstance ( resolution , Sum1D ) :
+        logger.info ( "Convolution of sum --> sum of convolutions" ) 
+        cnvs = [ pdf_convolution ( pdf , reso ) for reso in resolution ]
+        return Sum1D ( cnvs , fractions = resolution.fractions  )
+    
+    if isinstance ( pdf , Sum1D ) :
+        logger.info ( "Convolution of sum --> sum of convolutions" ) 
+        cnvs = [ pdf_convolution ( p , resoluton ) for  p in pdf  ]
+        return Sum1D ( cnvs , fractions = pdf.fractions  )
+
     ## Ready to use convolution  PDF 
     if   isinstance ( resolution , RESOLUTION  ) :
         
@@ -667,7 +683,7 @@ def pdf_convolution ( pdf , resolution ) :
             return NotImplemented
 
     if not isinstance ( pdf , PDF1 ) : return NotImplemented 
-        
+
     ## Ready to use convolution  PDF 
     if isinstance ( resolution , PDF1 ) and resolution.xvar in pdf.vars : 
         ## treat it as convolution
@@ -682,11 +698,15 @@ def pdf_convolution ( pdf , resolution ) :
     elif isinstance ( resolution , sized_types     ) and 2 <= len  ( resolution ) <= 4 : pass
 
     else : return NotImplemented 
-            
+
+    print ( 'PDF_CONVOLUTION/5' , type ( pdf ) , pdf ) 
+
     ## create convolution object 
     cnv = CNV.Convolution ( pdf        = pdf        ,
                             resolution = resolution ,
                             xvar       = pdf.xvar   , **config )
+    
+    print ( 'PDF_CONVOLUTION/6' )  
     
     return CNV.Convolution_pdf ( pdf , cnv )
     
