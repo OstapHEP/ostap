@@ -14,13 +14,15 @@ namespace
   enum { // =================================================================== 
     // ========================================================================
     INVALID_TREE             = 710 ,
-    INVALID_FORMULA          = 711 ,
-    INVALID_FORMULAE         = 712 ,
-    INVALID_BRANCH_NAME      = 713 , 
-    INVALID_BRANCH           = 714 , 
-    CANNOT_CREATE_BRANCH     = 715 , 
-    CANNOT_CREATE_FORMULA    = 716 , 
-    INVALID_NAME             = 717 , 
+    INVALID_DATA             = 711 ,
+    INVALID_FORMULA          = 712 ,
+    INVALID_FORMULAE         = 713 ,
+    INVALID_BRANCH_NAME      = 714 , 
+    INVALID_BRANCH           = 715 , 
+    CANNOT_CREATE_BRANCH     = 716 , 
+    CANNOT_CREATE_FORMULA    = 717 , 
+    INVALID_NAME             = 718 , 
+    INVALID_HISTO            = 719 , 
     // ========================================================================
     INVALID_TREEFUNCTION     = 720 ,
     INVALID_TH3              = 721 , 
@@ -53,7 +55,6 @@ namespace
     INVALID_PARS             = 781 , 
     INVALID_RANGE            = 782 , 
     INVALID_ORDER            = 783 , 
-    INVALID_DATA             = 784 ,
     //
     INVALID_TMATRIX          = 790 ,
     INVALID_TVECTOR          = 791 ,
@@ -71,7 +72,10 @@ namespace
     INVALID_MAXVAL_CODE      = 821 ,
     //
     INVALID_PARAMETER        = 825 , 
-    INVALID_MINMAX           = 826 , 
+    INVALID_MINMAX           = 826 ,
+    //
+    INVALID_ENTRY            = 830 ,
+    INVALID_EVENT            = 831 ,    
     // =========================================================================
     // =========================================================================
     ERROR_ROOT            = 1000000 ,
