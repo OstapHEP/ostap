@@ -208,26 +208,27 @@ if numpy and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
             if doubles :
                 dpart   = source.getBatches ( first , num )
                 for d in dpart :
-                    dname = d.first.name
-                    if   dname in doubles :
-                        part [ dname ] = d.second
-
-                    elif dname == weight  :
-                        part [ dname ] = d.second
+                    dname  = d.first.name
+                    buffer = d.second
+                    payload = numpy.frombuffer ( buffer.data(), dtype = numpy.float64, count = buffer.size() )
+                    if   dname in doubles : part [ dname ] = payload
+                    elif dname == weight  : part [ dname ] = payload
                 del dpart
                 
             if categories :
                 cpart   = source.getCategoryBatches ( first , num )
                 for c in cpart :
-                    cname = c.first.name
-                    if cname in categories : 
-                        part [ cname ] = c.second
+                    cname   = c.first.name
+                    buffer  = c.second 
+                    payload = numpy.frombuffer ( buffer.data(), dtype = numpy.int64, count = buffer.size() )
+                    if cname in categories : part [ cname ] = payload 
                 del cpart
                 
             if weight and not wget :
-                if twoargs : weights = source.getWeightBatch ( first , num         )
-                else       : weights = source.getWeightBatch ( first , num , False )
-                if weights : part [ weight ] = weights 
+                if twoargs : buffer = source.getWeightBatch ( first , num         )
+                else       : buffer = source.getWeightBatch ( first , num , False )
+                weights = numpy.frombuffer ( buffer.data(), dtype = numpy.float64, count = buffer.size() )
+                if buffer  : part [ weight ] = weights 
                 else       : part [ weight ] = numpy.full ( num , source.weight() , dtype = numpy.float64 )
 
             if data is None : data = part

@@ -12,7 +12,7 @@ jobs:
   test_docker:
      strategy:
       matrix:
-        build: [1,2,3]
+        build: [1,2,3,4,5]
         include:
             - { build: 1, lcg: dev3/latest, platform: x86_64-el9-gcc13-opt   }
             - { build: 2, lcg: dev3/latest, platform: x86_64-el9-gcc14-opt   }
