@@ -196,7 +196,7 @@ namespace Ostap
     // ========================================================================
     // sample variabales from 1D,2D&3D histograms 
     // ========================================================================
-    /** add new branch to TTree, sampling it from   the 1D-histogram
+    /** add new branch to TTree, sampling it from the 1D-histogram
      *  @param tree (UPFATE) input tree 
      *  @param name   name of the new branch 
      *  @param histo  the historgam to be  sampled
@@ -210,7 +210,7 @@ namespace Ostap
       const TH1&                               histo            , 
       const Ostap::Utils::ProgressConf&        progress = false ) ;
     // =========================================================================
-    /** add new branch to TTree, sampling it from   the 2D-histogram
+    /** add new branch to TTree, sampling it from the 2D-histogram
      *  @param tree (UPFATE) input tree 
      *  @param progress configuration of the progress bar
      *  @param namex  name of the new branch 
@@ -227,7 +227,7 @@ namespace Ostap
       const TH2&                               histo            , 
       const Ostap::Utils::ProgressConf&        progress = false ) ;
     // ========================================================================
-    /** add new branch to TTree, sampling it from   the 3D-histogram
+    /** add new branch to TTree, sampling it from the 3D-histogram
      *  @param tree (UPFATE) input tree 
      *  @param progress configuration of the progress bar
      *  @param namex  name of the new branch 

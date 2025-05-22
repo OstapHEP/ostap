@@ -58,10 +58,10 @@ tag_mc      = 'MC_tree'
 
 dbname      = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight3-'   )
 
-NDATA1      = 500000
-NDATA2      = 400000
-NDATA3      = 400000
-NMC         = 500000
+NDATA1      = 5000## 00
+NDATA2      = 4000## 00
+NDATA3      = 4000## 00
+NMC         = 5000## 00
 
 xmax        = 15.0
 ymax        = 12.0 
@@ -342,6 +342,8 @@ plots  = [
     WeightingPlot ( 'y'     , 'weight' , 'y-reweight'  , hy_data  , mc_y  ) ,  
     ]
 
+
+converged = False 
 # =============================================================================
 ## start reweighting iterations:
 for iter in range ( 1 , maxIter + 1 ) :
@@ -407,15 +409,17 @@ for iter in range ( 1 , maxIter + 1 ) :
 
     if not active and 5 <= iter : 
         logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
+        converged = True 
         break
     
     mcds.clear()
     del mcds
     
 else :
-
+    
+    converged = False 
     logger.error ( "No convergency!" )
-
+    
 # ===========================================================================
 title = 'Weighter object'
 logger.info ( '%s:\n%s' % ( title , weighter.table ( prefix = '# ' ) ) )
@@ -429,51 +433,51 @@ for key in graphs :
 # =============================================================================
 
 # =============================================================================
-with timing ( "Add weight column to initial MC-tree" , logger = logger ) : 
-    mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
-    weighter = Weight ( dbname , weightings )
-    mctree   = mctree.add_reweighting ( weighter ,  name = 'weight' )
-    mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
+if converged : # ==============================================================
+    # =========================================================================
+    with timing ( "Add weight column to initial MC-tree" , logger = logger ) : 
+        mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
+        weighter = Weight ( dbname , weightings )
+        mctree   = mctree.add_reweighting ( weighter ,  name = 'weight' )
+        mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
 
-# =============================================================================
-## compare DATA  and MC before and after reweighting
-# =============================================================================
+    # =======================================================================
+    ## compare DATA  and MC before and after reweighting
+    # ========================================================================
 
-datatree   = ROOT.TChain ( tag_data ) ; datatree.Add ( testdata )  
-mctree     = ROOT.TChain ( tag_mc   ) ; mctree  .Add ( testdata )  
-# =============================================================================
-title = 'Data/target dataset'
-logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'x' , 'y' , 'z' ] ,
-                                                      title     = title    ,
-                                                      prefix    = '# '     ) ) )
-# =============================================================================
-title = 'MC-tree before reweighting' 
-logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 'z' ] ,
-                                                      title     = title    ,
-                                                      prefix    = '# '     ) ) )
-# =============================================================================
-title = 'MC-tree after reweighting' 
-logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 'z' ] ,
-                                                      title     = title    ,
-                                                      cuts      = 'weight' , 
-                                                      prefix    = '# '     ) ) )
+    datatree   = ROOT.TChain ( tag_data ) ; datatree.Add ( testdata )  
+    mctree     = ROOT.TChain ( tag_mc   ) ; mctree  .Add ( testdata )  
+    # ========================================================================
+    title = 'Data/target dataset'
+    logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'x' , 'y' , 'z' ] ,
+                                                          title     = title    ,
+                                                          prefix    = '# '     ) ) )
+    # =============================================================================
+    title = 'MC-tree before reweighting' 
+    logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 'z' ] ,
+                                                        title     = title    ,
+                                                          prefix    = '# '     ) ) )
+    # =============================================================================
+    title = 'MC-tree after reweighting' 
+    logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 'z' ] ,
+                                                          title     = title    ,
+                                                          cuts      = 'weight' , 
+                                                          prefix    = '# '     ) ) )
+    
+    # =============================================================================
+    vct_final = mctree.statVct ( 'x,y,z' , 'weight' )
+    n_mc = int ( mctree.nEff('weight')  )
+    trow = ( '*' ,
+             '%.4g'  % vct_final .mahalanobis                 ( vct_data  ) , 
+             '%.4g'  % Ostap.Math.hotelling ( vct_final , n_mc ,  vct_data  , n_data ) ,         
+             '%+.4g' % vct_final .asymmetric_kullback_leibler ( vct_data  ) , 
+             '%+.4g' % vct_data  .asymmetric_kullback_leibler ( vct_final ) , 
+             '%+.4g' % vct_data  .           kullback_leibler ( vct_final ) )
+    glob_stat.append ( trow )
 
-# =============================================================================
-vct_final = mctree.statVct ( 'x,y,z' , 'weight' )
-n_mc = int ( mctree.nEff('weight')  )
-trow = ( '*' ,
-         '%.4g'  % vct_final .mahalanobis                 ( vct_data  ) , 
-         '%.4g'  % Ostap.Math.hotelling ( vct_final , n_mc ,  vct_data  , n_data ) ,         
-         '%+.4g' % vct_final .asymmetric_kullback_leibler ( vct_data  ) , 
-         '%+.4g' % vct_data  .asymmetric_kullback_leibler ( vct_final ) , 
-         '%+.4g' % vct_data  .           kullback_leibler ( vct_final ) )
-glob_stat.append ( trow )
-
-
-title = 'Global DATA/MC similarity'
-table = T.table ( glob_stat , title = title , prefix = '# ' ) 
-logger.info ( '%s\n%s' % ( title , table ) ) 
-
+    title = 'Global DATA/MC similarity'
+    table = T.table ( glob_stat , title = title , prefix = '# ' ) 
+    logger.info ( '%s\n%s' % ( title , table ) ) 
 
 
 # =============================================================================

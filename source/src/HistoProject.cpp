@@ -34,6 +34,7 @@
 #include "local_math.h"
 #include "local_utils.h"
 #include "local_roofit.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file
  *  Implementation file for class Ostap::HistoProject
@@ -73,7 +74,7 @@ namespace
     const unsigned long               first      ,
     const unsigned long               last       ) 
   {
-    if ( 0 == data  ) { return Ostap::StatusCode ( 300 ) ; }
+    if ( 0 == data  ) { return INVALID_DATA; }
     //
     const unsigned long nEntries = 
       std::min ( last , (unsigned long) data->numEntries() ) ;
@@ -131,7 +132,7 @@ namespace
     const unsigned long               first      ,
     const unsigned long               last       ) 
   {
-    if ( 0 == data  ) { return Ostap::StatusCode ( 300 ) ; }
+    if ( 0 == data  ) { return INVALID_DATA; }
     //
     RooArgList        alst ;
     const RooArgSet*  aset = data->get() ;
@@ -146,7 +147,7 @@ namespace
     if ( with_cuts && 0 == cut_var ) 
     {
       cuts.reset ( new Ostap::FormulaVar ( selection , alst , false ) ) ;
-      if ( !cuts->ok () ) { return Ostap::StatusCode(302) ; } //        // RETURN 
+      if ( !cuts->ok () ) { return INVALID_FORMULA ; } //        // RETURN 
     }
     //
     const RooAbsReal* x_var = get_var ( *aset , expression ) ;
@@ -154,7 +155,7 @@ namespace
     if ( 0 == x_var ) 
     {
       xwhat.reset( new Ostap::FormulaVar( expression , alst , false ) ) ;
-      if ( !xwhat->ok()   ) { return Ostap::StatusCode(303)  ; }             // RETURN
+      if ( !xwhat->ok()   ) { return INVALID_FORMULA ; }             // RETURN
     }
     //
     return _project_ ( data                                  , 
@@ -182,7 +183,7 @@ namespace
     const unsigned long               first       ,
     const unsigned long               last        ) 
   {
-    if ( 0 == data  ) { return Ostap::StatusCode ( 300 ) ; }
+    if ( 0 == data  ) { return INVALID_DATA; }
     //
     const unsigned long nEntries = 
       std::min ( last , (unsigned long) data->numEntries() ) ;
@@ -246,7 +247,7 @@ namespace
     const unsigned long               first       ,
     const unsigned long               last        ) 
   {
-    if ( 0 == data  ) { return Ostap::StatusCode ( 300 ) ; }
+    if ( 0 == data  ) { return INVALID_DATA; }
     //
     RooArgList        alst ;
     const RooArgSet*  aset = data->get() ;
@@ -261,7 +262,7 @@ namespace
     if ( with_cuts && 0 == cut_var ) 
     {
       cuts.reset ( new Ostap::FormulaVar ( selection , alst , false ) ) ;
-      if ( !cuts->ok () ) { return Ostap::StatusCode(302) ; } //        // RETURN 
+      if ( !cuts->ok () ) { return INVALID_FORMULA ; } //        // RETURN 
     }
     //
     const RooAbsReal* x_var = get_var ( *aset , xexpression ) ;
@@ -269,7 +270,7 @@ namespace
     if ( 0 == x_var ) 
     {
       xwhat.reset( new Ostap::FormulaVar( xexpression , alst , false ) ) ;
-      if ( !xwhat->ok()   ) { return Ostap::StatusCode(303)  ; }             // RETURN
+      if ( !xwhat->ok()   ) { return INVALID_FORMULA  ; }             // RETURN
     }
     //
     const RooAbsReal* y_var = get_var ( *aset , yexpression ) ;
@@ -277,7 +278,7 @@ namespace
     if ( 0 == y_var ) 
     {
       ywhat.reset( new Ostap::FormulaVar( yexpression , alst , false ) ) ;
-      if ( !ywhat->ok()   ) { return Ostap::StatusCode(304)  ; }             // RETURN
+      if ( !ywhat->ok()   ) { return INVALID_FORMULA  ; }             // RETURN
     }
     //
     return _project2_ ( data                                  , 
@@ -312,7 +313,7 @@ namespace
     const unsigned long               first       ,
     const unsigned long               last        ) 
   {
-    if ( 0 == data  ) { return Ostap::StatusCode ( 300 ) ; }
+    if ( 0 == data  ) { return INVALID_DATA; }
     //
     const unsigned long nEntries = 
       std::min ( last , (unsigned long) data->numEntries() ) ;
@@ -383,7 +384,7 @@ namespace
     const unsigned long               first       ,
     const unsigned long               last        ) 
   {
-    if ( 0 == data  ) { return Ostap::StatusCode ( 300 ) ; }
+    if ( 0 == data  ) { return INVALID_DATA; }
     //
     RooArgList        alst ;
     const RooArgSet*  aset = data->get() ;
@@ -398,7 +399,7 @@ namespace
     if ( with_cuts && 0 == cut_var ) 
     {
       cuts.reset ( new Ostap::FormulaVar ( selection , alst , false ) ) ;
-      if ( !cuts->ok () ) { return Ostap::StatusCode(302) ; } //        // RETURN 
+      if ( !cuts->ok () ) { return INVALID_FORMULA ; } //        // RETURN 
     }
     //
     const RooAbsReal* x_var = get_var ( *aset , xexpression ) ;
@@ -406,7 +407,7 @@ namespace
     if ( 0 == x_var ) 
     {
       xwhat.reset( new Ostap::FormulaVar( xexpression , alst , false ) ) ;
-      if ( !xwhat->ok()   ) { return Ostap::StatusCode(303)  ; }             // RETURN
+      if ( !xwhat->ok()   ) { return INVALID_FORMULA  ; }             // RETURN
     }
     //
     const RooAbsReal* y_var = get_var ( *aset , yexpression ) ;
@@ -414,7 +415,7 @@ namespace
     if ( 0 == y_var ) 
     {
       ywhat.reset( new Ostap::FormulaVar( yexpression , alst , false ) ) ;
-      if ( !ywhat->ok()   ) { return Ostap::StatusCode(304)  ; }             // RETURN
+      if ( !ywhat->ok()   ) { return INVALID_FORMULA  ; }             // RETURN
     }
     //
     const RooAbsReal* z_var = get_var ( *aset , zexpression ) ;
@@ -422,7 +423,7 @@ namespace
     if ( 0 == z_var ) 
     {
       zwhat.reset( new Ostap::FormulaVar( zexpression , alst , false ) ) ;
-      if ( !zwhat->ok()   ) { return Ostap::StatusCode(305)  ; }             // RETURN
+      if ( !zwhat->ok()   ) { return INVALID_FORMULA ; }             // RETURN
     }
     //
     return _project3_ ( data                                  , 
@@ -463,7 +464,7 @@ namespace
     const unsigned long               first       ,
     const unsigned long               last        ) 
   {
-    if ( 0 == data  ) { return Ostap::StatusCode ( 300 ) ; }
+    if ( 0 == data  ) { return INVALID_DATA; }
     //
     const unsigned long nEntries = 
       std::min ( last , (unsigned long) data->numEntries() ) ;
@@ -541,7 +542,7 @@ namespace
     const unsigned long               first       ,
     const unsigned long               last        ) 
   {
-    if ( 0 == data  ) { return Ostap::StatusCode ( 300 ) ; }
+    if ( 0 == data  ) { return INVALID_DATA; }
     //
     RooArgList        alst ;
     const RooArgSet*  aset = data->get() ;
@@ -556,7 +557,7 @@ namespace
     if ( with_cuts && 0 == cut_var ) 
     {
       cuts.reset ( new Ostap::FormulaVar ( selection , alst , false ) ) ;
-      if ( !cuts->ok () ) { return Ostap::StatusCode(302) ; } //        // RETURN 
+      if ( !cuts->ok () ) { return INVALID_FORMULA ; } //        // RETURN 
     }
     //
     const RooAbsReal* x_var = get_var ( *aset , xexpression ) ;
@@ -564,7 +565,7 @@ namespace
     if ( 0 == x_var ) 
     {
       xwhat.reset( new Ostap::FormulaVar( xexpression , alst , false ) ) ;
-      if ( !xwhat->ok()   ) { return Ostap::StatusCode(303)  ; }             // RETURN
+      if ( !xwhat->ok()   ) { return INVALID_FORMULA  ; }             // RETURN
     }
     //
     const RooAbsReal* y_var = get_var ( *aset , yexpression ) ;
@@ -572,7 +573,7 @@ namespace
     if ( 0 == y_var ) 
     {
       ywhat.reset( new Ostap::FormulaVar( yexpression , alst , false ) ) ;
-      if ( !ywhat->ok()   ) { return Ostap::StatusCode(304)  ; }             // RETURN
+      if ( !ywhat->ok()   ) { return INVALID_FORMULA  ; }             // RETURN
     }
     //
     const RooAbsReal* z_var = get_var ( *aset , zexpression ) ;
@@ -580,7 +581,7 @@ namespace
     if ( 0 == z_var ) 
     {
       zwhat.reset( new Ostap::FormulaVar( zexpression , alst , false ) ) ;
-      if ( !zwhat->ok()   ) { return Ostap::StatusCode(305)  ; }             // RETURN
+      if ( !zwhat->ok()   ) { return INVALID_FORMULA ; }             // RETURN
     }
     //
     const RooAbsReal* u_var = get_var ( *aset , uexpression ) ;
@@ -588,7 +589,7 @@ namespace
     if ( 0 == u_var ) 
     {
       uwhat.reset( new Ostap::FormulaVar( uexpression , alst , false ) ) ;
-      if ( !uwhat->ok()   ) { return Ostap::StatusCode(306)  ; }             // RETURN
+      if ( !uwhat->ok()   ) { return INVALID_FORMULA ; }             // RETURN
     }
     //
     return _project4_ ( data                                  , 
@@ -622,7 +623,7 @@ namespace
     const unsigned long               first      ,
     const unsigned long               last       )
   {
-    if ( 0 == data          ) { return Ostap::StatusCode(300 ) ; }
+    if ( 0 == data          ) { return INVALID_DATA ; }
     //
     const unsigned long nEntries = std::min ( last , (unsigned long) data->GetEntries() ) ;
     if ( nEntries <= first  ) { return Ostap::StatusCode::RECOVERABLE ; } 
@@ -631,11 +632,11 @@ namespace
     if  ( !selection.empty() ) 
     { 
       cut = std::make_unique<Ostap::Formula> ( selection , data ) ; 
-      if ( !cut || !cut->ok () ) { return Ostap::StatusCode ( 302 ) ; }
+      if ( !cut || !cut->ok () ) { return INVALID_FORMULA ; }
     }
     //
     Ostap::Formula xvar ( expression , data ) ;
-    if ( !xvar || !xvar.ok() ) { return Ostap::StatusCode ( 303 ) ; }
+    if ( !xvar || !xvar.ok() ) { return INVALID_FORMULA  ; }
     //
     Ostap::Utils::Notifier notify ( data , &xvar , cut.get() ) ;
     std::vector<double> results {} ;
@@ -644,10 +645,10 @@ namespace
     for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )
     {
       long ievent = data->GetEntryNumber ( entry ) ;
-      if ( ievent < 0 ) { return Ostap::StatusCode( 400 ) ; }
+      if ( ievent < 0 ) { return INVALID_ENTRY ; }
       //
       ievent      = data->LoadTree ( ievent ) ;      
-      if ( ievent < 0 ) { return Ostap::StatusCode( 401 ) ; }
+      if ( ievent < 0 ) { return INVALID_EVENT ; }
       //
       const double weight = cut ? cut -> evaluate() : 1.0 ;
       if ( !weight    ) { continue ; }
@@ -678,7 +679,7 @@ namespace
     const unsigned long               first       ,
     const unsigned long               last        )
   {
-    if ( 0 == data          ) { return Ostap::StatusCode(300 ) ; }
+    if ( 0 == data          ) { return INVALID_DATA ; }
     //
     const unsigned long nEntries = std::min ( last , (unsigned long) data->GetEntries() ) ;
     if ( nEntries <= first  ) { return Ostap::StatusCode::RECOVERABLE ; } 
@@ -687,14 +688,14 @@ namespace
     if  ( !selection.empty() ) 
     { 
       cut = std::make_unique<Ostap::Formula> ( selection , data ) ; 
-      if ( !cut || !cut->ok () ) { return Ostap::StatusCode ( 302 ) ; }
+      if ( !cut || !cut->ok () ) { return INVALID_FORMULA ; }
     }
     //
     Ostap::Formula xvar ( xexpression , data ) ;
-    if ( !xvar || !xvar.ok() ) { return Ostap::StatusCode ( 303 ) ; }
+    if ( !xvar || !xvar.ok() ) { return INVALID_FORMULA ; }
     //
     Ostap::Formula yvar ( yexpression , data ) ;
-    if ( !yvar || !yvar.ok() ) { return Ostap::StatusCode ( 304 ) ; }
+    if ( !yvar || !yvar.ok() ) { return INVALID_FORMULA ; }
     //
     Ostap::Utils::Notifier notify ( data , &xvar , &yvar, cut.get() ) ;
     //
@@ -705,10 +706,10 @@ namespace
     for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )
     {
       long ievent = data->GetEntryNumber ( entry ) ;
-      if ( ievent < 0 ) { return Ostap::StatusCode( 400 ) ; }
+      if ( ievent < 0 ) { return INVALID_ENTRY  ; }
       //
       ievent      = data->LoadTree ( ievent ) ;      
-      if ( ievent < 0 ) { return Ostap::StatusCode( 401 ) ; }
+      if ( ievent < 0 ) { return INVALID_EVENT ; }
       //
       const double weight = cut ? cut -> evaluate() : 1.0 ;
       if ( !weight    ) { continue ; }
@@ -746,7 +747,7 @@ namespace
     const unsigned long               first       ,
     const unsigned long               last        )
   {
-    if ( 0 == data          ) { return Ostap::StatusCode(300 ) ; }
+    if ( 0 == data          ) { return INVALID_DATA ; }
     //
     const unsigned long nEntries = std::min ( last , (unsigned long) data->GetEntries() ) ;
     if ( nEntries <= first  ) { return Ostap::StatusCode::RECOVERABLE ; } 
@@ -755,17 +756,17 @@ namespace
     if  ( !selection.empty() ) 
     { 
       cut = std::make_unique<Ostap::Formula> ( selection , data ) ; 
-      if ( !cut || !cut->ok () ) { return Ostap::StatusCode ( 302 ) ; }
+      if ( !cut || !cut->ok () ) { return INVALID_FORMULA ; }
     }
     //
     Ostap::Formula xvar ( xexpression , data ) ;
-    if ( !xvar || !xvar.ok() ) { return Ostap::StatusCode ( 303 ) ; }
+    if ( !xvar || !xvar.ok() ) { return INVALID_FORMULA ; }
     //
     Ostap::Formula yvar ( yexpression , data ) ;
-    if ( !yvar || !yvar.ok() ) { return Ostap::StatusCode ( 304 ) ; }
+    if ( !yvar || !yvar.ok() ) { return INVALID_FORMULA ; }
     //
     Ostap::Formula zvar ( zexpression , data ) ;
-    if ( !zvar || !zvar.ok() ) { return Ostap::StatusCode ( 305 ) ; }
+    if ( !zvar || !zvar.ok() ) { return INVALID_FORMULA ; }
     //
     Ostap::Utils::Notifier notify ( data , &xvar , &yvar, &zvar , cut.get() ) ;
     //
@@ -777,10 +778,10 @@ namespace
     for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )
     {
       long ievent = data->GetEntryNumber ( entry ) ;
-      if ( ievent < 0 ) { return Ostap::StatusCode( 400 ) ; }
+      if ( ievent < 0 ) { return INVALID_ENTRY ; }
       //
       ievent      = data->LoadTree ( ievent ) ;      
-      if ( ievent < 0 ) { return Ostap::StatusCode( 401 ) ; }
+      if ( ievent < 0 ) { return INVALID_EVENT ; }
       //
       const double weight = cut ? cut -> evaluate() : 1.0 ;
       if ( !weight    ) { continue ; }
@@ -827,7 +828,7 @@ namespace
     const unsigned long               first       ,
     const unsigned long               last        )
   {
-    if ( 0 == data          ) { return Ostap::StatusCode(300 ) ; }
+    if ( 0 == data          ) { return INVALID_DATA ; }
     //
     const unsigned long nEntries = std::min ( last , (unsigned long) data->GetEntries() ) ;
     if ( nEntries <= first  ) { return Ostap::StatusCode::RECOVERABLE ; } 
@@ -836,20 +837,20 @@ namespace
     if  ( !selection.empty() ) 
     { 
       cut = std::make_unique<Ostap::Formula> ( selection , data ) ; 
-      if ( !cut || !cut->ok () ) { return Ostap::StatusCode ( 302 ) ; }
+      if ( !cut || !cut->ok () ) { return INVALID_FORMULA ; }
     }
     //
     Ostap::Formula xvar ( xexpression , data ) ;
-    if ( !xvar || !xvar.ok() ) { return Ostap::StatusCode ( 303 ) ; }
+    if ( !xvar || !xvar.ok() ) { return INVALID_FORMULA ; }
     //
     Ostap::Formula yvar ( yexpression , data ) ;
-    if ( !yvar || !yvar.ok() ) { return Ostap::StatusCode ( 304 ) ; }
+    if ( !yvar || !yvar.ok() ) { return INVALID_FORMULA ; }
     //
     Ostap::Formula zvar ( zexpression , data ) ;
-    if ( !zvar || !zvar.ok() ) { return Ostap::StatusCode ( 305 ) ; }
+    if ( !zvar || !zvar.ok() ) { return INVALID_FORMULA ; }
     //
     Ostap::Formula uvar ( uexpression , data ) ;
-    if ( !uvar || !uvar.ok() ) { return Ostap::StatusCode ( 306 ) ; }
+    if ( !uvar || !uvar.ok() ) { return INVALID_FORMULA ; }
     //
     Ostap::Utils::Notifier notify ( data , &xvar , &yvar, &zvar , &uvar, cut.get() ) ;
     //
@@ -862,10 +863,10 @@ namespace
     for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )
     {
       long ievent = data->GetEntryNumber ( entry ) ;
-      if ( ievent < 0 ) { return Ostap::StatusCode( 400 ) ; }
+      if ( ievent < 0 ) { return INVALID_ENTRY ; }
       //
       ievent      = data->LoadTree ( ievent ) ;      
-      if ( ievent < 0 ) { return Ostap::StatusCode( 401 ) ; }
+      if ( ievent < 0 ) { return INVALID_EVENT ; }
       //
       const double weight = cut ? cut -> evaluate() : 1.0 ;
       if ( !weight    ) { continue ; }
@@ -919,9 +920,11 @@ Ostap::HistoProject::project
   const unsigned long               last       ) 
 {
   //
-  if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
-  else { histo->Reset() ; } // reset the historgam 
-  if ( 0 == data  ) { return Ostap::StatusCode ( 300 ) ; }
+  if      ( 0 == histo                 ) { return INVALID_HISTO; }
+  else if ( 1 != histo->GetDimension() ) { return INVALID_HISTO; }  
+  else { histo->Reset() ; } // reset the historgam
+  //
+  if ( 0 == data  ) { return INVALID_DATA; }
   //
   const unsigned long nEntries = 
     std::min ( last , (unsigned long) data->numEntries() ) ;
@@ -2229,9 +2232,11 @@ Ostap::HistoProject::project2
   const unsigned long               last        ) 
 {
   //
-  if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
-  else { histo->Reset() ; } // reset the historgam 
-  if ( 0 == data  ) { return Ostap::StatusCode ( 300 ) ; }
+  if      ( 0 == histo                 ) { return INVALID_HISTO; }
+  else if ( 2 != histo->GetDimension() ) { return INVALID_HISTO; }  
+  else { histo->Reset() ; } // reset the historgam
+  //
+  if ( 0 == data  ) { return INVALID_DATA; }
   //
   const unsigned long nEntries = 
     std::min ( last , (unsigned long) data->numEntries() ) ;
@@ -2356,9 +2361,10 @@ Ostap::HistoProject::project3
   const unsigned long               last        ) 
 {
   //
-  if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
+  if      ( 0 == histo                 ) { return INVALID_HISTO; }
+  else if ( 3 != histo->GetDimension() ) { return INVALID_HISTO; }  
   else { histo->Reset() ; } // reset the historgam 
-  if ( 0 == data  ) { return Ostap::StatusCode ( 300 ) ; }
+  if ( 0 == data  ) { return INVALID_DATA; }
   //
   const unsigned long nEntries = 
     std::min ( last , (unsigned long) data->numEntries() ) ;
@@ -2485,9 +2491,11 @@ Ostap::HistoProject::project
   const unsigned long               last       ) 
 {
   //
-  if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
-  else { histo->Reset() ; } // reset the historgam 
-  if ( 0 == data  ) { return Ostap::StatusCode ( 300 ) ; }
+  if      ( 0 == histo                 ) { return INVALID_HISTO; }
+  else if ( 1 != histo->GetDimension() ) { return INVALID_HISTO; }  
+  else { histo->Reset() ; } // reset the historgam
+  //
+  if ( 0 == data  ) { return INVALID_DATA; }
   //
   const unsigned long nEntries = 
     std::min ( last , (unsigned long) data->numEntries() ) ;
@@ -2506,7 +2514,7 @@ Ostap::HistoProject::project
   if ( with_cuts && 0 == cut_var ) 
   {
     cuts.reset ( new Ostap::FormulaVar ( selection , alst , false ) ) ;
-    if ( !cuts->ok () ) { return Ostap::StatusCode(302) ; } //        // RETURN 
+    if ( !cuts->ok () ) { return INVALID_FORMULA ; } //        // RETURN 
   }
   //
   const RooAbsReal* x_var = get_var ( *aset , expression ) ;
@@ -2580,9 +2588,11 @@ Ostap::HistoProject::project2
   const unsigned long               last        ) 
 {
   //
-  if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
-  else { histo->Reset() ; } // reset the historgam 
-  if ( 0 == data  ) { return Ostap::StatusCode ( 300 ) ; }
+  if      ( 0 == histo                 ) { return INVALID_HISTO; }
+  else if ( 2 != histo->GetDimension() ) { return INVALID_HISTO; }  
+  else { histo->Reset() ; } // reset the historgam
+  //
+  if ( 0 == data  ) { return INVALID_DATA; }
   //
   const unsigned long nEntries = 
     std::min ( last , (unsigned long) data->numEntries() ) ;
@@ -2601,7 +2611,7 @@ Ostap::HistoProject::project2
   if ( with_cuts && 0 == cut_var ) 
   {
     cuts.reset ( new Ostap::FormulaVar ( selection , alst , false ) ) ;
-    if ( !cuts->ok () ) { return Ostap::StatusCode(302) ; } //        // RETURN 
+    if ( !cuts->ok () ) { return INVALID_FORMULA ; } //        // RETURN 
   }
   //
   const RooAbsReal* x_var = get_var ( *aset , xexpression ) ;
@@ -2689,9 +2699,10 @@ Ostap::HistoProject::project3
   const unsigned long               last        ) 
 {
   //
-  if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
+  if      ( 0 == histo                 ) { return INVALID_HISTO; }
+  else if ( 3 != histo->GetDimension() ) { return INVALID_HISTO; }  
   else { histo->Reset() ; } // reset the historgam 
-  if ( 0 == data  ) { return Ostap::StatusCode ( 300 ) ; }
+  if ( 0 == data  ) { return INVALID_DATA; }
   //
   const unsigned long nEntries = 
     std::min ( last , (unsigned long) data->numEntries() ) ;
@@ -2710,7 +2721,7 @@ Ostap::HistoProject::project3
   if ( with_cuts && 0 == cut_var ) 
   {
     cuts.reset ( new Ostap::FormulaVar( selection , alst , false ) ) ;
-    if ( !cuts->ok () ) { return Ostap::StatusCode(302) ; } //        // RETURN 
+    if ( !cuts->ok () ) { return INVALID_FORMULA ; } //        // RETURN 
   }
   //
   const RooAbsReal* x_var = get_var ( *aset , xexpression ) ;
@@ -2815,8 +2826,8 @@ Ostap::StatusCode Ostap::HistoProject::project
   const std::string&  selection  ) 
 {
   //
-  if ( nullptr  == histo ) { return Ostap::StatusCode ( 301 ) ; }
-  else if ( dynamic_cast<TH2*>( histo ) ) { return Ostap::StatusCode ( 301 ) ; }  
+  if      ( nullptr  == histo          ) { return INVALID_HISTO; }
+  else if ( 1 != histo->GetDimension() ) { return INVALID_HISTO; }  
   else { histo->Reset() ; } // reset the histogram 
   //
   TH1D model {} ; histo->Copy ( model ) ;
@@ -2870,8 +2881,8 @@ Ostap::StatusCode Ostap::HistoProject::project2
   const std::string&  selection   )
 {
   //
-  if      ( nullptr == histo            ) { return Ostap::StatusCode ( 301 ) ; }
-  else if ( dynamic_cast<TH3*>( histo ) ) { return Ostap::StatusCode ( 301 ) ; }  
+  if      ( nullptr == histo           ) { return INVALID_HISTO; }
+  else if ( 2 != histo->GetDimension() ) { return INVALID_HISTO; }  
   else { histo->Reset() ; } // reset the historgam 
   //
   const bool no_cuts = trivial ( selection ) ;
@@ -2931,7 +2942,8 @@ Ostap::StatusCode Ostap::HistoProject::project3
   const std::string&  selection   )
 {
   //
-  if ( nullptr  == histo ) { return Ostap::StatusCode ( 301 ) ; }
+  if      ( nullptr  == histo          ) { return INVALID_HISTO; }
+  else if ( 3 != histo->GetDimension() ) { return INVALID_HISTO; }  
   else { histo->Reset() ; } // reset the historgam 
   //
   const bool no_cuts = trivial ( selection  ) ; 
@@ -2981,9 +2993,10 @@ Ostap::StatusCode Ostap::HistoProject::project
   const unsigned long               first      ,
   const unsigned long               last       ) 
 {
-  if ( 0 == histo     ) { return Ostap::StatusCode ( 301 ) ; }
+  if      ( 0 == histo                 ) { return INVALID_HISTO; }
+  else if ( 1 != histo->GetDimension() ) { return INVALID_HISTO; }  
   else { histo->Reset() ; } // reset the historgam 
-  if ( 0 == data      ) { return Ostap::StatusCode ( 300 ) ; }
+  if ( 0 == data      ) { return INVALID_DATA; }
   //
   const unsigned long nEntries = std::min ( last , (unsigned long) data->GetEntries() ) ;
   if ( nEntries <= first  ) { return Ostap::StatusCode::RECOVERABLE ; }
@@ -3066,9 +3079,10 @@ Ostap::StatusCode Ostap::HistoProject::project2
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
-  if ( 0 == histo     ) { return Ostap::StatusCode ( 301 ) ; }
+  if      ( 0 == histo                 ) { return INVALID_HISTO; }
+  else if ( 2 != histo->GetDimension() ) { return INVALID_HISTO; }  
   else { histo->Reset() ; } // reset the historgam 
-  if ( 0 == data      ) { return Ostap::StatusCode ( 300 ) ; }
+  if ( 0 == data      ) { return INVALID_DATA; }
   //
   const unsigned long nEntries = std::min ( last , (unsigned long) data->GetEntries() ) ;
   if ( nEntries <= first  ) { return Ostap::StatusCode::RECOVERABLE ; }
@@ -3083,7 +3097,7 @@ Ostap::StatusCode Ostap::HistoProject::project2
   if  ( !selection.empty() ) 
   { 
     cut = std::make_unique<Ostap::Formula>( selection , data ) ; 
-    if ( !cut || !cut->ok () ) { return Ostap::StatusCode ( 302 ) ; }  // RETURN
+    if ( !cut || !cut->ok () ) { return INVALID_FORMULA ; }  // RETURN
   }
   // 
   Ostap::Utils::Notifier notify ( data , &xvar , &yvar , cut.get() ) ;
@@ -3165,9 +3179,11 @@ Ostap::StatusCode Ostap::HistoProject::project3
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
-  if ( 0 == histo     ) { return Ostap::StatusCode ( 301 ) ; }
-  else { histo->Reset() ; } // reset the historgam 
-  if ( 0 == data      ) { return Ostap::StatusCode ( 300 ) ; }
+  if      ( 0 == histo                 ) { return INVALID_HISTO; }
+  else if ( 3 != histo->GetDimension() ) { return INVALID_HISTO; }  
+  else { histo->Reset() ; } // reset the historgam
+  //
+  if ( 0 == data      ) { return INVALID_DATA ; }
   //
   const unsigned long nEntries = std::min ( last , (unsigned long) data->GetEntries() ) ;
   if ( nEntries <= first  ) { return Ostap::StatusCode::RECOVERABLE ; }
@@ -3185,7 +3201,7 @@ Ostap::StatusCode Ostap::HistoProject::project3
   if  ( !selection.empty() ) 
   { 
     cut = std::make_unique<Ostap::Formula>( selection , data) ; 
-    if ( !cut || !cut->ok () ) { return Ostap::StatusCode ( 302 ) ; }  // RETURN
+    if ( !cut || !cut->ok () ) { return INVALID_FORMULA ; }  // RETURN
   }
   //
   Ostap::Utils::Notifier notify ( data , &xvar , &yvar , &zvar , cut.get() ) ;
@@ -3250,11 +3266,6 @@ Ostap::StatusCode Ostap::HistoProject::project3
                     last        ) ;
 }
 // ============================================================================
-
-
-
-
-
 
 
 // ============================================================================

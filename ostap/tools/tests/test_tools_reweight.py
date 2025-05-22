@@ -207,8 +207,6 @@ for iter in range ( 1 , maxIter + 1  ) :
         mcds.to_csv ( cvs_file , dialect = 'excel-tab' )
 
         converged = True 
-        ## mcds.clear () 
-        ## del mcds 
         break
 
     ## delete the dataset 
