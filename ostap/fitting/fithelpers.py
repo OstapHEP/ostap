@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 # =============================================================================
-"""Set of useful technical utilities to build various fit models"""
+""" Set of useful technical utilities to build various fit models"""
 # =============================================================================
 __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -170,27 +170,30 @@ class VarMaker (object) :
         return obj
     
     ##  produce ERROR    message using the local logger 
-    def fatal   ( self , message , *args , **kwargs ) :
-        """ Produce FATGAL   message using the local logger"""
+    def fatal     ( self , message , *args , **kwargs ) :
+        """ Produce FATAL   message using the local logger"""
         return self.logger.fatal   ( message , *args , **kwargs )
     ##  produce ERROR    message using the local logger 
-    def error   ( self , message , *args , **kwargs ) :
+    def error     ( self , message , *args , **kwargs ) :
         """ Produce ERROR    message using the local logger"""
         return self.logger.error   ( message , *args , **kwargs )
     ##  produce WARNIING message using the local logger 
-    def warning ( self , message , *args , **kwargs ) :
+    def warning   ( self , message , *args , **kwargs ) :
         """ Produce WARNIING message using the local logger"""
         return self.logger.warning ( message , *args , **kwargs )
+    def attention ( self , message , *args , **kwargs ) :
+        """ Produce ATTENTION  message using the local logger"""
+        return self.logger.attention ( message , *args , **kwargs )
     ##  produce INFO     message using the local logger 
-    def info    ( self , message , *args , **kwargs ) :
+    def info      ( self , message , *args , **kwargs ) :
         """ Produce INFO     message using the local logger"""
         return self.logger.info    ( message , *args , **kwargs )
     ##  produce DEBUG    message using the local logger 
-    def debug   ( self , message , *args , **kwargs ) :
+    def debug     ( self , message , *args , **kwargs ) :
         """ Produce DEBUG    message using the local logger"""
         return self.logger.debug   ( message , *args , **kwargs )
     ##  produce VERBOSE  message using the local logger 
-    def verbose ( self , message , *args , **kwargs ) :
+    def verbose   ( self , message , *args , **kwargs ) :
         """ Produce VERBOSE  message using the local logger"""
         return self.logger.verbose ( message , *args , **kwargs )
 
@@ -621,6 +624,699 @@ class VarMaker (object) :
         return isequal ( value , var.getVal () ) 
 
     # =========================================================================
+    ## Create some expressions with variables
+    # =========================================================================
+    
+    # =========================================================================
+    ## construct (on-flight) variable for the product of
+    #  <code>var1</code> and <code>var2</code> \f$ v \equiv  v_1 v_2\f$ 
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_multiply ( var1 , var2 )
+    #  var4 = xxx.vars_multiply ( var1 , 2.0  )    
+    #  var3 = xxx.vars_product  ( var2 )
+    #  var4 = xxx.vars_product  ( var1 , 2.0  )    
+    #  @endcode 
+    def vars_multiply ( self , var1 , var2 , name = '' , title = '' ) :
+        """ Construct (on-flight) variable for var1*var2 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_multiply ( var1 , var2   )
+        >>> var4 = xxx.vars_multiply ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
+        >>> var3 = xxx.vars_product  ( var1 , var2   )
+        >>> var4 = xxx.vars_product  ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
+        """
+        
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res  = float ( var1 ) * float ( var2 )
+            return ROOT.RooFit.RooConst ( res ) 
+        elif f1 :
+            # shortcut 
+            if   1 == var1 : return var2                       ## SHORTCUT
+            elif 0 == var1 : return ROOT.RooFit.RooConst ( 0 ) ## SHORTCUT
+            # 
+            var1 = ROOT.RooFit.RooConst ( var1 ) 
+            return self.vars_multiply ( var1 , var2 , name , title )
+        elif f2 : 
+            # shortcut 
+            if   1 == var2 : return var1                       ## SHORTCUT
+            elif 0 == var2 : return ROOT.RooFit.RooConst ( 0 ) ## SHORTCUT
+            # 
+            var2 = ROOT.RooFit.RooConst ( var2 ) 
+            return self.vars_multiply ( var1 , var2 , name , title )
+        
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        name  = name  if name   else self.roo_name  ( "mult_%s_%s" % ( var1.name , var2.name ) )
+        title = title if title  else                  "(%s)*(%s)"  % ( var1.name , var2.name )
+        
+        result = Ostap.MoreRooFit. Product  ( var1 , var2 , name , title )
+        self.aux_keep.append ( result  )
+        
+        return result
+
+
+    # =============================================================================
+    ## construct (on-flight) variable for the sum  of
+    #  <code>var1</code> and <code>var2</code> \f$ v\equiv  c_1v_1 + c_2v_2\f$ 
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_add ( var1 , var2 )
+    #  var4 = xxx.vars_add ( var1 , 2.0  )    
+    #  var5 = xxx.vars_sum ( var1 , var2 )
+    #  var6 = xxx.vars_sum ( var1 , 2.0  )    
+    #  @endcode 
+    def vars_add ( self , var1 , var2 , c1 = 1 , c2 = 1 , name = '' , title = '' ) :
+        """ Construct (on-flight) variable for var1*c1+var2*c2 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_add ( var1 , var2   )
+        >>> var4 = xxx.vars_add ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
+        >>> var5 = xxx.vars_sum ( var1 , var2   )
+        >>> var6 = xxx.vars_sum ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
+        """
+        
+        assert isinstance ( c1 , num_types ) and isinstance ( c2 , num_types ),\
+               "vars_add: c1 and c2 must be numeric types!"
+
+        c1 = float ( c1 )
+        c2 = float ( c2 )
+        
+        if   0 == c1 and 0 == c2 :
+            return ROOT.RooFit.RooConst ( 0 )   ## shortcut 
+        elif 0 == c1 : 
+            return self.vars_multiply ( var2 , c2 , name = name , title = title )
+        elif 0 == c2 :
+            return self.vars_multiply ( var1 , c1 , name = name , title = title )
+        
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res  = float ( var1 ) * float ( c1 ) + float ( var2 ) * float ( c2 )
+            return ROOT.RooFit.RooConst ( res ) 
+        elif f1 :
+            ## shortcut 
+            if 0 == var1 :
+                return self.var_multiply ( var2 , c2 , name = name , title = title )  ## SHORTCUT 
+            #
+            var1 = ROOT.RooFit.RooConst ( float ( var1 ) * float ( c1 ) )                         
+            return self.vars_add ( var1 , var2 , name = name , title = title )
+        elif f2 :
+            ## shortcut 
+            if 0 == var2 :
+                return self.var_multiply ( var1 , c1 , name = name , title = title )  ## SHORTCUT 
+            #
+            var2 = ROOT.RooFit.RooConst ( float ( var2 ) * float ( c2 ) ) 
+            return self.vars_add ( var1 , var2 , name =name , title = title  )
+        
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        name  = name  if name   else self.roo_name  ( "add_%s_%s" % ( var1.name , var2.name ) )
+        title = title if title  else                  "(%s)+(%s)" % ( var1.name , var2.name )
+
+        if c1 == 1 and c2 == 1 : 
+            result = Ostap.MoreRooFit.Addition  ( var1 , var2 , name , title )
+        else :
+            result = Ostap.MoreRooFit.Addition2 ( name , title , var1 , var2 , c1 , c2 )
+                
+        self.aux_keep.append ( result  )
+                
+        return result
+
+    # =============================================================================
+    ## construct (on-flight) variable for the subtraction  of
+    #  <code>var1</code> and <code>var1</code>: \f$ v\equiv v_1 - v_2\f$ 
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_subtract   ( var1 , var2 )
+    #  var4 = xxx.vars_subtract   ( var1 , 2.0  )    
+    #  var5 = xxx.vars_difference ( var1 , var2 )
+    #  var6 = xxx.vars_difference ( var1 , 2.0  )    
+    #  @endcode 
+    def vars_subtract ( self , var1 , var2 , name = '' , title = '' ) :
+        """ Construct (on-flight) variable  for var1-var2 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_subtract   ( var1 , var2   )
+        >>> var4 = xxx.vars_subtract   ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
+        >>> var5 = xxx.vars_difference ( var1 , var2   )
+        >>> var6 = xxx.vars_difference ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
+        """
+
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            ##
+            res  = float ( var1 ) - float ( var2 )
+            return ROOT.RooFit.RooConst ( res ) 
+        elif f1 :
+            ## 
+            var1 = ROOT.RooFit.RooConst ( var1 )                         
+            return self.vars_subtract ( var1 , var2 , name , title )
+        elif f2 :
+            ## shortcut 
+            if 0 == var2 : return var1                      ## SHORTCUT
+            #
+            var2 = ROOT.RooFit.RooConst ( var2 ) 
+            return self.vars_subtract ( var1 , var2 , name , title )
+
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        name  = name  if name   else self.roo_name  ( "subtract_%s_%s" % ( var1.name , var2.name ) )
+        title = title if title  else                  "(%s)-(%s)"      % ( var1.name , var2.name )
+
+        result = Ostap.MoreRooFit.Subtraction  ( var1 , var2 )
+        self.aux_keep.append ( result  )
+                
+        return result
+                
+    # =============================================================================
+    ## construct (on-flight) variable for the ratio of
+    #  <code>var1</code> and <code>var2</code>: \f$   v\equiv \frac{v_1}{v_2} \f$ 
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_divide ( var1 , var2 )
+    #  var4 = xxx.vars_divide ( var1 , 2.0  )    
+    #  var5 = xxx.vars_ratio  ( var1 , var2 )
+    #  var6 = xxx.vars_ratio  ( var1 , 2.0  )    
+    #  @endcode 
+    def vars_divide ( self , var1 , var2 , name = '' , title = '' ) :
+        """ Construct (on-flight) variable for var1/var2 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_divide ( var1 , var2   )
+        >>> var4 = xxx.vars_divide ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
+        >>> var5 = xxx.vars_ratio  ( var1 , var2   )
+        >>> var6 = xxx.vars_ratio  ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
+        """
+        
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res   = float ( var1 ) / float ( var2 )
+            return ROOT.RooFit.RooConst ( res ) 
+        elif f1 :
+            var1 = ROOT.RooFit.RooConst ( var1 ) 
+            return self.vars_divide   ( var1 , var2     , name , title )
+        elif f2 :
+            return self.vars_multiply ( var1 , 1.0/var2 , name , title )
+        
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+        
+        name  = name  if name   else self.roo_name  ( "divide_%s_%s" % ( var1.name , var2.name ) )
+        title = title if title  else                  "(%s)/(%s)"    % ( var1.name , var2.name )
+        
+        result = Ostap.MoreRooFit.Division  ( var1 , var2 , name , title )
+        self.aux_keep.append ( result  )
+                
+        return result
+
+    # =============================================================================
+    ## construct (on-flight) variable  for the fraction  of
+    #  <code>var1</code> and <code>var2</code>: \f$ v \equiv \frac{v_1}{v_1+v_2}\f$
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_fraction ( var1 , var2 )
+    #  var4 = xxx.vars_fraction ( var1 , 2.0  )    
+    #  @endcode 
+    def vars_fraction ( self , var1 , var2 , name = '' , title = '' ) :
+        """ Construct (on-flight) variable  for var1/(var2+var1)
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_fraction ( var1 , var2   )
+        >>> var4 = xxx.vars_fraction ( var1 , 2 , 'sigma2' , title = 'exression' )
+        """
+        
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res  = float ( var1 ) / ( float ( var2 ) + float ( var1 ) )
+            return ROOT.RooFit.RooConst ( res ) 
+        elif f1 :
+            ## shortcut 
+            if 0 == var1  : return ROOT.RooFit.RooConst ( 0 ) ## SHORTCUT
+            var1 = ROOT.RooFit.RooConst ( var1 ) 
+            return self.vars_fraction ( var1 , var2 , name , title )
+        elif f2 :
+            ## shortcut
+            if 0 == var2  : return ROOT.RooFit.RooConst ( 1 ) ## SHORTCUT
+            var2 = ROOT.RooFit.RooConst ( var2 ) 
+            return self.vars_fraction ( var1 , var2 , name , title )
+        
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        name  = name  if name   else self.roo_name  ( "fraction_%s_%s"  % ( var1.name , var2.name ) )
+        title = title if title  else                  "fraction(%s,%s)" % ( var1.name , var2.name )
+
+        result = Ostap.MoreRooFit.Fraction  ( var1 , var2 , name , title )
+        self.aux_keep.append ( result  )
+        
+        return result
+
+
+    # =============================================================================
+    ## construct (on-flight) variable  for the asymmetry of
+    #  <code>var1</code> and <code>var2</code>: \f$ v \equiv \frac{v_1-v_2}{v_1+v_2}\f$
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_asymmetry     ( var1 , var2 )
+    #  var4 = xxx.vars_asymmetry     ( var1 , 2.0  )    
+    #  var3 = xxx.vars_reldifference ( var1 , var2 )
+    #  var4 = xxx.vars_reldifference ( var1 , 2.0  )    
+    #  @endcode 
+    def vars_asymmetry ( self , var1 , var2 , scale = 1 , name = '' , title = '' ) :
+        """ Construct (on-flight) variable for (var1-var2)/(var2+var1)
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_asymmetry     ( var1 , var2   )
+        >>> var4 = xxx.vars_asymmetry     ( var1 , 2 , 'sigma2' , title = 'exression' )
+        >>> var3 = xxx.vars_reldifference ( var1 , var2   )
+        >>> var4 = xxx.vars_reldifference ( var1 , 2 , 'sigma2' , title = 'exression' )
+        """
+        
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res  = scale * ( float ( var1 ) - float ( var2 ) ) / ( float ( var2 ) + float ( var1 ) )
+            return ROOT.RooFit.RooConst ( res ) 
+        elif f1 :
+            ## shortcut 
+            if 0 == var1 : return ROOT.RooFit.RooConst ( -1.0 * scale ) ## shortcut
+            var1 = ROOT.RooFit.RooConst ( var1 ) 
+            return self.vars_asymmetry ( var1 , var2 , scale = scale , name = name , title = title )
+        elif f2 :
+            ## shortcut 
+            if 0 == var2 : return ROOT.RooFit.RooConst (  1.0 * scale ) ## shortcut
+            var2 = ROOT.RooFit.RooConst ( var2 ) 
+            return self.vars_asymmetry ( var1 , var2 , scale = scale , name = name , title = title )
+        
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        name  = name  if name   else self.roo_name  ( "asymmetry_%s_%s"  % ( var1.name , var2.name ) )
+        title = title if title  else                  "asymmetry(%s,%s)" % ( var1.name , var2.name )
+
+        result = Ostap.MoreRooFit.Asymmetry ( var1 , var2 , name , title , scale )
+        self.aux_keep.append ( result  )
+        
+        return result
+    
+    # =============================================================================
+    ## construct (on-flight) variable  for \f$ a^b \f$ 
+    #  <code>var1</code> and <code>var2</code>: 
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_power        ( var1 , var2 )
+    #  var4 = xxx.vars_power        ( var1 , 2.0  )    
+    #  var4 = xxx.vars_power        ( 2.0  , var2 )    
+    #  @endcode 
+    def vars_power ( self , var1 , var2 , name = '' , title = '' ) :
+        """ Construct (on-flight) variable  for \f$ a^b \f$ 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_power        ( var1 , var2 )
+        >>> var4 = xxx.vars_power        ( var1 , 2.0  )    
+        >>> var4 = xxx.vars_power        ( 2.0  , var2 )    
+        """
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res  = float ( var1 ) ** float ( var2 )
+            return ROOT.RooFit.RooConst ( res ) 
+        elif f1 :
+            ## shortcut 
+            if 1 == var1 : return ROOT.RooFit.RooConst ( 1 ) ## shortcut
+            var1 = ROOT.RooFit.RooConst ( var1 ) 
+            return self.vars_power ( var1 , var2 , name , title )
+        elif f2 :
+            ## shortcut 
+            if 0 == var2 : return ROOT.RooFit.RooConst (  1 ) ## shortcut
+            var2 = ROOT.RooFit.RooConst ( var2 ) 
+            return self.vars_power ( var1 , var2 , name , title )
+        
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        name  = name  if name   else self.roo_name  ( "pow_%s_%s"  % ( var1.name , var2.name ) )
+        title = title if title  else                  "pow(%s,%s)" % ( var1.name , var2.name )
+
+        result = Ostap.MoreRooFit.Power ( var1 , var2 , name . title )
+        self.aux_keep.append ( result  )
+        
+        return result
+
+        # =============================================================================
+    ## construct (on-flight) variable  for \f$ exp(ab) \f$ 
+    #  <code>var1</code> and <code>var2</code>: 
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_exp ( var1 , var2 )
+    #  var4 = xxx.vars_exp ( var1 , -1   )    
+    #  var4 = xxx.vars_exp ( -1   , var2 )    
+    #  @endcode 
+    def vars_exp ( self , var1 , var2 = 1 , name = '' , title = '' ) :
+        """ Construct (on-flight) variable  for \f$ exp(a*b) \f$ 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_exp ( var1 , var2 )
+        >>> var4 = xxx.vars_exp ( var1 , 2.0  )    
+        >>> var4 = xxx.vars_exp ( 2.0  , var2 )    
+        """
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res  = math.exp ( float ( var1 ) * float ( var2 ) )
+            return ROOT.RooFit.RooConst ( res ) 
+        elif f1 :
+            ## shortcut 
+            if 0 == var1 : return ROOT.RooFit.RooConst ( 1 ) ## shortcut
+            var1 = ROOT.RooFit.RooConst ( var1 ) 
+            return self.vars_exp ( var1 , var2 , name , title )
+        elif f2 :
+            ## shortcut 
+            if 0 == var2 : return ROOT.RooFit.RooConst ( 1 ) ## shortcut
+            var2 = ROOT.RooFit.RooConst ( var2 ) 
+            return self.vars_exp ( var1 , var2 , name , title )
+        
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        name  = name  if name   else self.roo_name  ( "exp_%s_%s"  % ( var1.name , var2.name ) )
+        title = title if title  else                  "exp(%s*%s)" % ( var1.name , var2.name )
+
+        result = Ostap.MoreRooFit.Exp ( var1 , var2 , name , title )
+        self.aux_keep.append ( result  )
+        
+        return result
+
+    # =============================================================================
+    ## construct (on-flight) variable  for \f$ |ab| \f$ 
+    #  <code>var1</code> and <code>var2</code>: 
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_abs ( var1 , var2 )
+    #  var4 = xxx.vars_abs ( var1 , -1   )    
+    #  var4 = xxx.vars_abs ( -1   , var2 )    
+    #  @endcode 
+    def vars_abs ( self , var1 , var2 = 1 , name = '' , title = '' ) :
+        """ Construct (on-flight) variable  for \f$ |a*b| \f$ 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_abs ( var1 , var2 )
+        >>> var4 = xxx.vars_abs ( var1 , 2.0  )    
+        >>> var4 = xxx.vars_abs ( 2.0  , var2 )    
+        """
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res  = abs ( float ( var1 ) * float ( var2 ) )
+            return ROOT.RooFit.RooConst ( res ) 
+        elif f1 :
+            ## shortcut 
+            if 0 == var1 : return ROOT.RooFit.RooConst ( 0 ) ## shortcut
+            var1 = ROOT.RooFit.RooConst ( var1 ) 
+            return self.vars_abs ( var1 , var2 , name , title )
+        elif f2 :
+            ## shortcut 
+            if 0 == var2 : return ROOT.RooFit.RooConst ( 0 ) ## shortcut
+            var2 = ROOT.RooFit.RooConst ( var2 ) 
+            return self.vars_abs ( var1 , var2 , name , title )
+        
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        name  = name  if name   else self.roo_name  ( "abs_%s_%s"  % ( var1.name , var2.name ) )
+        title = title if title  else                  "abs(%s*%s)" % ( var1.name , var2.name )
+
+        result = Ostap.MoreRooFit.Abs ( var1 , var2 , name , title )
+        self.aux_keep.append ( result  )
+        
+        return result
+
+    vars_sum           = vars_add 
+    vars_product       = vars_multiply
+    vars_ratio         = vars_divide
+    vars_difference    = vars_subtract
+    vars_reldifference = vars_asymmetry
+    vars_pow           = vars_power
+    vars_expo          = vars_exp
+
+
+    # =========================================================================
+    ## helper function to create <code>RooFormulaVar</code>
+    #  @code
+    #  OBJ = ...
+    #  f   = OBJ.vars_formula ( '%s*%s/%s' , [ a , b, c ] , name = 'myvar' )
+    #  @endcode 
+    def vars_formula ( self , formula , vars , name = '' , title = '' ) :
+        """ Helper function to create `RooFormulaVar`
+        >>> OBJ = ...
+        >>> f   = OBJ.vars_formula ( '%s*%s/%s' , [ a , b, c ] , name = 'myvar' )
+        """
+
+        assert vars and len ( vars ) , 'Variables must be specified!'
+
+        vvars = []
+        for v in  vars :
+            if isinstance    ( v , ROOT.RooAbsArg ) :
+                vvars.append ( v )
+            elif isinstance  ( v , string_types   ) :
+                try :
+                    vv = self.parameter ( v )
+                    vvars.append ( vv ) 
+                except :
+                    raise TypeError ( "Unknown parameter name %s" % v)
+            else :
+                raise TypeError( "Unknown parameter type %s/%s" % ( v , type ( v ) ) ) 
+
+        vlst = ROOT.RooArgList()
+        for v in vvars : vlst.add ( v )
+
+        has_at      = '@' in formula
+        has_percent = '%' in formula
+        import re
+        has_index   = re.search ( r'\[( *)(?P<degree>\d*)( *)\]' , formula )
+        has_format1 = re.search ( r'\{( *)(?P<degree>\d*)( *)\}' , formula )
+        has_format2 = re.search ( r'\{( *)(?P<degree>\w*)( *)\}' , formula )
+
+        formula_ = formula 
+        if   has_at      : pass 
+        elif has_index   : pass 
+        elif has_percent :  
+            vnames   = tuple ( [ p.name for p in vlst ] )
+            formula_ = formula % vnames
+        elif has_format1 :            
+            vnames   = tuple ( [ p.name for p in vlst ] )
+            formula_ = formula.format ( *vnames ) 
+        elif has_format2 :
+            kw  = {}
+            for p in vlist : kw [ p.name ] = p.name
+            formula_ = formula.format ( *kw )
+            
+        name  = name  if name  else 'Formula_%s '    % self.name 
+        title = title if title else 'Formula:%s/%s'  % ( formula , self.name )
+        
+        rfv = make_formula ( self.var_name ( name ) , formula_ , vlst )
+        
+        self.aux_keep.append ( vlst )
+        self.aux_keep.append ( rvf  )
+        
+        return rfv 
+    
+
+    # =========================================================================
+    ## make very specific combination of variables:  alpha*var1*(bets+gamma*var2)    
+    #  \f$ r = \alpha v_1 ( \beta + \gamma * v_2 ) \    
+    def vars_combination ( self ,
+                           var1 ,
+                           var2 ,
+                           alpha  = 1   ,
+                           beta   = 1   ,
+                           gamma  = 1   ,
+                           name   = ''  , 
+                           title  = ''  ) :
+        """ Make very specific combination of variables:  alpha*var1*(beta+gamma*var2)    
+        r = alpha * v_1 ( beta + gamma * v_2 ) 
+        """
+        
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        assert isinstance ( alpha , num_types ) , "vars_combination: 'alpha' must be numeric types!"
+        assert isinstance ( beta  , num_types ) , "vars_combination: 'beta'  must be numeric types!"
+        assert isinstance ( gamma , num_types ) , "vars_combination: 'gamma' must be numeric types!"
+
+        if   0 == alpha               : return ROOT.RooFit.RooConst ( 0 ) 
+        elif 0 == beta and 0 == gamma : return ROOT.RooFit.RooConst ( 0 ) 
+
+        alpha = float ( alpha )
+        beta  = float ( beta  )
+        gamma = float ( gamma )        
+        
+        if f1 and f2 :
+
+            res  = beta   + gamma * float ( var2 )
+            res *=          alpha * float ( var1 )
+            
+            return ROOT.RooFit.RooConst ( 0 )
+        
+        elif f1 :
+            
+            return self.sum_add      ( float ( var1 ) * alpha * beta        ,
+                                       var2                                 ,
+                                       c2    = alpha * gamma * float ( v1 ) , 
+                                       name  = name                         ,
+                                       title = title                        ) 
+        elif f2 :
+            
+            return self.sum_multiply ( var1 ,
+                                       alpha * ( beta + gamma * float ( v2 ) ) ,
+                                       name  = name  ,
+                                       title = title ) 
+        
+        
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        if not name :
+            if   1 == alpha and 1 == beta and +1 == gamma : name = '%s*(1+%s)' % ( var1.name , var2.name )
+            elif 1 == alpha and 1 == beta and -1 == gamma : name = '%s*(1-%s)' % ( var1.name , var2.name )
+            else : name = 'Var_%g*%s*(%s%+g*%s)' % ( alpha , var1.name , beta , gamma , var2.name )
+                
+        if not title : title = name
+            
+        result = Ostap.MoreRooFit.Combination ( var1  , var2  ,
+                                                name  , title ,
+                                                alpha , beta  , gamma )
+        
+        self.aux_keep.append ( result  )
+        
+        return result
+        
+    # =========================================================================
+    ## (var1,var2) <--> (var, asymmetry)
+    # =========================================================================
+
+    # =========================================================================
+    ## Convert pair of variables into 'sum' & 'asymmetry' pair:
+    # - 'sum'       :  sum_scale  * ( var1 + var2  )
+    # - 'asymmetry' :  asym_scale * ( var1 - var2 ) / (var1+ + var2 ) 
+    # @code
+    # var1 = ...
+    # var2 = ...
+    # hsum , asum = self.vars_to_asymmetry ( var1 , var2 ) 
+    # @endcode 
+    def vars_to_asymmetry ( self             ,
+                            var1             ,   ## the first variable 
+                            var2             ,   ## the second variable
+                            asym_scale = 1   ,   ## scale factor asymmetry
+                            sum_scale  = 0.5 ,   ## scale factor for 'sum'
+                            asym_name  = ''  ,   ## name for asymmetry variable
+                            sum_name   = ''  ,   ## name for 'sum' variable                              
+                            asym_title = ''  ,   ## title for asymmetry variable 
+                            sum_title  = ''  ) : ## title for 'sum' variable 
+        """ Convert a pair of variables into 'sum' & 'asymmetry' pair
+        - 'sum'       :  sum_scale  * ( var1 + var2  )
+        - 'asymmetry' :  asym_scale * ( var1 - var2 ) / ( var1+ + var2 ) 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> hsum , asum = self.vars_to_asymmetry ( var1 , var2 ) 
+        """
+        
+        ## asym_scale * ( var1-var2) / (var1+var2)
+        asym_var = self.vars_asymmetry (
+            var1               , ## first vatiable 
+            var2               , ## second variable 
+            scale = asym_scale , ## scale
+            name  = asym_name  ,
+            title = asym_title ) 
+
+        ## sum_scale * ( var1 + var2 ) 
+        sum_var  = self.vars_add (
+            var1               , ## first variable 
+            var2               , ## second variable
+            c1    = sum_scale  , ## factor c1 
+            c2    = sum_scale  , ## factor c2 
+            name  = sum_name   , ## name 
+            title = sum_title  ) ## title  
+        
+        return sum_var , asym_var
+    
+    # ========================================================================= 
+    ## convert a pair of variables 'half-sum'&'asymmetry' into 'var1', 'var2'
+    #  @code
+    #  halfsum   = ...
+    #  asymmetry = ...
+    #  var1 , var2 = self.vars_from_asymmetry ( halfsum , asymmetry )
+    #  @endcode 
+    def vars_from_asymmetry ( self         ,
+                              hsumvar      , ## half-sum 
+                              asymvar      , ## asymmetry 
+                              v1name  = '' , 
+                              v2name  = '' ,
+                              v1title = '' ,
+                              v2title = '' ) :
+        """ Convert a pair of variables 'half-sum'&'asymmetry' into 'var1', 'var2'
+        >>> halfsum   = ...
+        >>> asymmetry = ...
+        >>> var1 , var2 = self.vars_from_asymmetry ( halfsum , asymmetry )
+        """
+
+        if hsumvar is None :
+            return hsumvar , hsumvar
+        
+        if isinstance ( hsumvar , ROOT.RooAbsArg ) and isinstance ( asymvar , ROOT.RooAbsArg )  :
+            s = hsumvar.name
+            a = asymvar.name
+            if not v1name  : v1name  = '%s_1' % s
+            if not v2name  : v2name  = '%s_2' % s            
+            if not v1title : v1title = '%s_{1} : %s #times (1 + %s_{%s}) ' %  ( s , s , a , s ) 
+            if not v2title : v2title = '%s_{2} : %s #times (1 - %s_{%s}) ' %  ( s , s , a , s ) 
+                 
+        var1 = self.vars_combination ( hsumvar           ,
+                                       asymvar           ,
+                                       alpha   =  1      ,
+                                       beta    =  1      ,
+                                       gamma   = +1      , 
+                                       name    = v1name  ,
+                                       title   = v1title )
+        
+        var2 = self.vars_combination ( hsumvar           ,
+                                       asymvar           ,
+                                       alpha   =  1      ,
+                                       beta    =  1      ,
+                                       gamma   = -1      , 
+                                       name    = v2name  ,
+                                       title   = v2title )
+        return var1 , var2 
+        
+        
+    # =========================================================================
     ## delete the object
     #  - remove the registered names in storages
     #  - clear the local storage of names 
@@ -709,7 +1405,7 @@ args_maxcalls      = 'maxcalls' , 'maxcall' , 'callmax' , 'callsmax'
 #  Helper base class for fit-rrleated objects
 #  - storage of newly created RooFit objects
 #  - loggin
-#  - a lot of helper methdos for fitting 
+#  - a lot of helper methods for fitting 
 class FitHelper(VarMaker) :
     """ Helper base class for fit-rrleated objects
     - storage of newly created RooFit objects
@@ -1121,696 +1817,7 @@ class FitHelper(VarMaker) :
         for c , v in zip  ( components , values )  :
             self.set_value (  c , v ) 
 
-    # =========================================================================
-    ## Create some expressions with variables
-    # =========================================================================
-    
-    # =========================================================================
-    ## construct (on-flight) variable for the product of
-    #  <code>var1</code> and <code>var2</code> \f$ v \equiv  v_1 v_2\f$ 
-    #  @code
-    #  var1 = ...
-    #  var2 = ...
-    #  var3 = xxx.vars_multiply ( var1 , var2 )
-    #  var4 = xxx.vars_multiply ( var1 , 2.0  )    
-    #  var3 = xxx.vars_product  ( var2 )
-    #  var4 = xxx.vars_product  ( var1 , 2.0  )    
-    #  @endcode 
-    def vars_multiply ( self , var1 , var2 , name = '' , title = '' ) :
-        """ Construct (on-flight) variable for var1*var2 
-        >>> var1 = ...
-        >>> var2 = ...
-        >>> var3 = xxx.vars_multiply ( var1 , var2   )
-        >>> var4 = xxx.vars_multiply ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
-        >>> var3 = xxx.vars_product  ( var1 , var2   )
-        >>> var4 = xxx.vars_product  ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
-        """
-        
-        f1 = isinstance ( var1 , num_types )
-        f2 = isinstance ( var2 , num_types )
-
-        if f1 and f2 :
-            res  = float ( var1 ) * float ( var2 )
-            return ROOT.RooFit.RooConst ( res ) 
-        elif f1 :
-            # shortcut 
-            if   1 == var1 : return var2                       ## SHORTCUT
-            elif 0 == var1 : return ROOT.RooFit.RooConst ( 0 ) ## SHORTCUT
-            # 
-            var1 = ROOT.RooFit.RooConst ( var1 ) 
-            return self.vars_multiply ( var1 , var2 , name , title )
-        elif f2 : 
-            # shortcut 
-            if   1 == var2 : return var1                       ## SHORTCUT
-            elif 0 == var2 : return ROOT.RooFit.RooConst ( 0 ) ## SHORTCUT
-            # 
-            var2 = ROOT.RooFit.RooConst ( var2 ) 
-            return self.vars_multiply ( var1 , var2 , name , title )
-        
-        self.aux_keep.append ( var1 )
-        self.aux_keep.append ( var2 )
-
-        name  = name  if name   else self.roo_name  ( "mult_%s_%s" % ( var1.name , var2.name ) )
-        title = title if title  else                  "(%s)*(%s)"  % ( var1.name , var2.name )
-        
-        result = Ostap.MoreRooFit. Product  ( var1 , var2 , name , title )
-        self.aux_keep.append ( result  )
-        
-        return result
-
-    # =============================================================================
-    ## construct (on-flight) variable for the sum  of
-    #  <code>var1</code> and <code>var2</code> \f$ v\equiv  c_1v_1 + c_2v_2\f$ 
-    #  @code
-    #  var1 = ...
-    #  var2 = ...
-    #  var3 = xxx.vars_add ( var1 , var2 )
-    #  var4 = xxx.vars_add ( var1 , 2.0  )    
-    #  var5 = xxx.vars_sum ( var1 , var2 )
-    #  var6 = xxx.vars_sum ( var1 , 2.0  )    
-    #  @endcode 
-    def vars_add ( self , var1 , var2 , c1 = 1 , c2 = 1 , name = '' , title = '' ) :
-        """ Construct (on-flight) variable for var1*c1+var2*c2 
-        >>> var1 = ...
-        >>> var2 = ...
-        >>> var3 = xxx.vars_add ( var1 , var2   )
-        >>> var4 = xxx.vars_add ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
-        >>> var5 = xxx.vars_sum ( var1 , var2   )
-        >>> var6 = xxx.vars_sum ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
-        """
-        
-        assert isinstance ( c1 , num_types ) and isinstance ( c2 , num_types ),\
-               "vars_add: c1 and c2 must be numeric types!"
-
-        c1 = float ( c1 )
-        c2 = float ( c2 )
-        
-        if   0 == c1 and 0 == c2 :
-            return ROOT.RooFit.RooConst ( 0 )   ## shortcut 
-        elif 0 == c1 : 
-            return self.vars_multiply ( var2 , c2 , name = name , title = title )
-        elif 0 == c2 :
-            return self.vars_multiply ( var1 , c1 , name = name , title = title )
-        
-        f1 = isinstance ( var1 , num_types )
-        f2 = isinstance ( var2 , num_types )
-
-        if f1 and f2 :
-            res  = float ( var1 ) * float ( c1 ) + float ( var2 ) * float ( c2 )
-            return ROOT.RooFit.RooConst ( res ) 
-        elif f1 :
-            ## shortcut 
-            if 0 == var1 :
-                return self.var_multiply ( var2 , c2 , name = name , title = title )  ## SHORTCUT 
-            #
-            var1 = ROOT.RooFit.RooConst ( float ( var1 ) * float ( c1 ) )                         
-            return self.vars_add ( var1 , var2 , name = name , title = title )
-        elif f2 :
-            ## shortcut 
-            if 0 == var2 :
-                return self.var_multiply ( var1 , c1 , name = name , title = title )  ## SHORTCUT 
-            #
-            var2 = ROOT.RooFit.RooConst ( float ( var2 ) * float ( c2 ) ) 
-            return self.vars_add ( var1 , var2 , name =name , title = title  )
-        
-        self.aux_keep.append ( var1 )
-        self.aux_keep.append ( var2 )
-
-        name  = name  if name   else self.roo_name  ( "add_%s_%s" % ( var1.name , var2.name ) )
-        title = title if title  else                  "(%s)+(%s)" % ( var1.name , var2.name )
-
-        if c1 == 1 and c2 == 1 : 
-            result = Ostap.MoreRooFit.Addition  ( var1 , var2 , name , title )
-        else :
-            result = Ostap.MoreRooFit.Addition2 ( name , title , var1 , var2 , c1 , c2 )
-                
-        self.aux_keep.append ( result  )
-                
-        return result
-
-    # =============================================================================
-    ## construct (on-flight) variable for the subtraction  of
-    #  <code>var1</code> and <code>var1</code>: \f$ v\equiv v_1 - v_2\f$ 
-    #  @code
-    #  var1 = ...
-    #  var2 = ...
-    #  var3 = xxx.vars_subtract   ( var1 , var2 )
-    #  var4 = xxx.vars_subtract   ( var1 , 2.0  )    
-    #  var5 = xxx.vars_difference ( var1 , var2 )
-    #  var6 = xxx.vars_difference ( var1 , 2.0  )    
-    #  @endcode 
-    def vars_subtract ( self , var1 , var2 , name = '' , title = '' ) :
-        """ Construct (on-flight) variable  for var1-var2 
-        >>> var1 = ...
-        >>> var2 = ...
-        >>> var3 = xxx.vars_subtract   ( var1 , var2   )
-        >>> var4 = xxx.vars_subtract   ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
-        >>> var5 = xxx.vars_difference ( var1 , var2   )
-        >>> var6 = xxx.vars_difference ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
-        """
-
-        f1 = isinstance ( var1 , num_types )
-        f2 = isinstance ( var2 , num_types )
-
-        if f1 and f2 :
-            ##
-            res  = float ( var1 ) - float ( var2 )
-            return ROOT.RooFit.RooConst ( res ) 
-        elif f1 :
-            ## 
-            var1 = ROOT.RooFit.RooConst ( var1 )                         
-            return self.vars_subtract ( var1 , var2 , name , title )
-        elif f2 :
-            ## shortcut 
-            if 0 == var2 : return var1                      ## SHORTCUT
-            #
-            var2 = ROOT.RooFit.RooConst ( var2 ) 
-            return self.vars_subtract ( var1 , var2 , name , title )
-
-        self.aux_keep.append ( var1 )
-        self.aux_keep.append ( var2 )
-
-        name  = name  if name   else self.roo_name  ( "subtract_%s_%s" % ( var1.name , var2.name ) )
-        title = title if title  else                  "(%s)-(%s)"      % ( var1.name , var2.name )
-
-        result = Ostap.MoreRooFit.Subtraction  ( var1 , var2 )
-        self.aux_keep.append ( result  )
-                
-        return result
-            
-    # =============================================================================
-    ## construct (on-flight) variable for the ratio of
-    #  <code>var1</code> and <code>var2</code>: \f$   v\equiv \frac{v_1}{v_2} \f$ 
-    #  @code
-    #  var1 = ...
-    #  var2 = ...
-    #  var3 = xxx.vars_divide ( var1 , var2 )
-    #  var4 = xxx.vars_divide ( var1 , 2.0  )    
-    #  var5 = xxx.vars_ratio  ( var1 , var2 )
-    #  var6 = xxx.vars_ratio  ( var1 , 2.0  )    
-    #  @endcode 
-    def vars_divide ( self , var1 , var2 , name = '' , title = '' ) :
-        """ Construct (on-flight) variable for var1/var2 
-        >>> var1 = ...
-        >>> var2 = ...
-        >>> var3 = xxx.vars_divide ( var1 , var2   )
-        >>> var4 = xxx.vars_divide ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
-        >>> var5 = xxx.vars_ratio  ( var1 , var2   )
-        >>> var6 = xxx.vars_ratio  ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
-        """
-        
-        f1 = isinstance ( var1 , num_types )
-        f2 = isinstance ( var2 , num_types )
-
-        if f1 and f2 :
-            res   = float ( var1 ) / float ( var2 )
-            return ROOT.RooFit.RooConst ( res ) 
-        elif f1 :
-            var1 = ROOT.RooFit.RooConst ( var1 ) 
-            return self.vars_divide   ( var1 , var2     , name , title )
-        elif f2 :
-            return self.vars_multiply ( var1 , 1.0/var2 , name , title )
-        
-        self.aux_keep.append ( var1 )
-        self.aux_keep.append ( var2 )
-        
-        name  = name  if name   else self.roo_name  ( "divide_%s_%s" % ( var1.name , var2.name ) )
-        title = title if title  else                  "(%s)/(%s)"    % ( var1.name , var2.name )
-        
-        result = Ostap.MoreRooFit.Division  ( var1 , var2 , name , title )
-        self.aux_keep.append ( result  )
-                
-        return result
-
-    # =============================================================================
-    ## construct (on-flight) variable  for the fraction  of
-    #  <code>var1</code> and <code>var2</code>: \f$ v \equiv \frac{v_1}{v_1+v_2}\f$
-    #  @code
-    #  var1 = ...
-    #  var2 = ...
-    #  var3 = xxx.vars_fraction ( var1 , var2 )
-    #  var4 = xxx.vars_fraction ( var1 , 2.0  )    
-    #  @endcode 
-    def vars_fraction ( self , var1 , var2 , name = '' , title = '' ) :
-        """ Construct (on-flight) variable  for var1/(var2+var1)
-        >>> var1 = ...
-        >>> var2 = ...
-        >>> var3 = xxx.vars_fraction ( var1 , var2   )
-        >>> var4 = xxx.vars_fraction ( var1 , 2 , 'sigma2' , title = 'exression' )
-        """
-        
-        f1 = isinstance ( var1 , num_types )
-        f2 = isinstance ( var2 , num_types )
-
-        if f1 and f2 :
-            res  = float ( var1 ) / ( float ( var2 ) + float ( var1 ) )
-            return ROOT.RooFit.RooConst ( res ) 
-        elif f1 :
-            ## shortcut 
-            if 0 == var1  : return ROOT.RooFit.RooConst ( 0 ) ## SHORTCUT
-            var1 = ROOT.RooFit.RooConst ( var1 ) 
-            return self.vars_fraction ( var1 , var2 , name , title )
-        elif f2 :
-            ## shortcut
-            if 0 == var2  : return ROOT.RooFit.RooConst ( 1 ) ## SHORTCUT
-            var2 = ROOT.RooFit.RooConst ( var2 ) 
-            return self.vars_fraction ( var1 , var2 , name , title )
-        
-        self.aux_keep.append ( var1 )
-        self.aux_keep.append ( var2 )
-
-        name  = name  if name   else self.roo_name  ( "fraction_%s_%s"  % ( var1.name , var2.name ) )
-        title = title if title  else                  "fraction(%s,%s)" % ( var1.name , var2.name )
-
-        result = Ostap.MoreRooFit.Fraction  ( var1 , var2 , name , title )
-        self.aux_keep.append ( result  )
-        
-        return result
-
-    # =============================================================================
-    ## construct (on-flight) variable  for the asymmetry of
-    #  <code>var1</code> and <code>var2</code>: \f$ v \equiv \frac{v_1-v_2}{v_1+v_2}\f$
-    #  @code
-    #  var1 = ...
-    #  var2 = ...
-    #  var3 = xxx.vars_asymmetry     ( var1 , var2 )
-    #  var4 = xxx.vars_asymmetry     ( var1 , 2.0  )    
-    #  var3 = xxx.vars_reldifference ( var1 , var2 )
-    #  var4 = xxx.vars_reldifference ( var1 , 2.0  )    
-    #  @endcode 
-    def vars_asymmetry ( self , var1 , var2 , scale = 1 , name = '' , title = '' ) :
-        """ Construct (on-flight) variable for (var1-var2)/(var2+var1)
-        >>> var1 = ...
-        >>> var2 = ...
-        >>> var3 = xxx.vars_asymmetry     ( var1 , var2   )
-        >>> var4 = xxx.vars_asymmetry     ( var1 , 2 , 'sigma2' , title = 'exression' )
-        >>> var3 = xxx.vars_reldifference ( var1 , var2   )
-        >>> var4 = xxx.vars_reldifference ( var1 , 2 , 'sigma2' , title = 'exression' )
-        """
-        
-        f1 = isinstance ( var1 , num_types )
-        f2 = isinstance ( var2 , num_types )
-
-        if f1 and f2 :
-            res  = scale * ( float ( var1 ) - float ( var2 ) ) / ( float ( var2 ) + float ( var1 ) )
-            return ROOT.RooFit.RooConst ( res ) 
-        elif f1 :
-            ## shortcut 
-            if 0 == var1 : return ROOT.RooFit.RooConst ( -1.0 * scale ) ## shortcut
-            var1 = ROOT.RooFit.RooConst ( var1 ) 
-            return self.vars_asymmetry ( var1 , var2 , scale = scale , name = name , title = title )
-        elif f2 :
-            ## shortcut 
-            if 0 == var2 : return ROOT.RooFit.RooConst (  1.0 * scale ) ## shortcut
-            var2 = ROOT.RooFit.RooConst ( var2 ) 
-            return self.vars_asymmetry ( var1 , var2 , scale = scale , name = name , title = title )
-        
-        self.aux_keep.append ( var1 )
-        self.aux_keep.append ( var2 )
-
-        name  = name  if name   else self.roo_name  ( "asymmetry_%s_%s"  % ( var1.name , var2.name ) )
-        title = title if title  else                  "asymmetry(%s,%s)" % ( var1.name , var2.name )
-
-        result = Ostap.MoreRooFit.Asymmetry ( var1 , var2 , name , title , scale )
-        self.aux_keep.append ( result  )
-        
-        return result
-
-    # =============================================================================
-    ## construct (on-flight) variable  for \f$ a^b \f$ 
-    #  <code>var1</code> and <code>var2</code>: 
-    #  @code
-    #  var1 = ...
-    #  var2 = ...
-    #  var3 = xxx.vars_power        ( var1 , var2 )
-    #  var4 = xxx.vars_power        ( var1 , 2.0  )    
-    #  var4 = xxx.vars_power        ( 2.0  , var2 )    
-    #  @endcode 
-    def vars_power ( self , var1 , var2 , name = '' , title = '' ) :
-        """ Construct (on-flight) variable  for \f$ a^b \f$ 
-        >>> var1 = ...
-        >>> var2 = ...
-        >>> var3 = xxx.vars_power        ( var1 , var2 )
-        >>> var4 = xxx.vars_power        ( var1 , 2.0  )    
-        >>> var4 = xxx.vars_power        ( 2.0  , var2 )    
-        """
-        f1 = isinstance ( var1 , num_types )
-        f2 = isinstance ( var2 , num_types )
-
-        if f1 and f2 :
-            res  = float ( var1 ) ** float ( var2 )
-            return ROOT.RooFit.RooConst ( res ) 
-        elif f1 :
-            ## shortcut 
-            if 1 == var1 : return ROOT.RooFit.RooConst ( 1 ) ## shortcut
-            var1 = ROOT.RooFit.RooConst ( var1 ) 
-            return self.vars_power ( var1 , var2 , name , title )
-        elif f2 :
-            ## shortcut 
-            if 0 == var2 : return ROOT.RooFit.RooConst (  1 ) ## shortcut
-            var2 = ROOT.RooFit.RooConst ( var2 ) 
-            return self.vars_power ( var1 , var2 , name , title )
-        
-        self.aux_keep.append ( var1 )
-        self.aux_keep.append ( var2 )
-
-        name  = name  if name   else self.roo_name  ( "pow_%s_%s"  % ( var1.name , var2.name ) )
-        title = title if title  else                  "pow(%s,%s)" % ( var1.name , var2.name )
-
-        result = Ostap.MoreRooFit.Power ( var1 , var2 , name . title )
-        self.aux_keep.append ( result  )
-        
-        return result
-
-    # =============================================================================
-    ## construct (on-flight) variable  for \f$ exp(ab) \f$ 
-    #  <code>var1</code> and <code>var2</code>: 
-    #  @code
-    #  var1 = ...
-    #  var2 = ...
-    #  var3 = xxx.vars_exp ( var1 , var2 )
-    #  var4 = xxx.vars_exp ( var1 , -1   )    
-    #  var4 = xxx.vars_exp ( -1   , var2 )    
-    #  @endcode 
-    def vars_exp ( self , var1 , var2 = 1 , name = '' , title = '' ) :
-        """ Construct (on-flight) variable  for \f$ exp(a*b) \f$ 
-        >>> var1 = ...
-        >>> var2 = ...
-        >>> var3 = xxx.vars_exp ( var1 , var2 )
-        >>> var4 = xxx.vars_exp ( var1 , 2.0  )    
-        >>> var4 = xxx.vars_exp ( 2.0  , var2 )    
-        """
-        f1 = isinstance ( var1 , num_types )
-        f2 = isinstance ( var2 , num_types )
-
-        if f1 and f2 :
-            res  = math.exp ( float ( var1 ) * float ( var2 ) )
-            return ROOT.RooFit.RooConst ( res ) 
-        elif f1 :
-            ## shortcut 
-            if 0 == var1 : return ROOT.RooFit.RooConst ( 1 ) ## shortcut
-            var1 = ROOT.RooFit.RooConst ( var1 ) 
-            return self.vars_exp ( var1 , var2 , name , title )
-        elif f2 :
-            ## shortcut 
-            if 0 == var2 : return ROOT.RooFit.RooConst ( 1 ) ## shortcut
-            var2 = ROOT.RooFit.RooConst ( var2 ) 
-            return self.vars_exp ( var1 , var2 , name , title )
-        
-        self.aux_keep.append ( var1 )
-        self.aux_keep.append ( var2 )
-
-        name  = name  if name   else self.roo_name  ( "exp_%s_%s"  % ( var1.name , var2.name ) )
-        title = title if title  else                  "exp(%s*%s)" % ( var1.name , var2.name )
-
-        result = Ostap.MoreRooFit.Exp ( var1 , var2 , name , title )
-        self.aux_keep.append ( result  )
-        
-        return result
-
-    # =============================================================================
-    ## construct (on-flight) variable  for \f$ |ab| \f$ 
-    #  <code>var1</code> and <code>var2</code>: 
-    #  @code
-    #  var1 = ...
-    #  var2 = ...
-    #  var3 = xxx.vars_abs ( var1 , var2 )
-    #  var4 = xxx.vars_abs ( var1 , -1   )    
-    #  var4 = xxx.vars_abs ( -1   , var2 )    
-    #  @endcode 
-    def vars_abs ( self , var1 , var2 = 1 , name = '' , title = '' ) :
-        """ Construct (on-flight) variable  for \f$ |a*b| \f$ 
-        >>> var1 = ...
-        >>> var2 = ...
-        >>> var3 = xxx.vars_abs ( var1 , var2 )
-        >>> var4 = xxx.vars_abs ( var1 , 2.0  )    
-        >>> var4 = xxx.vars_abs ( 2.0  , var2 )    
-        """
-        f1 = isinstance ( var1 , num_types )
-        f2 = isinstance ( var2 , num_types )
-
-        if f1 and f2 :
-            res  = abs ( float ( var1 ) * float ( var2 ) )
-            return ROOT.RooFit.RooConst ( res ) 
-        elif f1 :
-            ## shortcut 
-            if 0 == var1 : return ROOT.RooFit.RooConst ( 0 ) ## shortcut
-            var1 = ROOT.RooFit.RooConst ( var1 ) 
-            return self.vars_abs ( var1 , var2 , name , title )
-        elif f2 :
-            ## shortcut 
-            if 0 == var2 : return ROOT.RooFit.RooConst ( 0 ) ## shortcut
-            var2 = ROOT.RooFit.RooConst ( var2 ) 
-            return self.vars_abs ( var1 , var2 , name , title )
-        
-        self.aux_keep.append ( var1 )
-        self.aux_keep.append ( var2 )
-
-        name  = name  if name   else self.roo_name  ( "abs_%s_%s"  % ( var1.name , var2.name ) )
-        title = title if title  else                  "abs(%s*%s)" % ( var1.name , var2.name )
-
-        result = Ostap.MoreRooFit.Abs ( var1 , var2 , name , title )
-        self.aux_keep.append ( result  )
-        
-        return result
-
-    vars_sum           = vars_add 
-    vars_product       = vars_multiply
-    vars_ratio         = vars_divide
-    vars_difference    = vars_subtract
-    vars_reldifference = vars_asymmetry
-    vars_pow           = vars_power
-    vars_expo          = vars_exp
-
-    # =========================================================================
-    ## helper function to create <code>RooFormulaVar</code>
-    #  @code
-    #  OBJ = ...
-    #  f   = OBJ.vars_formula ( '%s*%s/%s' , [ a , b, c ] , name = 'myvar' )
-    #  @endcode 
-    def vars_formula ( self , formula , vars , name = '' , title = '' ) :
-        """ Helper function to create `RooFormulaVar`
-        >>> OBJ = ...
-        >>> f   = OBJ.vars_formula ( '%s*%s/%s' , [ a , b, c ] , name = 'myvar' )
-        """
-
-        assert vars and len ( vars ) , 'Variables must be specified!'
-
-        vvars = []
-        for v in  vars :
-            if isinstance    ( v , ROOT.RooAbsArg ) :
-                vvars.append ( v )
-            elif isinstance  ( v , string_types   ) :
-                try :
-                    vv = self.parameter ( v )
-                    vvars.append ( vv ) 
-                except :
-                    raise TypeError ( "Unknown parameter name %s" % v)
-            else :
-                raise TypeError( "Unknown parameter type %s/%s" % ( v , type ( v ) ) ) 
-
-        vlst = ROOT.RooArgList()
-        for v in vvars : vlst.add ( v )
-
-        has_at      = '@' in formula
-        has_percent = '%' in formula
-        import re
-        has_index   = re.search ( r'\[( *)(?P<degree>\d*)( *)\]' , formula )
-        has_format1 = re.search ( r'\{( *)(?P<degree>\d*)( *)\}' , formula )
-        has_format2 = re.search ( r'\{( *)(?P<degree>\w*)( *)\}' , formula )
-
-        formula_ = formula 
-        if   has_at      : pass 
-        elif has_index   : pass 
-        elif has_percent :  
-            vnames   = tuple ( [ p.name for p in vlst ] )
-            formula_ = formula % vnames
-        elif has_format1 :            
-            vnames   = tuple ( [ p.name for p in vlst ] )
-            formula_ = formula.format ( *vnames ) 
-        elif has_format2 :
-            kw  = {}
-            for p in vlist : kw [ p.name ] = p.name
-            formula_ = formula.format ( *kw )
-            
-        name  = name  if name  else 'Formula_%s '    % self.name 
-        title = title if title else 'Formula:%s/%s'  % ( formula , self.name )
-        
-        rfv = make_formula ( self.var_name ( name ) , formula_ , vlst )
-        
-        self.aux_keep.append ( vlst )
-        self.aux_keep.append ( rvf  )
-        
-        return rfv 
-
-    # =========================================================================
-    ## make very specific combination of variables:  alpha*var1*(bets+gamma*var2)    
-    #  \f$ r = \alpha v_1 ( \beta + \gamma * v_2 ) \    
-    def vars_combination ( self ,
-                           var1 ,
-                           var2 ,
-                           alpha  = 1   ,
-                           beta   = 1   ,
-                           gamma  = 1   ,
-                           name   = ''  , 
-                           title  = ''  ) :
-        """ Make very specific combination of variables:  alpha*var1*(beta+gamma*var2)    
-        r = alpha * v_1 ( beta + gamma * v_2 ) 
-        """
-        
-        f1 = isinstance ( var1 , num_types )
-        f2 = isinstance ( var2 , num_types )
-
-        assert isinstance ( alpha , num_types ) , "vars_combination: 'alpha' must be numeric types!"
-        assert isinstance ( beta  , num_types ) , "vars_combination: 'beta'  must be numeric types!"
-        assert isinstance ( gamma , num_types ) , "vars_combination: 'gamma' must be numeric types!"
-
-        if   0 == alpha               : return ROOT.RooFit.RooConst ( 0 ) 
-        elif 0 == beta and 0 == gamma : return ROOT.RooFit.RooConst ( 0 ) 
-
-        alpha = float ( alpha )
-        beta  = float ( beta  )
-        gamma = float ( gamma )        
-        
-        if f1 and f2 :
-
-            res  = beta   + gamma * float ( var2 )
-            res *=          alpha * float ( var1 )
-            
-            return ROOT.RooFit.RooConst ( 0 )
-        
-        elif f1 :
-            
-            return self.sum_add      ( float ( var1 ) * alpha * beta        ,
-                                       var2                                 ,
-                                       c2    = alpha * gamma * float ( v1 ) , 
-                                       name  = name                         ,
-                                       title = title                        ) 
-        elif f2 :
-            
-            return self.sum_multiply ( var1 ,
-                                       alpha * ( beta + gamma * float ( v2 ) ) ,
-                                       name  = name  ,
-                                       title = title ) 
-        
-        
-        self.aux_keep.append ( var1 )
-        self.aux_keep.append ( var2 )
-
-        if not name :
-            if   1 == alpha and 1 == beta and +1 == gamma : name = '%s*(1+%s)' % ( var1.name , var2.name )
-            elif 1 == alpha and 1 == beta and -1 == gamma : name = '%s*(1-%s)' % ( var1.name , var2.name )
-            else : name = 'Var_%g*%s*(%s%+g*%s)' % ( alpha , var1.name , beta , gamma , var2.name )
-                
-        if not title : title = name
-            
-        result = Ostap.MoreRooFit.Combination ( var1  , var2  ,
-                                                name  , title ,
-                                                alpha , beta  , gamma )
-        
-        self.aux_keep.append ( result  )
-        
-        return result
-        
                            
-    # =========================================================================
-    ## (var1,var2) <--> (var, asymmetry)
-    # =========================================================================
-
-    # =========================================================================
-    ## Convert pair of variables into 'sum' & 'asymmetry' pair:
-    # - 'sum'       :  sum_scale  * ( var1 + var2  )
-    # - 'asymmetry' :  asym_scale * ( var1 - var2 ) / (var1+ + var2 ) 
-    # @code
-    # var1 = ...
-    # var2 = ...
-    # hsum , asum = self.vars_to_asymmetry ( var1 , var2 ) 
-    # @endcode 
-    def vars_to_asymmetry ( self             ,
-                            var1             ,   ## the first variable 
-                            var2             ,   ## the second variable
-                            asym_scale = 1   ,   ## scale factor asymmetry
-                            sum_scale  = 0.5 ,   ## scale factor for 'sum'
-                            asym_name  = ''  ,   ## name for asymmetry variable
-                            sum_name   = ''  ,   ## name for 'sum' variable                              
-                            asym_title = ''  ,   ## title for asymmetry variable 
-                            sum_title  = ''  ) : ## title for 'sum' variable 
-        """ Convert a pair of variables into 'sum' & 'asymmetry' pair
-        - 'sum'       :  sum_scale  * ( var1 + var2  )
-        - 'asymmetry' :  asym_scale * ( var1 - var2 ) / ( var1+ + var2 ) 
-        >>> var1 = ...
-        >>> var2 = ...
-        >>> hsum , asum = self.vars_to_asymmetry ( var1 , var2 ) 
-        """
-        
-        ## asym_scale * ( var1-var2) / (var1+var2)
-        asym_var = self.vars_asymmetry (
-            var1               , ## first vatiable 
-            var2               , ## second variable 
-            scale = asym_scale , ## scale
-            name  = asym_name  ,
-            title = asym_title ) 
-
-        ## sum_scale * ( var1 + var2 ) 
-        sum_var  = self.vars_add (
-            var1               , ## first variable 
-            var2               , ## second variable
-            c1    = sum_scale  , ## factor c1 
-            c2    = sum_scale  , ## factor c2 
-            name  = sum_name   , ## name 
-            title = sum_title  ) ## title  
-        
-        return sum_var , asym_var
-    
-    # ========================================================================= 
-    ## convert a pair of variables 'half-sum'&'asymmetry' into 'var1', 'var2'
-    #  @code
-    #  halfsum   = ...
-    #  asymmetry = ...
-    #  var1 , var2 = self.vars_from_asymmetry ( halfsum , asymmetry )
-    #  @endcode 
-    def vars_from_asymmetry ( self         ,
-                              hsumvar      , ## half-sum 
-                              asymvar      , ## asymmetry 
-                              v1name  = '' , 
-                              v2name  = '' ,
-                              v1title = '' ,
-                              v2title = '' ) :
-        """ Convert a pair of variables 'half-sum'&'asymmetry' into 'var1', 'var2'
-        >>> halfsum   = ...
-        >>> asymmetry = ...
-        >>> var1 , var2 = self.vars_from_asymmetry ( halfsum , asymmetry )
-        """
-
-        if hsumvar is None :
-            return hsumvar , hsumvar
-        
-        if isinstance ( hsumvar , ROOT.RooAbsArg ) and isinstance ( asymvar , ROOT.RooAbsArg )  :
-            s = hsumvar.name
-            a = asymvar.name
-            if not v1name  : v1name  = '%s_1' % s
-            if not v2name  : v2name  = '%s_2' % s            
-            if not v1title : v1title = '%s_{1} : %s #times (1 + %s_{%s}) ' %  ( s , s , a , s ) 
-            if not v2title : v2title = '%s_{2} : %s #times (1 - %s_{%s}) ' %  ( s , s , a , s ) 
-                 
-        var1 = self.vars_combination ( hsumvar           ,
-                                       asymvar           ,
-                                       alpha   =  1      ,
-                                       beta    =  1      ,
-                                       gamma   = +1      , 
-                                       name    = v1name  ,
-                                       title   = v1title )
-        
-        var2 = self.vars_combination ( hsumvar           ,
-                                       asymvar           ,
-                                       alpha   =  1      ,
-                                       beta    =  1      ,
-                                       gamma   = -1      , 
-                                       name    = v2name  ,
-                                       title   = v2title )
-        return var1 , var2 
-        
-        
     # =========================================================================
     ## Soft/Gaussian constraints 
     # =========================================================================
@@ -3485,78 +3492,114 @@ class SETPARS(object) :
 #  - half-sum       var   = 0.5*(v1+v2) 
 #  - asymmetry      kappa = (v1-v2)/(v1+v2)
 #  - skew-parameter psi   = atanh(kappa) 
-class AsymVars(VarMaker,ConfigReduce) :
-
-    def __init__ ( self , * ,
+class AsymVars(VarMaker,ConfigReducer) :
+    """ Helper class to treat "asymmetry cluster" of variables  :
+    - variable        v1
+    - variable       v2
+    - half-sum       var   = 0.5*(v1+v2) 
+    - asymmetry      kappa = (v1-v2)/(v1+v2)
+    - skew-parameter psi   = atanh(kappa) 
+    """
+    
+    def __init__ ( self , name , * ,
                    var1    = None ,
                    var2    = None ,
                    halfsum = None , 
                    kappa   = None ,
-                   psi     = None ) : 
-        
+                   psi     = None ) :
+
+        with NameDuplicates ( True ) : 
+            ## define the name 
+            self.name = name
+
+        ## 1st valid trivial  case 
+        if isinstance ( var1 , ROOT.RooRealVar ) and var2 is None and all ( v is None for v in ( halfsum , kappa , psi ) ) :
+            
+            self.__var1    = var1
+            self.__var2    = var1
+            self.__halfsum = var1
+            self.__kappa   = ROOT.RooFit.RooConst ( 0 )
+            self.__psi     = ROOT.RooFit.RooConst ( 0 )
+            
+            self.config  = { 'var1' : self.var1 , 'var2' : None }
+            
+        ## 2nd valid trivial  case 
+        elif isinstance ( var2 , ROOT.RooRealVar ) and var1 is None and all ( v is None for v in ( halfsum , kappa , psi ) ) :
+
+            self.__var1    = var2
+            self.__var2    = var2
+            self.__halfsum = var2
+            self.__kappa   = ROOT.RooFit.RooConst ( 0 )
+            self.__psi     = ROOT.RooFit.RooConst ( 0 )
+            
+            self.config  = { 'var1' : self.var1 , 'var2' : None }
+                    
         ## valid cases :
         ## (1) two variables are specified, the rest is None  
-        if   all ( not v is None for v in ( var1 , var2 ) ) and all ( v is None for v in ( halfsum , kappa , psi ) ) :
+        elif all ( not v is None for v in ( var1 , var2 ) ) and all ( v is None for v in ( halfsum , kappa , psi ) ) :
             
-            self.__var1  = self.make_var ( var1 ,  self.roo_name ( prefix = 'var1' ) , 'the first  variable' , False  , var1 )
-            self.__var2  = self.make_var ( var2 ,  self.roo_name ( prefix = 'var2' ) , 'the second variable' , False  , var2 )
+            self.__var1  = self.make_var ( var1 ,  self.roo_name ( prefix = '%s1' % self.name ) , 'the first  variable' , False  , var1 )
+            self.__var2  = self.make_var ( var2 ,  self.roo_name ( prefix = '%s2' % self.name ) , 'the second variable' , False  , var2 )
+            
             self.config  = { 'var1' : self.var1 , 'var2' : self.var2 }
 
-            names = self.var1.name, self.var2.name 
+            names = self.name , self.var1.name, self.var2.name 
             ## convert variables into halfsum & asymmetry 
             self.__halfsum , self.__kappa = self.vars_to_asymmetry (
                 self.var1        ,
                 self.var2        ,
                 sum_scale  = 0.5 , 
-                asym_name  = self.roo_name ( prefix = 'kappa_%s_%s'   % names ) , 
-                sum_name   = self.roo_name ( prefix = 'halfsum_%s_%s' % names ) , 
-                asym_title = "asymmetry: %s & %s"                     % names   ,                
-                sum_title  = "0.5 * ( %s + %s )"                      % names   )
+                asym_name  = self.roo_name ( prefix = 'kappa_%s_%s_%s'   % names )    , 
+                sum_name   = self.roo_name ( prefix = 'halfsum_%s_%s_%s' % names )    , 
+                asym_title = "asymmetry %s : %s & %s"                    % names      ,                
+                sum_title  = "0.5 * ( %s + %s )"                         % names [1:] )
 
             ## finally psi-variable 
-            self.__psi = Ostap.Math.ATanh ( self.roo_name  ( prefix = 'psi_%s_%s' % names ) , 
-                                            "skew: %s & %s"                       % names   ,             
-                                            self.kappa , 1.0 )
+            self.__psi = Ostap.MoreRooFit.ATanh ( self.roo_name  ( prefix = 'psi_%s_%s' % names ) , 
+                                                  "skew: %s & %s"                       % names   ,             
+                                                  self.kappa , 1.0 )
             
         # (2) half-sum and asymmetry :
         elif all ( not v is None for v in ( halfsum, kappa ) ) and all ( v is None for v in ( var1 , var2 , psi   ) ) :
             
-            self.__halfsum = self.make_var ( halfsum  , self.roo_name ( prefix = 'halfsum' ) , 'halfsum of variables'   , False , halfsum )
-            self.__kappa   = self.make_var ( kappa    , self.roo_name ( prefix = 'kappa'   ) , 'asymmetry of variables' , False , kappa   )
+            self.__halfsum = self.make_var ( halfsum  , self.roo_name ( prefix = '%s'       % self.name ) , 'halfsum of variables'   , False , halfsum )
+            self.__kappa   = self.make_var ( kappa    , self.roo_name ( prefix = 'kappa_%s' % self.name ) , 'asymmetry of variables' , False , kappa   )
+            
             self.config    = { 'var' : self.halfsum , 'kappa' : self.kappa }
 
-            names = self.halfsum.name , self.kappa.name
+            names = self.name , self.halfsum.name , self.kappa.name
             ## get the variables 
             self.__var1 , self.__var2 = self.vars_from_asymmetry (
                 self.halfsum ,
                 self.kappa   ,
-                v1name = self.root_name ( prefix = 'var1_%s_%s' % names ) , 
-                v2name = self.root_name ( prefix = 'var2_%s_%s' % names ) )
+                v1name = self.roo_name ( prefix = '%s1_%s_%s' % names ) , 
+                v2name = self.roo_name ( prefix = '%s2_%s_%s' % names ) )
               
             ## finally psi-variable 
-            self.__psi = Ostap.Math.ATanh ( self.roo_name  ( prefix = 'psi_%s_%s' % names ) ,
-                                            "skew: %s & %s" % names ,             
-                                            self.kappa , 1.0 )
+            self.__psi = Ostap.MoreRooFit.ATanh ( self.roo_name  ( prefix = 'psi_%s_%s_%s' % names ) ,
+                                                  "skew %s : %s & %s"                      % names ,             
+                                                  self.kappa , 1.0 )
         # (3) half-sum and skew 
         elif all ( not v is None for v in ( halsfum , psi    ) ) and all ( v is None for v in ( var1 , var2 , kappa ) ) : 
             
-            self.__halfsum = self.make_var ( halfsum  , self.roo_name ( prefix = 'halfsum' ) , 'halfsum of variables'  , False , halfsum )
-            self.__psi     = self.make_var ( psi      , self.roo_name ( prefix = 'psi'     ) , 'skew of variables'     , False , psi     )
+            self.__halfsum = self.make_var ( halfsum  , self.roo_name ( prefix = '%s'     % self.name ) , 'halfsum of variables'  , False , halfsum )
+            self.__psi     = self.make_var ( psi      , self.roo_name ( prefix = 'psi_%s' % self.name ) , 'skew of variables'     , False , psi     )
+            
             self.config    = { 'var' : self.halfsum , 'kappa' : self.kappa }
             
-            names = self.halfsum.name , self.psi.name
+            names = self.name , self.halfsum.name , self.psi.name
             
             ## kappa psi-variable 
-            self.__kappa   = Ostap.Math.Tanh ( self.roo_name  ( prefix = 'kappa_%s_%s' % names ) ,
-                                               "asymmetry: %s & %s"                    % names   ,             
-                                               self.psi , 1.0 )
+            self.__kappa   = Ostap.MoreRooFit.Tanh ( self.roo_name  ( prefix = 'kappa_%s_%s_%s' % names ) ,
+                                                     "asymmetry %s: %s & %s"                    % names   ,             
+                                                     self.psi , 1.0 )
 
             ## get the variables 
             self.__var1 , self.__var2 = self.vars_from_asymmetry (
                 self.halfsum ,
                 self.kappa   ,
-                v1name = self.root_name ( prefix = 'var1_%s_%s' % names ) , 
-                v2name = self.root_name ( prefix = 'var2_%s_%s' % names ) )
+                v1name = self.roo_name ( prefix = '%s1_%s_%s' % names ) , 
+                v2name = self.roo_name ( prefix = '%s2_%s_%s' % names ) )
             
         else :
             
@@ -3581,9 +3624,9 @@ class AsymVars(VarMaker,ConfigReduce) :
     @property
     def halfsum( self ) :
         """`halsfum` : the half-sum of `var1` and `var2`"""
-        return self.__halsfum
+        return self.__halfsum
     @halfsum.setter
-    def halsfum( self , value ) :
+    def halfsum( self , value ) :
         self.set_value ( self.__halfsum , value ) 
     
     @property
