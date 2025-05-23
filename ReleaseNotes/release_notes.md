@@ -2,6 +2,8 @@
 
   1. more platforms to test via GitHub Actions (added gcc15) 
   1. more coherent tretment of status-codes in HistoProject 
+  1. add few more `MoreRooFit` fucttions
+  1. add `AsymVars` helper structure in `fthelpers.py`
   
 ## Backward incompatible
 

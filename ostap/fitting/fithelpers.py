@@ -25,9 +25,9 @@ __all__     = (
     "H2D_dset"          , ## 2D-histogram to RooDataHist converter 
     "H3D_dset"          , ## 3D-histogram to RooDataHist converter
     #
-    'Phases'            , ##  helper class for Ostap polynomial/PDFs
-    'ParamsPoly'        , ##  helper class for RooFit polynomials
-    'ShiftScalePoly'    , ##  helper class for RooFit polynomials
+    'Phases'            , ## helper class for Ostap polynomial/PDFs
+    'ParamsPoly'        , ## helper class for RooFit polynomials
+    'ShiftScalePoly'    , ## helper class for RooFit polynomials
     #
     "NameDuplicates"    , ## allow/disallow name duplicates
     'SETPARS'           , ## context manager to keep/preserve parameters 
@@ -47,6 +47,7 @@ from   ostap.fitting.roocmdarg import check_arg
 from   ostap.fitting.variables import SETVAR, make_formula
 from   ostap.utils.utils       import make_iterable
 from   ostap.utils.basic       import typename , items_loop
+from   ostap.logger.symbols    import times 
 import ROOT, sys, random, math
 # =============================================================================
 from   ostap.logger.logger   import getLogger
@@ -577,6 +578,49 @@ class VarMaker (object) :
         return name
 
     # =========================================================================
+    ## set value to a given value with the optional check
+    #  @code
+    #  pdf = ...
+    #  pdf.set_value ( my_var1 , 10 )
+    #  pdf.set_value ( my_var2 , 10 , lambda a,b : b>0 ) 
+    #  @endcode 
+    @staticmethod 
+    def set_value ( var , value , ok = lambda a , b : True ) :
+        """ Set value to a given value with the optional check
+        pdf = ...
+        pdf.set_value ( my_var1 , 10 )
+        pdf.set_value ( my_var2 , 10 , lambda a,b : b>0 ) 
+        """
+
+        ## must be roofit variable! 
+        assert isinstance ( var , ROOT.RooAbsRealLValue ) , \
+               "set_value: invalid type of 'var' %s" % type ( var )
+        
+        if not hasattr ( var ,  'setVal' ) :
+            raise ValueError ( "No value can be set for %s/%s" % ( var , typename ( var ) ) )  
+
+        ## convert to float 
+        value = float ( value )
+
+        ## check for the range, if range is defined 
+        minmax = var.minmax ()
+        if minmax :
+            mn , mx = minmax
+            if not ( mn <= value <= mx or isequal ( mn , value ) or isequal ( mx , value ) ) :
+                raise ValueError ( "set_value: value %g is out of [%s,%s] region for %s" % ( value , mn , mx , var.name ) ) 
+            if isequal ( value , mn ) and value <= mn : value = mn
+            if isequal ( value , mx ) and value >= mx : value = mx 
+            
+        ## check for external conditions, if specified  
+        if not ok ( var , value ) :
+            raise ValueError ( "Value %g is not OK for " % ( value , var.name ) )
+
+        ## finally set the value 
+        var.setVal ( value )
+
+        return isequal ( value , var.getVal () ) 
+
+    # =========================================================================
     ## delete the object
     #  - remove the registered names in storages
     #  - clear the local storage of names 
@@ -670,9 +714,8 @@ class FitHelper(VarMaker) :
     """ Helper base class for fit-rrleated objects
     - storage of newly created RooFit objects
     - logging
-    - a lot of helper methdos for fitting 
+    - a lot of helper methods for fitting 
     """
-            
     # =========================================================================
     ## technical function to parse arguments for <code>fitTo</code> and 
     #  <code>nll</code>  methods
@@ -1048,49 +1091,6 @@ class FitHelper(VarMaker) :
 
         self.error ('parse_constraint: Invalid specification: %s/%s' % ( arg , type ( arg) ) )
         return None 
-
-    # =========================================================================
-    ## set value to a given value with the optional check
-    #  @code
-    #  pdf = ...
-    #  pdf.set_value ( my_var1 , 10 )
-    #  pdf.set_value ( my_var2 , 10 , lambda a,b : b>0 ) 
-    #  @endcode 
-    @staticmethod 
-    def set_value ( var , value , ok = lambda a , b : True ) :
-        """ Set value to a given value with the optional check
-        pdf = ...
-        pdf.set_value ( my_var1 , 10 )
-        pdf.set_value ( my_var2 , 10 , lambda a,b : b>0 ) 
-        """
-
-        ## must be roofit variable! 
-        assert isinstance ( var , ROOT.RooAbsRealLValue ) , \
-               "set_value: invalid type of 'var' %s" % type ( var )
-        
-        if not hasattr ( var ,  'setVal' ) :
-            raise ValueError ( "No value can be set for %s/%s" % ( var , typename ( var ) ) )  
-
-        ## convert to float 
-        value = float ( value )
-
-        ## check for the range, if range is defined 
-        minmax = var.minmax ()
-        if minmax :
-            mn , mx = minmax
-            if not ( mn <= value <= mx or isequal ( mn , value ) or isequal ( mx , value ) ) :
-                raise ValueError ( "set_value: value %g is outside of the [%s,%s] region for %s" % ( value , mn , mx , var.name ) ) 
-            if isequal ( value , mn ) and value <= mn : value = mn
-            if isequal ( value , mx ) and value >= mx : value = mx 
-            
-        ## check for external conditions, if specified  
-        if not ok ( var , value ) :
-            raise ValueError ( "Value %g is not OK for " % ( value , var.name ) )
-
-        ## finally set the value 
-        var.setVal ( value )
-
-        return isequal ( value , var.getVal () ) 
 
     # =========================================================================
     ## gettter for certain fit components from the provided list 
@@ -1662,8 +1662,8 @@ class FitHelper(VarMaker) :
         f2 = isinstance ( var2 , num_types )
 
         assert isinstance ( alpha , num_types ) , "vars_combination: 'alpha' must be numeric types!"
-        assert isinstance ( beta  , num_types ) , "vars_combination: 'alpha' must be numeric types!"
-        assert isinstance ( gamma , num_types ) , "vars_combination: 'alpha' must be numeric types!"
+        assert isinstance ( beta  , num_types ) , "vars_combination: 'beta'  must be numeric types!"
+        assert isinstance ( gamma , num_types ) , "vars_combination: 'gamma' must be numeric types!"
 
         if   0 == alpha               : return ROOT.RooFit.RooConst ( 0 ) 
         elif 0 == beta and 0 == gamma : return ROOT.RooFit.RooConst ( 0 ) 
@@ -1698,15 +1698,12 @@ class FitHelper(VarMaker) :
         self.aux_keep.append ( var2 )
 
         if not name :
-            if   1 == alpha and 1 == beta and +1 == gamma :
-                name = '%s*(1+%s)' % ( var1.name , var2.name )
-            elif 1 == alpha and 1 == beta and -1 == gamma :
-                name = '%s*(1-%s)' % ( var1.name , var2.name )
-            else :
-                name = 'Var_%g*%s*(%s%+g*%s)' % ( alpha , var1.name , beta , gamma , var2.name )
+            if   1 == alpha and 1 == beta and +1 == gamma : name = '%s*(1+%s)' % ( var1.name , var2.name )
+            elif 1 == alpha and 1 == beta and -1 == gamma : name = '%s*(1-%s)' % ( var1.name , var2.name )
+            else : name = 'Var_%g*%s*(%s%+g*%s)' % ( alpha , var1.name , beta , gamma , var2.name )
                 
         if not title : title = name
-                    
+            
         result = Ostap.MoreRooFit.Combination ( var1  , var2  ,
                                                 name  , title ,
                                                 alpha , beta  , gamma )
@@ -1746,7 +1743,7 @@ class FitHelper(VarMaker) :
         >>> hsum , asum = self.vars_to_asymmetry ( var1 , var2 ) 
         """
         
-        ## asym_scale * (var1-var2)/(var1+var2)
+        ## asym_scale * ( var1-var2) / (var1+var2)
         asym_var = self.vars_asymmetry (
             var1               , ## first vatiable 
             var2               , ## second variable 
@@ -1791,10 +1788,10 @@ class FitHelper(VarMaker) :
         if isinstance ( hsumvar , ROOT.RooAbsArg ) and isinstance ( asymvar , ROOT.RooAbsArg )  :
             s = hsumvar.name
             a = asymvar.name
-            if not v1name  : v1name  = '%sL' % s
-            if not v2name  : v2name  = '%sR' % s            
-            if not v1title : v1title = '%s_{L} : %s #times (1 + %s_{%s}) ' %  ( s , s , a , s ) 
-            if not v2title : v2title = '%s_{R} : %s #times (1 - %s_{%s}) ' %  ( s , s , a , s ) 
+            if not v1name  : v1name  = '%s_1' % s
+            if not v2name  : v2name  = '%s_2' % s            
+            if not v1title : v1title = '%s_{1} : %s #times (1 + %s_{%s}) ' %  ( s , s , a , s ) 
+            if not v2title : v2title = '%s_{2} : %s #times (1 - %s_{%s}) ' %  ( s , s , a , s ) 
                  
         var1 = self.vars_combination ( hsumvar           ,
                                        asymvar           ,
@@ -1855,7 +1852,7 @@ class FitHelper(VarMaker) :
             title = title if title else 'Gaussian Constraint[%s,%s+/-%s]' % ( var_name , value.name , error.name )
         elif isinstance ( value , num_types       ) and isinstance ( error , num_types       ) :
             sv , expo = VE ( value , error * error ).pretty_print ()
-            sv = sv if not expo else ( '%sx10^%+d' % expo )
+            sv = sv if not expo else ( '%s%s10^%+d' % ( sv , times , expo ) )
             title = title if title else 'Gaussian Constraint[%s,%s] '     % ( var_name , sv )
         elif isinstance ( value , ROOT.RooAbsReal ) :
             title = title if title else 'Gaussian Constraint[%s,%s+/-%s]' % ( var_name , value.name , error )
@@ -3161,7 +3158,7 @@ class Phases(object) :
     #  - index      < 0 : release all pamametrs
     #  - N < index      : no actions 
     def release_par ( self , index = -1 ) :
-        """Release parameter
+        """ Release parameter
         - 0 <= index < N : release  parameter 
         - index      < 0 : release all pamametrs
         - N < index      : no actions 
@@ -3174,7 +3171,7 @@ class Phases(object) :
 
     ## set all phis to be 0
     def reset_phis ( self ) :
-        """Set all phases to be zero
+        """ Set all phases to be zero
         >>> pdf = ...
         >>> pdf.reset_phis() 
         """
@@ -3182,7 +3179,7 @@ class Phases(object) :
         
     @property
     def phis ( self ) :
-        """The list/tuple of 'phases', used to parameterize various polynomial-like shapes
+        """ The list/tuple of 'phases', used to parameterize various polynomial-like shapes
         >>> pdf = ...
         >>> for phi in pdf.phis :
         ...    print phi       ## get phase  
@@ -3346,7 +3343,7 @@ class Fractions(object) :
                   ( '%04d' if nf < 10000 else '%d' ) ) ) )
         fr_name = make_name ( self.prefix , name_format , self.suffix )
 
-        ## make list of fractions 
+        ## make list of fractions [
         self.__fractions = tuple ( self.make_fractions  ( len ( self.pdfs )           ,
                                                           name       = fr_name        , 
                                                           recursive  = self.recursive ,
@@ -3480,7 +3477,131 @@ class SETPARS(object) :
         """'params': dictionary of parameters"""
         return self.__params
 
+# =============================================================================
+## @class AsymVars
+#  helper class to treat "asymmetry cluster" of variables  :
+#  - variable v1
+#  - variable v2
+#  - half-sum       var   = 0.5*(v1+v2) 
+#  - asymmetry      kappa = (v1-v2)/(v1+v2)
+#  - skew-parameter psi   = atanh(kappa) 
+class AsymVars(VarMaker,ConfigReduce) :
 
+    def __init__ ( self , * ,
+                   var1    = None ,
+                   var2    = None ,
+                   halfsum = None , 
+                   kappa   = None ,
+                   psi     = None ) : 
+        
+        ## valid cases :
+        ## (1) two variables are specified, the rest is None  
+        if   all ( not v is None for v in ( var1 , var2 ) ) and all ( v is None for v in ( halfsum , kappa , psi ) ) :
+            
+            self.__var1  = self.make_var ( var1 ,  self.roo_name ( prefix = 'var1' ) , 'the first  variable' , False  , var1 )
+            self.__var2  = self.make_var ( var2 ,  self.roo_name ( prefix = 'var2' ) , 'the second variable' , False  , var2 )
+            self.config  = { 'var1' : self.var1 , 'var2' : self.var2 }
+
+            names = self.var1.name, self.var2.name 
+            ## convert variables into halfsum & asymmetry 
+            self.__halfsum , self.__kappa = self.vars_to_asymmetry (
+                self.var1        ,
+                self.var2        ,
+                sum_scale  = 0.5 , 
+                asym_name  = self.roo_name ( prefix = 'kappa_%s_%s'   % names ) , 
+                sum_name   = self.roo_name ( prefix = 'halfsum_%s_%s' % names ) , 
+                asym_title = "asymmetry: %s & %s"                     % names   ,                
+                sum_title  = "0.5 * ( %s + %s )"                      % names   )
+
+            ## finally psi-variable 
+            self.__psi = Ostap.Math.ATanh ( self.roo_name  ( prefix = 'psi_%s_%s' % names ) , 
+                                            "skew: %s & %s"                       % names   ,             
+                                            self.kappa , 1.0 )
+            
+        # (2) half-sum and asymmetry :
+        elif all ( not v is None for v in ( halfsum, kappa ) ) and all ( v is None for v in ( var1 , var2 , psi   ) ) :
+            
+            self.__halfsum = self.make_var ( halfsum  , self.roo_name ( prefix = 'halfsum' ) , 'halfsum of variables'   , False , halfsum )
+            self.__kappa   = self.make_var ( kappa    , self.roo_name ( prefix = 'kappa'   ) , 'asymmetry of variables' , False , kappa   )
+            self.config    = { 'var' : self.halfsum , 'kappa' : self.kappa }
+
+            names = self.halfsum.name , self.kappa.name
+            ## get the variables 
+            self.__var1 , self.__var2 = self.vars_from_asymmetry (
+                self.halfsum ,
+                self.kappa   ,
+                v1name = self.root_name ( prefix = 'var1_%s_%s' % names ) , 
+                v2name = self.root_name ( prefix = 'var2_%s_%s' % names ) )
+              
+            ## finally psi-variable 
+            self.__psi = Ostap.Math.ATanh ( self.roo_name  ( prefix = 'psi_%s_%s' % names ) ,
+                                            "skew: %s & %s" % names ,             
+                                            self.kappa , 1.0 )
+        # (3) half-sum and skew 
+        elif all ( not v is None for v in ( halsfum , psi    ) ) and all ( v is None for v in ( var1 , var2 , kappa ) ) : 
+            
+            self.__halfsum = self.make_var ( halfsum  , self.roo_name ( prefix = 'halfsum' ) , 'halfsum of variables'  , False , halfsum )
+            self.__psi     = self.make_var ( psi      , self.roo_name ( prefix = 'psi'     ) , 'skew of variables'     , False , psi     )
+            self.config    = { 'var' : self.halfsum , 'kappa' : self.kappa }
+            
+            names = self.halfsum.name , self.psi.name
+            
+            ## kappa psi-variable 
+            self.__kappa   = Ostap.Math.Tanh ( self.roo_name  ( prefix = 'kappa_%s_%s' % names ) ,
+                                               "asymmetry: %s & %s"                    % names   ,             
+                                               self.psi , 1.0 )
+
+            ## get the variables 
+            self.__var1 , self.__var2 = self.vars_from_asymmetry (
+                self.halfsum ,
+                self.kappa   ,
+                v1name = self.root_name ( prefix = 'var1_%s_%s' % names ) , 
+                v2name = self.root_name ( prefix = 'var2_%s_%s' % names ) )
+            
+        else :
+            
+            raise TypeError ( "Invalid specification! %s " % [ var1 , var2, var, kappa , psi ]  ) 
+
+    @property
+    def var1 ( self ) :
+        """`var1` : the first variable"""
+        return self.__var1
+    @var1.setter
+    def var1 ( self , value ) :
+        self.set_value ( self.__var1 , value ) 
+        
+    @property
+    def var2 ( self ) :
+        """`var2` : the second variable"""
+        return self.__var2
+    @var2.setter
+    def var2 ( self , value ) :
+        self.set_value ( self.__var2 , value ) 
+    
+    @property
+    def halfsum( self ) :
+        """`halsfum` : the half-sum of `var1` and `var2`"""
+        return self.__halsfum
+    @halfsum.setter
+    def halsfum( self , value ) :
+        self.set_value ( self.__halfsum , value ) 
+    
+    @property
+    def kappa ( self ) :
+        """`kappa` : the asymmetry of `var1` and `var2`:  (v1-v2)/(v1+v2) or tanh(psi)  """
+        return self.__kappa
+    @kappa.setter
+    def kappa ( self , value ) :
+        self.set_value ( self.__kappa , value ) 
+
+    @property
+    def psi ( self ) :
+        """`psi` : the skew-parameter  of `var1` and `var2`: atan(kappa) or atanh((v1+v2)/(v1_v2))"""
+        return self.__psi
+    @psi.setter
+    def psi  ( self , value ) :
+        self.set_value ( self.__psi , value ) 
+    
 # =============================================================================
 if '__main__' == __name__ :
     

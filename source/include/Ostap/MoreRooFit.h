@@ -2273,7 +2273,362 @@ namespace Ostap
       Double_t evaluate () const override ;
       // ======================================================================
     }; //
-
+    
+    // ========================================================================
+    /** @class ASin
+     *  Evaluate \f$ \asin ab  \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class ASin final : public TwoVars 
+    {
+      // ======================================================================
+      ClassDefOverride(Ostap::MoreRooFit::ASin , 2 ) ;  // power function
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      ASin 
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     , 
+	RooAbsReal&        b     ) ;
+      /// constructor with two variables
+      ASin 
+      ( RooAbsReal&         a           , 
+	RooAbsReal&         b           ,
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : ASin ( name , title , a , b )
+      {}
+      /// constructor with two variables
+      ASin 
+      ( RooAbsReal&         a           , 
+	const double        b           ,
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : ASin ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables
+      ASin 
+      ( const double        a           ,
+	RooAbsReal&         b           , 
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : ASin ( name , title , RooFit::RooConst ( a ) , b )
+      {}
+      /// constructor with one variable
+      ASin 
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     ,
+	const double       b = 1 )
+	: ASin ( name , title , a , RooFit::RooConst ( b ) ) 
+      {}
+      // ======================================================================
+      /// fake defautl constructor (needed for serisalization) 
+      ASin () = default ;
+      // ======================================================================
+      // copy 
+      ASin
+      ( const ASin& right       , 
+	const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      ASin* clone ( const char* newname ) const override 
+      { return new ASin ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class ACos
+     *  Evaluate \f$ \acos ab  \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class ACos final : public TwoVars 
+    {
+      // ======================================================================
+      ClassDefOverride(Ostap::MoreRooFit::ACos , 2 ) ;  // power function
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      ACos
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     , 
+	RooAbsReal&        b     ) ;
+      /// constructor with two variables
+      ACos 
+      ( RooAbsReal&         a           , 
+	RooAbsReal&         b           ,
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : ACos ( name , title , a , b )
+      {}
+      /// constructor with two variables
+      ACos 
+      ( RooAbsReal&         a           , 
+	const double        b           ,
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : ACos ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables
+      ACos 
+      ( const double        a           ,
+	RooAbsReal&         b           , 
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : ACos ( name , title , RooFit::RooConst ( a ) , b )
+      {}
+      /// constructor with one variable
+      ACos 
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     ,
+	const double       b = 1 )
+	: ACos ( name , title , a , RooFit::RooConst ( b ) ) 
+      {}
+      // ======================================================================
+      /// fake defautl constructor (needed for serisalization) 
+      ACos () = default ;
+      // ======================================================================
+      // copy 
+      ACos
+      ( const ACos& right       , 
+	const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      ACos* clone ( const char* newname ) const override 
+      { return new ACos ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class ASinh
+     *  Evaluate \f$ \asinh ab  \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class ASinh final : public TwoVars 
+    {
+      // ======================================================================
+      ClassDefOverride(Ostap::MoreRooFit::ASinh , 2 ) ;  // power function
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      ASinh 
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     , 
+	RooAbsReal&        b     ) ;
+      /// constructor with two variables
+      ASinh 
+      ( RooAbsReal&         a           , 
+	RooAbsReal&         b           ,
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : ASinh ( name , title , a , b )
+      {}
+      /// constructor with two variables
+      ASinh 
+      ( RooAbsReal&         a           , 
+	const double        b           ,
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : ASinh ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables
+      ASinh 
+      ( const double        a           ,
+	RooAbsReal&         b           , 
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : ASinh ( name , title , RooFit::RooConst ( a ) , b )
+      {}
+      /// constructor with one variable
+      ASinh 
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     ,
+	const double       b = 1 )
+	: ASinh ( name , title , a , RooFit::RooConst ( b ) ) 
+      {}
+      // ======================================================================
+      /// fake defautl constructor (needed for serisalization) 
+      ASinh () = default ;
+      // ======================================================================
+      // copy 
+      ASinh
+      ( const ASinh& right       , 
+	const char*  newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      ASinh* clone ( const char* newname ) const override 
+      { return new ASinh ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class ACosh
+     *  Evaluate \f$ \acosh ab  \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class ACosh final : public TwoVars 
+    {
+      // ======================================================================
+      ClassDefOverride(Ostap::MoreRooFit::ACosh , 2 ) ;  // power function
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      ACosh
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     , 
+	RooAbsReal&        b     ) ;
+      /// constructor with two variables
+      ACosh 
+      ( RooAbsReal&         a           , 
+	RooAbsReal&         b           ,
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : ACosh ( name , title , a , b )
+      {}
+      /// constructor with two variables
+      ACosh 
+      ( RooAbsReal&         a           , 
+	const double        b           ,
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : ACosh ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables
+      ACosh 
+      ( const double        a           ,
+	RooAbsReal&         b           , 
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : ACosh ( name , title , RooFit::RooConst ( a ) , b )
+      {}
+      /// constructor with one variable
+      ACosh 
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     ,
+	const double       b = 1 )
+	: ACosh ( name , title , a , RooFit::RooConst ( b ) ) 
+      {}
+      // ======================================================================
+      /// fake defautl constructor (needed for serisalization) 
+      ACosh () = default ;
+      // ======================================================================
+      // copy 
+      ACosh
+      ( const ACosh& right       , 
+	const char*  newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      ACosh* clone ( const char* newname ) const override 
+      { return new ACosh ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class ATanh
+     *  Evaluate \f$ \atanh ab  \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class ATanh final : public TwoVars 
+    {
+      // ======================================================================
+      ClassDefOverride(Ostap::MoreRooFit::ATanh , 2 ) ;  // power function
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      ATanh
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     , 
+	RooAbsReal&        b     ) ;
+      /// constructor with two variables
+      ATanh 
+      ( RooAbsReal&         a           , 
+	RooAbsReal&         b           ,
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : ATanh ( name , title , a , b )
+      {}
+      /// constructor with two variables
+      ATanh 
+      ( RooAbsReal&         a           , 
+	const double        b           ,
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : ATanh ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables
+      ATanh 
+      ( const double        a           ,
+	RooAbsReal&         b           , 
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : ATanh ( name , title , RooFit::RooConst ( a ) , b )
+      {}
+      /// constructor with one variable
+      ATanh 
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     ,
+	const double       b = 1 )
+	: ATanh ( name , title , a , RooFit::RooConst ( b ) ) 
+      {}
+      // ======================================================================
+      /// fake defautl constructor (needed for serisalization) 
+      ATanh () = default ;
+      // ======================================================================
+      // copy 
+      ATanh
+      ( const ATanh& right       , 
+	const char*  newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      ATanh* clone ( const char* newname ) const override 
+      { return new ATanh ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
+    }; //
     // ========================================================================
     /** @class Sech
      *  Evaluate \f$ \sech ab = \frac{1}{ \cosh a b }   \f$

@@ -74,9 +74,10 @@ __all__     = (
 
     )
 # =============================================================================
-from   ostap.core.core        import Ostap
-from   ostap.fitting.pdfbasic import Generic1D_pdf 
-from   ostap.fitting.fit1d    import RESOLUTION, CheckMean 
+from   ostap.core.core          import Ostap
+from   ostap.fitting.pdfbasic   import Generic1D_pdf 
+from   ostap.fitting.fithelpers import AsymVars 
+from   ostap.fitting.fit1d      import RESOLUTION, CheckMean 
 import ROOT, math 
 # =============================================================================    
 from   ostap.logger.logger import getLogger

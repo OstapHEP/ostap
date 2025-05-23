@@ -72,6 +72,13 @@ ClassImp(Ostap::MoreRooFit::Tan           )
 ClassImp(Ostap::MoreRooFit::Sinh          )
 ClassImp(Ostap::MoreRooFit::Cosh          )
 ClassImp(Ostap::MoreRooFit::Tanh          )
+//
+ClassImp(Ostap::MoreRooFit::ASin          )
+ClassImp(Ostap::MoreRooFit::ACos          )
+ClassImp(Ostap::MoreRooFit::ASinh         )
+ClassImp(Ostap::MoreRooFit::ACosh         )
+ClassImp(Ostap::MoreRooFit::ATanh         )
+//
 ClassImp(Ostap::MoreRooFit::Sech          )
 ClassImp(Ostap::MoreRooFit::Atan2         )
 ClassImp(Ostap::MoreRooFit::Sigmoid       )
@@ -947,6 +954,65 @@ Ostap::MoreRooFit::Tanh::Tanh
   : TwoVars ( name_   ( name  , "tanh" , a , b ) ,
               title1_ ( title , "tanh" , a , b ) , a , b )
 {}
+
+
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::ASin::ASin
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "asin" , a , b ) ,
+              title1_ ( title , "asin" , a , b ) , a , b )
+{}
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::ACos::ACos
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "acos" , a , b ) ,
+              title1_ ( title , "acos" , a , b ) , a , b )
+{}
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::ASinh::ASinh
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "asinh" , a , b ) ,
+              title1_ ( title , "asinh" , a , b ) , a , b )
+{}
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::ACosh::ACosh
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "acosh" , a , b ) ,
+              title1_ ( title , "acosh" , a , b ) , a , b )
+{}
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::ATanh::ATanh
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "atanh" , a , b ) ,
+              title1_ ( title , "atanh" , a , b ) , a , b )
+{}
+// ============================================================================
+
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
@@ -1175,6 +1241,21 @@ Double_t Ostap::MoreRooFit::Sin::evaluate () const
 // ============================================================================
 Double_t Ostap::MoreRooFit::Cos::evaluate () const 
 { const double a = m_x ; const double b = m_y ; return std::cos    ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::ASin::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::asin   ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::ACos::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::acos   ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::ASinh::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::asinh  ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::ACosh::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::acosh  ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::ATanh::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::atanh  ( a * b ) ; }
 // ============================================================================
 Double_t Ostap::MoreRooFit::Tan::evaluate () const 
 { const double a = m_x ; const double b = m_y ; return std::tan    ( a * b ) ; }
