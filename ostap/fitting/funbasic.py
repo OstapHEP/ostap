@@ -787,9 +787,9 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         ## return self.plotOn ( what , frame , *new_options ) 
 
     # ========================================================================
-    ## print at table 
-    def table ( self , dataset = None , title  = '' , style = '' ) :
-        """ Print function/PDF as Table 
+    ## make table rows
+    def tab_rows ( self , dataset = None , title  = '' , style = '' ) :
+        """ Make table rows function/PDF as Table 
         """
         if isinstance ( dataset , ROOT.RooAbsData ) and valid_pointer ( dataset ) :
             params  = self.fun.getParameters  ( dataset )
@@ -852,22 +852,37 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
                 else    : row = '   ' + n , v
                 rows.append ( row )
 
-        bad  = lambda n : ( n.startswith ( '__' ) and n.endswith( '__' ) ) or ( n.startswith ( '_' ) and '__' in n )        
+        bad  = lambda n : ( n.startswith ( '__' ) and n.endswith( '__' ) ) or \
+            ( n.startswith ( '_' ) and '__' in n )        
         good = lambda n : not bad ( n ) 
 
         row = 'Attributes' ,', '.join ( d for d in dir ( self ) if good ( d ) ) 
         rows.append ( row )
 
+        return rows
+
+
+    # ========================================================================
+    ## print at table 
+    def table ( self , dataset = None , title  = '' , style = '' ) :
+        """ Print function/PDF as Table 
+        """
+
+        ## prepare the table 
+        rows  = self.tab_rows ( dataset )
+
+        ## print it!
+        
         title = title if title else 'FUN/PDF:%s' % self.name
         import ostap.logger.table as T
         rows = T.remove_empty_columns ( rows ) 
         return T.table ( rows , title = title , alignment = 'lwc' , style = style )
-
+    
     ## ## conversion to string 
     ## def __str__ (  self ) :
     ##   return '%s(%s,xvar=%s)' % ( typename ( self ) , self.name , self.xvar.name )
     __str__  = table 
-    __repr__ =  table  
+    __repr__ = table  
 
 # =============================================================================
 ## @class F1AUX

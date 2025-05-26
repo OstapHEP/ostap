@@ -275,7 +275,33 @@ class Components ( object ) :
         """`alist_cmps` : a list of structural components from `self.alist1`
         """
         return self.cmp_alist()
-    
+
+    # ======================================================================
+    ## add few roes into the table 
+    def tab_rows ( self , dataset = None ) :
+        """ Add few rows into the table 
+        """
+        ## get the tablle rows: 
+        rows = super().tab_rows ( dataset )
+        rows = list ( rows )
+
+        if self.alist1 :
+            row = '#components' , '%d' % len ( self.alist1 )
+            rows.append ( row )
+            for c in self.alist1 :
+                n    = c.GetName() 
+                what = '' 
+                if   c in self.signals     : what = 'signal'
+                elif c in self.background  : what = 'bkg.'    
+                elif c in self.crossterms1 : what = 'X-term-1'
+                elif c in self.crossterms2 : what = 'X-term-2'
+                elif c in self.components  : what = 'cmp.'
+                ## 
+                row = '   ' + n , typename ( c ) , what 
+                rows.append ( row )
+                
+        return rows 
+            
 # =============================================================================
 ## @class APDF1
 #  The helper MIXIN class for implementation of various PDF-wrappers
@@ -308,7 +334,7 @@ class APDF1 ( Components ) :
 
     @property
     def pdf  ( self ) :
-        """The actual PDF (ROOT.RooAbsPdf)"""
+        """ The actual PDF (ROOT.RooAbsPdf)"""
         return self.fun 
     @pdf.setter
     def pdf  ( self , value ) :

@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
 <lcgdict>
-  
+
   <class pattern    = "Ostap::*"                    />
+
   <class pattern    = "Ostap::Math::*"              />  
   <class pattern    = "Ostap::Math::GSL::*"         />  
   <class pattern    = "Ostap::Utils::*"             />
@@ -18,6 +19,7 @@
   <function pattern = "Ostap::Kinematics::*"      />
   
   <function name    = "Ostap::TMVA::addResponse"  />
+
   
   <class name    = "std::function&lt;double(double,double,double,double)&gt;" />
   <class pattern = "std::function&lt;double(*)&gt;" />
@@ -41,6 +43,8 @@
   
   <exclusion>
      
+    <class pattern   = "std::array<*double*>"      />
+    
     <class name    = "Ostap::StatVar::Interval"     />
     <class name    = "Ostap::Math::Interpolation::DATAVCT" />    
     <class name    = "Ostap::Math::Bernstein2D::VB" />
@@ -108,5 +112,7 @@
     <class function = "Ostap::Math::poly_to_bernstein"     />  
     <class function = "Ostap::Math::bernstein_from_roots"  />  
 
-  </exclusion>  
+  </exclusion>
+
+  
 </lcgdict>

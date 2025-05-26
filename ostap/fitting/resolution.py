@@ -271,14 +271,14 @@ class ResoGauss2(RESOLUTION) :
 models.add ( ResoGauss2 ) 
 # =============================================================================
 ## @class ResoApo2
-#  Symmetrical  Apollonios  model for resolution
-#   - Gaussian core 
+#  (A)Symmetrical  Apollonios  model for resolution
+#   - (asymmetrical)Gaussian core 
 #   - exponential tails
 #  @see Ostap::Models::Apollonios2 
 #  @see Ostap::Math::Apollonios2 
 class ResoApo2(RESOLUTION) :
-    """ Symmetric variant of Apollonios model for the resolution function
-    - Gaussian core 
+    """ (A)Symmetric variant of Apollonios model for the resolution function
+    - (asymmetrical) Gaussian core 
     - exponential tails
     see Ostap.Models.Apollonios2 
     see Ostap.Math.Apollonios2 
@@ -382,13 +382,13 @@ models.add ( ResoApo2 )
 
 # =============================================================================
 ## @class ResoCB2_
-#  Symmetrical double-sided Crystal Ball model for resolution
-#   - Gaussian core 
+#  (A)Symmetrical double-sided Crystal Ball model for resolution
+#   - (symmetric) Gaussian core 
 #   - power-law tails
 #  @see Ostap::Math::CrystalBallDS
 #  @see Ostap::Models::CrystalBallDS
 class ResoCB2_(RESOLUTION) :
-    """ Symmetric double-sided Crystal Ball model for resolution
+    """ (A)Symmetric double-sided Crystal Ball model for resolution
     - Gaussian core 
     - power-law tails
     see Ostap.Math.CrystalBallDS
@@ -532,14 +532,14 @@ class ResoCB2_(RESOLUTION) :
 models.add ( ResoCB2_ )
 # ===============================================================================
 ## @class ResoCB2
-#  Symmetrical double-sided Crystal Ball model for resolution
+#  (A)Symmetrical double-sided Crystal Ball model for resolution
 #   - Gaussian core 
 #   - power-law tails
 #  @see Ostap::Math::CrystalBallDS
 #  @see Ostap::Models::CrystalBallDS
 class ResoCB2(RESOLUTION) :
-    """ Symmetric double-sided Crystal Ball model for resolution
-    - Gaussian core 
+    """ (A)Symmetric double-sided Crystal Ball model for resolution
+    - (symmetric) Gaussian core 
     - power-law tails
     see Ostap.Math.CrystalBallDS
     see Ostap.Models.CrystalBallDS
@@ -672,10 +672,6 @@ class ResoCB2(RESOLUTION) :
         return self.__AV_ALPHA.var2 
 
 models.add ( ResoCB2 )
-
-
-
-
 
 # =============================================================================
 ## @class ResoStudentT
@@ -836,10 +832,8 @@ class ResoStudentT(RESOLUTION) :
     def sigmaR ( self ) :
         """'sigmaR' : 'sigma'-parameter for right part"""
         return self.__sigmaR        
-    
-    
+        
 models.add ( ResoStudentT )
-
 
 # =============================================================================
 ## @class ResoPearsonIV
@@ -887,14 +881,11 @@ class ResoPearsonIV(RESOLUTION) :
 
         
         ## asymmetry parameter 
-        if kappa is None :
-            self.__kappa = ZERO
-        else             :
-            self.__kappa = self.make_var ( kappa                     , 
-                                           'kappa_%s'         % name ,
-                                           '#kappa_{PIV}(%s)' % name ,
-                                           False , 0 , -100 , 100 )
-            
+        self.__kappa = self.make_var ( ZERO if kappa is None else kappa                      , 
+                                       'kappa_%s'         % name ,
+                                       '#kappa_{PIV}(%s)' % name ,
+                                       False , 0 , -100 , 100 )
+        
         ## finally build PDF 
         self.pdf = Ostap.Models.PearsonIV (
             self.roo_name ( 'p4_' )       ,
@@ -942,7 +933,6 @@ class ResoPearsonIV(RESOLUTION) :
         self.sigma = value
     
 models.add ( ResoPearsonIV )
-
 
 # =============================================================================
 ## @class ResoSkewGenT
@@ -1023,12 +1013,10 @@ class ResoSkewGenT(RESOLUTION) :
                                         False , 1 , 0    , 1000  ) 
         
         ## asymmetry parameter 
-        if kappa is None : self.__kappa = ZERO
-        else             :
-            self.__kappa = self.make_var ( kappa                     , 
-                                           'xi_%s'         % name ,
-                                           '#xi_{SGT}(%s)' % name ,
-                                           False , 0 , -100 , 100 )
+        self.__kappa = self.make_var ( ZERO if kappa is None else kappa                      , 
+                                       'xi_%s'         % name ,
+                                       '#xi_{SGT}(%s)' % name ,
+                                       False , 0 , -100 , 100 )
             
         ## finally build PDF 
         self.pdf = Ostap.Models.SkewGenT (
