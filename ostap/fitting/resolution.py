@@ -1074,7 +1074,6 @@ class ResoSkewGenT(RESOLUTION) :
     def kappa ( self , value ) :
         self.set_value ( self.__zeta , value )
 
-    
 models.add ( ResoSkewGenT )
 
 # =============================================================================
@@ -1147,12 +1146,10 @@ class ResoSkewGenError(RESOLUTION) :
                                         False , 2 , 0.01 , 100 ) 
         
         ## asymmetry parameter 
-        if kappa is None : self.__kappa = ZERO
-        else             :
-            self.__kappa = self.make_var ( kappa                     , 
-                                           'xi_%s'         % name ,
-                                           '#xi_{SGE}(%s)' % name ,
-                                           False , 0 , -100 , 100 )
+        self.__kappa = self.make_var ( ZERO if kappa is None else kappa , 
+                                       'xi_%s'         % name ,
+                                       '#xi_{SGE}(%s)' % name ,
+                                       False , 0 , -100 , 100 )
             
         ## finally build PDF 
         self.pdf = Ostap.Models.SkewGenError  (
