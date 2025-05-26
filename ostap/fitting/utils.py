@@ -28,7 +28,9 @@ __all__     = (
     'suppress_topics'   , ## suppress topics from RooMsgService 
     #
     'roo_gaussian'      , ## generate gaussian random number 
-    'roo_poisson'       , ## generate Poisson random number 
+    'roo_poisson'       , ## generate Poisson random number
+    #
+    'AsymVars'          , ## helper structure to keep asymmetry variables
 )
 # =============================================================================
 from   ostap.core.core         import ( Ostap   , rootID     , VE ,
@@ -40,6 +42,7 @@ from   ostap.core.ostap_types  import ( num_types      , list_types     ,
 from   ostap.math.random_ext   import ve_gauss, poisson
 from   ostap.fitting.variables import SETVAR 
 from   ostap.utils.basic       import numcpu , items_loop
+from   collections             import namedtuple
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 import ROOT, math, random 
@@ -47,6 +50,12 @@ import ROOT, math, random
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.utils' )
 else                       : logger = getLogger ( __name__              )
+# =============================================================================
+ZERO = ROOT.RooFit.RooConst ( 0 ) 
+ONE  = ROOT.RooFit.RooConst ( 1 ) 
+# =============================================================================
+## store for asymmetry variables 
+AsymVars = namedtuple ( 'AsymVars' , ( 'var1' , 'var2' , 'halfsum' , 'kappa' , 'psi' ) ) 
 # =============================================================================
 ## Generate Poisson random number coherentry  with RooFit
 def roo_poisson ( mu ) :

@@ -45,6 +45,7 @@ from   ostap.fitting.fithelpers      import ( FitHelper      ,
 from   ostap.utils.cidict            import cidict
 from   ostap.utils.basic             import typename 
 from   ostap.plotting.fit_draw       import key_transform, draw_options
+from   ostap.logger.pretty           import pretty_float 
 # 
 import ostap.fitting.roocollections
 import ROOT, math, sys, abc  
@@ -55,7 +56,7 @@ else                       : logger = getLogger ( __name__                 )
 # =============================================================================
 constant_types = num_types + ( ROOT.RooConstVar , ) 
 # =============================================================================
-## is valuer equal to 1?
+## is value equals to 1?
 isone = lambda x : isequal ( float ( x ) , 1 )
 # =============================================================================
 ## for better backward compatibility
@@ -130,11 +131,6 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
     ##     with NameDuplicates ( True ) :
     ##         return klass ( **config ) 
         
-    ## conversion to string 
-    def __str__ (  self ) :
-        return '%s(%s,xvar=%s)' % ( typename ( self ) , self.name , self.xvar.name )
-    __repr__ = __str__ 
-
     @property
     def title ( self ) :
         """'title' : the title for RooAbsReal/RooAbsPdf"""
@@ -170,18 +166,6 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
     def fun_name ( self ) :
         """'fun_name' : the name of the underlying RooAbsReal"""
         return  self.fun.GetName() if self.fun else ''
-
-    ## @property
-    ## def config ( self ) :
-    ##     """The full configuration info for the PDF"""
-    ##     conf = {}
-    ##     conf.update ( self.__config )
-    ##     return conf
-    ## @config.setter
-    ## def config ( self , value ) :
-    ##     conf = {}
-    ##     conf.update ( value )
-    ##     self.__config = conf
 
     @property    
     def tricks ( self ) :
@@ -294,7 +278,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
     #  @endcode
     #  @see RooAbsReal::getParameters
     def params ( self , dataset = None  ) :
-        """Get the parameters
+        """ Get the parameters
         >>>  fun = ...
         >>> parameters = fun.params ( )
         Or
@@ -313,7 +297,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
     #  p   = fun.parameter  ( 'A' )
     #  @endcode
     def parameter ( self , param , dataset = None ) :
-        """Get the parameter value by name
+        """ Get the parameter value by name
         >>> pdf = ...
         >>> p   = pdf.parameter  ( 'A' )
         """
@@ -659,7 +643,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
     #  >>> ypdf = copy.copy ( xpdf ) 
     #  @endcode 
     def __copy__ ( self ) :
-        """Make a copy/clone for the given function/PDF 
+        """ Make a copy/clone for the given function/PDF 
         >>> import copy 
         >>> xpdf = ...
         >>> ypdf = copy.copy ( xpdf ) 
@@ -785,8 +769,6 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         
         from ostap.fitting.roocmdarg import command 
         cmd = command ( *options )
-
-        
         
         return what.plotOn ( frame , cmd  )
 
@@ -804,9 +786,92 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         ## self.debug ( 'plotOn: merged options: %s' % str ( new_options ) ) 
         ## return self.plotOn ( what , frame , *new_options ) 
 
+    # ========================================================================
+    ## print at table 
+    def table ( self , dataset = None , title  = '' , style = '' ) :
+        """ Print function/PDF as Table 
+        """
+        if isinstance ( dataset , ROOT.RooAbsData ) and valid_pointer ( dataset ) :
+            params  = self.fun.getParameters  ( dataset )
+            obs     = self.fun.getObservables ( dataset )
+        else :            
+            obs     = self.vars 
+            params  = self.fun.getParameters  ( self.vars )
+        rows = [ ( '' , 'value' , '' ) ]
+
+        row = 'Name' , self.name
+        rows.append ( row )
+        
+        row = 'Ostap type' , typename ( self ) 
+        rows.append ( row )
+
+        row = 'MRO' , ', '.join ( typename ( t ) for t in type ( self ).mro() ) 
+        rows.append ( row )
+        
+        row = 'Description' , self.__doc__ 
+        rows.append ( row )
+        
+        row = 'C++ type' , typename ( self.fun ) 
+        rows.append ( row )
+
+        row = 'C++ name' , self.fun.GetName  () 
+        rows.append ( row )        
+        
+        row = 'C++ title' , self.fun.GetTitle () 
+        rows.append ( row )
+
+        if self.vars :            
+            row = '#variables' , '%d' % len ( self.vars )
+            rows.append ( row )            
+            for o in self.vars :
+                v        = float ( o )
+                n        = o.name   
+                v , expo = pretty_float ( v )
+                if expo : row = '   ' + n , v , '10^%+d' % expo
+                else    : row = '   ' + n , v
+                rows.append ( row ) 
+        
+        if obs and not obs is self.vars :
+            row = '#observables' , '%d' % len ( obs )
+            rows.append ( row )            
+            for o in obs :
+                v        = float ( o )
+                n        = o.name   
+                v , expo = pretty_float ( v )
+                if expo : row = '   ' + n , v , '10^%+d' % expo
+                else    : row = '   ' + n , v
+                rows.append ( row ) 
+        if params :
+            row = '#parameters' , '%d' % len ( params )
+            rows.append ( row )            
+            for p in params :
+                v        = float ( p )
+                n        = p.name 
+                v , expo = pretty_float ( v )
+                if expo : row = '   ' + n , v , '10^%+d' % expo
+                else    : row = '   ' + n , v
+                rows.append ( row )
+
+        bad  = lambda n : ( n.startswith ( '__' ) and n.endswith( '__' ) ) or ( n.startswith ( '_' ) and '__' in n )        
+        good = lambda n : not bad ( n ) 
+
+        row = 'Attributes' ,', '.join ( d for d in dir ( self ) if good ( d ) ) 
+        rows.append ( row )
+
+        title = title if title else 'FUN/PDF:%s' % self.name
+        import ostap.logger.table as T
+        rows = T.remove_empty_columns ( rows ) 
+        return T.table ( rows , title = title , alignment = 'lwc' , style = style )
+
+    ## ## conversion to string 
+    ## def __str__ (  self ) :
+    ##   return '%s(%s,xvar=%s)' % ( typename ( self ) , self.name , self.xvar.name )
+    __str__  = table 
+    __repr__ =  table  
+
 # =============================================================================
 ## @class F1AUX
-#  Helper MIXIN class for impleementation of various 1D (Roo)Function-wrappers
+#  Helper MIXIN class for implementation of various 1D (Roo)Function-wrappers
 # 
 #  It relies on following atttribute2:
 #  - <code>fun</cpode>
@@ -818,7 +883,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
 #  - <code>error</code>
 #  - <code>xminmax</code>
 class F1AUX(object) :
-    """Helper MIXIN class for implementation of various 1D (Roo)Function-wrappers
+    """ Helper MIXIN class for implementation of various 1D (Roo)Function-wrappers
     
     It relies on following atttribute2:
     - `fun`
@@ -836,7 +901,7 @@ class F1AUX(object) :
     # ========================================================================
     ## helper  function to implement some math stuff 
     def _get_stat_ ( self , funcall , *args , **kwargs ) :
-        """Helper  function to implement some math stuff 
+        """ Helper  function to implement some math stuff 
         """
         fun         = self.fun
         
@@ -864,7 +929,7 @@ class F1AUX(object) :
     # =========================================================================
     ## get the effective mean
     def get_mean ( self , **kwargs ) :
-        """Get the effective Mean
+        """ Get the effective Mean
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
         >>>  print('MEAN: %s ' % pdf.get_mean() )
@@ -875,7 +940,7 @@ class F1AUX(object) :
     # ========================================================================
     ## get the effective RMS 
     def rms ( self , **kwargs ) :
-        """Get the effective RMS
+        """ Get the effective RMS
         >>>  fun = ...
         >>>  print('RMS: %s ' % fun.rms())
         """
@@ -910,7 +975,7 @@ class F1AUX(object) :
     # ========================================================================
     ## get the effective Full Width at Half Maximum
     def fwhm ( self , **kwargs ) :
-        """Get the effective Full Width at  Half Maximum
+        """ Get the effective Full Width at  Half Maximum
         >>>  fun = ...
         >>>  print('FWHM: %s ' % fun.fwhm())
         """
@@ -922,7 +987,7 @@ class F1AUX(object) :
     # ========================================================================
     ## get the skewness 
     def skewness ( self , **kwargs ) :
-        """Get the skewness 
+        """ Get the skewness 
         >>>  fun = ...
         >>>  print('Skewness: %s ' % fun.skewness())
         """
@@ -933,7 +998,7 @@ class F1AUX(object) :
     # ========================================================================
     ## get the kurtosis
     def kurtosis ( self , **kwargs ) :
-        """Get the kurtosis
+        """ Get the kurtosis
         >>>  fun = ...
         >>>  print('Kurtosis: %s ' % fun.kurtosis())
         """
@@ -948,7 +1013,7 @@ class F1AUX(object) :
     #  where \f$ f(x_{low}) = f(x_{high}) = \frac{f_{max}(x)}{2} \f$ 
     # (the same points are used for FWHM)
     def mid_point ( self , **kwargs ) :
-        """Get the effective midpoint/location:
+        """ Get the effective midpoint/location:
         - a mid point of an interval  x_low, x_high
         x_mid = (x_low + x_high)/2 {2},
         where  f(x_low) = f(x_high) = f_{max}(x)
@@ -962,7 +1027,7 @@ class F1AUX(object) :
     # =========================================================================
     ## get the effective mode 
     def mode ( self , **kwargs ) :
-        """Get the effective mode
+        """ Get the effective mode
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
         >>>  print('MODE: %s ' % pdf.mode())
@@ -973,7 +1038,7 @@ class F1AUX(object) :
     # =========================================================================
     ## get the mediane 
     def median ( self , **kwargs ) :
-        """Get the effective mode
+        """ Get the effective mode
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
         >>>  print ( 'MODE: %s ' % pdf.mode() )
@@ -985,7 +1050,7 @@ class F1AUX(object) :
     # =========================================================================
     ## get the FWHM
     def fwhm   ( self , **kwargs ) :
-        """Get the effective mode
+        """ Get the effective mode
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
         >>>  print ( 'FWHM: %s ' % pdf.fwhm () )
@@ -996,7 +1061,7 @@ class F1AUX(object) :
     # =========================================================================
     ## get the effective moment for the distribution
     def moment ( self , N , **kwargs ) :
-        """Get the effective moment
+        """ Get the effective moment
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
         >>>  print ( 'MOMENT: %s ' % pdf.moment( 10 ) )
@@ -1019,7 +1084,7 @@ class F1AUX(object) :
     # =========================================================================
     ## get the standartized moment for the distribution
     def std_moment ( self , N , **kwargs ) :
-        """Get the standartized moment
+        """ Get the standartized moment
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
         >>>  print('STD-MOMENT: %s ' % pdf.std_moment( 10 ))
@@ -1030,7 +1095,7 @@ class F1AUX(object) :
     # =========================================================================
     ## get the effective quantile 
     def quantile ( self , prob  , **kwargs ) :
-        """Get the effective quantile
+        """ Get the effective quantile
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
         >>>  print ( 'QUANTILE: %s ' % pdf.quantile ( 0.10 ) )
@@ -1041,7 +1106,7 @@ class F1AUX(object) :
     # =========================================================================
     ## get the symmetric confidence interval 
     def cl_symm ( self , prob , x0 =  None , **kwargs ) :
-        """Get the symmetric confidence interval 
+        """ Get the symmetric confidence interval 
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
         >>>  print ( 'CL :  ',  pdf.cl_symm ( 0.10 ) ) 
@@ -1052,7 +1117,7 @@ class F1AUX(object) :
     # =========================================================================
     ## get the asymmetric confidence interval 
     def cl_asymm ( self , prob , **kwargs ) :
-        """Get the asymmetric confidence interval 
+        """ Get the asymmetric confidence interval 
         >>>  pdf = ...
         >>>  pdf.fitTo ( ... )
         >>>  print ( 'CL :  ',  pdf.cl_asymm ( 0.10 ) )
@@ -1068,7 +1133,7 @@ class F1AUX(object) :
     #  v4  = pdf.roo_moment ( 5 , central = True )
     #  @endcode
     def roo_moment ( self , order , central ) :
-        """Get moment using <code>RooAbsPdf::moment</code> method
+        """ Get moment using <code>RooAbsPdf::moment</code> method
         >>> pdf = ...
         >>> v5  = pdf.roo_moment ( 5 , central = True )
         - see `ROOT.RooAbsPdf.moment`
@@ -1090,7 +1155,7 @@ class F1AUX(object) :
     ## get mean using RooAbsPdf method
     #  @see RooAbsReal::mean 
     def roo_mean ( self ) :
-        """get mean using RooAbsPdf method
+        """ Get mean using RooAbsPdf method
          -see `ROOT.RooAbsReal.mean`
          """
         with rootWarning() , roo_silent ( True ) : 
@@ -1104,7 +1169,7 @@ class F1AUX(object) :
     ## get variance using RooAbdPdf method
     #  @see RooAbdPdf::moment 
     def roo_variance ( self ) :
-        """get variance  using the RooAbdReal method
+        """ Get variance  using the RooAbdReal method
          -see `ROOT.RooAbdPdf.moment`
          """
         return self.roo_moment ( 2 , central = True )
@@ -1113,7 +1178,7 @@ class F1AUX(object) :
     ## get dispersion  using RooAbdPdf method
     #  @see RooAbdPdf::moment 
     def roo_dispersion  ( self ) :
-        """get dispersion using RooAbdPdf method
+        """ Get dispersion using RooAbdPdf method
          -see `ROOT.RooAbdPdf.moment`
          """
         return self.roo_variance () 
@@ -1122,7 +1187,7 @@ class F1AUX(object) :
     ## get RMS using RooAbdPdf method
     #  @see RooAbdPdf::sigma 
     def roo_rms ( self ) :
-        """get RMS using RooAbsPdf method
+        """ Get RMS using RooAbsPdf method
          -see `ROOT.RooAbdPdf.sigma`
          """
         with rootWarning() , roo_silent ( True ) : 
@@ -1137,7 +1202,7 @@ class F1AUX(object) :
     #   \f$  k = \frac{\mu_3}{\mu_2^{3/2}}\f$ 
     #  @see RooAbdPdf::moment 
     def roo_skewness ( self ) :
-        """get skewness using RooAbdPdf method
+        """ Get skewness using RooAbdPdf method
         -see `ROOT.RooAbdPdf.moment`
         """
         m2 = self.roo_moment ( 2 , central = True )
@@ -1149,7 +1214,7 @@ class F1AUX(object) :
     #   \f$  k = \frac{\mu_4}{\mu_2^2} -3 \f$ 
     #  @see RooAbdPdf::moment 
     def roo_kurtosis ( self ) :
-        """get (excessive) kurtosis using RooAbdPdf method
+        """ Get (excessive) kurtosis using RooAbdPdf method
         -see `ROOT.RooAbdPdf.moment`
         """
         m2 = self.roo_moment ( 2 , central = True )
@@ -1159,7 +1224,7 @@ class F1AUX(object) :
     # =========================================================================
     ## get the derivative at  point x 
     def derivative ( self , x ) :
-        """Get derivative at point x 
+        """ Get derivative at point x 
         >>> pdf = ...
         >>> print ( pdf.derivative ( 0 ) )
         """
@@ -1189,7 +1254,7 @@ class F1AUX(object) :
     #  x   = fun.minimum() 
     #  @endcode 
     def minimum ( self , xmin = None , xmax = None , x0 = None ) :
-        """Get a minimum of FUN for certain interval
+        """ Get a minimum of FUN for certain interval
         >>> pdf = ...
         >>> x = pdf.minimum()
         """
@@ -1217,7 +1282,7 @@ class F1AUX(object) :
     #  x   = fun.maximum() 
     #  @endcode 
     def maximum ( self , xmin = None , xmax = None , x0 = None ) :
-        """Get a maximum of FUN for certain interval
+        """ Get a maximum of FUN for certain interval
         >>> fun = ...
         >>> x   = fun.maximum()
         """
@@ -1246,7 +1311,7 @@ class F1AUX(object) :
     #  mn , mx = pdf.minmax()            
     #  @endcode 
     def minmax ( self , nshoots =  50000 ) :
-        """Check min/max for the PDF using  random shoots 
+        """ Check min/max for the PDF using  random shoots 
         >>> pdf     = ....
         >>> mn , mx = pdf.minmax()        
         """
@@ -1311,11 +1376,10 @@ class F1AUX(object) :
                 if mx < 0 or vv > mx : mx = vv 
         return mn , mx 
 
-
     # =========================================================================
     ## get the integral between xmin and xmax 
     def integral ( self , xmin , xmax , nevents = True ) :
-        """Get integral between xmin and xmax
+        """ Get integral between xmin and xmax
         >>> pdf = ...
         >>> print ( pdf.integral ( 0 , 10 ) ) 
         """
@@ -1365,12 +1429,11 @@ class F1AUX(object) :
 
         return value
 
-
 # =============================================================================
 ## @class FUN1
 #  Helper base class for impleementation of various 1D (Roo)Function-wrappers
 class FUN1(AFUN1,F1AUX) :
-    """Helper base class for implementation of various 1D (Roo)Function-wrappers
+    """ Helper base class for implementation of various 1D (Roo)Function-wrappers
     """
     def __init__ ( self , name , xvar , tricks = True , **kwargs ) :
         
@@ -1412,7 +1475,7 @@ class FUN1(AFUN1,F1AUX) :
     # ========================================================================
     ## convert to float 
     def __float__ ( self ) :
-        """Convert to float
+        """ Convert to float
         >>> fun = ...
         >>> v   = float ( fun )
         """
@@ -1426,7 +1489,7 @@ class FUN1(AFUN1,F1AUX) :
     #  tf1.Draw('colz')
     #  @endcode
     def tf1 ( self , xmin = None , xmax = None ) :
-        """Convert FUN  to TF1 object, e.g. to profit from TF1::Draw options
+        """ Convert FUN  to TF1 object, e.g. to profit from TF1::Draw options
         >>> fun = ...
         >>> tf1 = fun.tf1()
         >>> tf1.Draw('colz')
@@ -2129,8 +2192,7 @@ class FUN1(AFUN1,F1AUX) :
         """
         d = self.fun.derivative ( self.xvar , 1 , *args )
         return Fun1D ( d , self.xvar , name = self.new_name ( 'dFdX' ) )
-    
-    
+        
 # =============================================================================
 ## @class Fun1D
 #  Simple wrapper for 1D-function
@@ -2188,7 +2250,6 @@ class Fun1D ( FUN1 ) :
         self.checked_keys.add  ( 'fun'  ) 
         self.checked_keys.add  ( 'xvar' ) 
 
-
 # =============================================================================
 ## @class Id
 #  The most trivial function \f$ f(x) = x \f$
@@ -2233,15 +2294,6 @@ class AFUN2(AFUN1,YVar) :
             'fun'    : self.fun    ,            
             }
         
-    ## conversion to string 
-    def __str__ (  self ) :
-        return '%s(%s,xvar=%s,yvar=%s)' % ( typename ( self ) ,
-                                            self.name      ,
-                                            self.xvar.name ,
-                                            self.yvar.name )
-    __repr__ = __str__ 
-
-
     # =========================================================================
     ## make 1D-plot
     def draw ( self                         ,
@@ -3264,15 +3316,6 @@ class AFUN3(AFUN2,ZVar) :
             }
         self.config.update ( kwargs )
         
-    ## conversion to string 
-    def __str__ (  self ) :
-        return '%s(%s,xvar=%s,yvar=%s,zvar=%s)' % ( typename ( self ) ,
-                                                    self.name      ,
-                                                    self.xvar.name ,
-                                                    self.yvar.name ,
-                                                    self.zvar.name )
-    __repr__ = __str__ 
-
     # =========================================================================
     ## draw the 1st variable
     #  @code
@@ -3326,7 +3369,7 @@ class AFUN3(AFUN2,ZVar) :
                 in_range1 = None ,
                 in_range3 = None ,
                 args      = ()   , **kwargs ) :
-        """Draw the 2nd variable
+        """ Draw the 2nd variable
         >>> fy  = fun.draw2 ( dataset ) 
         >>> fy  = fun.draw2 ( in_range3 = (2,3) ) 
         >>> fun.zvar.setRange ( 'QUQU2' , 2 , 3 ) 
@@ -3366,7 +3409,7 @@ class AFUN3(AFUN2,ZVar) :
                 in_range1 = None ,
                 in_range2 = None ,
                 args      = ()   , **kwargs ) :
-        """Draw the 3rd variable
+        """ Draw the 3rd variable
         >>> fz  = fun.draw3 ( dataset ) 
         >>> fz  = fun.draw3 ( in_range1 = (2,3) ) 
         >>> fun.xvar.setRange ( 'QUQU2' , 2 , 3 ) 
@@ -3420,7 +3463,7 @@ class AFUN3(AFUN2,ZVar) :
 ## @class FUN3
 #  The base class for 3D-function
 class FUN3(AFUN3) :
-    """Base class for 3D-function
+    """ Base class for 3D-function
     """
     def __init__ ( self , name , xvar , yvar , zvar , tricks = True , **kwargs ) :
 
@@ -3443,7 +3486,6 @@ class FUN3(AFUN3) :
         self.__call_OK = isinstance ( self.xvar , ROOT.RooAbsRealLValue ) and \
                          isinstance ( self.yvar , ROOT.RooAbsRealLValue ) and \
                          isinstance ( self.zvar , ROOT.RooAbsRealLValue )
-
         
     # =========================================================================
     ## simple 'function-like' interface 
@@ -3491,7 +3533,7 @@ class FUN3(AFUN3) :
               xmin = None , xmax = None ,
               ymin = None , ymax = None ,
               zmin = None , zmax = None ) :
-        """Convert PDF  to TF3 object, e.g. to profit from TF3::Draw options
+        """ Convert PDF  to TF3 object, e.g. to profit from TF3::Draw options
         >>> fun = ...
         >>> tf3 = fun.tf3()
         >>> tf3.Draw('colz')
@@ -3524,7 +3566,7 @@ class FUN3(AFUN3) :
     # =========================================================================
     ## operations with FUN3 object: self (op) fun2 
     def __f3_op__ ( self , fun2 , ftype ,pattern ) :
-        """Operations with FUN3 object: s elf (op) fun2
+        """ Operations with FUN3 object: s elf (op) fun2
         """
         
         fun_name = lambda  name1 , name2 : self.generate_name ( pattern % ( name1 , name2 ) )
@@ -3559,7 +3601,7 @@ class FUN3(AFUN3) :
     # =========================================================================
     ## operations with FUN3 object: fun2 (op) self 
     def __f3_rop__ ( self , fun2 , ftype , opname = '' , pattern = '' ) :
-        """operations with FUN3 object: fun2 (op) self 
+        """ operations with FUN3 object: fun2 (op) self 
         """
         
         fun_name = lambda  name1 , name2 : self.generate_name ( pattern % ( name1 , name2 ) )
@@ -3580,7 +3622,7 @@ class FUN3(AFUN3) :
     # =========================================================================
     ## make a constant function 
     def __constant ( self , value ) :
-        """ake a constant function"""
+        """ Fake a constant function"""
         return Fun3D ( value , xvar = self.xvar , yvar = self.yvar , zvar = self.zvar , 
                        name = self.new_name ( 'const3(%s)' % value ) ) 
 
@@ -3592,7 +3634,7 @@ class FUN3(AFUN3) :
     #  ff = f1 + f2
     #  @endcode 
     def __add__ ( self , other ) :
-        """Add two functions
+        """ Add two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 + f2 
@@ -3608,7 +3650,7 @@ class FUN3(AFUN3) :
     #  ff = f1 - f2 
     #  @endcode 
     def __sub__ ( self , other ) :
-        """Subtract two functions
+        """ Subtract two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 + f2 
@@ -3625,7 +3667,7 @@ class FUN3(AFUN3) :
     #  ff = f1 * f2 
     #  @endcode 
     def __mul__ ( self , other ) :
-        """Multiply two functions
+        """ Multiply two functions
         >>> f1 = ... 
         >>> f2 = ...
         >>> ff = f1 * f2 
@@ -3754,7 +3796,6 @@ class FUN3(AFUN3) :
         if   isinstance ( other , constant_types ) and isequal ( other , 1 ) : return self.__constant ( 1 )
         elif isinstance ( other , constant_types ) and iszero  ( other     ) : return self.__constant ( 0 ) 
         return self.__f3_rop__ ( other ,  Ostap.MoreRooFit.Power    , pattern = 'pow(%s,%s)' )  
-
 
     # =========================================================================
     ## absolute value : \f$ \left| bf(x) \right| \f$
@@ -4297,7 +4338,7 @@ class FUN3(AFUN3) :
 #  f3d  = Fun3D ( func , xvar = xvar , yvar = yvar , zvar = zvar ) 
 #  @endcode 
 class Fun3D ( FUN3 ) :
-    """Simple wrapper for 3D-function
+    """ Simple wrapper for 3D-function
     >>> func = ...
     >>> xvar = ...
     >>> yvar = ...
@@ -4423,10 +4464,6 @@ class Fun1op(FUN1) :
             'strname'   : self.strname   ,            
             }
         
-    def __str__ ( self ) :
-        return self.__strname if self.__strname else AFUN1.__str__ ( self ) 
-    __repr__ = __str__
-    
     @property
     def fun1 ( self ) :
         """'fun1' : the first argument"""
@@ -4508,9 +4545,6 @@ class Fun2op(FUN2) :
             'strname'   : self.strname   ,            
             }
         
-    def __str__ ( self ) : return self.__strname if self.__strname else AFUN2.__str__ ( self ) 
-    __repr__ = __str__
-    
     @property
     def fun1 ( self ) :
         """'fun1' : the first argument"""
@@ -4594,9 +4628,6 @@ class Fun3op(FUN3) :
             'strname'   : self.strname   ,            
             }
         
-    def __str__ ( self ) : return self.__strname if self.__strname else AFUN3.__str__ ( self ) 
-    __repr__ = __str__
-    
     @property
     def fun1 ( self ) :
         """'fun1' : the first argument"""
@@ -4627,7 +4658,7 @@ class Fun3op(FUN3) :
 # =============================================================================
 ## check cache binnig scheme
 def check_bins ( var , *args ) :
-    """Check cache bining scheme
+    """ Check cache bining scheme
     """
     
     if not args :
@@ -4644,7 +4675,6 @@ def check_bins ( var , *args ) :
 
     raise TypeError ("Invalid binning %s/%s" % ( bins , type ( bins ) ) ) 
 
-
 # =============================================================================
 ## make some popular special function from (presumably) 'short' description
 #  @param fun  the type of background function/PDF
@@ -4660,7 +4690,7 @@ def check_bins ( var , *args ) :
 #  - 'cvN' , 'concaveN'                   : <code> ConvexOnlyPoly(power=N,convex=False)</code>
 #  - 'roopolyN','rpN'                     : <code>RooPoly(power=N)</code>> 
 def make_fun1 ( fun , name , xvar , logger = None , **kwargs ) :
-    """Make some popular special function from presumably 'short' description
+    """ Make some popular special function from presumably 'short' description
     Possible values for <code>fun</code>:
     - any Ostap/PDF      : PDF will be copied or cloned  
     - any RooAbsReal     : `Fun1D` 
@@ -4741,16 +4771,13 @@ def make_fun1 ( fun , name , xvar , logger = None , **kwargs ) :
         return result 
 
     raise  TypeError("make_fun1: Wrong type of 'fun' object: %s/%s " % ( fun , type ( fun ) ) ) 
-
-
     
 # =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-    
-    
+        
 # =============================================================================
 #                                                                       The END 
 # =============================================================================

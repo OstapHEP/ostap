@@ -13,11 +13,11 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
     ##
-    'PEAKMEAN'      , ## useful base class to create "signal" PDFs for peak-like fits
-    'PEAK'          , ## useful base class to create "signal" PDFs for peak-like fits
-    'RESOLUTION'    , ## useful base class to create "resolution" PDFs
+    'PEAKMEAN'   , ## useful base class to create "signal" PDFs for peak-like fits
+    'PEAK'       , ## useful base class to create "signal" PDFs for peak-like fits
+    'RESOLUTION' , ## useful base class to create "resolution" PDFs
     ##
-    'Fit1D'         , ## the basic compound 1D-fit model 
+    'Fit1D'      , ## the basic compound 1D-fit model 
     ##
     )
 # =============================================================================
@@ -27,7 +27,7 @@ from   ostap.core.ostap_types   import ( is_integer     , string_types   ,
                                          list_types     , all_numerics   ) 
 from   ostap.fitting.funbasic   import FUN1
 from   ostap.fitting.pdfbasic   import PDF1, APDF1, Sum1D
-from   ostap.fitting.utils      import make_name
+from   ostap.fitting.utils      import make_name, ZERO 
 import ROOT, math,  random
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -78,7 +78,6 @@ class PEAKMEAN(PDF1) :
                    mean      = None  ,
                    mean_name  = ''   , 
                    mean_title = ''   ) : 
-
         
         if   isinstance ( xvar , ROOT.TH1   ) : xvar = xvar.xminmax ()
         elif isinstance ( xvar , ROOT.TAxis ) : xvar = xvar.GetXmin () , xvar.GetXmax ()
@@ -282,7 +281,7 @@ class RESOLUTION(PEAK) :
                    sigma_title = ''   ) :
         
         ## mean-value
-        if mean is None : mean = ROOT.RooFit.RooConst ( 0 ) 
+        if mean is None : mean = ZERO 
             
         with CheckMean ( False ) :
             super(RESOLUTION,self).__init__ ( name        = name        ,

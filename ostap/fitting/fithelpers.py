@@ -41,13 +41,15 @@ from   ostap.core.ostap_types  import ( string_types   , num_types   ,
 from   ostap.core.core         import ( Ostap          , rootID      ,
                                         VE             , isequal     ,
                                         roo_silent                   )
-from   ostap.fitting.utils     import ( make_name   , numcpu , ncpu , get_i ,
-                                        roo_poisson , roo_gaussian  )
+from   ostap.fitting.utils     import ( make_name   , numcpu , ncpu , get_i    ,
+                                        roo_poisson , roo_gaussian  ,
+                                        AsymVars    , ZERO          )
 from   ostap.fitting.roocmdarg import check_arg 
 from   ostap.fitting.variables import SETVAR, make_formula
 from   ostap.utils.utils       import make_iterable
 from   ostap.utils.basic       import typename , items_loop
-from   ostap.logger.symbols    import times 
+from   ostap.logger.symbols    import times
+import ostap.logger.table      as     T 
 import ROOT, sys, random, math
 # =============================================================================
 from   ostap.logger.logger   import getLogger
@@ -890,7 +892,6 @@ class VarMaker (object) :
         
         return result
 
-
     # =============================================================================
     ## construct (on-flight) variable  for the asymmetry of
     #  <code>var1</code> and <code>var2</code>: \f$ v \equiv \frac{v_1-v_2}{v_1+v_2}\f$
@@ -1315,7 +1316,136 @@ class VarMaker (object) :
                                        title   = v2title )
         return var1 , var2 
         
+
+    # ===========================================================================
+    #  helper class to treat "asymmetry cluster" of variables  :
+    #  - variable v1
+    #  - variable v2
+    #  - half-sum       var   = 0.5*(v1+v2) 
+    #  - asymmetry      kappa = (v1-v2)/(v1+v2)
+    #  - skew-parameter psi   : kappa = tanh ( psi ) 
+    def asymmetry_vars ( self , var_name , *  ,
+                         var1         = None  ,
+                         var2         = None  ,
+                         halfsum      = None  , 
+                         kappa        = None  , 
+                         psi          = None  , 
+                         v1_name      = ''    ,
+                         v2_name      = ''    ,
+                         halfsum_name = ''    ,
+                         kappa_name   = ''    ,
+                         psi_name     = ''    ,
+                         left_right   = "LR"  ) :
+
+        assert var_name and isinstance ( var_name , string_types ) , \
+            "Invalid `var_name' : %s" % var_name
+
+        assert isinstance ( left_right , sized_types ) and 2 == len ( left_right ) , \
+            "Invalid `left_right' : %s" % left_right
+            
+        L, R = left_right
+        if isinstance ( L , integer_types ) : L = '%d' % L
+        if isinstance ( R , integer_types ) : R = '%d' % R
+        ## 
+        ## assert isinstance ( L , string_types ) and L , "Invalid `L' : %s" % L
+        ## assert isinstance ( R , string_types ) and R , "Invalid `R' : %s" % R
+        ##         
+        if not v1_name      : v1_name      = '%s%s' % ( var_name , L )
+        if not v2_name      : v2_name      = '%s%s' % ( var_name , R )
+        if not halfsum_name : halfsum_name = var_name 
+        if not kappa_name   : kappa_name   = 'kappa_%s' % var_name
+        if not psi_name     : psi_name     = 'psi_%s  ' % var_name
+        ##
+        if not self.name in v1_name      : v1_name      = '%s_%s' % ( v1_name      , self.name )
+        if not self.name in v2_name      : v2_name      = '%s_%s' % ( v2_name      , self.name )
+        if not self.name in halfsum_name : halfsum_name = '%s_%s' % ( halfsum_name , self.name )
+        if not self.name in kappa_name   : kappa_name   = '%s_%s' % ( kappa_name   , self.name )
+        if not self.name in psi_name     : psi_name     = '%s_%s' % ( psi_name     , self.name )
         
+        ## 1st valid trivial  case : single var1 , everything else os None 
+        if isinstance ( var1 , ROOT.RooRealVar ) and var2 is None \
+           and all ( v is None for v in ( halfsum , kappa , psi ) ) :
+
+            self.aux_keep.append ( var1 )
+            result = AsymVars ( var1, var1, var1, ZERO, ZERO )
+            self.aux_keep.append ( result  )
+            return result 
+        
+        ## 2nd valid trivial  case : single var2 , everithing else is None 
+        elif isinstance ( var2 , ROOT.RooRealVar ) and var1 is None \
+             and all ( v is None for v in ( halfsum , kappa , psi ) ) :
+
+            self.aux_keep.append ( var2 )
+            result = AsymVars ( var2, var2, var2, ZERO, ZERO )
+            self.aux_keep.append ( result  )
+            return result 
+        
+        ## (3) two variables are specified, the rest is None  
+        elif all ( not v is None for v in ( var1 , var2 ) ) and all ( v is None for v in ( halfsum , kappa , psi ) ) :
+            
+            var1 = self.make_var ( var1 , v1_name , 'the first/%s  %s variable' % ( L , var_name ) , False  , var1 )
+            var2 = self.make_var ( var2 , v2_name , 'the second/%s %s variable' % ( R , var_name ) , False  , var2 )
+            
+            names = var1.name , var2.name
+            ## convert variables into halfsum & asymmetry 
+            halfsum , kappa = self.vars_to_asymmetry (
+                var1        ,
+                var2        ,
+                sum_scale  = 0.5 , 
+                asym_name  = kappa_name   ,
+                sum_name   = halfsum_name ,
+                asym_title = "asymmetry %s & %s"  % names    , 
+                sum_title  = "0.5 * ( %s + %s )"  % names    )
+            
+            ## finally psi-variable
+            psi_name = self.roo_name ( prefix = psi_name )
+            psi = Ostap.MoreRooFit.ATanh ( psi_name , "skew: %s & %s for %s "  % names , self.kappa , 1.0 )
+
+            result = AsymVars ( var1, var2, halfsum, kappa, psi ) 
+            self.aux_keep.append ( result )
+
+            return result 
+
+        # (4) half-sum and asymmetry :
+        elif all ( not v is None for v in ( halfsum, kappa ) ) and all ( v is None for v in ( var1 , var2 , psi   ) ) :
+            
+            halfsum = self.make_var ( halfsum  , halfsum_name , 'halfsum of %s & %s variables'   % ( v1_name , v2_name ) , False , halfsum )
+            kappa   = self.make_var ( kappa    , kappa_name   , 'asymmetry of %s & %s variables' % ( v1_name , v2_name ) , False , kappa   )
+
+            names = halfsum.name , kappa.name , self.name 
+            ## get the variables 
+            var1 , var2 = self.vars_from_asymmetry ( halfsum , kappa , v1name = v1_name , v2name = v2_name )
+            
+            ## finally psi-variable 
+            psi_name = self.roo_name ( prefix = psi_name ) 
+            psi = Ostap.MoreRooFit.ATanh ( psi_name , "skew %s & %s " % ( v1_name , v2_name ) , kappa , 1.0 )
+
+            result = AsymVars ( var1, var2, halfsum, kappa, psi ) 
+            self.aux_keep.append ( result )
+            return result
+        
+        # (5) half-sum and skew 
+        elif all ( not v is None for v in ( halsfum , psi    ) ) and all ( v is None for v in ( var1 , var2 , kappa ) ) : 
+            
+            halfsum = self.make_var ( halfsum  , halfsum_name , 'halfsum of %s & %s variables'  % ( v1_name , v2_name ) , False , halfsum )
+            psi     = self.make_var ( psi      , psi_name     , 'skew of %s & %s variables'     % ( v1_name , v2_name ) , False , psi     )
+        
+            ## kappa psi-variable
+            kappa_name = self.roo_name  ( prefix = kappa_name ) 
+            skappa   = Ostap.MoreRooFit.Tanh ( kappa_name , "asymmetry %s & %s " % ( v1_name , v2_name ) , psi , 1.0 )
+            
+            ## get the variables 
+            var1 , var2 = self.vars_from_asymmetry ( halfsum , kappa , v1name = v1_name , v2name = v2_name ) 
+
+            result = AsymVars ( var1, var2, halfsum, kappa, psi ) 
+            self.aux_keep.append ( result )
+            return result
+            
+        else :
+            
+            result = AsymVars ( var1, var2, halfsum, kappa, psi ) 
+            raise TypeError ( 'Invalid set of variables %s' % str ( result ) ) 
+            
     # =========================================================================
     ## delete the object
     #  - remove the registered names in storages
@@ -3484,167 +3614,6 @@ class SETPARS(object) :
         """'params': dictionary of parameters"""
         return self.__params
 
-# =============================================================================
-## @class AsymVars
-#  helper class to treat "asymmetry cluster" of variables  :
-#  - variable v1
-#  - variable v2
-#  - half-sum       var   = 0.5*(v1+v2) 
-#  - asymmetry      kappa = (v1-v2)/(v1+v2)
-#  - skew-parameter psi   = atanh(kappa) 
-class AsymVars(VarMaker,ConfigReducer) :
-    """ Helper class to treat "asymmetry cluster" of variables  :
-    - variable        v1
-    - variable       v2
-    - half-sum       var   = 0.5*(v1+v2) 
-    - asymmetry      kappa = (v1-v2)/(v1+v2)
-    - skew-parameter psi   = atanh(kappa) 
-    """
-    
-    def __init__ ( self , name , * ,
-                   var1    = None ,
-                   var2    = None ,
-                   halfsum = None , 
-                   kappa   = None ,
-                   psi     = None ) :
-
-        with NameDuplicates ( True ) : 
-            ## define the name 
-            self.name = name
-
-        ## 1st valid trivial  case 
-        if isinstance ( var1 , ROOT.RooRealVar ) and var2 is None and all ( v is None for v in ( halfsum , kappa , psi ) ) :
-            
-            self.__var1    = var1
-            self.__var2    = var1
-            self.__halfsum = var1
-            self.__kappa   = ROOT.RooFit.RooConst ( 0 )
-            self.__psi     = ROOT.RooFit.RooConst ( 0 )
-            
-            self.config  = { 'var1' : self.var1 , 'var2' : None }
-            
-        ## 2nd valid trivial  case 
-        elif isinstance ( var2 , ROOT.RooRealVar ) and var1 is None and all ( v is None for v in ( halfsum , kappa , psi ) ) :
-
-            self.__var1    = var2
-            self.__var2    = var2
-            self.__halfsum = var2
-            self.__kappa   = ROOT.RooFit.RooConst ( 0 )
-            self.__psi     = ROOT.RooFit.RooConst ( 0 )
-            
-            self.config  = { 'var1' : self.var1 , 'var2' : None }
-                    
-        ## valid cases :
-        ## (1) two variables are specified, the rest is None  
-        elif all ( not v is None for v in ( var1 , var2 ) ) and all ( v is None for v in ( halfsum , kappa , psi ) ) :
-            
-            self.__var1  = self.make_var ( var1 ,  self.roo_name ( prefix = '%s1' % self.name ) , 'the first  variable' , False  , var1 )
-            self.__var2  = self.make_var ( var2 ,  self.roo_name ( prefix = '%s2' % self.name ) , 'the second variable' , False  , var2 )
-            
-            self.config  = { 'var1' : self.var1 , 'var2' : self.var2 }
-
-            names = self.name , self.var1.name, self.var2.name 
-            ## convert variables into halfsum & asymmetry 
-            self.__halfsum , self.__kappa = self.vars_to_asymmetry (
-                self.var1        ,
-                self.var2        ,
-                sum_scale  = 0.5 , 
-                asym_name  = self.roo_name ( prefix = 'kappa_%s_%s_%s'   % names )    , 
-                sum_name   = self.roo_name ( prefix = 'halfsum_%s_%s_%s' % names )    , 
-                asym_title = "asymmetry %s : %s & %s"                    % names      ,                
-                sum_title  = "0.5 * ( %s + %s )"                         % names [1:] )
-
-            ## finally psi-variable 
-            self.__psi = Ostap.MoreRooFit.ATanh ( self.roo_name  ( prefix = 'psi_%s_%s' % names ) , 
-                                                  "skew: %s & %s"                       % names   ,             
-                                                  self.kappa , 1.0 )
-            
-        # (2) half-sum and asymmetry :
-        elif all ( not v is None for v in ( halfsum, kappa ) ) and all ( v is None for v in ( var1 , var2 , psi   ) ) :
-            
-            self.__halfsum = self.make_var ( halfsum  , self.roo_name ( prefix = '%s'       % self.name ) , 'halfsum of variables'   , False , halfsum )
-            self.__kappa   = self.make_var ( kappa    , self.roo_name ( prefix = 'kappa_%s' % self.name ) , 'asymmetry of variables' , False , kappa   )
-            
-            self.config    = { 'var' : self.halfsum , 'kappa' : self.kappa }
-
-            names = self.name , self.halfsum.name , self.kappa.name
-            ## get the variables 
-            self.__var1 , self.__var2 = self.vars_from_asymmetry (
-                self.halfsum ,
-                self.kappa   ,
-                v1name = self.roo_name ( prefix = '%s1_%s_%s' % names ) , 
-                v2name = self.roo_name ( prefix = '%s2_%s_%s' % names ) )
-              
-            ## finally psi-variable 
-            self.__psi = Ostap.MoreRooFit.ATanh ( self.roo_name  ( prefix = 'psi_%s_%s_%s' % names ) ,
-                                                  "skew %s : %s & %s"                      % names ,             
-                                                  self.kappa , 1.0 )
-        # (3) half-sum and skew 
-        elif all ( not v is None for v in ( halsfum , psi    ) ) and all ( v is None for v in ( var1 , var2 , kappa ) ) : 
-            
-            self.__halfsum = self.make_var ( halfsum  , self.roo_name ( prefix = '%s'     % self.name ) , 'halfsum of variables'  , False , halfsum )
-            self.__psi     = self.make_var ( psi      , self.roo_name ( prefix = 'psi_%s' % self.name ) , 'skew of variables'     , False , psi     )
-            
-            self.config    = { 'var' : self.halfsum , 'kappa' : self.kappa }
-            
-            names = self.name , self.halfsum.name , self.psi.name
-            
-            ## kappa psi-variable 
-            self.__kappa   = Ostap.MoreRooFit.Tanh ( self.roo_name  ( prefix = 'kappa_%s_%s_%s' % names ) ,
-                                                     "asymmetry %s: %s & %s"                    % names   ,             
-                                                     self.psi , 1.0 )
-
-            ## get the variables 
-            self.__var1 , self.__var2 = self.vars_from_asymmetry (
-                self.halfsum ,
-                self.kappa   ,
-                v1name = self.roo_name ( prefix = '%s1_%s_%s' % names ) , 
-                v2name = self.roo_name ( prefix = '%s2_%s_%s' % names ) )
-            
-        else :
-            
-            raise TypeError ( "Invalid specification! %s " % [ var1 , var2, var, kappa , psi ]  ) 
-
-    @property
-    def var1 ( self ) :
-        """`var1` : the first variable"""
-        return self.__var1
-    @var1.setter
-    def var1 ( self , value ) :
-        self.set_value ( self.__var1 , value ) 
-        
-    @property
-    def var2 ( self ) :
-        """`var2` : the second variable"""
-        return self.__var2
-    @var2.setter
-    def var2 ( self , value ) :
-        self.set_value ( self.__var2 , value ) 
-    
-    @property
-    def halfsum( self ) :
-        """`halsfum` : the half-sum of `var1` and `var2`"""
-        return self.__halfsum
-    @halfsum.setter
-    def halfsum( self , value ) :
-        self.set_value ( self.__halfsum , value ) 
-    
-    @property
-    def kappa ( self ) :
-        """`kappa` : the asymmetry of `var1` and `var2`:  (v1-v2)/(v1+v2) or tanh(psi)  """
-        return self.__kappa
-    @kappa.setter
-    def kappa ( self , value ) :
-        self.set_value ( self.__kappa , value ) 
-
-    @property
-    def psi ( self ) :
-        """`psi` : the skew-parameter  of `var1` and `var2`: atan(kappa) or atanh((v1+v2)/(v1_v2))"""
-        return self.__psi
-    @psi.setter
-    def psi  ( self , value ) :
-        self.set_value ( self.__psi , value ) 
-    
 # =============================================================================
 if '__main__' == __name__ :
     

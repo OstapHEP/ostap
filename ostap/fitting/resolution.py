@@ -75,8 +75,8 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.core          import Ostap
-from   ostap.fitting.pdfbasic   import Generic1D_pdf 
-from   ostap.fitting.fithelpers import AsymVars 
+from   ostap.fitting.pdfbasic   import Generic1D_pdf
+from   ostap.fitting.fithelpers import ZERO
 from   ostap.fitting.fit1d      import RESOLUTION, CheckMean 
 import ROOT, math 
 # =============================================================================    
@@ -84,12 +84,9 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.resolution' )
 else                       : logger = getLogger ( __name__                   )
 # =============================================================================
-## @var ZERO : zero constant 
-ZERO   = ROOT.RooRealConstant.value ( 0 ) 
-# =============================================================================    
 models = set()
 # =============================================================================
-## sigle gaussian model for resolution
+## single gaussian model for resolution
 # =============================================================================
 ## @class ResoGauss
 #  Trivial single gaussian resolution model
@@ -435,8 +432,8 @@ class ResoCB2_(RESOLUTION) :
                                                     'nR_'    + name   ,
                                                     'nR(%s)' % name   , *n_pars ) 
         
-        self.__AV_alpha = AsymVars ( 'alpha' , var1 = self.alphaL , var2 = alphaR )  
-        self.__AV_n     = AsymVars ( 'n'     , var1 = self.nL     , var2 = nR     )  
+        self.__AV_ALPHA = self.asymmetry_vars ( 'alpha' , var1 = self.alphaL , var2 = alphaR )
+        self.__AV_N     = self.asymmetry_vars ( 'n'     , var1 = self.nL     , var2 = nR     )
         
         ## actual PDF 
         self.cb1 = Ostap.Models.CrystalBallDS (
@@ -470,13 +467,13 @@ class ResoCB2_(RESOLUTION) :
     def alpha ( self  ) :
         """'alpha' parameter for double-sided (a)symmetric resolution function
         """
-        return self.__AV_alpha.halfsum
+        return self.__AV_ALPHA.halfsum
     
     @property
     def n    ( self  ) :
         """'n' parameter for double-sided (a)symmetric resolution function
         """
-        return self.__AV_n.halfsum 
+        return self.__AV_N.halfsum 
     
     @property
     def alphaL ( self  ) :
@@ -515,22 +512,22 @@ class ResoCB2_(RESOLUTION) :
     @property
     def kappaA ( self ) :
         """`kappaA` : asymmetry for `alpha`"""
-        return self._AV_alpha.kappa
+        return self._AV_ALPHA.kappa
         
     @property
     def kappaN ( self ) :
         """`kappaN` : asymmetry for `n`"""
-        return self._AV_n.kappa
+        return self._AV_N.kappa
 
     @property
     def psiA ( self ) :
         """`psiA` : skew for `alpha`"""
-        return self._AV_alpha.psi
+        return self._AV_ALPHA.psi
         
     @property
     def psiN ( self ) :
         """`psiN` : skew for `n`"""
-        return self._AV_n.psi
+        return self._AV_N.psi
         
 models.add ( ResoCB2_ )
 # ===============================================================================
@@ -584,8 +581,8 @@ class ResoCB2(RESOLUTION) :
                                         '#kappa_{a}(%s)' % self.name       ,
                                         None , 0 , -1 , +1 )
         
-        self.__AV_alpha = AsymVars ( 'alpha' , halfsum = self.alpha , kappa = self.kappaA )
-        self.__AV_n     = AsymVars ( 'n'     , halfsum = self.n     , kappa = self.kappaN )
+        self.__AV_ALPHA = self.asymmetry_vars ( 'alpha' , halfsum = self.alpha , kappa = self.kappaA )
+        self.__AV_N     = self.asymmetry_vars ( 'n'     , halfsum = self.n     , kappa = self.kappaN )
         
         ## actual PDF 
         self.cb2 = Ostap.Models.CrystalBallDS (
@@ -654,25 +651,25 @@ class ResoCB2(RESOLUTION) :
     def nL ( self ) :
         """'nL' : parameter 'n' for left tail
         """
-        return self.__AV_n.var1
+        return self.__AV_N.var1
     
     @property
     def nR ( self ) :
         """'nR' : parameter 'n' for right tail
         """
-        return self.__AV_n.var2 
+        return self.__AV_N.var2 
 
     @property
     def alphaL ( self ) :
         """'alphaL' : parameter 'alpha' for left tail
         """
-        return self.__AV_alpha.var1 
+        return self.__AV_ALPHA.var1 
 
     @property
     def alphaR ( self ) :
         """'alphaR' : parameter 'alpha' for right tail
         """
-        return self.__AV_alpha.var2 
+        return self.__AV_ALPHA.var2 
 
 models.add ( ResoCB2 )
 

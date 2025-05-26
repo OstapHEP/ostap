@@ -4,6 +4,7 @@
   1. more coherent tretment of status-codes in HistoProject 
   1. add few more `MoreRooFit` fucttions
   1. add `AsymVars` helper structure in `fthelpers.py`
+  1. add `table` mehtod for `AFUN1` and bundle it with `__str__` and `__repr__`. Now for all derived objects a table is printed
   
 ## Backward incompatible
 
