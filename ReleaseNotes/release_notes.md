@@ -1,5 +1,4 @@
 
-
 ## New features
 
   1. more platforms to test via GitHub Actions (added gcc15) 
