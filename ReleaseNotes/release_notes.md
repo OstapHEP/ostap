@@ -8,6 +8,8 @@
   1. add `table` mehtod for `AFUN1` and bundle it with `__str__` and `__repr__`.
      Now for all derived objects a detailed table it printed
   1. exclude `std::array` from `Ostap.xml`
+  1. redesign and rewrite `AsymVars structure
+  1. add `ResoCB2_` resoltuio function - reparameterisatuon of `ResoCB2`. Better name is needed here...
   
 ## Backward incompatible
 

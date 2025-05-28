@@ -301,7 +301,16 @@ class RESOLUTION(PEAK) :
         if fudge is ONE :
             
             ## fudge is trivial 
-            self.__fudge = fundge 
+            self.__fudge = fudge 
+
+            ## corrected sigma is trivial 
+            self.__sigma_corr = self.sigma
+            
+        ## no  correction...
+        elif fudge is None  :
+            
+            ## fudge is trivial 
+            self.__fudge = ONE 
 
             ## corrected sigma is trivial 
             self.__sigma_corr = self.sigma

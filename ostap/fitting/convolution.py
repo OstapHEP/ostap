@@ -116,7 +116,7 @@ class Convolution(object):
                    shift1   = None     ,  ## shift1 parameter
                    shift2   = None     ,  ## shift2 parameter
                    nsigmas  = 6        ,  ## number of sigmas for setConvolutionWindow
-                   silent   = False    ) : 
+                   silent   = True     ) : 
         
         ## the axis 
         assert isinstance ( xvar , ROOT.RooAbsReal ) or not xvar , "`xvar' must be ROOT.RooAbsReal"
@@ -334,7 +334,7 @@ class Convolution(object):
     # =========================================================================
     ## Get the convolution result as table 
     def table ( self , title = '' , prefix = '' ) :
-        """ Get the convolution result as table """
+        """ Get the convolution configuration as table """
         
         rows = [ ( 'Parameter' , 'value' ) ]        
         row  = 'name'       , '%s' % self.name

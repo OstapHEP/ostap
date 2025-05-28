@@ -53,6 +53,7 @@ __all__     = (
     'ResoGauss2'        , ## double-Gaussian resolutin model,
     'ResoApo2'          , ## Apollonios-2 resolution model,
     'ResoCB2'           , ## double-sided Crystal Ball resolution model,
+    'ResoCB2_'          , ## double-sided Crystal Ball resolution model,
     'ResoStudentT'      , ## Student-T resolution model,
     'ResoPearsonIV'     , ## Pearson Tyep IV resolution model
     'ResoSkewGenT'      , ## Skewed Generalized t-distribution 
@@ -420,7 +421,7 @@ class ResoCB2_(RESOLUTION) :
         self.__AV_N     = self.asymmetry_vars ( 'n'     , var1 = self.nL     , var2 = self.nR      , left_right = 'LR')
         
         ## actual PDF 
-        self.cb1 = Ostap.Models.CrystalBallDS (
+        self.cb2 = Ostap.Models.CrystalBallDS (
             self.roo_name ( 'rcb2_' )       ,
             "Resolution double-sided Crystal Ball %s" % self.name ,
             self.xvar           ,
@@ -475,6 +476,24 @@ class ResoCB2_(RESOLUTION) :
         return self.__alphaR
     @alphaR.setter
     def alphaR ( self , value ) :
+        self.set_value ( self.__alphaR , value  ) 
+
+    @property
+    def aL ( self  ) :
+        """'aL' parameter for double-sided (a)symmetric resolution function
+        """
+        return self.__alphaL
+    @aL.setter
+    def aL ( self , value ) :
+        self.set_value ( self.__alphaL , value  ) 
+
+    @property
+    def aR ( self  ) :
+        """'aR' parameter for double-sided (a)symmetric resolution function
+        """
+        return self.__alphaR
+    @aR.setter
+    def aR ( self , value ) :
         self.set_value ( self.__alphaR , value  ) 
         
     @property

@@ -853,7 +853,7 @@ class TaskManager(object) :
                 # =============================================================
             except : # ========================================================
                 # =============================================================
-                logger.error ( 'DBASE cannot be cused %s' % dump_dbase , exc_info = True ) 
+                logger.error ( 'DBASE cannot be used %s' % dump_dbase , exc_info = True ) 
                 self.__dump_dbase = None
                 
     # =========================================================================
@@ -959,8 +959,7 @@ class TaskManager(object) :
                                                              progress = False ) :
                     
                     merged_stat += stat
-                    
-                    
+                                        
                     if self.dump_jobs < 0  or ( index < self.dump_jobs ) :
                         with DBASE.open ( self.dump_dbase ) as db :
                             key = 'results_%d' % index 
@@ -972,7 +971,7 @@ class TaskManager(object) :
 
                     if 0 < self.dump_freq and 0 == index % self.dump_freq :
                         with DBASE.open ( self.dump_dbase ) as db :
-                            db [ 'merged_%d'  % index ] = results
+                            db [ 'merged' ] = index , results
                             
                     ## advance progress bar & job counter 
                     bar   += 1 
@@ -984,7 +983,7 @@ class TaskManager(object) :
                 ## dump merged results at the end of each chunk 
                 if 0 < self.dump_freq :  
                     with DBASE.open ( self.dump_dbase ) as db :
-                        db [ 'merged_%d'  % index ] = results 
+                        db [ 'merged' ] = index , results 
                                                 
         ## final results at the end of each chunk 
         if 0 < self.dump_freq :  

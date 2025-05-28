@@ -62,9 +62,10 @@ logger.debug ( "Helper functions for pretty prints of some object" )
 #  fmtv , expo = fmt_pretty_values ( e1 , e2 , e3 )
 #  @endcode
 #  @return formats for nice string and the separate exponent 
-def fmt_pretty_values ( *values         ,
-                        width       = 6 ,
-                        precision   = 4 ) : 
+def fmt_pretty_values ( *values            ,
+                        width       = 6    ,
+                        precision   = 4    ,
+                        with_sign   = True ) : 
     """ Formats for nice printout of the object with errors  ( strings + exponent)
     >>> fmtv , expo = fmt_pretty_values ( e1 , e2 , e3 ) 
     """
@@ -77,11 +78,12 @@ def fmt_pretty_values ( *values         ,
     
     av = max ( abs ( float ( v )  ) for v in values )
     
-    from ostap.math.base import iszero, frexp10  
-    if   100 <= av < 1000 : return '%%+%d.%df' %  ( width , precision - 2 ) , 0 
-    elif 10  <= av < 100  : return '%%+%d.%df' %  ( width , precision - 1 ) , 0 
-    elif 0.1 <= av < 10   : return '%%+%d.%df' %  ( width , precision     ) , 0 
-    elif iszero ( av )    : return '%%+%d.%df' %  ( width , precision     ) , 0 
+    from ostap.math.base import iszero, frexp10
+    the_format =  '%%+%d.%df' if with_sign else  '%%%d.%df'
+    if   100 <= av < 1000 : return the_format % ( width , precision - 2 ) , 0 
+    elif 10  <= av < 100  : return the_format % ( width , precision - 1 ) , 0 
+    elif 0.1 <= av < 10   : return the_format % ( width , precision     ) , 0 
+    elif iszero ( av )    : return the_format % ( width , precision     ) , 0 
 
     ## here we scale input data and try to get formats for scaled data
     
@@ -96,7 +98,8 @@ def fmt_pretty_values ( *values         ,
     ## get formats for properly scaled data
     fmtv , expo = fmt_pretty_values ( scaled                ,
                                       width     = width     ,
-                                      precision = precision )
+                                      precision = precision ,
+                                      with_sign = with_sign )
     
     return fmtv , expo + 3 * n 
 
@@ -106,10 +109,11 @@ def fmt_pretty_values ( *values         ,
 #  fmtv , fmte , expo = fmt_pretty_errs ( number , ( e1 , e2 , e3 ) ) 
 #  @endcode
 #  @return formats for nice string and the separate exponent 
-def fmt_pretty_errors ( value            ,
-                        *errors          , 
-                        width       = 6  ,
-                        precision   = 4  ) : 
+def fmt_pretty_errors ( value              ,
+                        *errors            ,  
+                        width       = 6    ,
+                        precision   = 4    ,
+                        with_sign   = True ) : 
     """ Formats for nice printout of the object with errors  ( strings + exponent)
     >>> fmtv , fmte , expo = fmt_pretty_errs ( number , ( e1 , e2 , e3 )  ) 
     """
@@ -128,27 +132,30 @@ def fmt_pretty_errors ( value            ,
     ## quantity that actually defines the format 
     av = max ( abs ( v ) , e )
 
+    vformat = '%%+%d.%df' if with_sign else '%%%d.%df'
+    eformat = '%%-%d.%df'
+    
     if   100 <= av < 1000 :
         
-        fmtv  = '%%+%d.%df' %  ( width , precision - 2 )
-        fmte  = '%%-%d.%df' %  ( width , precision - 2 )        
+        fmtv  = vformat %  ( width , precision - 2 )
+        fmte  = eformat %  ( width , precision - 2 )        
         return fmtv, fmte , 0
     
     elif 10  <= av < 100  :
         
-        fmtv  = '%%+%d.%df' %  ( width , precision - 1 )
-        fmte  = '%%-%d.%df' %  ( width , precision - 1 )
+        fmtv  = vformat  %  ( width , precision - 1 )
+        fmte  = eformat  %  ( width , precision - 1 )
         return fmtv  , fmte , 0
     
     elif 0.1 <= av < 10 :
         
-        fmtv  = '%%+%d.%df' %  ( width , precision     )
-        fmte  = '%%-%d.%df' %  ( width , precision     )
+        fmtv  = vformat  %  ( width , precision     )
+        fmte  = eformat  %  ( width , precision     )
         return fmtv , fmte , 0
 
     if iszero ( av ) :
-        fmtv  = '%%+%d.%df' %  ( width , precision     )
-        fmte  = '%%-%d.%df' %  ( width , precision     )
+        fmtv  = vformat %  ( width , precision     )
+        fmte  = eformat %  ( width , precision     )
         return fmtv , fmte , 0 
 
     #
@@ -169,7 +176,8 @@ def fmt_pretty_errors ( value            ,
     fmtv , fmte , expo = fmt_pretty_errors ( v                     ,
                                              *errs                 , 
                                              width     = width     ,
-                                             precision = precision )
+                                             precision = precision ,
+                                             with_sign = with_sign )
     
     return fmtv , fmte , expo + 3 * n 
 
@@ -179,9 +187,10 @@ def fmt_pretty_errors ( value            ,
 #  fmt , expo = fmt_pretty_float ( number ) 
 #  @endcode
 #  @return format for nice string and the separate exponent 
-def fmt_pretty_float ( value         ,
-                       width     = 6 ,
-                       precision = 4 ) :
+def fmt_pretty_float ( value            ,
+                       width     = 6    ,
+                       precision = 4    ,
+                       with_sign = True ) :
     """ Format for nice printout of the floating number
     - return format for nice string and the separate exponent 
     >>> fmt , expo = fmt_pretty_float ( number ) 
@@ -197,7 +206,10 @@ def fmt_pretty_float ( value         ,
     elif math.isnan ( value ) : return "%s" , 0
 
     ## get the format 
-    return fmt_pretty_values ( value , width = width , precision = precision ) 
+    return fmt_pretty_values ( value                 ,
+                               width     = width     ,
+                               precision = precision ,
+                               with_sign = with_sign ) 
 
 # ===============================================================================
 ## Formats nice printout of the valuw with (sinle, symmetric)  error
@@ -209,6 +221,7 @@ def fmt_pretty_error ( value              ,
                        error              , 
                        width       = 6    ,
                        precision   = 4    ,
+                       with_sign   = True , 
                        parentheses = True ) :
     """ Formats for nice printout of the value with (single symmetric) error 
     - return formats for nice stirng and the separate exponent 
@@ -226,7 +239,8 @@ def fmt_pretty_error ( value              ,
     fmtv , fmte , expo = fmt_pretty_errors ( v                     ,
                                              e                     , 
                                              width     = width     ,
-                                             precision = precision ) 
+                                             precision = precision ,
+                                             with_sign = with_sign ) 
     
     fmt = '%s %s %s' % ( fmtv , plus_minus , fmte ) 
     if parentheses : fmt = '( ' + fmt + ' )'
@@ -244,6 +258,7 @@ def fmt_pretty_error2 ( value              ,
                         errhigh            ,
                         width       = 6    ,
                         precision   = 4    ,
+                        with_sign   = True , 
                         parentheses = True ) :
     """ Formats for nice printout of the object with asymmetric  errors ( string + exponent)
     >>> fmt , fmtv , fmte , expo = fmt_pretty_err2 ( number , elow  , ehigh ) 
@@ -261,8 +276,9 @@ def fmt_pretty_error2 ( value              ,
 
     ## get the formats 
     fmtv , fmte , expo = fmt_pretty_errors ( v , el , eh ,
-                                             width     = width       ,
-                                             precision = precision   ) 
+                                             width     = width     ,
+                                             precision = precision ,
+                                             with_sign = with_sign ) 
     
     fmt = '%s -/%s +/%s' % ( fmtv , fmte , fmte )
     if parentheses : fmt = '( ' + fmt + ' )' 
@@ -279,9 +295,10 @@ def fmt_pretty_error2 ( value              ,
 #  s , expo = pretty_float ( number ) 
 #  @endcode
 #  @return nice stirng and the separate exponent 
-def pretty_float ( value         ,
-                   width     = 6 ,
-                   precision = 4 ) :
+def pretty_float ( value            ,
+                   width     = 6    ,
+                   precision = 4    ,
+                   with_sign = True ) :
     """ Nice printout of the floating number
     - return nice string and the separate exponent 
     >>> s , expo = pretty_float ( number )
@@ -297,7 +314,8 @@ def pretty_float ( value         ,
     ## get format 
     fmt , expo = fmt_pretty_float ( value     = v         ,
                                     width     = width     ,
-                                    precision = precision )
+                                    precision = precision ,
+                                    with_sign = with_sign )
     if expo :
         scale = 10 ** expo
         v /= scale
@@ -341,7 +359,7 @@ def pretty_error ( value              ,
         return fmt % ( v , fe ) , ne 
     elif not fine  :
         fv , nv = pretty_float ( value = v , width = width , precision = precision ) 
-        fmt = '%%%ds %s %%-%ds' % ( width , plus_miuns , width ) 
+        fmt = '%%%ds %s %%-%ds' % ( width , plus_minus , width ) 
         if parentheses : fmt = '( %s )' % fmt 
         return fmt % ( fv , e ) , nv
 
