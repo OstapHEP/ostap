@@ -112,27 +112,19 @@ class ResoGauss(RESOLUTION) :
         self.__kappa = self.make_var ( ZERO if kappa is None else kappa , 
                                        'kappa_%s'   % self.name ,
                                        '#kappa(%s)' % self.name ,
-                                       None , 0 , -1 , +1 ) 
-
-        if kappa is None :
-
-            self.__sigmaL = self.sigma_corr
-            self.__sigmaR = self.sigma_corr
-
-        else :
+                                       None , 0 , -1.0+1.e-9 , +1.0-1.e-9 )
+        
+        if kappa is None :            
+            self.__AV_SIGMA = self.asymmetry_vars ( 'sigma'                   ,
+                                                    var1    = self.sigma_corr ,
+                                                    var2    = self.sigma_corr , left_right = "LR" )
+        else :            
+            self.__AV_SIGMA = self.asymmetry_vars ( 'sigma'                   ,
+                                                    halfsum = self.sigma_corr ,
+                                                    kappa   = self.__kappa    , left_right = "LR" )
             
-            self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
-                self.sigma_corr                                   , ## mean/average sigma
-                self.kappa                                        , ## asymmetry parametet
-                v1name  =  self.roo_name ( 'sigmaL' , self.name ) ,
-                v2name  =  self.roo_name ( 'sigmaR' , self.name ) ,
-                v1title = '#sigma_L: #sigma #times (1+#kappa)'    , 
-                v2title = '#sigma_R: #sigma #times (1-#kappa)'    )
-                #
-        ## build gaussian resolution model
-        #
         # self.gauss = ROOT.RooGaussModel(
-        if kappa is None :
+        if kappa is None or self.__kappa is ZERO : 
             
             self.gauss = ROOT.RooGaussian (
                 self.roo_name ( 'rgauss_' )       ,
@@ -166,19 +158,19 @@ class ResoGauss(RESOLUTION) :
     @property
     def kappa ( self ) :
         """'kappa' : asymmetry parameter"""
-        return self.__kappa
+        return self.__AV_SIGMA.kappa
     @kappa.setter
     def kappa ( self , value ) :
-        self.set_value ( self.__kappa , value )
+        self.__AV_SIGMA.kappa = value 
 
     @property
     def sigmaL ( self ) :
         """'sigmaL': left sigma"""
-        return self.__sigmaL
+        return self.__AV_SIGMA.var1
     @property
     def sigmaR ( self ) :
         """'sigmaR': left sigma"""
-        return self.__sigmaR
+        return self.__AV_SIGMA.var2 
         
         
 models.add ( ResoGauss ) 
@@ -298,28 +290,23 @@ class ResoApo2(RESOLUTION) :
                                         sigma = sigma ,
                                         mean  = mean  ,
                                         fudge = fudge )
-
-        if kappa is None :
-            
-            self.__kappa  = ZERO
-            self.__sigmaL = self.sigma_corr
-            self.__sigmaR = self.sigma_corr
-            
+        
+        self.__kappa = self.make_var ( ZERO if kappa is None else kappa   ,
+                                       'kappa_%s'   % self.name           ,
+                                       '#kappa(%s)' % self.name           ,
+                                       None , 0 , -1.0+1.e-9 , +1.0-1.e-9 ) 
+        
+        if kappa is None or self.__kappa is ZERO :
+        
+            self.__AV_SIGMA = self.asymmetry_vars ( 'sigma' ,
+                                                    var1    = self.sigma_corr ,
+                                                    var2    = self.sigma_corr , left_right = "LR" )
         else :
-
-            self.__kappa = self.make_var ( kappa        ,
-                                           'kappa_%s'   % self.name ,
-                                           '#kappa(%s)' % self.name ,
-                                           None , 0 , -1 , +1 ) 
             
-            self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
-                self.sigma_corr                                   , ## mean/average sigma
-                self.kappa                                        , ## asymmetry parametet
-                v1name  =  self.roo_name ( 'sigmaL' , self.name ) ,
-                v2name  =  self.roo_name ( 'sigmaR' , self.name ) ,
-                v1title = '#sigma_L: #sigma #times (1+#kappa)'    , 
-                v2title = '#sigma_R: #sigma #times (1-#kappa)'    )
-                
+            self.__AV_SIGMA = self.asymmetry_vars ( 'sigma' ,
+                                                    halfsum = self.sigma_corr ,
+                                                    kappa   = self.__kappa    , left_right = "LR" )
+            
         self.__beta    = self.make_var ( beta ,
                                          'beta_%s'   % name  ,
                                          '#beta(%s)' % name  ,
@@ -364,19 +351,19 @@ class ResoApo2(RESOLUTION) :
     def kappa ( self ) :
         """'kappa' : asymmetry parameter
         """
-        return self.__kappa
+        return self.__AV_SIGMA.kappa
     @kappa.setter
     def kappa ( self , value ) :
-        self.set_value ( self.__kappa , value )
+        self.__AV_SIGMA_kappa = value
         
     @property
     def sigmaL ( self )  :
         """'sigmaL' : left sigma-parameter"""
-        return self.__sigmaL
+        return self.__AV_SIGMA.var1
     @property
     def sigmaR ( self )  :
         """'sigmaR' : right  sigma-parameter"""
-        return self.__sigmaR
+        return self.__AV_SIGMA.var2 
     
 models.add ( ResoApo2 )
 
@@ -399,7 +386,7 @@ class ResoCB2_(RESOLUTION) :
                    xvar          ,   ## the   variable 
                    sigma         ,   ## core  resolution
                    alphaL = 1.5  ,   ## left  alpha
-                   alphaR = None ,   ## right alpha
+                   alphaR = None ,   ## right alpha (the same as left alpha if None)
                    nL     = 5    ,   ## left  N 
                    nR     = None ,   ## right N 
                    fudge  = 1    ,   ## fudge-factor 
@@ -417,23 +404,20 @@ class ResoCB2_(RESOLUTION) :
                                         'alphaL_'     + name ,
                                         '#alphaL(%s)' % name , *alpha_pars )
         
-        if alphaR is None : self.__alphaR = self.__alphaL
-        else              : self.__alphaR = self.make_var ( alphaR               ,
-                                                            'alphaR_'     + name ,
-                                                            '#alphaR(%s)' % name , *alpha_pars )
+        self.__alphaR = self.make_var ( self.alphaL if alphaR is None else alphaR , 
+                                        'alphaR_'     + name ,
+                                        '#alphaR(%s)' % name , *alpha_pars )
         
-        n_pars = None , 5 , 1.e-6 , 200 
+        n_pars = None , 5 , 1.e-8 , 200 
         self.__nL     = self.make_var ( nL                   ,
                                         'nL_'         + name ,
-                                        'nL(%s)'      % name , *n_pars)
+                                        'nL(%s)'      % name , *n_pars)        
+        self.__nR     = self.make_var ( self.nL if nR is None else nR ,
+                                        'nR_'    + name   ,
+                                        'nR(%s)' % name   , *n_pars ) 
         
-        if nR is None : self.__nR = self.__nL 
-        else          : self.__nL = self.make_var ( nR                ,
-                                                    'nR_'    + name   ,
-                                                    'nR(%s)' % name   , *n_pars ) 
-        
-        self.__AV_ALPHA = self.asymmetry_vars ( 'alpha' , var1 = self.alphaL , var2 = alphaR )
-        self.__AV_N     = self.asymmetry_vars ( 'n'     , var1 = self.nL     , var2 = nR     )
+        self.__AV_ALPHA = self.asymmetry_vars ( 'alpha' , var1 = self.alphaL , var2 = self.alphaR  , left_right = 'LR')
+        self.__AV_N     = self.asymmetry_vars ( 'n'     , var1 = self.nL     , var2 = self.nR      , left_right = 'LR')
         
         ## actual PDF 
         self.cb1 = Ostap.Models.CrystalBallDS (
@@ -512,22 +496,22 @@ class ResoCB2_(RESOLUTION) :
     @property
     def kappaA ( self ) :
         """`kappaA` : asymmetry for `alpha`"""
-        return self._AV_ALPHA.kappa
+        return self.__AV_ALPHA.kappa
         
     @property
     def kappaN ( self ) :
         """`kappaN` : asymmetry for `n`"""
-        return self._AV_N.kappa
+        return self.__AV_N.kappa
 
     @property
     def psiA ( self ) :
         """`psiA` : skew for `alpha`"""
-        return self._AV_ALPHA.psi
+        return self.__AV_ALPHA.psi
         
     @property
     def psiN ( self ) :
         """`psiN` : skew for `n`"""
-        return self._AV_N.psi
+        return self.__AV_N.psi
         
 models.add ( ResoCB2_ )
 # ===============================================================================
@@ -561,7 +545,7 @@ class ResoCB2(RESOLUTION) :
                                        sigma = sigma ,
                                        mean  = mean  ,
                                        fudge = fudge )
-        
+
         self.__alpha = self.make_var ( alpha               ,
                                        'alpha_'     + name ,
                                        '#alpha(%s)' % name ,
@@ -581,8 +565,8 @@ class ResoCB2(RESOLUTION) :
                                         '#kappa_{a}(%s)' % self.name       ,
                                         None , 0 , -1 , +1 )
         
-        self.__AV_ALPHA = self.asymmetry_vars ( 'alpha' , halfsum = self.alpha , kappa = self.kappaA )
-        self.__AV_N     = self.asymmetry_vars ( 'n'     , halfsum = self.n     , kappa = self.kappaN )
+        self.__AV_ALPHA = self.asymmetry_vars ( 'alpha' , halfsum = self.alpha , kappa = self.kappaA , left_right = 'LR' )
+        self.__AV_N     = self.asymmetry_vars ( 'n'     , halfsum = self.n     , kappa = self.kappaN , left_right = 'LR' )
         
         ## actual PDF 
         self.cb2 = Ostap.Models.CrystalBallDS (
@@ -707,56 +691,37 @@ class ResoStudentT(RESOLUTION) :
                                             mean  = mean  ,
                                             fudge = fudge )
         
-        self.__n     = self.make_var ( n                      ,
-                                       'ResoN_'        + name ,
-                                       'ResoN(%s)'     % name ,
-                                       None , 1 , 1.e-6 , 200 )
+        self.__n      = self.make_var ( n                      ,
+                                        'ResoN_'        + name ,
+                                        'ResoN(%s)'     % name ,
+                                        None , 1 , 1.e-6 , 200 )
+        
+        self.__kappaN = self.make_var ( ZERO if kappaN is None else kappaN ,
+                                        "kappaN_%s"      % name ,
+                                        "#kappa_{n}(%s)" % name ,
+                                        None , 0 , -1.0 + 1.e-9 , +1.0 - 1.e-9 )
+        
+        self.__kappaS = self.make_var ( ZERO if kappaS is None else kappaS ,
+                                        "kappaS_%s"           % name ,
+                                        "#kappa_{#sigma}(%s)" % name ,
+                                        None , 0 , -1.0+1.e-9 , 1.0-1.e-9 )
+        
+        ## n,nL,nR    
+        if kappaN is None or self.__kappaN is ZERO :            
+            self.__AV_N = self.asymmetry_vars ( 'n'  , var1    = self.__n , var2  = self.__n  )
+        else :            
+            self.__AV_N = self.asymmetry_vars ( 'n'  , halfsum = self.__n , kappa = self.__kappaN )
 
-        if kappaN is None :
-
-            self.__kappaN = ZERO 
-            self.__nL     = self.n
-            self.__nR     = self.n
-
-        else :
-            
-            self.__kappaN = self.make_var ( ZERO if kappaN is None else kappaN ,
-                                            "kappaN_%s"      % name ,
-                                            "#kappa_{n}(%s)" % name ,
-                                            None , 0 , -1 , 1 )
-            
-            self.__nL , self.__nR = self.vars_from_asymmetry (
-                self.n                                        , ## mean/average n
-                self.kappaN                                   , ## asymmetry parametet
-                v1name  =  self.roo_name ( 'nL' , self.name ) ,
-                v2name  =  self.roo_name ( 'nR' , self.name ) ,
-                v1title = 'n_{L}: n #times (1+#kappa_{n})'    , 
-                v2title = 'n_{R}: n #times (1-#kappa_{n})'    )
-
-        if kappaS is None :
-
-            self.__kappaS = ZERO 
-            self.__sigmaL = self.sigma_corr
-            self.__sigmaR = self.sigma_corr 
-            
-        else:
-            
-            self.__kappaS = self.make_var ( ZERO if kappaS is None else kappaS ,
-                                            "kappaS_%s"           % name ,
-                                            "#kappa_{#sigma}(%s)" % name ,
-                                            None , 0 , -1 , 1 )
-            self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
-                self.sigma_corr                                   , ## mean/average sigma
-                self.kappaS                                       , ## asymmetry parameter
-                v1name  =  self.roo_name ( 'sigmaL' , self.name ) ,
-                v2name  =  self.roo_name ( 'sigmaR' , self.name ) ,
-                v1title = '#sigma_L: #sigma #times (1+#kappa)'    , 
-                v2title = '#sigma_R: #sigma #times (1-#kappa)'    )
+        if kappaS is None or self.__kappaS is ZERO :
+            self.__AV_SIGMA = self.asymmetry_vars ( 'sigma' , var1    = self.sigma_corr , var2  = self.sigma_corr )
+        else :            
+            self.__AV_SIGMA = self.asymmetry_vars ( 'sigma' , halfsum = self.sigma_corr , kappa = self.__kappaS   )
                  
         # 
         ## finally build pdf
         #
-        if kappaN is None and kappaS is None :
+        if ( kappaN is None or self.__kappaN is ZERO ) and \
+           ( kappaS is None or self.__kappaS is ZERO ) : 
             
             self.pdf = Ostap.Models.StudentT (
                 self.roo_name ( 'rstt_' )       ,
@@ -794,10 +759,10 @@ class ResoStudentT(RESOLUTION) :
     @property
     def n ( self  ) :
         """'n' parameter for symmetric Student-T resolution function"""
-        return self.__n
+        return self.__AV_N.halfsum 
     @n.setter
     def n ( self , value ) :
-        self.set_value ( self.__n , value ) 
+        self.__AV_N.halfsum = value 
 
     @property
     def kappaN ( self  ):
@@ -818,20 +783,20 @@ class ResoStudentT(RESOLUTION) :
     @property
     def nL ( self ) :
         """'nL' : 'n'-parameter for left  part"""
-        return self.__nL        
+        return self.__AV_N.var1 
     @property
     def nR ( self ) :
         """'nR' : 'n'-parameter for right part"""
-        return self.__nR
+        return self.__AV_N_var2
 
     @property
     def sigmaL ( self ) :
         """'sigmaL' : 'sigma'-parameter for left  part"""
-        return self.__sigmaL        
+        return self.__AV_SIGMA.var1      
     @property
     def sigmaR ( self ) :
         """'sigmaR' : 'sigma'-parameter for right part"""
-        return self.__sigmaR        
+        return self.__AV_SIGMA.var2    
         
 models.add ( ResoStudentT )
 
@@ -1118,9 +1083,9 @@ class ResoSkewGenError(RESOLUTION) :
     - asymmetry
     - see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#Skewed_generalized_error_distribution
     - see `Ostap.Math.SkewGenError`
-    - see `Ostap.Mdoels.SkewGenError`
+    - see `Ostap.Models.SkewGenError`
     - see `Ostap.Math.SkewGenError`
-    - see `Ostap.Mdoels.SkewGenError`
+    - see `Ostap.Models.SkewGenError`
     """
     def __init__ ( self           ,
                    name           ,   ## the name 
@@ -2219,20 +2184,10 @@ class ResoDas(RESOLUTION) :
                                        '#kappa(%s)'  % name ,
                                        None , 0 , -1 , +1 ) 
         
-        if kappa  is None :
-
-            self.__kL = self.k
-            self.__kR = self.k
-
+        if kappa  is None or self.__kappa is ZERO :
+            self.__AV_K = self.asymmetry_vars ( 'k' , var1    = self.__k , var2 = self.__k )
         else :
-
-            self.__kL , self.__kR = self.vars_from_asymmetry (
-                self.k                                        , ## mean/average k
-                self.kappa                                    , ## asymmetry parametet
-                v1name  =  self.roo_name ( 'kL' , self.name ) ,
-                v2name  =  self.roo_name ( 'kR' , self.name ) ,
-                v1title = 'k_{L}: k #times (1+#kappa)'        , 
-                v2title = 'k_{R}: k #times (1-#kappa)'        )
+            self.__AV_K = self.asymmetry_vars ( 'k' , halfsum = self.__k , kappa = self.__kappa  )
             
         ## mu 
         self.__mu    = self.mean 
@@ -2272,7 +2227,7 @@ class ResoDas(RESOLUTION) :
         return self.__k
     @k.setter
     def k ( self , value ) :
-        self.set_value ( self.__k , value )
+        self.set_value ( self.__k , value ) 
         
     @property
     def kappa ( self ) :
@@ -2285,13 +2240,13 @@ class ResoDas(RESOLUTION) :
     @property
     def kL  ( self ) :
         """'kL' : left tail parameter"""
-        return self.__kL
+        return self.__AV_K.var1 
 
     @property
     def kR  ( self ) :
         """'kR' : right tail parameter"""
-        return self.__kR
-    
+        return self.__AV_K.var2 
+
 # =============================================================================
 ## @class ResoGenGaussV1
 #  Simple class that implements the generalized normal distribution v1
@@ -2492,22 +2447,11 @@ class ResoNormalLaplace(RESOLUTION) :
                                        'kappa_%s'   % self.name ,
                                        '#kappa(%s)' % self.name ,
                                        None , 0 , -1 , +1 ) 
-        
-        
-        if kappa is None :
-            
-            self.__kL = self.__k 
-            self.__kR = self.__k
-            
+                
+        if kappa is None or self.__kappa is ZERO : 
+            self.__AV_K = self.asymmetry_vars ( 'k' , var1    = self.__k , var2  = self.__k     )
         else :
-            
-            self.__kL , self.__kR = self.vars_from_asymmetry (
-                self.k                                            , ## exponenital slope 
-                self.kappa                                        , ## asymmetry parametet
-                v1name  =  self.roo_name ( 'kL' , self.name ) ,
-                v2name  =  self.roo_name ( 'kR' , self.name ) ,
-                v1title = '#k_L: k #times (1+#kappa)'         , 
-                v2title = '#k_R: k #times (1-#kappa)'         )
+            self.__AV_K = self.asymmetry_vars ( 'k' , halfsum = self.__k , kappa = self.__kappa )
   
         #
         ## finally build PDF
@@ -2551,12 +2495,12 @@ class ResoNormalLaplace(RESOLUTION) :
     @property 
     def kL ( self ) :
         """'kL' :  (dimensioneless) kL-parameter"""
-        return self.__kL
+        return self.__AV_K.var1 
         
     @property 
     def kR ( self ) :
         """'kR' :  (dimensioneless) kR-parameter"""
-        return self.__kR
+        return self.__AV_K.var2 
 
     @property
     def kappa ( self ) :
@@ -2593,7 +2537,7 @@ class ResoBukin2(RESOLUTION) :
                                          sigma       = varsigma ,                                     
                                          mean        = mean     ,
                                          fudge       = fudge    ,
-                                         sigma_name  = 'varsigma_%s'   % name ,                                               
+                                         sigma_name  = 'varsigma_%s'   % name ,                                         
                                          sigma_title = '#varsigma(%s)' % name )
         
         ## asymmetry parameter 
@@ -2602,26 +2546,19 @@ class ResoBukin2(RESOLUTION) :
                                        '#kappa(%s)' % self.name ,
                                        None , 0 , -1 , +1 )
 
-
-        if kappa is None :
-
-            self.__varsigmaA = self.sigma_corr
-            self.__varsigmaB = self.sigma_corr
-
+        
+        if kappa is None or self.__kappa is ZERO  :
+            self.__AV_S = self.asymmetry_vars ( 'varsigma' ,
+                                                var1 = self.sigma_corr    ,
+                                                var2 = self.sigma_corr    , left_right = "AB" )
         else :
+            self.__AV_S = self.asymmetry_vars ( 'varsigma' ,
+                                                halfsum = self.sigma_corr ,
+                                                kappa   = self.__kappa    , left_right = "AB" )
             
-            self.__varsigmaA , self.__varsigmaB = self.vars_from_asymmetry (
-                self.sigma_corr                                   , ## mean/average sigma
-                self.kappa                                        , ## asymmetry parametet
-                v1name  =  self.roo_name ( 'varsigmaA' , self.name ) ,
-                v2name  =  self.roo_name ( 'varsigmaB' , self.name ) ,
-                v1title = '#sigma_A: #sigma #times (1+#kappa)'    , 
-                v2title = '#sigma_B: #sigma #times (1-#kappa)'    )
-                #
-                
         ## k-parameters 
         if   kA is None and kB is None :
-            
+                
             self.__kA , self.__kB = ZERO, ZERO 
             
         elif kA is None :
@@ -2707,12 +2644,12 @@ class ResoBukin2(RESOLUTION) :
     @property
     def varsigmaA   ( self ) :
         """'varsigmaA' : varsigmaA parameter for Bukin2 function"""
-        return self.__varsigmaA 
+        return self.__AV_S.var1
 
     @property
     def varsigmaB   ( self ) :
         """'varsigmaB' : varsigmaB parameter for Bukin2 function"""
-        return self.__varsigmaB 
+        return self.__AV_S.var2  
 
     @property 
     def kA  ( self ) :

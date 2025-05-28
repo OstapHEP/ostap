@@ -2,8 +2,8 @@
 ## New features
 
   1. more platforms to test via GitHub Actions (added gcc15) 
-  1. more coherent tretment of status-codes in HistoProject 
-  1. add few more `MoreRooFit` fucttions
+  1. more coherent treatment of status-codes in `HistoProject` 
+  1. add few more `MoreRooFit` functions
   1. add `AsymVars` helper structure in `fthelpers.py`
   1. add `table` mehtod for `AFUN1` and bundle it with `__str__` and `__repr__`.
      Now for all derived objects a detailed table it printed

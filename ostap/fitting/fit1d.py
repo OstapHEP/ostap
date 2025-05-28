@@ -27,7 +27,7 @@ from   ostap.core.ostap_types   import ( is_integer     , string_types   ,
                                          list_types     , all_numerics   ) 
 from   ostap.fitting.funbasic   import FUN1
 from   ostap.fitting.pdfbasic   import PDF1, APDF1, Sum1D
-from   ostap.fitting.utils      import make_name, ZERO 
+from   ostap.fitting.utils      import make_name, ZERO, ONE  
 import ROOT, math,  random
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -296,8 +296,17 @@ class RESOLUTION(PEAK) :
         self.__fudge            = fudge        
         self.__fudge_constraint = None
         self.__sigma_corr       = None
-        
-        if isinstance ( fudge , VE ) :
+
+        ## no  correction...
+        if fudge is ONE :
+            
+            ## fudge is trivial 
+            self.__fudge = fundge 
+
+            ## corrected sigma is trivial 
+            self.__sigma_corr = self.sigma
+            
+        elif isinstance ( fudge , VE ) :
             
             assert 0 < fudge.value() and 0 < fudge.cov2(),\
                    "Invalid value for 'fudge-factor': %s" % s 
@@ -311,7 +320,7 @@ class RESOLUTION(PEAK) :
             self.__fudge = self.make_var ( value ,
                                            'fudge_factor_%s'  % self.name ,
                                            'fudge_factor(%s)' % self.name ,
-                                           True , vmin , vmax            )
+                                           True , vmin , vmax             )
             
             ## create soft/gaussian constraint for fudge-factor
             self.__fudge_constraint = self.soft_constraint (
@@ -329,7 +338,7 @@ class RESOLUTION(PEAK) :
             
         elif isinstance ( fudge , num_types ) and 1 == fudge :
 
-            ## fudge is trivial 
+            ## fudge is trivial/constant  
             self.__fudge = ROOT.RooFit.RooConst ( fudge )
 
             ## corrected sigma is trivial 
@@ -337,7 +346,7 @@ class RESOLUTION(PEAK) :
             
         elif isinstance ( fudge , num_types ) :
             
-            ## fudge is trivial 
+            ## fudge is trivial/constant  
             self.__fudge = ROOT.RooFit.RooConst ( fudge )
 
         else :
@@ -413,7 +422,6 @@ class RESOLUTION(PEAK) :
     __rmatmult__ = __rmod__     
     
     
-
 # =============================================================================
 ## @class Fit1D
 #  The actual model for 1D-mass fits
@@ -881,9 +889,9 @@ class Fit1D (PDF1) :
         return () if not self.extended else self.component_getter ( self.__S )    
     @S.setter
     def S (  self , value ) :
-        assert self.extended, "'S'' cannot be set for non-exteded model!"
+        assert self.extended, "'S' cannot be set for non-exteded model!"
         self.component_setter ( self.__S , value )
-
+        
     @property
     def B ( self ) :
         """Get the  yields of background  component(s) (empty for non-extended fits)
