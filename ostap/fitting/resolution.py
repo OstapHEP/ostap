@@ -53,7 +53,7 @@ __all__     = (
     'ResoGauss2'        , ## double-Gaussian resolutin model,
     'ResoApo2'          , ## Apollonios-2 resolution model,
     'ResoCB2'           , ## double-sided Crystal Ball resolution model,
-    'ResoCB2_'          , ## double-sided Crystal Ball resolution model,
+    'ResoCB2a'          , ## double-sided Crystal Ball resolution model,
     'ResoStudentT'      , ## Student-T resolution model,
     'ResoPearsonIV'     , ## Pearson Tyep IV resolution model
     'ResoSkewGenT'      , ## Skewed Generalized t-distribution 
@@ -118,11 +118,11 @@ class ResoGauss(RESOLUTION) :
         if kappa is None :            
             self.__AV_SIGMA = self.asymmetry_vars ( 'sigma'                   ,
                                                     var1    = self.sigma_corr ,
-                                                    var2    = self.sigma_corr , left_right = "LR" )
+                                                    var2    = self.sigma_corr )
         else :            
             self.__AV_SIGMA = self.asymmetry_vars ( 'sigma'                   ,
                                                     halfsum = self.sigma_corr ,
-                                                    kappa   = self.__kappa    , left_right = "LR" )
+                                                    kappa   = self.__kappa    )
             
         # self.gauss = ROOT.RooGaussModel(
         if kappa is None or self.__kappa is ZERO : 
@@ -301,12 +301,12 @@ class ResoApo2(RESOLUTION) :
         
             self.__AV_SIGMA = self.asymmetry_vars ( 'sigma' ,
                                                     var1    = self.sigma_corr ,
-                                                    var2    = self.sigma_corr , left_right = "LR" )
+                                                    var2    = self.sigma_corr )
         else :
             
             self.__AV_SIGMA = self.asymmetry_vars ( 'sigma' ,
                                                     halfsum = self.sigma_corr ,
-                                                    kappa   = self.__kappa    , left_right = "LR" )
+                                                    kappa   = self.__kappa    )
             
         self.__beta    = self.make_var ( beta ,
                                          'beta_%s'   % name  ,
@@ -369,13 +369,13 @@ class ResoApo2(RESOLUTION) :
 models.add ( ResoApo2 )
 
 # =============================================================================
-## @class ResoCB2_
+## @class ResoCB2a
 #  (A)Symmetrical double-sided Crystal Ball model for resolution
 #   - (symmetric) Gaussian core 
 #   - power-law tails
 #  @see Ostap::Math::CrystalBallDS
 #  @see Ostap::Models::CrystalBallDS
-class ResoCB2_(RESOLUTION) :
+class ResoCB2a(RESOLUTION) :
     """ (A)Symmetric double-sided Crystal Ball model for resolution
     - Gaussian core 
     - power-law tails
@@ -394,7 +394,7 @@ class ResoCB2_(RESOLUTION) :
                    mean   = None ) : ## the mean value
 
         ## initialize the base 
-        super(ResoCB2_,self).__init__ ( name  = name  ,
+        super(ResoCB2a,self).__init__ ( name  = name  ,
                                         xvar  = xvar  ,
                                         sigma = sigma ,
                                         mean  = mean  ,
@@ -417,8 +417,8 @@ class ResoCB2_(RESOLUTION) :
                                         'nR_'    + name   ,
                                         'nR(%s)' % name   , *n_pars ) 
         
-        self.__AV_ALPHA = self.asymmetry_vars ( 'alpha' , var1 = self.alphaL , var2 = self.alphaR  , left_right = 'LR')
-        self.__AV_N     = self.asymmetry_vars ( 'n'     , var1 = self.nL     , var2 = self.nR      , left_right = 'LR')
+        self.__AV_ALPHA = self.asymmetry_vars ( 'alpha' , var1 = self.alphaL , var2 = self.alphaR )
+        self.__AV_N     = self.asymmetry_vars ( 'n'     , var1 = self.nL     , var2 = self.nR     )
         
         ## actual PDF 
         self.cb2 = Ostap.Models.CrystalBallDS (
@@ -532,7 +532,7 @@ class ResoCB2_(RESOLUTION) :
         """`psiN` : skew for `n`"""
         return self.__AV_N.psi
         
-models.add ( ResoCB2_ )
+models.add ( ResoCB2a )
 # ===============================================================================
 ## @class ResoCB2
 #  (A)Symmetrical double-sided Crystal Ball model for resolution
@@ -584,8 +584,8 @@ class ResoCB2(RESOLUTION) :
                                         '#kappa_{a}(%s)' % self.name       ,
                                         None , 0 , -1 , +1 )
         
-        self.__AV_ALPHA = self.asymmetry_vars ( 'alpha' , halfsum = self.alpha , kappa = self.kappaA , left_right = 'LR' )
-        self.__AV_N     = self.asymmetry_vars ( 'n'     , halfsum = self.n     , kappa = self.kappaN , left_right = 'LR' )
+        self.__AV_ALPHA = self.asymmetry_vars ( 'alpha' , halfsum = self.alpha , kappa = self.kappaA )
+        self.__AV_N     = self.asymmetry_vars ( 'n'     , halfsum = self.n     , kappa = self.kappaN )
         
         ## actual PDF 
         self.cb2 = Ostap.Models.CrystalBallDS (

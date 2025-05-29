@@ -9,7 +9,8 @@
      Now for all derived objects a detailed table it printed
   1. exclude `std::array` from `Ostap.xml`
   1. redesign and rewrite `AsymVars structure
-  1. add `ResoCB2_` resoltuio function - reparameterisatuon of `ResoCB2`. Better name is needed here...
+  1. add `ResoCB2_` resolution function - reparameterisatuon of `ResoCB2`. Better name is needed here...
+  1. rename `ResoCB2_` into `ResoCB2a`
   
 ## Backward incompatible
 
