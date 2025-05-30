@@ -63,15 +63,11 @@ if numpy and scipy : # ========================================================
         >>> x = model.minimum () 
         >>>
         """
-        if x0 == None : x0 = 0.5 * ( xmin + xmax )
-        
-        x0     = numpy.array ( [ x0 ] )
-        
-        bounds = [ ( xmin , xmax ) ]
-        
+        if x0 == None : x0 = 0.5 * ( xmin + xmax )        
+        x0     = numpy.array ( [ x0 ] )        
+        bounds = [ ( xmin , xmax ) ]        
         res    = scipy_minimize ( fun , x0 = x0 , bounds = bounds )
-        if not res.success :
-            logger.error ( "Can't minimize the function: %s" % res.message )
+        if not res.success : logger.error ( "Can't minimize the function: %s" % res.message )
         return res.x[0]
         
     # =========================================================================
@@ -86,7 +82,8 @@ if numpy and scipy : # ========================================================
         >>> x = model.maximum () 
         >>>
         """
-        funmin = lambda x , *a : -1.0 * ( float ( fun ( x , *a ) ) )
+        ## funmin = lambda x , *a : -1.0 * ( float ( fun ( x , *a ) ) )
+        funmin = lambda x , *a : -1.0 * ( fun ( x , *a ) ) 
         return sp_minimum_1D ( funmin , xmin ,  xmax , x0 , *args )
     
     # =========================================================================
@@ -104,14 +101,10 @@ if numpy and scipy : # ========================================================
         >>>
         """
         if not x0 :  x0 = 0.5 * ( xmin + xmax ) , 0.5 * ( ymin + ymax ) 
-
-        x0     = numpy.array ( *x0  )
-        
-        bounds = [ ( xmin , xmax ) , ( ymin , ymax ) ]
-        
+        x0     = numpy.array ( *x0  )        
+        bounds = [ ( xmin , xmax ) , ( ymin , ymax ) ]        
         res    = scipy_minimize ( fun , x0 = x0 , bounds = bounds )
-        if not res.success :
-            logger.error ( "Can't minimize the function: %s" % res.message )
+        if not res.success : logger.error ( "Can't minimize the function: %s" % res.message )
         return res.x[0] , res.x[1] 
             
     # =========================================================================
@@ -149,14 +142,10 @@ if numpy and scipy : # ========================================================
         >>>
         """
         if not x0 :  x0 = 0.5 * ( xmin + xmax ) , 0.5 * ( ymin + ymax ) , 0.5 * ( zmin + zmax ) 
-
-        x0     = numpy.array ( *x0  )
-        
-        bounds = [ ( xmin , xmax ) , ( ymin , ymax ) , ( zmin , zmax ) ]
-        
-        res    = scipuy_minimize ( fun , x0 = x0 , bounds = bounds )
-        if not res.success :
-            logger.error ( "Can't minimize the function: %s" % res.message )
+        x0     = numpy.array ( *x0  )        
+        bounds = [ ( xmin , xmax ) , ( ymin , ymax ) , ( zmin , zmax ) ]        
+        res    = scipy_minimize ( fun , x0 = x0 , bounds = bounds )
+        if not res.success : logger.error ( "Can't minimize the function: %s" % res.message )
         return res.x[0] , res.x[1] , res.x[2] 
         
     # =========================================================================

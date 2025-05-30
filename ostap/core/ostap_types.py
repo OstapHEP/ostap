@@ -66,15 +66,18 @@ str_types       = str ,
 list_types      = list , tuple
 listlike_types  = list_types + ( set , Sequence , array.array )
 # =============================================================================
-if sys.warnoptions or os.environ.get ( 'OSTAP_CMAKE_TEST', False ) :
-    import warnings 
-    with warnings.catch_warnings():
+if sys.warnoptions or os.environ.get ( 'OSTAP_CMAKE_TEST', False ) : # ========
+    import warnings # =========================================================
+    with warnings.catch_warnings(): # =========================================
+        # =====================================================================
         warnings.simplefilter ( "ignore" , category = DeprecationWarning )        
         warnings.simplefilter ( "ignore" , category = UserWarning        )        
         import cppyy
-else :    
+    # =========================================================================
+else : # ======================================================================
+    # =========================================================================
     import cppyy
-# ==============================================================================
+# =============================================================================
 std = cppyy.gbl.std 
 if hasattr ( std , 'string'      ) : string_types += ( std.string      , )
 if hasattr ( std , 'string_view' ) : string_types += ( std.string_view , )

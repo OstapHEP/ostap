@@ -22,6 +22,7 @@ from   ostap.utils.root_utils   import batch_env
 from   ostap.fitting.toys       import pull_var
 from   ostap.math.base          import num_range 
 from   ostap.utils.progress_bar import progress_bar
+from   ostap.logger.symbols     import times 
 import ostap.logger.table       as     T
 import ostap.fitting.models     as     Models
 import ostap.fitting.toys       as     Toys
@@ -186,7 +187,6 @@ def test_toys2 ( ) :
 
     toy_results [ 'test_toys2' ] = results , stats 
 
-
 # ============================================================================
 def toys3_action ( fit_result , fit_pdf , dataset ) :
     return float ( fit_result.mean_FG ) 
@@ -242,6 +242,59 @@ def test_toys3 ( ) :
     logger.info( 'Stats   : [%s]' % ( ', '.join ( key for key in stats   ) ) )
 
     toy_results [ 'test_toys3' ] = results , stats 
+
+
+# =============================================================================
+## Perform toy-study for possible fit bias and correct uncertainty evaluation
+#  - generate <code>nToys</code> pseudoexperiments with some PDF <code>gen_pdf</code>
+#  - fit teach experiment with the PDF <code>fit_pdf</code>
+#  - store  fit results
+#  - fill distributions for fit results
+def test_toys4 ( ) :
+    """ Perform toys-study for possible fit bias and correct uncertainty evaluation
+    - generate `nToys` pseudoexperiments with some PDF `gen_pdf`
+    - fit teach experiment with the PDF `fit_pdf`
+    - store  fit results
+    - fill distributions of fit results
+    """    
+
+    logger = getLogger ( 'test_toys4' )
+
+    gen_pars    = { 'mean_GG' : nominal_mean , 'sigma_GG' : nominal_sigma  } 
+    fit_pars    = { 'mean_FG' : nominal_mean , 'sigma_FG' : nominal_sigma  } 
+
+    ## reset parameters 
+    gen_gauss.load_params ( gen_pars , silent = True )    
+    fit_gauss.load_params ( fit_pars , silent = True )    
+    
+    dataset = gen_gauss.generate ( nEvents = 1000 )
+    r , f   = fit_gauss.fitTo ( dataset , **fit_config ) 
+
+    funcs = { 'RMS'      : fit_gauss.rms      ,
+              'FWHM'     : fit_gauss.fwhm     ,
+              'MODE'     : fit_gauss.mode     ,
+              'MEDIAN'   : fit_gauss.median   ,
+              'MEAN'     : fit_gauss.get_mean , 
+              'SKEWNESS' : fit_gauss.skewness , 
+              'KURTOSIS' : fit_gauss.kurtosis , 
+              'MAXIMUM'  : fit_gauss.maximum  } 
+
+    N = 1000 
+    with Toys.FunToys ( fit_gauss , r ) as toys :
+        counters = toys.run ( funcs , nToys = N  , progress = True )
+        
+    rows = [ ( 'Quantity' , 'value' , 'scale' ) ]
+    for k, v in counters.items() :
+
+        vv       = VE ( v.mean() , v.variance () ) 
+        vv, expo = vv.pretty_print ( parentheses = False )
+        row = k , vv , '%s10^%+d' %  ( times , expo ) if expo else ''
+        rows.append ( row ) 
+
+    rows = T.remove_empty_columns ( rows ) 
+    title = 'PDF features #toys=%d' % N 
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lcl' ) 
+    logger.info ( '%s:\n%s' % ( title , table ) ) 
     
 # ==============================================================================
 ## Perform toy-study for Jackknife (non-extended model) 
@@ -573,7 +626,7 @@ def test_significance ( ) :
     toy_results [ 'test_significance' ] = results , stats
 
 # =============================================================================
-## Save resuls of toys to DBASE 
+## Save results of toys to the DBASE 
 def test_db () :
     """ Save resuls of toys to DBASE 
     """
@@ -591,7 +644,6 @@ def test_db () :
         db.ls()
     while toy_results : toy_results.popitem() 
 # =============================================================================
-
     
 # =============================================================================
 if '__main__' == __name__ :
@@ -599,6 +651,7 @@ if '__main__' == __name__ :
     with memory ( 'test_toys'          , logger = logger ) as mtt : test_toys          ()
     with memory ( 'test_toys2'         , logger = logger ) as mt2 : test_toys2         ()
     with memory ( 'test_toys3'         , logger = logger ) as mt3 : test_toys3         ()
+    with memory ( 'test_toys4'         , logger = logger ) as mt4 : test_toys4         ()
 
     with memory ( 'test_jackknife_NE1' , logger = logger ) as mj1 : test_jackknife_NE1 ()
     with memory ( 'test_jackknife_NE2' , logger = logger ) as mj2 : test_jackknife_NE2 ()
@@ -620,6 +673,9 @@ if '__main__' == __name__ :
     rows.append ( row )\
         
     row  = 'Toys3'         , '%.1f' % mt3.delta 
+    rows.append ( row )
+
+    row  = 'Toys4'         , '%.1f' % mt4.delta 
     rows.append ( row )
 
     row  = 'Jackknife_NE1' , '%.1f' % mj1.delta 
@@ -650,7 +706,6 @@ if '__main__' == __name__ :
     table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lc' ) 
     logger.info ( '%s:\n%s' % ( title , table ) )
     
-
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

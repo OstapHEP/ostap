@@ -1787,7 +1787,7 @@ namespace Ostap
       const ValueWithError& b  ,
       const unsigned long   nb ) ;
     // ========================================================================
-    /** Calculate mean andRMS  for two samples 
+    /** Calculate mean and RMS  for two samples 
      *  @param  a   mean and  rms for the 1st sample
      *  @param na   size of the first sample  
      *  @param  b   mean and  rms for the 2nd sample

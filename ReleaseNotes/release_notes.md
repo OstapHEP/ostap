@@ -11,6 +11,10 @@
   1. redesign and rewrite `AsymVars structure
   1. add `ResoCB2_` resolution function - reparameterisatuon of `ResoCB2`. Better name is needed here...
   1. rename `ResoCB2_` into `ResoCB2a`
+  1. Add machinery to get the uncertainties for the PDF featires due to fit uncertanties
+  1. Add machinery to get the uncertainties for the PDF featires due to fit uncertanties in a parallel way
+  1. make FUN/PDF __call__ method aware of numpy (conversion to scalar - Deprecation Warning 
+  1. few typos & formatting
   
 ## Backward incompatible
 

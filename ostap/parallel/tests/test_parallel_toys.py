@@ -23,6 +23,7 @@ from   ostap.utils.basic            import numcpu
 from   ostap.fitting.toys           import pull_var
 from   ostap.math.base              import num_range
 from   ostap.utils.progress_bar     import progress_bar
+from   ostap.logger.symbols         import times 
 import ostap.parallel.parallel_toys as     Toys
 import ostap.logger.table           as     T
 import ostap.fitting.models         as     Models
@@ -242,6 +243,62 @@ def test_parallel_toys3 ( ) :
 
 
 
+# =============================================================================
+## Perform toy-study for possible fit bias and correct uncertainty evaluation
+#  - generate <code>nToys</code> pseudoexperiments with some PDF <code>gen_pdf</code>
+#  - fit teach experiment with the PDF <code>fit_pdf</code>
+#  - store  fit results
+#  - fill distributions for fit results
+def test_parallel_toys4 ( ) :
+    """ Perform toys-study for possible fit bias and correct uncertainty evaluation
+    - generate `nToys` pseudoexperiments with some PDF `gen_pdf`
+    - fit teach experiment with the PDF `fit_pdf`
+    - store  fit results
+    - fill distributions of fit results
+    """    
+
+    logger = getLogger ( 'test_parallel_toys4' )
+
+    gen_pars    = { 'mean_GG' : nominal_mean , 'sigma_GG' : nominal_sigma  } 
+    fit_pars    = { 'mean_FG' : nominal_mean , 'sigma_FG' : nominal_sigma  } 
+
+    ## reset parameters 
+    gen_gauss.load_params ( gen_pars , silent = True )    
+    fit_gauss.load_params ( fit_pars , silent = True )    
+    
+    dataset = gen_gauss.generate ( nEvents = 1000 )
+    r , f   = fit_gauss.fitTo ( dataset , **fit_config ) 
+
+    funcs = { 'RMS'      : fit_gauss.rms      ,
+              'FWHM'     : fit_gauss.fwhm     ,
+              'MODE'     : fit_gauss.mode     ,
+              'MEDIAN'   : fit_gauss.median   ,
+              'MEAN'     : fit_gauss.get_mean , 
+              'SKEWNESS' : fit_gauss.skewness , 
+              'KURTOSIS' : fit_gauss.kurtosis , 
+              'MAXIMUM'  : fit_gauss.maximum  }
+    
+    N = 1000 
+    counters  = Toys.parallel_funtoys ( fit_gauss       ,
+                                        r               ,
+                                        funcs           ,
+                                        nToys    = N    ,
+                                        progress = True )
+    
+    rows = [ ( 'Quantity' , 'value' , 'scale' ) ]
+    for k, v in counters.items() :
+
+        vv       = VE ( v.mean() , v.variance () ) 
+        vv, expo = vv.pretty_print ( parentheses = False )
+        row = k , vv , '%s10^%+d' %  ( times , expo ) if expo else ''
+        rows.append ( row ) 
+
+    rows = T.remove_empty_columns ( rows ) 
+    title = 'PDF features #toys=%d' % N 
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lcl' ) 
+    logger.info ( '%s:\n%s' % ( title , table ) ) 
+
+    
 # ==============================================================================
 ## Perform toy-study for Jackknife (non-extended model) 
 def test_parallel_jackknife_NE1 ( ) :
@@ -582,13 +639,13 @@ def test_db () :
 # =============================================================================
 
     
-
 # =============================================================================
 if '__main__' == __name__ :
 
     with memory ( 'test_parallel_toys'          , logger = logger ) as mtt : test_parallel_toys          ()
     with memory ( 'test_parallel_toys2'         , logger = logger ) as mt2 : test_parallel_toys2         ()
     with memory ( 'test_parallel_toys3'         , logger = logger ) as mt3 : test_parallel_toys3         ()
+    with memory ( 'test_parallel_toys4'         , logger = logger ) as mt4 : test_parallel_toys4         ()
 
     with memory ( 'test_parallel_jackknife_NE1' , logger = logger ) as mj1 : test_parallel_jackknife_NE1 ()
     with memory ( 'test_parallel_jackknife_NE2' , logger = logger ) as mj2 : test_parallel_jackknife_NE2 ()
@@ -610,6 +667,9 @@ if '__main__' == __name__ :
     rows.append ( row )
     
     row  = 'Toys3'         , '%.1f' % mt3.delta 
+    rows.append ( row )
+
+    row  = 'Toys4'         , '%.1f' % mt4.delta 
     rows.append ( row )
 
     row  = 'Jackknife_NE1' , '%.1f' % mj1.delta 
@@ -639,7 +699,6 @@ if '__main__' == __name__ :
     title = 'Memory usage for various toys'
     table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lc' ) 
     logger.info ( '%s:\n%s' % ( title , table ) )
-    
 
 # =============================================================================
 ##                                                                      The END 

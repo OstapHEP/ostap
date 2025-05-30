@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 # =============================================================================
-"""Set of useful technical utilities to build various fit models"""
+""" Set of useful technical utilities to build various fit models"""
 # =============================================================================
 __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -23,7 +23,7 @@ __all__     = (
     'Fun2D'             , ## wrapper for 2D-function
     'Fun3D'             , ## wrapper for 3D-function
     'Id'                , ## the most trivial function 
-    'make_fun1'         , ## reate popular FUN1 objects from the short description 
+    'make_fun1'         , ## create popular FUN1 objects from the short description 
     )
 # =============================================================================
 from   ostap.core.meta_info          import root_info 
@@ -34,7 +34,7 @@ from   ostap.core.core               import ( Ostap         , hID ,
                                               valid_pointer ,
                                               roo_silent    ,                                              
                                               rootWarning   )
-from   ostap.math.base               import iszero , isequal  
+from   ostap.math.base               import iszero , isequal, numpy   
 from   ostap.fitting.utils           import make_name 
 from   ostap.fitting.variables       import SETVAR
 from   ostap.fitting.roofit          import PDF_fun 
@@ -387,7 +387,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         """
 
         if dataset :
-            assert     isinstance ( dataset , ROOT.RooAbsData ) , "load_params: invalid type of 'dataset:%s'" % type ( dataset ) 
+            assert isinstance ( dataset , ROOT.RooAbsData ) , "load_params: invalid type of 'dataset:%s'" % type ( dataset ) 
         else :
             dataset = ROOT.nullptr
             
@@ -440,7 +440,6 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
                     table.append ( item ) 
                 keys.add  ( i )
 
-            print ( 'here', type (not_used), params )
             for i , pp in enumerate ( params ) :  
                 if i in keys : continue
                 not_used.add ( pp ) 
@@ -917,6 +916,11 @@ class F1AUX(object) :
     ## helper  function to implement some math stuff 
     def _get_stat_ ( self , funcall , *args , **kwargs ) :
         """ Helper  function to implement some math stuff 
+        - mean
+        - rms 
+        - skewness 
+        - kurtosis
+        - ... 
         """
         fun         = self.fun
         
@@ -1250,13 +1254,17 @@ class F1AUX(object) :
 
         ## make a try to use analytical derivatives 
         if self.tricks  and hasattr ( self.fun , 'function' ) :
-            if hasattr ( _fun , 'setPars'  ) : _fun.setPars() 
-            try: 
+            if hasattr ( _fun , 'setPars'  ) : _fun.setPars()
+            # ==================================================================
+            try: # =============================================================
+                # ==============================================================
                 funfun = sefl.fun.function() 
                 if hasattr ( funfun , 'derivative' ) :
                     return funfun.derivative ( x )
-            except:
-                pass
+                # ==============================================================
+            except: # ==========================================================
+                # ==============================================================
+                pass # =========================================================
             
         ## use numerical derivatives 
         from ostap.math.derivative import derivative as _derivative
@@ -1472,20 +1480,27 @@ class FUN1(AFUN1,F1AUX) :
         >>> fun  = ...
         >>> x = 1
         >>> y = fun ( x ) 
-        """
-        
+        """        
         assert self.__call_OK , "Invalid type for xvar!"
-        
-        xmnmx = self.xminmax()
-        if xmnmx :
-            xmn , xmx = xmnmx 
-            if not xmn <= x <= xmx : return 0
+
+        def eval_fun ( x , normalized , xmnmx ) :
+            if xmnmx :
+                xmn , xmx = xmnmx
+                if not xmn <= a <= xmx : return 0
             
-        with SETVAR( self.xvar ) :
-            
-            self.xvar.setVal ( x )
-            
+            self.xvar.setVal ( x )            
             return self.fun.getVal ( self.vars ) if normalized else self.fun.getVal ()  
+        
+        ## min-max, if defined 
+        xmnmx = self.xminmax()
+        
+        ## ensure that after call the x-value is the same 
+        with SETVAR ( self.xvar ) :
+            ## vectorized argument ?
+            if numpy and isinstance ( x , numpy.ndarray ) :                
+                return numpy.asarray ( [ eval_fun ( v , error , normalized, xmnmx ) for v in x ] )
+            ## scalar...
+            return eval_fun ( x , error , normalized , xmnmx )
         
     # ========================================================================
     ## convert to float 
@@ -4510,7 +4525,7 @@ class Fun1op(FUN1) :
 ## @class Fun2op
 #  Helper function to define operations 
 class Fun2op(FUN2) :
-    """Helper function to define operations
+    """ Helper function to define operations
     """    
     def __init__  ( self         ,
                     fun1         ,
@@ -4591,7 +4606,7 @@ class Fun2op(FUN2) :
 ## @class Fun3op
 #  Helper function to define operations 
 class Fun3op(FUN3) :
-    """Helper function to define operations
+    """ Helper function to define operations
     """    
     def __init__  ( self         ,
                     fun1         ,
@@ -4786,7 +4801,7 @@ def make_fun1 ( fun , name , xvar , logger = None , **kwargs ) :
         return result 
 
     raise  TypeError("make_fun1: Wrong type of 'fun' object: %s/%s " % ( fun , type ( fun ) ) ) 
-    
+
 # =============================================================================
 if '__main__' == __name__ :
     

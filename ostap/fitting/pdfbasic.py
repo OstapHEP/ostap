@@ -59,7 +59,7 @@ from   ostap.core.meta_info     import root_info
 from   ostap.core.ostap_types   import ( is_integer     , string_types   , 
                                          integer_types  , num_types      ,
                                          list_types     , all_numerics   ) 
-from   ostap.math.base          import iszero , frexp10 
+from   ostap.math.base          import iszero , frexp10, numpy  
 from   ostap.core.core          import ( Ostap , VE , hID , dsID , rootID   ,
                                          valid_pointer , in_test , 
                                          roo_silent    , rootWarning  )
@@ -2593,7 +2593,8 @@ class PDF1(APDF1,FUN1) :
         self.config.update ( kwargs )
 
         self.__call_OK = isinstance ( self.xvar , ROOT.RooAbsRealLValue ) 
-        
+
+
     # =========================================================================
     ## simple 'function-like' interface 
     def __call__ ( self , x , error = False , normalized = True  ) :
@@ -2602,29 +2603,44 @@ class PDF1(APDF1,FUN1) :
         >>> x = 1
         >>> y = fun ( x ) 
         """
-        
+        print ( 'I AM __CALL__' , type ( x ) ) 
+
         assert self.__call_OK , "Invalid type for xvar!"
         
         if error and not normalized :
-            self.error("Can't get error for non-normalized call" )
+            self.error ( "Can't get error for non-normalized call" )
             error = False
             
-        xmnmx = self.xminmax()
-        if xmnmx :
-            xmn , xmx = xmnmx 
-            if not xmn <= x <= xmx : return 0
-        
-        with SETVAR ( self.xvar ) :
+        if error and not self.fit_result :
+            error = False 
+
+        ## helper local function os SCALAR argument 
+        def eval_fun ( a , error , normalized , xmnmx  ) :
             
-            self.xvar.setVal ( x )
-            
-            v = self.fun.getVal ( self.vars ) if normalized else self.fun.getVal ()  
-            
+            if xmnmx :
+                xmn , xmx = xmnmx
+                if not xmn <= a <= xmx : return 0
+                
+            ## change x-value 
+            self.xvar.setVal ( a )
+            ## evaluate the functin
+            v = self.fun.getVal ( self.vars ) if normalized else self.fun.getVal ()
+            ## get ucertainties if/when availabke 
             if error and self.fit_result :
                 e = self.pdf.getPropagatedError ( self.fit_result )
                 if 0 <= e : v = VE ( v ,  e * e )
+            return v 
 
-            return v
+        ## min-max, if defined 
+        xmnmx = self.xminmax()
+        
+        ## ensure that after call the x-value is the same 
+        with SETVAR ( self.xvar ) :
+            ## vectorized argument ?
+            if numpy and isinstance ( x , numpy.ndarray ) :                
+                return numpy.asarray ( [ eval_fun ( v , error , normalized, xmnmx ) for v in x ] )
+            ## scalar...
+            return eval_fun ( x , error , normalized , xmnmx )
 
     # ========================================================================
     ## convert to float 

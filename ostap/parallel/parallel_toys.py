@@ -41,8 +41,7 @@ else                       : logger = getLogger ( __name__              )
 #  @return  updated results 
 def merge_toys ( previous , result , jobid = -1 ) :
     """ Helper function to merge results of toys
-    """
-    
+    """    
     if not result :
         logger.error ( "No valid results for merging" )
         return previous 
@@ -67,12 +66,45 @@ def merge_toys ( previous , result , jobid = -1 ) :
     
     return results_ , stat_ 
 
+# ====================================================================================
+## The simple base class for task object 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2020-01-18 
+class  TheBaseTask (Task) :
+    """ The simple base class for task object
+    """
+    ## 
+    def __init__ ( self ) : self.__the_output = () 
+        
+    @property
+    def the_output ( self ) :
+        return self.__the_output
+    @the_output.setter 
+    def the_output ( self , value ) :
+        self.__the_output = value 
+    
+    ## initialize the local task, setup/reset initial result 
+    def initialize_local   ( self ) : self.__the_output = ()
 
+    ## initialize the remote task, treat the random numbers  
+    def initialize_remote  ( self , jobid = -1 ) :
+        """ Initialize the remote task, properly treating the random numbers  
+        """
+        import random, ROOT
+        from ostap.parallel.utils import random_random
+        random_random ( jobid )
+        
+        return self.initialize_local() 
+        
+    ## get the results 
+    def results ( self ) :
+        return self.__the_output
+    
 # =====================================================================================
 ## The simple base class for task object 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2020-01-18 
-class  TheTask_ (Task) :
+class  TheTask_ (TheBaseTask) :
     """ The simple base class for task object
     """
     ## 
@@ -87,6 +119,8 @@ class  TheTask_ (Task) :
                    progress    = False ,
                    frequency   = 0     ) :
         
+        TheBaseTask.__init__ ( self )
+        
         self.data        = data  
         self.fit_config  = fit_config
         self.more_vars   = more_vars
@@ -97,36 +131,11 @@ class  TheTask_ (Task) :
         self.progress    = progress 
         self.frequency   = frequency 
         
-        self.__the_output   = ()
-        
-    @property
-    def the_output ( self ) :
-        return self.__the_output
-    @the_output.setter 
-    def the_output ( self , value ) :
-        self.__the_output = value 
-    
-    def initialize_local   ( self ) : self.__the_output = ()
-
-    ## initialize the remote task, treat the random numbers  
-    def initialize_remote  ( self , jobid = -1 ) :
-        """Initialize the remote task, treta the random numbers  
-        """
-        import random, ROOT
-        from ostap.parallel.utils import random_random
-        random_random ( jobid )
-        
-        return self.initialize_local() 
-        
-    ## get the results 
-    def results ( self ) :
-        return self.__the_output
-    
     ## merge results of toys 
     def merge_results ( self , result , jobid = -1 ) :
         """ Merge results of toys
         """
-        self.__the_output = merge_toys ( self.__the_output , result , jobid )
+        self.the_output = merge_toys ( self.the_output , result , jobid )
 
 
 # =====================================================================================
@@ -347,7 +356,7 @@ class  ToysTask3(ToysTask) :
     # =========================================================================
     ## the actual processing of toys 
     def process ( self , jobid , nToys ) :
-        """ The actual poroicessing of toys 
+        """ The actual processing of toys 
         """
         import ROOT
         from ostap.logger.logger import logWarning
@@ -673,12 +682,12 @@ def parallel_toys (
            'Number of events per toy must be specified via "gen_config" %s' % gen_config
     
     assert isinstance ( nToys  , integer_types ) and 0 < nToys  ,\
-               'Jobid %s: Invalid "nToys"  argument %s/%s' % ( jobid , nToys  , type ( nToys  ) )
+        'Invalid "nToys"  argument %s/%s' % ( nToys  , type ( nToys  ) )
 
     if not nSplit : nSplit = max ( 2 , 2 * numcpu() ) 
         
     assert isinstance ( nSplit , integer_types ) and 0 < nSplit ,\
-    'Jobid %s: Invalid "nSplit" argument %s/%s' % ( jobid , nSplit , type ( nSplit ) )
+        'Invalid "nSplit" argument %s/%s' % ( nSplit , type ( nSplit ) )
 
     config =  { 'pdf'         : pdf         ,
                 'data'        : data        ,
@@ -1392,7 +1401,7 @@ def parallel_bootstrap (
     task = BootstrapTask ( progress = progress and not silent , **config )
 
     ## create work manager 
-    wmgr  = WorkManager ( silent = silent and not progress , progress = progress or not silent , **kwargs )
+    wmgr = WorkManager ( silent = silent and not progress , progress = progress or not silent , **kwargs )
     
     ## perform the actual splitting 
     from ostap.utils.utils import split_n_range 
@@ -1431,6 +1440,103 @@ def parallel_bootstrap (
     return results, stats   
 
 
+# =====================================================================================
+## Task for parallel FunToys 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2025-05-30 
+class  FunToysTask (TheBaseTask) :
+    """ Taks for parallel Funtoy s
+    """
+    ## 
+    def __init__ ( self                ,
+                   model               ,
+                   fitresult           ,
+                   methods             ,
+                   *args               ,
+                   **kwargs            ) :
+        
+        import ostap.fitting.toys as Toys 
+        self.__funtoys     = Toys.FunToys ( model , fitresult , progress = False )
+        self.__methods     = methods
+        self.__args        = args  
+        self.__kwargs      = kwargs
+
+    # =========================================================================
+    ## the actual Funtoys processing 
+    def process ( self , jobid , nToys  ) :
+        """ The actual Jackknife processing 
+        """
+        return self.__funtoys.run ( self.__methods  ,
+                                    nToys           ,                                    
+                                    *self.__args    ,
+                                    **self.__kwargs )
+    
+    ## merge results of toys 
+    def merge_results ( self , result , jobid = -1 ) :
+        """ Merge results of toys
+        """
+        if not self.the_output :  self.the_output = result
+        else :
+            self.the_output = self.__funtoys.merge ( self.the_output , result )
+            
+# =============================================================================
+## Get certain features (mainly uncertaintes) of the model using pseudoexperments.
+#  Propagate fit uncertainties for the model features using pseudoexpeeriments 
+#  @param model      the model to be checked
+#  @param fit_result fit result
+#  @param methods    methods to be invokes
+#  @aram  nToys      number of pseudoexperiments
+def parallel_funtoys ( model         ,
+                       fit_result    , 
+                       methods       ,
+                       nSplit = 0    ,
+                       nToys  = 1000 ,
+                       *args         ,
+                       **kwargs      ) :
+    """ Get certain features (mainly uncertaintes) of the model using pseudoexperments
+    - model      : the model to be checked
+    - fit_result : fit results
+    - methods:   : methods to be invokes
+    - nToys      : numbner of pseudoexperiments
+    """
+    
+    import ostap.fitting.toys  as Toys
+
+    import ostap.fitting.roofit
+    import ostap.fitting.dataset
+   
+    assert isinstance ( nToys  , integer_types ) and 0 < nToys  ,\
+        'Invalid "nToys"  argument %s/%s' % ( nToys  , type ( nToys  ) )
+    
+    if not nSplit : nSplit = max ( 2 , 2 * numcpu() )
+    
+    assert isinstance ( nSplit , integer_types ) and 0 < nSplit ,\
+        'Invalid "nSplit" argument %s/%s' % ( nSplit , type ( nSplit ) )
+    
+    if nSplit <  2 or numcpu() <= 1 : 
+        return Toys.make_funtoys ( model , fit_result , methods , nToys , *args , **kwargs ) 
+    
+    size , rem = divmod ( nToys , nSplit )
+    if rem : params = [ size + rem ] + ( nSplit - 1 ) * [ size ]
+    else   : params =                    nSplit       * [ size ]
+
+    progress = kwargs.pop ( 'progress' , True )
+    
+    ## create the task 
+    task = FunToysTask ( model      ,
+                         fit_result ,
+                         methods    ,
+                         *args      ,
+                         **kwargs   )
+    
+    ## create work manager 
+    wmgr  = WorkManager ( silent = not progress , progress = progress )
+    
+    ## start parallel processing! 
+    wmgr.process( task , params  )
+    
+    return task.results () 
+ 
 # =============================================================================
 if '__main__' == __name__ :
     

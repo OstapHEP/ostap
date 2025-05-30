@@ -18,16 +18,21 @@ __all__     = (
     "make_toys3"       , ## run fitting toys with special action (separate models to generate and fit)
     'make_jackknife'   , ## run Jackknife analysis 
     'make_bootstrap'   , ## run Bootstrapanalysis 
+    "make_funtoys"     , ## propagate fit uncertainties for the model features 
     "vars_transform"   , ## helper fnuction to transform the variables
     "print_stats"      , ## print toys      statistics 
     "print_jackknife"  , ## print jackknife statistics 
     "print_bootstrap"  , ## print bootstrap statistics 
     )
 # =============================================================================
-from   ostap.core.ostap_types import string_types, integer_types
-from   ostap.core.core        import VE, SE, Ostap 
-from   ostap.logger.pretty    import pretty_float, fmt_pretty_float
-from   ostap.logger.colorized import attention
+from   ostap.core.ostap_types     import  ( string_types   , integer_types  ,
+                                            listlike_types , dictlike_types )
+from   ostap.core.core            import VE, SE, Ostap 
+from   ostap.logger.pretty        import pretty_float, fmt_pretty_float
+from   ostap.logger.colorized     import attention
+from   ostap.fitting.funbasic     import AFUN1
+from   ostap.utils.progress_bar   import progress_bar 
+import ostap.fitting.roofitresult 
 import ROOT
 # =============================================================================
 # logging 
@@ -626,7 +631,6 @@ def make_toys ( pdf                   ,
                 varset.add ( params [ v ] )
             else :
                 raise TypeError('Invalid variable %s/%s' % ( v , type ( v ) ) )
-
 
     fix_pars = vars_transform ( params    ) 
     fix_init = vars_transform ( init_pars ) 
@@ -1702,7 +1706,152 @@ def make_bootstrap (
         
     return results , stats 
 
+# =============================================================================
+## @class FunToys
+#  Helper class to get uncertainties for certaoin
+#  chacacteristis usiung pseudoexperiments
+#  @code
+#  model      = ...
+#  fit_result = ...
+#  with FunToys ( model , fit_result ) as toys :
+#     rms = toys.run ( 1000 , model.rms )
+#  @endcode
+#  Propagate fit uncertainties for the model features using pseudoexpeeriments 
+class FunToys(object) :
+    """ Helper class to get uncertainties for certaoin
+    chacacteristis usiung pseudoexperiments
+    >>> model      = ...
+    >>> fit_result = ...
+    >>> with FunToys ( model , fit_result ) as toys :
+    ...     rms = toys.run ( 1000 , model.rms )
+    >>> print ( rms ) 
+    - Propagate fit uncertainties for the model features using pseudoexpeeriments 
+    """
+    def __init__ ( self , fun , fitresult , progress = False ) :
+        
+        assert isinstance ( fun       , AFUN1             ) , "Inavlid type of `fun'!"
+        assert isinstance ( fitresult , ROOT.RooFitResult ) , "Inavlid type of `fitresult'!"
+        
+        self.__fun        = fun
+        self.__fit_result = fitresult
+        self.__progress   = True if progress else False 
+        
+        pars = fun.params () 
+        self.__snapshot = {}
+        for p in pars : self.__snapshot [ p.name ] = p
+        
+    ## context manager, take snapshot of fuction parameters 
+    def __enter__ ( self      ) :
+        """ Context manager, take snapshot of fuction parameters"""
+        
+        pars = self.fun.params () 
+        self.__snapshot = {}
+        for p in pars : self.__snapshot [ p.name ] = p
+        return self
+        
+    ## context manager: restore the original parameters 
+    def __exit__  ( self , *_ ) :
+        """ context manager: restore the original parameters"""
+        if self.__fun and self.__snapshot  :
+            self.__fun.load_params ( self.__snapshot , silent = True )
+        self.__snapshot = {}
 
+    # ==================================================================
+    ## run actual toys
+    #  @code 
+    #  pdf = ...
+    #  fit_result = ... 
+    #   with FunToys ( pdf , fit_result ) as toys : 
+    #    rms = toys.run ( pdf.rms , nToys = 1000 , progress = True )
+    def run ( self , methods , nToys , *args , **kwargs ) :
+        """ Run actual toys 
+        >>> pdf = ...
+        >>> fit_result = ... 
+        >>> with FunToys ( pdf , fit_result ) as toys : 
+        ...     rms = toys.run ( pdf.rms , nToys = 1000 , progress = True )
+        """
+        assert isinstance ( nToys , integer_types ) and 0 <= nToys ,  "Invalid `nToys` %s" % nToys
+
+        single  = False 
+        the_map = False 
+        if   callable   ( methods ) :
+            single   = True 
+            counters = SE()                
+        elif isinstance ( methods , dictlike_types ) and all ( callable ( m ) for m in methods.values () ) : 
+            the_map  = True 
+            counters = { key : SE() for key in methods } 
+        elif isinstance ( methods , listlike_types ) and all ( callable ( m ) for m in methods ) :
+            counters = tuple ( SE() for m in methods ) 
+        else :
+            raise TypeError ( "Invalid type of `methods'" )
+        
+        progress = kwargs.pop ( 'progress' , self.__progress ) 
+        for i in progress_bar ( nToys , silent = not progress ) :
+
+            pars     = self.fit_result.randomizePars()
+            self.fun.load_params ( pars , silent = True )
+            ##
+            if   single  : counters += methods ( *args , **kwargs )
+            elif the_map :
+                for k , m in methods.items() :
+                    counters [ k ] += m ( *args , **kwargs )
+            else : 
+                for c , m in zip ( counters , methods ) :                    
+                    c += m ( *args , **kwargs )
+
+        return counters
+
+    # =====================================================================
+    ## update result:   result1, result2 -> result1 
+    def merge ( self , result1 , result2 ) :
+        """ Update : result1: result1, result2 -> result1 
+        """
+        if  isinstance ( result1 , SE    ) and isinstance ( result2 , SE   ) :
+            result1 += result2 
+            return result1
+        elif isinstance ( result1 , dict ) and isinstance ( result2 , dict  ) :
+            for key, c2 in result2.items()  :
+                if key in result1 : result1 [ key ] += c2
+                else              : result1 [ key ]  = c2
+            return result1
+        elif len ( result1 ) == len ( result2 ) : 
+            for c1, c2 in zip ( result1 , result2 ) : c1 += c2
+            return result1 
+        else :
+            raise TypeError ( "Result1&2 are incompatible!" )
+            
+    @property
+    def fun ( self ) :
+        """`fun` : original function/PDF 
+        """
+        return self.__fun
+    @property
+    def fit_result ( self ) :
+        """`fit_result` : fit result for pseudoexperiment """
+        return self.__fit_result 
+
+# ============================================================================
+## Get certain features (mainly uncertaintes) of the model using pseudoexperments.
+#  Propagate fit uncertainties for the model features using pseudoexpeeriments 
+#  @param model      the model to be checked
+#  @param fit_result fit result
+#  @param methods    methods to be invokes
+#  @aram  nToys      number of pseudoexperiments
+def make_funtoys ( model         ,
+                   fut_result    , 
+                   methods       ,
+                   nToys  = 1000 ,
+                   *args         ,
+                   **kwargs      ) :
+    """ Get certain features (mainly uncertaintes) of the model using pseudoexperments
+    - model      : the model to be checked
+    - fit_result : fit results
+    - methods:   : methods to be invokes
+    - nToys      : numbner of pseudoexperiments
+    """
+    with  FunToys ( model , fit_result ) as toys :
+        return toys.run ( methods , nToys , *args , **kwargs ) 
+                   
 # =============================================================================
 if '__main__' == __name__ :
     
