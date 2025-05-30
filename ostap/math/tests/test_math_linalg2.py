@@ -11,7 +11,8 @@
 # ============================================================================= 
 from   ostap.math.linalg      import checkops, gsl_info 
 from   ostap.core.core        import Ostap
-from   ostap.math.base        import numpy 
+from   ostap.math.base        import numpy
+from   ostap.plotting.canvas  import use_canvas 
 from   ostap.utils.root_utils import batch_env 
 import math, random  
 # =============================================================================
@@ -229,7 +230,6 @@ def test_linalg2_mtrx () :
 
     return 
 
-
 ## powers of the nilponent matrix
     N   = 4 
     nNN = Ostap.Math.Matrix(N,N) ()
@@ -414,6 +414,8 @@ def test_linalg2_PLU ( M = 4 , N = 4 ) :
     assert delta1 < tolerance1 , '(P)LU: result are inconsistent delta1=%.3g' % delta1
     if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %.3g"   % delta1 )
     
+    with use_canvas ( 'PLU:L ' , wait = 2  ) : L.draw('colz')
+    with use_canvas ( 'PLU:U ' , wait = 2  ) : U.draw('colz')
     
 # =========================================================================================
 def test_linalg2_PQR ( M = 4 , N = 4 ) :

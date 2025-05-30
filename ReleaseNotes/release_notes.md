@@ -15,6 +15,7 @@
   1. Add machinery to get the uncertainties for the PDF featires due to fit uncertanties in a parallel way
   1. make FUN/PDF __call__ method aware of numpy (conversion to scalar - Deprecation Warning 
   1. few typos & formatting
+  1. add conversion of (S)Matriuces and (S) vectors to histogrms (&visualization)
   
 ## Backward incompatible
 

@@ -19,13 +19,13 @@ __all__     = (
     'correlation' , ## get i,j-correlation coeffiecient from matrix-like object
     )
 # =============================================================================
-from   ostap.math.base        import isequal   , iszero, std , Ostap, numpy  
-from   ostap.utils.basic      import typename 
 from   ostap.core.ostap_types import num_types , integer_types
+from   ostap.math.base        import isequal   , iszero, std , Ostap, numpy
+from   ostap.core.core        import hID 
+from   ostap.utils.basic      import typename 
 from   ostap.utils.clsgetter  import classgetter
 from   ostap.logger.pretty    import fmt_pretty_float, fmt_pretty_error 
 from   ostap.math.base        import pretty_array
-
 from   ostap.logger.colorized import infostr
 from   ostap.utils.gsl        import gsl_info
 from   ostap.logger.symbols   import ditto, times, labels 
@@ -1074,7 +1074,6 @@ class LinAlg(object) :
         
         raise NotImplementedError ( "Cannot anti-symmetrise %s/%s" % ( a , typename ( a ) ) )
 
-
     # =============================================================================
     ## Get minimal element of the matrix
     #  @code
@@ -1575,6 +1574,43 @@ class LinAlg(object) :
         return result
 
     # =============================================================================
+    ## Convert vector into 1D-histogram
+    #  @code
+    #  vct = ...
+    #  h   = vct.th1() 
+    #  @endcode 
+    @staticmethod
+    def V_TH1 ( vct ) :
+        """ Convert vector into 1D-histogram
+        >>> vct = ...
+        >>> h   = vct.th1() 
+        """
+        if hasattr ( vct , '_th1' ) : return  vct._th1 
+        N     = len ( vct )
+        xlow  = 0 - 0.5
+        xhigh = N - 0.5
+        th1   = ROOT.TH1F ( hID() , '1D-Histogram from the vector' , N , xlow , xhigh )
+        for i,v in eumerate ( vct ) : th1[i] = v 
+        self._th1 = th1
+        return th1
+
+    # =============================================================================
+    ## Draw the vector via conversion into into 1D-histogram
+    #  @code
+    #  vct = ...
+    #  vct.draw() 
+    #  @endcode 
+    @staticmethod
+    def V_DRAW ( vct , opts = '' , *args , **kwargs ) :
+        """ Draw the vector via conversion into 1D-histogram
+        >>> vct = ...
+        >>> vct.draw()  
+        """
+        h1 = vct.th1()
+        h1.draw ( opts , *args , **kwargs )
+        return vct 
+    
+    # =============================================================================
     ## self-printout of permutations 
     #  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
     #  @date 2009-09-12
@@ -1985,6 +2021,57 @@ class LinAlg(object) :
                                          precision = precision )
         return result
 
+    # =============================================================================
+    ## Convert matrix into 2D-histogram
+    #  @code
+    #  mtrx = ...
+    #  h    = vct.th2() 
+    #  @endcode 
+    @staticmethod
+    def M_TH2 ( mtrx ) :
+        """ Convert matrix into 2D-histogram
+        >>> mtrx = ...
+        >>> h   = mtrx.th2() 
+        """
+        if hasattr ( mtrx , '_th2' ) : return  mtrx._th2
+        
+        NX    = mtrx.kCols
+        NY    = mtrx.kRows
+        
+        xlow  = 0  - 0.5
+        xhigh = NX - 0.5
+        
+        ylow  = 0  - 0.5
+        yhigh = NY - 0.5
+        
+        th2   = ROOT.TH2F ( hID() ,
+                            '2D-Histogram from the matrix' ,
+                            NX , xlow , xhigh , 
+                            NY , ylow , yhigh )
+    
+        for i in range ( NX ) :
+            for j in range ( NY ) :                  
+                th2 [ i , j  ] = mtrx ( i , NY - j - 1 ) 
+
+        mtrx._th2 = th2
+        return th2
+    
+    # =============================================================================
+    ## Draw the matrix via conversion into into 2D-histogram
+    #  @code
+    #  mtrx = ...
+    #  mtrx.draw() 
+    #  @endcode 
+    @staticmethod
+    def M_DRAW ( mtrx , opts = '' , *args , **kwargs ) :
+        """ Draw the matrix via conversion into 2D-histogram
+        >>> mtrx = ...
+        >>> mtrx.draw()  
+        """
+        h2 = mtrx.th2()
+        h2.draw ( opts , *args , **kwargs )
+        return mtrx 
+ 
     # =============================================================================
     ##  Self-printout of symmetric matrices
     #   @code  
@@ -2577,6 +2664,11 @@ class LinAlg(object) :
         t. table        = LinAlg.V_STR        
         ## pretty printout  
         t.pretty_print  = LinAlg.V_PRETTY
+
+        ## convert to TH1
+        t. th1          = LinAlg.V_TH1
+        ## Draw it via convertsion to TH!
+        t. draw         = LinAlg.V_DRAW
         
         t. __len__      = lambda s : s.kSize 
         t. __contains__ = lambda s, i : 0<=i<s.kSize
@@ -2658,7 +2750,12 @@ class LinAlg(object) :
         m.__repr__      = LinAlg.M_STR
         m.table         = LinAlg.M_STR
         m.pretty_print  = LinAlg.M_PRETTY
-        
+
+        ## cnopversion to TH2 
+        m. th2          = LinAlg.M_TH2
+        ## draw ti vi conversion to TH2 
+        m. draw         = LinAlg.M_DRAW 
+
         m.__iter__      = LinAlg.M_ITER 
         m.iteritems     = LinAlg.M_ITEMS 
         m.    items     = LinAlg.M_ITEMS
