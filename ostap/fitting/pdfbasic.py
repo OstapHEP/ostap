@@ -2603,7 +2603,6 @@ class PDF1(APDF1,FUN1) :
         >>> x = 1
         >>> y = fun ( x ) 
         """
-        print ( 'I AM __CALL__' , type ( x ) ) 
 
         assert self.__call_OK , "Invalid type for xvar!"
         

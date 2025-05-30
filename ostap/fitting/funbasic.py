@@ -1483,12 +1483,12 @@ class FUN1(AFUN1,F1AUX) :
         """        
         assert self.__call_OK , "Invalid type for xvar!"
 
-        def eval_fun ( x , normalized , xmnmx ) :
+        def eval_fun ( xv , normalized , xmnmx ) :
             if xmnmx :
                 xmn , xmx = xmnmx
-                if not xmn <= a <= xmx : return 0
+                if not xmn <= xv <= xmx : return 0
             
-            self.xvar.setVal ( x )            
+            self.xvar.setVal ( xv )     
             return self.fun.getVal ( self.vars ) if normalized else self.fun.getVal ()  
         
         ## min-max, if defined 
@@ -1498,9 +1498,9 @@ class FUN1(AFUN1,F1AUX) :
         with SETVAR ( self.xvar ) :
             ## vectorized argument ?
             if numpy and isinstance ( x , numpy.ndarray ) :                
-                return numpy.asarray ( [ eval_fun ( v , error , normalized, xmnmx ) for v in x ] )
+                return numpy.asarray ( [ eval_fun ( v , normalized, xmnmx ) for v in x ] )
             ## scalar...
-            return eval_fun ( x , error , normalized , xmnmx )
+            return eval_fun ( x , normalized , xmnmx )
         
     # ========================================================================
     ## convert to float 
