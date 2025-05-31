@@ -1,4 +1,6 @@
 
+# v2.0.6.0
+
 ## New features
 
   1. more platforms to test via GitHub Actions (added gcc15) 

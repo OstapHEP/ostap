@@ -29,8 +29,8 @@ include(CTest)
 
 set(OSTAP_VERSION_MAJOR 2)
 set(OSTAP_VERSION_MINOR 0)
-set(OSTAP_VERSION_PATCH 5)
-set(OSTAP_VERSION_TWEAK 3)
+set(OSTAP_VERSION_PATCH 6)
+set(OSTAP_VERSION_TWEAK 0)
 
 message ("                                                                     ")
 message ("       .oooooo.                .                          .oooo.     ")
