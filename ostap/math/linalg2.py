@@ -1590,7 +1590,7 @@ class LinAlg(object) :
         xlow  = 0 - 0.5
         xhigh = N - 0.5
         th1   = ROOT.TH1F ( hID() , '1D-Histogram from the vector' , N , xlow , xhigh )
-        for i,v in eumerate ( vct ) : th1[i] = v 
+        for i , v in eumerate ( vct ) : th1.SetBinContent( i + 1 , v ) 
         self._th1 = th1
         return th1
 
@@ -2050,8 +2050,8 @@ class LinAlg(object) :
                             NY , ylow , yhigh )
     
         for i in range ( NX ) :
-            for j in range ( NY ) :                  
-                th2 [ i , j  ] = mtrx ( i , NY - j - 1 ) 
+            for j in range ( NY ) : 
+                th2.SetBinContent( i + 1 , j + 1 , mtrx ( i , NY - j - 1 ) ) 
 
         mtrx._th2 = th2
         return th2
