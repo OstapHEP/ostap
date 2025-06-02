@@ -12,6 +12,10 @@
 #include <numeric>
 #include <algorithm>
 // ============================================================================
+// Ostap
+// =============================================================================
+#include "Ostap/Power.h"
+// ============================================================================
 /** @file Ostap/MoreMath.h
  *  collection of various helper math functions  
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -2097,6 +2101,35 @@ namespace Ostap
     { return std::abs ( barrier_g ( x , l ) ) ; }
     // ========================================================================
     
+  // ===========================================================================
+  // Kernels
+  // https://en.wikipedia.org/wiki/Kernel_(statistics)
+  // ===========================================================================
+  /// uniform Kernel 
+  inline double k_uniform      ( const double u ) { return 0.5 * ( std::abs ( u ) <= 1 ) ; }
+  /// Triangular kernel
+  inline double k_triangular   ( const double u ) { return std::abs ( u ) <= 1 ? ( 1 - std::abs ( u ) ) : 0.0 ; }
+  /// Epanechnnikov/parabolic  kernel 
+  inline double k_epanechnikov ( const double u ) { return std::abs ( u ) <= 1 ? ( 1 - u * u )          : 0.0 ; }
+  /// Epanechnikov Parabolic kernel
+  inline double k_parabolic    ( const double u ) { return k_epanechnikov ( u ) ; }
+  /// Quartic/biweight kernel  
+  inline double k_quartic      ( const double u ) { return std::abs ( u ) <= 1 ? 15 * Ostap::Math::POW ( 1.0 - u * u ,  2  ) / 16 : 0.0 ; } 
+  /// Quartic/biweight kernel
+  inline double k_biweight     ( const double u ) { return k_quartic ( u ) ; }
+  /// Triweight kernel  
+  inline double k_triweight    ( const double u ) { return std::abs ( u ) <= 1 ? 35 * Ostap::Math::POW ( 1.0 - u * u ,  3  ) / 32 : 0.0 ; } 
+  /// Tricube kernel
+  inline double k_tricube      ( const double u ) { return std::abs ( u ) <= 1 ? 70 * Ostap::Math::POW ( 1.0 - std::abs ( u * u * u ) , 3 ) / 81 : 0.0 ; } 
+  /// Gaussian kernel 
+  inline double k_gaussian     ( const double u ) { return gauss_pdf ( u ) ; }
+  /// Cosine kernel 
+  double k_cosine   ( const double u ) ; 
+  /// Logistic Kernel
+  double k_logistic ( const double u ) ;
+  /// sigmoid kernel 
+  double k_sigmoid  ( const double u ) ; 
+
     // ========================================================================
   } //                                             end of namespace Ostap::Math 
   // ==========================================================================

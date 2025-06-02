@@ -7,10 +7,14 @@
 #include <cstring>
 #include <numeric>
 #include <algorithm>
+#include <tuple>
+#include <array>
 // ============================================================================
 // Ostap 
 // ============================================================================
 #include "Ostap/ECDF.h"
+#include "Ostap/Power.h"
+#include "Ostap/MoreMath.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -23,6 +27,55 @@
  *  @date 2024-09-16 
  *  @author Vanya BELYAEV 
  */
+// ============================================================================
+namespace
+{
+  /// actual kernel funcntion type 
+  typedef double (*FUNPTR)(double) ; 
+  typedef std::tuple<
+    Ostap::Math::DensityEstimator::Kernel,
+    FUNPTR,
+    double, 
+    double, 
+    double, 
+    double> RECORD ;
+  //
+  typedef std::array<RECORD,Ostap::Math::DensityEstimator::Last+1> TABLE ;  
+  // typedef std::array<RECORD,2> TABLE ; 
+  const TABLE s_table { 
+    RECORD( Ostap::Math::DensityEstimator::Uniform,     &Ostap::Math::k_uniform     ,1,1./3   ,1./2                   ,0.929) ,
+    RECORD( Ostap::Math::DensityEstimator::Triangular,  &Ostap::Math::k_triangular  ,1,1./6   ,2./3                   ,0.986) ,
+    RECORD( Ostap::Math::DensityEstimator::Epanechnikov,&Ostap::Math::k_epanechnikov,1,1./5   ,3./5                   ,1.000) ,
+    RECORD( Ostap::Math::DensityEstimator::Quartic,     &Ostap::Math::k_quartic     ,1,1./7   ,5./7                   ,0.994) ,
+    RECORD( Ostap::Math::DensityEstimator::Triweight,   &Ostap::Math::k_triweight   ,1,1./9   ,350./429               ,0.987) ,
+    RECORD( Ostap::Math::DensityEstimator::Tricube,     &Ostap::Math::k_tricube     ,1,35./243,175./447               ,0.998) ,
+    RECORD( Ostap::Math::DensityEstimator::Gaussian,    &Ostap::Math::k_gaussian    ,0,1      ,0.5/std::sqrt(M_PI)    ,0.951) ,
+    RECORD( Ostap::Math::DensityEstimator::Cosine,      &Ostap::Math::k_cosine      ,1,1-8/(M_PI*M_PI) , M_PI*M_PI/16 ,0.999) ,
+    RECORD( Ostap::Math::DensityEstimator::Logistic,    &Ostap::Math::k_logistic    ,0,M_PI*M_PI/3 , 1.6              ,0.887) ,
+    RECORD( Ostap::Math::DensityEstimator::Sigmoid,     &Ostap::Math::k_sigmoid     ,0,M_PI*M_PI/4 , 2/(M_PI*M_PI)    ,0.843) ,
+  } ;
+}
+// ============================================================================
+double Ostap::Math::DensityEstimator::kernel 
+( const double                                u , 
+  const Ostap::Math::DensityEstimator::Kernel k )
+  {
+    Ostap::Assert ( Uniform <= k && k <=  Last , 
+      "Invalid Kernel!" , 
+      "Ostap::Math::DensityEstimator::kernel"  ,
+      INVALID_KERNEL , __FILE__, __LINE__ ) ;
+
+  return 
+    Gaussian     == k ? Ostap::Math::k_gaussian     ( u ) :
+    Epanechnikov == k ? Ostap::Math::k_epanechnikov ( u ) :
+    Triangular   == k ? Ostap::Math::k_triangular   ( u ) :
+    Quartic      == k ? Ostap::Math::k_quartic      ( u ) : 
+    Triweight    == k ? Ostap::Math::k_triweight    ( u ) :
+    Tricube      == k ? Ostap::Math::k_tricube      ( u ) : 
+    Cosine       == k ? Ostap::Math::k_cosine       ( u ) : 
+    Logistic     == k ? Ostap::Math::k_logistic     ( u ) : 
+    Sigmoid      == k ? Ostap::Math::k_sigmoid      ( u ) : Ostap::Math::k_uniform ( u ) ;  
+  }
 // ============================================================================
 // Standard constructor from  data
 // ============================================================================

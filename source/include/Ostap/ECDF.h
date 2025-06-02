@@ -21,6 +21,41 @@ namespace Ostap
   namespace Math
   {
     // ==========================================================================
+    /** @class DesnsityEstimator
+     *  helpepr base class for non-parametetric denssty estimators
+     * @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+     */ 
+    class DensityEstimator
+    {
+      //====================================================================
+      public: 
+      //====================================================================
+      enum Kernel
+      {
+        Uniform      , 
+        Rectangular  = Uniform      , 
+        Boxcar       = Uniform      , 
+        Triangular   ,
+        Epanechnikov , 
+        Parabolic    = Epanechnikov , 
+        Quartic      , 
+        Biweight     = Quartic      , 
+        Triweight    , 
+        Tricube      ,
+        Gaussian     , 
+        Cosine       , 
+        Logistic     , 
+        Sigmoid      , 
+        Last         = Sigmoid    
+      };
+      // ======================================================================
+      public:
+      // ======================================================================
+      // get the kernel estimate
+      static double kernel ( const double u , const Kernel k ) ;  
+      // ======================================================================
+    };
+    // ==========================================================================
     /** @class ECDF Ostap/ECDF.h
      *  Empirical cumulative distribution function 
      *  @author Vanya Belyaev
@@ -35,6 +70,7 @@ namespace Ostap
       /// the actual type of indices 
       typedef std::vector<Data::size_type>  Indices ;
       // ======================================================================
+      
     public: 
       // ======================================================================
       /** Constructor from  data

@@ -94,6 +94,12 @@ namespace
    */
   const double s_EXP_UNDERFLOW = -708.4 ;
   // ==========================================================================
+ /** @var S_GAUSS_UNDERFLOW 
+   *  For IEEE-compatible type double, overflow is guaranteed if 709.8 < num
+   *  and underflow is guaranteed if num < -708.4.
+   */
+  const double s_GAUSS_UNDERFLOW = std::sqrt ( 2 * std::abs ( s_EXP_UNDERFLOW ) ) ;
+  // ==========================================================================
   /** @var S_INFINITY_ERFC_UNDERFLOW 
    *  For the IEEE-compatible type double, underflow is guaranteed if num > 26.55.
    */
@@ -205,6 +211,13 @@ namespace
   *  @date 2016-06-14
   */
   const double s_SQRT3overPI = std::sqrt(3.0)/M_PI ;
+  // ==========================================================================
+  /** @var s_PIi 
+  *  helper constant \f$ \frac{1}{\pi} \f$
+  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+  *  @date 2016-06-14
+  */
+  const double s_PIi = 1.0 /M_PI ;
   // ==========================================================================
   // Bukin & Co
   // ==========================================================================

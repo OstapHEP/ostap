@@ -1,4 +1,12 @@
 
+## New features
+
+  1. small step toward kernel estimators 
+
+## Backward incompatible 
+
+## Bug fixes 
+
 # v2.0.6.0
 
 
