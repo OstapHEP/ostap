@@ -1,4 +1,3 @@
-
 ## New features
 
   1. small step toward kernel estimators 
