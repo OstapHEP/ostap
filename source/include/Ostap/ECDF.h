@@ -575,9 +575,7 @@ namespace Ostap
     {
     public:
       // =====================================================================
-      /** create the emppirical PDF from empirical CDF 
-       *  @attention data are not copied!
-       */
+      /// create the emppirical PDF from empirical CDF 
       EPDF
       ( const ECDF&                                 ecdf  ,
 	const Ostap::Math::DensityEstimator::Kernel k     ,
@@ -607,6 +605,13 @@ namespace Ostap
       // =====================================================================
     public:
       // =====================================================================
+      /// update smoothing parameters  (
+      bool setH      ( const double h ) ;
+      /// set hew kernel
+      bool setKernel ( const Ostap::Math::DensityEstimator::Kernel k ) ;
+      // =====================================================================
+    private:
+      // =====================================================================
       ECDF                                  m_cdf ;
       Ostap::Math::DensityEstimator::Kernel m_k    { Ostap::Math::DensityEstimator::Epanechnikov } ;
       double                                m_h    { 0       } ; 
@@ -621,9 +626,7 @@ namespace Ostap
     {
     public:
       // =====================================================================
-      /** create the emppirical PDF from empirical CDF 
-       *  @attention data are not copied!
-       */
+      /// create the emppirical PDF from empirical CDF 
       WEPDF
       ( const WECDF&                                ecdf  ,
 	const Ostap::Math::DensityEstimator::Kernel k     ,
@@ -653,14 +656,18 @@ namespace Ostap
       // =====================================================================
     public:
       // =====================================================================
+      /// update smoothing parameters  (
+      bool setH      ( const double h ) ;
+      /// set hew kernel
+      bool setKernel ( const Ostap::Math::DensityEstimator::Kernel k ) ;
+      // =====================================================================
+    private: 
+      // =====================================================================
       WECDF                                 m_cdf ;
       Ostap::Math::DensityEstimator::Kernel m_k    { Ostap::Math::DensityEstimator::Epanechnikov } ;
       double                                m_h    { 0       } ; 
       // =====================================================================
-    } ;
-
-
-    
+    } ;    
     // =======================================================================    
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================

@@ -775,7 +775,58 @@ double Ostap::Math::WEPDF::evaluate ( const double x ) const
     }
   return ih * value / m_cdf.sumw ();
 }
-
+// ============================================================================
+// update smoothing parameters
+// ============================================================================
+bool Ostap::Math::EPDF::setH      ( const double h )
+{
+  if ( ( 0 < h ) && s_equal ( m_h , h ) ) { return false ; }
+  m_h = h ;
+  // check the smoothing parameter 
+  if ( m_h <= 0 ) { m_h = Ostap::Math::DensityEstimator::hopt ( m_cdf ) ; }
+  return true ;
+}
+// ============================================================================
+// update kernel kernel
+// ============================================================================
+bool Ostap::Math::EPDF::setKernel
+( const Ostap::Math::DensityEstimator::Kernel k )
+{
+  Ostap::Assert ( Ostap::Math::DensityEstimator::Uniform <= k &&
+		  Ostap::Math::DensityEstimator::Last    >= k && k < s_TABLE.size () , 
+		  "Invalid Kernel!"    , 
+		  "Ostap::Math::EPDF::setKernel" ,
+		  INVALID_KERNEL , __FILE__, __LINE__ ) ;
+  if ( k == m_k ) { return false ; }
+  m_k = k ;
+  return true ;
+}
+// ============================================================================
+// update smoothing parameters
+// ============================================================================
+bool Ostap::Math::WEPDF::setH      ( const double h )
+{
+  if ( ( 0 < h ) && s_equal ( m_h , h ) ) { return false ; }
+  m_h = h ;
+  // check the smoothing parameter 
+  if ( m_h <= 0 ) { m_h = Ostap::Math::DensityEstimator::hopt ( m_cdf ) ; }
+  return true ;
+}
+// ============================================================================
+// update kernel kernel
+// ============================================================================
+bool Ostap::Math::WEPDF::setKernel
+( const Ostap::Math::DensityEstimator::Kernel k )
+{
+  Ostap::Assert ( Ostap::Math::DensityEstimator::Uniform <= k &&
+		  Ostap::Math::DensityEstimator::Last    >= k && k < s_TABLE.size () , 
+		  "Invalid Kernel!"    , 
+		  "Ostap::Math::WEPDF::setKernel" ,
+		  INVALID_KERNEL , __FILE__, __LINE__ ) ;
+  if ( k == m_k ) { return false ; }
+  m_k = k ;
+  return true ;
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
