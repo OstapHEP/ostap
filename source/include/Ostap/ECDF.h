@@ -14,48 +14,85 @@
 // Ostap
 // ============================================================================
 #include "Ostap/ValueWithError.h"
+#include "Ostap/Power.h"
 // ============================================================================
 namespace Ostap
 {
   // ==========================================================================
   namespace Math
   {
+    // ========================================================================
+    class  ECDF ;
+    class WECDF ;
+    // ========================================================================
+    // Kernels
+    // https://en.wikipedia.org/wiki/Kernel_(statistics)
+    // ========================================================================
+    /// uniform Kernel 
+    inline double k_uniform      ( const double u ) { return 0.5 * ( std::abs ( u ) <= 1 ) ; }
+    /// Triangular kernel
+    inline double k_triangular   ( const double u ) { return std::abs ( u ) <= 1 ? ( 1 - std::abs ( u ) ) : 0.0 ; }
+    /// Epanechnnikov/parabolic  kernel 
+    inline double k_epanechnikov ( const double u ) { return std::abs ( u ) <= 1 ? ( 1 - u * u )          : 0.0 ; }
+    /// Epanechnikov Parabolic kernel
+    inline double k_parabolic    ( const double u ) { return k_epanechnikov ( u ) ; }
+    /// Quartic/biweight kernel  
+    inline double k_quartic      ( const double u ) { return std::abs ( u ) <= 1 ? 15 * Ostap::Math::POW ( 1.0 - u * u ,  2  ) / 16 : 0.0 ; } 
+    /// Quartic/biweight kernel
+    inline double k_biweight     ( const double u ) { return k_quartic ( u ) ; }
+    /// Triweight kernel  
+    inline double k_triweight    ( const double u ) { return std::abs ( u ) <= 1 ? 35 * Ostap::Math::POW ( 1.0 - u * u ,  3  ) / 32 : 0.0 ; } 
+    /// Tricube kernel
+    inline double k_tricube      ( const double u ) { return std::abs ( u ) <= 1 ? 70 * Ostap::Math::POW ( 1.0 - std::abs ( u * u * u ) , 3 ) / 81 : 0.0 ; } 
+    /// Gaussian kernel 
+    double        k_gaussian     ( const double u ) ; 
+    /// Cosine kernel 
+    double        k_cosine       ( const double u ) ; 
+    /// Logistic Kernel
+    double        k_logistic     ( const double u ) ;
+    /// sigmoid kernel 
+    double        k_sigmoid      ( const double u ) ; 
     // ==========================================================================
-    /** @class DesnsityEstimator
-     *  helpepr base class for non-parametetric denssty estimators
-     * @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+    /** @class DensityEstimator
+     *  Helper class for non-parametetric density estimators
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      */ 
     class DensityEstimator
     {
       //====================================================================
-      public: 
+    public: 
       //====================================================================
       enum Kernel
-      {
-        Uniform      , 
-        Rectangular  = Uniform      , 
-        Boxcar       = Uniform      , 
-        Triangular   ,
-        Epanechnikov , 
-        Parabolic    = Epanechnikov , 
-        Quartic      , 
-        Biweight     = Quartic      , 
-        Triweight    , 
-        Tricube      ,
-        Gaussian     , 
-        Cosine       , 
-        Logistic     , 
-        Sigmoid      , 
-        Last         = Sigmoid    
-      };
+	{
+	  Uniform      , 
+	  Rectangular  = Uniform      , 
+	  Boxcar       = Uniform      , 
+	  Triangular   ,
+	  Epanechnikov , 
+	  Parabolic    = Epanechnikov , 
+	  Quartic      , 
+	  Biweight     = Quartic      , 
+	  Triweight    , 
+	  Tricube      ,
+	  Gaussian     , 
+	  Cosine       , 
+	  Logistic     , 
+	  Sigmoid      , 
+	  Last         = Sigmoid    
+	};
       // ======================================================================
-      public:
+    public:
       // ======================================================================
-      // get the kernel estimate
-      static double kernel ( const double u , const Kernel k ) ;  
+      /// get the kernel estimate
+      static double kernel ( const double u , const Kernel k ) ;
+      // ======================================================================
+      /// get the "optimal" value for smoothing parameter 
+      static double hopt   ( const  ECDF& data ) ;
+      /// get the "optimal" value for smoothing parameter 
+      static double hopt   ( const WECDF& data ) ;
       // ======================================================================
     };
-    // ==========================================================================
+    // ========================================================================
     /** @class ECDF Ostap/ECDF.h
      *  Empirical cumulative distribution function 
      *  @author Vanya Belyaev
@@ -66,11 +103,12 @@ namespace Ostap
     public: 
       // ======================================================================
       /// the actual type of data 
-      typedef std::vector<double>           Data    ;
+      typedef std::vector<double>           Data     ;
+      /// iterator type
+      typedef Data::const_iterator          iterator ;
       /// the actual type of indices 
-      typedef std::vector<Data::size_type>  Indices ;
-      // ======================================================================
-      
+      typedef std::vector<Data::size_type>  Indices  ;
+      // ======================================================================      
     public: 
       // ======================================================================
       /** Constructor from  data
@@ -217,6 +255,11 @@ namespace Ostap
         return 0 == k ? 0.0 : n <= k ? 1.0 : k * 1.0 / n  ;
       }
       // ======================================================================
+      /// expose the data: begin iterator 
+      inline iterator begin () const { return m_data.begin () ; }
+      /// expose the data: end-iterator 
+      inline iterator end   () const { return m_data.end   () ; }      
+      // ======================================================================
     public:
       // ======================================================================
       /** assuming that x comes from the same distribution 
@@ -285,11 +328,27 @@ namespace Ostap
     public: 
       // ======================================================================
       /// The actual type of entry: (y,w)
-      typedef std::pair<double,double>    Entry   ;
+      typedef std::pair<double,double>    Entry    ;
       /// the actual type of data
-      typedef std::vector<Entry>          Data    ;
+      typedef std::vector<Entry>          Data     ;
+      /// iterator type
+      typedef Data::const_iterator        iterator ;
       /// the actual type of indices 
-      typedef ECDF::Indices               Indices ;
+      typedef ECDF::Indices               Indices  ;
+      // ======================================================================
+      /// ordering criteria - order by the first component/abscissas  
+      struct COMPARE
+      {
+	/// comparison criteria: compare abscissas 
+	inline bool operator () ( const Entry& a , const Entry& b ) const
+	{ return a.first < b.first ; }
+	/// comparison criteria: compare abscissas 
+	inline bool operator () ( const Entry& a , const double b ) const
+	{ return a.first < b ; }
+	/// comparison criteria: compare abscissas
+	inline bool operator () ( const double a , const Entry& b ) const
+	{ return a < b.first ; }
+      } ;
       // ======================================================================
     public: 
       // ======================================================================
@@ -414,6 +473,11 @@ namespace Ostap
       inline const Entry& operator[] ( const unsigned int index ) const
       { return index < m_data.size() ? m_data[index] : m_data.back() ; }
       // ======================================================================      
+      /// expose the data: begin iterator 
+      inline iterator begin () const { return m_data.begin () ; }
+      /// expose the data: end-iterator 
+      inline iterator end   () const { return m_data.end   () ; }      
+      // ======================================================================
     public: 
       // ======================================================================
       /// swap two objects 
@@ -449,7 +513,8 @@ namespace Ostap
       inline Data::size_type rank ( const double x ) const
       { return std::upper_bound ( m_data.begin ()   ,
                                   m_data.end   ()   ,
-                                  Entry ( x , 1.0 ) ) - m_data.begin() ; }
+                                  Entry ( x , 1.0 ) ,
+				  COMPARE      ()   ) - m_data.begin() ; }
       // ======================================================================
       /// get ranks for all elements from another sample 
       ECDF::Indices ranks ( const  ECDF& sample ) const ;
@@ -461,8 +526,8 @@ namespace Ostap
       /** check that WECDF is OK: 
        *  - there are some entries
        *  - sum of weigths is positive 
-       *  - sum of squaed weigths is positive 
-       *  - remove elments <code>!std::isfinite</code>
+       *  - sum of squared weigths is positive 
+       *  - remove elements <code>!std::isfinite</code>
        */
       WECDF& check_me () ; // check that ECDF is OK: there are some entries 
       // ======================================================================
@@ -501,6 +566,101 @@ namespace Ostap
     ( const  ECDF& a ,
       const WECDF& b )
     { WECDF c { b } ; c += a ; return c ; }
+    // =======================================================================
+    /** @class EPDF
+     *  Helper utility to eatimate the PDF for emprical data using 
+     *  Kernel estimators
+     */
+    class EPDF 
+    {
+    public:
+      // =====================================================================
+      /** create the emppirical PDF from empirical CDF 
+       *  @attention data are not copied!
+       */
+      EPDF
+      ( const ECDF&                                 ecdf  ,
+	const Ostap::Math::DensityEstimator::Kernel k     ,
+	const double                                h = 0 ) ;
+      // =====================================================================
+    public:
+      // =====================================================================
+      /// get the PDF 
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; }
+      /// get the PDF 
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; }
+      /// get the PDF 
+      double evaluate ( const double x ) const ;
+      /// get the CDF 
+      inline double cdf         ( const double x ) const { return m_cdf ( x ) ; }
+      // =====================================================================
+    public:
+      // =====================================================================
+      /// get ECDF 
+      const  ECDF&   cdf () const { return m_cdf  ; }
+      // =====================================================================
+      /// get the kernel 
+      inline Ostap::Math::DensityEstimator::Kernel kernel () const { return m_k ; }
+      // =====================================================================
+      /// get the smoothing parameter
+      inline double h    () const { return m_h ; }
+      // =====================================================================
+    public:
+      // =====================================================================
+      ECDF                                  m_cdf ;
+      Ostap::Math::DensityEstimator::Kernel m_k    { Ostap::Math::DensityEstimator::Epanechnikov } ;
+      double                                m_h    { 0       } ; 
+      // =====================================================================
+    } ;
+    // ========================================================================
+    /** @class EPDF
+     *  Helper utility to eatimate the PDF for emprical data using 
+     *  Kernel estimators
+     */
+    class WEPDF 
+    {
+    public:
+      // =====================================================================
+      /** create the emppirical PDF from empirical CDF 
+       *  @attention data are not copied!
+       */
+      WEPDF
+      ( const WECDF&                                ecdf  ,
+	const Ostap::Math::DensityEstimator::Kernel k     ,
+	const double                                h = 0 ) ;
+      // =====================================================================
+    public:
+      // =====================================================================
+      /// get the PDF 
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; }
+      /// get the PDF 
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; }
+      /// get the PDF 
+      double evaluate ( const double x ) const ;
+      /// get the CDF 
+      inline double cdf         ( const double x ) const { return m_cdf ( x ) ; }
+      // =====================================================================
+    public:
+      // =====================================================================
+      /// get ECDF 
+      const WECDF& cdf () const { return m_cdf  ; }
+      // =====================================================================
+      /// get the kernel 
+      inline Ostap::Math::DensityEstimator::Kernel kernel () const { return m_k ; }
+      // =====================================================================
+      /// get the smoothing parameter
+      inline double h  () const { return m_h ; }
+      // =====================================================================
+    public:
+      // =====================================================================
+      WECDF                                 m_cdf ;
+      Ostap::Math::DensityEstimator::Kernel m_k    { Ostap::Math::DensityEstimator::Epanechnikov } ;
+      double                                m_h    { 0       } ; 
+      // =====================================================================
+    } ;
+
+
+    
     // =======================================================================    
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================

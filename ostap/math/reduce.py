@@ -482,6 +482,19 @@ def wecdf_reduce  ( wecdf ) :
 
 Ostap.Math.WECDF.__reduce__ = wecdf_reduce
 
+# ==============================================================================
+## Reduce `Ostap::Math::EPDF` & `Ostap::Math::WEPDF`
+def _epdf_reduce_ ( pdf ) :
+    """ Reduce `Ostap.Math.EPDF` & `Ostap.Math.WEPDF`
+    """
+    return root_factory , ( type ( pdf )  ,
+                            pdf.cdf ()    ,
+                            int ( pdf.kernel() ) , 
+                            pdf.h   ()    ) 
+
+Ostap.Math. EPDF.__reduce__ = _epdf_reduce_
+Ostap.Math.WEPDF.__reduce__ = _epdf_reduce_
+
 # =============================================================================
 ## Dalitz' objects 
 # =============================================================================   

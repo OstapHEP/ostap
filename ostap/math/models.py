@@ -1177,6 +1177,8 @@ for model in ( Ostap.Math.Chebyshev              ,
                #
                Ostap.Math.ECDF                   , 
                Ostap.Math.WECDF                  , 
+               Ostap.Math.EPDF                   , 
+               Ostap.Math.WEPDF                  , 
                #
                Ostap.Math.BSpline                , 
                Ostap.Math.PositiveSpline         ,
