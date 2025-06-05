@@ -20,7 +20,7 @@ __all__     = (
 from   ostap.parallel.parallel import Task, WorkManager
 from   ostap.core.ostap_types  import string_types, integer_types
 from   ostap.utils.basic       import numcpu 
-import ROOT
+import ROOT, os 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -32,7 +32,7 @@ else                       : logger = getLogger ( __name__              )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2022-02-15 
 class  CopyTask(Task) :
-    """The simple task object for parallel copy
+    """ The simple task object for parallel copy
     """
     ## 
     def __init__ ( self , copier  ) :        
@@ -65,9 +65,9 @@ class  CopyTask(Task) :
         
         return self.results() 
 
-    ## merge results of toys 
+    ## merge results 
     def merge_results ( self , result , jobid = -1 ) :
-        """Merge results of toys
+        """ Merge results
         """
         self.the_output = self.the_output + result 
         
@@ -77,7 +77,7 @@ class  CopyTask(Task) :
 ## Copy files in parallel:
 #  @return sequence of (input,output) pairs
 def copy_files ( file_pairs , progress = True , maxfiles = 5 , copier = None , **kwargs ) :
-    """Copy files in parallel: 
+    """ Copy files in parallel: 
     - return sequence of (input,output) pairs
     """
     if not copier :
