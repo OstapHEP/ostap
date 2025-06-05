@@ -15,7 +15,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2020-06-08  
 # =============================================================================
-"""Decorate moment--counters
+""" Decorate moment--counters
 - see Ostap::Math::Moment
 - see Ostap::Math::Moment_
 - see Ostap::Math::WMoment
@@ -151,7 +151,6 @@ def _om_cumulant_3rd ( obj ) :
     assert 3 <= obj.order , 'cumulant_3rd: the order must be >=3!'
     return Ostap.Math.Moments.cumulant_3rd ( obj )  
     
-
 # =============================================================================
 ## Get 4th nb unbiased cumulant,
 #  @code
@@ -167,7 +166,6 @@ def _om_cumulant_4th ( obj ) :
     assert 4 <= obj.order , 'cumulant_4th: the order must be >=3!'
     return Ostap.Math.Moments.cumulant_4th ( obj )  
     
-
 # =============================================================================
 ## get unbiased 2nd order moment from the moment-counter 
 #  @code
@@ -298,6 +296,33 @@ def _om_rms  ( obj ) :
     
     return  max ( var , 0 ) **  0.5 
 
+# =============================================================================
+## Get the standartized moment of order `order` 
+def _om_std ( obj , order ) :
+    """ Get the standartized moment of order `order` 
+    """
+    assert isinstance ( order , integer_types ) and 0 <= order <= obj.order , \
+        "Invalid `order`!"
+
+    print ( 'STD/1' , obj , order ) 
+    if   0 == order : return 1            ## RETURN 
+    elif 1 == order : return 0            ## RETURN 
+    elif 2 == order : return 1            ## RETURN
+
+    m = obj.std_moment_[order]()    
+    print ( 'STD/2' , obj , order , m ) 
+    
+    if isinstance ( m , VE ) : return m   ## RETURN
+
+    if 2 * order <= obj.order : 
+        raw = obj.central_moment ( order)        
+        print ( 'STD/3' , obj , order , raw ) 
+        if isinstance ( raw , VE ) :
+            o2 = float ( obj.moment_[2] () ) 
+            return raw / pow ( o2 , 0.5 * order ) 
+    
+    return m 
+    
 # =============================================================================
 ## print object as a table
 #  @code
@@ -495,11 +520,14 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
     elif 100 <= order < 1000  : fmt = '[%03d]'
   
     for i in range ( 2 , order + 1 ) :
+
         
         if standard  :
-            
-            v  = obj.std_moment ( i )
-            vv = float   ( v )                         
+    
+            v  = obj.std_moment2 ( i )
+
+            print ( i , v ) 
+            vv = float  ( v  )                         
             if isfinite ( vv ) and IM != float ( v ) :                
                 if isinstance ( v , VE ) : field , n = v.pretty_print () 
                 else                     : field , n = pretty_float ( v )
@@ -540,6 +568,7 @@ Ostap.Math.Moment.skewness       = _om_skewness
 Ostap.Math.Moment.kurtosis       = _om_kurtosis
 Ostap.Math.Moment.cmoment        = _om_cm2
 Ostap.Math.Moment.central_moment = _om_cm2
+Ostap.Math.Moment.std_moment2    = _om_std
 Ostap.Math.Moment.table          = _om_table
 
 Ostap.Math.Moment.cumulant_1st   = _om_cumulant_1st ## 1st cumulant is a mens
@@ -555,6 +584,7 @@ Ostap.Math.WMoment.skewness       = _om_skewness
 Ostap.Math.WMoment.kurtosis       = _om_kurtosis
 Ostap.Math.WMoment.cmoment        = _om_cm3
 Ostap.Math.WMoment.central_moment = _om_cm3
+Ostap.Math.WMoment.std_moment2    = _om_std
 Ostap.Math.WMoment.table          = _om_table
 
 

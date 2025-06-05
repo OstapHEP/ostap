@@ -125,7 +125,7 @@ else                       : logger = getLogger ( __name__              )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class BaseMoment(object) :
-    """Calculate the N-th moment for the distribution
+    """ Calculate the N-th moment for the distribution
     
     >>> xmin,xmax = 0,math.pi 
     >>> mean  = Moment(1,xmin,xmax)  ## specify min/max
@@ -159,7 +159,7 @@ class BaseMoment(object) :
     # =========================================================================
     ## get the unormalized moment
     def umoment ( self , K , func , center  , *args ) :
-        """Get the unormalized moment
+        """ Get the unormalized moment
         """
         if 0 == K : return self.normalization ( func , *args ) 
 
@@ -171,21 +171,21 @@ class BaseMoment(object) :
     # =========================================================================
     ## get the normalization integral within the specified range 
     def normalization ( self, func , *args ) :
-        """get the normalization integral within the specified range 
+        """ Get the normalization integral within the specified range 
         """        
         return self.integral ( func , xmin = self.xmin , xmax = self.xmax , *args )
 
     # =========================================================================
     ## get the mean value
     def mean ( self , func , *args ) :
-        """Get the mean value 
+        """ Get the mean value 
         """
         return self.moment ( 1 , func , center = 0.0 , *args )
     
     # =========================================================================
     ## get the  central moment
     def central_moment ( self , K , func , *args ) :
-        """Get the central moment
+        """ Get the central moment
         """
         ##
         if   0 == K : return 1.0 
@@ -201,7 +201,7 @@ class BaseMoment(object) :
     # =========================================================================
     ## get the standartizeds central moment
     def std_moment ( self , K , func , *args ) :
-        """Get the standartized central moment
+        """ Get the standartized central moment
         """
         ##
         if   0 == K : return 1.0 
@@ -219,31 +219,31 @@ class BaseMoment(object) :
     # =========================================================================
     ## get the variance 
     def variance      ( self , func , *args ) :
-        """Get the  variance"""
+        """ Get the  variance"""
         return self.central_moment ( 2 , func , *args )
 
     # =========================================================================
     ## get the RMS
     def rms          ( self , func , *args ) :
-        """Get the  RMS"""
+        """ Get the  RMS"""
         return self.variance ( func , *args ) **0.5 
 
     # =========================================================================
     ## get the skewness 
     def skewness      ( self , func , *args ) :
-        """Get the skewness"""
+        """ Get the skewness"""
         return self.std_moment ( 3 , func , *args )
 
     # =========================================================================
     ## get the (excess) kurtosis 
     def kurtosis      ( self , func , *args ) :
-        """Get the (excess) kurtosis """
+        """ Get the (excess) kurtosis """
         return self.std_moment ( 4 , func , *args ) - 3.0 
     
     # =========================================================================
     ## integrate the function between xmin and xmax 
     def integral ( self , func , xmin , xmax , *args ) :
-        """Integrate the function between xmin and xmax"""
+        """ Integrate the function between xmin and xmax"""
         from ostap.math.integral import IntegralCache 
         integrator = IntegralCache ( func , xmin , err = self.err , args = args )
         return integrator ( xmax , *args )
@@ -281,26 +281,26 @@ class BaseMoment(object) :
 
     @property
     def args ( self ) :
-        "``args'' - other arguments for the function call"
+        "`args' - other arguments for the function call"
         return self.__args
     
     @property
     def  err( self ) :
-        "``err''- evaluate the error/uncertanty?"
+        "`err'- evaluate the error/uncertanty?"
         return self.__err
 
     @property
     def  xmin ( self ) :
-        "``xmin''- low edge of the interval"
+        "`xmin'- low edge of the interval"
         return self.__xmin
     @property
     def  xmax ( self ) :
-        "``xmax''- high edge of the interval"
+        "`xmax'- high edge of the interval"
         return self.__xmax
     
     @property
     def N ( self ) :
-        "``N''- the moment order"
+        "`N'- the moment order"
         return self.__N
 
 # =============================================================================    
@@ -314,7 +314,7 @@ class BaseMoment(object) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class Moment(BaseMoment) :
-    """Calculate the N-th moment for the distribution
+    """ Calculate the N-th moment for the distribution
     
     >>> xmin,xmax = 0,math.pi 
     >>> mean  = Moment(1,xmin,xmax)  ## specify min/max
@@ -322,7 +322,7 @@ class Moment(BaseMoment) :
     """
     ## constructor
     def __init__ ( self , N , xmin , xmax , err = False , center = 0.0 , *args ) :
-        """Contructor 
+        """ Contructor 
         """
         BaseMoment.__init__ ( self , N = N , xmin = xmin , xmax = xmax , err = err , *args )
         self.__center = float ( center )   
@@ -344,11 +344,11 @@ class Moment(BaseMoment) :
                                             self.center )
     @property
     def x0 ( self ) :
-        "``x0''- the center"
+        "`x0'- the center"
         return self.__center 
     @property
     def center ( self ) :
-        "``center''- the center (same as ``x0'')"
+        "`center'- the center (same as `x0')"
         return self.__center
     
 # =============================================================================
@@ -362,7 +362,7 @@ class Moment(BaseMoment) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class CentralMoment(BaseMoment) :
-    """Calculate the N-th central moment for the distribution
+    """ Calculate the N-th central moment for the distribution
     
     >>> xmin,xmax = 0,math.pi 
     >>> mc        = CentralMoment(1,xmin,xmax)  ## specify min/max
@@ -406,7 +406,7 @@ class CentralMoment(BaseMoment) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class StdMoment(CentralMoment) :
-    """Calculate the N-th central moment for the distribution
+    """ Calculate the N-th central moment for the distribution
     
     >>> xmin,xmax = 0,math.pi 
     >>> mc        = CentralMoment(1,xmin,xmax)  ## specify min/max
@@ -447,7 +447,7 @@ class StdMoment(CentralMoment) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class Mean(Moment) :
-    """Calculate the N-th moment for the distribution or function 
+    """ Calculate the N-th moment for the distribution or function 
     
     >>> xmin,xmax = 0,math.pi 
     >>> mean  = Mean ( xmin , xmax )  ## specify min/max
@@ -474,7 +474,7 @@ class Mean(Moment) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class Variance(CentralMoment) :
-    """Calculate the variance for the distribution or function  
+    """ Calculate the variance for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> variance  = Variance ( xmin,xmax )  ## specify min/max
     >>> value     = variance ( math.sin  )
@@ -498,7 +498,7 @@ class Variance(CentralMoment) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class RMS(Variance) :
-    """Calculate the RMS for the distribution or function  
+    """ Calculate the RMS for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> rms       = RMS ( xmin,xmax )  ## specify min/max
     >>> value     = rms ( math.sin  )
@@ -508,7 +508,7 @@ class RMS(Variance) :
         
     ## calculate the variance 
     def __call__ ( self , func , *args ) :
-        """Calculate the RMS for the distribution or function          
+        """ Calculate the RMS for the distribution or function          
         """
         ##
         args   = args if args else self.args
@@ -534,8 +534,7 @@ class RMS(Variance) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-09
 class Skewness(StdMoment) :
-    """
-    Calculate the variance for the distribution or function  
+    """ Calculate the variance for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> skew      = Skewness ( xmin,xmax )  ## specify min/max
     >>> value     = skew     ( math.sin  )
@@ -560,7 +559,7 @@ class Skewness(StdMoment) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-09
 class Kurtosis(StdMoment) :
-    """Calculate the variance for the distribution or function  
+    """ Calculate the variance for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> kurt      = Kurtosis ( xmin,xmax )  ## specify min/max
     >>> value     = kurt     ( math.sin  )
@@ -591,7 +590,7 @@ class Kurtosis(StdMoment) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-12
 class Median(RMS) :
-    """Calculate median for the distribution or function  
+    """ Calculate median for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> median    = Median ( xmin,xmax )  ## specify min/max
     >>> value     = median ( math.sin  )
@@ -617,7 +616,7 @@ class Median(RMS) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-12
 class Quantile(Median) :
-    """Calculate quantiles for the distribution or function  
+    """ Calculate quantiles for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> quantile  = Quantile ( 0.1 , xmin,xmax )  ## specify min/max
     >>> value     = quantile ( math.sin  )
@@ -803,7 +802,7 @@ class Mode(Median) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-12
 class Width(Mode) :
-    """Calculate the mode for the distribution or function  
+    """ Calculate the mode for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> width     = Width ( xmin,xmax )  ## specify min/max
     >>> x1 , x2   = width ( math.sin )
@@ -856,7 +855,7 @@ class Width(Mode) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-08-03
 class CL_symm(object) :
-    """Calculate symmetic confidence interval around x0
+    """ Calculate symmetic confidence interval around x0
     for the given function on (xmin,xmax) interval
     function is assumed to be zero outside the interval
     >>> fun = lambda x : exp( -0.5*x*x)
@@ -938,23 +937,23 @@ class CL_symm(object) :
 
     @property
     def args ( self ) :
-        "``args'' - other arguments for the function call"
+        "`args' - other arguments for the function call"
         return self.__args
     @property
     def  xmin ( self ) :
-        "``xmin''- low edge of the interval"
+        "`xmin'- low edge of the interval"
         return self.__xmin
     @property
     def  xmax ( self ) :
-        "``xmax''- high edge of the interval"
+        "`xmax'- high edge of the interval"
         return self.__xmax
     @property
     def prob ( self ) :
-        "``prop'' - confidence level"
+        "`prop' - confidence level"
         return self.__prob
     @property
     def x0 ( self ) :
-        "``x0''- the center"
+        "`x0'- the center"
         return self.__x0
 
 # =============================================================================
@@ -977,7 +976,7 @@ class CL_symm(object) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-08-03
 class CL_asymm(object) :
-    """Calculate asymmetic confidence interval around x0
+    """ Calculate asymmetic confidence interval around x0
     for the given function on (xmin,xmax) interval
     function is assumed to be zero outside the interval
     >>> fun = lambda x : exp( -0.5*x*x)
@@ -1085,19 +1084,19 @@ class CL_asymm(object) :
 
     @property
     def args ( self ) :
-        "``args'' - other arguments for the function call"
+        "`args' - other arguments for the function call"
         return self.__args
     @property
     def  xmin ( self ) :
-        "``xmin''- low edge of the interval"
+        "`xmin'- low edge of the interval"
         return self.__xmin
     @property
     def  xmax ( self ) :
-        "``xmax''- high edge of the interval"
+        "`xmax'- high edge of the interval"
         return self.__xmax
     @property
     def prob ( self ) :
-        "``prop'' - confidence level"
+        "`prop' - confidence level"
         return self.__prob
 
 # =============================================================================

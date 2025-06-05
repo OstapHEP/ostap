@@ -191,7 +191,6 @@ def _axis_scale_ ( axis , scale ) :
                         axis.GetXmin  () * scale ,
                         axis.GetXmax  () * scale )
 
-
 ROOT.TAxis . __iter__     = _axis_iter_1_
 ROOT.TAxis . __reversed__ = _axis_iter_reversed_
 ROOT.TAxis . __contains__ = lambda s , i : 1 <= abs(i) <= s.GetNbins()

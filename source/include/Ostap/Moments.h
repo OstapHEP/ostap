@@ -2326,7 +2326,7 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// accumulate only positive entries 
+      /// accumulate only finite entries 
       inline MinMaxValue& add ( const double x )
       {
         if ( !std::isfinite ( x ) ) { return *this ; }
