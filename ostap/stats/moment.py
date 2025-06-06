@@ -396,6 +396,26 @@ def _om_table ( obj , * ,
         row = "sum(w)" , field , '' if not n else fmt_factor % n
         rows.append ( row )
         
+    if 1 <= size and obj.ok () and hasattr ( obj , 'wmin' ) :
+        
+        v  = obj.wmin ()
+        vv = float   ( v ) 
+        if IM != float ( v ) and isfinite ( vv ) : 
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
+            else                     : field , n = pretty_float ( v )
+            row = "weight/min" , field , '' if not n else fmt_factor % n 
+            rows.append ( row )
+        
+    if 1 <= size and obj.ok () and hasattr ( obj , 'wmax' ) :
+        
+        v  = obj.wmax ()
+        vv = float   ( v ) 
+        if IM != float ( v ) and isfinite ( vv ) : 
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
+            else                     : field , n = pretty_float ( v )
+            row = "weight/max" , field , '' if not n else fmt_factor % n 
+            rows.append ( row )
+
     if hasattr  ( obj , 'nEff' ) :
             
         neff = obj.nEff()
@@ -403,7 +423,27 @@ def _om_table ( obj , * ,
             field , n = pretty_float ( neff ) 
             row = "nEff" , field , '' if not n else fmt_factor % n 
             rows.append ( row )
-            
+
+    if 1 <= order and 1 <= size and obj.ok () and hasattr ( obj , 'xmin' ) :
+        
+        v  = obj.xmin ()
+        vv = float   ( v ) 
+        if IM != float ( v ) and isfinite ( vv ) : 
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
+            else                     : field , n = pretty_float ( v )
+            row = "value/min" , field , '' if not n else fmt_factor % n 
+            rows.append ( row )
+        
+    if 1 <= order and 1 <= size and obj.ok () and hasattr ( obj , 'xmax' ) :
+        
+        v  = obj.xmax ()
+        vv = float   ( v ) 
+        if IM != float ( v ) and isfinite ( vv ) : 
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
+            else                     : field , n = pretty_float ( v )
+            row = "value/max" , field , '' if not n else fmt_factor % n 
+            rows.append ( row )
+                      
     if 1 <= order and 1 <= size and obj.ok () and hasattr ( obj , 'mean' )  : 
         
         v  = obj.mean ()
@@ -739,19 +779,23 @@ from ostap.math.reduce import root_factory
 def _mom0_reduce_ ( cnt ) :
     """ Reduce Ostap::Math::Moment_<0>
     """
-    return root_factory , ( type ( cnt ), cnt.size  () )
+    return root_factory , ( type ( cnt ), cnt.size () )
 # =========================================================
 ## Redude Ostap::Math::Moment_<1>
 def _mom1_reduce_ ( cnt ) :
     """ Reduce Ostap::Math::Moment_<1>
     """
-    return root_factory , ( type ( cnt ), cnt.mu () , cnt.previous () )
+    return root_factory , ( type ( cnt )    ,
+                            cnt.previous () ,
+                            cnt.mu       () ,
+                            cnt.xmin     () ,
+                            cnt.xmax     () )
 # ========================================================
 ## Redude Ostap::Math::Moment_<N>
 def _momN_reduce_ ( cnt ) :
     """ Reduce Ostap::Math::Moment_<N>
     """
-    return root_factory , ( type ( cnt ), cnt.moment () , cnt.previous () )
+    return root_factory , ( type ( cnt ) , cnt.previous () , cnt.moment () ) 
 
 Ostap.Math.Moment . __reduce__ = _momN_reduce_
 M0                . __reduce__ = _mom0_reduce_
@@ -762,25 +806,33 @@ M1                . __reduce__ = _mom1_reduce_
 def _wmom0_reduce_ ( cnt ) :
     """ Reduce Ostap::Math::WMoment_<0>
     """
-    return root_factory , ( type ( cnt ), cnt.size  () , cnt.w() , cnt.w2 () )
+    return root_factory , ( type ( cnt ) ,
+                            cnt.size  () ,
+                            cnt.w     () ,
+                            cnt.w2    () ,
+                            cnt.wmin  () ,
+                            cnt.wmax  () )
 # =========================================================
 ## Redude Ostap::Math::WMoment_<1>
 def _wmom1_reduce_ ( cnt ) :
     """ Reduce Ostap::Math::WMoment_<1>
     """
-    return root_factory , ( type ( cnt ), cnt.mu () , cnt.previous () )
+    return root_factory , ( type ( cnt )    ,
+                            cnt.previous () , 
+                            cnt.mu       () ,
+                            cnt.xmin     () ,
+                            cnt.xmax     () )
+
 # ========================================================
 ## Redude Ostap::Math::WMoment_<N>
 def _wmomN_reduce_ ( cnt ) :
     """ Reduce Ostap::Math::WMoment_<N>
     """
-    return root_factory , ( type ( cnt ), cnt.moment () , cnt.previous () )
+    return root_factory , ( type ( cnt ) , cnt.previous () , cnt.moment () ) 
 
 Ostap.Math.WMoment . __reduce__ = _wmomN_reduce_
 WM0                . __reduce__ = _wmom0_reduce_
 WM1                . __reduce__ = _wmom1_reduce_
-
-
 
 # =============================================================================
 ## serialization of Harmonic&Geometric means

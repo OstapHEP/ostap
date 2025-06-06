@@ -52,10 +52,14 @@ Ostap::Math::WMoment::~WMoment(){}
 Ostap::Math::WMoment_<0>::WMoment_ 
 ( const unsigned long long size  ,
   const double             sumw  ,
-  const double             sumw2 )
+  const double             sumw2 , 
+  const double             wmin  , 
+  const double             wmax  ) 
   : m_size ( size  )
   , m_w    ( sumw  )
-  , m_w2   ( sumw2 ) 
+  , m_w2   ( sumw2 )
+  , m_wmin { std::min ( wmin ,   std::numeric_limits<double>::max () ) } 
+  , m_wmax { std::max ( wmax , - std::numeric_limits<double>::max () ) } 
 {
   Ostap::Assert ( std::isfinite ( m_w ) && std::isfinite ( m_w2 ) ,
                   "Invalid sumw/sumw2!"              , 
@@ -348,60 +352,40 @@ Ostap::Math::WLehmerMean::add
 }
 // ===========================================================================
 
+
 // ===========================================================================
-// default constructor
+// (default) constructor 
 // ===========================================================================
-Ostap::Math::MinMaxValue::MinMaxValue ()
-  : m_min (   std::numeric_limits<double>::max() ) 
-  , m_max ( - std::numeric_limits<double>::max() ) 
-  , m_cnt ()
+Ostap::Math::Moment_<0>::Moment_
+( const unsigned long long size  )
+  : m_size ( size )
 {}
 // ===========================================================================
-// constructor
+/// constructor from mu and previous 
 // ===========================================================================
-Ostap::Math::MinMaxValue::MinMaxValue
-( const double                             minv ,
-  const double                             maxv ,
-  const Ostap::Math::MinMaxValue::Counter& cnt  )
-  : m_min ( minv )  
-  , m_max ( maxv ) 
-  , m_cnt ( cnt  )
-{
-  Ostap::Assert ( ( empty()
-                    && m_min ==   std::numeric_limits<double>::max()
-                    && m_max == - std::numeric_limits<double>::max() )
-                  || ( !empty() && m_min <= m_max ) ,
-                  "Invalid min/max/empty structure!" ,
-                  "Ostap::Math::MinMaxValue!" ,
-                  INVALID_RANGE , __FILE__ , __LINE__ ) ;
-}
-// ===========================================================================
-// default constructor
-// ===========================================================================
-Ostap::Math::WMinMaxValue::WMinMaxValue ()
-  : m_min (   std::numeric_limits<double>::max() ) 
-  , m_max ( - std::numeric_limits<double>::max() ) 
-  , m_cnt ()
+Ostap::Math::Moment_<1>::Moment_
+( const Ostap::Math::Moment_<0>& prev , 
+  const double                   mu   ,
+  const double                   xmin ,
+  const double                   xmax )
+  : m_prev ( prev ) 
+  , m_mu   ( mu   )
+  , m_min  { std::min ( xmin ,   std::numeric_limits<double>::max () ) } 
+  , m_max  { std::max ( xmax , - std::numeric_limits<double>::max () ) } 
 {}
-// ======================================================================
-// constructor
 // ===========================================================================
-Ostap::Math::WMinMaxValue::WMinMaxValue
-( const double                              minv ,
-  const double                              maxv ,
-  const Ostap::Math::WMinMaxValue::Counter& cnt  )
-  : m_min ( minv )  
-  , m_max ( maxv ) 
-  , m_cnt ()
-{
-  Ostap::Assert ( ( empty()
-                    && m_min ==   std::numeric_limits<double>::max()
-                    && m_max == - std::numeric_limits<double>::max() ) 
-                  || ( !empty() && m_min <= m_max )   , 		      
-                  "Invalid min/max/empty structure!"  ,
-                  "Ostap::Math::WMinMaxValue!"        ,
-                  INVALID_RANGE , __FILE__ , __LINE__ ) ;
-}
+/// constructor from mu and previous moment 
+// ===========================================================================
+Ostap::Math::WMoment_<1>::WMoment_
+( const Ostap::Math::WMoment_<0>& prev ,
+  const double                    mu   ,
+  const double                    xmin ,
+  const double                    xmax ) 
+  : m_prev ( prev ) 
+  , m_mu   ( mu   )
+  , m_min  { std::min ( xmin ,   std::numeric_limits<double>::max () ) } 
+  , m_max  { std::max ( xmax , - std::numeric_limits<double>::max () ) } 
+{}   
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

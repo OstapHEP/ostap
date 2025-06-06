@@ -83,8 +83,8 @@ namespace  Ostap
       Moment_ () = default ;
       /// constructor from the value and previous moment 
       Moment_
-      ( const double        mom  ,
-        const Moment_<N-1>& prev )
+      ( const Moment_<N-1>& prev ,	
+	const double        mom  ) 
         : m_prev ( prev              )
         , m_M    ( mom * prev.size() )
       {} 
@@ -131,6 +131,11 @@ namespace  Ostap
       inline bool               empty () const { return m_prev.empty () ; }
       /// ok ?
       inline bool               ok    () const { return m_prev.ok    () ; }
+      // ======================================================================
+      /// minimal value
+      inline double             xmin  () const { return m_prev.xmin  () ; } 
+      /// maximal value
+      inline double             xmax  () const { return m_prev.xmax  () ; } 
       // ======================================================================
     public: // basic operations for the counter 
       // ======================================================================
@@ -497,10 +502,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// (default) constructor 
-      Moment_
-      ( const unsigned long long size = 0 )
-        : m_size ( size )
-      {}
+      Moment_ ( const unsigned long long size = 0 ) ; 
       // ======================================================================
     public:
       // ======================================================================
@@ -625,20 +627,14 @@ namespace  Ostap
       // ======================================================================
     public: 
       // ======================================================================
-      /// default constructor from mu and size 
-      Moment_
-      ( const double             mu   = 0 ,
-        const unsigned long long size = 0 ) 
-        : m_prev ( size ) 
-        , m_mu   ( mu   )
-      {}
+      /// default constructor 
+      Moment_ () = default ;
       /// constructor from mu and previous 
       Moment_
-      ( const double      mu   ,
-        const Moment_<0>& prev ) 
-        : m_prev ( prev ) 
-        , m_mu   ( mu   )
-      {}
+      ( const Moment_<0>& prev ,	
+	const double      mu   ,
+	const double      xmin ,
+	const double      xmax ) ;
       // ======================================================================
     public: 
       // ======================================================================
@@ -669,6 +665,10 @@ namespace  Ostap
       inline bool               empty () const { return m_prev.empty () ; }
       /// ok ?
       inline bool               ok    () const { return m_prev.ok    () ; }
+      /// minimal value
+      inline double             xmin  () const { return m_min ; } 
+      /// maximal value
+      inline double             xmax  () const { return m_max ; } 
       // ======================================================================
     public: // basic operations 
       // ======================================================================
@@ -686,7 +686,9 @@ namespace  Ostap
         //
         const auto n = m_prev.size() ;
         m_mu = ( n * m_mu + x ) /  ( n + 1 );  // calculate new mean value 
-        m_prev += x ;                          // updated previous  
+        m_prev += x ;                          // updated previous
+	m_min   = std::min ( m_min , x ) ;
+	m_max   = std::max ( m_max , x ) ;
         return *this ;
       }
       /// add the moment 
@@ -700,6 +702,9 @@ namespace  Ostap
         //
         m_mu = ( n1 * m_mu + n2 * x.m_mu ) / ( n1 + n2 ) ; // update mean 
         m_prev += x.m_prev ;                               // update previous
+	//
+	m_min = std::min ( m_min , x.m_min ) ;
+	m_max = std::max ( m_max , x.m_max ) ;	
         //
         return *this ;
       }
@@ -745,7 +750,9 @@ namespace  Ostap
       void swap ( Moment_& right )
       {
         m_prev.swap ( right.m_prev ) ;
-        std::swap ( m_mu , right.m_mu ) ;
+        std::swap ( m_mu  , right.m_mu  ) ;
+        std::swap ( m_min , right.m_min ) ;
+        std::swap ( m_max , right.m_max ) ;
       }
       // ======================================================================
     public:  // templated prev
@@ -794,6 +801,10 @@ namespace  Ostap
       Moment_<0>  m_prev {   } ;
       /// mean value
       long double m_mu   { 0 } ; // mean value
+      /// minimal value
+      double      m_min  {   std::numeric_limits<double>::max () } ;
+      /// maximal value
+      double      m_max  { - std::numeric_limits<double>::max () } ;
       // ======================================================================
     private:
       // ======================================================================
@@ -826,8 +837,7 @@ namespace  Ostap
     // ========================================================================
     // Weighted moments 
     // ========================================================================
-    
-	
+    	
     // ========================================================================
     /** @class WStatistic
      *  Helper (empty) base class for weighted statistics 
@@ -886,8 +896,8 @@ namespace  Ostap
       WMoment_ () = default ;
       /// constructor from the value and previous moment 
       WMoment_
-      ( const double         mom  ,
-	const WMoment_<N-1>& prev )
+      ( const WMoment_<N-1>& prev , 
+	const double         mom  ) 
 	: m_prev ( prev            )
 	, m_M    ( mom * prev.w () )
       {} 
@@ -943,6 +953,16 @@ namespace  Ostap
       /// ok ?
       inline bool               ok    () const { return m_prev.ok    () ; }
       // ======================================================================
+      /// minimal value
+      inline double             xmin  () const { return m_prev.xmin  () ; } 
+      /// maximal value
+      inline double             xmax  () const { return m_prev.xmax  () ; } 
+      // ======================================================================
+      /// minimal weight 
+      inline double             wmin  () const { return m_prev.wmin () ; } 
+      /// maximal weight 
+      inline double             wmax  () const { return m_prev.wmax () ; }
+      // ======================================================================      
     public: // basic operations for the counter 
       // ======================================================================
       /// increment with other moment 
@@ -1182,17 +1202,22 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// default constructor
+      /// default constructor 
       WMoment_ () = default ;
+      // ======================================================================
       /** full constructor
        *  @param size number of entries 
        *  @param sumw sum of weights 
        *  @param sumw sum of squared weights 
+       *  @param wmin minimal weight 
+       *  @param wmax maximal weight 
        */
       WMoment_
-      ( const unsigned long long size ,
+      ( const unsigned long long size  ,
 	const double             sumw  ,
-	const double             sumw2 ) ;
+	const double             sumw2 , 
+	const double             wmin  , 
+	const double             wmax  ) ;
       // ======================================================================
     public : 
       // ======================================================================
@@ -1226,6 +1251,10 @@ namespace  Ostap
       inline bool               empty () const { return 0 == m_size ; }
       /// ok ?
       inline bool               ok    () const { return m_size && m_w && ( 0 < m_w2 ) ; }
+      /// minimal weight 
+      inline double             wmin  () const { return m_wmin ; } 
+      /// maximal weight 
+      inline double             wmax  () const { return m_wmax ; }       
       // ======================================================================
     public: // basic operations 
       // ======================================================================
@@ -1247,6 +1276,9 @@ namespace  Ostap
         ++m_size ; 
         m_w  += w     ; 
         m_w2 += w * w ;
+	//
+	m_wmin = std::min ( m_wmin , w ) ;
+	m_wmax = std::max ( m_wmax , w ) ;
         //
         return *this ; 
       }
@@ -1259,6 +1291,9 @@ namespace  Ostap
         m_w    += x.m_w    ;
         m_w2   += x.m_w2   ;
         //
+	m_wmin = std::min ( m_wmin , x.m_wmin ) ;
+	m_wmax = std::max ( m_wmax , x.m_wmax ) ;
+	//
         return *this ;
       }
       // ======================================================================
@@ -1302,6 +1337,8 @@ namespace  Ostap
         std::swap ( m_size , right.m_size ) ;
         std::swap ( m_w    , right.m_w    ) ;
         std::swap ( m_w2   , right.m_w2   ) ;
+        std::swap ( m_wmin , right.m_wmin ) ;
+        std::swap ( m_wmax , right.m_wmax ) ;
       }
       // ======================================================================
     public: //  templated M_ 
@@ -1329,6 +1366,11 @@ namespace  Ostap
       /// sum of weights squared \f$  \sum w_i^2 \f$ 
       long double        m_w2   { 0 } ; // sum of weights squared 
       // ======================================================================
+      /// minimal weight 
+      double      m_wmin {   std::numeric_limits<double>::max () } ;
+      /// maximal weight 
+      double      m_wmax { - std::numeric_limits<double>::max () } ;
+      // ======================================================================
     private:
       // ======================================================================
       /// helper array of binomial coefficients 
@@ -1349,13 +1391,13 @@ namespace  Ostap
       // ======================================================================
       /// default constructor 
       WMoment_ () = default ;
+      // ======================================================================
       /// constructor from mu and previous moment 
       WMoment_
-      ( const double       mu   ,
-        const WMoment_<0>& prev )
-        : m_prev ( prev )
-        , m_mu   ( mu   )
-      {} 
+      ( const WMoment_<0>& prev ,
+	const double       mu   ,
+	const double       xmin ,
+	const double       xmax ) ;
       // ======================================================================
     public :
       // ======================================================================
@@ -1391,7 +1433,16 @@ namespace  Ostap
       inline bool               empty () const { return m_prev.empty () ; }
       /// ok ?
       inline bool               ok    () const { return m_prev.ok    () ; }
+      /// minimal value
+      inline double             xmin  () const { return m_min ; } 
+      /// maximal value
+      inline double             xmax  () const { return m_max ; }       
       // ======================================================================
+      /// minimal weight 
+      inline double             wmin  () const { return m_prev.wmin () ; } 
+      /// maximal weight 
+      inline double             wmax  () const { return m_prev.wmax () ; }
+      // ======================================================================      
     public: // basic operations 
       // ======================================================================
       /// increment with other moment 
@@ -1411,7 +1462,11 @@ namespace  Ostap
         const long double wB = w ;
         //
         m_mu = ( wA * m_mu + wB * x ) / ( wA + wB ) ; // update mean
-        //
+        // minimal 
+	m_min = std::min ( m_min , x ) ;
+	// maximal
+	m_max = std::max ( m_max , x ) ;
+	//
         this->m_prev.add ( x , w ) ;
         //
         return *this ;
@@ -1428,6 +1483,11 @@ namespace  Ostap
         const long double wA = m_prev.w   () ;
         m_mu = ( wA * m_mu + wB * x.m_mu ) / ( wA + wB ) ; // update mean
         //
+        // minimal 
+	m_min = std::min ( m_min , x.m_min ) ;
+	// maximal
+	m_max = std::max ( m_max , x.m_max ) ;
+	//
         m_prev += x.m_prev ;                                 // update previous
         //
         return *this ;
@@ -1471,7 +1531,9 @@ namespace  Ostap
       void swap ( WMoment_& right )
       {
         m_prev.swap ( right.m_prev ) ;
-        std::swap ( m_mu , right.m_mu ) ;
+        std::swap ( m_mu  , right.m_mu  ) ;
+        std::swap ( m_min , right.m_min ) ;
+        std::swap ( m_max , right.m_max ) ;
       }
       // ======================================================================
     public:  // templated prev
@@ -1514,6 +1576,11 @@ namespace  Ostap
       WMoment_<0>  m_prev {   } ;
       /// mean value
       long double m_mu    { 0 } ; // mean value
+      // ======================================================================
+      /// minimal value
+      double      m_min  {   std::numeric_limits<double>::max () } ;
+      /// maximal value
+      double      m_max  { - std::numeric_limits<double>::max () } ;
       // ======================================================================
     private:
       // ======================================================================
@@ -2308,199 +2375,27 @@ namespace  Ostap
     // ========================================================================
     /** @class MinMaxValue 
      */
-    class MinMaxValue : public Statistic 
+    class MinMaxValue : public Moment_<1> 
     {
-      // ======================================================================
-    public:
-      // ======================================================================
-      typedef Moment_<0> Counter ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// default constructor
-      MinMaxValue () ;
-      /// constructor from min/max & counter 
-      MinMaxValue
-      ( const double   min ,
-        const double   max ,
-        const Counter& cnt ) ;
       // ======================================================================
     public:
       // ======================================================================
       /// get the min/max value  
       inline std::pair<double,double> value () const
-      { return std::make_pair ( m_min , m_max ) ; }
-      /// get the minvalue  
-      inline double min  () const { return m_min ; }
-      /// get the max value  
-      inline double max  () const { return m_max ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      inline MinMaxValue& operator+=( const double       x ) { return add ( x ) ; }
-      inline MinMaxValue& operator+=( const MinMaxValue& x ) { return add ( x ) ; }   
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// accumulate only finite entries 
-      inline MinMaxValue& add ( const double x )
-      {
-        if ( !std::isfinite ( x ) ) { return *this ; }
-        m_min = std::min ( m_min , x ) ;
-        m_max = std::max ( m_max , x ) ;
-        m_cnt.add ( x ) ;
-        return *this ;
-      }
-      inline MinMaxValue& add ( const MinMaxValue& x )
-      {
-        m_min = std::min ( m_min , x.m_min ) ;
-        m_max = std::max ( m_max , x.m_max ) ;
-        m_cnt.add ( x.m_cnt  ) ;
-        return *this ;
-      }
-      // ======================================================================
-      /// add sequence of values  
-      template <class ITERATOR>
-      inline
-      MinMaxValue&
-      add
-      ( ITERATOR begin ,
-        ITERATOR end   )
-      {
-        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
-        return *this ;
-      }
-      // ======================================================================
-    public:
-      // ======================================================================
-      const Counter& counter() const { return m_cnt ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// to use it as a Moment 
-      void update ( const double x ) override { add ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// number of entries
-      inline unsigned long long size  () const { return m_cnt.size  () ; }
-      /// empty ?
-      inline bool               empty () const { return m_cnt.empty () ; } 
-      /// ok ?
-      inline bool               ok    () const { return m_cnt.ok    () ; } 
-      // ======================================================================      
-    private:
-      // ======================================================================
-      /// minimal value   ;
-      double     m_min    ; 
-      /// maximal value   ;
-      double     m_max    ; 
-      /// get the counter
-      Counter    m_cnt {} ;
+      { return std::make_pair ( xmin () , xmax () ) ; }
       // ======================================================================
     } ;
     // ========================================================================
     /** @class WMinMaxValue 
      */
-    class WMinMaxValue : public WStatistic 
+    class WMinMaxValue : public WMoment_<1>
     {
       // ====================================================================== 
     public:
       // ======================================================================
-      typedef WMoment_<0> Counter ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// default constructor
-      WMinMaxValue () ;
-      /// constructor from min/max & counter 
-      WMinMaxValue
-      ( const double   min ,
-        const double   max ,
-        const Counter& cnt ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
       /// get the min/max value  
       inline std::pair<double,double> value () const
-      { return std::make_pair ( m_min , m_max ) ; }
-      /// get the minvalue  
-      inline double min  () const { return m_min ; }
-      /// get the max value  
-      inline double max  () const { return m_max ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      inline WMinMaxValue& operator+=( const WMinMaxValue& x ) { return add ( x ) ; }   
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// accumulate only no-zero weights  
-      inline WMinMaxValue& add
-      ( const double x     ,
-        const double w = 1 )
-      {
-        if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
-        if ( !w )                                           { return *this ; }
-        m_min = std::min ( m_min , x ) ;
-        m_max = std::max ( m_max , x ) ;        
-        m_cnt.add ( x , w ) ;
-        return *this ;
-      }
-      inline WMinMaxValue& add ( const WMinMaxValue& x )
-      {
-        m_min = std::min ( m_min , x.m_min ) ;
-        m_max = std::max ( m_max , x.m_max ) ;
-        m_cnt.add ( x.m_cnt  ) ;
-        return *this ;
-      }
-      // ======================================================================
-      /// add sequence of values  
-      template <class ITERATOR>
-      inline
-      WMinMaxValue&
-      add
-      ( ITERATOR begin ,
-        ITERATOR end   )
-      {
-        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
-        return *this ;
-      }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// to use it as a WMoment 
-      void update
-      ( const double x      ,
-        const double w  = 1 ) override { add ( x , w ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      const Counter& counter() const { return m_cnt ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// number of entries
-      inline unsigned long long size  () const { return m_cnt.size  () ; }
-      /// empty ?
-      inline bool               empty () const { return m_cnt.empty () ; } 
-      /// ok ?
-      inline bool               ok    () const { return m_cnt.ok    () ; }
-      /// get effective number of entries \f$  \frac{(\sum w_i)^2}{\sum w_i^2} \f$
-      inline long double        nEff  () const { return m_cnt.nEff  () ; }
-      /// get sum of weighes \f$  \sum_i w_i \f$ 
-      inline long double        w     () const { return m_cnt.w     () ; }
-      /// get sum of weights squared 
-      inline long double        w2    () const { return m_cnt.w2    () ; }
-      // ======================================================================      
-    private:
-      // ======================================================================
-      /// minimal value    ;
-      double      m_min    ; 
-      /// maximal value    ;
-      double      m_max    ; 
-      /// get the counter
-      Counter     m_cnt {} ;
+      { return std::make_pair ( xmin () , xmax () ) ; }
       // ======================================================================
     } ;
     // ========================================================================

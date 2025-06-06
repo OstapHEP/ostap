@@ -3,8 +3,13 @@
   1. small step toward kernel estimators 
   1. add an error estimate for standartized moments if/when possible
   1. improve printout of tables of moments
+  1. more improvement and simplifications to the moments, incorporate xmin/xmax/wmin/wmax 
+  1. add (partly suplicated>  `bin_edges` ietrators/methods  for `ROOT.TAxis`, `ROOT.TH(1,2,3)(F,D)``
   
 ## Backward incompatible 
+
+  1. change constructors in `Ostap::Math::(W)Moments_<N>`
+  1. change pickling/unpicking/serializatino/deserialization for (w)moments 
 
 ## Bug fixes 
 

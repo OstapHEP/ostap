@@ -2730,17 +2730,18 @@ def _gr_table_ ( graph            ,
 
     if title is None :
         t = typename( graph ) 
-        title = "%s(%s,%s),#%d" % ( t , graph.GetName() , grpah.GetTitle() , len ( graph ) )
+        title = "%s(%s,%s),#%d" % ( t , graph.GetName() , graph.GetTitle() , len ( graph ) )
         from ostap.logger.symbols import graph as graph_symbol 
         if graph_symbol : title = '%s %s' % ( graph_symbol , title ) 
         
     import ostap.logger.table as T
+    rows = T.remove_empty_columns ( rows ) 
     return T.table ( rows , title = title , prefix = prefix ) 
 
-
-ROOT.TGraph. table = _gr_table_ 
+ROOT.TGraph. table    = _gr_table_ 
+ROOT.TGraph. __repr__ = _gr_table_ 
+ROOT.TGraph. __str__  = _gr_table_ 
 # ===============================================================================
-
 
 # ===============================================================================
 ## get hash-value for the graph

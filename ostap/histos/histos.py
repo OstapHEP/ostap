@@ -154,11 +154,133 @@ def _axis_iter_1_ ( a ) :
         i+=1        
 
 # =============================================================================
+## Iterator over bin-edges
+#  @code
+#  axis = ...
+#  for xlow, xhigh in axis.bin_edges() :
+#  ...   
+#  @endcode 
+def _axis_bin_edges_ ( axis ) :
+    """ Iterator over the bin-edges
+    >>> axis = ...
+    >>> for xlow, xhigh in axis.bin_edges() :
+    ...
+    """
+    assert isinstance ( axis , ROOT.TAxis ) , "Only TAxis is accepted!"
+
+    nbins = axis.GetNbins()
+    bins  = axis.GetXbins()
+    if bins :
+        for i in range ( nbins ) :
+            yield bins [ i ] , bins [ i + 1 ]
+    else :
+        for i in range ( 1 , nbins + 1 ) :
+            yield axis.GetBinLowEdge ( i ) , axis.GetBinUpEdge ( i )
+
+# =============================================================================
+## Iterator over bin-edges
+#  @code
+#  h1 = ...
+#  for xlow, xhigh in h1.bin_edges() :
+#  ...   
+#  @endcode 
+def _h1_bin_edges_ ( h1 ) :
+    """ Iterator over the bin-edges
+    >>> h1 = ...
+    >>> for xlow, xhigh in h1.bin_edges() :
+    ...
+    """
+    assert isinstance ( h1 , ROOT.TH1 ) and 1 == h1.GetDimension() , \
+        "Only 1D-histograms are accepted!"
+    axis = h1.GetXaxis()
+    for item in axis.bin_edges() : yield item 
+    
+# =============================================================================
+## Iterator over bin-edges
+#  @code
+#  h2 = ...
+#  for (xlow, xhigh,(ylow,yhigh)  in h2.bin_edges() :
+#  ...   
+#  @endcode 
+def _h2_bin_edges_ ( h2 ) :
+    """ Iterator over the bin-edges
+    >>> h2 = ...
+    >>> for xlow, xhigh in h1.bin_edges() :
+    ...
+    """
+    assert isinstance ( h2 , ROOT.TH2 ) and 2 == h2.GetDimension() , \
+        "Only 2D-histograms are accepted!"
+    xa = h2.GetXaxis()
+    ya = h2.GetYaxis()
+    for xitem in xa.bin_edges() :
+        for yitem in ya.bin_edges() :
+            yield xitem, yitem  
+
+# =============================================================================
+## Iterator over bin-edges
+#  @code
+#  h3 = ...
+#  for (xlow, xhigh,(ylow,yhigh),(zlow,zhigh) in h3.bin_edges() :
+#  ...   
+#  @endcode 
+def _h3_bin_edges_ ( h3 ) :
+    """ Iterator over the bin-edges
+    >>> h3 = ...
+    >>> for (xlow, xhigh,(ylow,yhigh),(zlow,zhigh) in h3.bin_edges() :
+    ...
+    """
+    assert isinstance ( h3 , ROOT.TH3 ) and 3 == h3.GetDimension() , \
+        "Only 3D-histograms are accepted!"
+    xa = h3.GetXaxis()
+    ya = h3.GetYaxis()
+    za = h3.GetZaxis()
+    for xitem in xa.bin_edges() :
+        for yitem in ya.bin_edges() :
+            for zitem in za.bin_edges() :
+                yield xitem, yitem, zitem 
+            
+ROOT.TAxis.bin_edges = _axis_bin_edges_ 
+ROOT.TH1F .bin_edges = _h1_bin_edges_
+ROOT.TH1D .bin_edges = _h1_bin_edges_
+ROOT.TH2F .bin_edges = _h2_bin_edges_
+ROOT.TH2D .bin_edges = _h2_bin_edges_
+ROOT.TH3F .bin_edges = _h3_bin_edges_
+ROOT.TH3D .bin_edges = _h3_bin_edges_
+
+# =============================================================================
+## Iterator over  bin-edges
+#  @code
+#  axis = ...
+#  for xlow, xhigh in axis.bin_edges() :
+#  ...   
+#  @endcode 
+def _axis_bin_edges_ ( axis ) :
+    """ Iterator over the bin-edges
+    >>> axis = ...
+    >>> for xlow, xhigh in axis.bin_edges() :
+    ...
+    """
+    nbins = axis.GetNbins () 
+    bins  = axis.GetXbins ()
+    if bins :
+        for i in range ( nbins ) :
+            yield bins [ i ] , bins [ i +1 ]
+    else :
+        xmin  = axis.GetXmin  ()
+        xmax  = axis.GetXmax  ()
+        binw  = ( xmax - xmin ) / nbins
+        for i in range ( nbins ) :
+            left = xmin + i * binw 
+            yield left , left + binw 
+
+
+
+# =============================================================================
 ## iterator for histogram  axis (reversed order) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _axis_iter_reversed_ ( a ) :
-    """Iterator for axis
+    """ Iterator for axis
     >>> axis = ...
     >>> for i in reverse(axis) : 
     """
@@ -193,7 +315,7 @@ def _axis_scale_ ( axis , scale ) :
 
 ROOT.TAxis . __iter__     = _axis_iter_1_
 ROOT.TAxis . __reversed__ = _axis_iter_reversed_
-ROOT.TAxis . __contains__ = lambda s , i : 1 <= abs(i) <= s.GetNbins()
+ROOT.TAxis . __contains__ = lambda s , i : 1 <= abs ( i ) <= s.GetNbins()
 ROOT.TAxis .   scale      = _axis_scale_
         
 # =============================================================================
@@ -1890,10 +2012,9 @@ def _a_get_item_ ( axis , i ) :
     l = axis.GetBinLowEdge ( i )
     u = axis.GetBinUpEdge  ( i )
     
-    return l,u
+    return l , u
 
-ROOT.TAxis.__getitem__  = _a_get_item_
-
+ROOT.TAxis.__getitem__ = _a_get_item_
 
 # =============================================================================
 ## equality for axes
