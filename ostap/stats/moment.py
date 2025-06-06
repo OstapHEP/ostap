@@ -36,7 +36,7 @@ from   ostap.core.ostap_types import integer_types, num_types
 from   ostap.math.base        import isfinite, isequal, pos_infinity, neg_infinity  
 from   ostap.core.core        import Ostap, VE
 from   ostap.logger.pretty    import pretty_float
-from   ostap.logger.symbols   import times 
+from   ostap.logger.symbols   import times, sum_symbol 
 import ROOT 
 # =============================================================================
 # logging 
@@ -382,18 +382,18 @@ def _om_table ( obj , * ,
         row = "#entries" , '%d' % s , ''      
     rows.append ( row )
                     
-    if hasattr  ( obj , 'w2' ) :
-            
-        w2 = obj.w2 ()
-        field , n = pretty_float ( w2 ) 
-        row = "sum(w^2)" , field , '' if not n else fmt_factor % n 
-        rows.append ( row )
-        
     if hasattr  ( obj , 'w' ) :
         
         w = obj.w ()
         field , n = pretty_float ( w ) 
-        row = "sum(w)" , field , '' if not n else fmt_factor % n
+        row = "%sw" % sum_symbol  , field , '' if not n else fmt_factor % n
+        rows.append ( row )
+        
+    if hasattr  ( obj , 'w2' ) :
+            
+        w2 = obj.w2 ()
+        field , n = pretty_float ( w2 ) 
+        row = "%sw^2" % sum_symbol , field , '' if not n else fmt_factor % n 
         rows.append ( row )
         
     if 1 <= size and obj.ok () and hasattr ( obj , 'wmin' ) :

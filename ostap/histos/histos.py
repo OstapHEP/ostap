@@ -7408,7 +7408,7 @@ def _equal_edges_ ( h1 , num  , wmax = -1 ) :
     else :
         
         ## integrate it! 
-        _eff = h1.effic()
+        _eff = h1.effic ( cut_low = False )
         
         _bins = [ h1.xmin()  ]
         d     = 1.0 / num
