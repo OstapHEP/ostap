@@ -2287,12 +2287,12 @@ if Frames_OK :
                       delta    = 0.01  ,
                       progress = False ,
                       report   = False ) :
-        """Get the approproavte range  values for variables
+        """ Get the approproavte range  values for variables
          - In case there is no suitable range None is returned 
         >>> frame = ...
         >>> mean = frame_the_minmax ( frame , 5 ,  'x*x' , '0<y' ) 
         """
-        ranges = frame_the_minmax ( frame ,
+        ranges = frame_the_minmax ( frame               ,
                                     expressions         ,
                                     cuts     = cuts     ,
                                     progress = progress ,
@@ -2301,7 +2301,7 @@ if Frames_OK :
         
         if isinstance ( ranges , dictlike_types ) :
             for k , r in loop_items ( ranges ) :
-                mn, mx = r.xmin () , r.xmax()
+                mn, mx = r.min () , r.max()
                 if mx <= mn : return None                         ## ATTENTION!!
                 ranges [ k ] = axis_range ( mn , mx , delta = delta ) 
         else : ranges = axis_range ( ranges.xmin() , ranges.xmax() , delta = delta )

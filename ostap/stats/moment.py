@@ -424,9 +424,9 @@ def _om_table ( obj , * ,
             row = "nEff" , field , '' if not n else fmt_factor % n 
             rows.append ( row )
 
-    if 1 <= order and 1 <= size and obj.ok () and hasattr ( obj , 'xmin' ) :
+    if 1 <= order and 1 <= size and obj.ok () and hasattr ( obj , 'min' ) :
         
-        v  = obj.xmin ()
+        v  = obj.min ()
         vv = float   ( v ) 
         if IM != float ( v ) and isfinite ( vv ) : 
             if isinstance ( v , VE ) : field , n = v.pretty_print () 
@@ -434,9 +434,9 @@ def _om_table ( obj , * ,
             row = "value/min" , field , '' if not n else fmt_factor % n 
             rows.append ( row )
         
-    if 1 <= order and 1 <= size and obj.ok () and hasattr ( obj , 'xmax' ) :
+    if 1 <= order and 1 <= size and obj.ok () and hasattr ( obj , 'max' ) :
         
-        v  = obj.xmax ()
+        v  = obj.max ()
         vv = float   ( v ) 
         if IM != float ( v ) and isfinite ( vv ) : 
             if isinstance ( v , VE ) : field , n = v.pretty_print () 
@@ -788,8 +788,8 @@ def _mom1_reduce_ ( cnt ) :
     return root_factory , ( type ( cnt )    ,
                             cnt.previous () ,
                             cnt.mu       () ,
-                            cnt.xmin     () ,
-                            cnt.xmax     () )
+                            cnt.min      () ,
+                            cnt.max      () )
 # ========================================================
 ## Redude Ostap::Math::Moment_<N>
 def _momN_reduce_ ( cnt ) :
@@ -820,8 +820,8 @@ def _wmom1_reduce_ ( cnt ) :
     return root_factory , ( type ( cnt )    ,
                             cnt.previous () , 
                             cnt.mu       () ,
-                            cnt.xmin     () ,
-                            cnt.xmax     () )
+                            cnt.min      () ,
+                            cnt.max      () )
 
 # ========================================================
 ## Redude Ostap::Math::WMoment_<N>

@@ -133,7 +133,7 @@ class BaseMoment(object) :
     """
     ## constructor
     def __init__ ( self , N , xmin , xmax , err = False , *args ) :
-        """Contructor 
+        """ Contructor 
         """
         assert isinstance ( N , integer_types ) and  0 <= N , \
                'BaseMoment: illegal order: %s' % N 
@@ -147,7 +147,7 @@ class BaseMoment(object) :
     # =========================================================================
     ## get the normalized moment
     def moment ( self , K , func , center , *args ) :
-        """Get the normalized momentum
+        """ Get the normalized momentum
         """
         assert isinstance ( K , integer_types ) and 0 <= K , \
                'Invalid type/valeu for K=%s' %k

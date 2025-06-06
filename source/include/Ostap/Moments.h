@@ -133,9 +133,9 @@ namespace  Ostap
       inline bool               ok    () const { return m_prev.ok    () ; }
       // ======================================================================
       /// minimal value
-      inline double             xmin  () const { return m_prev.xmin  () ; } 
+      inline double             min   () const { return m_prev.min   () ; } 
       /// maximal value
-      inline double             xmax  () const { return m_prev.xmax  () ; } 
+      inline double             max   () const { return m_prev.max   () ; } 
       // ======================================================================
     public: // basic operations for the counter 
       // ======================================================================
@@ -666,9 +666,9 @@ namespace  Ostap
       /// ok ?
       inline bool               ok    () const { return m_prev.ok    () ; }
       /// minimal value
-      inline double             xmin  () const { return m_min ; } 
+      inline double             min   () const { return m_min ; } 
       /// maximal value
-      inline double             xmax  () const { return m_max ; } 
+      inline double             max   () const { return m_max ; } 
       // ======================================================================
     public: // basic operations 
       // ======================================================================
@@ -954,9 +954,9 @@ namespace  Ostap
       inline bool               ok    () const { return m_prev.ok    () ; }
       // ======================================================================
       /// minimal value
-      inline double             xmin  () const { return m_prev.xmin  () ; } 
+      inline double             min  () const { return m_prev.min   () ; } 
       /// maximal value
-      inline double             xmax  () const { return m_prev.xmax  () ; } 
+      inline double             max  () const { return m_prev.max   () ; } 
       // ======================================================================
       /// minimal weight 
       inline double             wmin  () const { return m_prev.wmin () ; } 
@@ -1434,9 +1434,9 @@ namespace  Ostap
       /// ok ?
       inline bool               ok    () const { return m_prev.ok    () ; }
       /// minimal value
-      inline double             xmin  () const { return m_min ; } 
+      inline double             min   () const { return m_min ; } 
       /// maximal value
-      inline double             xmax  () const { return m_max ; }       
+      inline double             max   () const { return m_max ; }       
       // ======================================================================
       /// minimal weight 
       inline double             wmin  () const { return m_prev.wmin () ; } 
