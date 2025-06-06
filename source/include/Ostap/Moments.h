@@ -53,9 +53,9 @@ namespace  Ostap
     // ========================================================================
     /// forward declaration 
     template <unsigned short N> class Moment_   ;
-    /// template spccialization for N=0
+    /// template specialization for N=0
     template <>                 class Moment_<0>;
-    /// template spccialization for N=1
+    /// template specialization for N=1
     template <>                 class Moment_<1>;
     // ========================================================================
     /** @class Moment_  Ostap/Moments.h 
@@ -1686,7 +1686,7 @@ namespace  Ostap
     };
     // ========================================================================
     /** @class HarmonicMean 
-     *  Calcualet  the harmonic mean 
+     *  Calculate the harmonic mean 
      *  \f$ \frac{n}{ \frac{1}{x_1} + ... + \frac{1}{x_n}} \f$
      *  @see https://en.wikipedia.org/wiki/Harmonic_mean
      */
@@ -1765,7 +1765,7 @@ namespace  Ostap
     };
     // ========================================================================
     /** @class PowerMean 
-     *  Calculate  the power mean 
+     *  Calculate the power mean 
      *  \f$ \left(\frac{1}{n}\sum x_i^p \right)^{\frac{1}{p}}\f$
      *  @see https://en.wikipedia.org/wiki/Power_mean
      */
@@ -1778,8 +1778,8 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// defautl construictor
-      PowerMean ( const double = 1 ) ;
+      /// default construictor
+      PowerMean ( const double p = 1 ) ;
       /// constructor for the counters 
       PowerMean ( const double p , const Counter& cnt ) ;      
       // ======================================================================
@@ -2372,34 +2372,6 @@ namespace  Ostap
       const Counter& counter() const { return *this ; }
       // ======================================================================
     } ;       
-    // ========================================================================
-    /** @class MinMaxValue 
-     */
-    class MinMaxValue : public Moment_<1> 
-    {
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the min/max value  
-      inline std::pair<double,double> value () const
-      { return std::make_pair ( xmin () , xmax () ) ; }
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class WMinMaxValue 
-     */
-    class WMinMaxValue : public WMoment_<1>
-    {
-      // ====================================================================== 
-    public:
-      // ======================================================================
-      /// get the min/max value  
-      inline std::pair<double,double> value () const
-      { return std::make_pair ( xmin () , xmax () ) ; }
-      // ======================================================================
-    } ;
-    // ========================================================================
-
     // =======================================================================
     // More decorations 
     // ========================================================================

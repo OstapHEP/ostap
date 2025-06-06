@@ -880,24 +880,11 @@ def _lm_reduce_ ( cnt ) :
     - see Ostap::Math::LehmerMean
     - see Ostap::Math::WLehmerMean
     """
-    return root_factory , ( type ( cnt ) , cnt.p() , cnt.counter1() , cnt.conuter2() )
+    return root_factory , ( type ( cnt ) , cnt.p() , cnt.counter1() , cnt.counter2() )
 
 Ostap.Math.LehmerMean   . __reduce__ = _lm_reduce_
 Ostap.Math.WLehmerMean  . __reduce__ = _lm_reduce_
 
-# =============================================================================
-## serialization of MinMaxValues 
-#  @see Ostap::Math::MinMaxValue 
-#  @see Ostap::Math::WMinMaxValue
-def _nx_reduce_ ( cnt ) :
-    """ Serialization of MinMax values 
-    - see Ostap::Math::MinMaxValue 
-    - see Ostap::Math::WMinMaxValue 
-    """
-    return root_factory , ( type ( cnt ) , cnt.min () , cnt.max() , cnt.conuter ())
-
-Ostap.Math.MinMaxValue  . __reduce__ = _nx_reduce_
-Ostap.Math.WMinMaxValue . __reduce__ = _nx_reduce_
 
 # ==============================================================================
 ## equality for the mean

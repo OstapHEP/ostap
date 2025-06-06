@@ -1846,10 +1846,12 @@ def _fr_the_minmax_ ( frame            ,
    """
     def mcreator ( node , var_name , cut_name ) : 
         if cut_name: 
-            TT = ROOT.Detail.RDF.Stat2Action ( Ostap.Math.WMinMaxValue ) 
+            ## TT = ROOT.Detail.RDF.Stat2Action ( Ostap.Math.WMinMaxValue ) 
+            TT = ROOT.Detail.RDF.Stat2Action ( Ostap.Math.WMoment_[1] ) 
             return node.Book( ROOT.std.move ( TT () ) , CNT ( [ var_name , cut_name ] ) )
         else  :
-            TT = ROOT.Detail.RDF.Stat1Action ( Ostap.Math.MinMaxValue  ) 
+            ## TT = ROOT.Detail.RDF.Stat1Action ( Ostap.Math.MinMaxValue  ) 
+            TT = ROOT.Detail.RDF.Stat2Action ( Ostap.Math.Moment_[1] ) 
             return node.Book( ROOT.std.move ( TT () ) , CNT ( 1 , var_name ) )     
         
     return _fr_helper2_ ( frame               ,
@@ -2290,13 +2292,19 @@ if Frames_OK :
         >>> frame = ...
         >>> mean = frame_the_minmax ( frame , 5 ,  'x*x' , '0<y' ) 
         """
-        ranges = frame_the_minmax ( frame , expressions , cuts = cuts , progress = progress , report = report , lazy = False )
+        ranges = frame_the_minmax ( frame ,
+                                    expressions         ,
+                                    cuts     = cuts     ,
+                                    progress = progress ,
+                                    report   = report   ,
+                                    lazy     = False    )
+        
         if isinstance ( ranges , dictlike_types ) :
             for k , r in loop_items ( ranges ) :
-                mn, mx = r.min () , r.max()
+                mn, mx = r.xmin () , r.xmax()
                 if mx <= mn : return None                         ## ATTENTION!!
                 ranges [ k ] = axis_range ( mn , mx , delta = delta ) 
-        else : ranges = axis_range ( ranges.min() , ranges.max()  , delta = delta )
+        else : ranges = axis_range ( ranges.xmin() , ranges.xmax() , delta = delta )
         return ranges
 
 

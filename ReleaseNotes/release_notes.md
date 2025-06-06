@@ -10,6 +10,8 @@
 
   1. change constructors in `Ostap::Math::(W)Moments_<N>`
   1. change pickling/unpicking/serializatino/deserialization for (w)moments 
+  1. completely remove `Ostap::Math::(W)MinMaxValue`
+
 
 ## Bug fixes 
 
