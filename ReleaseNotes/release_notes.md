@@ -1,7 +1,9 @@
 ## New features
 
   1. small step toward kernel estimators 
-
+  1. add an error estimate for standartized moments if/when possible
+  1. improve printout of tables of moments
+  
 ## Backward incompatible 
 
 ## Bug fixes 

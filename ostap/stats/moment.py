@@ -36,6 +36,7 @@ from   ostap.core.ostap_types import integer_types, num_types
 from   ostap.math.base        import isfinite, isequal, pos_infinity, neg_infinity  
 from   ostap.core.core        import Ostap, VE
 from   ostap.logger.pretty    import pretty_float
+from   ostap.logger.symbols   import times 
 import ROOT 
 # =============================================================================
 # logging 
@@ -108,10 +109,10 @@ def _om_kurtosis ( obj ) :
     return Ostap.Math.Moments.kurtosis ( obj )  
 
 # =============================================================================
-## Get 1st unbiased cumulant, well i tis equasl to the mean
+## Get 1st cumulant, well it is equal to the mean 
 #  @code
 #  m = ...
-#  v = m.cumulant1() 
+#  v = m.cumulant_1st() 
 #  @endcode
 def _om_cumulant_1st( obj ) :
     """ Get 1st unbiased cumulant, well it is equal to the mean
@@ -125,13 +126,13 @@ def _om_cumulant_1st( obj ) :
 ## Get 2nd cumulant, well it is equal to the variance 
 #  @code
 #  m = ...
-#  v = m.cumulant2() 
+#  v = m.cumulant_2nd() 
 #  @endcode
 def _om_cumulant_2nd ( obj ) :
     """ Get 2nd unbiased cumulant, well it is equal to the variance 
     
     >>> m = ...
-    >>> v = m.cumulant2() 
+    >>> v = m.cumulant_2nd() 
     """
     assert 2 <= obj.order , 'cumulant_2nd: the order must be >=2!'
     return Ostap.Math.Moments.cumulant_2nd  ( obj )  
@@ -150,7 +151,7 @@ def _om_cumulant_3rd ( obj ) :
     """
     assert 3 <= obj.order , 'cumulant_3rd: the order must be >=3!'
     return Ostap.Math.Moments.cumulant_3rd ( obj )  
-    
+
 # =============================================================================
 ## Get 4th nb unbiased cumulant,
 #  @code
@@ -165,7 +166,29 @@ def _om_cumulant_4th ( obj ) :
     """
     assert 4 <= obj.order , 'cumulant_4th: the order must be >=3!'
     return Ostap.Math.Moments.cumulant_4th ( obj )  
+
+# =============================================================================
+## Get Nth cumulant,
+#  @code
+#  m = ...
+#  v = m.cumulant(6) 
+#  @endcode
+def _om_cumulant_( obj , order ) :
+    """ Get Nth cumulant 
     
+    >>> m = ...
+    >>> v = m.cumulant_4th() 
+    """
+    O = min ( obj.order , 10 ) 
+    assert isinstance ( order , integer_types ) and 1 <= order <= O, \
+        'cumulant: invalid order!'
+    if   1 == order : return obj.cumulant_1st ()
+    elif 2 == order : return obj.cumulant_2nd ()
+    elif 3 == order : return obj.cumulant_3rd ()
+    elif 4 == order : return obj.cumulant_4th ()
+    ## 
+    return obj.cumulant_[order]() 
+
 # =============================================================================
 ## get unbiased 2nd order moment from the moment-counter 
 #  @code
@@ -178,9 +201,15 @@ def _om_u2nd ( obj ) :
     >>> v = m.unbiased_3nd() 
     """    
     assert 2 <= obj.order , 'unbiased 2nd moment: the order must be >=2!'
-    return Ostap.Math.Moments.unbiased_2nd ( obj )  
+    ## 
+    r2 = Ostap.Math.Moments.unbiased_2nd ( obj )
+    if isinstance ( r2 , VE ) : return r2
+    ## 
+    m2 = obj.moment_[2]()
+    if isinstance ( m2 , VE ) and 0 < m2.cov2() : return VE ( r2 , m2.cov2() )
+    return r2
 
-# =============================================================================
+# ===========================================================================
 ## get unbiased 3rd order moment from the moment-counter 
 #  @code
 #  m = ...
@@ -191,8 +220,14 @@ def _om_u3rd ( obj ) :
     >>> m = ...
     >>> v = m.unbiased_3rd() 
     """    
-    assert 3 <= obj.order , 'unbiased 3rd moment: the order must be >=3!' 
-    return Ostap.Math.Moments.unbiased_3rd ( obj )  
+    assert 3 <= obj.order , 'unbiased 3rd moment: the order must be >=3!'
+    ## 
+    r3 = Ostap.Math.Moments.unbiased_3rd ( obj )  
+    if isinstance ( r3 , VE ) : return r3
+    ## 
+    m3 = obj.moment_[3]()
+    if isinstance ( m3 , VE ) and 0 < m3.cov2() : return VE ( r3 , m3.cov2() )
+    return r3
 
 # =============================================================================
 ## get unbiased 4th order moment from the moment-counter 
@@ -205,9 +240,15 @@ def _om_u4th ( obj ) :
     >>> m = ...
     >>> v = m.unbiased_4th() 
     """    
-    assert 4 <= obj.order , 'unbiased 4th moment the order must be >=4!' 
-    return Ostap.Math.Moments.unbiased_4th ( obj )  
-
+    assert 4 <= obj.order , 'unbiased 4th moment the order must be >=4!'
+    ## 
+    r4 = Ostap.Math.Moments.unbiased_4th ( obj )
+    if isinstance ( r4 , VE ) : return r4
+    ## 
+    m4 = obj.moment_[4]()
+    if isinstance ( m4 , VE ) and 0 < m4.cov2() : return VE ( r4 , m4.cov2() )
+    return r4
+    
 # =============================================================================
 ## get unbiased 5th order moment from the moment-counter 
 #  @code
@@ -219,8 +260,15 @@ def _om_u5th ( obj ) :
     >>> m = ...
     >>> v = m.unbiased_5th() 
     """    
-    assert 5 <= obj.order  , 'unbiased 5th moment: the order must be >=4!' 
-    return Ostap.Math.Moments.unbiased_5th ( obj )  
+    assert 5 <= obj.order  , 'unbiased 5th moment: the order must be >=4!'
+    ## 
+    r5 = Ostap.Math.Moments.unbiased_5th ( obj )
+    if isinstance ( r5 , VE ) : return r5
+    ## 
+    m5 = obj.moment_[5]()
+    if isinstance ( m5 , VE ) and 0 < m5.cov2() : return VE ( r5 , m5.cov2() )
+    return r5
+    
 
 # =============================================================================
 ## get central moment 
@@ -259,24 +307,6 @@ def _om_cm3 ( obj , order  ) :
     ##
     return obj.moment_[order]()
 
-# ================================================================================
-## get the cumulant
-#  @code
-#  m = ...
-#  v = m.cumulant ( 4 ) 
-#  @endcode
-def _om_cumulant_ ( obj , order ) :
-    """ Get the cumulant 
-    >>> m = ...
-    >>> v = m.cumulant ( 3 ) ## ditto 
-    """
-    assert isinstance  ( order , integer_types ) and 1 <= order <= obj.order ,\
-           'cumulant: invalid order %s/%d' % ( order , obj.order )
-    if not obj.ok() : return neg_infinity
-    return obj.cumulant_[order] ()
-
-Ostap.Math.Moment.cumulant  = _om_cumulant_
-    
 # =============================================================================
 ## get a RMS 
 #  @code
@@ -304,19 +334,15 @@ def _om_std ( obj , order ) :
     assert isinstance ( order , integer_types ) and 0 <= order <= obj.order , \
         "Invalid `order`!"
 
-    print ( 'STD/1' , obj , order ) 
     if   0 == order : return 1            ## RETURN 
     elif 1 == order : return 0            ## RETURN 
     elif 2 == order : return 1            ## RETURN
 
-    m = obj.std_moment_[order]()    
-    print ( 'STD/2' , obj , order , m ) 
-    
+    m = obj.std_moment_[order]()        
     if isinstance ( m , VE ) : return m   ## RETURN
 
     if 2 * order <= obj.order : 
         raw = obj.central_moment ( order)        
-        print ( 'STD/3' , obj , order , raw ) 
         if isinstance ( raw , VE ) :
             o2 = float ( obj.moment_[2] () ) 
             return raw / pow ( o2 , 0.5 * order ) 
@@ -329,7 +355,12 @@ def _om_std ( obj , order ) :
 #  m = ...
 #  t = m.table()
 #  @endcode  
-def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None ) :
+def _om_table ( obj , * , 
+                title     = ''    ,
+                prefix    = ''    ,
+                standard  = True  ,
+                cumulants = False ,
+                style     = None  ) :
     """ Print object as a table
     >>> m = ...
     >>> t = m.table()
@@ -337,31 +368,32 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
 
     IM = Ostap.Math.Moments.invalid_moment() 
     
-    rows  = []
+    rows   = []
     
     order  = obj.order
     size   = obj.size   ()
-    
+
+    fmt_factor = '[%s10^%%+d]' % times 
     s = obj.size() 
     if 1.e+6 < s :
         field , n = pretty_float ( s * 1.0 ) 
-        row = "#entries" , '' if not n else '[10^%+d]' % n , field 
+        row = "#entries" , field    , '' if not n else fmt_factor % n 
     else :                
-        row = "#entries" , '' , '%d' % s     
+        row = "#entries" , '%d' % s , ''      
     rows.append ( row )
                     
     if hasattr  ( obj , 'w2' ) :
             
         w2 = obj.w2 ()
         field , n = pretty_float ( w2 ) 
-        row = "sum(w^2)" , '' if not n else '[10^%+d]' % n , field 
+        row = "sum(w^2)" , field , '' if not n else fmt_factor % n 
         rows.append ( row )
         
     if hasattr  ( obj , 'w' ) :
         
         w = obj.w ()
         field , n = pretty_float ( w ) 
-        row = "sum(w)" , '' if not n else '[10^%+d]' % n , field 
+        row = "sum(w)" , field , '' if not n else fmt_factor % n
         rows.append ( row )
         
     if hasattr  ( obj , 'nEff' ) :
@@ -369,7 +401,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         neff = obj.nEff()
         if neff != size and 0 < neff and isfinite ( neff ) :
             field , n = pretty_float ( neff ) 
-            row = "nEff" , '' if not n else '[10^%+d]' % n , field 
+            row = "nEff" , field , '' if not n else fmt_factor % n 
             rows.append ( row )
             
     if 1 <= order and 1 <= size and obj.ok () and hasattr ( obj , 'mean' )  : 
@@ -379,7 +411,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         if IM != float ( v ) and isfinite ( vv ) : 
             if isinstance ( v , VE ) : field , n = v.pretty_print () 
             else                     : field , n = pretty_float ( v )
-            row = "mean" , '' if not n else '[10^%+d]' % n , field 
+            row = "mean" , field , '' if not n else fmt_factor % n 
             rows.append ( row )
             
     if 2 <= order and 2 <= size and obj.ok() :
@@ -390,7 +422,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
             if isfinite  ( vv ) and IM != vv and 0 <= vv :                    
                 if isinstance ( v , VE ) : field , n = v.pretty_print () 
                 else                     : field , n = pretty_float ( v )
-                row = "rms"  , '' if not n else '[10^%+d]' % n , field 
+                row = "rms"  , field , '' if not n else fmt_factor % n
                 rows.append ( row )
                 
         if hasattr ( obj , 'variance' ) :
@@ -399,7 +431,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
             if isfinite  ( vv ) and IM != vv and 0 <= vv :                    
                 if isinstance ( v , VE ) : field , n = v.pretty_print ()
                 else                     : field , n = pretty_float ( v )
-                row = "variance"  , '' if not n else '[10^%+d]' % n , field 
+                row = "variance"  , field , '' if not n else fmt_factor % n 
                 rows.append ( row )
                 
     if 3 <= order and 3 <= size and obj.ok () and hasattr  ( obj , 'skewness' ) :
@@ -409,7 +441,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         if isfinite ( vv ) and IM != vv :
             if isinstance ( v , VE ) : field , n = v.pretty_print () 
             else                     : field , n = pretty_float ( v )
-            row = "skewness"  , '' if not n else '[10^%+d]' % n , field 
+            row = "skewness"  , field , '' if not n else fmt_factor % n
             rows.append ( row )
             
     if 4 <= order and 4 <= size and  obj.ok () and hasattr ( obj , 'kurtosis' ) : 
@@ -419,9 +451,14 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         if isfinite ( vv ) and IM != float ( v ) :
             if isinstance ( v , VE ) : field , n = v.pretty_print () 
             else                     : field , n = pretty_float ( v )
-            row = "kurtosis"  , '' if not n else '[10^%+d]' % n , field 
+            row = "kurtosis"  , field , '' if not n else fmt_factor % n  
             rows.append ( row )
-
+            
+    fmt = '[%d]'
+    if   order <   10 : fmt = '[%d]'
+    elif order <  100 : fmt = '[%02d]'
+    elif order < 1000 : fmt = '[%03d]'
+    
     if 2 <= order and 2 <= size and obj.ok () and hasattr ( obj , 'unbiased_2nd' ) :
         
         v  = obj.unbiased_2nd ()
@@ -429,7 +466,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         if isfinite ( vv ) and IM != float ( v ) :
             if isinstance ( v , VE ) : field , n = v.pretty_print ()  
             else                     : field , n = pretty_float ( v )
-            row = "M[2]/unb" , '' if not n else '[10^%+d]' % n , field 
+            row = ( "M" + fmt + "/unb" ) % 2 , field , '' if not n else fmt_factor % n 
             rows.append ( row )
 
     if 3 <= order and 3 <= size and obj.ok () and hasattr ( obj , 'unbiased_3rd' ) :
@@ -439,7 +476,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         if isfinite ( vv ) and IM != float ( v ) :
             if isinstance ( v , VE ) : field , n = v.pretty_print () 
             else                     : field , n = pretty_float ( v )
-            row = "M[3]/unb" , '' if not n else '[10^%+d]' % n , field 
+            row = ( "M" + fmt + "/unb" ) % 3 , field , '' if not n else fmt_factor % n 
             rows.append ( row )
 
     if 4 <= order and 4 <= size and obj.ok () and hasattr ( obj , 'unbiased_4th' ) :
@@ -449,7 +486,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         if isfinite ( vv ) and IM != float ( v ) :
             if isinstance ( v , VE ) : field , n = v.pretty_print () 
             else                     : field , n = pretty_float ( v )
-            row = "M[4]/unb" , '' if not n else '[10^%+d]' % n , field 
+            row = ( "M" + fmt + "/unb" ) % 4 , field , '' if not n else fmt_factor % n
             rows.append ( row )
         
     if 5 <= order and 5 <= size and obj.ok () and hasattr ( obj , 'unbiased_5th' ) : 
@@ -459,96 +496,89 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False , style = None
         if isfinite ( vv ) and IM != float ( v ) :
             if isinstance ( v , VE ) : field , n = v.pretty_print () 
             else                     : field , n = pretty_float ( v )
-            row = "M[5](unb)" , '' if not n else '[10^%+d]' % n , field 
+            row = ( "M" + fmt + "/unb" ) % 5 , field , '' if not n else fmt_factor % n  
             rows.append ( row )
 
-    if 1 <= order and 1 <= size and obj.ok () and hasattr ( obj , 'cumulant_1st' ) :
-
-        v  = obj.cumulant_1st ()
-        vv = float   ( v )                         
-        if isfinite ( vv ) and IM != float ( v ) :
-            if isinstance ( v , VE ) : field , n = v.pretty_print () 
-            else                     : field , n = pretty_float ( v )
-            row = "K[1](unb)" , '' if not n else '[10^%+d]' % n , field 
-            rows.append ( row )
-
-    if 2 <= order and 2 <= size and obj.ok () and hasattr ( obj , 'cumulant_2nd' ) :
-
-        v  = obj.cumulant_2nd ()
-        vv = float   ( v )                         
-        if isfinite ( vv ) and IM != float ( v ) :
-            if isinstance ( v , VE ) : field , n = v.pretty_print () 
-            else                     : field , n = pretty_float ( v )
-            row = "K[2](unb)" , '' if not n else '[10^%+d]' % n , field 
-            rows.append ( row )
-
-    if 3 <= order and 3 <= size and obj.ok () and hasattr ( obj , 'cumulant_3rd' ) :
-
-        v  = obj.cumulant_3rd ()
-        vv = float   ( v )                         
-        if isfinite ( vv ) and IM != float ( v ) :
-            if isinstance ( v , VE ) : field , n = v.pretty_print () 
-            else                     : field , n = pretty_float ( v )
-            row = "K[3](unb)" , '' if not n else '[10^%+d]' % n , field 
-            rows.append ( row )
-
-    if 4 <= order and 4 <= size and obj.ok () and hasattr ( obj , 'cumulant_4th' ) :
-
-        v  = obj.cumulant_4th ()
-        vv = float   ( v )                         
-        if isfinite ( vv ) and IM != float ( v ) :
-            if isinstance ( v , VE ) : field , n = v.pretty_print () 
-            else                     : field , n = pretty_float ( v )
-            row = "K[4](unb)" , '' if not n else '[10^%+d]' % n , field 
-            rows.append ( row )
-            
-    if 1<= order and obj.ok () and hasattr ( obj , 'cumulant' ) :
-        kmax = min ( order , 10 )        
-        fmt = '[%d]'
-        if 10 <= kmax : fmt = '[%02d]'
-        for k in range ( 1 , kmax + 1 ) :            
-            v  = obj.cumulant ( k )
-            vv = float   ( v )                         
-            if isfinite ( vv ) and IM != float ( v ) :
-                if isinstance ( v , VE ) : field , n = v.pretty_print () 
-                else                     : field , n = pretty_float ( v )
-                row = ( "K" + fmt + "/raw" )  % k , '' if not n else '[10^%+d]' % n , field 
-                rows.append ( row )
-                
-    fmt = '[%d]'
-    if   10  <= order < 100   : fmt = '[%02d]'
-    elif 100 <= order < 1000  : fmt = '[%03d]'
-  
     for i in range ( 2 , order + 1 ) :
 
-        
-        if standard  :
+        if standard and 2 < i :
     
             v  = obj.std_moment2 ( i )
 
-            print ( i , v ) 
             vv = float  ( v  )                         
             if isfinite ( vv ) and IM != float ( v ) :                
                 if isinstance ( v , VE ) : field , n = v.pretty_print () 
                 else                     : field , n = pretty_float ( v )
-                row = ( "M" + fmt + "/std" )  % i , '' if not n else '[10^%+d]' % n , field 
+                row = ( "M" + fmt + "/std" )  % i , field , '' if not n else fmt_factor % n
                 rows.append ( row )
 
-        else :
+        elif not standard :
 
             v  = obj.central_moment ( i )
             vv = float   ( v )                         
             if isfinite ( vv ) and IM != float ( v ) :                
                 if isinstance ( v , VE ) : field , n = v.pretty_print () 
                 else                     : field , n = pretty_float ( v )
-                row = ( "M" + fmt + "/raw" )  % i  , '' if not n else '[10^%+d]' % n , field 
+                row = ( "M" + fmt + "/raw" )  % i  , field , '' if not n else fmt_factor % n  
                 rows.append ( row )
 
-        
-    rows = tuple ( [ ( '' , '' , 'value') ] +  rows  )
+    if cumulants and 1 <= order and 1 <= size and obj.ok () and hasattr ( obj , 'cumulant_1st' ) :
+
+        v  = obj.cumulant_1st ()
+        vv = float   ( v )                         
+        if isfinite ( vv ) and IM != float ( v ) :
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
+            else                     : field , n = pretty_float ( v )
+            row = ( "K" + fmt + "/unb" ) % 1 , field , '' if not n else fmt_factor % n 
+            rows.append ( row )
+
+    if cumulants and 2 <= order and 2 <= size and obj.ok () and hasattr ( obj , 'cumulant_2nd' ) :
+
+        v  = obj.cumulant_2nd ()
+        vv = float   ( v )                         
+        if isfinite ( vv ) and IM != float ( v ) :
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
+            else                     : field , n = pretty_float ( v )
+            row = ( "K" + fmt + "/unb" ) % 2 , field , '' if not n else fmt_factor % n 
+            rows.append ( row )
+
+    if cumulants and 3 <= order and 3 <= size and obj.ok () and hasattr ( obj , 'cumulant_3rd' ) :
+
+        v  = obj.cumulant_3rd ()
+        vv = float   ( v )                         
+        if isfinite ( vv ) and IM != float ( v ) :
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
+            else                     : field , n = pretty_float ( v )
+            row = ( "K" + fmt + "/unb" ) % 3 , field , '' if not n else fmt_factor % n
+            rows.append ( row )
+
+    if cumulants and 4 <= order and 4 <= size and obj.ok () and hasattr ( obj , 'cumulant_4th' ) :
+
+        v  = obj.cumulant_4th ()
+        vv = float   ( v )                         
+        if isfinite ( vv ) and IM != float ( v ) :
+            if isinstance ( v , VE ) : field , n = v.pretty_print () 
+            else                     : field , n = pretty_float ( v )
+            row = ( "K" + fmt + "/unb" ) % 4 , field , '' if not n else fmt_factor % n  
+            rows.append ( row )
+            
+    if cumulants and 5 <= order and obj.ok () and hasattr ( obj , 'cumulant' ) :
+        kmax = min ( order , 10 )        
+        if 10 <= kmax : fmt = '[%02d]'
+        for k in range ( 5 , kmax + 1 ) :            
+            v  = obj.cumulant ( k )
+            vv = float   ( v )                         
+            if isfinite ( vv ) and IM != float ( v ) :
+                if isinstance ( v , VE ) : field , n = v.pretty_print () 
+                else                     : field , n = pretty_float ( v )
+                row = ( "K" + fmt + '/raw' ) % k , field , '' if not n else fmt_factor  % n
+                rows.append ( row )
+                
+    rows = tuple ( [ ( '' , 'value' , 'factor' ) ] +  rows  )
         
     import ostap.logger.table as T
-
+    rows = T.remove_empty_columns ( rows )
+    
     tit = title 
     if not title :
         if   isinstance ( obj , Ostap.Math. Moment ) : tit =  'Moment_[%d]' % obj.order 
@@ -575,7 +605,7 @@ Ostap.Math.Moment.cumulant_1st   = _om_cumulant_1st ## 1st cumulant is a mens
 Ostap.Math.Moment.cumulant_2nd   = _om_cumulant_2nd ## 2nd cumulant is a variance 
 Ostap.Math.Moment.cumulant_3rd   = _om_cumulant_3rd ## 3nd cumulant is a 3rd central moment 
 Ostap.Math.Moment.cumulant_4th   = _om_cumulant_4th ## 4th cumulant is different 
-
+Ostap.Math.Moment.cumulant       = _om_cumulant_  
 
 Ostap.Math.WMoment.mean           = _om_mean    
 Ostap.Math.WMoment.rms            = _om_rms 
@@ -871,7 +901,9 @@ _new_methods_ = (
     Ostap.Math.Moment.cumulant_1st   , 
     Ostap.Math.Moment.cumulant_2nd   , 
     Ostap.Math.Moment.cumulant_3rd   , 
-    Ostap.Math.Moment.cumulant_4th   , 
+    Ostap.Math.Moment.cumulant_4th   ,
+    ##
+    Ostap.Math.Moment.cumulant       ,
     ##
     Ostap.Math.Moment.mean           ,
     Ostap.Math.Moment.rms            ,

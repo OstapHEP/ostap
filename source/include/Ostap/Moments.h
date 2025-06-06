@@ -100,7 +100,7 @@ namespace  Ostap
       /** get value of the kth moment for \f$  k \le N \f$
        *  \f[ \mu_k \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^k \f]
        *  for \f$  k > N\f$ null is returned 
-       *  @param k  the cenral moment order  \f$  0 \le k \le N \f$
+       *  @param k  the central moment order  \f$  0 \le k \le N \f$
        *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
        */
       inline double moment ( const unsigned short k ) const
@@ -114,11 +114,11 @@ namespace  Ostap
       inline double std_moment ( const unsigned short k ) const
       { 
         return 
-          N <  k    ? 0 : 
-          0 == k    ? 1 : 
-          1 == k    ? 0 :
-          2 == k    ? 1 :
-          !this->ok()  ? 0 : this->moment ( k ) / std::pow ( this->moment ( 2 ) , 0.5 * k ) ;
+          N <  k    ? 0.0 : 
+          0 == k    ? 1.0 : 
+          1 == k    ? 0.0 :
+          2 == k    ? 1.0 :
+          !this->ok() ? 0.0 : this->moment ( k ) / std::pow ( this->moment ( 2 ) , 0.5 * k ) ;
       }
       // ======================================================================
       /// get number of entries
@@ -224,10 +224,6 @@ namespace  Ostap
       inline long double moment_ () const
       { return !this->ok () ? 0 : this->m_M / this->size  () ; }
       // ======================================================================
-      template <unsigned int K, typename std::enable_if<(N<2*K)&&(N>K),int>::type = 0 >
-      inline long double moment_ () const
-      { return this->m_prev.template moment_<K> () ; }
-      // ======================================================================
       template <unsigned int K, typename std::enable_if<(2<=K)&&(2*K<=N),int>::type = 0 >
       inline Ostap::Math::ValueWithError
       moment_ () const
@@ -252,23 +248,36 @@ namespace  Ostap
         //
         return Ostap::Math::ValueWithError ( muo , cov2 ) ;
       }
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(N<2*K)&&(N>K),int>::type = 0 >
+      inline long double moment_ () const
+      { return this->m_prev.template moment_<K> () ; }      
       // =======================================================================
     public: // templated std_moment 
       // =======================================================================
-      template <unsigned int K, typename std::enable_if<(K==0)&&(N>=K),int>::type = 0 >
+      template <unsigned int K, typename std::enable_if<(K==0)&&(K<=N),int>::type = 0 >
       inline long double std_moment_ () const { return 1 ; }
       // ======================================================================
-      template <unsigned int K, typename std::enable_if<(K==1)&&(N>=K),int>::type = 0 >
+      template <unsigned int K, typename std::enable_if<(K==1)&&(K<=N),int>::type = 0 >
       inline long double std_moment_ () const { return 0 ; }
       // ======================================================================
-      template <unsigned int K, typename std::enable_if<(K==2)&&(N>=K),int>::type = 0 >
+      template <unsigned int K, typename std::enable_if<(K==2)&&(K<=N),int>::type = 0 >
       inline long double std_moment_ () const { return 1 ; }
       // ======================================================================
-      template <unsigned int K, typename std::enable_if<(2<K)&&(N>=K),int>::type = 0 >
+      template <unsigned int K, typename std::enable_if<(2<K)&&(2*K<=N),int>::type = 0 >
+      inline Ostap::Math::ValueWithError
+      std_moment_ () const
+      {
+        return
+	  !this->ok () ? Ostap::Math::ValueWithError () :
+          this->template moment_<K> () / std::pow ( double ( this->moment_<2>() ) , 0.5 * K ) ;
+      }      
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(N<2*K)&&(K<=N),int>::type = 0 >
       inline long double std_moment_ () const
       {
         return
-	  !this->ok () ? 0 :
+	  !this->ok () ? 0.0 :
           this->template moment_<K> () / std::pow ( this->moment_<2>() , 0.5 * K ) ;
       }      
       // ======================================================================
@@ -298,7 +307,7 @@ namespace  Ostap
       }
       /// 5th cumulant 
       template <unsigned int K, typename std::enable_if<(5==K)&&(K<=N),int>::type = 0 >
-        inline long double cumulant_ () const 
+      inline long double cumulant_ () const 
       { 
         if ( !this->ok() ) { return 0.0 ; }
         //
@@ -1010,10 +1019,10 @@ namespace  Ostap
     public:  // templated moment
       // ======================================================================      
       /// get the central moment of order K 
-      template <unsigned int K, typename std::enable_if<(K==0)&&(N>=K),int>::type = 0 >
+      template <unsigned int K, typename std::enable_if<(K==0)&&(K<=N),int>::type = 0 >
       inline long double moment_ () const { return 1 ; }
       // ======================================================================
-      template <unsigned int K, typename std::enable_if<(K==1)&&(N>=K),int>::type = 0 >
+      template <unsigned int K, typename std::enable_if<(K==1)&&(K<=N),int>::type = 0 >
       inline long double moment_ () const { return 0 ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(2<=K)&&(K==N),int>::type = 0 >
@@ -1025,8 +1034,7 @@ namespace  Ostap
       { return this->m_prev.template moment_<K> () ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(2<=K)&&(2*K<=N),int>::type = 0 >
-      inline
-      Ostap::Math::ValueWithError
+      inline Ostap::Math::ValueWithError
       moment_ () const
       {
         //
@@ -1051,19 +1059,27 @@ namespace  Ostap
       // =======================================================================
     public: // templated std_moment 
       // =======================================================================
-      template <unsigned int K, typename std::enable_if<(K==0)&&(N>=K),int>::type = 0 >
+      template <unsigned int K, typename std::enable_if<(K==0)&&(K<=N),int>::type = 0 >
       inline long double std_moment_ () const { return 1 ; }
       // ======================================================================
-      template <unsigned int K, typename std::enable_if<(K==1)&&(N>=K),int>::type = 0 >
+      template <unsigned int K, typename std::enable_if<(K==1)&&(K<=N),int>::type = 0 >
       inline long double std_moment_ () const { return 0 ; }
       // ======================================================================
-      template <unsigned int K, typename std::enable_if<(K==2)&&(N>=K),int>::type = 0 >
+      template <unsigned int K, typename std::enable_if<(K==2)&&(K<=N),int>::type = 0 >
       inline long double std_moment_ () const { return 1 ; }
       // ======================================================================
-      template <unsigned int K, typename std::enable_if<(2<K)&&(N>=K),int>::type = 0 >
+      template <unsigned int K, typename std::enable_if<(2<K)&&(2*K<=N),int>::type = 0 >
+      inline Ostap::Math::ValueWithError
+      std_moment_ () const
+      {
+        return !this->ok() ? Ostap::Math::ValueWithError () : 
+          this->template moment_<K> () / std::pow ( double ( this->moment_<2>() ) , 0.5 * K ) ;
+      }      
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(N<2*K)&&(K<=N),int>::type = 0 >
       inline long double std_moment_ () const
       {
-        return !this->ok() ? 0 :
+        return !this->ok() ? 0.0 :
           this->template moment_<K> () / std::pow ( this->moment_<2>() , 0.5 * K ) ;
       }      
       // ======================================================================
