@@ -4,6 +4,7 @@
 // STD&STL
 // ============================================================================
 #include <memory>
+#include <map> 
 #include <cstring>
 #include <numeric>
 #include <algorithm>
@@ -12,16 +13,21 @@
 // ============================================================================
 // Ostap 
 // ============================================================================
+#include "Ostap/Hash.h"
 #include "Ostap/ECDF.h"
 #include "Ostap/Power.h"
 #include "Ostap/MoreMath.h"
+#include "Ostap/StatEntity.h"
 #include "Ostap/WStatEntity.h"
+#include "Ostap/Moments.h"
 // ============================================================================
 // Local
 // ============================================================================
 #include "Exception.h"
 #include "status_codes.h"
 #include "local_math.h"
+#include "local_hash.h"
+#include "syncedcache.h"
 // ============================================================================
 /** @file 
  *  Implementation file for class Ostap::Math::ECDF
@@ -57,6 +63,71 @@ namespace
     RECORD ( Ostap::Math::DensityEstimator::Sigmoid,     &Ostap::Math::k_sigmoid     ,0,M_PI*M_PI/4 , 2/(M_PI*M_PI)    ,0.843) ,
   } ;
   // ==========================================================================
+  /// cached version of normalized incomplete beta-function
+  double beta_inc  
+  ( const double alpha      ,  
+    const double beta       , 
+    const double z          ,
+    std::size_t  N  = 20000 ) 
+  {
+   /// cache for normalized incomplete beta-function;
+   typedef std::map<std::size_t,double>  MAP   ;
+   typedef SyncedCache<MAP>              CACHE ;
+   /// the actual integration cache
+   static CACHE   s_cache {}      ; // integration cache
+   ///
+   const std::size_t key { Ostap::Utils::hash_combiner ( z , alpha , beta ) }; 
+   ///
+   { 
+    CACHE::Lock lock { s_cache.mutex () } ;
+    auto it = s_cache->find ( key ) ;
+    if ( s_cache->end () != it ) { return it->second ; } 
+   }
+   // calcluate the result 
+   const double result = Ostap::Math::beta_inc ( alpha , beta , z ) ;
+   {
+    CACHE::Lock lock { s_cache.mutex () } ;
+    if ( N < s_cache->size() ) { s_cache->clear() ; }
+    s_cache->insert ( std::make_pair ( key , result ) ) ; 
+   }
+   //
+   return result ;
+  }
+  /// cached version of normalized incomplete beta-function
+  double beta_log  
+  ( const double alpha      ,  
+    const double beta       ,
+    const double t          , 
+    const double dt         ,
+    std::size_t  N  = 20000 ) 
+  {
+   /// cache for normalized incomplete beta-function;
+   typedef std::map<std::size_t,double>  MAP   ;
+   typedef SyncedCache<MAP>              CACHE ;
+   /// the actual integration cache
+   static CACHE   s_cache {}      ; // integration cache
+   ///
+   const std::size_t key { Ostap::Utils::hash_combiner ( t , alpha , beta , t , dt ) }; 
+   ///
+   { 
+    CACHE::Lock lock { s_cache.mutex () } ;
+    auto it = s_cache->find ( key ) ;
+    if ( s_cache->end () != it ) { return it->second ; } 
+   }
+  // calcluate the result
+  double result  = std::log  ( dt ) ; 
+  result        += ( alpha - 1 ) * std::log ( t       ) ;  
+  result        += ( beta  - 1 ) * std::log ( 1 - t   ) ; 
+  result        -= Ostap::Math::lnbeta ( alpha , beta ) ;
+  result         = std::exp ( result ) ;   
+  {
+    CACHE::Lock lock { s_cache.mutex () } ;
+    if ( N < s_cache->size() ) { s_cache->clear() ; }
+    s_cache->insert ( std::make_pair ( key , result ) ) ; 
+   }
+   //
+   return result ;
+  }
 }
 // ============================================================================
 double Ostap::Math::DensityEstimator::kernel 
@@ -173,7 +244,7 @@ Ostap::Math::ECDF::ECDF
   m_complementary = complementary ; 
 }
 // ============================================================================
-// check that ECDF is OK: there are some entreiss 
+// check that ECDF is OK: there are some entries 
 // ============================================================================
 Ostap::Math::ECDF&
 Ostap::Math::ECDF::check_me ()
@@ -320,6 +391,111 @@ double Ostap::Math::ECDF::uniform ( const double x ) const
       ( x > xmax () ) ? ( 1.0 - 1.0 / size () ) : 
       ( std::lower_bound ( m_data.begin () , m_data.end () , x ) - m_data.begin() ) * 1.0 / size () ) ;
 }
+// =============================================================================
+/* get p-quantile of distributtion: \f$ 1 \le p \le1  \f$
+ *  @param p      (INPUT) quantile
+ *  @param alphap (INPUT) parameter alphap \f$ 0 \le\alpha_p \le 1 \f$ 
+ *  @param abetap (INPUT) parameter betap \f$ 0 \le\beta_p \le 1 \f$ 
+*/    
+// =============================================================================
+double Ostap::Math::ECDF::quantile
+( const double p      ,  
+  const double alphap , 
+  const double betap  ) const 
+{
+  if      ( !p     || s_zero  ( p )     ) { return m_data.front () ; }
+  else if ( 1 == p || s_equal ( p , 1 ) ) { return m_data.back  () ; } 
+  //
+  Ostap::Assert ( 0 <= p && p <= 1 , 
+      "Invalid quantile!" , 
+      "Ostap::Math::ECDF::quantile" , 
+      INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
+  Ostap::Assert ( 0 <= alphap && alphap <= 1 , 
+      "Invalid alphap!" , 
+      "Ostap::Math::ECDF::quantile" , 
+      INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
+ Ostap::Assert ( 0 <= betap && betap <= 1 , 
+      "Invalid betap!" , 
+      "Ostap::Math::ECDF::quantile" , 
+      INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
+  //
+const double          m = alphap + p * ( 1 - alphap - betap ) ;
+const Data::size_type n = N () ; 
+const double          a = p * n  + m ; 
+const int             j = static_cast<int> ( std::floor ( a ) ) ; 
+//
+if       ( j <  0     ) { return m_data.front() ; } 
+else if  ( n <= j + 1 ) { return m_data.back () ; } 
+//
+const double          g = a - j ;
+return ( 1 - g ) * m_data [ j ] + g * m_data [ j + 1 ] ; 
+} 
+// ============================================================================
+/* Get Harrel-Davis estimator for quantile function
+ *  @param p  (INPUT) quantile 
+ *  @retiurn Harrel-Davis quantile estimator
+ *  @see https://doi.org/10.1093/biomet/69.3.635
+ *  @see F.E. Harrel and C.E.Davis,  "A new distribution-free quantile estimator",
+ *       Biometrika 63.9 (Dec 1982), pp. 635-640
+ */
+// ============================================================================
+double Ostap::Math::ECDF::quantile_HD ( const double p ) const 
+{
+  if      ( !p     || s_zero  ( p     ) ) { return m_data.front () ; }
+  else if ( 1 == p || s_equal ( p , 1 ) ) { return m_data.back  () ; } 
+  //
+  Ostap::Assert ( 0 <= p && p <= 1     , 
+      "Invalid quantile!"              , 
+      "Ostap::Math::ECDF::quantile_HD" , 
+      INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
+//
+double result = 0 ;
+const std::size_t n = N () ;
+const double alpha = ( n + 1 ) * p ;
+const double beta  = ( n + 1 ) * ( 1 - p ) ;
+for ( std::size_t i = 0 ; i < n ; ++i )
+  {
+    const double ti    = ( i + 1.0 ) / n ;
+    const double value = m_data [ i ] ; 
+    if ( !value ) { continue ; } 
+    // 
+    if (  n < 100 )
+  {
+    result += value * ::beta_inc ( alpha , beta , ti          , 20 * n ) ; 
+    result -= value * ::beta_inc ( alpha , beta , i * 1.0 / n , 20 * n ) ; 
+  }
+  else 
+  {
+    const double t  =  ( i + 0.5 ) / n ;
+    result += value  * ::beta_log ( alpha, beta , t , 1.0 / n , 20 * n ) ; 
+  }
+  }
+  //
+  return result ;  
+}
+// ============================================================================
+// statistics (as Counter)
+// ============================================================================
+Ostap::StatEntity Ostap::Math::ECDF::counter() const 
+{
+  Ostap::StatEntity cnt {} ;
+  for ( auto v : m_data ) { cnt.add ( v ) ; } 
+  return cnt ;
+}  
+// ============================================================================
+/* statistics (as statistics)
+ * @param stat (UPDATE) input statistic object
+ * @return updated statistics object
+ */
+// =============================================================================
+Ostap::Math::Statistic& 
+Ostap::Math::ECDF::statistics
+( Ostap::Math::Statistic& stat ) 
+{
+  for ( auto v : m_data ) { stat.update ( v ) ; } 
+  return stat ;
+}
+
 // ============================================================================
 // For weighted data 
 // ============================================================================
@@ -666,10 +842,77 @@ Ostap::Math::WECDF::ranks
     }
   return result ;
 }
+// ============================================================================  
+// statistics (as Counter)
 // ============================================================================
-
-
-
+Ostap::WStatEntity 
+Ostap::Math::WECDF::counter() const 
+{
+  Ostap::WStatEntity cnt{} ;
+  for ( const auto& v : m_data ) { cnt.add( v.first , v.second ) ; } 
+  return cnt ;
+}  
+// ============================================================================
+// ============================================================================
+/* statistics (as statistics)
+ * @param stat (UPDATE) input statistic object
+ * @return updated statistics object
+ */
+// =============================================================================
+Ostap::Math::WStatistic& 
+Ostap::Math::WECDF::statistics
+( Ostap::Math::WStatistic& stat ) 
+{
+  for ( const auto& v : m_data ) { stat.update ( v.first , v.second  ) ; } 
+  return stat ;
+}
+// ============================================================================
+/* Get Harrel-Davis estimator for quantile function
+ *  @param p  (INPUT) quantile 
+ *  @retiurn Harrel-Davis quantile estimator
+ *
+ *  @see https://arxiv.org/abs/2304.07265
+ *  @see Andrey Akinshin, "Weighted quantile estimators", arXiv:2304.07265
+ *   
+ *  @see https://doi.org/10.1093/biomet/69.3.635
+ *  @see F.E. Harrel and C.E.Davis,  "A new distribution-free quantile estimator",
+ *       Biometrika 63.9 (Dec 1982), pp. 635-640
+ */
+// ============================================================================
+double Ostap::Math::WECDF::quantile_HD ( const double p ) const 
+{
+  if      ( !p     || s_zero  ( p     ) ) { return xmin () ; }
+  else if ( 1 == p || s_equal ( p , 1 ) ) { return xmax () ; } 
+  //
+  Ostap::Assert ( 0 <= p && p <= 1     , 
+      "Invalid quantile!"              , 
+      "Ostap::Math::WECDF::quantile_HD" , 
+      INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
+//
+const double sw_inv { 1./sumw () } ;
+const double nstar  { nEff () } ; 
+const double alpha = ( nstar + 1 ) * p ;
+const double beta  = ( nstar + 1 ) * ( 1 - p ) ;
+//
+double result = 0 ;
+const std::size_t n = N () ;
+double wsum         = 0    ;  
+for ( std::size_t i = 0 ; i < n ; ++i )
+  {
+    const double value  = m_data [ i ].first  ;
+    const double weight = m_data [ i ].second ;
+    if ( !value || !weight ) { continue ; }
+    //
+    const double tp = sw_inv * ( wsum          ) ;
+    const double ti = sw_inv * ( wsum + weight ) ;
+    wsum += weight ;
+    // 
+    result += value * ::beta_inc ( alpha , beta , ti , 20 * N () ) ; 
+    result -= value * ::beta_inc ( alpha , beta , tp , 20 * N () ) ; 
+  }
+  //
+  return result ;  
+}
 // ============================================================================
 /* create the empirical PDF from empirical CDF 
  *  @attention data are not copied!

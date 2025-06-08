@@ -15,6 +15,9 @@
 // ============================================================================
 #include "Ostap/ValueWithError.h"
 #include "Ostap/Power.h"
+#include "Ostap/StatEntity.h"
+#include "Ostap/WStatEntity.h"
+#include "Ostap/Moments.h"
 // ============================================================================
 namespace Ostap
 {
@@ -22,8 +25,10 @@ namespace Ostap
   namespace Math
   {
     // ========================================================================
-    class  ECDF ;
-    class WECDF ;
+    class  ECDF      ;
+    class WECDF      ;
+    class  Statistic ;
+    class WStatistic ; 
     // ========================================================================
     // Kernels
     // https://en.wikipedia.org/wiki/Kernel_(statistics)
@@ -98,7 +103,7 @@ namespace Ostap
      *  @author Vanya Belyaev
      *  @date   2023-09-17
      */
-    class ECDF
+    class ECDF : public Statistic 
     {
     public: 
       // ======================================================================
@@ -180,6 +185,9 @@ namespace Ostap
         std::sort ( tmp.begin () , tmp.end () ) ; 
         return this->add_sorted ( tmp.begin() , tmp.end() ) ;
       }
+      // ======================================================================
+      /// Ostap::Math::Statistic::update
+      void update ( const double x  ) override { this->add ( x ) ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -274,8 +282,48 @@ namespace Ostap
        */
       double uniform ( const double x ) const ;
       // ======================================================================
-    public:
+      /** get p-quantile of distributtion: \f$ 1 \le p \le1  \f$
+       *  @param p      (INPUT) quantile
+       *  @param alphap (INPUT) parameter alphap \f$ 0 \le\alpha_p \le 1 \f$ 
+       *  @param abetap (INPUT) parameter betap \f$ 0 \le\beta_p \le 1 \f$ 
+      */    
+      double quantile
+      ( const double p            ,  
+        const double alphap = 0.4 , 
+        const double betap  = 0.4 ) const ;
       // ======================================================================
+      /** Get Harrel-Davis estimator for quantile function
+       *  @param p  (INPUT) quantile 
+       *  @retiurn Harrel-Davis quantile estimator
+       *  @see https://doi.org/10.1093/biomet/69.3.635
+       *  @see F.E. Harrel and C.E.Davis,  "A new distribution-free quantile estimator",
+       *       Biometrika 63.9 (Dec 1982), pp. 635-640
+       */
+      double quantile_HD ( const double p ) const ;
+      // ======================================================================
+    public:
+      //=======================================================================
+      /// statistics (as Counter)
+      Ostap::StatEntity counter() const ;  
+      /** statistics (as statistics)
+        * @param stat (UPDATE) input statistic object
+        * @return updated statistics object
+        */
+      Ostap::Math::Statistic& 
+      statistics
+      ( Ostap::Math::Statistic& stat ) ;
+      // ======================================================================
+      /// get the moments 
+      template <unsigned short K>
+      Ostap::Math::Moment_<K> moment_ () const
+     {
+       Ostap::Math::Moment_<K> m{} ;
+       for ( auto value : m_data ) { m.add ( value ) ; }
+       return m ;
+     } 
+      // ======================================================================
+    public:
+      //=======================================================================
       /** number of elements that are less or equal to x
        *  "rank of x" in the ordered sample
        */
@@ -323,7 +371,7 @@ namespace Ostap
      *  @author Vanya Belyaev
      *  @date   2024-11-28
      */
-    class WECDF
+    class WECDF : public WStatistic
     {
     public: 
       // ======================================================================
@@ -421,6 +469,12 @@ namespace Ostap
       /// add more values to data container 
       WECDF& add ( const ECDF::Data&  values ) ;
       // ======================================================================
+      /// Ostap::Math::WStatistic::update
+      void update
+      ( const double x     , 
+        const double w = 1 ) override { this->add ( x , w ) ; }
+      // ======================================================================
+      // ======================================================================
       inline WECDF& operator+= ( const double       x ) { return add ( x ) ; }
       inline WECDF& operator+= ( const Entry&       x ) { return add ( x ) ; }
       inline WECDF& operator+= ( const WECDF&       x ) { return add ( x ) ; }      
@@ -478,7 +532,40 @@ namespace Ostap
       /// expose the data: end-iterator 
       inline iterator end   () const { return m_data.end   () ; }      
       // ======================================================================
-    public: 
+   public:
+      //=======================================================================
+      /// statistics (as Counter)
+      Ostap::WStatEntity counter() const ;  
+      /** statistics (as statistics)
+        * @param stat (UPDATE) input statistic object
+        * @return updated statistics object
+        */
+      Ostap::Math::WStatistic& 
+      statistics
+      ( Ostap::Math::WStatistic& stat ) ;
+      /// get the moments 
+      template <unsigned short K>
+      Ostap::Math::WMoment_<K> moment_ () const
+      {
+        Ostap::Math::WMoment_<K> m{} ;
+       for ( const auto& value : m_data ) { m.add ( value.first, value.second ) ; }
+       return m ;
+      } 
+      // =======================================================================
+     /** Get Harrel-Davis estimator for quantile function
+       *  @param p  (INPUT) quantile 
+       *  @retiurn Harrel-Davis quantile estimator
+       *
+       *  @see https://arxiv.org/abs/2304.07265
+       *  @see Andrey Akinshin, "Weighted quantile estimators", arXiv:2304.07265
+       *   
+       *  @see https://doi.org/10.1093/biomet/69.3.635
+       *  @see F.E. Harrel and C.E.Davis,  "A new distribution-free quantile estimator",
+       *       Biometrika 63.9 (Dec 1982), pp. 635-640
+       */
+      double quantile_HD ( const double p ) const ;
+      // ======================================================================
+   public: 
       // ======================================================================
       /// swap two objects 
       void swap ( WECDF& right ) ;

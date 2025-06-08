@@ -80,7 +80,9 @@ namespace
     INVALID_KERNEL           = 835 , 
     INVALID_ECDF             = 836 , 
     INVALID_WECDF            = 837 , 
-    INVALID_SMOOTH           = 838 , 
+    INVALID_SMOOTH           = 838 ,
+    // 
+    INVALID_QUANTILE         = 840 ,
     // =========================================================================
     // =========================================================================
     ERROR_ROOT            = 1000000 ,
