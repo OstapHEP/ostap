@@ -33,6 +33,8 @@ namespace Ostap { namespace Math { class LegendreSum4 ; } }
 namespace Ostap { namespace Math { class Bernstein    ; } }
 namespace Ostap { namespace Math { class Bernstein2D  ; } }
 namespace Ostap { namespace Math { class Bernstein3D  ; } }
+namespace Ostap { namespace Math { class ECDF         ; } }
+namespace Ostap { namespace Math { class WECDF        ; } }
 // =============================================================================
 namespace Ostap
 {  
@@ -151,7 +153,6 @@ namespace Ostap
       const char*         range      = nullptr , 
       const unsigned long first      = 0                                         ,
       const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
-
     // ========================================================================
     /** make a projection of RooDataSet into the histogram 
      *  @param data        (INPUT)  input data 
@@ -1495,6 +1496,105 @@ namespace Ostap
       const unsigned long               first      = 0  ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
+  public : // TTree -> ECDF 
+    // ========================================================================
+    /** get ECDF for for the given expression/variable 
+     *  @param data   (INPUT) input data 
+     *  @param ecdf        (UPDATE) ECDF 
+     *  @param expression  (INPUT)  expression
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( TTree*              data            ,
+      Ostap::Math::ECDF&  ecdf            ,
+      const std::string&  expression      ,
+      const unsigned long first      = 0  ,
+      const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;      
+    // ========================================================================
+    /** get ECDF for for the given expression/variable 
+     *  @param data   (INPUT) input data 
+     *  @param ecdf        (UPDATE) ECDF 
+     *  @param expression  (INPUT)  expression
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( TTree*                            data            ,
+      const Ostap::Utils::ProgressConf& progress        ,
+      Ostap::Math::ECDF&                ecdf            ,
+      const std::string&                expression      ,
+      const unsigned long               first      = 0  ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;    
+    // ========================================================================
+  public : // TTree -> WECDF 
+    // ========================================================================
+    /** get ECDF for for the given expression/variable 
+     *  @param data   (INPUT) input data 
+     *  @param ecdf        (UPDATE) ECDF 
+     *  @param expression  (INPUT)  expression
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( TTree*              data            ,
+      Ostap::Math::WECDF& ecdf            ,
+      const std::string&  expression      ,
+      const std::string&  selection  = "" ,
+      const unsigned long first      = 0  ,
+      const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;      
+    // ========================================================================
+    /** get ECDF for for the given expression/variable 
+     *  @param data   (INPUT) input data 
+     *  @param ecdf        (UPDATE) ECDF 
+     *  @param expression  (INPUT)  expression
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( TTree*                            data            ,
+      const Ostap::Utils::ProgressConf& progress        ,
+      Ostap::Math::WECDF&               ecdf            ,
+      const std::string&                expression      ,
+      const std::string&                selection  = "" ,
+      const unsigned long               first      = 0  ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;    
+    // ========================================================================
+  public : // RooAbsData  -> WECDF 
+    // ========================================================================
+    /** get ECDF for for the given expression/variable 
+     *  @param data        (INPUT) input data 
+     *  @param ecdf        (UPDATE) ECDF 
+     *  @param expression  (INPUT)  expression
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( const RooAbsData*   data                 ,
+      Ostap::Math::WECDF& ecdf                 ,
+      const std::string&  expression           ,
+      const std::string&  selection  = ""      , 
+      const char*         range      = nullptr , 
+      const unsigned long first      = 0       ,
+      const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;      
+    // ========================================================================
+    /** get ECDF for for the given expression/variable 
+     *  @param data   (INPUT) input data 
+     *  @param ecdf        (UPDATE) ECDF 
+     *  @param expression  (INPUT)  expression
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( const RooAbsData*                 data            ,
+      const Ostap::Utils::ProgressConf& progress        ,
+      Ostap::Math::WECDF&               ecdf            ,
+      const std::string&                expression      ,
+      const std::string&                selection  = ""      , 
+      const char*                       range      = nullptr , 
+      const unsigned long               first      = 0       ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;    
+    // ========================================================================            
   } ;
   // ==========================================================================
 } //                                                     end of namespace Ostap

@@ -6,14 +6,9 @@
 // ============================================================================
 // ROOT 
 // ============================================================================
-#include "RVersion.h"   // ROOT 
 #include "RtypesCore.h" // ROOT 
 // ============================================================================
-#if ROOT_VERSION(6,14,0) <= ROOT_VERSION_CODE 
 #include "ROOT/RDataFrame.hxx"  // ROOT 
-#else 
-#include "ROOT/TDataFrame.hxx"  // ROOT
-#endif
 // ============================================================================
 // Ostap 
 // ============================================================================
@@ -26,10 +21,7 @@
 #include "Ostap/Bernstein3D.h"
 #include "Ostap/Parameterization.h"
 #include "Ostap/Moments.h"
-// ============================================================================
-/// ONLY starting from ROOT 6.16
-// ============================================================================
-#if ROOT_VERSION(6,16,0) <= ROOT_VERSION_CODE
+#include "Ostap/ECDF.h"
 // ============================================================================
 #include "Ostap/DataFrameUtils.h"
 // ============================================================================
@@ -48,6 +40,7 @@ namespace ROOT
        *  Requirements for COUNTER:
        *  -  counter.add ( value ) 
        *  -  counter += counter 
+       *  -  default constructor 
        *  @see Ostap::StatEntity
        *  @see Ostap::Math::Moment_
        */
@@ -96,11 +89,7 @@ namespace ROOT
         { m_slots [ slot % m_N ].add ( value ) ; } 
         // ====================================================================
         /// The basic method: increment the counter for the vector-like columns       
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
         void Exec ( unsigned int slot , const T &vs )
         { Result_t& m = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { m.add ( v ) ; } }
         // ====================================================================
@@ -128,6 +117,7 @@ namespace ROOT
        *  Requirements for COUNTER:
        *  -  counter.add ( value , weight ) 
        *  -  counter += counter 
+       *  -  defaut contructor 
        *  @see Ostap::WStatEntity
        *  @see Ostap::Math::Covariance
        *  @see Ostap::Math::WMoment_
@@ -177,20 +167,12 @@ namespace ROOT
         { m_slots [ slot % m_N ].add ( value , weight ) ; } 
         // ====================================================================
         /// The basic method: increment the counter for the vector-like columns       
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
         void Exec ( unsigned int slot , const T &vs , const double weight = 1 )
         { Result_t& m = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { m.add ( v , weight ) ; } }
         // ====================================================================
         /// The basic method: increment the counter for the vector-like column of weight 
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif
         void Exec ( unsigned int slot , const double value , const T &ws )
         { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & w : ws ) { e.add ( value , w   ) ; } }
         // ====================================================================
@@ -269,11 +251,7 @@ namespace ROOT
         { m_slots [ slot % m_N ].add ( v1 , v2 , weight ) ; } 
         // ====================================================================
         /// The basic method: increment the counter for the vector-like columns       
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
         void Exec
 	( unsigned int slot       ,
 	  const T&     vs         ,
@@ -282,11 +260,7 @@ namespace ROOT
         { Result_t& m = m_slots [ slot % m_N ] ; for ( const auto& v1 : vs ) { m.add ( v1 , v2  , weight ) ; } }
         // ====================================================================
         /// The basic method: increment the counter for the vector-like columns       
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
         void Exec
 	( unsigned int slot       ,
 	  const double v1         ,
@@ -295,11 +269,7 @@ namespace ROOT
         { Result_t& m = m_slots [ slot % m_N ] ; for ( const auto& v2 : vs ) { m.add ( v1 , v2  , weight ) ; } }
         // ====================================================================
         /// The basic method: increment the counter for the vector-like column of weight 
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif
         void Exec
 	( unsigned int slot ,
 	  const double v1   ,
@@ -387,20 +357,12 @@ namespace ROOT
         { m_slots [ slot % m_N ].Fill ( value , weight ) ; } 
         // ====================================================================
         /// The basic method: increment the counter for the vector-like column of values        
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
         void Exec ( unsigned int slot , const T &vs , const double weight = 1 )
         { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { e.Fill ( v , weight ) ; } }
         // ====================================================================
         /// The basic method: increment the counter for the vector-like column of weight 
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif
         void Exec ( unsigned int slot , const double value , const T &ws )
         { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & w : ws ) { e.Fill ( value , w   ) ; } }
         // ====================================================================
@@ -481,27 +443,15 @@ namespace ROOT
         { m_slots [ slot % m_N ].Fill ( x , y , weight ) ; } 
         // ====================================================================
         /// The basic method: increment the counter for the vector-like column of values
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
         void Exec ( unsigned int slot , const T &xs , const double y , const double weight = 1 )
         { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto &x : xs ) { e.Fill ( x , y , weight ) ; } }
         // ====================================================================
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
         void Exec ( unsigned int slot , const double x , const T &ys , const double weight = 1 )
         { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto &y : ys ) { e.Fill ( x , y , weight ) ; } }
         // ====================================================================
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif
         void Exec ( unsigned int slot , const double x, const double y , const T &ws )
         { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & w : ws ) { e.Fill ( x , y , w   ) ; } }
         // ====================================================================
@@ -585,35 +535,19 @@ namespace ROOT
         { m_slots [ slot % m_N ].Fill ( x , y , z , weight ) ; } 
         // ====================================================================
         /// The basic method: increment the counter for the vector-like column of values
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
         void Exec ( unsigned int slot , const T &xs , const double y , const double z , const double weight = 1 )
         { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto &x : xs ) { e.Fill ( x , y , z , weight ) ; } }
         // ====================================================================
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
         void Exec ( unsigned int slot , const double x , const T &ys , const double z , const double weight = 1 )
         { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto &y : ys ) { e.Fill ( x , y , z , weight ) ; } }
         // ====================================================================
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
         void Exec ( unsigned int slot , const double x , const double y , const T &zs , const double weight = 1 )
         { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto &z : zs ) { e.Fill ( x , y , z , weight ) ; } }
         // ====================================================================
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif
         void Exec ( unsigned int slot , const double x, const double y , const double z , const T &ws )
         { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & w : ws ) { e.Fill ( x , y , z , w   ) ; } }
         // ====================================================================
@@ -697,44 +631,23 @@ namespace ROOT
         { m_slots [ slot % m_N ].Fill ( x , y , z , u , weight ) ; } 
         // ====================================================================
         /// The basic method: increment the counter for the vector-like column of values
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
         void Exec ( unsigned int slot , const T &xs , const double y , const double z , const double u , const double weight = 1 )
         { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto &x : xs ) { e.Fill ( x , y , z , u , weight ) ; } }
         // ====================================================================
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
         void Exec ( unsigned int slot , const double x , const T &ys , const double z , const double u, const double weight = 1 )
         { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto &y : ys ) { e.Fill ( x , y , z , u , weight ) ; } }
-
         // ====================================================================
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
         void Exec ( unsigned int slot , const double x , const double y , const T &zs , const double u , const double weight = 1 )
         { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto &z : zs ) { e.Fill ( x , y , z , u , weight ) ; } }
         // ====================================================================
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
         void Exec ( unsigned int slot , const double x , const double y , const double z , const T &us , const double weight = 1 )
         { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto &u : us ) { e.Fill ( x , y , z , u   , weight ) ; } }
         // ====================================================================
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif
         void Exec ( unsigned int slot , const double x, const double y , const double z , const double u , const T &ws )
         { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & w : ws ) { e.Fill ( x , y , z , w   ) ; } }
         // ====================================================================
@@ -774,9 +687,12 @@ namespace Ostap
     template <class COUNTER>
     using Stat2Action = ROOT::Detail::RDF::Stat2Action<COUNTER>  ;
 
-    using StatVar  = Stat1Action <Ostap::StatEntity>  ;    
+    using StatVar  = Stat1Action <Ostap::StatEntity> ;    
     using WStatVar = Stat2Action<Ostap::WStatEntity> ;
 
+    using ECDF     = Stat1Action <Ostap::Math::ECDF> ;    
+    using WECDF    = Stat2Action<Ostap::Math::WECDF> ;
+    
     template <unsigned short N> 
     using Moment_  = Stat1Action <typename Ostap::Math::Moment_<N>  > ;
     template <unsigned short N> 
@@ -820,8 +736,6 @@ namespace Ostap
   }
   // ==========================================================================
 }
-// ============================================================================
-#endif // #if ROOT_VERSION_CODE >= ROOT_VERSION(6,16,0)
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

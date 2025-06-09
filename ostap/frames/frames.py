@@ -120,7 +120,7 @@ def as_rnode ( frame ) :
 # ==============================================================================
 ## Helper method to generate new, unique name for the variable 
 def var_name ( prefix , used_names , *garbage ) :
-    """Helper method to generate new, unique name for the variable 
+    """ Helper method to generate new, unique name for the variable 
     """
     name =     prefix + '%x' % ( hash ( ( prefix , used_names , garbage ) )               % ( 2**32 ) ) 
     while name in used_names :
@@ -132,13 +132,13 @@ def var_name ( prefix , used_names , *garbage ) :
 mt_global = OCC.general.getboolean ( 'ImplicitMT' , fallback = True )    
 
 # ==============================================================================
-## Helper function that defines expressions and cuts 
+## Helper function that define expressions and cuts 
 #  @code
 #  frame = ...
 #  currnt , vexpr , cexpr, input_string  = _fr_helper_ ( frame , 'x*x' , 'z<0' )
 #  #endcode 
 def _fr_helper_ ( frame , expressions , cuts = '' , progress = False ) :
-    """Helper function that defin4es expressions and cuts 
+    """ Helper function that define expressions and cuts 
     >>> frame = ...
     >>> current, vexpr , cexpr = _fr_helper_ ( frame , 'x*x' , 'z<0' )
     """
@@ -205,7 +205,7 @@ def _fr_helper2_ ( frame            ,
                    progress = False ,
                    report   = False ,
                    lazy     = True  ) :
-    """The seocnd helper method to implement various statitic-related actions  
+    """ The second helper method to implement various statistic-related actions  
     """
 
     current, var_names, cut_name, input_string = _fr_helper_ ( frame , expressions , cuts , progress = progress )
@@ -241,7 +241,7 @@ def _fr_helper2_ ( frame            ,
 #  @see ROOT::DisableImplicitMT
 #  @see ROOT::IsImplicitMTEnabled
 def _fr_new_init_ ( self , *args , **kwargs ) :
-    """Modify the DataFrame constuctor to allow (semi)automatic
+    """ Modify the DataFrame constuctor to allow (semi)automatic
     manipulations wth ROOT.ROOT.EnableImplicitMT/DisableImplicitMT
     - see ROOT.ROOT.EnableImplicitMT 
     - see ROOT.ROOT.DisableImplicitMT
@@ -348,7 +348,7 @@ def frame_progress1 ( frame  , length ) :
 #  @see ROOT::RDF::Experimental::AddProgressbar 
 #  @attention no action for ROOT < 6.30 
 def frame_progress2 ( frame , length = -1 ) :
-    """Make use of new `ROOT.RDF.Experimental.AddProgressbar` utility
+    """ Make use of new `ROOT.RDF.Experimental.AddProgressbar` utility
     - see ROOT.RDF.Experimental.AddProgressbar
     - no action for ROOT < 6.30 
     """
@@ -376,7 +376,7 @@ def frame_progress2 ( frame , length = -1 ) :
 #  frame , cnt = frame_progrees ( frame , nevents ) 
 #  @endcode 
 def frame_progress ( frame , length = -1 ) :
-    """Add progress bar to the frame
+    """ Add progress bar to the frame
     >>> frame = ...
     >>> frame , cnt = frame_progrees ( frame , nevents ) 
     """
@@ -391,7 +391,6 @@ def frame_progress ( frame , length = -1 ) :
     if 1 <= length : return frame_progress1 ( frame , length )
     else           : return frame_progress2 ( frame , length )
     
-    
 # ==============================================================================
 ## Prescale the frame
 #  @code
@@ -400,7 +399,7 @@ def frame_progress ( frame , length = -1 ) :
 #  prescaled2 = frame_prescale ( frame , 20   ) ##  1   < prescale 
 #  @endcode 
 def frame_prescale ( frame , prescale , name = '' ) :
-    """Prescale the frame
+    """ Prescale the frame
     >>> frame = ...
     >>> prescaled1 = frame_prescale ( frame , 0.15 ) ##  0.0 < prescale < 1.0
     >>> prescaled2 = frame_prescale ( frame , 20   ) ##  1   < prescale 
@@ -431,7 +430,7 @@ def frame_prescale ( frame , prescale , name = '' ) :
 ## Draw the variables for the frame
 #  - old variant 
 def frame_draw ( frame , *args , **kwargs ) :
-    """Draw the variable (s) for the frames
+    """ Draw the variable(s) for the frames
     - old variant
     """
     node = as_rnode ( frame )
@@ -444,7 +443,7 @@ def frame_draw ( frame , *args , **kwargs ) :
 #  frame = ...
 #  @endcode 
 def frame_print ( frame ) :
-    """Simplified print out for the  frame 
+    """ Simplified print out for the  frame 
     
     >>> frame = ...
     >>> print frame
@@ -459,9 +458,6 @@ def frame_print ( frame ) :
     res += "\nColumns:\n%s" % multicolumn ( cols , indent = 2 , pad = 1 )
     return res
 
-
-
-
 # ==============================================================================
 ## Data frame as table
 #  @code
@@ -470,7 +466,7 @@ def frame_print ( frame ) :
 #  print ( table ) 
 #  @endcode 
 def frame_table ( frame , pattern = None ,  cuts = '' , more_vars = () , title = '' ,  prefix = '' ) :
-    """Data frame as table
+    """ Data frame as table
     >>> frame = ...
     >>> table = frame_table ( frame , '.*PT.*' , cuts = ... , more_vars = [ 'x*x/y' , 'y+z'] )
     >>> print ( table )
@@ -590,7 +586,7 @@ DF_P2Type  = ROOT.TProfile2D
 # =============================================================================
 ## convert 1D-histogram to "model" for usage with DataFrames 
 def _h1_model_ ( histo ) :
-    """Convert 1D-histogram to 'model' for usage with DataFrame"""
+    """ Convert 1D-histogram to 'model' for usage with DataFrame"""
     model = histo 
     if not isinstance ( model , DF_H1Type ) :
         model = DF_H1Type()
@@ -599,7 +595,7 @@ def _h1_model_ ( histo ) :
 # =============================================================================
 ## convert 2D-histogram to "model" for usage with DataFrames 
 def _h2_model_ ( histo ) :
-    """Convert 2D-histogram to 'model' for usage with DataFrame"""
+    """ Convert 2D-histogram to 'model' for usage with DataFrame"""
     model = histo 
     if not isinstance ( model , DF_H2Type ) :
         model = DF_H2Type()
@@ -608,7 +604,7 @@ def _h2_model_ ( histo ) :
 # =============================================================================
 ## convert 3D-histogram to "model" for usage with DataFrames 
 def _h3_model_ ( histo ) :
-    """Convert 3D-histogram to 'model' for usage with DataFrame"""
+    """ Convert 3D-histogram to 'model' for usage with DataFrame"""
     model = histo 
     if not isinstance ( model , DF_H3Type ) :
         model = DF_H3Type()
@@ -617,7 +613,7 @@ def _h3_model_ ( histo ) :
 # =============================================================================
 ## convert 1D-profile to "model" for usage with DataFrames 
 def _p1_model_ ( histo ) :
-    """Convert 1D-profile to 'model' for usage with DataFrame"""
+    """ Convert 1D-profile to 'model' for usage with DataFrame"""
     model = histo 
     if not isinstance ( model , DF_P1Type ) :
         model = DF_P1Type()
@@ -725,9 +721,15 @@ def frame_project ( frame            ,
 
     if isinstance ( model , _types_nD ) : 
         assert ( 6 , 25 ) <= root_info, '6.25<=ROOT is required here!'
-        return _fr_param_ ( frame , model , expression, cuts = cuts , progress = progress , report = report , lazy = lazy ) 
+        return _fr_param_ ( frame               ,
+                            model               ,
+                            expression          ,
+                            cuts     = cuts     ,
+                            progress = progress ,
+                            report   = report   ,
+                            lazy     = lazy     ) 
 
-    ## decode expressons & cuts 
+    ## decode expressions & cuts 
     current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts , progress = progress )
 
     ## convert histogram-like objects into 'models'
@@ -766,7 +768,6 @@ def frame_project ( frame            ,
          logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
          
     return result 
-
 
 # =============================================================================
 ## "project/parameterise" frame into polynomial structures (lazy action)
@@ -879,7 +880,6 @@ def _fr_param_ ( frame            ,
          logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
 
     return result
-
 
 # ==========================================================================
 ## draw the variable(s) from the frame
@@ -1314,7 +1314,6 @@ def frame_deciles  ( frame , expression , cuts = '' , exact = True ) :
 
 # ==================================================================================
 
-
 # ==================================================================================
 ## Action-based methods
 # ==================================================================================
@@ -1429,6 +1428,36 @@ def _fr_the_statVar_ ( frame            ,
                           report   = report   ,
                           lazy     = lazy     )
 
+# ==================================================================================
+## Get ECDF for the given varibale or expression 
+#  @code
+#  frame = ....
+#  ecdf  = frame.get_ECDF ( 'pt'           , lazy = True )
+#  ecdf  = frame.get_ECDF ( 'pt' , 'eta>0' , lazy = True )
+#  @endcode
+def _fr_the_ECDF_ ( frame            ,
+                       expressions      ,
+                       cuts     = ''    ,
+                       progress = False ,
+                       report   = False , 
+                       lazy     = True  ) :
+    """ Get ECDF for the given varibale or expression 
+    >>> frame = ....
+    >>> ecdf  = frame.get_ECDF ( 'pt'           , lazy = True )
+    >>> ecdf  = frame.get_ECDF ( 'pt' , 'eta>0' , lazy = True )
+    """
+    
+    def screator ( node , var_name , cut_name ) : 
+        if   cut_name: return node.Book( ROOT.std.move ( Ostap.Actions.WECDF() ) , CNT ( [ var_name , cut_name ] ) )
+        else         : return node.Book( ROOT.std.move ( Ostap.Actions. ECDF() ) , CNT ( 1 , var_name ) )     
+        
+    return _fr_helper2_ ( frame               ,
+                          screator            ,
+                          expressions         ,
+                          cuts     = cuts     ,
+                          progress = progress ,
+                          report   = report   ,
+                          lazy     = lazy     )
 
 # ==================================================================================
 ## get nEff through action
@@ -1872,6 +1901,7 @@ if Frames_OK :
     frame_the_statVar         = _fr_the_statVar_
     frame_the_statCov         = _fr_the_statCov_
     frame_the_nEff            = _fr_the_nEff_  
+    frame_the_ECDF            = _fr_the_ECDF_  
     frame_the_moment          = _fr_the_moment_
     frame_the_mean            = _fr_the_mean_
     frame_the_minmax          = _fr_the_minmax_
@@ -1891,6 +1921,7 @@ if Frames_OK :
         'frame_the_statVar'         ,
         'frame_the_statCov'         ,
         'frame_the_nEff'            ,
+        'frame_the_ECDF'            ,
         'frame_the_moment'          ,
         'frame_the_mean'            ,
         'frame_the_minmax'          ,
@@ -1921,6 +1952,22 @@ if Frames_OK :
         >>> stat  = frame.statVar ( 'pt' , 'eta>0' )
         """
         return frame_the_statVar ( frame , expressions , cuts = cuts , progress = progress , report = report , lazy = False )
+
+    # ==================================================================================
+    ## get ECDF
+    #  @code
+    #  frame = ....
+    #  stat  = frame_ECDF ( frame , 'pt'           )
+    #  stat  = frame_ECDF ( frame , 'pt' , 'eta>0' )
+    #  @endcode
+    def frame_ECDF ( frame , expressions , cuts = ''  , progress = False , report = False ) :
+        """ Get statistics of variable(s)
+        >>> frame = ....
+        >>> ecdf  = frame.ECDF ( 'pt'           )
+        >>> ecdf  = frame.ECDF ( 'pt' , 'eta>0' )
+        """
+        return frame_the_ECDF ( frame , expressions , cuts = cuts , progress = progress , report = report , lazy = False )
+    
     # ==================================================================================
     ## get covariance for variables via action 
     #  @code
@@ -2412,6 +2459,7 @@ _new_methods_ = [
     frame_size           , 
     ##
     frame_nEff           , 
+    frame_ECDF           , 
     frame_statVar        , 
     frame_statCov        ,
     #
@@ -2457,7 +2505,9 @@ for f in frame_types :
     f.nEff           = frame_nEff
     f.statVar        = frame_statVar 
     f.statCov        = frame_statCov
-    #
+    
+    f.ECDF           = frame_ECDF
+
     f.get_moment     = frame_get_moment
     f.moment         = frame_moment
     f.central_moment = frame_moment
@@ -2510,7 +2560,9 @@ for f in frame_types :
         f.terciles       , 
         f.quartiles      , 
         f.quintiles      , 
-        f.deciles        
+        f.deciles        ,
+        # 
+        f.ECDF           ,        
         ]
     
 
@@ -2520,6 +2572,7 @@ if Frames_OK :
         frame_the_statVar         , 
         frame_the_statCov         , 
         frame_the_nEff            , 
+        frame_the_ECDF            , 
         frame_the_moment          , 
         frame_the_mean            , 
         frame_the_rms             ,
@@ -2547,6 +2600,7 @@ if Frames_OK :
         f.the_dispersion       = frame_the_dispersion 
         f.the_skewness         = frame_the_skewness 
         f.the_kurtosis         = frame_the_kurtosis
+        f.the_ECDF             = frame_the_ECDF
         
         f.the_arithmetic_mean  = frame_the_arithmetic_mean 
         f.the_geometric_mean   = frame_the_geometric_mean 

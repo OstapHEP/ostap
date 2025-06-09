@@ -40,7 +40,8 @@
 - data_power_mean      - get the (weighted) power     mean 
 - data_lehmer_mean     - get the (weighted) Lehmer    mean 
 - data_statistics      - get the statistics for variables 
-- data_range           - get the suitable ranged for drawing variables 
+- data_range           - get the suitable ranges for drawing variables 
+- data_ECDF            - get the ECDF for given variable/expression 
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -85,6 +86,7 @@ __all__     = (
     'data_lehmer_mean'     , ## get the (weighted) Lehmer     mean
     ##
     'data_range'           , ## get the suitable ranged for drawing variables 
+    'data_ECDF'            , ## get the ECDF for given variable/expression
     ##
     'data_decorate'        , ## technical function to decorate the class
     'expression_types'     , ## valid types for expressions/cuts/weights
@@ -213,6 +215,37 @@ def  data_central_moment ( data       ,
                                         expression ,
                                         cuts       , *args )
 
+
+# =============================================================================
+## Get the empirical cumulative distributioin function 
+#  @code
+#  data =  ...
+#  ecdf1 = data_ECDF ( data , 'mass' ) 
+#  ecdf2 = data_ECDF ( data , 'mass' ,  'PT>1') 
+#  @endcode
+#  @see Ostap::Math::ECDF
+#  @see Ostap::Math::WECDF
+def data_ECDF ( data , expression , cuts = '' , *args ) :
+    """ Get the empirical cumulative distribution function 
+    >>> data =  ...
+    >>> ecdf1 = data_get_ECDF ( data , 'mass' ) 
+    >>> ecdf2 = data_get_ECDF ( data , 'mass' ,  'PT>1') 
+    - see `Ostap.Math.ECDF`
+    - see `Ostap.Math.WECDF`
+    """ 
+    assert isinstance ( expression , expression_types ) , 'Invalid type of expression!'
+    assert isinstance ( cuts       , expression_types ) , 'Invalid type of cuts/weight!'
+
+    expression = str ( expression ).strip() 
+    cuts       = str ( cuts       ).strip() 
+
+    if not cuts :
+        ecdf = Ostap.Math.ECDF()
+        return data_get_stat ( data , ecdf , expression ,    *args )
+    
+    ecdf = Ostap.Math.WECDF()
+    return data_get_stat ( data , ecdf , expression , cuts , *args )
+    
 # ==============================================================================
 ## Get the (s)Statistic-bases statistics/counter from data
 #  @code
@@ -1215,6 +1248,7 @@ def data_decorate ( klass ) :
     if hasattr ( klass , 'quartiles'      ) : klass.orig_quartiles      = klass.quartiles
     if hasattr ( klass , 'quintiles'      ) : klass.orig_quintiles      = klass.quintiles
     if hasattr ( klass , 'deciles'        ) : klass.orig_deciles        = klass.deciles
+    if hasattr ( klass , 'ECDF'           ) : klass.orig_ECDF           = klass.ECDF
 
     klass.get_moment      = data_get_moment
     klass.moment          = data_moment
@@ -1236,6 +1270,7 @@ def data_decorate ( klass ) :
     klass.quartiles       = data_quartiles
     klass.quintiles       = data_quintiles
     klass.deciles         = data_deciles
+    klass.ECDF            = data_ECDF 
 
     if hasattr ( klass , 'get_stats'       ) : klass.orig_get_stats       = klass.get_stats
     

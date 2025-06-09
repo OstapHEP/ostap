@@ -100,6 +100,7 @@ namespace Ostap
      */    
     struct Quantiles 
     {
+      // =======================================================================
       Quantiles
       ( const std::vector<double>& q = std::vector<double>() , 
 	const unsigned long        n = 0  )
@@ -119,18 +120,19 @@ namespace Ostap
      */    
     struct QInterval    
     {
+      // =====================================================================
       QInterval
       ( const Interval&     i = Interval () ,
 	const unsigned long n = 0           )
         : interval ( i ) 
         , nevents  ( n ) 
       {}
-      // =====================================================================
+      // ======================================================================
       /// the interval
       Interval      interval {}    ; // the interval
       /// number of events used for estimation
       unsigned long nevents  { 0 } ; // number of events used for estimation
-      // =====================================================================
+      // ======================================================================
     };
     // ========================================================================
   public: 
@@ -1150,7 +1152,7 @@ namespace Ostap
     // ========================================================================    
   public:
     // ========================================================================    
-    /**  get the (aapproximate) interval of the distribution suong P^2 algotirhm 
+    /**  get the (approximate) interval of the distribution using P^2 algotirhm 
      *   @param tree  (INPUT) the input tree 
      *   @param q1    (INPUT) quantile value   0 < q1 < 1  
      *   @param q2    (INPUT) quantile value   0 < q2 < 1  

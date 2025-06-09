@@ -28,6 +28,7 @@
 #include "Ostap/Bernstein.h"
 #include "Ostap/Bernstein2D.h"
 #include "Ostap/Bernstein3D.h"
+#include "Ostap/ECDF.h"
 // ============================================================================
 #include "OstapDataFrame.h"
 #include "Exception.h"
@@ -87,7 +88,7 @@ namespace
     for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )   
     {
       //
-      const RooArgSet* vars = data->get( entry ) ;
+      const RooArgSet* vars = data->get ( entry ) ;
       if ( nullptr == vars )                          { break    ; } // BREAK 
       //
       if ( has_range && !vars->allInRange ( range ) ) { continue ; } // CONTINUE    
@@ -609,6 +610,48 @@ namespace
   } ;
   // ==========================================================================
   // TTree 
+  // ==========================================================================
+  template <class OBJECT> 
+  Ostap::StatusCode 
+  _project_ 
+  ( TTree*                            data       , 
+    const Ostap::Utils::ProgressConf& progress   ,
+    OBJECT&                           obj        ,
+    const std::string&                expression ,
+    const double                      xmin       , 
+    const double                      xmax       ,
+    const unsigned long               first      ,
+    const unsigned long               last       )
+  {
+    if ( 0 == data          ) { return INVALID_DATA ; }
+    //
+    const unsigned long nEntries = std::min ( last , (unsigned long) data->GetEntries() ) ;
+    if ( nEntries <= first  ) { return Ostap::StatusCode::RECOVERABLE ; } 
+    //
+    Ostap::Formula xvar ( expression , data ) ;
+    if ( !xvar || !xvar.ok() ) { return INVALID_FORMULA  ; }
+    //
+    Ostap::Utils::Notifier notify ( data , &xvar ) ;
+    std::vector<double> results {} ;
+    /// make an explicit loop 
+    Ostap::Utils::ProgressBar bar (  nEntries - first , progress ) ;
+    for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )
+    {
+      long ievent = data->GetEntryNumber ( entry ) ;
+      if ( ievent < 0 ) { return INVALID_ENTRY ; }
+      //
+      ievent      = data->LoadTree ( ievent ) ;      
+      if ( ievent < 0 ) { return INVALID_EVENT ; }
+      //
+      xvar.evaluate ( results ) ;
+      for ( double x : results ) 
+	{ 
+	  // check the x-range  & fill 
+	  if ( xmin <= x && x <= xmax ) { obj.fill ( x ) ; }
+	}
+    }
+    return Ostap::StatusCode::SUCCESS ;
+  }
   // ==========================================================================
   template <class OBJECT> 
   Ostap::StatusCode 
@@ -3854,6 +3897,180 @@ Ostap::HistoProject::project4
                       sum.umax () , 
                       first       , 
                       last        ) ;
+}
+// ===============================================================================
+/*  get ECDF for for the given expression/variable 
+ *  @param data   (INPUT) input data 
+ *  @param ecdf        (UPDATE) ECDF 
+ *  @param expression  (INPUT)  expression
+ *  @param first       (INPUT)  the first event to process 
+ *  @param last        (INPUT)  the last event to process 
+ */
+// ===============================================================================
+Ostap::StatusCode Ostap::HistoProject::project
+( TTree*              data       ,
+  Ostap::Math::ECDF&  ecdf       ,
+  const std::string&  expression ,
+  const unsigned long first      ,
+  const unsigned long last       )
+{
+  /// make a fake progress bar 
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  return project ( data       ,
+		   progress   ,
+		   ecdf       ,
+		   expression , 
+		   first      ,
+		   last       ) ; 
+}
+// =============================================================================
+/* get ECDF for for the given expression/variable 
+ *  @param data        (INPUT) input data 
+ *  @param ecdf        (UPDATE) ECDF 
+ *  @param expression  (INPUT)  expression
+ *  @param first       (INPUT)  the first event to process 
+ *  @param last        (INPUT)  the last event to process 
+ */
+// =============================================================================
+Ostap::StatusCode project
+( TTree*                            data       ,
+  const Ostap::Utils::ProgressConf& progress   ,
+  Ostap::Math::ECDF&                ecdf       ,
+  const std::string&                expression ,
+  const unsigned long               first      ,
+  const unsigned long               last       )
+{
+  ecdf = Ostap::Math::ECDF () ;
+  static const double s_xmin { - std::numeric_limits<double>::max() } ; 
+  static const double s_xmax {   std::numeric_limits<double>::max() } ; 
+  return _project_ ( data       ,
+		     progress   ,
+		     ecdf       ,
+		     expression ,
+		     s_xmin     ,
+		     s_xmax     ,
+		     first      ,
+		     last       ) ;
+}
+// ===============================================================================
+/*  get ECDF for for the given expression/variable 
+ *  @param data   (INPUT) input data 
+ *  @param ecdf        (UPDATE) ECDF 
+ *  @param expression  (INPUT)  expression
+ *  @param first       (INPUT)  the first event to process 
+ *  @param last        (INPUT)  the last event to process 
+ */
+// ===============================================================================
+Ostap::StatusCode Ostap::HistoProject::project
+( TTree*              data       ,
+  Ostap::Math::WECDF& ecdf       ,
+  const std::string&  expression ,
+  const std::string&  selection  ,
+  const unsigned long first      ,
+  const unsigned long last       )
+{
+  /// make a fake progress bar 
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  return project ( data       ,
+		   progress   ,
+		   ecdf       ,
+		   expression ,
+		   selection  , 
+		   first      ,
+		   last       ) ; 
+}
+// =============================================================================
+/* get ECDF for for the given expression/variable 
+ *  @param data        (INPUT) input data 
+ *  @param ecdf        (UPDATE) ECDF 
+ *  @param expression  (INPUT)  expression
+ *  @param first       (INPUT)  the first event to process 
+ *  @param last        (INPUT)  the last event to process 
+ */
+// =============================================================================
+Ostap::StatusCode project
+( TTree*                            data       ,
+  const Ostap::Utils::ProgressConf& progress   ,
+  Ostap::Math::WECDF&               ecdf       ,
+  const std::string&                expression ,
+  const std::string&                selection  ,  
+  const unsigned long               first      ,
+  const unsigned long               last       )
+{
+  ecdf = Ostap::Math::WECDF() ;
+  static const double s_xmin { - std::numeric_limits<double>::max() } ; 
+  static const double s_xmax {   std::numeric_limits<double>::max() } ; 
+  return _project_ ( data       ,
+		     progress   ,
+		     ecdf       ,
+		     expression ,
+		     selection  , 
+		     s_xmin     ,
+		     s_xmax     ,
+		     first      ,
+		     last       ) ;
+}
+// ===============================================================================
+/*  get ECDF for for the given expression/variable 
+ *  @param data   (INPUT) input data 
+ *  @param ecdf        (UPDATE) ECDF 
+ *  @param expression  (INPUT)  expression
+ *  @param first       (INPUT)  the first event to process 
+ *  @param last        (INPUT)  the last event to process 
+ */
+// ===============================================================================
+Ostap::StatusCode Ostap::HistoProject::project
+( const RooAbsData*   data       ,
+  Ostap::Math::WECDF& ecdf       ,
+  const std::string&  expression ,
+  const std::string&  selection  ,
+  const char*         range      , 
+  const unsigned long first      ,
+  const unsigned long last       )
+{
+  /// make a fake progress bar 
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  return project ( data       ,
+		   progress   ,
+		   ecdf       ,
+		   expression ,		   
+		   selection  ,
+		   range      , 
+		   first      ,
+		   last       ) ; 
+}
+// =============================================================================
+/* get ECDF for for the given expression/variable 
+ *  @param data        (INPUT) input data 
+ *  @param ecdf        (UPDATE) ECDF 
+ *  @param expression  (INPUT)  expression
+ *  @param first       (INPUT)  the first event to process 
+ *  @param last        (INPUT)  the last event to process 
+ */
+// =============================================================================
+Ostap::StatusCode project
+( const RooAbsData*                 data       ,
+  const Ostap::Utils::ProgressConf& progress   ,
+  Ostap::Math::WECDF&               ecdf       ,
+  const std::string&                expression ,
+  const std::string&                selection  ,  
+  const char*                       range      , 
+  const unsigned long               first      ,
+  const unsigned long               last       )
+{
+  ecdf = Ostap::Math::WECDF () ;
+  static const double s_xmin { - std::numeric_limits<double>::max() } ; 
+  static const double s_xmax {   std::numeric_limits<double>::max() } ; 
+  return _project_ ( data       ,
+		     progress   ,
+		     ecdf       ,
+		     expression ,
+		     selection  ,
+		     range      , 
+		     s_xmin     ,
+		     s_xmax     ,
+		     first      ,
+		     last       ) ;
 }
 
 // ============================================================================

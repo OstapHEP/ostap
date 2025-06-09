@@ -34,21 +34,29 @@ namespace Ostap
     // https://en.wikipedia.org/wiki/Kernel_(statistics)
     // ========================================================================
     /// uniform Kernel 
-    inline double k_uniform      ( const double u ) { return 0.5 * ( std::abs ( u ) <= 1 ) ; }
+    inline double k_uniform      ( const double u )
+    { return 0.5 * ( std::abs ( u ) <= 1 ) ; }
     /// Triangular kernel
-    inline double k_triangular   ( const double u ) { return std::abs ( u ) <= 1 ? ( 1 - std::abs ( u ) ) : 0.0 ; }
-    /// Epanechnnikov/parabolic  kernel 
-    inline double k_epanechnikov ( const double u ) { return std::abs ( u ) <= 1 ? ( 1 - u * u )          : 0.0 ; }
+    inline double k_triangular   ( const double u )
+    { return std::abs ( u ) <= 1 ? ( 1 - std::abs ( u ) ) : 0.0 ; }
+    /// Epanechnikov/parabolic  kernel 
+    inline double k_epanechnikov ( const double u )
+    { return std::abs ( u ) <= 1 ? ( 1 - u * u )          : 0.0 ; }
     /// Epanechnikov Parabolic kernel
-    inline double k_parabolic    ( const double u ) { return k_epanechnikov ( u ) ; }
+    inline double k_parabolic    ( const double u )
+    { return k_epanechnikov ( u ) ; }
     /// Quartic/biweight kernel  
-    inline double k_quartic      ( const double u ) { return std::abs ( u ) <= 1 ? 15 * Ostap::Math::POW ( 1.0 - u * u ,  2  ) / 16 : 0.0 ; } 
+    inline double k_quartic      ( const double u )
+    { return std::abs ( u ) <= 1 ? 15 * Ostap::Math::POW ( 1.0 - u * u ,  2  ) / 16 : 0.0 ; } 
     /// Quartic/biweight kernel
-    inline double k_biweight     ( const double u ) { return k_quartic ( u ) ; }
+    inline double k_biweight     ( const double u )
+    { return k_quartic ( u ) ; }
     /// Triweight kernel  
-    inline double k_triweight    ( const double u ) { return std::abs ( u ) <= 1 ? 35 * Ostap::Math::POW ( 1.0 - u * u ,  3  ) / 32 : 0.0 ; } 
+    inline double k_triweight    ( const double u )
+    { return std::abs ( u ) <= 1 ? 35 * Ostap::Math::POW ( 1.0 - u * u ,  3  ) / 32 : 0.0 ; } 
     /// Tricube kernel
-    inline double k_tricube      ( const double u ) { return std::abs ( u ) <= 1 ? 70 * Ostap::Math::POW ( 1.0 - std::abs ( u * u * u ) , 3 ) / 81 : 0.0 ; } 
+    inline double k_tricube      ( const double u )
+    { return std::abs ( u ) <= 1 ? 70 * Ostap::Math::POW ( 1.0 - std::abs ( u * u * u ) , 3 ) / 81 : 0.0 ; } 
     /// Gaussian kernel 
     double        k_gaussian     ( const double u ) ; 
     /// Cosine kernel 
@@ -57,7 +65,7 @@ namespace Ostap
     double        k_logistic     ( const double u ) ;
     /// sigmoid kernel 
     double        k_sigmoid      ( const double u ) ; 
-    // ==========================================================================
+    // ====================================================================
     /** @class DensityEstimator
      *  Helper class for non-parametetric density estimators
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
@@ -113,7 +121,24 @@ namespace Ostap
       typedef Data::const_iterator          iterator ;
       /// the actual type of indices 
       typedef std::vector<Data::size_type>  Indices  ;
-      // ======================================================================      
+      // ======================================================================
+      /** quantile Hyndman Fan taxonomy
+       *  see Table 1 in 
+       *  @see https://arxiv.org/abs/2304.07265
+       *  @see Andrey Akinshin, "Weighted quantile estimators", arXiv:2304.07265
+       */
+      enum QType {
+	One = 1 ,
+	Two     ,
+	Three   ,
+	Four    ,
+	Five    ,
+	Six     ,
+	Seven   ,
+	Eight   ,
+	Nine    
+      } ;
+      // ======================================================================
     public: 
       // ======================================================================
       /** Constructor from  data
@@ -148,6 +173,15 @@ namespace Ostap
       ECDF ( const ECDF&  right ) = default ;
       /// move constructor 
       ECDF (       ECDF&& right ) = default ;
+      /// default constructor
+      ECDF () = default ;
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /// copy assignement 
+      ECDF& operator=( const ECDF&  right ) ;
+      /// move assignement 
+      ECDF& operator=(       ECDF&& right ) ;
       // ======================================================================
     public: // the main method 
       // ======================================================================
@@ -187,7 +221,11 @@ namespace Ostap
       }
       // ======================================================================
       /// Ostap::Math::Statistic::update
-      void update ( const double x  ) override { this->add ( x ) ; }
+      void update ( const double x ) override { this -> add  ( x ) ; }
+      /// Fill, similar to histograms & 1D,2D,&3D polynomials 
+      void fill   ( const double x )          { this -> add  ( x ) ; }
+      /// Fill, similar to histograms & 1D,2D,&3D polynomials 
+      void Fill   ( const double x )          { this -> fill ( x ) ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -243,18 +281,20 @@ namespace Ostap
       inline const Data&     data          () const { return m_data         ; }
       // access to data 
       inline double          data   ( const unsigned int index ) const
-      { return index < m_data.size() ?  m_data[index] : m_data.back() ; }
+      { return index < m_data.size() ?  m_data [ index ] : xmax () ; }
       // ======================================================================
       /// complementary?
       inline bool            complementary () const { return m_complementary ; }
       /// minimal x-value
-      inline double          xmin          () const { return m_data.front () ; } 
+      inline double          xmin          () const
+      { return m_data.empty () ? -std::numeric_limits<double>::max() : m_data.front () ; } 
       /// maximal x-value
-      inline double          xmax          () const { return m_data.back  () ; }
+      inline double          xmax          () const
+      { return m_data.empty () ? +std::numeric_limits<double>::max() : m_data.back  () ; } 
       // ======================================================================
       /// get the abscissa value with the given index 
       inline double operator[] ( const unsigned int index ) const
-      { return index < m_data.size() ? m_data[index] : m_data.back() ; }
+      { return index < m_data.size() ? m_data[index] : xmax ()  ; }
       // ======================================================================
       // get the value of F_k
       inline double Fk ( const unsigned int k ) const
@@ -282,15 +322,40 @@ namespace Ostap
        */
       double uniform ( const double x ) const ;
       // ======================================================================
-      /** get p-quantile of distributtion: \f$ 1 \le p \le1  \f$
+      /** get p-quantile of distribution: \f$ 1 \le p \le1  \f$
+       *  @see scipy.stats.mstats
+       *
+       * Typical avleus for alphap, betap are:
+       * 
+       * - (0,1) : p(k) = k/n : linear interpolation of cdf (R type 4)
+       * - (.5,.5) : p(k) = (k - 1/2.)/n : piecewise linear function (R type 5)
+       * - (0,0) : p(k) = k/(n+1) : (R type 6)
+       * - (1,1) : p(k) = (k-1)/(n-1): p(k) = mode[F(x[k])]. (R type 7, R default)
+       * - (1/3,1/3): p(k) = (k-1/3)/(n+1/3): Then p(k) ~ median[F(x[k])].
+       *   The resulting quantile estimates are approximately median-unbiased 
+       *   regardless of the distribution of x. (R type 8)
+       * - (3/8,3/8): p(k) = (k-3/8)/(n+1/4): Blom.
+       *   The resulting quantile estimates are approximately 
+       *   unbiased if x is normally distributed (R type 9)
+       * - 0(.4,.4) : approximately quantile unbiased (Cunnane)
+       * - (.35,.35): APL, used with PWM
+       *
        *  @param p      (INPUT) quantile
        *  @param alphap (INPUT) parameter alphap \f$ 0 \le\alpha_p \le 1 \f$ 
        *  @param abetap (INPUT) parameter betap \f$ 0 \le\beta_p \le 1 \f$ 
-      */    
+       */    
       double quantile
       ( const double p            ,  
         const double alphap = 0.4 , 
         const double betap  = 0.4 ) const ;
+      // ======================================================================
+      /** get p-quantile
+       *  @see https://arxiv.org/abs/2304.07265
+       *  @see Andrey Akinshin, "Weighted quantile estimators", arXiv:2304.07265     
+       */
+      double quantile_HF
+      ( const double p         ,
+	const QType  t = Seven ) ;
       // ======================================================================
       /** Get Harrel-Davis estimator for quantile function
        *  @param p  (INPUT) quantile 
@@ -438,6 +503,16 @@ namespace Ostap
       /// move constructor 
       WECDF (       WECDF&& right ) = default ;
       // ======================================================================
+      /// default constructor
+      WECDF () = default ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// copy assignement 
+      WECDF& operator=( const WECDF&  right ) ;
+      /// move assignement 
+      WECDF& operator=(       WECDF&& right ) ;
+      // ======================================================================
     public: // the main method 
       // ======================================================================
       /// the main method 
@@ -472,8 +547,17 @@ namespace Ostap
       /// Ostap::Math::WStatistic::update
       void update
       ( const double x     , 
-        const double w = 1 ) override { this->add ( x , w ) ; }
+        const double w = 1 ) override { this->add  ( x , w ) ; }
+      /// Fill, similar to histograms & 1D,2D,&3D polynomials 
+      void fill 
+      ( const double x     , 
+        const double w = 1 )          { this->add  ( x , w ) ; }
+      /// Fill, similar to histograms & 1D,2D,&3D polynomials 
+      void Fill 
+      ( const double x     , 
+        const double w = 1 )          { this->fill ( x , w ) ; }
       // ======================================================================
+    public:
       // ======================================================================
       inline WECDF& operator+= ( const double       x ) { return add ( x ) ; }
       inline WECDF& operator+= ( const Entry&       x ) { return add ( x ) ; }
@@ -511,21 +595,23 @@ namespace Ostap
       inline const Data&     data          () const { return m_data         ; }
       // access to data 
       inline double data   ( const unsigned int index ) const
-      { return index < m_data.size() ?  m_data[index].first  : m_data.back().first  ; }
+      { return index < m_data.size() ?  m_data[index].first  : xmax ()   ; }
       // access to weight 
       inline double weight ( const unsigned int index ) const
-      { return index < m_data.size() ?  m_data[index].second : m_data.back().second ; }      
+      { return index < m_data.size() ?  m_data[index].second : 0.0 ; }      
       // ======================================================================
       /// complementary?
       inline bool            complementary () const { return m_complementary ; }
       /// minimal x-value
-      inline double          xmin          () const { return m_data.front ().first ; } 
+      inline double          xmin          () const 
+      { return m_data.empty () ? -std::numeric_limits<double>::max() : m_data.front ().first ; } 
       /// maximal x-value
-      inline double          xmax          () const { return m_data.back  ().first ; }
+      inline double          xmax          () const 
+      { return m_data.empty () ? +std::numeric_limits<double>::max() : m_data.back  ().first ; } 
       // ======================================================================
       /// get the abscissa value with the given index 
       inline const Entry& operator[] ( const unsigned int index ) const
-      { return index < m_data.size() ? m_data[index] : m_data.back() ; }
+      { return index < m_data.size() ? m_data [ index ] : m_data.back() ; }
       // ======================================================================      
       /// expose the data: begin iterator 
       inline iterator begin () const { return m_data.begin () ; }
@@ -537,9 +623,9 @@ namespace Ostap
       /// statistics (as Counter)
       Ostap::WStatEntity counter() const ;  
       /** statistics (as statistics)
-        * @param stat (UPDATE) input statistic object
-        * @return updated statistics object
-        */
+       * @param stat (UPDATE) input statistic object
+       * @return updated statistics object
+       */
       Ostap::Math::WStatistic& 
       statistics
       ( Ostap::Math::WStatistic& stat ) ;
@@ -548,11 +634,13 @@ namespace Ostap
       Ostap::Math::WMoment_<K> moment_ () const
       {
         Ostap::Math::WMoment_<K> m{} ;
-       for ( const auto& value : m_data ) { m.add ( value.first, value.second ) ; }
-       return m ;
+	for ( const auto& value : m_data ) { m.add ( value.first, value.second ) ; }
+	return m ;
       } 
       // =======================================================================
-     /** Get Harrel-Davis estimator for quantile function
+    public: 
+      // =======================================================================
+      /** Get Harrel-Davis estimator for quantile function
        *  @param p  (INPUT) quantile 
        *  @retiurn Harrel-Davis quantile estimator
        *

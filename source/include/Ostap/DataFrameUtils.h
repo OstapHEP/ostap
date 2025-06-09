@@ -73,7 +73,7 @@ namespace Ostap
 #if ROOT_VERSION(6,32,0) <= ROOT_VERSION_CODE
     // ========================================================================
     /** helper utility to add progress bar
-     *  to "Conut"-action 
+     *  to "Count"-action 
      *  @see https://root-forum.cern.ch/t/problems-with-onpartialresultslot-in-new-root-version-6-32-02/60257/3
      *  @param count    input counter 
      *  @param nchunks 

@@ -174,7 +174,6 @@ double Ostap::Math::k_sigmoid      ( const double u )
 double Ostap::Math::k_gaussian    ( const double u ) { return gauss_pdf ( u ) ; }
 // ============================================================================
 
-
 // ============================================================================
 // get the "optimal" value for the smoothing parameter 
 // ============================================================================
@@ -242,6 +241,31 @@ Ostap::Math::ECDF::ECDF
   : ECDF ( right ) 
 {
   m_complementary = complementary ; 
+}
+// ============================================================================
+
+// ============================================================================
+// copy assignement 
+// ============================================================================
+Ostap::Math::ECDF&
+Ostap::Math::ECDF::operator=
+( const Ostap::Math::ECDF&  right )
+{
+  if ( this == &right ) { return *this ; }
+  m_data          = right.m_data          ;
+  m_complementary = right.m_complementary ;
+  return *this ;
+}
+// ============================================================================
+// move assignement 
+// ============================================================================
+Ostap::Math::ECDF&
+Ostap::Math::ECDF::operator=
+( Ostap::Math::ECDF&&  right )
+{
+  if ( this == &right ) { return *this ; }
+  this->swap ( right ) ;
+  return *this ; 
 }
 // ============================================================================
 // check that ECDF is OK: there are some entries 
@@ -403,33 +427,132 @@ double Ostap::Math::ECDF::quantile
   const double alphap , 
   const double betap  ) const 
 {
-  if      ( !p     || s_zero  ( p )     ) { return m_data.front () ; }
-  else if ( 1 == p || s_equal ( p , 1 ) ) { return m_data.back  () ; } 
+  if      ( !p     || s_zero  ( p )     ) { return xmin () ; }
+  else if ( 1 == p || s_equal ( p , 1 ) ) { return xmax () ; } 
   //
   Ostap::Assert ( 0 <= p && p <= 1 , 
-      "Invalid quantile!" , 
-      "Ostap::Math::ECDF::quantile" , 
-      INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
+		  "Invalid quantile!" , 
+		  "Ostap::Math::ECDF::quantile" , 
+		  INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
   Ostap::Assert ( 0 <= alphap && alphap <= 1 , 
-      "Invalid alphap!" , 
-      "Ostap::Math::ECDF::quantile" , 
-      INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
- Ostap::Assert ( 0 <= betap && betap <= 1 , 
-      "Invalid betap!" , 
-      "Ostap::Math::ECDF::quantile" , 
-      INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
+		  "Invalid alphap!" , 
+		  "Ostap::Math::ECDF::quantile" , 
+		  INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
+  Ostap::Assert ( 0 <= betap && betap <= 1 , 
+		  "Invalid betap!" , 
+		  "Ostap::Math::ECDF::quantile" , 
+		  INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
   //
-const double          m = alphap + p * ( 1 - alphap - betap ) ;
-const Data::size_type n = N () ; 
-const double          a = p * n  + m ; 
-const int             j = static_cast<int> ( std::floor ( a ) ) ; 
-//
-if       ( j <  0     ) { return m_data.front() ; } 
-else if  ( n <= j + 1 ) { return m_data.back () ; } 
-//
-const double          g = a - j ;
-return ( 1 - g ) * m_data [ j ] + g * m_data [ j + 1 ] ; 
-} 
+  const double          m = alphap + p * ( 1 - alphap - betap ) ;
+  const Data::size_type n = N () ; 
+  const double          a = p * n  + m ; 
+  const int             j = static_cast<int> ( std::floor ( a ) ) ; 
+  //
+  if       ( j <  0     ) { return m_data.front() ; } 
+  else if  ( n <= j + 1 ) { return m_data.back () ; } 
+  //
+  const double          g = a - j ;
+  return ( 1 - g ) * m_data [ j ] + g * m_data [ j + 1 ] ; 
+}
+// ============================================================================
+/* get p-quantile
+ *  @see https://arxiv.org/abs/2304.07265
+ *  @see Andrey Akinshin, "Weighted quantile estimators", arXiv:2304.07265     
+ */
+// ============================================================================
+double Ostap::Math::ECDF::quantile_HF
+( const double                   p ,
+  const Ostap::Math::ECDF::QType t )
+{
+  if      ( !p     || s_zero  ( p )     ) { return xmin () ; }
+  else if ( 1 == p || s_equal ( p , 1 ) ) { return xmax () ; } 
+  //
+  Ostap::Assert ( 0 <= p && p <= 1 , 
+		  "Invalid p-quantile!" , 
+		  "Ostap::Math::ECDF::quantile_HF" , 
+		  INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
+  Ostap::Assert ( One <= t && t <= Nine , 
+		  "Invalid quantile estimator type!" , 
+		  "Ostap::Math::ECDF::quantile_HF" , 
+		  INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
+  //
+  const Data::size_type n = N ()  ;
+  //
+  auto index = [ n ] ( const double h ) -> std::size_t
+  {
+    const long j = Ostap::Math::round ( h ) ;
+    return  ( j < 0 ) ? 0 :  ( n <= j ) ? ( n - 1 ) : std::size_t ( j ) ;  
+  } ;
+  //
+  auto QF = [this,index] ( const double h ) ->double
+  {
+    const std::size_t jf = index ( std::floor ( h ) ) ;
+    const std::size_t jc = index ( std::ceil  ( h ) ) ;
+    const double xf = this->data ( jf ) ;
+    const double xc = this->data ( jc ) ;
+    //
+    return xf + ( h - jf ) * ( xc - xf ) ;
+  } ;
+  //
+  switch ( t ) 
+    {
+    case One :
+      {
+	const double h = n * p ;
+	const std::size_t j = index ( std::ceil ( h ) ) ; 
+	return data ( j ) ;
+      }
+    case Two :
+      {
+	const double h = n * p + 0.5 ;
+	const std::size_t j1 = index ( std::ceil ( h + 0.5 ) ) ; 
+	const std::size_t j2 = index ( std::ceil ( h - 0.5 ) ) ; 
+	const double x1 = data ( j1 ) ;
+	const double x2 = data ( j2 ) ;
+	return  0.5 * ( x1 + x2 ) ;
+      }
+    case Three :
+      {
+	const double h = n * p ;
+	const std::size_t j = index ( h  ) ; 
+	return data ( j ) ;
+      }
+    case Four :
+      {
+	const double h = n * p ;
+	return QF ( h ) ;
+      }
+    case Five :
+      {
+	const double h = n * p + 0.5 ;
+	return QF ( h ) ;
+      }
+    case Six :
+      {
+	const double h = ( n + 1 ) * p ;
+	return QF ( h ) ;
+      }
+    case Seven :
+      {
+	const double h = ( n - 1 ) * p + 1 ;
+	return QF ( h ) ;
+      }
+    case Eight :
+      {
+	const double h = ( n + 1./3  ) * p + 1./3  ;
+	return QF ( h ) ;
+      }
+    case Nine :
+      {
+	const double h = ( n + 0.25 ) * p + 0.375 ;
+	return QF ( h ) ;
+      }
+    default :
+      return 0 ;
+    } ;
+  //
+  return 0 ;
+}
 // ============================================================================
 /* Get Harrel-Davis estimator for quantile function
  *  @param p  (INPUT) quantile 
@@ -439,37 +562,38 @@ return ( 1 - g ) * m_data [ j ] + g * m_data [ j + 1 ] ;
  *       Biometrika 63.9 (Dec 1982), pp. 635-640
  */
 // ============================================================================
-double Ostap::Math::ECDF::quantile_HD ( const double p ) const 
+double Ostap::Math::ECDF::quantile_HD
+( const double p ) const 
 {
   if      ( !p     || s_zero  ( p     ) ) { return m_data.front () ; }
   else if ( 1 == p || s_equal ( p , 1 ) ) { return m_data.back  () ; } 
   //
   Ostap::Assert ( 0 <= p && p <= 1     , 
-      "Invalid quantile!"              , 
-      "Ostap::Math::ECDF::quantile_HD" , 
-      INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
-//
-double result = 0 ;
-const std::size_t n = N () ;
-const double alpha = ( n + 1 ) * p ;
-const double beta  = ( n + 1 ) * ( 1 - p ) ;
-for ( std::size_t i = 0 ; i < n ; ++i )
-  {
-    const double ti    = ( i + 1.0 ) / n ;
-    const double value = m_data [ i ] ; 
-    if ( !value ) { continue ; } 
-    // 
-    if (  n < 100 )
-  {
-    result += value * ::beta_inc ( alpha , beta , ti          , 20 * n ) ; 
-    result -= value * ::beta_inc ( alpha , beta , i * 1.0 / n , 20 * n ) ; 
-  }
-  else 
-  {
-    const double t  =  ( i + 0.5 ) / n ;
-    result += value  * ::beta_log ( alpha, beta , t , 1.0 / n , 20 * n ) ; 
-  }
-  }
+		  "Invalid quantile!"              , 
+		  "Ostap::Math::ECDF::quantile_HD" , 
+		  INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
+  //
+  double result = 0 ;
+  const std::size_t n = N () ;
+  const double alpha = ( n + 1 ) * p ;
+  const double beta  = ( n + 1 ) * ( 1 - p ) ;
+  for ( std::size_t i = 0 ; i < n ; ++i )
+    {
+      const double ti    = ( i + 1.0 ) / n ;
+      const double value = m_data [ i ] ; 
+      if ( !value ) { continue ; } 
+      // 
+      if (  n < 100 )
+	{
+	  result += value * ::beta_inc ( alpha , beta , ti          , 20 * n ) ; 
+	  result -= value * ::beta_inc ( alpha , beta , i * 1.0 / n , 20 * n ) ; 
+	}
+      else 
+	{
+	  const double t  =  ( i + 0.5 ) / n ;
+	  result += value  * ::beta_log ( alpha, beta , t , 1.0 / n , 20 * n ) ; 
+	}
+    }
   //
   return result ;  
 }
@@ -495,7 +619,6 @@ Ostap::Math::ECDF::statistics
   for ( auto v : m_data ) { stat.update ( v ) ; } 
   return stat ;
 }
-
 // ============================================================================
 // For weighted data 
 // ============================================================================
@@ -533,7 +656,6 @@ Ostap::Math::WECDF::check_me ()
   //
   return *this ;
 }
-
 // ============================================================================
 /* Constructor from  data
  *  data must be non-empty!
@@ -626,6 +748,7 @@ Ostap::Math::WECDF::WECDF
 void Ostap::Math::WECDF::swap ( Ostap::Math::WECDF& right )
 {
   std::swap ( m_data          , right.m_data          ) ;
+  std::swap ( m_weights       , right.m_weights       ) ;
   std::swap ( m_sumw          , right.m_sumw          ) ;
   std::swap ( m_sumw2         , right.m_sumw2         ) ;
   std::swap ( m_complementary , right.m_complementary ) ;
@@ -746,6 +869,8 @@ Ostap::Math::WECDF::add
   return this->check_me() ;
 }
 // ============================================================================
+
+// ============================================================================
 // the main method 
 // ============================================================================
 double Ostap::Math::WECDF::evaluate   ( const double x ) const
@@ -853,6 +978,33 @@ Ostap::Math::WECDF::counter() const
   return cnt ;
 }  
 // ============================================================================
+// copy assignement 
+// ============================================================================
+Ostap::Math::WECDF&
+Ostap::Math::WECDF::operator=
+( const Ostap::Math::WECDF&  right )
+{
+  if ( this == &right ) { return *this ; }
+  m_data          = right.m_data          ;
+  m_weights       = right.m_weights       ;
+  m_sumw          = right.m_sumw          ;
+  m_sumw2         = right.m_sumw2         ;
+  m_complementary = right.m_complementary ;
+  return *this ;
+}
+// ============================================================================
+// move assignement 
+// ============================================================================
+Ostap::Math::WECDF&
+Ostap::Math::WECDF::operator=
+( Ostap::Math::WECDF&&  right )
+{
+  if ( this == &right ) { return *this ; }
+  this->swap ( right ) ;
+  return *this ; 
+}
+
+
 // ============================================================================
 /* statistics (as statistics)
  * @param stat (UPDATE) input statistic object

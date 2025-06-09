@@ -5,7 +5,10 @@
   1. improve printout of tables of moments
   1. more improvement and simplifications to the moments, incorporate xmin/xmax/wmin/wmax 
   1. add (partly suplicated>  `bin_edges` ietrators/methods  for `ROOT.TAxis`, `ROOT.TH(1,2,3)(F,D)``
-  
+  1. Add quantiles for `Ostap::Math::(W)ECDF`
+  1. add `ostap/toos/evolution.py` - utilty to investgate the on-parametrick evolution of the
+     distribushae as function of another parameter
+
 ## Backward incompatible 
 
   1. change constructors in `Ostap::Math::(W)Moments_<N>`
