@@ -3181,9 +3181,9 @@ double Ostap::StatVar::nEff
   if ( no_cuts ) { return  *frame.Count(); }                     // RETURN
   //
   /// define temporary columns 
-  const std::string weight  = Ostap::tmp_name ( "w_"  , cuts ) ;
-  const std::string weight2 = Ostap::tmp_name ( "w2_" , cuts ) ;
-  const std::string bcut    = Ostap::tmp_name ( "b_"  , cuts ) ;
+  const std::string weight  { Ostap::tmp_name ( "w_"  , cuts ) } ;
+  const std::string weight2 { Ostap::tmp_name ( "w2_" , cuts ) } ;
+  const std::string bcut    { Ostap::tmp_name ( "b_"  , cuts ) } ;
   /// decorate the frame
   auto t = frame
     .Define ( bcut     , "(bool)   ( " + cuts + " ) ;" ) 
@@ -3225,9 +3225,9 @@ Ostap::StatVar::statVar
   const bool no_cuts = trivial ( cuts ) ; 
   //
   /// define the temporary columns 
-  const std::string var    = Ostap::tmp_name ( "v_" , expression ) ;
-  const std::string weight = Ostap::tmp_name ( "w_" , cuts       ) ;
-  const std::string bcut   = Ostap::tmp_name ( "b_" , cuts       ) ;
+  const std::string var    { Ostap::tmp_name ( "v_" , expression ) } ;
+  const std::string weight { Ostap::tmp_name ( "w_" , cuts       ) } ;
+  const std::string bcut   { Ostap::tmp_name ( "b_" , cuts       ) } ;
   /// define actions 
   auto t = frame
     .Define ( bcut   , no_cuts ? "true" : "(bool)   ( " + cuts + " ) ;" ) 

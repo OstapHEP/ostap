@@ -260,12 +260,14 @@ def data_get_stat ( data        ,
                     statobj     ,
                     expression  ,
                     cuts   = '' , *args ) :
-    """ Get the (W)Statistic-based statistics.counters from data  
+    """ Get the (W)Statistic-based statistics/counters from data  
     >>> data   = ...
     >>> stat   = Ostap.Math.HarmonicMean() 
     >>> result = data.get_stat ( stat , 'x/y+z' , '0<qq' )
     - see Ostap.Math.Moment 
     - see Ostap.Math.WMoment 
+    - see Ostap.Math.ECDF
+    - see Ostap.Math.WECDF
     """
     assert isinstance ( statobj , ( Ostap.Math.Statistic , Ostap.Math.WStatistic ) ) ,\
         'get_object: invalid statobj type: %s' % type ( statobj ) 

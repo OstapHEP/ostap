@@ -173,8 +173,6 @@ double Ostap::Math::k_sigmoid      ( const double u )
 // ============================================================================
 double Ostap::Math::k_gaussian    ( const double u ) { return gauss_pdf ( u ) ; }
 // ============================================================================
-
-// ============================================================================
 // get the "optimal" value for the smoothing parameter 
 // ============================================================================
 double Ostap::Math::DensityEstimator::hopt
@@ -225,6 +223,12 @@ double Ostap::Math::DensityEstimator::hopt
   return 0.9 * value * std::pow ( data.nEff () , -0.2 );
 }
 // ============================================================================
+
+
+
+
+
+// ============================================================================
 // Standard constructor from  data
 // ============================================================================
 Ostap::Math::ECDF::ECDF
@@ -243,8 +247,6 @@ Ostap::Math::ECDF::ECDF
   m_complementary = complementary ; 
 }
 // ============================================================================
-
-// ============================================================================
 // copy assignement 
 // ============================================================================
 Ostap::Math::ECDF&
@@ -254,6 +256,7 @@ Ostap::Math::ECDF::operator=
   if ( this == &right ) { return *this ; }
   m_data          = right.m_data          ;
   m_complementary = right.m_complementary ;
+  m_counter       = right.m_counter       ;
   return *this ;
 }
 // ============================================================================
@@ -271,20 +274,16 @@ Ostap::Math::ECDF::operator=
 // check that ECDF is OK: there are some entries 
 // ============================================================================
 Ostap::Math::ECDF&
-Ostap::Math::ECDF::check_me ()
+Ostap::Math::ECDF::cleanup ()
 {
+  // find invalid elements 
   Data::iterator remove = std::remove_if
     ( m_data.begin () ,
       m_data.end   () ,
       [] ( const double x ) -> bool
-      { return !std::isfinite ( x ) ;} ) ;
-  //
+      { return !std::isfinite ( x ) ; } ) ;
+  // remove them! 
   m_data.erase ( remove , m_data.end() ) ; 
-  //
-  Ostap::Assert ( !m_data.empty()                     ,
-                  "No data for Empirical CDF"         ,
-                  "Ostap::Math::CDF"                  ,
-                  INVALID_DATA   , __FILE__ ,__LINE__ ) ;
   //
   return *this ;
 }
@@ -295,6 +294,7 @@ void Ostap::Math::ECDF::swap ( Ostap::Math::ECDF& right )
 {
   std::swap ( m_data          , right.m_data          ) ;
   std::swap ( m_complementary , right.m_complementary ) ;
+  m_counter.swap ( right.m_counter ) ;
 }
 // ============================================================================
 // the main method 
@@ -311,7 +311,8 @@ double Ostap::Math::ECDF::evaluate   ( const double x ) const
 // the main method 
 // ============================================================================
 Ostap::Math::ValueWithError
-Ostap::Math::ECDF::estimate ( const double x ) const
+Ostap::Math::ECDF::estimate
+( const double x ) const
 {
   const std::size_t NN = m_data.size() ;
   //
@@ -332,7 +333,8 @@ Ostap::Math::ECDF::add
 {
   if ( !std::isfinite ( value ) ) { return *this ; } 
   auto where = std::upper_bound ( m_data.begin () , m_data.end   () , value ) ;
-  m_data.insert ( where , value ) ;
+  m_data   .insert ( where , value ) ;
+  m_counter.add    ( value ) ;
   return *this ;
 }
 // ============================================================================
@@ -352,6 +354,9 @@ Ostap::Math::ECDF::add
                tmp.begin           () ) ;
   /// swap the merged result  with own data 
   std::swap ( m_data , tmp ) ;
+  //
+  m_counter += values.m_counter ;
+  // 
   return *this ;
 }
 // ============================================================================
@@ -373,7 +378,6 @@ Ostap::Math::ECDF::__add__  ( const Ostap::Math::ECDF&        x ) const
 Ostap::Math::ECDF
 Ostap::Math::ECDF::__add__  ( const Ostap::Math::ECDF::Data&  x ) const 
 { ECDF c { *this } ; c.add ( x ) ; return c ; }
-// ============================================================================
 // ============================================================================
 // get ranks of the elements in the (pooled) sample
 // ============================================================================
@@ -598,15 +602,6 @@ double Ostap::Math::ECDF::quantile_HD
   return result ;  
 }
 // ============================================================================
-// statistics (as Counter)
-// ============================================================================
-Ostap::StatEntity Ostap::Math::ECDF::counter() const 
-{
-  Ostap::StatEntity cnt {} ;
-  for ( auto v : m_data ) { cnt.add ( v ) ; } 
-  return cnt ;
-}  
-// ============================================================================
 /* statistics (as statistics)
  * @param stat (UPDATE) input statistic object
  * @return updated statistics object
@@ -620,6 +615,9 @@ Ostap::Math::ECDF::statistics
   return stat ;
 }
 // ============================================================================
+
+
+// ============================================================================
 // For weighted data 
 // ============================================================================
 /*  check that WECDF is OK: 
@@ -630,8 +628,9 @@ Ostap::Math::ECDF::statistics
  */
 // ============================================================================
 Ostap::Math::WECDF&
-Ostap::Math::WECDF::check_me ()
+Ostap::Math::WECDF::cleanup ()
 {
+  //
   Data::iterator remove = std::remove_if
     ( m_data.begin () ,
       m_data.end   () ,
@@ -641,18 +640,6 @@ Ostap::Math::WECDF::check_me ()
           !std::isfinite ( item.second ) || !item.second ; } ) ;
   // 
   m_data.erase ( remove , m_data.end() ) ; 
-  //
-  Ostap::Assert ( !m_data.empty()                     ,
-                  "No data for Empirical CDF"         ,
-                  "Ostap::Math::WCDF"                 ,
-                  INVALID_DATA   , __FILE__ ,__LINE__ ) ;
-  //
-  m_sumw  = calc_sumw  () ;
-  m_sumw2 = calc_sumw2 () ;
-  Ostap::Assert ( 0 < m_sumw && 0 < m_sumw2      ,
-                  "Non-positive sum of weights!" ,
-                  "Ostap::Math::WECDF"           , 
-                  INVALID_DATA   , __FILE__ ,__LINE__ ) ;
   //
   return *this ;
 }
@@ -665,15 +652,17 @@ Ostap::Math::WECDF::WECDF
 ( const Ostap::Math::WECDF::Data& data          ,
   const bool                      complementary )
   : m_data          ( data )
-  , m_sumw          ( 0    ) 
-  , m_sumw2         ( 0    ) 
   , m_complementary ( complementary ) 
+  , m_counter       ( ) 
 {
   //
-  if ( !std::is_sorted ( m_data.begin() , m_data.end () , COMPARE() ) )
+  // (1) remove bad elements 
+  cleanup () ;
+  // (2) sort it if needed 
+  if ( !std::is_sorted ( m_data.begin() , m_data.end () , COMPARE () ) )
     { std::sort ( m_data.begin() , m_data.end() , COMPARE () ) ; }
-  //
-  this->check_me() ;
+  // (3) update counter
+  for ( const auto& v : m_data ) { m_counter.add ( v.first , v.second ) ; } 
 }
 // ============================================================================
 /*  Constructor from data
@@ -684,14 +673,18 @@ Ostap::Math::WECDF::WECDF
 ( const Ostap::Math::ECDF::Data&  data          ,
   const Ostap::Math::ECDF::Data&  weights       ,
   const bool                      complementary )
-  : m_data          (   ) 
-  , m_sumw          ( 0 ) 
-  , m_sumw2         ( 0 ) 
+  : m_data          () 
   , m_complementary ( complementary )
+  , m_counter       () 
 {
   //
   const std::size_t nd = data   .size() ;
   const std::size_t nw = weights.size() ;
+  //
+  Ostap::Assert ( nw <= nd                               ,
+		  "Mismatch wth data/weigth structures!" ,
+		  "Ostap::Math::WECDF"                   ,
+		  INVALID_DATA , __FILE__ , __LINE__     ) ;
   //
   m_data.reserve ( nd ) ;
   for ( std::size_t i = 0 ; i < nd ; ++i )
@@ -701,18 +694,19 @@ Ostap::Math::WECDF::WECDF
       if ( !std::isfinite ( value ) || !std::isfinite ( weight ) || !weight ) { continue ; } 
       m_data.emplace_back ( value , weight ) ;
     }
-  //
+  // (1) here there is  no need to filter data... doe above 
+  // (2) sort if needed 
   if ( !std::is_sorted ( m_data.begin() , m_data.end() , COMPARE () ) ) 
-    { std::sort ( m_data.begin() , m_data.end() , COMPARE () ) ; } 
-  //
-  this->check_me() ;
+    { std::sort ( m_data.begin() , m_data.end () , COMPARE () ) ; }
+  // (3) update counter
+  for ( const auto& v : m_data ) { m_counter.add ( v.first , v.second ) ; } 
 }
 // ============================================================================
 // Standard constructor from  data
 // ============================================================================
 Ostap::Math::WECDF::WECDF
 ( const Ostap::Math::ECDF::Data&  data          ,
-  const bool                      complementary  )
+  const bool                      complementary )
   :  WECDF ( data , Ostap::Math::ECDF::Data() , complementary )
 {}
 // ============================================================================
@@ -734,24 +728,26 @@ Ostap::Math::WECDF::WECDF
 // ============================================================================
 Ostap::Math::WECDF::WECDF
 ( const Ostap::Math::ECDF& right            )
-  : m_data          () 
-  , m_sumw          ( right.size ()         ) 
-  , m_sumw2         ( right.size ()         ) 
+  : m_data          ()
   , m_complementary ( right.complementary() ) 
+  , m_counter       () 
 {
   m_data.reserve ( right.size() ) ;
-  for ( auto d : right.data() ) { m_data.emplace_back ( d , 1.0 ) ; }
+  for ( auto d : right.data() )
+    {
+      m_data.emplace_back ( d , 1.0 ) ;
+      m_counter.add       ( d , 1.0 ) ; 
+    }
 }
 // ============================================================================
 // swap two objects 
 // ============================================================================
-void Ostap::Math::WECDF::swap ( Ostap::Math::WECDF& right )
+void Ostap::Math::WECDF::swap
+( Ostap::Math::WECDF& right )
 {
   std::swap ( m_data          , right.m_data          ) ;
-  std::swap ( m_weights       , right.m_weights       ) ;
-  std::swap ( m_sumw          , right.m_sumw          ) ;
-  std::swap ( m_sumw2         , right.m_sumw2         ) ;
   std::swap ( m_complementary , right.m_complementary ) ;
+  m_counter.swap ( right.m_counter ) ;
 }
 // ============================================================================
 // add a value to data container  
@@ -766,16 +762,9 @@ Ostap::Math::WECDF::add
   if ( !std::isfinite ( value ) || !std::isfinite ( weight ) || !weight) { return *this ; }  
   //
   auto where = std::upper_bound ( m_data.begin () , m_data.end () , entry , COMPARE () ) ;
-  m_data.insert ( where , entry ) ;
-  //
-  m_sumw  += weight ;
-  m_sumw2 += weight * weight ;
-  //
-  Ostap::Assert ( 0 < m_sumw && 0 <= m_sumw2         ,
-                  "Non-positive sum of weights!"     ,
-                  "Ostap::Math::WECDF::add"          ,
-                  INVALID_DATA , __FILE__ , __LINE__ ) ;
-  //
+  m_data.insert ( where , entry  ) ;
+  // update the counter 
+  m_counter.add ( value , weight ) ;
   return *this ;
 }
 // ============================================================================
@@ -795,10 +784,8 @@ Ostap::Math::WECDF::add
 	       COMPARE             () ) ;
   ///
   std::swap ( m_data , tmp  ) ;
-  ///
-  m_sumw  += values.m_sumw  ;
-  m_sumw2 += values.m_sumw2 ;
-  ///
+  /// update the counter 
+  m_counter += values.m_counter ; 
   return *this ;
 }
 // ============================================================================
@@ -822,9 +809,7 @@ Ostap::Math::WECDF::add
   ///
   std::swap ( m_data , tmp  ) ;
   ///
-  m_sumw  += values.size() ;
-  m_sumw2 += values.size() ;
-  ///
+  m_counter += values.counter() ; 
   return *this ;
 }// ============================================================================
 // add values to data container  
@@ -835,7 +820,6 @@ Ostap::Math::WECDF::add
 {
   Data aux {} ; aux.reserve ( values.size() ) ; 
   for ( auto d : values ) { aux.emplace_back ( d , 1.0 ) ; }
-  //
   return this->add ( aux ) ;
 }  
 // ============================================================================
@@ -851,7 +835,17 @@ Ostap::Math::WECDF::add
   if ( !std::is_sorted ( values.begin() , values.end() , COMPARE () ) ) 
     {
       values2 = values ;
-      std::sort ( values2.begin() , values2.end  () , COMPARE () ) ;
+      /// remove bad elements 
+      Data::iterator remove = std::remove_if
+	( values2.begin () ,
+	  values2.end   () ,
+	  [] ( const Data::value_type& item ) -> bool
+	  { return
+	      !std::isfinite ( item.first  ) ||
+	      !std::isfinite ( item.second ) || !item.second ; } ) ;
+      if ( values2.end() != remove ) { values2.erase ( remove , values2.end() ) ; } 
+      /// sort it 
+      std::sort ( values2.begin() , values2.end  () , COMPARE () ) ;      
       input = &values2 ;
     }
   /// temporary  dataset 
@@ -863,10 +857,13 @@ Ostap::Math::WECDF::add
                input->end    () ,
                tmp.begin     () ,
 	       COMPARE       () ) ;
-  //
+  /// 
   std::swap ( m_data , tmp ) ;
-  //
-  return this->check_me() ;
+  /// (1) adjust the content 
+  if ( &values2 != input ) { this -> cleanup () ; }
+  /// (2) update counters 
+  for ( const auto& v : *input ) { m_counter.add ( v.first , v.second ) ; }
+  return *this ;
 }
 // ============================================================================
 
@@ -882,8 +879,8 @@ double Ostap::Math::WECDF::evaluate   ( const double x ) const
   // NB: note the comparison criteria! 
   auto found = std::upper_bound ( m_data.begin () , m_data.end () , entry , COMPARE () ) ;
   //
-  const double wsum   = calc_sumw ( found - m_data.begin() ) ;
-  const double result = wsum / m_sumw ;
+  const double wsum   = ( found == m_data.end() ) ? sumw() : sumw ( found - m_data.begin() ) ;
+  const double result = wsum / sumw ()  ;
   //
   return m_complementary ? ( 1 - result ) : result ; 
 }
@@ -897,7 +894,7 @@ Ostap::Math::WECDF::estimate ( const double x ) const
   //
   typedef Ostap::Math::ValueWithError  VE ;
   //
-  const VE all  { m_sumw , m_sumw2 } ;
+  const VE all  { sumw () , sumw2 () } ;
   //
   if      ( x < xmin () )
     {
@@ -917,11 +914,11 @@ Ostap::Math::WECDF::estimate ( const double x ) const
   // NB: note the comparison criteria! 
   auto found = std::upper_bound ( m_data.begin () , m_data.end () , entry , COMPARE () ) ;
   //
-  const double wsum   = calc_sumw  ( found - m_data.begin() ) ;
-  const double w2sum  = calc_sumw2 ( found - m_data.begin() ) ;
+  const double wsum  = ( found == m_data.end() ) ? sumw  () : sumw  ( found - m_data.begin() ) ;
+  const double w2sum = ( found == m_data.end() ) ? sumw2 () : sumw2 ( found - m_data.begin() ) ;
   //  
-  const VE  acc {          wsum ,           w2sum } ;
-  const VE  rej { m_sumw - wsum , m_sumw2 - w2sum } ;
+  const VE acc {           wsum ,           w2sum } ;
+  const VE rej { sumw () - wsum , sumw2() - w2sum } ;
   //
   return m_complementary ?
     Ostap::Math::binomEff2 ( acc , rej ) : 
@@ -968,16 +965,6 @@ Ostap::Math::WECDF::ranks
   return result ;
 }
 // ============================================================================  
-// statistics (as Counter)
-// ============================================================================
-Ostap::WStatEntity 
-Ostap::Math::WECDF::counter() const 
-{
-  Ostap::WStatEntity cnt{} ;
-  for ( const auto& v : m_data ) { cnt.add( v.first , v.second ) ; } 
-  return cnt ;
-}  
-// ============================================================================
 // copy assignement 
 // ============================================================================
 Ostap::Math::WECDF&
@@ -986,10 +973,8 @@ Ostap::Math::WECDF::operator=
 {
   if ( this == &right ) { return *this ; }
   m_data          = right.m_data          ;
-  m_weights       = right.m_weights       ;
-  m_sumw          = right.m_sumw          ;
-  m_sumw2         = right.m_sumw2         ;
   m_complementary = right.m_complementary ;
+  m_counter       = right.m_counter       ;
   return *this ;
 }
 // ============================================================================
@@ -1003,8 +988,6 @@ Ostap::Math::WECDF::operator=
   this->swap ( right ) ;
   return *this ; 
 }
-
-
 // ============================================================================
 /* statistics (as statistics)
  * @param stat (UPDATE) input statistic object
@@ -1037,34 +1020,37 @@ double Ostap::Math::WECDF::quantile_HD ( const double p ) const
   else if ( 1 == p || s_equal ( p , 1 ) ) { return xmax () ; } 
   //
   Ostap::Assert ( 0 <= p && p <= 1     , 
-      "Invalid quantile!"              , 
-      "Ostap::Math::WECDF::quantile_HD" , 
-      INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
-//
-const double sw_inv { 1./sumw () } ;
-const double nstar  { nEff () } ; 
-const double alpha = ( nstar + 1 ) * p ;
-const double beta  = ( nstar + 1 ) * ( 1 - p ) ;
-//
-double result = 0 ;
-const std::size_t n = N () ;
-double wsum         = 0    ;  
-for ( std::size_t i = 0 ; i < n ; ++i )
-  {
-    const double value  = m_data [ i ].first  ;
-    const double weight = m_data [ i ].second ;
-    if ( !value || !weight ) { continue ; }
-    //
-    const double tp = sw_inv * ( wsum          ) ;
-    const double ti = sw_inv * ( wsum + weight ) ;
-    wsum += weight ;
-    // 
-    result += value * ::beta_inc ( alpha , beta , ti , 20 * N () ) ; 
-    result -= value * ::beta_inc ( alpha , beta , tp , 20 * N () ) ; 
-  }
+		  "Invalid quantile!"              , 
+		  "Ostap::Math::WECDF::quantile_HD" , 
+		  INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
+  //
+  const double sw_inv { 1./sumw () } ;
+  const double nstar  { nEff () } ; 
+  const double alpha = ( nstar + 1 ) * p ;
+  const double beta  = ( nstar + 1 ) * ( 1 - p ) ;
+  //
+  double result = 0 ;
+  const std::size_t n = N () ;
+  double wsum         = 0    ;  
+  for ( std::size_t i = 0 ; i < n ; ++i )
+    {
+      const double value  = m_data [ i ].first  ;
+      const double weight = m_data [ i ].second ;
+      if ( !value || !weight ) { continue ; }
+      //
+      const double tp = sw_inv * ( wsum          ) ;
+      const double ti = sw_inv * ( wsum + weight ) ;
+      wsum += weight ;
+      // 
+      result += value * ::beta_inc ( alpha , beta , ti , 20 * N () ) ; 
+      result -= value * ::beta_inc ( alpha , beta , tp , 20 * N () ) ; 
+    }
   //
   return result ;  
 }
+// ============================================================================
+
+
 // ============================================================================
 /* create the empirical PDF from empirical CDF 
  *  @attention data are not copied!

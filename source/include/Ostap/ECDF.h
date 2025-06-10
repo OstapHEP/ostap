@@ -159,11 +159,16 @@ namespace Ostap
         ITERATOR   end                   ,
         const bool complementary = false ) 
         : m_data          ( begin , end   )
-        , m_complementary ( complementary ) 
+        , m_complementary ( complementary )
+	, m_counter       () 
       {
-        if ( !std::is_sorted ( m_data.begin() , m_data.end() ) )
-          { std::sort ( m_data.begin() , m_data.end() ) ; }
-        this->check_me() ;
+	/// (1) adjust the content 
+	this -> cleanup () ;
+	/// (2) sort it if needed 
+        if ( !std::is_sorted ( m_data.begin () , m_data.end () ) )
+          { std::sort ( m_data.begin () , m_data.end () ) ; }
+	/// (3) update counters 
+	for ( auto v : m_data ) { m_counter.add ( v ) ; }
       }
       /// constructor to create complementary/ordinary ECDF
       ECDF
@@ -214,9 +219,10 @@ namespace Ostap
       {
         if ( std::is_sorted ( begin , end ) ) { return this -> add_sorted ( begin , end ) ; }
         /// copy input data (only valid/finite entries)  
-        Data tmp ( begin, end ) ;
+        Data tmp ( begin, end ) ;	
         /// sort input data 
-        std::sort ( tmp.begin () , tmp.end () ) ; 
+        std::sort ( tmp.begin () , tmp.end () ) ;
+	/// add sorted input 
         return this->add_sorted ( tmp.begin() , tmp.end() ) ;
       }
       // ======================================================================
@@ -250,7 +256,11 @@ namespace Ostap
                      tmp.begin    () ) ;
         /// swap the merged result  with own data 
         std::swap ( m_data , tmp ) ;
-        return this->check_me() ;
+	/// (1) remove bad entries (if needed) 
+	this -> cleanup () ;
+	/// (2) update counter
+	for ( ITERATOR v = begin ; end != v ; ++v) { m_counter.add ( *v ) ; }
+	return *this ; 
       }
       // ======================================================================
     public :
@@ -270,12 +280,17 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// ok ?
+      inline bool            ok            () const
+      { return !m_data.empty() && m_data.size() == m_counter.nEntries () ; }
+      /// empty?
+      inline bool            empty         () const { return m_data.empty () ; } 
       /// data size 
-      inline Data::size_type N             () const { return m_data.size () ; } 
+      inline Data::size_type N             () const { return m_data.size  () ; } 
       /// data size 
-      inline Data::size_type size          () const { return m_data.size () ; }
+      inline Data::size_type size          () const { return m_data.size  () ; }
       /// number of effective entries
-      inline Data::size_type nEff          () const { return m_data.size () ; }      
+      inline Data::size_type nEff          () const { return m_data.size  () ; }      
       // ======================================================================
       /// access to data
       inline const Data&     data          () const { return m_data         ; }
@@ -286,11 +301,9 @@ namespace Ostap
       /// complementary?
       inline bool            complementary () const { return m_complementary ; }
       /// minimal x-value
-      inline double          xmin          () const
-      { return m_data.empty () ? -std::numeric_limits<double>::max() : m_data.front () ; } 
+      inline double          xmin          () const { return m_counter.min () ; } 
       /// maximal x-value
-      inline double          xmax          () const
-      { return m_data.empty () ? +std::numeric_limits<double>::max() : m_data.back  () ; } 
+      inline double          xmax          () const { return m_counter.max () ; } 
       // ======================================================================
       /// get the abscissa value with the given index 
       inline double operator[] ( const unsigned int index ) const
@@ -368,12 +381,13 @@ namespace Ostap
       // ======================================================================
     public:
       //=======================================================================
-      /// statistics (as Counter)
-      Ostap::StatEntity counter() const ;  
+      /// get simple statistics 
+      const Ostap::StatEntity& counter() const { return m_counter ; }
+      // ======================================================================
       /** statistics (as statistics)
-        * @param stat (UPDATE) input statistic object
-        * @return updated statistics object
-        */
+       * @param stat (UPDATE) input statistic object
+       * @return updated statistics object
+       */
       Ostap::Math::Statistic& 
       statistics
       ( Ostap::Math::Statistic& stat ) ;
@@ -405,17 +419,17 @@ namespace Ostap
       // ======================================================================
     private :
       // ======================================================================
-      /** check that ECDF is OK: there are some entries
-       *  - remove elments <code>!std::isfinite</code>
-       */
-      ECDF& check_me () ; // check that ECDF is OK: there are some entries 
+      /// Remove elments <code>!std::isfinite</code>
+      ECDF& cleanup () ; // Remove elments <code>!std::isfinite</code>
       // ======================================================================
     private:
       // ======================================================================
       /// container of sorted data 
-      Data m_data          {       } ; // container of sorted data
+      Data              m_data          {       } ; // container of sorted data
       /// complementary CDF?
-      bool m_complementary { false } ; // complementary CDF ? 
+      bool              m_complementary { false } ; // complementary CDF ?
+      /// counter
+      Ostap::StatEntity m_counter       {} ;
       // ======================================================================
     }; //                                The end of the class Ostap::Math::ECDF
     // ========================================================================
@@ -521,7 +535,7 @@ namespace Ostap
       inline double operator() ( const double x ) const
       { return evaluate ( x ) ; }
       // ======================================================================
-      /** get the value with binomial estimate for uncertainty
+      /** get the value with estimate for uncertainty
        *  @see Ostap::Math::binomEff 
        */ 
       Ostap::Math::ValueWithError estimate ( const double x ) const ; 
@@ -580,34 +594,39 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// ok ?
+      inline bool            ok            () const
+      { return !m_data.empty()
+	  && m_data.size() == m_counter.nEntries ()
+	  && 0 < m_counter.sumw () ; }      
+      /// empty?
+      inline bool            empty         () const { return m_data.empty () ; } 
       /// data size 
-      inline Data::size_type N             () const { return m_data.size () ; } 
+      inline Data::size_type N             () const { return m_data.size  () ; } 
       /// data size 
-      inline Data::size_type size          () const { return m_data.size () ; }
+      inline Data::size_type size          () const { return m_data.size  () ; }
       /// number of effective entries
-      inline double          nEff          () const { return m_sumw * m_sumw / m_sumw2 ;  }
+      inline double          nEff          () const { return m_counter.nEff () ;  }
       /// sum of all weights
-      inline double          sumw          () const { return m_sumw  ; }      
+      inline double          sumw          () const { return m_counter.sumw  () ; }      
       /// sum of all squared weights
-      inline double          sumw2         () const { return m_sumw2 ; }      
+      inline double          sumw2         () const { return m_counter.sumw2 () ; }      
       // ======================================================================      
       /// access to data
       inline const Data&     data          () const { return m_data         ; }
       // access to data 
       inline double data   ( const unsigned int index ) const
-      { return index < m_data.size() ?  m_data[index].first  : xmax ()   ; }
+      { return index < m_data.size() ?  m_data [ index ].first  : xmax ()   ; }
       // access to weight 
       inline double weight ( const unsigned int index ) const
-      { return index < m_data.size() ?  m_data[index].second : 0.0 ; }      
+      { return index < m_data.size() ?  m_data [ index ].second : 0.0       ; }      
       // ======================================================================
       /// complementary?
-      inline bool            complementary () const { return m_complementary ; }
+      inline bool            complementary () const { return m_complementary  ; }
       /// minimal x-value
-      inline double          xmin          () const 
-      { return m_data.empty () ? -std::numeric_limits<double>::max() : m_data.front ().first ; } 
+      inline double          xmin          () const { return m_counter.min () ; } 
       /// maximal x-value
-      inline double          xmax          () const 
-      { return m_data.empty () ? +std::numeric_limits<double>::max() : m_data.back  ().first ; } 
+      inline double          xmax          () const { return m_counter.max () ; } 
       // ======================================================================
       /// get the abscissa value with the given index 
       inline const Entry& operator[] ( const unsigned int index ) const
@@ -621,7 +640,7 @@ namespace Ostap
    public:
       //=======================================================================
       /// statistics (as Counter)
-      Ostap::WStatEntity counter() const ;  
+      const Ostap::WStatEntity& counter() const { return m_counter ; } 
       /** statistics (as statistics)
        * @param stat (UPDATE) input statistic object
        * @return updated statistics object
@@ -653,7 +672,7 @@ namespace Ostap
        */
       double quantile_HD ( const double p ) const ;
       // ======================================================================
-   public: 
+    public: 
       // ======================================================================
       /// swap two objects 
       void swap ( WECDF& right ) ;
@@ -661,24 +680,19 @@ namespace Ostap
     public: 
       // ======================================================================
       /// calculate \f$ \sum_i^{n} w_i \f$
-      inline double calc_sumw ( const unsigned long n ) const
-      { return std::accumulate  ( m_data.begin () ,
-                                  m_data.begin () + std::min ( n , m_data.size() ) , 
-                                  0.0             ,
-                                  [] ( const double s , const Entry& entry ) -> double
-                                  { return s + entry.second ; } ) ;	}
+      inline double sumw  ( const unsigned long n ) const
+      { return std::accumulate ( m_data.begin () ,
+				 m_data.begin () + std::min ( n , m_data.size() ) , 
+				 0.0             ,
+				 [] ( const double s , const Entry& entry ) -> double
+				 { return s + entry.second ; } ) ;	}
       /// calculate \f$ \sum_i^{n} w_i \f$
-      inline double calc_sumw2 ( const unsigned long n ) const
+      inline double sumw2 ( const unsigned long n ) const
       { return std::accumulate ( m_data.begin () ,
                                  m_data.begin () + std::min ( n , m_data.size() ) , 
                                  0.0             ,
                                  [] ( const double s , const Entry& entry ) -> double
                                  { return s + entry.second * entry.second ; } ) ; }
-      // ======================================================================
-      /// calculate \f$ \sum_i w_i   \f$
-      inline double calc_sumw  () const { return calc_sumw  ( m_data.size() ) ; }
-      /// calculate \f$ \sum_i w^2_i \f$
-      inline double calc_sumw2 () const { return calc_sumw2 ( m_data.size() ) ; }
       // ======================================================================
     public: 
       // ======================================================================
@@ -698,26 +712,17 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      /** check that WECDF is OK: 
-       *  - there are some entries
-       *  - sum of weigths is positive 
-       *  - sum of squared weigths is positive 
-       *  - remove elements <code>!std::isfinite</code>
-       */
-      WECDF& check_me () ; // check that ECDF is OK: there are some entries 
+      /// remove elements <code>!std::isfinite</code>
+      WECDF& cleanup () ; // check that ECDF is OK: there are some entries 
       // ======================================================================
     private: 
       // ======================================================================
       /// container of sorted data 
-      Data m_data          {       } ; // container of sorted data
-      /// container of weights 
-      Data m_weights       {       } ; // container of weights
-      /// sum of all weights
-      double m_sumw        { 0     } ; // sum opf all weights 
-      /// sum of all squared weights
-      double m_sumw2       { 0     } ; // sum opf all squared weights 
+      Data               m_data    {} ; // container of sorted data
       /// complementary CDF?
-      bool m_complementary { false } ; // complementary CDF ? 
+      bool               m_complementary { false } ; // complementary CDF ? 
+      /// Basic Statistics
+      Ostap::WStatEntity m_counter {} ;        // Basic statistics
       // ======================================================================
     } ; //                              The end of the class Ostap::Math::WECDF 
     // ========================================================================

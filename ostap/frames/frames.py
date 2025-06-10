@@ -1951,7 +1951,12 @@ if Frames_OK :
         >>> stat  = frame.statVar ( 'pt'           )
         >>> stat  = frame.statVar ( 'pt' , 'eta>0' )
         """
-        return frame_the_statVar ( frame , expressions , cuts = cuts , progress = progress , report = report , lazy = False )
+        return frame_the_statVar ( frame               ,
+                                   expressions         ,
+                                   cuts     = cuts     ,
+                                   progress = progress ,
+                                   report   = report   ,
+                                   lazy     = False    )
 
     # ==================================================================================
     ## get ECDF
@@ -1966,7 +1971,12 @@ if Frames_OK :
         >>> ecdf  = frame.ECDF ( 'pt'           )
         >>> ecdf  = frame.ECDF ( 'pt' , 'eta>0' )
         """
-        return frame_the_ECDF ( frame , expressions , cuts = cuts , progress = progress , report = report , lazy = False )
+        return frame_the_ECDF ( frame               ,
+                                expressions         ,
+                                cuts     = cuts     ,
+                                progress = progress ,
+                                report   = report   ,
+                                lazy     = False    )
     
     # ==================================================================================
     ## get covariance for variables via action 
@@ -2459,7 +2469,6 @@ _new_methods_ = [
     frame_size           , 
     ##
     frame_nEff           , 
-    frame_ECDF           , 
     frame_statVar        , 
     frame_statCov        ,
     #
@@ -2506,8 +2515,6 @@ for f in frame_types :
     f.statVar        = frame_statVar 
     f.statCov        = frame_statCov
     
-    f.ECDF           = frame_ECDF
-
     f.get_moment     = frame_get_moment
     f.moment         = frame_moment
     f.central_moment = frame_moment
@@ -2562,7 +2569,6 @@ for f in frame_types :
         f.quintiles      , 
         f.deciles        ,
         # 
-        f.ECDF           ,        
         ]
     
 
@@ -2616,6 +2622,8 @@ if Frames_OK :
         f.lehmer_mean          = frame_lehmer_mean 
         f.param                = frame_param
         
+        f.ECDF                 = frame_ECDF
+        
         _new_methods_ += [ 
             f.arithmetic_mean      , 
             f.geometric_mean       , 
@@ -2646,7 +2654,9 @@ if Frames_OK :
             f.harmonic_mean        , 
             f.power_mean           , 
             f.lehmer_mean          , 
-            f.param                , 
+            f.param                ,
+
+            f.ECDF                 , 
             ]
         
     ROOT.TTree. fstatVar = frame_statVar

@@ -22,6 +22,7 @@ class RooAbsData ; // RooFit
 #include "Ostap/Covariance.h"
 #include "Ostap/SymmetricMatrixTypes.h"
 #include "Ostap/DataFrame.h"
+#include "Ostap/ECDF.h"
 #include "Ostap/StatusCode.h"
 // ============================================================================
 // forward declarations 
