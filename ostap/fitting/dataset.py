@@ -1392,6 +1392,8 @@ def ds_draw ( dataset ,
     >>> dataset.draw ( 'm', '(chi2<10)*weight' , 'e1' , 1000 , 100000 )
     """
 
+    print ( 'I AM DS_DRAW-0', what , cuts  )
+    
     ## check type of opts 
     assert isinstance ( opts , string_types ) , "Invalid type of `opts' : %s" % type ( opts ) 
 
@@ -1411,12 +1413,14 @@ def ds_draw ( dataset ,
         return tree_draw ( dataset , what, cuts = cuts , opts = opts ,  first = first , last = last , delta = delta , **kwargs )
     elif isinstance ( dataset , ROOT.RooAbsData ) : 
         ranges = ds_range ( dataset , varlst , cuts = cuts , cut_range = cut_range , first = first , last  = last , delta = delta )
+        print ( 'RANGES/1' , ranges )             
     else :
         ## something else ? e.g. DataFrame 
         assert not cut_range                   , "ds_draw: `cut_range' is not allowed!"
         assert ( first , last ) == ALL_ENTRIES , "ds_draw: `first'/`last' are not allowed!"
         ranges = data_range ( dataset , varlst , cuts = cuts , delta = delta )
 
+    print ( 'RANGES/2' , ranges )             
     if not ranges :
         logger.warning ("ds_draw: nothing to draw, return None" ) 
         return None 

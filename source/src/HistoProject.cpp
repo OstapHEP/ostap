@@ -3907,7 +3907,8 @@ Ostap::HistoProject::project4
  *  @param last        (INPUT)  the last event to process 
  */
 // ===============================================================================
-Ostap::StatusCode Ostap::HistoProject::project
+Ostap::StatusCode
+Ostap::HistoProject::project
 ( TTree*              data       ,
   Ostap::Math::ECDF&  ecdf       ,
   const std::string&  expression ,
@@ -3932,7 +3933,8 @@ Ostap::StatusCode Ostap::HistoProject::project
  *  @param last        (INPUT)  the last event to process 
  */
 // =============================================================================
-Ostap::StatusCode project
+Ostap::StatusCode
+Ostap::HistoProject::project
 ( TTree*                            data       ,
   const Ostap::Utils::ProgressConf& progress   ,
   Ostap::Math::ECDF&                ecdf       ,
@@ -3961,7 +3963,8 @@ Ostap::StatusCode project
  *  @param last        (INPUT)  the last event to process 
  */
 // ===============================================================================
-Ostap::StatusCode Ostap::HistoProject::project
+Ostap::StatusCode
+Ostap::HistoProject::project
 ( TTree*              data       ,
   Ostap::Math::WECDF& ecdf       ,
   const std::string&  expression ,
@@ -3988,7 +3991,8 @@ Ostap::StatusCode Ostap::HistoProject::project
  *  @param last        (INPUT)  the last event to process 
  */
 // =============================================================================
-Ostap::StatusCode project
+Ostap::StatusCode
+Ostap::HistoProject::project
 ( TTree*                            data       ,
   const Ostap::Utils::ProgressConf& progress   ,
   Ostap::Math::WECDF&               ecdf       ,
@@ -4019,7 +4023,8 @@ Ostap::StatusCode project
  *  @param last        (INPUT)  the last event to process 
  */
 // ===============================================================================
-Ostap::StatusCode Ostap::HistoProject::project
+Ostap::StatusCode
+Ostap::HistoProject::project
 ( const RooAbsData*   data       ,
   Ostap::Math::WECDF& ecdf       ,
   const std::string&  expression ,
@@ -4048,7 +4053,8 @@ Ostap::StatusCode Ostap::HistoProject::project
  *  @param last        (INPUT)  the last event to process 
  */
 // =============================================================================
-Ostap::StatusCode project
+Ostap::StatusCode
+Ostap::HistoProject::project
 ( const RooAbsData*                 data       ,
   const Ostap::Utils::ProgressConf& progress   ,
   Ostap::Math::WECDF&               ecdf       ,

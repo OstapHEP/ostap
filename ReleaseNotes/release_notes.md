@@ -15,7 +15,6 @@
   1. change pickling/unpicking/serializatino/deserialization for (w)moments 
   1. completely remove `Ostap::Math::(W)MinMaxValue`
 
-
 ## Bug fixes 
 
 # v2.0.6.0

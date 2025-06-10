@@ -996,6 +996,22 @@ def frame_statVar ( frame , expression ,  cuts = '' ) :
     node = as_rnode ( frame ) 
     return SV.data_statistics ( node , expression,  cuts = cuts )
 
+# =============================================================================
+## Get empirical CDF 
+#  @code
+#  data = ...
+#  c1 = frame_ECDF ( data , 'S_sw' ) 
+#  c2 = frame_ECDF ( data , S_sw' , 'pt>0'  )
+#  @endcode
+def frame_ECDF ( frame , expression ,  cuts = '' ) :
+    """ Get empirical CDF 
+    >>> data = ...
+    >>> c1 = frame_ECDF ( data , 'S_sw' ) 
+    >>> c2 = frame_ECDF ( data , S_sw' , 'pt>0'  )
+    """
+    if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame  )
+    node = as_rnode ( frame ) 
+    return SV.data_ECDF ( node , expression,  cuts = cuts )
 
 # =============================================================================
 ## get the statistic for pair of expressions in DataFrame

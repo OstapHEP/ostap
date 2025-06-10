@@ -22,15 +22,16 @@ class RooAbsData ; // RooFit
 #include "Ostap/Covariance.h"
 #include "Ostap/SymmetricMatrixTypes.h"
 #include "Ostap/DataFrame.h"
-#include "Ostap/ECDF.h"
 #include "Ostap/StatusCode.h"
 // ============================================================================
 // forward declarations 
 // ============================================================================
 template <class SCALAR> class TMatrixTSym ; // ROOT 
 // ============================================================================
-namespace Ostap { namespace Math { class  Statistic  ; } }
-namespace Ostap { namespace Math { class WStatistic  ; } }
+namespace Ostap { namespace Math { class  Statistic ; } }
+namespace Ostap { namespace Math { class WStatistic ; } }
+namespace Ostap { namespace Math { class  ECDF      ; } }
+namespace Ostap { namespace Math { class WECDF      ; } }
 // ============================================================================
 namespace Ostap
 {
@@ -224,11 +225,11 @@ namespace Ostap
      *  @return true if there exist at leats one entry 
      */
     static bool hasEntry 
-    ( const RooAbsData*   data               , 
-      const std::string&  cuts               , 
-      const std::string&  cut_range          , 
-      const unsigned long first      = 0     ,
-      const unsigned long last       = LAST  ) ;
+    ( const RooAbsData*   data                 , 
+      const std::string&  cuts                 ,  
+      const std::string&  cut_range  = ""      , 
+      const unsigned long first      = 0       ,
+      const unsigned long last       = LAST    ) ;
     // ========================================================================
   public:
     // ========================================================================
@@ -289,7 +290,7 @@ namespace Ostap
       const std::string&  expression         , 
       const unsigned long first      = 0     ,
       const unsigned long last       = LAST  ) 
-    { return statVar( data , expression , std::string() , "" , first , last ) ; }
+    { return statVar( data , expression , std::string() , std::string (), first , last ) ; }
     // ========================================================================
     /** build statistic for the <code>expression</code>
      *  @param data       (INPUT) the data 
@@ -312,7 +313,7 @@ namespace Ostap
       const std::string&  cuts               , 
       const unsigned long first      = 0     ,
       const unsigned long last       = LAST  ) 
-    { return statVar( data , expression , cuts , "" , first , last ) ; }
+    { return statVar( data , expression , cuts , std::string () , first , last ) ; }
     // ========================================================================
     /** build statistic for the <code>expression</code>
      *  @param data       (INPUT) the data 
@@ -332,12 +333,12 @@ namespace Ostap
      *  @date   2015-02-15
      */
     static Statistic statVar 
-    ( const RooAbsData*   data              , 
-      const std::string&  expression        , 
-      const std::string&  cuts              , 
-      const std::string&  cut_range         ,
-      const unsigned long first      = 0    ,
-      const unsigned long last       = LAST ) ;
+    ( const RooAbsData*   data                 , 
+      const std::string&  expression           , 
+      const std::string&  cuts                 , 
+      const std::string&  cut_range            , 
+      const unsigned long first      = 0       ,
+      const unsigned long last       = LAST    ) ;
     // ========================================================================
   public:
     // ========================================================================
@@ -357,7 +358,7 @@ namespace Ostap
       const Names&                    expressions       ,
       const unsigned long             first      = 0    ,
       const unsigned long             last       = LAST ) 
-    { return statVars ( data , result , expressions , std::string() , std::string () , first , last ) ; }
+    { return statVars ( data , result , expressions , std::string() , std::string() , first , last ) ; }
     // ========================================================================
     /** build statistic for the <code>expressions</code>
      *  @param data        (INPUT)  input data 
@@ -374,7 +375,7 @@ namespace Ostap
     ( const RooAbsData*               data              , 
       std::vector<Statistic>&         result            , 
       const Names&                    expressions       ,
-      const std::string&              cuts              ,
+      const std::string&              cuts              , 
       const unsigned long             first      = 0    ,
       const unsigned long             last       = LAST ) 
     { return statVars ( data , result , expressions , cuts  , std::string() , first , last ) ; }
@@ -392,13 +393,13 @@ namespace Ostap
      *  @date   2021-06-04
      */
     static unsigned long statVars
-    ( const RooAbsData*               data              , 
-      std::vector<Statistic>&         result            , 
-      const std::vector<std::string>& expressions       ,
-      const std::string&              cuts              ,
-      const std::string&              cut_range         ,
-      const unsigned long             first      = 0    ,
-      const unsigned long             last       = LAST ) ;
+    ( const RooAbsData*               data                 , 
+      std::vector<Statistic>&         result               , 
+      const std::vector<std::string>& expressions          ,
+      const std::string&              cuts                 ,
+      const std::string&              cut_range            , 
+      const unsigned long             first      = 0       ,
+      const unsigned long             last       = LAST    ) ;
     // ========================================================================
   public:
     // ========================================================================
@@ -446,11 +447,11 @@ namespace Ostap
      *  @return number of equivalent entries 
      */
     static double nEff 
-    ( const RooAbsData&    tree             , 
-      const std::string&   cuts      = ""   , 
-      const std::string&   cut_range = ""   , 
-      const unsigned long  first     = 0    ,
-      const unsigned long  last      = LAST ) ;
+    ( const RooAbsData&    tree                , 
+      const std::string&   cuts      = ""      , 
+      const std::string&   cut_range = ""      , 
+      const unsigned long  first     = 0       ,
+      const unsigned long  last      = LAST    ) ;
     // ========================================================================
     /** get the number of equivalent entries 
      *  \f$ n_{eff} \equiv = \frac{ (\sum w)^2}{ \sum w^2} \f$
@@ -552,14 +553,14 @@ namespace Ostap
      *  @date   2023-02-28
      */
     static unsigned long statCov 
-    ( const RooAbsData*    tree             , 
-      const std::vector<std::string>& vars           ,  
-      const std::string&              cuts           ,
-      std::vector<Statistic>&         stats          ,  
-      TMatrixTSym<double>&            cov2           , 
-      const std::string&              cut_range = "" ,
-      const unsigned long             first = 0      ,
-      const unsigned long             last  = LAST   ) ;
+    ( const RooAbsData*               tree                , 
+      const std::vector<std::string>& vars                ,  
+      const std::string&              cuts                ,
+      std::vector<Statistic>&         stats               ,  
+      TMatrixTSym<double>&            cov2                , 
+      const std::string&              cut_range = ""      , 
+      const unsigned long             first     = 0       ,
+      const unsigned long             last      = LAST    ) ;
     // ========================================================================
     /** calculate the covariance of several expressions 
      *  @param tree      (INPUT)  the inpout tree 
@@ -572,13 +573,13 @@ namespace Ostap
      *  @date   2023-02-28
      */
     static unsigned long statCov 
-    ( const RooAbsData*               tree           , 
-      const std::vector<std::string>& vars           ,  
-      std::vector<Statistic>&         stats          ,  
-      TMatrixTSym<double>&            cov2           , 
-      const std::string&              cut_range = "" ,
-      const unsigned long             first = 0      ,
-      const unsigned long             last  = LAST   ) ;
+    ( const RooAbsData*               tree             , 
+      const std::vector<std::string>& vars             ,  
+      std::vector<Statistic>&         stats            ,  
+      TMatrixTSym<double>&            cov2             , 
+      const std::string&              cut_range = ""   , 
+      const unsigned long             first     = 0    ,
+      const unsigned long             last      = LAST ) ;
     // ========================================================================
   public:
     // ========================================================================
@@ -593,13 +594,13 @@ namespace Ostap
      *  @date   2014-03-27
      */
     static WCovariance statCov
-    ( const RooAbsData*    tree             , 
-      const std::string&   exp1             , 
-      const std::string&   exp2             , 
-      const std::string&   cuts             , 
-      const std::string&   cut_range = ""   ,
-      const unsigned long  first     = 0    ,
-      const unsigned long  last      = LAST ) ;
+    ( const RooAbsData*    tree                , 
+      const std::string&   exp1                , 
+      const std::string&   exp2                , 
+      const std::string&   cuts                , 
+      const std::string&   cut_range = ""      , 
+      const unsigned long  first     = 0       ,
+      const unsigned long  last      = LAST    ) ;
     // ========================================================================
   public:
     // ========================================================================
@@ -664,14 +665,14 @@ namespace Ostap
      *  @return the moment 
      */
     static double get_moment 
-    ( const RooAbsData&    data             ,  
-      const unsigned short order            , 
-      const std::string&   expr             , 
-      const double         center    = 0    ,
-      const std::string&   cuts      = ""   , 
-      const std::string&   cut_range = ""   , 
-      const unsigned long  first     = 0    ,
-      const unsigned long  last      = LAST ) ;
+    ( const RooAbsData&    data                ,  
+      const unsigned short order               , 
+      const std::string&   expr                , 
+      const double         center    = 0       ,
+      const std::string&   cuts      = ""      , 
+      const std::string&   cut_range = ""      ,
+      const unsigned long  first     = 0       ,
+      const unsigned long  last      = LAST    ) ;
     // ========================================================================    
   public:
     // ========================================================================    
@@ -720,13 +721,13 @@ namespace Ostap
      *  @return the moment 
      */ 
     static Ostap::Math::ValueWithError moment
-    ( const  RooAbsData&   data             ,  
-      const unsigned short order            ,
-      const std::string&   expr             , 
-      const std::string&   cuts      = ""   , 
-      const std::string&   cut_range = ""   , 
-      const unsigned long  first     = 0    ,
-      const unsigned long  last      = LAST ) ;
+    ( const  RooAbsData&   data                ,  
+      const unsigned short order               ,
+      const std::string&   expr                , 
+      const std::string&   cuts      = ""      , 
+      const std::string&   cut_range = ""      ,
+      const unsigned long  first     = 0       ,
+      const unsigned long  last      = LAST    ) ;
     // ========================================================================
   public:
     // ========================================================================
@@ -773,13 +774,13 @@ namespace Ostap
      *  @return the moment 
      */ 
     static Ostap::Math::ValueWithError central_moment 
-    ( const RooAbsData&    data             ,  
-      const unsigned short order            ,
-      const std::string&   expr             , 
-      const std::string&   cuts      = ""   , 
-      const std::string&   cut_range = ""   , 
-      const unsigned long  first     = 0    ,
-      const unsigned long  last      = LAST ) ;
+    ( const RooAbsData&    data                ,  
+      const unsigned short order               ,
+      const std::string&   expr                , 
+      const std::string&   cuts      = ""      , 
+      const std::string&   cut_range = ""      ,
+      const unsigned long  first     = 0       ,
+      const unsigned long  last      = LAST    ) ;
     // ========================================================================    
   public:
     // ========================================================================    
@@ -823,12 +824,12 @@ namespace Ostap
      *  @return the skewness 
      */
     static Ostap::Math::ValueWithError skewness 
-    ( const RooAbsData&    data             ,  
-      const std::string&   expr             , 
-      const std::string&   cuts      = ""   , 
-      const std::string&   cut_range = ""   , 
-      const unsigned long  first     = 0    ,
-      const unsigned long  last      = LAST ) ;
+    ( const RooAbsData&    data                ,  
+      const std::string&   expr                , 
+      const std::string&   cuts      = ""      , 
+      const std::string&   cut_range = ""      ,
+      const unsigned long  first     = 0       ,
+      const unsigned long  last      = LAST    ) ;
     // ========================================================================    
   public:
     // ========================================================================    
@@ -870,12 +871,12 @@ namespace Ostap
      *  @return the (excess) kurtosis
      */
     static Ostap::Math::ValueWithError kurtosis
-    ( const RooAbsData&    data             ,  
-      const std::string&   expr             , 
-      const std::string&   cuts      = ""   , 
-      const std::string&   cut_range = ""   , 
-      const unsigned long  first     = 0    ,
-      const unsigned long  last      = LAST ) ;
+    ( const RooAbsData&    data                ,  
+      const std::string&   expr                , 
+      const std::string&   cuts      = ""      , 
+      const std::string&   cut_range = ""      ,
+      const unsigned long  first     = 0       ,
+      const unsigned long  last      = LAST    ) ;
     // ========================================================================    
   public:
     // ========================================================================    
@@ -941,13 +942,13 @@ namespace Ostap
      *   @return the quantile value 
      */
     static Quantile quantile
-    ( const RooAbsData&   data             ,
-      const double        q                , //  0<q<1 
-      const std::string&  expr             , 
-      const std::string&  cuts      = ""   , 
-      const std::string&  cut_range = ""   , 
-      const unsigned long first     = 0    ,
-      const unsigned long last      = LAST ) ;
+    ( const RooAbsData&   data                ,
+      const double        q                   , //  0<q<1 
+      const std::string&  expr                , 
+      const std::string&  cuts      = ""      , 
+      const std::string&  cut_range = ""     ,
+      const unsigned long first     = 0       ,
+      const unsigned long last      = LAST    ) ;
     // ========================================================================    
     /**  get (approximate) quantile of the distribution  using p^2 algorithm
      *   @param data   (INPUT) the input data
@@ -960,13 +961,13 @@ namespace Ostap
      *   @return the quantile value 
      */
     static Quantile p2quantile
-    ( const RooAbsData&   data             ,
-      const double        q                , //  0<q<1 
-      const std::string&  expr             , 
-      const std::string&  cuts      = ""   , 
-      const std::string&  cut_range = ""   , 
-      const unsigned long first     = 0    ,
-      const unsigned long last      = LAST ) ;
+    ( const RooAbsData&   data                ,
+      const double        q                   , //  0<q<1 
+      const std::string&  expr                , 
+      const std::string&  cuts      = ""      , 
+      const std::string&  cut_range = ""     ,
+      const unsigned long first     = 0       ,
+      const unsigned long last      = LAST    ) ;
     // ========================================================================    
   public:
     // ========================================================================    
@@ -1025,13 +1026,13 @@ namespace Ostap
      *   @return the quantile value 
      */
     static Quantiles quantiles
-    ( const RooAbsData&          data              ,
-      const std::vector<double>& quantiles         , 
-      const std::string&         expr              , 
-      const std::string&         cuts       = ""   , 
-      const std::string&         cut_range  = ""   , 
-      const unsigned long        first      = 0    ,
-      const unsigned long        last       = LAST ) ;
+    ( const RooAbsData&          data                 ,
+      const std::vector<double>& quantiles            , 
+      const std::string&         expr                 , 
+      const std::string&         cuts       = ""      , 
+      const std::string&         cut_range  = ""      ,
+      const unsigned long        first      = 0       ,
+      const unsigned long        last       = LAST    ) ;
     // ========================================================================
   public:
     // ========================================================================    
@@ -1062,13 +1063,13 @@ namespace Ostap
      *   @return the quantile value 
      */
     static Quantiles p2quantiles
-    ( const RooAbsData&          data              ,
-      const std::vector<double>& quantiles         , 
-      const std::string&         expr              , 
-      const std::string&         cuts       = ""   , 
-      const std::string&         cut_range  = ""   , 
-      const unsigned long        first      = 0    ,
-      const unsigned long        last       = LAST ) ;
+    ( const RooAbsData&          data                 ,
+      const std::vector<double>& quantiles            , 
+      const std::string&         expr                 , 
+      const std::string&         cuts       = ""      , 
+      const std::string&         cut_range  = ""      ,
+      const unsigned long        first      = 0       ,
+      const unsigned long        last       = LAST    ) ;
     // ========================================================================
   public:
     // ========================================================================    
@@ -1147,7 +1148,7 @@ namespace Ostap
       const double        q2               , //  0<q2<1 
       const std::string&  expr             , 
       const std::string&  cuts      = ""   , 
-      const std::string&  cut_range = ""   , 
+      const std::string&  cut_range = ""   ,
       const unsigned long first     = 0    ,
       const unsigned long last      = LAST ) ;
     // ========================================================================    
@@ -1198,7 +1199,7 @@ namespace Ostap
       const double        q2               , //  0<q2<1 
       const std::string&  expr             , 
       const std::string&  cuts      = ""   , 
-      const std::string&  cut_range = ""   , 
+      const std::string&  cut_range = ""   ,
       const unsigned long first     = 0    ,
       const unsigned long last      = LAST ) ;
     // ========================================================================    
@@ -1256,7 +1257,7 @@ namespace Ostap
     ( TTree*                  tree          , 
       Ostap::Math::Statistic& moment        , 
       const std::string&      expression    , 
-      const unsigned long     first  = 0    ,
+      const unsigned long     first      = 0    ,
       const unsigned long     last   = LAST ) ;
     // ========================================================================    
     /** get the moment as Ostap::Math::WMoment_<N>
@@ -1280,7 +1281,7 @@ namespace Ostap
       Ostap::Math::WStatistic& moment              , 
       const std::string&       expression          , 
       const std::string&       selection = ""      , 
-      const std::string&       cutrange  = ""      ,      
+      const std::string&       cut_range = ""      ,
       const unsigned long      first     = 0       ,
       const unsigned long      last      = LAST    ) ;
     // ========================================================================
@@ -1306,6 +1307,85 @@ namespace Ostap
       const std::string&       expression          , 
       const unsigned long      first               ,
       const unsigned long      last      = LAST    ) ;
+    // ========================================================================
+  public: // ECDF & WECDF 
+    // ========================================================================
+    /** Get the empirical cumulative distribtion function 
+     *  @param data  (INPUT) data 
+     *  @param ecdf  (UDATE) cumulative distribtion function 
+     *  @param expression (INPUT) the variable 
+     *  @param first  (INPUT) the first event to process (inclusive)
+     *  @param last   (INPUT) the last  event to process (non-inclusive)
+     *  @returs status code 
+     */
+    static Ostap::StatusCode ECDF
+    ( TTree*              data              ,
+      Ostap::Math::ECDF&  ecdf              ,
+      const std::string&  expression        ,
+      const unsigned long first      = 0    ,
+      const unsigned long last       = LAST ) ;
+    // ========================================================================
+    /** Get the empirical cumulative distribtion function 
+     *  @param data       (INPUT) data 
+     *  @param ecdf       (UDATE) cumulative distribtion function 
+     *  @param expression (INPUT) the variable 
+     *  @param selection  (INOUT) selectgion/weight 
+     *  @param first      (INPUT) the first event to process (inclusive)
+     *  @param last       (INPUT) the last  event to process (non-inclusive)
+     *  @returs status code 
+     */
+    static Ostap::StatusCode ECDF
+    ( TTree*              data              ,
+      Ostap::Math::WECDF& ecdf              ,
+      const std::string&  expression        , 
+      const std::string&  selection  = ""   , 
+      const unsigned long first      = 0    ,
+      const unsigned long last       = LAST ) ;    
+    // ========================================================================
+    /** Get the empirical cumulative distribtion function 
+     *  @param data       (INPUT) data 
+     *  @param ecdf       (UDATE) cumulative distribtion function 
+     *  @param expression (INPUT) the variable 
+     *  @param selection  (INOUT) selectgion/weight 
+     *  @param first      (INPUT) the first event to process (inclusive)
+     *  @param last       (INPUT) the last  event to process (non-inclusive)
+     *  @returs status code 
+     */
+    static Ostap::StatusCode ECDF
+    ( const RooAbsData*   data                 ,
+      Ostap::Math::WECDF& ecdf                 ,
+      const std::string&  expression           , 
+      const std::string&  selection  = ""      , 
+      const std::string&  cut_range  = ""      ,
+      const unsigned long first      = 0       ,
+      const unsigned long last       = LAST    ) ;    
+    // ========================================================================
+    /** Get the empirical cumulative distribtion function 
+     *  @param data  (INPUT) data 
+     *  @param ecdf  (UDATE) cumulative distribtion function 
+     *  @param expression (INPUT) the variable 
+     *  @param first  (INPUT) the first event to process (inclusive)
+     *  @param last   (INPUT) the last  event to process (non-inclusive)
+     *  @returs status code 
+     */
+    static Ostap::StatusCode ECDF
+    ( FrameNode           data              ,
+      Ostap::Math::ECDF&  ecdf              ,
+      const std::string&  expression        ) ;
+    // ========================================================================
+    /** Get the empirical cumulative distribtion function 
+     *  @param data  (INPUT) data 
+     *  @param ecdf  (UDATE) cumulative distribtion function 
+     *  @param expression (INPUT) the variable 
+     *  @param first  (INPUT) the first event to process (inclusive)
+     *  @param last   (INPUT) the last  event to process (non-inclusive)
+     *  @returs status code 
+     */
+    static Ostap::StatusCode ECDF
+    ( FrameNode           data             ,
+      Ostap::Math::WECDF& ecdf             ,
+      const std::string&  expression       ,
+      const std::string&  selection  = ""  ) ;
     // ========================================================================
   public:
     // ========================================================================
@@ -1366,14 +1446,14 @@ namespace Ostap
      */
     static unsigned long 
     get_table
-    ( const RooAbsData*                  data         , 
-      const Names&                       vars         , 
-      const std::string&                 cuts         , 
-      Table&                             table        ,
-      Column&                            weights      , 
-      const std::string&                 cutrange     ,
-      const unsigned long                first = 0    ,
-      const unsigned long                last  = LAST ) ;
+    ( const RooAbsData*                  data             , 
+      const Names&                       vars             , 
+      const std::string&                 cuts             ,   
+      Table&                             table            ,
+      Column&                            weights          , 
+      const std::string&                 cut_range = ""   ,
+      const unsigned long                first     = 0    ,
+      const unsigned long                last      = LAST ) ;
     // ========================================================================
   } ;  
   // ==========================================================================

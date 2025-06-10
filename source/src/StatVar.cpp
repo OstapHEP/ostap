@@ -29,12 +29,14 @@
 #include "Ostap/Moments.h"
 #include "Ostap/GetWeight.h"
 #include "Ostap/Moments.h"
+#include "Ostap/ECDF.h"
 #include "Ostap/DataFrameUtils.h"
 // ============================================================================
 // Local
 // ============================================================================
 #include "OstapDataFrame.h"
 #include "Exception.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file
  *  Implementation file for class Ostap::StatVar
@@ -44,14 +46,6 @@
 // ============================================================================
 namespace
 {
-  // ==========================================================================
-  enum {
-    INVALID_DATA       = 760 , 
-    INVALID_EXPRESSION = 761 , 
-    INVALID_SELECTION  = 762 , 
-    INVALID_ENTRY      = 763 , 
-    INVALID_LOAD       = 764 , 
-  } ;
   // ==========================================================================
   static_assert ( std::numeric_limits<unsigned long>::is_specialized   ,
                   "Numeric_limist<unsigned long> are not specialized!" ) ;
@@ -981,9 +975,9 @@ bool Ostap::StatVar::hasEntry
   //
   const std::unique_ptr<Ostap::FormulaVar> selection { make_formula ( cuts , *data , true ) } ;
   //
-  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
-  //
   const unsigned long the_last  = std::min ( last , (unsigned long) data->numEntries() ) ;
+  //
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
   // start the loop
   for ( unsigned long entry = first ; entry < the_last ; ++entry )
@@ -1004,7 +998,6 @@ bool Ostap::StatVar::hasEntry
 /** check if there is at least one entry that satisfies criteria 
  *  @param data       (INPUT) data 
  *  @param cuts       (INPUT) criteria 
- *  @param cut_range  (INPUT) cut range 
  *  @param first      (INPUT) the first entry 
  *  @param last       (INPUT) the last entry
  *  @return true if there exist at leats one entry 
@@ -1015,7 +1008,7 @@ bool Ostap::StatVar::hasEntry
   const std::string&  cuts      , 
   const unsigned long first     ,
   const unsigned long last      ) 
-{ return hasEntry ( data , cuts , "" , first , last ) ; }
+{ return hasEntry ( data , cuts , nullptr , first , last ) ; }
 // ============================================================================
 /*  build statistic for the <code>expression</code>
  *  @param tree (INPUT) the tree
@@ -1558,10 +1551,11 @@ Ostap::StatVar::statVar
 ( const RooAbsData*   data        ,
   const std::string&  expression  ,
   const std::string&  cuts        ,
-  const std::string&  cut_range   ,
+  const std::string&  cut_range   , 
   const unsigned long first       ,
   const unsigned long last        )
 {
+    
   // ==========================================================================
   Ostap::Assert ( nullptr != data           ,  
 		  "Invalid RotAbsData"      , 
@@ -1574,9 +1568,10 @@ Ostap::StatVar::statVar
   const std::unique_ptr<Ostap::FormulaVar> selection { make_formula ( cuts       , *data , true ) } ;
   //
   const bool  weighted = data->isWeighted() ;
-  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
   const unsigned long the_last  = std::min ( last , (unsigned long) data->numEntries() ) ;
+  //
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
   // start the loop
   for ( unsigned long entry = first ; entry < the_last ; ++entry )
@@ -1584,7 +1579,7 @@ Ostap::StatVar::statVar
     //
     const RooArgSet* vars = data->get( entry ) ;
     if ( nullptr == vars  )                           { break    ; } // RETURN
-    if ( cutrange && !vars->allInRange ( cutrange ) ) { continue ; } // CONTINUE    
+    if ( cutrange && !vars->allInRange ( cutrange ) ) { continue ; } // CONTINUE
     //
     // apply cuts:
     const long double wc = selection ? selection -> getVal() : 1.0L ;
@@ -1597,7 +1592,7 @@ Ostap::StatVar::statVar
     if ( !w  ) { continue ; }                                   // CONTINUE        
     //
     const double v = formula->getVal () ;
-    //
+    //      
     result.add ( v , w ) ;
   }
   //
@@ -1623,7 +1618,7 @@ Ostap::StatVar::statVars
   std::vector<Statistic>&         result      , 
   const Ostap::StatVar::Names&    expressions ,
   const std::string&              cuts        ,
-  const std::string&              cut_range   ,
+  const std::string&              cut_range   , 
   const unsigned long             first       ,
   const unsigned long             last        ) 
 {
@@ -1649,8 +1644,8 @@ Ostap::StatVar::statVars
     formulas.push_back ( std::move ( p ) ) ;  
   }
   //
-  const bool  weighted = data->isWeighted() ;
   const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
+  const bool  weighted = data->isWeighted() ;
   //
   const unsigned long the_last  = std::min ( last , (unsigned long) data->numEntries() ) ;
   //
@@ -1699,7 +1694,7 @@ Ostap::StatVar::statCov
   const std::string&   exp1      , 
   const std::string&   exp2      , 
   const std::string&   cuts      , 
-  const std::string&   cut_range ,
+  const std::string&   cut_range , 
   const unsigned long  first     ,
   const unsigned long  last      )
 {
@@ -1717,8 +1712,8 @@ Ostap::StatVar::statCov
   const std::unique_ptr<Ostap::FormulaVar> formula2  { make_formula ( exp2 , *data        ) } ;
   const std::unique_ptr<Ostap::FormulaVar> selection { make_formula ( cuts , *data , true ) } ;
   //
-  const bool  weighted = data->isWeighted() ;
   const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
+  const bool  weighted = data->isWeighted() ;
   //
   const unsigned long the_last  = std::min ( last , (unsigned long) data->numEntries() ) ;
   //
@@ -1768,7 +1763,7 @@ Ostap::StatVar::statCov
   const std::string&              cuts      ,
   std::vector<Statistic>&         stats     ,  
   TMatrixTSym<double>&            cov2      , 
-  const std::string&              cut_range ,
+  const std::string&              cut_range , 
   const unsigned long             first     ,
   const unsigned long             last      ) 
 {
@@ -1778,7 +1773,6 @@ Ostap::StatVar::statCov
   if ( 0 == data || last <= first ) { stats.clear() ; return 0 ; }
   //
   const bool  weighted = data->isWeighted() ;
-  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
   std::vector<std::unique_ptr<Ostap::FormulaVar> > formulas ;
   //
@@ -1793,6 +1787,7 @@ Ostap::StatVar::statCov
   cov2 = TMatrixTSym<double>( N ) ; 
   stats.resize( N ) ;
   //
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   std::vector<double> results ( N , 0.0 ) ;
   //
   const bool with_cuts  = !(!selection) ;
@@ -1864,7 +1859,7 @@ Ostap::StatVar::statCov
   const std::vector<std::string>& vars      ,  
   std::vector<Statistic>&         stats     ,  
   TMatrixTSym<double>&            cov2      ,  
-  const std::string&              cut_range ,
+  const std::string&              cut_range , 
   const unsigned long             first     ,
   const unsigned long             last      )
 {
@@ -2427,10 +2422,10 @@ double Ostap::StatVar::nEff
   //
   const bool  weighted   = data.isWeighted () ;
   const bool  with_cuts  = !cuts    .empty () ;
-  const char* cutrange   = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   // the simplest case :
-  if ( !with_cuts && cut_range.empty() && !weighted ) { return the_last - first ; } // RETURN
+  if ( !with_cuts && !cutrange && !weighted ) { return the_last - first ; } // RETURN
   //
   const std::unique_ptr<Ostap::FormulaVar> cut { make_formula ( cuts , data , true ) } ;
   //
@@ -2491,8 +2486,7 @@ double Ostap::StatVar::get_moment
   const unsigned long the_last    = std::min ( num_entries , last ) ;
   if ( the_last <= first ) { return  0 ; }    // RETURN
   //
-  const char* cutrange   = cut_range.empty() ?  nullptr : cut_range.c_str() ;
-  //
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
   const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //  
@@ -2530,7 +2524,6 @@ Ostap::StatVar::moment
   //
   const bool  weighted = data.isWeighted () ;
   const bool  with_cuts  = !cuts    .empty () ;
-  const char* cutrange   = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
   const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
   const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
@@ -2541,6 +2534,7 @@ Ostap::StatVar::moment
   long double sumw2 = 0 ; // sum of weights^2
   long double c2    = 0 ;
   //
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   bool        empty = true ;
   for ( unsigned long entry = first ; entry < the_last ; ++entry )
   {
@@ -2613,11 +2607,11 @@ Ostap::StatVar::central_moment
   //
   const bool  weighted = data.isWeighted () ;
   const bool  with_cuts  = !cuts    .empty () ;
-  const char* cutrange   = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
   const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
   const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
-  //  
+  //
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   const long double mu =
     _moment_ ( data ,  *expression , cut.get() , 1  , 0 , first ,  the_last , cutrange );
   //
@@ -2716,11 +2710,11 @@ Ostap::StatVar::skewness
   //
   const bool  weighted = data.isWeighted () ;
   const bool  with_cuts  = !cuts    .empty () ;
-  const char* cutrange   = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
   const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
   const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   const long double mu =
     _moment_ ( data ,  *expression , cut.get() , 1  , 0 , first ,  the_last , cutrange );
   //
@@ -2802,11 +2796,11 @@ Ostap::StatVar::kurtosis
   //
   const bool  weighted  = data.isWeighted () ;
   const bool  with_cuts = !cuts    .empty () ;
-  const char* cutrange  = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
   const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
   const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   const long double mu =
     _moment_ ( data ,  *expression , cut.get() , 1  , 0 , first ,  the_last , cutrange );
   //
@@ -2897,14 +2891,13 @@ Ostap::StatVar::quantile
   const unsigned long the_last    = std::min ( num_entries , last ) ;
   if ( the_last <= first ) { return  0 ; }    // RETURN
   //
-  const char* cutrange  = cut_range.empty() ?  nullptr : cut_range.c_str() ;
-  //
   const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
   const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //  
   std::set<double> qset {} ;
   qset.insert ( q )  ;
   //
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   auto result = _quantiles_ 
     (  data,  qset , 
        *expression ,  cut.get() , first , the_last , cutrange ) ;
@@ -2945,11 +2938,10 @@ Ostap::StatVar::p2quantile
   const unsigned long the_last    = std::min ( num_entries , last ) ;
   if ( the_last <= first ) { return  0 ; }    // RETURN
   //
-  const char* cutrange  = cut_range.empty() ?  nullptr : cut_range.c_str() ;
-  //
   const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
   const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //  
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   std::set<double> qset {} ;
   qset.insert ( q )  ;
   //
@@ -3002,11 +2994,10 @@ Ostap::StatVar::interval
   const unsigned long the_last    = std::min ( num_entries , last ) ;
   if ( the_last <= first ) { return QInterval() ; }    // RETURN
   //
-  const char* cutrange  = cut_range.empty() ?  nullptr : cut_range.c_str() ;
-  //
   const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
   const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //  
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   auto result = _quantiles_ 
     (  data,  std::set<double>{{ q1 , q2 }} , 
        *expression ,  cut.get() , first , the_last , cutrange ) ;
@@ -3040,7 +3031,7 @@ Ostap::StatVar::p2interval
   const double        q2        , //  0<q2<1 
   const std::string&  expr      , 
   const std::string&  cuts      , 
-  const std::string&  cut_range , 
+  const std::string&  cut_range ,   
   const unsigned long first     ,
   const unsigned long last      )
 {
@@ -3055,11 +3046,10 @@ Ostap::StatVar::p2interval
   const unsigned long the_last    = std::min ( num_entries , last ) ;
   if ( the_last <= first ) { return  QInterval()  ; }    // RETURN
   //
-  const char* cutrange  = cut_range.empty() ?  nullptr : cut_range.c_str() ;
-  //
   const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
   const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //  
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   auto result = _p2quantiles_ 
     (  data,  std::set<double>{{ q1 , q2 }} , 
        *expression ,  cut.get() , first , the_last , cutrange ) ;
@@ -3086,7 +3076,7 @@ Ostap::StatVar::quantiles
   const std::vector<double>& quantiles , 
   const std::string&         expr      , 
   const std::string&         cuts      , 
-  const std::string&         cut_range , 
+  const std::string&         cut_range ,   
   const unsigned long        first     ,
   const unsigned long        last      )
 {
@@ -3106,8 +3096,7 @@ Ostap::StatVar::quantiles
   const unsigned long the_last    = std::min ( num_entries , last ) ;
   if ( the_last <= first ) { return  std::vector<double>() ; }    // RETURN
   //
-  const char* cutrange  = cut_range.empty() ?  nullptr : cut_range.c_str() ;
-  //
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
   const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //  
@@ -3132,7 +3121,7 @@ Ostap::StatVar::p2quantiles
   const std::vector<double>& quantiles , 
   const std::string&         expr      , 
   const std::string&         cuts      , 
-  const std::string&         cut_range , 
+  const std::string&         cut_range ,   
   const unsigned long        first     ,
   const unsigned long        last      )
 {
@@ -3153,8 +3142,7 @@ Ostap::StatVar::p2quantiles
   if ( the_last <= first )
   { return  Ostap::StatVar::Quantiles  ( std::vector<double>() , 0 ) ; }    // RETURN
   //
-  const char* cutrange  = cut_range.empty() ?  nullptr : cut_range.c_str() ;
-  //
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
   const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //  
@@ -4056,7 +4044,7 @@ Ostap::StatVar::get_table
   const std::string&                 cuts      ,
   Ostap::StatVar::Table&             table     ,
   Ostap::StatVar::Column&            weights   ,
-  const std::string&                 cut_range ,
+  const std::string&                 cut_range ,   
   const unsigned long                first     ,
   const unsigned long                last      )
 {
@@ -4079,8 +4067,8 @@ Ostap::StatVar::get_table
     formulas.push_back ( std::move ( p ) ) ;  
   }
   //
-  const bool  weighted = data->isWeighted() ;
   const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
+  const bool  weighted = data->isWeighted() ;
   //
   const unsigned long the_last  = std::min ( last , (unsigned long) data->numEntries() ) ;
   //
@@ -4159,10 +4147,10 @@ Ostap::StatVar::the_moment
   const unsigned long     first      ,
   const unsigned long     last       ) 
 {
-  if ( nullptr == tree    ) { return Ostap::StatusCode ( INVALID_DATA       ) ; }
+  if ( nullptr == tree    ) { return INVALID_DATA     ; }
   //
   Ostap::Formula formula ( expression , tree ) ;
-  if ( !formula.ok()      ) { return Ostap::StatusCode ( INVALID_EXPRESSION ) ; }
+  if ( !formula.ok()      ) { return INVALID_FORMULA ; }
   //
   if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
   //  
@@ -4176,10 +4164,10 @@ Ostap::StatVar::the_moment
   {
     //
     long ievent = tree->GetEntryNumber ( entry ) ;
-    if ( 0 > ievent ) { return Ostap::StatusCode ( INVALID_ENTRY  )  ; }
+    if ( 0 > ievent ) { return INVALID_ENTRY ; }
     //
     ievent      = tree->LoadTree ( ievent ) ;
-    if ( 0 > ievent ) { return Ostap::StatusCode ( INVALID_LOAD   )  ; } 
+    if ( 0 > ievent ) { return INVALID_EVENT  ; } 
     //
     formula.evaluate ( results ) ;
     for  ( const double r : results ) { moment.update ( r ) ; }
@@ -4205,13 +4193,13 @@ Ostap::StatVar::the_moment
   if ( nullptr == tree    ) { return Ostap::StatusCode ( INVALID_DATA       ) ; }
   //
   Ostap::Formula formula ( expression , tree ) ;
-  if ( !formula.ok()      ) { return Ostap::StatusCode ( INVALID_EXPRESSION ) ; }
+  if ( !formula.ok()      ) { return INVALID_FORMULA ; }
   //
   std::unique_ptr<Ostap::Formula> cuts { nullptr } ;
   if  ( !selection.empty() ) 
   { 
     cuts = std::make_unique<Ostap::Formula>( selection , tree ) ; 
-    if ( !cuts || !cuts->ok() ) { return Ostap::StatusCode ( INVALID_SELECTION ) ; }
+    if ( !cuts || !cuts->ok() ) { return INVALID_FORMULA ; }
   }
   //
   const bool with_cuts = !(!cuts) ;
@@ -4228,10 +4216,10 @@ Ostap::StatVar::the_moment
   {
     //
     long ievent = tree->GetEntryNumber ( entry ) ;
-    if ( 0 > ievent ) { return Ostap::StatusCode ( INVALID_ENTRY ) ; }
+    if ( 0 > ievent ) { return INVALID_ENTRY ; }
     //
     ievent      = tree->LoadTree ( ievent ) ;
-    if ( 0 > ievent ) { return Ostap::StatusCode ( INVALID_LOAD  ) ; } 
+    if ( 0 > ievent ) { return INVALID_EVENT ; } 
     //
     const long double w = with_cuts ? cuts->evaluate() : 1.0L ;
     //
@@ -4255,23 +4243,22 @@ Ostap::StatVar::the_moment
   Ostap::Math::WStatistic& moment     , 
   const std::string&       expression , 
   const std::string&       selection  , 
-  const std::string&       cutrange   ,      
+  const std::string&       cut_range  , 
   const unsigned long      first      ,
   const unsigned long      last       ) 
 {
-  if ( nullptr == data ) { return Ostap::StatusCode ( INVALID_DATA       ) ; }
+  if ( nullptr == data ) { return INVALID_DATA ; }
   //
   const std::unique_ptr<Ostap::FormulaVar> expr { ::make_formula ( expression , *data , false , true ) } ;
   const std::unique_ptr<Ostap::FormulaVar> cuts { ::make_formula ( selection  , *data , true  , true ) } ;
   //
-  if ( !expr || !expr->ok() )                          { return Ostap::StatusCode ( INVALID_EXPRESSION ) ; }
-  if ( selection.empty() && ( !cuts || !cuts->ok() ) ) { return Ostap::StatusCode ( INVALID_SELECTION  ) ; }
+  if ( !expr || !expr->ok() )                          { return INVALID_FORMULA ; }
+  if ( selection.empty() && ( !cuts || !cuts->ok() ) ) { return INVALID_FORMULA  ; }
   //
   if ( last <= first ) { return Ostap::StatusCode::SUCCESS ; }
   //
-  const char* cut_range = cutrange.empty() ?  nullptr : cutrange.c_str() ;
-  //
-  const bool weighted = data->isWeighted() ;
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
+  const bool  weighted = data->isWeighted() ;
   //
   const unsigned long the_last = std::min ( last , (unsigned long) data->numEntries() ) ;
   //
@@ -4281,7 +4268,7 @@ Ostap::StatVar::the_moment
     //
     const RooArgSet* vars = data->get( entry ) ;
     if ( nullptr == vars  ) { return Ostap::StatusCode ( INVALID_ENTRY ) ; }
-    if ( cut_range && !vars->allInRange ( cut_range ) ) { continue ; } // CONTINUE    
+    if ( cutrange && !vars->allInRange ( cutrange ) ) { continue ; } // CONTINUE    
     //
     // apply cuts:
     const long double wc = cuts      ? cuts->getVal() : 1.0L ;
@@ -4345,6 +4332,177 @@ Ostap::StatVar::the_moment
                       ""         , 
                       first      , 
                       last       ) ;
+}
+// ============================================================================
+/*  Get the empirical cumulative distribution function 
+ *  @param data  (INPUT) data 
+ *  @param ecdf  (UDATE) cumulative distribtion function 
+ *  @param expression (INPUT) the variable 
+ *  @param first  (INPUT) the first event to process (inclusive)
+ *  @param last   (INPUT) the last  event to process (non-inclusive)
+ *  @returs status code 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::StatVar::ECDF
+( TTree*              data       ,
+  Ostap::Math::ECDF&  ecdf       ,
+  const std::string&  expression ,
+  const unsigned long first      ,
+  const unsigned long last       )
+{
+  // reset ECDF 
+  ecdf = Ostap::Math::ECDF () ;
+  const Ostap::StatusCode sc = the_moment ( data , ecdf , expression , first , last ) ;
+  if       ( sc.isFailure() ) { return sc ; }
+  else if  ( !ecdf.ok()     ) { return INVALID_ECDF ; } 
+  return Ostap::StatusCode::SUCCESS ; 
+}
+// ==========================================================================
+/* Get the empirical cumulative distribtion function 
+ *  @param data       (INPUT) data 
+ *  @param ecdf       (UDATE) cumulative distribtion function 
+ *  @param expression (INPUT) the variable 
+ *  @param selection  (INOUT) selectgion/weight 
+ *  @param first      (INPUT) the first event to process (inclusive)
+ *  @param last       (INPUT) the last  event to process (non-inclusive)
+ *  @returs status code 
+ */
+// ==========================================================================
+Ostap::StatusCode
+Ostap::StatVar::ECDF
+( TTree*              data       ,
+  Ostap::Math::WECDF& ecdf       ,
+  const std::string&  expression , 
+  const std::string&  selection  , 
+  const unsigned long first      ,
+  const unsigned long last       )
+{
+  // reset ECDF 
+  ecdf = Ostap::Math::WECDF () ;
+  const Ostap::StatusCode sc = the_moment ( data , ecdf , expression , selection , first , last ) ;
+  if       ( sc.isFailure() ) { return sc ; }
+  else if  ( !ecdf.ok()     ) { return INVALID_WECDF ; } 
+  return Ostap::StatusCode::SUCCESS ; 
+}
+// ==========================================================================
+/* Get the empirical cumulative distribtion function 
+ *  @param data       (INPUT) data 
+ *  @param ecdf       (UDATE) cumulative distribtion function 
+ *  @param expression (INPUT) the variable 
+ *  @param selection  (INOUT) selectgion/weight 
+ *  @param first      (INPUT) the first event to process (inclusive)
+ *  @param last       (INPUT) the last  event to process (non-inclusive)
+ *  @returs status code 
+ */
+// ==========================================================================
+Ostap::StatusCode
+Ostap::StatVar::ECDF
+( const RooAbsData*   data       ,
+  Ostap::Math::WECDF& ecdf       ,
+  const std::string&  expression , 
+  const std::string&  selection  , 
+  const std::string&  cut_range  , 
+  const unsigned long first      ,
+  const unsigned long last       )
+{
+  // reset ECDF 
+  ecdf = Ostap::Math::WECDF () ;
+  const Ostap::StatusCode sc = the_moment ( data , ecdf , expression , selection , cut_range , first , last ) ;
+  if       ( sc.isFailure() ) { return sc ; }
+  else if  ( !ecdf.ok()     ) { return INVALID_WECDF ; } 
+  return Ostap::StatusCode::SUCCESS ; 
+}
+
+
+
+
+// ============================================================================
+/** Get the empirical cumulative distribtion function 
+ *  @param data  (INPUT) data 
+ *  @param ecdf  (UDATE) cumulative distribtion function 
+ *  @param expression (INPUT) the variable 
+ *  @param first  (INPUT) the first event to process (inclusive)
+ *  @param last   (INPUT) the last  event to process (non-inclusive)
+ *  @returs status code 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::StatVar::ECDF
+( Ostap::FrameNode    data        ,
+  Ostap::Math::ECDF&  ecdf        ,
+  const std::string&  expression  )
+{
+  // (1) reset ECDF 
+  ecdf = Ostap::Math::ECDF () ;
+  //
+  /// define the temporary columns 
+  const std::string var    { Ostap::tmp_name ( "v_" , expression ) } ;
+  auto t = data.Define ( var    ,  "1.0*(" + expression + ")" ) ;
+  //
+  const unsigned int nSlots = std::max ( 1u , Ostap::Utils::mt_pool_size() ) ;
+  std::vector<Ostap::Math::ECDF> _stat ( nSlots ? nSlots : 1 ) ;
+  //
+  auto fun = [&_stat,nSlots] ( unsigned int slot , double v ) 
+  { _stat [ slot % nSlots ].add ( v ) ; } ;
+  //
+  t.ForeachSlot ( fun ,  { var } ) ;
+  //
+  // merge results 
+  for ( unsigned int i = 1 ; i < nSlots ; ++i )
+    { _stat [ 0 ] += _stat [ i ] ; }
+  //
+  if ( !_stat [ 0 ].ok () ) {  return INVALID_ECDF ; }
+  ecdf = _stat [ 0 ] ;
+  //
+  return Ostap::StatusCode::SUCCESS ; 
+}
+// ============================================================================
+/** Get the empirical cumulative distribtion function 
+ *  @param data  (INPUT) data 
+ *  @param ecdf  (UDATE) cumulative distribtion function 
+ *  @param expression (INPUT) the variable 
+ *  @param first  (INPUT) the first event to process (inclusive)
+ *  @param last   (INPUT) the last  event to process (non-inclusive)
+ *  @returs status code 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::StatVar::ECDF
+( Ostap::FrameNode    data        ,
+  Ostap::Math::WECDF& ecdf        ,
+  const std::string&  expression  ,
+  const std::string&  selection   )
+{
+  //
+  const bool no_cuts = trivial ( selection ) ; 
+  /// define the temporary columns 
+  const std::string var    { Ostap::tmp_name ( "v_" , expression ) } ;
+  const std::string weight { Ostap::tmp_name ( "w_" , selection  ) } ;
+  const std::string bcut   { Ostap::tmp_name ( "b_" , selection  ) } ;
+  //
+  auto t = data
+  .Define ( bcut   , no_cuts ? "true" : "(bool)   ( " + selection + " ) ;" ) 
+  .Filter ( bcut   ) 
+  .Define ( var    ,  "1.0*(" + expression + ")"   )
+  .Define ( weight , no_cuts ? "1.0"  : "1.0*(" + selection + ")" ) ;
+  //
+  const unsigned int nSlots = std::max ( 1u , Ostap::Utils::mt_pool_size() ) ;
+  std::vector<Ostap::Math::WECDF> _stat ( nSlots ? nSlots : 1 ) ;
+  //  
+  auto fun = [&_stat,nSlots] ( unsigned int slot , double v , double w ) 
+  { _stat [ slot % nSlots ].add ( v , w ) ; } ;
+  //
+  t.ForeachSlot ( fun ,  { var , weight } ) ; 
+  //
+  // merge results 
+  for ( unsigned int i = 1 ; i < nSlots ; ++i )
+    { _stat [ 0 ] += _stat [ i ] ; }
+  //
+  if ( !_stat [ 0 ].ok () ) {  return INVALID_WECDF ; }
+  ecdf = _stat [ 0 ] ;
+  //
+  return Ostap::StatusCode::SUCCESS ;   
 }
 // ============================================================================
 //                                                                      The END

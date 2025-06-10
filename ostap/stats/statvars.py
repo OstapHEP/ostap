@@ -228,8 +228,8 @@ def  data_central_moment ( data       ,
 def data_ECDF ( data , expression , cuts = '' , *args ) :
     """ Get the empirical cumulative distribution function 
     >>> data =  ...
-    >>> ecdf1 = data_get_ECDF ( data , 'mass' ) 
-    >>> ecdf2 = data_get_ECDF ( data , 'mass' ,  'PT>1') 
+    >>> ecdf1 = data.ECDF ( data , 'mass' ) 
+    >>> ecdf2 = data.ECDF ( data , 'mass' ,  'PT>1') 
     - see `Ostap.Math.ECDF`
     - see `Ostap.Math.WECDF`
     """ 
@@ -239,12 +239,34 @@ def data_ECDF ( data , expression , cuts = '' , *args ) :
     expression = str ( expression ).strip() 
     cuts       = str ( cuts       ).strip() 
 
-    if not cuts :
-        ecdf = Ostap.Math.ECDF()
-        return data_get_stat ( data , ecdf , expression ,    *args )
-    
-    ecdf = Ostap.Math.WECDF()
-    return data_get_stat ( data , ecdf , expression , cuts , *args )
+    ## RooFit 
+    if   isinstance ( data , ROOT.RooAbsData ) :
+        ecdf = Ostap.Math.WECDF ()
+        sc   = StatVar.ECDF ( data , ecdf , expression , cuts , *args )
+        
+    elif isinstance ( data , ROOT.TTree ) :
+        
+        from ostap.trees.trees import ActiveBranches
+        with rootException() , ActiveBranches ( data , cuts , expression ) : 
+        
+            if not cuts :
+                ecdf = Ostap.Math.ECDF  ()
+                sc   = StatVar.ECDF ( data , ecdf , expression , *args )
+            else :
+                ecdf = Ostap.Math.WECDF ()
+                sc   = StatVar.ECDF ( data , ecdf , expression , cuts , *args )
+                
+    else : ## FRAMES HERE 
+        
+        if not cuts :
+            ecdf = Ostap.Math.ECDF  ()
+            sc   = StatVar.ECDF ( data , ecdf , expression , *args )
+        else :
+            ecdf = Ostap.Math.WECDF ()
+            sc   = StatVar.ECDF ( data , ecdf , expression , cuts , *args )
+            
+    assert sc.isSuccess () , "Error code %s from StatVar::ECDF" % sc 
+    return ecdf
     
 # ==============================================================================
 ## Get the (s)Statistic-bases statistics/counter from data
@@ -319,7 +341,7 @@ def data_statistics ( data , expressions , cuts = '' , *args ) :
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
     active = ActiveBranches ( data , cuts , *var_lst )
-    
+
     ## only one name is specified as string
     if   input_string :         
         var    = var_lst [ 0 ]
