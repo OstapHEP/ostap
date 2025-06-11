@@ -23,7 +23,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types   import integer_types, sized_types  
 from   ostap.core.pyrouts       import Ostap, hID
-from   ostap.frames.frames      import frame_the_moment, frame_the_statVar, frame_project
+from   ostap.frames.frames      import frame_project, Frames_OK 
 from   ostap.utils.valerrors    import ValWithErrors 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.progress_bar import progress_bar
@@ -42,6 +42,31 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.evolution' )
 else                       : logger = getLogger ( __name__                )
 # =============================================================================
+if Frames_OK : # ==============================================================
+    # =========================================================================
+    from ostap.frames.frames import frame_the_moment, frame_the_statVar
+    def _X_stat ( tree , xvar, cuts ) :
+        return frame_the_statVar ( tree , xvar , cuts , progress = False , report = False , lazy = False )
+    ## get the momnet anc x
+    def _X_and_Ymoment_ ( tree ,  N , yvar , xvar , cuts ) :
+        mm = frame_the_moment  ( tree , N , yvar , cuts , progress = False , report = False , lazy = True )
+        xs = frame_the_statVar ( tree ,     xvar , cuts , progress = False , report = False , lazy = True )
+        mm = mm.GetValue()
+        xs = xs.GetValue()
+        return xs, mm 
+    # ========================================================================= 
+else : # ======================================================================
+    #  ========================================================================
+    from ostap.frames.frames import frame_moment, frame_statVar
+    def _X_stat ( tree , xvar, cuts ) :
+        return frame_statVar ( tree , xvar , cuts )
+    ## get X and Y-moment the momnet anc x
+    def _X_and_Ymoment_ ( tree ,  N , yvar , xvar , cuts ) :
+        mm = frame_moment  ( tree , N , yvar , cuts )
+        xs = frame_statVar ( tree ,     xvar , cuts )
+        return xs, mm 
+    
+# ===========================================================================
 ## Helper function to study the non-parametric evolution of the distribution
 #  shape of one variabl eas function of anmothe variable,
 #  e.f. shape of resolution function
@@ -112,7 +137,7 @@ def evolution ( tree , yvar , xvar , cuts , bins = 10 , draw = True , silent = F
     if isinstance ( bins , integer_types ) and 0 < bins :
         #
         with timing ( 'Choose proper binning scheme' , logger = logger ) : 
-            xlims  = frame_the_statVar ( tree , xvar , cuts , progress = False , report = False , lazy = False  )
+            xlims  = _X_stat ( tree , xvar , cuts )
             xmnmx  = xlims.minmax() 
             hh     = ROOT.TH1F ( hID() , '' , 200 * bins , *xmnmx )
             tree.fproject ( hh , xvar , cuts ) 
@@ -139,11 +164,7 @@ def evolution ( tree , yvar , xvar , cuts , bins = 10 , draw = True , silent = F
 
     def calculate ( the_cuts ) :
         
-        mm = frame_the_moment  ( tree , N , yvar , the_cuts , progress = False , report = False , lazy = True )
-        xs = frame_the_statVar ( tree ,     xvar , the_cuts , progress = False , report = False , lazy = True )
-
-        mm = mm.GetValue()
-        xs = xs.GetValue()
+        xs, mm  = _X_and_Ymoment_ ( tree , N , yvar, xvar , the_cuts )
         
         mean     = mm.mean           ()
         rms      = mm.rms            () 

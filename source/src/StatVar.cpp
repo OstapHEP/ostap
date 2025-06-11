@@ -1008,7 +1008,7 @@ bool Ostap::StatVar::hasEntry
   const std::string&  cuts      , 
   const unsigned long first     ,
   const unsigned long last      ) 
-{ return hasEntry ( data , cuts , nullptr , first , last ) ; }
+{ return hasEntry ( data , cuts , std::string() , first , last ) ; }
 // ============================================================================
 /*  build statistic for the <code>expression</code>
  *  @param tree (INPUT) the tree
