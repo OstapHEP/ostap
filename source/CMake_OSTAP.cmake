@@ -103,6 +103,7 @@ add_library(ostap SHARED src/format.cpp
                          src/SFactor.cpp
                          src/SPLOT.cpp
                          src/StatEntity.cpp
+                         src/Statistic.cpp
                          src/StatVar.cpp
                          src/StatusCode.cpp
                          src/Tee.cpp

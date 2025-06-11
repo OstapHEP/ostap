@@ -6,16 +6,63 @@
 // ============================================================================
 #include <utility>
 #include <algorithm>
+#include <array>
 // ============================================================================
 //  GSL
 // ============================================================================
 #include "gsl/gsl_rstat.h"
 // ============================================================================
+// Ostap
+// =============================================================================
+#include "Ostap/Statistic.h"
+// =============================================================================
 namespace Ostap
 {
   // ==========================================================================
   namespace  Math
   {
+    // ========================================================================
+    /** @class QantileP2 
+     *  P2 algorithm for (approximate quantile estimamtion)
+     *  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
+     */
+    class  QuantileP2 : public Ostap::Math::Statistic
+    {
+      public :
+        // =======================================================================
+        /** constructor from  p
+         *  @parameter p (INPUT) p: \f$ 0 \le p \le 1 \f$  
+         */  
+        QuantileP2 ( const double p  = 0.5) ;
+        // ======================================================================
+      public :
+        // ======================================================================
+        /// add one more measurable, update quantiles    
+        QuantileP2& add ( const double v ) ;
+        /// add group of measurements 
+        // =====================================================================
+        // Generic counter interface 
+        void update ( const double value ) override { add  ( value ) ; }
+        // ======================================================================
+      public:
+        // ======================================================================
+        /// sample size 
+        inline std::size_t N    () const { return m_N  ; }
+        /// sample size 
+        inline std::size_t size () const { return N () ; }
+        // ======================================================================
+      private:
+        // ======================================================================
+        /// quantile 
+        double                    m_p   { 0.5 } ; // quantile 
+        /// sample size 
+        std::size_t               m_N   { 0   } ;  // sample size 
+        std::array<double,5>      m_q   {     } ;
+        std::array<std::size_t,5> m_n   {     } ;
+        std::array<double,5>      m_np  {     } ;
+        std::array<double,5>      m_dnp {     } ;
+      // =======================================================================
+    };
     // ========================================================================
     namespace GSL
     {

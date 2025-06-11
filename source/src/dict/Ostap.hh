@@ -122,6 +122,7 @@
 #include "Ostap/SFactor.h"
 #include "Ostap/SPLOT.h"
 #include "Ostap/StatEntity.h"
+#include "Ostap/Statistic.h"
 #include "Ostap/StatVar.h"
 #include "Ostap/StatusCode.h"
 #include "Ostap/SVectorWithError.h"

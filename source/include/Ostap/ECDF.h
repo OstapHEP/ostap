@@ -16,6 +16,7 @@
 #include "Ostap/ValueWithError.h"
 #include "Ostap/StatEntity.h"
 #include "Ostap/WStatEntity.h"
+#include "Ostap/Statistic.h"
 #include "Ostap/Moments.h"
 // ============================================================================
 namespace Ostap

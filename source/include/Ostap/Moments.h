@@ -11,33 +11,17 @@
 #include <limits>
 #include <type_traits>
 // ============================================================================
-// ROOT 
-// ============================================================================
-#include "RVersion.h"
-// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Choose.h"
 #include "Ostap/ValueWithError.h"
+#include "Ostap/Statistic.h"
 // ============================================================================
 namespace  Ostap
 {
   // ==========================================================================
   namespace Math
   {
-    // ========================================================================
-    /** @class Statistic
-     *  Helper abstract base class for statistic counters 
-     */
-    class Statistic
-    {
-    public :
-      // ======================================================================
-      virtual ~Statistic() ;
-      /// add new value to the counter 
-      virtual void update ( const double x ) = 0 ;
-      // ======================================================================      
-    } ;
     // ========================================================================
     /** @class Moment
      *  Helper (empty) base class for weighted statistic counters 
@@ -838,19 +822,6 @@ namespace  Ostap
     // Weighted moments 
     // ========================================================================
     	
-    // ========================================================================
-    /** @class WStatistic
-     *  Helper (empty) base class for weighted statistics 
-     */
-    class WStatistic
-    {
-    public :
-      // ======================================================================
-      virtual ~WStatistic () ;
-      /// add new value to the counter 
-      virtual void update ( const double x , const double w = 1 ) = 0 ;
-      // ======================================================================      
-    } ;
     // ========================================================================
     /** @class WMoment
      *  Helper (empty) base class for weighted moment-counters 

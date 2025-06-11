@@ -11,6 +11,11 @@
 #include <string>
 #include <ostream>
 // ============================================================================
+// Ostap
+// ============================================================================
+#include "Ostap/Statistic.h"
+// ============================================================================
+
 namespace Ostap
 {
   // ========================================================================
@@ -45,7 +50,7 @@ namespace Ostap
    *  @date    26/11/1999
    *  @date    2005-08-02
    */
-  class StatEntity
+  class StatEntity : public Ostap::Math::Statistic 
   {
   public:
     // ======================================================================
@@ -311,9 +316,7 @@ namespace Ostap
   public:
     // ========================================================================
     /// update counter 
-    StatEntity& update ( const double      value ) { return add ( value ) ; };
-    /// update counter 
-    StatEntity& update ( const StatEntity& value ) { return add ( value ) ; };
+    void update ( const double value ) override{ add ( value ) ; } ;
     // ========================================================================
   public: // various technical helper methods  
     // ========================================================================
