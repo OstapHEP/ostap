@@ -35,6 +35,7 @@
 #include "Ostap/DataFrameUtils.h"
 #include "Ostap/Digit.h"
 #include "Ostap/ECDF.h"
+#include "Ostap/EPDF.h"
 #include "Ostap/EigenSystem.h"
 #include "Ostap/Exception.h"
 #include "Ostap/Error2Exception.h"
