@@ -17,7 +17,7 @@ namespace Ostap
    *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
    *  @date   2014-04-07
    */
-  class WStatEntity : public Ostap::Math::WStatistic
+  class WStatEntity // : public Ostap::Math::WStatistic
   {
   public:
     // ======================================================================
@@ -144,9 +144,9 @@ namespace Ostap
     ( const double value      ,  
       const double weight = 1 ) ;
     /// ditto
-    void update 
-    ( const double value      ,  
-      const double weight = 1 ) override { add ( value , weight ) ; }
+    // void update 
+    // ( const double value      ,  
+    // const double weight = 1 ) override { add ( value , weight ) ; }
     // =============================================================================== 
     /** add another counter 
      *  @see Pebay, P., Terriberry, T.B., Kolla, H. et al. Comput Stat (2016) 31: 1305. 
@@ -156,13 +156,6 @@ namespace Ostap
     /// add another counter 
     WStatEntity& add ( const  StatEntity& stat ) 
     { return add ( WStatEntity (   stat ) ) ; }
-    /** add another counter 
-     *  @see Pebay, P., Terriberry, T.B., Kolla, H. et al. Comput Stat (2016) 31: 1305. 
-     *  @see https://doi.org/10.1007/s00180-015-0637-z
-     */
-    WStatEntity& update ( const WStatEntity& stat ) { return add ( stat ) ; }
-    /// add another counter 
-    WStatEntity& update ( const  StatEntity& stat ) { return add ( stat ) ; }
     // ======================================================================
   public:
     // ======================================================================

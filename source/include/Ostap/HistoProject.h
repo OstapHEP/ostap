@@ -218,11 +218,11 @@ namespace Ostap
     /** make a projection of RooDataSet into the histogram 
      *  @param data        (INPUT)  input data 
      *  @param histo       (UPDATE) histogram 
-     *  @param xexpression (INPUT) expression for x-axis 
-     *  @param yexpression (INPUT) expression for y-axis 
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
+     *  @param xexpression (INPUT)  expression for x-axis 
+     *  @param yexpression (INPUT)  expression for y-axis 
+     *  @param selection   (INPUT)  selection criteria/weight 
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
      */
     static Ostap::StatusCode project2
     ( const RooAbsData*   data                 , 

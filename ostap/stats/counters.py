@@ -201,7 +201,7 @@ if not hasattr ( WSE , '_orig_mean' ) :
     
 WSE. sum     = lambda s : VE ( s._orig_sum  () , s.sum2()       )
 WSE. mean    = lambda s : VE ( s._orig_mean () , s.meanErr()**2 )
-WSE. minmax  = lambda s :            s.values  ().minmax() 
+WSE. minmax  = lambda s : ( s.min () , s.max () ) 
 WSE.__repr__ = lambda s : 'WStat: '+ s.toString()
 WSE.__str__  = lambda s : 'WStat: '+ s.toString()
 
