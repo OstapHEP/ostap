@@ -143,7 +143,8 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
 
             silent = self.silent or not progress
             with warnings.catch_warnings() :
-                warnings.simplefilter('ignore', category=UserWarning)
+                ## warnings.simplefilter('ignore', category=UserWarning)
+                warnings.simplefilter('ignore', category=DeprecationWarning)
                 with ipp.Cluster ( **self.__kwargs ) as cluster :
 
                     if   self.__use_dill :
