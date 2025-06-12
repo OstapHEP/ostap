@@ -175,15 +175,16 @@ def evolution ( tree , yvar , xvar , cuts , bins = 10 , draw = True , silent = F
         
         return mm , xs.mean() , mean, rms , skewness , kurtosis, std5 , std6 
 
-    TGE   = ROOT.TGraphErrors
+    TGE  = ROOT.TGraphErrors
     TGAE = ROOT.TGraphAsymmErrors
-    
-    g1_MEAN , g2_MEAN = TGAE () , TGE ()
-    g1_RMS  , g2_RMS  = TGAE () , TGE ()
-    g1_SKEW , g2_SKEW = TGAE () , TGE ()
-    g1_KURT , g2_KURT = TGAE () , TGE ()
-    g1_STD5 , g2_STD5 = TGAE () , TGE ()
-    g1_STD6 , g2_STD6 = TGAE () , TGE ()
+
+    NB = len ( bins ) 
+    g1_MEAN , g2_MEAN = TGAE ( NB ) , TGE ( 1 )
+    g1_RMS  , g2_RMS  = TGAE ( NB ) , TGE ( 1 )
+    g1_SKEW , g2_SKEW = TGAE ( NB ) , TGE ( 1 )
+    g1_KURT , g2_KURT = TGAE ( NB ) , TGE ( 1 )
+    g1_STD5 , g2_STD5 = TGAE ( NB ) , TGE ( 1 )
+    g1_STD6 , g2_STD6 = TGAE ( NB ) , TGE ( 1 )
 
     for g in ( g1_MEAN, g1_RMS , g1_SKEW, g1_KURT , g1_STD5 , g1_STD6 ) : g.blue()
     for g in ( g2_MEAN, g2_RMS , g2_SKEW, g2_KURT , g2_STD5 , g2_STD6 ) : g.red ()
@@ -196,16 +197,16 @@ def evolution ( tree , yvar , xvar , cuts , bins = 10 , draw = True , silent = F
             title = '%s in global single bin' % yvar 
             logger.info ( '%s:\n%s' % ( title , mm.table ( title = title , prefix = '# ' ) ) )
 
-        g2_MEAN .append ( xmean , mean     )
-        g2_RMS  .append ( xmean , rms      )
-        g2_SKEW .append ( xmean , skewness )
-        g2_KURT .append ( xmean , kurtosis )
-        g2_STD5 .append ( xmean , std5     )
-        g2_STD6 .append ( xmean , std6     )
+        g2_MEAN [ 0 ] = xmean , mean    
+        g2_RMS  [ 0 ] = xmean , rms      
+        g2_SKEW [ 0 ] = xmean , skewness 
+        g2_KURT [ 0 ] = xmean , kurtosis 
+        g2_STD5 [ 0 ] = xmean , std5     
+        g2_STD6 [ 0 ] = xmean , std6     
 
     with timing ( "Process individual bins" , logger = logger ) :
         
-        first = True
+        ibin  = 0 
         for xlow, xhigh in progress_bar ( bins , silent = silent ) : 
             
             cut_low  = ROOT.TCut ( '%.10g<=%s' % ( xlow , xvar  ) )
@@ -217,14 +218,16 @@ def evolution ( tree , yvar , xvar , cuts , bins = 10 , draw = True , silent = F
             xm = float ( xmean ) 
             xm = ValWithErrors ( xm , xlow - xm , xhigh - xm )
             
-            g1_MEAN .append ( xm , mean     )
-            g1_RMS  .append ( xm , rms      )
-            g1_SKEW .append ( xm , skewness )
-            g1_KURT .append ( xm , kurtosis )
-            g1_STD5 .append ( xm , std5     )
-            g1_STD6 .append ( xm , std6     )
+            g1_MEAN [ ibin ] = xm , mean     
+            g1_RMS  [ ibin ] = xm , rms      
+            g1_SKEW [ ibin ] = xm , skewness 
+            g1_KURT [ ibin ] = xm , kurtosis 
+            g1_STD5 [ ibin ] = xm , std5     
+            g1_STD6 [ ibin ] = xm , std6     
+
+            ibin += 1
             
-            if draw and first :
+            if draw and 1 == ibin :
                 with use_canvas  ( "Mean     %s vs %s " % ( yvar, xvar ) ) :
                     g1_MEAN.draw ( 'ap' )
                     g2_MEAN.draw ( 'p'  )
@@ -243,7 +246,6 @@ def evolution ( tree , yvar , xvar , cuts , bins = 10 , draw = True , silent = F
                 with use_canvas  ( "Std-6    %s vs %s " % ( yvar, xvar ) ) :
                     g1_STD6.draw ( 'ap' )
                     g2_STD6.draw ( 'p'  )
-                first = False 
 
 
     from ostap.utils.cidict import cidict, cidict_fun 
