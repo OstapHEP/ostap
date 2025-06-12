@@ -38,7 +38,7 @@ except ImportError : # ========================================================
 # =============================================================================
 ## simple    function that created and  fill a histogram
 def make_histo  ( jobid , n ) :
-    """Simple    function that creates and  fills a histogram
+    """ Simple    function that creates and  fills a histogram
     """
     import ROOT, random 
     h1 = ROOT.TH1F ( 'h%d' %  jobid , '' , 100 , 0 , 10 )
@@ -48,7 +48,7 @@ def make_histo  ( jobid , n ) :
 # =============================================================================
 ## simple    function that created and  fill a histogram
 def make_histo2  ( param ) :
-    """Simple    function that creates and fills a histogram
+    """ Simple    function that creates and fills a histogram
     """
     jobid , n  = param
     ##  return make_histo ( jobid , n ) 
@@ -61,7 +61,7 @@ def make_histo2  ( param ) :
 # =============================================================================
 ## simple "merger" for histograms
 def merge_histos  ( h1 , h2 ) :
-    """Simple ``merger'' for historgams"""
+    """ Simple ``merger'' for historgams"""
     if not h1 : return h2 
     h1.Add (  h2 )
     return h1
@@ -73,7 +73,7 @@ inputs = 50 * [ 100 ]
 # ==============================================================================
 ## simple task to create and fill histogram 
 class HTask(Task) :
-    """Simple task to create and fill historgam
+    """ Simple task to create and fill historgam
     """
     def __init__ (  self )                  : self.__histo = None
     def initialize_local  ( self )          : self.__histo = None
@@ -92,7 +92,7 @@ class HTask(Task) :
 # =============================================================================
 ## test parallel processing with parallel_ipyparallel (bare interface) 
 def test_parallel_ipyparallel_bare ( ) :
-    """Test parallel processing with parallel_ipyparallel (bare interface) 
+    """ Test parallel processing with parallel_ipyparallel (bare interface) 
     """
     logger  = getLogger ("test_parallel_ipyparallel_bare")
     if not WorkManager :
@@ -124,7 +124,7 @@ def test_parallel_ipyparallel_bare ( ) :
 # =============================================================================
 ## test parallel processing with parallel_ipyparallel (task interface) 
 def test_parallel_ipyparallel_task ( ) :
-    """Test parallel processing with parallel_ipyparallel (task interface) 
+    """ Test parallel processing with parallel_ipyparallel (task interface) 
     """
     logger  = getLogger ("test_parallel_iparallel_task")
     if not WorkManager :
@@ -153,7 +153,7 @@ def test_parallel_ipyparallel_task ( ) :
 # =============================================================================
 ## test parallel processing with parallel_ipyparallel  (func interface) 
 def test_parallel_ipyparallel_func ( ) :
-    """Test parallel processing with parallel_ipyparallel (func interface) 
+    """ Test parallel processing with parallel_ipyparallel (func interface) 
     """
     logger  = getLogger ("test_parallel_ipyparallel_task")
     if not WorkManager :
@@ -179,7 +179,7 @@ def test_parallel_ipyparallel_func ( ) :
 # =============================================================================
 ## test parallel processing with parallel_ipyparallel (use generic task)
 def test_parallel_ipyparallel_generic ( ) :
-    """Test parallel processnig with parallel_ipyparallel (use generic task)
+    """T est parallel processnig with parallel_ipyparallel (use generic task)
     """
     logger  = getLogger ("test_parallel_ipyparallel_generic")
     if not WorkManager :
