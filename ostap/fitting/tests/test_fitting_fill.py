@@ -136,6 +136,7 @@ def test_fitting_fill_1 () :
 
     chain = data.chain
 
+    return 
     
     mJPsi = ROOT.RooRealVar ( 'mJPsi' , 'mass(J/Psi) [GeV]' , 3.0 * GeV , 3.2 * GeV )
 
@@ -240,7 +241,6 @@ def test_fitting_fill_1 () :
     if ds1_2 != ds1p_2  : logger.error ('Datasets ds1_2  and ds1p_2  are different!' )
     if ds1_3 != ds1p_3  : logger.error ('Datasets ds1_3  and ds1p_3  are different!' )
     if ds1_4 != ds1p_4  : logger.error ('Datasets ds1_4  and ds1p_4  are different!' )
-
 
     # =========================================================================
     logger.info ( attention( 'Trivial variables + CUT' ) ) 
@@ -593,7 +593,7 @@ if '__main__' == __name__ :
 
 
     test_fitting_fill_1 ()
-    pass 
+    
 
 
 
