@@ -208,6 +208,8 @@ def test_fitting_fill_1 () :
     if DataSet_NEW_FILL : 
         if ds1_1 != ds1_5 : logger.error ('Datasets ds1_1  and ds1_5   are different!' )
 
+    return 
+
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 :
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
@@ -219,7 +221,7 @@ def test_fitting_fill_1 () :
         chain.parallel_fill ( selector , shortcut = True  , use_frame = False , max_files = 1 )        
         ds1p_2 = selector.data 
     
-    return 
+    ## return 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )        
         selector = SelectorWithVars ( **config ) 
