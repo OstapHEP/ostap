@@ -1317,14 +1317,15 @@ namespace Ostap
     // ========================================================================
     /** @class Needham
      *  The special parametrization by Matthew NEEDHAM of
-     *  ``Crystal Ball-function'' suitable for \f$J/\psi/\Upsilon\f$-peaks     
+     *  `Crystal Ball-function' suitable for \f$J/\psi/\Upsilon\f$-peaks     
      *  - thanks to Matthew Needham
      *
-     *  - N i s fixed at 1 
-     *  - alpha is parametereised as functio of sigma 
+     *  - alpha is parameterized as functio of sigma 
      *  \f$ \alpha(\sigma) = c_0\frac{ (\sigma/c_1)^{c_2}}{ 1 + (\sigma/c_1)^{c_2} }\f$ 
      *
-     
+     *  @attention For majority of physics cases <code>n</code> 
+     *             can be fixed <code>n=1</code> (corresponds to <code>N=1</code>
+     *
      *  @see Ostap::Math::CrystalBall
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2012-05-13
@@ -1345,7 +1346,8 @@ namespace Ostap
         const double sigma =   13.5 ,
         const double a0    =    2.5 ,
         const double a1    =   13.5 ,
-        const double a2    =   10   ) ;
+        const double a2    =   10   ,
+	const double n     =    0   ) ; // notethat it is different from internal N!
       /// destructor
       ~Needham() ;
       // ======================================================================
@@ -1383,6 +1385,7 @@ namespace Ostap
       inline bool setMode  ( const double value ) { return m_cb.setMode  ( value ) ; }
       inline bool setMass  ( const double value ) { return m_cb.setMass  ( value ) ; }
       inline bool setSigma ( const double value ) { return m_cb.setSigma ( value ) ; }
+      inline bool setN     ( const double value ) { return m_cb.setN     ( value ) ; } 
       // =====================================================================
       bool        setA0    ( const double value ) ;
       bool        setA1    ( const double value ) ;
@@ -1406,11 +1409,11 @@ namespace Ostap
       /// the function itself
       Ostap::Math::CrystalBall m_cb ; // the function itself
       /// a0-parameter
-      double m_a0       ;  // a0_parameter
+      double m_a0                   ;  // a0_parameter
       /// a0-parameter
-      double m_a1       ;  // a1_parameter
+      double m_a1                   ;  // a1_parameter
       /// a0-parameter
-      double m_a2       ;  // a2_parameter
+      double m_a2                   ;  // a2_parameter
       // ======================================================================
     } ;
     // ========================================================================

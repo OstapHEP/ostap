@@ -2049,7 +2049,8 @@ Ostap::Math::Needham::Needham
   const double sigma ,
   const double a0    ,
   const double a1    ,
-  const double a2    )
+  const double a2    ,
+  const double n     ) 
 /// @see Ostap::Math:CrystalBall
   : m_cb  ( m0 , sigma , 1 , 0 ) // Ostap::Math:CrystalBall
   , m_a0  ( std::abs ( a0 ) )
@@ -2057,6 +2058,7 @@ Ostap::Math::Needham::Needham
   , m_a2  (            a2   )
 {
   m_cb.setAlpha ( alpha () ) ;
+  m_cb.setN     ( n        ) ;
 }
 // ============================================================================
 // destructor

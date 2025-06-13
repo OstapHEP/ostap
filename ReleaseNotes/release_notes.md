@@ -9,7 +9,8 @@
   1. Add quantiles for `Ostap::Math::(W)ECDF`
   1. add `ostap/toos/evolution.py` - utilty to investgate the on-parametrick evolution of the
      distribushae as function of another parameter
-
+  1. Add `n`-parameter to Needham' function/PDF 
+  
 ## Backward incompatible 
 
   1. change constructors in `Ostap::Math::(W)Moments_<N>`

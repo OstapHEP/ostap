@@ -604,8 +604,8 @@ models.append ( CB2_pdf )
 # =============================================================================
 ## @class Needham_pdf
 #  Needham function: specific parameterisation of Crystal Ball function with
-#   - \f$ n = 1 \f$  
 #   - \f$ \alpha(\sigma) = a_0 + \sigma\times (a_1+\sigma \times a_2) \f$
+#  For majority of physics cases n can/should  ne fixed to 0 (corresponds to N=1)
 #  The function is very well sutable to fit
 #  \f$J/\psi \rightarrow \mu^+\mu^-\f$,
 #  \f$\psi^{\prime} \rightarrow \mu^+\mu^-\f$ and
@@ -619,14 +619,15 @@ models.append ( CB2_pdf )
 #  @date 2011-07-25
 class Needham_pdf(PEAK) :
     """ Needham function: specific parameterisation of Crystal Ball function with
-    - n = 1 
     - alpha(sigma) = a_0 + sigma*(a_1+sigma*a_2)
-    
+
+    For majority of physics cases n can/should  be fixed to 0 ( corresponds to N=1) 
+
     The function is well suitable to fit dimuon final states: 
     - J/psi   -> mu+ mu-
     - psi'    -> mu+ mu-
     - Upsilon -> mu+ mu-
-    Is has been used with great success for all LCHb papers on
+    Is has been used with great success for all LHCb papers on
     quarkonia production in dimuon final states
     """
     def __init__ ( self                 ,
@@ -636,7 +637,8 @@ class Needham_pdf(PEAK) :
                    sigma    =  0.013    ,   ## GeV 
                    a0       =  1.975    ,
                    a1       = -0.0011   ,   ## GeV^-1
-                   a2       =   10      ) : ## GeV^-2  
+                   a2       =   10      ,
+                   n        = ROOT.RooFit.RooConst ( 0 ) ) : 
         
         PEAK.__init__ ( self , name , xvar , mean , sigma )
         
@@ -662,6 +664,14 @@ class Needham_pdf(PEAK) :
                                     "a2_%s"     % name  ,
                                     "a_{2}(%s)" % name  ,
                                     True , -0.00018  * unit**2 , -10 * unit**2 , 10 * unit**2 )
+
+        self.__n     = self.make_var ( n   ,
+                                       'n_%s'            % name ,
+                                       'n_{CB}(%s)'      % name ,
+                                       None , 0 , -1 , 100 )
+
+        self.__N = Ostap.MoreRooFit.TailN ( 'N_%s' % name , self.__n )
+
         #
         self.pdf = Ostap.Models.Needham (
             self.roo_name ( 'needham_' ) , 
@@ -671,7 +681,8 @@ class Needham_pdf(PEAK) :
             self.sigma ,
             self.a0    ,
             self.a1    ,
-            self.a2
+            self.a2    ,
+            self.n     , 
             )
         
         ## save the configuration
@@ -683,7 +694,8 @@ class Needham_pdf(PEAK) :
             'a0'     : self.a0    ,
             'a1'     : self.a1    ,
             'a2'     : self.a2    ,
-            }
+            'n'      : self.n     ,
+        }
         
     @property
     def a0 ( self ) :
@@ -707,9 +719,22 @@ class Needham_pdf(PEAK) :
         return self.__a2
     @a2.setter
     def a2 ( self, value ) :
-        self.set_value ( self.__a2 , value ) 
+        self.set_value ( self.__a2 , value )
+        
+    @property
+    def n ( self ) :
+        """n-parameter for Crystal Ball tail , same as nL"""
+        return self.__n
+    @n.setter
+    def n ( self, value ) :
+        self.set_value ( self.__n , value ) 
 
-            
+    @property
+    def N ( self ) :
+        """`N` : actual N-parameter used for Crystal Ball """
+        return self.__N
+
+        
 models.append ( Needham_pdf )    
 # =============================================================================
 ## @class Apollonios_pdf

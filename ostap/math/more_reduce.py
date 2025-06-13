@@ -445,11 +445,11 @@ Ostap.Math.CrystalBallRightSide. __reduce__ = _omcb_reduce_
 ## Reduce Ostap::Math::Needham
 #  @see Ostap::Math::Needham
 def _ommatt_reduce_ ( peak ) :
-    """Reduce `Ostap.Math.Needham`
+    """ Reduce `Ostap.Math.Needham`
     - see `Ostap.Math.Needham`
     """
     return root_factory , ( type ( peak ) , peak.m0 () , peak.sigma() ,
-                            peak.a0 ()    , peak.a1 () , peak.a2   () ) 
+                            peak.a0 ()    , peak.a1 () , peak.a2   () , peak.n () ) 
 
 Ostap.Math.Needham  . __reduce__ = _ommatt_reduce_
 
@@ -457,7 +457,7 @@ Ostap.Math.Needham  . __reduce__ = _ommatt_reduce_
 ## Reduce Ostap::Math::CrystalBallDoubleSided
 #  @see Ostap::Math::CristalBallDoubleSided 
 def _omcb2_reduce_ ( peak ) :
-    """Reduce `Ostap.Math.CrystalBallDoubleSided`
+    """ Reduce `Ostap.Math.CrystalBallDoubleSided`
     - see `Ostap.Math.CrystalBallDoubleSided`
     """
     return root_factory , ( type ( peak ) , peak.m0() , peak.sigma() ,

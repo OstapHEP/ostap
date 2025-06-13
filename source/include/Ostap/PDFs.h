@@ -1278,6 +1278,17 @@ namespace Ostap
         RooAbsReal&          sigma     ,
         RooAbsReal&          c0        ,
         RooAbsReal&          c1        ,
+        RooAbsReal&          c2        , 
+        RooAbsReal&          n         ) ;
+      /// constructor from all parameters
+      Needham
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          m0        ,
+        RooAbsReal&          sigma     ,
+        RooAbsReal&          c0        ,
+        RooAbsReal&          c1        ,
         RooAbsReal&          c2        ) ;
       /// "copy" constructor
       Needham ( const Needham& right , const char* name = 0 ) ;
@@ -1331,6 +1342,7 @@ namespace Ostap
       const RooAbsReal& a0     () const { return m_a0     .arg() ; }
       const RooAbsReal& a1     () const { return m_a1     .arg() ; }
       const RooAbsReal& a2     () const { return m_a2     .arg() ; }
+      const RooAbsReal& n      () const { return m_n      .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -1340,6 +1352,7 @@ namespace Ostap
       RooRealProxy m_a0     ;
       RooRealProxy m_a1     ;
       RooRealProxy m_a2     ;
+      RooRealProxy m_n      ;
       // ======================================================================
     private:
       // ======================================================================

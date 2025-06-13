@@ -1411,7 +1411,8 @@ def _rneedham_reduce_ ( pdf ):
                                   pdf.sigma  () ,                            
                                   pdf.a0     () ,
                                   pdf.a1     () ,
-                                  pdf.a2     () )
+                                  pdf.a2     () , 
+                                  pdf.n      () )
 
 Ostap.Models.Needham .__reduce__ = _rneedham_reduce_ 
 

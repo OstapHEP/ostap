@@ -1989,16 +1989,35 @@ Ostap::Models::Needham::Needham
   RooAbsReal&          a0        ,    
   RooAbsReal&          a1        ,    
   RooAbsReal&          a2        )
+  : Needham ( name , title ,
+	      x  , m0 , sigma ,
+	      a0 , a1 , a2 , RooFit::RooConst ( 0 ) )
+{}
+// ============================================================================
+// Needham
+// ============================================================================
+Ostap::Models::Needham::Needham
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          m0        ,
+  RooAbsReal&          sigma     ,    
+  RooAbsReal&          a0        ,    
+  RooAbsReal&          a1        ,    
+  RooAbsReal&          a2        ,
+  RooAbsReal&          n         )
   : RooAbsPdf ( name , title )
-//
-  , m_x       ( "x"       , "Observable"                 , this , x      ) 
-  , m_m0      ( "m0"      , "mass"                       , this , m0     ) 
-  , m_sigma   ( "sigma"   , "sigma"                      , this , sigma  )
-//
-  , m_a0      ( "a0"      , "a0-parameter"               , this , a0     ) 
-  , m_a1      ( "a1"      , "a1-parameter"               , this , a1     ) 
-  , m_a2      ( "a2"      , "a2-parameter"               , this , a2     ) 
-//
+    //
+  , m_x       ( "!x"       , "Observable"                 , this , x      ) 
+  , m_m0      ( "!m0"      , "mass"                       , this , m0     ) 
+  , m_sigma   ( "!sigma"   , "sigma"                      , this , sigma  )
+    //
+  , m_a0      ( "!a0"      , "a0-parameter"               , this , a0     ) 
+  , m_a1      ( "!a1"      , "a1-parameter"               , this , a1     ) 
+  , m_a2      ( "!a2"      , "a2-parameter"               , this , a2     )
+    //
+  , m_n       ( "!n"       , "n-parameter"                , this , n     ) 
+    //
   , m_needham ( 100 , 1 , 1.9 , 0 , 0 ) 
 {
   //
@@ -2012,15 +2031,17 @@ Ostap::Models::Needham::Needham
 ( const Ostap::Models::Needham& right , 
   const char*                      name ) 
   : RooAbsPdf ( right , name ) 
-//
-  , m_x       ( "x"       , this , right.m_x      ) 
-  , m_m0      ( "m0"      , this , right.m_m0     ) 
-  , m_sigma   ( "sigma"   , this , right.m_sigma  )
-//
-  , m_a0      ( "a0"      , this , right.m_a0     ) 
-  , m_a1      ( "a1"      , this , right.m_a1     ) 
-  , m_a2      ( "a2"      , this , right.m_a2     ) 
-//
+    //
+  , m_x       ( "!x"       , this , right.m_x      ) 
+  , m_m0      ( "!m0"      , this , right.m_m0     ) 
+  , m_sigma   ( "!sigma"   , this , right.m_sigma  )
+    //
+  , m_a0      ( "!a0"      , this , right.m_a0     ) 
+  , m_a1      ( "!a1"      , this , right.m_a1     ) 
+  , m_a2      ( "!a2"      , this , right.m_a2     ) 
+    //
+  , m_n       ( "!n"      , this , right.m_n       )
+    //
   , m_needham ( right.m_needham ) 
 {
   setPars () ;
@@ -2046,6 +2067,7 @@ void Ostap::Models::Needham::setPars () const
   m_needham . setA1    ( m_a1     ) ;
   m_needham . setA2    ( m_a2     ) ;
   //
+  m_needham . setN     ( m_n      ) ;
 }
 // ============================================================================
 // the actual evaluation of function 
