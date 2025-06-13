@@ -49,7 +49,7 @@ namespace Ostap
    *  @date    26/11/1999
    *  @date    2005-08-02
    */
-  class StatEntity : public Ostap::Math::Statistic 
+  class StatEntity // : public Ostap::Math::Statistic 
   {
   public:
     // ======================================================================
@@ -315,7 +315,7 @@ namespace Ostap
   public:
     // ========================================================================
     /// update counter Ostap::Math::Statistic
-    void update ( const double value ) override { this -> add ( value ) ; } ;
+    // void update ( const double value ) override { this -> add ( value ) ; } ;
     // ========================================================================
   public: // various technical helper methods  
     // ========================================================================

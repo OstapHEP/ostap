@@ -203,13 +203,13 @@ indices = '\U0001F10B' + \
 
 
 ## capital Greek Sigma 
-sum_symbol       = '\U00002211'           if show else 'sum '
+sum_symbol       = '\U00002211'           if show else 'sum'
 ## lowercase Greek sigma 
-rms_symbol       = '\U000003C3'           if show else 'rms '
+rms_symbol       = '\U000003C3'           if show else 'rms'
 ## squared lower case Greek sigma 
-dispersion_sym   = '\U000003c3\U000000B2' if show else 'D '
+dispersion_sym   = '\U000003c3\U000000B2' if show else 'D'
 ## squared lower case Greek sigma 
-variance_sym     = '\U000003c3\U000000B2' if show else 'var '
+variance_sym     = '\U000003c3\U000000B2' if show else 'var'
 ## Delta symbol 
 delta_symbol     = '\U00000394'           if show else 'delta'
 ## Number

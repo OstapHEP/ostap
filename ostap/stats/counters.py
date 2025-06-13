@@ -286,14 +286,14 @@ def counters_table ( counters , prefix = '' , title = '' , style = None ) :
         raise TypeError ( "cnt_table: Invalid type for 'counters' %s" % type ( counters ) )
 
     from ostap.logger.pretty  import pretty_float, fmt_pretty_values
-    from ostap.logger.symbols import times
+    from ostap.logger.symbols import times, sum_symbol, rms_symbol  
     
-    rows = [ ( ''        , '#' , 
-               '#eff'    , ''  ,
-               'sum'     , ''  ,
-               'mean'    , ''  ,
-               'rms'     , ''  ,
-               'min/max' , ''  ) ]
+    rows = [ ( ''         , '#' , 
+               '#eff'     , ''  ,
+               sum_symbol , ''  ,  ## 'sum'     , ''  ,
+               'mean'     , ''  ,
+               rms_symbol , ''  ,  ## 'rms'     , ''  ,
+               'min/max'  , ''  ) ]
     
     for key in counters :
         
@@ -334,7 +334,6 @@ def counters_table ( counters , prefix = '' , title = '' , style = None ) :
     #
     return table 
 
-    
 # =============================================================================
 SE  .__repr__ = lambda s : counters_table ( { '' : s } , title = 'Counter' )
 SE  .__str__  = lambda s : counters_table ( { '' : s } , title = 'Counter' )  
