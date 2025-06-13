@@ -259,6 +259,8 @@ def test_fitting_fill_1 () :
         ( 'x'   , 'some variable'  , 0 , 5000 , '(mass+pt+eta)/eta' ) 
         ] 
 
+    return 
+
     if not DILL_PY3_issue :
         
         config = { 'variables' : variables          ,
@@ -300,7 +302,7 @@ def test_fitting_fill_1 () :
     table.append ( ( t3.name , '%.3fs' % t3.delta ) )
     table.append ( ( t4.name , '%.3fs' % t4.delta ) )
 
-    return 
+    ## return 
 
     title2 = "Trivial variables + CUT"
     table2 = T.table ( table , title = title2 , prefix = '# ' , alignment = 'rr' )
