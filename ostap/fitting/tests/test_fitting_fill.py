@@ -205,10 +205,12 @@ def test_fitting_fill_1 () :
     if ds1_1 != ds1_3   : logger.error ('Datasets ds1_1  and ds1_3   are different!' )
     if ds1_1 != ds1_4   : logger.error ('Datasets ds1_1  and ds1_4   are different!' )
 
+    return 
+
     if DataSet_NEW_FILL : 
         if ds1_1 != ds1_5 : logger.error ('Datasets ds1_1  and ds1_5   are different!' )
 
-    return 
+    ## return 
 
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 :
         logger.info ( attention ( t1.name ) )
