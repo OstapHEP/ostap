@@ -199,7 +199,7 @@ def test_fitting_fill_1 () :
     table1 = T.table ( table , title = title1 , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title1 , table1 ) ) 
 
-    return 
+    ## return 
 
     if ds1_1 != ds1_2   : logger.error ('Datasets ds1_1  and ds1_2   are different!' )
     if ds1_1 != ds1_3   : logger.error ('Datasets ds1_1  and ds1_3   are different!' )
@@ -299,6 +299,8 @@ def test_fitting_fill_1 () :
     table.append ( ( t2.name , '%.3fs' % t2.delta ) )
     table.append ( ( t3.name , '%.3fs' % t3.delta ) )
     table.append ( ( t4.name , '%.3fs' % t4.delta ) )
+
+    return 
 
     title2 = "Trivial variables + CUT"
     table2 = T.table ( table , title = title2 , prefix = '# ' , alignment = 'rr' )
