@@ -229,6 +229,8 @@ def test_fitting_fill_1 () :
         chain.parallel_fill ( selector , shortcut = True  , use_frame = True  , max_files = 1 )
         ds1p_4 = selector.data 
 
+    return 
+
     table = [ ('Configuration' , 'CPU' ) ] 
 
     table.append ( ( t1.name , '%.3fs' % t1.delta ) )
@@ -259,7 +261,7 @@ def test_fitting_fill_1 () :
         ( 'x'   , 'some variable'  , 0 , 5000 , '(mass+pt+eta)/eta' ) 
         ] 
 
-    return 
+    ## return 
 
     if not DILL_PY3_issue :
         
