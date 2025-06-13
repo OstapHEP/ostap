@@ -235,8 +235,12 @@ def row_se ( counter ) :
     mean        = counter.mean   ()
     rms         = counter.rms    ()
     minv, maxv  = counter.minmax () 
-    vsum        = counter.sum    ()
+    vsum        = counter.sum    ()    
+    nEff        = counter.nEff   ()
     
+    if isinstance ( nEff , integer_types ) : nEff , expo0 = '%d' % nEff , 0 
+    else                                   : nEff , expo0 = pretty_float ( nEff )
+
     vsum , expo1  = vsum.pretty_print ( parentheses = False ) 
     mean , expo2  = mean.pretty_print ( parentheses = False ) 
     rms  , expo3  = pretty_float      ( rms )
@@ -247,11 +251,12 @@ def row_se ( counter ) :
     else     : scale = 1 
     mnmx = mnmx % ( minv * scale , maxv * scale  )
     
-    row = '%d' % counter.nEntries() , \
-        vsum  , '%s10^{%+d}' % ( times , expo1 ) if expo1 else '' , \
-        mean  , '%s10^{%+d}' % ( times , expo2 ) if expo2 else '' , \
-        rms   , '%s10^{%+d}' % ( times , expo3 ) if expo3 else '' , \
-        mnmx  , '%s10^{%+d}' % ( times , expo4 ) if expo4 else ''
+    row = \
+        ( nEff  , '%s10^{%+d}' % ( times , expo0 ) if expo0 else '' ) , \
+        ( vsum  , '%s10^{%+d}' % ( times , expo1 ) if expo1 else '' ) , \
+        ( mean  , '%s10^{%+d}' % ( times , expo2 ) if expo2 else '' ) , \
+        ( rms   , '%s10^{%+d}' % ( times , expo3 ) if expo3 else '' ) , \
+        ( mnmx  , '%s10^{%+d}' % ( times , expo4 ) if expo4 else '' )
     
     return row 
 
@@ -289,7 +294,6 @@ def counters_table ( counters , prefix = '' , title = '' , style = None ) :
     from ostap.logger.symbols import times, sum_symbol, rms_symbol  
     
     rows = [ ( ''         , '#' , 
-               '#eff'     , ''  ,
                sum_symbol , ''  ,  ## 'sum'     , ''  ,
                'mean'     , ''  ,
                rms_symbol , ''  ,  ## 'rms'     , ''  ,
@@ -297,35 +301,19 @@ def counters_table ( counters , prefix = '' , title = '' , style = None ) :
     
     for key in counters :
         
-        counter     = counters [ key ]
-        
-        mean        = counter.mean   ()
-        rms         = counter.rms    ()
-        minv, maxv  = counter.minmax () 
-        vsum        = counter.sum    ()        
-        nEff        = counter.nEff   ()
+        counter = counters [ key ]
 
-        if isinstance ( nEff , integer_types ) : nEff , expo0 = '%d' % nEff , 0 
-        else                                   : nEff , expo0 = pretty_float ( nEff )
+        record = row_se ( counter ) 
 
-        vsum , expo1  = vsum.pretty_print ( parentheses = False ) 
-        mean , expo2  = mean.pretty_print ( parentheses = False ) 
-        rms  , expo3  = pretty_float      ( rms )
-        fmtx , expo4  = fmt_pretty_values ( minv , maxv , with_sign = True )
-        
-        mnmx          = '%s/%s' % ( fmtx , fmtx )
-        if expo4 : scale = 1.0/(10**expo4)
-        else     : scale = 1 
-        mnmx = mnmx % ( minv * scale , maxv * scale  )
-        
-        row = ( '%s'    % key                ,
-                '%d'    % counter.nEntries() ,
-                nEff    , '%s10^{%+d}' % ( times , expo0 ) if expo0 else '' ,
-                vsum    , '%s10^{%+d}' % ( times , expo1 ) if expo1 else '' ,
-                mean    , '%s10^{%+d}' % ( times , expo2 ) if expo2 else '' ,
-                rms     , '%s10^{%+d}' % ( times , expo3 ) if expo3 else '' ,
-                mnmx    , '%s10^{%+d}' % ( times , expo4 ) if expo4 else '' )
-        rows.append ( row )
+        row = ( '%s'    % key                 ,
+                '%d'    % counter.nEntries()  ,
+                
+        row += record [ 1 ]   ## sum
+        row += record [ 2 ]   ## mean 
+        row += record [ 3 ]   ## rms 
+        row += record [ 4 ]   ## min/max
+
+        rows.append ( row ) 
 
     import ostap.logger.table as T
     rows = T.remove_empty_columns ( rows ) 

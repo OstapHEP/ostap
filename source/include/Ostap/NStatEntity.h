@@ -25,7 +25,7 @@ namespace Ostap
    *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
    *  @date   2015-04-03
    */
-  class NStatEntity // : public Ostap::Math::Statistic
+  class NStatEntity : public Ostap::Math::Statistic
   {
     // ======================================================================
   public:
@@ -118,7 +118,7 @@ namespace Ostap
     /// the main method without decorations  
     NStatEntity& add ( const double f ) 
     {
-      /// inncrement both counters 
+      /// increment both counters 
       m_cnt1.add ( f ) ;
       m_cnt2.add ( f ) ;
       // reset them when needed 
@@ -131,7 +131,7 @@ namespace Ostap
   public:
     // ======================================================================
     /// Ostap::Math::Statistic
-    // void update ( const double value ) override { this->add ( value) ; } ;  
+    void update ( const double value ) override { this->add ( value) ; } ;  
     // ======================================================================
   private:
     // ======================================================================
