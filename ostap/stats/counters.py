@@ -25,7 +25,8 @@ __all__     = (
 # =============================================================================
 from   ostap.math.ve          import Ostap, VE
 from   ostap.math.base        import isequal, isequalf, iszero 
-from   ostap.core.ostap_types import dictlike_types, sequence_types
+from   ostap.core.ostap_types import ( dictlike_types , sequence_types ,
+                                       integer_types  , sized_types    )
 import ROOT, cppyy, math, sys  
 # =============================================================================
 _new_methods_ = []
@@ -33,13 +34,6 @@ _new_methods_ = []
 SE    = Ostap.StatEntity 
 WSE   = Ostap.WStatEntity 
 NSE   = Ostap.NStatEntity 
-
-# =============================================================================
-# temporary trick, to be removed 
-# =============================================================================
-
-SE .__repr__ = lambda s : 'Stat: '+ s.toString()
-SE .__str__  = lambda s : 'Stat: '+ s.toString()
 
 # =============================================================================
 # minor decoration for StatEntity 
@@ -155,9 +149,6 @@ _new_methods_ += [
     SE.__add__   ,
     SE.__iadd__  ,    
     SE.__isub__  ,    
-    SE.__repr__  ,
-    SE.__str__   ,
-    SE.__str__   ,
     SE.__eq__    , 
     SE.__ne__    ,
     ]
@@ -249,16 +240,32 @@ def counters_table ( counters , prefix = '' , title = '' , style = None ) :
     >>> logger.info ( 'Table is \n%s' % table )
     """    
     if   isinstance ( counters , dictlike_types ) : pass 
+    elif isinstance ( counters , sequence_types ) and \
+         isinstance ( counters , sized_types    ) :
+        cnts = {}
+        n = len ( counters )
+        from ostap.logger.symbols import labels 
+        for l , c in zip ( labels ( n ) , counters ) : cnts [ l ] = c         
+        counters = cnts
     elif isinstance ( counters , sequence_types ) :
         cnts = {}
-        for i,c in enumerate ( counters , start = 1 ) : cnts [ i ] = c
-        counters = cnts 
-    elif isntance   ( counters , ( SE , WSE , NSE ) ) :
+        for c , i  in enumerate ( counters , start = 1 ) : cnts [ i ] = c
+        counters = cnts        
+    elif isinstance ( counters , ( SE , WSE , NSE ) ) :
         counters = { 1 : counters } 
     else :
-        raise TypeError ( "cnt_table: illegay type for 'counters' %s" % type ( counters ) )
+        raise TypeError ( "cnt_table: Invalid type for 'counters' %s" % type ( counters ) )
 
-    rows = [ ( '' , '#' , 'Sum' , 'Mean' , 'RMS' , 'min/max'  ) ] 
+    from ostap.logger.pretty  import pretty_float, fmt_pretty_values
+    from ostap.logger.symbols import times
+    
+    rows = [ ( ''        , '#' , 
+               '#eff'    , ''  ,
+               'sum'     , ''  ,
+               'mean'    , ''  ,
+               'rms'     , ''  ,
+               'min/max' , ''  ) ]
+    
     for key in counters :
         
         counter     = counters [ key ]
@@ -266,21 +273,46 @@ def counters_table ( counters , prefix = '' , title = '' , style = None ) :
         mean        = counter.mean   ()
         rms         = counter.rms    ()
         minv, maxv  = counter.minmax () 
+        vsum        = counter.sum    ()        
+        nEff        = counter.nEff   ()
+
+        if isinstance ( nEff , integer_types ) : nEff , expo0 = '%d' % nEff , 0 
+        else                                   : nEff , expo0 = pretty_float ( nEff )
+
+        vsum , expo1  = vsum.pretty_print ( parentheses = False ) 
+        mean , expo2  = mean.pretty_print ( parentheses = False ) 
+        rms  , expo3  = pretty_float      ( rms )
+        fmtx , expo4  = fmt_pretty_values ( minv , maxv , with_sign = True )
+        
+        mnmx          = '%s/%s' % ( fmtx , fmtx )
+        if expo4 : scale = 1.0/(10**expo4)
+        else     : scale = 1 
+        mnmx = mnmx % ( minv * scale , maxv * scale  )
         
         row = ( '%s'    % key                ,
                 '%d'    % counter.nEntries() ,
-                '%+.6g' % counter.sum     () ,
-                '( %-+.6g +/- %.6g )' %  ( mean.value() , mean.error () ) ,
-                '%.6g' % counter.rms     () ,
-                '( %-+.6g / %+.6g )'  %  ( minv         , maxv ) ) 
-        
+                nEff    , '%s10^{%+d}' % ( times , expo0 ) if expo0 else '' ,
+                vsum    , '%s10^{%+d}' % ( times , expo1 ) if expo1 else '' ,
+                mean    , '%s10^{%+d}' % ( times , expo2 ) if expo2 else '' ,
+                rms     , '%s10^{%+d}' % ( times , expo3 ) if expo3 else '' ,
+                mnmx    , '%s10^{%+d}' % ( times , expo4 ) if expo4 else '' )
         rows.append ( row )
 
     import ostap.logger.table as T
+    rows = T.remove_empty_columns ( rows ) 
     if not title : title = 'Table of %d counters' % len ( counters )    
-    table = T.table ( rows , prefix = prefix , title = title , alignment = "llcccc" , style = style )
+    table = T.table ( rows , prefix = prefix , title = title , alignment = "lcccccccccccc" , style = style )
     #
     return table 
+
+# =============================================================================
+SE  .__repr__ = lambda s : counters_table ( { '' : s } , title = 'Counter' )
+SE  .__str__  = lambda s : counters_table ( { '' : s } , title = 'Counter' )  
+
+_new_methods_ += [
+    SE.__repr__  ,
+    SE.__str__   ,
+    ]
 
 # ==============================================================================
 _new_methods_ += [

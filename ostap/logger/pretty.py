@@ -24,7 +24,7 @@ __all__     = (
     ##
     ## Formats
     ##
-    'fmt_pretty_values'  , ## (common) format for seevral floating values
+    'fmt_pretty_values'  , ## (common) format for several floating values
     'fmt_pretty_errors'  , ## (common) format for values with uncertaintines 
     'fmt_pretty_float'   , ## (common) format for floaitng value
     'fmt_pretty_error'   , ## (common) format for floaitng value with error 
