@@ -193,17 +193,12 @@ if not hasattr ( WSE , '_orig_mean' ) :
 WSE. sum     = lambda s : VE ( s._orig_sum  () , s.sum2()       )
 WSE. mean    = lambda s : VE ( s._orig_mean () , s.meanErr()**2 )
 WSE. minmax  = lambda s : ( s.min () , s.max () ) 
-WSE.__repr__ = lambda s : 'WStat: '+ s.toString()
-WSE.__str__  = lambda s : 'WStat: '+ s.toString()
 
 _new_methods_ += [
     WSE.sum         ,
     WSE.mean        ,
     WSE.minmax      ,
     WSE.__add__     ,
-    WSE.__repr__    ,
-    WSE.__str__     ,
-    WSE.__str__     ,
     WSE.__eq__      ,
     WSE.__ne__      ,
 ]
@@ -338,11 +333,11 @@ _new_methods_ += [
     counters_table  
     ]
 
-
 # ==============================================================================
-## print WSEs as 3-row table
+## Print weighetd counters: 3 rows per counter 
 def wcounters_table ( counters , title = '' , prefix = '' , style = '' ) :
-    
+    """ Print weighetd counters: 3 rows per counter 
+    """
     if   isinstance ( counters , dictlike_types ) : pass 
     elif isinstance ( counters , sequence_types ) and \
          isinstance ( counters , sized_types    ) :
@@ -364,11 +359,12 @@ def wcounters_table ( counters , title = '' , prefix = '' , style = '' ) :
         "Invalid type of counter!"
     
     from   ostap.logger.symbols  import sum_symbol, rms_symbol  
-    rows = [ ( ''         , '#eff' , 
-               sum_symbol , ''  ,  ## 'sum'     , ''  ,
-               'mean'     , ''  ,
-               rms_symbol , ''  ,  ## 'rms'     , ''  ,
-               'min/max'  , ''  ) ]
+    rows = [ ( '' ,
+               '#eff/#'   , '' ,  
+               sum_symbol , '' ,  ## 'sum'     , ''  ,
+               'mean'     , '' ,
+               rms_symbol , '' ,  ## 'rms'     , ''  ,
+               'min/max'  , '' ) ]
 
     for key in counters :
         
@@ -378,31 +374,31 @@ def wcounters_table ( counters , title = '' , prefix = '' , style = '' ) :
         recv = row_se ( counter.values  () ) ## statistics of values 
         recw = row_se ( counter.weights () ) ## statistics of weights 
 
-        row  = '%s' % key , \
+        row  = ( '%s' % key , ) + \
             rec [ 0 ] + \
             rec [ 1 ] + \
-            rec [ 2 ] , \
-            rec [ 3 ] , \
+            rec [ 2 ] + \
+            rec [ 3 ] + \
             rec [ 4 ]   ## min/max
         
-        rowv = '%svalues' % key , \
+        rowv = ( '%s(values)' % key , ) + \
             recv [ 0 ] + \
             recv [ 1 ] + \
-            recv [ 2 ] , \
-            recv [ 3 ] , \
+            recv [ 2 ] + \
+            recv [ 3 ] + \
             recv [ 4 ]   ## min/max
         
-        roww = '%sweights' % key , \
+        roww = ( '%s(weights)' % key , ) + \
             recw [ 0 ] + \
             recw [ 1 ] + \
-            recw [ 2 ] , \
-            recw [ 3 ] , \
+            recw [ 2 ] + \
+            recw [ 3 ] + \
             recw [ 4 ]   ## min/max
-
+        
         rows.append ( row  )
         rows.append ( rowv )
         rows.append ( roww )
-
+        
     import ostap.logger.table as T
     rows = T.remove_empty_columns ( rows ) 
     if not title : title = 'Table of %d counters' % len ( counters )    
@@ -410,6 +406,14 @@ def wcounters_table ( counters , title = '' , prefix = '' , style = '' ) :
     #
     return table 
         
+# =============================================================================
+WSE .__repr__ = lambda s : wcounters_table ( { '' : s } , title = 'Counter' )
+WSE .__str__  = lambda s : wcounters_table ( { '' : s } , title = 'Counter' )  
+
+_new_methods_ += [
+    WSE.__repr__  ,
+    WSE.__str__   ,
+    ]
 
 
 

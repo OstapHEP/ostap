@@ -36,36 +36,36 @@ namespace Ostap
   public: // the basic getters 
     // ======================================================================
     /// total number of entries 
-    unsigned long long       n   () const { return m_weights.n () ; }
+    inline unsigned long long       n   () const { return m_weights.n () ; }
     /// the first weighted moment/mean-value 
-    double                   mu  () const { return m_mu  ; }
+    inline double                   mu  () const { return m_mu  ; }
     /// the second central weighted moment/dispersion/variance  
-    double                   mu2 () const { return m_mu2 ; }
+    inline double                   mu2 () const { return m_mu2 ; }
     // ======================================================================
   public: // derived getters and aliases 
     // ======================================================================
     /// empty ?
-    bool                     empty      () const { return m_weights.empty()  ; }
+    inline bool                     empty      () const { return m_weights.empty()  ; }
     /// get the actual number of entries 
-    unsigned long long       nEntries   () const { return n () ; }
+    inline unsigned long long       nEntries   () const { return n () ; }
     /// mean-value 
-    double                   mean       () const { return m_mu  ; }
+    inline double                   mean       () const { return m_mu  ; }
     /// error im mean-value 
-    double                   meanErr    () const ;  
+    double                          meanErr    () const ;  
     /// dispersion 
-    double                   dispersion () const { return m_mu2 ; }
+    inline double                   dispersion () const { return m_mu2 ; }
     /// variance 
-    double                   variance   () const { return m_mu2 ; }
+    inline double                   variance   () const { return m_mu2 ; }
     /// RMS 
-    double                   rms        () const ;
+    double                          rms        () const ;
     /// get the effective number of entries 
-    double                   nEff       () const ;
+    double                          nEff       () const ;
     /// get number of "good" (non-zero) entries
-    unsigned long long       nGood      () const { return m_values. n   () ; }
+    inline unsigned long long       nGood      () const { return m_values. n   () ; }
     /// minimal value (for non-zero weights) 
-    double                   min        () const { return m_values. min () ; }
+    inline double                   min        () const { return m_values. min () ; }
     /// maximal value (for non-zero weights) 
-    double                   max        () const { return m_values. max () ; }       
+    inline double                   max        () const { return m_values. max () ; }       
     // ======================================================================
   public: // helper sums 
     // ======================================================================
@@ -74,31 +74,31 @@ namespace Ostap
     /// sum_i weight_i*value_i**2
     double                   sum2  () const ; // sum_i weight_i * value_i**2
     /// sum_i weight_i  
-    double                   sumw  () const {  return m_weights.sum  () ; }
+    inline double            sumw  () const {  return m_weights.sum  () ; }
     /// sum_i weight_i*wight_i   
-    double                   sumw2 () const {  return m_weights.sum2 () ; }
+    inline double            sumw2 () const {  return m_weights.sum2 () ; }
     // ======================================================================
   public:  // statistics &  weights and values 
     // ======================================================================
     /// get the statistic of weights 
-    const Ostap::StatEntity& weights () const { return m_weights ; }
+    inline const Ostap::StatEntity& weights () const { return m_weights ; }
     /// get the statistic of values with non-zero weight 
-    const Ostap::StatEntity& values  () const { return m_values  ; }
+    inline const Ostap::StatEntity& values  () const { return m_values  ; }
     // ======================================================================
   public:
     // ======================================================================
     /// add   the  value      (with weight=1) to the counter 
-    WStatEntity& operator+= ( const double value ) { return add (  value ) ; }
+    inline WStatEntity& operator+= ( const double value ) { return add (  value ) ; }
     /// add   the  value +1   (with weight=1) to the counter 
-    WStatEntity& operator++ ()      { return   (*this) += 1 ; }
+    inline WStatEntity& operator++ ()      { return   (*this) += 1 ; }
     /// add   the  value +1   (with weight=1) to the counter 
-    WStatEntity& operator++ ( int ) { return ++(*this)      ; }    
+    inline WStatEntity& operator++ ( int ) { return ++(*this)      ; }    
     /// add   the -value      (with weight=1) to the counter 
-    WStatEntity& operator-= ( const double value ) { return add ( -value ) ; }
+    inline WStatEntity& operator-= ( const double value ) { return add ( -value ) ; }
     /// add   the  value -1   (with weight=1) to the counter 
-    WStatEntity& operator-- ()      { return   (*this) -= 1 ; }
+    inline WStatEntity& operator-- ()      { return   (*this) -= 1 ; }
     /// add   the  value -1   (with weight=1) to the counter 
-    WStatEntity& operator-- ( int ) { return --(*this)      ; }    
+    inline WStatEntity& operator-- ( int ) { return --(*this)      ; }    
     // ======================================================================
   public: // ordering operators 
     // ======================================================================
@@ -168,9 +168,9 @@ namespace Ostap
      *  @see Pebay, P., Terriberry, T.B., Kolla, H. et al. Comput Stat (2016) 31: 1305. 
      *  @see https://doi.org/10.1007/s00180-015-0637-z
      */
-    WStatEntity& operator+= ( const WStatEntity& other ) { return add ( other ) ; }
+    inline WStatEntity& operator+= ( const WStatEntity& other ) { return add ( other ) ; }
     /// add another counter 
-    WStatEntity& operator+= ( const  StatEntity& other ) { return add ( other ) ; }
+    inline WStatEntity& operator+= ( const  StatEntity& other ) { return add ( other ) ; }
     // ======================================================================
   private: /// the basic quantities 
     // ======================================================================

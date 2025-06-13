@@ -49,7 +49,7 @@ namespace Ostap
    *  @date    26/11/1999
    *  @date    2005-08-02
    */
-  class StatEntity // : public Ostap::Math::Statistic 
+  class StatEntity : public Ostap::Math::Statistic 
   {
   public:
     // ======================================================================
@@ -73,30 +73,30 @@ namespace Ostap
   public: // the basic accessors 
     // ======================================================================
     /// number of entries 
-    unsigned long long   n          () const { return m_n    ; }
+    inline unsigned long long   n          () const { return m_n    ; }
     /// effective number of entries 
-    unsigned long long   nEff       () const { return m_n    ; }
+    inline unsigned long long   nEff       () const { return m_n    ; }
     /// mean value 
-    double               mu         () const { return m_mu   ; }
+    inline double               mu         () const { return m_mu   ; }
     /// the second central moment/dispersion/variance  
-    double               mu2        () const { return m_mu2  ; }    
+    inline double               mu2        () const { return m_mu2  ; }    
     /// minimal value
-    double               min        () const { return m_min  ; }
+    inline double               min        () const { return m_min  ; }
     /// maximal valu e
-    double               max        () const { return m_max  ; }
-    /// get number of "good" (mnon-zero) entries
-    unsigned long long   nGood      () const { return n   () ; }
+    inline double               max        () const { return m_max  ; }
+    /// get number of "good" (non-zero) entries
+    inline unsigned long long   nGood      () const { return n   () ; }
     // ======================================================================
   public: // derived quantities & aliases  
     // ======================================================================
     /// empty ?
-    bool                 empty      () const { return 0 == m_n ; }
+    inline bool                 empty      () const { return 0 == m_n ; }
     /// number of entries 
-    unsigned long long   nEntries   () const { return m_n    ; }
+    inline unsigned long long   nEntries   () const { return m_n    ; }
     /// variance
-    double               variance   () const { return m_mu2  ; }
+    inline double               variance   () const { return m_mu2  ; }
     /// dispersion 
-    double               dispersion () const { return m_mu2  ; }
+    inline double               dispersion () const { return m_mu2  ; }
     /// r.m.s of value
     double               rms        () const ;
     /// mean value of counter
@@ -172,9 +172,9 @@ namespace Ostap
      */
     double efficiencyErr () const ;
     /// shortcut, @see StatEntity::efficiency
-    double eff           () const { return efficiency    () ; }
+    inline double eff    () const { return efficiency    () ; }
     /// shortcut, @see StatEntity::efficiencyErr
-    double effErr        () const { return efficiencyErr () ; }
+    inline double effErr () const { return efficiencyErr () ; }
     // ======================================================================
   public: // operators
     // ======================================================================
@@ -191,7 +191,7 @@ namespace Ostap
      *  @endcode
      *  @param f counter increment
      */
-    StatEntity& operator+= ( const double f ) { return add ( f )  ; }
+    inline StatEntity& operator+= ( const double f ) { return add ( f )  ; }
     // ======================================================================
     /** Pre-increment operator for the flag
      *  Could be used for easy manipulation with StatEntity object:
@@ -205,7 +205,7 @@ namespace Ostap
      *  }
      *  @endcode
      */
-    StatEntity& operator++ ()    { return   (*this)+= 1  ; }
+    inline StatEntity& operator++ ()    { return   (*this)+= 1  ; }
     // ======================================================================
     /** Post-increment operator for the flag.
      *  Actually it is the same as pre-increment.
@@ -220,7 +220,7 @@ namespace Ostap
      *  }
      *  @endcode
      */
-    StatEntity& operator++ (int) { return ++(*this) ; }
+    inline StatEntity& operator++ (int) { return ++(*this) ; }
     // ======================================================================
     /** General decrement operator for the flag
      *  Could be used for easy manipulation with StatEntity object:
@@ -235,7 +235,7 @@ namespace Ostap
      *  @endcode
      *  @param f counter increment
      */
-    StatEntity& operator-= ( const double   f ) { return add ( -f ) ; }
+    inline StatEntity& operator-= ( const double   f ) { return add ( -f ) ; }
     // ======================================================================
     /** Pre-decrement operator for the flag
      *  Could be used for easy manipulation with StatEntity object:
@@ -249,7 +249,7 @@ namespace Ostap
      *  }
      *  @endcode
      */
-    StatEntity& operator-- () { return (*this)-=1  ; }
+    inline StatEntity& operator-- () { return (*this)-=1  ; }
     // ======================================================================
     /** Post-decrement operator for the flag
      *  Could be used for easy manipulation with StatEntity object:
@@ -263,7 +263,7 @@ namespace Ostap
      *  }
      *  @endcode
      */
-    StatEntity& operator-- (int) { return --(*this) ; }
+    inline StatEntity& operator-- (int) { return --(*this) ; }
     // ======================================================================
     /** increment with other counter
      *  @code
@@ -276,7 +276,7 @@ namespace Ostap
      *  @see Pebay, P., Terriberry, T.B., Kolla, H. et al. Comput Stat (2016) 31: 1305. 
      *  @see https://doi.org/10.1007/s00180-015-0637-z
      */
-    StatEntity& operator+= ( const StatEntity& other ) { return add  ( other ) ; }
+    inline StatEntity& operator+= ( const StatEntity& other ) { return add  ( other ) ; }
     // ======================================================================
   public:
     // ======================================================================
@@ -284,10 +284,10 @@ namespace Ostap
     bool operator< ( const StatEntity& s ) const ;
     bool operator==( const StatEntity& s ) const ;
     /// derived comparisons:
-    bool operator> ( const StatEntity& s ) const { return s < *this ; }
-    bool operator<=( const StatEntity& s ) const { return    (*this) == s || (*this) < s ; }
-    bool operator>=( const StatEntity& s ) const { return    (*this) == s || (*this) > s ; }
-    bool operator!=( const StatEntity& s ) const { return   !(*this  == s ) ; }
+    inline bool operator> ( const StatEntity& s ) const { return s < *this ; }
+    inline bool operator<=( const StatEntity& s ) const { return    (*this) == s || (*this) < s ; }
+    inline bool operator>=( const StatEntity& s ) const { return    (*this) == s || (*this) > s ; }
+    inline bool operator!=( const StatEntity& s ) const { return   !(*this  == s ) ; }
     // ======================================================================
   public:
     // ======================================================================
@@ -315,7 +315,7 @@ namespace Ostap
   public:
     // ========================================================================
     /// update counter Ostap::Math::Statistic
-    // void update ( const double value ) override { this -> add ( value ) ; } ;
+    void update ( const double value ) override { this -> add ( value ) ; } ;
     // ========================================================================
   public: // various technical helper methods  
     // ========================================================================
