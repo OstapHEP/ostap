@@ -237,7 +237,9 @@ def row_se ( counter ) :
     minv, maxv  = counter.minmax () 
     vsum        = counter.sum    ()    
     nEff        = counter.nEff   ()
-    
+
+    from ostap.logger.pretty  import pretty_float, fmt_pretty_values
+
     if isinstance ( nEff , integer_types ) : nEff , expo0 = '%d' % nEff , 0 
     else                                   : nEff , expo0 = pretty_float ( nEff )
 
@@ -250,7 +252,9 @@ def row_se ( counter ) :
     if expo4 : scale = 1.0/(10**expo4)
     else     : scale = 1 
     mnmx = mnmx % ( minv * scale , maxv * scale  )
-    
+
+    from   ostap.logger.symbols   import times
+
     row = \
         ( nEff  , '%s10^{%+d}' % ( times , expo0 ) if expo0 else '' ) , \
         ( vsum  , '%s10^{%+d}' % ( times , expo1 ) if expo1 else '' ) , \
@@ -290,9 +294,7 @@ def counters_table ( counters , prefix = '' , title = '' , style = None ) :
     else :
         raise TypeError ( "cnt_table: Invalid type for 'counters' %s" % type ( counters ) )
 
-    from ostap.logger.pretty  import pretty_float, fmt_pretty_values
-    from ostap.logger.symbols import times, sum_symbol, rms_symbol  
-    
+    from   ostap.logger.symbols  import sum_symbol, rms_symbol  
     rows = [ ( ''         , '#' , 
                sum_symbol , ''  ,  ## 'sum'     , ''  ,
                'mean'     , ''  ,
@@ -335,6 +337,81 @@ _new_methods_ += [
 _new_methods_ += [
     counters_table  
     ]
+
+
+# ==============================================================================
+## print WSEs as 3-row table
+def wcounters_table ( counters , title = '' , prefix = '' , style = '' ) :
+    
+    if   isinstance ( counters , dictlike_types ) : pass 
+    elif isinstance ( counters , sequence_types ) and \
+         isinstance ( counters , sized_types    ) :
+        cnts = {}
+        n = len ( counters )
+        from ostap.logger.symbols import labels 
+        for l , c in zip ( labels ( n ) , counters ) : cnts [ l ] = c         
+        counters = cnts
+    elif isinstance ( counters , sequence_types ) :
+        cnts = {}
+        for c , i  in enumerate ( counters , start = 1 ) : cnts [ i ] = c
+        counters = cnts        
+    elif isinstance ( counters , ( SE , WSE , NSE ) ) :
+        counters = { 1 : counters } 
+    else :
+        raise TypeError ( "cnt_table: Invalid type for 'counters' %s" % type ( counters ) )
+
+    assert all ( isinstance ( w , WSE ) for w in counters.values() ) , \
+        "Invalid type of counter!"
+    
+    from   ostap.logger.symbols  import sum_symbol, rms_symbol  
+    rows = [ ( ''         , '#eff' , 
+               sum_symbol , ''  ,  ## 'sum'     , ''  ,
+               'mean'     , ''  ,
+               rms_symbol , ''  ,  ## 'rms'     , ''  ,
+               'min/max'  , ''  ) ]
+
+    for key in counters :
+        
+        counter = counters [ key ]
+
+        rec  = row_se ( counter            ) ## statistics 
+        recv = row_se ( counter.values  () ) ## statistics of values 
+        recw = row_se ( counter.weights () ) ## statistics of weights 
+
+        row  = '%s' % key , \
+            rec [ 0 ] + \
+            rec [ 1 ] + \
+            rec [ 2 ] , \
+            rec [ 3 ] , \
+            rec [ 4 ]   ## min/max
+        
+        rowv = '%svalues' % key , \
+            recv [ 0 ] + \
+            recv [ 1 ] + \
+            recv [ 2 ] , \
+            recv [ 3 ] , \
+            recv [ 4 ]   ## min/max
+        
+        roww = '%sweights' % key , \
+            recw [ 0 ] + \
+            recw [ 1 ] + \
+            recw [ 2 ] , \
+            recw [ 3 ] , \
+            recw [ 4 ]   ## min/max
+
+        rows.append ( row  )
+        rows.append ( rowv )
+        rows.append ( roww )
+
+    import ostap.logger.table as T
+    rows = T.remove_empty_columns ( rows ) 
+    if not title : title = 'Table of %d counters' % len ( counters )    
+    table = T.table ( rows , prefix = prefix , title = title , alignment = "lcccccccccccc" , style = style )
+    #
+    return table 
+        
+
+
 
 # ==============================================================================
 ## @class EffCounter
