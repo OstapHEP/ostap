@@ -226,6 +226,35 @@ _new_methods_ += [
     SE.count ,
     ]
 
+
+# ============================================================================== 
+## Build the single row from the counter 
+def row_se ( counter ) :
+    """ Build the single row from the counter 
+    """
+    mean        = counter.mean   ()
+    rms         = counter.rms    ()
+    minv, maxv  = counter.minmax () 
+    vsum        = counter.sum    ()
+    
+    vsum , expo1  = vsum.pretty_print ( parentheses = False ) 
+    mean , expo2  = mean.pretty_print ( parentheses = False ) 
+    rms  , expo3  = pretty_float      ( rms )
+    fmtx , expo4  = fmt_pretty_values ( minv , maxv , with_sign = True )
+    
+    mnmx          = '%s/%s' % ( fmtx , fmtx )
+    if expo4 : scale = 1.0/(10**expo4)
+    else     : scale = 1 
+    mnmx = mnmx % ( minv * scale , maxv * scale  )
+    
+    row = '%d' % counter.nEntries() , \
+        vsum  , '%s10^{%+d}' % ( times , expo1 ) if expo1 else '' , \
+        mean  , '%s10^{%+d}' % ( times , expo2 ) if expo2 else '' , \
+        rms   , '%s10^{%+d}' % ( times , expo3 ) if expo3 else '' , \
+        mnmx  , '%s10^{%+d}' % ( times , expo4 ) if expo4 else ''
+    
+    return row 
+
 # =============================================================================
 ## Make table of counters
 #  @code
@@ -305,6 +334,7 @@ def counters_table ( counters , prefix = '' , title = '' , style = None ) :
     #
     return table 
 
+    
 # =============================================================================
 SE  .__repr__ = lambda s : counters_table ( { '' : s } , title = 'Counter' )
 SE  .__str__  = lambda s : counters_table ( { '' : s } , title = 'Counter' )  

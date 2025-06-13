@@ -32,9 +32,9 @@ __all__     = (
     ##
     ## Formatters
     ## 
-    'pretty_float'       , ## pretty representation for floaitng value
-    'pretty_error'       , ## pretty represetnation for floaitng value with (symmetric) error 
-    'pretty_error2'      , ## pretty representation for floaitng value with asymmetric errors
+    'pretty_float'       , ## pretty representation for floating value
+    'pretty_error'       , ## pretty represetnation for floating value with (symmetric) error 
+    'pretty_error2'      , ## pretty representation for floating value with asymmetric errors
     'pretty_errors'      , ## pretty representation for asymmetric errors
     ## 
     'add_expo'           , ## add an exponetaion factor for sting representaion of the object
@@ -77,9 +77,10 @@ def fmt_pretty_values ( *values            ,
     assert values and all ( isinstance ( v , num_types ) for v in values ) , "Invalid type of `values'"
     
     av = max ( abs ( float ( v )  ) for v in values )
+
     
     from ostap.math.base import iszero, frexp10
-    the_format =  '%%+%d.%df' if with_sign else  '%%%d.%df'
+    the_format =  '%%+%d.%df' if with_sign else '%%%d.%df'
     if   100 <= av < 1000 : return the_format % ( width , precision - 2 ) , 0 
     elif 10  <= av < 100  : return the_format % ( width , precision - 1 ) , 0 
     elif 0.1 <= av < 10   : return the_format % ( width , precision     ) , 0 
