@@ -94,6 +94,7 @@ def test_ipyparallel_function () :
     result = None 
     with warnings.catch_warnings() :
         warnings.simplefilter('ignore', category=UserWarning)
+        warnings.simplefilter('ignore', category=DeprecationWarning)
         with ipp.Cluster () as cluster : 
         
             view    = cluster.load_balanced_view()        
@@ -134,6 +135,7 @@ def test_ipyparallel_callable () :
     result = None 
     with warnings.catch_warnings() :
         warnings.simplefilter('ignore', category=UserWarning)
+        warnings.simplefilter('ignore', category=DeprecationWarning)
         with ipp.Cluster () as cluster : 
         
             ##view    = cluster.load_balanced_view()
