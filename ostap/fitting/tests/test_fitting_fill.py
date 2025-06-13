@@ -136,7 +136,7 @@ def test_fitting_fill_1 () :
 
     chain = data.chain
 
-    return 
+    ## return 
     
     mJPsi = ROOT.RooRealVar ( 'mJPsi' , 'mass(J/Psi) [GeV]' , 3.0 * GeV , 3.2 * GeV )
 
@@ -161,6 +161,8 @@ def test_fitting_fill_1 () :
         selector = SelectorWithVars ( **config ) 
         chain.fill_dataset ( selector , shortcut = False , use_frame = False )
         ds1_1 = selector.data
+
+    return 
 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 :
         logger.info ( attention ( t2.name ) )        
