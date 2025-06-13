@@ -305,13 +305,13 @@ def counters_table ( counters , prefix = '' , title = '' , style = None ) :
 
         record = row_se ( counter ) 
 
-        row = ( '%s'    % key                 ,
-                '%d'    % counter.nEntries()  ,
+        row = ( '%s' % key                 ,
+                '%d' % counter.nEntries()  ) 
                 
-        row += record [ 1 ]   ## sum
-        row += record [ 2 ]   ## mean 
-        row += record [ 3 ]   ## rms 
-        row += record [ 4 ]   ## min/max
+        row = row + record [ 1 ]   ## sum
+        row = row + record [ 2 ]   ## mean 
+        row = row + record [ 3 ]   ## rms 
+        row = row + record [ 4 ]   ## min/max
 
         rows.append ( row ) 
 
