@@ -202,7 +202,8 @@ class UseStyle(object):
             if self.__config :
                 self.__changed = set_style ( self.__new_style , self.__config ) 
             groot.ForceStyle ( True )
-            if ROOT.gPad : ROOT.gPad.UseCurrentStyle()
+            pad = ROOT.Ostap.Utils.get_pad () 
+            if pad : pad.UseCurrentStyle()
             logger.debug ( "Swith to `%s' style!" % self.__new_style.GetName() ) 
                            
     ## context  manager: exit

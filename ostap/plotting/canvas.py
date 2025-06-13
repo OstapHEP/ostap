@@ -438,12 +438,11 @@ if not hasattr ( ROOT.TObject , 'draw_with_autoplot' ) :
         """
         result = obj.draw_ostap ( option, *args , **kwargs ) 
 
-        if ROOT.gPad :
+        if ROOT.Ostap.Utils.get_pad ():
             plot = AutoPlots.plot()
             if plot :
-                cnv = ROOT.gPad.GetCanvas ()
-                if cnv : 
-                    cnv >> plot
+                cnv = ROOT.Ostap.Utils.get_canvas () 
+                if cnv : cnv >> plot
             
         return result
     
@@ -1047,7 +1046,7 @@ class UsePad(object) :
         
     def __enter__ ( self ) :
             
-        if not self.__pad and ROOT.gPad : self.__pad = ROOT.gPad
+        if not self.__pad : self.__pad = ROOT.Ostap.Utils.get_pad() 
         
         if self.pad : 
             self.__changed = set_pad ( self.pad , **self.config )
@@ -1157,14 +1156,19 @@ class Canvas(KeepCanvas) :
     
     ## context manager: exit 
     def __exit__ ( self , *_ ) :
-
+        """ Context manager EXIT 
+        - update canvas 
+        - male a plot, if requested 
+        - switch to the previus canvas
+        """
         if self.__cnv :
             self.__cnv.Update()            
             if self.__plot :
-                self.__cnv >> self.__plot 
-                    
+                self.__cnv >> self.__plot
+                
+        ## switch to the previous canvas 
         KeepCanvas.__exit__ ( self , *_ ) 
-        self.__cnv = None 
+        ## self.__cnv = None 
     
 # =============================================================================
 ## helper context manager to create and configure a canvas (and pad)

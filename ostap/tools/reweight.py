@@ -757,10 +757,12 @@ def _cmp_draw_ ( self ) :
         if hasattr ( hmc    , 'blue'   ) : hmc.blue   () 
         rmax   = 1.2 * max ( hd .GetMaximum () , hmc.GetMaximum() )
         hd .SetMinimum ( 0 )
-        hmc.SetMinimum ( 0 )        
-        scale  = ROOT.gPad.GetUymax() / rmax        
-        hd  .Scale ( scale  )
-        hmc .Scale ( scale  )        
+        hmc.SetMinimum ( 0 )
+        pad = ROOT.Ostap.Utils.get_pad () 
+        if pad :
+            scale  = pad.GetUymax() / rmax        
+            hd  .Scale ( scale  )
+            hmc .Scale ( scale  )        
         hd  .draw  ( 'same' , copy = True )
         hmc .draw  ( 'same' , copy = True )
         
@@ -770,8 +772,10 @@ def _cmp_draw_ ( self ) :
         if hasattr ( hd     , 'green'  ) : hd .green   () 
         rmax   = 1.2 *       hd .GetMaximum ()         
         hd .SetMinimum ( 0 )
-        scale  = ROOT.gPad.GetUymax() / rmax
-        hd  .Scale ( scale  )
+        pad = ROOT.Ostap.Utils.get_pad () 
+        if pad :        
+            scale  = pad.GetUymax() / rmax
+            hd  .Scale ( scale  )
         hd  .draw  ( 'same' , copy = True )
         
     elif isinstance ( hmc , ROOT.TH1 ) and 1 == hmc.dim() :
@@ -781,8 +785,10 @@ def _cmp_draw_ ( self ) :
         if hasattr ( hmc    , 'blue'   ) : hmc.blue   () 
         rmax   = 1.2 *       hmc.GetMaximum ()         
         hmc.SetMinimum ( 0 )        
-        scale  = ROOT.gPad.GetUymax() / rmax
-        hmc .Scale ( scale  )
+        pad = ROOT.Ostap.Utils.get_pad () 
+        if pad :        
+            scale  = pad.GetUymax() / rmax
+            hmc .Scale ( scale  )
         hmc .draw  ( 'same' , copy = True )
 
 ComparisonPlot. draw = _cmp_draw_

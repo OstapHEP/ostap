@@ -15,7 +15,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = () 
 # =============================================================================
-from   ostap.core.core        import hID , VE 
+from   ostap.core.core        import hID , VE, Ostap  
 from   ostap.logger.colorized import allright
 from   ostap.logger.symbols   import plus_minus 
 from   ostap.logger.pretty    import pretty_float
@@ -111,7 +111,7 @@ def _h1_cmp_fit_ ( h1              ,
         
     rf = f2.Fit ( h1 , 'S' + opts )
     if 0 == rf.Status() and not '0' in opts :
-        cnv  = ROOT.gPad.GetCanvas() if ROOT.gPad else None
+        cnv = Ostap.Utils.get_canvas () 
         if cnv : cnv.Update()
         
     if 0 != rf.Status() :
