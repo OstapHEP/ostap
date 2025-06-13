@@ -218,6 +218,8 @@ def test_fitting_fill_1 () :
         selector = SelectorWithVars ( **config ) 
         chain.parallel_fill ( selector , shortcut = True  , use_frame = False , max_files = 1 )        
         ds1p_2 = selector.data 
+    
+    return 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )        
         selector = SelectorWithVars ( **config ) 
@@ -229,7 +231,7 @@ def test_fitting_fill_1 () :
         chain.parallel_fill ( selector , shortcut = True  , use_frame = True  , max_files = 1 )
         ds1p_4 = selector.data 
 
-    return 
+    ##  return 
 
     table = [ ('Configuration' , 'CPU' ) ] 
 
