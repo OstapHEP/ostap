@@ -162,7 +162,7 @@ def test_fitting_fill_1 () :
         chain.fill_dataset ( selector , shortcut = False , use_frame = False )
         ds1_1 = selector.data
 
-    return 
+    ## return 
 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 :
         logger.info ( attention ( t2.name ) )        
@@ -199,6 +199,7 @@ def test_fitting_fill_1 () :
     table1 = T.table ( table , title = title1 , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title1 , table1 ) ) 
 
+    return 
 
     if ds1_1 != ds1_2   : logger.error ('Datasets ds1_1  and ds1_2   are different!' )
     if ds1_1 != ds1_3   : logger.error ('Datasets ds1_1  and ds1_3   are different!' )
