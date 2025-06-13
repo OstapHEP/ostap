@@ -25,7 +25,7 @@ namespace Ostap
    *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
    *  @date   2015-04-03
    */
-  class NStatEntity : public Ostap::Math::Statistic
+  class NStatEntity // : public Ostap::Math::Statistic
   {
     // ======================================================================
   public:
@@ -131,7 +131,7 @@ namespace Ostap
   public:
     // ======================================================================
     /// Ostap::Math::Statistic
-    void update ( const double value ) override { this->add ( value) ; } ;  
+    // void update ( const double value ) override { this->add ( value) ; } ;  
     // ======================================================================
   private:
     // ======================================================================

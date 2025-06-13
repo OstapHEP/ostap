@@ -17,7 +17,7 @@ namespace Ostap
    *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
    *  @date   2014-04-07
    */
-  class WStatEntity : public Ostap::Math::WStatistic
+  class WStatEntity // : public Ostap::Math::WStatistic
   {
   public:
     // ======================================================================
@@ -147,9 +147,9 @@ namespace Ostap
   public:
     // ===============================================================================
     /// Ostap::Math::WStatistics
-    void update 
-    ( const double value      ,  
-      const double weight = 1 ) override { this -> add ( value , weight ) ; }
+    // void update 
+    // ( const double value      ,  
+    //   const double weight = 1 ) override { this -> add ( value , weight ) ; }
     // ===============================================================================
   public:
     // =============================================================================== 

@@ -10,7 +10,8 @@
 // ============================================================================
 // forward declarations
 // ============================================================================
-class TVirtualPad ; // ROOT 
+class TVirtualPad ; // ROOT
+class TCanvas     ; // ROOT 
 // ============================================================================
 namespace Ostap
 {
@@ -22,7 +23,12 @@ namespace Ostap
      *  @see TROOT::GetSelectedPad 
      *  @see TVirtualPad::Pad 
      */
-    TVirtualPad* get_pad () ;
+    TVirtualPad* get_pad    () ;
+    // ========================================================================
+    /** get the (current) canvas 
+     *  @see TCanvas 
+     */
+    TCanvas*     get_canvas () ;
     // ========================================================================
     /** call for TVirtualPad::Update 
      *  @see TVirtualPad::Update 

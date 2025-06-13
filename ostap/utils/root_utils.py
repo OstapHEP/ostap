@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-02-10
 # =============================================================================
-""" Basi cROOT-based utils 
+""" Basic ROOT-based utils 
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -159,21 +159,31 @@ class KeepCanvas(Wait) :
         Wait.__init__ ( self , after = wait ) 
         self.__old_canvas  = None 
     def __enter__ ( self ) :
-        Wait.__enter__ ( self ) 
-        import ROOT
+        Wait.__enter__ ( self )
+        ## 
         ## pad  = ROOT.TVirtualPad.Pad()
-        pad     = ROOT.Ostap.Utils.get_pad()  
-        cnv     = pad.GetCanvas()  if pad  else None 
-        self.__old_canvas = cnv if cnv else None 
+        ## pad  = ROOT.Ostap.Utils.get_pad()  
+        ## cnv  = pad.GetCanvas()  if pad  else None
+        ## 
+        cnv = self.current 
+        self.__old_canvas = cnv if cnv else None
+        print ( 'KEEP CANVAS ENTER:' , cnv.GetName() if cnv else cnv )
+        
     def __exit__  ( self , *_ ) :
         Wait.__exit__ ( self , *_ )         
         if self.__old_canvas:
+            cnv = self.__old_canvas 
+            print ( 'KEEP CANVAS EXIT: ' , cnv.GetName() if cnv else cnv )                    
             self.__old_canvas.cd()
-        self.__old_canvas = None             
+        ## self.__old_canvas = None             
     @property
     def old_canvas ( self ) :
-        """``old_canvas'': canvas to be preserved"""
+        """`old_canvas': canvas to be preserved"""
         return self.__old_canvas
+    @property
+    def current ( self ) :
+        """`current` : get the pointer to the current TCanvas"""
+        return ROOT.Ostap.Utils.get_canvas() 
     
 # =============================================================================
 #  Keep the current canvas

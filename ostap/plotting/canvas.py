@@ -81,8 +81,8 @@ def setWebDisplay ( web ) :
 #  @see TROOT::GetWebDisplay
 #  @see TROOT::SetWebDisplay
 class UseWeb(object) :
-    """ Context manager to redefien the web-display
-    >>> with UseWe ('chrome') :
+    """ Context manager to redefine the web-display
+    >>> with UseWeb ('chrome') :
     >>> ...
     - see `ROOT.TROOT.GetWebDisplay`
     - see `ROOT.TROOT.SetWebDisplay`
@@ -217,7 +217,7 @@ all_extensions = (
 #  @endcode 
 def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
                                          'jpg'  , 'gif' , 'json' , 'svg' ) ) :
-    """A bit simplified version for TCanvas print
+    """ A bit simplified version for TCanvas print
     It Alows to create several output file types  at once
     - if extension is equal to `tar` or `tgz`, single (gzipped) tar-files is created
     - if extension is equal to `zip`, single zip-archive is created 
@@ -319,7 +319,7 @@ def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
 #  canvas >> 'a'    
 #  @endcode 
 def _cnv_rshift_ ( cnv , fname ) :
-    """Very simple print for canvas:
+    """ Very simple print for canvas:
     >>> canvas >> 'a'    
     """
     return _cnv_print_ ( cnv , fname )
@@ -337,7 +337,7 @@ from collections import defaultdict
 #  Helper structure/context manager to setup "auto-plotting"
 #  all produced plots will be saved
 class AutoPlots ( object ) :
-    """helper structure to setup ``auto-plotting''
+    """ Helper structure to setup ``auto-plotting''
     all produced plots will be saved
     """
     
@@ -417,7 +417,7 @@ class AutoPlots ( object ) :
 #  @endcode
 def auto_plots ( pattern   = 'ostap_%0.4d' ,
                  directory = ''            ) :
-    """Helper function /context manager to setup "auto-plotting"
+    """ Helper function/context manager to setup "auto-plotting"
     all produced plots will be saved
     with auto_plots ( 'all_%d'  , directory  = 'plots' ) :
     ...     a.draw()
@@ -488,7 +488,7 @@ def canvas_partition ( canvas                        ,
                        top_margin    = margin_top    ,
                        hSpacing      = 0.0           ,
                        vSpacing      = 0.0           ) :
-    """Perform partition of Canvas into pads with no inter-margins
+    """ Perform partition of Canvas into pads with no inter-margins
 
     canvas = ...
     nx = 3 , ny = 2 
@@ -651,7 +651,7 @@ def partition_draw ( canvas                        ,
                      top_margin    = margin_top    ,
                      hSpacing      = 0.0           ,
                      vSpacing      = 0.0           ) :
-    """Perform partition of Canvas into pads with no inter-marginspads and draw objects
+    """ Perform partition of Canvas into pads with no inter-marginspads and draw objects
     >>> canvas  = ...
     >>> objects = ...
     >>> pads    = canvas.partition_draw ( objects , 3 , 2 )
@@ -1061,24 +1061,24 @@ class UsePad(object) :
 
     @property
     def pad ( self ) :
-        """``pad'' : pad to be configured"""
+        """`pad' : pad to be configured"""
         return self.__pad
     
     @property
     def config ( self ) :
-        """``config'' : cofiguration pad to be"""
+        """`config' : cofiguration pad to be"""
         return self.__config
 
     @property
     def changed ( self ) :
-        """``changed'' : changed parameters"""
+        """`changed' : changed parameters"""
         return self.__changed
     
 # =============================================================================
 ## helper context manager to modify <code>TAttPad</code>
 #  @see TAttPad 
 def use_pad ( pad , **config ) :
-    """Helper context manager for `TAttPad` objects
+    """ Helper context manager for `TAttPad` objects
     - see `TAttPad`
     """
     return UsePad ( pad , **config ) 
@@ -1113,10 +1113,7 @@ class Canvas(KeepCanvas) :
         self.__kwargs = kwargs
         self.__cnv    = None
 
-        if plot : 
-            plot = plot.strip() 
-            while '  ' in plot : plot = plot.replace ( '  ' , ' ' )                
-            plot = plot.strip().replace ( ' ' , '_' )
+        if plot : plot = plot.strip().replace ( ' ' , '_' )
             
         self.__plot   = plot            
         ## 
@@ -1125,7 +1122,7 @@ class Canvas(KeepCanvas) :
     ## context manager: exit 
     def __enter__ ( self ) :
 
-        ## 1) use context manager 
+        ## (1) use context manager 
         KeepCanvas.__enter__ ( self )
 
         if not self.__name :
@@ -1139,7 +1136,7 @@ class Canvas(KeepCanvas) :
         if not self.__title :
             self.__title = self.__name
 
-        ## 2) create/use new canvas 
+        ## (2) create/use new canvas 
         self.__cnv = getCanvas ( name   = self.__name   ,
                                  title  = self.__title  ,
                                  width  = self.__width  ,
@@ -1148,12 +1145,13 @@ class Canvas(KeepCanvas) :
         self.__name  = self.__cnv.GetName  () 
         self.__title = self.__cnv.GetTitle () 
 
-        ## 3) make it active 
+        ## (3) make it active 
         self.__cnv.cd() 
 
-        ## 4) apply pad settings
+        ## (4) apply pad settings
         if self.__kwargs :
-            set_pad ( ROOT.gPad , **self.__kwargs ) 
+            pad    = ROOT.Ostap.Utils.get_pad() 
+            if pad : set_pad ( pad , **self.__kwargs ) 
             
         return self.__cnv  ## return current canvas 
     

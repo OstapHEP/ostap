@@ -28,6 +28,17 @@ TVirtualPad* Ostap::Utils::get_pad ()
   return TVirtualPad::Pad() ;
 }
 // ============================================================================
+/* get the (current) canvas 
+ *  @see TCanvas 
+ */
+// ============================================================================
+TCanvas*  Ostap::Utils::get_canvas ()
+{
+  TVirtualPad* pad = get_pad() ;
+  if ( nullptr == pad ) { return nullptr ; }
+  return pad->GetCanvas() ; 
+}
+// ============================================================================
 /*  call for TVirtualPad::Update 
  *  @see TVirtualPad::Update 
  */
