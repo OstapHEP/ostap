@@ -230,7 +230,7 @@ _new_methods_ += [
 # ============================================================================== 
 ## Build the single row from the counter 
 def row_se ( counter ) :
-    """ Build the single row from the counter 
+    """ Build the single row from the SE-counter 
     """
     mean        = counter.mean   ()
     rms         = counter.rms    ()
@@ -363,7 +363,7 @@ _new_methods_ += [
 #  eff = cnt.eff 
 #  @endcode 
 class EffCounter(object):
-    """ A primitive `effciciency' counter
+    """ A primitive `effciency' counter
     - It keeps number of `accepted` and `rejected` entries
     and allows to calcuale the (binomial) efficiency
 
@@ -440,7 +440,7 @@ class EffCounter(object):
     # ==========================================================================
     @property 
     def eff        ( self ) :
-        """`effi` : get (binomial) efficiency"""
+        """`eff` : get (binomial) efficiency"""
         return self.efficiency
     # ==========================================================================
     def __getstate__ ( self ) : return self.__A , self.__R 
