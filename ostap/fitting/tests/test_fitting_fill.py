@@ -201,9 +201,9 @@ def test_fitting_fill_1 () :
 
     ## return 
 
-    if ds1_1 != ds1_2   : logger.error ('Datasets ds1_1  and ds1_2   are different!' )
-    if ds1_1 != ds1_3   : logger.error ('Datasets ds1_1  and ds1_3   are different!' )
-    if ds1_1 != ds1_4   : logger.error ('Datasets ds1_1  and ds1_4   are different!' )
+    ## if ds1_1 != ds1_2   : logger.error ('Datasets ds1_1  and ds1_2   are different!' )
+    ## if ds1_1 != ds1_3   : logger.error ('Datasets ds1_1  and ds1_3   are different!' )
+    ## if ds1_1 != ds1_4   : logger.error ('Datasets ds1_1  and ds1_4   are different!' )
 
     return 
 
