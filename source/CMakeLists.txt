@@ -9,9 +9,8 @@ if (${FORCE_COLORED_OUTPUT})
     endif ()
 endif ()
 
-  
-if(ROOT_VERSION VERSION_LESS "6.24")
-  message ( FATAL_ERROR " ROOT   version " ${ROOT_VERSION} "<6.24 is not supported anymore" )
+if(ROOT_VERSION VERSION_LESS "6.26")
+  message ( FATAL_ERROR " ROOT   version " ${ROOT_VERSION} "<6.26 is not supported anymore" )
 endif() 
     
 message ( "----> ROOT            version    : " ${ROOT_VERSION} )
