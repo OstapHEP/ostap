@@ -10,12 +10,14 @@
   1. add `ostap/toos/evolution.py` - utilty to investgate the on-parametrick evolution of the
      distribushae as function of another parameter
   1. Add `n`-parameter to Needham' function/PDF 
-  
+  1. remove a lot of ancient version switches
+
 ## Backward incompatible 
 
   1. change constructors in `Ostap::Math::(W)Moments_<N>`
   1. change pickling/unpicking/serializatino/deserialization for (w)moments 
   1. completely remove `Ostap::Math::(W)MinMaxValue`
+  1. disable the support of ROOT versions <6.26 - both in CMAKE and in C++/python code 
 
 ## Bug fixes 
 
