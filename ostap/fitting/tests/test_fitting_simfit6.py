@@ -50,9 +50,6 @@ if (6,29) <= root_info :
 def test_simfit6() :
     
     logger = getLogger ( 'test_simfit6' ) 
-    if  (6,18) <= root_info < (6,20) :
-        logger.warning ( "Test is disabled for ROOT verison %s" % str ( root_info ) )
-        return 
 
     ## make simple test mass 
     mass     = ROOT.RooRealVar ( 'mass' , 'Some test mass (for splot)' ,  0 , 10 )

@@ -15,7 +15,6 @@ from   ostap.plotting.canvas  import use_canvas
 from   ostap.core.meta_info   import root_info
 from   ostap.utils.root_utils import implicitMT, batch_env 
 from   ostap.utils.timing     import timing
-from   ostap.frames.frames    import Frames_OK 
 import ostap.logger.table     as     T 
 import ROOT, os, sys
 # =============================================================================
@@ -28,44 +27,37 @@ else                       : logger = getLogger ( __name__            )
 ## set batch form environment 
 batch_env ( logger )
 # =============================================================================
-if not Frames_OK : 
-    
-    logger.warning ( "Tests are disabled for this version of ROOT %s" % str ( root_info ) )
-    
-else :
-    
-    from ostap.frames.frames   import * 
-    
-    # A simple helper function to fill a test tree
-    def fill_tree ( tname , fname ) :
 
-        N = 10000 
-        tdf      = DataFrame      ( N       )
-        tdf , pb = frame_progress ( tdf , N ) 
-        tdf.Define   ("one", "1.0"                    )\
-                   .Define   ("b1" , "tdfentry_ + 1000.0") \
-                   .Define   ("b2" , "(1.0+b1)*(1.0+b1)"      ) \
-                   .Define   ("b3" , "(1.0+b1)*(1.0+b1)"      ) \
-                   .Define   ("b4" , "gRandom->Gaus()"        ) \
-                   .Define   ("b5" , "gRandom->Gaus()"        ) \
-                   .Define   ("b6" , "10+0.5*gRandom->Gaus()" ) \
-                   .Snapshot ( tname, fname )
-        
-    # We prepare an input tree to run on
-    tname  = "myTree"
-    tmpdir = CleanUp().tmpdir
-    fname  = os.path.join ( tmpdir , 'test_frame.root' )
     
-    fill_tree ( tname, fname )
+from ostap.frames.frames   import * 
+    
+# A simple helper function to fill a test tree
+def fill_tree ( tname , fname ) :
+
+    N = 10000 
+    tdf      = DataFrame      ( N       )
+    tdf , pb = frame_progress ( tdf , N ) 
+    tdf.Define   ("one", "1.0"                    )\
+                .Define   ("b1" , "tdfentry_ + 1000.0") \
+                .Define   ("b2" , "(1.0+b1)*(1.0+b1)"      ) \
+                .Define   ("b3" , "(1.0+b1)*(1.0+b1)"      ) \
+                .Define   ("b4" , "gRandom->Gaus()"        ) \
+                .Define   ("b5" , "gRandom->Gaus()"        ) \
+                .Define   ("b6" , "10+0.5*gRandom->Gaus()" ) \
+                .Snapshot ( tname, fname )
+        
+# We prepare an input tree to run on
+tname  = "myTree"
+tmpdir = CleanUp().tmpdir
+fname  = os.path.join ( tmpdir , 'test_frame.root' )
+    
+fill_tree ( tname, fname )
 
 
 # =============================================================================
 def test_frame0 () : 
 
     logger = getLogger ( 'test_frame0' ) 
-    if not Frames_OK : 
-        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
-        return 
     
     frame = DataFrame ( tname        , fname        )
     tree  = Tree      ( name = tname , file = fname ).chain
@@ -178,9 +170,6 @@ def test_frame0 () :
 def test_frame1 ( ) :
 
     logger = getLogger ( 'test_frame1' ) 
-    if not Frames_OK : 
-        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
-        return 
     
     logger.info ( 80*'*' ) 
     logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
@@ -216,10 +205,7 @@ def test_frame1 ( ) :
 def test_frame2 ( ) :
  
     logger = getLogger ( 'test_frame2' ) 
-    if not Frames_OK : 
-        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
-        return 
-      
+
     logger.info ( 80*'*' ) 
     logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
     
@@ -344,10 +330,7 @@ def test_frame2 ( ) :
 def test_frame3 () :
 
     logger = getLogger ( 'test_frame3' ) 
-    if not Frames_OK : 
-        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
-        return 
-   
+    
     logger.info ( 80*'*' ) 
     logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
 
@@ -367,9 +350,6 @@ def test_frame3 () :
 def test_frame4 () :
 
     logger = getLogger ( 'test_frame4' ) 
-    if not Frames_OK : 
-        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
-        return 
                    
     logger.info ( 80*'*' ) 
     logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
@@ -391,9 +371,7 @@ def test_frame4 () :
 def test_frame5 () :
 
     logger = getLogger ( 'test_frame5' ) 
-    if not Frames_OK : 
-        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
-        return 
+
     
     logger.info ( 80*'*' ) 
     logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
@@ -411,9 +389,6 @@ def test_frame5 () :
 def test_frame6 () :
 
     logger = getLogger ( 'test_frame6' ) 
-    if not Frames_OK : 
-        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
-        return 
                       
     logger.info ( 80*'*' ) 
     logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
@@ -436,9 +411,6 @@ def test_frame6 () :
 def test_frame7 () :
 
     logger = getLogger ( 'test_frame7' ) 
-    if not Frames_OK : 
-        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
-        return
      
     logger.info ( 80*'*' ) 
     logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
@@ -474,9 +446,6 @@ def test_frame7 () :
 def test_frame8 () :
 
     logger = getLogger ( 'test_frame8' ) 
-    if not Frames_OK : 
-        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
-        return
       
     logger.info ( 80*'*' ) 
     logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
@@ -506,23 +475,17 @@ def test_frame8 () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    if Frames_OK : 
         
-        test_frame0 () 
-        test_frame1 ()
-        test_frame2 ()
-        test_frame3 ()
-        test_frame4 ()   
-        test_frame5 ()   
-        test_frame6 ()
-        test_frame7 ()
-        test_frame8 ()
+    test_frame0 () 
+    test_frame1 ()
+    test_frame2 ()
+    test_frame3 ()
+    test_frame4 ()   
+    test_frame5 ()   
+    test_frame6 ()
+    test_frame7 ()
+    test_frame8 ()
         
-    else :
-        
-        logger.warning ( "All tests are disabled for this version of ROOT %s" % str ( root_info ) )
-
-
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
