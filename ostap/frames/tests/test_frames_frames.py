@@ -30,7 +30,12 @@ batch_env ( logger )
 
     
 from ostap.frames.frames   import * 
-    
+from ostap.frames.frames   import Frames_OK
+
+
+if not Frames_ok :  
+    raise TypeError ( 'FRAMES!!')
+
 # A simple helper function to fill a test tree
 def fill_tree ( tname , fname ) :
 
