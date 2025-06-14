@@ -11,10 +11,6 @@
 #include <complex>
 #include <algorithm>
 // ============================================================================
-// ROOT 
-// ============================================================================
-#include "RVersion.h"
-// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Parameters.h"
@@ -98,27 +94,8 @@ namespace Ostap
       // ======================================================================
     public: // getters & setters 
       // ======================================================================
-#if ROOT_VERSION_CODE<ROOT_VERSION(6,22,0)
-      // ======================================================================
-      // old ROOT does not export in python the "using" methods 
-      // ======================================================================
-      /// get the parameter value
-      inline double  par          
-      ( const std::size_t k ) const
-      { return Ostap::Math::Parameters::par ( k ) ; }
-      /// set k-parameter
-      inline bool    setPar          
-      ( const std::size_t  k             , 
-        const double       value         ,
-        const bool         force = false ) 
-      { return Ostap::Math::Parameters::setPar ( k , value , force ) ;}
-      // ======================================================================
-#else 
-      // ======================================================================
       using Ostap::Math::Parameters::par    ;
       using Ostap::Math::Parameters::setPar ;
-      // ======================================================================
-#endif 
       // ======================================================================      
       /// get (l,m)-parameter
       inline double  par       

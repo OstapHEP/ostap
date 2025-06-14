@@ -3535,7 +3535,7 @@ namespace Ostap
       double   getValV  ( const RooArgSet* aset = nullptr ) const override 
       { return m_x.arg ().getValV ( aset ) ; }
       // ======================================================================
-#if   ROOT_VERSION(6,24,0)<=ROOT_VERSION_CODE && ROOT_VERSION_CODE<=ROOT_VERSION(6,29,0)
+#if   ROOT_VERSION_CODE<=ROOT_VERSION(6,29,0)
       // ======================================================================
       RooSpan<const double>
       getValues 
