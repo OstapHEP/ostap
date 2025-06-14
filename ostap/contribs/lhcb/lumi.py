@@ -37,7 +37,6 @@ __all__     = (
     'getLumi'     ,  ## get the lumi
     )
 # =============================================================================
-from   ostap.core.meta_info import root_info 
 from   ostap.core.core      import VE, hID, rootError
 import ostap.trees.trees 
 import ostap.io.root_file
@@ -115,16 +114,6 @@ def getLumi ( data , *args ) :
 
         ## try :
         with rootError() : ## suppress errors from ROOT
-            
-            ## if ( 6 , 25 ) < root_info :
-
-            ##     ## use DataFrames. It is faster here?  not sure....
-                
-            ##     from ostap.frame.frames import DataFrame , frame_statVars
-            ##     frame = DataFrame ( data )
-            ##     stat  = frame_statVars ( frame , [ lumi , lumi_err ] , lumi_cuts )
-                
-            ## else :
             
             stat = data. statVar ( [ lumi , lumi_err ] , lumi_cuts )
 

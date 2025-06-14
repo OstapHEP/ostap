@@ -13,7 +13,6 @@
 # ============================================================================= 
 from   ostap.core.core          import cpp, VE, dsID, rooSilent 
 from   ostap.fitting.background import make_bkg 
-from   ostap.core.meta_info     import root_info 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.timing       import wait
 from   ostap.utils.root_utils   import batch_env  

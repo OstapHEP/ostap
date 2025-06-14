@@ -64,9 +64,7 @@ if (6,29) <= root_info :
 def test_morphingL () :
 
     logger = getLogger ('test_morphingL')    
-    if root_info < ( 6 , 23 )  : 
-        logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
-        return
+ 
     
     pdf1 = Models.Gauss_pdf ( 'GL1'  ,
                               xvar  = mass ,
@@ -92,9 +90,7 @@ def test_morphingL () :
 def test_morphing_N1s() :
 
     logger = getLogger ('test_morphing_N1s')    
-    if root_info < ( 6 , 23 ) : 
-        logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
-        return
+  
 
     shapes = {}
 
@@ -121,9 +117,7 @@ def test_morphing_N1m () :
     
     logger = getLogger ('test_morphing_N1m')
     
-    if root_info < ( 6 , 23 ) : 
-        logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
-        return
+
 
     shapes = {}
 
@@ -149,10 +143,7 @@ def test_morphing_N2 () :
     
     logger = getLogger ('test_morphing_N2')
     
-    if root_info < ( 6 , 23 ) : 
-        logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
-        return
-
+  
 
     shapes = {}
     

@@ -1559,8 +1559,6 @@ class FitHelper(VarMaker) :
 
                 if a and root_info <  ( 6 , 27 ) :
                     self.warning ("'AsymptoticError=True' is buggy for this version of ROOT, (ROOT-PR-11282)")
-                if a and root_info <= ( 6 , 26 ) :
-                    self.warning ("'AsymptoticError=True' will crash if Title!=Name (ROOT-10668)")
                     
                 _args.append (  ROOT.RooFit.AsymptoticError ( a ) )
                     
@@ -1746,7 +1744,7 @@ class FitHelper(VarMaker) :
             aer      = check_arg  ( 'AsymptoticError' , *_args  )
             binned   = isinstance ( dataset  , ROOT.RooDataHist )
             
-            if ( 6 , 25 )<= root_info and binned and ( not sw2 ) and ( not aer ) :
+            if binned and ( not sw2 ) and ( not aer ) :
                 _args.append ( ROOT.RooFit.SumW2Error ( True ) )                
             elif sw2 and aer :
                 self.warning ( "parse_args: Both 'SumW2Error' and 'AsymptoticError' are specified" )                

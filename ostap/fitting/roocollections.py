@@ -667,7 +667,7 @@ class  KeepArgs(object) :
 
 # =============================================================================
 ## attention 
-if root_info < ( 6 , 26 ) and not hasattr ( ROOT.RooAbsCollection , 'assign' ) :
+if not hasattr ( ROOT.RooAbsCollection , 'assign' ) :
     ## attention !!!
     ROOT.RooAbsCollection.assign = ROOT.RooAbsCollection.assignValueOnly 
 

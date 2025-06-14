@@ -22,7 +22,6 @@ Four ways to add branch into TTree/Tchain
 - using histogram sampling
 """
 # =============================================================================
-from   ostap.core.meta_info               import root_info 
 from   ostap.core.pyrouts                 import hID , Ostap 
 from   ostap.trees.data                   import Data
 from   ostap.math.make_fun                import make_fun1, make_fun2, make_fun3 
@@ -266,54 +265,51 @@ def test_addbranch() :
     # =========================================================================
     ## (6) add new branch as histogram-function 
     # =========================================================================
-    if ( 6 , 24 , 6 ) <= root_info : 
-        with timing ('fun-hist-1' , logger = logger ) as timer :          
-            h1    = ROOT.TH1D ( hID () , 'some pt-correction' , 100 , 0 , 10 )
-            h1   += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
-            from   ostap.trees.funcs  import FuncTH1
-            ptw   = FuncTH1 ( h1 , 'pt' )
-            chain = data.chain 
-            chain = chain.padd_new_branch ( ptw , name = 'ptw1' )
-        rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
-        ## reload the chain and check: 
-        assert 'ptw1' in chain , "Branch `ptw1' is  not here!"
+    with timing ('fun-hist-1' , logger = logger ) as timer :          
+        h1    = ROOT.TH1D ( hID () , 'some pt-correction' , 100 , 0 , 10 )
+        h1   += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
+        from   ostap.trees.funcs  import FuncTH1
+        ptw   = FuncTH1 ( h1 , 'pt' )
+        chain = data.chain 
+        chain = chain.padd_new_branch ( ptw , name = 'ptw1' )
+    rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
+    ## reload the chain and check: 
+    assert 'ptw1' in chain , "Branch `ptw1' is  not here!"
             
     # =========================================================================
     ## (7) add new branch as histogram-function 
     # =========================================================================
-    if ( 6 , 24 , 6 ) <= root_info : 
-        with timing ( 'fun-hist-2' , logger = logger ) as timer :          
-            h1    = ROOT.TH1D ( hID () , 'some pt-correction' , 100 , 0 , 10 )
-            h1   += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
-            from   ostap.trees.funcs  import FuncTH1
-            ptw   = FuncTH1 ( h1 , 'pt' )
-            chain = data.chain 
-            chain = chain.padd_new_branch ( 'ptw2' , function = ptw )     
-        rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
-        ## reload the chain and check: 
-        assert 'ptw2' in chain , "Branch `ptw2' is  not here!"
+    with timing ( 'fun-hist-2' , logger = logger ) as timer :          
+        h1    = ROOT.TH1D ( hID () , 'some pt-correction' , 100 , 0 , 10 )
+        h1   += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
+        from   ostap.trees.funcs  import FuncTH1
+        ptw   = FuncTH1 ( h1 , 'pt' )
+        chain = data.chain 
+        chain = chain.padd_new_branch ( 'ptw2' , function = ptw )     
+    rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
+    ## reload the chain and check: 
+    assert 'ptw2' in chain , "Branch `ptw2' is  not here!"
 
     # =========================================================================
     ## (8) add several functions simultaneously 
     # =========================================================================
-    if ( 6 , 24 , 6 ) <= root_info : 
-        with timing ('sim-funcs' , logger = logger ) as timer :          
-            from   ostap.trees.funcs  import FuncTH1
-            hh    = ROOT.TH1D ( hID() , 'some pt-correction' , 100 , 0 , 10 )
-            h1    = hh + ( lambda x :  1.0 + math.tanh ( 0.1 * ( x - 5 ) ) )
-            ptw3  = FuncTH1 ( h1 , 'pt' )
-            h2    = h1 + ( lambda x :  1.0 + math.tanh ( 0.2 * ( x - 5 ) ) )
-            ptw4  = FuncTH1 ( h2 , 'pt' )
-            h3    = h1 + ( lambda x :  1.0 + math.tanh ( 0.3 * ( x - 5 ) ) ) 
-            ptw5  = FuncTH1 ( h3 , 'pt' )
-            chain = data.chain
-            brs   = { 'ptw3' : ptw3 , 'ptw4' : ptw4 , 'ptw5' : ptw4 } 
-            chain = chain.padd_new_branch ( brs )     
-        rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
-        ## reload the chain and check: 
-        assert 'ptw3' in chain , "Branch `ptw3' is  not here!"
-        assert 'ptw4' in chain , "Branch `ptw4' is  not here!"
-        assert 'ptw5' in chain , "Branch `ptw5' is  not here!"
+    with timing ('sim-funcs' , logger = logger ) as timer :          
+        from   ostap.trees.funcs  import FuncTH1
+        hh    = ROOT.TH1D ( hID() , 'some pt-correction' , 100 , 0 , 10 )
+        h1    = hh + ( lambda x :  1.0 + math.tanh ( 0.1 * ( x - 5 ) ) )
+        ptw3  = FuncTH1 ( h1 , 'pt' )
+        h2    = h1 + ( lambda x :  1.0 + math.tanh ( 0.2 * ( x - 5 ) ) )
+        ptw4  = FuncTH1 ( h2 , 'pt' )
+        h3    = h1 + ( lambda x :  1.0 + math.tanh ( 0.3 * ( x - 5 ) ) ) 
+        ptw5  = FuncTH1 ( h3 , 'pt' )
+        chain = data.chain
+        brs   = { 'ptw3' : ptw3 , 'ptw4' : ptw4 , 'ptw5' : ptw4 } 
+        chain = chain.padd_new_branch ( brs )     
+    rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
+    ## reload the chain and check: 
+    assert 'ptw3' in chain , "Branch `ptw3' is  not here!"
+    assert 'ptw4' in chain , "Branch `ptw4' is  not here!"
+    assert 'ptw5' in chain , "Branch `ptw5' is  not here!"
 
     h1 = ROOT.TH1D ( hID() , 'Gauss1' , 120 , -6 , 6 )
     h2 = ROOT.TH2D ( hID() , 'Gauss2' ,  50 , -6 , 6 , 50 , -6 , 6 )
@@ -329,38 +325,35 @@ def test_addbranch() :
     # =========================================================================
     ## (9) add the variable sampled from the 1D histogram
     # =========================================================================
-    if ( 6 , 24 , 6 ) <= root_info : 
-        with timing ('sample-h1' , logger = logger ) as timer :          
-            chain = data.chain 
-            chain = chain.padd_new_branch ( h1 , xname = 'xh1' ) 
-        rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
-        ## reload the chain and check: 
-        assert 'xh1' in chain , "Branch `xh1' is  not here!"
+    with timing ('sample-h1' , logger = logger ) as timer :          
+        chain = data.chain 
+        chain = chain.padd_new_branch ( h1 , xname = 'xh1' ) 
+    rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
+    ## reload the chain and check: 
+    assert 'xh1' in chain , "Branch `xh1' is  not here!"
             
     # =========================================================================
     ## (10) add the variable sampled from the 2D histogram
-    # =========================================================================
-    if ( 6 , 24 , 6 ) <= root_info : 
-        with timing ('sample-h2' , logger = logger ) as timer :          
-            chain = data.chain 
-            chain = chain.padd_new_branch ( h2 , xname = 'xh2' , yname = 'yh2' ) 
-            rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
-        ## reload the chain and check: 
-        assert 'xh2' in chain , "Branch `xh2' is  not here!"
-        assert 'yh2' in chain , "Branch `yh2' is  not here!"
+    # ========================================================================= 
+    with timing ('sample-h2' , logger = logger ) as timer :          
+        chain = data.chain 
+        chain = chain.padd_new_branch ( h2 , xname = 'xh2' , yname = 'yh2' ) 
+    rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
+    ## reload the chain and check: 
+    assert 'xh2' in chain , "Branch `xh2' is  not here!"
+    assert 'yh2' in chain , "Branch `yh2' is  not here!"
     
     # =========================================================================
     ## (11) add the variable sampled from the 3D histogram
     # =========================================================================
-    if ( 6 , 24 , 6 ) <= root_info : 
-        with timing ('sample-h3' , logger = logger ) as timer :          
-            chain = data.chain 
-            chain = chain.padd_new_branch ( h3 , xname = 'xh3' , yname = 'yh3' , zname = 'zh3' ) 
-            rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
-        ## reload the chain and check: 
-        assert 'xh3' in chain , "Branch `xh2' is  not here!"
-        assert 'yh3' in chain , "Branch `yh2' is  not here!"
-        assert 'zh3' in chain , "Branch `zh2' is  not here!"
+    with timing ('sample-h3' , logger = logger ) as timer :          
+        chain = data.chain 
+        chain = chain.padd_new_branch ( h3 , xname = 'xh3' , yname = 'yh3' , zname = 'zh3' ) 
+    rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
+    ## reload the chain and check: 
+    assert 'xh3' in chain , "Branch `xh2' is  not here!"
+    assert 'yh3' in chain , "Branch `yh2' is  not here!"
+    assert 'zh3' in chain , "Branch `zh2' is  not here!"
         
     # =========================================================================
     ## (12) python function again 

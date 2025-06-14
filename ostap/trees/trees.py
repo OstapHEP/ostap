@@ -22,7 +22,6 @@ __all__     = (
     'array_buffer_types' , ## allowed array buffer types 
   ) 
 # =============================================================================
-from   ostap.core.meta_info      import root_info
 from   ostap.core.ostap_types    import ( integer_types      , long_type      ,
                                           string_types       , sequence_types ,
                                           sized_types        , num_types      ,
@@ -454,12 +453,12 @@ def tree_project ( tree                    ,
 
     ## use frame if requested and if/when possible 
     if use_frame and 0 == first and len ( tree ) < last : 
-        if input_histo or ( 6 , 25 ) <= root_info :
-            import ostap.frames.frames as F 
-            frame  = F.DataFrame ( tree )
-            if progress : frame , _ = F.frame_progress ( frame , len ( tree ) )
-            with ActiveBranches  ( tree , cuts , *varlst ) :            
-                return F.frame_project ( frame , target , expressions = what , cuts = cuts , lazy = False  )
+        ## if input_histo or ( 6 , 25 ) <= root_info :
+        import ostap.frames.frames as F 
+        frame  = F.DataFrame ( tree )
+        if progress : frame , _ = F.frame_progress ( frame , len ( tree ) )
+        ## with ActiveBranches  ( tree , cuts , *varlst ) :            
+        return F.frame_project ( frame , target , expressions = what , cuts = cuts , lazy = False  )
 
     ## dimension of the target 
     dim = target.dim ()
@@ -2702,13 +2701,14 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         fvars = ( branch , ) + vars + ( tree , )        
         keeper.append ( fvars[:-1]  ) 
         
-        if   ( 6 , 26 ) <= root_info : args = vars + ( branch , )
-        else :
-        
-            fvars = ( branch , ) + vars + ( tree , )
-            if   1 == len ( vars ) : args = Ostap.Functions.Func1D ( *fvars ) , 
-            elif 2 == len ( vars ) : args = Ostap.Functions.Func2D ( *fvars ) , 
-            elif 3 == len ( vars ) : args = Ostap.Functions.Func3D ( *fvars ) ,
+        args = vars + ( branch , )
+        ## if   ( 6 , 26 ) <= root_info : args = vars + ( branch , )
+        ## else :
+        ## 
+        ##    fvars = ( branch , ) + vars + ( tree , )
+        ##    if   1 == len ( vars ) : args = Ostap.Functions.Func1D ( *fvars ) , 
+        ##    elif 2 == len ( vars ) : args = Ostap.Functions.Func2D ( *fvars ) , 
+        ##    elif 3 == len ( vars ) : args = Ostap.Functions.Func3D ( *fvars ) ,
 
         logger.debug ( 'prepare_branches: case [14] %s' % typename ( branch ) )
         
@@ -2837,11 +2837,9 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
         sc    = Ostap.Trees.add_branch ( ttree , *args  )
         assert sc.isSuccess () , "Error from Ostap.Trees.add_branch %s" % sc
 
-        if ( 6 , 26 ) <= root_info :
-            from ostap.utils.root_utils import implicitMT 
-            with implicitMT ( False ) : tfile.Write ( "" , ROOT.TObject.kOverwrite )
-        else                          : tfile.Write ( "" , ROOT.TObject.kOverwrite )
-        
+        from ostap.utils.root_utils import implicitMT 
+        with implicitMT ( False ) : tfile.Write ( "" , ROOT.TObject.kOverwrite )
+         
         ttree = ROOT.nullptr 
 
     chain = ROOT.TChain ( tpath )
@@ -3099,10 +3097,8 @@ def buffer_2tree ( tree , name , buffer , progress = True , report = True ) :
         sc = Ostap.Trees.add_buffer ( ttree , *args  )
         assert sc.isSuccess () , "Error from Ostap.Trees.add_branch %s" % sc
 
-        if ( 6 , 26 ) <= root_info :
-            from ostap.utils.root_utils import implicitMT 
-            with implicitMT ( False ) : tfile.Write ( "" , ROOT.TObject.kOverwrite )
-        else                          : tfile.Write ( "" , ROOT.TObject.kOverwrite )
+        from ostap.utils.root_utils import implicitMT 
+        with implicitMT ( False ) : tfile.Write ( "" , ROOT.TObject.kOverwrite )
 
     ## recostrut the tree/chain 
     chain = ROOT.TChain ( tpath )

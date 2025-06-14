@@ -17,7 +17,6 @@ __date__    = "2011-06-07"
 __all__     = (
     ) 
 # =============================================================================
-from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import Ostap, VE, valid_pointer, iszero, isequal
 from   ostap.core.ostap_types   import string_types , integer_types
 from   ostap.utils.valerrors    import ValWithErrors, AsymErrors   
@@ -679,10 +678,6 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
     if 0 < nbadnll :
         rows.append ( ( 'Invalid FCN/NLL evaluations' , '' , '  %d' % nbadnll , '' ) )
 
-
-    with_globcorr =         not ( root_info < ( 6 , 28 ) )
-    with_globcorr = True or not ( root_info < ( 6 , 28 ) )
-    with_globcorr =         not ( root_info < ( 6 , 26 ) )
 
     with_globcorr = True 
 

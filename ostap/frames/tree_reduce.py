@@ -86,10 +86,8 @@ class ReduceTree(CleanUp):
         nvars = [] 
         ## new variables 
         for nv in new_vars :
-            if ( 6 , 26 ) <= root_info and nv in avars :
-                frame = frame.Redefine ( nv , new_vars [ nv ] ) ## REDEFINE!!!
-            else : 
-                frame = frame.Define   ( nv , new_vars [ nv ] )
+            if nv in avars : frame = frame.Redefine ( nv , new_vars [ nv ] ) ## REDEFINE!!!
+            else           : frame = frame.Define   ( nv , new_vars [ nv ] )
             nvars.append ( nv )
             avars.add    ( nv )
             

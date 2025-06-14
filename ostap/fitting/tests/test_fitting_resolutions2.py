@@ -14,7 +14,6 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   ostap.core.meta_info     import root_info, python_info
 from   ostap.core.core          import VE, dsID
 from   ostap.utils.gsl          import gslCount
 from   ostap.utils.timing       import timing 
@@ -630,9 +629,6 @@ def test_db() :
 
     logger = getLogger ( 'test_db' )
 
-    if root_info < (6,20) and (3,0)<= python_info < (3,7) :
-        logger.warning ( "Test is disabled for this version of ROOT+python" )
-        return 
 
     logger.info('Saving all objects into DBASE')
     import ostap.io.zipshelve   as     DBASE

@@ -17,7 +17,6 @@ __all__    = () ## nothing to import
 from   ostap.core.core          import cpp, VE, dsID, rooSilent 
 from   ostap.fitting.background import make_bkg 
 from   ostap.utils.timing       import timing, wait 
-from   ostap.core.meta_info     import root_info 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env  
 import ostap.fitting.models     as     Models 

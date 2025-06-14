@@ -1619,7 +1619,7 @@ def fill_dataset2 ( self              ,
 
     if all and shortcut and isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
         
-        if ( not selector.morecuts ) and  selector.trivial_vars  ) : 
+        if ( not selector.morecuts ) and  selector.trivial_vars : 
                 ## ( DataSet_NEW_FILL or selector.really_trivial ) :
             
             ## if selector.really_trivial and not selector.morecuts ) and \
