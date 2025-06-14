@@ -1,32 +1,32 @@
 # File: azure-pipelines.yml
 jobs:
 
- - template: template-pipelines.yml  # Template reference
-   parameters:
-    name: cs7_LCG_100_gcc9
-    vmImage:  'ubuntu-latest'
-    dockername: 'gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest'
-    LCG: 'LCG_100'
-    CMTCONFIG: 'x86_64-centos7-gcc9-opt'
-    artifact: 'test_cs7_LCG_100_gcc9'
+# - template: template-pipelines.yml  # Template reference
+#   parameters:
+#    name: cs7_LCG_100_gcc9
+#    vmImage:  'ubuntu-latest'
+#    dockername: 'gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest'
+#    LCG: 'LCG_100'
+#    CMTCONFIG: 'x86_64-centos7-gcc9-opt'
+#    artifact: 'test_cs7_LCG_100_gcc9'
 
- - template: template-pipelines.yml  # Template reference
-   parameters:
-    name: cs7_LCG_101_gcc10
-    vmImage:  'ubuntu-latest'
-    dockername: 'gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest'
-    LCG: 'LCG_101'
-    CMTCONFIG: 'x86_64-centos7-gcc10-opt'
-    artifact: 'test_cs7_LCG_101_gcc10'
+# - template: template-pipelines.yml  # Template reference
+#   parameters:
+#    name: cs7_LCG_101_gcc10
+#    vmImage:  'ubuntu-latest'
+#    dockername: 'gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest'
+#    LCG: 'LCG_101'
+#    CMTCONFIG: 'x86_64-centos7-gcc10-opt'
+#    artifact: 'test_cs7_LCG_101_gcc10'
 
- - template: template-pipelines.yml  # Template reference
-   parameters:
-    name: cs7_LCG_101_gcc11
-    vmImage:  'ubuntu-latest'
-    dockername: 'gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest'
-    LCG: 'LCG_101'
-    CMTCONFIG: 'x86_64-centos7-gcc11-opt'
-    artifact: 'test_cs7_LCG_101_gcc11'
+# - template: template-pipelines.yml  # Template reference
+#   parameters:
+#    name: cs7_LCG_101_gcc11
+#    vmImage:  'ubuntu-latest'
+#    dockername: 'gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest'
+#    LCG: 'LCG_101'
+#    CMTCONFIG: 'x86_64-centos7-gcc11-opt'
+#    artifact: 'test_cs7_LCG_101_gcc11'
         
  - template: template-pipelines.yml  # Template reference
    parameters:
@@ -75,6 +75,15 @@ jobs:
 
  - template: template-pipelines.yml  # Template reference
    parameters:
+    name: el9_LCG_107_gcc14
+    vmImage:  'ubuntu-latest'
+    dockername: 'gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest'
+    LCG: 'LCG_107a'
+    CMTCONFIG: 'x86_64-el9-gcc14-opt'
+    artifact: 'test_al9_LCG_107_gcc14'
+
+ - template: template-pipelines.yml  # Template reference
+   parameters:
     name: el9_LCG_107_clang19
     vmImage:  'ubuntu-latest'
     dockername: 'gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest'
@@ -84,13 +93,13 @@ jobs:
 
  - template: template-pipelines.yml  # Template reference
    parameters:
-    name: el9_LCG_107_gcc14
+    name: el9_LCG_dev3_gcc15
     vmImage:  'ubuntu-latest'
     dockername: 'gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest'
-    LCG: 'LCG_107a'
-    CMTCONFIG: 'x86_64-el9-gcc14-opt'
-    artifact: 'test_al9_LCG_107_gcc14'
-    
+    LCG: 'dev3/latest'
+    CMTCONFIG: 'x86_64-el9-gcc15-opt'
+    artifact: 'test_al9_LCG_dev3_gcc15'
+
  - template: template-pipelines.yml  # Template reference
    parameters:
     name: el9_LCG_dev3_clang19
