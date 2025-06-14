@@ -274,9 +274,9 @@ class Trainer(object) :
         self.__prescale_background = prescale_background
         
         if self.parallel :
-            from ostap.parallel.parallel import DILL_PY3_issue
-            if DILL_PY3_issue :
-                self.logger.warning ("Disable parallel chopping due to DILL_PY3_issue")
+            from ostap.parallel.parallel import has_dill 
+            if not has_dill :
+                self.logger.attention  ("Disable parallel chopping due to old `dill` version ")
                 self.__parallel = False
                 
         self.__parallel_conf   = {}

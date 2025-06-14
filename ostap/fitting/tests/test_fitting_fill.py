@@ -40,15 +40,13 @@ else :
 batch_env ( logger )
 # =============================================================================
 
-DILL_PY3_issue = False 
-if ( 3 , 6 ) <= sys.version_info : 
-    from   ostap.parallel.parallel import DILL_PY3_issue
-    
-    
-if DILL_PY3_issue :
-    raise TypeError( 'DILL ISSUE!')
-
+## DILL_PY3_issue = False 
+## if ( 3 , 6 ) <= sys.version_info : 
+##    from   ostap.parallel.parallel import DILL_PY3_issue
         
+## if DILL_PY3_issue :
+##    raise TypeError( 'DILL ISSUE!')
+      
 # =============================================================================
 ## create a file with tree 
 def create_tree ( fname , nentries = 1000 ) :
@@ -274,18 +272,18 @@ def test_fitting_fill_1 () :
 
     ## return 
 
-    if not DILL_PY3_issue :
+    ## if not DILL_PY3_issue :
         
-        config = { 'variables' : variables          ,
-                   'selection' : "pt>7 && eta<3"    ,
-                   'cuts'   :lambda s : s.pt > 3    } ## ATTENTION: no trivial cuts!
+    config = { 'variables' : variables          ,
+                'selection' : "pt>7 && eta<3"    ,
+                'cuts'      : lambda s : s.pt > 3 } ## ATTENTION: no trivial cuts!
         
-    else :
-        
-        logger.warning ( 'There is an issue with dill+python3: avoid lambda!' ) 
-        config = { 'variables' : variables          ,
-                   'selection' : "pt>7 && eta<3"    ,
-                   'cuts'      : ptcut              } ## ATTENTION: no trivial cuts!
+    ## else :
+    ##    
+    ##    logger.warning ( 'There is an issue with dill+python3: avoid lambda!' ) 
+    ##    config = { 'variables' : variables          ,
+    ##               'selection' : "pt>7 && eta<3"    ,
+    ##               'cuts'      : ptcut              } ## ATTENTION: no trivial cuts!
     
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )
@@ -369,31 +367,30 @@ def test_fitting_fill_1 () :
     logger.info ( attention ( 'Non-trivial variables' ) ) 
     # =========================================================================
      
-    if not DILL_PY3_issue : 
-       
-        variables = [
-            Variable ( mJPsi     , accessor = 'mass' ) ,
-            Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
-            Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) ,
-            Variable ( 'fevt'    , accessor = '1.0*evt' ) , 
-            ( 'pt'  , ) ,
-            ( 'eta' , ) ,
-            ( 'x'   , 'some variable'  , 0 , 5000 , lambda s : (s.mass+s.pt+s.eta)/s.eta ) 
-            ]
+    ## if not DILL_PY3_issue : 
+      
+    variables = [
+        Variable ( mJPsi     , accessor = 'mass' ) ,
+        Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
+        Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) ,
+        Variable ( 'fevt'    , accessor = '1.0*evt' ) , 
+        ( 'pt'  , ) ,
+        ( 'eta' , ) ,
+        ( 'x'   , 'some variable'  , 0 , 5000 , lambda s : (s.mass+s.pt+s.eta)/s.eta ) 
+        ]
         
-    else :
-        
-        logger.warning ( 'There is an issue with dill+python3: avoid lambda!' ) 
-        variables = [
-            Variable ( mJPsi     , accessor = 'mass' ) ,
-            Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
-            Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
-            Variable ( 'fevt'    , accessor = '1.0*evt' ) , 
-            ( 'pt'  , ) ,
-            ( 'eta' , ) ,
-            ( 'x'   , 'some variable'  , 0 , 5000 , xvar ) 
-            ]
-
+    ## else :
+    ##    
+    ##    logger.warning ( 'There is an issue with dill+python3: avoid lambda!' ) 
+    ##    variables = [
+    ##        Variable ( mJPsi     , accessor = 'mass' ) ,
+    ##        Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
+    ##        Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
+    ##        Variable ( 'fevt'    , accessor = '1.0*evt' ) , 
+    ##        ( 'pt'  , ) ,
+    ##        ( 'eta' , ) ,
+    ##        ( 'x'   , 'some variable'  , 0 , 5000 , xvar ) 
+    ##        ]
 
     config = { 'variables' : variables          ,
                'selection' : "pt>7 && eta<3"    }
@@ -477,43 +474,43 @@ def test_fitting_fill_1 () :
     logger.info ( attention ( 'Non-trivial variables + CUT' ) ) 
     # =========================================================================
  
-    if not DILL_PY3_issue : 
+    ## if not DILL_PY3_issue : 
         
-        variables = [
-            Variable ( mJPsi     , accessor = 'mass' ) ,
-            Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
-            Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
-            Variable ( 'fevt'    , accessor = '1.0*evt' ) , 
-            ( 'pt'  , ) ,
-            ( 'eta' , ) ,
-            ( 'x'   , 'some variable'  , 0 , 5000 , lambda s : (s.mass+s.pt+s.eta)/s.eta ) 
-            ]
+    variables = [
+        Variable ( mJPsi     , accessor = 'mass' ) ,
+        Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
+        Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
+        Variable ( 'fevt'    , accessor = '1.0*evt' ) , 
+        ( 'pt'  , ) ,
+        ( 'eta' , ) ,
+        ( 'x'   , 'some variable'  , 0 , 5000 , lambda s : (s.mass+s.pt+s.eta)/s.eta ) 
+        ]
         
-    else :
-
-        logger.warning ( 'There is an issue with dill+python3: avoid lambda!' ) 
-        variables = [
-            Variable ( mJPsi     , accessor = 'mass' ) ,
-            Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
-            Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
-            Variable ( 'fevt'    , accessor = '1.0*evt' ) , 
-            ( 'pt'  , ) ,
-            ( 'eta' , ) ,
-            ( 'x'   , 'some variable'  , 0 , 5000 , xvar ) 
-            ]
+    ## else :
+    ##
+    ##    logger.warning ( 'There is an issue with dill+python3: avoid lambda!' ) 
+    ##    variables = [
+    ##        Variable ( mJPsi     , accessor = 'mass' ) ,
+    ##        Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
+    ##        Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
+    ##        Variable ( 'fevt'    , accessor = '1.0*evt' ) , 
+    ##        ( 'pt'  , ) ,
+    ##        ( 'eta' , ) ,
+    ##        ( 'x'   , 'some variable'  , 0 , 5000 , xvar ) 
+    ##        ]
             
     
-    if not DILL_PY3_issue :
+    ## if not DILL_PY3_issue :
         
-        config = { 'variables' : variables          ,
-                   'selection' : "pt>7 && eta<3"    ,
-                   'cuts'      :lambda s : s.pt > 3 } ## ATTENTION: no trivial cuts! 
-    else :
-        
-        logger.warning ( 'There is an issue with dill+python3: avoid lambda!' ) 
-        config = { 'variables' : variables          ,
-                   'selection' : "pt>7 && eta<3"    ,
-                   'cuts'      : ptcut              } ## ATTENTION: no trivial cuts! 
+    config = { 'variables' : variables          ,
+                'selection' : "pt>7 && eta<3"    ,
+                'cuts'      :lambda s : s.pt > 3 } ## ATTENTION: no trivial cuts! 
+    ## else :
+    ##    
+    ##    logger.warning ( 'There is an issue with dill+python3: avoid lambda!' ) 
+    ##    config = { 'variables' : variables          ,
+    ##               'selection' : "pt>7 && eta<3"    ,
+    ##               'cuts'      : ptcut              } ## ATTENTION: no trivial cuts! 
         
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )

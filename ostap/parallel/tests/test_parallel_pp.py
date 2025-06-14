@@ -69,15 +69,11 @@ def uimap  ( jobs ) :
 # =============================================================================
 ## test parallel python with with plain function 
 def test_pp_function () :
-    """Test parallel python with plain function
+    """ Test parallel python with plain function
     """
     logger =    getLogger ("test_pp_function")
     logger.info ('Test job submission with %s' %  pp ) 
 
-    from ostap.core.known_issues import DILL_ROOT_issue
-    if DILL_ROOT_issue : 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" )
-        return
     
     job_server = pp.Server()
     
@@ -109,11 +105,7 @@ def test_pp_method() :
     logger =    getLogger ("test_pp_method")
     logger.info ('Test job submission with %s' %  pp ) 
 
-    from ostap.core.known_issues import DILL_ROOT_issue
-    if DILL_ROOT_issue : 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" )
-        return
-            
+ 
     job_server = pp.Server()    
     jobs = [ ( i , job_server.submit ( mh.process , ( i , n ) ) ) for ( i , n ) in enumerate  ( inputs ) ]
 
