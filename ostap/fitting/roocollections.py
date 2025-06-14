@@ -117,7 +117,7 @@ _new_methods_ += [
     ROOT.RooArgList. __setitem__   ,
 ]
 
-if root_info < ( 6 , 26 ) and not hasattr ( ROOT.RooAbsCollection , 'assign' ) :
+if not hasattr ( ROOT.RooAbsCollection , 'assign' ) :
     ROOT.RooAbsCollection.assign = ROOT.RooAbsCollection.assignValueOnly 
     _new_methods_ += [
         ROOT.RooAbsCollection.assign ,

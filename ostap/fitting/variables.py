@@ -1545,8 +1545,6 @@ def _rfv_repr_ ( var ) :
     """
     return '%s : %s' % ( var.expression() , var.getVal() ) 
 
-
-if root_info < ( 6, 26 ) : ROOT.RooFormulaVar. expression = _rfv_expr_
 ROOT.RooFormulaVar. __str__    = _rfv_str_
 ROOT.RooFormulaVar. __repr__   = _rfv_repr_
 _new_methods_ += [

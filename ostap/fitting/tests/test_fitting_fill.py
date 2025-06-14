@@ -18,7 +18,7 @@ from   ostap.core.meta_info         import root_info
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.utils.timing           import timing  
 from   ostap.trees.data             import Data
-from   ostap.fitting.pyselectors    import Variable, SelectorWithVars, DataSet_NEW_FILL
+from   ostap.fitting.pyselectors    import Variable, SelectorWithVars
 from   ostap.logger.colorized       import attention
 from   ostap.utils.root_utils       import batch_env 
 import ostap.logger.table           as     T
@@ -39,13 +39,6 @@ else :
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-
-## DILL_PY3_issue = False 
-## if ( 3 , 6 ) <= sys.version_info : 
-##    from   ostap.parallel.parallel import DILL_PY3_issue
-        
-## if DILL_PY3_issue :
-##    raise TypeError( 'DILL ISSUE!')
       
 # =============================================================================
 ## create a file with tree 
@@ -183,10 +176,9 @@ def test_fitting_fill_1 () :
         chain.fill_dataset ( selector , shortcut = True  , use_frame = True  )
         ds1_4 = selector.data
         
-    if DataSet_NEW_FILL :  
-        with timing ( " pure-FRAME (new) " , logger = None ) as t5 : 
-            logger.info ( attention ( t5.name ) )        
-            ds1_5 , _ = chain.make_dataset ( silent = False , **config )
+    with timing ( " pure-FRAME (new) " , logger = None ) as t5 : 
+        logger.info ( attention ( t5.name ) )        
+        ds1_5 , _ = chain.make_dataset ( silent = False , **config )
 
     table = [ ('Configuration' , 'CPU' ) ] 
 
@@ -195,8 +187,7 @@ def test_fitting_fill_1 () :
     table.append ( ( t3.name , '%.3fs' % t3.delta ) )
     table.append ( ( t4.name , '%.3fs' % t4.delta ) )
 
-    if DataSet_NEW_FILL : 
-        table.append ( ( t5.name , '%.3fs' % t5.delta ) )
+    table.append ( ( t5.name , '%.3fs' % t5.delta ) )
 
     title1 = "All trivial variables"
     table1 = T.table ( table , title = title1 , prefix = '# ' , alignment = 'rr' )
@@ -210,8 +201,8 @@ def test_fitting_fill_1 () :
 
     ## return 
 
-    ##  if DataSet_NEW_FILL : 
-    ##    if ds1_1 != ds1_5 : logger.error ('Datasets ds1_1  and ds1_5   are different!' )
+    ## 
+    ##  if ds1_1 != ds1_5 : logger.error ('Datasets ds1_1  and ds1_5   are different!' )
 
     ## return 
 

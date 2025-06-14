@@ -11,7 +11,6 @@
 - It tests decorations for <code>ROOT.TMinuit</code>
 """
 # ============================================================================= 
-from   ostap.core.meta_info   import old_PyROOT 
 from   ostap.utils.timing     import timing
 from   ostap.utils.root_utils import batch_env 
 import ostap.fitting.minuit
@@ -28,7 +27,6 @@ else :
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-
 
 # ==============================================================================
 ## *NEW* PyROOT  uses <code>ctypes.c_int</code>, <code>ctypes.c_double</code>

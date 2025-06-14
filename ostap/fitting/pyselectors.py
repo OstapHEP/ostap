@@ -99,7 +99,6 @@ __all__ = (
     'SelectorWithCuts' ,        ## The "fixed" TPySelector with TTree-formula 
     'SelectorWithVars' ,        ## Generic selctor to fill RooDataSet from TTree/TChain
     'Variable'         ,        ## helper class to define variable
-    'DataSet_NEW_FILL' ,        ## Is new efficient filing machinery activated? 
     'SelectorWithVarsCached'    ## Generic selector with cache   
 )
 # =============================================================================
@@ -1444,255 +1443,7 @@ class SelectorWithVarsCached(SelectorWithVars) :
 
         return 1
 
-# =============================================================================
-## Is new (very efficient) fill machinery activated? 
-DataSet_NEW_FILL = ( 6 , 26 ) <= root_info 
 
-# =============================================================================
-## Create RooDataset from the tree
-#  @code 
-#  tree = ...
-#  ds   = tree.make_dataset_old ( [ 'px , 'py' , 'pz' ] ) 
-#  @endcode
-def make_dataset_old ( tree              ,
-                       variables         , ## varibales 
-                       selection = ''    , ## TTree selection 
-                       roo_cuts  = ''    , ## Roo-Fit selection  
-                       name      = ''    , 
-                       title     = ''    ,
-                       silent    = False ) :
-    """Create the dataset from the tree
-    >>> tree = ...
-    >>> ds = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
-    """
-
-    if DataSet_NEW_FILL :
-        if not silent : logger.info ( "Switch to more efficient function 'make_dataset'" )
-        return make_dataset ( tree                  ,
-                              variables = variables ,
-                              selection = selection ,
-                              roo_cuts  = roo_cuts  ,
-                              name      = name      ,
-                              title     = title     ,
-                              silent    = silent    )
-    
-    import ostap.trees.cuts
-    import ostap.fitting.roofit
-
-    variables = Variables ( variables )
-    if not variables.trivial_vars or ( '[' in selection ) or ( '[' in roo_cuts ) :
-        if not silent : logger.info ( "Variables/selection are not trivial, switch to 'fill_dataset'" )
-        return fill_dataset ( tree                  ,
-                              variables = variables ,
-                              selection = selection ,
-                              roo_cuts  = roo_cuts  ,
-                              name      = name      ,
-                              title     = title     ,
-                              shortcut  = True      ,
-                              use_frame = True      , ## IMPORTANT!
-                              silent    = silent    ) 
-    
-    
-    varset   = ROOT.RooArgSet()
-    vars     = set()
-
-    formulas  = []
-    
-    selection = str ( selection ) if isinstance ( selection , ROOT.TCut ) else selection  
-    selection = selection.strip() if isinstance ( selection , str       ) else selection 
-
-    branches = set ( tree.branches () )
-    leaves   = set ( tree.leaves   () ) 
-    
-    limits    = []
-
-    for vv in variables :
-        
-        if vv.name != vv.formula :            
-            if vv.name in branches :
-                logger.error ( "Variable %s exists as branch! skip it" % vv.name )
-                continue
-            if vv.name in leaves   :
-                logger.error ( "Variable %s exists as leaf! skip it"   % vv.name )
-                continue
-
-        if vv.trivial and vv.name == vv.formula : 
-            
-            assert hasattr  ( tree , vv.name ) , "Tree/Chain has no branch '%s'" % vv.name
-            
-            varset.add  ( vv.var )
-            vars.add    ( vv )
-            
-        elif vv.formula :
-            
-            formulas.append ( vv )
-            continue
-
-        else :
-            
-            logger.error("Do not know how to treat the variable %s, skip it" % vv.name )
-            continue 
-        
-        mn , mx = vv.minmax
-        if _minv < mn : limits.append ( "(%.16g <= %s)" % ( mn      , vv.name ) ) 
-        if _maxv > mx : limits.append ( "(%s <= %.16g)" % ( vv.name , mx      ) )
-
-
-    ## 
-    limits = ROOT.TCut (' && '.join ( limits ) ) if limits else ROOT.TCut()
-    cuts   = ROOT.TCut ( limits )
-    
-    ## extended varset
-    stor    = set() 
-    varsete = ROOT.RooArgSet()
-    for v in varset : varsete.add ( v )
-
-    expressions = [ f.formula for f in formulas ]
-
-    if selection :
-        cuts = cuts & ROOT.TCut ( selection ) 
-        expressions.append      ( selection ) 
-
-    if expressions :
-
-        tt = None 
-        if isinstance ( tree , ROOT.TChain ) :
-            nf = len ( tree.files() )
-            for i in range ( nf ) :
-                tt = tree[i]
-                if tt : break 
-        if not tt : tt = tree
-
-        lvars = tt.the_variables ( *expressions )
-
-        assert not lvars is None , 'Unable to get the basic variables for %s' % expressions
-        if not silent :
-            logger.info ("make_dataset: temporary variables to be added %s" % str ( lvars ) ) 
-        for lname in lvars :
-            if not lname in varsete :
-                v = Variable ( lname )
-                varsete.add  ( v.var )
-                stor.add ( v )
-                
-    if not name : name = dsID () 
-    if not title and tree.GetName() != tree.GetTitle  :
-        title = tree.GetTitle ()
-
-    total     = len ( tree )
-    processed = tree.statVar ( '1' , selection ).nEntries()
-    skipped   = tree.statVar ( '1' , cuts      ).nEntries() 
- 
-    stat = SelStat ( total , processed , processed - skipped )
-
-    f1 = len ( varsete ) * 1.0 / len ( tree.branches() )
-    f2 = skipped         * 1.0 / max ( 1 , total ) 
-    if f1   < 0.20 and f2 < 0.10 and not silent :
-        logger.warning ( "Only tiny fraction of variables (% 4.1f%%) and data (% 4.1F%%) is requested: prefiltering can speedup process" % ( f1 * 100 , f2 * 100 ) ) 
-    elif f1 < 0.20 and not silent :
-        logger.warning ( "Only tiny fraction of variables (% 4.1f%%) is requested: prefiltering can speedup process" % ( f1 * 100  ) )
-    elif f2 < 0.10 and not silent : 
-        logger.warning ( "Only tiny fraction of data (% 4.1F%%) is requested: prefiltering can speedup process" % ( f2 * 100 ) ) 
-        
-    from ostap.core.core    import rooSilent, rootError, NoContext
-    from ostap.utils.timing import timing
-    TIMING = timing if not silent else NoContext
-
-    with TIMING ( 'Fill RooDataSet' , logger = logger ) : 
-        with rooSilent ( ROOT.RooFit.ERROR  , True ) :
-            with rootError ( ROOT.kWarning ) :
-                if root_info <= ( 6 , 31 ) : ds = ROOT.RooDataSet ( name , title , tree    , varsete , str ( cuts ) )
-                else                       : ds = ROOT.RooDataSet ( name , title , varsete , ROOT.RooFit.Import ( tree ) , ROOT.RooFit.Cut ( str ( cuts ) ) ) 
-                    
-                varsete = ds.get()
-                
-    if not silent :
-        logger.debug( "make_dataset: Initial dataset\n%s" % ds.table ( prefix = "# " ) ) 
-    
-    ## add complex expressions 
-    if formulas or roo_cuts :
-        # a
-        vset = ds.get()
-        vlst = ROOT.RooArgList()
-        for v in vset : vlst.add ( v )
-
-        fcols = ROOT.RooArgList() 
-
-        ffs   = []
-        fcuts = []
-        for f in formulas :            
-            fv = make_formula ( f.name , f.formula , ds  )
-            fv.title = f.description 
-            ffs.append ( fv )
-            fcols.add  ( fv )
-            mn , mx = f.minmax            
-            if _minv < mn : fcuts.append ( "(%.16g <= %s)" % ( mn      , fv.name ) )
-            if _maxv > mx : fcuts.append ( "(%s <= %.16g)" % ( fv.name , mx      ) )
-
-        with rooSilent ( ROOT.RooFit.ERROR + 1 , True ) :
-            with rootError( ROOT.kError ) :
-                ## ## it causes some strange behaviour
-                ## ds.addColumns ( fcols )
-                ## ## it is ok: 
-                for  f in fcols : ds.addColumn ( f ) 
-                del fcols
-                del ffs 
-
-        ## insert Roo-Fit cuts here!
-        if roo_cuts : fcuts.append ( roo_cuts )  ## ATTENTION: insert Roo-Fit cuts here!
-        
-        ##  apply cuts (if any) for the  complex expressions 
-        if fcuts :
-            fcuts = [ '(%s)' % f for f in fcuts ]
-            fcuts = ' && '.join ( fcuts )
-            _vars = ds.get()
-            with rooSilent ( ROOT.RooFit.ERROR  + 1  , True ) :
-                with rootError( ROOT.kError + 1 ) :
-                    ds1 = ROOT.RooDataSet ( dsID() , ds.title , ds , _vars , fcuts ) 
-                    ds.clear()
-                    del ds
-                    ds = ds1
-                    varsete = ds.get()
-            if not silent :
-                logger.info ( "make_dataset: dataset after (f)cuts\n%s" % ds.table ( prefix = "# " ) )
-                
-        nvars = ROOT.RooArgSet()
-        for v in varset   : nvars.add ( v     )
-        for v in formulas : nvars.add ( v.var )
-        varset  = nvars 
-        varsete = ds.get() 
-
-    if formulas and not silent : 
-        logger.info ( "make_dataset: dataset with expressions\n%s" % ds.table ( prefix = "# " ) ) 
-
-    ##  remove all temporary variables  
-    if len ( varset ) != len ( varsete ) :
-        vs  = ROOT.RooArgSet()
-        vrm = set ( )
-        for v in ds.get() :
-            if  v in varset : vs .add ( v      )
-            else            : vrm.add ( v.name )
-        if vrm and not silent :
-            logger.info  ("make_dataset: temporary variables to be removed %s" % str ( tuple ( vrm) ) )
-        ds1 = ds.reduce ( vs , '' )
-        ds.clear()
-        del ds
-        ds = ds1
-        
-    if not silent : 
-        skipped = 'Skipped:%d' % stat.skipped 
-        skipped = '/' + attention ( skipped ) if stat.skipped else ''
-        table   = ds.table () 
-        report = 'make_dataset: Events Total:%d/Processed:%s%s CUTS:"%s" dataset\n%s' % (
-            stat.total     ,
-            stat.processed ,
-            skipped        ,
-            selection      ,
-            ds             )
-        logger.info (  report.replace ( '\n','\n# ' ) )
-        
-    return ds , stat 
-
-ROOT.TTree.make_dataset_old = make_dataset_old
 
 # =============================================================================
 ## Create RooDataset from the tree using Tree->Frame->Dataset transformation 
@@ -1714,18 +1465,6 @@ def make_dataset ( tree              ,
     if not title : title = 'Dataset from %s' % tree.GetName()
 
     if isinstance ( selection , ROOT.TCut ) : selection = str ( selection )
-    
-    if not DataSet_NEW_FILL :
-        return make_dataset_old ( tree      = tree      ,
-                                  variables = variables ,
-                                  selection = selection ,
-                                  roo_cuts  = roo_cuts  ,
-                                  name      = name      ,
-                                  title     = title     ,
-                                  silent    = silent    )
-    
-    if not silent :
-        logger.info  ("Use new efficient RooDataSet filling machinery")
         
     import ostap.trees.cuts
     import ostap.fitting.roofit
@@ -1767,7 +1506,7 @@ def make_dataset ( tree              ,
         if v.name == v.formula and v.name in columns : continue
 
         ## define new variable
-        if ( 6 , 26 ) <=root_info and  v.name in columns : 
+        if v.name in columns : 
             frame = frame.Redefine ( v.name , v.formula )  ## REDEFINE 
         else : 
             frame = frame.Define   ( v.name , v.formula )
@@ -1880,9 +1619,8 @@ def fill_dataset2 ( self              ,
 
     if all and shortcut and isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
         
-        if ( not selector.morecuts )  and \
-               selector.trivial_vars  and \
-               ( DataSet_NEW_FILL or selector.really_trivial ) :
+        if ( not selector.morecuts ) and  selector.trivial_vars  ) : 
+                ## ( DataSet_NEW_FILL or selector.really_trivial ) :
             
             ## if selector.really_trivial and not selector.morecuts ) and \
             ##    ( not '[' in selector.selection ) : 
@@ -1961,7 +1699,7 @@ def fill_dataset2 ( self              ,
                     logger.debug  ( 'PROCESS: define %s as %s ' % ( v.name , v.formula ) )
 
                     ## define new variable
-                    if ( 6 , 26 ) <= root_info and  v.name in columns : 
+                    if  v.name in columns : 
                         frame = frame.Redefine ( v.name , v.formula )  ## REDEFINE 
                     else : 
                         frame = frame.Define   ( v.name , v.formula )  ## define new variable  for the frame

@@ -28,7 +28,6 @@ __all__     = (
     'root_info'            , ## ROOT version info 
     'python_info'          , ## Python version info
     #
-    'old_PyROOT'           , ## do we use "old" PyROOT ?
     )
 # =============================================================================
 from collections import namedtuple 
@@ -79,7 +78,6 @@ python_version_int = sys.version_info.micro              + \
 groot = ROOT.ROOT.GetROOT()
 root_version     = groot.GetVersion    ()
 root_version_int = groot.GetVersionInt ()
-old_PyROOT       = groot.GetVersionInt () < 62200
 
 root_major       = divmod ( root_version_int                       , 100**2 ) [0]
 root_minor       = divmod ( root_version_int - root_major * 100**2 , 100    ) [0]
@@ -94,7 +92,7 @@ python_info     = sys.version_info
 
 # =============================================================================
 assert ( 3 ,  8 ) <  python_info, "No support for PYTHON %s " %  ( '.'.join ( str ( i ) for i in python_info  ) )
-assert ( 6 , 24 ) <= root_info  , "No support for ROOT %s "   %  ( '.'.join ( str ( i ) for i in   root_info  ) )
+assert ( 6 , 26 ) <= root_info  , "No support for ROOT %s "   %  ( '.'.join ( str ( i ) for i in   root_info  ) )
 # =============================================================================
 
 # =============================================================================

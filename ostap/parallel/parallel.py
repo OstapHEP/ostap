@@ -61,7 +61,7 @@ try : # =======================================================================
     dill_version   =  getattr ( dill , '__version__' , '' )
     if not dill_version :  dill_version =  getattr ( dill , 'version' , '' )
     if not dill_version or dill_version < '0.3' :
-        logger.error ( )"Too old version of `dill`!" )
+        logger.error ("Too old version of `dill'")
         has_dill = False
         dill     = None 
     else :

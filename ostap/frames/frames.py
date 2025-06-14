@@ -101,7 +101,7 @@ try : # =======================================================================
     # =========================================================================
     std_move     = ROOT.std.move
     has_std_move = True 
-    Frames_OK    = has_std_move and ( 6 , 25 ) <= root_info  ## ATTENTION!
+    Frames_OK    = has_std_move                                    ## ATTENTION!
     # =========================================================================
 except AttributeError : # =====================================================
     # =========================================================================
@@ -720,7 +720,6 @@ def frame_project ( frame            ,
     if progress and isinstance ( frame , ROOT.TTree ) : progress = len ( frame )
 
     if isinstance ( model , _types_nD ) : 
-        assert ( 6 , 25 ) <= root_info, '6.25<=ROOT is required here!'
         return _fr_param_ ( frame               ,
                             model               ,
                             expression          ,
