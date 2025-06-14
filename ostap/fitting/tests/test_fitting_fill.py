@@ -44,10 +44,15 @@ DILL_PY3_issue = False
 if ( 3 , 6 ) <= sys.version_info : 
     from   ostap.parallel.parallel import DILL_PY3_issue
     
+    
+if DILL_PY3_issue :
+    raise TypeError( 'DILL ISSUE!')
+
+        
 # =============================================================================
 ## create a file with tree 
 def create_tree ( fname , nentries = 1000 ) :
-    """Create a file with a tree
+    """ Create a file with a tree
     >>> create_tree ( 'file.root' ,  1000 ) 
     """
     
