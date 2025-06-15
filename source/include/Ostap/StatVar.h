@@ -22,6 +22,7 @@ class RooAbsData ; // RooFit
 #include "Ostap/Covariance.h"
 #include "Ostap/DataFrame.h"
 #include "Ostap/StatusCode.h"
+#include "Ostap/Types.h"
 // ============================================================================
 // forward declarations 
 // ============================================================================
@@ -34,8 +35,6 @@ namespace Ostap { namespace Math { class WECDF      ; } }
 // ============================================================================
 namespace Ostap
 {
-  /// variable names, exressions  
-  typedef std::vector<std::string>           Strings ;
   // ==========================================================================
   /** @class StatVar Ostap/StatVar.h
    *  Helper class to get statistical 
@@ -43,14 +42,15 @@ namespace Ostap
    *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
    *  @date   2013-10-13
    */
-  class StatVar 
+  // class StatVar 
+  namespace StatVar 
   {
-  public:
+  // public:
     // ========================================================================
     typedef std::vector<Ostap::StatEntity>   StatVector ;
     typedef std::vector<Ostap::WStatEntity> WStatVector ;
      // ========================================================================
-  public:
+  // public:
     // ========================================================================
     /** @struct Interval 
      *  the actual type for interval
@@ -130,13 +130,7 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
-  public: 
-    // ========================================================================
-    static_assert ( std::numeric_limits<unsigned long>::is_specialized   ,
-                    "Numeric_limist<unsigned long> are not specialized!" ) ;
-    static constexpr unsigned long LAST { std::numeric_limits<unsigned long>::max() } ;
-    // ========================================================================
-  public:
+  // public:
     // ========================================================================
     /** build statistic for the <code>expression</code>
      *  @param tree       (INPUT) the tree 
@@ -153,11 +147,11 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2013-10-13
      */
-    static Ostap::StatEntity statVar
+    Ostap::StatEntity statVar
     ( TTree*              tree              , 
       const std::string&  expression        , 
-      const unsigned long first      = 0    ,
-      const unsigned long last       = LAST ) ;
+      const unsigned long first      = Ostap::FirstEvent ,
+      const unsigned long last       = Ostap::LastEvent  ) ;
     // ========================================================================
     /** build statistic for the <code>expression</code>
      *  @param tree       (INPUT) the tree 
@@ -178,10 +172,10 @@ namespace Ostap
     ( TTree*              tree              , 
       const std::string&  expression        , 
       const std::string&  cuts              ,
-      const unsigned long first      = 0    ,
-      const unsigned long last       = LAST ) ;
+      const unsigned long first      = Ostap::FirstEvent ,
+      const unsigned long last       = Ostap::LastEvent  ) ;
     // ========================================================================
-  public:
+  // public:
     // ========================================================================
     /** check if there is at least one entry that satisfies criteria 
      *  @param tree       (INPUT) the tree 
@@ -193,8 +187,8 @@ namespace Ostap
     static bool hasEntry 
     ( TTree*              tree              , 
       const std::string&  cuts              ,   
-      const unsigned long first      = 0    ,
-      const unsigned long last       = LAST ) ;      
+      const unsigned long first      = Ostap::FirstEvent ,
+      const unsigned long last       = Ostap::LastEvent  ) ;      
     // ========================================================================
     /** check if there is at least one entry that satisfies criteria 
      *  @param data       (INPUT) data 
@@ -206,8 +200,8 @@ namespace Ostap
     static bool hasEntry 
     ( const RooAbsData*   data               , 
       const std::string&  cuts               , 
-      const unsigned long first      = 0     ,
-      const unsigned long last       = LAST  ) ;
+      const unsigned long first      = Ostap::FirstEvent ,
+      const unsigned long last       = Ostap::LastEvent  ) ;
     // ========================================================================
     /** check if there is at least one entry that satisfies criteria 
      *  @param data       (INPUT) data 
@@ -221,10 +215,10 @@ namespace Ostap
     ( const RooAbsData*   data                 , 
       const std::string&  cuts                 ,  
       const std::string&  cut_range  = ""      , 
-      const unsigned long first      = 0       ,
-      const unsigned long last       = LAST    ) ;
+      const unsigned long first      = Ostap::FirstEvent ,
+      const unsigned long last       = Ostap::LastEvent  ) ;
     // ========================================================================
-  public:
+  // public:
     // ========================================================================
     /** build statistic for the <code>expressions</code>
      *  @param tree        (INPUT)  the tree 
@@ -240,8 +234,8 @@ namespace Ostap
     ( TTree*                           tree              , 
       WStatVector&                     result            , 
       const Ostap::Strings&            expressions       ,
-      const unsigned long              first      = 0    ,
-      const unsigned long              last       = LAST ) ;
+      const unsigned long              first      = Ostap::FirstEvent ,
+      const unsigned long              last       = Ostap::LastEvent  ) ;
     // ========================================================================
     /** build statistic for the <code>expressions</code>
      *  @param tree        (INPUT)  the tree 
@@ -262,7 +256,7 @@ namespace Ostap
       const unsigned long              first       = 0    ,
       const unsigned long              last        = LAST ) ;
     // ========================================================================    
-  public:
+  // public:
     // ========================================================================
     /** build statistic for the <code>expression</code>
      *  @param data       (INPUT) the data 
@@ -333,7 +327,7 @@ namespace Ostap
       const unsigned long first      = 0       ,
       const unsigned long last       = LAST    ) ;
     // ========================================================================
-  public:
+  // public:
     // ========================================================================
     /** build statistic for the <code>expressions</code>
      *  @param data        (INPUT)  input data 
@@ -394,7 +388,7 @@ namespace Ostap
       const unsigned long              first      = 0       ,
       const unsigned long              last       = LAST    ) ;
     // ========================================================================
-  public:
+  // public:
     // ========================================================================
     /** build statistic for the <code>expression</code>
      *  @param data       (INPUT) the data 
@@ -414,7 +408,7 @@ namespace Ostap
       const std::string&  expression      , 
       const std::string&  cuts       = "" ) ;
     // ========================================================================    
-  public:
+  // public:
     // ========================================================================
     /** get the number of equivalent entries 
      *  \f$ n_{eff} \equiv = \frac{ (\sum w)^2}{ \sum w^2} \f$
@@ -458,7 +452,7 @@ namespace Ostap
     ( FrameNode            frame            ,
       const std::string&   cuts      = ""   ) ;
     // ========================================================================
-  public: 
+  // public: 
     // ========================================================================
     /** calculate the covariance of several expressions 
      *  @param tree  (INPUT)  the inpout tree 
@@ -479,7 +473,7 @@ namespace Ostap
       const unsigned long             first = 0    ,
       const unsigned long             last  = LAST ) ;
     // ========================================================================
- public:  // new methods 
+ // public:  // new methods 
     // ========================================================================
     /** calculate the covariance of two expressions 
      *  @param tree  (INPUT)  the inpout tree 
@@ -513,7 +507,7 @@ namespace Ostap
       const unsigned long  first  = 0    ,
       const unsigned long  last   = LAST ) ;
     // ========================================================================
-  public: 
+  // public: 
     // ========================================================================
     /** calculate the covariance of several expressions 
      *  @param tree  (INPUT)  the inpout tree 
@@ -532,7 +526,7 @@ namespace Ostap
       const unsigned long             first = 0    ,
       const unsigned long             last  = LAST ) ;
     // ========================================================================
-  public:
+  // public:
     // ========================================================================
     /** calculate the covariance of several expressions 
      *  @param tree      (INPUT)  the inpout tree 
@@ -574,7 +568,7 @@ namespace Ostap
       const unsigned long             first     = 0    ,
       const unsigned long             last      = LAST ) ;
     // ========================================================================
-  public:
+  // public:
     // ========================================================================
     /** calculate the covariance of two expressions 
      *  @param tree  (INPUT)  the input  tree 
@@ -595,7 +589,7 @@ namespace Ostap
       const unsigned long  first     = 0       ,
       const unsigned long  last      = LAST    ) ;
     // ========================================================================
-  public:
+  // public:
     // ========================================================================
     /** calculate the covariance of two expressions 
      *  @param frame (INPUT)  data frame 
@@ -625,7 +619,7 @@ namespace Ostap
       const std::string&   exp2 , 
       const std::string&   cuts ) ; 
     // ========================================================================
-  public:
+  // public:
     // ========================================================================
     /** calculate the moment of order "order" relative to the center "center"
      *  @param  tree   (INPUT) input tree 
@@ -667,7 +661,7 @@ namespace Ostap
       const unsigned long  first     = 0       ,
       const unsigned long  last      = LAST    ) ;
     // ========================================================================    
-  public:
+  // public:
     // ========================================================================    
     /** calculate the moment of order "order" relative to the center "center"
      *  @param  frame  (INPUT) input frame 
@@ -684,7 +678,7 @@ namespace Ostap
       const double         center      ,    
       const std::string&   cuts   = "" ) ;
     // ========================================================================
-  public:
+  // public:
     // ========================================================================    
     /** calculate the moment of order "order"
      *  @param  tree  (INPUT) input tree 
@@ -722,7 +716,7 @@ namespace Ostap
       const unsigned long  first     = 0       ,
       const unsigned long  last      = LAST    ) ;
     // ========================================================================
-  public:
+  // public:
     // ========================================================================
     /** calculate the moment of order "order"
      *  @param  tree  (INPUT) input tree 
@@ -737,7 +731,7 @@ namespace Ostap
       const std::string&   expr       , 
       const std::string&   cuts  = "" ) ;
     // ========================================================================
-  public:
+  // public:
     // ========================================================================
     /** calculate the central moment of order "order"
      *  @param  tree  (INPUT) input tree 
@@ -775,7 +769,7 @@ namespace Ostap
       const unsigned long  first     = 0       ,
       const unsigned long  last      = LAST    ) ;
     // ========================================================================    
-  public:
+  // public:
     // ========================================================================    
     /** calculate the central moment of order "order"
      *  @param  tree  (INPUT) input tree 
@@ -790,7 +784,7 @@ namespace Ostap
       const std::string&   expr     , 
       const std::string&   cuts     )  ;
     // ========================================================================    
-  public:
+  // public:
     // ========================================================================    
     /** calculate the skewness of the  distribution
      *  @param  tree  (INPUT) input tree 
@@ -824,7 +818,7 @@ namespace Ostap
       const unsigned long  first     = 0       ,
       const unsigned long  last      = LAST    ) ;
     // ========================================================================    
-  public:
+  // public:
     // ========================================================================    
     /** calculate the skewness of the  distribution
      *  @param  frame (INPUT) frame
@@ -837,7 +831,7 @@ namespace Ostap
       const std::string&   expr         , 
       const std::string&   cuts  = ""   ) ;
     // ========================================================================    
-  public:
+  // public:
     // ========================================================================    
     /** calculate the (excess) kurtosis of the  distribution
      *  @param  tree  (INPUT) input tree 
@@ -871,7 +865,7 @@ namespace Ostap
       const unsigned long  first     = 0       ,
       const unsigned long  last      = LAST    ) ;
     // ========================================================================    
-  public:
+  // public:
     // ========================================================================    
     /** calculate the (excess) kurtosis of the  distribution
      *  @param  frame (INPUT) input frame 
@@ -886,7 +880,7 @@ namespace Ostap
       const std::string&   expr         , 
       const std::string&   cuts  = ""   );
     // ========================================================================    
-  public:
+  // public:
     // ========================================================================    
     /**  get quantile of the distribution  
      *   @param tree  (INPUT) the input tree 
@@ -922,7 +916,7 @@ namespace Ostap
       const unsigned long first = 0    ,
       const unsigned long last  = LAST ) ;
     // ========================================================================    
-  public:
+  // public:
     // ========================================================================
     /**  get quantile of the distribution  
      *   @param data   (INPUT) the input data
@@ -962,7 +956,7 @@ namespace Ostap
       const unsigned long first     = 0       ,
       const unsigned long last      = LAST    ) ;
     // ========================================================================    
-  public:
+  // public:
     // ========================================================================    
     /**  get quantile of the distribution  
      *   @param frame  (INPUT) the input data
@@ -990,7 +984,7 @@ namespace Ostap
       const std::string&  expr             , 
       const std::string&  cuts      = ""   ) ;
     // ========================================================================    
-  public:
+  // public:
     // ========================================================================    
     /**  get quantiles of the distribution  
      *   @param tree  (INPUT) the input tree 
@@ -1027,7 +1021,7 @@ namespace Ostap
       const unsigned long        first      = 0       ,
       const unsigned long        last       = LAST    ) ;
     // ========================================================================
-  public:
+  // public:
     // ========================================================================    
     /**  get (approximate) quantiles of the distribution  using P^2 algorithm
      *   @param tree  (INPUT) the input tree 
@@ -1064,7 +1058,7 @@ namespace Ostap
       const unsigned long        first      = 0       ,
       const unsigned long        last       = LAST    ) ;
     // ========================================================================
-  public:
+  // public:
     // ========================================================================    
     /**  get quantiles of the distribution  
      *   @param frame (INPUT) the input frame
@@ -1079,7 +1073,7 @@ namespace Ostap
       const std::string&         expr             , 
       const std::string&         cuts      = ""   ) ;
     // ========================================================================
-  public:
+  // public:
     // ========================================================================    
     /**  get approximate  quantiles of the distribution  using P^2 algorithm
      *   @param frame (INPUT) the input frame
@@ -1094,7 +1088,7 @@ namespace Ostap
       const std::string&         expr             , 
       const std::string&         cuts      = ""   ) ;
     // ========================================================================
-  public:
+  // public:
     // ========================================================================    
     /**  get the interval of the distribution  
      *   @param tree  (INPUT) the input tree 
@@ -1145,7 +1139,7 @@ namespace Ostap
       const unsigned long first     = 0    ,
       const unsigned long last      = LAST ) ;
     // ========================================================================    
-  public:
+  // public:
     // ========================================================================    
     /**  get the (approximate) interval of the distribution using P^2 algotirhm 
      *   @param tree  (INPUT) the input tree 
@@ -1196,7 +1190,7 @@ namespace Ostap
       const unsigned long first     = 0    ,
       const unsigned long last      = LAST ) ;
     // ========================================================================    
-  public:
+  // public:
     // ========================================================================    
     /**  get the interval of the distribution  
      *   @param tree  (INPUT) the input tree 
@@ -1218,7 +1212,7 @@ namespace Ostap
       const std::string&  expr         , 
       const std::string&  cuts  = ""   ) ;
     // ========================================================================    
-  public:
+  // public:
     // ========================================================================    
     /**  get the approximate  interval of the distribution  
      *   @param tree  (INPUT) the input tree 
@@ -1240,7 +1234,7 @@ namespace Ostap
       const std::string&  expr         , 
       const std::string&  cuts  = ""   ) ;
     // ========================================================================    
-  public:  
+  // public:  
     // ========================================================================
     /** get the moment as Ostap::Math::Moment_<N>
      *  @see Ostap::Math::Moment_

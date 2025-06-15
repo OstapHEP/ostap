@@ -44,12 +44,6 @@
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  */
 // ============================================================================
-
-#include <map>
-
-template <typename VALUE>
-using Dict = std::map<std::string,VALUE> ;
-
 namespace
 {
   // ==========================================================================
