@@ -42,8 +42,8 @@ namespace Ostap
       // constructor from two counters and the correlation coefficient 
       Covariance
       ( const Counter& c1       , 
-	const Counter& c2       ,
-	const double   corr = 0 ) ;
+	      const Counter& c2       ,
+	      const double   corr = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -73,7 +73,7 @@ namespace Ostap
       /// add two values to the counters 
       inline Covariance& add	
       ( const double x ,
-	const double y ) ;
+	      const double y ) ;
       /// add another counter 
       Covariance& add ( const Covariance& right ) ;
       // ======================================================================
@@ -84,22 +84,16 @@ namespace Ostap
     public:
       // ======================================================================
       /// add x,y
-      Covariance& update
+      inline void update
       ( const double x ,
-	const double y ) { return add ( x , y ) ; }
-      /// add another counter 
-      Covariance& update  ( const Covariance& right ) { return add ( right ) ; }
+	      const double y ) { add ( x , y ) ; }
       // ======================================================================
       /// reset counters 
       void reset () ;
       // ======================================================================
       // everything is finite?
       inline bool isfinite () const
-      {
-	return std::isfinite ( m_cov2m )
-	  && m_cnt1.isfinite()
-	  && m_cnt2.isfinite() ;
-      }
+      { return std::isfinite ( m_cov2m ) && m_cnt1.isfinite() && m_cnt2.isfinite() ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -115,6 +109,8 @@ namespace Ostap
     ( const double x ,
       const double y )
     {
+      if ( !std::isfinite( x ) || !std::isfinite ( y ) ) { return *this ; }
+      //
       const unsigned long long nn = n ()    ;
       if ( nn )
         {
@@ -161,8 +157,8 @@ namespace Ostap
       // constructor from two counters and the correlation coefficient
       WCovariance
       ( const Counter& c1       , 
-	const Counter& c2       ,
-	const double   corr = 0 ) ;
+	      const Counter& c2       ,
+	      const double   corr = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -208,23 +204,17 @@ namespace Ostap
     public:
       // ======================================================================
       /// add x,y
-      WCovariance& update
+      inline void update
       ( const double x     ,
         const double y     ,
-        const double w = 1 ) { return add ( x , y , w ) ; }
-      /// add another counter 
-      WCovariance& update  ( const WCovariance& right ) { return add ( right ) ; }
+        const double w = 1 ) { add ( x , y , w ) ; }
       // ======================================================================
       /// reset counters 
       void reset () ;
       // ======================================================================
       // everything is finite?
       inline bool isfinite () const
-      {
-	return std::isfinite ( m_cov2m )
-	  && m_cnt1.isfinite()
-	  && m_cnt2.isfinite() ;
-      }
+      { return std::isfinite ( m_cov2m ) && m_cnt1.isfinite() && m_cnt2.isfinite() ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -241,8 +231,10 @@ namespace Ostap
       const double y ,
       const double w )      
     {
+      if ( !std::isfinite ( x ) || !std::isfinite ( y ) || !w  ) { return *this ; } 
+      //
       const double ww = sumw ()    ;
-      if ( ww && w )
+      if ( ww )
         {
           const double xA = m_cnt1.mean() ;
           const double yA = m_cnt2.mean() ;
@@ -260,10 +252,9 @@ namespace Ostap
     { a += b ; return a ; }
     // ========================================================================
     /// get the covariance matrix
-    WCovariance::Matrix   covariance  ( const WCovariance& ) ;
-    // ========================================================================
+    WCovariance::Matrix    covariance   ( const WCovariance& ) ;
     /// get the correlation matrix
-    WCovariance::Matrix   correlation ( const WCovariance& ) ;
+    WCovariance::Matrix    correlation  ( const WCovariance& ) ;
     // ========================================================================
   } //                                         The end of nameapace Ostap::Math
   // ==========================================================================

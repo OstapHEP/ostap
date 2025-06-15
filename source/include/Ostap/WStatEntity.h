@@ -19,7 +19,7 @@ namespace Ostap
    */
   class WStatEntity : public Ostap::Math::WStatistic
   {
-  public:
+ public:
     // ======================================================================
     /// empty constructor 
     WStatEntity () = default ;

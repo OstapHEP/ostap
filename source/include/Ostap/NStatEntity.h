@@ -28,7 +28,7 @@ namespace Ostap
   class NStatEntity : public Ostap::Math::Statistic
   {
     // ======================================================================
-  public:
+ public:
     // ======================================================================
     /// constructor with N-parameter  
     NStatEntity

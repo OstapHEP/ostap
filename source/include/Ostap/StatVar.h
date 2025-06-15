@@ -20,7 +20,6 @@ class RooAbsData ; // RooFit
 #include "Ostap/WStatEntity.h"
 #include "Ostap/ValueWithError.h"
 #include "Ostap/Covariance.h"
-#include "Ostap/SymmetricMatrixTypes.h"
 #include "Ostap/DataFrame.h"
 #include "Ostap/StatusCode.h"
 // ============================================================================
@@ -35,6 +34,8 @@ namespace Ostap { namespace Math { class WECDF      ; } }
 // ============================================================================
 namespace Ostap
 {
+  /// variable names, exressions  
+  typedef std::vector<std::string>           Strings ;
   // ==========================================================================
   /** @class StatVar Ostap/StatVar.h
    *  Helper class to get statistical 
@@ -46,17 +47,9 @@ namespace Ostap
   {
   public:
     // ========================================================================
-    /// the actual type for statistic 
-    typedef Ostap::WStatEntity        Statistic   ;
-    /// the actual type for vector of statistic 
-    typedef std::vector<Statistic>    Statistics  ;
-    /// variable names 
-    typedef std::vector<std::string>  Names       ;
-    /// covariance
-    typedef Ostap::Math::Covariance   Covariance  ; 
-    /// (weighted) covariance
-    typedef Ostap::Math::WCovariance  WCovariance ; 
-    // ========================================================================
+    typedef std::vector<Ostap::StatEntity>   StatVector ;
+    typedef std::vector<Ostap::WStatEntity> WStatVector ;
+     // ========================================================================
   public:
     // ========================================================================
     /** @struct Interval 
@@ -66,7 +59,7 @@ namespace Ostap
     {
       Interval
       (  const double l = 0 ,
-	 const double h = 0 )
+	       const double h = 0 )
         : low  ( std::min ( l , h ) )
         , high ( std::max ( l , h ) )
       {}
@@ -85,7 +78,7 @@ namespace Ostap
     {
       Quantile
       ( const double        q = 0 ,
-	const unsigned long n = 0 )
+	      const unsigned long n = 0 )
         : quantile ( q ) 
         , nevents  ( n ) 
       {}
@@ -105,7 +98,7 @@ namespace Ostap
       // =======================================================================
       Quantiles
       ( const std::vector<double>& q = std::vector<double>() , 
-	const unsigned long        n = 0  )
+	      const unsigned long        n = 0  )
         : quantiles ( q ) 
         , nevents   ( n ) 
       {}
@@ -125,7 +118,7 @@ namespace Ostap
       // =====================================================================
       QInterval
       ( const Interval&     i = Interval () ,
-	const unsigned long n = 0           )
+	      const unsigned long n = 0           )
         : interval ( i ) 
         , nevents  ( n ) 
       {}
@@ -181,7 +174,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2013-10-13
      */
-    static Statistic statVar
+    static Ostap::WStatEntity statVar
     ( TTree*              tree              , 
       const std::string&  expression        , 
       const std::string&  cuts              ,
@@ -244,11 +237,11 @@ namespace Ostap
      *  @date   2018-11-04
      */
     static unsigned long statVars
-    ( TTree*                          tree              , 
-      std::vector<Statistic>&         result            , 
-      const Names&                    expressions       ,
-      const unsigned long             first      = 0    ,
-      const unsigned long             last       = LAST ) ;
+    ( TTree*                           tree              , 
+      WStatVector&                     result            , 
+      const Ostap::Strings&            expressions       ,
+      const unsigned long              first      = 0    ,
+      const unsigned long              last       = LAST ) ;
     // ========================================================================
     /** build statistic for the <code>expressions</code>
      *  @param tree        (INPUT)  the tree 
@@ -262,12 +255,12 @@ namespace Ostap
      *  @date   2018-11-04
      */
     static unsigned long statVars
-    ( TTree*                          tree               ,       
-      std::vector<Statistic>&         result             , 
-      const Names&                    expressions        ,
-      const std::string&              cuts               ,
-      const unsigned long             first       = 0    ,
-      const unsigned long             last        = LAST ) ;
+    ( TTree*                           tree               ,       
+      WStatVector&                     result             , 
+      const Ostap::Strings&            expressions        ,
+      const std::string&               cuts               ,
+      const unsigned long              first       = 0    ,
+      const unsigned long              last        = LAST ) ;
     // ========================================================================    
   public:
     // ========================================================================
@@ -285,7 +278,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2015-02-15
      */
-    static Statistic statVar 
+    static Ostap::WStatEntity statVar 
     ( const RooAbsData*   data               , 
       const std::string&  expression         , 
       const unsigned long first      = 0     ,
@@ -307,7 +300,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2015-02-15
      */
-    static Statistic statVar 
+    static Ostap::WStatEntity statVar 
     ( const RooAbsData*   data               , 
       const std::string&  expression         , 
       const std::string&  cuts               , 
@@ -332,7 +325,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2015-02-15
      */
-    static Statistic statVar 
+    static Ostap::WStatEntity statVar 
     ( const RooAbsData*   data                 , 
       const std::string&  expression           , 
       const std::string&  cuts                 , 
@@ -353,11 +346,11 @@ namespace Ostap
      *  @date   2018-11-04
      */
     static unsigned long statVars
-    ( const RooAbsData*               data              , 
-      std::vector<Statistic>&         result            , 
-      const Names&                    expressions       ,
-      const unsigned long             first      = 0    ,
-      const unsigned long             last       = LAST ) 
+    ( const RooAbsData*                data              , 
+      WStatVector&                     result            , 
+      const Ostap::Strings&            expressions       ,
+      const unsigned long              first      = 0    ,
+      const unsigned long              last       = LAST ) 
     { return statVars ( data , result , expressions , std::string() , std::string() , first , last ) ; }
     // ========================================================================
     /** build statistic for the <code>expressions</code>
@@ -372,12 +365,12 @@ namespace Ostap
      *  @date   2021-06-04
      */
     static unsigned long statVars
-    ( const RooAbsData*               data              , 
-      std::vector<Statistic>&         result            , 
-      const Names&                    expressions       ,
-      const std::string&              cuts              , 
-      const unsigned long             first      = 0    ,
-      const unsigned long             last       = LAST ) 
+    ( const RooAbsData*                  data              , 
+      WStatVector&                       result            , 
+      const Ostap::Strings&              expressions       ,
+      const std::string&                 cuts              , 
+      const unsigned long                first      = 0    ,
+      const unsigned long                last       = LAST ) 
     { return statVars ( data , result , expressions , cuts  , std::string() , first , last ) ; }
     // ========================================================================
     /** build statistic for the <code>expressions</code>
@@ -393,13 +386,13 @@ namespace Ostap
      *  @date   2021-06-04
      */
     static unsigned long statVars
-    ( const RooAbsData*               data                 , 
-      std::vector<Statistic>&         result               , 
-      const std::vector<std::string>& expressions          ,
-      const std::string&              cuts                 ,
-      const std::string&              cut_range            , 
-      const unsigned long             first      = 0       ,
-      const unsigned long             last       = LAST    ) ;
+    ( const RooAbsData*                data                 , 
+      WStatVector&                     result               , 
+      const std::vector<std::string>&  expressions          ,
+      const std::string&               cuts                 ,
+      const std::string&               cut_range            , 
+      const unsigned long              first      = 0       ,
+      const unsigned long              last       = LAST    ) ;
     // ========================================================================
   public:
     // ========================================================================
@@ -416,7 +409,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2018-06-18
      */
-    static Statistic statVar 
+    static Ostap::WStatEntity statVar 
     ( FrameNode           frame           , 
       const std::string&  expression      , 
       const std::string&  cuts       = "" ) ;
@@ -481,7 +474,7 @@ namespace Ostap
     ( TTree*                          tree         ,
       const std::vector<std::string>& vars         , 
       const std::string&              cuts         ,
-      std::vector<Statistic>&         stats        ,  
+      WStatVector&                    stats        ,  
       TMatrixTSym<double>&            cov2         , 
       const unsigned long             first = 0    ,
       const unsigned long             last  = LAST ) ;
@@ -496,7 +489,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      *  @date   2024-07-22-
      */
-    static Covariance statCov 
+    static Ostap::Math::Covariance statCov 
     ( TTree*               tree          , 
       const std::string&   exp1          , 
       const std::string&   exp2          , 
@@ -512,7 +505,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      *  @date   2024-07-22
      */
-    static WCovariance statCov 
+    static Ostap::Math::WCovariance statCov 
     ( TTree*               tree          , 
       const std::string&   exp1          , 
       const std::string&   exp2          ,
@@ -534,7 +527,7 @@ namespace Ostap
     static unsigned long statCov 
     ( TTree*                          tree         ,
       const std::vector<std::string>& vars         , 
-      std::vector<Statistic>&         stats        ,  
+      WStatVector&                    stats        ,  
       TMatrixTSym<double>&            cov2         , 
       const unsigned long             first = 0    ,
       const unsigned long             last  = LAST ) ;
@@ -556,7 +549,7 @@ namespace Ostap
     ( const RooAbsData*               tree                , 
       const std::vector<std::string>& vars                ,  
       const std::string&              cuts                ,
-      std::vector<Statistic>&         stats               ,  
+      WStatVector&                    stats               ,  
       TMatrixTSym<double>&            cov2                , 
       const std::string&              cut_range = ""      , 
       const unsigned long             first     = 0       ,
@@ -575,7 +568,7 @@ namespace Ostap
     static unsigned long statCov 
     ( const RooAbsData*               tree             , 
       const std::vector<std::string>& vars             ,  
-      std::vector<Statistic>&         stats            ,  
+      WStatVector&                    stats            ,  
       TMatrixTSym<double>&            cov2             , 
       const std::string&              cut_range = ""   , 
       const unsigned long             first     = 0    ,
@@ -593,7 +586,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2014-03-27
      */
-    static WCovariance statCov
+    static Ostap::Math::WCovariance statCov
     ( const RooAbsData*    tree                , 
       const std::string&   exp1                , 
       const std::string&   exp2                , 
@@ -612,7 +605,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2024-07-22
      */
-    static Covariance statCov
+    static Ostap::Math::Covariance statCov
     ( FrameNode            data , 
       const std::string&   exp1 , 
       const std::string&   exp2 ) ; 
@@ -626,7 +619,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2024-07-22
      */
-    static WCovariance statCov
+    static Ostap::Math::WCovariance statCov
     ( FrameNode            data , 
       const std::string&   exp1 , 
       const std::string&   exp2 , 
@@ -1386,74 +1379,6 @@ namespace Ostap
       Ostap::Math::WECDF& ecdf             ,
       const std::string&  expression       ,
       const std::string&  selection  = ""  ) ;
-    // ========================================================================
-  public:
-    // ========================================================================
-    /// data column 
-    typedef std::vector<double> Column ;    
-    /// data table 
-    typedef std::vector<Column> Table  ;
-    // ========================================================================    
-  public:
-    // ========================================================================    
-    /** get variables from dataset in form of the table 
-     *  @param data input dataset
-     *  @param vars list of variables
-     *  @param cuts selection criteria 
-     *  @param table output table
-     *  @param weights column of weigths (empty for non-weighted data) 
-     *  @param first first entry 
-     *  @param last  last entry 
-     */
-    static unsigned long 
-    get_table 
-    ( const RooAbsData*                  data         , 
-      const Names&                       vars         , 
-      const std::string&                 cuts         , 
-      Table&                             table        ,
-      Column&                            weights      , 
-      const unsigned long                first = 0    ,
-      const unsigned long                last  = LAST ) ;
-    // ========================================================================
-    /** get variables from dataset in form of the table 
-     *  @param data input dataset
-     *  @param vars list of variables
-     *  @param table output table
-     *  @param weights column of weigths (empty for non-weighted data) 
-     *  @param first first entry 
-     *  @param last  last entry 
-     */
-    static unsigned long 
-    get_table 
-    ( const RooAbsData*                  data         , 
-      const Names&                       vars         , 
-      Table&                             table        ,
-      Column&                            weights      , 
-      const unsigned long                first = 0    ,
-      const unsigned long                last  = LAST ) ;    
-    // ========================================================================
-  public:
-    // ========================================================================    
-    /** get variables from dataset in form of the table 
-     *  @param data input dataset
-     *  @param vars list of variables
-     *  @param cuts selection criteria 
-     *  @param cutrange cut range 
-     *  @param table output table
-     *  @param weights column of weigths (empty for non-weighted data) 
-     *  @param first first entry 
-     *  @param last  last entry 
-     */
-    static unsigned long 
-    get_table
-    ( const RooAbsData*                  data             , 
-      const Names&                       vars             , 
-      const std::string&                 cuts             ,   
-      Table&                             table            ,
-      Column&                            weights          , 
-      const std::string&                 cut_range = ""   ,
-      const unsigned long                first     = 0    ,
-      const unsigned long                last      = LAST ) ;
     // ========================================================================
   } ;  
   // ==========================================================================

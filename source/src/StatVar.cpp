@@ -1071,7 +1071,7 @@ Ostap::StatVar::statVar
  *  @date   2013-10-13
  */
 // ============================================================================
-Ostap::StatVar::Statistic
+Ostap::WStatEntity
 Ostap::StatVar::statVar
 ( TTree*              tree       ,
   const std::string&  expression ,
@@ -1082,7 +1082,7 @@ Ostap::StatVar::statVar
   //
   if ( cuts.empty() ) { return statVar( tree , expression , first , last ) ; }
   //
-  Ostap::StatVar::Statistic result ;
+  Ostap::WStatEntity result ;
   if ( 0 == tree || last <= first ) { return result ; }  // RETURN
   Ostap::Formula selection ( cuts      , tree ) ;
   if ( !selection.ok () ) { return result ; }            // RETURN
@@ -1129,8 +1129,8 @@ Ostap::StatVar::statVar
 // ============================================================================
 unsigned long Ostap::StatVar::statVars
 ( TTree*                                  tree        ,  
-  std::vector<Ostap::StatVar::Statistic>& result      ,  
-  const Ostap::StatVar::Names&            expressions ,
+  Ostap::StatVar::WStatVector& result      ,  
+  const Ostap::Strings&            expressions ,
   const unsigned long                     first       ,
   const unsigned long                     last        ) 
 {
@@ -1196,8 +1196,8 @@ unsigned long Ostap::StatVar::statVars
 // ============================================================================
 unsigned long Ostap::StatVar::statVars
 ( TTree*                                  tree        ,  
-  std::vector<Ostap::StatVar::Statistic>& result      ,  
-  const Ostap::StatVar::Names&            expressions ,
+  Ostap::StatVar::WStatVector&            result      ,  
+  const Ostap::Strings&                   expressions ,
   const std::string&                      cuts        ,
   const unsigned long                     first       ,
   const unsigned long                     last        ) 
@@ -1266,7 +1266,7 @@ unsigned long Ostap::StatVar::statVars
  *  @date   2024-07-22
  */
 // ============================================================================
-Ostap::StatVar::Covariance
+Ostap::Math::Covariance
 Ostap::StatVar::statCov
 ( TTree*                     tree    ,
   const std::string&         exp1    ,
@@ -1280,7 +1280,7 @@ Ostap::StatVar::statCov
 		  "Ostap::StatVar::statCov" ) ;
   // 
   // prepare the result 
-  Ostap::StatVar::Covariance result {} ;
+  Ostap::Math::Covariance result {} ;
   ///
   if ( last <= first ) { return result ; }  // RETURN
   
@@ -1335,7 +1335,7 @@ Ostap::StatVar::statCov
  *  @date   2024-07-22
  */
 // ============================================================================
-Ostap::StatVar::WCovariance
+Ostap::Math::WCovariance
 Ostap::StatVar::statCov
 ( TTree*                     tree    ,
   const std::string&         exp1    ,
@@ -1350,7 +1350,7 @@ Ostap::StatVar::statCov
 		  "Ostap::StatVar::statCov" ) ;
   // 
   // prepare the result 
-  Ostap::StatVar::WCovariance result {} ;
+  Ostap::Math::WCovariance result {} ;
   ///
   if ( last <= first ) { return result ; }
   //
@@ -1421,7 +1421,7 @@ Ostap::StatVar::statCov
 ( TTree*                          tree  , 
   const std::vector<std::string>& vars  , 
   const std::string&              cuts  ,
-  std::vector<Statistic>&         stats ,  
+  Ostap::StatVar::WStatVector&    stats ,  
   TMatrixTSym<double>&            cov2  , 
   const unsigned long             first ,
   const unsigned long             last  ) 
@@ -1465,7 +1465,7 @@ Ostap::StatVar::statCov
   cov2 = TMatrixTSym<double>( N ) ; 
   stats.resize( N ) ;
   const bool with_cuts = selection && selection->ok () ;
-  for ( std::vector<Statistic>::iterator s = stats.begin() ; stats.end() != s ; ++s ) { s->reset() ; }
+  for ( WStatVector::iterator s = stats.begin() ; stats.end() != s ; ++s ) { s->reset() ; }
   //
   for ( unsigned long entry = first ; entry < nEntries ; ++entry )
   {
@@ -1537,7 +1537,7 @@ unsigned long
 Ostap::StatVar::statCov
 ( TTree*                          tree  , 
   const std::vector<std::string>& vars  , 
-  std::vector<Statistic>&         stats ,  
+  Ostap::StatVar::WStatVector&    stats ,  
   TMatrixTSym<double>&            cov2  , 
   const unsigned long             first ,
   const unsigned long             last  ) 
@@ -1546,7 +1546,7 @@ Ostap::StatVar::statCov
   return statCov ( tree , vars ,  cuts , stats , cov2 , first , last  ) ;
 }
 // ============================================================================
-Ostap::StatVar::Statistic
+Ostap::WStatEntity
 Ostap::StatVar::statVar
 ( const RooAbsData*   data        ,
   const std::string&  expression  ,
@@ -1561,7 +1561,7 @@ Ostap::StatVar::statVar
 		  "Invalid RotAbsData"      , 
 		  "Ostap::StatVar::statVar" ) ;
   // ==========================================================================
-  Statistic result ;
+  Ostap::WStatEntity result{} ;
   if ( 0 == data || last <= first ) { return result ; }         // RETURN
   //
   const std::unique_ptr<Ostap::FormulaVar> formula   { make_formula ( expression , *data        ) } ;
@@ -1615,8 +1615,8 @@ Ostap::StatVar::statVar
 unsigned long
 Ostap::StatVar::statVars
 ( const RooAbsData*               data        , 
-  std::vector<Statistic>&         result      , 
-  const Ostap::StatVar::Names&    expressions ,
+  Ostap::StatVar::WStatVector&    result      , 
+  const Ostap::Strings&           expressions ,
   const std::string&              cuts        ,
   const std::string&              cut_range   , 
   const unsigned long             first       ,
@@ -1688,7 +1688,7 @@ Ostap::StatVar::statVars
  *  @date   2014-03-27
  */
 // ============================================================================
-Ostap::StatVar::WCovariance
+Ostap::Math::WCovariance
 Ostap::StatVar::statCov
 ( const RooAbsData*    data      , 
   const std::string&   exp1      , 
@@ -1704,7 +1704,7 @@ Ostap::StatVar::statCov
 		  "Ostap::StatVar::statCov" ) ;
   //
   // prepare the result 
-  Ostap::StatVar::WCovariance result {} ;
+  Ostap::Math::WCovariance result {} ;
   //
   if ( last <= first ) { return result ; }         // RETURN
   //
@@ -1761,7 +1761,7 @@ Ostap::StatVar::statCov
 ( const RooAbsData*               data      , 
   const std::vector<std::string>& vars      ,  
   const std::string&              cuts      ,
-  std::vector<Statistic>&         stats     ,  
+  Ostap::StatVar::WStatVector&    stats     ,  
   TMatrixTSym<double>&            cov2      , 
   const std::string&              cut_range , 
   const unsigned long             first     ,
@@ -1857,7 +1857,7 @@ unsigned long
 Ostap::StatVar::statCov
 ( const RooAbsData*               data      , 
   const std::vector<std::string>& vars      ,  
-  std::vector<Statistic>&         stats     ,  
+  Ostap::StatVar::WStatVector&    stats     ,  
   TMatrixTSym<double>&            cov2      ,  
   const std::string&              cut_range , 
   const unsigned long             first     ,
@@ -3203,7 +3203,7 @@ double Ostap::StatVar::nEff
  *  @date   2018-06-18
  */
 // ============================================================================
-Ostap::StatVar::Statistic 
+Ostap::WStatEntity
 Ostap::StatVar::statVar 
 ( Ostap::FrameNode    frame      , 
   const std::string&  expression , 
@@ -3225,13 +3225,13 @@ Ostap::StatVar::statVar
   //
   const unsigned int nSlots = std::max ( 1u , Ostap::Utils::mt_pool_size() ) ;
   //
-  std::vector<Statistic> _stat ( nSlots ? nSlots : 1 ) ;
+  WStatVector _stat ( nSlots ? nSlots : 1 ) ;
   //
   auto fun = [&_stat,nSlots] ( unsigned int slot , double v , double w ) 
     { _stat [ slot % nSlots ].add ( v , w ) ; } ;
   t.ForeachSlot ( fun ,  { var , weight } ) ; 
   //
-  Statistic stat ; for ( const auto& s : _stat ) { stat += s ; }
+  Ostap::WStatEntity stat ; for ( const auto& s : _stat ) { stat += s ; }
   return stat ;
 }
 // ============================================================================
@@ -3244,7 +3244,7 @@ Ostap::StatVar::statVar
  *  @date   2024-07-22
  */
 // ============================================================================
-Ostap::StatVar::Covariance
+Ostap::Math::Covariance
 Ostap::StatVar::statCov
 ( Ostap::FrameNode     frame , 
   const std::string&   exp1  , 
@@ -3259,13 +3259,13 @@ Ostap::StatVar::statCov
   ///
   const unsigned int nSlots = std::max ( 1u , Ostap::Utils::mt_pool_size() ) ;
   //
-  std::vector<Covariance>           _covs ( nSlots ? nSlots : 1 ) ;
+  std::vector<Ostap::Math::Covariance>           _covs ( nSlots ? nSlots : 1 ) ;
   //
   auto fun = [&_covs,nSlots] ( unsigned int slot , double v1 , double v2 )
   { _covs [ slot % nSlots ].add ( v1 , v2 ) ; } ;
   t.ForeachSlot ( fun , { var1 , var2 } ); 
   //
-  Covariance result ;
+  Ostap::Math::Covariance result ;
   for ( const auto& s : _covs ) { result += s ; }
   //
   return result ;
@@ -3281,7 +3281,7 @@ Ostap::StatVar::statCov
  *  @date   2024-07-22
  */
 // ============================================================================
-Ostap::StatVar::WCovariance
+Ostap::Math::WCovariance
 Ostap::StatVar::statCov
 ( Ostap::FrameNode     frame , 
   const std::string&   exp1  , 
@@ -3303,13 +3303,13 @@ Ostap::StatVar::statCov
   ///
   const unsigned int nSlots = std::max ( 1u , Ostap::Utils::mt_pool_size() ) ;
   //
-  std::vector<WCovariance>           _covs ( nSlots ? nSlots : 1 ) ;
+  std::vector<Ostap::Math::WCovariance>           _covs ( nSlots ? nSlots : 1 ) ;
   //
   auto fun = [&_covs,nSlots] ( unsigned int slot , double v1 , double v2 , double w )
   { if ( w )  { _covs [ slot % nSlots ].add ( v1 , v2 , w ) ;  } } ;
   t.ForeachSlot ( fun , { var1 , var2 , weight } ); 
   //
-  WCovariance result ;
+  Ostap::Math::WCovariance result ;
   for ( const auto& s : _covs ) { result += s ; }
   //
   return result ;
@@ -3988,151 +3988,8 @@ Ostap::StatVar::p2interval
   return QInterval ( Interval ( result.quantiles[0] , result.quantiles[1] ) , result.nevents ) ;
 }
 // ============================================================================
-/** get variables from dataset in form of the table 
- *  @param data input dataset
- *  @param vars list of variables
- *  @param table output table
- *  @param weights column of weigths (empty for non-weighted data) 
- *  @param first first entry 
- *  @param last  last entry 
- */
-// ============================================================================
-unsigned long 
-Ostap::StatVar::get_table 
-( const RooAbsData*                  data     , 
-  const Ostap::StatVar::Names&       vars     , 
-  const std::string&                 cuts     ,
-  Ostap::StatVar::Table&             table    ,
-  Ostap::StatVar::Column&            weights  ,
-  const unsigned long                first    ,
-  const unsigned long                last     )
-{ return get_table ( data , vars , cuts , table , weights , "" , first , last )  ; }
-// ============================================================================
-/*  get variables from dataset in form of the table 
- *  @param data input dataset
- *  @param vars list of variables
- *  @param table output table
- *  @param weights column of weigths (empty for non-weighted data) 
- *  @param first first entry 
- *  @param last  last entry 
- */
-// ============================================================================
-unsigned long 
-Ostap::StatVar::get_table 
-( const RooAbsData*                  data    , 
-  const Ostap::StatVar::Names&       vars    , 
-  Ostap::StatVar::Table&             table   ,
-  Ostap::StatVar::Column&            weights ,
-  const unsigned long                first   ,
-  const unsigned long                last    )
-{ return get_table ( data , vars , std::string("")  , table , weights , "" , first , last ) ; }
-// ============================================================================
-/** get variables from dataset in form of the table 
- *  @param data input dataset
- *  @param vars list of variables
- *  @param table output table
- *  @param weights column of weigths (empty for non-weighted data) 
- *  @param cut_range cut range 
- *  @param first first entry 
- *  @param last  last entry 
- */
-// ============================================================================
-unsigned long 
-Ostap::StatVar::get_table 
-( const RooAbsData*                  data      , 
-  const Ostap::StatVar::Names&       vars      , 
-  const std::string&                 cuts      ,
-  Ostap::StatVar::Table&             table     ,
-  Ostap::StatVar::Column&            weights   ,
-  const std::string&                 cut_range ,   
-  const unsigned long                first     ,
-  const unsigned long                last      )
-{
-  //
-  const unsigned int N = vars.size() ;
-  //
-  if ( vars.empty()                     ) { table.clear() ; weights.clear() ; return 0 ; }
-  if ( nullptr == data || last <= first ) { table.clear() ; weights.clear() ; return 0 ; }
-  if ( data->numEntries() <= first      ) { table.clear() ; weights.clear() ; return 0 ; }
-  //
-  const std::unique_ptr<Ostap::FormulaVar> selection { make_formula ( cuts , *data , true ) } ;
-  //
-  typedef std::unique_ptr<Ostap::FormulaVar> UOF ;
-  std::vector<UOF> formulas ; formulas.reserve ( N ) ;
-  //
-  for ( const auto& e : vars ) 
-  {
-    auto p = make_formula ( e , *data , false ) ;
-    if ( !p ) { return 0 ; }
-    formulas.push_back ( std::move ( p ) ) ;  
-  }
-  //
-  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
-  const bool  weighted = data->isWeighted() ;
-  //
-  const unsigned long the_last  = std::min ( last , (unsigned long) data->numEntries() ) ;
-  //
-  unsigned long NN = 0 ;
-  //
-  // start the first loop
-  for ( unsigned long entry = first ; entry < the_last ; ++entry )
-  {
-    //
-    const RooArgSet* vars = data->get( entry ) ;
-    if ( nullptr == vars  )                           { break    ; } // RETURN
-    if ( cutrange && !vars->allInRange ( cutrange ) ) { continue ; } // CONTINUE
-    // apply cuts:
-    const long double wc = selection ? selection -> getVal() : 1.0L ;
-    if ( !wc ) { continue ; }                                   // CONTINUE  
-    // apply weight:
-    const long double wd = weighted  ? data->weight()        : 1.0L ;
-    if ( !wd ) { continue ; }                                   // CONTINUE    
-    // cuts & weight:
-    const long double w  = wd *  wc ;
-    if ( !w  ) { continue ; }                                   // CONTINUE        
-    //
-    ++NN ;
-  }
-  //
-  if  ( 0 == NN ) { table.clear()  ; weights.clear() ; return NN ; } // RETURN 
-  //
-  table.resize ( N ) ;
-  for ( unsigned short i = 0 ; i < N ; ++i ) { table[i].resize ( NN ) ; }
-  //
-  if ( weighted ) { weights.resize ( NN ) ; }
-  else            { weights.clear  ()     ; }
-  //
-  unsigned long ii = 0 ;
-  // start the second loop
-  for ( unsigned long entry = first ; entry < the_last ; ++entry )
-  {
-    //
-    const RooArgSet* vars = data->get( entry ) ;
-    if ( nullptr == vars  )                           { break    ; } // RETURN
-    if ( cutrange && !vars->allInRange ( cutrange ) ) { continue ; } // CONTINUE
-    // apply cuts:
-    const long double wc = selection ? selection -> getVal() : 1.0L ;
-    if ( !wc ) { continue ; }                                   // CONTINUE  
-    // apply weight:
-    const long double wd = weighted  ? data->weight()        : 1.0L ;
-    if ( !wd ) { continue ; }                                   // CONTINUE    
-    // cuts & weight:
-    const long double w  = wd * wc ;
-    if ( !w  ) { continue ; }                                   // CONTINUE        
-    //
-    if  ( weighted ) { weights [ ii ] = w ; }
-    //
-    for ( unsigned int i = 0 ; i  < N ; ++i ) 
-    {
-      const double v = formulas[i]->getVal()  ;
-      table[i][ii] = v ;
-    }
-    //
-    ++ii  ; 
-    //
-  }
-  return NN ;
-}
+
+
 // ============================================================================
 /*  get the moment as Ostap::Math::Moment_<N>
  *  @see Ostap::Math::Moment_
