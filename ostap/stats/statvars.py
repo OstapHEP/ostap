@@ -361,7 +361,7 @@ def data_statistics ( data , expressions , cuts = '' , *args ) :
     ## several variables are specified
     from ostap.core.core import strings 
     names   = strings ( *var_lst )
-    results = StatVar.Statistics()
+    results = StatVar.WStatVector()
     with rootException() , active :
         
         if cuts : StatVar.statVars ( data , results , names , cuts , *args )

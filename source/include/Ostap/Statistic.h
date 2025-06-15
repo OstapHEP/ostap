@@ -5,19 +5,6 @@
 namespace  Ostap
 {
   // ===========================================================================
-  /// The actual  type  ofevent undex(ROOT::Int_64)
-  typedef unsigned long EventIndex; 
-  // ===========================================================================
-  /** @var FirstEvent  
-   *  Index for the first event in the loop
-   */
-  extern const EventIndex FirstEvent ;
-   // ===========================================================================
-  /** @var LastEvent  
-   *  Index for the last (exclusive) event in the loop
-   */
-  extern const EventIndex LastEvent ;
-  // ===========================================================================
   namespace Math
   {
     // ========================================================================

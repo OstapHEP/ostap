@@ -111,6 +111,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Topics.cpp
                          src/Tmva.cpp
                          src/TreeGetter.cpp
+                         src/Types.cpp
                          src/qMath.cpp
                          src/UStat.cpp
                          src/Valid.cpp

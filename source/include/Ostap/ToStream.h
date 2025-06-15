@@ -328,7 +328,7 @@ namespace Ostap
     /// print generic pointer 
     // ========================================================================
     template <class TYPE>
-    inline std::ostream& toStrem
+    inline std::ostream& toStream
     ( const TYPE*   o ,
       std::ostream& s )
     {
@@ -354,6 +354,10 @@ namespace Ostap
       s.flags( orig_flags ) ;
       return s.str();
     }
+    // ========================================================================
+    template <class TYPE>
+    inline std::string to_string ( const TYPE& obj )
+    { return toString ( obj ) ; }
     // ========================================================================
   } //                                            end of namespace Ostap::Utils
   // ==========================================================================
