@@ -48,15 +48,17 @@ namespace  Ostap
         TObject* obj9 = 0 ) ;
       // templated constructor 
       template <class ITERATOR>
-      Notifier ( ITERATOR  begin ,
-                 ITERATOR  end   , 
-                 TTree*    tree  ) ;
+      Notifier
+      ( ITERATOR  begin ,
+	ITERATOR  end   , 
+	TTree*    tree  ) ;
       // templated constructor 
       template <class ITERATOR>
-      Notifier ( ITERATOR  begin ,
-                 ITERATOR  end   ,
-                 TObject*  obj   , 
-                 TTree*    tree  ) ;
+      Notifier
+      ( ITERATOR  begin ,
+	ITERATOR  end   ,
+	TObject*  obj   , 
+	TTree*    tree  ) ;
       /// virtual destructor 
       virtual        ~Notifier () ; // virtual destructor 
       /// the main method 
@@ -81,7 +83,7 @@ namespace  Ostap
       bool known ( const TObject* obj ) const ;
       // ======================================================================
       // exit from  notification context 
-      bool exit() ;
+      bool exit () ;
       // ======================================================================
     private:
       // ======================================================================
