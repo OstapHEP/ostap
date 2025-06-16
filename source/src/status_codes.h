@@ -83,6 +83,10 @@ namespace
     INVALID_SMOOTH           = 838 ,
     // 
     INVALID_QUANTILE         = 840 ,
+    INVALID_SELECTION        = 841 ,
+    INVALID_SELECTIONS       = 842 ,  
+    INVALID_COUNTER          = 843 ,
+    INVALID_COUNTERS         = 844 ,  
     // =========================================================================
     // =========================================================================
     ERROR_ROOT            = 1000000 ,

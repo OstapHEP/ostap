@@ -35,12 +35,14 @@ namespace
    *  is not a primitive one
    */
   const std::string s_SYMBOLS = " */+-%|&^()[]!$?<>=";
+  // ==========================================================================
   /// Is a variable name "primitive" (no operations) ?
   inline bool primitive ( const std::string& name )
   { return std::string::npos == name.find_first_of ( s_SYMBOLS ) ; }
   // ==========================================================================
   /// is this selection/weight a trivial one? 
-  inline bool trivial ( const std::string& selection ) 
+  inline bool trivial
+  ( const std::string& selection ) 
   {
     return 
       ""     == selection || 
