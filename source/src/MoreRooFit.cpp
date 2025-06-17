@@ -34,12 +34,12 @@
 #include "Ostap/RooFitUtils.h"
 #include "Ostap/Peaks.h"
 #include "Ostap/ToStream.h"
+#include "Ostap/Names.h"
 // ============================================================================
 // local
 // ============================================================================
 #include "Exception.h"
 #include "local_math.h"
-#include "local_utils.h"
 #include "local_roofit.h"
 #include "status_codes.h"
 // ============================================================================

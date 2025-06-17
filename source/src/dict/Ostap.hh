@@ -86,6 +86,7 @@
 #include "Ostap/MoreRooFit.h"
 #include "Ostap/MoreVars.h"
 #include "Ostap/Mute.h"
+#include "Ostap/Names.h"
 #include "Ostap/Notifier.h"
 #include "Ostap/NSphere.h"
 #include "Ostap/NStatEntity.h"

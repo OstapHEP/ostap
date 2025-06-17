@@ -8,6 +8,10 @@
 // ============================================================================
 #include <limits>
 // ============================================================================
+// ROOT
+// ============================================================================
+#include "TMatrixDfwd.h"
+// ============================================================================
 // Forward declarations 
 // =============================================================================
 class TTree      ; // ROOT 
@@ -416,15 +420,78 @@ namespace Ostap
       const Ostap::EventIndex first      = Ostap::FirstEvent ,
       const Ostap::EventIndex last       = Ostap::LastEvent  ) const ;    
     // =========================================================================
+  public: // Covarinaces for many variables 
+    // =========================================================================
+    /** calculate the covariance of several expressions 
+     *  @param data        (INPUT)  the inpout tree 
+     *  @param stats       (UPDATE) the statistics 
+     *  @param cov2        (UPDATE) the covariance matrix 
+     *  @param expressions (INPUT)  expressions 
+     *  @param selection   (INPUT)  the selection criteria 
+     *  @return status code 
+     *  @attention selection is treate as boolean! 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2023-02-28
+     */
+    Ostap::StatusCode statCov
+    ( TTree*                          data       , 
+      Ostap::StatVar::StatVector&     stats      ,  
+      TMatrixTSym<double>&            cov2       , 
+      const std::vector<std::string>& exressions , 
+      const std::string&              sekection  = ""                ,
+      const Ostap::EventIndex         first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex         last       = Ostap::LastEvent  ) const ;
+    // ========================================================================
+    /** calculate the covariance of several expressions 
+     *  @param data        (INPUT)  the inpout tree 
+     *  @param stats       (UPDATE) the statistics 
+     *  @param cov2        (UPDATE) the covariance matrix 
+     *  @param expressions (INPUT)  expressions 
+     *  @param selection   (INPUT)  the selection criteria 
+     *  @return status code 
+     *  @attention selection is treate as weight!
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2023-02-28
+     */
+    Ostap::StatusCode statCov
+    ( TTree*                          data       , 
+      Ostap::StatVar::WStatVector&    stats      ,  
+      TMatrixTSym<double>&            cov2       , 
+      const std::vector<std::string>& exressions , 
+      const std::string&              sekection  = ""                ,
+      const Ostap::EventIndex         first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex         last       = Ostap::LastEvent  ) const ;          
+    // =========================================================================
+    /** calculate the covariance of several expressions 
+     *  @param data        (INPUT)  the inpout tree 
+     *  @param stats       (UPDATE) the statistics 
+     *  @param cov2        (UPDATE) the covariance matrix 
+     *  @param expressions (INPUT)  expressions 
+     *  @param selection   (INPUT)  the selection criteria 
+     *  @return status code 
+     *  @attention selection is treate as weight!
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2023-02-28
+     */
+    Ostap::StatusCode statCov
+    ( const RooAbsData*               data       , 
+      Ostap::StatVar::WStatVector&    stats      ,  
+      TMatrixTSym<double>&            cov2       , 
+      const std::vector<std::string>& exressions , 
+      const std::string&              sekection  = ""                ,
+      const std::string&              cut_range  = ""                , 
+      const Ostap::EventIndex         first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex         last       = Ostap::LastEvent  ) const ;          
+    // ========================================================================
   public: // ECDF & WECDF 
     // ========================================================================
     /** Get the empirical cumulative distribtion function 
-     *  @param data  (INPUT) data 
-     *  @param ecdf  (UDATE) cumulative distribtion function 
+     *  @param data       (INPUT) data 
+     *  @param ecdf       (UDATE) cumulative distribtion function 
      *  @param expression (INPUT) the variabl
      *  @param selection  (INPUT) selection (treated as boolean)
-     *  @param first  (INPUT) the first event to process (inclusive)
-     *  @param last   (INPUT) the last  event to process (non-inclusive)
+     *  @param first      (INPUT) the first event to process (inclusive)
+     *  @param last       (INPUT) the last  event to process (non-inclusive)
      *  @returs status code 
      */
     Ostap::StatusCode ECDF
@@ -433,7 +500,7 @@ namespace Ostap
       const std::string&      expression                     ,
       const std::string&      selection  = ""                ,      
       const Ostap::EventIndex first      = Ostap::FirstEvent ,
-      const Ostap::EventIndex last       = Ostap::LastEvent  ) ;
+      const Ostap::EventIndex last       = Ostap::LastEvent  ) const ;
     // ========================================================================
     /** Get the empirical cumulative distribtion function 
      *  @param data       (INPUT) data 
@@ -450,7 +517,7 @@ namespace Ostap
       const std::string&      expression                     , 
       const std::string&      selection  = ""                ,
       const Ostap::EventIndex first      = Ostap::FirstEvent ,
-      const Ostap::EventIndex last       = Ostap::LastEvent  ) ;
+      const Ostap::EventIndex last       = Ostap::LastEvent  ) const ;
     // ========================================================================
     /** Get the empirical cumulative distribtion function 
      *  @param data       (INPUT) data 
@@ -468,7 +535,7 @@ namespace Ostap
       const std::string&      selection  = ""      , 
       const std::string&      cut_range  = ""      ,
       const Ostap::EventIndex first      = Ostap::FirstEvent ,
-      const Ostap::EventIndex last       = Ostap::LastEvent  ) ;
+      const Ostap::EventIndex last       = Ostap::LastEvent  ) const ;
     // ========================================================================
   private:
     // ========================================================================

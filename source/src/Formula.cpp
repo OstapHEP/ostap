@@ -15,12 +15,13 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Names.h"
 #include "Ostap/Formula.h"
 // ============================================================================
 // Local
 // ============================================================================
 #include "Exception.h"
-#include "local_utils.h"
+#include "status_codes.h"
 // ============================================================================
 /** Implementation file for class Ostap::Formula
  *  @see Ostap::Formula
@@ -32,10 +33,11 @@
 namespace 
 {
   // ==========================================================================
-  std::string formula_name ( const std::string& prefix     ,
-                             const std::string& expression ,
-                             const TTree*       tree       ) 
-  { return Ostap::tmp_name ( prefix , expression , tree , true ) ; }
+  std::string formula_name
+  ( const std::string& prefix     ,
+    const std::string& expression ,
+    const TTree*       tree       ) 
+  { return Ostap::tmp_name ( prefix , Ostap::strip ( expression ) , tree , true ) ; }
   // ==========================================================================
 } //                                             The end of anonymous namespace 
 // ============================================================================
@@ -43,7 +45,7 @@ namespace
 // ============================================================================
 ClassImp(Ostap::Formula)
 // ============================================================================
-#endif 
+#endif
 // ============================================================================
 // constructor from name, expression and the tree 
 // ============================================================================
@@ -51,37 +53,36 @@ Ostap::Formula::Formula
 ( const std::string& name       , 
   const std::string& expression ,
   const TTree*       tree       ) 
-: TTreeFormula ( name.c_str()                ,
-                 expression.c_str()          ,
-                 const_cast<TTree*> ( tree ) ) 
+: TTreeFormula ( name                        . c_str() ,
+		 Ostap::strip ( expression ) . c_str() ,
+		 const_cast<TTree*> ( tree )           ) 
 {}
 // ============================================================================
 Ostap::Formula::Formula
-( const std::string& name       , 
-  const TCut&        expression ,
-  const TTree*       tree       ) 
-  : TTreeFormula ( name.c_str()                ,
-                   expression                  , 
+( const std::string& name   , 
+  const TCut&        cut   ,
+  const TTree*       tree  ) 
+  : TTreeFormula ( name                             . c_str() ,
+		   Ostap::strip ( cut.GetTitle () ) . c_str() ,
                    const_cast<TTree*> ( tree ) ) 
 {}
 // ============================================================================
 Ostap::Formula::Formula
 ( const std::string& expression ,
   const TTree*       tree       ) 
-  : Formula ( formula_name ( "formula_" , expression , tree ) , expression , tree )
+  : Formula ( formula_name ( "formula_" , expression , tree ) ,
+	      Ostap::strip ( expression ) , tree )
 {}
 // ============================================================================
 Ostap::Formula::Formula
-( const TCut&        expression ,
-  const TTree*       tree       ) 
-  : Formula ( formula_name ( "formula_" , expression.GetName() , tree ) , expression , tree ) 
+( const TCut&   cut  ,
+  const TTree*  tree ) 
+  : Formula ( formula_name ( "formula_" , cut.GetTitle() , tree ) , cut , tree ) 
 {}
 // ============================================================================
 Ostap::Formula::Formula() 
   : Formula ( std::string ( "1" ) , nullptr )
 {}
-// ============================================================================
-
 // ============================================================================
 // destructor 
 // ============================================================================
@@ -97,9 +98,9 @@ double Ostap::Formula::evaluate () // evaluate the formula
 { 
   const Int_t d = GetNdata() ; 
   Ostap::Assert ( 1 == d , 
-                  "evaluate: scalar call for GetNdata()!=1 function" , 
-                  "Ostap::Formula"           , 
-                  Ostap::StatusCode::FAILURE ) ;
+                  "evaluate: scalar call for vector [ GetNdata()!=1 ]  function" , 
+                  "Ostap::Formula"     , 
+		  INVALID_FORMULA_CALL , __FILE__ , __LINE__ ) ;
   return EvalInstance () ; 
 }
 // ============================================================================
@@ -108,10 +109,10 @@ double Ostap::Formula::evaluate () // evaluate the formula
 double Ostap::Formula::evaluate ( const unsigned short i ) // evaluate the formula 
 { 
   const Int_t d = GetNdata() ; 
-  Ostap::Assert ( i  < d ,
+  Ostap::Assert ( i < d ,
                   "evaluate: invalid instance counter" , 
-                  "Ostap::Formula"           , 
-                  Ostap::StatusCode::FAILURE ) ;
+                  "Ostap::Formula"           ,
+		  INVALID_FORMULA_CALL , __FILE__ , __LINE__ ) ;
   return EvalInstance ( i ) ; 
 }
 // ============================================================================

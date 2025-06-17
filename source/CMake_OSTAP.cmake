@@ -33,6 +33,7 @@ add_library(ostap SHARED src/format.cpp
                          src/FitResult.cpp 
                          src/Formula.cpp   
                          src/FormulaVar.cpp   
+                         src/Formulae.cpp   
                          src/Fourier.cpp   
                          src/Funcs.cpp   
                          src/GetWeight.cpp 
@@ -68,10 +69,10 @@ add_library(ostap SHARED src/format.cpp
                          src/MoreRooFit.cpp
                          src/MoreVars.cpp
                          src/Mute.cpp
+			 src/Names.cpp 
                          src/NStatEntity.cpp
                          src/Notifier.cpp
                          src/Ostap.cpp
-                         src/OstapDataFrame.cpp
                          src/P2Quantile.cpp
                          src/Parameters.cpp
                          src/Parameterization.cpp

@@ -42,8 +42,8 @@ namespace Ostap
       // constructor from two counters and the correlation coefficient 
       Covariance
       ( const Counter& c1       , 
-	      const Counter& c2       ,
-	      const double   corr = 0 ) ;
+	const Counter& c2       ,
+	const double   corr = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -73,7 +73,7 @@ namespace Ostap
       /// add two values to the counters 
       inline Covariance& add	
       ( const double x ,
-	      const double y ) ;
+	const double y ) ;
       /// add another counter 
       Covariance& add ( const Covariance& right ) ;
       // ======================================================================
@@ -86,7 +86,7 @@ namespace Ostap
       /// add x,y
       inline void update
       ( const double x ,
-	      const double y ) { add ( x , y ) ; }
+	const double y ) { add ( x , y ) ; }
       // ======================================================================
       /// reset counters 
       void reset () ;

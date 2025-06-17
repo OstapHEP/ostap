@@ -33,11 +33,12 @@ namespace
     //
     INVALID_ABSDATA          = 730 ,
     INVALID_ARGSET           = 731 ,
-    INVALID_ABSARG           = 732 ,   
-    INVALID_ABSREAL          = 733 ,   
-    INVALID_OBSERVABLE       = 734 , 
-    INVALID_OBSERVABLES      = 735 ,
-    INVALID_ABSPDF           = 736 ,
+    INVALID_ARGLIST          = 732 ,
+    INVALID_ABSARG           = 733 ,   
+    INVALID_ABSREAL          = 734 ,   
+    INVALID_OBSERVABLE       = 735 , 
+    INVALID_OBSERVABLES      = 736 ,
+    INVALID_ABSPDF           = 737 ,
     //
     INVALID_PDF              = 740 ,
     INVALID_FITRESULT        = 741 ,
@@ -86,7 +87,11 @@ namespace
     INVALID_SELECTION        = 841 ,
     INVALID_SELECTIONS       = 842 ,  
     INVALID_COUNTER          = 843 ,
-    INVALID_COUNTERS         = 844 ,  
+    INVALID_COUNTERS         = 844 ,
+    //
+    INVALID_FORMULA_CALL     = 850 ,
+    INVALID_WEIGHT           = 861 ,
+    INVALID_SUMWEIGHT        = 862 ,
     // =========================================================================
     // =========================================================================
     ERROR_ROOT            = 1000000 ,

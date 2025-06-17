@@ -11,7 +11,6 @@
 // ============================================================================
 // ROOT/RooFit 
 // ============================================================================
-#include "RVersion.h"
 #include "RooFormulaVar.h"
 // ============================================================================
 namespace Ostap 
@@ -149,6 +148,26 @@ namespace Ostap
   makeFormula
   ( const std::string& expression , 
     const RooArgList&  dependents ) ;
+  // ==========================================================================
+  /** make formula (skip unnesessary dependents)
+   *  @param expression formula expression
+   *  @param dependent  formula dependents 
+   *  @return the formula  
+   */
+  std::unique_ptr<FormulaVar>  
+  makeFormula
+  ( const std::string& expression , 
+    const RooArgSet*   dependents ) ;
+  // ==========================================================================
+  /** make formula (skip unnesessary dependents)
+   *  @param expression formula expression
+   *  @param dependent  formula dependents 
+   *  @return the formula  
+   */
+  std::unique_ptr<FormulaVar>  
+  makeFormula
+  ( const std::string& expression , 
+    const RooAbsData*  dependents ) ;
   // ===========================================================================
   /** valid formula expression ?
    *  @param expression formula expression

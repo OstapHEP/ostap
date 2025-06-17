@@ -29,8 +29,8 @@
 #include "Ostap/Bernstein2D.h"
 #include "Ostap/Bernstein3D.h"
 #include "Ostap/ECDF.h"
+#include "Ostap/Names.h"
 // ============================================================================
-#include "OstapDataFrame.h"
 #include "Exception.h"
 #include "local_math.h"
 #include "local_utils.h"

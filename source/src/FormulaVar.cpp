@@ -14,13 +14,14 @@
 // ============================================================================
 #include "RVersion.h"
 #include "RooFormulaVar.h"
-#include "TError.h"
+#include "RooAbsData.h"
 // ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/FormulaVar.h"
-#include "Ostap/Iterator.h"
+// #include "Ostap/Iterator.h"
 #include "Ostap/Mute.h"
+#include "Ostap/Names.h"
 // ============================================================================
 // local
 // ============================================================================
@@ -42,25 +43,6 @@ ClassImp(Ostap::FormulaVar) ;
 // ============================================================================
 namespace
 {
-  // ==========================================================================
-  class ESentry
-  {
-  public :
-    ESentry  () ;
-    ~ESentry () ;
-  private:
-    int m_level ;    
-  };
-  //===========================================================================    
-  ESentry:: ESentry()
-    : m_level ( gErrorIgnoreLevel )
-  {
-    gErrorIgnoreLevel = kFatal + 1 ;
-  }  
-  ESentry::~ESentry()
-  {
-    gErrorIgnoreLevel = m_level ;    
-  }
   // ==========================================================================
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
   // ==========================================================================
@@ -104,13 +86,14 @@ namespace
 // ============================================================================
 std::unique_ptr<Ostap::FormulaVar>  
 Ostap::makeFormula 
-( const std::string&      name        ,
-  const std::string&      title       ,
-  const std::string&      expression  , 
-  const RooArgList&       dependents  ) 
+( const std::string& name       ,
+  const std::string& title      ,
+  const std::string& expression , 
+  const RooArgList&  dependents ) 
 {
   //
   const std::string vname { Ostap::tmp_name ( "test_formula1_" , expression ) } ;
+  const std::string exprs { Ostap::strip ( expression                       ) } ;
   //
   // ========================================================================
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
@@ -120,10 +103,10 @@ Ostap::makeFormula
   try
   {
     ESentry sentry {} ;
-    ptr.reset ( new RooFormula ( vname     .c_str () ,                                                        
-                                 expression.c_str () , 
-                                 dependents          , 
-                                 false             ) ) ;
+    ptr = std::make_unique<RooFormulaVae> ( vname.c_str () ,                                                        
+					    exprs.c_str () , 
+					    dependents     , 
+					    false          ) ;
   }
   catch ( std::invalid_argument& /* e1 */ ){ return nullptr ;  }
   catch ( std::runtime_error&    /* e2 */ ){ return nullptr ;  }
@@ -135,17 +118,17 @@ Ostap::makeFormula
   //
   std::unique_ptr<RooFormulaVar> ptr ;
   //
-  try
-  {
-    ESentry sentry {} ;
-    Ostap::Utils::Mute m1  ( true  ) ;
-    Ostap::Utils::Mute m2  ( false ) ;    
-    ptr.reset ( new RooFormulaVar ( vname     .c_str () ,                                                        
-                                    expression.c_str () , 
-                                    expression.c_str () , 
-                                    dependents          , 
-                                    false             ) ) ;
-  }
+  try 
+    {
+      ESentry sentry {} ;
+      Ostap::Utils::Mute m1  ( true  ) ;
+      Ostap::Utils::Mute m2  ( false ) ;    
+      ptr = std::make_unique<RooFormulaVar> ( vname.c_str () ,                                                        
+					      exprs.c_str () , 
+					      exprs.c_str () , 
+					      dependents     , 
+					      false          ) ;
+    }
   catch ( std::invalid_argument& /* e1 */ ){ return nullptr ;  }
   catch ( std::runtime_error&    /* e2 */ ){ return nullptr ;  }
   //    
@@ -157,12 +140,12 @@ Ostap::makeFormula
   //
   if ( !ptr || !ptr->ok() ) { return nullptr ; }
   //
-  std::unique_ptr<Ostap::FormulaVar> result
-                        ( new Ostap::FormulaVar ( name       , 
-                                                  title      , 
-                                                  expression , 
-                                                  used       , 
-                                                  true       ) ) ;
+  std::unique_ptr<Ostap::FormulaVar>
+    result { std::make_unique<Ostap::FormulaVar> ( name  , 
+						   title , 
+						   exprs , 
+						   used  , 
+						   true  ) } ;
   //
   if ( !result || !result->ok() ) { return nullptr ; }
   //
@@ -200,6 +183,43 @@ Ostap::makeFormula
                        expression , 
                        expression , 
                        dependents ) ; }
+// ============================================================================
+/** make formula (skip unnesessary dependents)
+ *  @param expression formula expression
+ *  @param dependent  formula dependents 
+ *  @return the formula  
+ */
+// ============================================================================
+std::unique_ptr<Ostap::FormulaVar>  
+Ostap::makeFormula 
+( const std::string&   expression ,
+  const RooArgSet*     dependents )
+{
+  Ostap::Assert ( nullptr != dependents                ,
+		  "Invald RooArgSet object"            ,
+		  "Ostap::makeFormula"                 ,
+		  INVALID_ARGSET , __FILE__ , __LINE__ ) ;  
+  RooArgList lst { *dependents } ;
+  return makeFormula ( expression , lst ) ;
+}
+// ============================================================================
+/** make formula (skip unnesessary dependents)
+ *  @param expression formula expression
+ *  @param data  formula dependents 
+ *  @return the formula  
+ */
+// ============================================================================
+std::unique_ptr<Ostap::FormulaVar>  
+Ostap::makeFormula 
+( const std::string&   expression ,
+  const RooAbsData*    data       )
+{
+  Ostap::Assert ( nullptr != data                   ,
+		  "Invald RooAbsData object"         ,
+		  "Ostap::makeFormula"               ,
+		  INVALID_DATA , __FILE__ , __LINE__ ) ;  
+  return makeFormula ( expression , data->get() ) ;
+}
 // ============================================================================
 /** valid formula expression ?
  *  @param expression formula expression
@@ -321,16 +341,15 @@ Ostap::FormulaVar::FormulaVar
   const RooArgList & dependents    ,
   const bool            check         
   )
-  : RooFormulaVar ( name       . c_str () 
+  : RooFormulaVar ( name                 . c_str () , 
 #if  ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
-  , title      . c_str () 
+		    title                , c_str () , 
 #else        
-  , expression . c_str ()  
+		    strip ( expression ) . c_str () , 
 #endif 
-  , expression . c_str () 
-  , dependents            
-  , check
-  ) 
+		    strip ( expression ) . c_str () , 
+		    dependents                      , 
+		    check                           ) 
 {}
 // ============================================================================
 /*  full constructor 
@@ -389,8 +408,11 @@ Ostap::FormulaVar::~FormulaVar(){}
 // ============================================================================
 std::string Ostap::FormulaVar::expression () const 
 {
+  // 
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
+  //
   return formula().GetTitle() ;
+  //
 #else 
   // ==========================================================================
   /// FIX ME!!!! @see https://github.com/root-project/root/commit/a470a3d85e8b5c93917d3e84c39e9d5f0066da97
