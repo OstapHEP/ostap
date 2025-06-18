@@ -34,8 +34,6 @@ template <class SCALAR> class TMatrixTSym ; // ROOT
 // ============================================================================
 namespace Ostap { namespace Math { class  Statistic   ; } }
 namespace Ostap { namespace Math { class WStatistic   ; } }
-namespace Ostap { namespace Math { class  ECDF        ; } }
-namespace Ostap { namespace Math { class WECDF        ; } }
 namespace Ostap { namespace Math { class  Covariances ; } }
 namespace Ostap { namespace Math { class WCovariances ; } }
 // ============================================================================
@@ -131,7 +129,7 @@ namespace Ostap
     /// construtctor with the progress flag
     StatVar ( const Ostap::Utils::ProgressConf& progress = false) ;
     // ========================================================================    
-  public:
+  public:  // Statistics&WStatistics 
     // ========================================================================
     /** Fill/update statistical counter 
      *  @param data       (input) data 
@@ -187,6 +185,231 @@ namespace Ostap
     ( const RooAbsData*         data                           ,
       Ostap::Math::WStatistic&  stat                           ,
       const std::string&        expression                     , 
+      const std::string&        selection  = ""                ,
+      const std::string&        cut_range  = ""                ,
+      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last       = Ostap::LastEvent  ) const ;
+   // ========================================================================    
+  public:  // Statistics2 & WStatistics2 
+    // ========================================================================
+    /** Fill/update statistical counter 
+     *  @param data       (input) data 
+     *  @param stat       (UDATE) statistical counter 
+     *  @param expr1      (INPUT) the 1st variable 
+     *  @param expr1      (INPUT) the 2nd variable 
+     *  @param selection  (INPUT) selection/cut (treated as boolean!)
+     *  @param first      (INPIUT) the first event to process (inclusibe) 
+     *  @param last       (INPIUT) the last event to process (exclusive) 
+     *  @return status code 
+     *  @see Ostap::Math::Statistics2
+     *  @attention selection/cut is treated as boolean!
+     */
+    Ostap::StatusCode get_stat
+    ( TTree*                    data                           ,
+      Ostap::Math::Statistic2&  stat                           ,
+      const std::string&        expr1                          , 
+      const std::string&        expr2                          ,       
+      const std::string&        selection  = ""                ,
+      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last       = Ostap::LastEvent  ) const ;
+    // ========================================================================
+    /** Fill/update statistical counter 
+     *  @param data       (input) data 
+     *  @param stat       (UDATE) statistical counter 
+     *  @param expr1      (INPUT) the 1st variable 
+     *  @param expr1      (INPUT) the 2nd variable 
+     *  @param selection  (INPUT) selection/cut (treated as weight!)
+     *  @param first      (INPIUT) the first event to process (inclusibe) 
+     *  @param last       (INPIUT) the last event to process (exclusive) 
+     *  @return status code 
+     *  @see Ostap::Math::WStatistics2
+     *  @attention selection/cut is treated as weight!
+     */
+    Ostap::StatusCode get_stat
+    ( TTree*                    data                           ,
+      Ostap::Math::WStatistic2& stat                           ,
+      const std::string&        expr1                          , 
+      const std::string&        expr2                          ,       
+      const std::string&        selection  = ""                ,
+      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last       = Ostap::LastEvent  ) const ;
+    // ========================================================================
+    /** Fill/update statistical counter 
+     *  @param data       (input) data 
+     *  @param stat       (UDATE) statistical counter 
+     *  @param expr1       (INPUT) the 1st variable 
+     *  @param expr1      (INPUT) the 2nd variable 
+     *  @param selection  (INPUT) selection/cut (treated as weight!)
+     *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+     *  @param first      (INPIUT) the first event to process (inclusibe) 
+     *  @param last       (INPIUT) the last event to process (exclusive) 
+     *  @return status code 
+     *  @see Ostap::Math::WStatistics2
+     *  @attention selection/cut is treated as weight!
+     */
+    Ostap::StatusCode get_stat
+    ( const RooAbsData*         data                           ,
+      Ostap::Math::WStatistic2& stat                           ,
+      const std::string&        expr1                          , 
+      const std::string&        expr2                          ,       
+      const std::string&        selection  = ""                ,
+      const std::string&        cut_range  = ""                ,
+      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last       = Ostap::LastEvent  ) const ;
+    // ========================================================================
+
+
+
+
+
+  // ========================================================================    
+  public:  // Statistics3 & WStatistics3
+    // ========================================================================
+    /** Fill/update statistical counter 
+     *  @param data       (input) data 
+     *  @param stat       (UDATE) statistical counter 
+     *  @param expr1      (INPUT) the 1st variable 
+     *  @param expr1      (INPUT) the 2nd variable 
+     *  @param expr3      (INPUT) the 3rd variable 
+     *  @param selection  (INPUT) selection/cut (treated as boolean!)
+     *  @param first      (INPIUT) the first event to process (inclusibe) 
+     *  @param last       (INPIUT) the last event to process (exclusive) 
+     *  @return status code 
+     *  @see Ostap::Math::Statistics3
+     *  @attention selection/cut is treated as boolean!
+     */
+    Ostap::StatusCode get_stat
+    ( TTree*                    data                           ,
+      Ostap::Math::Statistic3&  stat                           ,
+      const std::string&        expr1                          , 
+      const std::string&        expr2                          ,       
+      const std::string&        expr3                          , 
+      const std::string&        selection  = ""                ,
+      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last       = Ostap::LastEvent  ) const ;
+    // ========================================================================
+    /** Fill/update statistical counter 
+     *  @param data       (input) data 
+     *  @param stat       (UDATE) statistical counter 
+     *  @param expr1      (INPUT) the 1st variable 
+     *  @param expr1      (INPUT) the 2nd variable 
+     *  @param expr3      (INPUT) the 3rd variable  
+     *  @param selection  (INPUT) selection/cut (treated as weight!)
+     *  @param first      (INPIUT) the first event to process (inclusibe) 
+     *  @param last       (INPIUT) the last event to process (exclusive) 
+     *  @return status code 
+     *  @see Ostap::Math::WStatistics3
+     *  @attention selection/cut is treated as weight!
+     */
+    Ostap::StatusCode get_stat
+    ( TTree*                    data                           ,
+      Ostap::Math::WStatistic3& stat                           ,
+      const std::string&        expr1                          , 
+      const std::string&        expr2                          ,
+      const std::string&        expr3                          ,       
+      const std::string&        selection  = ""                ,
+      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last       = Ostap::LastEvent  ) const ;
+    // ========================================================================
+    /** Fill/update statistical counter 
+     *  @param data       (input) data 
+     *  @param stat       (UDATE) statistical counter 
+     *  @param expr1      (INPUT) the 1st variable 
+     *  @param expr1      (INPUT) the 2nd variable 
+     *  @param expr3      (INPUT) the 3rd variable 
+     *  @param selection  (INPUT) selection/cut (treated as weight!)
+     *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+     *  @param first      (INPIUT) the first event to process (inclusibe) 
+     *  @param last       (INPIUT) the last event to process (exclusive) 
+     *  @return status code 
+     *  @see Ostap::Math::WStatistics3
+     *  @attention selection/cut is treated as weight!
+     */
+    Ostap::StatusCode get_stat
+    ( const RooAbsData*         data                           ,
+      Ostap::Math::WStatistic3& stat                           ,
+      const std::string&        expr1                          , 
+      const std::string&        expr2                          , 
+      const std::string&        expr3                          ,      
+      const std::string&        selection  = ""                ,
+      const std::string&        cut_range  = ""                ,
+      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last       = Ostap::LastEvent  ) const ;
+    // ======================================================================    
+  public:  // Statistics3 & WStatistics3
+    // ======================================================================
+    /** Fill/update statistical counter 
+     *  @param data       (input) data 
+     *  @param stat       (UDATE) statistical counter 
+     *  @param expr1      (INPUT) the 1st variable 
+     *  @param expr1      (INPUT) the 2nd variable 
+     *  @param expr3      (INPUT) the 3rd variable 
+     *  @param expr4      (INPUT) the 4th variable   
+     *  @param selection  (INPUT) selection/cut (treated as boolean!)
+     *  @param first      (INPIUT) the first event to process (inclusibe) 
+     *  @param last       (INPIUT) the last event to process (exclusive) 
+     *  @return status code 
+     *  @see Ostap::Math::Statistics4
+     *  @attention selection/cut is treated as boolean!
+     */
+    Ostap::StatusCode get_stat
+    ( TTree*                    data                           ,
+      Ostap::Math::Statistic4&  stat                           ,
+      const std::string&        expr1                          , 
+      const std::string&        expr2                          ,       
+      const std::string&        expr3                          , 
+      const std::string&        expr4                          , 
+      const std::string&        selection  = ""                ,
+      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last       = Ostap::LastEvent  ) const ;
+    // ========================================================================
+    /** Fill/update statistical counter 
+     *  @param data       (input) data 
+     *  @param stat       (UDATE) statistical counter 
+     *  @param expr1      (INPUT) the 1st variable 
+     *  @param expr1      (INPUT) the 2nd variable 
+     *  @param expr3      (INPUT) the 3rd variable  
+     *  @param expr4      (INPUT) the 4th variable 
+     *  @param selection  (INPUT) selection/cut (treated as weight!)
+     *  @param first      (INPIUT) the first event to process (inclusibe) 
+     *  @param last       (INPIUT) the last event to process (exclusive) 
+     *  @return status code 
+     *  @see Ostap::Math::WStatistics4
+     *  @attention selection/cut is treated as weight!
+     */
+    Ostap::StatusCode get_stat
+    ( TTree*                    data                           ,
+      Ostap::Math::WStatistic4& stat                           ,
+      const std::string&        expr1                          , 
+      const std::string&        expr2                          ,
+      const std::string&        expr3                          ,
+      const std::string&        expr4                          ,        
+      const std::string&        selection  = ""                ,
+      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last       = Ostap::LastEvent  ) const ;
+    // ========================================================================
+    /** Fill/update statistical counter 
+     *  @param data       (input) data 
+     *  @param stat       (UDATE) statistical counter 
+     *  @param expr1      (INPUT) the 1st variable 
+     *  @param expr1      (INPUT) the 2nd variable 
+     *  @param expr3      (INPUT) the 3rd variable 
+     *  @param expr4      (INPUT) the 4th variable 
+     *  @param selection  (INPUT) selection/cut (treated as weight!)
+     *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+     *  @param first      (INPIUT) the first event to process (inclusibe) 
+     *  @param last       (INPIUT) the last event to process (exclusive) 
+     *  @return status code 
+     *  @see Ostap::Math::WStatistics2
+     *  @attention selection/cut is treated as weight!
+     */
+    Ostap::StatusCode get_stat
+    ( const RooAbsData*         data                           ,
+      Ostap::Math::WStatistic4& stat                           ,
+      const std::string&        expr1                          , 
+      const std::string&        expr2                          , 
+      const std::string&        expr3                          ,
+      const std::string&        expr4                          ,       
       const std::string&        selection  = ""                ,
       const std::string&        cut_range  = ""                ,
       const Ostap::EventIndex   first      = Ostap::FirstEvent ,
@@ -479,60 +702,6 @@ namespace Ostap
       const std::string&              cut_range   = ""                , 
       const Ostap::EventIndex         first       = Ostap::FirstEvent ,
       const Ostap::EventIndex         last        = Ostap::LastEvent  ) const ;          
-    // ========================================================================
-  public: // ECDF & WECDF 
-    // ========================================================================
-    /** Get the empirical cumulative distribtion function 
-     *  @param data       (INPUT) data 
-     *  @param ecdf       (UDATE) cumulative distribtion function 
-     *  @param expression (INPUT) the variabl
-     *  @param selection  (INPUT) selection (treated as boolean)
-     *  @param first      (INPUT) the first event to process (inclusive)
-     *  @param last       (INPUT) the last  event to process (non-inclusive)
-     *  @returs status code 
-     */
-    Ostap::StatusCode ECDF
-    ( TTree*                  data                           ,
-      Ostap::Math::ECDF&      ecdf                           ,
-      const std::string&      expression                     ,
-      const std::string&      selection  = ""                ,      
-      const Ostap::EventIndex first      = Ostap::FirstEvent ,
-      const Ostap::EventIndex last       = Ostap::LastEvent  ) const ;
-    // ========================================================================
-    /** Get the empirical cumulative distribtion function 
-     *  @param data       (INPUT) data 
-     *  @param ecdf       (UDATE) cumulative distribtion function 
-     *  @param expression (INPUT) the variable 
-     *  @param selection  (INOUT) selecgion (treated as weight)
-     *  @param first      (INPUT) the first event to process (inclusive)
-     *  @param last       (INPUT) the last  event to process (non-inclusive)
-     *  @returs status code 
-     */
-    Ostap::StatusCode ECDF
-    ( TTree*                  data                           ,
-      Ostap::Math::WECDF&     ecdf                           ,
-      const std::string&      expression                     , 
-      const std::string&      selection  = ""                ,
-      const Ostap::EventIndex first      = Ostap::FirstEvent ,
-      const Ostap::EventIndex last       = Ostap::LastEvent  ) const ;
-    // ========================================================================
-    /** Get the empirical cumulative distribtion function 
-     *  @param data       (INPUT) data 
-     *  @param ecdf       (UDATE) cumulative distribtion function 
-     *  @param expression (INPUT) the variable 
-     *  @param selection  (INOUT) selectgion/weight 
-     *  @param first      (INPUT) the first event to process (inclusive)
-     *  @param last       (INPUT) the last  event to process (non-inclusive)
-     *  @returs status code 
-     */
-    Ostap::StatusCode ECDF
-    ( const RooAbsData*       data                 ,
-      Ostap::Math::WECDF&     ecdf                 ,
-      const std::string&      expression           , 
-      const std::string&      selection  = ""      , 
-      const std::string&      cut_range  = ""      ,
-      const Ostap::EventIndex first      = Ostap::FirstEvent ,
-      const Ostap::EventIndex last       = Ostap::LastEvent  ) const ;
     // ========================================================================
   private:
     // ========================================================================

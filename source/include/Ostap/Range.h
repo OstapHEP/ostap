@@ -61,8 +61,6 @@ namespace Ostap
     typedef typename Container::const_iterator           iterator       ;
     typedef typename Container::const_iterator           const_iterator ;
     // =========================================================================
-    typedef std::pair<iterator,iterator> Base;
-    // =========================================================================
   private:
     // =========================================================================
     typedef typename std::iterator_traits<iterator> iter_traits;
@@ -86,43 +84,51 @@ namespace Ostap
      *  @param iend    iterator to end   of the sequence
      */
     template <typename InputIterator>
-    Range_( InputIterator first, InputIterator last ) : m_base( first, last ) {}
+    Range_( InputIterator first, InputIterator last ) 
+    : m_begin ( first ) 
+    , m_end   ( last  ) 
+    {
+      if ( 0 > std::distance ( m_begin , m_end ) ) { std::swap ( m_begin , m_end ) ; }
+    }
     // =========================================================================
     /** constructor from the container
-     *  @param cont  reference to the container
+     *  @param cnt  reference to the container
      */
-    Range_( const Container& cont ) : m_base( cont.begin(), cont.end() ) {}
+    Range_( const Container& cnt ) 
+    : m_begin ( cnt.begin () )
+    , m_end   ( cnt.end   () ) 
+    {}
     // =========================================================================
     /* constructor of empty range/sequence
      * @param ibegin  iterator to begin of empty sequence
      */
-    Range_( iterator ibegin ) : m_base( ibegin, ibegin ) {}
-    // =========================================================================
-    /// destructor
-    ~Range_() = default;
+    Range_( iterator ibegin ) 
+    : m_begin ( ibegin )
+    , m_end   ( ibegin ) 
+    {}
     // =========================================================================
     public:
     // =========================================================================
     /// empty sequence ?
-    inline bool empty() const { return m_base.second == m_base.first; }
+    inline bool           empty    () const { return m_begin == m_end ; }
     /// size of the sequence (number of elements)
-    inline std::size_t    size() const { return std::distance( m_base.first, m_base.second ); }
+    inline std::size_t    size     () const { return std::distance ( m_begin , m_end ); }
     /// access to begin of the sequence (const version )
-    inline iterator       begin() const { return m_base.first; }
+    inline iterator       begin    () const { return m_begin ; }
     /// access to end   of the sequence (const version)
-    inline iterator       end() const { return m_base.second; }
+    inline iterator       end      () const { return m_end ; }
     /// access to begin of the sequence (const version )
-    inline const_iterator cbegin() const { return m_base.first; }
+    inline const_iterator cbegin   () const { return m_begin ; }
     /// access to end   of the sequence (const version)
-    inline const_iterator cend() const { return m_base.second; }
+    inline const_iterator cend     () const { return m_end ; }
     /// access to begin of the reversed sequence (const)
-    inline reverse_iterator rbegin() const { return reverse_iterator( end() ); }
+    inline reverse_iterator rbegin () const { return reverse_iterator( end() ); }
     /// access to begin of the reversed sequence (const)
-    inline reverse_iterator rend() const { return reverse_iterator( begin() ); }
+    inline reverse_iterator rend   () const { return reverse_iterator( begin() ); }
     /// access for the first element (only for non-empty ranges!)
-    inline const_reference front() const { return *begin(); }
+    inline const_reference front   () const { return *begin(); }
     /// access for the back  element (only for non-empty ranges!)
-    inline const_reference back() const { return *std::prev( end() ); }
+    inline const_reference back    () const { return *std::prev ( end() ); }
     // ========================================================================
     /// get a "slice" of a range, in Python style
     inline Range_ slice ( long index1, long index2 ) const 
@@ -212,8 +218,10 @@ namespace Ostap
     // ========================================================================
   private:
     // ========================================================================
-    // the base itself
-    Base m_base; ///< the base itself
+    /// begin-iterator 
+    iterator m_begin ;  // begin-iterator 
+    /// end-iterator 
+    iterator m_end   ; // end-iterator 
     // ========================================================================
   }; // end of class Range_
   // ==========================================================================

@@ -15,11 +15,17 @@
 // ===========================================================================
 // virtual destructor
 // ===========================================================================
-Ostap::Math::Statistic::~Statistic(){}
+Ostap::Math::Statistic ::~Statistic (){}
+Ostap::Math::Statistic2::~Statistic2(){}
+Ostap::Math::Statistic3::~Statistic3(){}
+Ostap::Math::Statistic4::~Statistic4(){}
 // ===========================================================================
 // virtual destructor
 // ===========================================================================
-Ostap::Math::WStatistic::~WStatistic(){}
+Ostap::Math::WStatistic ::~WStatistic (){}
+Ostap::Math::WStatistic2::~WStatistic2(){}
+Ostap::Math::WStatistic3::~WStatistic3(){}
+Ostap::Math::WStatistic4::~WStatistic4(){}
 // ============================================================================
 //                                                                      The END
 // ============================================================================
