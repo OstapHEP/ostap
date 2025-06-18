@@ -21,6 +21,10 @@ namespace Ostap
   {
  public:
     // ======================================================================
+    // # of entries 
+    typedef Ostap::StatEntity::size_type    size_type ;
+    // ======================================================================
+  public:
     /// empty constructor 
     WStatEntity () = default ;
     /// constructor from StatEntity of values 
@@ -36,36 +40,36 @@ namespace Ostap
   public: // the basic getters 
     // ======================================================================
     /// total number of entries 
-    inline unsigned long long       n   () const { return m_weights.n () ; }
+    inline size_type n   () const { return m_weights.n () ; }
     /// the first weighted moment/mean-value 
-    inline double                   mu  () const { return m_mu  ; }
+    inline double    mu  () const { return m_mu           ; }
     /// the second central weighted moment/dispersion/variance  
-    inline double                   mu2 () const { return m_mu2 ; }
+    inline double    mu2 () const { return m_mu2 ; }
     // ======================================================================
   public: // derived getters and aliases 
     // ======================================================================
     /// empty ?
-    inline bool                     empty      () const { return m_weights.empty()  ; }
+    inline bool             empty      () const { return m_weights.empty()  ; }
     /// get the actual number of entries 
-    inline unsigned long long       nEntries   () const { return n () ; }
+    inline size_type        nEntries   () const { return n () ; }
     /// mean-value 
-    inline double                   mean       () const { return m_mu  ; }
+    inline double           mean       () const { return m_mu  ; }
     /// error im mean-value 
-    double                          meanErr    () const ;  
+    double                  meanErr    () const ;  
     /// dispersion 
-    inline double                   dispersion () const { return m_mu2 ; }
+    inline double           dispersion () const { return m_mu2 ; }
     /// variance 
-    inline double                   variance   () const { return m_mu2 ; }
+    inline double           variance   () const { return m_mu2 ; }
     /// RMS 
-    double                          rms        () const ;
+    double                  rms        () const ;
     /// get the effective number of entries 
-    double                          nEff       () const ;
+    double                  nEff       () const ;
     /// get number of "good" (non-zero) entries
-    inline unsigned long long       nGood      () const { return m_values. n   () ; }
+    inline size_type        nGood      () const { return m_values. n   () ; }
     /// minimal value (for non-zero weights) 
-    inline double                   min        () const { return m_values. min () ; }
+    inline double           min        () const { return m_values. min () ; }
     /// maximal value (for non-zero weights) 
-    inline double                   max        () const { return m_values. max () ; }       
+    inline double           max        () const { return m_values. max () ; }       
     // ======================================================================
   public: // helper sums 
     // ======================================================================
@@ -126,10 +130,10 @@ namespace Ostap
     inline bool isfinite () const
     {
       return
-	std::isfinite ( m_mu  ) &&
-	std::isfinite ( m_mu2 ) &&
-	m_values .isfinite ()   &&
-	m_weights.isfinite ()   ;
+    	std::isfinite ( m_mu  ) &&
+	    std::isfinite ( m_mu2 ) &&
+	    m_values .isfinite ()   &&
+	    m_weights.isfinite ()   ;
     }
     // ======================================================================
   public: // the main methods 

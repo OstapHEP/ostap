@@ -68,6 +68,29 @@ Ostap::Math::Covariance::Covariance
       m_cov2m *= n () ;
     }
 }
+
+// ============================================================================
+/// add two values to the counters 
+Ostap::Math::Covariance&
+Ostap::Math::Covariance::add	
+( const double x ,
+  const double y )
+  {
+      if ( !std::isfinite( x ) || !std::isfinite ( y ) ) { return *this ; }
+      //
+      const unsigned long long nn = n ()    ;
+      if ( nn )
+        {
+          const double xA = m_cnt1.mean() ;
+          const double yA = m_cnt2.mean() ;
+          m_cov2m += ( x - xA ) * nn  * ( y - yA ) / ( nn + 1 )  ;
+        }
+      //
+      m_cnt1 += x ;
+      m_cnt2 += y ;
+      //
+      return *this ;
+  } ;
 // ============================================================================
 // add two counters 
 // ============================================================================
@@ -185,6 +208,36 @@ Ostap::Math::WCovariance::WCovariance
       m_cov2m *= w () ;
     }
 }
+
+
+// =====================================================================================
+// add two values to the counters 
+// =====================================================================================
+Ostap::Math::WCovariance&
+Ostap::Math::WCovariance::add	
+    ( const double x ,
+      const double y ,
+      const double w )      
+    {
+      if ( !w                   || 
+           !std::isfinite ( x ) || 
+           !std::isfinite ( y ) || 
+           !std::isfinite ( w ) ) { return *this ; } 
+      //
+      const double ww = sumw ()    ;
+      if ( ww )
+        {
+          const double xA = m_cnt1.mean() ;
+          const double yA = m_cnt2.mean() ;
+          m_cov2m += ( x - xA ) * ww * w  * ( y - yA ) / ( ww + w )  ;
+        }
+      //
+      m_cnt1.add ( x , w ) ;
+      m_cnt2.add ( y , w ) ;
+      //
+      return *this ;
+    }
+
 // ============================================================================
 // add two counters 
 // ============================================================================

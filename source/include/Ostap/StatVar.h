@@ -32,10 +32,12 @@ class RooAbsData ; // RooFit
 // ============================================================================
 template <class SCALAR> class TMatrixTSym ; // ROOT 
 // ============================================================================
-namespace Ostap { namespace Math { class  Statistic ; } }
-namespace Ostap { namespace Math { class WStatistic ; } }
-namespace Ostap { namespace Math { class  ECDF      ; } }
-namespace Ostap { namespace Math { class WECDF      ; } }
+namespace Ostap { namespace Math { class  Statistic   ; } }
+namespace Ostap { namespace Math { class WStatistic   ; } }
+namespace Ostap { namespace Math { class  ECDF        ; } }
+namespace Ostap { namespace Math { class WECDF        ; } }
+namespace Ostap { namespace Math { class  Covariances ; } }
+namespace Ostap { namespace Math { class WCovariances ; } }
 // ============================================================================
 namespace Ostap
 {
@@ -424,8 +426,7 @@ namespace Ostap
     // =========================================================================
     /** calculate the covariance of several expressions 
      *  @param data        (INPUT)  the inpout tree 
-     *  @param stats       (UPDATE) the statistics 
-     *  @param cov2        (UPDATE) the covariance matrix 
+     *  @param stats       (UPDATE) the statistics  
      *  @param expressions (INPUT)  expressions 
      *  @param selection   (INPUT)  the selection criteria 
      *  @return status code 
@@ -435,9 +436,8 @@ namespace Ostap
      */
     Ostap::StatusCode statCov
     ( TTree*                          data       , 
-      Ostap::StatVar::StatVector&     stats      ,  
-      TMatrixTSym<double>&            cov2       , 
-      const std::vector<std::string>& exressions , 
+      Ostap::Math::Covariances&       stats      , 
+      const Ostap::Strings&           exressions , 
       const std::string&              sekection  = ""                ,
       const Ostap::EventIndex         first      = Ostap::FirstEvent ,
       const Ostap::EventIndex         last       = Ostap::LastEvent  ) const ;
@@ -445,7 +445,6 @@ namespace Ostap
     /** calculate the covariance of several expressions 
      *  @param data        (INPUT)  the inpout tree 
      *  @param stats       (UPDATE) the statistics 
-     *  @param cov2        (UPDATE) the covariance matrix 
      *  @param expressions (INPUT)  expressions 
      *  @param selection   (INPUT)  the selection criteria 
      *  @return status code 
@@ -454,13 +453,12 @@ namespace Ostap
      *  @date   2023-02-28
      */
     Ostap::StatusCode statCov
-    ( TTree*                          data       , 
-      Ostap::StatVar::WStatVector&    stats      ,  
-      TMatrixTSym<double>&            cov2       , 
-      const std::vector<std::string>& exressions , 
-      const std::string&              sekection  = ""                ,
-      const Ostap::EventIndex         first      = Ostap::FirstEvent ,
-      const Ostap::EventIndex         last       = Ostap::LastEvent  ) const ;          
+    ( TTree*                          data        , 
+      Ostap::Math::WCovariances&      stats       , 
+      const Ostap::Strings&           expressions , 
+      const std::string&              sekection   = ""                ,
+      const Ostap::EventIndex         first       = Ostap::FirstEvent ,
+      const Ostap::EventIndex         last        = Ostap::LastEvent  ) const ;          
     // =========================================================================
     /** calculate the covariance of several expressions 
      *  @param data        (INPUT)  the inpout tree 
@@ -474,14 +472,13 @@ namespace Ostap
      *  @date   2023-02-28
      */
     Ostap::StatusCode statCov
-    ( const RooAbsData*               data       , 
-      Ostap::StatVar::WStatVector&    stats      ,  
-      TMatrixTSym<double>&            cov2       , 
-      const std::vector<std::string>& exressions , 
-      const std::string&              sekection  = ""                ,
-      const std::string&              cut_range  = ""                , 
-      const Ostap::EventIndex         first      = Ostap::FirstEvent ,
-      const Ostap::EventIndex         last       = Ostap::LastEvent  ) const ;          
+    ( const RooAbsData*               data        , 
+      Ostap::Math::WCovariances&      stats       , 
+      const Ostap::Strings&           expressions , 
+      const std::string&              sekection   = ""                ,
+      const std::string&              cut_range   = ""                , 
+      const Ostap::EventIndex         first       = Ostap::FirstEvent ,
+      const Ostap::EventIndex         last        = Ostap::LastEvent  ) const ;          
     // ========================================================================
   public: // ECDF & WECDF 
     // ========================================================================

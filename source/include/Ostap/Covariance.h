@@ -33,6 +33,8 @@ namespace Ostap
       typedef Ostap::StatEntity                       Counter  ;
       /// covarinace/correlation matrices 
       typedef Ostap::SymMatrix2x2                     Matrix   ;
+      /// #of entries 
+      typedef Counter::size_type                      size_type ;
       // ======================================================================
     public:
       // ======================================================================
@@ -42,8 +44,8 @@ namespace Ostap
       // constructor from two counters and the correlation coefficient 
       Covariance
       ( const Counter& c1       , 
-	const Counter& c2       ,
-	const double   corr = 0 ) ;
+      	const Counter& c2       ,
+	      const double   corr = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -60,20 +62,20 @@ namespace Ostap
       double        correlation () const ;
       // ======================================================================
       /// number of entries 
-      inline unsigned long long  n     () const { return m_cnt1.n     () ; }
+      inline size_type  n     () const { return m_cnt1.n     () ; }
       /// effective number of entries 
-      inline unsigned long long  nEff  () const { return m_cnt1.nEff  () ; }
+      inline size_type  nEff  () const { return m_cnt1.nEff  () ; }
       ///  number of "good" (non-zero) entries
-      inline unsigned long long  nGood () const { return m_cnt1.nGood () ; }
+      inline size_type  nGood () const { return m_cnt1.nGood () ; }
       /// empty ?
-      inline bool                empty () const { return m_cnt1.empty () ; }
+      inline bool       empty () const { return m_cnt1.empty () ; }
       // ======================================================================
     public:
       // ======================================================================
       /// add two values to the counters 
-      inline Covariance& add	
+      Covariance& add	
       ( const double x ,
-	const double y ) ;
+      	const double y ) ;
       /// add another counter 
       Covariance& add ( const Covariance& right ) ;
       // ======================================================================
@@ -86,7 +88,7 @@ namespace Ostap
       /// add x,y
       inline void update
       ( const double x ,
-	const double y ) { add ( x , y ) ; }
+	      const double y ) { add ( x , y ) ; }
       // ======================================================================
       /// reset counters 
       void reset () ;
@@ -102,28 +104,6 @@ namespace Ostap
       double            m_cov2m { 0 } ;
       // ======================================================================      
     };
-    // ========================================================================
-    /// add two values to the counters 
-    inline Covariance&
-    Covariance::add	
-    ( const double x ,
-      const double y )
-    {
-      if ( !std::isfinite( x ) || !std::isfinite ( y ) ) { return *this ; }
-      //
-      const unsigned long long nn = n ()    ;
-      if ( nn )
-        {
-          const double xA = m_cnt1.mean() ;
-          const double yA = m_cnt2.mean() ;
-          m_cov2m += ( x - xA ) * nn  * ( y - yA ) / ( nn + 1 )  ;
-        }
-      //
-      m_cnt1 += x ;
-      m_cnt2 += y ;
-      //
-      return *this ;
-    }
     // ========================================================================      
     /// external operator for addition of two covariance objects
     inline Covariance operator+ ( Covariance a , const Covariance& b ) 
@@ -148,6 +128,8 @@ namespace Ostap
       typedef Ostap::WStatEntity                Counter  ;
       /// covarinace/correlation matrices 
       typedef Ostap::Math::Covariance::Matrix   Matrix   ;
+      /// #of entries 
+      typedef Counter::size_type                size_type ;
       // ======================================================================
     public:
       // ======================================================================
@@ -175,22 +157,22 @@ namespace Ostap
       double        correlation () const ;
       // ======================================================================
       /// number of entries 
-      inline unsigned long long  n     () const { return m_cnt1.n     () ; }
+      inline size_type  n     () const { return m_cnt1.n     () ; }
       /// effective number of entries 
-      inline double              nEff  () const { return m_cnt1.nEff  () ; }
+      inline double     nEff  () const { return m_cnt1.nEff  () ; }
       ///  number of "good" (non-zero) entries
-      inline unsigned long long  nGood () const { return m_cnt1.nGood () ; }
+      inline size_t     nGood () const { return m_cnt1.nGood () ; }
       /// empty ?
-      inline bool                empty () const { return m_cnt1.empty () ; }
+      inline bool       empty () const { return m_cnt1.empty () ; }
       /// sum of weights 
-      inline double              w     () const { return m_cnt1.sumw  () ; }
+      inline double     w     () const { return m_cnt1.sumw  () ; }
       /// sum of weights 
-      inline double              sumw  () const { return m_cnt1.sumw  () ; }
+      inline double     sumw  () const { return m_cnt1.sumw  () ; }
       // ======================================================================
     public:
       // ======================================================================
       /// add two values to the counters 
-      inline WCovariance& add	
+      WCovariance& add	
       ( const double x     ,
         const double y     ,
         const double w = 1 ) ; 
@@ -223,29 +205,6 @@ namespace Ostap
       double             m_cov2m { 0 } ;
       // ======================================================================      
     };
-    // ========================================================================
-    /// add two values to the counters 
-    inline WCovariance&
-    WCovariance::add	
-    ( const double x ,
-      const double y ,
-      const double w )      
-    {
-      if ( !std::isfinite ( x ) || !std::isfinite ( y ) || !w  ) { return *this ; } 
-      //
-      const double ww = sumw ()    ;
-      if ( ww )
-        {
-          const double xA = m_cnt1.mean() ;
-          const double yA = m_cnt2.mean() ;
-          m_cov2m += ( x - xA ) * ww * w  * ( y - yA ) / ( ww + w )  ;
-        }
-      //
-      m_cnt1.add ( x , w ) ;
-      m_cnt2.add ( y , w ) ;
-      //
-      return *this ;
-    }
     // ========================================================================      
     /// external operator for addition of two covariance objects
     inline WCovariance operator+ ( WCovariance a , const WCovariance& b ) 

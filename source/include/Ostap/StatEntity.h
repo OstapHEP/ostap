@@ -53,6 +53,10 @@ namespace Ostap
   {
   public:
     // ======================================================================
+    /// the  content type: umber of entries  
+    typedef unsigned long long size_type ;
+    // ======================================================================
+  public:
     /// the default constructor
     StatEntity  () = default ;
     // ======================================================================
@@ -73,30 +77,30 @@ namespace Ostap
   public: // the basic accessors 
     // ======================================================================
     /// number of entries 
-    inline unsigned long long   n          () const { return m_n    ; }
+    inline size_type    n          () const { return m_n    ; }
     /// effective number of entries 
-    inline unsigned long long   nEff       () const { return m_n    ; }
+    inline size_type    nEff       () const { return m_n    ; }
     /// mean value 
-    inline double               mu         () const { return m_mu   ; }
+    inline double       mu         () const { return m_mu   ; }
     /// the second central moment/dispersion/variance  
-    inline double               mu2        () const { return m_mu2  ; }    
+    inline double       mu2        () const { return m_mu2  ; }    
     /// minimal value
-    inline double               min        () const { return m_min  ; }
+    inline double       min        () const { return m_min  ; }
     /// maximal valu e
-    inline double               max        () const { return m_max  ; }
+    inline double       max        () const { return m_max  ; }
     /// get number of "good" (non-zero) entries
-    inline unsigned long long   nGood      () const { return n   () ; }
+    inline size_type    nGood      () const { return n   () ; }
     // ======================================================================
   public: // derived quantities & aliases  
     // ======================================================================
     /// empty ?
-    inline bool                 empty      () const { return 0 == m_n ; }
+    inline bool          empty      () const { return 0 == m_n ; }
     /// number of entries 
-    inline unsigned long long   nEntries   () const { return m_n    ; }
+    inline size_type     nEntries   () const { return m_n    ; }
     /// variance
-    inline double               variance   () const { return m_mu2  ; }
+    inline double        variance   () const { return m_mu2  ; }
     /// dispersion 
-    inline double               dispersion () const { return m_mu2  ; }
+    inline double        dispersion () const { return m_mu2  ; }
     /// r.m.s of value
     double               rms        () const ;
     /// mean value of counter
@@ -170,11 +174,11 @@ namespace Ostap
      *  @see StatEntity::efficiency
      *  @see StatEntity::efficiencyErr
      */
-    double efficiencyErr () const ;
+    double        efficiencyErr () const ;
     /// shortcut, @see StatEntity::efficiency
-    inline double eff    () const { return efficiency    () ; }
+    inline double eff           () const { return efficiency    () ; }
     /// shortcut, @see StatEntity::efficiencyErr
-    inline double effErr () const { return efficiencyErr () ; }
+    inline double effErr        () const { return efficiencyErr () ; }
     // ======================================================================
   public: // operators
     // ======================================================================
@@ -332,21 +336,21 @@ namespace Ostap
     inline bool isfinite () const
     {
       return
-	std::isfinite ( m_mu  ) &&
-	std::isfinite ( m_mu2 ) &&
-	std::isfinite ( m_min ) &&
-	std::isfinite ( m_max ) ;	
+  	  std::isfinite ( m_mu  ) &&
+	    std::isfinite ( m_mu2 ) &&
+	    std::isfinite ( m_min ) &&
+	    std::isfinite ( m_max ) ;	
     }
     // ======================================================================
   private: // data members 
     // ======================================================================
     /// number of calls
-    unsigned long long m_n   { 0 } ;
+    size_type m_n   { 0 } ;
     /// accumulated flag
-    double             m_mu  { 0 } ;
-    double             m_mu2 { 0 } ;
-    double             m_min {   std::numeric_limits<double>::max() } ;
-    double             m_max { - std::numeric_limits<double>::max() } ;
+    double    m_mu  { 0 } ;
+    double    m_mu2 { 0 } ;
+    double    m_min {   std::numeric_limits<double>::max() } ;
+    double    m_max { - std::numeric_limits<double>::max() } ;
     // ======================================================================
   };
   // ========================================================================

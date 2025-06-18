@@ -20,6 +20,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Names.h"
+#include "Ostap/Combiner.h"
 #include "Ostap/Formula.h"
 #include "Ostap/Iterator.h"
 #include "Ostap/Notifier.h"
@@ -31,6 +32,7 @@
 #include "Ostap/GetWeight.h"
 #include "Ostap/Moments.h"
 #include "Ostap/ECDF.h"
+#include "Ostap/Covariances.h"
 #include "Ostap/DataFrameUtils.h"
 #include "Ostap/ProgressBar.h"
 // ============================================================================
@@ -955,19 +957,16 @@ Ostap::StatVar::statCov
  *  @date   2023-02-28
  */
 // ============================================================================
-Ostap::StatiusCode Ostap::StatVar::statCov
-( TTree*                          data       , 
-  Ostap::StatVar::StatVector&     stats      ,  
-  TMatrixTSym<double>&            cov2       , 
-  const std::vector<std::string>& exressions , 
-  const std::string&              sekection  = ""                ,
-  const Ostap::EventIndex         first      = Ostap::FirstEvent ,
-  const Ostap::EventIndex         last       = Ostap::LastEvent  ) const
+Ostap::StatusCode Ostap::StatVar::statCov
+( TTree*                          data        ,   
+  Ostap::Math::Covariances&       stats       ,  
+  const Ostap::Strings&           expressions , 
+  const std::string&              selection   ,
+  const Ostap::EventIndex         first       ,
+  const Ostap::EventIndex         last        ) const
 {
   const std::size_t N = expressions.size() ;
-  stats.resize ( N ) ; 
-  for ( auto& r : result ) { r.reset () ; }
-  cov2 = TMatrixTSym<double>( N ) ;
+  stats = Ostap::Math::Covariances (  N  ) ; 
   //
   if ( nullptr == data     ) { return INVALID_TREE ; }
   if ( expressions.empty() ) { return Ostap::StatusCode::SUCCESS ; }
@@ -982,13 +981,14 @@ Ostap::StatiusCode Ostap::StatVar::statCov
   // 
   Ostap::Utils::Notifier    notify  ( formulae.begin() , formulae.end() , cuts.get() , data ) ;
   // 
-  const bool                with_cuts = cuts & cuts->ok() ;
+  const bool                with_cuts = cuts && cuts->ok() ;
   //
   typedef std::vector<double> RESULT  ;
   typedef std::vector<RESULT> RESULTS ;
   RESULTS results {} ;
+  RESULT  input   ( N , 0.0 ) ;
   //
-  Ostap::Utils::PorogressBar bar {the_last - first , m_progress } ;
+  Ostap::Utils::ProgressBar bar {the_last - first , m_progress } ;
   for ( Ostap::EventIndex    entry = first ; entry < the_last  ; ++entry , ++bar )
     {
       //
@@ -999,38 +999,19 @@ Ostap::StatiusCode Ostap::StatVar::statCov
       const double cut = with_cuts ? cuts ->evaluate() : 1.0 ;
       if ( !cut ) { continue  ; }
       //
-      for ( std::size_t i = 0 ; i < N ; ++i ) 
-	{ formulae.evaluate ( i , results [ i ] ) ; }
+      for ( std::size_t i = 0 ; i < N ; ++i )  { formulae.evaluate ( i , results [ i ] ) ; }
       //
-      for ( std::size_t i = 0 ; i < N ; ++i ) 
-	{ for ( const double ri : results [ i ] ) 
-	    { // update counters 
-	      stats [ i ].add ( ri ) ;
-	      for ( std::size_t j = i  ; j < N ; ++j ) 
-		{ for ( const double rj : results [ j ] ) 
-		    { cov2 ( i , j ) += ri * rj ; } } } }
+      Ostap::Combiner_<RESULT> combiner { results.begin() , results.end() };
+      while ( combiner.valid() ) 
+      {
+        //get the curren combination 
+        combiner.current ( input.begin() ) ;
+        // update counter 
+        stats.add ( input ) ; 
+        // go to next combination
+        ++combiner ; 
+      } 
     }
-  //
-  // empty counters ?
-  const std::size_t num = stats[0].nEntries() ;
-  if ( !num ) { return Ostap::StatusCode::SUCCESS ; }        // ATTENTION 
-  //
-  cov2 *= 1.0 / size ;
-  /// 
-  for ( std::size_Ti = 0 ; i < N ; ++i ) 
-    {
-      const double vi_mean = stats[i].mean() ;
-      for ( std::size_t j = i ; j < N ; ++j ) 
-        {
-          const double vj_mean = stats[j].mean() ;
-          cov2 ( i , j ) -= vi_mean * vj_mean ;
-        }
-    }
-  //
-  /// strange lines.... due to ROOT 
-  for ( unsigned int i = 0 ; i < N ; ++i ) 
-    { for ( unsigned int j = 0 ; j < i ; ++j ) 
-        { if ( !cov2 ( i , j ) ) { cov2 ( i , j ) = cov2 ( j , i ) ; } } }
   //
   return Ostap::StatusCode::SUCCESS ; 
 }
@@ -1047,19 +1028,17 @@ Ostap::StatiusCode Ostap::StatVar::statCov
  *  @date   2023-02-28
  */
 // ============================================================================
-Ostap::StatiusCode Ostap::StatVar::statCov
-( TTree*                          data       , 
-  Ostap::StatVar::WStatVector&    stats      ,  
-  TMatrixTSym<double>&            cov2       , 
-  const std::vector<std::string>& exressions , 
-  const std::string&              sekection  = ""                ,
-  const Ostap::EventIndex         first      = Ostap::FirstEvent ,
-  const Ostap::EventIndex         last       = Ostap::LastEvent  ) const
+Ostap::StatusCode 
+Ostap::StatVar::statCov
+( TTree*                          data        ,   
+  Ostap::Math::WCovariances&      stats       ,  
+  const Ostap::Strings&           expressions , 
+  const std::string&              selection   ,
+  const Ostap::EventIndex         first       ,
+  const Ostap::EventIndex         last        ) const
 {
   const std::size_t N = expressions.size() ;
-  stats.resize ( N ) ; 
-  for ( auto& r : result ) { r.reset () ; }
-  cov2 = TMatrixTSym<double>( N ) ;
+  stats = Ostap::Math::WCovariances (  N  ) ; 
   //
   if ( nullptr == data     ) { return INVALID_TREE ; }
   if ( expressions.empty() ) { return Ostap::StatusCode::SUCCESS ; }
@@ -1070,62 +1049,41 @@ Ostap::StatiusCode Ostap::StatVar::statCov
   //
   /// formulae for exressons
   const Ostap::Formulae                 formulae { data , expressions } ;  
-  const std::unique_ptr<Ostap::Formula> cuts     { make_formula ( selection , data , true ) } ;  
+  const std::unique_ptr<Ostap::Formula> cuts     { make_formula ( selection , data , true ) } ;    
   // 
   Ostap::Utils::Notifier    notify  ( formulae.begin() , formulae.end() , cuts.get() , data ) ;
   // 
-  const bool                with_cuts = cuts & cuts->ok() ;
+  const bool                with_cuts = cuts && cuts->ok() ;
   //
   typedef std::vector<double> RESULT  ;
   typedef std::vector<RESULT> RESULTS ;
   RESULTS results {} ;
+  RESULT  input   ( N , 0.0 ) ;
   //
-  Ostap::Utils::PorogressBar bar {the_last - first , m_progress } ;
-  for ( Ostap::EventIndex   entry = first ; entry < the_last  ; ++entry , ++bar )
+  Ostap::Utils::ProgressBar bar {the_last - first , m_progress } ;
+  for ( Ostap::EventIndex    entry = first ; entry < the_last  ; ++entry , ++bar )
     {
       //
       const long ievent = data -> GetEntryNumber ( entry ) ;
       if ( 0 > ievent                    ) { return INVALID_ENTRY ; } // RETURN
       if ( 0 > data->LoadTree ( ievent ) ) { return INVALID_EVENT ; } // RETURN
       //
-      const double weight = with_cuts ? cuts ->evaluate() : 1.0 ;
+      const double weight  = with_cuts ? cuts ->evaluate() : 1.0 ;
       if ( !weight ) { continue  ; }
       //
-      for ( std::size_t i = 0 ; i < N ; ++i ) 
-	{ formulae.evaluate ( i , results [ i ] ) ; }
+      for ( std::size_t i = 0 ; i < N ; ++i )  { formulae.evaluate ( i , results [ i ] ) ; }
       //
-      for ( std::size_t i = 0 ; i < N ; ++i ) 
-	{ for ( const double ri : results [ i ] ) 
-	    { // update counters 
-	      stats [ i ].add ( ri , weight ) ;
-	      for ( std::size_t j = i  ; j < N ; ++j ) 
-		{ for ( const double rj : results [ j ] ) 
-		    { cov2 ( i , j ) += weight * ri * rj ; } } } }
+      Ostap::Combiner_<RESULT> combiner { results.begin() , results.end() };
+      while ( combiner.valid() ) 
+      {
+        //get the curren combination 
+        combiner.current ( input.begin() ) ;
+        // update counter 
+        stats.add ( input , weight ) ; 
+        // go to next combination
+        ++combiner ; 
+      } 
     }
-  //
-  // empty counters ?
-  const std::size_t num  = stats[0].nEntries () ;
-  const souble      sumw = stats[0].sumw     () ;
-  // 
-  if ( !num  ) { return Ostap::StatusCode::SUCCESS ; }        // ATTENTION 
-  if ( !sumw ) { return INVALID_SUMWEIGHT          ; }        // ATTENTION 
-  //
-  cov2 *= 1.0 / sumw ;
-  /// 
-  for ( std::size_Ti = 0 ; i < N ; ++i ) 
-    {
-      const double vi_mean = stats[i].mean() ;
-      for ( std::size_t j = i ; j < N ; ++j ) 
-        {
-          const double vj_mean = stats[j].mean() ;
-          cov2 ( i , j ) -= vi_mean * vj_mean ;
-        }
-    }
-  //
-  /// strange lines.... due to ROOT 
-  for ( unsigned int i = 0 ; i < N ; ++i ) 
-    { for ( unsigned int j = 0 ; j < i ; ++j ) 
-        { if ( !cov2 ( i , j ) ) { cov2 ( i , j ) = cov2 ( j , i ) ; } } }
   //
   return Ostap::StatusCode::SUCCESS ; 
 }
@@ -1142,26 +1100,24 @@ Ostap::StatiusCode Ostap::StatVar::statCov
  *  @date   2023-02-28
  */
 // ============================================================================
-Ostap::StatiusCode statCov
-( const RooAbsData*               data       , 
-  Ostap::StatVar::WStatVector&    stats      ,  
-  TMatrixTSym<double>&            cov2       , 
-  const std::vector<std::string>& exressions , 
-  const std::string&              sekection  ,
-  const std::string&              cut_range  , 
-  const Ostap::EventIndex         first      ,
-  const Ostap::EventIndex         last       ) const
+Ostap::StatusCode 
+Ostap::StatVar::statCov
+( const RooAbsData*               data        , 
+  Ostap::Math::WCovariances&      stats       ,   
+  const Ostap::Strings&           expressions , 
+  const std::string&              selection   ,
+  const std::string&              cut_range   , 
+  const Ostap::EventIndex         first       , 
+  const Ostap::EventIndex         last        ) const
 {
-  
+  // 
   const std::size_t N = expressions.size() ;
-  stats.resize ( N ) ; 
-  for ( auto& r : result ) { r.reset () ; }
-  cov2 = TMatrixTSym<double>( N ) ;
+  stats = Ostap::Math::WCovariances (  N  ) ; 
   //
   if ( nullptr == data     ) { return INVALID_DATA ; }
   if ( expressions.empty() ) { return Ostap::StatusCode::SUCCESS ; }
   //
-  const Ostap::EventIndex num_entries =  data-> numEntries () ;
+  const Ostap::EventIndex num_entries =  data -> numEntries () ;
   const Ostap::EventIndex the_last    = std::min ( first , num_entries ) ;
   if ( the_last <= first   ) { return Ostap::StatusCode::SUCCESS ; }
   //
@@ -1169,17 +1125,14 @@ Ostap::StatiusCode statCov
   const Ostap::FormulaVars                 formulae { data , expressions } ;  
   const std::unique_ptr<Ostap::FormulaVar> cuts     { make_formula ( selection , data , true ) } ;  
   // 
-  Ostap::Utils::Notifier    notify  ( formulae.begin() , formulae.end() , cuts.get() , data ) ;
-  //
-  
-  const bool  with_cuts = cuts & cuts->ok() ;
+  const bool  with_cuts = cuts && cuts->ok() ;
   const char* cutrange  = cut_range.empty() ? nullptr : cut_range.c_str() ;
-  const bool  weighted  = data->isWeigted() ;
+  const bool  weighted  = data->isWeighted() ;
   //
   typedef std::vector<double> RESULTS ;
-  RESULTS results { N } ;
+  RESULTS result ( N , 0.0 ) ;
   //
-  Ostap::Utils::PorogressBar bar {the_last - first , m_progress } ;
+  Ostap::Utils::ProgressBar bar {the_last - first , m_progress } ;
   for ( Ostap::EventIndex   entry = first ; entry < the_last  ; ++entry , ++bar )
     {
       //
@@ -1194,47 +1147,14 @@ Ostap::StatiusCode statCov
       const double wc = with_cuts ? cuts->getVal() : 1.0 ;
       if ( !wc )                                        { continue ; } // CONTINUE  
       //
-      const doble weight = wd * wc ;
+      const double weight = wd * wc ;
       if ( !weight )                                    { continue ; } // CONTINUE  
       //
       // evaluate all expressions 
       for ( std::size_t i = 0 ; i < N ; ++i ) { result[i] = formulae.evaluate ( i ) ; }
       //
-      for ( std::size_t i = 0 ; i < N ; ++i ) 
-	{
-	  const double ru = results [ i ] ;
-	  stats [ i ].add ( ri , weight ) ;
-	  for ( std::size_t j = i  ; j < N ; ++j )
-	    {
-	      const double ri = results [ j ] ;
-	      cov2 ( i , j ) += weight * ri * rj ; 
-	    }
-	}
-    }
-  //
-  // empty counters ?
-  const std::size_t num  = stats[0].nEntries () ;
-  const souble      sumw = stats[0].sumw     () ;
-  // 
-  if ( !num  ) { return Ostap::StatusCode::SUCCESS ; }        // ATTENTION 
-  if ( !sumw ) { return INVALID_SUMWEIGHT          ; }        // ATTENTION 
-  //
-  cov2 *= 1.0 / sumw ;
-  /// 
-  for ( std::size_Ti = 0 ; i < N ; ++i ) 
-    {
-      const double vi_mean = stats[i].mean() ;
-      for ( std::size_t j = i ; j < N ; ++j ) 
-        {
-          const double vj_mean = stats[j].mean() ;
-          cov2 ( i , j ) -= vi_mean * vj_mean ;
-        }
-    }
-  //
-  /// strange lines.... due to ROOT 
-  for ( unsigned int i = 0 ; i < N ; ++i ) 
-    { for ( unsigned int j = 0 ; j < i ; ++j ) 
-        { if ( !cov2 ( i , j ) ) { cov2 ( i , j ) = cov2 ( j , i ) ; } } }
+      stats.add ( result , weight ) ;
+    } 
   //
   return Ostap::StatusCode::SUCCESS ; 
 }
@@ -1288,7 +1208,7 @@ Ostap::StatVar::ECDF
   const std::string&      expression , 
   const std::string&      selection  , 
   const Ostap::EventIndex first      ,
-  const Ostap::EventIndex last       )
+  const Ostap::EventIndex last       ) const
 {
   // reset ECDF 
   ecdf = Ostap::Math::WECDF () ;
@@ -1316,7 +1236,7 @@ Ostap::StatVar::ECDF
   const std::string&      selection  , 
   const std::string&      cut_range  , 
   const Ostap::EventIndex first      ,
-  const Ostap::EventIndex last       ) 
+  const Ostap::EventIndex last       ) const
 {
   // reset ECDF 
   ecdf = Ostap::Math::WECDF () ;

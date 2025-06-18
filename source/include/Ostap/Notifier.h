@@ -76,7 +76,7 @@ namespace  Ostap
       // ======================================================================
       // add object to the notification list 
       template <class TYPE>
-      inline bool add  ( std::unique_ptr<TYPE>& o ) 
+      inline bool add  ( const std::unique_ptr<TYPE>& o ) 
       { return this -> add ( o.get() ) ; }
       // ======================================================================
       /// is this object known for notifier ? 

@@ -19,6 +19,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Clausen.cpp
                          src/Combine.cpp
                          src/Covariance.cpp
+                         src/Covariances.cpp
                          src/COWs.cpp
                          src/Dalitz.cpp
                          src/DalitzIntegrator.cpp
@@ -69,7 +70,7 @@ add_library(ostap SHARED src/format.cpp
                          src/MoreRooFit.cpp
                          src/MoreVars.cpp
                          src/Mute.cpp
-			 src/Names.cpp 
+			             src/Names.cpp 
                          src/NStatEntity.cpp
                          src/Notifier.cpp
                          src/Ostap.cpp
