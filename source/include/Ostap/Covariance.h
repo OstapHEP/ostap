@@ -24,7 +24,7 @@ namespace Ostap
      *  Counter for two variables which also counts the covariance 
      *  @see Ostap::StatEntity
      */
-    class Covariance
+    class Covariance : public Ostap::Math::Statistic2 
     {
       // ======================================================================
     public: 
@@ -45,7 +45,7 @@ namespace Ostap
       Covariance
       ( const Counter& c1       , 
       	const Counter& c2       ,
-	      const double   corr = 0 ) ;
+	const double   corr = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -86,12 +86,14 @@ namespace Ostap
     public:
       // ======================================================================
       /// add x,y
-      inline void update
+      void update
       ( const double x ,
-	      const double y ) { add ( x , y ) ; }
+	const double y ) override { add ( x , y ) ; }
       // ======================================================================
       /// reset counters 
-      void reset () ;
+      void reset () override ;
+      // ======================================================================
+    public :
       // ======================================================================
       // everything is finite?
       inline bool isfinite () const
@@ -119,7 +121,7 @@ namespace Ostap
      *  Counter for two variables which also counts the covariance 
      *  @see Ostap::WStatEntity
      */
-    class WCovariance
+    class WCovariance : public Ostap::Math::WStatistic2 
     {
       // ======================================================================
     public: 
@@ -139,8 +141,8 @@ namespace Ostap
       // constructor from two counters and the correlation coefficient
       WCovariance
       ( const Counter& c1       , 
-	      const Counter& c2       ,
-	      const double   corr = 0 ) ;
+	const Counter& c2       ,
+	const double   corr = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -175,7 +177,7 @@ namespace Ostap
       WCovariance& add	
       ( const double x     ,
         const double y     ,
-        const double w = 1 ) ; 
+        const double w = 1 ) ;
       /// add another counter 
       WCovariance& add ( const WCovariance& right ) ;
       // ======================================================================
@@ -189,10 +191,12 @@ namespace Ostap
       inline void update
       ( const double x     ,
         const double y     ,
-        const double w = 1 ) { add ( x , y , w ) ; }
+        const double w = 1 ) override { add ( x , y , w ) ; }
       // ======================================================================
       /// reset counters 
-      void reset () ;
+      void reset () override ;
+      // ======================================================================
+    public:
       // ======================================================================
       // everything is finite?
       inline bool isfinite () const

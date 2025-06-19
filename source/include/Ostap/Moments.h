@@ -53,9 +53,390 @@ namespace  Ostap
      *        arbitrary weights". Comput Stat 31, 1305–1325 (2016). 
      *  @see https://doi.org/10.1007/s00180-015-0637-z
      */
+    template <unsigned short N> class Moment_ ;
+    // =======================================================================
+    /// specialization for \f$N=0f\$
+    template <>
+    class Moment_<0> : public Moment 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// # entries
+      typedef unsigned long long size_type ;
+      /// data type 
+      typedef long double        data_type ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      enum _ { order = 0 } ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// (default) constructor 
+      Moment_ ( const size_type  size = 0 ) ; 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** get the value of the Nth moment 
+       *  \f[ \mu_N \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^N \f]
+       *  @return the value of the Nth central moment
+       */
+      inline double moment () const { return 1 ; }
+      // ======================================================================
+      /** get value of the kth moment for \f$  k \le N \f$
+       *  \f[ \mu_k \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^k \f]
+       *  for \f$  k > N\f$ null is returned 
+       *  @param k  the cenral moment order  \f$  0 \le k \le N \f$
+       *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
+       */
+      inline double moment ( const unsigned short k ) const { return 0 < k ? 0 : 1 ; }
+      // ========================================================================
+      /// get value of the kth standartized moment for \f$  k \le N \f$
+      inline double std_moment ( const unsigned short k ) const
+      { return 0 == k || 2 == k ? 1 : 0 ; }
+      // ======================================================================
+      /// get number of entries
+      inline size_type size  () const { return m_size  ; }
+      /// get effective number of entries 
+      inline size_type nEff  () const { return size () ; }
+      /// empty ?
+      inline bool      empty () const { return 0 == m_size ; }
+      /// ok ?
+      inline bool      ok    () const { return      m_size ; }
+      // ======================================================================
+    public: // basic operations 
+      // ======================================================================
+      /// increment with some value 
+      inline Moment_& operator+= ( const double    x ) { add ( x ) ; return *this ; }
+      /// increment with other moment 
+      inline Moment_& operator+= ( const Moment_&  x ) { add ( x ) ; return *this ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// add single value
+      inline Moment_& add ( const double   x )
+      { if ( std::isfinite ( x ) ) { ++m_size ; } ; return *this ; }
+      /// add single value
+      inline Moment_& add ( const Moment_& x    ) { m_size += x.m_size ; return *this ; }
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline
+      Moment_&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
+      // ======================================================================
+    public: // python operations 
+      // ======================================================================
+      Moment_   __add__ ( const double   x ) const { Moment_ r (*this) ; r += x ; return r ; }
+      Moment_  __radd__ ( const double   x ) const { return __add__ ( x ) ; }
+      Moment_& __iadd__ ( const double   x )       { (*this) += x ; return *this ; }
+      // ======================================================================
+      Moment_   __add__ ( const Moment_& x ) const { Moment_ r (*this) ; r += x ; return r ; }
+      Moment_  __radd__ ( const Moment_& x ) const { return __add__ ( x ) ; }
+      Moment_& __iadd__ ( const Moment_& x )       { (*this) += x ; return *this ; }
+      // ======================================================================
+    public:      
+      // ======================================================================
+      /// update the counter 
+      void update ( const double x ) override { add ( x ) ; }
+      /// Reset the content
+      void reset  () override { m_size = 0 ; }
+      // ======================================================================
+    public :
+      // ======================================================================      
+      /// is finite ?
+      inline bool isfinite () const  { return true ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** get the value of \f$ M_k = \sum_i \left( x_i - \bar{x} \right)^k \f$ 
+       *  for \f$ k \le N \f$
+       *  @param k the order   \f$  0 \le k \le N \f$
+       *  @return the value of \$ M_k \f$  if \f$  0 \le k \le  \f$, 0 otherwise 
+       */   
+      inline long double M ( const unsigned short k = 0 ) const
+      { return  0 < k ? 0 : m_size  ; }
+      // ======================================================================
+    public:
+      // ======================================================================      
+      void swap ( Moment_& right )
+      { std::swap ( m_size , right.m_size ) ; }
+      // ======================================================================
+    public: //  templated M_ 
+      // =====================================================================
+      template <unsigned  int K, typename std::enable_if<(K==0),int>::type = 0 >
+      inline long double M_ () const { return this->m_size ; }
+      // ======================================================================
+    public:  // templated moment
+      // ======================================================================
+      /// get the central moment of order K 
+      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
+      inline long double moment_ () const { return 1 ; }
+      // ======================================================================
+    public: // templated std_moment 
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
+      inline long double std_moment_ () const { return 1 ; }
+      // ======================================================================      
+    private:
+      // ======================================================================
+      size_type  m_size { 0 } ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// helper array of binomial coefficients 
+      static const std::array<unsigned long long,1> s_Ck ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /// specializaton for \f$ N=1 \f$ 
+    template <>
+    class Moment_<1> : public Moment 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      // # of entries 
+      typedef typename Moment_<0>::size_type size_type ; 
+      /// data type 
+      typedef typename Moment_<0>::data_type data_type ; 
+      // ======================================================================
+    public:
+      // ======================================================================
+      enum _ { order = 1 } ;
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /// default constructor 
+      Moment_ () = default ;
+      /// constructor from mu and previous 
+      Moment_
+      ( const Moment_<0>& prev ,	
+	const double      mu   ,
+	const double      xmin ,
+	const double      xmax ) ;
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /** get the value of the Nth moment 
+       *  \f[ \mu_N \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^N \f]
+       *  @return the value of the Nth central moment
+       */
+      inline double moment () const { return 0 ; }
+      // ======================================================================
+      /** get value of the kth moment for \f$  k \le N \f$
+       *  \f[ \mu_k \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^k \f]
+       *  for \f$  k > N\f$ null is returned 
+       *  @param k  the cenral moment order  \f$  0 \le k \le N \f$
+       *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
+       */
+      inline double moment ( const unsigned short k ) const { return 0 ; }
+      /// get value of the kth standartized moment for \f$  k \le N \f$
+      inline double std_moment ( const unsigned short k ) const
+      { return 0 == k || 2 == k ? 1 : 0 ; }
+      // ======================================================================
+      /// get number of entries
+      inline size_type  size  () const { return m_prev.size ()  ; }
+      /// get effective number of entries 
+      inline size_type  nEff  () const { return m_prev.nEff ()  ; }
+      // get the mean value
+      inline data_type  mu    () const { return m_mu            ; } 
+      /// empty ?
+      inline bool       empty () const { return m_prev.empty () ; }
+      /// ok ?
+      inline bool       ok    () const { return m_prev.ok    () ; }
+      /// minimal value
+      inline double     min   () const { return m_min ; } 
+      /// maximal value
+      inline double     max   () const { return m_max ; } 
+      // ======================================================================
+    public: // basic operations 
+      // ======================================================================
+      /// increment with some value 
+      inline Moment_& operator+= ( const double  x ) { return add ( x ) ; }
+      /// increment with other moment 
+      inline Moment_& operator+= ( const Moment_ x ) { return add ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// add single value 
+      inline Moment_& add ( const double x )
+      {
+        if ( !std::isfinite ( x ) ) { return *this ; }
+        //
+        const size_type n = m_prev.size() ;
+        m_mu = ( n * m_mu + x ) /  ( n + 1 );  // calculate new mean value 
+        m_prev += x ;                          // updated previous
+	m_min   = std::min ( m_min , x ) ;
+	m_max   = std::max ( m_max , x ) ;
+        return *this ;
+      }
+      /// add the moment 
+      inline Moment_& add ( const Moment_& x )
+      {
+        if      ( x     . empty () ) {               return *this ; }
+        else if ( this -> empty () ) { (*this) = x ; return *this ; }
+        //
+        const size_type n1 =   m_prev.size() ;
+        const size_type n2 = x.m_prev.size() ;
+        //
+        m_mu = ( n1 * m_mu + n2 * x.m_mu ) / ( n1 + n2 ) ; // update mean 
+        m_prev += x.m_prev ;                               // update previous
+	//
+	m_min = std::min ( m_min , x.m_min ) ;
+	m_max = std::max ( m_max , x.m_max ) ;	
+        //
+        return *this ;
+      }
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline
+      Moment_&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
+      // ======================================================================
+    public: // python operations 
+      // ======================================================================
+      Moment_   __add__ ( const double   x ) const { Moment_ r (*this) ; r += x ; return r ; }
+      Moment_  __radd__ ( const double   x ) const { return __add__ ( x ) ; }
+      Moment_& __iadd__ ( const double   x )       { return   add   ( x ) ; }
+      // ======================================================================
+      Moment_   __add__ ( const Moment_& x ) const { Moment_ r (*this) ; r += x ; return r ; }
+      Moment_  __radd__ ( const Moment_& x ) const { return __add__ ( x ) ; }
+      Moment_& __iadd__ ( const Moment_& x )       { return   add   ( x ) ; }
+      // ======================================================================
+    public:      
+      // ======================================================================
+      /// update the counter 
+      void update ( const double x ) override { add ( x ) ; }
+      /// Reset the content
+      void reset  () override
+      {
+	m_mu = 0 ;
+	m_min =   std::numeric_limits<double>::max () ;
+	m_max = - std::numeric_limits<double>::max () ;
+	m_prev.reset() ;
+      }
+    public :
+      // ======================================================================      
+      /// is finite ?
+      inline bool isfinite () const
+      { return
+	  std::isfinite ( m_mu  ) &&
+	  std::isfinite ( m_min ) && 
+	  std::isfinite ( m_max ) && m_prev.isfinite () ;
+      }
+      // ======================================================================
+    public:      
+      // ======================================================================
+      /// get "previos" moment 
+      inline const Moment_<0>& previous () const { return this->m_prev ; }
+      // ======================================================================
+    public: 
+      // ======================================================================
+      inline long double M ( const unsigned short k = 1 ) const
+      { return 1 < k  ? 0 : 1 == k ? 0 : this->m_prev. M ( k ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      void swap ( Moment_& right )
+      {
+        m_prev.swap ( right.m_prev ) ;
+        std::swap ( m_mu  , right.m_mu  ) ;
+        std::swap ( m_min , right.m_min ) ;
+        std::swap ( m_max , right.m_max ) ;
+      }
+      // ======================================================================
+    public:  // templated prev
+      // ======================================================================
+      template <unsigned  int K, typename std::enable_if<(K==0),int>::type = 0 >
+      const Moment_<K>& prev_ () const { return this->m_prev ; }
+      // =====================================================================
+    public: //  templated M_ 
+      // =====================================================================
+      template <unsigned  int K, typename std::enable_if<(K==1),int>::type = 0 >
+      inline data_type M_ () const { return 0 ; }
+      // =====================================================================
+      template <unsigned  int K, typename std::enable_if<(K==0),int>::type = 0 >
+      inline data_type M_ () const { return this->m_prev.template M_<K>() ; }
+      // ======================================================================
+    public:  // templated moments
+      // ======================================================================
+      /// get the central moment of order K 
+      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
+      inline data_type moment_ () const { return 1 ; }
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(K==1),int>::type = 0 >
+      inline data_type moment_ () const { return 0 ; }
+      // =======================================================================
+    public: // templated std_moment 
+      // =======================================================================
+      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
+      inline data_type std_moment_ () const { return 1 ; }
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(K==1),int>::type = 0 >
+      inline data_type std_moment_ () const { return 0 ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// 1st cumulant 
+      template <unsigned int K, typename std::enable_if<(1==K),int>::type = 0 >
+      inline data_type cumulant_ () const { return this->mu() ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// mean value 
+      inline double mean () const { return mu() ; }      
+      // =======================================================================
+    private :
+      // ======================================================================
+      Moment_<0>  m_prev {   } ;
+      /// mean value
+      data_type   m_mu   { 0 } ; // mean value
+      /// minimal value
+      double      m_min  {   std::numeric_limits<double>::max () } ;
+      /// maximal value
+      double      m_max  { - std::numeric_limits<double>::max () } ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// array of binomial coefficients 
+      static const std::array<unsigned long long,2> s_Ck ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class Moment_  Ostap/Moments.h 
+     *  Simple class to keep/calculate 
+     *  the high-order central momentts
+     *  \f[  \mu_n \equiv \frac{1}{N} \sum_{i}  \left( x_i - \bar{x} \right)^n \f] 
+     *  It implements the (single-pass) algorithm 
+     *  @see  Pebay, P., Terriberry, T.B., Kolla, H. et al. 
+     *        "Numerically stable, scalable formulas for parallel and online 
+     *        computation of higher-order multivariate central moments with 
+     *        arbitrary weights". Comput Stat 31, 1305–1325 (2016). 
+     *  @see https://doi.org/10.1007/s00180-015-0637-z
+     */
     template <unsigned short N>
     class Moment_ : public Moment 
     {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// # of entries 
+      typedef typename Moment_<0>::size_type size_type ;
+      /// data type 
+      typedef typename Moment_<0>::data_type data_type ; 
       // ======================================================================
     public:
       // ======================================================================
@@ -106,20 +487,20 @@ namespace  Ostap
       }
       // ======================================================================
       /// get number of entries
-      inline unsigned long long size  () const { return m_prev.size  () ; }
+      inline size_type size  () const { return m_prev.size  () ; }
       /// get effective number of entries 
-      inline unsigned long long nEff  () const { return m_prev.nEff  () ; }
+      inline size_type nEff  () const { return m_prev.nEff  () ; }
       /// get the mean value (if \f$ 1 \le N \$4)
-      inline long double        mu    () const { return m_prev.mu    () ; }
+      inline data_type mu    () const { return m_prev.mu    () ; }
       /// empty ?
-      inline bool               empty () const { return m_prev.empty () ; }
+      inline bool      empty () const { return m_prev.empty () ; }
       /// ok ?
-      inline bool               ok    () const { return m_prev.ok    () ; }
+      inline bool      ok    () const { return m_prev.ok    () ; }
       // ======================================================================
       /// minimal value
-      inline double             min   () const { return m_prev.min   () ; } 
+      inline double    min   () const { return m_prev.min   () ; } 
       /// maximal value
-      inline double             max   () const { return m_prev.max   () ; } 
+      inline double    max   () const { return m_prev.max   () ; } 
       // ======================================================================
     public: // basic operations for the counter 
       // ======================================================================
@@ -160,7 +541,15 @@ namespace  Ostap
       // ======================================================================
       /// update the counter 
       void update ( const double x ) override { add ( x ) ; }
+      /// Reset the content
+      void reset  () override { m_M = 0 ; m_prev.reset() ; }
       // ======================================================================
+    public :
+      // ======================================================================      
+      /// is finite ?
+      inline bool isfinite () const
+      { return std::isfinite ( m_M ) && m_prev.isfinite () ; }
+      // ======================================================================      
     public:      
       // ======================================================================
       /// get "previos" moment 
@@ -173,7 +562,7 @@ namespace  Ostap
        *  @param k the order   \f$  0 \le k \le N \f$
        *  @return the value of \$ M_k \f$  if \f$  0 \le k \le N \f$, 0 otherwise 
        */   
-      inline long double M ( const unsigned short k = N ) const
+      inline data_type M ( const unsigned short k = N ) const
       { return k >  N ? 0.0L : k == N ? this->m_M : this->m_prev.M( k ) ; }
       // ======================================================================
     public:
@@ -195,22 +584,22 @@ namespace  Ostap
     public: //  templated M_ 
       // =====================================================================
       template <unsigned  int K, typename std::enable_if<(K==N),int>::type = 0 >
-      inline long double M_ () const { return this->m_M ; }
+      inline data_type M_ () const { return this->m_M ; }
       // =====================================================================
       template <unsigned  int K, typename std::enable_if<(N>K),int>::type = 0 >
-      inline long double M_ () const { return this->m_prev.template M_<K>() ; }
+      inline data_type M_ () const { return this->m_prev.template M_<K>() ; }
       // ======================================================================
     public:  // templated moment
       // ======================================================================
       /// get the central moment of order K 
       template <unsigned int K, typename std::enable_if<(K==0)&&(K<=N),int>::type = 0 >
-      inline long double moment_ () const { return 1 ; }
+      inline data_type moment_ () const { return 1 ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(K==1)&&(N>=K),int>::type = 0 >
-      inline long double moment_ () const { return 0 ; }
+      inline data_type moment_ () const { return 0 ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(2<=K)&&(K==N),int>::type = 0 >
-      inline long double moment_ () const
+      inline data_type moment_ () const
       { return !this->ok () ? 0 : this->m_M / this->size  () ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(2<=K)&&(2*K<=N),int>::type = 0 >
@@ -218,18 +607,18 @@ namespace  Ostap
       moment_ () const
       {
         if  ( !this -> ok () ) { return 0 ; }
-        const unsigned long long n = this->size() ;
+        const size_type n = this->size() ;
         //
-        const long double muo  = this->template M_<K>   () / n ;
+        const data_type muo  = this->template M_<K>   () / n ;
         //
         if ( this -> size() < 2 * K ) { return muo ; } // error estimate is impossible 
         //
-        const long double mu2o = this->template M_<2*K> () / n ;
-        const long double muop = this->template M_<K+1> () / n ;
-        const long double muom = this->template M_<K-1> () / n ;  
-        const long double mu2  = this->template M_<2>   () / n ;  
+        const data_type mu2o = this->template M_<2*K> () / n ;
+        const data_type muop = this->template M_<K+1> () / n ;
+        const data_type muom = this->template M_<K-1> () / n ;  
+        const data_type mu2  = this->template M_<2>   () / n ;  
         //
-        long double cov2 = mu2o     ;
+        data_type cov2 = mu2o     ;
         cov2 -= 2 * K * muop * muom ;
         cov2 -=         muo  * muo  ;
         cov2 += K * K * mu2  * muom * muom ;
@@ -239,19 +628,19 @@ namespace  Ostap
       }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(N<2*K)&&(N>K),int>::type = 0 >
-      inline long double moment_ () const
+      inline data_type moment_ () const
       { return this->m_prev.template moment_<K> () ; }      
       // =======================================================================
     public: // templated std_moment 
       // =======================================================================
       template <unsigned int K, typename std::enable_if<(K==0)&&(K<=N),int>::type = 0 >
-      inline long double std_moment_ () const { return 1 ; }
+      inline data_type std_moment_ () const { return 1 ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(K==1)&&(K<=N),int>::type = 0 >
-      inline long double std_moment_ () const { return 0 ; }
+      inline data_type std_moment_ () const { return 0 ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(K==2)&&(K<=N),int>::type = 0 >
-      inline long double std_moment_ () const { return 1 ; }
+      inline data_type std_moment_ () const { return 1 ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(2<K)&&(2*K<=N),int>::type = 0 >
       inline Ostap::Math::ValueWithError
@@ -263,7 +652,7 @@ namespace  Ostap
       }      
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(N<2*K)&&(K<=N),int>::type = 0 >
-      inline long double std_moment_ () const
+      inline data_type std_moment_ () const
       {
         return
 	  !this->ok () ? 0.0 :
@@ -274,95 +663,94 @@ namespace  Ostap
       // ======================================================================      
       /// 1st cumulant 
       template <unsigned int K, typename std::enable_if<(1==K)&&(K<=N),int>::type = 0 >
-      inline long double cumulant_ () const { return this->mu() ; }
+      inline data_type cumulant_ () const { return this->mu() ; }
       /// 2nd cumulant 
       template <unsigned int K, typename std::enable_if<(2==K)&&(K<=N),int>::type = 0 >
-      inline long double cumulant_ () const 
+      inline data_type cumulant_ () const 
       { return !this->ok() ? 0.0 : this->template M_<K>() / this->size() ; }
       /// 3rd cumulant 
       template <unsigned int K, typename std::enable_if<(3==K)&&(K<=N),int>::type = 0 >
-      inline long double cumulant_ () const 
+      inline data_type cumulant_ () const 
       { return !this->ok() ? 0.0 : this->template M_<K>() / this->size() ; }
       /// 4th cumulant 
       template <unsigned int K, typename std::enable_if<(4==K)&&(K<=N),int>::type = 0 >
-      inline long double cumulant_ () const 
+      inline data_type cumulant_ () const 
       { 
         if ( !this->ok() ) { return 0.0 ; }
         //
-        const long double m4 = this->template M_<4> () / this->size() ;
-        const long double m2 = this->template M_<2> () / this->size() ;
+        const data_type m4 = this->template M_<4> () / this->size() ;
+        const data_type m2 = this->template M_<2> () / this->size() ;
         //
         return m4 - 3 * m2 * m2 ;
       }
       /// 5th cumulant 
       template <unsigned int K, typename std::enable_if<(5==K)&&(K<=N),int>::type = 0 >
-      inline long double cumulant_ () const 
+      inline data_type cumulant_ () const 
       { 
         if ( !this->ok() ) { return 0.0 ; }
         //
-        const long double m5 = this->template M_<5> () / this->size() ;
-        const long double m3 = this->template M_<3> () / this->size() ;
-        const long double m2 = this->template M_<2> () / this->size() ;
+        const data_type m5 = this->template M_<5> () / this->size() ;
+        const data_type m3 = this->template M_<3> () / this->size() ;
+        const data_type m2 = this->template M_<2> () / this->size() ;
         //
         return m5 - 10  *m3 * m2 ;
       }
       /// 6th cumulant 
       template <unsigned int K, typename std::enable_if<(6==K)&&(K<=N),int>::type = 0 >
-      inline long double cumulant_ () const 
+      inline data_type cumulant_ () const 
       { 
         if ( !this->ok() ) { return 0.0 ; }
         //
-        const long double m6 = this->template M_<6> () / this->size() ;       
-        const long double m4 = this->template M_<4> () / this->size() ;
-        const long double m3 = this->template M_<3> () / this->size() ;
-        const long double m2 = this->template M_<2> () / this->size() ;
+        const data_type m6 = this->template M_<6> () / this->size() ;       
+        const data_type m4 = this->template M_<4> () / this->size() ;
+        const data_type m3 = this->template M_<3> () / this->size() ;
+        const data_type m2 = this->template M_<2> () / this->size() ;
         //
         return m6 - 15 * m4 * m2 - 10 * m3 * m3 + 30 * m2 * m2 * m2 ;
       }
       /// 7th cumulant 
       template <unsigned int K, typename std::enable_if<(7==K)&&(K<=N),int>::type = 0 >
-      inline long double cumulant_ () const 
+      inline data_type cumulant_ () const 
       { 
         if ( !this->ok() ) { return 0.0 ; }
         //
-        const long double m7 = this->template M_<7> () / this->size() ;       
-        const long double m5 = this->template M_<5> () / this->size() ;       
-        const long double m4 = this->template M_<4> () / this->size() ;
-        const long double m3 = this->template M_<3> () / this->size() ;
-        const long double m2 = this->template M_<2> () / this->size() ;
+        const data_type m7 = this->template M_<7> () / this->size() ;       
+        const data_type m5 = this->template M_<5> () / this->size() ;       
+        const data_type m4 = this->template M_<4> () / this->size() ;
+        const data_type m3 = this->template M_<3> () / this->size() ;
+        const data_type m2 = this->template M_<2> () / this->size() ;
         //
         return m7 - 21 * m5 * m2 - 35 * m4 * m3 + 210 *m3 * m2 * m2 ;
       }
       /// 8th cumulant 
       template <unsigned int K, typename std::enable_if<(8==K)&&(K<=N),int>::type = 0 >
-      inline long double cumulant_ () const 
+      inline data_type cumulant_ () const 
       { 
         if ( !this->ok() ) { return 0.0 ; }
         //
-        const long double m8 = this->template M_<8> () / this->size() ;       
-        const long double m6 = this->template M_<6> () / this->size() ;       
-        const long double m5 = this->template M_<5> () / this->size() ;       
-        const long double m4 = this->template M_<4> () / this->size() ;
-        const long double m3 = this->template M_<3> () / this->size() ;
-        const long double m2 = this->template M_<2> () / this->size() ;
+        const data_type m8 = this->template M_<8> () / this->size() ;       
+        const data_type m6 = this->template M_<6> () / this->size() ;       
+        const data_type m5 = this->template M_<5> () / this->size() ;       
+        const data_type m4 = this->template M_<4> () / this->size() ;
+        const data_type m3 = this->template M_<3> () / this->size() ;
+        const data_type m2 = this->template M_<2> () / this->size() ;
         //
         return m8 - 28 * m6 * m2 - 56 * m5 * m3 - 35 * m4 * m4 
-        + 420 * m4 * m2 * m2 + 560 * m3 * m3 * m2 - 630 * m2 * m2 * m2 * m2 ;
-        
+        + 420 * m4 * m2 * m2 + 560 * m3 * m3 * m2 - 630 * m2 * m2 * m2 * m2 ;        
       }
       /// 9th cumulant 
       template <unsigned int K, typename std::enable_if<(9==K)&&(K<=N),int>::type = 0 >
-      inline long double cumulant_ () const 
+      inline data_type cumulant_ () const 
       { 
         if ( !this->ok() ) { return 0.0 ; }
         //
-        const long double m9 = this->template M_<9> () / this->size() ;       
-        const long double m7 = this->template M_<7> () / this->size() ;       
-        const long double m6 = this->template M_<6> () / this->size() ;       
-        const long double m5 = this->template M_<5> () / this->size() ;       
-        const long double m4 = this->template M_<4> () / this->size() ;
-        const long double m3 = this->template M_<3> () / this->size() ;
-        const long double m2 = this->template M_<2> () / this->size() ;
+        const data_type m9 = this->template M_<9> () / this->size() ;       
+        const data_type m7 = this->template M_<7> () / this->size() ;       
+        const data_type m6 = this->template M_<6> () / this->size() ;       
+        const data_type m5 = this->template M_<5> () / this->size() ;       
+        const data_type m4 = this->template M_<4> () / this->size() ;
+        const data_type m3 = this->template M_<3> () / this->size() ;
+        const data_type m2 = this->template M_<2> () / this->size() ;
         //
         return m9 - 36 * m7 * m2 - 84 * m6 * m3 - 126 * m5 * m4 
         + 756 * m5 * m2 * m2 + 2520 * m4 * m3 * m2 
@@ -371,18 +759,18 @@ namespace  Ostap
       }
       /// 10th cumulant 
       template <unsigned int K, typename std::enable_if<(10==K)&&(K<=N),int>::type = 0 >
-      inline long double cumulant_ () const 
+      inline data_type cumulant_ () const 
       { 
         if ( !this->ok() ) { return 0.0 ; }
         //
-        const long double m10 = this->template M_<10> () / this->size() ;       
-        const long double m8  = this->template M_<8>  () / this->size() ;       
-        const long double m7  = this->template M_<7>  () / this->size() ;       
-        const long double m6  = this->template M_<6>  () / this->size() ;       
-        const long double m5  = this->template M_<5>  () / this->size() ;       
-        const long double m4  = this->template M_<4>  () / this->size() ;
-        const long double m3  = this->template M_<3>  () / this->size() ;
-        const long double m2  = this->template M_<2>  () / this->size() ;
+        const data_type m10 = this->template M_<10> () / this->size() ;       
+        const data_type m8  = this->template M_<8>  () / this->size() ;       
+        const data_type m7  = this->template M_<7>  () / this->size() ;       
+        const data_type m6  = this->template M_<6>  () / this->size() ;       
+        const data_type m5  = this->template M_<5>  () / this->size() ;       
+        const data_type m4  = this->template M_<4>  () / this->size() ;
+        const data_type m3  = this->template M_<3>  () / this->size() ;
+        const data_type m2  = this->template M_<2>  () / this->size() ;
         //
         return m10 - 45 * m8 * m2 - 120 * m7 * m3 - 210 * m6 * m4 
         + 1260  * m6 * m2 * m2       - 126   * m5 * m5
@@ -396,7 +784,7 @@ namespace  Ostap
       /// counter of (N-1)th order
       Moment_<N-1> m_prev {   }  ;  // counter of (N-1)th order
       /// the current value of \f$ N_N \f$  
-      long double   m_M   { 0 }  ; // the current value
+      data_type    m_M   { 0 }  ; // the current value
       // ======================================================================
     private:
       // ======================================================================
@@ -417,22 +805,22 @@ namespace  Ostap
       //
       if ( !std::isfinite ( x ) ) { return *this ; } // NB: NO ACTION!!
       //
-      const auto nA = this->size() ;
-      const unsigned long long nB =      1 ;
-      const unsigned long long nN = nA + 1 ;
+      const size_type nA = this->size() ;
+      const size_type nB =      1 ;
+      const size_type nN = nA + 1 ;
       //
-      const long double delta = x - this -> mu () ;
-      const long double b_n   =      -1.0L / nN ;
-      const long double a_n   =  nA * 1.0L / nN ;
-      const long double d_n   = - delta    / nN ;
+      const data_type delta = x - this -> mu () ;
+      const data_type b_n   =      -1.0L / nN ;
+      const data_type a_n   =  nA * 1.0L / nN ;
+      const data_type d_n   = - delta    / nN ;
       //
       m_M += ( nA * std::pow ( b_n , N ) + std::pow ( a_n , N ) ) * std::pow ( delta , N ) ;
-      long double d = 1 ;
+      data_type d = 1 ;
       for ( unsigned int k = 1 ; k + 2 <= N ; ++k )
-      {
-        d   *= d_n ;
-        m_M += s_Ck [ k ] * this-> M ( N - k ) * d   ;
-      }
+	{
+	  d   *= d_n ;
+	  m_M += s_Ck [ k ] * this-> M ( N - k ) * d   ;
+	}
       /// update previous 
       this->m_prev += x ; // update previous
       //
@@ -447,355 +835,33 @@ namespace  Ostap
       if      ( x     . empty () ) {               return *this ; }
       else if ( this -> empty () ) { (*this) = x ; return *this ; }
       //
-      const unsigned long long nA    = this->size () ;
-      const unsigned long long nB    =    x. size () ;
-      const unsigned long long nN    = nA + nB       ;
-      const long double        delta = x.mu() - this->mu() ;
-      const long double        b_n   =  ( -1.0L * nB ) / nN ;
-      const long double        a_n   =  (  1.0L * nA ) / nN ;
+      const size_type nA    = this->size () ;
+      const size_type nB    =    x. size () ;
+      const size_type nN    = nA + nB       ;
+      //
+      const data_type delta = x.mu() - this->mu() ;
+      const data_type b_n   =  ( -1.0L * nB ) / nN ;
+      const data_type a_n   =  (  1.0L * nA ) / nN ;
       //
       m_M += x.m_M ;
       m_M += nA * std::pow ( b_n * delta , N ) + nB * std::pow ( a_n * delta , N ) ;
       //
-      long double a = 1 ;
-      long double b = 1 ;
-      long double d = 1 ;
+      data_type a = 1 ;
+      data_type b = 1 ;
+      data_type d = 1 ;
       //
       for ( unsigned short k = 1 ; k + 2 <= N ; ++k )
-      {
-        a   *= a_n   ;
-        b   *= b_n   ;
-        d   *= delta ;        
-        m_M += s_Ck [ k ] * d * ( this-> M( N -k ) * b + x. M ( N - k ) * a ) ;
-      }
+	{
+	  a   *= a_n   ;
+	  b   *= b_n   ;
+	  d   *= delta ;        
+	  m_M += s_Ck [ k ] * d * ( this-> M( N -k ) * b + x. M ( N - k ) * a ) ;
+	}
       /// update previous 
       this->m_prev += x.m_prev ; // update previous
       //
       return *this ;
     }
-    // =======================================================================
-    /// specialization for \f$N=0f\$
-    template <>
-    class Moment_<0> : public Moment 
-    {
-      // ======================================================================
-    public:
-      // ======================================================================
-      enum _ { order = 0 } ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// (default) constructor 
-      Moment_ ( const unsigned long long size = 0 ) ; 
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** get the value of the Nth moment 
-       *  \f[ \mu_N \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^N \f]
-       *  @return the value of the Nth central moment
-       */
-      inline double moment () const { return 1 ; }
-      // ======================================================================
-      /** get value of the kth moment for \f$  k \le N \f$
-       *  \f[ \mu_k \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^k \f]
-       *  for \f$  k > N\f$ null is returned 
-       *  @param k  the cenral moment order  \f$  0 \le k \le N \f$
-       *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
-       */
-      inline double moment ( const unsigned short k ) const { return 0 < k ? 0 : 1 ; }
-      // ========================================================================
-      /// get value of the kth standartized moment for \f$  k \le N \f$
-      inline double std_moment ( const unsigned short k ) const
-      { return 0 == k || 2 == k ? 1 : 0 ; }
-      // ======================================================================
-      /// get number of entries
-      inline unsigned long long size  () const { return m_size  ; }
-      /// get effective number of entries 
-      inline unsigned long long nEff  () const { return size () ; }
-      /// empty ?
-      inline bool               empty () const { return 0 == m_size ; }
-      /// ok ?
-      inline bool               ok    () const { return      m_size ; }
-      // ======================================================================
-    public: // basic operations 
-      // ======================================================================
-      /// increment with some value 
-      inline Moment_& operator+= ( const double    x ) { add ( x ) ; return *this ; }
-      /// increment with other moment 
-      inline Moment_& operator+= ( const Moment_&  x ) { add ( x ) ; return *this ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// add single value
-      inline Moment_& add ( const double   x )
-      { if ( std::isfinite ( x ) ) { ++m_size ; } ; return *this ; }
-      /// add single value
-      inline Moment_& add ( const Moment_& x    ) { m_size += x.m_size ; return *this ; }
-      /// add sequence of values  
-      template <class ITERATOR>
-      inline
-      Moment_&
-      add
-      ( ITERATOR begin ,
-        ITERATOR end   )
-      {
-        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
-        return *this ;
-      }
-      // ======================================================================
-    public: // python operations 
-      // ======================================================================
-      Moment_   __add__ ( const double   x ) const { Moment_ r (*this) ; r += x ; return r ; }
-      Moment_  __radd__ ( const double   x ) const { return __add__ ( x ) ; }
-      Moment_& __iadd__ ( const double   x )       { (*this) += x ; return *this ; }
-      // ======================================================================
-      Moment_   __add__ ( const Moment_& x ) const { Moment_ r (*this) ; r += x ; return r ; }
-      Moment_  __radd__ ( const Moment_& x ) const { return __add__ ( x ) ; }
-      Moment_& __iadd__ ( const Moment_& x )       { (*this) += x ; return *this ; }
-      // ======================================================================
-    public:      
-      // ======================================================================
-      /// update the counter 
-      void update ( const double x ) override { add ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** get the value of \f$ M_k = \sum_i \left( x_i - \bar{x} \right)^k \f$ 
-       *  for \f$ k \le N \f$
-       *  @param k the order   \f$  0 \le k \le N \f$
-       *  @return the value of \$ M_k \f$  if \f$  0 \le k \le  \f$, 0 otherwise 
-       */   
-      inline long double M ( const unsigned short k = 0 ) const
-      { return  0 < k ? 0 : m_size  ; }
-      // ======================================================================
-    public:
-      // ======================================================================      
-      void swap ( Moment_& right )
-      { std::swap ( m_size , right.m_size ) ; }
-      // ======================================================================
-    public: //  templated M_ 
-      // =====================================================================
-      template <unsigned  int K, typename std::enable_if<(K==0),int>::type = 0 >
-      inline long double M_ () const { return this->m_size ; }
-      // ======================================================================
-    public:  // templated moment
-      // ======================================================================
-      /// get the central moment of order K 
-      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
-      inline long double moment_ () const { return 1 ; }
-      // ======================================================================
-    public: // templated std_moment 
-      // ======================================================================
-      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
-      inline long double std_moment_ () const { return 1 ; }
-      // ======================================================================      
-    private:
-      // ======================================================================
-      unsigned long long m_size { 0 } ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// helper array of binomial coefficients 
-      static const std::array<unsigned long long,1> s_Ck ;
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /// specializaton for \f$ N=1 \f$ 
-    template <>
-    class Moment_<1> : public Moment 
-    {
-      // ======================================================================
-    public:
-      // ======================================================================
-      enum _ { order = 1 } ;
-      // ======================================================================
-    public: 
-      // ======================================================================
-      /// default constructor 
-      Moment_ () = default ;
-      /// constructor from mu and previous 
-      Moment_
-      ( const Moment_<0>& prev ,	
-	const double      mu   ,
-	const double      xmin ,
-	const double      xmax ) ;
-      // ======================================================================
-    public: 
-      // ======================================================================
-      /** get the value of the Nth moment 
-       *  \f[ \mu_N \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^N \f]
-       *  @return the value of the Nth central moment
-       */
-      inline double moment () const { return 0 ; }
-      // ======================================================================
-      /** get value of the kth moment for \f$  k \le N \f$
-       *  \f[ \mu_k \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^k \f]
-       *  for \f$  k > N\f$ null is returned 
-       *  @param k  the cenral moment order  \f$  0 \le k \le N \f$
-       *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
-       */
-      inline double moment ( const unsigned short k ) const { return 0 ; }
-      /// get value of the kth standartized moment for \f$  k \le N \f$
-      inline double std_moment ( const unsigned short k ) const
-      { return 0 == k || 2 == k ? 1 : 0 ; }
-      // ======================================================================
-      /// get number of entries
-      inline unsigned long long size  () const { return m_prev.size ()  ; }
-      /// get effective number of entries 
-      inline unsigned long long nEff  () const { return m_prev.nEff ()  ; }
-      // get the mean value
-      inline long double        mu    () const { return m_mu            ; } 
-      /// empty ?
-      inline bool               empty () const { return m_prev.empty () ; }
-      /// ok ?
-      inline bool               ok    () const { return m_prev.ok    () ; }
-      /// minimal value
-      inline double             min   () const { return m_min ; } 
-      /// maximal value
-      inline double             max   () const { return m_max ; } 
-      // ======================================================================
-    public: // basic operations 
-      // ======================================================================
-      /// increment with some value 
-      inline Moment_& operator+= ( const double  x ) { return add ( x ) ; }
-      /// increment with other moment 
-      inline Moment_& operator+= ( const Moment_ x ) { return add ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// add single value 
-      inline Moment_& add ( const double x )
-      {
-        if ( !std::isfinite ( x ) ) { return *this ; }
-        //
-        const auto n = m_prev.size() ;
-        m_mu = ( n * m_mu + x ) /  ( n + 1 );  // calculate new mean value 
-        m_prev += x ;                          // updated previous
-	m_min   = std::min ( m_min , x ) ;
-	m_max   = std::max ( m_max , x ) ;
-        return *this ;
-      }
-      /// add the moment 
-      inline Moment_& add ( const Moment_& x )
-      {
-        if      ( x     . empty () ) {               return *this ; }
-        else if ( this -> empty () ) { (*this) = x ; return *this ; }
-        //
-        const unsigned long long n1 =   m_prev.size() ;
-        const unsigned long long n2 = x.m_prev.size() ;
-        //
-        m_mu = ( n1 * m_mu + n2 * x.m_mu ) / ( n1 + n2 ) ; // update mean 
-        m_prev += x.m_prev ;                               // update previous
-	//
-	m_min = std::min ( m_min , x.m_min ) ;
-	m_max = std::max ( m_max , x.m_max ) ;	
-        //
-        return *this ;
-      }
-      /// add sequence of values  
-      template <class ITERATOR>
-      inline
-      Moment_&
-      add
-      ( ITERATOR begin ,
-        ITERATOR end   )
-      {
-        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
-        return *this ;
-      }
-      // ======================================================================
-    public: // python operations 
-      // ======================================================================
-      Moment_   __add__ ( const double   x ) const { Moment_ r (*this) ; r += x ; return r ; }
-      Moment_  __radd__ ( const double   x ) const { return __add__ ( x ) ; }
-      Moment_& __iadd__ ( const double   x )       { return   add   ( x ) ; }
-      // ======================================================================
-      Moment_   __add__ ( const Moment_& x ) const { Moment_ r (*this) ; r += x ; return r ; }
-      Moment_  __radd__ ( const Moment_& x ) const { return __add__ ( x ) ; }
-      Moment_& __iadd__ ( const Moment_& x )       { return   add   ( x ) ; }
-      // ======================================================================
-    public:      
-      // ======================================================================
-      /// update the counter 
-      void update ( const double x ) override { add ( x ) ; }
-      // ======================================================================
-    public:      
-      // ======================================================================
-      /// get "previos" moment 
-      inline const Moment_<0>& previous () const { return this->m_prev ; }
-      // ======================================================================
-    public: 
-      // ======================================================================
-      inline long double M ( const unsigned short k = 1 ) const
-      { return 1 < k  ? 0 : 1 == k ? 0 : this->m_prev. M ( k ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      void swap ( Moment_& right )
-      {
-        m_prev.swap ( right.m_prev ) ;
-        std::swap ( m_mu  , right.m_mu  ) ;
-        std::swap ( m_min , right.m_min ) ;
-        std::swap ( m_max , right.m_max ) ;
-      }
-      // ======================================================================
-    public:  // templated prev
-      // ======================================================================
-      template <unsigned  int K, typename std::enable_if<(K==0),int>::type = 0 >
-      const Moment_<K>& prev_ () const { return this->m_prev ; }
-      // =====================================================================
-    public: //  templated M_ 
-      // =====================================================================
-      template <unsigned  int K, typename std::enable_if<(K==1),int>::type = 0 >
-      inline long double M_ () const { return 0 ; }
-      // =====================================================================
-      template <unsigned  int K, typename std::enable_if<(K==0),int>::type = 0 >
-      inline long double M_ () const { return this->m_prev.template M_<K>() ; }
-      // ======================================================================
-    public:  // templated moments
-      // ======================================================================
-      /// get the central moment of order K 
-      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
-      inline long double moment_ () const { return 1 ; }
-      // ======================================================================
-      template <unsigned int K, typename std::enable_if<(K==1),int>::type = 0 >
-      inline long double moment_ () const { return 0 ; }
-      // =======================================================================
-    public: // templated std_moment 
-      // =======================================================================
-      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
-      inline long double std_moment_ () const { return 1 ; }
-      // ======================================================================
-      template <unsigned int K, typename std::enable_if<(K==1),int>::type = 0 >
-      inline long double std_moment_ () const { return 0 ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// 1st cumulant 
-      template <unsigned int K, typename std::enable_if<(1==K),int>::type = 0 >
-      inline long double cumulant_ () const { return this->mu() ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// mean value 
-      inline double mean () const { return mu() ; }      
-      // =======================================================================
-    private :
-      // ======================================================================
-      Moment_<0>  m_prev {   } ;
-      /// mean value
-      long double m_mu   { 0 } ; // mean value
-      /// minimal value
-      double      m_min  {   std::numeric_limits<double>::max () } ;
-      /// maximal value
-      double      m_max  { - std::numeric_limits<double>::max () } ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// array of binomial coefficients 
-      static const std::array<unsigned long long,2> s_Ck ;
-      // ======================================================================
-    } ;
     // ========================================================================
     // Operations with counters 
     // =========================================================================
@@ -835,12 +901,471 @@ namespace  Ostap
       // ======================================================================      
     } ;
     // ========================================================================
-    /// forward declaration 
+    /** @class WMoment_  Ostap/Moments.h 
+     *  Simple class to keep/calculate 
+     *  the summable  high-order weighted central momentts
+     *  \f[  \mu_n \equiv \frac{1}{\sum w_i} \sum_{i}  w_i \left( x_i - \bar{x} \right)^n \f] 
+     *  It implements the (single-pass) algorithm 
+     *  @see  Pebay, P., Terriberry, T.B., Kolla, H. et al. 
+     *        "Numerically stable, scalable formulas for parallel and online 
+     *        computation of higher-order multivariate central moments with 
+     *        arbitrary weights". Comput Stat 31, 1305–1325 (2016). 
+     *  @see https://doi.org/10.1007/s00180-015-0637-z
+     */
     template <unsigned short N> class WMoment_    ;
-    /// template spccialization for N=0
-    template <>                 class WMoment_<0> ;
-    /// template spccialization for N=1
-    template <>                 class WMoment_<1> ;
+    // ========================================================================    
+    /// specialization for \f$ N=0 f\$
+    template <>
+    class WMoment_<0> : public WMoment 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// # of entries 
+      typedef typename Moment_<0>::size_type size_type ;
+      /// data type 
+      typedef typename Moment_<0>::data_type data_type ; 
+      // ======================================================================
+    public:
+      // ======================================================================
+      enum _ { order = 0 } ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// default constructor 
+      WMoment_ () = default ;
+      // ======================================================================
+      /** full constructor
+       *  @param size number of entries 
+       *  @param sumw sum of weights 
+       *  @param sumw sum of squared weights 
+       *  @param wmin minimal weight 
+       *  @param wmax maximal weight 
+       */
+      WMoment_
+      ( const size_type size  ,
+	const double    sumw  ,
+	const double    sumw2 , 
+	const double    wmin  , 
+	const double    wmax  ) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /** get the value of the 0th moment 
+       *  \f[ \mu_N \equiv  \frac{1}{\sum w_i } \sum w_i \left( x_i - \bar{x} \right)^0 \f]
+       *  @return the value of the 0th central moment
+       */
+      inline double moment () const { return 1 ; }
+      // ======================================================================
+      /** get value of the kth moment for \f$  k \le N \f$
+       *  \f[ \mu_k \equiv  \frac{1}{\sum w_i} \sum w_i \left( x_i - \bar{x} \right)^k \f]
+       *  for \f$  k > 0 \f$ null is returned 
+       *  @param k  the cenral moment order  \f$  0 \le k \le N \f$
+       *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
+       */
+      inline double moment ( const unsigned short k ) const { return 0 < k ? 0 : 1 ; }
+      // ======================================================================
+      /// get value of the kth standartized moment for \f$  k \le N \f$
+      inline double std_moment ( const unsigned short k ) const
+      { return 0 == k || 2 == k ? 1 : 0 ; }
+      // ======================================================================
+      /// get number of entries
+      inline size_type size  () const { return m_size ; }
+      /// get effective number of entries \f$  \frac{(\sum w_i)^2}{\sum w_i^2} \f$
+      inline data_type nEff  () const { return m_w2 ? m_w * m_w / m_w2 : -1.0 ; }
+      /// get sum of weights  \f$  \sum w_i \f$  
+      inline data_type w     () const { return m_w    ; }
+      /// get sum of weights squared  \f$  \sum w_i^2 \f$  
+      inline data_type w2    () const { return m_w2   ; }
+      /// empty ?
+      inline bool      empty () const { return 0 == m_size ; }
+      /// ok ?
+      inline bool      ok    () const { return m_size && m_w && ( 0 < m_w2 ) ; }
+      /// minimal weight 
+      inline double    wmin  () const { return m_wmin ; } 
+      /// maximal weight 
+      inline double    wmax  () const { return m_wmax ; }       
+      // ======================================================================
+    public: // basic operations 
+      // ======================================================================
+      /// increment with other moment 
+      inline WMoment_& operator+= ( const WMoment_&  x ) { return add ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// add a single value
+      inline WMoment_& add
+      ( const double x     ,
+        const double w = 1 )
+      {
+        /// INVALID values&weight and ZERO weight are ignred 
+        if ( !w || !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ;}
+        //
+        ++m_size ;
+	//
+        m_w   += w     ; 
+        m_w2  += w * w ;
+	//
+	m_wmin = std::min ( m_wmin , w ) ;
+	m_wmax = std::max ( m_wmax , w ) ;
+        //
+        return *this ; 
+      }
+      /// add a single value
+      inline WMoment_& add ( const WMoment_& x )
+      {
+        if ( !x.m_w ) { return *this ; }
+        //
+        m_size += x.m_size ;
+        m_w    += x.m_w    ;
+        m_w2   += x.m_w2   ;
+        //
+	m_wmin = std::min ( m_wmin , x.m_wmin ) ;
+	m_wmax = std::max ( m_wmax , x.m_wmax ) ;
+	//
+        return *this ;
+      }
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline
+      WMoment_&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
+      // ======================================================================
+    public: // python operations 
+      // ======================================================================
+      WMoment_   __add__ ( const WMoment_& x ) const { WMoment_ r (*this) ; r += x ; return r ; }
+      WMoment_  __radd__ ( const WMoment_& x ) const { return __add__ ( x ) ; }
+      WMoment_& __iadd__ ( const WMoment_& x )       { return   add   ( x ) ; }
+      // ======================================================================
+    public:      
+      // ======================================================================
+      /// update the counter 
+      void update
+      ( const double x     ,
+	const double w = 1 ) override { add ( x , w ) ; }
+      /// Reset the content
+      void reset  () override
+      {
+	m_size = 0 ;
+	m_w    = 0 ;
+	m_w2   = 0 ;
+	m_wmin =   std::numeric_limits<double>::max () ;
+	m_wmax = - std::numeric_limits<double>::max () ;
+      }
+      // ======================================================================      
+    public :
+      // ======================================================================      
+      /// is finite ?
+      inline bool isfinite () const
+      { return
+	  std::isfinite ( m_w    ) &&
+	  std::isfinite ( m_w2   ) &&
+	  std::isfinite ( m_wmin ) &&
+	  std::isfinite ( m_wmax ) ; 
+      }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** get the value of \f$ M_k = \sum_i w_i \left( x_i - \bar{x} \right)^k \f$ 
+       *  for \f$ k \le N \f$
+       *  @param k the order   \f$  0 \le k \le N \f$
+       *  @return the value of \$ M_k \f$  if \f$  0 \le k \le  \f$, 0 otherwise 
+       */   
+      inline data_type M ( const unsigned short k = 0 ) const
+      { return  0 < k ? 0 : m_w ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      void swap ( WMoment_& right )
+      {
+        std::swap ( m_size , right.m_size ) ;
+        std::swap ( m_w    , right.m_w    ) ;
+        std::swap ( m_w2   , right.m_w2   ) ;
+        std::swap ( m_wmin , right.m_wmin ) ;
+        std::swap ( m_wmax , right.m_wmax ) ;
+      }
+      // ======================================================================
+    public: //  templated M_ 
+      // =====================================================================
+      template <unsigned  int K, typename std::enable_if<(K==0),int>::type = 0 >
+      inline data_type M_ () const { return this->m_w ; }
+      // ======================================================================
+    public:  // templated moment
+      // ======================================================================
+      /// get the central moment of order K 
+      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
+      inline data_type moment_ () const { return 1 ; }
+      // ======================================================================
+    public: // templated std_moment 
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
+      inline data_type std_moment_ () const { return 1 ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// number of entries 
+      size_type  m_size { 0 } ; // number of entries
+      /// sum of weights \f$  \sum w_i \f$ 
+      data_type  m_w    { 0 } ; // sum of weights
+      /// sum of weights squared \f$  \sum w_i^2 \f$ 
+      data_type  m_w2   { 0 } ; // sum of weights squared 
+      // ======================================================================
+      /// minimal weight 
+      double     m_wmin {   std::numeric_limits<double>::max () } ;
+      /// maximal weight 
+      double     m_wmax { - std::numeric_limits<double>::max () } ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// helper array of binomial coefficients 
+      static const std::array<unsigned long long,1> s_Ck ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /// specializaton for \f$ N=1 \f$ 
+    template <>
+    class WMoment_<1> : public WMoment 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// # of entries 
+      typedef typename WMoment_<0>::size_type size_type ;
+      /// data type 
+      typedef typename WMoment_<0>::data_type data_type ; 
+      // ======================================================================
+    public:
+      // ======================================================================
+      enum _ { order = 1 } ;
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /// default constructor 
+      WMoment_ () = default ;
+      // ======================================================================
+      /// constructor from mu and previous moment 
+      WMoment_
+      ( const WMoment_<0>& prev ,
+	const double       mu   ,
+	const double       xmin ,
+	const double       xmax ) ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /** get the value of the 1st moment 
+       *  \f[ \mu_N \equiv  \frac{1}{N} \sum w_i \left( x_i - \bar{x} \right)^1 \f]
+       *  @return the value of the 1st central moment
+       */
+      inline double moment () const { return 0 ; }
+      // ======================================================================
+      /** get value of the kth moment for \f$  k \le N \f$
+       *  \f[ \mu_k \equiv  \frac{1}{\sum w_i } \sum w_i \left( x_i - \bar{x} \right)^k \f]
+       *  for \f$  k > N\f$ null is returned 
+       *  @param k  the cenral moment order  \f$  0 \le k \le N \f$
+       *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
+       */
+      inline double moment ( const unsigned short k ) const { return 1 <= k ? 0 : 1 ; }
+      // ======================================================================
+      /// get value of the kth standartized moment for \f$  k \le N \f$
+      inline double std_moment ( const unsigned short k ) const
+      { return 0 == k || 2 == k ? 1 : 0 ; }
+      // ======================================================================
+      /// get number of entries
+      inline size_type size  () const { return m_prev.size ()  ; }
+      /// get effective number of entries \f$  \frac{(\sum w_i)^2}{\sum w_i^2} \f$
+      inline data_type nEff  () const { return m_prev.nEff () ; }
+      /// get sum of weights \f$ \sum w_i \f$
+      inline data_type w     () const { return m_prev.w    () ; }
+      /// get sum of weights squared 
+      inline data_type w2    () const { return m_prev.w2   () ; }
+      // get the mean value
+      inline data_type mu    () const { return m_mu           ; } 
+      /// empty ?
+      inline bool      empty () const { return m_prev.empty () ; }
+      /// ok ?
+      inline bool      ok    () const { return m_prev.ok    () ; }
+      /// minimal value
+      inline double    min   () const { return m_min ; } 
+      /// maximal value
+      inline double    max   () const { return m_max ; }       
+      // ======================================================================
+      /// minimal weight 
+      inline double    wmin  () const { return m_prev.wmin () ; } 
+      /// maximal weight 
+      inline double    wmax  () const { return m_prev.wmax () ; }
+      // ======================================================================      
+    public: // basic operations 
+      // ======================================================================
+      /// increment with other moment 
+      inline WMoment_& operator+= ( const WMoment_ x ) { return add ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// add single value 
+      inline WMoment_& add ( const double x , const double w = 1 )
+      {
+        /// INVALUID values and weights are ignored 
+        if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
+        /// ZERO weights are ignored 
+        if ( !w )                                           { return *this ; }  // ZERO weights are ignored 
+        //
+        const data_type wA = this -> w() ;
+        const data_type wB = w ;
+        //
+        m_mu = ( wA * m_mu + wB * x ) / ( wA + wB ) ; // update mean
+        // minimal 
+	m_min = std::min ( m_min , x ) ;
+	// maximal
+	m_max = std::max ( m_max , x ) ;
+	//
+        this->m_prev.add ( x , w ) ;
+        //
+        return *this ;
+      }
+      /// add another moment 
+      inline WMoment_& add ( const WMoment_& x )  
+      {
+        if      ( x     . empty () ) {               return *this ; }
+        else if ( this -> empty () ) { (*this) = x ; return *this ; }
+        //
+        const data_type wB = x.m_prev.w () ;
+        if ( !wB ) { return *this ; }
+        //
+        const data_type wA = m_prev.w   () ;
+        m_mu = ( wA * m_mu + wB * x.m_mu ) / ( wA + wB ) ; // update mean
+        //
+        // minimal 
+	m_min = std::min ( m_min , x.m_min ) ;
+	// maximal
+	m_max = std::max ( m_max , x.m_max ) ;
+	//
+        m_prev += x.m_prev ;                                 // update previous
+        //
+        return *this ;
+      }
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline
+      WMoment_&
+      add
+      ( ITERATOR begin ,
+        ITERATOR end   )
+      {
+        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
+        return *this ;
+      }
+      // ====================================================================== 
+   public: // python operations 
+      // ======================================================================
+      WMoment_   __add__ ( const WMoment_& x ) const { WMoment_ r (*this) ; r += x ; return r ; }
+      WMoment_  __radd__ ( const WMoment_& x ) const { return __add__ ( x ) ; }
+      WMoment_& __iadd__ ( const WMoment_& x )       { return   add   ( x ) ; }
+      // ======================================================================
+   public:      
+      // ======================================================================
+      /// update the counter 
+      void update
+      ( const double x     ,
+	const double w = 1 ) override { add ( x , w ) ; }
+      /// Reset the content
+      void reset  () override
+      {
+	m_mu = 0 ;
+	m_min =   std::numeric_limits<double>::max () ;
+	m_max = - std::numeric_limits<double>::max () ;
+	m_prev.reset () ;
+      }
+      // ======================================================================      
+    public :
+      // ======================================================================      
+      /// is finite ?
+      inline bool isfinite () const
+      { return
+	  std::isfinite ( m_mu  ) &&
+	  std::isfinite ( m_min ) &&
+	  std::isfinite ( m_max ) && m_prev.isfinite () ;
+      }      
+      // ======================================================================
+    public:      
+      // ======================================================================
+      /// get "previos" moment 
+      const WMoment_<0>& previous () const { return this->m_prev ; }
+      // ======================================================================
+    public: 
+      // ======================================================================
+      inline data_type M ( const unsigned short k = 1 ) const
+      { return 1 < k  ? 0 : 1 == k ? 0 : this->m_prev. M ( k ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      void swap ( WMoment_& right )
+      {
+        m_prev.swap ( right.m_prev ) ;
+        std::swap ( m_mu  , right.m_mu  ) ;
+        std::swap ( m_min , right.m_min ) ;
+        std::swap ( m_max , right.m_max ) ;
+      }
+      // ======================================================================
+    public:  // templated prev
+      // ======================================================================
+      template <unsigned  int K, typename std::enable_if<(K==0),int>::type = 0 >
+      const WMoment_<K>& prev_ () const { return this->m_prev ; }
+      // =====================================================================
+    public: //  templated M_ 
+      // =====================================================================
+      template <unsigned  int K, typename std::enable_if<(K==1),int>::type = 0 >
+      inline data_type M_ () const { return 0 ; }
+      // =====================================================================
+      template <unsigned  int K, typename std::enable_if<(K==0),int>::type = 0 >
+      inline data_type M_ () const { return this->m_prev.template M_<K>() ; }
+      // ======================================================================
+    public:  // templated moments
+      // ======================================================================
+      /// get the central moment of order K 
+      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
+      inline data_type moment_ () const { return 1 ; }
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(K==1),int>::type = 0 >
+      inline data_type moment_ () const { return 0 ; }
+      // =======================================================================
+    public: // templated std_moment 
+      // =======================================================================
+      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
+      inline data_type std_moment_ () const { return 1 ; }
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(K==1),int>::type = 0 >
+      inline data_type std_moment_ () const { return 0 ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// mean value 
+      inline double mean () const { return mu() ; }      
+      // =======================================================================
+    private:
+      // ======================================================================
+      WMoment_<0>  m_prev {   } ;
+      /// mean value
+      data_type m_mu    { 0 } ; // mean value
+      // ======================================================================
+      /// minimal value
+      double    m_min  {   std::numeric_limits<double>::max () } ;
+      /// maximal value
+      double    m_max  { - std::numeric_limits<double>::max () } ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// array of binomial coefficients 
+      static const std::array<unsigned long long,2> s_Ck ;
+      // ======================================================================
+    } ;
     // ========================================================================
     /** @class WMoment_  Ostap/Moments.h 
      *  Simple class to keep/calculate 
@@ -856,6 +1381,13 @@ namespace  Ostap
     template <unsigned short N>
     class WMoment_ : public WMoment 
     {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// # of entries 
+      typedef typename WMoment_<0>::size_type size_type ;
+      /// data type 
+      typedef typename WMoment_<0>::data_type data_type ; 
       // ======================================================================
     public:
       // ======================================================================
@@ -910,29 +1442,29 @@ namespace  Ostap
       }
       // ======================================================================
       /// get number of entries
-      inline unsigned long long size  () const { return m_prev.size () ; }
+      inline size_type size  () const { return m_prev.size () ; }
       /// get effective number of entries \f$  \frac{(\sum w_i)^2}{\sum w_i^2} \f$
-      inline long double        nEff  () const { return m_prev.nEff () ; }
+      inline data_type nEff  () const { return m_prev.nEff () ; }
       /// get sum of weighes \f$  \sum_i w_i \f$ 
-      inline long double        w     () const { return m_prev.w    () ; }
+      inline data_type w     () const { return m_prev.w    () ; }
       /// get sum of weights squared 
-      inline long double        w2    () const { return m_prev.w2   () ; }
+      inline data_type w2    () const { return m_prev.w2   () ; }
       /// get the weighted mean value (if \f$ 1 \le N \$4)
-      inline long double        mu    () const { return m_prev.mu   () ; } 
+      inline data_type mu    () const { return m_prev.mu   () ; } 
       /// empty ?
-      inline bool               empty () const { return m_prev.empty () ; }
+      inline bool      empty () const { return m_prev.empty () ; }
       /// ok ?
-      inline bool               ok    () const { return m_prev.ok    () ; }
+      inline bool      ok    () const { return m_prev.ok    () ; }
       // ======================================================================
       /// minimal value
-      inline double             min  () const { return m_prev.min   () ; } 
+      inline double    min  () const { return m_prev.min   () ; } 
       /// maximal value
-      inline double             max  () const { return m_prev.max   () ; } 
+      inline double    max  () const { return m_prev.max   () ; } 
       // ======================================================================
       /// minimal weight 
-      inline double             wmin  () const { return m_prev.wmin () ; } 
+      inline double    wmin  () const { return m_prev.wmin () ; } 
       /// maximal weight 
-      inline double             wmax  () const { return m_prev.wmax () ; }
+      inline double    wmax  () const { return m_prev.wmax () ; }
       // ======================================================================      
     public: // basic operations for the counter 
       // ======================================================================
@@ -966,7 +1498,21 @@ namespace  Ostap
    public:      
       // ======================================================================
       /// update the counter 
-      void update ( const double x , const double w = 1 ) override { add ( x , w ) ; }
+      void update
+      ( const double x     ,
+	const double w = 1 ) override { add ( x , w ) ; }
+      /// Reset the content
+      void reset  () override
+      {
+	m_M = 0 ;
+	m_prev.reset() ;
+      }      
+      // ======================================================================      
+    public :
+      // ======================================================================      
+      /// is finite ?
+      inline bool isfinite () const
+      { return std::isfinite ( m_M ) && m_prev.isfinite () ;}
       // ======================================================================
     public:      
       // ======================================================================
@@ -980,7 +1526,7 @@ namespace  Ostap
        *  @param k the order   \f$  0 \le k \le N \f$
        *  @return the value of \$ M_k \f$  if \f$  0 \le k \le N \f$, 0 otherwise 
        */   
-      inline long double M ( const unsigned short k = N ) const
+      inline data_type M ( const unsigned short k = N ) const
       { return k >  N ? 0.0L : k == N ? this->m_M : this->m_prev.M( k ) ; }
       // ======================================================================
     public:
@@ -1002,26 +1548,26 @@ namespace  Ostap
     public: //  templated M_ 
       // =====================================================================
       template <unsigned  int K, typename std::enable_if<(K==N),int>::type = 0 >
-      inline long double M_ () const { return this->m_M ; }
+      inline data_type M_ () const { return this->m_M ; }
       // =====================================================================
       template <unsigned  int K, typename std::enable_if<(N>K) ,int>::type = 0 >
-      inline long double M_ () const { return this->m_prev.template M_<K>() ; }
+      inline data_type M_ () const { return this->m_prev.template M_<K>() ; }
       // ======================================================================
     public:  // templated moment
       // ======================================================================      
       /// get the central moment of order K 
       template <unsigned int K, typename std::enable_if<(K==0)&&(K<=N),int>::type = 0 >
-      inline long double moment_ () const { return 1 ; }
+      inline data_type moment_ () const { return 1 ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(K==1)&&(K<=N),int>::type = 0 >
-      inline long double moment_ () const { return 0 ; }
+      inline data_type moment_ () const { return 0 ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(2<=K)&&(K==N),int>::type = 0 >
-      inline long double moment_ () const
+      inline data_type moment_ () const
       { return !this->ok() ?  0 : this->m_M / this->w () ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(N<2*K)&&(N>K),int>::type = 0 >
-      inline long double moment_ () const
+      inline data_type moment_ () const
       { return this->m_prev.template moment_<K> () ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(2<=K)&&(2*K<=N),int>::type = 0 >
@@ -1033,13 +1579,13 @@ namespace  Ostap
         //
 		const long double n = this->w() ; // ATENTION!
         //
-        const long double muo  = this->template M_ <K>  () / n ;
-        const long double mu2o = this->template M_<2*K> () / n ;
-        const long double muop = this->template M_<K+1> () / n ;
-        const long double muom = this->template M_<K-1> () / n ;  
-        const long double mu2  = this->         M_<2>   () / n ;  
+        const data_type muo  = this->template M_ <K>  () / n ;
+        const data_type mu2o = this->template M_<2*K> () / n ;
+        const data_type muop = this->template M_<K+1> () / n ;
+        const data_type muom = this->template M_<K-1> () / n ;  
+        const data_type mu2  = this->         M_<2>   () / n ;  
         //
-        long double cov2 = mu2o     ;
+        data_type cov2 = mu2o     ;
         cov2 -= 2 * N * muop * muom ;
         cov2 -=         muo  * muo  ;
         cov2 += N * N * mu2  * muom * muom ;
@@ -1051,13 +1597,13 @@ namespace  Ostap
     public: // templated std_moment 
       // =======================================================================
       template <unsigned int K, typename std::enable_if<(K==0)&&(K<=N),int>::type = 0 >
-      inline long double std_moment_ () const { return 1 ; }
+      inline data_type std_moment_ () const { return 1 ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(K==1)&&(K<=N),int>::type = 0 >
-      inline long double std_moment_ () const { return 0 ; }
+      inline data_type std_moment_ () const { return 0 ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(K==2)&&(K<=N),int>::type = 0 >
-      inline long double std_moment_ () const { return 1 ; }
+      inline data_type std_moment_ () const { return 1 ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(2<K)&&(2*K<=N),int>::type = 0 >
       inline Ostap::Math::ValueWithError
@@ -1068,7 +1614,7 @@ namespace  Ostap
       }      
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(N<2*K)&&(K<=N),int>::type = 0 >
-      inline long double std_moment_ () const
+      inline data_type std_moment_ () const
       {
         return !this->ok() ? 0.0 :
           this->template moment_<K> () / std::pow ( this->moment_<2>() , 0.5 * K ) ;
@@ -1079,7 +1625,7 @@ namespace  Ostap
       /// counter of (N-1)th order
       WMoment_<N-1> m_prev {}   ;  // counter of (N-1)th order
       /// the current value of \f$ M_N \f$  
-      long double   m_M   {0}  ; // the current value
+      data_type     m_M   {0}  ; // the current value
       // ======================================================================
     private:
       // ======================================================================
@@ -1101,18 +1647,18 @@ namespace  Ostap
       /// ZERO weights are also ignored 
       if ( !w )                                           { return *this ; }  // ZERO weights are ignored 
       //
-      const long double wA    = this->w () ;
-      const long double wB    =       w    ;
+      const data_type wA    = this->w () ;
+      const data_type wB    =       w    ;
       //
-      const long double wW    = wA + wB    ;
-      const long double delta = x - this->mu() ;
+      const data_type wW    = wA + wB    ;
+      const data_type delta = x - this->mu() ;
       //
-      const long double b_n =  -1.0L * wB / wW ;
-      const long double a_n =   1.0L * wA / wW ;
-      const long double d_n = - delta     / wW ;
+      const data_type b_n =  -1.0L * wB / wW ;
+      const data_type a_n =   1.0L * wA / wW ;
+      const data_type d_n = - delta     / wW ;
       //
       m_M += ( wA * std::pow ( b_n , N ) + wB * std::pow ( a_n , N ) ) * std::pow ( delta , N ) ;
-      long double d = 1 ;
+      data_type d = 1 ;
       for ( unsigned int k = 1 ; k + 2 <= N ; ++k )
       {
         d   *= d_n ;
@@ -1132,22 +1678,22 @@ namespace  Ostap
       if      ( x     . empty () ) {               return *this ; }
       else if ( this -> empty () ) { (*this) = x ; return *this ; }
       //
-      const long double wB    =  x. w () ;
+      const data_type wB    =  x. w () ;
       if ( !wB ) {               return *this ; }                    // RETURN! 
       //
-      const long double wA    = this->w () ;
+      const data_type wA    = this->w () ;
       //
-      const long double wW    = wA + wB    ;
-      const long double delta = x.mu () - this->mu ()  ;
-      const long double b_n   =  ( -1.0L * wB ) / wW ;
-      const long double a_n   =  (  1.0L * wA ) / wW ;
+      const data_type wW    = wA + wB    ;
+      const data_type delta = x.mu () - this->mu ()  ;
+      const data_type b_n   =  ( -1.0L * wB ) / wW ;
+      const data_type a_n   =  (  1.0L * wA ) / wW ;
       //
       m_M += x.m_M ;
       m_M += wA * std::pow ( b_n * delta , N ) + wB * std::pow ( a_n * delta , N ) ;
       //
-      long double a = 1 ;
-      long double b = 1 ;
-      long double d = 1 ;
+      data_type a = 1 ;
+      data_type b = 1 ;
+      data_type d = 1 ;
       //
       for ( unsigned short k = 1 ; k + 2 <= N ; ++k )
       {
@@ -1162,403 +1708,7 @@ namespace  Ostap
       return *this ;
     }
     // =======================================================================
-    /// specialization for \f$ N=0 f\$
-    template <>
-    class WMoment_<0> : public WMoment 
-    {
-      // ======================================================================
-    public:
-      // ======================================================================
-      enum _ { order = 0 } ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// default constructor 
-      WMoment_ () = default ;
-      // ======================================================================
-      /** full constructor
-       *  @param size number of entries 
-       *  @param sumw sum of weights 
-       *  @param sumw sum of squared weights 
-       *  @param wmin minimal weight 
-       *  @param wmax maximal weight 
-       */
-      WMoment_
-      ( const unsigned long long size  ,
-	const double             sumw  ,
-	const double             sumw2 , 
-	const double             wmin  , 
-	const double             wmax  ) ;
-      // ======================================================================
-    public : 
-      // ======================================================================
-      /** get the value of the 0th moment 
-       *  \f[ \mu_N \equiv  \frac{1}{\sum w_i } \sum w_i \left( x_i - \bar{x} \right)^0 \f]
-       *  @return the value of the 0th central moment
-       */
-      inline double moment () const { return 1 ; }
-      // ======================================================================
-      /** get value of the kth moment for \f$  k \le N \f$
-       *  \f[ \mu_k \equiv  \frac{1}{\sum w_i} \sum w_i \left( x_i - \bar{x} \right)^k \f]
-       *  for \f$  k > 0 \f$ null is returned 
-       *  @param k  the cenral moment order  \f$  0 \le k \le N \f$
-       *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
-       */
-      inline double moment ( const unsigned short k ) const { return 0 < k ? 0 : 1 ; }
-      // ======================================================================
-      /// get value of the kth standartized moment for \f$  k \le N \f$
-      inline double std_moment ( const unsigned short k ) const
-      { return 0 == k || 2 == k ? 1 : 0 ; }
-      // ======================================================================
-      /// get number of entries
-      inline unsigned long long size  () const { return m_size ; }
-      /// get effective number of entries \f$  \frac{(\sum w_i)^2}{\sum w_i^2} \f$
-      inline long double        nEff  () const { return m_w2 ? m_w * m_w / m_w2 : -1.0 ; }
-      /// get sum of weights  \f$  \sum w_i \f$  
-      inline long double        w     () const { return m_w    ; }
-      /// get sum of weights squared  \f$  \sum w_i^2 \f$  
-      inline long double        w2    () const { return m_w2   ; }
-      /// empty ?
-      inline bool               empty () const { return 0 == m_size ; }
-      /// ok ?
-      inline bool               ok    () const { return m_size && m_w && ( 0 < m_w2 ) ; }
-      /// minimal weight 
-      inline double             wmin  () const { return m_wmin ; } 
-      /// maximal weight 
-      inline double             wmax  () const { return m_wmax ; }       
-      // ======================================================================
-    public: // basic operations 
-      // ======================================================================
-      /// increment with other moment 
-      inline WMoment_& operator+= ( const WMoment_&  x ) { return add ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// add a single value
-      inline WMoment_& add
-      ( const double x     ,
-        const double w = 1 )
-      {
-        /// INVALID values and weights are ignored 
-        if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ;}
-        /// ZERO weights are ignored 
-        if ( !w )                                      { return *this ; }  // ZERO weights are ignored 
-        //
-        ++m_size ; 
-        m_w  += w     ; 
-        m_w2 += w * w ;
-	//
-	m_wmin = std::min ( m_wmin , w ) ;
-	m_wmax = std::max ( m_wmax , w ) ;
-        //
-        return *this ; 
-      }
-      /// add a single value
-      inline WMoment_& add ( const WMoment_& x )
-      {
-        if ( !x.m_w ) { return *this ; }
-        //
-        m_size += x.m_size ;
-        m_w    += x.m_w    ;
-        m_w2   += x.m_w2   ;
-        //
-	m_wmin = std::min ( m_wmin , x.m_wmin ) ;
-	m_wmax = std::max ( m_wmax , x.m_wmax ) ;
-	//
-        return *this ;
-      }
-      // ======================================================================
-      /// add sequence of values  
-      template <class ITERATOR>
-      inline
-      WMoment_&
-      add
-      ( ITERATOR begin ,
-        ITERATOR end   )
-      {
-        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
-        return *this ;
-      }
-      // ======================================================================
-    public: // python operations 
-      // ======================================================================
-      WMoment_   __add__ ( const WMoment_& x ) const { WMoment_ r (*this) ; r += x ; return r ; }
-      WMoment_  __radd__ ( const WMoment_& x ) const { return __add__ ( x ) ; }
-      WMoment_& __iadd__ ( const WMoment_& x )       { return   add   ( x ) ; }
-      // ======================================================================
-    public:      
-      // ======================================================================
-      /// update the counter 
-      void update ( const double x , const double w = 1 ) override { add ( x , w ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** get the value of \f$ M_k = \sum_i w_i \left( x_i - \bar{x} \right)^k \f$ 
-       *  for \f$ k \le N \f$
-       *  @param k the order   \f$  0 \le k \le N \f$
-       *  @return the value of \$ M_k \f$  if \f$  0 \le k \le  \f$, 0 otherwise 
-       */   
-      inline long double M ( const unsigned short k = 0 ) const
-      { return  0 < k ? 0 : m_w ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      void swap ( WMoment_& right )
-      {
-        std::swap ( m_size , right.m_size ) ;
-        std::swap ( m_w    , right.m_w    ) ;
-        std::swap ( m_w2   , right.m_w2   ) ;
-        std::swap ( m_wmin , right.m_wmin ) ;
-        std::swap ( m_wmax , right.m_wmax ) ;
-      }
-      // ======================================================================
-    public: //  templated M_ 
-      // =====================================================================
-      template <unsigned  int K, typename std::enable_if<(K==0),int>::type = 0 >
-      inline long double M_ () const { return this->m_w ; }
-      // ======================================================================
-    public:  // templated moment
-      // ======================================================================
-      /// get the central moment of order K 
-      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
-      inline long double moment_ () const { return 1 ; }
-      // ======================================================================
-    public: // templated std_moment 
-      // ======================================================================
-      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
-      inline long double std_moment_ () const { return 1 ; }
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// number of entries 
-      unsigned long long m_size { 0 } ; // number of entries
-      /// sum of weights \f$  \sum w_i \f$ 
-      long double        m_w    { 0 } ; // sum of weights
-      /// sum of weights squared \f$  \sum w_i^2 \f$ 
-      long double        m_w2   { 0 } ; // sum of weights squared 
-      // ======================================================================
-      /// minimal weight 
-      double      m_wmin {   std::numeric_limits<double>::max () } ;
-      /// maximal weight 
-      double      m_wmax { - std::numeric_limits<double>::max () } ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// helper array of binomial coefficients 
-      static const std::array<unsigned long long,1> s_Ck ;
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /// specializaton for \f$ N=1 \f$ 
-    template <>
-    class WMoment_<1> : public WMoment 
-    {
-      // ======================================================================
-    public:
-      // ======================================================================
-      enum _ { order = 1 } ;
-      // ======================================================================
-    public: 
-      // ======================================================================
-      /// default constructor 
-      WMoment_ () = default ;
-      // ======================================================================
-      /// constructor from mu and previous moment 
-      WMoment_
-      ( const WMoment_<0>& prev ,
-	const double       mu   ,
-	const double       xmin ,
-	const double       xmax ) ;
-      // ======================================================================
-    public :
-      // ======================================================================
-      /** get the value of the 1st moment 
-       *  \f[ \mu_N \equiv  \frac{1}{N} \sum w_i \left( x_i - \bar{x} \right)^1 \f]
-       *  @return the value of the 1st central moment
-       */
-      inline double moment () const { return 0 ; }
-      // ======================================================================
-      /** get value of the kth moment for \f$  k \le N \f$
-       *  \f[ \mu_k \equiv  \frac{1}{\sum w_i } \sum w_i \left( x_i - \bar{x} \right)^k \f]
-       *  for \f$  k > N\f$ null is returned 
-       *  @param k  the cenral moment order  \f$  0 \le k \le N \f$
-       *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
-       */
-      inline double moment ( const unsigned short k ) const { return 1 <= k ? 0 : 1 ; }
-      // ======================================================================
-      /// get value of the kth standartized moment for \f$  k \le N \f$
-      inline double std_moment ( const unsigned short k ) const
-      { return 0 == k || 2 == k ? 1 : 0 ; }
-      // ======================================================================
-      /// get number of entries
-      inline unsigned long long size  () const { return m_prev.size ()  ; }
-      /// get effective number of entries \f$  \frac{(\sum w_i)^2}{\sum w_i^2} \f$
-      inline long double        nEff  () const { return m_prev.nEff () ; }
-      /// get sum of weights \f$ \sum w_i \f$
-      inline  long double       w     () const { return m_prev.w    () ; }
-      /// get sum of weights squared 
-      inline long double        w2    () const { return m_prev.w2   () ; }
-      // get the mean value
-      inline long double        mu    () const { return m_mu           ; } 
-      /// empty ?
-      inline bool               empty () const { return m_prev.empty () ; }
-      /// ok ?
-      inline bool               ok    () const { return m_prev.ok    () ; }
-      /// minimal value
-      inline double             min   () const { return m_min ; } 
-      /// maximal value
-      inline double             max   () const { return m_max ; }       
-      // ======================================================================
-      /// minimal weight 
-      inline double             wmin  () const { return m_prev.wmin () ; } 
-      /// maximal weight 
-      inline double             wmax  () const { return m_prev.wmax () ; }
-      // ======================================================================      
-    public: // basic operations 
-      // ======================================================================
-      /// increment with other moment 
-      inline WMoment_& operator+= ( const WMoment_ x ) { return add ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// add single value 
-      inline WMoment_& add ( const double x , const double w = 1 )
-      {
-        /// INVALUID values and weights are ignored 
-        if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
-        /// ZERO weights are ignored 
-        if ( !w )                                       { return *this ; }  // ZERO weights are ignored 
-        //
-        const long double wA = this -> w() ;
-        const long double wB = w ;
-        //
-        m_mu = ( wA * m_mu + wB * x ) / ( wA + wB ) ; // update mean
-        // minimal 
-	m_min = std::min ( m_min , x ) ;
-	// maximal
-	m_max = std::max ( m_max , x ) ;
-	//
-        this->m_prev.add ( x , w ) ;
-        //
-        return *this ;
-      }
-      /// add another moment 
-      inline WMoment_& add ( const WMoment_& x )  
-      {
-        if      ( x     . empty () ) {               return *this ; }
-        else if ( this -> empty () ) { (*this) = x ; return *this ; }
-        //
-        const long double wB = x.m_prev.w () ;
-        if ( !wB ) { return *this ; }
-        //
-        const long double wA = m_prev.w   () ;
-        m_mu = ( wA * m_mu + wB * x.m_mu ) / ( wA + wB ) ; // update mean
-        //
-        // minimal 
-	m_min = std::min ( m_min , x.m_min ) ;
-	// maximal
-	m_max = std::max ( m_max , x.m_max ) ;
-	//
-        m_prev += x.m_prev ;                                 // update previous
-        //
-        return *this ;
-      }
-      // ======================================================================
-      /// add sequence of values  
-      template <class ITERATOR>
-      inline
-      WMoment_&
-      add
-      ( ITERATOR begin ,
-        ITERATOR end   )
-      {
-        for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; }
-        return *this ;
-      }
-      // ====================================================================== 
-   public: // python operations 
-      // ======================================================================
-      WMoment_   __add__ ( const WMoment_& x ) const { WMoment_ r (*this) ; r += x ; return r ; }
-      WMoment_  __radd__ ( const WMoment_& x ) const { return __add__ ( x ) ; }
-      WMoment_& __iadd__ ( const WMoment_& x )       { return   add   ( x ) ; }
-      // ======================================================================
-   public:      
-      // ======================================================================
-      /// update the counter 
-      void update ( const double x , const double w = 1 ) override { add ( x , w ) ; }
-      // ======================================================================
-    public:      
-      // ======================================================================
-      /// get "previos" moment 
-      const WMoment_<0>& previous () const { return this->m_prev ; }
-      // ======================================================================
-    public: 
-      // ======================================================================
-      inline long double M ( const unsigned short k = 1 ) const
-      { return 1 < k  ? 0 : 1 == k ? 0 : this->m_prev. M ( k ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      void swap ( WMoment_& right )
-      {
-        m_prev.swap ( right.m_prev ) ;
-        std::swap ( m_mu  , right.m_mu  ) ;
-        std::swap ( m_min , right.m_min ) ;
-        std::swap ( m_max , right.m_max ) ;
-      }
-      // ======================================================================
-    public:  // templated prev
-      // ======================================================================
-      template <unsigned  int K, typename std::enable_if<(K==0),int>::type = 0 >
-      const WMoment_<K>& prev_ () const { return this->m_prev ; }
-      // =====================================================================
-    public: //  templated M_ 
-      // =====================================================================
-      template <unsigned  int K, typename std::enable_if<(K==1),int>::type = 0 >
-      inline long double M_ () const { return 0 ; }
-      // =====================================================================
-      template <unsigned  int K, typename std::enable_if<(K==0),int>::type = 0 >
-      inline long double M_ () const { return this->m_prev.template M_<K>() ; }
-      // ======================================================================
-    public:  // templated moments
-      // ======================================================================
-      /// get the central moment of order K 
-      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
-      inline long double moment_ () const { return 1 ; }
-      // ======================================================================
-      template <unsigned int K, typename std::enable_if<(K==1),int>::type = 0 >
-      inline long double moment_ () const { return 0 ; }
-      // =======================================================================
-    public: // templated std_moment 
-      // =======================================================================
-      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
-      inline long double std_moment_ () const { return 1 ; }
-      // ======================================================================
-      template <unsigned int K, typename std::enable_if<(K==1),int>::type = 0 >
-      inline long double std_moment_ () const { return 0 ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// mean value 
-      inline double mean () const { return mu() ; }      
-      // =======================================================================
-    private:
-      // ======================================================================
-      WMoment_<0>  m_prev {   } ;
-      /// mean value
-      long double m_mu    { 0 } ; // mean value
-      // ======================================================================
-      /// minimal value
-      double      m_min  {   std::numeric_limits<double>::max () } ;
-      /// maximal value
-      double      m_max  { - std::numeric_limits<double>::max () } ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// array of binomial coefficients 
-      static const std::array<unsigned long long,2> s_Ck ;
-      // ======================================================================
-    } ;
+
     // ========================================================================
     /// add two counters        
     template <unsigned short N>
@@ -1587,7 +1737,11 @@ namespace  Ostap
     public:
       // ======================================================================
       /// the actual underlying counter 
-      typedef Moment_<1> Counter ;
+      typedef Moment_<1>         Counter   ;
+      /// # entries
+      typedef Counter::size_type size_type ;
+      /// data type 
+      typedef Counter::data_type data_type ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1601,7 +1755,7 @@ namespace  Ostap
       /// get the geometric mean 
       inline double mean  () const { return value () ; }
       inline double value () const { return std::pow ( 2 , m_log.mean() ) ; }   
-	  // ======================================================================
+      // ======================================================================
     public:
       // ======================================================================
       inline GeometricMean& operator+=( const double         x ) { return add ( x ) ; }
@@ -1639,15 +1793,22 @@ namespace  Ostap
       // ======================================================================
       /// to use it as a Moment 
       void update ( const double x ) override { add ( x ) ; }
+      /// reset the cunter 
+      void reset  () override { m_log.reset () ; }
+      // ======================================================================      
+    public :
+      // ======================================================================      
+      /// is finite ?
+      bool isfinite () const ;
       // ======================================================================
     public:
       // ======================================================================
       /// number of entries
-      inline unsigned long long size  () const { return m_log.size  () ; }
+      inline size_type size  () const { return m_log.size  () ; }
       /// empty ?
-      inline bool               empty () const { return m_log.empty () ; } 
+      inline bool      empty () const { return m_log.empty () ; } 
       /// ok ?
-      inline bool               ok    () const { return m_log.ok    () ; } 
+      inline bool      ok    () const { return m_log.ok    () ; } 
       // ======================================================================      
     private:
       // ======================================================================
@@ -1667,6 +1828,10 @@ namespace  Ostap
       // ======================================================================
       /// the actual underlying counter 
       typedef Moment_<1> Counter ;
+      /// # entries
+      typedef Counter::size_type size_type ;
+      /// data type 
+      typedef Counter::data_type data_type ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1680,7 +1845,7 @@ namespace  Ostap
       /// get the harmonic mean 
       inline double value () const { return 1. / m_inv.mean() ; }
       inline double mean  () const { return value () ; }
-	  // ======================================================================
+      // ======================================================================
     public:
       // ======================================================================
       inline HarmonicMean& operator+=( const double        x ) { return add ( x ) ; }
@@ -1718,15 +1883,22 @@ namespace  Ostap
       // ======================================================================
       /// to use it as a Moment 
       void update ( const double x ) override { add ( x ) ; }
+      /// reset the cunter 
+      void reset  () override { m_inv.reset () ; }
+      // ======================================================================
+    public :
+      // ======================================================================      
+      /// is finite ?
+      bool isfinite () const ;
       // ======================================================================
     public:
       // ======================================================================
       /// number of entries
-      inline unsigned long long size  () const { return m_inv.size  () ; }
+      inline size_type size  () const { return m_inv.size  () ; }
       /// empty ?
-      inline bool               empty () const { return m_inv.empty () ; } 
+      inline bool      empty () const { return m_inv.empty () ; } 
       /// ok ?
-      inline bool               ok    () const { return m_inv.ok    () ; } 
+      inline bool      ok    () const { return m_inv.ok    () ; } 
       // ======================================================================      
     private:
       // ======================================================================
@@ -1746,6 +1918,10 @@ namespace  Ostap
       // ======================================================================
       /// the actual underlying counter 
       typedef Moment_<1> Counter ;
+      /// # entries
+      typedef Counter::size_type size_type ;
+      /// data type 
+      typedef Counter::data_type data_type ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -1793,17 +1969,24 @@ namespace  Ostap
       // ======================================================================
       /// to use it as a Moment 
       void update ( const double x ) override { add ( x ) ; }
+      /// reset the cunter 
+      void reset  () override { m_pow.reset () ; } 
       // ======================================================================
-    public:
+    public :
+      // ======================================================================      
+      /// is finite ?
+      bool isfinite () const ;
+      // ======================================================================
+   public:
       // ======================================================================
       /// number of entries
-      inline unsigned long long size  () const { return m_pow.size  () ; }
+      inline size_type size  () const { return m_pow.size  () ; }
       /// empty ?
-      inline bool               empty () const { return m_pow.empty () ; } 
+      inline bool      empty () const { return m_pow.empty () ; } 
       /// ok ?
-      inline bool               ok    () const { return m_pow.ok    () ; }
+      inline bool      ok    () const { return m_pow.ok    () ; }
       /// power 
-      inline double             p     () const { return m_p            ; }
+      inline double    p     () const { return m_p            ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -1831,6 +2014,10 @@ namespace  Ostap
       // ======================================================================
       /// the actual underlying counter 
       typedef Moment_<1> Counter ;
+      /// # entries
+      typedef Counter::size_type size_type ;
+      /// data type 
+      typedef Counter::data_type data_type ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1848,7 +2035,7 @@ namespace  Ostap
       /// get the power mean 
       inline double value () const { return m_lp.mean() / m_lpm1.mean () ; }
       inline double mean  () const { return value () ; }
-	  // ======================================================================
+      // ======================================================================
     public:
       // ======================================================================
       inline LehmerMean& operator+=( const double      x ) { return add ( x ) ; }
@@ -1884,17 +2071,24 @@ namespace  Ostap
       // ======================================================================
       /// to use it as a Moment 
       void update ( const double x ) override { add ( x ) ; }
+      /// reset the cunter 
+      void reset  () override { m_lp.reset () ; m_lpm1.reset () ; }
+      // ======================================================================
+    public :
+      // ======================================================================      
+      /// is finite ?
+      bool isfinite () const ;
       // ======================================================================
     public:
       // ======================================================================
       /// number of entries
-      inline unsigned long long size  () const { return m_lp.size   () ; }
+      inline size_type size  () const { return m_lp.size   () ; }
       /// empty ?
-      inline bool               empty () const { return m_lp.empty  () ; } 
+      inline bool      empty () const { return m_lp.empty  () ; } 
       /// ok ?
-      inline bool               ok    () const { return m_lp.ok     () ; }
+      inline bool      ok    () const { return m_lp.ok     () ; }
       /// power 
-      inline double             p     () const { return m_p            ; }
+      inline double    p     () const { return m_p            ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -1917,6 +2111,10 @@ namespace  Ostap
       // ======================================================================
       /// the actual underlying counter 
       typedef WMoment_<1> Counter ;
+      /// # entries
+      typedef Counter::size_type size_type ;
+      /// data type 
+      typedef Counter::data_type data_type ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1973,20 +2171,28 @@ namespace  Ostap
       ( const double x ,
         const double w ) override { add ( x , w ) ; }
       // ======================================================================
+      /// reset the cunter 
+      void reset  () override { m_log.reset () ; }
+      // ======================================================================
+    public :
+      // ======================================================================      
+      /// is finite ?
+      bool isfinite () const ;
+      // ======================================================================
     public:
       // ======================================================================
       /// number of entries
-      inline unsigned long long size  () const { return m_log.size  () ; }
+      inline size_type size  () const { return m_log.size  () ; }
       /// number of effective entries
-      inline long double        nEff  () const { return m_log.nEff  () ; }
+      inline data_type nEff  () const { return m_log.nEff  () ; }
       /// get sum of weighes \f$  \sum_i w_i \f$ 
-      inline long double        w     () const { return m_log.w     () ; }
+      inline data_type  w     () const { return m_log.w     () ; }
       /// get sum of weights squared 
-      inline long double        w2    () const { return m_log.w2    () ; }
+      inline data_type  w2    () const { return m_log.w2    () ; }
       /// empty ?
-      inline bool               empty () const { return m_log.empty () ; } 
+      inline bool       empty () const { return m_log.empty () ; } 
       /// ok ?
-      inline bool               ok    () const { return m_log.ok    () ; } 
+      inline bool       ok    () const { return m_log.ok    () ; } 
       // ======================================================================      
     private:
       // ======================================================================
@@ -2005,6 +2211,10 @@ namespace  Ostap
       // ======================================================================
       /// the actual underlying counter 
       typedef WMoment_<1> Counter ;
+      /// # entries
+      typedef Counter::size_type size_type ;
+      /// data type 
+      typedef Counter::data_type data_type ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2017,7 +2227,7 @@ namespace  Ostap
       // ======================================================================
       /// get the harmonic mean 
       inline double value () const { return 1. / m_inv.mean() ; }
-	  inline double mean  () const { return value () ; }
+      inline double mean  () const { return value () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2059,21 +2269,28 @@ namespace  Ostap
       void update
       ( const double x ,
         const double w ) override { add ( x , w ) ; }
+      /// reset the cunter 
+      void reset  () override { m_inv.reset () ; }
+      // ======================================================================
+    public :
+      // ======================================================================      
+      /// is finite ?
+      bool isfinite () const ;
       // ======================================================================
     public:
       // ======================================================================
       /// number of entries
-      inline unsigned long long size  () const { return m_inv.size  () ; }
+      inline size_type size  () const { return m_inv.size  () ; }
       /// number of effective entries
-      inline long double        nEff  () const { return m_inv.nEff  () ; }
+      inline data_type nEff  () const { return m_inv.nEff  () ; }
       /// get sum of weighes \f$  \sum_i w_i \f$ 
-      inline long double        w     () const { return m_inv.w     () ; }
+      inline data_type w     () const { return m_inv.w     () ; }
       /// get sum of weights squared 
-      inline long double        w2    () const { return m_inv.w2    () ; }
+      inline data_type w2    () const { return m_inv.w2    () ; }
       /// empty ?
-      inline bool               empty () const { return m_inv.empty () ; } 
+      inline bool      empty () const { return m_inv.empty () ; } 
       /// ok ?
-      inline bool               ok    () const { return m_inv.ok    () ; } 
+      inline bool      ok    () const { return m_inv.ok    () ; } 
       // ======================================================================      
     private:
       // ======================================================================
@@ -2092,6 +2309,10 @@ namespace  Ostap
       // ======================================================================
       /// the actual underlying counter 
       typedef WMoment_<1> Counter ;
+      /// # entries
+      typedef Counter::size_type size_type ;
+      /// data type 
+      typedef Counter::data_type data_type ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2142,23 +2363,30 @@ namespace  Ostap
       void update
       ( const double x ,
         const double w ) override { add ( x , w ) ; }
+      /// reset the cunter 
+      void reset  () override { m_pow.reset () ; }
+      // ======================================================================
+    public :
+      // ======================================================================      
+      /// is finite ?
+      bool isfinite () const ;
       // ======================================================================
     public:
       // ======================================================================
       /// number of entries
-      inline unsigned long long size  () const { return m_pow.size  () ; }
+      inline size_type size  () const { return m_pow.size  () ; }
       /// number of effective entries
-      inline long double        nEff  () const { return m_pow.nEff  () ; }
+      inline data_type nEff  () const { return m_pow.nEff  () ; }
       /// get sum of weighes \f$  \sum_i w_i \f$ 
-      inline long double        w     () const { return m_pow.w     () ; }
+      inline data_type w     () const { return m_pow.w     () ; }
       /// get sum of weights squared 
-      inline long double        w2    () const { return m_pow.w2    () ; }
+      inline data_type w2    () const { return m_pow.w2    () ; }
       /// empty ?
-      inline bool               empty () const { return m_pow.empty () ; } 
+      inline bool      empty () const { return m_pow.empty () ; } 
       /// ok ?
-      inline bool               ok    () const { return m_pow.ok    () ; }
+      inline bool      ok    () const { return m_pow.ok    () ; }
       /// power 
-      inline double             p     () const { return m_p            ; }
+      inline double    p     () const { return m_p            ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -2179,6 +2407,10 @@ namespace  Ostap
       // ======================================================================
       /// the actual underlying counter 
       typedef WMoment_<1> Counter ;
+      /// # entries
+      typedef Counter::size_type size_type ;
+      /// data type 
+      typedef Counter::data_type data_type ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2204,9 +2436,9 @@ namespace  Ostap
     public:
       // ======================================================================
       /// the counter of x**p  values 
-      const Counter& counter1 () const { return m_lp   ; }
+      inline const Counter& counter1 () const { return m_lp   ; }
       /// the counter of x**(p-1)  values 
-      const Counter& counter2 () const { return m_lpm1 ; }
+      inline const Counter& counter2 () const { return m_lpm1 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2235,23 +2467,30 @@ namespace  Ostap
       void update
       ( const double x ,
         const double w ) override { add ( x , w ) ; }
+      /// reset the cunter 
+      void reset  () override { m_lp.reset() ; m_lpm1.reset() ; } 
+      // ======================================================================
+    public :
+      // ======================================================================      
+      /// is finite ?
+      bool isfinite () const ;
       // ======================================================================
     public:
       // ======================================================================
       /// number of entries
-      inline unsigned long long size  () const { return m_lp.size   () ; }
+      inline size_type size  () const { return m_lp.size   () ; }
       /// number of effective entries
-      inline long double        nEff  () const { return m_lp.nEff   () ; }
+      inline data_type nEff  () const { return m_lp.nEff   () ; }
       /// get sum of weighes \f$  \sum_i w_i \f$ 
-      inline long double        w     () const { return m_lp.w      () ; }
+      inline data_type w     () const { return m_lp.w      () ; }
       /// get sum of weights squared 
-      inline long double        w2    () const { return m_lp.w2     () ; }
+      inline data_type w2    () const { return m_lp.w2     () ; }
       /// empty ?
-      inline bool               empty () const { return m_lp.empty  () ; } 
+      inline bool      empty () const { return m_lp.empty  () ; } 
       /// ok ?
-      inline bool               ok    () const { return m_lp.ok     () ; }
+      inline bool      ok    () const { return m_lp.ok     () ; }
       /// power 
-      inline double             p     () const { return m_p            ; }
+      inline double    p     () const { return m_p            ; }
       // ======================================================================
     private:
       // ======================================================================

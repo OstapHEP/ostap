@@ -117,8 +117,6 @@ namespace Ostap
     // ======================================================================
   public: // various technical helper methods  
     // ========================================================================
-    /// reset the counters
-    void reset () ;
     /// swap two cunters
     void swap ( WStatEntity& right ) ;
     /// representation as string
@@ -152,8 +150,10 @@ namespace Ostap
     // ===============================================================================
     /// Ostap::Math::WStatistics
     void update 
-      ( const double value      ,  
-	const double weight = 1 ) override { this -> add ( value , weight ) ; }
+    ( const double value      ,  
+      const double weight = 1 ) override { this -> add ( value , weight ) ; }
+    /// reset the counters
+    void reset () override ;
     // ===============================================================================
   public:
     // =============================================================================== 

@@ -31,7 +31,8 @@ namespace Ostap
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2019-06-30
      */
-    class LegendreSum2 : public Parameters 
+    class LegendreSum2 : public Parameters
+		       , public Ostap::Math::WStatistic2 
     {
     public:
       // ======================================================================
@@ -154,7 +155,18 @@ namespace Ostap
       bool Fill
       ( const double x          , 
         const double y          , 
-        const double weight = 1 )  { return fill ( x , y , weight ) ; } 
+        const double weight = 1 )  { return fill ( x , y , weight ) ; }
+      // =====================================================================
+    public: // Ostap::Math::WStatistic2 
+      // =====================================================================
+      /// Ostap::Math::WStatistic, add one event with weight 
+      void update
+      ( const double x          ,
+	const double y          , 
+	const double weight = 1 ) override
+      { this -> fill ( x , y , weight ) ; }
+      /// reet parameters to zeros 
+      void reset  () override { Parameters::reset () ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -345,7 +357,8 @@ namespace Ostap
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2019-06-30
      */
-    class LegendreSum3 : public Parameters 
+    class LegendreSum3 : public Parameters
+    		       , public Ostap::Math::WStatistic3			 
     {
     public:
       // ======================================================================
@@ -522,6 +535,18 @@ namespace Ostap
         const double y          , 
         const double z          , 
         const double weight = 1 )  { return fill ( x , y , z , weight ) ; } 
+      // ======================================================================
+    public: // Ostap::Math::WStatistic3 
+      // =====================================================================
+      /// Ostap::Math::WStatistic, add one event with weight 
+      void update
+      ( const double x          ,
+	const double y          ,
+	const double z          ,
+	const double weight = 1 ) override
+      { this -> fill ( x , y , z , weight ) ; }
+      /// reet parameters to zeros 
+      void reset  () override { Parameters::reset () ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -731,7 +756,8 @@ namespace Ostap
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2019-06-30
      */
-    class LegendreSum4 : public Parameters 
+    class LegendreSum4 : public Parameters
+		       , public Ostap::Math::WStatistic4 
     {
     public:
       // ======================================================================
@@ -924,6 +950,19 @@ namespace Ostap
         const double z          , 
         const double u          , 
         const double weight = 1 )  { return fill ( x , y , z , u , weight ) ; } 
+      // ======================================================================
+    public: // Ostap::Math::WStatistic4 
+      // =====================================================================
+      /// Ostap::Math::WStatistic4, add one event with weight 
+      void update
+      ( const double x          ,
+	const double y          ,
+	const double z          ,
+	const double u          ,
+	const double weight = 1 ) override
+      { this -> fill ( x , y , z , u , weight ) ; }
+      /// reet parameters to zeros 
+      void reset  () override { Parameters::reset () ; } 
       // ======================================================================
     public:
       // ======================================================================

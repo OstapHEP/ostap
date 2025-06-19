@@ -26,7 +26,6 @@
 #include "Ostap/Notifier.h"
 #include "Ostap/StatVar.h"
 #include "Ostap/FormulaVar.h"
-#include "Ostap/P2Quantile.h"
 #include "Ostap/Covariances.h"
 #include "Ostap/ProgressBar.h"
 // ============================================================================
@@ -105,36 +104,7 @@ Ostap::StatVar::StatVar
   : m_progress ( progress )
 {}
 // ============================================================================
-// Helper structures 
-// ============================================================================
-Ostap::StatVar::Interval::Interval
-(  const double l ,
-   const double h )
-  : low  ( std::min ( l , h ) )
-  , high ( std::max ( l , h ) )
-{}
-// ============================================================================
-Ostap::StatVar::Quantile::Quantile
-( const double      q ,
-  const std::size_t n )
-  : quantile ( q ) 
-  , nevents  ( n ) 
-{}
-// ============================================================================
-Ostap::StatVar::Quantiles::Quantiles
-( const std::vector<double>& q ,  
-  const std::size_t          n )
-  : quantiles ( q ) 
-  , nevents   ( n ) 
-{}
-// ============================================================================
-Ostap::StatVar::QInterval::QInterval
-( const Ostap::StatVar::Interval& i ,
-  const std::size_t               n )
-  : interval ( i ) 
-  , nevents  ( n ) 
-{}
-// =============================================================================
+
 
 // =============================================================================
 // The basic methods 
@@ -159,7 +129,9 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   const Ostap::EventIndex   first      ,
   const Ostap::EventIndex   last       ) const 
 {
-  // 
+  /// reset the statistic
+  stat.reset() ; // reset the statistic
+  //
   if ( nullptr == data    ) { return INVALID_DATA    ; }
   if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
   //
@@ -214,7 +186,9 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   const Ostap::EventIndex   first      ,
   const Ostap::EventIndex   last       ) const
 {
-  // 
+  /// reset the statistic
+  stat.reset() ; // reset the statistic
+  //
   if ( nullptr == data    ) { return INVALID_DATA    ; }
   if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
   //
@@ -271,6 +245,8 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   const Ostap::EventIndex   first      ,
   const Ostap::EventIndex   last       ) const
 {
+  /// reset the statistic
+  stat.reset() ; // reset the statistic
   // 
   if ( nullptr == data    ) { return INVALID_DATA    ; }
   if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
@@ -337,6 +313,8 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   const Ostap::EventIndex   first      ,
   const Ostap::EventIndex   last       ) const 
 {
+  /// reset the statistic
+  stat.reset() ; // reset the statistic
   // 
   if ( nullptr == data    ) { return INVALID_DATA    ; }
   if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
@@ -400,6 +378,8 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   const Ostap::EventIndex   first      ,
   const Ostap::EventIndex   last       ) const
 {
+  /// reset the statistic
+  stat.reset() ; // reset the statistic
   // 
   if ( nullptr == data    ) { return INVALID_DATA    ; }
   if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
@@ -464,7 +444,9 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   const Ostap::EventIndex   first      ,
   const Ostap::EventIndex   last       ) const
 {
-  // 
+  /// reset the statistic
+  stat.reset() ; // reset the statistic
+  //
   if ( nullptr == data    ) { return INVALID_DATA    ; }
   if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
   //
@@ -507,8 +489,6 @@ Ostap::StatusCode Ostap::StatVar::get_stat
 }
 // =============================================================================
 
-
-
 // ============================================================================
 // Get information about several varibales 
 // =============================================================================
@@ -534,6 +514,8 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   const Ostap::EventIndex   first      ,
   const Ostap::EventIndex   last       ) const 
 {
+  /// reset the statistic
+  stat.reset() ; // reset the statistic
   // 
   if ( nullptr == data    ) { return INVALID_DATA    ; }
   if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
@@ -600,6 +582,8 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   const Ostap::EventIndex   first      ,
   const Ostap::EventIndex   last       ) const
 {
+  /// reset the statistic
+  stat.reset() ; // reset the statistic
   // 
   if ( nullptr == data    ) { return INVALID_DATA    ; }
   if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
@@ -667,6 +651,8 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   const Ostap::EventIndex   first      ,
   const Ostap::EventIndex   last       ) const
 {
+  /// reset the statistic
+  stat.reset() ; // reset the statistic
   // 
   if ( nullptr == data    ) { return INVALID_DATA    ; }
   if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
@@ -711,11 +697,6 @@ Ostap::StatusCode Ostap::StatVar::get_stat
 }
 // =============================================================================
 
-
-
-
-
-
 // ============================================================================
 // Get information about several varibales 
 // =============================================================================
@@ -742,6 +723,8 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   const Ostap::EventIndex   first      ,
   const Ostap::EventIndex   last       ) const 
 {
+  /// reset the statistic
+  stat.reset() ; // reset the statistic
   // 
   if ( nullptr == data    ) { return INVALID_DATA    ; }
   if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
@@ -811,6 +794,8 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   const Ostap::EventIndex   first      ,
   const Ostap::EventIndex   last       ) const
 {
+  /// reset the statistic
+  stat.reset() ; // reset the statistic
   // 
   if ( nullptr == data    ) { return INVALID_DATA    ; }
   if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
@@ -881,6 +866,8 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   const Ostap::EventIndex   first      ,
   const Ostap::EventIndex   last       ) const
 {
+  /// reset the statistic
+  stat.reset() ; // reset the statistic
   // 
   if ( nullptr == data    ) { return INVALID_DATA    ; }
   if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
@@ -1568,6 +1555,7 @@ Ostap::StatusCode Ostap::StatVar::statCov
   const Ostap::EventIndex         first       ,
   const Ostap::EventIndex         last        ) const
 {
+  //
   const std::size_t N = expressions.size() ;
   stats = Ostap::Math::Covariances (  N  ) ; 
   //

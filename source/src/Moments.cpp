@@ -41,12 +41,41 @@ Ostap::Math::WMoment::~WMoment(){}
  *  @param sumw sum of squared weights 
  */
 // ===========================================================================
-Ostap::Math::WMoment_<0>::WMoment_ 
-( const unsigned long long size  ,
-  const double             sumw  ,
-  const double             sumw2 , 
-  const double             wmin  , 
-  const double             wmax  ) 
+namespace
+{
+  // =========================================================================
+  static_assert ( std::numeric_limits<Ostap::Math::Moment_<0>::size_type>::is_specialized   ,
+		  "Ostap::Math::Moment_<0>::size_type is not specialized!" ) ;
+  // =========================================================================
+} // =========================================================================
+// ===========================================================================
+// ===========================================================================
+// (default) constructor 
+// ===========================================================================
+Ostap::Math::Moment_<0>::Moment_
+( const Ostap::Math::Moment_<0>::size_type size )
+  : m_size ( size )
+{}
+// ===========================================================================
+// constructor from mu and previous 
+// ===========================================================================
+Ostap::Math::Moment_<1>::Moment_
+( const Ostap::Math::Moment_<0>& prev , 
+  const double                   mu   ,
+  const double                   xmin ,
+  const double                   xmax )
+  : m_prev ( prev ) 
+  , m_mu   ( mu   )
+  , m_min  { std::min ( xmin ,   std::numeric_limits<double>::max () ) } 
+  , m_max  { std::max ( xmax , - std::numeric_limits<double>::max () ) } 
+{}
+// ===========================================================================
+Ostap::Math::WMoment_<0>::WMoment_
+( const Ostap::Math::WMoment_<0>::size_type size  ,  
+  const double                              sumw  ,
+  const double                              sumw2 , 
+  const double                              wmin  , 
+  const double                              wmax  ) 
   : m_size ( size  )
   , m_w    ( sumw  )
   , m_w2   ( sumw2 )
@@ -54,16 +83,16 @@ Ostap::Math::WMoment_<0>::WMoment_
   , m_wmax { std::max ( wmax , - std::numeric_limits<double>::max () ) } 
 {
   Ostap::Assert ( std::isfinite ( m_w ) && std::isfinite ( m_w2 ) ,
-                  "Invalid sumw/sumw2!"              , 
-                  "Ostap::Math::WMoment_<0>"         ,
-                  INVALID_PARS , __FILE__ , __LINE__ ) ;
+		  "Invalid sumw/sumw2!"              , 
+		  "Ostap::Math::WMoment_<0>"         ,
+		  INVALID_PARS , __FILE__ , __LINE__ ) ;
   
   if ( 0 == m_size )
     {
       Ostap::Assert ( s_zero ( m_w ) && s_zero ( m_w2 )  ,  
-                      "Non-zero sum of (squared) weights for empty counter!" , 
-                      "Ostap::Math::WMoment_<0>"         ,
-                      INVALID_PARS , __FILE__ , __LINE__ ) ;
+		      "Non-zero sum of (squared) weights for empty counter!" , 
+		      "Ostap::Math::WMoment_<0>"         ,
+		      INVALID_PARS , __FILE__ , __LINE__ ) ;
       m_w  = 0 ;
       m_w2 = 0 ;       
     }
@@ -71,9 +100,9 @@ Ostap::Math::WMoment_<0>::WMoment_
   if ( s_zero ( m_w2 ) )
     {
       Ostap::Assert ( s_zero ( m_w )                     ,
-                      "Non zero sum of weigth for zero sumw2 !" , 
-                      "Ostap::Math::WMoment_<0>"         ,
-                      INVALID_PARS , __FILE__ , __LINE__ ) ;      
+		      "Non zero sum of weigth for zero sumw2 !" , 
+		      "Ostap::Math::WMoment_<0>"         ,
+		      INVALID_PARS , __FILE__ , __LINE__ ) ;      
       m_w  = 0 ;
       m_w2 = 0 ;
     }
@@ -81,12 +110,25 @@ Ostap::Math::WMoment_<0>::WMoment_
   if ( s_zero ( m_w ) ) { m_w = 0 ; }
   //
   Ostap::Assert ( 0 <= m_w2                          ,      
-                  "Negative sum of squared weights!" , 
-                  "Ostap::Math::WMoment_<0>"         , 
-                  INVALID_PARS , __FILE__ , __LINE__ ) ;      
+		  "Negative sum of squared weights!" , 
+		  "Ostap::Math::WMoment_<0>"         , 
+		  INVALID_PARS , __FILE__ , __LINE__ ) ;      
 }
-// ===========================================================================
-
+ // ===========================================================================
+ /// constructor from mu and previous moment 
+ // ===========================================================================
+ Ostap::Math::WMoment_<1>::WMoment_
+ ( const Ostap::Math::WMoment_<0>& prev ,
+   const double                    mu   ,
+  const double                    xmin ,
+  const double                    xmax ) 
+  : m_prev ( prev ) 
+  , m_mu   ( mu   )
+  , m_min  { std::min ( xmin ,   std::numeric_limits<double>::max () ) } 
+  , m_max  { std::max ( xmax , - std::numeric_limits<double>::max () ) } 
+{}   
+// ============================================================================
+ 
 // ===========================================================================
 Ostap::Math::GeometricMean::GeometricMean
 ( const Ostap::Math::GeometricMean::Counter& cnt )
@@ -246,7 +288,7 @@ Ostap::Math::WGeometricMean::add
 ( const double x ,
   const double w ) 
 {
-  if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
+  if ( !w || !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
   if ( ( 0 < x ) && !s_zero ( x ) ) { m_log.add ( std::log2 ( x ) , w ) ; }
   return *this ;
 }
@@ -258,7 +300,7 @@ Ostap::Math::WHarmonicMean::add
 ( const double x ,
   const double w ) 
 {
-  if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
+  if ( !w || !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
   if ( !s_zero ( x ) ) { m_inv.add ( 1/x , w ) ; }
   return *this ;
 }
@@ -270,7 +312,7 @@ Ostap::Math::WPowerMean::add
 ( const double x  ,
   const double w  )
 {
-  if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
+  if ( !w || !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
   if ( ( 0 < x ) && !s_zero ( x ) ) { m_pow.add ( std::pow ( x , m_p ) , w ) ; }
   return *this ;
 }
@@ -282,7 +324,7 @@ Ostap::Math::WLehmerMean::add
 ( const double x ,
   const double w ) 
 {
-  if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
+  if ( !w || !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
   if ( ( 0 < x ) && !s_zero ( x ) )
     {
       m_lp  .add ( std::pow ( x , m_p     ) , w ) ;
@@ -344,40 +386,67 @@ Ostap::Math::WLehmerMean::add
 }
 // ===========================================================================
 
+// ============================================================================
+// Finiteness 
+// ============================================================================
+bool Ostap::Math::GeometricMean::isfinite () const
+{
+  return m_log.isfinite ()
+    && m_log.mean  () < std::numeric_limits<double>::max_exponent ;
+}
+// ============================================================================
+// Finiteness
+// ============================================================================
+bool Ostap::Math::HarmonicMean::isfinite () const
+{ return m_inv.isfinite () && m_inv.mean() ; }
+// ============================================================================
+// Finiteness
+// ============================================================================
+bool Ostap::Math::PowerMean::isfinite () const
+{
+  if ( !m_pow.isfinite() || !m_p ) { return false ; }
+  const double x   = m_pow.mean()    ;
+  if ( x <= 0                  ) { return false ; }
+  const double l2x = std::log2 ( x ) ;
+  return l2x / m_p < std::numeric_limits<double>::max_exponent ;
+}
+// ============================================================================
+// Finiteness
+// ============================================================================
+bool Ostap::Math::LehmerMean::isfinite () const
+{ return m_lp.isfinite () && m_lpm1.isfinite() && m_lpm1.mean () ; }
+// ============================================================================
+// Finiteness 
+// ============================================================================
+bool Ostap::Math::WGeometricMean::isfinite () const
+{
+  return m_log.isfinite ()
+    && m_log.mean  () < std::numeric_limits<double>::max_exponent ;
+}
+// ============================================================================
+// Finiteness
+// ============================================================================
+bool Ostap::Math::WHarmonicMean::isfinite () const
+{ return m_inv.isfinite () && m_inv.mean() ; }
+// ============================================================================
+// Finiteness
+// ============================================================================
+bool Ostap::Math::WPowerMean::isfinite () const
+{
+  if ( !m_pow.isfinite() || !m_p ) { return false ; }
+  const double x   = m_pow.mean()    ;
+  if ( x <= 0                    ) { return false ; }
+  const double l2x = std::log2 ( x ) ;
+  return l2x / m_p < std::numeric_limits<double>::max_exponent ;
+}
+// ============================================================================
+// Finiteness
+// ============================================================================
+bool Ostap::Math::WLehmerMean::isfinite () const
+{ return m_lp.isfinite () && m_lpm1.isfinite() && m_lpm1.mean () ; }
 
-// ===========================================================================
-// (default) constructor 
-// ===========================================================================
-Ostap::Math::Moment_<0>::Moment_
-( const unsigned long long size  )
-  : m_size ( size )
-{}
-// ===========================================================================
-/// constructor from mu and previous 
-// ===========================================================================
-Ostap::Math::Moment_<1>::Moment_
-( const Ostap::Math::Moment_<0>& prev , 
-  const double                   mu   ,
-  const double                   xmin ,
-  const double                   xmax )
-  : m_prev ( prev ) 
-  , m_mu   ( mu   )
-  , m_min  { std::min ( xmin ,   std::numeric_limits<double>::max () ) } 
-  , m_max  { std::max ( xmax , - std::numeric_limits<double>::max () ) } 
-{}
-// ===========================================================================
-/// constructor from mu and previous moment 
-// ===========================================================================
-Ostap::Math::WMoment_<1>::WMoment_
-( const Ostap::Math::WMoment_<0>& prev ,
-  const double                    mu   ,
-  const double                    xmin ,
-  const double                    xmax ) 
-  : m_prev ( prev ) 
-  , m_mu   ( mu   )
-  , m_min  { std::min ( xmin ,   std::numeric_limits<double>::max () ) } 
-  , m_max  { std::max ( xmax , - std::numeric_limits<double>::max () ) } 
-{}   
+
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

@@ -17,6 +17,7 @@
 #include "Ostap/MakeArray.h"
 #include "Ostap/Math.h"
 #include "Ostap/Parameters.h"
+#include "Ostap/Statistic.h"
 #include "Ostap/Clenshaw.h"
 // ============================================================================
 /** @file Ostap/Polynomials.h
@@ -1964,7 +1965,8 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-02-22
      */
-    class ChebyshevSum : public PolySum 
+    class ChebyshevSum : public PolySum
+		       , public Ostap::Math::WStatistic  
     {
     public:
       // =====================================================================
@@ -2067,8 +2069,16 @@ namespace Ostap
        *  @parameter x      the event content 
        *  @parameter weight the weight 
        */
-      bool fill ( const double x , const double weight = 1 ) ;
-      bool Fill ( const double x , const double weight = 1 ) { return fill ( x , weight ) ; }
+      bool fill   ( const double x , const double weight = 1 ) ;
+      bool Fill   ( const double x , const double weight = 1 ) { return fill ( x , weight ) ; }
+      // =====================================================================
+    public: // Ostap::Math::WStatistic 
+      // =====================================================================
+      /// Ostap::Math::WStatistic, add one event with weight 
+      void update ( const double x , const double weight = 1 ) override
+      { this -> fill ( x , weight ) ; }
+      /// reet parameters to zeros 
+      void reset  () override { Parameters::reset () ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -2182,6 +2192,7 @@ namespace Ostap
      *  @date 2015-02-22
      */
     class LegendreSum : public PolySum
+		      , public Ostap::Math::WStatistic
     {
     public:
       // =====================================================================
@@ -2359,6 +2370,13 @@ namespace Ostap
       bool fill ( const double x , const double weight = 1 ) ;
       bool Fill ( const double x , const double weight = 1 ) { return fill ( x , weight ) ; }
       // ======================================================================
+    public: // Ostap::Math::WStatistic 
+      // =====================================================================
+      /// Ostap::Math::WStatistic, add one event with weight 
+      void update ( const double x , const double weight = 1 ) override
+      { this -> fill ( x , weight ) ; }
+      /// reet parameters to zeros 
+      void reset  () override { Parameters::reset () ; } 
     public: 
       // ======================================================================      
       /// get unique tag 

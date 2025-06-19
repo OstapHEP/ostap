@@ -38,7 +38,8 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2017-11-14
      */
-    class Bernstein3D : public Ostap::Math::Parameters 
+    class Bernstein3D : public Ostap::Math::Parameters
+		      , public Ostap::Math::WStatistic3
     {
       // ======================================================================
     public:
@@ -546,6 +547,18 @@ namespace Ostap
         const double y          , 
         const double z          , 
         const double weight = 1 )  { return fill ( x , y , z , weight ) ; }
+      // ======================================================================
+    public: // Ostap::Math::WStatistic3 
+      // =====================================================================
+      /// Ostap::Math::WStatistic3, add one event with weight 
+      void update
+      ( const double x          , 
+	const double y          , 
+	const double z          , 
+	const double weight = 1 ) override
+      { this -> fill ( x , y , z , weight ) ; }
+      /// reet parameters to zeros 
+      void reset  () override { Parameters::reset () ; } 
       // ======================================================================
     public: // few helper functions to expose internals
       // ======================================================================

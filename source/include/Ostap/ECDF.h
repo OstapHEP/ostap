@@ -145,12 +145,12 @@ namespace Ostap
         return this->add_sorted ( tmp.begin() , tmp.end() ) ;
       }
       // ======================================================================
+    public:
+      // ======================================================================
       /// Ostap::Math::Statistic::update
       void update ( const double x ) override { this -> add  ( x ) ; }
-      /// Fill, similar to histograms & 1D,2D,&3D polynomials 
-      void fill   ( const double x )          { this -> add  ( x ) ; }
-      /// Fill, similar to histograms & 1D,2D,&3D polynomials 
-      void Fill   ( const double x )          { this -> fill ( x ) ; }
+      /// Reset
+      void reset  () override { m_data.clear() ; m_counter.reset() ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -477,18 +477,14 @@ namespace Ostap
       /// add more values to data container 
       WECDF& add ( const ECDF::Data&  values ) ;
       // ======================================================================
+    public:
+      // ======================================================================
       /// Ostap::Math::WStatistic::update
       void update
       ( const double x     , 
         const double w = 1 ) override { this->add  ( x , w ) ; }
-      /// Fill, similar to histograms & 1D,2D,&3D polynomials 
-      void fill 
-      ( const double x     , 
-        const double w = 1 )          { this->add  ( x , w ) ; }
-      /// Fill, similar to histograms & 1D,2D,&3D polynomials 
-      void Fill 
-      ( const double x     , 
-        const double w = 1 )          { this->fill ( x , w ) ; }
+      /// Reset
+      void reset  () override { m_data.clear() ; m_counter.reset () ; }
       // ======================================================================
     public:
       // ======================================================================

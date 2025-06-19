@@ -102,13 +102,6 @@ namespace Ostap
     /// conversion to string
     std::string toString() const ;
     // =====================================================================
-    /// reset method (likely not needed at all) 
-    void reset() 
-    {
-      m_cnt1.reset() ;
-      m_cnt2.reset() ;        
-    }
-    // =====================================================================
     // all finite values ?
     inline bool isfinite () const
     { return m_cnt1.isfinite () && m_cnt2.isfinite() ; }
@@ -131,7 +124,9 @@ namespace Ostap
   public:
     // ======================================================================
     /// Ostap::Math::Statistic
-    void update ( const double value ) override { this->add ( value) ; } ;  
+    void update ( const double value ) override { this->add ( value) ; } ;
+    /// reset method 
+    void reset() override ;  
     // ======================================================================
   private:
     // ======================================================================

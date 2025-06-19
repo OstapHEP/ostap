@@ -11,1596 +11,231 @@
 // Ostap
 // ============================================================================
 #include "Ostap/StatusCode.h"
-#include "Ostap/DataFrame.h"
 // ============================================================================
 // Forward declarations 
 // =============================================================================
 class TH1        ;  // ROOT 
 class TH2        ;  // ROOT 
 class TH3        ;  // ROOT 
-class TProfile   ;  // ROOT 
-class TProfile2D ;  // ROOT 
 class TTree      ;  // ROOT 
 // =============================================================================
 class RooAbsData ; // RooFit 
 class RooAbsReal ; // RooFit 
 // =============================================================================
-namespace Ostap { namespace Math { class ChebyshevSum ; } }
-namespace Ostap { namespace Math { class LegendreSum  ; } }
-namespace Ostap { namespace Math { class LegendreSum2 ; } }
-namespace Ostap { namespace Math { class LegendreSum3 ; } }
-namespace Ostap { namespace Math { class LegendreSum4 ; } }
-namespace Ostap { namespace Math { class Bernstein    ; } }
-namespace Ostap { namespace Math { class Bernstein2D  ; } }
-namespace Ostap { namespace Math { class Bernstein3D  ; } }
-namespace Ostap { namespace Math { class ECDF         ; } }
-namespace Ostap { namespace Math { class WECDF        ; } }
+#include "Ostap/Statistic.h"
 // =============================================================================
+/** @file Ostap/HistoProject 
+ *  Collecton of useful counters for "projetcion" of 
+ *  data sources (TTree/RooAbsData) into data accumulators:
+ * - counters
+ * - histograms 
+ * - paramterizations 
+ * @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+ * @data 2025-06-19
+ */
 namespace Ostap
 {  
-  // ==========================================================================
-  namespace Utils 
+  // ===========================================================================
+  namespace  Utils
   {
-    // ========================================================================
-    /// forward declaration 
-    class ProgressConf ; /// forward declaration 
-    // ========================================================================
-  }    
-  // ==========================================================================
-  /** @class HistoProject Ostap/HistoProject.h
-   *  Helper class to project Dataset/DataFrame/TTree to histogram 
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date   2015-10-08
-   */
-  class HistoProject 
-  {
-  public:
-    // ========================================================================
-    /** make a projection of RooDataSet into the histogram 
-     *  @param data       (INPUT)  input data 
-     *  @param histo      (UPDATE) histogram 
-     *  @param expression (INPUT) expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*   data                 , 
-      TH1*                histo                ,
-      const std::string&  expression           ,
-      const std::string&  selection  = ""      ,
-      const char*         range      = nullptr , 
-      const unsigned long first      = 0                                         ,
-      const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================  
-    /** make a projection of RooDataSet into the histogram 
-     *  @param data       (INPUT)  input data
-     *  @param progress   (INPUT)  configuration of progres bar 
-     *  @param histo      (UPDATE) histogram 
-     *  @param expression (INPUT) expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param range      (INPUT) cut-range 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      TH1*                              histo                ,
-      const std::string&                expression           ,
-      const std::string&                selection  = ""      ,
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0                                         ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into the histogram 
-     *  @param data        (INPUT)  input data 
-     *  @param histo       (UPDATE) histogram 
-     *  @param xexpression (INPUT) expression for x-axis 
-     *  @param yexpression (INPUT) expression for y-axis 
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( const RooAbsData*   data                 , 
-      TH2*                histo                ,
-      const std::string&  xexpression          ,
-      const std::string&  yexpression          ,
-      const std::string&  selection  = ""      ,
-      const char*         range      = nullptr , 
-      const unsigned long first      = 0                                         ,
-      const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into the histogram 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param histo       (UPDATE) histogram 
-     *  @param xexpression (INPUT) expression for x-axis 
-     *  @param yexpression (INPUT) expression for y-axis 
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( const RooAbsData*                 data                 ,  
-      const Ostap::Utils::ProgressConf& progress             ,
-      TH2*                              histo                ,
-      const std::string&                xexpression          ,
-      const std::string&                yexpression          ,
-      const std::string&                selection  = ""      ,
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0                                         ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into the histogram 
-     *  @param data  (INPUT)  input data 
-     *  @param histo (UPDATE) histogram 
-     *  @param xexpression (INPUT) expression for x-axis 
-     *  @param yexpression (INPUT) expression for y-axis 
-     *  @param zexpression (INPUT) expression for z-axis 
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first (INPUT) the first event to process 
-     *  @param last  (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( const RooAbsData*   data                 , 
-      TH3*                histo                ,
-      const std::string&  xexpression          ,
-      const std::string&  yexpression          ,
-      const std::string&  zexpression          ,
-      const std::string&  selection  = ""      ,
-      const char*         range      = nullptr , 
-      const unsigned long first      = 0                                         ,
-      const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into the histogram 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param histo       (UPDATE) histogram 
-     *  @param xexpression (INPUT) expression for x-axis 
-     *  @param yexpression (INPUT) expression for y-axis 
-     *  @param zexpression (INPUT) expression for z-axis 
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( const RooAbsData*   data                 , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      TH3*                histo                ,
-      const std::string&  xexpression          ,
-      const std::string&  yexpression          ,
-      const std::string&  zexpression          ,
-      const std::string&  selection  = ""      ,
-      const char*         range      = nullptr , 
-      const unsigned long first      = 0                                         ,
-      const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-  public: // RooDataSet 
-    // ========================================================================
-    /** make a projection of RooDataSet into the histogram 
-     *  @param data       (INPUT)  input data 
-     *  @param histo      (UPDATE) histogram 
-     *  @param expression (INPUT) expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*   data                 , 
-      TH1*                histo                ,
-      const RooAbsReal&   expression           ,
-      const RooAbsReal*   selection  = nullptr ,
-      const char*         range      = nullptr , 
-      const unsigned long first      = 0                                         ,
-      const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into the histogram 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param histo       (UPDATE) histogram 
-     *  @param expression  (INPUT)  expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      TH1*                              histo                ,
-      const RooAbsReal&                 expression           ,
-      const RooAbsReal*                 selection  = nullptr ,
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0                                         ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into the histogram 
-     *  @param data        (INPUT)  input data 
-     *  @param histo       (UPDATE) histogram 
-     *  @param xexpression (INPUT)  expression for x-axis 
-     *  @param yexpression (INPUT)  expression for y-axis 
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( const RooAbsData*   data                 , 
-      TH2*                histo                ,
-      const RooAbsReal&   xexpression          ,
-      const RooAbsReal&   yexpression          ,
-      const RooAbsReal*   selection  = nullptr ,
-      const char*         range      = nullptr , 
-      const unsigned long first      = 0                                         ,
-      const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into the histogram 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param histo       (UPDATE) histogram 
-     *  @param xexpression (INPUT) expression for x-axis 
-     *  @param yexpression (INPUT) expression for y-axis 
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      TH2*                              histo                ,
-      const RooAbsReal&                 xexpression          ,
-      const RooAbsReal&                 yexpression          ,
-      const RooAbsReal*                 selection  = nullptr ,
-      const char*                       range      = nullptr ,       
-      const unsigned long               first      = 0                                         ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into the histogram 
-     *  @param data        (INPUT)  input data 
-     *  @param histo       (UPDATE) histogram 
-     *  @param xexpression (INPUT) expression for x-axis 
-     *  @param yexpression (INPUT) expression for y-axis 
-     *  @param zexpression (INPUT) expression for z-axis 
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( const RooAbsData*   data            , 
-      TH3*                histo           ,
-      const RooAbsReal&   xexpression     ,
-      const RooAbsReal&   yexpression     ,
-      const RooAbsReal&   zexpression     ,
-      const RooAbsReal*   selection  = nullptr ,
-      const char*         range      = nullptr ,       
-      const unsigned long first      = 0                                         ,
-      const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into the histogram 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param histo       (UPDATE) histogram 
-     *  @param xexpression (INPUT)  expression for x-axis 
-     *  @param yexpression (INPUT)  expression for y-axis 
-     *  @param zexpression (INPUT)  expression for z-axis 
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( const RooAbsData*   data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      TH3*                histo                ,
-      const RooAbsReal&   xexpression          ,
-      const RooAbsReal&   yexpression          ,
-      const RooAbsReal&   zexpression          ,
-      const RooAbsReal*   selection  = nullptr ,
-      const char*         range      = nullptr ,       
-      const unsigned long first      = 0                                         ,
-      const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-  public:  //   TTree
-    // ========================================================================
-    /** make a projection of TTree into the histogram 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param data        (INPUT)  input data 
-     *  @param histo       (UPDATE) histogram 
-     *  @param expression  (INPUT)  expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( TTree*              data            , 
-      TH1*                histo           ,
-      const std::string&  expression      ,
-      const std::string&  selection  = "" ,
-      const unsigned long first      = 0  ,
-      const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of TTree into the histogram 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param histo       (UPDATE) histogram 
-     *  @param expression  (INPUT)  expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( TTree*                            data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      TH1*                              histo           ,
-      const std::string&                expression      ,
-      const std::string&                selection  = "" ,
-      const unsigned long               first      = 0  ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of TTree into the histogram 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param data        (INPUT)  input data 
-     *  @param histo       (UPDATE) histogram 
-     *  @param xexpression (INPUT)  x-expression
-     *  @param yexpression (INPUT)  y-expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( TTree*              data            , 
-      TH2*                histo           ,
-      const std::string&  xexpression     ,
-      const std::string&  yexpression     ,
-      const std::string&  selection  = "" ,
-      const unsigned long first      = 0  ,
-      const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of TTree into the histogram 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param histo       (UPDATE) histogram 
-     *  @param xexpression (INPUT)  x-expression
-     *  @param yexpression (INPUT)  y-expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( TTree*                            data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      TH2*                              histo           ,
-      const std::string&                xexpression     ,
-      const std::string&                yexpression     ,
-      const std::string&                selection  = "" ,
-      const unsigned long               first      = 0  ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of TTree into the histogram 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param data        (INPUT)  input data 
-     *  @param histo       (UPDATE) histogram 
-     *  @param xexpression (INPUT)  x-expression
-     *  @param yexpression (INPUT)  y-expression
-     *  @param zexpression (INPUT)  z-expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( TTree*              data            , 
-      TH3*                histo           ,
-      const std::string&  xexpression     ,
-      const std::string&  yexpression     ,
-      const std::string&  zexpression     ,
-      const std::string&  selection  = "" ,
-      const unsigned long first      = 0  ,
-      const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of TTree into the histogram 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param histo       (UPDATE) histogram 
-     *  @param xexpression (INPUT)  x-expression
-     *  @param yexpression (INPUT)  y-expression
-     *  @param zexpression (INPUT)  z-expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( TTree*                            data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      TH3*                              histo           ,
-      const std::string&                xexpression     ,
-      const std::string&                yexpression     ,
-      const std::string&                zexpression     ,
-      const std::string&                selection  = "" ,
-      const unsigned long               first      = 0  ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-  public:
-    // ========================================================================
-    /** make a projection of RooDataSet into LegendreSum object 
-     *  @param data       (INPUT)  input data 
-     *  @param object     (UPDATE) the object 
-     *  @param expression (INPUT) expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*         data                 , 
-      Ostap::Math::LegendreSum& object               ,
-      const RooAbsReal&         expression           ,
-      const RooAbsReal*         selection  = nullptr ,
-      const char*               range      = nullptr , 
-      const unsigned long       first      = 0       ,
-      const unsigned long       last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into LegendreSum object 
-     *  @param data       (INPUT)  input data 
-     *  @param progress   (INPUT)  configuration of progres bar 
-     *  @param object     (UPDATE) the object 
-     *  @param expression (INPUT) expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      Ostap::Math::LegendreSum&         object               ,
-      const RooAbsReal&                 expression           ,
-      const RooAbsReal*                 selection  = nullptr ,
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0       ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into ChebyshevSum object 
-     *  @param data       (INPUT)  input data 
-     *  @param object     (UPDATE) the object 
-     *  @param expression (INPUT) expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*          data                 , 
-      Ostap::Math::ChebyshevSum& object               ,
-      const RooAbsReal&          expression           ,
-      const RooAbsReal*          selection  = nullptr ,
-      const char*                range      = nullptr , 
-      const unsigned long        first      = 0       ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into ChebyshevSum object 
-     *  @param data       (INPUT)  input data 
-     *  @param progress   (INPUT)  configuration of progres bar 
-     *  @param object     (UPDATE) the object 
-     *  @param expression (INPUT) expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      Ostap::Math::ChebyshevSum&        object               ,
-      const RooAbsReal&                 expression           ,
-      const RooAbsReal*                 selection  = nullptr ,
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0       ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into Bernstein object 
-     *  @param data       (INPUT)  input data 
-     *  @param object     (UPDATE) the object 
-     *  @param expression (INPUT) expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*          data                 , 
-      Ostap::Math::Bernstein&    object               ,
-      const RooAbsReal&          expression           ,
-      const RooAbsReal*          selection  = nullptr ,
-      const char*                range      = nullptr , 
-      const unsigned long        first      = 0       ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into Bernstein object 
-     *  @param data       (INPUT)  input data 
-     *  @param progress   (INPUT)  configuration of progres bar 
-     *  @param object     (UPDATE) the object 
-     *  @param expression (INPUT) expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      Ostap::Math::Bernstein&           object               ,
-      const RooAbsReal&                 expression           ,
-      const RooAbsReal*                 selection  = nullptr ,
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0       ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into LegendreSum2 object 
-     *  @param data        (INPUT)  input data 
-     *  @param object      (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( const RooAbsData*          data                 , 
-      Ostap::Math::LegendreSum2& object               ,
-      const RooAbsReal&          xexpression          ,
-      const RooAbsReal&          yexpression          ,
-      const RooAbsReal*          selection  = nullptr ,
-      const char*                range      = nullptr , 
-      const unsigned long        first      = 0       ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into LegendreSum2 object 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param object      (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param range       (INPUT) selection range  
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      Ostap::Math::LegendreSum2&        object               ,
-      const RooAbsReal&                 xexpression          ,
-      const RooAbsReal&                 yexpression          ,
-      const RooAbsReal*                 selection  = nullptr ,
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0       ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into Bernstein2D object 
-     *  @param data        (INPUT)  input data 
-     *  @param object      (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( const RooAbsData*          data                 , 
-      Ostap::Math::Bernstein2D&  object               ,
-      const RooAbsReal&          xexpression          ,
-      const RooAbsReal&          yexpression          ,
-      const RooAbsReal*          selection  = nullptr ,
-      const char*                range      = nullptr , 
-      const unsigned long        first      = 0       ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into Bernstein2D object 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param object      (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param range       (INPUT) selection range  
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      Ostap::Math::Bernstein2D&         object               ,
-      const RooAbsReal&                 xexpression          ,
-      const RooAbsReal&                 yexpression          ,
-      const RooAbsReal*                 selection  = nullptr ,
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0       ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into LegendreSum3 object 
-     *  @param data        (INPUT)  input data 
-     *  @param object      (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param zexpression (INPUT) z-expression
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( const RooAbsData*          data                 , 
-      Ostap::Math::LegendreSum3& object               ,
-      const RooAbsReal&          xexpression          ,
-      const RooAbsReal&          yexpression          ,
-      const RooAbsReal&          zexpression          ,
-      const RooAbsReal*          selection  = nullptr ,
-      const char*                range      = nullptr , 
-      const unsigned long        first      = 0       ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into LegendreSum3 object 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param object      (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param zexpression (INPUT) z-expression
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param range       (INPUT) selection range  
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      Ostap::Math::LegendreSum3&        object               ,
-      const RooAbsReal&                 xexpression          ,
-      const RooAbsReal&                 yexpression          ,
-      const RooAbsReal&                 zexpression          ,
-      const RooAbsReal*                 selection  = nullptr ,
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0       ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into Bernstein3D object 
-     *  @param data        (INPUT)  input data 
-     *  @param object      (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param zexpression (INPUT) z-expression
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( const RooAbsData*          data                 , 
-      Ostap::Math::Bernstein3D&  object               ,
-      const RooAbsReal&          xexpression          ,
-      const RooAbsReal&          yexpression          ,
-      const RooAbsReal&          zexpression          ,
-      const RooAbsReal*          selection  = nullptr ,
-      const char*                range      = nullptr , 
-      const unsigned long        first      = 0       ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into Bernstein3D object 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param object      (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param zexpression (INPUT) z-expression
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param range       (INPUT) selection range  
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      Ostap::Math::Bernstein3D&         object               ,
-      const RooAbsReal&                 xexpression          ,
-      const RooAbsReal&                 yexpression          ,
-      const RooAbsReal&                 zexpression          ,
-      const RooAbsReal*                 selection  = nullptr ,
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0       ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into LegendreSum4 object 
-     *  @param data        (INPUT)  input data 
-     *  @param object      (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param zexpression (INPUT) z-expression
-     *  @param uexpression (INPUT) u-expression
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project4
-    ( const RooAbsData*          data                 , 
-      Ostap::Math::LegendreSum4& object               ,
-      const RooAbsReal&          xexpression          ,
-      const RooAbsReal&          yexpression          ,
-      const RooAbsReal&          zexpression          ,
-      const RooAbsReal&          uexpression          ,
-      const RooAbsReal*          selection  = nullptr ,
-      const char*                range      = nullptr , 
-      const unsigned long        first      = 0       ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into LegendreSum4 object 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param object      (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param zexpression (INPUT) z-expression
-     *  @param uexpression (INPUT) u-expression
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param range       (INPUT) selection range  
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project4
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      Ostap::Math::LegendreSum4&        object               ,
-      const RooAbsReal&                 xexpression          ,
-      const RooAbsReal&                 yexpression          ,
-      const RooAbsReal&                 zexpression          ,
-      const RooAbsReal&                 uexpression          ,
-      const RooAbsReal*                 selection  = nullptr ,
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0       ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-  public:
-    // ========================================================================
-    /** make a projection of RooDataSet into LegendreSum object 
-     *  @param data       (INPUT)  input data 
-     *  @param object     (UPDATE) the object 
-     *  @param expression (INPUT) expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*         data                 , 
-      Ostap::Math::LegendreSum& object               ,
-      const std::string&        expression           , 
-      const std::string&        selection  = ""      , 
-      const char*               range      = nullptr , 
-      const unsigned long       first      = 0       ,
-      const unsigned long       last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into LegendreSum object 
-     *  @param data       (INPUT)  input data 
-     *  @param progress   (INPUT)  configuration of progres bar 
-     *  @param object     (UPDATE) the object 
-     *  @param expression (INPUT) expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      Ostap::Math::LegendreSum&         object               ,
-      const std::string&                expression           , 
-      const std::string&                selection  = ""      , 
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0       ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into ChebyshevSum object 
-     *  @param data       (INPUT)  input data 
-     *  @param object     (UPDATE) the object 
-     *  @param expression (INPUT) expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*          data                 , 
-      Ostap::Math::ChebyshevSum& object               ,
-      const std::string&         expression           , 
-      const std::string&         selection  = ""      ,
-      const char*                range      = nullptr , 
-      const unsigned long        first      = 0       ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into ChebyshevSum object 
-     *  @param data       (INPUT)  input data 
-     *  @param progress   (INPUT)  configuration of progres bar 
-     *  @param object     (UPDATE) the object 
-     *  @param expression (INPUT) expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      Ostap::Math::ChebyshevSum&        object               ,
-      const std::string&                expression           , 
-      const std::string&                selection  = ""      , 
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0       ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into Bernstein object 
-     *  @param data       (INPUT)  input data 
-     *  @param object     (UPDATE) the object 
-     *  @param expression (INPUT) expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*         data                 , 
-      Ostap::Math::Bernstein&   object               ,
-      const std::string&        expression           , 
-      const std::string&        selection  = ""      , 
-      const char*               range      = nullptr , 
-      const unsigned long       first      = 0       ,
-      const unsigned long       last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into Bernstein  object 
-     *  @param data       (INPUT)  input data 
-     *  @param progress   (INPUT)  configuration of progres bar 
-     *  @param object     (UPDATE) the object 
-     *  @param expression (INPUT) expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      Ostap::Math::Bernstein&           object               ,
-      const std::string&                expression           , 
-      const std::string&                selection  = ""      , 
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0       ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;    
-    // ========================================================================
-    /** make a projection of RooDataSet into LegendreSum2 object 
-     *  @param data        (INPUT)  input data 
-     *  @param object      (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( const RooAbsData*          data                 , 
-      Ostap::Math::LegendreSum2& object               ,
-      const std::string&         xexpression           , 
-      const std::string&         yexpression           , 
-      const std::string&         selection  = ""      , 
-      const char*                range      = nullptr , 
-      const unsigned long        first      = 0       ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into LegendreSum2 object 
-     *  @param data       (INPUT)  input data 
-     *  @param progress   (INPUT)  configuration of progres bar 
-     *  @param object     (UPDATE) the object 
-     *  @param expression (INPUT) expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      Ostap::Math::LegendreSum2&        object               ,
-      const std::string&                xexpression          , 
-      const std::string&                yexpression          , 
-      const std::string&                selection  = ""      , 
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0       ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into Bernstein2D object 
-     *  @param data        (INPUT)  input data 
-     *  @param object      (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( const RooAbsData*          data                 , 
-      Ostap::Math::Bernstein2D&  object               ,
-      const std::string&         xexpression          , 
-      const std::string&         yexpression          , 
-      const std::string&         selection  = ""      , 
-      const char*                range      = nullptr , 
-      const unsigned long        first      = 0       ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into Bernstein2D object 
-     *  @param data       (INPUT)  input data 
-     *  @param progress   (INPUT)  configuration of progres bar 
-     *  @param object     (UPDATE) the object 
-     *  @param expression (INPUT) expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      Ostap::Math::Bernstein2D&         object               ,
-      const std::string&                xexpression          , 
-      const std::string&                yexpression          , 
-      const std::string&                selection  = ""      , 
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0       ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================    
-    /** make a projection of RooDataSet into LegendreSum3 object 
-     *  @param data        (INPUT)  input data 
-     *  @param object      (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param zexpression (INPUT) z-expression
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( const RooAbsData*          data                 , 
-      Ostap::Math::LegendreSum3& object               ,
-      const std::string&         xexpression          , 
-      const std::string&         yexpression          , 
-      const std::string&         zexpression          , 
-      const std::string&         selection  = ""      , 
-      const char*                range      = nullptr , 
-      const unsigned long        first      = 0       ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into LegendreSum3 object 
-     *  @param data       (INPUT)  input data 
-     *  @param progress   (INPUT)  configuration of progres bar 
-     *  @param object     (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param zexpression (INPUT) z-expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      Ostap::Math::LegendreSum3&        object               ,
-      const std::string&                xexpression          , 
-      const std::string&                yexpression          , 
-      const std::string&                zexpression          , 
-      const std::string&                selection  = ""      , 
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0       ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into Bernstein3D object 
-     *  @param data        (INPUT)  input data 
-     *  @param object      (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param zexpression (INPUT) z-expression
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( const RooAbsData*          data                 , 
-      Ostap::Math::Bernstein3D&  object               ,
-      const std::string&         xexpression          , 
-      const std::string&         yexpression          , 
-      const std::string&         zexpression          , 
-      const std::string&         selection  = ""      ,
-      const char*                range      = nullptr ,       
-      const unsigned long        first      = 0       ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into Bernstein3D object 
-     *  @param data       (INPUT)  input data 
-     *  @param progress   (INPUT)  configuration of progres bar 
-     *  @param object     (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param zexpression (INPUT) z-expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      Ostap::Math::Bernstein3D&         object               ,
-      const std::string&                xexpression          , 
-      const std::string&                yexpression          , 
-      const std::string&                zexpression          , 
-      const std::string&                selection  = ""      ,
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0       ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================    
-    /** make a projection of RooDataSet into LegendreSum4 object 
-     *  @param data        (INPUT)  input data 
-     *  @param object      (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param zexpression (INPUT) z-expression
-     *  @param uexpression (INPUT) u-expression
-     *  @param selection   (INPUT) selection criteria/weight 
-     *  @param first       (INPUT) the first event to process 
-     *  @param last        (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project4
-    ( const RooAbsData*          data                 , 
-      Ostap::Math::LegendreSum4& object               ,
-      const std::string&         xexpression          , 
-      const std::string&         yexpression          , 
-      const std::string&         zexpression          , 
-      const std::string&         uexpression          , 
-      const std::string&         selection  = ""      , 
-      const char*                range      = nullptr , 
-      const unsigned long        first      = 0       ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into LegendreSum4 object 
-     *  @param data       (INPUT)  input data 
-     *  @param progress   (INPUT)  configuration of progres bar 
-     *  @param object     (UPDATE) the object 
-     *  @param xexpression (INPUT) x-expression
-     *  @param yexpression (INPUT) y-expression
-     *  @param zexpression (INPUT) z-expression
-     *  @param selection  (INPUT) selection criteria/weight 
-     *  @param first      (INPUT) the first event to process 
-     *  @param last       (INPUT) the last event to process 
-     */
-    static Ostap::StatusCode project4
-    ( const RooAbsData*                 data                 , 
-      const Ostap::Utils::ProgressConf& progress             ,
-      Ostap::Math::LegendreSum4&        object               ,
-      const std::string&                xexpression          , 
-      const std::string&                yexpression          , 
-      const std::string&                zexpression          , 
-      const std::string&                uexpression          , 
-      const std::string&                selection  = ""      , 
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0       ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-  public:  //   DataFrame 
-    // ========================================================================
-    /** make a projection of DataFrame into the histogram 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param histo       (UPDATE) histogram 
-     *  @param expression  (INPUT) expression
-     *  @param selection   (INPUT) selection criteria/weight 
-     */
-    static Ostap::StatusCode project
-    ( FrameNode           data            , 
-      TH1*                histo           ,
-      const std::string&  expression      ,
-      const std::string&  selection  = "" ) ;
-    // ========================================================================
-    /** make a projection of DataFrame into the histogram 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param data        (INPUT)  input data 
-     *  @param histo       (UPDATE) histogram 
-     *  @param expression  (INPUT) expression
-     *  @param selection   (INPUT) selection criteria/weight 
-     */
-    static Ostap::StatusCode project
-    ( FrameNode                         data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      TH1*                              histo           ,
-      const std::string&                expression      ,
-      const std::string&                selection  = "" ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into the histogram 
-     *  @param data        (INPUT)  input data 
-     *  @param histo       (UPDATE) histogram 
-     *  @param xexpression (INPUT) expression for x-axis 
-     *  @param yexpression (INPUT) expression for y-axis 
-     *  @param selection   (INPUT) selection criteria/weight 
-     */
-    static Ostap::StatusCode project2
-    ( FrameNode           data            , 
-      TH2*                histo           ,
-      const std::string&  xexpression     ,
-      const std::string&  yexpression     ,
-      const std::string&  selection  = "" );
-    // ========================================================================
-    /** make a projection of RooDataSet into the histogram 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param histo       (UPDATE) histogram 
-     *  @param xexpression (INPUT) expression for x-axis 
-     *  @param yexpression (INPUT) expression for y-axis 
-     *  @param selection   (INPUT) selection criteria/weight 
-     */
-    static Ostap::StatusCode project2
-    ( FrameNode                         data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      TH2*                              histo           ,
-      const std::string&                xexpression     ,
-      const std::string&                yexpression     ,
-      const std::string&                selection  = "" );
-    // ========================================================================
-    /** make a projection of RooDataSet into the histogram 
-     *  @param data        (INPUT)  input data 
-     *  @param histo       (UPDATE) histogram 
-     *  @param xexpression (INPUT)  expression for x-axis 
-     *  @param yexpression (INPUT)  expression for y-axis 
-     *  @param zexpression (INPUT)  expression for z-axis 
-     *  @param selection   (INPUT)  selection criteria/weight 
-     */
-    static Ostap::StatusCode project3
-    ( FrameNode           data            , 
-      TH3*                histo           ,
-      const std::string&  xexpression     ,
-      const std::string&  yexpression     ,
-      const std::string&  zexpression     ,
-      const std::string&  selection  = "" ) ;
-    // ========================================================================
-    /** make a projection of RooDataSet into the histogram 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param histo       (UPDATE) histogram 
-     *  @param xexpression (INPUT)  expression for x-axis 
-     *  @param yexpression (INPUT)  expression for y-axis 
-     *  @param zexpression (INPUT)  expression for z-axis 
-     *  @param selection   (INPUT)  selection criteria/weight 
-     */
-    static Ostap::StatusCode project3
-    ( FrameNode                         data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      TH3*                              histo           ,
-      const std::string&                xexpression     ,
-      const std::string&                yexpression     ,
-      const std::string&                zexpression     ,
-      const std::string&                selection  = "" ) ;
-    // ========================================================================
-  public: 
-    // ========================================================================
-    // TTeee -> 1D non-histograms 
-    // ========================================================================
-    /** make a projection of TTree into the object 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param data        (INPUT)  input data 
-     *  @param sum         (UPDATE) sum  
-     *  @param expression  (INPUT)  expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( TTree*                     data            , 
-      Ostap::Math::LegendreSum&  sum             ,
-      const std::string&         expression      ,
-      const std::string&         selection  = "" ,
-      const unsigned long        first      = 0  ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of TTree into the object 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param sum         (UPDATE) sum 
-     *  @param expression  (INPUT)  expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( TTree*                            data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      Ostap::Math::LegendreSum&         sum             ,
-      const std::string&                expression      ,
-      const std::string&                selection  = "" ,
-      const unsigned long               first      = 0  ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of TTree into the object 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param data        (INPUT)  input data 
-     *  @param sum         (UPDATE) sum  
-     *  @param expression  (INPUT)  expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( TTree*                     data            , 
-      Ostap::Math::ChebyshevSum& sum             ,
-      const std::string&         expression      ,
-      const std::string&         selection  = "" ,
-      const unsigned long        first      = 0  ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of TTree into the object 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param sum         (UPDATE) sum 
-     *  @param expression  (INPUT)  expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( TTree*                            data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      Ostap::Math::ChebyshevSum&        sum             ,
-      const std::string&                expression      ,
-      const std::string&                selection  = "" ,
-      const unsigned long               first      = 0  ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of TTree into the object 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param data        (INPUT)  input data 
-     *  @param sum         (UPDATE) sum  
-     *  @param expression  (INPUT)  expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( TTree*                     data            , 
-      Ostap::Math::Bernstein&    sum             ,
-      const std::string&         expression      ,
-      const std::string&         selection  = "" ,
-      const unsigned long        first      = 0  ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of TTree into the object 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param sum         (UPDATE) sum 
-     *  @param expression  (INPUT)  expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( TTree*                            data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      Ostap::Math::Bernstein&           sum             ,
-      const std::string&                expression      ,
-      const std::string&                selection  = "" ,
-      const unsigned long               first      = 0  ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-  public: 
-    // ========================================================================
-    // TTeee -> 2D non-histograms 
-    // ========================================================================
-    /** make a projection of TTree into the object
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param data        (INPUT)  input data 
-     *  @param sum         (UPDATE) sum 
-     *  @param xexpression (INPUT)  x-expression
-     *  @param yexpression (INPUT)  y-expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( TTree*                     data            , 
-      Ostap::Math::LegendreSum2& sum             ,
-      const std::string&         xexpression     ,
-      const std::string&         yexpression     ,
-      const std::string&         selection  = "" ,
-      const unsigned long        first      = 0  ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of TTree into the object 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param sum         (UPDATE) sum 
-     *  @param xexpression (INPUT)  x-expression
-     *  @param yexpression (INPUT)  y-expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( TTree*                            data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      Ostap::Math::LegendreSum2&        sum             ,
-      const std::string&                xexpression     ,
-      const std::string&                yexpression     ,
-      const std::string&                selection  = "" ,
-      const unsigned long               first      = 0  ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of TTree into the object
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param data        (INPUT)  input data 
-     *  @param sum         (UPDATE) sum 
-     *  @param xexpression (INPUT)  x-expression
-     *  @param yexpression (INPUT)  y-expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( TTree*                     data            , 
-      Ostap::Math::Bernstein2D&  sum             ,
-      const std::string&         xexpression     ,
-      const std::string&         yexpression     ,
-      const std::string&         selection  = "" ,
-      const unsigned long        first      = 0  ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of TTree into the object 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param sum         (UPDATE) sum 
-     *  @param xexpression (INPUT)  x-expression
-     *  @param yexpression (INPUT)  y-expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project2
-    ( TTree*                            data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      Ostap::Math::Bernstein2D&         sum             ,
-      const std::string&                xexpression     ,
-      const std::string&                yexpression     ,
-      const std::string&                selection  = "" ,
-      const unsigned long               first      = 0  ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-  public: 
-    // ========================================================================
-    // TTeee -> 3D non-histograms 
-    // ========================================================================
-    /** make a projection of TTree into the object
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param data        (INPUT)  input data 
-     *  @param sum         (UPDATE) sum 
-     *  @param xexpression (INPUT)  x-expression
-     *  @param yexpression (INPUT)  y-expression
-     *  @param zexpression (INPUT)  z-expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( TTree*                     data            , 
-      Ostap::Math::LegendreSum3& sum             ,
-      const std::string&         xexpression     ,
-      const std::string&         yexpression     ,
-      const std::string&         zexpression     ,
-      const std::string&         selection  = "" ,
-      const unsigned long        first      = 0  ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of TTree into the object 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param sum         (UPDATE) sum 
-     *  @param xexpression (INPUT)  x-expression
-     *  @param yexpression (INPUT)  y-expression
-     *  @param zexpression (INPUT)  z-expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( TTree*                            data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      Ostap::Math::LegendreSum3&        sum             ,
-      const std::string&                xexpression     ,
-      const std::string&                yexpression     ,
-      const std::string&                zexpression     ,
-      const std::string&                selection  = "" ,
-      const unsigned long               first      = 0  ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of TTree into the object
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param data        (INPUT)  input data 
-     *  @param sum         (UPDATE) sum 
-     *  @param xexpression (INPUT)  x-expression
-     *  @param yexpression (INPUT)  y-expression
-     *  @param zexpression (INPUT)  z-expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( TTree*                     data            , 
-      Ostap::Math::Bernstein3D&  sum             ,
-      const std::string&         xexpression     ,
-      const std::string&         yexpression     ,
-      const std::string&         zexpression     ,
-      const std::string&         selection  = "" ,
-      const unsigned long        first      = 0  ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of TTree into the object 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param sum         (UPDATE) sum 
-     *  @param xexpression (INPUT)  x-expression
-     *  @param yexpression (INPUT)  y-expression
-     *  @param zexpression (INPUT)  z-expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project3
-    ( TTree*                            data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      Ostap::Math::Bernstein3D&         sum             ,
-      const std::string&                xexpression     ,
-      const std::string&                yexpression     ,
-      const std::string&                zexpression     ,
-      const std::string&                selection  = "" ,
-      const unsigned long               first      = 0  ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-  public: 
-    // ========================================================================
-    // TTeee -> 4D non-histograms 
-    // ========================================================================
-    /** make a projection of TTree into the object
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param data        (INPUT)  input data 
-     *  @param sum         (UPDATE) sum 
-     *  @param xexpression (INPUT)  x-expression
-     *  @param yexpression (INPUT)  y-expression
-     *  @param zexpression (INPUT)  z-expression
-     *  @param zexpression (INPUT)  z-expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project4
-    ( TTree*                     data            , 
-      Ostap::Math::LegendreSum4& sum             ,
-      const std::string&         xexpression     ,
-      const std::string&         yexpression     ,
-      const std::string&         zexpression     ,
-      const std::string&         uexpression     ,
-      const std::string&         selection  = "" ,
-      const unsigned long        first      = 0  ,
-      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-    /** make a projection of TTree into the object 
-     *  @param data        (INPUT)  input data 
-     *  @param progress    (INPUT)  configuration of progres bar 
-     *  @param sum         (UPDATE) sum 
-     *  @param xexpression (INPUT)  x-expression
-     *  @param yexpression (INPUT)  y-expression
-     *  @param zexpression (INPUT)  z-expression
-     *  @param selection   (INPUT)  selection criteria/weight 
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project4
-    ( TTree*                            data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      Ostap::Math::LegendreSum4&        sum             ,
-      const std::string&                xexpression     ,
-      const std::string&                yexpression     ,
-      const std::string&                zexpression     ,
-      const std::string&                uexpression     ,
-      const std::string&                selection  = "" ,
-      const unsigned long               first      = 0  ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
-    // ========================================================================
-  public : // TTree -> ECDF 
-    // ========================================================================
-    /** get ECDF for for the given expression/variable 
-     *  @param data   (INPUT) input data 
-     *  @param ecdf        (UPDATE) ECDF 
-     *  @param expression  (INPUT)  expression
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( TTree*              data            ,
-      Ostap::Math::ECDF&  ecdf            ,
-      const std::string&  expression      ,
-      const unsigned long first      = 0  ,
-      const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;      
-    // ========================================================================
-    /** get ECDF for for the given expression/variable 
-     *  @param data   (INPUT) input data 
-     *  @param ecdf        (UPDATE) ECDF 
-     *  @param expression  (INPUT)  expression
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( TTree*                            data            ,
-      const Ostap::Utils::ProgressConf& progress        ,
-      Ostap::Math::ECDF&                ecdf            ,
-      const std::string&                expression      ,
-      const unsigned long               first      = 0  ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;    
-    // ========================================================================
-  public : // TTree -> WECDF 
-    // ========================================================================
-    /** get ECDF for for the given expression/variable 
-     *  @param data   (INPUT) input data 
-     *  @param ecdf        (UPDATE) ECDF 
-     *  @param expression  (INPUT)  expression
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( TTree*              data            ,
-      Ostap::Math::WECDF& ecdf            ,
-      const std::string&  expression      ,
-      const std::string&  selection  = "" ,
-      const unsigned long first      = 0  ,
-      const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;      
-    // ========================================================================
-    /** get ECDF for for the given expression/variable 
-     *  @param data   (INPUT) input data 
-     *  @param ecdf        (UPDATE) ECDF 
-     *  @param expression  (INPUT)  expression
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( TTree*                            data            ,
-      const Ostap::Utils::ProgressConf& progress        ,
-      Ostap::Math::WECDF&               ecdf            ,
-      const std::string&                expression      ,
-      const std::string&                selection  = "" ,
-      const unsigned long               first      = 0  ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;    
-    // ========================================================================
-  public : // RooAbsData  -> WECDF 
-    // ========================================================================
-    /** get ECDF for for the given expression/variable 
-     *  @param data        (INPUT) input data 
-     *  @param ecdf        (UPDATE) ECDF 
-     *  @param expression  (INPUT)  expression
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*   data                 ,
-      Ostap::Math::WECDF& ecdf                 ,
-      const std::string&  expression           ,
-      const std::string&  selection  = ""      , 
-      const char*         range      = nullptr , 
-      const unsigned long first      = 0       ,
-      const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;      
-    // ========================================================================
-    /** get ECDF for for the given expression/variable 
-     *  @param data   (INPUT) input data 
-     *  @param ecdf        (UPDATE) ECDF 
-     *  @param expression  (INPUT)  expression
-     *  @param first       (INPUT)  the first event to process 
-     *  @param last        (INPUT)  the last event to process 
-     */
-    static Ostap::StatusCode project
-    ( const RooAbsData*                 data            ,
-      const Ostap::Utils::ProgressConf& progress        ,
-      Ostap::Math::WECDF&               ecdf            ,
-      const std::string&                expression      ,
-      const std::string&                selection  = ""      , 
-      const char*                       range      = nullptr , 
-      const unsigned long               first      = 0       ,
-      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;    
-    // ========================================================================            
-  } ;
-  // ==========================================================================
-} //                                                     end of namespace Ostap
-// ============================================================================
-//                                                                      The END 
-// ============================================================================
+    // =======================================================================
+    /** @class TH1_Statistics 
+     *  1D-histgram as statistics 
+     *  @see Ostap::Math::Statistics
+     */
+    class TH1_Statistic : public Ostap::Math::Statistic
+    {
+      // ======================================================================
+      /// constructor 
+      TH1_Statistic  ( TH1* histo ) ;
+      // ======================================================================
+    public:
+      // =====================================================================
+      /** reset the histogram
+       *  @see Ostap::Math::Statistic::reset 
+       *  @see TH1::Reset 
+       */
+      void reset  () override ;
+      // =====================================================================
+      /** update the content 
+       *  @see Ostap::Math::Statistic::update
+       *  @see TH1::Fill
+       */
+      void update
+      ( const double x ) override ; 
+      // =====================================================================
+    private:
+      // ======================================================================
+      TH1* m_histo { nullptr } ;
+      // ======================================================================      
+    } ;
+    // =======================================================================
+    /** @class TH1_@Statistic 
+     *  1D-histgram as statistics 
+     *  @see Ostap::Math::WStatistic
+     */
+    class TH1_WStatistic : public Ostap::Math::WStatistic
+    {
+      // ======================================================================
+      TH1_WStatistic  ( TH1* histo ) ;
+      // ======================================================================
+    public:
+      // =====================================================================
+      /** reset the histogram
+       *  @see Ostap::Math::WStatistic::reset 
+       *  @see TH1::Reset 
+       */
+      void reset  () override ;
+      // =====================================================================
+      /** update the content 
+       *  @see Ostap::Math::WStatistic::update
+       *  @see TH1::Fill
+       */
+      void update
+      ( const double x ,
+	const double w ) override ; 
+      // =====================================================================
+    private:
+      // ======================================================================
+      TH1* m_histo { nullptr } ;
+      // ======================================================================      
+    } ;
+    // =======================================================================
+    /** @class TH2_Statistic 
+     *  2D-histgram as statistics
+     *  @see Ostap::Math::Statistics2
+     */
+    class TH2_Statistic : public Ostap::Math::Statistic2
+    {
+      // ======================================================================
+      /// constructor 
+      TH2_Statistic  ( TH2* histo ) ;
+      // ======================================================================
+    public:
+      // =====================================================================
+      /** reset the histogram
+       *  @see Ostap::Math::Statistic2::reset 
+       *  @see TH1::Reset 
+       */
+      void reset  () override ;
+      // =====================================================================
+      /** update the content 
+       *  @see Ostap::Math::Statistic2::update
+       *  @see TH1::Fill
+       */
+      void update
+      ( const double x ,
+	const double y ) override ; 
+      // =====================================================================
+    private:
+      // ======================================================================
+      TH2* m_histo { nullptr } ;
+      // ======================================================================      
+    } ;
+    // =======================================================================
+    /** @class TH2_WStatistic 
+     *  2D-histgram as statistics 
+     *  @see Ostap::Math::WStatistic2
+     */
+    class TH2_WStatistic : public Ostap::Math::WStatistic2
+    {
+      // ======================================================================
+      TH2_WStatistic  ( TH2* histo ) ;
+      // ======================================================================
+    public:
+      // =====================================================================
+      /** reset the histogram
+       *  @see Ostap::Math::WStatistic2::reset 
+       *  @see TH1::Reset 
+       */
+      void reset  () override ;
+      // =====================================================================
+      /** update the content 
+       *  @see Ostap::Math::WStatistic2::update
+       *  @see TH1::Fill
+       */
+      void update
+      ( const double x ,
+	const double y , 
+	const double w ) override ; 
+      // =====================================================================
+    private:
+      // ======================================================================
+      TH2* m_histo { nullptr } ;
+      // ======================================================================      
+    } ;
+    // ========================================================================
+    /** @class TH3_Statistic
+     *  3D-histgram as statistics 
+     *  @see Ostap::Math::Statistic3
+     */
+    class TH3_Statistic : public Ostap::Math::Statistic3
+    {
+      // ======================================================================
+      /// constructor 
+      TH3_Statistic  ( TH3* histo ) ;
+      // ======================================================================
+    public:
+      // =====================================================================
+      /** reset the histogram
+       *  @see Ostap::Math::Statistic3::reset 
+       *  @see TH1::Reset 
+       */
+      void reset  () override ;
+      // =====================================================================
+      /** update the content 
+       *  @see Ostap::Math::Statistic3::update
+       *  @see TH1::Fill
+       */
+      void update
+      ( const double x ,
+	const double y ,
+	const double z ) override ; 
+      // =====================================================================
+    private:
+      // ======================================================================
+      TH3* m_histo { nullptr } ;
+      // ======================================================================      
+    } ;
+    // =======================================================================
+    /** @class TH3_WStatistic 
+     *  3D-histgram as statistics 
+     *  @see Ostap::Math::WStatistic3
+     */
+    class TH3_WStatistic : public Ostap::Math::WStatistic3
+    {
+      // ======================================================================
+      TH3_WStatistic  ( TH3* histo ) ;
+      // ======================================================================
+    public:
+      // =====================================================================
+      /** reset the histogram
+       *  @see Ostap::Math::WStatistic3::reset 
+       *  @see TH1::Reset 
+       */
+      void reset  () override ;
+      // =====================================================================
+      /** update the content 
+       *  @see Ostap::Math::WStatistics3::update
+       *  @see TH1::Fill
+       */
+      void update
+      ( const double x ,
+	const double y , 
+	const double z , 
+	const double w ) override ; 
+      // =====================================================================
+    private:
+      // ======================================================================
+      TH3* m_histo { nullptr } ;
+      // ======================================================================      
+    } ;
+    // ========================================================================
+  } //                                        The end of namespace Ostap::Utils 
+  // ===========================================================================
+} // The end of namespace Ostap 
+// =============================================================================
 #endif // OSTAP_HPROJECT_H
-// ============================================================================
-
+// =============================================================================
+//                                                                       The END 
+// =============================================================================

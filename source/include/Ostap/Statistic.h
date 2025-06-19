@@ -19,7 +19,7 @@ namespace  Ostap
       /// add new value to the counter
       virtual void update ( const double x ) = 0 ;
       /// reset  the context
-      // virtual void reset () = 0 ; 
+      virtual void reset () = 0 ; 
       // ======================================================================
     } ; //                          The end of the class Ostap::Math::Statistic
     // ========================================================================
@@ -35,8 +35,8 @@ namespace  Ostap
       virtual void update 
       ( const double x , 
         const double y ) = 0 ; 
-      /// reset  the context
-      // virtual void reset () = 0 ; 
+      // reset  the context
+      virtual void reset () = 0 ; 
       // ======================================================================
     } ; //                         The end of the class Ostap::Math::Statistic2
     // ========================================================================
@@ -54,7 +54,7 @@ namespace  Ostap
         const double y , 
         const double z ) = 0 ;
       /// reset  the context
-      // virtual void reset () = 0 ; 
+      virtual void reset () = 0 ; 
       // ======================================================================
     } ; //                         The end of the class Ostap::Math::Statistic3
     // ========================================================================
@@ -73,7 +73,7 @@ namespace  Ostap
         const double z , 
         const double t ) = 0 ;
       /// reset  the context
-      // virtual void reset () = 0 ; 
+      virtual void reset () = 0 ; 
       // ======================================================================
     } ; //                         The end of the class Ostap::Math::Statistic4
     // ========================================================================
@@ -88,7 +88,7 @@ namespace  Ostap
       /// add new value to the counter
       virtual void update ( const double x , const double w = 1 ) = 0 ;
       /// reset  the context
-      // virtual void reset () = 0 ; 
+      virtual void reset () = 0 ; 
       // ======================================================================
     } ; //                         The end of the class Ostap::Math::WStatistic 
     // ========================================================================
@@ -106,7 +106,7 @@ namespace  Ostap
         const double y , 
         const double w = 1 ) = 0 ;
       /// reset  the context
-      // virtual void reset () = 0 ; 
+      virtual void reset () = 0 ; 
       // ======================================================================
     } ; //                        The end of the class Ostap::Math::WStatistic2
     // ========================================================================
@@ -125,11 +125,11 @@ namespace  Ostap
         const double z , 
         const double w = 1 ) = 0 ;
       /// reset  the context
-      // virtual void reset () = 0 ; 
+      virtual void reset () = 0 ; 
       // ======================================================================
     } ; //                        The end of the class Ostap::Math::WStatistic3
     // ========================================================================
-   /** @class WStatistic4
+    /** @class WStatistic4
      *  Helper (empty) base class for weighted statistics
      */
     class WStatistic4
@@ -145,8 +145,8 @@ namespace  Ostap
         const double t , 
         const double w = 1 ) = 0 ;
       /// reset  the context
-      // virtual void reset () = 0 ; 
-      // ======================================================================
+      virtual void reset () = 0 ; 
+      // ======================================================================      
     } ; //                        The end of the class Ostap::Math::WStatistic4
     // ========================================================================
   } //                                         The end of namespace Ostap::Math

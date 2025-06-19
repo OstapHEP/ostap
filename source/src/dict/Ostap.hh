@@ -92,6 +92,7 @@
 #include "Ostap/Notifier.h"
 #include "Ostap/NSphere.h"
 #include "Ostap/NStatEntity.h"
+#include "Ostap/P2Quantile.h"
 #include "Ostap/Parameterization.h"
 #include "Ostap/Params.h"
 #include "Ostap/Peaks.h"

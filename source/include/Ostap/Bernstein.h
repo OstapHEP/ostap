@@ -49,6 +49,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      */
     class Bernstein : public Ostap::Math::PolySum
+		    , public Ostap::Math::WStatistic		      
     {
       // ======================================================================
     public:
@@ -446,6 +447,14 @@ namespace Ostap
        */
       bool fill ( const double x , const double weight = 1 ) ;
       bool Fill ( const double x , const double weight = 1 ) { return fill ( x , weight ) ; }
+      // ======================================================================
+    public: // Ostap::Math::WStatistic 
+      // =====================================================================
+      /// Ostap::Math::WStatistic, add one event with weight 
+      void update ( const double x , const double weight = 1 ) override
+      { this -> fill ( x , weight ) ; }
+      /// reet parameters to zeros 
+      void reset  () override { Parameters::reset () ; } 
       // ======================================================================
     public:
       // ======================================================================

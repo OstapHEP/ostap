@@ -320,11 +320,11 @@ namespace Ostap
     // ========================================================================
     /// update counter Ostap::Math::Statistic
     void update ( const double value ) override { this -> add ( value ) ; } ;
+    /// reset the counters
+    void reset  () override ;
     // ========================================================================
   public: // various technical helper methods  
     // ========================================================================
-    /// reset the counters
-    void reset () ;
     /// swap two counters
     void swap ( StatEntity& right ) ;
     /// representation as string
@@ -336,10 +336,10 @@ namespace Ostap
     inline bool isfinite () const
     {
       return
-  	  std::isfinite ( m_mu  ) &&
-	    std::isfinite ( m_mu2 ) &&
-	    std::isfinite ( m_min ) &&
-	    std::isfinite ( m_max ) ;	
+	std::isfinite ( m_mu  ) &&
+	std::isfinite ( m_mu2 ) &&
+	std::isfinite ( m_min ) &&
+	std::isfinite ( m_max ) ;	
     }
     // ======================================================================
   private: // data members 

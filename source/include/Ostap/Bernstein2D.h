@@ -42,7 +42,8 @@ namespace Ostap
      *  - \f$ B_n^k(x) \f$ is basic Bernstein polynomial
      *  @see Ostap::Math::Bernstein
      */
-    class Bernstein2D : public Ostap::Math::Parameters 
+    class Bernstein2D : public Ostap::Math::Parameters
+		      , public Ostap::Math::WStatistic2 
     {
       // ======================================================================
     public:
@@ -273,6 +274,17 @@ namespace Ostap
       ( const double x          , 
         const double y          , 
         const double weight = 1 )  { return fill ( x , y , weight ) ; }
+      // ======================================================================
+    public: // Ostap::Math::WStatistic2 
+      // =====================================================================
+      /// Ostap::Math::WStatistic2, add one event with weight 
+      void update
+      ( const double x          ,
+	const double y          ,
+	const double weight = 1 ) override
+      { this -> fill ( x , y , weight ) ; }
+      /// reet parameters to zeros 
+      void reset  () override { Parameters::reset () ; } 
       // ======================================================================
     public:
       // ======================================================================
