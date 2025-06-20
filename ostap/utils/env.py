@@ -112,6 +112,28 @@ def get_env ( variable , default , silent = False ) :
     return found [ -1] [ 1 ] 
 
 # =============================================================================
+## print enviroments as a table 
+def show_env ( title = 'Environment' ) :
+    """ Print enviroments as a table 
+    """
+    rows = [  ( '#' , 'Variable' , 'Value' ) ]
+
+    i = 0
+    keys = sorted ( os.environ.keys() )
+    for key in keys :
+        value = os.environ [ key ] 
+        i += 1
+        if 'PATH' in key :
+            vv  = value.split(':')
+            vv  =  '\n'.join ( vv ) 
+            row = '%d' % i , key , vv 
+        else : 
+            row = '%d' % i , key , value 
+        rows.append ( row )
+    import ostap.logger.table as T
+    return T.table ( rows , title = title , prefix = '# ' , alignment = 'rlw' )
+    
+# =============================================================================
 if __name__ == '__main__' :
 
     from ostap.logger.logger import getLogger
@@ -119,6 +141,9 @@ if __name__ == '__main__' :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
+
+    title = 'Environment'
+    logger.info ( '%s:\n%s' % ( title , show_env ( title = title ) ) )
     
 # =============================================================================
 ##                                                                      The END 

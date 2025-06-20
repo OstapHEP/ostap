@@ -119,6 +119,7 @@
 #include "Ostap/PyBLOB.h"
 #include "Ostap/Polarization.h"
 #include "Ostap/ProgressBar.h"
+#include "Ostap/Quantile.h"
 #include "Ostap/Range.h" 
 #include "Ostap/Rational.h"
 #include "Ostap/RooFitUtils.h"
