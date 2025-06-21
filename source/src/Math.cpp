@@ -6,6 +6,7 @@
 // ============================================================================
 #include <cstdlib>
 #include <cmath>
+#include <cfenv>
 #include <limits>
 // ============================================================================
 // GSL 
@@ -413,8 +414,9 @@ float Ostap::Math::round_N ( const float x , const unsigned short n )
   return round_N ( xd , n ) ;
 }
 // ============================================================================
-/*  round to nearest integer, rounds half integers to nearest even integer 
- *  It is just a simple wrapper around boost::numeric::converter 
+/* round to nearest integer, rounding half a  way from  zero 
+ *  @see std::lround 
+ *  @see https://en.cppreference.com/w/cpp/numeric/math/round
  *  @author Vanya BELYAEV Ivan.BElyaev
  */
 // ============================================================================
@@ -425,8 +427,9 @@ long Ostap::Math::round ( const double x )
     x >= sd_long_max ? s_long_max : long ( std::lround ( x )  ) ;
 }
 // ============================================================================
-/*  round to nearest integer, rounds half integers to nearest even integer 
- *  It is just a simple wrapper around boost::numeric::converter 
+/* round to nearest integer, rounding half a  way from  zero 
+ *  @see std::lround 
+ *  @see https://en.cppreference.com/w/cpp/numeric/math/round
  *  @author Vanya BELYAEV Ivan.BElyaev
  */
 // ============================================================================
@@ -437,8 +440,27 @@ long Ostap::Math::round ( const long double x )
     x >= sd_long_max ? s_long_max : long ( std::lround ( x )  ) ;
 }
 // ============================================================================
-
-
+/* Round half to even  
+ *  Aka: 
+ *  -  convergent rounding
+ *  - statistician's rounding, 
+ *  - Dutch rounding, 
+ *  - Gaussian rounding, 
+ *  - odd–even rounding,
+ *  - bankers' rounding.
+ *  @see std::lrint
+ */    
+// ==============================================================================
+long Ostap::Math::round_half_even ( const double v ) 
+{
+  if      ( v <= sd_long_min ) { return s_long_min ; } 
+  else if ( v >= sd_long_max ) { return s_long_max ; } 
+  const int mode = std::fegetround() ; 
+  if ( 0 <= mode ) { std::fesetround ( FE_TONEAREST ) ; } 
+  const long result = std::lrint ( v ) ;
+  if ( 0 <= mode ) { std::fesetround ( mode ) ; }
+  return result ; 
+}
 // ============================================================================
 /*  Volume of n-ball of given radius r  
  *  @param n dimension

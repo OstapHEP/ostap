@@ -811,20 +811,109 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    /** round to nearest integer, rounds half integers to nearest even integer 
+    /** round to nearest integer, rounding half a  way from  zero 
+     *  @see std::lround 
+     *  @see https://en.cppreference.com/w/cpp/numeric/math/round
      *  @author Vanya BELYAEV Ivan.Belyaev
      */
     long round ( const double      x ) ;
     // ========================================================================
-    /** round to nearest integer, rounds half integers to nearest even integer 
+    /** round to nearest integer, rounding half a  way from  zero 
+     *  @see std::lround 
+     *  @see https://en.cppreference.com/w/cpp/numeric/math/round
      *  @author Vanya BELYAEV Ivan.Belyaev
      */
     long round ( const long double x ) ; 
     // ========================================================================
-    /** round to nearest integer, rounds half integers to nearest even integer 
+    /** round to nearest integer, roundinng half a way from zero 
      *  @author Vanya BELYAEV Ivan.Belyaev
      */
     inline long round ( const float  x ) { return round ( double ( x ) ) ; }
+    // ========================================================================
+    /** Round  down
+     *  @see std::floor 
+     *  @see  https://en.wikipedia.org/wiki/Rounding 
+     */
+    inline long round_down ( const double v )
+    { return round ( std::floor ( v ) ) ; } 
+    // ========================================================================
+    /** Round  down
+     *  @see std::ceil 
+     *  @see  https://en.wikipedia.org/wiki/Rounding 
+     */
+    inline long round_up  ( const double v )
+    { return round ( std::ceil  ( v ) ) ; } 
+    // =========================================================================
+   /** Round  toward zero
+     *  @see std::trunc  
+     *  @see  https://en.wikipedia.org/wiki/Rounding 
+     */
+    inline long round_toward_zero ( const double v )
+    { return round ( std::trunc ( v ) ) ; } 
+    // ==========================================================================
+   /** Round  away zero
+     *  @see std::ceil    
+     *  @see  https://en.wikipedia.org/wiki/Rounding 
+     */
+    inline long round_away_zero ( const double v )
+    { 
+      const double av = std::ceil ( std::abs ( v ) ) ;
+      return round ( 0 <= v ? av : -av ) ; 
+    } 
+    // ==========================================================================
+    /** Round half-up 
+     *  @see std::floor    
+     *  @see  https://en.wikipedia.org/wiki/Rounding 
+     */
+    inline long round_half_up ( const double v )
+    { return round ( std::floor ( v + 0.5 ) ) ;  } 
+    // ==========================================================================
+    /** Round half-down 
+     *  @see std::ceil    
+     *  @see  https://en.wikipedia.org/wiki/Rounding 
+     */
+    inline long round_half_down ( const double v )
+    { return round ( std::ceil ( v - 0.5 ) ) ;  }
+    // ========================================================================
+    /** Round half-toward sero 
+     *  @see std::floor    
+     *  @see std;:ceil 
+     *  @see  https://en.wikipedia.org/wiki/Rounding 
+     */
+    inline long round_half_toward_zero ( const double v )
+    { return round ( 0 <= v ? std::ceil ( v - 0.5 ) : std::floor ( v + 0.5 ) ) ;  } 
+    // ========================================================================
+     /** Round half-away sero 
+     *  @see std::floor    
+     *  @see std;:ceil 
+     *  @see  https://en.wikipedia.org/wiki/Rounding 
+     */
+    inline long round_half_away_zero ( const double v )
+    { return round ( 0 <= v ? std::floor ( v + 0.5 ) : std::ceil ( v - 0.5 ) ) ;  } 
+    // ========================================================================
+    /** Round half to even  
+     *  Aka: 
+     *  -  convergent rounding
+     *  - statistician's rounding, 
+     *  - Dutch rounding, 
+     *  - Gaussian rounding, 
+     *  - odd–even rounding,
+     *  - bankers' rounding.
+     *  @see std::lrint
+     */    
+     long round_half_even ( const double v ) ; 
+     // =======================================================================
+    /** Round half to even  
+     *  Aka: 
+     *  -  convergent rounding
+     *  - statistician's rounding, 
+     *  - Dutch rounding, 
+     *  - Gaussian rounding, 
+     *  - odd–even rounding,
+     *  - bankers' rounding.
+     *  @see std::lrint
+     */    
+    inline long banker ( const double v ) { return round_half_even ( v ) ; }  
     // ========================================================================
     /** get mantissa and (decimal) exponent 
      *  similar to std::frexp, but radix=10)
