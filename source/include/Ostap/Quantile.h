@@ -38,10 +38,10 @@ namespace Ostap
       // =======================================================================
       /// initialization strategy 
       enum Initialization
-	{
-	  Classic = 0 ,
-	  Adaptive 
-	} ;
+    	{
+	      Classic = 0 ,
+	      Adaptive 
+	    } ;
       // =======================================================================      
     public :
       // =======================================================================
@@ -51,7 +51,7 @@ namespace Ostap
        */  
       Quantile
       ( const double         p = 0.5      ,
-	const Initialization s = Adaptive ) ;
+	      const Initialization s = Adaptive ) ;
       // ======================================================================
     public: // Ostap::Math::Statistic
       // =====================================================================
@@ -64,6 +64,14 @@ namespace Ostap
       // ======================================================================
       /// add one more measurable, update quantiles    
       Quantile& add ( const double v ) ;
+      /// add a raneg of values
+      template <class ITERATOR,
+		    typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+		    typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+      Quantile& add
+      ( ITERATOR first ,
+	      ITERATOR last  )
+	     { for ( ; first != last ; ++first ) { add ( *first ) ; } ; return *this ; }
       // =====================================================================
     public:
       // ======================================================================
@@ -131,19 +139,29 @@ namespace Ostap
       /// from vector oof probabiliies 
       Quantiles
       ( const std::vector<double>& ps ) ;
+      /// get N-quantiles 
+      Quantiles ( const std::size_t N ) ; 
       /// from soem range
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+		      typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+		      typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       Quantiles
       ( ITERATOR first ,
-	ITERATOR last  )
-	: Quantiles ( std::vector<double> ( first , last ) )
+	      ITERATOR last  )
+	     : Quantiles ( std::vector<double> ( first , last ) )
       {}
       // ======================================================================
     public: // 
       // ======================================================================
       Quantiles& add ( const double value ) ;
+      /// add a raneg of values
+      template <class ITERATOR,
+		    typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+		    typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+      Quantiles& add
+      ( ITERATOR first ,
+	      ITERATOR last  )
+	     { for ( ; first != last ; ++first ) { add ( *first ) ; } ; return *this ; }
       // ======================================================================
     public: // Ostap::Math::Statistic
       // =====================================================================
@@ -207,6 +225,45 @@ namespace Ostap
     // ========================================================================
     // swap two objects 
     inline void swap ( Quantiles& a , Quantiles& b ) { a.swap ( b ) ; } 
+    // ========================================================================
+    template <unsigned int N,typename = std::enable_if<(1<=N)> >
+    class Quantiles_ : public Ostap::Math::Statistic
+    {
+        // ====================================================================
+      public :
+        // ====================================================================
+        Quantiles_& add  ( const  double v ) { m_qs.add ( v ) ; return *this ; }
+        // ====================================================================
+      public: // Ostap::Math::Statistic
+      // =====================================================================
+      // Generic counter interface
+      void update ( const double value ) override { add  ( value ) ; }
+      // reset quantile 
+      void reset  ()                     override { m_qs.reset () ; } ; 
+      // ======================================================================
+      public :
+      // ======================================================================
+      std::array<double,N+1> quantiles ()  const 
+      {
+        const std::vector<double> output { m_qs.quantiles () } ;
+        std::array<double,N+1> result ;
+        result.front () = m_qs.min () ;
+        result.back  () = m_qs.max () ; 
+        // 
+        const std::size_t o = output.size() ; 
+        // for normal regiome   o + 1 == N 
+        const std::size_t L = o + 1 < N ? o + 1: N  ;
+        for  ( std::size_t i = 0 ; i + 1 < L ; ++i )
+        { result [ i + 1 ] = output [ 1 ] ; }  
+        return result ;
+      }
+      // ======================================================================
+      private:
+      // ======================================================================
+      /// actual quantile counter  
+      Quantiles m_qs { N } ; // actual quantile counter 
+      // ======================================================================
+    }; //                                             The end of class Qantile_ 
     // ========================================================================
   } //                                         The end od namesapce Ostap::Math
   // ==========================================================================

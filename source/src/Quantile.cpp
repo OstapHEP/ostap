@@ -10,6 +10,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Quantile.h"
+#include "Ostap/Quantiles.h"
 // ============================================================================
 // local
 // ============================================================================
@@ -248,11 +249,10 @@ double Ostap::Math::Quantile::max () const
 // ============================================================================
 double Ostap::Math::Quantile::quantile () const
 {
-  if ( !m_N ) { return std::numeric_limits<double>::quiet_NaN() ; }
-  // calculate the quantile here
-  if ( 5 <= m_N ) { return m_q [ 2 ] ; }
-  /// calcual quantile here
-  return -12345 ; // FIX ME 
+  if ( 5 < m_N ) { return m_q [ 2 ] ; }  
+  // 
+  const Ostap::Math::HarrellDavis hd {} ;
+  return hd ( m_q.begin() , m_q.begin() + m_N , m_p ) ; 
 }
 // ============================================================================
 
@@ -260,6 +260,25 @@ double Ostap::Math::Quantile::quantile () const
 // Extended P2 algorithm for (approximate) quantile estimamtion
 // ============================================================================
 
+namespace 
+{
+  // ==========================================================================
+  std::vector<double> vct ( const std::size_t  N )
+  {
+    std::vector<double> result ( N ) ;
+    for ( std::size_t i = 0 ; i + 1 < N ; ++i )
+    { result [ i ] = ( i + 1.0 ) / N ; }
+    return result ;  
+  }
+  // ========================================================================
+}
+// ============================================================================
+// from vector oof probabiliies 
+// ============================================================================
+Ostap::Math::Quantiles::Quantiles
+( const std::size_t N  )
+: Quantiles ( vct ( N ) ) 
+{}
 // ============================================================================
 // from vector oof probabiliies 
 // ============================================================================
@@ -396,8 +415,16 @@ std::vector<double>
 Ostap::Math::Quantiles::quantiles () const
 {
   std::vector<double> result {} ;
-  if ( !m_N ) { return result            ; }
-  else        { result.reserve ( NP () ) ; }
+  if (  m_N <= m_q.size() )
+  {
+    Ostap::Math::HarrellDavis hd { false } ;
+    for ( const auto p : m_p )
+    { result.push_back ( hd ( m_q.begin() , m_q.begin() + m_N , p ) ) ; }
+    //
+    return result ; 
+  }
+  //
+  result.reserve ( NP () ) ; 
   //
   const std::size_t M = NP () ;
   for ( std::size_t i = 0 ; i < M ; ++i  )
@@ -414,15 +441,16 @@ Ostap::Math::Quantiles::quantiles () const
 double Ostap::Math::Quantiles::quantile
 ( const std::size_t index ) const
 {
-  if ( !m_N ) { return std::numeric_limits<double>::quiet_NaN()  ; }
-  else if ( NP ()      <= index ) { return max ()                ; }
-  else if ( m_q.size() <= m_N   ) { return m_q [ index * 2 + 2 ] ; }
+  if ( m_p.size () <= index ) { return max () ; }
   //
-  // calculate the quantile here
-  return -12345 ; // FIX ME!!!
+  if ( m_N <= m_q.size() )
+  {
+     Ostap::Math::HarrellDavis hd { false } ;
+     return hd ( m_q.begin() , m_q.begin() + m_N , m_p [ index ] ) ;  
+  }
+  // regular case  
+  return m_q [ index * 2 + 2 ] ; 
 }
-
-
 
 // ============================================================================
 //                                                                      The END  

@@ -13,57 +13,210 @@
 #include "Ostap/Math.h"
 #include "Ostap/MakeArray.h"
 // =============================================================================
+#include  <iostream>
+
 namespace Ostap
 {
   // ===========================================================================
   namespace  Math
   {
     // =========================================================================
-    /** get array of N-quantiles  (+min&max values)
-     *  @retur array of lenth N+1 with N-quanties
-     *  - first element is minaml value 
-     *  - laselement if maximal values 
+    /** @class QuanitleMixin
+     *  Mixin class to evaluate varuous quantiles 
+     *  @author Vanya BELYAEV Iban.Belyaev@cern.ch
+     *  @date 2025-06-20
      */
-    template <unsigned short N, class QUANTILE, class ITERATOR,
-              typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-              typename = std::enable_if<std::is_convertible<value_type,double>::value&&1<=N> >
-    inline std::array<double,N+1>
-    quantiles_   
-    ( const QUANTILE& quantile ,  
-      ITERATOR        first     ,
-      ITERATOR        last      )
+    template <class ESTIMATOR>
+    class QuantileMixin
     {
-        auto q = [&quantile,first,last] ( unsigned short k ) -> double
-        { return quantile ( first , last , k * 1.0 / ( N + 1 ) ) ; } ;
-        return Ostap::Math::make_array ( q , std::make_index_sequence<N+1>() )  ;
-    }
+      public:
+        // ==========================================================================
+        template <unsigned short N, class ITERATOR,
+                  typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                  typename = std::enable_if<std::is_convertible<value_type,double>::value&&1<=N> >
+        inline std::array<double,N+1>
+        quantiles_
+        ( ITERATOR first , 
+          ITERATOR last  ) const 
+        {
+          const ESTIMATOR& e = static_cast<const ESTIMATOR&>( *this ) ;
+          auto q = [&e,first,last] ( const std::size_t k ) -> double
+          { return e ( first , last , k * 1.0 / N  ) ; } ;
+          // return Ostap::Math::make_array ( q , std::make_index_sequence<N+1>() )  ;
+          std::array<double,N+1> result ;
+          for ( std::size_t k = 0 ; k < N + 1 ; ++k )
+          { result [ k ] = e ( first , last, k * 1.0 / N ) ; } 
+          return result ; 
+        }; 
+        // 1-quantiles: min & max
+        template <class ITERATOR,
+             typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+             typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+        inline std::array<double,2>
+        minmax 
+        ( ITERATOR first , 
+          ITERATOR last  ) const
+        { return this->template quantiles_<1> ( first  , last ) ;}
+        // 2-quantiles: min,median,max
+        template <class ITERATOR,
+             typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+             typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+        inline std::array<double,3>
+        median
+        ( ITERATOR first , 
+          ITERATOR last  ) const
+        { return this->template quantiles_<2> ( first  , last ) ;}
+        /// 3-quantiles:
+        template <class ITERATOR,
+             typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+             typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+        inline std::array<double,4>
+        terciles
+        ( ITERATOR first , 
+          ITERATOR last  ) const
+        { return this->template quantiles_<3> ( first  , last ) ;}
+        /// 4-quantiles:
+        template <class ITERATOR,
+             typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+             typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+        inline std::array<double,5>
+        quartiles
+        ( ITERATOR first , 
+          ITERATOR last  ) const
+        { return this->template quantiles_<4> ( first  , last ) ;}
+        /// 5-quantiles:
+        template <class ITERATOR,
+             typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+             typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+        inline std::array<double,6>
+        quintiles 
+        ( ITERATOR first , 
+          ITERATOR last  ) const
+        { return this->template quantiles_<5> ( first  , last ) ;}
+        /// 6-quantiles:
+        template <class ITERATOR,
+             typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+             typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+        inline std::array<double,7>
+        sextiles 
+        ( ITERATOR first , 
+          ITERATOR last  ) const
+        { return this->template quantiles_<6> ( first  , last ) ;}
+        /// 7-quantiles:
+        template <class ITERATOR,
+             typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+             typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+        inline std::array<double,8>
+        septiles 
+        ( ITERATOR first , 
+          ITERATOR last  ) const
+        { return this->template quantiles_<7> ( first  , last ) ;}
+        /// 8-quantiles:
+        template <class ITERATOR,
+             typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+             typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+        inline std::array<double,9>
+        octiles 
+        ( ITERATOR first , 
+          ITERATOR last  ) const
+        { return this->template quantiles_<8> ( first  , last ) ;}
+        /// 10-quantiles:
+        template <class ITERATOR,
+             typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+             typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+        inline std::array<double,11>
+        deciles 
+        ( ITERATOR first , 
+          ITERATOR last  ) const
+        { return this->template quantiles_<10> ( first  , last ) ;}
+        /// 20-quantiles:
+        template <class ITERATOR,
+             typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+             typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+        inline std::array<double,21>
+        ventiles 
+        ( ITERATOR first , 
+          ITERATOR last  ) const
+        { return this->template quantiles_<20> ( first  , last ) ;}
+        /// 100-quantiles:
+        template <class ITERATOR,
+             typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+             typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+        inline std::array<double,101>
+        percentiles  
+        ( ITERATOR first , 
+          ITERATOR last  ) const
+        { return this->template quantiles_<100> ( first  , last ) ;}
+        // ======================================================================
+        template <unsigned short N,typename = std::enable_if<(1<=N)> >
+        inline std::array<double,N+1> 
+        quantiles_ ( const std::vector<double>& data ) const
+        { return this -> template quantiles_<N> ( data.begin(), data.end () ) ; }
+        // ======================================================================
+        inline std::array<double,2>
+        minmax  ( const std::vector<double>& data ) const
+        { return this -> minmax ( data.begin() , data.end () ) ; }
+        // ======================================================================
+        inline std::array<double,3>
+        median ( const std::vector<double>& data ) const
+        { return this -> median ( data.begin() , data.end () ) ; }
+        // ======================================================================
+        inline std::array<double,4>
+        terciles ( const std::vector<double>& data ) const
+        { return this -> terciles  ( data.begin() , data.end () ) ; }
+        // ======================================================================
+        inline std::array<double,5>
+        quartiles ( const std::vector<double>& data ) const
+        { return this -> quartiles ( data.begin() , data.end () ) ; }
+        // ======================================================================
+        inline std::array<double,6>
+        quintiles ( const std::vector<double>& data ) const
+        { return this -> quintiles ( data.begin() , data.end () ) ; }
+        // ======================================================================
+        inline std::array<double,7>
+        sextiles ( const std::vector<double>& data ) const
+        { return this -> sextiles ( data.begin() , data.end () ) ; }
+        // ======================================================================
+        inline std::array<double,8>
+        septiles ( const std::vector<double>& data ) const
+        { return this -> septiles ( data.begin() , data.end () ) ; }
+        // ======================================================================
+        inline std::array<double,9>
+        octiles ( const std::vector<double>& data ) const
+        { return this -> octiles ( data.begin() , data.end () ) ; }
+        // ======================================================================
+        inline std::array<double,11>
+        deciles ( const std::vector<double>& data ) const
+        { return this -> deciles ( data.begin() , data.end () ) ; }
+        // ======================================================================
+        inline std::array<double,21>
+        ventiles ( const std::vector<double>& data ) const
+        { return this -> ventiles ( data.begin() , data.end () ) ; }
+        // ======================================================================
+        inline std::array<double,101>
+        percentiles ( const std::vector<double>& data ) const
+        { return this -> percentiles( data.begin() , data.end () ) ; }
+        // ======================================================================
+        inline double
+        operator ()
+        ( const std::vector<double>& data , 
+          const double               p    ) const 
+        { 
+          const ESTIMATOR& e = static_cast<const ESTIMATOR&> ( *this ) ;
+          return e ( data.begin() , data.end () , p ) ; 
+        } 
+     } ;
     // ========================================================================
-    /** get array of N-quantiles  (+min&max values)
-     *  @retur array of lenth N+1 with N-quanties
-     *  - first element is minaml value 
-     *  - laselement if maximal values 
+    /** @class QCheck
+     *  Helper checker for quantile estimators 
      */
-    template <unsigned short N, class QUANTILE, class CONTAINER,
-              typename value_type = typename CONTAINER::value_type,
-              typename = std::enable_if<std::is_convertible<value_type,double>::value&&1<=N> >
-    inline std::array<double,N+1>
-    quantiles_   
-    ( const QUANTILE&   quantile  ,  
-      const CONTAINER&  container )
-    {
-      return quantiles_<N> ( quantile , container.begin () , container.end() ) ;
-    } 
-    // ========================================================================
-    /** @class QBase
-     *  Helper base class for quantile estimators 
-     */
-    class QBase
+    class QCheck
     {
       public:
         // ====================================================================
-        QBase ( const bool check = false ) ;
+        QCheck ( const bool check = false ) ;
         // ====================================================================
-      protected :
+      public : 
         // ====================================================================
         template <class ITERATOR,
               typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
@@ -78,7 +231,7 @@ namespace Ostap
           { this->throw_exception ( "Input data must be sorted!"  , __FILE__ , __LINE__ ) ; }
         }
         // ====================================================================
-      protected :
+      private : 
         // ====================================================================
         void throw_exception 
         ( const char* message            ,  
@@ -97,7 +250,7 @@ namespace Ostap
       * @see https://en.wikipedia.org/wiki/Quantile
       * @see https://doi.org/10.2307%2F2684934
       */
-     class HyndmanFan : protected QBase 
+     class HyndmanFan : public QuantileMixin<HyndmanFan>
      {
       //========================================================================
       public:
@@ -134,19 +287,27 @@ namespace Ostap
       template <class ITERATOR,
               typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
               typename = std::enable_if<std::is_convertible<value_type,double>::value> >
-      inline double quantile  
-      ( ITERATOR      first       ,
-        ITERATOR      last        , 
-        const double  p     = 0.5 ) const 
+      inline double operator() 
+      ( ITERATOR      first ,
+        ITERATOR      last  , 
+        const double  p     ) const 
         {
+          std::cout << "HF/0 "<<  " p=" << p <<  " f=" <<  (*first) << std::endl ;  
           // check input 
-          this -> check ( first , last ) ;
-          if  ( 0 >= p ) { return *first      ; } 
+          m_check.check ( first , last ) ;
+          if  ( 0 >= p ) { return *first ; } 
           // 
+          std::cout << "HF/1 "<<  " p=" << p <<  " f=" <<  (*first) << std::endl ;  
+          //
           const std::size_t  N  = std::distance ( first , last ) ;
+          std::cout << "HF/N "<<  " p=" << p <<  " N=" << N << std::endl ;  
+          // 
           if  ( 1 == N ) { return *first ; }
+          std::cout << "HF/2 "<<  " p=" << p <<  " f=" <<  (*first) << std::endl ;  
+
           if  ( 1 <= p ) { std::advance ( first , N - 1 ) ; return *first ;} 
-          //   
+          std::cout << "HF/1 "<<  " p=" << p <<  " f=" <<  (*first) << std::endl ;  
+
          const double h = 
             ( One   == m_t ) ?   N * p                  :
             ( Two   == m_t ) ?   N * p + 0.5            :
@@ -160,7 +321,7 @@ namespace Ostap
 
           /// clumped and adjusted for zero-indexed  
           const double hh = std::clamp ( h - 1 , 0.0 , N - 1.0 ) ;
-
+          // 
           if ( Ostap::Math::islong  ( hh ) )
             {
               const std::size_t nn = static_cast<std::size_t> ( hh ) ;
@@ -204,16 +365,14 @@ namespace Ostap
           return vf + ( hh - std::floor ( hh ) ) * ( vc - vf ) ; 
         }
       // ======================================================================
-      private: 
+      private :
       // ======================================================================
-      /// Algorithm to use 
-      QuantileType m_t     { Eight } ; // algorithm to use
-      /// check input sequence 
-      bool         m_check { false } ; // check input sequence  
+      QuantileType m_t     { Eight } ; // quantile type
+      QCheck       m_check { false } ; // check 
       // ======================================================================
-     } ;
+      };
     // ========================================================================
-   /** @class Quanitle2
+    /** @class ABQuantile
     *  Variant of Hyndman-Fan with lnear innterplaton using two parameteers
     *  - alpha  \f$ 0 \le \alpha \le 1 \f$ 
     *  - beta   \f$ 0 \le \beta  \le 1 \f$ 
@@ -233,7 +392,7 @@ namespace Ostap
     * - (0.4,0.4) : approximately quantile unbiased (Cunnane)
     * - (.35,.35): APL, used with PWM
     */  
-   class ABQuantile  : protected QBase
+   class ABQuantile: public QuantileMixin<ABQuantile>
     {
       public:
         // ====================================================================
@@ -247,12 +406,12 @@ namespace Ostap
         template <class ITERATOR,
               typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
               typename = std::enable_if<std::is_convertible<value_type,double>::value> >
-        inline double quantile  
-        ( ITERATOR      first       ,
-          ITERATOR      last        , 
-          const double  p     = 0.5 ) const 
+        inline double operator()
+        ( ITERATOR      first ,
+          ITERATOR      last  , 
+          const double  p     ) const 
         {
-          this->check ( first , last ) ; 
+          m_check.check ( first , last ) ; 
           if  ( 0 >= p ) { return *first      ; } 
           // 
           const std::size_t  N  = std::distance ( first , last ) ;
@@ -278,12 +437,77 @@ namespace Ostap
         private:
         // ====================================================================
         /// parameter alpha
-        double m_alpha { 0.4 } ;
+        double m_alpha { 0.4   } ;
         /// parameter beta 
-        double m_beta  { 0.4 } ;
+        double m_beta  { 0.4   } ;
+        /// check 
+        QCheck m_check { false } ; 
         // ====================================================================
     } ; 
     // ========================================================================
+    /** @class HarrellDavis 
+     *  Harrell-Davis quatile etimator 
+     *  @attention it cna e CPU espensive for large data sets
+     */
+    class HarrellDavis : public QuantileMixin<HarrellDavis>
+    {
+      // ======================================================================
+      public:
+      // ======================================================================
+      HarrellDavis 
+      ( const bool check = false ) ;  
+      // ======================================================================
+      public:
+      // ======================================================================
+      template <class ITERATOR,
+              typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+              typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+      inline double operator() 
+      ( ITERATOR      first ,
+        ITERATOR      last  , 
+        const double  p     ) const 
+      {
+        m_check.check ( first , last ) ; 
+        if  ( 0 >= p ) { return *first      ; } 
+        // 
+        const std::size_t  N  = std::distance ( first , last ) ;
+        if  ( 1 == N ) { return *first ; }
+        if  ( 1 <= p ) { std::advance ( first , N - 1 ) ; return *first ;} 
+        //
+        double result = 0 ;
+        for ( std::size_t i = 0 ; first != last ; ++first , ++i )
+        {
+          const double ti    = ( i + 1.0 ) / N ;
+          const double tm1   =   i * 1.0   / N ;
+          const double value = *first ;
+          if ( !value ) { continue ; }
+          result += value * WHD ( N  , p , ( 1.0 + i ) / N , i * 1.0 / N ) ; 
+        }
+        return result ;
+      } ;  
+      // ======================================================================
+      private :
+      // ======================================================================
+      /// check ? 
+      QCheck  m_check { false } ; // check ? 
+      // ======================================================================
+      private:
+      // ======================================================================
+      /** calculate 
+       *  \f$ \ I_{t_1}(\alpha,\beta) - I_{t_2} ( \alpha, \beta) f$, where 
+       *  \f$ I_z(x,y) \f$ is normalized inncomplete beta function   
+       *  @see Ostap::Math::beta_inc  
+       *  - protection is added 
+       *  - cachinng is applie 
+       */
+      static double WHD 
+      ( const std::size_t N  , 
+        const double      p  , 
+        const double      t1 ,
+        const double      t2 ) ; 
+      // ======================================================================
+    } ; //                        The end of the class  Ostap::Math::HArrelavis
+    // ======================================================================== 
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================
 } //                                                The  end of namespace Ostap 
