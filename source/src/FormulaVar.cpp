@@ -98,15 +98,15 @@ Ostap::makeFormula
   // =========================================================================
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,29,0) // ==============================
   // =========================================================================
-  std::unique_ptr<RooFormulaVar> ptr ;
+  std::unique_ptr<RooFormula> ptr ;
   // =========================================================================
   try // =====================================================================
     {
       ESentry sentry {} ;
-      ptr = std::make_unique<RooFormulaVar> ( vname.c_str () ,                                                        
-					      exprs.c_str () , 
-					      dependents     , 
-					      false          ) ;
+      ptr = std::make_unique<RooFormula> ( vname.c_str () ,                                                        
+			         	   exprs.c_str () , 
+					   dependents     , 
+					   false          ) ;
     }
   catch ( std::invalid_argument& /* e1 */ ){ return nullptr ;  }
   catch ( std::runtime_error&    /* e2 */ ){ return nullptr ;  }

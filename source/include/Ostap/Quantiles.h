@@ -13,9 +13,6 @@
 #include "Ostap/Math.h"
 #include "Ostap/MakeArray.h"
 // =============================================================================
-#include  <iostream>
-#include "Ostap/ToStream.h"
-
 namespace Ostap
 {
   // ===========================================================================
@@ -48,13 +45,8 @@ namespace Ostap
 	const double p     ) const
       {
 	const QUANTILE& q = static_cast<const QUANTILE&>( *this ) ;
-	// return q.quantile ( first , last , p ) ;
-	std::cout << "-MIXIN/0 :" << p << std::endl ; 
-	double result = q.quantile ( first , last , p ) ;
-	std::cout << "-MIXIN/1 :" << result  << std::endl ; 
-	return result ;
-      }
-      
+	return q.quantile ( first , last , p ) ;
+      }      
       // ==========================================================================
       /** get N-quantiles 
        *  - p=0 and p=1 2quantiels are included!
@@ -63,7 +55,7 @@ namespace Ostap
        *  @return N-quantiles
        *  @attention  data s assumed to be SORTED!
        */
-      template <unsigned short N, class ITERATOR,
+      template <unsigned int N, class ITERATOR,
 		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
 		typename = std::enable_if<std::is_convertible<value_type,double>::value&&1<=N> >
       inline std::array<double,N+1>
@@ -72,20 +64,9 @@ namespace Ostap
 	ITERATOR last  ) const 
       {
 	const auto q = [this,first,last] ( const std::size_t k ) -> double
-	{
-	  // return (*this) ( first , last , k * 1.0 / N  ) ;
-	  std::cout << " Q/before" << k << std::endl ;
-	  const double r = (*this) ( first , last , k * 1.0 / N ) ;
-	  std::cout << " Q/after" << r << std::endl ;
-	  return r ; 
-	} ;
-	// return Ostap::Math::make_array ( q , std::make_index_sequence<N+1>() )  ;
-	const auto rr = Ostap::Math::make_array ( q , std::make_index_sequence<N+1>() )  ;
-	std::cout << "QUANTILES_<" << N  << "> :" ;
-	Ostap::Utils::toStream ( rr , std::cout ) ;
-	std::cout  << " name:" << typeid ( rr ) . name() << std::endl ;
-	return rr ;
-      }; 
+	{ return (*this) ( first , last , k * 1.0 / N  ) ; } ;
+	return Ostap::Math::make_array ( q , std::make_index_sequence<N+1>() )  ;
+      } ;
       // 1-quantiles: min & max
       template <class ITERATOR,
 		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
@@ -94,16 +75,7 @@ namespace Ostap
       minmax 
       ( ITERATOR first , 
 	ITERATOR last  ) const
-      {
-	// return this->template quantiles_<1> ( first  , last ) ;	
-	auto rr = this->template quantiles_<1> ( first  , last ) ;
-	rr [ 0 ] = -10 ;
-	std::cout << "MINMAX " ;
-	Ostap::Utils::toStream ( rr , std::cout ) ;
-	std::cout  << " name:" << typeid ( rr ) . name() << std::endl ;
-	//
-	return rr ; 
-      }
+      { return this->template quantiles_<1> ( first  , last ) ;	 }
       // 2-quantiles: min,median,max
       template <class ITERATOR,
 		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
@@ -337,39 +309,16 @@ namespace Ostap
         ITERATOR      last  , 
         const double  p     ) const 
       {
-	std::cout << "HF/START "<<  " p=" << p << std::endl ;  
 	// check input 
 	m_check.check ( first , last ) ;
-	if  ( 0 >= p )
-	  {
-	    // return *first ;
-	    const double result = *first ;
-	    std::cout << "HF/1 "<<  " p=" << p <<  " R=" <<  result << std::endl ;  
-	    return result ;
-	  } 
+	if  ( 0 >= p ) { return *first ; } 
 	// 
 	const std::size_t  N  = std::distance ( first , last ) ;
-	std::cout << "HF/N "<<  " p=" << p <<  " N=" << N << std::endl ;  
 	// 
-	if  ( 1 == N )
-	  {
-	    // return *first ;
-	    const double result = *first ;
-	    std::cout << "HF/2 "<<  " p=" << p <<  " R=" <<  result << std::endl ;  
-	    return result ;
-	  }
-	
-	if  ( 1 <= p )
-	  {
-	    std::advance ( first , N - 1 ) ;
-	    // return *first ;
-	    const double result = *first ;
-	    std::cout << "HF/3 "<<  " p=" << p <<  " R=" <<  result << std::endl ;  
-	    return result ;
-	  }
-	
-	std::cout << "HF/REGULAR  "<<  " p=" << p << std::endl ;  
-
+	if  ( 1 == N ) { return *first ; }
+	//
+	if  ( 1 <= p ) { std::advance ( first , N - 1 ) ; return *first ; }
+	//
 	const double h = 
 	  ( One   == m_t ) ?   N * p                  :
 	  ( Two   == m_t ) ?   N * p + 0.5            :
@@ -380,20 +329,15 @@ namespace Ostap
 	  ( Seven == m_t ) ? ( N - 1    ) * p + 1     :
 	  ( Eight == m_t ) ? ( N + 1./3 ) * p + 1./3  :
 	  ( N + 0.25 ) * p + 0.375 ;
-	
+	//
 	/// clumped and adjusted for zero-indexed  
 	const double hh = std::clamp ( h - 1 , 0.0 , N - 1.0 ) ;
 	// 
 	if ( Ostap::Math::islong  ( hh ) )
 	  {
 	    const std::size_t nn = static_cast<std::size_t> ( hh ) ;
-	    if ( nn ) { std::advance ( first , nn ) ; }
-	    
-	    // return *first ;
-	    
-	    const double result = *first ;
-	    std::cout << "HF/4 "<<  " p=" << p <<  " R=" <<  result << std::endl ;  
-	    return result ;
+	    if ( nn ) { std::advance ( first , nn ) ; }	    
+	    return *first ;
 	  }
 	//
 	// first three cases explicitley 
@@ -401,14 +345,8 @@ namespace Ostap
 	if ( One == m_t )
           {
             const std::size_t nn = Ostap::Math::round_up ( hh ) ;
-            std::advance ( first , nn ) ;
-	    
-            // return *first ;
-
-	    const double result = *first ;
-	    std::cout << "HF/5 "<<  " p=" << p <<  " R=" <<  result << std::endl ;  
-	    return result ;
-	    
+            if ( nn ) { std::advance ( first , nn ) ; } 
+	    return *first ;
           }
 	else if ( Two == m_t )
           {
@@ -418,25 +356,14 @@ namespace Ostap
             const double v1 = *first ; 
             if ( n1 != n2 ) { std::advance ( first , n2 - n1 ) ; } 
             const double v2 = *first ;
-	    
-            // return 0.5 * ( v1 + v2 ) ;
-	    
-	    const double result = 0.5 * ( v1 + v2 ) ;
-	    std::cout << "HF/6 "<<  " p=" << p <<  " R=" <<  result << std::endl ;  
-	    return result ;
-	    	    
+	    //
+	    return 0.5 * ( v1 + v2 ) ;
           } 
 	else if( Three == m_t )
           {
             const std::size_t nn = Ostap::Math::banker ( hh ) ;
-            if ( nn ) { std::advance ( first ,  nn ) ; }
-	    
-            // return *first ;
-	    
-	    const double result = *first ;
-	    std::cout << "HF/7 "<<  " p=" << p <<  " R=" <<  result << std::endl ;  
-	    return result ;
-	    
+            if ( nn ) { std::advance ( first ,  nn ) ; }	  
+	    return *first ;
           }
 	//
 	const std::size_t nf = Ostap::Math::round_down ( hh ) ;
@@ -447,12 +374,7 @@ namespace Ostap
 	if ( nc != nf  ) { std::advance ( first , nc - nf ) ; } 
 	const double vc = *first ;
 	//
-	// return vf + ( hh - std::floor ( hh ) ) * ( vc - vf ) ;
-	
-	const double result = vf + ( hh - std::floor ( hh ) ) * ( vc - vf ) ;
-	std::cout << "HF/8 "<<  " p=" << p <<  " R=" <<  result << std::endl ;  
-	return result ;
-	
+	return vf + ( hh - std::floor ( hh ) ) * ( vc - vf ) ;
       }
       // ======================================================================
     private :

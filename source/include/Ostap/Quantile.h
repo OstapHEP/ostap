@@ -39,9 +39,9 @@ namespace Ostap
       /// initialization strategy 
       enum Initialization
     	{
-	      Classic = 0 ,
-	      Adaptive 
-	    } ;
+	  Classic = 0 ,
+	  Adaptive 
+	} ;
       // =======================================================================      
     public :
       // =======================================================================
@@ -64,14 +64,14 @@ namespace Ostap
       // ======================================================================
       /// add one more measurable, update quantiles    
       Quantile& add ( const double v ) ;
-      /// add a raneg of values
+      /// add a range of values
       template <class ITERATOR,
-		    typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		    typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       Quantile& add
       ( ITERATOR first ,
-	      ITERATOR last  )
-	     { for ( ; first != last ; ++first ) { add ( *first ) ; } ; return *this ; }
+	ITERATOR last  )
+      { for ( ; first != last ; ++first ) { add ( *first ) ; } ; return *this ; }
       // =====================================================================
     public:
       // ======================================================================
@@ -143,25 +143,25 @@ namespace Ostap
       Quantiles ( const std::size_t N ) ; 
       /// from soem range
       template <class ITERATOR,
-		      typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		      typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       Quantiles
       ( ITERATOR first ,
-	      ITERATOR last  )
-	     : Quantiles ( std::vector<double> ( first , last ) )
+	ITERATOR last  )
+	: Quantiles ( std::vector<double> ( first , last ) )
       {}
       // ======================================================================
     public: // 
       // ======================================================================
       Quantiles& add ( const double value ) ;
-      /// add a raneg of values
+      /// add a rageg of values
       template <class ITERATOR,
-		    typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		    typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       Quantiles& add
       ( ITERATOR first ,
-	      ITERATOR last  )
-	     { for ( ; first != last ; ++first ) { add ( *first ) ; } ; return *this ; }
+	ITERATOR last  )
+      { for ( ; first != last ; ++first ) { add ( *first ) ; } ; return *this ; }
       // ======================================================================
     public: // Ostap::Math::Statistic
       // =====================================================================
@@ -229,19 +229,27 @@ namespace Ostap
     template <unsigned int N,typename = std::enable_if<(1<=N)> >
     class Quantiles_ : public Ostap::Math::Statistic
     {
-        // ====================================================================
-      public :
-        // ====================================================================
-        Quantiles_& add  ( const  double v ) { m_qs.add ( v ) ; return *this ; }
-        // ====================================================================
-      public: // Ostap::Math::Statistic
+      // ====================================================================
+    public :
+      // ====================================================================
+      Quantiles_& add  ( const  double v ) { m_qs.add ( v ) ; return *this ; }
+      /// add a rageg of values
+      template <class ITERATOR,
+		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+      Quantiles_& add
+      ( ITERATOR first ,
+	ITERATOR last  )
+      { for ( ; first != last ; ++first ) { this->add ( *first ) ; } ; return *this ; }
+      // ====================================================================
+    public: // Ostap::Math::Statistic
       // =====================================================================
       // Generic counter interface
       void update ( const double value ) override { add  ( value ) ; }
       // reset quantile 
       void reset  ()                     override { m_qs.reset () ; } ; 
       // ======================================================================
-      public :
+    public :
       // ======================================================================
       std::array<double,N+1> quantiles ()  const 
       {
@@ -254,16 +262,39 @@ namespace Ostap
         // for normal regiome   o + 1 == N 
         const std::size_t L = o + 1 < N ? o + 1: N  ;
         for  ( std::size_t i = 0 ; i + 1 < L ; ++i )
-        { result [ i + 1 ] = output [ 1 ] ; }  
+	  { result [ i + 1 ] = output [ 1 ] ; }  
         return result ;
       }
       // ======================================================================
-      private:
+    private:
       // ======================================================================
       /// actual quantile counter  
       Quantiles m_qs { N } ; // actual quantile counter 
       // ======================================================================
     }; //                                             The end of class Qantile_ 
+    // ========================================================================
+    /// get minmax:  trivial "quantiles" for p=0 & p=1 
+    typedef Quantiles_<1>   QMinMax      ;
+    ///              get ( min, median, max)    
+    typedef Quantiles_<2>   QMedian      ;
+    /// Terciles:    get ( min, t1 , t2 , max )    
+    typedef Quantiles_<3>   QTerciles    ;
+    /// Quartiles:   get ( min, q1 , median  , q3   , max )        
+    typedef Quantiles_<4>   QQuartiles   ;
+    /// Quintiles:   get ( min, q1 , q2 , a3 , q4   , max )            
+    typedef Quantiles_<5>   QQuintiles   ;
+    /// Sextiles:    get ( min, q1 , q2 , ... , q5  , max )                
+    typedef Quantiles_<6>   QSextiles    ;
+    /// Septiles:    get ( min, q1 , q2 , ... , q6  , max )            
+    typedef Quantiles_<7>   QSeptiles    ;
+    /// Octiles:     get ( min, q1 , q2 , ... , q7  , max )                
+    typedef Quantiles_<8>   QOctiles     ;
+    /// Deciles:     get ( min, q1 , q2 , ... , q9  , max )                
+    typedef Quantiles_<10>  QDeciles     ;
+    /// Ventiles:    get ( min, q1 , q2 , ... , q19 , max )                
+    typedef Quantiles_<20>  QVentiles    ;
+    /// Percentiles: get ( min, q1 , q2 , ... , q99 , max )                
+    typedef Quantiles_<100> QPercentiles ;
     // ========================================================================
   } //                                         The end od namesapce Ostap::Math
   // ==========================================================================
