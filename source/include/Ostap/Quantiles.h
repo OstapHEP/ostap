@@ -14,6 +14,8 @@
 #include "Ostap/MakeArray.h"
 // =============================================================================
 #include  <iostream>
+#include "Ostap/ToStream.h"
+
 namespace Ostap
 {
   // ===========================================================================
@@ -68,9 +70,20 @@ namespace Ostap
       ( ITERATOR first , 
 	ITERATOR last  ) const 
       {
-	auto q = [this,first,last] ( const std::size_t k ) -> double
-	{ return (*this) ( first , last , k * 1.0 / N  ) ; } ;
-	return Ostap::Math::make_array ( q , std::make_index_sequence<N+1>() )  ;
+	const auto q = [this,first,last] ( const std::size_t k ) -> double
+	{
+	  // return (*this) ( first , last , k * 1.0 / N  ) ;
+	  std::cout << " Q/before" << k << std::endl ;
+	  const double r = (*this) ( first , last , k * 1.0 / N ) ;
+	  std::cout << " Q/after" << r << std::endl ;
+	  return r ; 
+	} ;
+	// return Ostap::Math::make_array ( q , std::make_index_sequence<N+1>() )  ;
+	const auto rr = Ostap::Math::make_array ( q , std::make_index_sequence<N+1>() )  ;
+	std::cout << "QUANTILES_<" << N  << "> :" ;
+	Ostap::Utils::toStream ( rr , std::cout ) ;
+	std::cout  << " name:" << typeid ( rr ) . name() << std::endl ;
+	return rr ;
       }; 
       // 1-quantiles: min & max
       template <class ITERATOR,
