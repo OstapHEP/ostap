@@ -26,6 +26,7 @@
 #include "Ostap/Notifier.h"
 #include "Ostap/StatVar.h"
 #include "Ostap/FormulaVar.h"
+#include "Ostap/Covariance.h"
 #include "Ostap/Covariances.h"
 #include "Ostap/ProgressBar.h"
 // ============================================================================
@@ -1270,64 +1271,6 @@ Ostap::WStatEntity Ostap::StatVar::statVar
 // ============================================================================
 
 // ============================================================================
-/*  calculate the covariance of two expressions
- *  @param tree  (INPUT)  the input tree
- *  @param exp1  (INPUT)  the first  expression
- *  @param exp2  (INPUT)  the second expression
- *  @return covariance
- *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
- *  @date   2024-07-22
- */
-// ============================================================================
-Ostap::Math::Covariance
-Ostap::StatVar::statCov
-( TTree*                  data  ,
-  const std::string&      exp1  ,
-  const std::string&      exp2  ,
-  const Ostap::EventIndex first ,
-  const Ostap::EventIndex last  ) const 
-{
-  //
-  Ostap::Assert ( nullptr != data                    ,  
-		  "Invalid TTree"                    , 
-		  "Ostap::StatVar::statCov"          ,
-		  INVALID_TREE , __FILE__ , __LINE__ ) ;
-  //
-  // prepare the result 
-  Ostap::Math::Covariance result {} ;
-  //
-  const Ostap::EventIndex num_entries = data -> GetEntries() ;
-  const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
-  if ( the_last <= first ) { return result ; } 
-  //
-  // formulas for expressins
-  const Ostap::Formulae formulae { data , { exp1 , exp2 } } ;
-  //
-  Ostap::Utils::Notifier notify ( formulae.begin()  , formulae.end()  , data ) ;
-  //
-  std::vector<double> results1 {} ;
-  std::vector<double> results2 {} ;
-  //
-  Ostap::Utils::ProgressBar bar ( the_last - first , m_progress ) ;
-  for ( Ostap::EventIndex entry = first ; entry < the_last ; ++entry , ++bar )
-    {
-      //
-      const long ievent = data->GetEntryNumber ( entry ) ;
-      if ( 0 > ievent                    ) { break ; } // BREAK
-      if ( 0 > data->LoadTree ( ievent ) ) { break ; } // BREAK
-      //
-      formulae.evaluate ( 0 , results1 ) ;
-      formulae.evaluate ( 1 , results2 ) ;
-      //
-      for ( const long double value1 : results1 ) 
-	{  for ( const long double value2 : results2 ) 
-	    { result.add ( value1 , value2 ) ; } }
-      //
-    }
-  //
-  return result ;
-}
-// ============================================================================
 /*  calculate the covariance of two expressions 
  *  @param tree  (INPUT)  the inpout tree 
  *  @param exp1  (INPUT)  the first  expression
@@ -1338,27 +1281,25 @@ Ostap::StatVar::statCov
  *  @date   2024-07-22
  */
 // ============================================================================
-Ostap::Math::Covariance
-Ostap::StatVar::statCov_cut 
-( TTree*                  data      ,
-  const std::string&      exp1      ,
-  const std::string&      exp2      ,
-  const std::string&      selection ,
-  const Ostap::EventIndex first     ,
-  const Ostap::EventIndex last      ) const 
+Ostap::StatusCode
+Ostap::StatVar::statCov
+( TTree*                   data     ,
+  Ostap::Math::Covariance& stat     , 
+  const std::string&       exp1     ,
+  const std::string&       exp2      ,
+  const std::string&       selection ,
+  const Ostap::EventIndex  first     ,
+  const Ostap::EventIndex  last      ) const 
 {
   //
-  Ostap::Assert ( nullptr != data                    ,  
-		  "Invalid TTree"                    , 
-		  "Ostap::StatVar::statCov"          ,
-		  INVALID_TREE , __FILE__ , __LINE__ ) ;
+  stat.reset() ;
+  //  
+  if ( nullptr == data    ) { return INVALID_DATA    ; }
+  if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
   //
-  // prepare the result 
-  Ostap::Math::Covariance result {} ;
-  //
-  const Ostap::EventIndex num_entries = data -> GetEntries() ;
-  const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
-  if ( the_last <= first ) { return result ; } 
+  const Ostap::EventIndex  num_entries = data -> GetEntries () ;
+  const Ostap::EventIndex  the_last    = std::min ( last , num_entries ) ;
+  if ( the_last <= first ) { return Ostap::StatusCode::SUCCESS ; }
   //
   // formulas for expressins
   const Ostap::Formulae formulae             { data , { exp1 , exp2 } } ;
@@ -1367,7 +1308,7 @@ Ostap::StatVar::statCov_cut
   Ostap::Utils::Notifier notify ( formulae.begin()  , formulae.end()  , cuts.get() , data ) ;
   //
   const bool with_cuts = cuts && cuts ->ok () ;
-
+  //
   std::vector<double> results1 {} ;
   std::vector<double> results2 {} ;
   //
@@ -1375,9 +1316,9 @@ Ostap::StatVar::statCov_cut
   for ( Ostap::EventIndex entry = first ; entry < the_last ; ++entry , ++bar )
     {
       //
-      const long ievent = data->GetEntryNumber ( entry ) ;
-      if ( 0 > ievent                    ) { break ; } // BREAK
-      if ( 0 > data->LoadTree ( ievent ) ) { break ; } // BREAK
+      const long ievent = data -> GetEntryNumber ( entry ) ;
+      if ( 0 > ievent )                      { return INVALID_ENTRY ; }  // RETURN 
+      if ( 0 > data -> LoadTree ( ievent ) ) { return INVALID_EVENT ; }  // RETURN 
       //
       const double cut = with_cuts ? cuts->evaluate() : 1.0 ;
       if ( !cut ) { continue ;}                      // ATTENTION
@@ -1387,11 +1328,11 @@ Ostap::StatVar::statCov_cut
       //
       for ( const long double value1 : results1 ) 
 	{  for ( const long double value2 : results2 ) 
-	    { result.add ( value1 , value2 ) ; } }
+	    { stat.add ( value1 , value2 ) ; } }
       //
     }
   //
-  return result ;
+  return Ostap::StatusCode::SUCCESS ; 
 }
 
 // ============================================================================
@@ -1405,33 +1346,31 @@ Ostap::StatVar::statCov_cut
  *  @date   2024-07-22
  */
 // ============================================================================
-Ostap::Math::WCovariance
+Ostap::StatusCode
 Ostap::StatVar::statCov
-( TTree*                  data      ,
-  const std::string&      exp1      ,
-  const std::string&      exp2      ,
-  const std::string&      selection ,
-  const Ostap::EventIndex first     ,
-  const Ostap::EventIndex last      ) const
+( TTree*                    data      ,
+  Ostap::Math::WCovariance& stat      , 
+  const std::string&        exp1      ,
+  const std::string&        exp2      ,
+  const std::string&        selection ,
+  const Ostap::EventIndex   first     ,
+  const Ostap::EventIndex   last      ) const 
 {
   //
-  Ostap::Assert ( nullptr != data                    ,  
-		  "Invalid TTree"                    , 
-		  "Ostap::StatVar::statCov"          ,
-		  INVALID_TREE , __FILE__ , __LINE__ ) ;
+  stat.reset() ;
+  //  
+  if ( nullptr == data    ) { return INVALID_DATA    ; }
+  if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
   //
-  // prepare the result 
-  Ostap::Math::WCovariance result {} ;
-  //
-  const Ostap::EventIndex num_entries = data -> GetEntries() ;
-  const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
-  if ( the_last <= first ) { return result ; } 
+  const Ostap::EventIndex  num_entries = data -> GetEntries () ;
+  const Ostap::EventIndex  the_last    = std::min ( last , num_entries ) ;
+  if ( the_last <= first ) { return Ostap::StatusCode::SUCCESS ; }
   //
   // formulas for expressins
   const Ostap::Formulae formulae             { data , { exp1 , exp2 } } ;
   const std::unique_ptr<Ostap::Formula> cuts { make_formula ( selection , data , true ) } ;
   //
-  Ostap::Utils::Notifier notify ( formulae.begin() , formulae.end() , cuts.get() , data ) ;
+  Ostap::Utils::Notifier notify ( formulae.begin()  , formulae.end()  , cuts.get() , data ) ;
   //
   const bool with_cuts = cuts && cuts ->ok () ;
   //
@@ -1442,9 +1381,9 @@ Ostap::StatVar::statCov
   for ( Ostap::EventIndex entry = first ; entry < the_last ; ++entry , ++bar )
     {
       //
-      const long ievent = data->GetEntryNumber ( entry ) ;
-      if ( 0 > ievent                    ) { break ; } // BREAK
-      if ( 0 > data->LoadTree ( ievent ) ) { break ; } // BREAK
+      const long ievent = data -> GetEntryNumber ( entry ) ;
+      if ( 0 > ievent )                      { return INVALID_ENTRY ; }  // RETURN 
+      if ( 0 > data -> LoadTree ( ievent ) ) { return INVALID_EVENT ; }  // RETURN 
       //
       const double weight = with_cuts ? cuts->evaluate() : 1.0 ;
       if ( !weight ) { continue ;}                      // ATTENTION
@@ -1454,11 +1393,11 @@ Ostap::StatVar::statCov
       //
       for ( const long double value1 : results1 ) 
 	{  for ( const long double value2 : results2 ) 
-	    { result.add ( value1 , value2 , weight ) ; } }
+	    { stat.add ( value1 , value2 , weight ) ; } }
       //
     }
   //
-  return result ;  
+  return Ostap::StatusCode::SUCCESS ; 
 }
 // ============================================================================
 /*  calculate the covariance of two expressions 
@@ -1471,28 +1410,27 @@ Ostap::StatVar::statCov
  *  @date   2014-03-27
  */
 // ============================================================================
-Ostap::Math::WCovariance
+Ostap::StatusCode 
 Ostap::StatVar::statCov
-( const RooAbsData*       data      , 
-  const std::string&      exp1      , 
-  const std::string&      exp2      , 
-  const std::string&      selection , 
-  const std::string&      cut_range , 
-  const Ostap::EventIndex first     ,
-  const Ostap::EventIndex last      ) const 
+( const RooAbsData*         data      , 
+  Ostap::Math::WCovariance& stat      , 
+  const std::string&        exp1      , 
+  const std::string&        exp2      , 
+  const std::string&        selection , 
+  const std::string&        cut_range , 
+  const Ostap::EventIndex   first     ,
+  const Ostap::EventIndex   last      ) const 
 {
   // ===========================================================================
-  Ostap::Assert ( nullptr != data                    ,  
-		  "Invalid RotAbsData"               , 
-		  "Ostap::StatVar::statCov"          ,
-		  INVALID_DATA , __FILE__ , __LINE__ ) ;
-  //
-  // prepare the result 
-  Ostap::Math::WCovariance result {} ;
+  stat.reset() ; 
+  // ===========================================================================
+  if ( nullptr == data    ) { return INVALID_DATA    ; }
+  if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
   //
   const Ostap::EventIndex num_entries = data->numEntries() ;
   const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
-  if ( the_last <= first ) { return result ; }         // RETURN
+  if ( the_last <= first )  { return Ostap::StatusCode::SUCCESS ; }
+  //
   //
   const Ostap::FormulaVars                 formulae { data , { exp1 , exp2 } } ;
   const std::unique_ptr<Ostap::FormulaVar> cuts     { make_formula ( selection , data , true ) } ;
@@ -1523,10 +1461,10 @@ Ostap::StatVar::statCov
       const double value1 = formulae.evaluate ( 0 ) ;
       const double value2 = formulae.evaluate ( 1 ) ;
       //
-      result.add ( value1 , value2 , weight ) ;
+      stat.add ( value1 , value2 , weight ) ;
     }
   //
-  return result ;
+  return Ostap::StatusCode::SUCCESS ; 
 }
 
 

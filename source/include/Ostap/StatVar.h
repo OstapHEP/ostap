@@ -23,7 +23,6 @@ class RooAbsData ; // RooFit
 #include "Ostap/StatEntity.h"
 #include "Ostap/WStatEntity.h"
 #include "Ostap/ValueWithError.h"
-#include "Ostap/Covariance.h"
 #include "Ostap/StatusCode.h"
 #include "Ostap/Types.h"
 #include "Ostap/ProgressConf.h"
@@ -34,6 +33,8 @@ template <class SCALAR> class TMatrixTSym ; // ROOT
 // ============================================================================
 namespace Ostap { namespace Math { class  Statistic   ; } }
 namespace Ostap { namespace Math { class WStatistic   ; } }
+namespace Ostap { namespace Math { class  Covariance  ; } }
+namespace Ostap { namespace Math { class WCovariance  ; } }
 namespace Ostap { namespace Math { class  Covariances ; } }
 namespace Ostap { namespace Math { class WCovariances ; } }
 // ============================================================================
@@ -343,14 +344,14 @@ namespace Ostap
     // ========================================================================
   public: /// get infomation about several variables simultabneously 
     // =========================================================================
-    /**  build statistic for the <code>expressions</code>
+    /** build statistic for the <code>expressions</code>
      *  @param data        (INPUT)  input data 
      *  @param result      (UPDATE) the output statistics for specified expressions 
      *  @param expressions (INPUT)  the list of  expressions
      *  @param selection   (INPUT)  selection 
      *  @param first       (INPUT)  the first entry to process 
      *  @param last        (INPUT)  the last entry to process (not including!)
-     *  @return statsu code 
+     *  @return status code 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @attentoon selection is treated as boolean 
      *  @date   2018-11-04
@@ -500,23 +501,6 @@ namespace Ostap
      *  @param tree  (INPUT)  the inpout tree 
      *  @param exp1  (INPUT)  the first  expression
      *  @param exp2  (INPUT)  the second expression
-     *  @param first (INPUT)  the first  event to process (inclusive) 
-     *  @param last  (INPUT)  the last   event to process (exc;usive) 
-     *  @return Covariance 
-     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-     *  @date   2024-07-22-
-     */
-    Ostap::Math::Covariance statCov 
-    ( TTree*                  tree                      , 
-      const std::string&      exp1                      , 
-      const std::string&      exp2                      , 
-      const Ostap::EventIndex first = Ostap::FirstEvent ,
-      const Ostap::EventIndex last  = Ostap::LastEvent  ) const ;
-    // ======================================================================
-    /** calculate the covariance of two expressions 
-     *  @param tree  (INPUT)  the inpout tree 
-     *  @param exp1  (INPUT)  the first  expression
-     *  @param exp2  (INPUT)  the second expression
      *  @param selection 
      *  @param first (INPUT)  the first  event to process (inclusive) 
      *  @param last  (INPUT)  the last   event to process (exc;usive) 
@@ -524,13 +508,14 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      *  @date   2024-07-22-
      */
-    Ostap::Math::Covariance statCov_cut 
-    ( TTree*                  tree                          , 
-      const std::string&      exp1                          , 
-      const std::string&      exp2                          , 
-      const std::string&      selection = ""                , 
-      const Ostap::EventIndex first     = Ostap::FirstEvent ,
-      const Ostap::EventIndex last      = Ostap::LastEvent  ) const ;
+    Ostap::StatusCode statCov
+    ( TTree*                   tree                          , 
+      Ostap::Math::Covariance& stat                          , 
+      const std::string&       exp1                          , 
+      const std::string&       exp2                          , 
+      const std::string&       selection = ""                , 
+      const Ostap::EventIndex  first     = Ostap::FirstEvent ,
+      const Ostap::EventIndex  last      = Ostap::LastEvent  ) const ;
     // ======================================================================    
     /** calculate the covariance of two expressions 
      *  @param tree  (INPUT)  the inpout tree 
@@ -543,13 +528,14 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      *  @date   2024-07-22-
      */
-    Ostap::Math::WCovariance statCov 
-    ( TTree*                  tree       , 
-      const std::string&      exp1       , 
-      const std::string&      exp2       ,
-      const std::string&      selection  , 
-      const Ostap::EventIndex first      = Ostap::FirstEvent ,
-      const Ostap::EventIndex last       = Ostap::LastEvent  ) const ;
+    Ostap::StatusCode statCov 
+    ( TTree*                    tree       , 
+      Ostap::Math::WCovariance& stat       , 
+      const std::string&        exp1       , 
+      const std::string&        exp2       ,
+      const std::string&        selection  , 
+      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last       = Ostap::LastEvent  ) const ;
     // ========================================================================
     /** calculate the covariance of two expressions 
      *  @param tree  (INPUT)  the inpout tree 
@@ -562,14 +548,15 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      *  @date   2024-07-22-
      */
-    Ostap::Math::WCovariance statCov 
-    ( const RooAbsData*       data                           , 
-      const std::string&      exp1                           , 
-      const std::string&      exp2                           ,
-      const std::string&      selection  = ""                ,
-      const std::string&      cut_range  = ""                ,      
-      const Ostap::EventIndex first      = Ostap::FirstEvent ,
-      const Ostap::EventIndex last       = Ostap::LastEvent  ) const ;    
+    Ostap::StatusCode statCov 
+    ( const RooAbsData*         data                           , 
+      Ostap::Math::WCovariance& stat                           , 
+      const std::string&        exp1                           , 
+      const std::string&        exp2                           ,
+      const std::string&        selection  = ""                ,
+      const std::string&        cut_range  = ""                ,      
+      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last       = Ostap::LastEvent  ) const ;    
     // =========================================================================
   public: // Covarinaces for many variables 
     // =========================================================================

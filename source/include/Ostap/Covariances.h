@@ -31,7 +31,7 @@ namespace Ostap
       typedef Ostap::StatEntity    Counter    ;
       typedef std::vector<Counter> Counters   ;
       typedef TMatrixTSym<double>  CovMatrix  ;
-      typedef Counter::size_type   size_type  ;
+      typedef Counter::size_type   size_type  ;      
       // ======================================================================
     public:
       // ======================================================================

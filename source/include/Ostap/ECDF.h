@@ -79,7 +79,7 @@ namespace Ostap
         const bool complementary = false ) 
         : m_data          ( begin , end   )
         , m_complementary ( complementary )
-	      , m_counter       () 
+	, m_counter       () 
       {
 	/// (1) adjust the content 
 	this -> cleanup () ;
