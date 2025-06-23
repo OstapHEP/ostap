@@ -188,13 +188,7 @@ namespace Ostap
       const std::string&        cut_range  = ""                ,
       const Ostap::EventIndex   first      = Ostap::FirstEvent ,
       const Ostap::EventIndex   last       = Ostap::LastEvent  ) const ;
-    // ========================================================================
-
-
-
-
-
-  // ========================================================================    
+    // ========================================================================    
   public:  // Statistics3 & WStatistics3
     // ========================================================================
     /** Fill/update statistical counter 

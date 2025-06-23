@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06  
 # =============================================================================
-"""Functions to collect statistics for trees and  datasets
+""" Functions to collect statistics for trees and  datasets
 - data_get_moment      - calculate the moment 
 - data_moment          - get the moment            (with uncertainty)
 - data_get_stat        - get the momentt-based statistics 
@@ -108,11 +108,150 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.statvars' )
 else                       : logger = getLogger ( __name__               )
 # =============================================================================
+FIRTS   = Ostap.FirstEvent
+LAST    = Ostap.LastEvent
 StatVar = Ostap.StatVar 
 # =============================================================================
 ## @var QEXACT
 #  use it as threshold for exact/slow vs approximate/fast quantile calcualtion 
 QEXACT = 10000
+# =============================================================================
+## Get the (s)Statistic-bases statistics/counter from data
+#  @code
+#  statobj = Ostap.Math.MinValue()
+#  data    = ...
+#  result  = data.get_stat ( statobj , 'x+y' , 'pt>1' ) 
+#  @encode
+#  @see Ostap::Math::Statistic
+#  @see Ostap::Math::WStatistic
+#  @see Ostap::statVar::the_moment
+def data_get_stat ( data                ,
+                    statobj             ,
+                    expression          ,
+                    *args               , 
+                    cuts        = ""    , 
+                    progress    = False , 
+                    cut_range   = ""    ,
+                    use_frames  = False ,
+                    parallel    = False ) :
+    """ Get the (W)Statistic-based statistics/counters from data  
+    >>> data   = ...
+    >>> stat   = Ostap.Math.HarmonicMean() 
+    >>> result = data.get_stat ( stat , 'x/y+z' , '0<qq' )
+    - see Ostap.Math.Statistic
+    - see Ostap.Math.WStatistic
+    """
+    assert isinstance ( statobj , ( Ostap.Math.Statistic , Ostap.Math.WStatistic ) ) ,\
+        'get_object: invalid statobj type: %s' % type ( statobj ) 
+    
+    ## decode expressions & cuts
+    var_lst , cuts, _  = vars_and_cuts ( expression , cuts )
+    assert 1 == len ( var_lst ) , "Invalid expression/cuts!"
+    expression = var_lst [ 0 ] 
+    
+    if cut_range and not isinstance ( data , ROOT.RooAbsData ) , \
+       "Invalid use of `cut_range':%s" % cut_range 
+    
+    if   isinstance ( progress , Ostap.Uitls.ProgressConf ) : pass 
+    elif progress : progress = progress_conf ( True  ) 
+    else          : progress = progress_conf ( False ) 
+    
+    sv = StatVar ( progress )
+
+    ## 
+    if isinstance ( data , ROOT.RooAbsData ) :
+        if   isinstance ( progress , Ostap.Uitls.ProgressConf ) : pass 
+        elif progress : progress = progress_conf ( True  ) 
+        else          : progress = progress_conf ( False ) 
+        with rootException() : 
+            sc = sv.get_stat ( data , statobs , expression , cuts , cut_range , *args )
+        assert sc.isSuccess() , 'Error %s from StatVar::get_stat' % sc 
+        return statobj
+
+    if  use_frames and isinstance ( data , ROOT.TTee and use_frames ) :
+        pass
+    
+    if  parallel   and isinstance ( data , ROOT.TChain ) and 1 < len ( data.files () ) :
+        pass 
+    
+    assert isinstance ( data , ROOT.TTree ) , "Invalid type for data!"
+    
+    ## Branches to be activated
+    from ostap.trees.trees import ActiveBranches
+    with rootException() , ActiveBranches ( data , cuts , expression ) :
+        sc = sv.get_stat  ( data , statobj , expression , cuts , *args )
+        assert sc.isSuccess() , 'Error %s from StatVar::the_moment' % sc 
+        return statobj
+
+# =========================================================================
+## Get the (s)Statistic-bases statistics/counter from data
+#  @code
+#  statobj = Ostap.Math.Bernstein2D ( ... )
+#  data    = ...
+#  result  = data.get_stat2 ( statobj , 'x+y' , 'x-y' , 'pt>1' ) 
+#  @encode
+#  @see Ostap::Math::Statistic2
+#  @see Ostap::Math::WStatistic2
+#  @see Ostap::statVar::the_moment
+def data_get_stat2 ( data                ,
+                     statobj             ,
+                     expression1         ,
+                     expression2         ,
+                     *args               , 
+                     cuts        = ""    , 
+                     progress    = False , 
+                     cut_range   = ""    ,
+                     use_frames  = False ,
+                     parallel    = False ) :
+    """ Get the (W)Statistic2-based statistics/counters from data  
+    >>> data   = ...
+    >>> stat   = Ostap.Math.Bernstein2D ( ,,, )  
+    >>> result = data.get_stat ( stat , 'x+y' , 'x-y' , '0<qq' )
+    - see Ostap.Math.Statistic
+    - see Ostap.Math.WStatistic
+    """
+    assert isinstance ( statobj , ( Ostap.Math.Statistic2 , Ostap.Math.WStatistic2 ) ) ,\
+        'get_object: invalid statobj type: %s' % type ( statobj ) 
+    
+    ## decode expressions & cuts
+    var_lst , cuts, _  = vars_and_cuts ( [ expression1 , expression2 ], cuts )
+    assert 2 == len ( var_lst ) , "Invalid expression/cuts!"
+    expression1, expression2 = var_lst
+    
+    if cut_range and not isinstance ( data , ROOT.RooAbsData ) , \
+       "Invalid use of `cut_range':%s" % cut_range 
+    
+    if   isinstance ( progress , Ostap.Uitls.ProgressConf ) : pass 
+    elif progress : progress = progress_conf ( True  ) 
+    else          : progress = progress_conf ( False ) 
+    
+    sv = StatVar ( progress )
+
+    ## 
+    if isinstance ( data , ROOT.RooAbsData ) :
+        if   isinstance ( progress , Ostap.Uitls.ProgressConf ) : pass 
+        elif progress : progress = progress_conf ( True  ) 
+        else          : progress = progress_conf ( False ) 
+        with rootException() : 
+            sc = sv.get_stat ( data , statobs , expression1 , expresson2 , cuts , cut_range , *args )
+        assert sc.isSuccess() , 'Error %s from StatVar::get_stat' % sc 
+        return statobj
+
+    if  not args and use_frames and isinstance ( data , ROOT.TTee and use_frames ) :
+        pass
+    
+    if  if not args and parallel and isinstance ( data , ROOT.TChain ) and 1 < len ( data.files () ) :
+        pass 
+    
+    assert isinstance ( data , ROOT.TTree ) , "Invalid type for data!"
+    
+    ## Branches to be activated
+    from ostap.trees.trees import ActiveBranches
+    with rootException() , ActiveBranches ( data , cuts , expression1 , expression2  ) :
+        sc = sv.get_stat  ( data , statobj , expression1 , expression2 , cuts , *args )
+        assert sc.isSuccess() , 'Error %s from StatVar::the_moment' % sc 
+        return statobj
+
 # =============================================================================
 ## get the moment of order 'order' relative to 'center'
 #  @code
@@ -268,53 +407,6 @@ def data_ECDF ( data , expression , cuts = '' , *args ) :
     assert sc.isSuccess () , "Error code %s from StatVar::ECDF" % sc 
     return ecdf
     
-# ==============================================================================
-## Get the (s)Statistic-bases statistics/counter from data
-#  @code
-#  statobj = Ostap.Math.MinValue()
-#  data    = ...
-#  result  = data.get_stat( statobj , 'x+y' , 'pt>1' ) 
-#  @encode
-#  @see Ostap::Math::Statistic
-#  @see Ostap::Math::WStatistic
-#  @see Ostap::statVar::the_moment
-def data_get_stat ( data        ,
-                    statobj     ,
-                    expression  ,
-                    cuts   = '' , *args ) :
-    """ Get the (W)Statistic-based statistics/counters from data  
-    >>> data   = ...
-    >>> stat   = Ostap.Math.HarmonicMean() 
-    >>> result = data.get_stat ( stat , 'x/y+z' , '0<qq' )
-    - see Ostap.Math.Moment 
-    - see Ostap.Math.WMoment 
-    - see Ostap.Math.ECDF
-    - see Ostap.Math.WECDF
-    """
-    assert isinstance ( statobj , ( Ostap.Math.Statistic , Ostap.Math.WStatistic ) ) ,\
-        'get_object: invalid statobj type: %s' % type ( statobj ) 
-
-    assert isinstance ( expression , expression_types ) , 'Invalid type of expression!'
-    assert isinstance ( cuts       , expression_types ) , 'Invalid type of cuts/weight!'
-    
-    expression = str ( expression ).strip() 
-    cuts       = str ( cuts       ).strip()
-    
-    ## Branches to be activated
-    from ostap.trees.trees import ActiveBranches
-    active = ActiveBranches ( data , cuts , expression )
-
-    if isinstance ( data , ROOT.TTree ) and isinstance ( statobj , Ostap.Math.Statistic ) and not cuts : 
-        with rootException() , active :
-            sc = StatVar.the_moment ( data , statobj , expression , *args )
-            assert sc.isSuccess() , 'Error %s from StatVar::the_moment' % sc 
-            return statobj
-        
-    with rootException() , active :
-        sc = StatVar.the_moment ( data , statobj , expression , cuts , *args )
-        assert sc.isSuccess() , 'Error %s from StatVar::the_moment' % sc 
-        return statobj
-
 # ==============================================================================
 ## Get the statistics from data
 #  @code
@@ -1385,24 +1477,24 @@ def data_decorate ( klass ) :
 
 # =============================================================================
 
-Quantile  = StatVar.Quantile
-Quantiles = StatVar.Quantiles
-Interval  = StatVar.Interval 
-QInterval = StatVar.QInterval 
+## Quantile  = StatVar.Quantile
+## Quantiles = StatVar.Quantiles
+## Interval  = StatVar.Interval 
+## QInterval = StatVar.QInterval 
 
-def _q_str_  ( o ) : return "Quantile(%.5g,n=%s)"         % ( o.quantile  , o.nevents )
-def _qs_str_ ( o ) : return "Quantiles(%s,n=%s)"          % ( o.quantiles , o.nevents )
-def _i_str_  ( o ) : return "Interval([%.5g,%.5g])"       % ( o.low       , o.high    )
-def _qi_str_ ( o ) : return "QInterval([%.5g,%.5g],n=%s)" % ( o.interval.low  ,
+## def _q_str_  ( o ) : return "Quantile(%.5g,n=%s)"         % ( o.quantile  , o.nevents )
+## def _qs_str_ ( o ) : return "Quantiles(%s,n=%s)"          % ( o.quantiles , o.nevents )
+## def _i_str_  ( o ) : return "Interval([%.5g,%.5g])"       % ( o.low       , o.high    )
+## def _qi_str_ ( o ) : return "QInterval([%.5g,%.5g],n=%s)" % ( o.interval.low  ,
                                                               o.interval.high , o.nevents )
-Quantile  .__str__  = _q_str_
-Quantile  .__repr__ = _q_str_
-Quantiles .__str__  = _qs_str_
-Quantiles .__repr__ = _qs_str_
-Interval  .__str__  = _i_str_
-Interval  .__repr__ = _i_str_
-QInterval .__str__  = _qi_str_
-QInterval .__repr__ = _qi_str_
+## Quantile  .__str__  = _q_str_
+## Quantile  .__repr__ = _q_str_
+## Quantiles .__str__  = _qs_str_
+## Quantiles .__repr__ = _qs_str_
+## Interval  .__str__  = _i_str_
+## Interval  .__repr__ = _i_str_
+## QInterval .__str__  = _qi_str_
+## QInterval .__repr__ = _qi_str_
     
 # =============================================================================
 
