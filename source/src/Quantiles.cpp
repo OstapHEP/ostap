@@ -37,60 +37,60 @@ namespace
     const double beta  , 
     const double t1    ,
     const double t2    )  
-{
-   /// ;
-   typedef std::map<std::size_t,double>  MAP   ;
-   typedef SyncedCache<MAP>              CACHE ;
-   /// the actual integration cache
-   static CACHE   s_cache {}      ; // integration cache
-   ///
-   if ( s_equal ( t1 , t2 ) ) { return 0 ; }
-   //
-   const std::size_t key { Ostap::Utils::hash_combiner ( alpha , beta , t1 , t2 ) } ; 
-   /// lookup in cache 
-   { 
-    CACHE::Lock lock { s_cache.mutex () } ;
-    auto it = s_cache->find ( key ) ;
-    if ( s_cache->end () != it ) { return it->second ; }
-   }
-   /// calculate it 
-   const double pmax = std::max ( alpha , beta ) ;
-   const double t    = 0.5 *    ( t1 + t2 ) ;
-   const double dt   = std::abs ( t2 - t1 ) ;  
-   ///
-   const auto fun1 = [alpha,beta,t1,t2]() -> double
-   { return Ostap::Math::beta_inc ( alpha , beta , t1 ) - 
-            Ostap::Math::beta_inc ( alpha , beta , t2 ) ; } ;
-   // 
-   const auto fun2 = [alpha,beta,t1,t2]() -> double
-   {  
-     const double t  = 0.5 *    ( t1 + t2 ) ;
-     const double dt = std::abs ( t2 - t1 ) ;  
-     double result  = std::log  ( dt ) ;
-     result        += ( alpha - 1 ) * std::log ( t       ) ;
-     result        += ( beta  - 1 ) * std::log ( 1 - t   ) ;
-     result        -= Ostap::Math::lnbeta ( alpha , beta ) ;
-     result         = std::exp ( result ) ;
-     return t2 < t1 ? result : -result ;
-   } ; 
-  ///
-  const double result = pmax < 100 ? fun1 () : fun2() ; 
-  //
-  /// add result to the cache 
   {
-    CACHE::Lock lock { s_cache.mutex () } ;
-    if ( 100000  < s_cache->size() ) { s_cache->clear() ; }
-    s_cache->insert ( std::make_pair ( key , result ) ) ;
-  }
-  //
-  return result ;
+    /// ;
+    typedef std::map<std::size_t,double>  MAP   ;
+    typedef SyncedCache<MAP>              CACHE ;
+    /// the actual integration cache
+    static CACHE   s_cache {}      ; // integration cache
+    ///
+    if ( s_equal ( t1 , t2 ) ) { return 0 ; }
+    //
+    const std::size_t key { Ostap::Utils::hash_combiner ( alpha , beta , t1 , t2 ) } ; 
+    /// lookup in cache 
+    { 
+      CACHE::Lock lock { s_cache.mutex () } ;
+      auto it = s_cache->find ( key ) ;
+      if ( s_cache->end () != it ) { return it->second ; }
+    }
+    /// calculate it 
+    const double pmax = std::max ( alpha , beta ) ;
+    const double t    = 0.5 *    ( t1 + t2 ) ;
+    const double dt   = std::abs ( t2 - t1 ) ;  
+    ///
+    const auto fun1 = [alpha,beta,t1,t2]() -> double
+    { return Ostap::Math::beta_inc ( alpha , beta , t1 ) - 
+	Ostap::Math::beta_inc ( alpha , beta , t2 ) ; } ;
+    // 
+    const auto fun2 = [alpha,beta,t1,t2]() -> double
+    {  
+      const double t  = 0.5 *    ( t1 + t2 ) ;
+      const double dt = std::abs ( t2 - t1 ) ;  
+      double result  = std::log  ( dt ) ;
+      result        += ( alpha - 1 ) * std::log ( t       ) ;
+      result        += ( beta  - 1 ) * std::log ( 1 - t   ) ;
+      result        -= Ostap::Math::lnbeta ( alpha , beta ) ;
+      result         = std::exp ( result ) ;
+      return t2 < t1 ? result : -result ;
+    } ; 
+    ///
+    const double result = pmax < 100 ? fun1 () : fun2() ; 
+    //
+    /// add result to the cache 
+    {
+      CACHE::Lock lock { s_cache.mutex () } ;
+      if ( 100000  < s_cache->size() ) { s_cache->clear() ; }
+      s_cache->insert ( std::make_pair ( key , result ) ) ;
+    }
+    //
+    return result ;
   } ; 
   // ============================================================================
 } //                                               The end of anynymous namesapce  
 // ==============================================================================
 Ostap::Math::QCheck::QCheck
 ( const  bool check )
-:  m_check ( check)
+  :  m_check ( check)
 {}
 // ==============================================================================
 void Ostap::Math::QCheck::throw_exception 
@@ -98,10 +98,10 @@ void Ostap::Math::QCheck::throw_exception
   const char* f , 
   const long  l ) const 
 {
-    Ostap::throwException 
+  Ostap::throwException 
     ( message , 
       "Ostap::Math::QChqck" , 
-       INVALID_DATA , f ? f : __FILE__  , 0 <= l ? l : __LINE__ ) ;
+      INVALID_DATA , f ? f : __FILE__  , 0 <= l ? l : __LINE__ ) ;
 }
 // =============================================================================
 // constructor
@@ -109,13 +109,13 @@ void Ostap::Math::QCheck::throw_exception
 Ostap::Math::HyndmanFan::HyndmanFan
 ( const Ostap::Math::HyndmanFan::QuantileType t     , 
   const bool                                 check ) 
-: m_t      ( t    ) 
-, m_check ( check ) 
+  : m_t      ( t    ) 
+  , m_check ( check ) 
 {
-    Ostap::Assert ( One <= t  && t <= Nine , 
-        "Invalid QuantileType!" , 
-        "Ostap::Math::HyndmanFan" , 
-        INVALID_QUANTILE  , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( One <= t  && t <= Nine , 
+		  "Invalid QuantileType!" , 
+		  "Ostap::Math::HyndmanFan" , 
+		  INVALID_QUANTILE  , __FILE__ , __LINE__ ) ;
 } 
 // ==============================================================================
 // constructor
@@ -124,13 +124,13 @@ Ostap::Math::ABQuantile::ABQuantile
 ( const double alpha , 
   const double beta  ,  
   const bool   check ) 
-: m_alpha ( alpha )
-, m_beta  ( beta  )
-, m_check ( check )
+  : m_alpha ( alpha )
+  , m_beta  ( beta  )
+  , m_check ( check )
 {
-if ( s_zero  ( m_alpha    ) ) { m_alpha = 0 ; }
-if ( s_equal ( m_beta , 1 ) ) { m_beta  = 1 ; }
-//
+  if ( s_zero  ( m_alpha    ) ) { m_alpha = 0 ; }
+  if ( s_equal ( m_beta , 1 ) ) { m_beta  = 1 ; }
+  //
   Ostap::Assert ( 0 <= m_alpha && m_alpha <= 1            ,
                   "Invalid alpha!"                        ,
                   "Ostap::Math::ABQuantile"               ,
@@ -139,17 +139,17 @@ if ( s_equal ( m_beta , 1 ) ) { m_beta  = 1 ; }
                   "Invalid beta!"                         ,
                   "Ostap::Math::ABQuantile"               ,
                   INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
-
+  
 } 
 // =============================================================================
 // constructor
 // =============================================================================
 Ostap::Math::HarrellDavis::HarrellDavis 
 ( const bool check ) 
-: m_check  ( check )
+  : m_check  ( check )
 {} ;
 // =============================================================================
-/** calculate \f$ \ I_{t_1}(\alpha,\beta) - I_{t_2} ( \alpha, \beta) f$, where 
+/*  calculate \f$ \ I_{t_1}(\alpha,\beta) - I_{t_2} ( \alpha, \beta) f$, where 
  *  \f$ I_z(x,y) \f$ is normalized inncomplete beta function   
  *  @see Ostap::Math::beta_inc  
  *  - protection is added 

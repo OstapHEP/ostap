@@ -101,13 +101,13 @@ Ostap::makeFormula
   std::unique_ptr<RooFormula> ptr ;
   //
   try
-  {
-    ESentry sentry {} ;
-    ptr = std::make_unique<RooFormulaVar> ( vname.c_str () ,                                                        
-					    exprs.c_str () , 
-					    dependents     , 
-					    false          ) ;
-  }
+    {
+      ESentry sentry {} ;
+      ptr.reset { new RooFormulaVar ( vname.c_str () ,                                                        
+				      exprs.c_str () , 
+				      dependents     , 
+				      false          ) } ;
+    }
   catch ( std::invalid_argument& /* e1 */ ){ return nullptr ;  }
   catch ( std::runtime_error&    /* e2 */ ){ return nullptr ;  }
   //
