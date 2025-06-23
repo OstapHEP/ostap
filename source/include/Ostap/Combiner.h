@@ -106,18 +106,14 @@ namespace Ostap
   {
   public:
     // ========================================================================
-    /// type for container itself
-    typedef typename std::remove_cvref<CONTAINER>::type Container;
     /// type for the range
-    typedef Ostap::Range_<Container> Range;
+    typedef Ostap::Range_<CONTAINER>      Range     ;    
+    /// type for actual contained iterator
+    typedef typename Range::Container     Container ; 
     /// iterator type
-    typedef typename Range::const_iterator iterator;
+    typedef typename Range::const_iterator iterator ;
     /// definition of (multy)iterator
-    typedef std::vector<iterator> Select;
-    /// type for back-up
-    typedef std::pair<Select, size_t> BackUp;
-    /// container of back-ups
-    typedef std::vector<BackUp> BackUps;
+    typedef std::vector<iterator>          Select   ;
     // ========================================================================
   private:
     // ========================================================================

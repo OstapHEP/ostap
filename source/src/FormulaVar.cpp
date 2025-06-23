@@ -103,7 +103,7 @@ Ostap::makeFormula
   try
   {
     ESentry sentry {} ;
-    ptr = std::make_unique<RooFormulaVae> ( vname.c_str () ,                                                        
+    ptr = std::make_unique<RooFormulaVar> ( vname.c_str () ,                                                        
 					    exprs.c_str () , 
 					    dependents     , 
 					    false          ) ;
