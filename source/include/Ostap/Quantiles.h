@@ -54,6 +54,7 @@ namespace Ostap
 	std::cout << "-MIXIN/1 :" << result  << std::endl ; 
 	return result ;
       }
+      
       // ==========================================================================
       /** get N-quantiles 
        *  - p=0 and p=1 2quantiels are included!
@@ -93,7 +94,16 @@ namespace Ostap
       minmax 
       ( ITERATOR first , 
 	ITERATOR last  ) const
-      { return this->template quantiles_<1> ( first  , last ) ;}
+      {
+	// return this->template quantiles_<1> ( first  , last ) ;	
+	auto rr = this->template quantiles_<1> ( first  , last ) ;
+	rr [ 0 ] = -10 ;
+	std::cout << "MINMAX " ;
+	Ostap::Utils::toStream ( rr , std::cout ) ;
+	std::cout  << " name:" << typeid ( rr ) . name() << std::endl ;
+	//
+	return rr ; 
+      }
       // 2-quantiles: min,median,max
       template <class ITERATOR,
 		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
@@ -234,13 +244,10 @@ namespace Ostap
       percentiles ( const std::vector<double>& data ) const
       { return this -> percentiles ( data.begin() , data.end () ) ; }
       // ======================================================================
-      template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       inline double operator()
       ( const std::vector<double>& data , 
 	const double               p    ) const
-      { return (*this)( data.begin () , data.end() , p ) ; }
+      { return (*this) ( data.begin () , data.end() , p ) ; }
       // ======================================================================
      } ;
     // ========================================================================

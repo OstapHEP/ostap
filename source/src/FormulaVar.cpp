@@ -95,30 +95,30 @@ Ostap::makeFormula
   const std::string vname { Ostap::tmp_name ( "test_formula1_" , expression ) } ;
   const std::string exprs { Ostap::strip ( expression                       ) } ;
   //
-  // ========================================================================
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
-  //
-  std::unique_ptr<RooFormula> ptr ;
-  //
-  try
+  // =========================================================================
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,29,0) // ==============================
+  // =========================================================================
+  std::unique_ptr<RooFormulaVar> ptr ;
+  // =========================================================================
+  try // =====================================================================
     {
       ESentry sentry {} ;
-      ptr.reset ( new RooFormulaVar ( vname.c_str () ,                                                        
-				      exprs.c_str () , 
-				      dependents     , 
-				      false          ) ) ;
+      ptr = std::make_unique<RooFormulaVar> ( vname.c_str () ,                                                        
+					      exprs.c_str () , 
+					      dependents     , 
+					      false          ) ;
     }
   catch ( std::invalid_argument& /* e1 */ ){ return nullptr ;  }
   catch ( std::runtime_error&    /* e2 */ ){ return nullptr ;  }
   //
   if ( !ptr || !ptr->ok() ) { return nullptr ; }
   const RooArgList used { ::usedVariables ( *ptr , dependents ) } ;
-  //
-#else
-  //
+  // =========================================================================
+#else // =====================================================================
+  // =========================================================================
   std::unique_ptr<RooFormulaVar> ptr ;
-  //
-  try 
+  // =========================================================================
+  try // =====================================================================
     {
       ESentry sentry {} ;
       Ostap::Utils::Mute m1  ( true  ) ;
@@ -134,8 +134,8 @@ Ostap::makeFormula
   //    
   if ( !ptr || !ptr->ok() ) { return nullptr ; }
   const RooArgList used { usedVariables ( *ptr , dependents ) } ;
-  // ========================================================================
-#endif
+  // ==========================================================================
+#endif // =====================================================================
   // ==========================================================================
   //
   if ( !ptr || !ptr->ok() ) { return nullptr ; }
