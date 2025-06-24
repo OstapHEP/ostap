@@ -13,7 +13,6 @@
 // local 
 // ============================================================================
 #include "Formulae.h"
-#include "Exception.h"
 #include "status_codes.h"
 // ============================================================================
 // creates several formulae in one go 

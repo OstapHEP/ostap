@@ -46,7 +46,6 @@ add_library(ostap SHARED src/format.cpp
                          src/HistoInterpolation.cpp
                          src/HistoInterpolators.cpp
                          src/HistoMake.cpp
-                         src/HistoProject.cpp
                          src/HistoStat.cpp
                          src/IFuncs.cpp
                          src/Integrator.cpp
@@ -75,7 +74,6 @@ add_library(ostap SHARED src/format.cpp
                          src/Notifier.cpp
                          src/Ostap.cpp
 			 src/Quantile.cpp
-                         src/P2Quantile.cpp
                          src/Parameters.cpp
                          src/Parameterization.cpp
                          src/Peaks.cpp
@@ -91,6 +89,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Primitives.cpp
                          src/Printable.cpp
                          src/ProgressBar.cpp
+			 src/Project.cpp
                          src/PyBLOB.cpp
                          src/PyCallable.cpp 
                          src/PyFuncs.cpp 
@@ -128,6 +127,7 @@ add_library(ostap SHARED src/format.cpp
                          src/owens.cpp      
                          src/hcubature.cpp                         
                          src/pcubature.cpp
+			 src/hstats.cpp      
                         )
 
 target_compile_features ( ostap PUBLIC cxx_constexpr                      )

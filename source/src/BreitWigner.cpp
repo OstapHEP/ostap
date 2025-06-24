@@ -16,10 +16,10 @@
 #include "Ostap/DalitzIntegrator.h"
 #include "Ostap/Workspace.h"
 #include "Ostap/Models.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 // local
 // ============================================================================
-#include "Exception.h"
 #include "local_math.h"
 #include "local_gsl.h"
 #include "Integrator1D.h"

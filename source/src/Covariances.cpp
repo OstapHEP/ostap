@@ -16,10 +16,7 @@
 // ============================================================================
 // Local 
 // ============================================================================
-#include "Exception.h"
 #include "status_codes.h"
-// ============================================================================
-
 // ============================================================================
 // Constructor from the dimensions
 // ============================================================================
@@ -64,11 +61,13 @@ Ostap::Math::Covariances::add
 		  "Invalid size of input da ta "        ,
 		  "Ostap::Math::NCovarianceL  Ladd"      ,
 		  INVALID_DATA  , __FILE__  ,   __LINE__ ) ;
-
+  
   // (2) skip infinitis 
-  if ( !std::all_of ( input.begin() , input.end() , 
-     [] ( const double v ) ->  bool { return std::isfinite ( v ) ; } ) ) { return *this  ; }
-
+  if ( !std::all_of ( input.begin () ,
+		      input.end() , 
+		      [] ( const double v ) ->  bool
+		      { return std::isfinite ( v ) ; } ) ) { return *this  ; }
+  
   // (2) number of entries 
   const double nn = n    () ;
   //
@@ -142,9 +141,11 @@ Ostap::Math::WCovariances::add
   // (2) skip zero or infinite weigts 
   if  ( !weight || !std::isfinite ( weight ) ) { return *this ;} 
   // (3) skip infinitis 
-  if ( !std::all_of ( input.begin() , input.end() , 
-     [] ( const double v ) ->  bool { return std::isfinite ( v ) ; } ) ) { return *this  ; }
-   //
+  if ( !std::all_of ( input.begin () ,
+		      input.end   () , 
+		      [] ( const double v ) ->  bool
+		      { return std::isfinite ( v ) ; } ) ) { return *this  ; }
+  //
   // (4) number of entries 
   const double nn = n     () ;
   const double ww = sumw  () ; 

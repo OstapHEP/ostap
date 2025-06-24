@@ -22,10 +22,6 @@
 #include "Ostap/EigenSystem.h"
 #include "Ostap/EigenSystem.icpp"
 // ============================================================================
-// Local
-// ============================================================================
-#include "Exception.h"
-// ============================================================================
 /** @file 
  *  Implementation fiel for class Gaudi::Math::GSL::EigenSystem
  *  @author Vanya BELYAEV ibelyaev@physics.syr.edu

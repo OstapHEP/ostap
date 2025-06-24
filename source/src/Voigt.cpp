@@ -11,10 +11,10 @@
 #include "Ostap/Voigt.h"
 #include "Ostap/Clenshaw.h"
 #include "Ostap/MoreMath.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 //  local
 // ============================================================================
-#include "Exception.h"
 #include "local_math.h"
 #include "local_gsl.h"
 #include "Integrator1D.h"

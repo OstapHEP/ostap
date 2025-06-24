@@ -20,10 +20,10 @@
 #include "Ostap/StatEntity.h"
 #include "Ostap/WStatEntity.h"
 #include "Ostap/Moments.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 // Local
 // ============================================================================
-#include "Exception.h"
 #include "status_codes.h"
 #include "local_math.h"
 #include "local_hash.h"

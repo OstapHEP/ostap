@@ -8,13 +8,13 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Hash.h"
+#include "Ostap/StatusCode.h"
 #include "Ostap/Kinematics.h"
 #include "Ostap/Dalitz.h"
 #include "Ostap/DalitzIntegrator.h"
 // ============================================================================
 // local
 // ============================================================================
-#include "Exception.h"
 #include "local_math.h"
 #include "local_hash.h"
 // ============================================================================

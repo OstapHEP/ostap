@@ -22,10 +22,10 @@
 #include "Ostap/MoreMath.h"
 #include "Ostap/Bernstein.h"
 #include "Ostap/Interpolants.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 // Local
 // ============================================================================
-#include "Exception.h"
 #include "local_math.h"
 #include "local_hash.h"
 #include "syncedcache.h"  // the cache 

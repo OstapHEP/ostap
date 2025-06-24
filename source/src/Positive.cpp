@@ -12,11 +12,11 @@
 #include "Ostap/NSphere.h"
 #include "Ostap/Positive.h"
 #include "Ostap/Lomont.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 // lcoal
 // ============================================================================
 #include "Integrator1D.h"
-#include "Exception.h"
 #include "local_math.h"
 // ============================================================================
 /** @file

@@ -11,10 +11,10 @@
 #include "Ostap/Rational.h"
 #include "Ostap/Clenshaw.h"
 #include "Ostap/LinAlg.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 // Local 
 // ===========================================================================
-#include "Exception.h"
 #include "Integrator1D.h"
 #include "local_hash.h"
 #include "local_math.h"

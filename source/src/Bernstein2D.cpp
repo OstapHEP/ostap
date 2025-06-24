@@ -14,10 +14,10 @@
 #include "Ostap/Hash.h"
 #include "Ostap/Math.h"
 #include "Ostap/Bernstein2D.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 // Local
 // ============================================================================
-#include "Exception.h"
 #include "local_math.h"
 #include "local_hash.h"
 // ============================================================================

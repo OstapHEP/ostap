@@ -11,10 +11,10 @@
 #include "Ostap/Fourier.h"
 #include "Ostap/Clenshaw.h"
 #include "Ostap/Cesaro.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 //  Local 
 // ============================================================================
-#include "Exception.h"
 #include "local_math.h"
 #include "status_codes.h"
 // ============================================================================

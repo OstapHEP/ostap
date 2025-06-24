@@ -27,9 +27,12 @@ namespace
     INVALID_TREEFUNCTION     = 720 ,
     INVALID_TH3              = 721 , 
     INVALID_TH2              = 722 , 
-    INVALID_TH1              = 723 , 
-    INVALID_BUFFER           = 724 ,
-    MISMATCH_TREE            = 725  , 
+    INVALID_TH1              = 723 ,
+    INVALID_XAXIS            = 724 ,
+    INVALID_YAXIS            = 725 ,
+    INVALID_ZAXIS            = 726 ,
+    INVALID_BUFFER           = 727 ,
+    MISMATCH_TREE            = 728  , 
     //
     INVALID_ABSDATA          = 730 ,
     INVALID_ARGSET           = 731 ,
@@ -73,7 +76,8 @@ namespace
     INVALID_MAXVAL_CODE      = 821 ,
     //
     INVALID_PARAMETER        = 825 , 
-    INVALID_MINMAX           = 826 ,
+    INVALID_PARAMETERS       = 826 , 
+    INVALID_MINMAX           = 827 ,
     //
     INVALID_ENTRY            = 830 ,
     INVALID_EVENT            = 831 ,    

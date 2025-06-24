@@ -17,10 +17,10 @@
 #include "Ostap/Choose.h"
 #include "Ostap/Bernstein1D.h"
 #include "Ostap/Polynomials.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 // Local
 // ============================================================================
-#include "Exception.h"
 #include "local_math.h"
 #include "local_hash.h"
 #include "bernstein_utils.h"

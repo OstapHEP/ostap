@@ -25,11 +25,11 @@
 #include "Ostap/qMath.h"
 #include "Ostap/Power.h"
 #include "Ostap/Clenshaw.h"
+#include "Ostap/StatusCode.h"
 #include "Ostap/Models2D.h"
 // ============================================================================
 //  Local 
 // ============================================================================
-#include "Exception.h"
 #include "local_math.h"
 #include "local_hash.h"
 #include "Integrator1D.h"

@@ -4,6 +4,11 @@
 // ============================================================================
 // Include files
 // ============================================================================
+// STD&STL 
+// ============================================================================
+#include <memory>
+#include <string>
+// ============================================================================
 // ROOT 
 // ============================================================================
 #include "TTreeFormula.h"
@@ -73,6 +78,20 @@ namespace Ostap
     bool   ok       () const { return this->GetNdim() ; } // is formula OK ? 
     // ========================================================================    
   };
+  // ==========================================================================
+  /** make Formula
+   *  @param expression  (input) formula expresson  
+   *  @param daat        (INPUT) input data 
+   *  @param allow_empty (INPUT) return nullptr for "trivial" formula 
+   *  @para, allow_null  (INPUT) return nullptr instead of exceptios 
+   *  @see Ostap::trivial 
+   */
+  std::unique_ptr<Ostap::Formula>
+  makeFormula 
+  ( const std::string& expression           , 
+    const TTree*       data                 , 
+    const bool         allow_empty = false  , 
+    const bool         allow_null  = false  ) ;
   // ==========================================================================
 } //                                                     End of namespace Ostap 
 // ============================================================================

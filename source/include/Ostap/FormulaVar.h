@@ -151,23 +151,18 @@ namespace Ostap
   // ==========================================================================
   /** make formula (skip unnesessary dependents)
    *  @param expression formula expression
-   *  @param dependent  formula dependents 
+   *  @param data        (INPUT) data 
+   *  @param allow_empty (INPUT) return nullptr for "trivial" formula 
+   *  @para, allow_null  (INPUT) return nullptr instead of exceptios 
+   *  @see Ostap::trivial 
    *  @return the formula  
    */
   std::unique_ptr<FormulaVar>  
   makeFormula
-  ( const std::string& expression , 
-    const RooArgSet*   dependents ) ;
-  // ==========================================================================
-  /** make formula (skip unnesessary dependents)
-   *  @param expression formula expression
-   *  @param dependent  formula dependents 
-   *  @return the formula  
-   */
-  std::unique_ptr<FormulaVar>  
-  makeFormula
-  ( const std::string& expression , 
-    const RooAbsData*  dependents ) ;
+  ( const std::string& expression           , 
+    const RooAbsData*  data                 ,
+    const bool         allow_empty = false  , 
+    const bool         allow_null  = false  ) ; 
   // ===========================================================================
   /** valid formula expression ?
    *  @param expression formula expression

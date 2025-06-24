@@ -31,6 +31,7 @@
 #include "Ostap/Hash.h"
 #include "Ostap/Math.h"
 #include "Ostap/Power.h"
+#include "Ostap/StatusCode.h"
 #include "Ostap/Polynomials.h"
 #include "Ostap/Bernstein.h"
 #include "Ostap/Clenshaw.h"
@@ -40,7 +41,6 @@
 // ============================================================================
 //  Local 
 // ============================================================================
-#include "Exception.h"
 #include "local_math.h"
 #include "local_hash.h"
 #include "local_gsl.h"

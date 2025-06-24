@@ -16,10 +16,10 @@
 #include "Ostap/Hash.h"
 #include "Ostap/ECDF.h"
 #include "Ostap/EPDF.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 // Local
 // ============================================================================
-#include "Exception.h"
 #include "status_codes.h"
 #include "local_math.h"
 #include "local_hash.h"

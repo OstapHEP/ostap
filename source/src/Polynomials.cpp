@@ -15,6 +15,7 @@
 #include "Ostap/Math.h"
 #include "Ostap/Hash.h"
 #include "Ostap/Power.h"
+#include "Ostap/StatusCode.h"
 #include "Ostap/Clenshaw.h"
 #include "Ostap/Choose.h"
 #include "Ostap/Bernstein.h"
@@ -22,10 +23,6 @@
 #include "Ostap/Polynomials.h"
 #include "Ostap/Positive.h"
 #include "Ostap/Bernstein1D.h"
-// ============================================================================
-// Local 
-// ============================================================================
-#include "Exception.h"
 // ============================================================================
 /** @file 
  *  Implementation file for classes from file Ostap/Polynomials.h

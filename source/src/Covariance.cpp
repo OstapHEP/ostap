@@ -12,10 +12,11 @@
 #include "Ostap/StatEntity.h"
 #include "Ostap/WStatEntity.h"
 #include "Ostap/Covariance.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 // local
 // ============================================================================
-#include "Exception.h"
+
 // ============================================================================
 /** @file 
  *  Implementation file for class Ostap::Math::Covariance

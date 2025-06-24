@@ -16,6 +16,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/StatusCode.h"
 #include "Ostap/ProgressBar.h"
 #include "Ostap/AddBranch.h"
 #include "Ostap/Notifier.h"
@@ -25,7 +26,6 @@
 // ============================================================================
 // local
 // ============================================================================
-#include "Exception.h"
 #include "local_math.h"
 #include "local_roofit.h"
 #include "status_codes.h"

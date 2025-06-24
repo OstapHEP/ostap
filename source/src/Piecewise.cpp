@@ -10,10 +10,11 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Piecewise.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
-// local
+// Local
 // ============================================================================
-#include "Exception.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file
  *  Implementation file for class Ostap::Math::Piecewise
@@ -57,7 +58,10 @@ void Ostap::Math::Piecewise::add_
     m_funcs.pop_back() ;
   }
   //
-  Ostap::Assert ( m_edges.empty () || xi > m_edges.back() , s_ERROR , s_METHOD ) ;
+  Ostap::Assert ( m_edges.empty () || xi > m_edges.back()  ,
+		  s_ERROR                                  ,
+		  s_METHOD                                 ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
   //
   m_edges.push_back ( xi ) ; 
   m_funcs.push_back ( FPAIR ( fi , si ) ) ;

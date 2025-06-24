@@ -16,11 +16,11 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Names.h"
+#include "Ostap/StatusCode.h"
 #include "Ostap/Formula.h"
 // ============================================================================
 // Local
 // ============================================================================
-#include "Exception.h"
 #include "status_codes.h"
 // ============================================================================
 /** Implementation file for class Ostap::Formula
@@ -124,6 +124,34 @@ Int_t Ostap::Formula::evaluate ( std::vector<double>& results )
   results.resize ( d ) ;
   for ( Int_t i = 0 ; i < d ; ++i ) { results [ i ] = EvalInstance ( i ) ; }
   return d ;  
+}
+// ============================================================================
+/*  make Formula
+ *  @param expression  (input) formula expresson  
+ *  @param daat        (INPUT) input data 
+ *  @param allow_empty (INPUT) return nullptr for "trivial" formula 
+ *  @para, allow_null  (INPUT) return nullptr instead of exceptios 
+ *  @see Ostap::trivial 
+ */
+// ============================================================================
+std::unique_ptr<Ostap::Formula>
+Ostap::makeFormula 
+( const std::string& expression  , 
+  const TTree*       data        , 
+  const bool         allow_empty , 
+  const bool         allow_null  )
+{
+  if ( allow_empty && Ostap::trivial ( expression ) ) { return nullptr ; }  // RETURN!
+  // 
+  auto result = std::make_unique<Ostap::Formula> ( expression , data  ) ;
+  if ( allow_null && ( !result || !result->ok() ) ) { return nullptr ; } 
+  //
+  Ostap::Assert ( result && result->ok()                   , 
+		  "Invalid formula:\'" + expression + "\'" , 
+		  "Ostap::Formula::makeFormula"            ,
+		  INVALID_FORMULA , __FILE__ , __LINE__    ) ;
+  //
+  return result ;
 }
 // ============================================================================
 //                                                                      The END 

@@ -19,10 +19,10 @@
 #include "Ostap/ChebyshevApproximation.h"
 #include "Ostap/PyCallable.h"
 #include "Ostap/Polynomials.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 // Local
 // ============================================================================
-#include "Exception.h"
 #include "local_math.h"
 #include "status_codes.h"
 // ============================================================================

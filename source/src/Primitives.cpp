@@ -4,11 +4,12 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Primitives.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 // Local
 // ============================================================================
-#include "Exception.h"
 #include "local_math.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file  
  *  Implementaiton file for functions from the file   Ostap/Primitives.h 
@@ -26,9 +27,10 @@ Ostap::Math::Moebius::Moebius
 // ==========================================================================
 bool Ostap::Math::Moebius::check() const
 {
-  Ostap::Assert ( !s_zero ( m_a * m_d - m_b * m_c )    ,
-                  "invalid parameters!"  , 
-                  "Ostap::Math::Moebius" ) ;
+  Ostap::Assert ( !s_zero ( m_a * m_d - m_b * m_c )        ,
+                  "invalid parameters!"                    , 
+                  "Ostap::Math::Moebius"                   ,
+		  INVALID_PARAMETERS , __FILE__ , __LINE__ ) ;
   return true ;
 }
 // ===========================================================================

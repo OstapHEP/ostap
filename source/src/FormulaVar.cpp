@@ -14,6 +14,8 @@
 // ============================================================================
 #include "RVersion.h"
 #include "RooFormulaVar.h"
+#include "RooAbsData.h"
+#include "RooArgList.h"
 #include "TError.h"
 // ============================================================================
 // Ostap
@@ -25,7 +27,6 @@
 // ============================================================================
 // local
 // ============================================================================
-#include "Exception.h"
 #include "local_utils.h"
 #include "local_roofit.h"
 // ============================================================================
@@ -191,6 +192,51 @@ Ostap::makeFormula
                        expression , 
                        expression , 
                        dependents ) ; }
+// ============================================================================
+/** make formula (skip unnesessary dependents)
+ *  @param expression formula expression
+ *  @param dependent  formula dependents 
+ *  @param allow_empty (INPUT) return nullptr for "trivial" formula 
+ *  @para, allow_null  (INPUT) return nullptr instead of exceptios 
+ *  @see    Ostap::trivial 
+ *  @return the formula  
+ */
+// ============================================================================
+std::unique_ptr<Ostap::FormulaVar>  
+Ostap::makeFormula
+( const std::string& expression  , 
+  const RooAbsData*  data        ,
+  const bool         allow_empty , 
+  const bool         allow_null  )
+{
+  if ( allow_empty && Ostap::trivial ( expression ) ) { return nullptr ; } // RETURN!
+  if ( allow_null  && !data                         ) { return nullptr ; } // RETURN
+  //
+  Ostap::Assert ( nullptr != data                      ,  
+		  "Invalid RooAbdData"                 , 
+		  "Ostap::FormulaVar::makeFormula"     ,
+		  INVALID_DATA , __FILE__ , __LINE__ ) ;
+  //
+  const RooArgSet*  aset = data -> get() ;
+  if ( allow_null && nullptr == aset ) { return nullptr ; }
+  //
+  Ostap::Assert ( nullptr != aset                      ,  
+		  "Invalid varset"                     , 
+		  "Ostap::FormulaVar::makeFormula"     ,
+		  INVALID_ARGSET , __FILE__ , __LINE__ ) ;
+  // convert set to list 
+  const RooArgList alst { *aset } ;
+  // make formula 
+  std::unique_ptr<FormulaVar> result = makeFormula ( expression , alst ) ;
+  if ( allow_null && ( !result || !result->ok () ) ) { return nullptr ; } 
+  //
+  Ostap::Assert ( result && result->ok ()               ,  
+		  "Invalid formula"                     , 
+		  "Ostap::FormulaVar::makeFormula"      ,
+		  INVALID_FORMULA , __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+}
 // ============================================================================
 /** valid formula expression ?
  *  @param expression formula expression

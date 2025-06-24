@@ -18,6 +18,7 @@
 // ============================================================================
 #include "Ostap/Hash.h"
 #include "Ostap/Peaks.h"
+#include "Ostap/StatusCode.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/qMath.h"
 #include "Ostap/Clenshaw.h"
@@ -25,7 +26,6 @@
 // ============================================================================
 //  Local
 // ============================================================================
-#include "Exception.h"
 #include "local_math.h"
 #include "local_gsl.h"
 #include "local_hash.h"

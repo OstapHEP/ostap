@@ -12,12 +12,12 @@
 #include "Ostap/Math.h"
 #include "Ostap/Bernstein2D.h"
 #include "Ostap/Bernstein3D.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 // Local
 // ============================================================================
 #include "local_math.h"
 #include "local_hash.h"
-#include "Exception.h"
 // ============================================================================
 /** @file
  *  Implementation file for functions, related to Bernstein's polynomnials
