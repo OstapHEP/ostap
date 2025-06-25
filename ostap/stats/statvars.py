@@ -60,14 +60,16 @@ __all__     = (
     'expression_types'     , ## valid types for expressions/cuts/weights
 )
 # =============================================================================
-from   ostap.math.base        import isequal, iszero, axis_range, strings 
-from   ostap.core.core        import Ostap, rootException, WSE, VE, std     
-from   ostap.core.ostap_types import ( string_types , integer_types  , 
-                                       num_types    , dictlike_types )
-from   ostap.trees.cuts       import expression_types, vars_and_cuts
-from   ostap.utils.basic      import loop_items, typename 
+from   ostap.math.base           import ( isequal, iszero, axis_range, strings, 
+                                          all_entries )      
+from   ostap.core.core           import Ostap, rootException, WSE, VE, std     
+from   ostap.core.ostap_types    import ( string_types , integer_types  , 
+                                          num_types    , dictlike_types )
+from   ostap.trees.cuts          import expression_types, vars_and_cuts
+from   ostap.utils.basic         import loop_items, typename 
+from   ostap.utils.progress_conf import progress_conf
 import ostap.stats.moment 
-import ostap.logger.table     as     T
+import ostap.logger.table        as     T
 import ROOT 
 # =============================================================================
 # logging 
@@ -76,7 +78,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.statvars' )
 else                       : logger = getLogger ( __name__               )
 # =============================================================================
-FIRTS   = Ostap.FirstEvent
+FIRST   = Ostap.FirstEvent
 LAST    = Ostap.LastEvent
 StatVar = Ostap.StatVar 
 # =============================================================================
@@ -135,7 +137,7 @@ def data_get_stat ( data               ,
     if   1 == nvars and isinstance ( statobj , _s1D ) : pass
     elif 2 == nvars and isinstance ( statobj , _s2D ) : pass
     elif 3 == nvars and isinstance ( statobj , _s3D ) : pass
-    elif 4 == mvars and isinstance ( statobj , _s4D ) : pass
+    elif 4 == nvars and isinstance ( statobj , _s4D ) : pass
     else :
         raise TypeError ( 'Inconsistent statobj %s & expression(s): %s' % ( typename ( statobj ) , str ( var_lst ) ) ) 
 
@@ -144,9 +146,7 @@ def data_get_stat ( data               ,
         raise TypeError ( "Invalid use of `cut_range':%s" % cut_range  ) 
 
     ## (4) display progress ? 
-    if   isinstance ( progress , Ostap.Uitls.ProgressConf ) : pass 
-    elif progress : progress = progress_conf ( True  ) 
-    else          : progress = progress_conf ( False ) 
+    progress = progress_conf ( progress )
 
     ## (5) create the driver 
     sv = StatVar ( progress )
@@ -155,18 +155,18 @@ def data_get_stat ( data               ,
     if isinstance ( data , ROOT.RooAbsData ) :
         with rootException() :
             the_args = var_lst + ( cuts , cut_range ) + args 
-            sc       = sv.get_stat ( data , statobs , *the_args )
+            sc       = sv.get_stat ( data , statobj , *the_args )
         assert sc.isSuccess() , 'Error %s from StatVar::get_stat' % sc 
         return statobj
 
-    if  use_frame and isinstance ( data , ROOT.TTee ) :
-        logger.error ( "Not yet implemented!" )
-        return 
+    if  use_frame and isinstance ( data , ROOT.TTee    ) and all_entries ( data , *args[:2] ) :
+        raise NotImplementedError ( "Not yet implemented!" )
     
-    if  parallel   and isinstance ( data , ROOT.TChain ) and 1 < len ( data.files () ) :
-        logger.error ( "Not yet implemented!" )
-        return 
-    
+    if  parallel   and isinstance ( data , ROOT.TChain ) and all_entries ( data , *args[:2] ) :
+        import ostap.trees.trees
+        if 1 < len ( data.files () ) :
+            raise NotImplementedError ( "Not implemented yet!" ) 
+             
     assert isinstance ( data , ROOT.TTree ) , "Invalid type for data!"
     
     ## Branches to be activated
@@ -193,13 +193,13 @@ def data_the_moment ( data               ,
                       cuts       = ''    ,
                       cut_range  = ''    ,
                       progress   = False , 
-                      as_weight  = True  , ## interpret cuts s as weiggt 
+                      as_weight  = True  , ## interpret cuts as weight 
                       use_frame  = False ,
                       parallel   = False ) : 
     """ Get the moment of order 'order'
     >>> data =  ...
-    >>> print data_the_moment ( data , 3 , 0.0 , 'mass' , 'pt>1' )
-    >>> print data.the_moment (        3 , 0.0 , 'mass' , 'pt>1' ) ## ditto
+    >>> print data_the_moment ( data , 3 , 0.0 , 'mass' , cuts = 'pt>1' )
+    >>> print data.the_moment (        3 , 0.0 , 'mass' , cuts = 'pt>1' ) ## ditto
     #  @see Ostap::Math::WMoment_
     """   
     assert isinstance ( order , integer_types ) and 0 <= order , \
@@ -211,13 +211,13 @@ def data_the_moment ( data               ,
     if isinstance ( data , ROOT.RooAbsData ) or ( cuts and as_weight ) : 
         statobj = Ostap.Math.WMoment_[order] ()
     else :
-        statobj = Ostap.Math.WMoment_[order] ()
+        statobj = Ostap.Math. Moment_[order] ()
         
     return data_get_stat ( data                  ,
                            statobj               ,
                            expression            , 
                            *args                 ,
-                           cuts      = cut       ,
+                           cuts      = cuts      ,
                            cut_range = cut_range ,
                            progress  = progress  , 
                            use_frame = use_frame , 
@@ -266,7 +266,7 @@ def  data_moment ( data               ,
 #  @code
 #  data =  ...
 #  ecdf1 = data_ECDF ( data , 'mass' ) 
-#  ecdf2 = data_ECDF ( data , 'mass' ,  'PT>1') 
+#  ecdf2 = data_ECDF ( data , 'mass' ,  cuts = 'PT>1') 
 #  @endcode
 #  @see Ostap::Math::ECDF
 #  @see Ostap::Math::WECDF
@@ -282,7 +282,7 @@ def data_ECDF ( data               ,
     """ Get the empirical cumulative distribution function 
     >>> data =  ...
     >>> ecdf1 = data.ECDF ( data , 'mass' ) 
-    >>> ecdf2 = data.ECDF ( data , 'mass' ,  'PT>1') 
+    >>> ecdf2 = data.ECDF ( data , 'mass' , cuts = 'PT>1') 
     - see `Ostap.Math.ECDF`
     - see `Ostap.Math.WECDF`
     """
@@ -299,7 +299,7 @@ def data_ECDF ( data               ,
                            statobj               ,
                            expression            , 
                            *args                 ,
-                           cuts      = cut       ,
+                           cuts      = cuts      ,
                            cut_range = cut_range ,
                            progress  = progress  , 
                            use_frame = use_frame , 
@@ -309,8 +309,8 @@ def data_ECDF ( data               ,
 ## Get the statistic from data
 #  @code
 #  data    = ...
-#  result  = data_statistics ( data , 'x+y'   , 'pt>1' ) 
-#  results = data_statistics ( data , 'x;y;z' , 'pt>1' ) ## result is dictionary 
+#  result  = data_statistics ( data , 'x+y'   , cuts = 'pt>1' ) 
+#  results = data_statistics ( data , 'x;y;z' , cuts = 'pt>1' ) ## result is dictionary 
 #  @encode
 #  @see Ostap::StatEntity
 #  @see Ostap::WStatEntity
@@ -326,59 +326,60 @@ def data_statistic ( data               ,
                      parallel   = False ) :     
     """ Get statistics from data 
     >>> data    = ...
-    >>> result  = data_statistics ( data , 'x/y+z' , '0<qq' )
-    >>> results = data_statistics ( data , 'x/y;z' , '0<qq' ) ## result is dictionary
+    >>> result  = data_statistics ( data , 'x/y+z' , cuts = '0<qq' )
+    >>> results = data_statistics ( data , 'x/y;z' , cuts = '0<qq' ) ## result is dictionary
     - see Ostap.Math.StatEntity
     - see Ostap.Math.WStatEntity
     - see Ostap.StatVar.statVar
     """
     ## decode expressions & cuts
     var_lst, cuts, input_string = vars_and_cuts ( expressions , cuts )
-    assert var_lst , "Inavlid expressions!"
+    assert var_lst , "Invalid expressions!"
+    
+    if use_frame and isinstance ( data , ROOT.TTree  ) and all_entries ( data , *args[:2] ) :
+        raise NotImplementedError ( "Not implemented yet!")
+    if parallel  and isinstance ( data , ROOT.TChain ) and all_entries ( data , *args[:2] ) :
+        import ostap.trees.trees   
+        if 1 < data.nfiles () : raise NotImplementedError ( "Not implemented yet!")
     
     ##  diplay progress ? 
-    if   isinstance ( progress , Ostap.Uitls.ProgressConf ) : pass 
-    elif progress : progress = progress_conf ( True  ) 
-    else          : progress = progress_conf ( False ) 
+    progress = progress_conf ( progress )
 
     ## create the driver 
     sv = StatVar ( progress )
-
-    if isinstance ( data ROOT.RooAbsData ) or ( cuts and as_weight ) :
-        vcnt = Ostap.StatVar.WStatVector ()
-    else : 
-        vcnt = Ostap.StatVar. StatVector ()
+    
+    if input_string :
+        varname  = var_lst [ 0 ] 
+        if   isinstance ( data , ROOT.RooAbsData ) : return sv.statVar     ( data , varname , cuts , cut_range , *args )
+        elif cuts and as_weight                    : return sv.statVar     ( data , varname , cuts ,             *args )
+        else                                       : return sv.statVar_cut ( data , varname , cuts ,             *args )
+           
+    ## 
+    
+    if   isinstance ( data , ROOT.RooAbsData ) : vcnt = Ostap.StatVar.WStatVector ()
+    elif cuts and as_weight                    : vcnt = Ostap.StatVar.WStatVector ()
+    else                                       : vcnt = Ostap.StatVar. StatVector ()
         
     ## variable names 
     vnames = strings ( var_lst ) 
     
-    if isinstance ( ROOT.RooAnsData ) :
+    print  ( 'ARGS: ' , args )
+    
+    if isinstance ( data , ROOT.RooAbsData ) :
         with rootException() :
-            sc   = sv.statVars ( vcnt , vnames  , cuts , cut_range , *args ) 
-            assert sc.isSuccess() , 'Error %s from StatVar::statVars' % sc 
-            if input_string and 1 == len ( vcnt ) : return vcnt [ 0 ] 
-            assert len ( vcnt ) == len ( vname ) , "Mismatch in structure"
-            result = {}
-            for name , cnt  in zip ( var_lst , vct ) : result [ name ] = cnt
-            return result 
+            sc   = sv.statVars ( data , vcnt , vnames  , cuts , cut_range , *args ) 
+            assert sc.isSuccess() , 'Error %s from Ostap::StatVar::statVars' % sc  
+            assert len ( vcnt ) == len ( vnames ) , "Mismatch in structure"
+            return { name : cnt for ( name , cnt ) in zip ( var_lst , vct ) } 
             
-    if  use_frame and isinstance ( data , ROOT.TTee ) :
-        pass
-    
-    if  parallel   and isinstance ( data , ROOT.TChain ) and 1 < len ( data.files () ) :
-        pass
-    
     assert isinstance ( data , ROOT.TTree ) , "Invalid type for data!"
     
     from ostap.trees.trees import ActiveBranches
     with rootException() , ActiveBranches ( data , cuts , *var_lst ) :
-        sc   = sv.statVars ( vcnt , vnames  , cuts , *args ) 
-        assert sc.isSuccess() , 'Error %s from StatVar::statVars' % sc 
-        if input_string and 1 == len ( vcnt ) : return vcnt [ 0 ] 
-        assert len ( vcnt ) == len ( vname ) , "Mismatch in structure"
-        result = {}
-        for name , cnt  in zip ( var_lst , vct ) : result [ name ] = cnt
-        return result 
+        sc   = sv.statVars ( data , vcnt , vnames , cuts , *args ) 
+        assert sc.isSuccess() , 'Error %s from Ostap::StatVar::statVars' % sc 
+        assert len ( vcnt ) == len ( vnames ) , "Mismatch in structure"
+        return { name : cnt for ( name , cnt ) in zip ( var_lst , vcnt ) } 
 
 # ==============================================================================
 ## Get the minmax from data
@@ -460,25 +461,26 @@ def data_range ( data               ,
     if isinstance ( results , dictlike_types ) :
         for k , r in loop_items ( results ) :
             mn, mx = r
-            if mx < mn and ( cuts or cut_range ) : 
-                ## recalculate without cuts 
-                rr = data_statistic ( data, k , *args        ,
-                                      cuts      = ''         ,
-                                      cut_range = ""         ,
-                                      progress  = progress   ,
-                                      use_frame = use_frame  ,
-                                      parallel  = parallel   ) 
-                mn , mx = rr.min () , rr.max() 
+            if mx < mn and ( cuts or cut_range or args ) : 
+                ## recalculate without cuts and arg-ranges 
+                mn , mx = data_minmax ( data , k ,        
+                                        cuts      = ''         ,
+                                        cut_range = ''         ,
+                                        progress  = progress   ,
+                                        use_frame = use_frame  ,
+                                        parallel  = parallel   )  
             if mx < mn : return None               ## ATTENTION!                    
             results [ k ] = axis_range ( mn , mx , delta = delta ) 
     else :
         mn , mx = results
-        if mx < mn and cuts :
-            rr = data_statistic  ( data , k , '' , *args )
-            mn , mx = rr.min () , rr.max() 
-        if mx < mn : return None               ## ATTENTION!                            
-        results = axis_range ( *results , delta = delta )
-    ##
+        if mx < mn and ( cuts or cut_range or args ) :
+            mn , mx = data_minmax ( data , expressions    , 
+                                    progress  = progress  ,
+                                    use_frame = use_frame , 
+                                    parallel  = parallel  )
+        if mx < mn : return None               ## ATTENTION! 
+        return axis_range ( mn , mx , delta = delta ) 
+      
     return results 
 
 # ==============================================================================
@@ -511,7 +513,7 @@ def data_covariance ( data        ,
     """
     
     var_lst, cuts, _ =  vars_and_cuts ( expressions , cuts )
-    assert 2 <= len ( var_lst ) , "At least two varibales are required!"
+    assert 2 <= len ( var_lst ) , "At least two variables are required!"
     N = len ( var_lst ) 
     
     if isinstance ( data , ROOT.RooAbsData ) or ( cuts and as_weight ) :
@@ -520,38 +522,39 @@ def data_covariance ( data        ,
         result = Ostap.Math. Covariance() if 2 == N else Ostap.Math. Covariances ( N )
 
     ##  diplay progress ? 
-    if   isinstance ( progress , Ostap.Uitls.ProgressConf ) : pass 
-    elif progress : progress = progress_conf ( True  ) 
-    else          : progress = progress_conf ( False ) 
+    progress = progress_conf ( progress )
 
     ## create the driver 
     sv = StatVar ( progress )
     
-    if isinstance ( ROOT.RooAnsData ) :
+    vnames = strings ( var_lst )
+    
+    if isinstance ( data , ROOT.RooAbsData ) :
         with rootException() :
             if 2 == N : sc = sv.statCov ( data , result , var_lst[0] , var_lst[1] , cuts , cut_range , *args )
-            else      : sc = sv.statCov ( data , result , vbanes                  , cuts , cut_range , *args )
+            else      : sc = sv.statCov ( data , result , vnames                  , cuts , cut_range , *args )
             assert sc.isSuccess() , 'Error %s from StatVar::statVars' % sc 
             return result 
 
-    if  use_frame and isinstance ( data , ROOT.TTee ) :
-        logger.error ('not yet implemented!')
+    if  use_frame and isinstance ( data , ROOT.TTee   ) and all_entries ( data , *args[:2] ) :
+        raise NotImplementedError ( 'Not yet implemented yet!' )
     
-    if  parallel   and isinstance ( data , ROOT.TChain ) and 1 < len ( data.files () ) :
-        logger.error ('not yet implemented!')
+    if  parallel  and isinstance ( data , ROOT.TChain ) and all_entries ( data , *args[:2] ) : 
+        import ostap.trees.trees
+        if 1 < len ( data.files () ) : raise NotImplementedError ( 'Not yet implemented yet!' )
         
     assert isinstance ( data , ROOT.TTree ) , "Invalid type for data!"
         
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
-    with rootException() , ActiveBranches ( data , cuts , expression1, expression2 ) :
+    with rootException() , ActiveBranches ( data , cuts , *var_lst ) :
         if 2 == N : sc = sv.statCov ( data , result , var_lst[0] , var_lst[1] , cuts , *args )
-        else      : sc = sv.statCov ( data , result , vbanes                  , cuts , *args )
+        else      : sc = sv.statCov ( data , result , vnames                  , cuts , *args )
         assert sc.isSuccess() , 'Error %s from StatVar::statVars' % sc 
         return result 
 
 # ============================================================================
-## get the effective vector of mean-values with covarinaces for the dataset
+## get the effective vector of mean-values with covariances for the dataset
 #  @code
 #  vct = data_statvct ( data ,  'a,b,c' ) 
 #  @endcode 
@@ -573,13 +576,13 @@ def data_statvector ( data        ,
     
     assert 2 <= N , "At least two variables are needed!"
 
-    covs = data_covarinace ( data , var_lst , *args ,
+    covs = data_covariance ( data , var_lst , *args ,
                              cuts       = cuts      ,
                              cut_range  = cut_range ,                             
-                             progress   = False     , 
-                             as_weight  = True      ,  
-                             use_frame  = False     ,
-                             parallel   = False     )
+                             progress   = progress  , 
+                             as_weight  = as_weight ,  
+                             use_frame  = use_frame ,
+                             parallel   = parallel  )
 
     ## HERE !!!
     ## FIX IT!!!

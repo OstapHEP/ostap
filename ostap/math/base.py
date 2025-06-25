@@ -110,13 +110,18 @@ __all__     = (
     'pos_infinity'   , ## positive infinity  
     'neg_infinity'   , ## negative infinity
     ##
+    'FIRST_ENTRY'    , ## the first entryfor evetn loops
+    'LAST_ENTRY'     , ## the last entry for event loops 
+    'evt_range'      , ## get the actual range of entries
+    'all_entries'    , ## Are all entreis required to process? 
+    ##
     'numpy'          , ## numpy or None
     'scipy'          , ## scipy or None
     'np2raw'         , ## numnpy array to raw C++ buffer 
     ) 
 # =============================================================================
 from   ostap.core.meta_info    import python_info
-from   collections.abc         import Iterable
+from   collections.abc         import Iterable, Sized
 import ROOT, cppyy, sys, math, ctypes  
 # =============================================================================
 # logging 
@@ -958,6 +963,69 @@ def lround ( x ) :
     - see `Ostap.Math.round`
     """
     return x if isinstance  ( x , int ) else _round ( x ) 
+
+
+# ============================================================================
+## The first entry for event loops
+FIRST_ENTRY = Ostap.FirstEvent 
+## The last entry for event loops 
+LAST_ENTRY  = Ostap.LastEvent
+# ============================================================================
+assert isinstance ( FIRST_ENTRY , int ) , "Invalid First Entry type!"
+assert isinstance ( LAST_ENTRY  , int ) , "Invalid Last  Entry type!"
+assert 0 <= FIRST_ENTRY < LAST_ENTRY    , "Invalid First/Last entries!"
+# ============================================================================
+## Get the actual range of entries
+#  @code
+#  tree  = 
+#  first , last = evt_range ( 100 , 1000 ) 
+#  @endcode
+def evt_range ( sized , first = FIRST_ENTRY , last = LAST_ENTRY  ) :
+    """ Get the actual range of entries  
+    >>> tree = ....
+    >>> first , last = evt_range ( tree , 0 , 1000 ) 
+    """
+    assert isinstance ( first , int ) , "evt_range: Invalid `first' type!"
+    assert isinstance ( last  , int ) , "evt_range: Invalid `last' type!"
+    ##
+    size = sized
+    if isinstance ( sized , Sized ) : size  = len ( sized )
+    assert isinstance ( size , int ) and 0 <= size , 'Invalid size!'
+    ##
+    if not size : return 0 , 0   ## empty range
+    ##
+    if first < 0 : first += size
+    if last  < 0 : last  += size 
+    assert 0 <= first <= last , "Invalid first/last setting!"
+    ##
+    if   size <= first : return size, size 
+    elif size <= last  : return first, min ( size , last )
+    return first , last 
+# =========================================================================
+## Are all entries required to process?
+#  @code
+#  tree  = 
+#  if not  all_events ( tree , 100 , 1000 ) :
+#  @endcode
+def all_entries ( sized , first = FIRST_ENTRY , last = LAST_ENTRY  ) :
+    """ Get the actual range of entries  
+    >>> tree = ....
+    >>> if not all_entries  ( tree , 0 , 1000 ) : ...
+    """
+    ##
+    assert isinstance ( first , int ) , "all_entries: Invalid `first' type!"
+    assert isinstance ( last  , int ) , "evt_entries: Invalid `last' type!"
+    ##
+    size = sized
+    if isinstance ( sized , Sized ) : size  = len ( sized )
+    assert isinstance ( size , int ) and 0 <= size , 'Invalid size!'
+    ##
+    if first < 0 : first += size
+    if last  < 0 : last  += size 
+    assert 0 <= first <= last , "Invalid first/last setting!"
+    ##
+    return 0 == first and size <= last 
+
 
 # =============================================================================
 ## Numpy & scipy 

@@ -20,6 +20,7 @@ __all__     = (
     'progress_conf', ## default configuration of the C++ progrees bar 
 )
 # =============================================================================
+from ostap.core.ostap_types import integer_types 
 from ostap.core.core        import Ostap
 from ostap.utils.basic      import isatty, terminal_size
 from ostap.logger.colorized import allright
@@ -38,24 +39,37 @@ def progress_conf ( show = True , timer = True , description = 'Entries:' ) :
     - see `Ostap.Utils.ProgressConf`
     - see `Ostap.Utils.ProgressBar` 
     """
-    if not show : return Ostap.Utils.ProgressConf ( 0 )
-    tty    = isatty () 
-    twidth = terminal_size() [ 0 ] if tty else 105
+    PC = Ostap.Utils.ProgressConf 
+    if   isinstance ( show , PC )  : return show 
+    elif not show                  : return PC ( 0 )
+    
+    tty    = isatty ()
+    if isinstance ( show , integer_types ) and 40 <= show <= 512 : twidth = show 
+    else : twidth = terminal_size() [ 0 ] if tty else 105
+    
+    done   = '#'
+    notyet = ' '
+    assert len ( done ) == len ( notyet ) , "Mismatch in symbol lengths"
     left   = '[ '
     right  = ' ]'
     ld     = len ( description ) 
+    ll     = len ( left        )
+    lr     = len ( right       )
+    twidth = max ( 0 , twidth - 20 - ll - lr - ld ) // len ( done )
+    if tty :
+        done  = allright ( done  )
+        left  = allright ( left  )
+        right = allright ( right )
+        
     return Ostap.Utils.ProgressConf ( 
-	max ( 0 , twidth - 18 - ld )          , ## silent if is terminal is too narrow
-	allright ( '#'   ) if tty else '#'    , ## 'done' symbol 
-        ' '                                   , ## 'not-yet' symbol
-        ## allright ( left ) if tty else left    , ## left
-        ## allright ( ' [ ' ) if tty else ' [ '  , ## left
-        left                               , ## left 
-        ## allright ( ' ] '  ) if tty else ' ] ' , ## right
-        right                                    , ## right
-        description                              , ## what/descritoiont
-        timer                                    , ## use the timer
-        tty                                      ) ## tty ? 
+        twidth        , ## silent if terminal is too narrow
+	    done          , ## 'done' symbol 
+        notyet        , ## 'not-yet' symbol
+        left          , ## left 
+        right         , ## right
+        description   , ## what/description
+        timer         , ## use the timer
+        tty           ) ## tty ? 
 
 # =============================================================================
 if '__main__' == __name__ :

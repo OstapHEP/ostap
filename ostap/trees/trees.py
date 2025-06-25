@@ -43,10 +43,11 @@ from   ostap.utils.strings       import ( split_string           ,
                                           var_separators         )
 from   ostap.utils.cidict        import cidict, cidict_fun
 from   ostap.utils.progress_bar  import progress_bar
+from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.scp_copy      import scp_copy
 from   ostap.utils.utils         import chunked
-from   ostap.utils.ranges        import evt_range
 from   ostap.math.base           import numpy, np2raw  
+from   ostap.math.base           import FIRST_ENTRY, LAST_ENTRY, evt_range, all_entries
 from   ostap.logger.symbols      import tree           as tree_symbol
 from   ostap.logger.symbols      import branch         as branch_symbol
 from   ostap.logger.symbols      import leaves         as leaves_symbol
@@ -65,11 +66,6 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.trees.trees' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some useful decorations for Tree/Chain objects')
-# =============================================================================
-## the last index for laooping over TTRee/RooAbsData
-LAST_ENTRY  = ROOT.TVirtualTreePlayer.kMaxEntries
-## the last index for laooping over TTRee/RooAbsData
-ALL_ENTRIES = 0 , LAST_ENTRY 
 # =============================================================================
 ## check validity/emptiness  of TTree/TChain
 #  require non-zero poniter and non-empty Tree/Chain
@@ -263,7 +259,13 @@ else : # ======================================================================
 #   for row, weight  in tree.rows ( 'a a+b/c sin(d)' , 'd>0' ) :
 #      print ( row , weight ) 
 #   @code 
-def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = LAST_ENTRY , progress = False , active = () ) :
+def _tt_rows_ ( tree     , 
+               variables , 
+               cuts      = ''          , 
+               first     = FIRST_ENTRY , 
+               last      = LAST_ENTRY  , 
+               progress  = False       , 
+               active    = ()          ) :
     """ Iterate over tree entries and get a row/array of values for each good entry
     >>> tree = ...
     >>> for row, weight  in tree.rows ( 'a a+b/c sin(d)' , 'd>0' ) :
@@ -274,25 +276,13 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = LAST_ENTRY , p
     progress = progress and isatty()
 
     ## redefine first/last 
-    first, last = evt_range ( len ( tree ) , first , last ) 
+    first, last = evt_range ( tree , first , last ) 
     
-    if isinstance ( variables , string_types ) :
-        variables = split_string ( variables , var_separators , strip = True , respect_groups = True )
-        
-    vars = []
-    for v in variables :
-        vars += split_string ( v , var_separators , strip = True , respect_groups = True )
+    vars , cuts, _ = vars_and_cuts ( variables , cuts )
     
-    if active :
+    if active : context = ActiveBranches  ( tree , *active  )
+    else      : context = NoContext () 
         
-        cvar    = tree.the_variables ( cuts , vars ,  *active )
-        abrs    = tuple ( set ( [ c for c in cvar ] ) ) 
-        context = ActiveBranches  ( tree , *abrs )
-        
-    else :
-        
-        from ostap.utils.basic import NoContext 
-        context = NoContext () 
         
     vars = strings ( vars ) 
 
@@ -361,13 +351,13 @@ ROOT.TTree .rows  = _tt_rows_
 #
 #  @code 
 #    >>> h1   = ROOT.TH1D(... )
-#    >>> tree.Project ( h1.GetName() , 'm', 'chi2<10' ) ## standart ROOT 
+#    >>> tree.Project ( h1.GetName() , 'm', cuts = 'chi2<10' ) ## standart ROOT 
 #    
 #    >>> h1   = ROOT.TH1D(... )
-#    >>> tree.project ( h1.GetName() , 'm', 'chi2<10' ) ## ditto 
+#    >>> tree.project ( h1.GetName() , 'm', cuts = 'chi2<10' ) ## ditto 
 #    
 #    >>> h1   = ROOT.TH1D(... )
-#    >>> tree.project ( h1           , 'm', 'chi2<10' ) ## use histo
+#    >>> tree.project ( h1           , 'm', cust = 'chi2<10' ) ## use histo
 # 
 #  @endcode
 #  @attention For 2D&3D cases if variables specifed as singel string, the order is Z,Y,X,
@@ -386,26 +376,28 @@ ROOT.TTree .rows  = _tt_rows_
 #  @see TTree::Project
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
-def tree_project ( tree                    ,
-                   histo                   ,
-                   what                    ,
-                   cuts       = ''         ,
-                   first      =  0         , 
-                   last       = LAST_ENTRY , 
-                   use_frame  = True       , ## use DataFrame ? 
-                   progress   = False      ) :
+def tree_project ( tree                     ,
+                   histo                    ,
+                   what                     ,
+                   cuts       = ''          ,
+                   first      = FIRST_ENTRY ,          
+                   last       = LAST_ENTRY  , 
+                   native     = False       ,
+                   use_frame  = False       , ## use DataFrame ? 
+                   parallel   = False       , ## use parallel stuff?
+                   progress   = False       ) :
     """ Helper project method
     
     >>> tree = ...
     
     >>> h1   = ROOT.TH1D(... )
-    >>> tree.Project ( h1.GetName() , 'm', 'chi2<10' ) ## standart ROOT 
+    >>> tree.Project ( h1.GetName() , 'm', cuts2<10' ) ## standart ROOT 
     
     >>> h1   = ROOT.TH1D(... )
     >>> tree.project ( h1.GetName() , 'm', 'chi2<10' ) ## ditto 
     
     >>> h1   = ROOT.TH1D(... )
-    >>> tree.project ( h1           ,  'm', 'chi2<10' ) ## use histo
+    >>> tree.project ( h1           , 'm', 'chi2<10' ) ## use histo
 
     - histo : the histogram (or histogram name)
     - what  : variable/expression to project. It can be expression or list/tuple of expression or comma (or semicolumn) separated expression
@@ -415,19 +407,15 @@ def tree_project ( tree                    ,
 
     """
 
-    ## 0) show progress only for tty 
-    progress = progress and isatty ()
-    
     ## 1) adjust the first/last
-    first , last = evt_range ( len ( tree ) , first , last )
+    first , last = evt_range ( tree , first , last  )
 
-    ## 2) if the histogram is specified by the name, try to locate it ROOT memory  
+    ## 2) if the histogram is specified by the name, try to locate it in ROOT memory  
     if isinstance ( histo , string_types ) :
-        hname = histo
         groot = ROOT.ROOT.GetROOT()
-        h     = groot.FindObject ( hname )
-        assert h , 'Cannot get locate histo by name %s' % histos        
-        assert isinstance ( h , ROOT.TH1 ) , 'the object %s i snot ROOT.TH1' % type ( h ) 
+        h     = groot.FindObject ( histo )
+        assert h , "Cannot get locate histogram by name:`%s'" % histo       
+        assert isinstance ( h , ROOT.TH1 ) , "Object `%s' exists, but not ROOT.TH1" % typename ( h ) 
         histo = h
         
     ## 3) redirect to the appropriate method
@@ -437,87 +425,109 @@ def tree_project ( tree                    ,
     elif isinstance ( tree , ROOT.RooAbsData ) :
         from ostap.fitting.dataset import ds_project as _ds_project_
         return _ds_project_ ( tree , histo , what , cuts = cuts , first = first , last = last , progress = progress )
-
+    
     assert isinstance ( tree , ROOT.TTree ) , "Invalid type of 'tree': %s" % type ( tree ) 
-
-    ## 3) target        
+    
+    ## 4) target        
     target = histo    
     
     ## input histogram?
     input_histo = isinstance ( target , ROOT.TH1 )
     from ostap.trees.param import param_types_nD        
-    assert input_histo or  isinstance ( target , param_types_nD ) , 'Invalid target/histo type %s' % type ( target ) 
-
+    assert input_histo or  isinstance ( target , param_types_nD ) , \
+        'Invalid target/histo type %s' % typename ( target ) 
+        
     ## 3) parse input expressions
     varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
-
+  
     ## use frame if requested and if/when possible 
-    if use_frame and 0 == first and len ( tree ) < last : 
-        ## if input_histo or ( 6 , 25 ) <= root_info :
+    if use_frame and all_entries ( tree , first , last ) : 
         import ostap.frames.frames as F 
         frame  = F.DataFrame ( tree )
-        if progress : frame , _ = F.frame_progress ( frame , len ( tree ) )
-        ## with ActiveBranches  ( tree , cuts , *varlst ) :            
-        return F.frame_project ( frame , target , expressions = what , cuts = cuts , lazy = False  )
+        if progress : frame , _ = F.frame_progress ( frame , len ( tree ) )            
+        return F.frame_project ( frame , target , expressions = varlst , cuts = cuts , lazy = False  )
+
+    ## use parallel processing if requested and if/when possible  
+    if parallel and isinstance ( ROOT.TChain ) and all_entries ( tree , first , last ) and 1 < tree.nFiles () :
+            raise NotImplementedError ( 'Not implemented yet!' )
 
     ## dimension of the target 
     dim = target.dim ()
     assert 1 <= dim <= 4 , 'Invalid dimension of target: %s' % dim  
 
-    if input_string and 2 <= len ( varlst ) and order_warning :
+    nvars = len ( varlst )
+    assert ( 1 == dim and dim < nvars and not native ) or dim == nvars , \
+        'Mismatch between the target/histo dimension %d and input variables %s' % ( dim , varlst )
+ 
+    if input_string and 2 <= dim and order_warning :
         vv = ' ; '.join  ( varlst  ) 
         logger.attention ("project: from v1.10.1.9 variables are in natural order [x;y;..]=[ %s ]" % vv  )
         
-    nvars = len ( varlst )
-    assert ( 1 == dim and dim <= nvars ) or dim == nvars , \
-        'Mismatch between the target/histo dimension %d and input variables %s' % ( dim , varlst )
- 
-    tail = cuts , first , last
-    args = ( target , ) + varlst + tail 
-
     ## copy/clone the target 
-    def target_copy  ( t ) : return t.Clone() if isinstance ( t , ROOT.TH1 ) else type ( t ) ( t )
+    def target_copy   ( t ) : return t.Clone() if isinstance ( t , ROOT.TH1 ) else type ( t ) ( t )
     ## reset the target 
-    def target_reset ( t ) :
-        if isinstance ( t , ROOT.TH1 ) : t.Reset()
-        else                           : t *= 0.0
+    def target_reset  ( t ) :
+        if isinstance ( t , ROOT.TH1 ) : 
+            t.Reset ()
+            if not t.GetSumw2() : t.Sumw2 () 
+        else : t.reset ()
         return t
     
     ## reset the target 
     target = target_reset ( target ) 
+        
+    ## avoid looping 
+    if first == last : return target
+      
+    ## Native ROOT processing
+    if native and isinstance ( target , ROOT.TH1 ) and \
+        ROOT.ROOT.GetROOT().FindObject ( target.GetName() ) is target : 
                     
+        ## ATTENTION: 
+        ## here the inverse/contrintuitive ROOT convention
+        ## is used for the ordering of variables
+        the_vars = ' : '.join ( '( %s )' % v for v in reversed ( varlst ) )
+        ## Use the native ROOT machinery
+        rr = data.Project ( target.GetName () , the_vars , cuts , '' , last - first , first )
+        if rr < 0  : logger.error ("Error from TTree::Project %+d" % rr )
+        else :
+            nn = target.GetEntries ()
+            if nn != rr : logger.error ("Mismath for #entries: %+g vs %+d" % ( nn , rr) )
+                
+        return target
+    
+    tail = cuts , first , last
+    
+    ## Use our own loop/fill/project machinery
+    hp = Ostap.Project ( progress_conf ( progress ) ) 
+    
+    print ( 'PROGRESS!', progress )
+    
     ## get the list of active branches 
-    active = tree.the_variables ( cuts , *varlst )
-    with ActiveBranches  ( tree , *active ) :
-        ## very special case of projection several expressions into the same target 
+    with ActiveBranches  ( tree , *varlst ) :
+        ## very special case of projection of several expressions into the same 1D-target 
         if 1 == dim and dim < nvars : 
-            ## very special case of projection several expressions into the same target 
-            htmp  = target_copy ( target )  ## prepare temporary object 
+            ## very special case of projections of several expressions into the same 1D-target 
+            htmp  = target_copy ( target )  ## prepare the temporary object 
             for var in varlst :
                 htmp = target_reset ( htmp ) ## rest the temporary object 
-                args = ( htmp , var ) + tail 
-                if progress : sc = Ostap.HistoProject.project  ( tree , progress_conf () , *args )
-                else        : sc = Ostap.HistoProject.project  ( tree ,                    *args )
-                if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project %s" % sc )
+                sc   = hp.project1  ( tree , htmp , var , cuts , *tail )
+                if not sc.isSuccess() : logger.error ( "Error from Ostap.Project.project1(%s) %s" %  ( sc , var ) )
                 ## update results 
                 target += htmp
             del htmp 
         elif 1 == dim :
-            if progress : sc = Ostap.HistoProject.project  ( tree , progress_conf () , *args )
-            else        : sc = Ostap.HistoProject.project  ( tree ,                    *args )
-            if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project  %s" % sc )
+            sc =  hp.project1 ( tree , target , *varlst , *tail )
+            if not sc.isSuccess() : logger.error ( "Error from Ostap.Project.project1 %s" % sc )
         elif 2 == dim : 
-            if progress : sc = Ostap.HistoProject.project2 ( tree , progress_conf () , *args )
-            else        : sc = Ostap.HistoProject.project2 ( tree ,                    *args )
-            if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
+            sc =  hp.project2 ( tree , target , *varlst , *tail )
+            if not sc.isSuccess() : logger.error ( "Error from Ostap.Project.project2 %s" % sc )
         elif 3 == dim : 
-            if progress : sc = Ostap.HistoProject.project3 ( tree , progress_conf () , *args )
-            else        : sc = Ostap.HistoProject.project3 ( tree ,                    *args )
-            if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
+            sc =  hp.project3 ( tree , target , *varlst , *tail )
+            if not sc.isSuccess() : logger.error ( "Error from Ostap.Project.project3 %s" % sc )
         elif 4 == dim : 
-            if progress : sc = Ostap.HistoProject.project4 ( tree , progress_conf () , *args )
-            else        : sc = Ostap.HistoProject.project4 ( tree ,                    *args )
-            if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project4 %s" % sc )
+            sc =  hp.project4 ( tree , target , *varlst , *tail )
+            if not sc.isSuccess() : logger.error ( "Error from Ostap.Project.project4 %s" % sc )
 
         ## return None on error 
         return target if sc.isSuccess() else None 
@@ -526,26 +536,24 @@ ROOT.TTree .project = tree_project
 ROOT.TChain.project = tree_project
 
 # ======================================================================
-## Draw the variables/expressions fom TTree obnjetc
-def tree_draw ( tree                    , 
-                what                    ,
-                cuts       = ''         ,
-                opts       = ''         , 
-                first      =  0         , 
-                last       = LAST_ENTRY , 
-                use_frame  = False      ,
-                delta      = 0.01       ,
-                native     = False      ,
-                progress   = False      , **kwargs ) :  ## use DataFrame ? 
-
-    ## show progress obly for tty 
-    progress = progress ## and isatty()
-    
+## Draw the variables/expressions from TTree object
+def tree_draw ( tree                     , 
+                what                     ,
+                cuts       = ''          ,
+                opts       = ''          , 
+                first      = FIRST_ENTRY , 
+                last       = LAST_ENTRY  , 
+                use_frame  = False       , ## use DataFrame ? 
+                parallel   = False       , ## use parallel processing?
+                native     = False       , ## use native ROOT processinng
+                delta      = 0.01        ,
+                progress   = False       , **kwargs ) :  
+ 
     ## check type of opts 
     assert isinstance ( opts , string_types ) , "Invalid type of `opts' : %s" % type ( opts )
     
     ## adjust first/last indices 
-    first , last = evt_range ( len ( tree ) , first , last )
+    first , last = evt_range ( tree , first , last )
     
     ## decode variables/cuts 
     varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
@@ -564,11 +572,11 @@ def tree_draw ( tree                    ,
             groot.cd()            
             hname  = hID ()
             varexp = '(%s) >> %s' % ( varlst [ 0 ] , hname )
-            tree.Draw ( varexpr , cuts , opts , last - first , first )
+            tree.Draw ( varexp , cuts , opts , last - first , first )
             cdir   = ROOT.gDirectory()
             histo  = cdir.Get ( hname )
             assert histo and isinstance ( histo , ROOT.TH1 ) and histo.GetName() == hname , \
-                "Cannot retrive the histogram %s" % hname
+                "Cannot retrive the histogram %s from %s" %  ( hname , cdir.GetName () ) 
             ## remove keys related to the booking 
             for k in histo_keys : kw.pop( k , None )
             ## draw the histogram 
@@ -576,7 +584,13 @@ def tree_draw ( tree                    ,
             return histo
             
     ## get the suitable ranges for the variables 
-    ranges = data_range ( tree , varlst , cuts , delta , first, last )
+    ranges = data_range ( tree  ,
+                          varlst , first , last , 
+                          cuts      = cuts      ,
+                          use_frame = use_frame , 
+                          parallel  = parallel  , 
+                          delta     = delta     , 
+                          progress  = progress  )
     if not ranges :
         logger.warning ( 'tree_draw: nothing to draw, return None' )
         return None
@@ -588,28 +602,22 @@ def tree_draw ( tree                    ,
         histos.append ( item ) 
 
     ## book the histogram 
-    histo = histo_book2 ( histos , kw )
+    histo = histo_book2  ( histos , kw )
 
-    if not native :
-        ## fill the histogram 
-        histo = tree_project ( tree , histo  , varlst , cuts = cuts , first = first , last = last , use_frame = use_frame , progress = progress )
-        ## draw the histogram 
-        histo.draw ( opts , **kw )
-        return histo
-
-    # =========================================================================
-    ## ROOT native project (a bit more efficient) 
-    # Natiev project uses reverse order!
-    # =========================================================================
-    if   1 == nvars : varexp =                                                  varlst [ 0 ]
-    elif 2 == nvars : varexp = '%s : %s '     %                ( varlst [ 1 ] , varlst [ 0 ] ) 
-    elif 3 == nvars : varexp = '%s : %s : %s' % ( varlst [ 2 ] , varlst [ 1 ] , varlst [ 0 ] ) 
+    ## fill the histogram 
+    histo = tree_project ( tree                  , 
+                           histo                 , 
+                           varlst                , 
+                           cuts      = cuts      , 
+                           first     = first     , 
+                           last      = last      ,
+                           native    = native    ,  
+                           use_frame = use_frame , 
+                           parallel  = parallel  , 
+                           progress  = progress  )
     
-    ## fill the histoigram 
-    with ActiveBranches ( tree , cuts , varexp , *varlst ) :
-        tree.Project ( histo.GetName() , varexp , cuts , ''   , last  - first , first       )
     ## draw the histogram 
-    histo.draw ( opts , **kw  )
+    histo.draw ( opts , **kw )
     return histo
 
 ROOT.TTree .draw = tree_draw 
