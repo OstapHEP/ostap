@@ -79,7 +79,8 @@ __all__     = (
     'axe'                 , 
     ##
     'delta_symbol'        ,
-    'number'              , 
+    'number'              ,
+    'permille'            , 
     ##
     'union'               , 
     'intersection'        , 
@@ -184,6 +185,7 @@ exclusive_or     = '\U000022BB' if show else '^'
 difference       = '\U000022BB' if show else '-'
 
 iteration        = '\U00003005' if show else ''
+permille         = '\U00002030' if show else '/1000'
 
 ## indices: circled numbes from 0 to 50 (inclusive) 
 indices2 = '\U000024FF' + \
