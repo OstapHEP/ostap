@@ -8,7 +8,6 @@
 
 ## Bug fixes
 
-
 # v2.1.0.0
 
 ## New features

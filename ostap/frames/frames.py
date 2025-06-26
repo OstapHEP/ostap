@@ -14,25 +14,28 @@ __date__    = "2011-06-07"
 __all__     = (
     'DataFrame'             , ## RDataFrame object
     ## 
-    'frame_columns'         , ## defined columns  
-    'frame_branches'        , ## defined columns  
+    'frame_columns'         , ## all defined columns 
+    'frame_branches'        , ## all defined columns  
     ## 
     'frame_progress1'       , ## progress bar for frame (OK for ROOT<6.32)
     'frame_progress2'       , ## progress bar for frame (OK for ROOT>6.29) 
     'frame_progress'        , ## progress bar for frame
+    ## 
     'frame_prescale'        , ## prescale frame (trivial filter)
     'frame_project'         , ## project data frame to the (1D/2D/3D) histogram
     'frame_draw'            , ## draw variable from the frame  
     'frame_print'           , ## over-simplified print frame
     'frame_table'           , ## Print frame as detailed table 
     ##
-    'frame_length'          , ## length/size of the frame 
-    'frame_size'            , ## length/size of the frame 
+    'frame_length'          , ## length/size/#entries of the frame 
+    'frame_size'            , ## length/size/#entries of the frame 
     ##
-    'frame_nEff'            , ## nEff function for frames
-    'frame_statVar'         , ## stat var for frame 
+    'frame_nEff'            , ## number of effective entries 
+    'frame_statVar'         , ## statistics for the variables 
     'frame_statCov'         , ## stat cov for frame
-    ##
+    ##    
+    'frame_the_moment'      , ## get *THE* moment for certain variable(s)
+    ## 
     'frame_get_moment'      , ## get the moment or certain order around defined center 
     'frame_moment'          , ## get the moment or certain order 
     'frame_central_moment'  , ## get the central moment or certain order
@@ -44,15 +47,6 @@ __all__     = (
     'frame_skewness'       , ## skewness for the variable 
     'frame_kurtosis'       , ## kurtosos for the variable
     ## 
-    'frame_quantile'       , ## quantile 
-    'frame_interval'       , ## quantile interval 
-    'frame_median'         , ## median 
-    'frame_quantiles'      , ## quantiles 
-    'frame_terciles'       , ## terciles 
-    'frame_quartiles'      , ## quartiles 
-    'frame_quintiles'      , ## quintiles 
-    'frame_deciles'        , ## deciles 
-    ##
     'report_print'         , ## print the report 
     'report_print_table'   , ## print the report 
     'report_as_table'      , ## print the report
@@ -63,12 +57,12 @@ __all__     = (
 from   ostap.core.meta_info      import root_info 
 from   ostap.core.ostap_types    import ( integer_types , dictlike_types , 
                                           num_types     , ordered_dict   )    
-from   ostap.core.core           import cpp, Ostap
+from   ostap.core.core           import cpp, Ostap, SE , WSE 
 from   ostap.math.base           import isequal, iszero, axis_range                             
 from   ostap.logger.utils        import multicolumn
 from   ostap.utils.cidict        import cidict, cidict_fun      
 from   ostap.utils.progress_conf import progress_conf 
-from   ostap.utils.basic         import isatty, loop_items
+from   ostap.utils.basic         import isatty, loop_items, typename 
 import ostap.core.config         as     OCC 
 import ostap.stats.statvars      as     SV
 import ostap.logger.table        as     T 
@@ -193,7 +187,12 @@ def _fr_helper_ ( frame , expressions , cuts = '' , progress = False ) :
         ncuts   = '1.0*(%s)' % cuts 
         current = current.Define ( cn , ncuts )
         cname   = cn
-        
+
+    ## attach cuts as filter 
+    if cname :
+        filter_name = '(PRE)FILTER'
+        current = current.Filter ( '(bool) %s' % cname , filter_name ) 
+    
     return current, vnames, cname, input_string
 
 # ==================================================================================
@@ -218,12 +217,11 @@ def _fr_helper2_ ( frame            ,
     if not lazy :
         for expr, res  in loop_items ( results ) :
             results [ expr ] = res.GetValue()
-            rr = results [ expr ]
-
-    if report and not lazy :
-        report = current.Report()
-        title  = 'DataFrame processing'
-        logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
+            
+        if report :
+            report = current.Report()
+            title  = 'DataFrame processing'
+            logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
         
     if input_string and 1 == len ( results ) :
         _ , r = results.popitem()
@@ -426,17 +424,6 @@ def frame_prescale ( frame , prescale , name = '' ) :
         
     raise TypeError ( "Invalid type/value for 'prescale' %s/%s" %( prescale , type ( prescale ) ) )
 
-# ==============================================================================
-## Draw the variables for the frame
-#  - old variant 
-def frame_draw ( frame , *args , **kwargs ) :
-    """ Draw the variable(s) for the frames
-    - old variant
-    """
-    node = as_rnode ( frame )
-    from ostap.fitting.dataset import ds_draw as _ds_draw_
-    return _ds_draw_ ( node , *args , **kwargs ) 
-
 # =============================================================================
 ## Simplified print out for the frame 
 #  @code 
@@ -477,7 +464,7 @@ def frame_table ( frame , pattern = None ,  cuts = '' , more_vars = () , title =
     
     ## the basic column type 
     def col_type ( var ) :
-        """The basic column type"""
+        """ The basic column type"""
         if var in cols : t = frame.GetColumnType ( var )
         else           : return ''
         
@@ -567,6 +554,123 @@ def frame_table ( frame , pattern = None ,  cuts = '' , more_vars = () , title =
     return t 
 
 # =============================================================================
+## Get the length/size of the data frame
+#  @code
+#  frame = ...
+#  print ( len(frame) )
+#  len   = frame_length ( frame ) 
+#  len   = frame_size   ( frame ) ## ditto 
+#  @endcode 
+def frame_length ( frame , cuts = '' , progress = False , report = False , lazy = False ) :
+    """ Get the length/size of the data frame
+    >>> frame = ...
+    >>> print len(frame)
+    >>> len   = frame_length ( frame ) 
+    >>> len   = frame_size   ( frame ) ## ditto 
+    """
+    node = as_rnode ( frame )
+    if cuts :
+        _ , cuts , _ =  SV.vars_and_cuts ( 'fake' , cuts )
+        if cuts :
+            vars  = frame_columns ( node )
+            cname = var_name ( 'cut_' , vars , cuts , *vars )
+            fname = '(PRE)FILTER'
+            node  = node.Filter ( '(bool) %s' % cname , fname ) ) 
+    
+    cnt  = node.Count ()
+    
+    if not lazy :
+        cnt = cnt .GetValue()
+        if report :
+            report = node.Report()
+            title  = 'DataFrame project/parameterize'
+            logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
+
+    return cnt
+
+## number of "good" etnties 
+frame_size = frame_length
+
+# =============================================================================
+
+# ==================================================================================
+## get nEff through action
+#  @code
+#  frame = ...
+#  nEff = frame_the_nEff ( 'x*x' , 'y>0' )  
+#  @endcode 
+def frame_nEff ( frame              ,
+                 cuts      = ''     ,
+                 as_weight = True   , 
+                 progress  = False  ,
+                 report    = False  ,
+                 lazy      = True   ) : 
+    """ Get nEff through action
+    >>> frame = ...
+    >>> nEff = frame_the_nEff ( 'x*x' , 'y>0' )
+    """
+    result = frame_statVar ( frame                 ,
+                             "1"                   ,
+                             cuts                  ,
+                             as_weigth = as_Weight ,
+                             progress  = progress  ,
+                             report    = report    ,
+                             lazy      = lasy      )
+    ## 
+    return resutl if lazy else result.nEff() 
+    
+
+# ==================================================================================
+## get statistics of variable(s)
+#  @code
+#  frame = ....
+#  stat  = frame_the_moment ( 5 , 'pt'           )
+#  stat  = frame_the_moment ( 5 , 'pt' , 'eta>0' )
+#  @endcode
+#  @see Ostap::Math::Moment_
+#  @see Ostap::Math::WMoment_
+def frame_the_moment ( frame , N           ,
+                       expressions         ,
+                       cuts        = ''    ,
+                       as_weight   = True  , 
+                       progress    = False ,
+                       report      = False ,
+                       lazy        = True  ) :
+    """ Get statistics of variable(s)
+    >>> frame = ....
+    >>> stat  = frame_the_moment ( frame , 5 , 'pt'                  )
+    >>> stat  = frame_the_moment ( frame , 5 , 'pt' , cuts = 'eta>0' )
+    """
+    assert isinstance ( N , integer_types ) and 0 <= N , 'Invalid order!'
+
+    current, vname , cname , input_string = _fr_helper_ ( frame , expressions , cuts ) 
+    
+    ## ATTENTION HERE!!
+    if cname and not as_weight :
+        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        cname = ''
+
+    def mcreator ( node , var_name , cut_name ) :
+        
+        if cut_name : 
+            RT = Ostap.Math.WMoment_(N) 
+            TT = ROOT.Detail.RDF.StatAction1w [RT] 
+            return current.Book ( ROOT.std.move ( TT () ) , CNT ( [ var_name , cut_name ] ) ) 
+        else :
+            RT = Ostap.Math. Moment_(N) 
+            TT = ROOT.Detail.RDF.StatAction1  [RT] 
+            return current.Book ( ROOT.std.move ( TT () ) , CNT ( 1 , var_name ) ) 
+        
+    return _fr_helper2_ ( current                 , 
+                          mcreator                ,
+                          expressions             ,
+                          cuts        = cname     ,
+                          progress    = progress  ,
+                          report      = report    ,
+                          lazy        = lazy      )
+
+
+# =============================================================================
 # Frame -> histogram prjections 
 # =============================================================================
     
@@ -622,7 +726,7 @@ def _p1_model_ ( histo ) :
 # =============================================================================
 ## convert 2D-profile to "model" for usage with DataFrames 
 def _p2_model_ ( histo ) :
-    """Convert 2D-profile to 'model' for usage with DataFrame"""
+    """ Convert 2D-profile to 'model' for usage with DataFrame"""
     model = histo 
     if not isinstance ( model , DF_P2Type ) :
         model = DF_P2Type()
@@ -633,12 +737,12 @@ ROOT.TH1.model        = _h1_model_
 ROOT.TH2.model        = _h2_model_
 ROOT.TH3.model        = _h3_model_
 ROOT.TProfile  .model = _p1_model_
-ROOT.TProfile2D.model = _p1_model_
+ROOT.TProfile2D.model = _p2_model_
 # ==============================================================================
-_types_1D = Ostap.Math.LegendreSum  , Ostap.Math.Bernstein   , Ostap.Math.ChebyshevSum , 
-_types_2D = Ostap.Math.LegendreSum2 , Ostap.Math.Bernstein2D ,
-_types_3D = Ostap.Math.LegendreSum3 , Ostap.Math.Bernstein3D , 
-_types_4D = Ostap.Math.LegendreSum4 ,
+_types_1D =  Ostap.Math.LegendreSum  , Ostap.Math.Bernstein   , Ostap.Math.ChebyshevSum , 
+_types_2D =  Ostap.Math.LegendreSum2 , Ostap.Math.Bernstein2D ,
+_types_3D =  Ostap.Math.LegendreSum3 , Ostap.Math.Bernstein3D , 
+_types_4D =  Ostap.Math.LegendreSum4 ,
 _types_nD = _types_1D + _types_2D + _types_3D + _types_4D 
 # ============================================================================
 ## Project of the frame
@@ -672,18 +776,16 @@ _types_nD = _types_1D + _types_2D + _types_3D + _types_4D
 #  - <code>ROOT::RDF::TH3DModel</code>
 #  - anything that can be converted to <code>ROOT::RDF::TH1DModel</code>, 
 #    <code>ROOT::RDF::TH2DModel</code> or <code>ROOT::RDF::TH3DModel</code> objects 
-#  @attention: variables should be listed in reverse order!  
-def frame_project ( frame            , 
-                    model            ,
-                    expressions      ,
-                    cuts      = ''   ,
-                    progress = False , 
-                    report   = False ,
-                    lazy     = True  ) :
-    """ Project of the frame into histigram 
+def frame_project ( frame               , 
+                    model               ,
+                    expressions         ,
+                    cuts        = ''    ,
+                    as_weight   = True  , 
+                    progress    = False , 
+                    report      = False ,
+                    lazy        = True  ) :
+    """ Project of the frame into histogram (or other accumulator) 
 
-    - attention: variables should be listed in reverse order! 
-    
     >>> frame    = ...
     >>> h1_model = ...
     >>> h1       = frame_project ( frame , h1_model , 'pt' )
@@ -720,32 +822,60 @@ def frame_project ( frame            ,
     if progress and isinstance ( frame , ROOT.TTree ) : progress = len ( frame )
 
     if isinstance ( model , _types_nD ) : 
-        return _fr_param_ ( frame               ,
-                            model               ,
-                            expression          ,
-                            cuts     = cuts     ,
-                            progress = progress ,
-                            report   = report   ,
-                            lazy     = lazy     ) 
-
+        return frame_param ( frame                   ,
+                             model                   ,
+                             expression              ,
+                             cuts        = cuts      ,
+                             as_weight   = as_weight ,  
+                             progress    = progress  ,
+                             report      = report    ,
+                             lazy        = lazy      ) 
+    
     ## decode expressions & cuts 
     current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts , progress = progress )
 
-    ## convert histogram-like objects into 'models'
+    ## add the fiducial cuts
 
+    if isinstance ( model , ROOT.TH3 ) :
+        
+        axis    = model.GetZaxis()
+        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmin() , v  ) , 'ZMIN-FILTER' )
+        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmax() , v  ) , 'ZMAX-FILTER' )
+
+    if isinstance ( model , ROOT.TH2 ) :
+        
+        axis    = model.GetYaxis()
+        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmin() , v  ) , 'YMIN-FILTER' )
+        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmax() , v  ) , 'YMAX-FILTER' )
+
+    if isinstance ( model , ROOT.TH1 ) :
+        
+        axis    = model.GetXaxis()
+        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmin() , v  ) , 'XMIN-FILTER' )
+        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmax() , v  ) , 'XMAX-FILTER' )
+
+    ## convert histogram-like objects into 'models'
+    
     histo = None
-    if   isinstance ( model , ROOT.TProfile2D )                : histo, model  = model, model.model ()        
-    elif isinstance ( model , ROOT.TProfile   )                : histo, model  = model, model.model ()        
-    elif isinstance ( model , ROOT.TH3 ) and 3 == model.dim () : histo, model  = model, model.model ()        
-    elif isinstance ( model , ROOT.TH2 ) and 2 == model.dim () : histo, model  = model, model.model ()        
-    elif isinstance ( model , ROOT.TH1 ) and 1 == model.dim () : histo, model  = model, model.model ()        
+    ## if   isinstance ( model , ROOT.TProfile3D ) : histo, model  = model, model.model ()        
+    if   isinstance ( model , ROOT.TProfile2D ) : histo, model  = model, model.model ()        
+    elif isinstance ( model , ROOT.TProfile   ) : histo, model  = model, model.model ()        
+    elif isinstance ( model , ROOT.TH3        ) : histo, model  = model, model.model ()        
+    elif isinstance ( model , ROOT.TH2        ) : histo, model  = model, model.model ()        
+    elif isinstance ( model , ROOT.TH1        ) : histo, model  = model, model.model ()        
 
     if histo : histo.Reset()
 
+    ## ATTENTION HERE!!
+    if cname and not as_weight :
+        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        cname = ''
+        
     nvars = len ( items )
     pvars = [ v for v in items.values() ] 
     if cname : pvars.append ( cname )
-
+    
+    ## if   4 == nvars and isinstance ( model , DF_P3Model ) : action = current.Profile3D ( model , *pvars )
     if   3 == nvars and isinstance ( model , DF_P2Model ) : action = current.Profile2D ( model , *pvars )
     elif 2 == nvars and isinstance ( model , DF_P1Model ) : action = current.Profiel1D ( model , *pvars )
     elif 3 == nvars and isinstance ( model , DF_H3Model ) : action = current.Histo3D   ( model , *pvars )
@@ -774,33 +904,34 @@ def frame_project ( frame            ,
 #  frame = ...
 #
 #  ls    = Ostap.Math.LegendreSum ( ... )
-#  res   = frame_the_param ( frame , ls , 'x' , 'y>0' )
+#  res   = frame_param ( frame , ls , 'x' , 'y>0' )
 #
 #  bs    = Ostap.Math.Bernstein   ( ... )
-#  res   = frame_the_param ( frame , bs , 'x' , 'y>0' )
+#  res   = frame_param ( frame , bs , 'x' , 'y>0' )
 #
 #  cs    = Ostap.Math.ChebyshevSum ( ... )
-#  res   = frame_the_param ( frame , cs , 'x' , 'y>0' )
+#  res   = frame_param ( frame , cs , 'x' , 'y>0' )
 #
 #  ls2   = Ostap.Math.LegendreSum2 ( ... )
-#  res   = frame_the_param ( frame , ls2 , 'y' , 'x' , 'z>0' )
+#  res   = frame_param ( frame , ls2 , 'y' , 'x' , 'z>0' )
 # 
 #  bs2   = Ostap.Math.Bernstein2D  ( ... )
-#  res   = frame_the_param ( frame , bs2 ,  ( 'y' , 'x' ) , 'z>0' )
+#  res   = frame_param ( frame , bs2 ,  ( 'y' , 'x' ) , 'z>0' )
 #
 #  ls3   = Ostap.Math.LegendreSum3 ( ... )
-#  res   = frame_the_param ( frame , ls3 ,  ( 'z' , 'y' , 'x' ) , 'z>0' )
+#  res   = frame_param ( frame , ls3 ,  ( 'z' , 'y' , 'x' ) , 'z>0' )
 # 
 #  bs2   = Ostap.Math.Bernstein2D  ( ... )
-#  res   = frame_the_param ( frame , bs2 , ( 'y' , 'x' ) , 'z>0' )
+#  res   = frame_param ( frame , bs2 , ( 'y' , 'x' ) , 'z>0' )
 #  @endcode
-def _fr_param_ ( frame            ,
-                 poly             ,
-                 expressions      ,
-                 cuts     = ''    ,
-                 progress = False ,
-                 report   = False ,
-                 lazy     = True  ) :
+def frame_param ( frame               ,
+                  target              ,
+                  expressions         ,
+                  cuts        = ''    ,
+                  as_weight   = ''    , 
+                  progress    = False ,
+                  report      = False ,
+                  lazy        = True  ) :
     """ `project/parameterise` frame into polynomial structures
     
     >>> frame = ...
@@ -830,14 +961,29 @@ def _fr_param_ ( frame            ,
     if progress and isinstance ( frame , ROOT.TTree ) : progress = len ( frame )
 
     ## the histogram ? 
-    if isinstance ( poly , ROOT.TH1 ) :
-        return _fr_project_ ( frame , poly , expressions , cuts = cuts , progress = progress , report = report , lazy = lazy )
-
+    if isinstance ( target , ROOT.TH1 ) :
+        return frame_project ( frame                   ,
+                               poly                    ,
+                               expressions             ,
+                               cuts        = cuts      ,
+                               as_weight   = as_weight ,  
+                               progress = progress     ,
+                               report   = report       ,
+                               lazy     = lazy         )
+    
     ## 
-    current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts , progress = progress )
+    current , items , cname , _  = _fr_helper_ ( frame       ,
+                                                 expressions ,
+                                                 cuts        ,
+                                                 progress    = progress )
+
+    ## ATTENTION HERE!!
+    if cname and not as_weight :
+        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        cname = ''
     
     nvars = len ( items )
-    
+
     assert \
         ( 1 == nvars and isinstance ( poly , _types_1D ) ) or \
         ( 2 == nvars and isinstance ( poly , _types_2D ) ) or \
@@ -847,36 +993,97 @@ def _fr_param_ ( frame            ,
 
     ## variables 
     uvars = [ k for k in items.values() ]
+
+    if 4 <== len ( uvars ) :        
+        if hasattr ( target , 'umin' ) : current = current.Filter ( '%.10g <= %s ' %  ( target.umin() , uvars[3] ) , 'UMIN-FILTER' )
+        if hasattr ( target , 'umax' ) : current = current.Filter ( '%.10g >= %s ' %  ( target.umax() , uvars[3] ) , 'UMAX-FILTER' )
+        
+    if 3 <= len ( uvars ) :
+        if hasattr ( target , 'zmin' ) : current = current.Filter ( '%.10g <= %s ' %  ( target.zmin() , uvars[2] ) , 'ZMIN-FILTER' )
+        if hasattr ( target , 'zmax' ) : current = current.Filter ( '%.10g >= %s ' %  ( target.zmax() , uvars[2] ) , 'ZMAX-FILTER' )
+        
+    if 2 <= len ( uvars ) :
+        if hasattr ( target , 'ymin' ) : current = current.Filter ( '%.10g <= %s ' %  ( target.ymin() , uvars[1] ) , 'YMIN-FILTER' )
+        if hasattr ( target , 'ymax' ) : current = current.Filter ( '%.10g >= %s ' %  ( target.ymax() , uvars[1] ) , 'YMAX-FILTER' )
+        
+    if 1 <= len ( uvars ) :
+        if hasattr ( target , 'xmin' ) : current = current.Filter ( '%.10g <= %s ' %  ( target.xmin() , uvars[0] ) , 'ZMIN-FILTER' )
+        if hasattr ( target , 'xmax' ) : current = current.Filter ( '%.10g >= %s ' %  ( target.xmax() , uvars[0] ) , 'ZMAX-FILTER' )
+
     if cuts : uvars.append ( cname )
     uvars = CNT ( uvars )
-    
-    ## finally book the actions!
-    if   isinstance ( poly , Ostap.Math.LegendreSum  ) :
-        result = current.Book ( ROOT.std.move ( Ostap.Actions.LegendrePoly   ( poly ) ) , uvars )
-    elif isinstance ( poly , Ostap.Math.LegendreSum2 ) :
-        result = current.Book ( ROOT.std.move ( Ostap.Actions.LegendrePoly2  ( poly ) ) , uvars )
-    elif isinstance ( poly , Ostap.Math.LegendreSum3 ) :
-        result = current.Book ( ROOT.std.move ( Ostap.Actions.LegendrePoly3  ( poly ) ) , uvars )
-    elif isinstance ( poly , Ostap.Math.LegendreSum4 ) :
-        result = current.Book ( ROOT.std.move ( Ostap.Actions.LegendrePoly4  ( poly ) ) , uvars )
-    elif isinstance ( poly , Ostap.Math.ChebyshevSum ) :
-        result = current.Book ( ROOT.std.move ( Ostap.Actions.ChebyshevPoly  ( poly ) ) , uvars )
-    elif isinstance ( poly , Ostap.Math.Bernstein    ) :
-        result = current.Book ( ROOT.std.move ( Ostap.Actions.BernsteinPoly  ( poly ) ) , uvars )
-    elif isinstance ( poly , Ostap.Math.Bernstein2D  ) :
-        result = current.Book ( ROOT.std.move ( Ostap.Actions.BernsteinPoly2 ( poly ) ) , uvars )
-    elif isinstance ( poly , Ostap.Math.Bernstein3D  ) :
-        result = current.Book ( ROOT.std.move ( Ostap.Actions.BernsteinPoly3 ( poly ) ) , uvars )
 
-    if not lazy :
-        result = result.GetValue()
-        poly  *= 0.0 
-        poly  += result
+    SA1  = ROOT.Detail.RDF.StatAction1
+    SA1w = ROOT.Detail.RDF.StatAction1w 
+    SA2  = ROOT.Detail.RDF.StatAction2
+    SA2w = ROOT.Detail.RDF.StatAction2w 
+    SA3  = ROOT.Detail.RDF.StatAction3
+    SA3w = ROOT.Detail.RDF.StatAction3w 
+    SA4  = ROOT.Detail.RDF.StatAction4
+    SA4w = ROOT.Detail.RDF.StatAction4w
+    
+    ## reser the target 
+    target.reset()
+    
+    TT = type ( target )
+    
+    if   isinstance ( poly , Ostap.Math.LegendreSum4 ) :
+        action = SA4w [ TT ]( target ) if cuts else SA4 [ TT ]( target )
         
-    if report and not lazy :
-         report = current.Report()
-         title = 'DataFrame parameterisation'
-         logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
+    elif isinstance ( poly , Ostap.Math.LegendreSum3 ) :
+        action = SA3w [ TT ]( target ) if cuts else SA3 [ TT ]( target )
+        
+    elif isinstance ( poly , Ostap.Math.LegendreSum2 ) :
+        action = SA2w [ TT ]( target ) if cuts else SA2 [ TT ]( target )
+        
+    elif isinstance ( poly , Ostap.Math.LegendreSum  ) :
+        action = SA1w [ TT ]( target ) if cuts else SA1 [ TT ]( target )
+        
+    elif isinstance ( poly , Ostap.Math.ChebyshevSum ) :
+        action = SA1w [ TT ]( target ) if cuts else SA1 [ TT ]( target )
+        
+    elif isinstance ( poly , Ostap.Math.Bernstein3D  ) :
+        action = SA3w [ TT ]( target ) if cuts else SA3 [ TT ]( target )
+        
+    elif isinstance ( poly , Ostap.Math.Bernstein2D  ) :
+        action = SA2w [ TT ]( poly ) if cuts else SA2 [ TT ]( poly )
+        
+    elif isinstance ( poly , Ostap.Math.Bernstein1D  ) :
+        action = SA1w [ TT ]( poly ) if cuts else SA1 [ TT ]( poly )
+        
+    elif isinstance ( poly , Ostap.Math.WStatEntity  ) : action = SA1w [ TT ]( poly)    
+    elif isinstance ( poly , Ostap.Math.NStatEntity  ) : action = SA1  [ TT ]( poly)
+    elif isinstance ( poly , Ostap.Math. StatEntity  ) : action = SA1  [ TT ]( poly)
+    
+    elif isinstance ( poly , Ostap.Math.WStatictic4  ) : action = SA4w [ TT ]( poly)
+    elif isinstance ( poly , Ostap.Math. Statictic4  ) : action = SA4  [ TT ]( poly)
+    
+    elif isinstance ( poly , Ostap.Math.WStatictic3  ) : action = SA3w [ TT ]( poly)
+    elif isinstance ( poly , Ostap.Math. Statictic3  ) : action = SA3  [ TT ]( poly)
+    
+    elif isinstance ( poly , Ostap.Math.WStatictic2  ) : action = SA2w [ TT ]( poly)
+    elif isinstance ( poly , Ostap.Math. Statictic2  ) : action = SA2  [ TT ]( poly)
+    
+    elif isinstance ( poly , Ostap.Math.WStatictic2  ) : action = SA1w [ TT ]( poly)
+    elif isinstance ( poly , Ostap.Math. Statictic2  ) : action = SA1  [ TT ]( poly)
+    
+    else :
+        
+        raise TypeError ( "Unknown type of target: %s" % typename ( poly ) )
+
+    ## Book the action:
+    
+    result = current.Book ( ROOT.std.move ( action ) , uvars ) 
+
+    ## make real looping 
+    if not lazy :
+        result  = result.GetValue()
+        targer += result
+        
+        if report :
+            report = current.Report()
+            title = 'DataFrame project/parameterize'
+            logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
 
     return result
 
@@ -886,13 +1093,14 @@ def _fr_param_ ( frame            ,
 #  frame = ...
 #  result = frame_draw ( frame , 'x+12/z' , cut = 'z>1' ) 
 ## @endcode 
-def _fr_draw_ ( frame            ,
-                expressions      ,
-                cuts     = ''    ,
-                opts     = ''    ,
-                delta    = 0.01  , 
-                progress = False ,
-                report   = False , **kwargs ) :
+def frame_draw ( frame               ,
+                 expressions         ,
+                 cuts        = ''    ,
+                 opts        = ''    ,
+                 as_weight   = True  , 
+                 delta       = 0.01  , 
+                 progress    = False ,
+                 report      = False , **kwargs ) :
     """ Draw the variable(s) from the frame
     >>> frame = ...
     >>> result = frame_draw ( frame , 'x+12/z' , cut = 'z>1' ) 
@@ -903,6 +1111,11 @@ def _fr_draw_ ( frame            ,
     ## decode expressions & cuts 
     current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts , progress = progress )
 
+    ## ATTENTION HERE!!
+    if cname and not as_weight :
+        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        cname = ''
+    
     nvars = len ( items )
     assert 1 <= nvars <= 3 , 'Invalid expressions: %s' % str ( items ) 
 
@@ -913,11 +1126,14 @@ def _fr_draw_ ( frame            ,
     ## cache   = current.Cache ( uvars )
     cache   = current 
 
-    ## get the ranges 
+    ## 11st explicit loop 
     ranges = frame_range ( cache , cvars , cname , delta = delta , report = report )
     if not ranges :
-        logger.warning ( 'frame_draw: nothing to draw, return None' )
-        return None
+        ## remove cuts and recalculate the ranges 
+        ranges = frame_range ( current , cvars , '' , delta = delta , report = report )
+        if not ranges :         
+            logger.warning ( 'frame_draw: nothing to draw, return None' )
+            return None
 
     kw = cidict ( transform = cidict_fun , **kwargs )
 
@@ -939,29 +1155,13 @@ def _fr_draw_ ( frame            ,
 
     return histo 
 
-# =============================================================================
-## Get the length/size of the data frame
-#  @code
-#  frame = ...
-#  print ( len(frame) )
-#  len   = frame_length ( frame ) 
-#  len   = frame_size   ( frame ) ## ditto 
-#  @endcode 
-def frame_length ( frame , lazy = False ) :
-    """ Get the length/size of the data frame
-    >>> frame = ...
-    >>> print len(frame)
-    >>> len   = frame_length ( frame ) 
-    >>> len   = frame_size   ( frame ) ## ditto 
-    """
-    node = as_rnode ( frame )
-    cnt  = node.Count () 
-    return cnt if lazy else cnt.GetValue() 
-
 # ==============================================================================
 ## Size of the frame, same as frame length 
 #  @see frame_length 
-frame_size   = frame_length 
+frame_size = frame_length 
+
+
+
 
 # =============================================================================
 ## Get the effective entries in data frame
@@ -969,7 +1169,7 @@ frame_size   = frame_length
 #  data = ...
 #  neff = data.nEff('b1*b1')
 #  @endcode
-def frame_nEff ( frame , cuts = '' ) :
+def frame_nEff ( frame   , cuts = '' , as_weight = True , progress = False , report = False ) :
     """ Get the effective entries in data frame 
     >>> data = ...
     >>> neff = data.nEff('b1*b1')
@@ -978,22 +1178,6 @@ def frame_nEff ( frame , cuts = '' ) :
     node  = as_rnode ( frame )    
     return SV.data_nEff ( node , cuts )
 
-# =============================================================================
-## Get statistics for the  given expression in data frame
-#  @code
-#  data = ...
-#  c1 = frame_statVar ( 'S_sw' , 'pt>10' ) 
-#  c2 = frame_statVar ( 'S_sw' , 'pt>0'  )
-#  @endcode
-def frame_statVar ( frame , expression ,  cuts = '' ) :
-    """ Get statistics for the  given expression in data frame
-    >>> data = ...
-    >>> c1 = frame_statVar( 'S_sw' , 'pt>10' ) 
-    >>> c2 = framestatVar( 'S_sw' )
-    """
-    if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame  )
-    node = as_rnode ( frame ) 
-    return SV.data_statistics ( node , expression,  cuts = cuts )
 
 # =============================================================================
 ## Get empirical CDF 
@@ -1038,39 +1222,6 @@ def frame_statCov ( frame       ,
     if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame  )
     node = as_rnode ( frame ) 
     return SV.data_statCov  ( node , expression1 , expression2 , cuts ) 
-
-# ==============================================================================
-## Get the moment for the frame object
-#  @code
-#  frame = ...
-#  value = frame_get_moment ( 3 , 1.234 , 'b1*b2' , 'b3>0' )
-#  @endcode
-#  @see Ostap::StatVar::get_moment 
-def frame_get_moment ( frame , order , center , expression , cuts = '' ) :
-    """ Get the moment  for the frame object
-    >>> frame = ...
-    >>> value = frame_get_moment ( 3 , 1.234 , 'b1*b2' , 'b3>0' )
-    - see `Ostap.StatVar.get_moment` 
-    """
-    if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame  )
-    node = as_rnode ( frame )
-    return SV.data_get_moment ( node , order = order , center = center , expression = expression , cuts = cuts )
-
-# ==============================================================================
-## Get the moment  for the frame object
-#  @code
-#  frame = ...
-#  value = frame_moment ( 3 , 'b1*b2' , 'b3>0' )
-#  @endcode
-#  @see Ostap::StatVar::moment 
-def frame_moment ( frame , order , expression , cuts = '' ) :
-    """ Get the moment  for the frame object
-    >>> frame = ...
-    >>> value = frame_moment ( 3 , 'b1*b2' , 'b3>0' )
-    - see `Ostap.StatVar.moment` 
-    """
-    node = as_rnode ( frame )
-    return SV.data_moment ( node , order = order , expression = expression , cuts = cuts )
 
 # ==============================================================================
 ## Get the central moment  for the frame object
@@ -1143,22 +1294,6 @@ def frame_rms ( frame , expression , cuts = '' ) :
     return frame_variance ( frame , expression = expression , cuts = cuts ) ** 0.5 
 
 # ==============================================================================
-## Get the skewness for the frame object
-#  @code
-#  frame = ...
-#  value = frame_skewness ( 'b1*b2' , 'b3>0' )
-#  @endcode
-#  @see Ostap::StatVar::skewness 
-def frame_skewness ( frame , expression , cuts = '' ) :
-    """ Get the skewness for the frame object
-    >>> frame = ...
-    >>> value = frame_skeness ( 'b1*b2' , 'b3>0' )
-    - see `Ostap.StatVar.skewness`
-    """
-    node = as_rnode ( frame )
-    return SV.data_skewness ( node , expression = expression , cuts = cuts )
-
-# ==============================================================================
 ## Get the kurtosis for the frame object
 #  @code
 #  frame = ...
@@ -1194,140 +1329,7 @@ def frame_quantile ( frame , q , expression , cuts = '' , exact = True ) :
     node = as_rnode ( frame )
     return SV.data_quantile ( node , q = q , expression = expression , cuts = cuts , exact = exact  )
 
-# ==============================================================================
-## Get the interval  for the frame object
-#  @code
-#  frame = ...
-#  value = frame_interval (  0.1 , 0.9 , 'b1*b2' , 'b3>0' )
-#  @endcode
-#  @see Ostap::StatVar::interval
-#  @see Ostap::StatVar::p2interval 
-def frame_interval ( frame , qmin , qmax  , expression , cuts = '' , exact = True ) :
-    """ Get the approximarte quantile for the frame object usnig P2-algorithm
-    >>> frame = ...
-    >>> value = frame_p2quantile ( 0.3 , 'b1*b2' , 'b3>0' )
-    - see `Ostap.StatVar.p2quantile`
-    """
-    node = as_rnode ( frame )
-    return SV.data_interval ( node , qmin = qmin , qmax = qmax  ,
-                              expression = expression , cuts = cuts , exact = exact )
 
-# ==============================================================================
-## Get the median
-#  @code
-#  frame = ...
-#  value = frame_median ( 'b1*b2' , 'b3>0' , exact = True )
-#  value = frame_median ( 'b1*b2' , 'b3>0' , exact = False  ) ## use P2 algorithm 
-#  @endcode
-#  @see Ostap::StatVar::quantile
-#  @see Ostap::StatVar::p2quantile
-def frame_median ( frame , expression , cuts = '' , exact = True ) :
-    """ Get the quantile for the frame object
-    >>> frame = ...
-    >>> value = frame_quantile ( 0.3 , 'b1*b2' , 'b3>0' , exact = True  )
-    >>> value = frame_quantile ( 0.3 , 'b1*b2' , 'b3>0' , exact = False ) ## use P2 algorithm 
-    - see `Ostap.StatVar.quantile`
-    - see `Ostap.StatVar.p2quantile`
-    """
-    return frame_quantile ( frame , q = 0.5 , expression = expression , cuts = cuts , exact = exact  )
-
-# ==============================================================================
-## Get the quantiles for the frame object
-#  @code
-#  frame = ...
-#  value = frame_quantiles (  ( 0.1 , 0.2 , 0.3 ) , 'b1*b2' , 'b3>0' , exact = True )
-#  value = frame_quantiles (  ( 0.1 , 0.2 , 0.3 ) , 'b1*b2' , 'b3>0' , exact = False  ) ## use P2 algorithm 
-#  @endcode
-#  @see Ostap::StatVar::quantiles
-#  @see Ostap::StatVar::p2quantiles
-def frame_quantiles ( frame , quantiles , expression , cuts = '' , exact = True ) :
-    """ Get the quantile for the frame object
-    >>> frame = ...
-    >>> value = frame_quantiles ( (0.1,0.2,0.3) , 'b1*b2' , 'b3>0' , exact = True  )
-    >>> value = frame_quantiles ( (0.1,0.2 0.3) , 'b1*b2' , 'b3>0' , exact = False ) ## use P2 algorithm 
-    - see `Ostap.StatVar.quantiles`
-    - see `Ostap.StatVar.p2quantiles`
-    """
-    node = as_rnode ( frame )
-    return SV.data_quantiles ( node , quantiles = quantiles , expression = expression , cuts = cuts , exact = exact  )
-
-# ==============================================================================
-## Get the terciles for the frame object
-#  @code
-#  frame = ...
-#  value = frame_terciles ( 'b1*b2' , 'b3>0' , exact = True )
-#  value = frame_terciles ( 'b1*b2' , 'b3>0' , exact = False  ) ## use P2 algorithm 
-#  @endcode
-#  @see Ostap::StatVar::quantiles
-#  @see Ostap::StatVar::p2quantiles
-def frame_terciles ( frame , expression , cuts = '' , exact = True ) :
-    """ Get the quantile for the frame object
-    >>> frame = ...
-    >>> value = frame_terciles ( 'b1*b2' , 'b3>0' , exact = True  )
-    >>> value = frame_terciles ( 'b1*b2' , 'b3>0' , exact = False ) ## use P2 algorithm 
-    - see `Ostap.StatVar.quantiles`
-    - see `Ostap.StatVar.p2quantiles`
-    """
-    return frame_quantiles ( frame , quantiles = 3 , expression = expression , cuts = cuts , exact = exact  )
-
-# ==============================================================================
-## Get the quartiles for the frame object
-#  @code
-#  frame = ...
-#  value = frame_quartiles ( 'b1*b2' , 'b3>0' , exact = True )
-#  value = frame_quartiles ( 'b1*b2' , 'b3>0' , exact = False  ) ## use P2 algorithm 
-#  @endcode
-#  @see Ostap::StatVar::quantiles
-#  @see Ostap::StatVar::p2quantiles
-def frame_quartiles ( frame , expression , cuts = '' , exact = True ) :
-    """ Get the quantile for the frame object
-    >>> frame = ...
-    >>> value = frame_quartiles ( 'b1*b2' , 'b3>0' , exact = True  )
-    >>> value = frame_quartiles ( 'b1*b2' , 'b3>0' , exact = False ) ## use P2 algorithm 
-    - see `Ostap.StatVar.quantiles`
-    - see `Ostap.StatVar.p2quantiles`
-    """
-    return frame_quantiles ( frame , quantiles = 4 , expression = expression , cuts = cuts , exact = exact  )
-
-# ==============================================================================
-## Get the quintiles for the frame object
-#  @code
-#  frame = ...
-#  value = frame_quintiles ( 'b1*b2' , 'b3>0' , exact = True )
-#  value = frame_quintiles ( 'b1*b2' , 'b3>0' , exact = False  ) ## use P2 algorithm 
-#  @endcode
-#  @see Ostap::StatVar::quantiles
-#  @see Ostap::StatVar::p2quantiles
-def frame_quintiles  ( frame , expression , cuts = '' , exact = True ) :
-    """ Get the quintiles for the frame object
-    >>> frame = ...
-    >>> value = frame_quintiles ( 'b1*b2' , 'b3>0' , exact = True  )
-    >>> value = frame_quintiles ( 'b1*b2' , 'b3>0' , exact = False ) ## use P2 algorithm 
-    - see `Ostap.StatVar.quantiles`
-    - see `Ostap.StatVar.p2quantiles`
-    """
-    return frame_quantiles ( frame , quantiles = 5 , expression = expression , cuts = cuts , exact = exact  )
-
-# ==============================================================================
-## Get the deciles for the frame object
-#  @code
-#  frame = ...
-#  value = frame_deciles ( 'b1*b2' , 'b3>0' , exact = True )
-#  value = frame_deciles ( 'b1*b2' , 'b3>0' , exact = False  ) ## use P2 algorithm 
-#  @endcode
-#  @see Ostap::StatVar::quantiles
-#  @see Ostap::StatVar::p2quantiles
-def frame_deciles  ( frame , expression , cuts = '' , exact = True ) :
-    """ Get the quintiles for the frame object
-    >>> frame = ...
-    >>> value = frame_deciles ( 'b1*b2' , 'b3>0' , exact = True  )
-    >>> value = frame_deciles ( 'b1*b2' , 'b3>0' , exact = False ) ## use P2 algorithm 
-    - see `Ostap.StatVar.quantiles`
-    - see `Ostap.StatVar.p2quantiles`
-    """
-    return frame_quantiles ( frame , quantiles = 10 , expression = expression , cuts = cuts , exact = exact  )
-
-# ==================================================================================
 
 # ==================================================================================
 ## Action-based methods
@@ -1337,32 +1339,45 @@ def frame_deciles  ( frame , expression , cuts = '' , exact = True ) :
 ## get statistics of variable(s)
 #  @code
 #  frame = ....
-#  stat  = frame_the_tatVar  ( 'pt'           , lazy = True )
-#  stat  = frame_the_statVar ( 'pt' , 'eta>0' , lazy = True )
+#  stat  = frame_statVar ( frame , 'pt' , lazy = True )
 #  @endcode
-def _fr_the_statVar_ ( frame            ,
-                       expressions      ,
-                       cuts = ''        ,
-                       progress = False ,
-                       report   = False , 
-                       lazy     = True  ) :
+def frame_statVar ( frame              ,
+                    expressions        ,
+                    cuts       = ''    ,
+                    as_weight  = True  ,
+                    progress   = False ,
+                    report     = False , 
+                    lazy       = True  ) :
     """ Get statistics of variable(s)
     >>> frame = ....
-    >>> stat  = frame_the_statVar ( 'pt'           , lazy = True )
-    >>> stat  = frame_the_statVar ( 'pt' , 'eta>0' , lazy = True )
+    >>> stat  = frame_statVar ( 'pt'           , lazy = True )
+    >>> stat  = frame_statVar ( 'pt' , 'eta>0' , lazy = True )
     """
+
+    current, var_names, cut_name, input_string = \
+        _fr_helper_ ( frame , expressions , cuts , progress = progress )
+
+    ## ATTENTION HERE!!
+    if cut_name and not as_weight :
+        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        cname = ''
     
-    def screator ( node , var_name , cut_name ) : 
-        if   cut_name: return node.Book( ROOT.std.move ( Ostap.Actions.WStatVar() ) , CNT ( [ var_name , cut_name ] ) )
-        else         : return node.Book( ROOT.std.move ( Ostap.Actions. StatVar() ) , CNT ( 1 , var_name ) )     
+    def screator ( node , var_name , cut_name ) :
         
-    return _fr_helper2_ ( frame               ,
-                          screator            ,
-                          expressions         ,
-                          cuts                ,
-                          progress = progress ,
-                          report   = report   ,  
-                          lazy     = lazy     )
+        if   cut_name : 
+            action = ROOT.Detail.RDF.StatAction1w [ WSE ] ( WSE () )
+            return node.Book ( ROOT.std.move ( action ) , CNT ( [ var_name , cut_name ] ) )
+        else         :
+            action = ROOT.Detail.RDF.StatAction1w [  SE ] (  SE () )
+            return node.Book ( ROOT.std.move ( action ) , CNT ( 1 , var_name ) )
+        
+    return _fr_helper2_ ( current                  ,
+                          screator                 ,
+                          expressions              ,
+                          cname                    , 
+                          progress = progress      ,
+                          report   = report        ,  
+                          lazy     = lazy          )
 
 
 # ==================================================================================
@@ -1473,28 +1488,6 @@ def _fr_the_ECDF_ ( frame            ,
                           progress = progress ,
                           report   = report   ,
                           lazy     = lazy     )
-
-# ==================================================================================
-## get nEff through action
-#  @code
-#  frame = ...
-#  nEff = frame_the_nEff ( 'x*x' , 'y>0' )  
-#  @endcode 
-def _fr_the_nEff_ ( frame            ,
-                    cuts     = ''    ,
-                    progress = False ,
-                    report   = False ,
-                    lazy     = True  ) :
-    """ Get nEff through action
-    >>> frame = ...
-    >>> nEff = frame_the_nEff ( 'x*x' , 'y>0' )
-    """
-    return _fr_the_statVar_ ( frame               ,
-                              '1.0'               ,
-                              cuts      = cuts    ,
-                              progress = progress ,
-                              report   = report   ,
-                              lazy     = lazy     )
 
 # ==================================================================================
 ## get statistics of variable(s)
