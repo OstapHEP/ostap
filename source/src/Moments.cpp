@@ -21,9 +21,26 @@
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  */
 // ===========================================================================
+namespace
+{
+  // =========================================================================
+  static_assert ( std::numeric_limits<Ostap::Math::Moment_<0>::size_type>::is_specialized  ,
+		  "Ostap::Math::Moment_<0>::size_type is not specialized!" ) ;
+  // =========================================================================
+  static_assert ( std::numeric_limits<double>::is_specialized   ,
+		  "std""numeric_limits<double> is not specialized!" ) ;
+  // =========================================================================
+  /** @var S_INVALID_MOMENT 
+   *  invalid vaolue for moments
+   */
+  constexpr double s_INVALID_MOMENT { std::numeric_limits<double>::quiet_NaN() } ;
+  // =========================================================================  
+} // =========================================================================
+// ===========================================================================
 // get the invalid moment 
 // ===========================================================================
-double Ostap::Math::Moments::invalid_moment () { return s_INVALID_MOMENT ; }  
+double Ostap::Math::Moments::invalid_moment ()
+{ return ::s_INVALID_MOMENT ; }  
 // ===========================================================================
 // virtual destructor
 // ===========================================================================
@@ -33,6 +50,16 @@ Ostap::Math::Moment::~Moment(){}
 // ===========================================================================
 Ostap::Math::WMoment::~WMoment(){}
 // ===========================================================================
+// return the value for invalid moment 
+// ===========================================================================
+double Ostap::Math::Moment::invalid_moment () const
+{ return Ostap::Math::Moments::invalid_moment () ; }
+// ===========================================================================  
+// return the value for invalid moment 
+// ===========================================================================
+double Ostap::Math::WMoment::invalid_moment () const
+{ return Ostap::Math::Moments::invalid_moment () ; } 
+// ===========================================================================
 // constructor 
 // ===========================================================================
 /*  full constructor
@@ -40,15 +67,6 @@ Ostap::Math::WMoment::~WMoment(){}
  *  @param sumw sum of weights 
  *  @param sumw sum of squared weights 
  */
-// ===========================================================================
-namespace
-{
-  // =========================================================================
-  static_assert ( std::numeric_limits<Ostap::Math::Moment_<0>::size_type>::is_specialized   ,
-		  "Ostap::Math::Moment_<0>::size_type is not specialized!" ) ;
-  // =========================================================================
-} // =========================================================================
-// ===========================================================================
 // ===========================================================================
 // (default) constructor 
 // ===========================================================================

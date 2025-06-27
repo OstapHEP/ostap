@@ -21,7 +21,7 @@ namespace  Ostap
    *  @param named  (INPUT) the TNNamed object 
    *  @param random (INPUT) use random generator 
    *  @return some random name 
-   *  @see TNames 
+   *  @see TNamed
    */  
   std::string tmp_name
     ( const std::string& prefix        , 
@@ -63,7 +63,11 @@ namespace  Ostap
   bool trivial ( const std::string& selection ) ;
   // ==========================================================================
   /// remove all leading and yraling whotespaces
-  std::string strip ( const std::string& name ) ;
+  std::string strip   ( const std::string& name ) ;
+  /// convert to lower case
+  std::string tolower ( const std::string& name ) ;
+  /// convert to upper case 
+  std::string toupper ( const std::string& name ) ;
   // ==========================================================================
 } //                                                 The end of namespace Ostap
 // ============================================================================

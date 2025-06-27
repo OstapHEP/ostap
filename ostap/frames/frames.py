@@ -6,14 +6,18 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-06-16
 # =============================================================================
-"""Decoration of Tree/Chain objects for efficient use in python"""
+""" Decoration of Tree/Chain objects for efficient use in python"""
 # =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
     'DataFrame'             , ## RDataFrame object
-    ## 
+    ##
+    'report_print_table'   , ## print the report 
+    'report_as_table'      , ## print the report
+    'report_print'         , ## print the report 
+    ##
     'frame_columns'         , ## all defined columns 
     'frame_branches'        , ## all defined columns  
     ## 
@@ -22,35 +26,38 @@ __all__     = (
     'frame_progress'        , ## progress bar for frame
     ## 
     'frame_prescale'        , ## prescale frame (trivial filter)
-    'frame_project'         , ## project data frame to the (1D/2D/3D) histogram
-    'frame_draw'            , ## draw variable from the frame  
     'frame_print'           , ## over-simplified print frame
     'frame_table'           , ## Print frame as detailed table 
-    ##
+    ## 
     'frame_length'          , ## length/size/#entries of the frame 
     'frame_size'            , ## length/size/#entries of the frame 
     ##
-    'frame_nEff'            , ## number of effective entries 
-    'frame_statVar'         , ## statistics for the variables 
-    'frame_statCov'         , ## stat cov for frame
-    ##    
-    'frame_the_moment'      , ## get *THE* moment for certain variable(s)
-    ## 
-    'frame_get_moment'      , ## get the moment or certain order around defined center 
-    'frame_moment'          , ## get the moment or certain order 
-    'frame_central_moment'  , ## get the central moment or certain order
-    ## 
-    'frame_mean'           , ## mean value for the variable 
-    'frame_rms'            , ## RMS for the variable 
-    'frame_variance'       , ## variance for the variable 
-    'frame_dispersion'     , ## dispersion for the variable
-    'frame_skewness'       , ## skewness for the variable 
-    'frame_kurtosis'       , ## kurtosos for the variable
-    ## 
-    'report_print'         , ## print the report 
-    'report_print_table'   , ## print the report 
-    'report_as_table'      , ## print the report
+    'frame_statistic'       , ## statistics for the variable(s) 
+    'frame_minmax'          , ## min/max for the variable(s) 
+    'frame_range'           , ## ranges  for the variable(s)
     ##
+    'frame_the_moment'      , ## get moments for the variable(s)
+    ##
+    'frame_nEff'            , ## number of effective entries 
+    'frame_mean'            , ## mean value for variable(s)
+    'frame_variance'        , ## variance   for variable(s)
+    'frame_dispersion'      , ## dispersion for variable(s)
+    'frame_rms'             , ## rms for variable(s)
+    'frame_skewness'        , ## skewness for variable(s)
+    'frame_kurtosis'        , ## skewness for variable(s)
+    ##
+    'frame_aithmetic_mean'  , ## get the arithmetc mean for variables 
+    'frame_harmonic_mean'   , ## get the harmonic  mean for variables 
+    'frame_geometric_mean'  , ## get the geometric mean for variables 
+    'frame_power_mean'      , ## get the power     mean for variables 
+    'frame_lehmer_mean'     , ## get the Lehmer    mean for variables 
+    ## 
+    'frame_ECDF'            , ## get the empirical cumulative distribution functions for variable(s)
+    ## 
+    'frame_project'         , ## project data frame to the (1D/2D/3D) histogram
+    'frame_param'           , ## parameterize data n flight     
+    'frame_draw'            , ## draw variable from the frame
+    ## 
     'frame_types'          , ## the basic DataFrame/FeameNode types 
     ) 
 # =============================================================================
@@ -63,9 +70,11 @@ from   ostap.logger.utils        import multicolumn
 from   ostap.utils.cidict        import cidict, cidict_fun      
 from   ostap.utils.progress_conf import progress_conf 
 from   ostap.utils.basic         import isatty, loop_items, typename 
+from   ostap.frames.frame2histo  import ( DF_P2Model , DF_P1Model , 
+                                          DF_H3Model , DF_H2Model , DF_H1Model ) 
 import ostap.core.config         as     OCC 
 import ostap.stats.statvars      as     SV
-import ostap.logger.table        as     T 
+import ostap.logger.table        as     T
 import ROOT, math
 # =============================================================================
 # logging 
@@ -87,39 +96,122 @@ else                         : frame_types = DataFrame , FrameNode
 if not hasattr ( Ostap ,'DataFrame' ) :  Ostap.DataFrame = DataFrame
 if not hasattr ( Ostap ,'FrameNode' ) :  Ostap.FrameNode = FrameNode 
 # =============================================================================
-Frames_OK    = False 
-std_move     = None 
-has_std_move = False
+std_move = ROOT.std.move
 # =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    std_move     = ROOT.std.move
-    has_std_move = True 
-    Frames_OK    = has_std_move                                    ## ATTENTION!
-    # =========================================================================
-except AttributeError : # =====================================================
-    # =========================================================================
-    std_move     = None 
-    has_std_move = False
-    Frames_OK    = False 
-# =============================================================================
+## The shortcuts for actions  
+SA1  = ROOT.Detail.RDF.StatAction1
+SA1w = ROOT.Detail.RDF.StatAction1w 
+SA2  = ROOT.Detail.RDF.StatAction2
+SA2w = ROOT.Detail.RDF.StatAction2w 
+SA3  = ROOT.Detail.RDF.StatAction3
+SA3w = ROOT.Detail.RDF.StatAction3w 
+SA4  = ROOT.Detail.RDF.StatAction4
+SA4w = ROOT.Detail.RDF.StatAction4w
+# ================================================================================    
 ## type for the column names 
-CNT                = DataFrame.ColumnNames_t 
+CNT  = DataFrame.ColumnNames_t 
 # =============================================================================
 ## get frame-like stuff  as rnode 
 def as_rnode ( frame ) :
     """ Get frame-like stuff  as rnode"""
     return ROOT.RDF.AsRNode ( frame ) 
+# ==============================================================================
+## Local helper function  to get the lazy results
+def get_values ( results , frame = None , report = False , title = 'DataFrame' ) :
+    """ Local helper function to get the Lazy results 
+    """
+    if not isinstance ( results , dictlike_types ) :
+        if frame and report :
+            report = frame.Report()
+            logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
+        return results.GetValue()
+    ## 
+    values = {}
+    for key, value in loop_items ( results ) : 
+        values [ key ] = value.GetValue  ()
+    ## 
+    if frame and report :
+        report = frame.Report()
+        logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
+    return values
 
 # ==============================================================================
-## Helper method to generate new, unique name for the variable 
+## Local helper method to generate new, unique name for the variable 
 def var_name ( prefix , used_names , *garbage ) :
-    """ Helper method to generate new, unique name for the variable 
+    """ Local helper method to generate new, unique name for the variable 
     """
-    name =     prefix + '%x' % ( hash ( ( prefix , used_names , garbage ) )               % ( 2**32 ) ) 
+    name =     prefix + '%x' % ( hash ( (        prefix , used_names , garbage ) ) % ( 2**32 ) ) 
     while name in used_names :
-        name = prefix + '%x' % ( hash ( ( name , prefix , used_names , name , garbage ) ) % ( 2**32 ) )
+        name = prefix + '%x' % ( hash ( ( name , prefix , used_names , garbage ) ) % ( 2**32 ) )
     return name
+
+# ===============================================================================
+## Print the frame report data
+def report_print_table ( report , title  = '' , prefix = '' , more_rows = [] ) :
+    """ Print a frame report data 
+    """
+    from ostap.core.core import binomEff
+    
+    n0     = -1 
+    lmax   =  5
+    table  = []
+    
+    for name, passed, all in report :
+        n0   = max ( n0 , all , passed )        
+        eff1 = binomEff ( passed , all ) * 100        
+        eff2 = binomEff ( passed ,  n0 ) * 100
+        lmax = max ( len ( name ) , lmax , len ( 'Filter ' ) )     
+        item = name ,  passed , all , eff1 , eff2 
+        table.append ( item )
+        
+    lmax          =  max ( lmax + 2 , len ( 'Selection' ) + 2 )
+    fmt_name      =  '%%-%ds ' % lmax 
+    fmt_input     =  '%10d'
+    fmt_passed    =  '%-10d'
+    fmt_eff       =  '%8.3g +/- %-8.3g'
+    fmt_cumulated =  '%8.3g +/- %-8.3g'
+        
+    header = ( ( '{:^%d}' % lmax ).format ( 'Filter'   ) ,               
+               ( '{:>10}'        ).format ( '#input '  ) ,
+               ( '{:<10}'        ).format ( '#passed'  ) ,
+               ( '{:^20}'        ).format ( 'efficiency [%]' ) ,
+               ( '{:^20}'        ).format ( 'cumulated efficiency [%]' ) )
+
+    table_data = [ header ]
+    for entry in table :
+        n, p, a , e1 , e2 = entry
+        table_data.append ( ( fmt_name      % n ,
+                              fmt_input     % a ,
+                              fmt_passed    % p  ,
+                              fmt_eff       % ( e1.value () , e1.error () ) ,
+                              fmt_cumulated % ( e2.value () , e2.error () ) ) )
+    for row in more_rows :
+        table_data.append ( row ) 
+    
+    import ostap.logger.table as T
+    return T.table ( table_data , title = title , prefix = prefix , alignment = 'lcccc' )
+
+# ===============================================================================
+## Print the frame report
+def report_as_table ( report ) :
+    """ Print a frame report
+    """
+    table = []
+    for c in report:
+        name    = c.GetName ()
+        passed  = c.GetPass ()
+        all     = c.GetAll  ()
+        table.append (  ( name , passed , all )  )
+
+    return table 
+
+# ===============================================================================
+## Print the data frame report
+def report_print ( report , title  = '' , prefix = '' , more_rows = [] ) :
+    """ Print the data frame report
+    """
+    table = report_as_table ( report )    
+    return report_print_table ( table , title, prefix , more_rows )
 
 # ==============================================================================
 ## Is implicit MC globally enabled? 
@@ -174,11 +266,6 @@ def _fr_helper_ ( frame , expressions , cuts = '' , progress = False ) :
             vname   = vn
         vnames [ expr ] = vname 
 
-    ## Filter frame, if needed!
-    if cuts :
-        ## add named filter 
-        current = current.Filter ( '(bool) (%s)' % cuts, 'FILTER/WEIGHT: %s' % cuts )
-        
     cname = cuts
     if cuts and not cuts in all_vars :
         used    = tuple ( all_vars | set ( frame_columns ( current ) ) ) 
@@ -188,46 +275,43 @@ def _fr_helper_ ( frame , expressions , cuts = '' , progress = False ) :
         current = current.Define ( cn , ncuts )
         cname   = cn
 
-    ## attach cuts as filter 
+    ## attach cuts as BOOLEAN filter 
     if cname :
-        filter_name = '(PRE)FILTER'
-        current = current.Filter ( '(bool) %s' % cname , filter_name ) 
-    
+        fname   = '(PRE)FILTER %s' % cuts 
+        current = current.Filter ( '(bool) %s' % cname , fname ) 
+        
     return current, vnames, cname, input_string
 
 # ==================================================================================
 ## The second helper method to implement various "statistics"-related actions  
-def _fr_helper2_ ( frame            ,
-                   creator          ,
-                   expressions      ,
-                   cuts     = ''    ,
-                   progress = False ,
-                   report   = False ,
-                   lazy     = True  ) :
+def _fr_helper2_ ( frame                  ,
+                   creator                ,
+                   expressions            , * , 
+                   cuts     = ''          ,
+                   progress = False       ,
+                   report   = False       ,
+                   lazy     = True        , 
+                   title    = 'DataFrame' ) : 
     """ The second helper method to implement various statistic-related actions  
     """
 
-    current, var_names, cut_name, input_string = _fr_helper_ ( frame , expressions , cuts , progress = progress )
+    current, var_names, cut_name, input_string = \
+        _fr_helper_ ( frame , expressions , cuts , progress = progress )
 
     results = {}
     for expr, var_name in loop_items ( var_names ) : 
         results [ expr ] = creator ( current , var_name , cut_name ) 
 
-    lasy = False 
-    if not lazy :
-        for expr, res  in loop_items ( results ) :
-            results [ expr ] = res.GetValue()
-            
-        if report :
-            report = current.Report()
-            title  = 'DataFrame processing'
-            logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
-        
+    ## single variable as argument 
     if input_string and 1 == len ( results ) :
-        _ , r = results.popitem()
-        return r
-    
-    return results 
+        _ , results = results.popitem ()
+
+    ## Lazy processing ? 
+    if lazy :
+        return results , current
+
+    ## get result/perform the loop 
+    return get_values ( results , frame = current , report = report , title = title ) 
 
 # ==============================================================================
 ## modify constructor for RDataFrame to enable/disable Implicit multithreading
@@ -402,7 +486,9 @@ def frame_prescale ( frame , prescale , name = '' ) :
     >>> prescaled1 = frame_prescale ( frame , 0.15 ) ##  0.0 < prescale < 1.0
     >>> prescaled2 = frame_prescale ( frame , 20   ) ##  1   < prescale 
     """
-    node = as_rnode ( frame )
+    
+    if isinstance   ( frame  , ROOT.TTree ) : node = DataFrame ( frame )
+    else                                    : node = as_rnode  ( frame )
     
     if isinstance ( prescale , integer_types ) and 1 < prescale :
 
@@ -418,10 +504,8 @@ def frame_prescale ( frame , prescale , name = '' ) :
         code = 'gRandom->Rndm() <= %.12g'        % prescale
         return node.Filter ( code , name )
     
-    elif 1 == prescale :
-        ## no action
-        return node 
-        
+    elif 1 == prescale : return node 
+
     raise TypeError ( "Invalid type/value for 'prescale' %s/%s" %( prescale , type ( prescale ) ) )
 
 # =============================================================================
@@ -452,7 +536,7 @@ def frame_print ( frame ) :
 #  table = frame_table ( frame , '.*PT.*' , cuts = ... , more_vars = [ 'x*x/y' , 'y+z'] )
 #  print ( table ) 
 #  @endcode 
-def frame_table ( frame , pattern = None ,  cuts = '' , more_vars = () , title = '' ,  prefix = '' ) :
+def frame_table ( frame , pattern = None , cuts = '' , more_vars = () , title = '' ,  prefix = '' ) :
     """ Data frame as table
     >>> frame = ...
     >>> table = frame_table ( frame , '.*PT.*' , cuts = ... , more_vars = [ 'x*x/y' , 'y+z'] )
@@ -492,8 +576,8 @@ def frame_table ( frame , pattern = None ,  cuts = '' , more_vars = () , title =
         cpat  = re.compile ( pattern )
         vcols = tuple ( [ v for v in vcols if cpat.match ( v ) ] ) 
 
-    svars = vcols + tuple  ( more_vars ) 
-    stats = frame_statVar  ( node , svars , cuts = cuts ) 
+    svars = vcols + tuple   ( more_vars ) 
+    stats = frame_statistic ( node , svars , cuts = cuts , lazy = False ) 
 
     if   len ( vcols ) < 10    : ifmt = '%1d.'
     elif len ( vcols ) < 100   : ifmt = '%2d.'
@@ -561,45 +645,181 @@ def frame_table ( frame , pattern = None ,  cuts = '' , more_vars = () , title =
 #  len   = frame_length ( frame ) 
 #  len   = frame_size   ( frame ) ## ditto 
 #  @endcode 
-def frame_length ( frame , cuts = '' , progress = False , report = False , lazy = False ) :
+def frame_length ( frame            , * , 
+                   cuts     = ''    ,
+                   progress = False ,
+                   report   = False ,
+                   lazy     = True  ) :
     """ Get the length/size of the data frame
     >>> frame = ...
     >>> print len(frame)
     >>> len   = frame_length ( frame ) 
     >>> len   = frame_size   ( frame ) ## ditto 
     """
-    node = as_rnode ( frame )
-    if cuts :
-        _ , cuts , _ =  SV.vars_and_cuts ( 'fake' , cuts )
-        if cuts :
-            vars  = frame_columns ( node )
-            cname = var_name ( 'cut_' , vars , cuts , *vars )
-            fname = '(PRE)FILTER'
-            node  = node.Filter ( '(bool) %s' % cname , fname ) ) 
     
-    cnt  = node.Count ()
+    current, _ , cut_name , _ = \
+        _fr_helper_ ( frame , '1' , cuts , progress = progress )
     
-    if not lazy :
-        cnt = cnt .GetValue()
-        if report :
-            report = node.Report()
-            title  = 'DataFrame project/parameterize'
-            logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
+    ## create counter 
+    cnt  = current.Count ()
 
-    return cnt
+    if lazy :
+        return cnt , current                           ## RETURN 
+    ##
+    return get_values ( cnt , current , report , 'frame_length' )
 
+# =================================================================================
 ## number of "good" etnties 
 frame_size = frame_length
-
-# =============================================================================
+# =================================================================================
 
 # ==================================================================================
-## get nEff through action
+## Generic counters
+# ==================================================================================
+
+# ==================================================================================
+## get statistics of variable(s) in a form of moments 
+#  @code
+#  frame = ....
+#  stat  = frame_statistic ( 'pt'           )
+#  stat  = frame_statistic ( 'pt' , 'eta>0' )
+#  @endcode
+#  @see Ostap::Math::StatEntity 
+#  @see Ostap::Math::WStatEntity 
+def frame_statistic ( frame               , 
+                      expressions         , * , 
+                      cuts        = ''    ,
+                      as_weight   = True  , 
+                      progress    = False ,
+                      report      = False ,
+                      lazy        = True  ) :
+    """ Get statistics of variable(s)
+    >>> frame = ....
+    >>> stat  = frame_statistic ( frame , 'pt' )
+    """
+    current, vname , cname , input_string = \
+        _fr_helper_ ( frame , expressions , cuts ) 
+    
+    ## ATTENTION HERE!!
+    if cname and not as_weight :
+        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        cname = ''
+
+    def screator ( node , var_name , cut_name ) :
+        if cut_name : 
+            TT = SA1w [ Ostap.WStatEntity ] 
+            return node.Book ( std_move ( TT () ) , CNT ( [ var_name , cut_name ] ) ) 
+        else :
+            TT = SA1  [ Ostap.StatEntity  ] 
+            return node.Book ( std_move ( TT () ) , CNT ( 1 , var_name ) ) 
+        
+    return _fr_helper2_ ( current                 , 
+                          screator                ,
+                          expressions             ,
+                          cuts        = cname     ,
+                          progress    = progress  ,
+                          report      = report    ,
+                          lazy        = lazy      ,
+                          title       = 'frame_statistic' )
+
+
+# ==================================================================================
+## get min/max for variable 
+#  @code
+#  frame = ....
+#  stat  = frame_minmax  ( frame , 'pt' )
+#  @endcode
+#  @see Ostap::Math::StatEntity 
+#  @see Ostap::Math::WStatEntity 
+def frame_minmax ( frame               , 
+                   expressions         , * , 
+                   cuts        = ''    ,
+                   as_weight   = True  , 
+                   progress    = False ,
+                   report      = False ,
+                   lazy        = True  ) :
+    """ Get min/max variable(s)
+    >>> frame = ....
+    >>> stat  = frame_minmax ( frame , 'pt' )
+    """
+
+    ## get counters 
+    result = frame_statistic ( frame                    ,
+                               expressions              ,
+                               cuts         = cuts      ,
+                               as_weight    = as_weight ,
+                               progress     = progress  ,
+                               report       = report    ,
+                               lazy         = lazy      ) 
+    ## 
+    if lazy : return result
+    
+    if isinstance ( result , dictlike_types ) :
+        mnmx = {}
+        for key , value in loop_items ( result ) :
+            mnmx [ key ] = value.min() , value.max()
+        return mnmx
+
+    return result.min() , result.max()
+
+# ==================================================================================
+## get suitable range(s) for variables 
+#  @code
+#  frame = ....
+#  stat  = frame_range ( frame , 'pt' )
+#  @endcode
+def frame_range ( frame               , 
+                  expressions         , * , 
+                  cuts        = ''    ,
+                  as_weight   = True  , 
+                  progress    = False ,
+                  report      = False ,
+                  delta       = 0.01  ) : 
+    """ Get suitable ranges of variable(s)
+    >>> frame = ....
+    >>> stat  = frame_range ( frame , 'pt' )
+    """
+
+    ## get minmax (non LAZY!)
+    result = frame_minmax ( frame                    ,
+                            expressions              ,
+                            cuts         = cuts      ,
+                            as_weight    = as_weight ,
+                            progress     = progress  ,
+                            report       = report    ,
+                            lazy         = False     )
+
+    if isinstance ( result , dictlike_types ) :
+        ranges = {}
+        for key , value in loop_items ( result ) :
+            mn , mx = value 
+            if mx <= mn and cuts :
+                ## REDO WITH NO CUTS 
+                mn , mx = frame_minmax ( frame , key , lazy = False )
+            ## ATTENTION! 
+            if mx <= mn : return None            
+            ranges [ key ] = axis_range ( mn , mx , delta = delta )            
+        return ranges 
+
+    mn , mx = result
+    if mx <= mn and cuts :
+        ## REDO WITH NO CUTS 
+        mn , mx = frame_minmax ( frame , expressions , lazy = False )
+    ## ATTENTION 
+    if mx <= mn : return None         
+    return axis_range ( mn , mx , delta = delta )            
+
+# ==================================================================================
+# specfic counters 
+# ==================================================================================
+
+# ==================================================================================
+## get nEff through the action
 #  @code
 #  frame = ...
-#  nEff = frame_the_nEff ( 'x*x' , 'y>0' )  
+#  stat  = frame_nEff ( dramw , cuts = 'y>0' )  
 #  @endcode 
-def frame_nEff ( frame              ,
+def frame_nEff ( frame              , * , 
                  cuts      = ''     ,
                  as_weight = True   , 
                  progress  = False  ,
@@ -609,19 +829,41 @@ def frame_nEff ( frame              ,
     >>> frame = ...
     >>> nEff = frame_the_nEff ( 'x*x' , 'y>0' )
     """
-    result = frame_statVar ( frame                 ,
+    return frame_statistic ( frame                 ,
                              "1"                   ,
-                             cuts                  ,
-                             as_weigth = as_Weight ,
+                             cuts      = cuts      ,
+                             as_weight = as_weight ,
                              progress  = progress  ,
                              report    = report    ,
-                             lazy      = lasy      )
-    ## 
-    return resutl if lazy else result.nEff() 
-    
+                             lazy      = lazy      )
 
 # ==================================================================================
-## get statistics of variable(s)
+## get mena-values through the action
+#  @code
+#  frame = ...
+#  stat  = frame_mean ( frame , 'x, t, z ' , cuts = 'y>0' )  
+#  @endcode 
+def frame_mean ( frame              ,
+                 expressions        , * , 
+                 cuts      = ''     ,
+                 as_weight = True   , 
+                 progress  = False  ,
+                 report    = False  ,
+                 lazy      = True   ) : 
+    """ Get mean through action
+    >>> frame = ...
+    >>> stat  = frame_mean  ( 'x*x' , 'y>0' )
+    """
+    return frame_statistic ( frame                 ,
+                             expressions           ,
+                             cuts      = cuts      ,
+                             as_weight = as_weight ,
+                             progress  = progress  ,
+                             report    = report    ,
+                             lazy      = lazy      )
+
+# ==================================================================================
+## get statistics of variable(s) in a form of moments 
 #  @code
 #  frame = ....
 #  stat  = frame_the_moment ( 5 , 'pt'           )
@@ -630,7 +872,7 @@ def frame_nEff ( frame              ,
 #  @see Ostap::Math::Moment_
 #  @see Ostap::Math::WMoment_
 def frame_the_moment ( frame , N           ,
-                       expressions         ,
+                       expressions         , * , 
                        cuts        = ''    ,
                        as_weight   = True  , 
                        progress    = False ,
@@ -653,13 +895,11 @@ def frame_the_moment ( frame , N           ,
     def mcreator ( node , var_name , cut_name ) :
         
         if cut_name : 
-            RT = Ostap.Math.WMoment_(N) 
-            TT = ROOT.Detail.RDF.StatAction1w [RT] 
-            return current.Book ( ROOT.std.move ( TT () ) , CNT ( [ var_name , cut_name ] ) ) 
+            TT = SA1w [ Ostap.Math.WMoment_[N] ] 
+            return node.Book ( std_move ( TT () ) , CNT ( [ var_name , cut_name ] ) ) 
         else :
-            RT = Ostap.Math. Moment_(N) 
-            TT = ROOT.Detail.RDF.StatAction1  [RT] 
-            return current.Book ( ROOT.std.move ( TT () ) , CNT ( 1 , var_name ) ) 
+            TT = SA1  [ Ostap.Math.Moment_[N] ] 
+            return node.Book ( std_move ( TT () ) , CNT ( 1 , var_name ) ) 
         
     return _fr_helper2_ ( current                 , 
                           mcreator                ,
@@ -667,77 +907,458 @@ def frame_the_moment ( frame , N           ,
                           cuts        = cname     ,
                           progress    = progress  ,
                           report      = report    ,
-                          lazy        = lazy      )
+                          lazy        = lazy      ,
+                          title       = 'frame_minmax' )
+
+# ==================================================================================
+## get -values through the action
+#  @code
+#  frame = ...
+#  stat  = frame_variance   ( frame , 'x, t, z ' , cuts = 'y>0' )  
+#  stat  = frame_dispersion ( frame , 'x, t, z ' , cuts = 'y>0' )  
+#  @endcode 
+def frame_variance ( frame              ,
+                     expressions        , * , 
+                     cuts      = ''     ,
+                     as_weight = True   , 
+                     progress  = False  ,
+                     report    = False  ,
+                     lazy      = True   ) : 
+    """ Get variance through action
+    >>> frame = ...
+    >>> stat  = frame_variance  ( 'x*x' , cuts = 'y>0' )
+    >>> stat  = frame_dispersion ( 'x*x' , cuts = 'y>0' )
+    """
+    return frame_the_moment ( frame                 ,
+                              4                     , ## neeeded to ge the uncertainty
+                              expressions           ,
+                              cuts      = cuts      ,
+                              as_weight = as_weight ,
+                              progress  = progress  ,
+                              report    = report    ,
+                              lazy      = lazy      )
+
+# ==================================================================================
+## get skewness through the action
+#  @code
+#  frame = ...
+#  stat  = frame_skewness  ( frame , 'x, t, z ' , cuts = 'y>0' )  
+#  @endcode 
+def frame_skewness ( frame              ,
+                     expressions        , * , 
+                     cuts      = ''     ,
+                     as_weight = True   , 
+                     progress  = False  ,
+                     report    = False  ,
+                     lazy      = True   ) : 
+    """ Get skewness through action
+    >>> frame = ...
+    >>> stat  = frame_skewnexx   ( 'x*x' , cuts = 'y>0' )
+    """
+    return frame_the_moment ( frame                 ,
+                              6                     , ## neeeded to ge the uncertainty
+                              expressions           ,
+                              cuts      = cuts      ,
+                              as_weight = as_weight ,
+                              progress  = progress  ,
+                              report    = report    ,
+                              lazy      = lazy      )
+
+# ==================================================================================
+## get kurtosis through the action
+#  @code
+#  frame = ...
+#  stat  = frame_kurtosis  ( frame , 'x, t, z ' , cuts = 'y>0' )  
+#  @endcode 
+def frame_kurtosis ( frame              ,
+                     expressions        , * , 
+                     cuts      = ''     ,
+                     as_weight = True   , 
+                     progress  = False  ,
+                     report    = False  ,
+                     lazy      = True   ) : 
+    """ Get kurtosis through action
+    >>> frame = ...
+    >>> stat  = frame_kurtosis ( 'x*x' , cuts = 'y>0' )
+    """
+    return frame_the_moment ( frame                 ,
+                              8                     , ## neeeded to ge the uncertainty
+                              expressions           ,
+                              cuts      = cuts      ,
+                              as_weight = as_weight ,
+                              progress  = progress  ,
+                              report    = report    ,
+                              lazy      = lazy      )
+
+## dispersion 
+frame_dispersion = frame_variance
+## RMS 
+frame_rms        = frame_variance
+
 
 
 # =============================================================================
-# Frame -> histogram prjections 
-# =============================================================================
+## get the statistic for pair of expressions in DataFrame
+#  @code
+#  frame  = ...
+#  sta = frame_covariance ( 'x' , 'y' )
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @see   Ostap::Math::Covariance
+#  @see   Ostap::Math::WCovariance
+#  @date   2018-06-18
+def frame_covariance ( frame              ,
+                       expression1        ,
+                       expression2        , * , 
+                       cuts       = ''    ,
+                       as_weight  = True  ,
+                       progress   = False ,
+                       lazy       = True  ) :
+    """ Get the statistic for pair of expressions in DataFrame
     
-DF_H1Model = ROOT.ROOT.RDF.TH1DModel 
-DF_H1Type  = ROOT.TH1D
-DF_H2Model = ROOT.ROOT.RDF.TH2DModel 
-DF_H2Type  = ROOT.TH2D
-DF_H3Model = ROOT.ROOT.RDF.TH3DModel 
-DF_H3Type  = ROOT.TH3D
+    >>>  frame  = ...
+    >>>  cov = framw.covariance(  frame , 'x' , 'y' )
 
-DF_P1Model = ROOT.ROOT.RDF.TProfile1DModel 
-DF_P1Type  = ROOT.TProfile
+    """
+    ## decode expressions & cuts 
+    current , items, cname , _ = \
+        _fr_helper_ ( frame , [ expression1 , expression2 ] , cuts , progress = progress )
+    
+    assert 2 == len ( items ) , "Imvalid expressions!"
+   
+    ## ATTENTION HERE!!
+    if cname and not as_weight :
+        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        cname = ''
 
-DF_P2Model = ROOT.ROOT.RDF.TProfile2DModel
-DF_P2Type  = ROOT.TProfile2D
+    vars = [ v for v in items.values ]
+    if cname : vars.append ( cname ) 
+    
+    if cname : ACTION = SA2w [ Ostap.Math.WCovarinace ] 
+    else     : ACTION = SA2  [ Ostap.Math. Covarinace ] 
+        
+    results = current.Book ( std_move ( ACTION () ) , CNT ( vars ) )
 
-# =============================================================================
-## convert 1D-histogram to "model" for usage with DataFrames 
-def _h1_model_ ( histo ) :
-    """ Convert 1D-histogram to 'model' for usage with DataFrame"""
-    model = histo 
-    if not isinstance ( model , DF_H1Type ) :
-        model = DF_H1Type()
-        histo.Copy ( model )
-    return DF_H1Model ( model ) 
-# =============================================================================
-## convert 2D-histogram to "model" for usage with DataFrames 
-def _h2_model_ ( histo ) :
-    """ Convert 2D-histogram to 'model' for usage with DataFrame"""
-    model = histo 
-    if not isinstance ( model , DF_H2Type ) :
-        model = DF_H2Type()
-        histo.Copy ( model )
-    return DF_H2Model ( model ) 
-# =============================================================================
-## convert 3D-histogram to "model" for usage with DataFrames 
-def _h3_model_ ( histo ) :
-    """ Convert 3D-histogram to 'model' for usage with DataFrame"""
-    model = histo 
-    if not isinstance ( model , DF_H3Type ) :
-        model = DF_H3Type()
-        histo.Copy ( model )
-    return DF_H3Model ( model ) 
-# =============================================================================
-## convert 1D-profile to "model" for usage with DataFrames 
-def _p1_model_ ( histo ) :
-    """ Convert 1D-profile to 'model' for usage with DataFrame"""
-    model = histo 
-    if not isinstance ( model , DF_P1Type ) :
-        model = DF_P1Type()
-        histo.Copy ( model )
-    return DF_P1Model ( model ) 
-# =============================================================================
-## convert 2D-profile to "model" for usage with DataFrames 
-def _p2_model_ ( histo ) :
-    """ Convert 2D-profile to 'model' for usage with DataFrame"""
-    model = histo 
-    if not isinstance ( model , DF_P2Type ) :
-        model = DF_P2Type()
-        histo.Copy ( model )
-    return P2Model ( model ) 
+    if lazy :
+        return results , current  ## RETURN 
+    
+    return get_values ( results , current , report , 'frame_covariance' ) 
+
 # ==============================================================================
-ROOT.TH1.model        = _h1_model_
-ROOT.TH2.model        = _h2_model_
-ROOT.TH3.model        = _h3_model_
-ROOT.TProfile  .model = _p1_model_
-ROOT.TProfile2D.model = _p2_model_
+## Get an arithmetic mean
+#  @see Ostap::Math::ArithmeticMean
+#  @code
+#  frame = ...
+#  mean = frame_the_arithmetic_mean ( frame , 'x*x' , '0<y' ) 
+#  @endcode 
+def frame_arithmetic_mean ( frame              ,
+                            expressions        , * , 
+                            cuts       = ''    ,
+                            as_weight  = True  , 
+                            progress   = False ,
+                            report     = False ,
+                            lazy       = True  ) :
+    """ Get an arithmetic mean
+    >>> frame = ...
+    >>> mean = frame_the_arithmetic_mean ( frame , 'x*x' , '0<y' ) 
+    -  see `Ostap.Math.ArithmeticMean`
+    """
+    
+    ## decode expressions & cuts 
+    current , items, cname , _ = \
+        _fr_helper_ ( frame , expressions , cuts , progress = progress )
+
+    ## ATTENTION HERE!!
+    if cname and not as_weight :
+        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        cname = ''
+   
+    def acreator ( node , var_name , cut_name ) : 
+        if cut_name: 
+            TT = SA1w [ Ostap.Math.WArithmeticMean  ] 
+            return node.Book ( std_move ( TT () ) , CNT ( [ var_name , cut_name ] ) )
+        else  :
+            TT = SA1  [ Ostap.Math. ArithmeticMean  ] 
+            return node.Book ( std_move ( TT () ) , CNT ( 1 , var_name ) )     
+        
+    return _fr_helper2_ ( frame               ,
+                          acreator            , 
+                          expressions         ,
+                          cuts     = cuts     ,
+                          progress = progress ,
+                          report   = report   ,
+                          lazy     = lazy     ,
+                          title    = 'frame_arithmeric_mean' )
+    
+
+# ==============================================================================
+## Get harmonic mean
+#  @see Ostap::Math::HarmonicMean
+#  @see Ostap::Math::WHarmonicMean
+#  @code
+#  frame = ...
+#  mean = frame_harmoni_mean ( frame , 'x*x' , cut = '0<y' ) 
+#  @endcode 
+def frame_harmonic_mean ( frame              ,
+                          expressions        , * , 
+                          cuts       = ''    ,
+                          as_weight  = True  , 
+                          progress   = False ,
+                          report     = False ,
+                          lazy       = True  ) :
+    """ Get harmnonic mean
+    >>> frame = ...
+    >>> mean = frame_harmonic_mean ( frame , 'x*x' , '0<y' ) 
+    -  see `Ostap.Math.HarmonicMean`
+    -  see `Ostap.Math.WHarmonicMean`
+    """
+    
+    ## decode expressions & cuts 
+    current , items, cname , _ = \
+        _fr_helper_ ( frame , expressions , cuts , progress = progress )
+
+    ## ATTENTION HERE!!
+    if cname and not as_weight :
+        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        cname = ''
+   
+    def acreator ( node , var_name , cut_name ) : 
+        if cut_name: 
+            TT = SA1w [ Ostap.Math.WHarmonicMean  ] 
+            return node.Book ( std_move ( TT () ) , CNT ( [ var_name , cut_name ] ) )
+        else  :
+            TT = SA1  [ Ostap.Math. HarmonicMean  ] 
+            return node.Book ( std_move ( TT () ) , CNT ( 1 , var_name ) )     
+        
+    return _fr_helper2_ ( frame               ,
+                          acreator            , 
+                          expressions         ,
+                          cuts     = cuts     ,
+                          progress = progress ,
+                          report   = report   ,
+                          lazy     = lazy     ,
+                          title    = 'frame_harmonic_mean' )
+
+# ==============================================================================
+## Get geometric mean
+#  @see Ostap::Math::GeometricMean
+#  @see Ostap::Math::GeometricMean
+#  @code
+#  frame = ...
+#  mean = frame_harmoni_mean ( frame , 'x*x' , cut = '0<y' ) 
+#  @endcode 
+def frame_geometric_mean ( frame              ,
+                           expressions        , * , 
+                           cuts       = ''    ,
+                           as_weight  = True  , 
+                           progress   = False ,
+                           report     = False ,
+                           lazy       = True  ) :
+    """ Get an geometric mean
+    >>> frame = ...
+    >>> mean = frame_geonmetric_mean ( frame , 'x*x' , '0<y' ) 
+    -  see `Ostap.Math.GeometricMean`
+    -  see `Ostap.Math.WGeometricMean`
+    """
+    
+    ## decode expressions & cuts 
+    current , items, cname , _ = \
+        _fr_helper_ ( frame , expressions , cuts , progress = progress )
+
+    ## ATTENTION HERE!!
+    if cname and not as_weight :
+        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        cname = ''
+   
+    def acreator ( node , var_name , cut_name ) : 
+        if cut_name: 
+            TT = SA1w [ Ostap.Math.WGeometricMean  ] 
+            return node.Book ( std_move ( TT () ) , CNT ( [ var_name , cut_name ] ) )
+        else  :
+            TT = SA1  [ Ostap.Math. GeometricMean  ] 
+            return node.Book ( std_move ( TT () ) , CNT ( 1 , var_name ) )     
+        
+    return _fr_helper2_ ( frame               ,
+                          acreator            , 
+                          expressions         ,
+                          cuts     = cuts     ,
+                          progress = progress ,
+                          report   = report   ,
+                          lazy     = lazy     ,
+                          title    = 'frame_geometric_mean' )
+
+# ==============================================================================
+## Get power mean
+#  @see Ostap::Math::PowerMean
+#  @see Ostap::Math::PowerMean
+#  @code
+#  frame = ...
+#  mean = frame_power_mean ( frame , 0.5 , 'x*x' , cut = '0<y' ) 
+#  @endcode 
+def frame_power_mean ( frame              , p ,
+                       expressions        , * , 
+                       cuts       = ''    ,
+                       as_weight  = True  , 
+                       progress   = False ,
+                       report     = False ,
+                       lazy       = True  ) :
+    """ Get power mean
+    >>> frame = ...
+    >>> mean = frame_power_mean ( frame , 0.5 , 'x*x' , '0<y' ) 
+    -  see `Ostap.Math.PowerMean`
+    -  see `Ostap.Math.WPowerMean`
+    """
+    assert isinstance ( p , num_types ) , 'Invalid type of p-parameter: %s' % typename ( p ) 
+
+    args = { 'cuts'      : cuts      ,
+             'as_weight' : as_weight ,
+             'progress'  : progress  ,
+             'report'    : report    ,
+             'lazy'      : lazy      }
+    if    -1 == p or isequal ( p , -1.0 ) : 
+        return frame_harmonic_mean   ( frame , expressions , **args )
+    elif   0 == p or iszero  ( p        ) : 
+        return frame_geometric_mean  ( frame , expressions , **args )
+    elif   1 == p or isequal ( p ,  1.0 ) : 
+        return frame_arithmetic_mean ( frame , expressions , **args )
+    
+    ## decode expressions & cuts 
+    current , items, cname , _ = \
+        _fr_helper_ ( frame , expressions , cuts , progress = progress )
+
+    ## ATTENTION HERE!!
+    if cname and not as_weight :
+        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        cname = ''
+   
+    def acreator ( node , var_name , cut_name ) : 
+        if cut_name:            
+            TT = SA1w [ Ostap.Math.WPowerMean  ]
+            PP = Ostap.Math.WPowerMean ( p ) 
+            return node.Book ( std_move ( TT ( pp ) ) , CNT ( [ var_name , cut_name ] ) )
+        else  :
+            TT = SA1  [ Ostap.Math. PowerMean  ]
+            PP = Ostap.Math. PowerMean ( p )             
+            return node.Book ( std_move ( TT ( pp ) ) , CNT ( 1 , var_name ) )     
+        
+    return _fr_helper2_ ( frame               ,
+                          acreator            , 
+                          expressions         ,
+                          cuts     = cuts     ,
+                          progress = progress ,
+                          report   = report   ,
+                          lazy     = lazy     ,
+                          title    = 'frame_power_mean' )
+
+# ==============================================================================
+## Get power mean
+#  @see Ostap::Math::LehmerMean
+#  @see Ostap::Math::WLehmerMean
+#  @code
+#  frame = ...
+#  mean = frame_lehmer_mean ( frame , 0.5 , 'x*x' , cut = '0<y' ) 
+#  @endcode 
+def frame_lehmer_mean ( frame              , p ,
+                        expressions        , * , 
+                        cuts       = ''    ,
+                        as_weight  = True  , 
+                        progress   = False ,
+                        report     = False ,
+                        lazy       = True  ) :
+    """ Get Lehmer  mean
+    >>> frame = ...
+    >>> mean = frame_lehmer_mean ( frame , 0.5 , 'x*x' , '0<y' ) 
+    -  see `Ostap.Math.LehmerMean`
+    -  see `Ostap.Math.WLehmerMean`
+    """
+    assert isinstance ( p , num_types ) , 'Invalid type of p-parameter: %s' % typename ( p ) 
+
+    args = { 'cuts'      : cuts      ,
+             'as_weight' : as_weight ,
+             'progress'  : progress  ,
+             'report'    : report    ,
+             'lazy'      : lazy      }
+    
+    if   0   == p or iszero  ( p        ) : 
+        return frame_harmonic_mean   ( frame , expressions , **args )
+    elif 1   == p or isequal ( p ,  1.0 ) : 
+        return frame_arithmetic_mean ( frame , expressions , **args )
+    elif 0.5 == p or isequal ( p , 0.5 ) : 
+        return frame_geometric_mean  ( frame , expressions , **args )
+    
+    ## decode expressions & cuts 
+    current , items, cname , _ = \
+        _fr_helper_ ( frame , expressions , cuts , progress = progress )
+
+    ## ATTENTION HERE!!
+    if cname and not as_weight :
+        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        cname = ''
+   
+    def acreator ( node , var_name , cut_name ) : 
+        if cut_name:            
+            TT = SA1w [ Ostap.Math.WLehmerMean  ]
+            PP =       Ostap.Math.WLehmerMean ( p ) 
+            return node.Book ( std_move ( TT ( pp ) ) , CNT ( [ var_name , cut_name ] ) )
+        else  :
+            TT = SA1  [ Ostap.Math. LehmerMean  ]
+            PP =        Ostap.Math. LehmerMean ( p )             
+            return node.Book ( std_move ( TT ( pp ) ) , CNT ( 1 , var_name ) )     
+        
+    return _fr_helper2_ ( frame               ,
+                          acreator            , 
+                          expressions         ,
+                          cuts     = cuts     ,
+                          progress = progress ,
+                          report   = report   ,
+                          lazy     = lazy     ,
+                          title    = 'frame_lehmer_mean' )
+
+
+# =============================================================================
+## Get empirical CDF 
+#  @code
+#  data = ...
+#  c1 = frame_ECDF ( data , 'S_sw' ) 
+#  c2 = frame_ECDF ( data , S_sw' , 'pt>0'  )
+#  @endcode
+def frame_ECDF ( frame               ,
+                 expressions         , * , 
+                 cuts        = ''    ,
+                 as_weight   = True  , 
+                 progress    = False ,
+                 report      = False ,
+                 lazy        = True  ) :
+    """ Get empirical CDF 
+    >>> data = ...
+    >>> c1 = frame_ECDF ( data , 'S_sw' ) 
+    >>> c2 = frame_ECDF ( data , S_sw' , 'pt>0'  )
+    """
+    current, vname , cname , input_string = _fr_helper_ ( frame , expressions , cuts ) 
+    
+    ## ATTENTION HERE!!
+    if cname and not as_weight :
+        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        cname = ''
+        
+    def ecreator ( node , var_name , cut_name ) :
+        
+        if cut_name : 
+            TT = SA1w [ Ostap.Math.WECDF ]
+            return node.Book ( std_move ( TT () ) , CNT ( [ var_name , cut_name ] ) ) 
+        else :
+            TT = SA1  [ Ostap.Math. ECDF ]
+            return node.Book ( std_move ( TT () ) , CNT ( 1 , var_name ) ) 
+        
+    return _fr_helper2_ ( current                 , 
+                          ecreator                ,
+                          expressions             ,
+                          cuts        = cname     ,
+                          progress    = progress  ,
+                          report      = report    ,
+                          lazy        = lazy      , 
+                          title       = 'frame_ECDF' )
+
 # ==============================================================================
 _types_1D =  Ostap.Math.LegendreSum  , Ostap.Math.Bernstein   , Ostap.Math.ChebyshevSum , 
 _types_2D =  Ostap.Math.LegendreSum2 , Ostap.Math.Bernstein2D ,
@@ -778,7 +1399,7 @@ _types_nD = _types_1D + _types_2D + _types_3D + _types_4D
 #    <code>ROOT::RDF::TH2DModel</code> or <code>ROOT::RDF::TH3DModel</code> objects 
 def frame_project ( frame               , 
                     model               ,
-                    expressions         ,
+                    expressions         , * , 
                     cuts        = ''    ,
                     as_weight   = True  , 
                     progress    = False , 
@@ -824,7 +1445,7 @@ def frame_project ( frame               ,
     if isinstance ( model , _types_nD ) : 
         return frame_param ( frame                   ,
                              model                   ,
-                             expression              ,
+                             expressions             , 
                              cuts        = cuts      ,
                              as_weight   = as_weight ,  
                              progress    = progress  ,
@@ -833,26 +1454,27 @@ def frame_project ( frame               ,
     
     ## decode expressions & cuts 
     current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts , progress = progress )
-
+    
     ## add the fiducial cuts
 
+    cvars = [ v for v in items.values () ]
     if isinstance ( model , ROOT.TH3 ) :
-        
+        zvar    = cvars [ 2 ] 
         axis    = model.GetZaxis()
-        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmin() , v  ) , 'ZMIN-FILTER' )
-        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmax() , v  ) , 'ZMAX-FILTER' )
+        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmin() , zvar ) , 'ZMIN-FILTER' )
+        current = current.Filter ( '%.12g >= %s ' %  ( axis.GetXmax() , zvar ) , 'ZMAX-FILTER' )
 
     if isinstance ( model , ROOT.TH2 ) :
-        
+        yvar    = cvars [ 1 ]         
         axis    = model.GetYaxis()
-        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmin() , v  ) , 'YMIN-FILTER' )
-        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmax() , v  ) , 'YMAX-FILTER' )
+        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmin() , yvar ) , 'YMIN-FILTER' )
+        current = current.Filter ( '%.12g >= %s ' %  ( axis.GetXmax() , yvar ) , 'YMAX-FILTER' )
 
     if isinstance ( model , ROOT.TH1 ) :
-        
+        xvar    = cvars [ 0 ]                 
         axis    = model.GetXaxis()
-        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmin() , v  ) , 'XMIN-FILTER' )
-        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmax() , v  ) , 'XMAX-FILTER' )
+        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmin() , xvar ) , 'XMIN-FILTER' )
+        current = current.Filter ( '%.12g >= %s ' %  ( axis.GetXmax() , xvar ) , 'XMAX-FILTER' )
 
     ## convert histogram-like objects into 'models'
     
@@ -885,18 +1507,21 @@ def frame_project ( frame               ,
         raise TypeError ('Invalid model/what objects %s %s ' % ( type ( model ) , str ( pvars ) ) ) 
 
     ## if true histo is specified, the action is NOT lazy!
-    if histo :
-        histo += action.GetValue() 
-        result = histo 
-    else :        
-        result = action if lazy else action.GetValue()
+    if histo and lazy :
+        lazy  = False
+        logger.warning ( "True histo os psecified, procesisng is lot lazy!" )
+        
+    if lazy :
+        return action , current  ## RETUTRN
 
-    if report and not lazy :
-         report = current.Report()
-         title = 'DataFrame project'
-         logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
+    ## make the actual looping 
+    result = get_values ( action , current , report , 'frame_project' )
+    
+    if histo :
+        histo  += result
+        result  = histo 
          
-    return result 
+    return result
 
 # =============================================================================
 ## "project/parameterise" frame into polynomial structures (lazy action)
@@ -926,7 +1551,7 @@ def frame_project ( frame               ,
 #  @endcode
 def frame_param ( frame               ,
                   target              ,
-                  expressions         ,
+                  expressions         , * , 
                   cuts        = ''    ,
                   as_weight   = ''    , 
                   progress    = False ,
@@ -963,19 +1588,19 @@ def frame_param ( frame               ,
     ## the histogram ? 
     if isinstance ( target , ROOT.TH1 ) :
         return frame_project ( frame                   ,
-                               poly                    ,
+                               target                  ,
                                expressions             ,
                                cuts        = cuts      ,
                                as_weight   = as_weight ,  
-                               progress = progress     ,
-                               report   = report       ,
-                               lazy     = lazy         )
+                               progress    = progress  ,
+                               report      = report    ,
+                               lazy        = lazy      )
     
     ## 
-    current , items , cname , _  = _fr_helper_ ( frame       ,
-                                                 expressions ,
-                                                 cuts        ,
-                                                 progress    = progress )
+    current , items , cname , _  = \
+        _fr_helper_ ( frame , expressions ,
+                      cuts     = cuts     , 
+                      progress = progress )
 
     ## ATTENTION HERE!!
     if cname and not as_weight :
@@ -994,7 +1619,7 @@ def frame_param ( frame               ,
     ## variables 
     uvars = [ k for k in items.values() ]
 
-    if 4 <== len ( uvars ) :        
+    if 4 <= len ( uvars ) :        
         if hasattr ( target , 'umin' ) : current = current.Filter ( '%.10g <= %s ' %  ( target.umin() , uvars[3] ) , 'UMIN-FILTER' )
         if hasattr ( target , 'umax' ) : current = current.Filter ( '%.10g >= %s ' %  ( target.umax() , uvars[3] ) , 'UMAX-FILTER' )
         
@@ -1013,79 +1638,68 @@ def frame_param ( frame               ,
     if cuts : uvars.append ( cname )
     uvars = CNT ( uvars )
 
-    SA1  = ROOT.Detail.RDF.StatAction1
-    SA1w = ROOT.Detail.RDF.StatAction1w 
-    SA2  = ROOT.Detail.RDF.StatAction2
-    SA2w = ROOT.Detail.RDF.StatAction2w 
-    SA3  = ROOT.Detail.RDF.StatAction3
-    SA3w = ROOT.Detail.RDF.StatAction3w 
-    SA4  = ROOT.Detail.RDF.StatAction4
-    SA4w = ROOT.Detail.RDF.StatAction4w
-    
     ## reser the target 
     target.reset()
     
     TT = type ( target )
     
-    if   isinstance ( poly , Ostap.Math.LegendreSum4 ) :
-        action = SA4w [ TT ]( target ) if cuts else SA4 [ TT ]( target )
+    if   isinstance ( target , Ostap.Math.LegendreSum4 ) :
+        action = SA4w [ TT ] ( target ) if cuts else SA4 [ TT ] ( target )
         
-    elif isinstance ( poly , Ostap.Math.LegendreSum3 ) :
-        action = SA3w [ TT ]( target ) if cuts else SA3 [ TT ]( target )
+    elif isinstance ( target , Ostap.Math.LegendreSum3 ) :
+        action = SA3w [ TT ] ( target ) if cuts else SA3 [ TT ] ( target )
         
-    elif isinstance ( poly , Ostap.Math.LegendreSum2 ) :
-        action = SA2w [ TT ]( target ) if cuts else SA2 [ TT ]( target )
+    elif isinstance ( target , Ostap.Math.LegendreSum2 ) :
+        action = SA2w [ TT ] ( target ) if cuts else SA2 [ TT ] ( target )
         
-    elif isinstance ( poly , Ostap.Math.LegendreSum  ) :
-        action = SA1w [ TT ]( target ) if cuts else SA1 [ TT ]( target )
+    elif isinstance ( target , Ostap.Math.LegendreSum  ) :
+        action = SA1w [ TT ] ( target ) if cuts else SA1 [ TT ] ( target )
         
-    elif isinstance ( poly , Ostap.Math.ChebyshevSum ) :
-        action = SA1w [ TT ]( target ) if cuts else SA1 [ TT ]( target )
+    elif isinstance ( target , Ostap.Math.ChebyshevSum ) :
+        action = SA1w [ TT ] ( target ) if cuts else SA1 [ TT ] ( target )
         
-    elif isinstance ( poly , Ostap.Math.Bernstein3D  ) :
-        action = SA3w [ TT ]( target ) if cuts else SA3 [ TT ]( target )
+    elif isinstance ( target , Ostap.Math.Bernstein3D  ) :
+        action = SA3w [ TT ] ( target ) if cuts else SA3 [ TT ] ( target )
         
-    elif isinstance ( poly , Ostap.Math.Bernstein2D  ) :
-        action = SA2w [ TT ]( poly ) if cuts else SA2 [ TT ]( poly )
+    elif isinstance (target , Ostap.Math.Bernstein2D  ) :
+        action = SA2w [ TT ] ( target ) if cuts else SA2 [ TT ] ( target )
         
-    elif isinstance ( poly , Ostap.Math.Bernstein1D  ) :
-        action = SA1w [ TT ]( poly ) if cuts else SA1 [ TT ]( poly )
+    elif isinstance ( target , Ostap.Math.Bernstein1D  ) :
+        action = SA1w [ TT ] ( target ) if cuts else SA1 [ TT ]( poly )
         
-    elif isinstance ( poly , Ostap.Math.WStatEntity  ) : action = SA1w [ TT ]( poly)    
-    elif isinstance ( poly , Ostap.Math.NStatEntity  ) : action = SA1  [ TT ]( poly)
-    elif isinstance ( poly , Ostap.Math. StatEntity  ) : action = SA1  [ TT ]( poly)
+    elif isinstance ( target , Ostap.Math.WStatEntity  ) : action = SA1w [ TT ] ( poly)    
+    elif isinstance ( target , Ostap.Math.NStatEntity  ) : action = SA1  [ TT ] ( poly)
+    elif isinstance ( target , Ostap.Math. StatEntity  ) : action = SA1  [ TT ] ( poly)
+     
+    elif isinstance ( target , Ostap.Math.WStatictic4  ) : action = SA4w [ TT ]( poly)
+    elif isinstance ( target , Ostap.Math. Statictic4  ) : action = SA4  [ TT ]( poly)
     
-    elif isinstance ( poly , Ostap.Math.WStatictic4  ) : action = SA4w [ TT ]( poly)
-    elif isinstance ( poly , Ostap.Math. Statictic4  ) : action = SA4  [ TT ]( poly)
+    elif isinstance ( target , Ostap.Math.WStatictic3  ) : action = SA3w [ TT ]( poly)
+    elif isinstance ( target , Ostap.Math. Statictic3  ) : action = SA3  [ TT ]( poly)
     
-    elif isinstance ( poly , Ostap.Math.WStatictic3  ) : action = SA3w [ TT ]( poly)
-    elif isinstance ( poly , Ostap.Math. Statictic3  ) : action = SA3  [ TT ]( poly)
+    elif isinstance ( target , Ostap.Math.WStatictic2  ) : action = SA2w [ TT ]( poly)
+    elif isinstance ( target , Ostap.Math. Statictic2  ) : action = SA2  [ TT ]( poly)
     
-    elif isinstance ( poly , Ostap.Math.WStatictic2  ) : action = SA2w [ TT ]( poly)
-    elif isinstance ( poly , Ostap.Math. Statictic2  ) : action = SA2  [ TT ]( poly)
-    
-    elif isinstance ( poly , Ostap.Math.WStatictic2  ) : action = SA1w [ TT ]( poly)
-    elif isinstance ( poly , Ostap.Math. Statictic2  ) : action = SA1  [ TT ]( poly)
+    elif isinstance ( target , Ostap.Math.WStatictic2  ) : action = SA1w [ TT ]( poly)
+    elif isinstance ( target , Ostap.Math. Statictic2  ) : action = SA1  [ TT ]( poly)
     
     else :
         
-        raise TypeError ( "Unknown type of target: %s" % typename ( poly ) )
+        raise TypeError ( "Unknown type of target: %s" % typename ( target  ) )
 
     ## Book the action:
     
-    result = current.Book ( ROOT.std.move ( action ) , uvars ) 
-
-    ## make real looping 
-    if not lazy :
-        result  = result.GetValue()
-        targer += result
-        
-        if report :
-            report = current.Report()
-            title = 'DataFrame project/parameterize'
-            logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
-
-    return result
+    result = current.Book ( std_move ( action ) , uvars ) 
+    
+    ## lazy processing ? 
+    if lasy :
+        return result , current
+    
+    ## make real looping
+    result  = get_value ( result , current , report , 'frame_param' ) 
+    target += result
+    
+    return target 
 
 # ==========================================================================
 ## draw the variable(s) from the frame
@@ -1109,7 +1723,8 @@ def frame_draw ( frame               ,
     if progress and isinstance ( frame , ROOT.TTree ) : progress = len ( frame )
 
     ## decode expressions & cuts 
-    current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts , progress = progress )
+    current , items, cname , _ = \
+        _fr_helper_ ( frame , expressions , cuts , progress = progress )
 
     ## ATTENTION HERE!!
     if cname and not as_weight :
@@ -1127,10 +1742,10 @@ def frame_draw ( frame               ,
     cache   = current 
 
     ## 11st explicit loop 
-    ranges = frame_range ( cache , cvars , cname , delta = delta , report = report )
+    ranges = frame_range ( cache , cvars , cuts = cname , delta = delta , report = report , progress = progress )
     if not ranges :
         ## remove cuts and recalculate the ranges 
-        ranges = frame_range ( current , cvars , '' , delta = delta , report = report )
+        ranges = frame_range ( current , cvars , '' , delta = delta , report = report , progress = progress )
         if not ranges :         
             logger.warning ( 'frame_draw: nothing to draw, return None' )
             return None
@@ -1148,7 +1763,14 @@ def frame_draw ( frame               ,
     histo = histo_book2 ( histos , kw )
 
     ## fill the histogram 
-    histo = frame_project ( cache , histo , cvars , cname , progress = progress , report = report , lazy = False )
+    histo = frame_project ( cache ,
+                            histo ,
+                            cvars ,
+                            cuts      = cname     ,
+                            as_weight = as_weight , 
+                            progress  = progress  ,
+                            report    = report    ,
+                            lazy      = False     )
 
     ## draw the histogram
     histo.draw ( opts , **kw )
@@ -1156,1600 +1778,56 @@ def frame_draw ( frame               ,
     return histo 
 
 # ==============================================================================
-## Size of the frame, same as frame length 
-#  @see frame_length 
-frame_size = frame_length 
-
-
-
-
-# =============================================================================
-## Get the effective entries in data frame
-#  @code
-#  data = ...
-#  neff = data.nEff('b1*b1')
-#  @endcode
-def frame_nEff ( frame   , cuts = '' , as_weight = True , progress = False , report = False ) :
-    """ Get the effective entries in data frame 
-    >>> data = ...
-    >>> neff = data.nEff('b1*b1')
-    """
-    if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame  )
-    node  = as_rnode ( frame )    
-    return SV.data_nEff ( node , cuts )
-
-
-# =============================================================================
-## Get empirical CDF 
-#  @code
-#  data = ...
-#  c1 = frame_ECDF ( data , 'S_sw' ) 
-#  c2 = frame_ECDF ( data , S_sw' , 'pt>0'  )
-#  @endcode
-def frame_ECDF ( frame , expression ,  cuts = '' ) :
-    """ Get empirical CDF 
-    >>> data = ...
-    >>> c1 = frame_ECDF ( data , 'S_sw' ) 
-    >>> c2 = frame_ECDF ( data , S_sw' , 'pt>0'  )
-    """
-    if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame  )
-    node = as_rnode ( frame ) 
-    return SV.data_ECDF ( node , expression,  cuts = cuts )
-
-# =============================================================================
-## get the statistic for pair of expressions in DataFrame
-#  @code
-#  frame  = ...
-#  stat1 , stat2 , cov2 , len = frame.statCov( 'x' , 'y' )
-#  # apply some cuts 
-#  stat1 , stat2 , cov2 , len = frame.statCov( 'x' , 'y' , 'z>0' )
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2018-06-18
-def frame_statCov ( frame       ,
-                    expression1 ,
-                    expression2 ,
-                    cuts = ''   ) :
-    """ Get the statistic for pair of expressions in DataFrame
-    
-    >>>  frame  = ...
-    >>>  stat1 , stat2 , cov2 , len = framw.statCov( 'x' , 'y' )
-    
-    Apply some cuts:
-    >>> stat1 , stat2 , cov2 , len = frame.statCov( 'x' , 'y' , 'z>0' )
-    
-    """
-    if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame  )
-    node = as_rnode ( frame ) 
-    return SV.data_statCov  ( node , expression1 , expression2 , cuts ) 
-
-# ==============================================================================
-## Get the central moment  for the frame object
-#  @code
-#  frame = ...
-#  value = frame_central_moment ( 3 , 'b1*b2' , 'b3>0' )
-#  @endcode
-#  @see Ostap::StatVar::central_moment 
-def frame_central_moment ( frame , order , expression , cuts = '' ) :
-    """ Get the central_moment  for the frame object
-    >>> frame = ...
-    >>> value = frame_central_moment ( 3 , 'b1*b2' , 'b3>0' )
-    - see `Ostap.StatVar.central_moment` 
-    """
-    if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame  )
-    node = as_rnode ( frame )
-    return SV.data_central_moment ( node , order = order , expression = expression , cuts = cuts )
-
-
-# ==============================================================================
-## Get the mean for the frame object
-#  @code
-#  frame = ...
-#  value = frame_mean ( 'b1*b2' , 'b3>0' )
-#  @endcode
-#  @see Ostap::StatVar::moment
-def frame_mean ( frame , expression , cuts = '' ) :
-    """ Get the mean for the frame object
-    >>> frame = ...
-    >>> value = frame_mean ( 'b1*b2' , 'b3>0' )
-    - see `Ostap.StatVar.moment`
-    """    
-    return frame_moment ( frame , order = 1 , expression = expression , cuts = cuts )
-
-# ==============================================================================
-## Get the variance for the frame object
-#  @code
-#  frame = ...
-#  value = frame_variance   ( 'b1*b2' , 'b3>0' , exact = True )
-#  value = frame_dispersion ( 'b1*b2' , 'b3>0' , exact = True ) ## ditto
-#  @endcode
-#  @see Ostap::StatVar::central_moment 
-def frame_variance ( frame , expression , cuts = '' ) :
-    """ Get the variance for the frame object
-    >>> frame = ...
-    >>> value = frame_variance   ( 'b1*b2' , 'b3>0' )
-    >>> value = frame_dispersion ( 'b1*b2' , 'b3>0' ) ## ditto
-    - see `Ostap.StatVar.moment`
-    """    
-    return frame_central_moment ( frame , order = 2 , expression = expression , cuts = cuts )
-
-# ==============================================================================
-## dispersion, same as variance
-frame_dispersion = frame_variance
-
-# ==============================================================================
-## Get the RMS for the frame object
-#  @code
-#  frame = ...
-#  value = frame_rms ( 'b1*b2' , 'b3>0' , exact = True )
-#  @endcode
-#  @see Ostap::StatVar::central_moment 
-def frame_rms ( frame , expression , cuts = '' ) :
-    """ Get the RMS for the frame object
-    >>> frame = ...
-    >>> value = frame_rms ( 'b1*b2' , 'b3>0' , exact = True  )
-    >>> value = frame_rms ( 'b1*b2' , 'b3>0' , exact = False ) ## use P2 algorithm 
-    - see `Ostap.StatVar.moment`
-    """    
-    return frame_variance ( frame , expression = expression , cuts = cuts ) ** 0.5 
-
-# ==============================================================================
-## Get the kurtosis for the frame object
-#  @code
-#  frame = ...
-#  value = frame_kurtosis ( 'b1*b2' , 'b3>0' )
-#  @endcode
-#  @see Ostap::StatVar::kurtosis 
-def frame_kurtosis ( frame , expression , cuts = '' ) :
-    """ Get the kurtosis for the frame object
-    >>> frame = ...
-    >>> value = frame_kurtosis ( 'b1*b2' , 'b3>0' )
-    - see `Ostap.StatVar.kurtosis`
-    """
-    node = as_rnode ( frame )
-    return SV.data_kurtosis ( node , expression = expression , cuts = cuts )
-
-# ==============================================================================
-## Get the quantile for the frame object
-#  @code
-#  frame = ...
-#  value = frame_quantile (  0.3 , 'b1*b2' , 'b3>0' , exact = True )
-#  value = frame_quantile (  0.3 , 'b1*b2' , 'b3>0' , exact = False  ) ## use P2 algorithm 
-#  @endcode
-#  @see Ostap::StatVar::quantile
-#  @see Ostap::StatVar::p2quantile
-def frame_quantile ( frame , q , expression , cuts = '' , exact = True ) :
-    """ Get the quantile for the frame object
-    >>> frame = ...
-    >>> value = frame_quantile ( 0.3 , 'b1*b2' , 'b3>0' , exact = True  )
-    >>> value = frame_quantile ( 0.3 , 'b1*b2' , 'b3>0' , exact = False ) ## use P2 algorithm 
-    - see `Ostap.StatVar.quantile`
-    - see `Ostap.StatVar.p2quantile`
-    """
-    node = as_rnode ( frame )
-    return SV.data_quantile ( node , q = q , expression = expression , cuts = cuts , exact = exact  )
-
-
-
-# ==================================================================================
-## Action-based methods
-# ==================================================================================
-
-# ==================================================================================
-## get statistics of variable(s)
-#  @code
-#  frame = ....
-#  stat  = frame_statVar ( frame , 'pt' , lazy = True )
-#  @endcode
-def frame_statVar ( frame              ,
-                    expressions        ,
-                    cuts       = ''    ,
-                    as_weight  = True  ,
-                    progress   = False ,
-                    report     = False , 
-                    lazy       = True  ) :
-    """ Get statistics of variable(s)
-    >>> frame = ....
-    >>> stat  = frame_statVar ( 'pt'           , lazy = True )
-    >>> stat  = frame_statVar ( 'pt' , 'eta>0' , lazy = True )
-    """
-
-    current, var_names, cut_name, input_string = \
-        _fr_helper_ ( frame , expressions , cuts , progress = progress )
-
-    ## ATTENTION HERE!!
-    if cut_name and not as_weight :
-        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
-        cname = ''
-    
-    def screator ( node , var_name , cut_name ) :
-        
-        if   cut_name : 
-            action = ROOT.Detail.RDF.StatAction1w [ WSE ] ( WSE () )
-            return node.Book ( ROOT.std.move ( action ) , CNT ( [ var_name , cut_name ] ) )
-        else         :
-            action = ROOT.Detail.RDF.StatAction1w [  SE ] (  SE () )
-            return node.Book ( ROOT.std.move ( action ) , CNT ( 1 , var_name ) )
-        
-    return _fr_helper2_ ( current                  ,
-                          screator                 ,
-                          expressions              ,
-                          cname                    , 
-                          progress = progress      ,
-                          report   = report        ,  
-                          lazy     = lazy          )
-
-
-# ==================================================================================
-## get covariance for variables
-#  @code
-#  frame = ....
-#  stat  = frame_the_statCov ( 'pt1' , 'pt2' ,          lazy = True )
-#  stat  = frame_the_statCov ( 'pt1' , 'pt2' , 'z<0' ,  lazy = True )
-#  @endcode
-def _fr_the_statCov_ ( frame            ,
-                       expression1      ,
-                       expression2      ,
-                       cuts     = ''    ,
-                       progress = False ,
-                       rreport  = False ,                        
-                       lazy     = True  ) :
-    """ Get statistics of variable(s)
-    >>> frame = ....
-    >>> stat  = frame_the_statCov ( 'pt1' , 'pt2' ,          lazy = True )
-    >>> stat  = frame_the_statCov ( 'pt1' , 'pt2' , 'z<0' ,  lazy = True )
-    """
-    
-    current , exprs1 , cut_name , input_string1 = _fr_helper_ ( frame   , expression1 , cuts     , progress = progress )
-    assert exprs1 and input_string1, 'Invalid expression1: %s' % expression2
-    
-    current , exprs2 , cut_name , input_string2 = _fr_helper_ ( current , expression2 , cut_name )
-    assert exprs2 and input_string2, 'Invalid expression2: %s' % expression2 
-    
-    ## variables 
-    uvars = [ k for k in exprs1.values() ] + [ k for k in exprs2.values() ]  
-    if cut_name  : uvars.append ( cut_name )
-    uvars = CNT ( uvars )
-    
-    if   cut_name:
-        TT = ROOT.Detail.RDF.Stat3Action ( Ostap.Math.WCovariance ) 
-        action = node.Book( ROOT.std.move ( TT () ) , CNT ( uvars ) )
-    else         :
-        TT = ROOT.Detail.RDF.Stat2Action ( Ostap.Math.Covariance  ) 
-        action = node.Book( ROOT.std.move ( TT () ) , CNT ( uvars ) )     
-
-    result = action if lazy else action.GetValue()
-
-    if report and not lazy :
-         report = current.Report()
-         title = 'DataFrame processing'
-         logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
-             
-    return result 
-
-# ==================================================================================
-## get statistics of variable(s)
-#  @code
-#  frame = ....
-#  stat  = frame.statVar ( 'pt'           , lazy = True )
-#  stat  = frame.statVar ( 'pt' , 'eta>0' , lazy = True )
-#  @endcode
-def _fr_the_statVar_ ( frame            ,
-                       expressions      ,
-                       cuts     = ''    ,
-                       progress = False ,
-                       report   = False , 
-                       lazy     = True  ) :
-    """ Get statistics of variable(s)
-    >>> frame = ....
-    >>> stat  = frame.statVar ( 'pt'           , lazy = True )
-    >>> stat  = frame.statVar ( 'pt' , 'eta>0' , lazy = True )
-    """
-    
-    def screator ( node , var_name , cut_name ) : 
-        if   cut_name: return node.Book( ROOT.std.move ( Ostap.Actions.WStatVar() ) , CNT ( [ var_name , cut_name ] ) )
-        else         : return node.Book( ROOT.std.move ( Ostap.Actions. StatVar() ) , CNT ( 1 , var_name ) )     
-        
-    return _fr_helper2_ ( frame               ,
-                          screator            ,
-                          expressions         ,
-                          cuts     = cuts     ,
-                          progress = progress ,
-                          report   = report   ,
-                          lazy     = lazy     )
-
-# ==================================================================================
-## Get ECDF for the given varibale or expression 
-#  @code
-#  frame = ....
-#  ecdf  = frame.get_ECDF ( 'pt'           , lazy = True )
-#  ecdf  = frame.get_ECDF ( 'pt' , 'eta>0' , lazy = True )
-#  @endcode
-def _fr_the_ECDF_ ( frame            ,
-                       expressions      ,
-                       cuts     = ''    ,
-                       progress = False ,
-                       report   = False , 
-                       lazy     = True  ) :
-    """ Get ECDF for the given varibale or expression 
-    >>> frame = ....
-    >>> ecdf  = frame.get_ECDF ( 'pt'           , lazy = True )
-    >>> ecdf  = frame.get_ECDF ( 'pt' , 'eta>0' , lazy = True )
-    """
-    
-    def screator ( node , var_name , cut_name ) : 
-        if   cut_name: return node.Book( ROOT.std.move ( Ostap.Actions.WECDF() ) , CNT ( [ var_name , cut_name ] ) )
-        else         : return node.Book( ROOT.std.move ( Ostap.Actions. ECDF() ) , CNT ( 1 , var_name ) )     
-        
-    return _fr_helper2_ ( frame               ,
-                          screator            ,
-                          expressions         ,
-                          cuts     = cuts     ,
-                          progress = progress ,
-                          report   = report   ,
-                          lazy     = lazy     )
-
-# ==================================================================================
-## get statistics of variable(s)
-#  @code
-#  frame = ....
-#  stat  = frame_the_moment ( 5 , 'pt'           )
-#  stat  = frame_the_moment ( 5 , 'pt' , 'eta>0' )
-#  @endcode
-#  @see Ostap::Math::Moment_
-#  @see Ostap::Math::WMoment_
-def _fr_the_moment_ ( frame , N        ,
-                      expressions      ,
-                      cuts     = ''    ,
-                      progress = False ,
-                      report   = False ,
-                      lazy     = True  ) :
-    """ Get statistics of variable(s)
-    >>> frame = ....
-    >>> stat  = frame_the_moment ( 5 , 'pt'           )
-    >>> stat  = frame_the_moment ( 5 , 'pt' , 'eta>0' )
-    """
-    assert isinstance ( N , integer_types ) and 0 <= N , 'Invalid order!'
-
-    current, vname , cname , input_string = _fr_helper_ ( frame , expressions , cuts ) 
-    
-    def mcreator ( node , var_name , cut_name ) : 
-        if cname :
-            TT = ROOT.Detail.RDF.Stat2Action ( Ostap.Math.WMoment_(N) ) 
-            return current.Book ( ROOT.std.move ( TT () ) , CNT ( [ var_name , cut_name ] ) ) 
-        else :
-            TT = ROOT.Detail.RDF.Stat1Action ( Ostap.Math.Moment_(N) ) 
-            return current.Book ( ROOT.std.move ( TT () ) , CNT ( 1 , var_name ) ) 
-
-    return _fr_helper2_ ( frame               , 
-                          mcreator            ,
-                          expressions         ,
-                          cuts     = cuts     ,
-                          progress = progress ,
-                          report   = report   ,
-                          lazy     = lazy     )
-
-# ============================================================================
-## Get a mean via moment
-#  @code
-#  frame = ...
-#  stat  = frame.the_mean ( 'x'x' ,  'y<0' )
-#  mean  = stat.mean() 
-#  @ndcode
-def _fr_the_mean_ ( frame            ,
-                    expressions      ,
-                    cuts     = ''    ,
-                    errors   = True  , 
-                    progress = False ,
-                    report   = False ,
-                    lazy     = True  ) :
-    """ Get a mean via moment
-    >>> frame = ...
-    >>> stat  = frame.the_mean ( 'x'x' ,  'y<0' )
-    >>> mean  = stat.mean() 
-    """
-    return _fr_the_moment_ ( frame               ,
-                             2 if errors else 1  ,
-                             expressions         ,
-                             cuts     = cuts     ,
-                             progress = progress ,
-                             report   = report   ,
-                             lazy     = lazy     )
-
-# ============================================================================
-## Get a rms via moment
-#  @code
-#  frame = ...
-#  stat  = frame.the_rms ( 'x'x' ,  'y<0' )
-#  value = stat.rms() 
-#  @ndcode
-def _fr_the_rms_ ( frame ,
-                   expressions      ,
-                   cuts     = ''    ,
-                   errors   = True  ,                    
-                   progress = False ,
-                   report   = False ,
-                   lazy     = True  ) :
-    """ Get a rms via moment
-    >>> frame = ...
-    >>> stat  = frame.the_rms ( 'x'x' ,  'y<0' )
-    >>> value = stat.rms () 
-    """
-    return _fr_the_moment_ ( frame               ,
-                             4 if errors else 2  , 
-                             expressions         ,
-                             cuts     = cuts     ,
-                             progress = progress ,
-                             report   = report   ,
-                             lazy     = lazy     )
-
-# ============================================================================
-## Get a variance via moment
-#  @code
-#  frame = ...
-#  stat  = frame.the_variance ( 'x'x' ,  'y<0' )
-#  value = stat.variance () 
-#  @ndcode
-def _fr_the_variance_ ( frame            , 
-                        expressions      ,
-                        cuts     = ''    ,
-                        errors   = True  ,                    
-                        progress = False ,
-                        report   = False ,
-                        lazy     = True  ) :
-    """ Get a variance via moment
-    >>> frame  = ...
-    >>> stat   = frame.the_variance( 'x'x' ,  'y<0' )
-    >>> value  = stat.variance () 
-    """
-    return _fr_the_moment_ ( frame               ,
-                             4 if errors else 2  , 
-                             expressions         ,
-                             cuts     = cuts     ,
-                             progress = progress ,
-                             report   = report   ,
-                             lazy     = lazy     )
-
-# ============================================================================
-## Get a skewness via moment
-#  @code
-#  frame = ...
-#  stat  = frame.the_skewness ( 'x'x' ,  'y<0' )
-#  mean  = stat.skewness  () 
-#  @ndcode
-def _fr_the_skewness_ ( frame ,
-                        expressions      ,
-                        cuts     = ''    ,
-                        errors   = True  ,                    
-                        progress = False ,
-                        report   = False ,
-                        lazy     = True  ) :
-    """ Get a skewness via moment
-    >>> frame = ...
-    >>> stat  = frame.the_skewness ( 'x'x' ,  'y<0' )
-    >>> mean  = stat.skreness  () 
-    """
-    return _fr_the_moment_ ( frame               ,
-                             6 if errors else 3  , 
-                             expressions         ,
-                             cuts     = cuts     ,
-                             progress = progress ,
-                             report   = report   ,
-                             lazy     = lazy     )
-
-# ============================================================================
-## Get a kurtosis via moment
-#  @code
-#  frame = ...
-#  stat  = frame.the_kurtosis ( 'x'x' ,  'y<0' )
-#  value = stat.kurtosis   () 
-#  @ndcode
-def _fr_the_kurtosis_ ( frame            ,
-                        expressions      ,
-                        cuts     = ''    ,
-                        errors   = True  ,                    
-                        progress = False ,
-                        report   = False ,
-                        lazy     = True  ) :
-    """ Get a kurtosis  via moment
-    >>> frame = ...
-    >>> stat  = frame.the_kurtosis ( 'x'x' ,  'y<0' )
-    >>> value = stat.kurtosis   () 
-    """
-    return _fr_the_moment_ ( frame               ,
-                             8 if errors else 4  ,
-                             expressions         ,
-                             cuts     = cuts     ,
-                             progress = progress ,
-                             report   = report   ,
-                             lazy     = lazy     )
-
-# ============================================================================
-## Get an arithmetic mean
-#  @see Ostap::Math::ArithmeticMean
-#  @code
-#  frame = ...
-#  mean = frame_the_arithmetic_mean ( frame , 'x*x' , '0<y' ) 
-#  @endcode 
-def _fr_the_arithmetic_mean_ ( frame ,
-                               expressions      ,
-                               cuts     = ''    ,
-                               progress = False ,
-                               report   = False ,
-                               lazy     = True  ) :
-    """ Get an arithmetic mean
-    >>> frame = ...
-    >>> mean = frame_the_arithmetic_mean ( frame , 'x*x' , '0<y' ) 
-    -  see `Ostap.Math.ArithmeticMean`
-    """
-    
-    def acreator ( node , var_name , cut_name ) : 
-        if cut_name: 
-            TT = ROOT.Detail.RDF.Stat2Action ( Ostap.Math.WArithmeticMean ) 
-            return node.Book( ROOT.std.move ( TT () ) , CNT ( [ var_name , cut_name ] ) )
-        else  :
-            TT = ROOT.Detail.RDF.Stat1Action ( Ostap.Math.ArithmeticMean ) 
-            return node.Book( ROOT.std.move ( TT () ) , CNT ( 1 , var_name ) )     
-        
-    return _fr_helper2_ ( frame               ,
-                          acreator            , 
-                          expressions         ,
-                          cuts     = cuts     ,
-                          progress = progress ,
-                          report   = report   ,
-                          lazy     = lazy     )
-    
-# ============================================================================
-## Get a geometric mean
-#  @see Ostap::Math::GeometricMean
-#  @code
-#  frame = ...
-#  mean = frame_the_geometric_mean ( frame , 'x*x' , '0<y' ) 
-#  @endcode 
-def _fr_the_geometric_mean_ ( frame ,
-                              expressions      ,
-                              cuts     = ''    ,
-                              progress = False ,
-                              report   = False ,
-                              lazy     = True  ) :
-    """ Get an geometric mean
-    >>> frame = ...
-    >>> mean = frame_the_geometric_mean ( frame , 'x*x' , '0<y' ) 
-    -  see `Ostap.Math.GeometricMean`
-    """
-    def gcreator ( node , var_name , cut_name ) : 
-        if cut_name: 
-            TT = ROOT.Detail.RDF.Stat2Action ( Ostap.Math.WGeometricMean ) 
-            return node.Book( ROOT.std.move ( TT () ) , CNT ( [ var_name , cut_name ] ) )
-        else  :
-            TT = ROOT.Detail.RDF.Stat1Action ( Ostap.Math.GeometricMean ) 
-            return node.Book( ROOT.std.move ( TT () ) , CNT ( 1 , var_name ) )     
-        
-    return _fr_helper2_ ( frame               ,
-                          gcreator            ,
-                          expressions         ,
-                          cuts     = cuts     ,
-                          progress = progress ,
-                          report   = report   ,
-                          lazy     = lazy     )
-
-# ============================================================================
-## Get a harmonic mean
-#  @see Ostap::Math::HarmonicMean
-#  @code
-#  frame = ...
-#  mean = frame_the_harmonic_mean ( frame , 'x*x' , '0<y' ) 
-#  @endcode 
-def _fr_the_harmonic_mean_ ( frame            , 
-                             expressions      ,
-                             cuts     = ''    ,
-                             progress = False ,
-                             report   = False ,
-                             lazy     = True  ) :
-    """ Get a harmonic mean
-    >>> frame = ...
-    >>> mean = frame_the_harmonic_mean ( frame , 'x*x' , '0<y' ) 
-    -  see `Ostap.Math.HarmonicMean`
-    """
-    def creator ( node , var_name , cut_name ) : 
-        if cut_name: 
-            TT = ROOT.Detail.RDF.Stat2Action ( Ostap.Math.WHarmonicMean ) 
-            return node.Book( ROOT.std.move ( TT () ) , CNT ( [ var_name , cut_name ] ) )
-        else  :
-            TT = ROOT.Detail.RDF.Stat1Action ( Ostap.Math.HarmonicMean ) 
-            return node.Book( ROOT.std.move ( TT () ) , CNT ( 1 , var_name ) )     
-        
-    return _fr_helper2_ ( frame               ,
-                          creator             ,
-                          expressions         ,
-                          cuts     = cuts     ,
-                          progress = progress ,
-                          report   = report   ,
-                          lazy     = lazy     )
- 
-# ============================================================================
-## Get a power mean
-#  @see Ostap::Math::PowerMean
-#  - p == -1 : harmonic mean 
-#  - p ==  0 : geometric mean
-#  - p == +1 : arithmetic mean 
-#  @code
-#  frame = ...
-#  mean = frame_the_power_mean ( frame , 3 , 'x*x' , '0<y' ) 
-#  @endcode 
-def _fr_the_power_mean_ ( frame , p ,
-                          expressions      ,
-                          cuts     = ''    ,
-                          progress = False ,
-                          report   = False ,
-                          lazy     = True  ) :
-    """ Get a power mean
-    >>> frame = ...
-    >>> mean = frame_the_power_mean ( frame , 5 ,  'x*x' , '0<y' ) 
-    -  see `Ostap.Math.PowerMean`
-   - p == -1 : harmonic mean 
-   - p ==  0 : geometric mean
-   - p == +1 : arithmetic mean 
-   """
-    assert isinstance ( p , num_types ) , 'Invalid type of p-parameter: %s' % type ( p ) 
-    
-    if    -1 == p or isequal ( p , -1.0 ) : 
-        return _fr_harmonic_mean_   ( frame , expressions , cuts = cuts , lazy = lazy ) 
-    elif   0 == p or iszero  ( p        ) : 
-        return _fr_geometric_mean_  ( frame , expressions , cuts = cuts , lazy = lazy ) 
-    elif   1 == p or isequal ( p ,  1.0 ) : 
-        return _fr_arithmetic_mean_ ( frame , expressions , cuts = cuts , lazy = lazy ) 
-    
-    def pcreator ( node , var_name , cut_name ) : 
-        if cut_name: 
-            TT = ROOT.Detail.RDF.Stat2Action ( Ostap.Math.WPowerMean ) 
-            return node.Book( ROOT.std.move ( TT ( p ) ) , CNT ( [ var_name , cut_name ] ) )
-        else  :
-            TT = ROOT.Detail.RDF.Stat1Action ( Ostap.Math.PowerMean ) 
-            return node.Book( ROOT.std.move ( TT ( p ) ) , CNT ( 1 , var_name ) )
-        
-    return _fr_helper2_ ( frame               ,
-                          pcreator            ,
-                          expressions         ,
-                          cuts     = cuts     ,
-                          progress = progress ,
-                          report   = report   ,
-                          lazy     = lazy     )
-
-# ============================================================================
-## Get Lehmer mean
-#  @see Ostap::Math::LehmerMean
-#  - p ==  0 : harmonic mean 
-#  - p == +1 : arithmetic mean 
-#  @code
-#  frame = ...
-#  mean = frame_the_lehmer_mean ( frame , 3 , 'x*x' , '0<y' ) 
-#  @endcode 
-def _fr_the_lehmer_mean_ ( frame , p ,
-                           expressions      ,
-                           cuts     = ''    ,
-                           progress = False ,
-                           report   = False ,
-                           lazy     = True  ) :
-    """ Get Lehmer mean
-    >>> frame = ...
-    >>> mean = frame_the_lehmer_mean ( frame , 5 ,  'x*x' , '0<y' ) 
-    -  see `Ostap.Math.LehmerMean`
-   - p ==  0 : harmonic mean 
-   - p == +1 : arithmetic mean 
-   """
-    assert isinstance ( p , num_types ) , 'Invalid type of p-parameter: %s' % type ( p ) 
-    
-    if   0 == p or iszero  ( p        ) : 
-        return _fr_harmonic_mean_   ( frame , expressions , cuts = cuts , lazy = lazy ) 
-    elif 1 == p or isequal ( p ,  1.0 ) : 
-        return _fr_arithmetic_mean_ ( frame , expressions , cuts = cuts , lazy = lazy ) 
-    
-    def lcreator ( node , var_name , cut_name ) : 
-        if cut_name: 
-            TT = ROOT.Detail.RDF.Stat2Action ( Ostap.Math.WLehmerMean ) 
-            return node.Book( ROOT.std.move ( TT ( p ) ) , CNT ( [ var_name , cut_name ] ) )
-        else  :
-            TT = ROOT.Detail.RDF.Stat1Action ( Ostap.Math.LehmerMean ) 
-            return node.Book( ROOT.std.move ( TT ( p ) ) , CNT ( 1 , var_name ) )     
-        
-    return _fr_helper2_ ( frame               ,
-                          lcreator            ,
-                          expressions         ,
-                          cuts     = cuts     ,
-                          progress = progress ,
-                          report   = report   ,
-                          lazy     = lazy     )
-
-# ============================================================================
-## Get min/max for variables 
-#  @see Ostap::Math::MinMaxValue
-#  @see Ostap::Math::WMinMaxValue
-#  @code
-#  frame = ...
-#  mean = frame_the_minmax ( frame , 'x*x' , '0<y' ) 
-#  @endcode 
-def _fr_the_minmax_ ( frame            ,
-                      expressions      ,
-                      cuts     = ''    ,
-                      progress = False ,
-                      report   = False ,
-                      lazy     = True  ) :
-    """ Get min/max values for variables
-    >>> frame = ...
-    >>> mean = frame_the_minmax ( frame , 5 ,  'x*x' , '0<y' ) 
-    -  see `Ostap.Math.MinMaxValue`
-    -  see `Ostap.Math.WMinMaxValue`
-   """
-    def mcreator ( node , var_name , cut_name ) : 
-        if cut_name: 
-            ## TT = ROOT.Detail.RDF.Stat2Action ( Ostap.Math.WMinMaxValue ) 
-            TT = ROOT.Detail.RDF.Stat2Action ( Ostap.Math.WMoment_[1] ) 
-            return node.Book( ROOT.std.move ( TT () ) , CNT ( [ var_name , cut_name ] ) )
-        else  :
-            ## TT = ROOT.Detail.RDF.Stat1Action ( Ostap.Math.MinMaxValue  ) 
-            TT = ROOT.Detail.RDF.Stat2Action ( Ostap.Math.Moment_[1] ) 
-            return node.Book( ROOT.std.move ( TT () ) , CNT ( 1 , var_name ) )     
-        
-    return _fr_helper2_ ( frame               ,
-                          mcreator            ,
-                          expressions         ,
-                          cuts     = cuts     ,
-                          progress = progress ,
-                          report   = report   ,
-                          lazy     = lazy     )
-
-
-# ===============================================================================
-if Frames_OK :
-    
-    ## frame_get_moment 
-    ## frame_central_moment
-    
-    frame_the_statVar         = _fr_the_statVar_
-    frame_the_statCov         = _fr_the_statCov_
-    frame_the_nEff            = _fr_the_nEff_  
-    frame_the_ECDF            = _fr_the_ECDF_  
-    frame_the_moment          = _fr_the_moment_
-    frame_the_mean            = _fr_the_mean_
-    frame_the_minmax          = _fr_the_minmax_
-    frame_the_rms             = _fr_the_rms_
-    frame_the_variance        = _fr_the_variance_
-    frame_the_dispersion      = _fr_the_variance_
-    frame_the_skewness        = _fr_the_skewness_
-    frame_the_kurtosis        = _fr_the_kurtosis_
-    frame_the_arithmetic_mean = _fr_the_arithmetic_mean_ 
-    frame_the_geometric_mean  = _fr_the_geometric_mean_ 
-    frame_the_harmonic_mean   = _fr_the_harmonic_mean_ 
-    frame_the_power_mean      = _fr_the_power_mean_ 
-    frame_the_lehmer_mean     = _fr_the_lehmer_mean_ 
-    frame_the_param           = _fr_param_
-
-    __all__ += (
-        'frame_the_statVar'         ,
-        'frame_the_statCov'         ,
-        'frame_the_nEff'            ,
-        'frame_the_ECDF'            ,
-        'frame_the_moment'          ,
-        'frame_the_mean'            ,
-        'frame_the_minmax'          ,
-        'frame_the_rms'             ,
-        'frame_the_variance'        ,
-        'frame_the_dispersion'      ,
-        'frame_the_skewness'        ,
-        'frame_the_kurtosis'        ,
-        'frame_the_arithmetic_mean' ,
-        'frame_the_geometric_mean'  ,
-        'frame_the_harmonic_mean'   ,
-        'frame_the_power_mean'      ,
-        'frame_the_lehmer_mean'     ,
-        'frame_the_param'           ,
-    )
-    
-    # ==================================================================================
-    ## get statistics of variable(s) (via actions) 
-    #  @code
-    #  frame = ....
-    #  stat  = frame_statVar ( frame , 'pt'           )
-    #  stat  = frame_statVar ( frame , 'pt' , 'eta>0' )
-    #  @endcode
-    def frame_statVar ( frame , expressions , cuts = ''  , progress = False , report = False ) :
-        """ Get statistics of variable(s)
-        >>> frame = ....
-        >>> stat  = frame.statVar ( 'pt'           )
-        >>> stat  = frame.statVar ( 'pt' , 'eta>0' )
-        """
-        return frame_the_statVar ( frame               ,
-                                   expressions         ,
-                                   cuts     = cuts     ,
-                                   progress = progress ,
-                                   report   = report   ,
-                                   lazy     = False    )
-
-    # ==================================================================================
-    ## get ECDF
-    #  @code
-    #  frame = ....
-    #  stat  = frame_ECDF ( frame , 'pt'           )
-    #  stat  = frame_ECDF ( frame , 'pt' , 'eta>0' )
-    #  @endcode
-    def frame_ECDF ( frame , expressions , cuts = ''  , progress = False , report = False ) :
-        """ Get statistics of variable(s)
-        >>> frame = ....
-        >>> ecdf  = frame.ECDF ( 'pt'           )
-        >>> ecdf  = frame.ECDF ( 'pt' , 'eta>0' )
-        """
-        return frame_the_ECDF ( frame               ,
-                                expressions         ,
-                                cuts     = cuts     ,
-                                progress = progress ,
-                                report   = report   ,
-                                lazy     = False    )
-    
-    # ==================================================================================
-    ## get covariance for variables via action 
-    #  @code
-    #  frame = ....
-    #  stat  = frame_statCov ( 'pt1' , 'pt2' ,        )
-    #  stat  = frame_statCov ( 'pt1' , 'pt2' , 'z<0'  )
-    #  @endcode
-    def frame_statCov ( frame            ,
-                        expression1      ,
-                        expression2      ,
-                        cuts     = ''    ,
-                        progress = False ,
-                        report   = False ) :
-        """ Get statistics of variables via actions 
-        >>> frame = ....
-        >>> stat  = frame_statCov ( 'pt1' , 'pt2' ,        )
-        >>> stat  = frame_statCov ( 'pt1' , 'pt2' , 'z<0'  )
-        """
-        return frame_the_statCov ( frame               ,
-                                   expression1         ,
-                                   expression2         ,
-                                   cuts     = cuts     , 
-                                   progress = progress ,
-                                   report   = report   ,
-                                   lazy     = False    )
-
-    # =============================================================================
-    ## Get the effective entries in data frame (via actions)
-    #  @code
-    #  data = ...
-    #  neff = data.nEff('b1*b1')
-    #  @endcode
-    def frame_nEff ( frame            ,
-                     cuts     = ''    ,
-                     progress = False ,
-                     report   = False ) :
-        """ Get the effective entries in data frame 
-        >>> data = ...
-        >>> neff = frame_nEff('b1*b1')
-        """
-        return frame_the_nEff ( frame               ,
-                                cuts     = cuts     ,
-                                progress = progress ,
-                                report   = report   ,
-                                lazy     = False    ).nEff()         
-    # ==================================================================================
-    ## get statistics of variable(s)  (via actions)
-    #  @code
-    #  frame = ....
-    #  stat  = frame_the_moment ( 5 , 'pt'           )
-    #  stat  = frame_the_moment ( 5 , 'pt' , 'eta>0' )
-    #  @endcode
-    #  @see Ostap::Math::Moment_
-    #  @see Ostap::Math::WMoment_
-    def frame_moment ( frame , N , expressions , cuts = '' , progress = False , report = False ) :
-        """ Get statistics of variable(s)  (via actions) 
-        >>> frame = ....
-        >>> stat  = frame_moment ( 5 , 'pt'           )
-        >>> stat  = frame_moment ( 5 , 'pt' , 'eta>0' )
-        """
-        return frame_the_moment ( frame , N           ,
-                                  expressions         ,
-                                  cuts     = cuts     ,
-                                  progress = progress ,
-                                  report   = report   , 
-                                  lazy     = False    )
-    # ============================================================================
-    ## Get a mean via moment&action
-    #  @code
-    #  frame = ...
-    #  mean  = frame_mean ( 'x'x' ,  'y<0' )
-    #  @ndcode
-    def frame_mean ( frame , expressions , cuts = '' , errors = True , progress = False , report = False ) :
-        """ Get a mean via moment
-        >>> frame = ...
-        >>> mean = frame_mean ( 'x'x' ,  'y<0' )
-        """
-        return frame_the_mean ( frame               ,
-                                expressions         ,
-                                cuts     = cuts     ,
-                                errors   = errors   ,
-                                progress = progress ,
-                                report   = report   ,
-                                lazy     = False    ).mean() 
-    # ============================================================================
-    ## Get a rms via moment&action 
-    #  @code
-    #  frame = ...
-    #  rms   = frame_rms ( 'x'x' ,  'y<0' )
-    #  @ndcode
-    def frame_rms ( frame , expressions , cuts = '' , errors = True , progress = False , report = False ) :
-        """ Get a rms via moment&action
-        >>> frame = ...
-        >>> rms   = frame_rms ( 'x'x' ,  'y<0' )
-        """
-        return frame_the_rms ( frame               ,
-                               expressions         ,
-                               cuts     = cuts     ,
-                               errors   = errors   ,
-                               progress = progress ,
-                               report   = report   ,
-                               lazy     = False    ).rms() 
-    # ============================================================================
-    ## Get a variance via moment&actions
-    #  @code
-    #  frame     = ...
-    #  variance  = frame_variance   ( 'x'x' ,  'y<0' )
-    #  variance  = frame_dispersion ( 'x'x' ,  'y<0' )
-    #  @ndcode
-    def frame_variance ( frame , expressions , cuts = '' , errors = True , progress = False , report = False ) :
-        """ Get a variance via moment&action
-        >>> frame     = ...
-        >>> variance  = frame_variance   ( 'x'x' ,  'y<0' )
-        >>> variance  = frame_dispersion ( 'x'x' ,  'y<0' )        
-        """
-        return frame_the_variance ( frame               ,
-                                    expressions         ,
-                                    cuts     = cuts     ,
-                                    errors   = errors   ,
-                                    progress = progress ,
-                                    report   = report   ,
-                                    lazy     = False    ).variance()
-    # ============================================================================
-    ## ditto 
-    frame_dispersion = frame_variance 
-    # ============================================================================
-    ## Get a skewness via moment&action 
-    #  @code
-    #  frame = ...
-    #  skew  = frame_skewness ( 'x'x' ,  'y<0' )
-    #  @ndcode
-    def frame_skewness ( frame , expressions , cuts = '' , errors = True , progress = False , report = False ) :
-        """ Get a variance via moment
-        >>> frame = ...
-        >>> skew  = frame_skewness ( 'x'x' ,  'y<0' )
-        >>> mean  = stat.skreness  () 
-        """
-        return frame_the_skewness ( frame               ,
-                                    expressions         ,
-                                    cuts     = cuts     ,
-                                    errors   = errors   ,
-                                    progress = progress ,
-                                    report   = report   ,                                     
-                                    lazy     = False    ).skewness()
-    # ============================================================================
-    ## Get a kurtosis via moment&actions 
-    #  @code
-    #  frame = ...
-    #  kurt  = frame_kurtosis ( 'x'x' ,  'y<0' )
-    #  @ndcode
-    def frame_kurtosis ( frame            ,
-                         expressions      ,
-                         cuts     = ''    ,
-                         errors   = True  ,
-                         progress = False ,
-                         report   = False ) :
-        """ Get a kurtosis  via moment
-        >>> frame = ...
-        >>> stat  = frame.the_kurtosis ( 'x'x' ,  'y<0' )
-        >>> value = stat.kurtosis   () 
-        """
-        return frame_the_kurtosis ( frame               ,
-                                    expressions         , 
-                                    cuts     = cuts     ,
-                                    errors   = True     ,
-                                    progress = progress ,
-                                    report   = report   , 
-                                    lazy     = False    ).kurtosis()     
-    # ============================================================================
-    ## Get an arithmetic mean
-    #  @see Ostap::Math::ArithmeticMean
-    #  @code
-    #  frame = ...
-    #  mean = frame_arithmetic_mean ( frame , 'x*x' , '0<y' ) 
-    #  @endcode 
-    def frame_arithmetic_mean ( frame            ,
-                                expressions      ,
-                                cuts     = ''    ,  
-                                progress = False ,
-                                report   = False ) :
-        """ Get an arithmetic mean
-        >>> frame = ...
-        >>> mean = frame_arithmetic_mean ( frame , 'x*x' , '0<y' ) 
-        -  see `Ostap.Math.ArithmeticMean`
-        """
-        return frame_the_arithmetic_mean ( frame ,
-                                           expressions         ,
-                                           cuts     = cuts     ,
-                                           progress = progress ,
-                                           report   = report   , 
-                                           lazy     = False    )
-    # ============================================================================
-    ## Get a geometric mean
-    #  @see Ostap::Math::GeometricMean&actions 
-    #  @code
-    #  frame = ...
-    #  mean = frame_geometric_mean ( frame , 'x*x' , '0<y' ) 
-    #  @endcode 
-    def frame_geometric_mean ( frame            ,
-                               expressions      ,
-                               cuts     = ''    ,  
-                               progress = False ,
-                               report   = False ) :
-        """ Get an geomentric mean
-        >>> frame = ...
-        >>> mean = frame_geometric_mean ( frame , 'x*x' , '0<y' ) 
-        -  see `Ostap.Math.GeometricMean`
-        """
-        return frame_the_geometric_mean ( frame               ,
-                                          expressions         ,
-                                          cuts     = cuts     ,
-                                          progress = progress ,
-                                          report   = report   , 
-                                          lazy     = False    )
-    # ============================================================================
-    ## Get a harmonic mean
-    #  @see Ostap::Math::HarmonicMean
-    #  @code
-    #  frame = ...
-    #  mean = frame_harmonic_mean ( frame , 'x*x' , '0<y' ) 
-    #  @endcode 
-    def frame_harmonic_mean ( frame            ,
-                              expressions      ,
-                              cuts     = ''    ,
-                              progress = False ,
-                              report   = False ) :
-        """ Get a harmonic mean
-        >>> frame = ...
-        >>> mean = frame_harmonic_mean ( frame , 'x*x' , '0<y' ) 
-        -  see `Ostap.Math.HarmonicMean`
-        """
-        return frame_the_harmonic_mean ( frame ,
-                                         expressions         ,
-                                         cuts     = cuts     ,
-                                         progress = progress ,
-                                         report   = report   , 
-                                         lazy     = False    )
-    # ============================================================================
-    ## Get a power mean
-    #  @see Ostap::Math::PowerMean
-    #  - p == -1 : harmonic mean 
-    #  - p ==  0 : geometric mean
-    #  - p == +1 : arithmetic mean 
-    #  @code
-    #  frame = ...
-    #  mean = frame_power_mean ( frame , 3 , 'x*x' , '0<y' ) 
-    #  @endcode 
-    def frame_power_mean ( frame , p        ,
-                           expressions      ,
-                           cuts     = ''    ,
-                           progress = False ,
-                           report   = False ) :
-        """ Get a power mean
-        >>> frame = ...
-        >>> mean = frame_power_mean ( frame , 5 ,  'x*x' , '0<y' ) 
-        -  see `Ostap.Math.PowerMean`
-        - p == -1 : harmonic mean 
-        - p ==  0 : geometric mean
-        - p == +1 : arithmetic mean 
-        """
-        return frame_the_power_mean ( frame , p ,
-                                      expressions         ,
-                                      cuts     = cuts     ,
-                                      progress = progress ,
-                                      report   = report   , 
-                                      lazy     = False    )
-    # ============================================================================
-    ## Get Lehmer mean
-    #  @see Ostap::Math::LehmerMean
-    #  - p ==  0 : harmonic mean 
-    #  - p == +1 : arithmetic mean 
-    #  @code
-    #  frame = ...
-    #  mean = frame_lehmer_mean ( frame , 3 , 'x*x' , '0<y' ) 
-    #  @endcode 
-    def frame_lehmer_mean ( frame , p , expressions , cuts = '' , progress = False , report = False ) :
-        """ Get Lehmer mean
-        >>> frame = ...
-        >>> mean  = frame_lehmer_mean ( frame , 5 ,  'x*x' , '0<y' ) 
-        -  see `Ostap.Math.LehmerMean`
-        - p ==  0 : harmonic mean 
-        - p == +1 : arithmetic mean 
-        """
-        return frame_the_lehmer_mean ( frame , p  ,
-                                       expressions         ,
-                                       cuts     = cuts     ,
-                                       progress = progress ,
-                                       report   = report   ,
-                                       lazy     = False    )
-    # ==============================================================================
-    ## "project/parameterise" frame into polynomial structures 
-    #  @code
-    #  frame = ...
-    #
-    #  ls    = Ostap.Math.LegendreSum ( ... )
-    #  res   = frame_param ( frame , ls , 'x' , 'y>0' )
-    #
-    #  bs    = Ostap.Math.Bernstein   ( ... )
-    #  res   = frame_param ( frame , bs , 'x' , 'y>0' )
-    #
-    #  cs    = Ostap.Math.ChebyshevSum ( ... )
-    #  res   = frame_param ( frame , cs , 'x' , 'y>0' )
-    #
-    #  ls2   = Ostap.Math.LegendreSum2 ( ... )
-    #  res   = frame_param ( frame , ls2 , 'y' , 'x' , 'z>0' )
-    # 
-    #  bs2   = Ostap.Math.Bernstein2D  ( ... )
-    #  res   = frame_param ( frame , bs2 ,  ( 'y' , 'x' ) , 'z>0' )
-    #
-    #  ls3   = Ostap.Math.LegendreSum3 ( ... )
-    #  res   = frame_param ( frame , ls3 ,  ( 'z' , 'y' , 'x' ) , 'z>0' )
-    # 
-    #  bs2   = Ostap.Math.Bernstein2D  ( ... )
-    #  res   = frame_param ( frame , bs2 , ( 'y' , 'x' ) , 'z>0' )
-    #  @endcode
-    def frame_param ( frame            ,
-                      poly             ,
-                      expressions      ,
-                      cuts     = ''    ,
-                      progress = False ,
-                      report   = False ) :
-        """ `project/parameterise` frame into polynomial structures
-        
-        >>> frame = ...
-        
-        >>> ls    = Ostap.Math.LegendreSum ( ... )
-        >>> res   = frame_param ( frame , ls , 'x' , 'y>0' )
-        
-        >>> bs    = Ostap.Math.Bernstein   ( ... )
-        >>> res   = frame_param ( frame , bs , 'x' , 'y>0' )
-        
-        >>> cs    = Ostap.Math.ChebyshevSum ( ... )
-        >>> res   = frame_param ( frame , cs , 'x' , 'y>0' )
-        
-        >>> ls2   = Ostap.Math.LegendreSum2 ( ... )
-        >>> res   = frame_param ( frame , ls2 , 'y,x' , 'z>0' )
-        
-        >>> bs2   = Ostap.Math.Bernstein2D  ( ... )
-        >>> res   = frame_param ( frame , bs2 , 'y,x' , 'z>0' )
-        
-        >>> ls3   = Ostap.Math.LegendreSum3 ( ... )
-        >>> res   = frame_param ( frame , ls3 , 'z,y;z' , 'z>0' )
-        
-        >>> bs2   = Ostap.Math.Bernstein2D  ( ... )
-        >>> res   = frame_param ( frame , bs2 , 'y,x' , 'z>0' )
-        """
-        return frame_the_param ( frame            ,
-                                 poly             ,
-                                 expressions      ,
-                                 cuts     = cuts  ,
-                                 progress = False ,
-                                 report   = False , lazy = False ) 
-    
-    # ============================================================================
-    ## Get the approproate range  for drawing the variables 
-    #  In case there is no suitable range None is returned 
-    #  @code
-    #  frame = ...
-    #  mean = frame_range ( frame , 'x*x' , '0<y' ) 
-    #  @endcode 
-    def frame_range ( frame            ,
-                      expressions      ,
-                      cuts     = ''    ,
-                      delta    = 0.01  ,
-                      progress = False ,
-                      report   = False ) :
-        """ Get the approproavte range  values for variables
-         - In case there is no suitable range None is returned 
-        >>> frame = ...
-        >>> mean = frame_the_minmax ( frame , 5 ,  'x*x' , '0<y' ) 
-        """
-        ranges = frame_the_minmax ( frame               ,
-                                    expressions         ,
-                                    cuts     = cuts     ,
-                                    progress = progress ,
-                                    report   = report   ,
-                                    lazy     = False    )
-        
-        if isinstance ( ranges , dictlike_types ) :
-            for k , r in loop_items ( ranges ) :
-                mn, mx = r.min () , r.max()
-                if mx <= mn : return None                         ## ATTENTION!!
-                ranges [ k ] = axis_range ( mn , mx , delta = delta ) 
-        else : ranges = axis_range ( ranges.xmin() , ranges.xmax() , delta = delta )
-        return ranges
-
-
-    ## use more efficient drawing function 
-    frame_draw = _fr_draw_
-    
-    __all__ += (
-        'frame_arithmetic_mean' ,
-        'frame_geometric_mean'  ,
-        'frame_harmonic_mean'   ,
-        'frame_power_mean'      ,
-        'frame_lehmer_mean'     ,
-        'frame_param'           ,
-        'frame_range'           ,
-    )
-    
-
-# ===============================================================================
-frame_statistics = frame_statVar
-
-# ===============================================================================
-## Print the frame report data
-def report_print_table ( report , title  = '' , prefix = '' , more_rows = [] ) :
-    """ Print a frame report data 
-    """
-    from ostap.core.core import binomEff
-    
-    n0     = -1 
-    lmax   =  5
-    table  = []
-    
-    for name, passed, all in report :
-        n0   = max ( n0 , all , passed )        
-        eff1 = binomEff ( passed , all ) * 100        
-        eff2 = binomEff ( passed ,  n0 ) * 100
-        lmax = max ( len ( name ) , lmax , len ( 'Filter ' ) )     
-        item = name ,  passed , all , eff1 , eff2 
-        table.append ( item )
-        
-    lmax          =  max ( lmax + 2 , len ( 'Selection' ) + 2 )
-    fmt_name      =  '%%-%ds ' % lmax 
-    fmt_input     =  '%10d'
-    fmt_passed    =  '%-10d'
-    fmt_eff       =  '%8.3g +/- %-8.3g'
-    fmt_cumulated =  '%8.3g +/- %-8.3g'
-        
-    header = ( ( '{:^%d}' % lmax ).format ( 'Filter'   ) ,               
-               ( '{:>10}'        ).format ( '#input '  ) ,
-               ( '{:<10}'        ).format ( '#passed'  ) ,
-               ( '{:^20}'        ).format ( 'efficiency [%]' ) ,
-               ( '{:^20}'        ).format ( 'cumulated efficiency [%]' ) )
-
-    table_data = [ header ]
-    for entry in table :
-        n, p, a , e1 , e2 = entry
-        table_data.append ( ( fmt_name      % n ,
-                              fmt_input     % a ,
-                              fmt_passed    % p  ,
-                              fmt_eff       % ( e1.value () , e1.error () ) ,
-                              fmt_cumulated % ( e2.value () , e2.error () ) ) )
-    for row in more_rows :
-        table_data.append ( row ) 
-    
-    import ostap.logger.table as T
-    return T.table ( table_data , title = title , prefix = prefix , alignment = 'lcccc' )
-
-# ===============================================================================
-## Print the frame report
-def report_as_table ( report ) :
-    """ Print a frame report
-    """
-    table = []
-    for c in report:
-        name    = c.GetName ()
-        passed  = c.GetPass ()
-        all     = c.GetAll  ()
-        table.append (  ( name , passed , all )  )
-
-    return table 
-
-# ===============================================================================
-## Print the data frame report
-def report_print ( report , title  = '' , prefix = '' , more_rows = [] ) :
-    """ Print the data frame report
-    """
-    table = report_as_table ( report )    
-    return report_print_table ( table , title, prefix , more_rows )
-
-
-# ==============================================================================
 # decorate 
 # ==============================================================================
-_new_methods_ = [
-    ## 
-    frame_columns        , 
-    frame_branches       ,
-    frame_progress       , 
-    frame_prescale       , 
-    frame_project        , 
-    frame_draw           , 
-    frame_print          , 
-    frame_table          , 
+
+_new_methods_       = (
+    report_print_table    , ## print the report 
+    report_as_table       , ## print the report
+    report_print          , ## print the report 
     ##
-    frame_length         , 
-    frame_size           , 
-    ##
-    frame_nEff           , 
-    frame_statVar        , 
-    frame_statCov        ,
-    #
-    frame_get_moment     , 
-    frame_moment         , 
-    frame_central_moment ,
-    # 
-    frame_mean           , 
-    frame_rms            , 
-    frame_variance       , 
-    frame_dispersion     , 
-    frame_skewness       , 
-    frame_kurtosis       , 
+    frame_columns         , ## all defined columns 
+    frame_branches        , ## all defined columns  
     ## 
-    frame_quantile       ,
-    frame_interval       ,
-    frame_median         ,
-    frame_quantiles      ,
-    frame_terciles       ,
-    frame_quartiles      ,
-    frame_quintiles      ,
-    frame_deciles        ,
-    ##
-    frame_statistics     , 
+    frame_progress1       , ## progress bar for frame (OK for ROOT<6.32)
+    frame_progress2       , ## progress bar for frame (OK for ROOT>6.29) 
+    frame_progress        , ## progress bar for frame
     ## 
-    report_print         ,
-    report_print_table   ,
-    report_as_table      ,    
-    ]     
-# ================================================================================
-for f in frame_types :
+    frame_prescale        , ## prescale frame (trivial filter)
+    frame_print           , ## over-simplified print frame
+    frame_table           , ## Print frame as detailed table 
+    ## 
+    frame_length          , ## length/size/#entries of the frame 
+    frame_size            , ## length/size/#entries of the frame 
+    ##
+    frame_statistic       , ## statistics for the variable(s) 
+    frame_minmax          , ## min/max for the variable(s) 
+    frame_range           , ## ranges  for the variable(s)
+    ##
+    frame_the_moment      , ## get moments for the variable(s)
+    ##
+    frame_nEff            , ## number of effective entries 
+    frame_mean            , ## mean value for variable(s)
+    frame_variance        , ## variance   for variable(s)
+    frame_dispersion      , ## dispersion for variable(s)
+    frame_rms             , ## rms for variable(s)
+    frame_skewness        , ## skewness for variable(s)
+    frame_kurtosis        , ## kurtosis for variable(s)
+    ##
+    frame_arithmetic_mean , ## get the arithmetc mean for variables 
+    frame_harmonic_mean   , ## get the harmonic  mean for variables 
+    frame_geometric_mean  , ## get the geometric mean for variables 
+    frame_power_mean      , ## get the power     mean for variables 
+    frame_lehmer_mean     , ## get the Lehmer    mean for variables 
+    ## 
+    frame_ECDF            , ## get the empirical cumulative distribution functions for variable(s)
+    ## 
+    frame_project         , ## project data frame to the (1D/2D/3D) histogram
+    frame_param           , ## parameterize data n flight     
+    frame_draw            , ## draw variable from the frame
+    ## 
+)
 
-    f.__str__        = frame_print
-    f.__repr__       = frame_print
-    f.__len__        = frame_length
-
-    f.columns        = frame_columns  
-    f.branches       = frame_branches
-    
-    f.project        = frame_project 
-    f.draw           = frame_draw
-    
-    f.nEff           = frame_nEff
-    f.statVar        = frame_statVar 
-    f.statCov        = frame_statCov
-    
-    f.get_moment     = frame_get_moment
-    f.moment         = frame_moment
-    f.central_moment = frame_moment
-    #
-    f.mean           = frame_mean
-    f.rms            = frame_rms 
-    f.variance       = frame_variance 
-    f.dispersion     = frame_dispersion
-    f.skewness       = frame_skewness
-    f.kurtosis       = frame_kurtosis
-    #
-    f.quantile       = frame_quantile 
-    f.interval       = frame_interval 
-    f.median         = frame_median
-    f.quantiles      = frame_quantiles
-    f.terciles       = frame_terciles 
-    f.quartiles      = frame_quartiles
-    f.quintiles      = frame_quintiles    
-    f.deciles        = frame_deciles 
-    
-    _new_methods_ += [
-        f.columns        , 
-        f.branches       ,         
-        f.project        , 
-        f.draw           ,
-        #
-        f.__str__        , 
-        f.__repr__       , 
-        f.__len__        ,
-        #
-        f.nEff           , 
-        f.statVar        , 
-        f.statCov        , 
-        #
-        f.get_moment     , 
-        f.moment         , 
-        f.central_moment , 
-        #
-        f.mean           , 
-        f.rms            , 
-        f.variance       , 
-        f.dispersion     , 
-        f.skewness       , 
-        f.kurtosis       , 
-        #
-        f.quantile       , 
-        f.interval       , 
-        f.median         , 
-        f.quantiles      , 
-        f.terciles       , 
-        f.quartiles      , 
-        f.quintiles      , 
-        f.deciles        ,
-        # 
-        ]
-    
-
-if Frames_OK :
-
-    _new_methods_ += [
-        frame_the_statVar         , 
-        frame_the_statCov         , 
-        frame_the_nEff            , 
-        frame_the_ECDF            , 
-        frame_the_moment          , 
-        frame_the_mean            , 
-        frame_the_rms             ,
-        frame_the_variance        ,
-        frame_the_dispersion      ,
-        frame_the_skewness        ,
-        frame_the_kurtosis        ,
-        frame_the_arithmetic_mean ,
-        frame_the_geometric_mean  ,
-        frame_the_harmonic_mean   ,
-        frame_the_power_mean      , 
-        frame_the_lehmer_mean     , 
-        frame_the_param           , 
-        ]
-    
-    for f in frame_types :
-
-        f.the_statVar          = frame_the_statVar
-        f.the_statCov          = frame_the_statCov
-        f.the_nEff             = frame_the_nEff 
-        f.the_moment           = frame_the_moment 
-        f.the_mean             = frame_the_mean 
-        f.the_rms              = frame_the_rms        
-        f.the_variance         = frame_the_variance 
-        f.the_dispersion       = frame_the_dispersion 
-        f.the_skewness         = frame_the_skewness 
-        f.the_kurtosis         = frame_the_kurtosis
-        f.the_ECDF             = frame_the_ECDF
-        
-        f.the_arithmetic_mean  = frame_the_arithmetic_mean 
-        f.the_geometric_mean   = frame_the_geometric_mean 
-        f.the_harmonic_mean    = frame_the_harmonic_mean 
-        f.the_power_mean       = frame_the_power_mean 
-        f.the_lehmer_mean      = frame_the_lehmer_mean 
-        f.the_param            = frame_the_param
-
-        f.arithmetic_mean      = frame_arithmetic_mean 
-        f.geometric_mean       = frame_geometric_mean 
-        f.harmonic_mean        = frame_harmonic_mean 
-        f.power_mean           = frame_power_mean 
-        f.lehmer_mean          = frame_lehmer_mean 
-        f.param                = frame_param
-        
-        f.ECDF                 = frame_ECDF
-        
-        _new_methods_ += [ 
-            f.arithmetic_mean      , 
-            f.geometric_mean       , 
-            f.harmonic_mean        , 
-            f.power_mean           , 
-            f.lehmer_mean          , 
-            f.param                , 
-            f.the_statVar          , 
-            f.the_statCov          , 
-            f.the_nEff             , 
-            f.the_moment           , 
-            f.the_mean             , 
-            f.the_rms              , 
-            f.the_variance         , 
-            f.the_dispersion       , 
-            f.the_skewness         , 
-            f.the_kurtosis         , 
-            
-            f.the_arithmetic_mean  , 
-            f.the_geometric_mean   , 
-            f.the_harmonic_mean    , 
-            f.the_power_mean       , 
-            f.the_lehmer_mean      , 
-            f.the_param            , 
-            
-            f.arithmetic_mean      , 
-            f.geometric_mean       , 
-            f.harmonic_mean        , 
-            f.power_mean           , 
-            f.lehmer_mean          , 
-            f.param                ,
-
-            f.ECDF                 , 
-            ]
-        
-    ROOT.TTree. fstatVar = frame_statVar
-    ROOT.TTree. fstatCov = frame_statCov
-    ROOT.TTree. fmoment  = frame_moment 
-    
-    _new_methods_ .append ( ROOT.TTree. fstatVar ) 
-    _new_methods_ .append ( ROOT.TTree. fstatCov ) 
-    _new_methods_ .append ( ROOT.TTree. fmoment  ) 
-
-_decorated_classes_ = frame_types  
-
-_new_methods_ += [ 
-    ROOT.TH1.model        , 
-    ROOT.TH2.model        , 
-    ROOT.TH3.model        , 
-    ROOT.TProfile  .model , 
-    ROOT.TProfile2D.model ,
-    ]
-
-# =============================================================================
-## Project the tree to the histogram using DataFrame machinery
-#  @code
-#  tree  = ...
-#  histo = ...
-#  tree.fproject ( histo , what , ... ) 
-#  @endcode
-def _rt_fproject_ ( tree , histo , *args ) :
-    """ Project the tree to the histogram using DataFrame machinery
-    >>> tree  = ...
-    >>> histo = ...
-    >>> tree.fproject ( histo , what , ... ) 
-    """
-    assert isinstance ( histo , ROOT.TH1  ) or \
-        isinstance ( histo , _types_nD ) ,  \
-        '"histo" must be ROOT.TH1 or polynomial type!'
-    ## use frame methods
-    frame_project ( tree , histo , *args )
-    ## return        
-    return histo
-
-_rt_fproject_.__doc__ += '\n' + frame_project.__doc__ 
-ROOT.TTree.fproject  = _rt_fproject_
-
-_decorated_classes_ += ( ROOT.TTree , )
-_new_methods_.append   ( ROOT.TTree.fproject ) 
-
-# =============================================================================
-if Frames_OK : 
-    # =========================================================================
-    frame_param = _fr_param_
-    __all__ = __all__ + ( 'frame_param' , ) 
-    
-    for f in frame_types : f.param = frame_param
-
-    ## Project/parameterise the tree to the polynomial using DataFrame machinery
-    #  @code
-    #  tree  = ...
-    #  poly  = ...
-    #  tree.fparam ( histo , what , ... ) 
-    #  @endcode
-    def _rt_fparam_ ( tree , poly , *args ) :
-        """ Project/parameterise the tree into polynomial using DataFrame machinery
-        >>> tree  = ...
-        >>> poly  = ...
-        >>> tree.fparam ( poly , what , ... ) 
-        """
-        assert isinstance ( poly , _types_nD  ) , '"poly" must be polynomial!'
-        ## use frame methods
-        result = frame_param ( tree , poly, *args )
-        ## return 
-        return result
-
-    _rt_fparam_ .__doc__ += '\n' + frame_param  .__doc__ 
-
-        
-    ROOT.TTree.fparam    = _rt_fparam_
-    
-    _decorated_classes_ += ( ROOT.TTree , )
-    _new_methods_.append   ( ROOT.TTree.fparam   ) 
-
-_new_methods_       = tuple ( _new_methods_ ) 
-
-# =============================================================================
-    
 # =============================================================================
 if '__main__' == __name__ :
     

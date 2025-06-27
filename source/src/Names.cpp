@@ -40,6 +40,33 @@ namespace
     "yes"  , "Yes"  , "YES"  } ;
   // ==========================================================================
 } // ==========================================================================
+// ===============================================================================
+/*  Genrate some valid (ranodm) name
+ *  @param prefix (INPUT) prefix 
+ *  @param name   (INPUT) the base name 
+ *  @param named  (INPUT) the TNNamed object 
+ *  @param random (INPUT) use random generator 
+ *  @return some random name 
+ *  @see TNamed
+ */  
+// ===============================================================================
+std::string Ostap::tmp_name 
+( const std::string&  prefix ,
+  const std::string&  name   ,
+  const TNamed*       named  ,
+  const bool          random ) 
+{
+  std::size_t hv = 
+    nullptr == named || random ? 
+    Ostap::Utils::hash_combiner ( prefix , name , random ) :
+    Ostap::Utils::hash_combiner ( prefix , name , random , 
+                                  std::string ( named -> GetName  () ) , 
+                                  std::string ( named -> GetTitle () ) ) ;
+  //
+  if ( random ) { hv = Ostap::Utils::hash_combiner ( prefix , hv , std::rand() ) ; }
+  //
+  return prefix + std::to_string ( hv ) ;
+}
 // ============================================================================
 /* Is  the name "primitive" 
  *  the name os primitive if it can corresponds to 
@@ -88,23 +115,35 @@ std::string Ostap::strip ( const std::string& s )
   return s.substr ( s1 , s.size() - s2 ) ;
 }
 // ===============================================================================
-std::string Ostap::tmp_name 
-( const std::string&  prefix ,
-  const std::string&  name   ,
-  const TNamed*       named  ,
-  const bool          random ) 
+// convert to lower case
+// ===============================================================================
+std::string Ostap::tolower
+( const std::string& name )
 {
-  std::size_t hv = 
-    nullptr == named || random ? 
-    Ostap::Utils::hash_combiner ( prefix , name , random ) :
-    Ostap::Utils::hash_combiner ( prefix , name , random , 
-                                  std::string ( named -> GetName  () ) , 
-                                  std::string ( named -> GetTitle () ) ) ;
-  //
-  if ( random ) { hv = Ostap::Utils::hash_combiner ( prefix , hv , std::rand() ) ; }
-  //
-  return prefix + std::to_string ( hv ) ;
+  std::string result { name } ;
+  std::transform ( name   .begin () ,
+		   name   .end   () ,
+		   result .begin () ,
+		   [] ( unsigned char c )
+		   { return std::tolower ( c ) ; } ) ;
+  return result ;
 }
+// ===============================================================================
+// convert to upper case
+// ===============================================================================
+std::string Ostap::toupper
+( const std::string& name )
+{
+  std::string result { name } ;
+  std::transform ( name   .begin () ,
+		   name   .end   () ,
+		   result .begin () ,
+		   [] ( unsigned char c )
+		   { return std::toupper ( c ) ; } ) ;
+  return result ;
+}
+// ============================================================================
+
 // ============================================================================
 //                                                                     The END 
 // ============================================================================

@@ -61,7 +61,22 @@ def _om_mean ( obj ) :
     """
     o = obj.order
     assert 1 <= o , 'mean: the order must be >=1!'
-    return Ostap.Math.Moments.mean ( obj )  
+    return Ostap.Math.Moments.mean ( obj )
+# ===========================================================================
+## get min/max  for the moment-counter
+#  @code
+#  m = ...
+#  mn, mx  = m.minmax() 
+#  @endcode
+def _om_minmax ( obj ) :
+    """ Get min/.max for the moment-counter
+    >>> m = ...
+    >>> mn , mx  = m.menamax () 
+    - If order of the moment-counter exceeds 1, the uncertainty is also evaluated 
+    """
+    o = obj.order
+    assert 1 <= o , 'minmax: the order must be >=1!'
+    return m.min () , m.max() 
 
 # =============================================================================
 ## get a variance for the moment-counter
@@ -657,6 +672,8 @@ Ostap.Math.WMoment.central_moment = _om_cm3
 Ostap.Math.WMoment.std_moment2    = _om_std
 Ostap.Math.WMoment.table          = _om_table
 
+Ostap.Math.Moment.minmax           = _om_minmax
+Ostap.Math.WMoment.minmax          = _om_minmax
 
 for t in ( Ostap.Math.WMoment ,
            Ostap.Math. Moment ) :
@@ -962,7 +979,9 @@ _new_methods_ = (
     Ostap.Math.WMoment.central_moment , 
     Ostap.Math.WMoment.table          ,
     ##
-    )
+    Ostap.Math.Moment.minmax          , 
+    Ostap.Math.WMoment.minmax         , 
+)
                           
 # =============================================================================
 if '__main__' == __name__ :

@@ -20,7 +20,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info   import ostap_info
 from   ostap.core.ostap_types import num_types, string_types, integer_types 
-from   ostap.core.core        import cpp, VE, hID, dsID
+from   ostap.core.core        import cpp, VE, hID, dsID, Ostap 
 from   ostap.utils.strings    import split_string 
 from   ostap.utils.utils      import balanced 
 import ROOT
@@ -41,6 +41,15 @@ if order_warning :
 # =============================================================================
 ## types for expressions and cuts 
 expression_types  = string_types +  ( ROOT.TCut , )
+# ==============================================================================
+##  Is the expression/cut  really trivial ? 
+#  @see Ostap::tivial 
+def trivial ( expression ) :
+    """ Is the expression/cut  really trivial ? 
+    - see Ostap.tivial 
+    """
+    return expression and Ostap.trivial ( expression )
+
 # =============================================================================
 ## Prepare the arguments: variable names and cuts 
 #  @code
@@ -81,6 +90,9 @@ def vars_and_cuts ( expressions , cuts ) :
         'Invaild type of cuts: %s' % str ( cuts ) 
     
     cuts = str ( cuts ).strip() if cuts else ''
+
+    ## if cut is trivial : make it really trivial! 
+    if cuts and trivial ( cuts ) : cuts = ''
 
     return exprs , cuts, input_string 
 

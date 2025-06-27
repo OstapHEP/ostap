@@ -33,6 +33,11 @@ namespace  Ostap
       // ======================================================================
       virtual ~Moment() ;
       // ======================================================================
+    protected:
+      // ======================================================================
+      /// return the value for invalid moment 
+      double invalid_moment () const ;
+      // ======================================================================
     } ;
     // ========================================================================
     /// forward declaration 
@@ -90,11 +95,12 @@ namespace  Ostap
        *  @param k  the cenral moment order  \f$  0 \le k \le N \f$
        *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
        */
-      inline double moment ( const unsigned short k ) const { return 0 < k ? 0 : 1 ; }
+      inline double moment     ( const unsigned short k ) const
+      { return 0 == k ? 1.0 : this->invalid_moment() ; }
       // ========================================================================
       /// get value of the kth standartized moment for \f$  k \le N \f$
       inline double std_moment ( const unsigned short k ) const
-      { return 0 == k || 2 == k ? 1 : 0 ; }
+      { return 0 == k ? 1.0 : this->invalid_moment() ; }
       // ======================================================================
       /// get number of entries
       inline size_type size  () const { return m_size  ; }
@@ -161,7 +167,7 @@ namespace  Ostap
        *  @return the value of \$ M_k \f$  if \f$  0 \le k \le  \f$, 0 otherwise 
        */   
       inline long double M ( const unsigned short k = 0 ) const
-      { return  0 < k ? 0 : m_size  ; }
+      { return  0 < k ? this->invalid_moment() : 1.0 * m_size ; }
       // ======================================================================
     public:
       // ======================================================================      
@@ -228,7 +234,7 @@ namespace  Ostap
        *  \f[ \mu_N \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^N \f]
        *  @return the value of the Nth central moment
        */
-      inline double moment () const { return 0 ; }
+      inline double moment      () const { return 0 ; }
       // ======================================================================
       /** get value of the kth moment for \f$  k \le N \f$
        *  \f[ \mu_k \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^k \f]
@@ -236,10 +242,11 @@ namespace  Ostap
        *  @param k  the cenral moment order  \f$  0 \le k \le N \f$
        *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
        */
-      inline double moment ( const unsigned short k ) const { return 0 ; }
+      inline double moment     ( const unsigned short k ) const
+      { return ( 0 == k ) ? 1.0 : ( 1 == k ) ? 0.0 : this->invalid_moment () ; }
       /// get value of the kth standartized moment for \f$  k \le N \f$
       inline double std_moment ( const unsigned short k ) const
-      { return 0 == k || 2 == k ? 1 : 0 ; }
+      { return ( 0 == k ) ? 1.0 : ( 1 == k ) ? 0.0 : this->invalid_moment () ; }
       // ======================================================================
       /// get number of entries
       inline size_type  size  () const { return m_prev.size ()  ; }
@@ -899,6 +906,11 @@ namespace  Ostap
       // ======================================================================
       virtual ~WMoment() ;
       // ======================================================================      
+    protected:
+      // ======================================================================
+      /// return the value for invalid moment 
+      double invalid_moment () const ;
+      // ======================================================================
     } ;
     // ========================================================================
     /** @class WMoment_  Ostap/Moments.h 
@@ -2590,11 +2602,6 @@ namespace  Ostap
       // ======================================================================
       typedef Ostap::Math::ValueWithError VE    ;
       // ======================================================================
-      /** @var S_INVALID_MOMEMT 
-       *  invalid vaolue for moment
-       */
-      constexpr double s_INVALID_MOMENT { std::numeric_limits<double>::quiet_NaN() } ;
-      // ======================================================================
       /// get the invalid moment 
       double invalid_moment () ; 
       // ======================================================================
@@ -2602,26 +2609,26 @@ namespace  Ostap
        *  \f[ \hat{\mu}_2 \equiv \frac{n}{n-1} \mu_2 \f] 
        *  @param  m input counter
        *  @return the unbiased estimate (if number of entries exceeds 2) and 
-       *   <code>s_INVALID_MOMENT</code> otherwise 
+       *   <code>invalid_moment()</code> otherwise 
        */
       template <unsigned short N, typename std::enable_if<(N>=2),int>::type = 0 >
       inline double unbiased_2nd ( const Moment_<N>& m )
       {
         const unsigned long long n = m.size() ;
-        return !m.ok() || n < 2 ? s_INVALID_MOMENT  : m.template M_<2> () / ( n - 1 ) ;  
+        return !m.ok() || n < 2 ? invalid_moment () : m.template M_<2> () / ( n - 1 ) ;  
       }
       // ======================================================================
       /** get the unbiased estimator for the 3rd order moment:
        *  \f[ \hat{\mu}_3 \equiv \frac{n^2}{(n-1)(n-2)} \mu_3 \f] 
        *  @param  m input counter
        *  @return the unbiased estimate (if number of entries exceeds 3) and 
-       *   <code>s_INVALID_MOMENT</code> otherwise 
+       *   <code>invalid_moment()</code> otherwise 
        */
       template <unsigned short N, typename std::enable_if<(N>=3),int>::type = 0 >
       inline double unbiased_3rd ( const Moment_<N>& m )
       {
         const unsigned long long n = m.size() ;
-        return !m.ok() || n < 3 ? s_INVALID_MOMENT : m.template M_<3> * n / ( ( n - 1.0L ) * (  n - 2.0L  ) ) ;  
+        return !m.ok() || n < 3 ? invalid_moment() : m.template M_<3> * n / ( ( n - 1.0L ) * (  n - 2.0L  ) ) ;  
       }
       // ======================================================================
       /** get the unbiased estimator for the 4th  order moment:
@@ -2633,13 +2640,13 @@ namespace  Ostap
        *  @see https://amstat.tandfonline.com/doi/pdf/10.1080/00031305.1999.10474471
        *  @param  m input counter
        *  @return the unbiased estimate (if number of entries exceeds 4) and 
-       *   <code>s_INVALID_MOMENT</code> otherwise
+       *   <code>invalid_moment()</code> otherwise
        */
       template <unsigned short N, typename std::enable_if<(N>=4),int>::type = 0 > 
       inline double unbiased_4th ( const Moment_<N>& m )
       {
         const unsigned long long n =  m.size() ;
-        if ( !m.ok() ||  (n < 4 ) ) { return s_INVALID_MOMENT  ; }
+        if ( !m.ok() ||  (n < 4 ) ) { return invalid_moment()  ; }
         //
         const long double m4 = m.template M_<4> / n ;
         const long double m2 = m.template M_<2> / n ;
@@ -2653,13 +2660,13 @@ namespace  Ostap
        *      10(n-2)\mu_2\mu_3 + ( n^2-2n+2)\mu_5 \right] \f] 
        *  @param  m input counter
        *  @return the unbiased estimate and 
-       *   <code>s_INVALID_MOMENT</code> otherwise
+       *   <code>invalid_moment()</code> otherwise
        */
       template <unsigned short N, typename std::enable_if<(N>=5),int>::type = 0 >
       inline double unbiased_5th ( const Moment_<N>& m )
       {
         const unsigned long long n =  m.size() ;
-        if ( !m.ok() ||  ( n < 5 ) ) { return s_INVALID_MOMENT  ; }
+        if ( !m.ok() ||  ( n < 5 ) ) { return invalid_moment()  ; }
         //
         const long double m5 = m.template M_<5> () / n ;
         const long double m2 = m.template M_<2> () / n ;
@@ -2697,7 +2704,7 @@ namespace  Ostap
       inline VE variance ( const Moment_<N>& m )
       {
         const unsigned long long n = m.size () ;
-        if ( !m.ok() || n  < 2  ) { return s_INVALID_MOMENT ; } // RETURN
+        if ( !m.ok() || n  < 2  ) { return invalid_moment() ; } // RETURN
         //
         const double m2 = unbiased_2nd ( m ) ;
         //
@@ -2714,7 +2721,7 @@ namespace  Ostap
       inline double variance ( const Moment_<N>& m )
       {
         const unsigned long long n =  m.size() ;
-        if ( !m.ok() || 2 > n ) { return s_INVALID_MOMENT ; }        
+        if ( !m.ok() || 2 > n ) { return invalid_moment() ; }        
         return unbiased_2nd ( m ) ;
       }
       // ======================================================================
@@ -2727,7 +2734,7 @@ namespace  Ostap
       inline VE skewness ( const Moment_<N>& m ) 
       {
         const unsigned long long n = m.size() ;
-        if ( !m.ok() || n < 3 ) { return s_INVALID_MOMENT ; } // RETURN
+        if ( !m.ok() || n < 3 ) { return invalid_moment() ; } // RETURN
         //
         const double m3   = unbiased_3rd ( m ) ;
         const double m2   = m.template M_<2>  () / n ;
@@ -2746,7 +2753,7 @@ namespace  Ostap
       static inline VE kurtosis ( const Moment_<N>& m ) 
       {
         const unsigned long long n = m.size() ;
-        if ( !m.ok() || n < 4 ) { return s_INVALID_MOMENT ; }
+        if ( !m.ok() || n < 4 ) { return invalid_moment() ; }
         const double m4   = unbiased_4th ( m ) ;
         const double m2   = m.template M_<2> () / n  ;
         //
@@ -2771,12 +2778,12 @@ namespace  Ostap
       template <unsigned short K, unsigned short N,
                 typename std::enable_if<(K>=2)&&(2*K>N)&&(K<=N),int>::type = 1 >
       inline double central_moment ( const Moment_<N>& m )
-      { return ( !m.ok() || m.size() < K ) ? s_INVALID_MOMENT : m.template moment_<K> () ; }
+      { return ( !m.ok() || m.size() < K ) ? invalid_moment() : m.template moment_<K> () ; }
       /// get the central moment of order \f$ N \f$      
       template <unsigned short K, unsigned short N,
                 typename std::enable_if<(2<=K) && (N>=2*K),int>::type = 0 >
       inline VE  central_moment ( const Moment_<N>& m )
-      { return ( !m.ok() || m.size() < K ) ? VE(s_INVALID_MOMENT,-1) : m.template moment_<K> () ; }
+      { return ( !m.ok() || m.size() < K ) ? VE(invalid_moment(),-1) : m.template moment_<K> () ; }
       // ======================================================================
       
       // ======================================================================
@@ -2792,7 +2799,7 @@ namespace  Ostap
       template <unsigned short K, unsigned short N,
                 typename std::enable_if<(K>=2)&&(K<=N),int>::type = 1 >
       inline double std_moment ( const Moment_<N>& m )
-      { return ( !m.ok() || m.size() < K ) ? s_INVALID_MOMENT : m.template moment_<K> () ; }
+      { return ( !m.ok() || m.size() < K ) ? invalid_moment() : m.template moment_<K> () ; }
       // ======================================================================
 
       // ======================================================================
@@ -2800,13 +2807,13 @@ namespace  Ostap
       template <unsigned short N,
                 typename std::enable_if<(N==1),int>::type = 1 >
       inline double cumulant_1st ( const Moment_<N>& m ) 
-      { return ( !m.ok() || ( m.size() < 1 ) ) ? s_INVALID_MOMENT : m.mu () ; }
+      { return ( !m.ok() || ( m.size() < 1 ) ) ? invalid_moment() : m.mu () ; }
       /// get the first cumulant, well, it is actually the first central moment 
       template <unsigned short N,
                 typename std::enable_if<(N>1),int>::type = 1 >
       inline VE     cumulant_1st ( const Moment_<N>& m ) 
       { 
-        if ( !m.ok() || m.size() < 1 ) { return s_INVALID_MOMENT ; }
+        if ( !m.ok() || m.size() < 1 ) { return invalid_moment() ; }
         //
         const double m1 = m.mu()  ;
         if ( m.size () < 2 ) { return m1 ; }
@@ -2820,13 +2827,13 @@ namespace  Ostap
       template <unsigned short N,
                 typename std::enable_if<(N>=2)&&(N<=3),int>::type = 1 >
       inline double cumulant_2nd ( const Moment_<N>& m ) 
-      { return ( !m.ok() || ( m.size() < 2 ) ) ? s_INVALID_MOMENT : m.size() * m.template M_<2> () / ( m.size() - 1 ) ; }
+      { return ( !m.ok() || ( m.size() < 2 ) ) ? invalid_moment() : m.size() * m.template M_<2> () / ( m.size() - 1 ) ; }
       /// get the second unbiased cumulant, well it is actually the second unbiased central moment 
       template <unsigned short N,
                 typename std::enable_if<(N>=4),int>::type = 1 >
       inline VE     cumulant_2nd ( const Moment_<N>& m ) 
       { 
-        if ( !m.ok() || ( m.size() < 2 ) ) { return s_INVALID_MOMENT ;} 
+        if ( !m.ok() || ( m.size() < 2 ) ) { return invalid_moment() ;} 
         //
         const auto n = m.size() ;
         //
@@ -2849,7 +2856,7 @@ namespace  Ostap
                 typename std::enable_if<(N>=3)&&(N<6),int>::type = 1 >
       inline double cumulant_3rd  ( const Moment_<N>& m ) 
       { 
-        if ( !m.ok() || ( m.size() < 3 ) ) { return s_INVALID_MOMENT ; }
+        if ( !m.ok() || ( m.size() < 3 ) ) { return invalid_moment() ; }
         //
         const auto n = m.size() ;
         const double m3 = m.template M_<3> () / n ; 
@@ -2861,7 +2868,7 @@ namespace  Ostap
                 typename std::enable_if<(N>=6),int>::type = 1 >
       inline VE cumulant_3rd  ( const Moment_<N>& m ) 
       { 
-        if ( !m.ok() || ( m.size() < 3 ) ) { return s_INVALID_MOMENT ; }
+        if ( !m.ok() || ( m.size() < 3 ) ) { return invalid_moment() ; }
         //
         const auto n = m.size() ;
         const double m3 = m.template M_<3> () / n ; 
@@ -2885,7 +2892,7 @@ namespace  Ostap
                 typename std::enable_if<(N>=4)&&(N<8),int>::type = 1 >
       inline double cumulant_4th  ( const Moment_<N>& m ) 
       { 
-        if ( !m.ok() || ( m.size() < 4 ) ) { return s_INVALID_MOMENT ; }
+        if ( !m.ok() || ( m.size() < 4 ) ) { return invalid_moment() ; }
         //
         const auto n = m.size() ;
         // 
@@ -2902,7 +2909,7 @@ namespace  Ostap
                 typename std::enable_if<(N>=8),int>::type = 1 >
       inline VE cumulant_4th  ( const Moment_<N>& m ) 
       { 
-        if ( !m.ok() || ( m.size() < 4 ) ) { return s_INVALID_MOMENT ; }
+        if ( !m.ok() || ( m.size() < 4 ) ) { return invalid_moment() ; }
         //
         const auto n = m.size() ;
         // 
@@ -2961,11 +2968,11 @@ namespace  Ostap
       template <unsigned short N, typename std::enable_if<(N>3),int>::type = 0 >
       inline VE variance ( const WMoment_<N>& m )
       {
-        if ( !m.ok() || m.size() < 2  ) { return s_INVALID_MOMENT ; } // RETURN
+        if ( !m.ok() || m.size() < 2  ) { return invalid_moment() ; } // RETURN
         //
         const double m2 = m.template M_<2> () / m.w()  ;
 	    // 
-        if ( 0 >  m2 ) { return s_INVALID_MOMENT ; } // RETURN
+        if ( 0 >  m2 ) { return invalid_moment() ; } // RETURN
         //
         if ( m.size() < 4  ) { return m2 ; }  // RETURN 
         //
@@ -2980,7 +2987,7 @@ namespace  Ostap
       /// get the variance  
       template <unsigned short N, typename std::enable_if<(1<=N)&&(4>N),int>::type = 0 >
       inline double variance ( const WMoment_<N>& m )
-      { return !m.ok() || ( m.size() < 2 ) ? s_INVALID_MOMENT : m.template moment_<2>() ; }      
+      { return !m.ok() || ( m.size() < 2 ) ? invalid_moment() : m.template moment_<2>() ; }      
       // ======================================================================
       
       // ======================================================================
@@ -2990,7 +2997,7 @@ namespace  Ostap
       template <unsigned short N, typename std::enable_if<(N>=3),int>::type = 0 >
       inline VE skewness ( const WMoment_<N>& m ) 
       {
-        if ( !m.ok() || ( m.size() < 3 ) ) { return s_INVALID_MOMENT ; }
+        if ( !m.ok() || ( m.size() < 3 ) ) { return invalid_moment() ; }
         //
         const auto   n    = m.nEff () ;
         const double m3   = m.template M_<3> () / m.w () ;
@@ -3009,7 +3016,7 @@ namespace  Ostap
       template <unsigned short N, typename std::enable_if<(N>3),int>::type = 0 >
       inline VE kurtosis ( const WMoment_<N>& m ) 
       {
-        if ( !m.ok() || ( m.size() < 4 ) ) { return s_INVALID_MOMENT ; }
+        if ( !m.ok() || ( m.size() < 4 ) ) { return invalid_moment() ; }
         //
         const auto   n  = m.nEff () ;
         const double m4 = m.template M_<4> () / m.w() ;
@@ -3035,12 +3042,12 @@ namespace  Ostap
       template <unsigned short K, unsigned short N,
                 typename std::enable_if<(K>=2)&&(2*K>N)&&(K<=N),int>::type = 1 >
       inline double central_moment ( const WMoment_<N>& m )
-      { return ( !m.ok() || m.size() < K ) ? s_INVALID_MOMENT : m.template moment_<K> () ; }
+      { return ( !m.ok() || m.size() < K ) ? invalid_moment() : m.template moment_<K> () ; }
       /// get the central moment of order \f$ N \f$      
       template <unsigned short K, unsigned short N,
                 typename std::enable_if<(2<=K) && (N>=2*K),int>::type = 0 >
       inline VE     central_moment ( const WMoment_<N>& m )
-      { return ( !m.ok() || m.size() < K ) ? VE( s_INVALID_MOMENT , -1 ) : m.template moment_<K> () ; }
+      { return ( !m.ok() || m.size() < K ) ? VE( invalid_moment() , -1 ) : m.template moment_<K> () ; }
       
       // ======================================================================
       /// get the standartized moment of order 1
@@ -3055,7 +3062,7 @@ namespace  Ostap
       template <unsigned short K, unsigned short N,
                 typename std::enable_if<(K>=2)&&(K<=N),int>::type = 1 >
       inline double std_moment ( const WMoment_<N>& m )
-      { return ( !m.ok() || m.size() < K ) ? s_INVALID_MOMENT : m.template moment_<K> () ; }      
+      { return ( !m.ok() || m.size() < K ) ? invalid_moment() : m.template moment_<K> () ; }      
       // ======================================================================
     } ; //                            The end of namespace Ostap::Math::Moments
     // ========================================================================
