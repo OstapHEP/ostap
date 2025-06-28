@@ -96,6 +96,8 @@ else                         : frame_types = DataFrame , FrameNode
 if not hasattr ( Ostap ,'DataFrame' ) :  Ostap.DataFrame = DataFrame
 if not hasattr ( Ostap ,'FrameNode' ) :  Ostap.FrameNode = FrameNode 
 # =============================================================================
+if not hasattr ( ROOT.TTree  , '__len__') : ROOT.TTree .__len__ = lambda s : s.GetEntries() 
+if not hasattr ( ROOT.TChain , '__len__') : ROOT.TChain.__len__ = lambda s : s.GetEntries()
 std_move = ROOT.std.move
 # =============================================================================
 ## The shortcuts for actions  

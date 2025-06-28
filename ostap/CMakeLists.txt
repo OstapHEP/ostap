@@ -493,7 +493,7 @@ list(FILTER             allfiles EXCLUDE REGEX ".*\\/sp_.*\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/.*#.*\\.py$")
 ##
 if ( NOT ${PY_zstandard_FOUND} )
-   list(FILTER             allfiles EXCLUDE REGEX ".*\\/zstshelve\\.py$")
+   list(FILTER          allfiles EXCLUDE REGEX ".*\\/zstshelve\\.py$")
 endif()
 
 set (PREFIX ${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}/ )

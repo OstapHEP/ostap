@@ -101,6 +101,14 @@ namespace  Ostap
       /// get value of the kth standartized moment for \f$  k \le N \f$
       inline double std_moment ( const unsigned short k ) const
       { return 0 == k ? 1.0 : this->invalid_moment() ; }
+      // =======================================================================
+      /// get value of the kth centralzed moment for \f$  k \le N \f$
+      inline double centralized_moment 
+      ( const unsigned short k       , 
+        const double    /* center */ ) const 
+      { return 0 == k ? 1.0 : this->invalid_moment() ; }
+      // =======================================================================
+    public:
       // ======================================================================
       /// get number of entries
       inline size_type size  () const { return m_size  ; }
@@ -167,7 +175,7 @@ namespace  Ostap
        *  @return the value of \$ M_k \f$  if \f$  0 \le k \le  \f$, 0 otherwise 
        */   
       inline long double M ( const unsigned short k = 0 ) const
-      { return  0 < k ? this->invalid_moment() : 1.0 * m_size ; }
+      { return 0  == k ? 1.0 * m_size : this->invalid_moment() ; }
       // ======================================================================
     public:
       // ======================================================================      
@@ -189,7 +197,13 @@ namespace  Ostap
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
       inline long double std_moment_ () const { return 1 ; }
-      // ======================================================================      
+      // ====================================================================== 
+    public: // templated centralized moment 
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
+      inline long double centralized_moment_ 
+      ( const double /* center */ ) const { return 1 ; }
+      // ====================================================================== 
     private:
       // ======================================================================
       size_type  m_size { 0 } ;
@@ -224,9 +238,9 @@ namespace  Ostap
       /// constructor from mu and previous 
       Moment_
       ( const Moment_<0>& prev ,	
-	const double      mu   ,
-	const double      xmin ,
-	const double      xmax ) ;
+	      const double      mu   ,
+	      const double      xmin ,
+	      const double      xmax ) ;
       // ======================================================================
     public: 
       // ======================================================================
@@ -244,9 +258,18 @@ namespace  Ostap
        */
       inline double moment     ( const unsigned short k ) const
       { return ( 0 == k ) ? 1.0 : ( 1 == k ) ? 0.0 : this->invalid_moment () ; }
+      // ======================================================================
       /// get value of the kth standartized moment for \f$  k \le N \f$
       inline double std_moment ( const unsigned short k ) const
       { return ( 0 == k ) ? 1.0 : ( 1 == k ) ? 0.0 : this->invalid_moment () ; }
+      // ======================================================================
+      /// get value of the kth centralized moment for \f$  k \le N \f$
+      inline double centralized_moment 
+      ( const unsigned short k      , 
+        const double         center ) const
+      { return ( 0 == k ) ? 1.0 : ( 1 == k ) ? ( m_mu - center ) : this->invalid_moment () ; }
+      // ======================================================================
+    public:
       // ======================================================================
       /// get number of entries
       inline size_type  size  () const { return m_prev.size ()  ; }
@@ -280,8 +303,8 @@ namespace  Ostap
         const size_type n = m_prev.size() ;
         m_mu = ( n * m_mu + x ) /  ( n + 1 );  // calculate new mean value 
         m_prev += x ;                          // updated previous
-	m_min   = std::min ( m_min , x ) ;
-	m_max   = std::max ( m_max , x ) ;
+	      m_min   = std::min ( m_min , x ) ;
+	      m_max   = std::max ( m_max , x ) ;
         return *this ;
       }
       /// add the moment 
@@ -295,9 +318,9 @@ namespace  Ostap
         //
         m_mu = ( n1 * m_mu + n2 * x.m_mu ) / ( n1 + n2 ) ; // update mean 
         m_prev += x.m_prev ;                               // update previous
-	//
-	m_min = std::min ( m_min , x.m_min ) ;
-	m_max = std::max ( m_max , x.m_max ) ;	
+	      //
+	      m_min = std::min ( m_min , x.m_min ) ;
+	      m_max = std::max ( m_max , x.m_max ) ;	
         //
         return *this ;
       }
@@ -330,19 +353,19 @@ namespace  Ostap
       /// Reset the content
       void reset  () override
       {
-	m_mu = 0 ;
-	m_min =   std::numeric_limits<double>::max () ;
-	m_max = - std::numeric_limits<double>::max () ;
-	m_prev.reset() ;
+      	m_mu  = 0 ;
+	      m_min =   std::numeric_limits<double>::max () ;
+	      m_max = - std::numeric_limits<double>::max () ;
+	      m_prev.reset() ;
       }
     public :
       // ======================================================================      
       /// is finite ?
       inline bool isfinite () const
       { return
-	  std::isfinite ( m_mu  ) &&
-	  std::isfinite ( m_min ) && 
-	  std::isfinite ( m_max ) && m_prev.isfinite () ;
+	      std::isfinite ( m_mu  ) &&
+	      std::isfinite ( m_min ) && 
+	      std::isfinite ( m_max ) && m_prev.isfinite () ;
       }
       // ======================================================================
     public:      
@@ -353,7 +376,7 @@ namespace  Ostap
     public: 
       // ======================================================================
       inline long double M ( const unsigned short k = 1 ) const
-      { return 1 < k  ? 0 : 1 == k ? 0 : this->m_prev. M ( k ) ; }
+      { return 0 == k ? this->m_prev. M ( k ) : 1 == k ? 0.0 : this->invalid_moment () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -394,6 +417,16 @@ namespace  Ostap
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(K==1),int>::type = 0 >
       inline data_type std_moment_ () const { return 0 ; }
+      // ======================================================================
+    public: // templated centralized moment 
+      // =======================================================================
+      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
+      inline data_type centralized_moment_ 
+      ( const double /* center */ ) const { return 1 ; }
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(K==1),int>::type = 0 >
+      inline data_type centralized_moment_ 
+      ( const double center ) const { return mu() - center ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -456,7 +489,7 @@ namespace  Ostap
       /// constructor from the value and previous moment 
       Moment_
       ( const Moment_<N-1>& prev ,	
-	const double        mom  ) 
+	      const double        mom  ) 
         : m_prev ( prev              )
         , m_M    ( mom * prev.size() )
       {} 
@@ -476,28 +509,57 @@ namespace  Ostap
        *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
        */
       inline double moment ( const unsigned short k ) const
-      { return 
-          N <  k       ? 0 :
+      { return
           0 == k       ? 1 :
           1 == k       ? 0 :
-          !this->ok () ? 0 : ( this->M ( k ) / this->size() ) ; }
+          N >  k       ? m_prev.moment     ( k ) :
+          N <  k       ? this->invalid_moment () :
+          !this->ok () ? this->invalid_moment () :
+          this->M ( k ) / this->size() ; }
       // ======================================================================
       /// get value of the kth standartized moment for \f$  k \le N \f$
       inline double std_moment ( const unsigned short k ) const
       { 
-        return 
-          N <  k    ? 0.0 : 
-          0 == k    ? 1.0 : 
-          1 == k    ? 0.0 :
-          2 == k    ? 1.0 :
-          !this->ok() ? 0.0 : this->moment ( k ) / std::pow ( this->moment ( 2 ) , 0.5 * k ) ;
+        return
+          0 == k       ? 1 : 
+          1 == k       ? 0 :
+          2 == k       ? 1 :
+          N >  k       ? m_prev.std_moment ( k ) : 
+          N <  k       ? this->invalid_moment () :  
+          !this->ok () ? this->invalid_moment () :
+          this->moment ( k ) / std::pow ( this->moment ( 2 ) , 0.5 * k ) ;
+      } 
+      /// get value of the kth centralized moment for \f$  k \le N \f$
+      inline double centralized_moment 
+      ( const unsigned short k      , 
+        const double         center ) const
+      { 
+        if      ( 0 == k       ) { return 1              ; } 
+        else if ( 1 == k       ) { return mu () - center ; }
+        else if ( N >  k       ) { return m_prev.centralized_moment ( k , center ) ; }
+        else if ( N <  k       ) { return this->invalid_moment () ; }
+        else if ( !this->ok () ) { return this->invalid_moment () ; }
+        // 
+        // here we have k == N
+        //
+        const data_type delta  = mu () - center ; 
+        data_type result = 0 ;
+        data_type deltai = 1 ;  // == delta**i 
+        for ( unsigned short i = 0 ; i <= N ; ++i )
+        {
+          result += s_Ck [ i ] * deltai * this -> moment ( N - i ) ;
+          deltai *= delta ; 
+        }
+        return result ; 
       }
+      // ======================================================================
+    public: 
       // ======================================================================
       /// get number of entries
       inline size_type size  () const { return m_prev.size  () ; }
       /// get effective number of entries 
       inline size_type nEff  () const { return m_prev.nEff  () ; }
-      /// get the mean value (if \f$ 1 \le N \$4)
+      /// get the mean value (if \f$ 1 \le N \f$)
       inline data_type mu    () const { return m_prev.mu    () ; }
       /// empty ?
       inline bool      empty () const { return m_prev.empty () ; }
@@ -570,7 +632,9 @@ namespace  Ostap
        *  @return the value of \$ M_k \f$  if \f$  0 \le k \le N \f$, 0 otherwise 
        */   
       inline data_type M ( const unsigned short k = N ) const
-      { return k >  N ? 0.0L : k == N ? this->m_M : this->m_prev.M( k ) ; }
+      { return 
+        k <  N ? this->m_prev.M ( k ) :
+        k == N ? this->m_M            : this->invalid_moment () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -653,20 +717,50 @@ namespace  Ostap
       inline Ostap::Math::ValueWithError
       std_moment_ () const
       {
-        return
-	  !this->ok () ? Ostap::Math::ValueWithError () :
+        return !this->ok () ? this->invalid_moment () : 
           this->template moment_<K> () / std::pow ( double ( this->moment_<2>() ) , 0.5 * K ) ;
       }      
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(N<2*K)&&(K<=N),int>::type = 0 >
       inline data_type std_moment_ () const
       {
-        return
-	  !this->ok () ? 0.0 :
+        return !this->ok () ? this->invalid_moment () :
           this->template moment_<K> () / std::pow ( this->moment_<2>() , 0.5 * K ) ;
-      }      
+      }  
       // ======================================================================
     public:
+      // ======================================================================      
+      template <unsigned int K, typename std::enable_if<(K==0)&&(K<=N),int>::type = 0 >
+      inline data_type centralized_moment_ 
+      ( const double /* center */ ) const { return 1 ; }
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(K==1)&&(K<=N),int>::type = 0 >
+      inline data_type centralized_moment_ 
+      ( const double center ) const { return this -> mu() - center ; }
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(K<N),int>::type = 0 >
+      inline data_type centralized_moment_ 
+      ( const double center ) const 
+      { return this->m_prev.template centralized_moment_<K> ( center ) ; }
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(K==N),int>::type = 0 >
+      inline data_type centralized_moment_ 
+      ( const double center ) const 
+      { 
+        if ( !this->ok () ) { return this->invalid_moment() ; }
+        //
+        const data_type  delta = this -> mu () - center ;
+        data_type result = 0 ;
+        data_type deltai = 1 ;
+        for ( unsigned short i = 0 ; i <= N ; ++ i )
+        {
+          result += s_Ck [ i ] * deltai * this->moment ( N - i ) ;
+          deltai *= delta ;
+        }
+        return result ; 
+      }
+      // ======================================================================
+    public: // cumulants 
       // ======================================================================      
       /// 1st cumulant 
       template <unsigned int K, typename std::enable_if<(1==K)&&(K<=N),int>::type = 0 >
@@ -674,16 +768,16 @@ namespace  Ostap
       /// 2nd cumulant 
       template <unsigned int K, typename std::enable_if<(2==K)&&(K<=N),int>::type = 0 >
       inline data_type cumulant_ () const 
-      { return !this->ok() ? 0.0 : this->template M_<K>() / this->size() ; }
+      { return !this->ok() ? this->invalid_moment () : this->template M_<K>() / this->size() ; }
       /// 3rd cumulant 
       template <unsigned int K, typename std::enable_if<(3==K)&&(K<=N),int>::type = 0 >
       inline data_type cumulant_ () const 
-      { return !this->ok() ? 0.0 : this->template M_<K>() / this->size() ; }
+      { return !this->ok() ? this->invalid_moment () : this->template M_<K>() / this->size() ; }
       /// 4th cumulant 
       template <unsigned int K, typename std::enable_if<(4==K)&&(K<=N),int>::type = 0 >
       inline data_type cumulant_ () const 
       { 
-        if ( !this->ok() ) { return 0.0 ; }
+        if ( !this->ok() ) { return this->invalid_moment () ; }
         //
         const data_type m4 = this->template M_<4> () / this->size() ;
         const data_type m2 = this->template M_<2> () / this->size() ;
@@ -694,7 +788,7 @@ namespace  Ostap
       template <unsigned int K, typename std::enable_if<(5==K)&&(K<=N),int>::type = 0 >
       inline data_type cumulant_ () const 
       { 
-        if ( !this->ok() ) { return 0.0 ; }
+        if ( !this->ok() ) { return this->invalid_moment () ; }
         //
         const data_type m5 = this->template M_<5> () / this->size() ;
         const data_type m3 = this->template M_<3> () / this->size() ;
@@ -706,7 +800,7 @@ namespace  Ostap
       template <unsigned int K, typename std::enable_if<(6==K)&&(K<=N),int>::type = 0 >
       inline data_type cumulant_ () const 
       { 
-        if ( !this->ok() ) { return 0.0 ; }
+        if ( !this->ok() ) { return this -> invalid_moment () ; }
         //
         const data_type m6 = this->template M_<6> () / this->size() ;       
         const data_type m4 = this->template M_<4> () / this->size() ;
@@ -719,7 +813,7 @@ namespace  Ostap
       template <unsigned int K, typename std::enable_if<(7==K)&&(K<=N),int>::type = 0 >
       inline data_type cumulant_ () const 
       { 
-        if ( !this->ok() ) { return 0.0 ; }
+        if ( !this->ok() ) { return this->invalid_moment () ; }
         //
         const data_type m7 = this->template M_<7> () / this->size() ;       
         const data_type m5 = this->template M_<5> () / this->size() ;       
@@ -733,7 +827,7 @@ namespace  Ostap
       template <unsigned int K, typename std::enable_if<(8==K)&&(K<=N),int>::type = 0 >
       inline data_type cumulant_ () const 
       { 
-        if ( !this->ok() ) { return 0.0 ; }
+        if ( !this->ok() ) { return this->invalid_moment () ; }
         //
         const data_type m8 = this->template M_<8> () / this->size() ;       
         const data_type m6 = this->template M_<6> () / this->size() ;       
@@ -749,7 +843,7 @@ namespace  Ostap
       template <unsigned int K, typename std::enable_if<(9==K)&&(K<=N),int>::type = 0 >
       inline data_type cumulant_ () const 
       { 
-        if ( !this->ok() ) { return 0.0 ; }
+        if ( !this->ok() ) { return this->invalid_moment () ; }
         //
         const data_type m9 = this->template M_<9> () / this->size() ;       
         const data_type m7 = this->template M_<7> () / this->size() ;       
@@ -768,7 +862,7 @@ namespace  Ostap
       template <unsigned int K, typename std::enable_if<(10==K)&&(K<=N),int>::type = 0 >
       inline data_type cumulant_ () const 
       { 
-        if ( !this->ok() ) { return 0.0 ; }
+        if ( !this->ok() ) { return this->invalid_moment () ; }
         //
         const data_type m10 = this->template M_<10> () / this->size() ;       
         const data_type m8  = this->template M_<8>  () / this->size() ;       
@@ -789,9 +883,9 @@ namespace  Ostap
     private:
       // ======================================================================
       /// counter of (N-1)th order
-      Moment_<N-1> m_prev {   }  ;  // counter of (N-1)th order
-      /// the current value of \f$ N_N \f$  
-      data_type    m_M   { 0 }  ; // the current value
+      Moment_<N-1> m_prev {   } ; // counter of (N-1)th order
+      /// the current value of \f$ m_N \f$  
+      data_type    m_M    { 0 } ; // the current value
       // ======================================================================
     private:
       // ======================================================================
@@ -858,12 +952,12 @@ namespace  Ostap
       data_type d = 1 ;
       //
       for ( unsigned short k = 1 ; k + 2 <= N ; ++k )
-	{
-	  a   *= a_n   ;
-	  b   *= b_n   ;
-	  d   *= delta ;        
-	  m_M += s_Ck [ k ] * d * ( this-> M( N -k ) * b + x. M ( N - k ) * a ) ;
-	}
+	    {
+	      a   *= a_n   ;
+	      b   *= b_n   ;
+	      d   *= delta ;        
+	      m_M += s_Ck [ k ] * d * ( this-> M ( N -k ) * b + x. M ( N - k ) * a ) ;
+	    }
       /// update previous 
       this->m_prev += x.m_prev ; // update previous
       //
@@ -956,10 +1050,10 @@ namespace  Ostap
        */
       WMoment_
       ( const size_type size  ,
-	const double    sumw  ,
-	const double    sumw2 , 
-	const double    wmin  , 
-	const double    wmax  ) ;
+	      const double    sumw  ,
+	      const double    sumw2 , 
+	      const double    wmin  , 
+	      const double    wmax  ) ;
       // ======================================================================
     public : 
       // ======================================================================
@@ -972,14 +1066,23 @@ namespace  Ostap
       /** get value of the kth moment for \f$  k \le N \f$
        *  \f[ \mu_k \equiv  \frac{1}{\sum w_i} \sum w_i \left( x_i - \bar{x} \right)^k \f]
        *  for \f$  k > 0 \f$ null is returned 
-       *  @param k  the cenral moment order  \f$  0 \le k \le N \f$
+       *  @param k the central moment order  \f$  0 \le k \le N \f$
        *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
        */
-      inline double moment ( const unsigned short k ) const { return 0 < k ? 0 : 1 ; }
+      inline double moment ( const unsigned short k ) const 
+      { return 0 == k ? 1 : this->invalid_moment () ; }
       // ======================================================================
       /// get value of the kth standartized moment for \f$  k \le N \f$
       inline double std_moment ( const unsigned short k ) const
-      { return 0 == k || 2 == k ? 1 : 0 ; }
+      { return 0 == k ? 1 : this->invalid_moment () ; }
+      // ======================================================================
+      /// get value of the kth centralized moment for \f$  k \le N \f$
+      inline double centralized_moment
+      ( const unsigned short k         , 
+        const double      /* center */ ) const
+      { return 0 == k ? 1 : this->invalid_moment () ; }
+      // ======================================================================
+    public :
       // ======================================================================
       /// get number of entries
       inline size_type size  () const { return m_size ; }
@@ -992,7 +1095,7 @@ namespace  Ostap
       /// empty ?
       inline bool      empty () const { return 0 == m_size ; }
       /// ok ?
-      inline bool      ok    () const { return m_size && m_w && ( 0 < m_w2 ) ; }
+      inline bool      ok    () const { return m_size && m_w && m_w2 ; }
       /// minimal weight 
       inline double    wmin  () const { return m_wmin ; } 
       /// maximal weight 
@@ -1014,12 +1117,12 @@ namespace  Ostap
         if ( !w || !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ;}
         //
         ++m_size ;
-	//
+	      //
         m_w   += w     ; 
         m_w2  += w * w ;
-	//
-	m_wmin = std::min ( m_wmin , w ) ;
-	m_wmax = std::max ( m_wmax , w ) ;
+	      //
+	      m_wmin = std::min ( m_wmin , w ) ;
+	      m_wmax = std::max ( m_wmax , w ) ;
         //
         return *this ; 
       }
@@ -1032,9 +1135,9 @@ namespace  Ostap
         m_w    += x.m_w    ;
         m_w2   += x.m_w2   ;
         //
-	m_wmin = std::min ( m_wmin , x.m_wmin ) ;
-	m_wmax = std::max ( m_wmax , x.m_wmax ) ;
-	//
+	      m_wmin = std::min ( m_wmin , x.m_wmin ) ;
+	      m_wmax = std::max ( m_wmax , x.m_wmax ) ;
+	      //
         return *this ;
       }
       // ======================================================================
@@ -1061,15 +1164,15 @@ namespace  Ostap
       /// update the counter 
       void update
       ( const double x     ,
-	const double w = 1 ) override { add ( x , w ) ; }
+	      const double w = 1 ) override { add ( x , w ) ; }
       /// Reset the content
       void reset  () override
       {
-	m_size = 0 ;
-	m_w    = 0 ;
-	m_w2   = 0 ;
-	m_wmin =   std::numeric_limits<double>::max () ;
-	m_wmax = - std::numeric_limits<double>::max () ;
+	      m_size = 0 ;
+	      m_w    = 0 ;
+	      m_w2   = 0 ;
+	      m_wmin =   std::numeric_limits<double>::max () ;
+	      m_wmax = - std::numeric_limits<double>::max () ;
       }
       // ======================================================================      
     public :
@@ -1077,10 +1180,10 @@ namespace  Ostap
       /// is finite ?
       inline bool isfinite () const
       { return
-	  std::isfinite ( m_w    ) &&
-	  std::isfinite ( m_w2   ) &&
-	  std::isfinite ( m_wmin ) &&
-	  std::isfinite ( m_wmax ) ; 
+	        std::isfinite ( m_w    ) &&
+	        std::isfinite ( m_w2   ) &&
+	        std::isfinite ( m_wmin ) &&
+	        std::isfinite ( m_wmax ) ; 
       }
       // ======================================================================
     public:
@@ -1088,10 +1191,10 @@ namespace  Ostap
       /** get the value of \f$ M_k = \sum_i w_i \left( x_i - \bar{x} \right)^k \f$ 
        *  for \f$ k \le N \f$
        *  @param k the order   \f$  0 \le k \le N \f$
-       *  @return the value of \$ M_k \f$  if \f$  0 \le k \le  \f$, 0 otherwise 
+       *  @return the value of \$ M_k \f$  if \f$  0 \le k \le  \f$
        */   
       inline data_type M ( const unsigned short k = 0 ) const
-      { return  0 < k ? 0 : m_w ; }
+      { return 0 == k ? m_w : this->invalid_moment () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1119,6 +1222,12 @@ namespace  Ostap
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
       inline data_type std_moment_ () const { return 1 ; }
+      // ======================================================================
+    public: // templated centralized moment 
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
+      inline data_type centralized_moment_ 
+      ( const double /* center */ ) const { return 1 ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -1165,9 +1274,9 @@ namespace  Ostap
       /// constructor from mu and previous moment 
       WMoment_
       ( const WMoment_<0>& prev ,
-	const double       mu   ,
-	const double       xmin ,
-	const double       xmax ) ;
+	      const double       mu   ,
+	      const double       xmin ,
+	      const double       xmax ) ;
       // ======================================================================
     public :
       // ======================================================================
@@ -1183,11 +1292,20 @@ namespace  Ostap
        *  @param k  the cenral moment order  \f$  0 \le k \le N \f$
        *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
        */
-      inline double moment ( const unsigned short k ) const { return 1 <= k ? 0 : 1 ; }
+      inline double moment ( const unsigned short k ) const
+      { return 0 == k ? 1 : 1 == k ? 0 : this -> invalid_moment () ; }
       // ======================================================================
       /// get value of the kth standartized moment for \f$  k \le N \f$
       inline double std_moment ( const unsigned short k ) const
-      { return 0 == k || 2 == k ? 1 : 0 ; }
+      { return 0 == k ? 1 : 1 == k ? 0 : this -> invalid_moment ()  ; }
+      // ======================================================================
+      /// get value of the kth centralized moment for \f$  k \le N \f$
+      inline double centralized_moment 
+      ( const unsigned short k      ,
+        const double         center ) const
+      { return 0 == k ? 1 : 1 == k ? mu () - center : this -> invalid_moment () ; }
+      // ======================================================================
+    public:
       // ======================================================================
       /// get number of entries
       inline size_type size  () const { return m_prev.size ()  ; }
@@ -1233,10 +1351,10 @@ namespace  Ostap
         //
         m_mu = ( wA * m_mu + wB * x ) / ( wA + wB ) ; // update mean
         // minimal 
-	m_min = std::min ( m_min , x ) ;
-	// maximal
-	m_max = std::max ( m_max , x ) ;
-	//
+	      m_min = std::min ( m_min , x ) ;
+	      // maximal
+	      m_max = std::max ( m_max , x ) ;
+	      //
         this->m_prev.add ( x , w ) ;
         //
         return *this ;
@@ -1254,10 +1372,10 @@ namespace  Ostap
         m_mu = ( wA * m_mu + wB * x.m_mu ) / ( wA + wB ) ; // update mean
         //
         // minimal 
-	m_min = std::min ( m_min , x.m_min ) ;
-	// maximal
-	m_max = std::max ( m_max , x.m_max ) ;
-	//
+	      m_min = std::min ( m_min , x.m_min ) ;
+	      // maximal
+	      m_max = std::max ( m_max , x.m_max ) ;
+	      //
         m_prev += x.m_prev ;                                 // update previous
         //
         return *this ;
@@ -1286,14 +1404,14 @@ namespace  Ostap
       /// update the counter 
       void update
       ( const double x     ,
-	const double w = 1 ) override { add ( x , w ) ; }
+	      const double w = 1 ) override { add ( x , w ) ; }
       /// Reset the content
       void reset  () override
       {
-	m_mu = 0 ;
-	m_min =   std::numeric_limits<double>::max () ;
-	m_max = - std::numeric_limits<double>::max () ;
-	m_prev.reset () ;
+	      m_mu = 0 ;
+	      m_min =   std::numeric_limits<double>::max () ;
+	      m_max = - std::numeric_limits<double>::max () ;
+	      m_prev.reset () ;
       }
       // ======================================================================      
     public :
@@ -1301,9 +1419,9 @@ namespace  Ostap
       /// is finite ?
       inline bool isfinite () const
       { return
-	  std::isfinite ( m_mu  ) &&
-	  std::isfinite ( m_min ) &&
-	  std::isfinite ( m_max ) && m_prev.isfinite () ;
+	        std::isfinite ( m_mu  ) &&
+	        std::isfinite ( m_min ) &&
+	        std::isfinite ( m_max ) && m_prev.isfinite () ;
       }      
       // ======================================================================
     public:      
@@ -1314,7 +1432,10 @@ namespace  Ostap
     public: 
       // ======================================================================
       inline data_type M ( const unsigned short k = 1 ) const
-      { return 1 < k  ? 0 : 1 == k ? 0 : this->m_prev. M ( k ) ; }
+      { return 
+          0 == k ? this->m_prev.M ( k ) :
+          1 == k ? 0.0                  :
+          this->invalid_moment () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1355,6 +1476,16 @@ namespace  Ostap
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(K==1),int>::type = 0 >
       inline data_type std_moment_ () const { return 0 ; }
+      // =======================================================================
+    public: // templated centralized moment 
+      // =======================================================================
+      template <unsigned int K, typename std::enable_if<(K==0),int>::type = 0 >
+      inline data_type centralized_moment_ 
+      ( const double /* center */ ) const { return 1 ; }
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(K==1),int>::type = 0 >
+      inline data_type centralized_moment_ 
+      ( const double center ) const { return this -> mu () - center ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1412,9 +1543,9 @@ namespace  Ostap
       /// constructor from the value and previous moment 
       WMoment_
       ( const WMoment_<N-1>& prev , 
-	const double         mom  ) 
-	: m_prev ( prev            )
-	, m_M    ( mom * prev.w () )
+      	const double         mom  ) 
+	      : m_prev ( prev            )
+	      , m_M    ( mom * prev.w () )
       {} 
       // ======================================================================
     public:
@@ -1423,7 +1554,8 @@ namespace  Ostap
        *  \f[ \mu_N \equiv  \frac{1}{\sum w_i} \sum w_i \left( x_i - \bar{x} \right)^N \f]
        *  @return the value of the Nth central moment
        */
-      inline double moment () const { return this-> ok () ? this->M ( N ) / this-> w () : 0.0 ; }
+      inline double moment () const 
+      { return this-> ok () ? this->M ( N ) / this-> w () : this->invalid_moment () ; }
       // ======================================================================
       /** get value of the kth moment for \f$  k \le N \f$
        *  \f[ \mu_k \equiv  \frac{1}{\sum w_i} \sum w_i \left( x_i - \bar{x} \right)^k \f]
@@ -1433,10 +1565,12 @@ namespace  Ostap
        */
       inline double moment ( const unsigned short k ) const
       { return
-	  N <  k       ? 0  :
-	  0 == k       ? 1  :
-	  1 == k       ? 0  :
-	  !this->ok () ? 0  : ( this->M ( k ) / this-> w () ) ; }
+        0 == k       ? 1 :
+        1 == k       ? 0 :
+        N >  k       ? this->m_prev.moment ( k ) :
+        N <  k       ? this->invalid_moment   () :
+        !this->ok () ? this->invalid_moment   () :
+	      this->M ( k ) / this-> w () ; }
       // ======================================================================
       /** get value of the kth standartized moment for \f$  k \le N \f$
        *  \f[ \mu_k \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^k \f]
@@ -1446,12 +1580,38 @@ namespace  Ostap
        */
       inline double std_moment ( const unsigned short k ) const
       { return 
-          N <  k       ? 0 : 
-          0 == k       ? 1 : 
+          0 == k       ? 1 :
           1 == k       ? 0 :
-          2 == k       ? 1 :
-	  !this->ok () ? 0 : this->moment ( k ) / std::pow ( this->moment ( 2 ) , 0.5 * k ) ;
+          2 == k       ? 1 : 
+          N >  k       ? this->std_moment    ( k ) :
+          N <  k       ? this->invalid_moment   () :
+          !this->ok () ? this->invalid_moment   () :
+          this->moment ( k ) / std::pow ( this->moment ( 2 ) , 0.5 * k ) ;
       }
+      // ======================================================================
+      /// get value of the kth centralized moment 
+      inline double centralized_moment 
+      ( const unsigned short k      , 
+        const double         center ) const
+      {
+        if      ( 0 == k        ) { return 1 ; }
+        else if ( 1 == k        ) { return mu () - center ; }
+        else if ( N >  k        ) { return m_prev.centralized_moment ( k , center ) ; }
+        else if ( N <  k        ) { return this->invalid_moment () ; }
+        else if ( !this-> ok () ) { return this->invalid_moment () ; }
+        //
+        const data_type delta = mu () - center ;
+        data_type result = 0 ;
+        data_type deltai = 1 ; //  == delta**i 
+        for ( unsigned short i = 0 ; i <= N ; ++i )
+        {
+          result += s_Ck [ i ] * deltai *  this->moment ( N - i ) ;
+          deltai *= delta ; 
+        }
+        return result ;  
+      }
+      // ======================================================================
+    public :
       // ======================================================================
       /// get number of entries
       inline size_type size  () const { return m_prev.size () ; }
@@ -1512,12 +1672,12 @@ namespace  Ostap
       /// update the counter 
       void update
       ( const double x     ,
-	const double w = 1 ) override { add ( x , w ) ; }
+	      const double w = 1 ) override { add ( x , w ) ; }
       /// Reset the content
       void reset  () override
       {
-	m_M = 0 ;
-	m_prev.reset() ;
+	      m_M = 0 ;
+	      m_prev.reset() ;
       }      
       // ======================================================================      
     public :
@@ -1536,10 +1696,12 @@ namespace  Ostap
       /** get the value of \f$ M_k = \sum_i w_i \left( x_i - \bar{x} \right)^k \f$ 
        *  for \f$ k \le N \f$
        *  @param k the order   \f$  0 \le k \le N \f$
-       *  @return the value of \$ M_k \f$  if \f$  0 \le k \le N \f$, 0 otherwise 
+       *  @return the value of \$ M_k \f$  if \f$  0 \le k \le N \f$ 
        */   
       inline data_type M ( const unsigned short k = N ) const
-      { return k >  N ? 0.0L : k == N ? this->m_M : this->m_prev.M( k ) ; }
+      { return 
+          N > k ? this->m_prev.M    ( k ) :
+          N < k ? this->invalid_moment () : this -> m_M ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1576,7 +1738,7 @@ namespace  Ostap
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(2<=K)&&(K==N),int>::type = 0 >
       inline data_type moment_ () const
-      { return !this->ok() ?  0 : this->m_M / this->w () ; }
+      { return !this->ok() ? this->invalid_moment () : this->m_M / this->w () ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(N<2*K)&&(N>K),int>::type = 0 >
       inline data_type moment_ () const
@@ -1587,9 +1749,9 @@ namespace  Ostap
       moment_ () const
       {
         //
-        if ( !this->ok() ) { return 0 ; }
+        if ( !this->ok() ) { return this->invalid_moment() ; }
         //
-		const long double n = this->w() ; // ATENTION!
+		    const long double n = this->w() ; // ATENTION!
         //
         const data_type muo  = this->template M_ <K>  () / n ;
         const data_type mu2o = this->template M_<2*K> () / n ;
@@ -1621,15 +1783,46 @@ namespace  Ostap
       inline Ostap::Math::ValueWithError
       std_moment_ () const
       {
-        return !this->ok() ? Ostap::Math::ValueWithError () : 
+        return !this->ok() ? this->invalid_moment () : 
           this->template moment_<K> () / std::pow ( double ( this->moment_<2>() ) , 0.5 * K ) ;
       }      
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(N<2*K)&&(K<=N),int>::type = 0 >
       inline data_type std_moment_ () const
       {
-        return !this->ok() ? 0.0 :
+        return !this->ok() ? this->invalid_moment () :
           this->template moment_<K> () / std::pow ( this->moment_<2>() , 0.5 * K ) ;
+      }      
+   // =======================================================================
+    public: // templated centralzedmoment 
+      // =======================================================================
+      template <unsigned int K, typename std::enable_if<(K==0)&&(K<=N),int>::type = 0 >
+      inline data_type centralized_moment_ 
+      ( const double /* center */ ) const { return 1 ; }
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(K==1)&&(K<=N),int>::type = 0 >
+      inline data_type centralized_moment_ 
+      ( const double center ) const { return this->mu() - center  ; }
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(K<N),int>::type = 0 >
+      inline data_type centralized_moment_ 
+      ( const double center  ) const { return this->m_prev.template centralized_moment_<K> ( center ); }
+      // ======================================================================
+      template <unsigned int K, typename std::enable_if<(K==N),int>::type = 0 >
+      inline data_type centralized_moment_ 
+      ( const double center ) const
+      {
+        if ( !this->ok () ) { return this->invalid_moment () ; }
+        //
+        const data_type delta = mu () - center ;
+        data_type result = 0 ;
+        data_type deltai = 1 ; //  == delta**i 
+        for ( unsigned short i = 0 ; i <= N ; ++i )
+        {
+          result += s_Ck [ i ] * deltai *  this->moment ( N - i ) ;
+          deltai *= delta ; 
+        }
+        return result ;  
       }      
       // ======================================================================
     private:
@@ -1867,7 +2060,7 @@ namespace  Ostap
       // ======================================================================
       /// accumulate only non-zero entries 
       HarmonicMean&        add ( const double        x ) ;
-      /// add two counters togather 
+      /// add two counters together 
       inline HarmonicMean& add ( const HarmonicMean& x )
       {
         m_inv.add ( x.m_inv ) ;
