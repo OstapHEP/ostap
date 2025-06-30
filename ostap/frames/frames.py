@@ -257,7 +257,8 @@ def _fr_helper_ ( frame , expressions , cuts = '' , progress = False ) :
     elif progress :
         current , cnt = frame_progress ( current , lenght   ) 
 
-    vnames   = ordered_dict()     
+    vnames   = ordered_dict ()
+    added    = ordered_dict ()
     for i , expr in enumerate ( exprs , start = 1 ) :
         vname = expr
         if not expr in all_vars :
@@ -266,6 +267,7 @@ def _fr_helper_ ( frame , expressions , cuts = '' , progress = False ) :
             all_vars.add ( vn )
             current = current.Define ( vn , expr )
             vname   = vn
+            added [ vn ] = expr 
         vnames [ expr ] = vname 
 
     cname = cuts
@@ -276,11 +278,21 @@ def _fr_helper_ ( frame , expressions , cuts = '' , progress = False ) :
         ncuts   = '1.0*(%s)' % cuts 
         current = current.Define ( cn , ncuts )
         cname   = cn
+        added [ cn ] = ncuts 
 
     ## attach cuts as BOOLEAN filter 
     if cname :
-        fname   = '(PRE)FILTER %s' % cuts 
-        current = current.Filter ( '(bool) %s' % cname , fname ) 
+        fname      = '(PRE)FILTER %s' % cuts
+        the_filter = '(bool) %s' % cname 
+        current    = current.Filter ( the_filter , fname ) 
+        logger.debug ( 'Added pre-filter: %s' % the_filter ) 
+                       
+    if added :
+        title = 'Added variables'
+        rows  = [ ( 'Variable' , 'Expression' ) ] 
+        for row in loop_items ( added ) : rows.append ( row )
+        table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lr' )        
+        logger.debug ( '%s:\n%s' % ( title , table ) )
         
     return current, vnames, cname, input_string
 
@@ -704,7 +716,7 @@ def frame_statistic ( frame               ,
     
     ## ATTENTION HERE!!
     if cname and not as_weight :
-        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        logger.warning ( "The cut is treated as boolean: %s" % cuts ) 
         cname = ''
 
     def screator ( node , var_name , cut_name ) :
@@ -891,7 +903,7 @@ def frame_the_moment ( frame , N           ,
     
     ## ATTENTION HERE!!
     if cname and not as_weight :
-        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        logger.warning ( "The cut is treated as boolean: %s" % cuts ) 
         cname = ''
 
     def mcreator ( node , var_name , cut_name ) :
@@ -1030,7 +1042,7 @@ def frame_covariance ( frame              ,
    
     ## ATTENTION HERE!!
     if cname and not as_weight :
-        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        logger.warning ( "The cut is treated as boolean: %s" % cuts ) 
         cname = ''
 
     vars = [ v for v in items.values ]
@@ -1072,7 +1084,7 @@ def frame_arithmetic_mean ( frame              ,
 
     ## ATTENTION HERE!!
     if cname and not as_weight :
-        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        logger.warning ( "The cut is treated as boolean: %s" % cuts ) 
         cname = ''
    
     def acreator ( node , var_name , cut_name ) : 
@@ -1121,7 +1133,7 @@ def frame_harmonic_mean ( frame              ,
 
     ## ATTENTION HERE!!
     if cname and not as_weight :
-        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        logger.warning ( "The cut is treated as boolean: %s" % cuts ) 
         cname = ''
    
     def acreator ( node , var_name , cut_name ) : 
@@ -1169,7 +1181,7 @@ def frame_geometric_mean ( frame              ,
 
     ## ATTENTION HERE!!
     if cname and not as_weight :
-        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        logger.warning ( "The cut is treated as boolean: %s" % cuts ) 
         cname = ''
    
     def acreator ( node , var_name , cut_name ) : 
@@ -1230,7 +1242,7 @@ def frame_power_mean ( frame              , p ,
 
     ## ATTENTION HERE!!
     if cname and not as_weight :
-        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        logger.warning ( "The cut is treated as boolean: %s" % cuts ) 
         cname = ''
    
     def acreator ( node , var_name , cut_name ) : 
@@ -1294,7 +1306,7 @@ def frame_lehmer_mean ( frame              , p ,
 
     ## ATTENTION HERE!!
     if cname and not as_weight :
-        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        logger.warning ( "The cut is treated as boolean: %s" % cuts ) 
         cname = ''
    
     def acreator ( node , var_name , cut_name ) : 
@@ -1340,7 +1352,7 @@ def frame_ECDF ( frame               ,
     
     ## ATTENTION HERE!!
     if cname and not as_weight :
-        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        logger.warning ( "The cut is treated as boolean: %s" % cuts ) 
         cname = ''
         
     def ecreator ( node , var_name , cut_name ) :
@@ -1492,7 +1504,7 @@ def frame_project ( frame               ,
 
     ## ATTENTION HERE!!
     if cname and not as_weight :
-        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        logger.warning ( "The cut is treated as boolean: %s" % cuts ) 
         cname = ''
         
     nvars = len ( items )
@@ -1606,7 +1618,7 @@ def frame_param ( frame               ,
 
     ## ATTENTION HERE!!
     if cname and not as_weight :
-        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        logger.warning ( "The cut is treated as boolean: %s" % cuts ) 
         cname = ''
     
     nvars = len ( items )
@@ -1622,20 +1634,28 @@ def frame_param ( frame               ,
     uvars = [ k for k in items.values() ]
 
     if 4 <= len ( uvars ) :        
-        if hasattr ( target , 'umin' ) : current = current.Filter ( '%.10g <= %s ' %  ( target.umin() , uvars[3] ) , 'UMIN-FILTER' )
-        if hasattr ( target , 'umax' ) : current = current.Filter ( '%.10g >= %s ' %  ( target.umax() , uvars[3] ) , 'UMAX-FILTER' )
+        if hasattr ( target , 'umin' ) :
+            current = current.Filter ( '%.10g <= %s ' %  ( target.umin() , uvars[3] ) , 'UMIN-FILTER' )
+        if hasattr ( target , 'umax' ) :
+            current = current.Filter ( '%.10g >= %s ' %  ( target.umax() , uvars[3] ) , 'UMAX-FILTER' )
         
     if 3 <= len ( uvars ) :
-        if hasattr ( target , 'zmin' ) : current = current.Filter ( '%.10g <= %s ' %  ( target.zmin() , uvars[2] ) , 'ZMIN-FILTER' )
-        if hasattr ( target , 'zmax' ) : current = current.Filter ( '%.10g >= %s ' %  ( target.zmax() , uvars[2] ) , 'ZMAX-FILTER' )
+        if hasattr ( target , 'zmin' ) :
+            current = current.Filter ( '%.10g <= %s ' %  ( target.zmin() , uvars[2] ) , 'ZMIN-FILTER' )
+        if hasattr ( target , 'zmax' ) :
+            current = current.Filter ( '%.10g >= %s ' %  ( target.zmax() , uvars[2] ) , 'ZMAX-FILTER' )
         
     if 2 <= len ( uvars ) :
-        if hasattr ( target , 'ymin' ) : current = current.Filter ( '%.10g <= %s ' %  ( target.ymin() , uvars[1] ) , 'YMIN-FILTER' )
-        if hasattr ( target , 'ymax' ) : current = current.Filter ( '%.10g >= %s ' %  ( target.ymax() , uvars[1] ) , 'YMAX-FILTER' )
+        if hasattr ( target , 'ymin' ) :
+            current = current.Filter ( '%.10g <= %s ' %  ( target.ymin() , uvars[1] ) , 'YMIN-FILTER' )
+        if hasattr ( target , 'ymax' ) :
+            current = current.Filter ( '%.10g >= %s ' %  ( target.ymax() , uvars[1] ) , 'YMAX-FILTER' )
         
     if 1 <= len ( uvars ) :
-        if hasattr ( target , 'xmin' ) : current = current.Filter ( '%.10g <= %s ' %  ( target.xmin() , uvars[0] ) , 'ZMIN-FILTER' )
-        if hasattr ( target , 'xmax' ) : current = current.Filter ( '%.10g >= %s ' %  ( target.xmax() , uvars[0] ) , 'ZMAX-FILTER' )
+        if hasattr ( target , 'xmin' ) :
+            current = current.Filter ( '%.10g <= %s ' %  ( target.xmin() , uvars[0] ) , 'ZMIN-FILTER' )
+        if hasattr ( target , 'xmax' ) :
+            current = current.Filter ( '%.10g >= %s ' %  ( target.xmax() , uvars[0] ) , 'ZMAX-FILTER' )
 
     if cuts : uvars.append ( cname )
     uvars = CNT ( uvars )
@@ -1730,7 +1750,7 @@ def frame_draw ( frame               ,
 
     ## ATTENTION HERE!!
     if cname and not as_weight :
-        lopgger.warning ( "The cut is treated as boolean: %s" % cuts ) 
+        logger.warning ( "The cut is treated as boolean: %s" % cuts ) 
         cname = ''
     
     nvars = len ( items )
@@ -1744,10 +1764,20 @@ def frame_draw ( frame               ,
     cache   = current 
 
     ## 11st explicit loop 
-    ranges = frame_range ( cache , cvars , cuts = cname , delta = delta , report = report , progress = progress )
+    ranges = frame_range ( cache               ,
+                           cvars               ,
+                           cuts     = cname    ,
+                           delta    = delta    ,
+                           report   = report   ,
+                           progress = progress )
     if not ranges :
         ## remove cuts and recalculate the ranges 
-        ranges = frame_range ( current , cvars , '' , delta = delta , report = report , progress = progress )
+        ranges = frame_range ( current ,
+                               cvars   ,
+                               cuts     = ''       ,
+                               delta    = delta    ,
+                               report   = report   ,
+                               progress = progress )
         if not ranges :         
             logger.warning ( 'frame_draw: nothing to draw, return None' )
             return None
@@ -1825,7 +1855,7 @@ _new_methods_       = (
     frame_ECDF            , ## get the empirical cumulative distribution functions for variable(s)
     ## 
     frame_project         , ## project data frame to the (1D/2D/3D) histogram
-    frame_param           , ## parameterize data n flight     
+    frame_param           , ## parameterize data on-flight     
     frame_draw            , ## draw variable from the frame
     ## 
 )

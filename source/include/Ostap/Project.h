@@ -82,7 +82,7 @@ namespace Ostap
      *  @param selection  (INPUT)  selection/weight 
      *  @param first      (INOPUT) the first event to process (inclusive) 
      *  @param last       (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      *  @see   TH1::Fill
      */
     Ostap::StatusCode project1
@@ -101,7 +101,7 @@ namespace Ostap
      *  @param cut_range  (INPUT)  cut-range 
      *  @param first      (INOPUT) the first event to process (inclusive) 
      *  @param last       (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      *  @see   TH1::Fill
      */
     Ostap::StatusCode project1
@@ -123,7 +123,7 @@ namespace Ostap
      *  @param selection   (INPUT)  selection/weight  
      *  @param first       (INOPUT) the first event to process (inclusive) 
      *  @param last        (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      *  @see   TH1::Fill
      */
     Ostap::StatusCode project2
@@ -143,7 +143,7 @@ namespace Ostap
      *  @param selection   (INPUT)  selection/weight  
      *  @param first       (INOPUT) the first event to process (inclusive) 
      *  @param last        (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      *  @see   TH1::Fill
      */
     Ostap::StatusCode project2
@@ -167,7 +167,7 @@ namespace Ostap
      *  @param selection   (INPUT)  selection/weight  
      *  @param first       (INOPUT) the first event to process (inclusive) 
      *  @param last        (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      *  @see   TH1::Fill
      */
     Ostap::StatusCode project3
@@ -189,7 +189,7 @@ namespace Ostap
      *  @param selection   (INPUT)  selection/weight  
      *  @param first       (INOPUT) the first event to process (inclusive) 
      *  @param last        (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      *  @see   TH1::Fill
      */
     Ostap::StatusCode project3
@@ -212,7 +212,7 @@ namespace Ostap
      *  @param selection  (INPUT)  selection (as boolean)
      *  @param first      (INOPUT) the first event to process (inclusive) 
      *  @param last       (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project1
     ( TTree*                    data            ,
@@ -231,7 +231,7 @@ namespace Ostap
      *  @param selection  (INPUT)  selection (as weight) 
      *  @param first      (INOPUT) the first event to process (inclusive) 
      *  @param last       (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project1
     ( TTree*                    data            ,
@@ -250,7 +250,7 @@ namespace Ostap
      *  @param selection  (INPUT)  selection (as weight) 
      *  @param first      (INOPUT) the first event to process (inclusive) 
      *  @param last       (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project1
     ( const RooAbsData*         data            ,
@@ -272,7 +272,7 @@ namespace Ostap
      *  @param selection  (INPUT)  selection (as boolean)
      *  @param first      (INOPUT) the first event to process (inclusive) 
      *  @param last       (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project1
     ( TTree*                     data            ,
@@ -289,7 +289,7 @@ namespace Ostap
      *  @param selection  (INPUT)  selection (as boolean)
      *  @param first      (INOPUT) the first event to process (inclusive) 
      *  @param last       (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project1
     ( const RooAbsData*          data            ,
@@ -309,7 +309,7 @@ namespace Ostap
      *  @param selection  (INPUT)  selection (as boolean)
      *  @param first      (INOPUT) the first event to process (inclusive) 
      *  @param last       (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project1
     ( TTree*                     data            ,
@@ -326,7 +326,7 @@ namespace Ostap
      *  @param selection  (INPUT)  selection (as boolean)
      *  @param first      (INOPUT) the first event to process (inclusive) 
      *  @param last       (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project1
     ( const RooAbsData*          data            ,
@@ -346,7 +346,7 @@ namespace Ostap
      *  @param selection  (INPUT)  selection (as boolean)
      *  @param first      (INOPUT) the first event to process (inclusive) 
      *  @param last       (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project1
     ( TTree*                     data            ,
@@ -363,7 +363,7 @@ namespace Ostap
      *  @param selection  (INPUT)  selection (as boolean)
      *  @param first      (INOPUT) the first event to process (inclusive) 
      *  @param last       (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project1
     ( const RooAbsData*          data            ,
@@ -384,7 +384,7 @@ namespace Ostap
      *  @param selection   (INPUT)  selection (as boolean)
      *  @param first       (INOPUT) the first event to process (inclusive) 
      *  @param last        (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project2
     ( TTree*                     data            ,
@@ -403,7 +403,7 @@ namespace Ostap
      *  @param selection   (INPUT)  selection (as boolean)
      *  @param first       (INOPUT) the first event to process (inclusive) 
      *  @param last        (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project2
     ( const RooAbsData*          data            ,
@@ -425,7 +425,7 @@ namespace Ostap
      *  @param selection   (INPUT)  selection (as boolean)
      *  @param first       (INOPUT) the first event to process (inclusive) 
      *  @param last        (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project2
     ( TTree*                     data            ,
@@ -444,7 +444,7 @@ namespace Ostap
      *  @param selection   (INPUT)  selection (as boolean)
      *  @param first       (INOPUT) the first event to process (inclusive) 
      *  @param last        (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project2
     ( const RooAbsData*          data            ,
@@ -467,7 +467,7 @@ namespace Ostap
      *  @param selection   (INPUT)  selection (as boolean)
      *  @param first       (INOPUT) the first event to process (inclusive) 
      *  @param last        (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project3
     ( TTree*                     data            ,
@@ -487,7 +487,7 @@ namespace Ostap
      *  @param selection   (INPUT)  selection (as boolean)
      *  @param first       (INOPUT) the first event to process (inclusive) 
      *  @param last        (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project3
     ( const RooAbsData*          data            ,
@@ -511,7 +511,7 @@ namespace Ostap
      *  @param selection   (INPUT)  selection (as boolean)
      *  @param first       (INOPUT) the first event to process (inclusive) 
      *  @param last        (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project3
     ( TTree*                     data            ,
@@ -531,7 +531,7 @@ namespace Ostap
      *  @param selection   (INPUT)  selection (as boolean)
      *  @param first       (INOPUT) the first event to process (inclusive) 
      *  @param last        (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project3
     ( const RooAbsData*          data            ,
@@ -556,7 +556,7 @@ namespace Ostap
      *  @param selection   (INPUT)  selection (as boolean)
      *  @param first       (INOPUT) the first event to process (inclusive) 
      *  @param last        (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project4
     ( TTree*                     data            ,
@@ -577,7 +577,7 @@ namespace Ostap
      *  @param selection   (INPUT)  selection (as boolean)
      *  @param first       (INOPUT) the first event to process (inclusive) 
      *  @param last        (INOPUT) the last  event to process (exclusive)
-     *  @return statis code 
+     *  @return Status Code 
      */
     Ostap::StatusCode project4
     ( const RooAbsData*          data            ,

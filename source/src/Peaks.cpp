@@ -2053,39 +2053,45 @@ Ostap::Math::Needham::Needham
   const double n     ) 
 /// @see Ostap::Math:CrystalBall
   : m_cb  ( m0 , sigma , 1 , 0 ) // Ostap::Math:CrystalBall
-  , m_a0  ( std::abs ( a0 ) )
-  , m_a1  ( std::abs ( a1 ) )
-  , m_a2  (            a2   )
+  , m_a0  ( -1 )
+  , m_a1  ( -1 )
+  , m_a2  ( -1 )
 {
-  m_cb.setAlpha ( alpha () ) ;
-  m_cb.setN     ( n        ) ;
+  setA      ( a0 , a1 , a2 ) ;
+  m_cb.setN ( n            ) ;
 }
 // ============================================================================
 // destructor
 // ============================================================================
 Ostap::Math::Needham::~Needham(){}
 // ============================================================================
-bool Ostap::Math::Needham::setA0 ( const double value )
+bool Ostap::Math::Needham::setSigma
+( const double value )
 {
-  const double value_ = std::fabs ( value );
-  if ( s_equal ( value_ , m_a0 ) ) { return false ; }
-  m_a0      = value_ ;
-  return m_cb.setAlpha ( alpha () ) ;
+  if ( !m_cb.setSigma ( value ) ) { return false ; }
+  return m_cb.setAlpha ( alpha ( sigma () ) ) ;
 }
 // ============================================================================
-bool Ostap::Math::Needham::setA1 ( const double value )
-{
-  const double value_ = std::fabs ( value );
-  if ( s_equal ( value_ , m_a1 ) ) { return false ; }
-  m_a1 = value_ ;
-  return m_cb.setAlpha ( alpha () ) ;
-}
+// set all three values togather
 // ============================================================================
-bool Ostap::Math::Needham::setA2 ( const double value )
+bool Ostap::Math::Needham::setA
+( const double a0 ,
+  const double a1 ,
+  const double a2 )
 {
-  if ( s_equal ( value , m_a2 ) ) { return false ; }
-  m_a2 = value ;
-  return m_cb.setAlpha ( alpha () ) ;
+  const double a0_ = std::fabs ( a0  ) ;
+  const double a1_ = std::fabs ( a1  ) ;
+  const double a2_ =             a2    ;
+  //
+  if ( s_equal ( a0_ , m_a0 ) &&
+       s_equal ( a1_ , m_a1 ) &&
+       s_equal ( a2_ , m_a2 ) ) { return false ; }
+  //
+  m_a0 = a0_ ;
+  m_a1 = a1_ ;
+  m_a2 = a2_ ;
+  //
+  return m_cb.setAlpha ( alpha ( sigma () ) ) ;
 }
 // ===========================================================================
 // evaluate Needham's function
@@ -2098,7 +2104,7 @@ double Ostap::Math::Needham::pdf ( const double x ) const
 std::size_t Ostap::Math::Needham::tag () const 
 {
   static const std::string s_name = "Needham" ;
-  return Ostap::Utils::hash_combiner ( s_name , m_cb.tag() , m_a0 , m_a1 , m_a2 ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_cb.tag () , m_a0 , m_a1 , m_a2 ) ; 
 }
 // ============================================================================
 // show alpha as functon of sigma 

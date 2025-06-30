@@ -1324,7 +1324,7 @@ namespace Ostap
      *  \f$ \alpha(\sigma) = c_0\frac{ (\sigma/c_1)^{c_2}}{ 1 + (\sigma/c_1)^{c_2} }\f$ 
      *
      *  @attention For majority of physics cases <code>n</code> 
-     *             can be fixed <code>n=1</code> (corresponds to <code>N=1</code>
+     *             can be fixed <code>n=0</code> (corresponds to <code>N=1</code>
      *
      *  @see Ostap::Math::CrystalBall
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -1347,7 +1347,7 @@ namespace Ostap
         const double a0    =    2.5 ,
         const double a1    =   13.5 ,
         const double a2    =   10   ,
-	const double n     =    0   ) ; // notethat it is different from internal N!
+        const double n     =    0   ) ; // notethat it is different from internal N!
       /// destructor
       ~Needham() ;
       // ======================================================================
@@ -1368,9 +1368,9 @@ namespace Ostap
       inline double a0    () const { return m_a0          ; }
       inline double a1    () const { return m_a1          ; }
       inline double a2    () const { return m_a2          ; }
-      inline double alpha () const { return alpha ( m_cb.sigma() ) ; }
-      inline double n     () const { return m_cb.n () ; }
-      inline double N     () const { return m_cb.N () ; }      
+      inline double alpha () const { return m_cb.alpha () ; }
+      inline double n     () const { return m_cb.n     () ; }
+      inline double N     () const { return m_cb.N     () ; }      
       // ======================================================================
     public: // show alpha as function of sigma 
       // ======================================================================
@@ -1384,12 +1384,18 @@ namespace Ostap
       inline bool setPeak  ( const double value ) { return m_cb.setPeak  ( value ) ; }
       inline bool setMode  ( const double value ) { return m_cb.setMode  ( value ) ; }
       inline bool setMass  ( const double value ) { return m_cb.setMass  ( value ) ; }
-      inline bool setSigma ( const double value ) { return m_cb.setSigma ( value ) ; }
-      inline bool setN     ( const double value ) { return m_cb.setN     ( value ) ; } 
+      inline bool setN     ( const double value ) { return m_cb.setN     ( value ) ; }
+      // ====================================================================
+    public:
+      // ====================================================================
+      // setting sigma causses some change in alpha ...
+      bool        setSigma ( const double value ) ;
       // =====================================================================
-      bool        setA0    ( const double value ) ;
-      bool        setA1    ( const double value ) ;
-      bool        setA2    ( const double value ) ;
+      /// set all three values together
+      bool setA
+      ( const double a0 ,
+        const double a1 ,
+        const double a2 ) ;
       // ======================================================================
     public:
       // ======================================================================

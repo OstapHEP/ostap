@@ -68,8 +68,9 @@ from   ostap.core.ostap_types    import ( string_types , integer_types  ,
 from   ostap.trees.cuts          import expression_types, vars_and_cuts
 from   ostap.utils.basic         import loop_items, typename 
 from   ostap.utils.progress_conf import progress_conf
-import ostap.stats.moment 
+import ostap.frames.frames       as     F 
 import ostap.logger.table        as     T
+import ostap.stats.moment 
 import ROOT 
 # =============================================================================
 # logging 
@@ -80,11 +81,33 @@ else                       : logger = getLogger ( __name__               )
 # =============================================================================
 FIRST   = Ostap.FirstEvent
 LAST    = Ostap.LastEvent
-StatVar = Ostap.StatVar 
 # =============================================================================
-## @var QEXACT
-#  use it as threshold for exact/slow vs approximate/fast quantile calcualtion 
-QEXACT = 10000
+LARGE   = 50000    ## allow frames or parallel for LARGE datasets 
+# =============================================================================
+StatVar = Ostap.StatVar
+# =============================================================================
+## reset the target 
+def target_reset ( obj ) :
+    """ Reset the target """
+    if instance ( obj , ROOT.TH1 ) :
+        obj.Reset()
+        if not obj.GetSumw2() : obj.Sumw2()
+    elif hasattr ( obj , 'Reset' )  : obj.Reset ()
+    elif hasattr ( obj , 'reset' )  : obj.reset ()
+# =============================================================================    
+## Copy target 
+def target_copy ( self , obj ) :
+    """ Copy target """
+    if instance ( obj , ROOT.TH1 ) :
+        newoj = obj.Clone ()
+        newobj.Reset()
+        if not newobj.GetSumw2() : newobj.Sumw2()
+        return newobj
+    elif hasattr ( obj , 'Clone' ) : return obj.Clone()
+    elif hasattr ( obj , 'clone' ) : return obj.clone()
+    ## 
+    T = type ( obj )
+    return T ( obj )
 # =============================================================================
 _s1D = Ostap.Math.Statistic  , Ostap.Math.WStatistic
 _s2D = Ostap.Math.Statistic2 , Ostap.Math.WStatistic2
@@ -139,7 +162,8 @@ def data_get_stat ( data               ,
     elif 3 == nvars and isinstance ( statobj , _s3D ) : pass
     elif 4 == nvars and isinstance ( statobj , _s4D ) : pass
     else :
-        raise TypeError ( 'Inconsistent statobj %s & expression(s): %s' % ( typename ( statobj ) , str ( var_lst ) ) ) 
+        raise TypeError ( 'Inconsistent statobj %s & expression(s): %s' % \
+                          ( typename ( statobj ) , str ( var_lst ) ) ) 
 
     ## (3) cut_range defined *only* for RooFit datasets 
     if cut_range and not isinstance ( data , ROOT.RooAbsData ) : 
@@ -159,14 +183,31 @@ def data_get_stat ( data               ,
         assert sc.isSuccess() , 'Error %s from StatVar::get_stat' % sc 
         return statobj
 
-    if  use_frame and isinstance ( data , ROOT.TTee    ) and all_entries ( data , *args[:2] ) :
-        raise NotImplementedError ( "Not yet implemented!" )
+    if  use_frame and isinstance ( data , ROOT.TTee    ) and LARGE < len ( data ) :
+        if all_entries ( data , *args[:2] ) and not arg[2:]  :
+            return F.frame_project ( data                   ,
+                                     model       = statobj  ,
+                                     expressions = var_lst  ,
+                                     cuts        = cuts     ,
+                                     progress    = progress ,
+                                     report      = progress ,
+                                     lazy        = False    ) 
     
-    if  parallel   and isinstance ( data , ROOT.TChain ) and all_entries ( data , *args[:2] ) :
-        import ostap.trees.trees
-        if 1 < len ( data.files () ) :
-            raise NotImplementedError ( "Not implemented yet!" ) 
-             
+    if  parallel   and isinstance ( data , ROOT.TChain ) and LARGE < len ( data ) :
+        if all_entries ( data , *args[:2] ) and not args [2:]  :
+            import ostap.trees.trees
+            if 1 < len ( data.files () ) :
+                from ostap.parallel.parallel_stavar import parallel_get_stat
+                return parallel_get_stat ( data        ,
+                                           statobj     ,
+                                           expressions ,
+                                           cuts       = cuts          ,
+                                           progress   = progress      ,
+                                           use_frame  = False         , ## NB!!
+                                           chunk_size = 2 * LARGE     ,
+                                           maX_files  = 1             ,
+                                           silent     = not progress  ) ;
+
     assert isinstance ( data , ROOT.TTree ) , "Invalid type for data!"
     
     ## Branches to be activated
@@ -191,9 +232,9 @@ def data_the_moment ( data               ,
                       expression         ,
                       *args              , 
                       cuts       = ''    ,
+                      as_weight  = True  , ## interpret cuts as weight 
                       cut_range  = ''    ,
                       progress   = False , 
-                      as_weight  = True  , ## interpret cuts as weight 
                       use_frame  = False ,
                       parallel   = False ) : 
     """ Get the moment of order 'order'
@@ -237,8 +278,8 @@ def  data_moment ( data               ,
                    *args              , 
                    cuts       = ''    ,
                    cut_range  = ''    ,
-                   progress   = False , 
                    as_weight  = True  , ## interpret cuts s as weiggt 
+                   progress   = False , 
                    use_frame  = False ,
                    parallel   = False ) : 
     """ Get the moment of order 'order' relative to 'center'
@@ -335,13 +376,29 @@ def data_statistic ( data               ,
     ## decode expressions & cuts
     var_lst, cuts, input_string = vars_and_cuts ( expressions , cuts )
     assert var_lst , "Invalid expressions!"
-    
-    if use_frame and isinstance ( data , ROOT.TTree  ) and all_entries ( data , *args[:2] ) :
-        raise NotImplementedError ( "Not implemented yet!")
-    if parallel  and isinstance ( data , ROOT.TChain ) and all_entries ( data , *args[:2] ) :
-        import ostap.trees.trees   
-        if 1 < data.nfiles () : raise NotImplementedError ( "Not implemented yet!")
-    
+
+    if use_frame and isinstance ( data , ROOT.TTree  ) and len ( data ) > LARGE :
+        if all_entries ( data , *args[:2] ) and not args[2:] :
+            return F.frame_statistic ( data        ,
+                                       expressions ,
+                                       cuts        = cuts      , 
+                                       as_weight   = as_weight , 
+                                       progess     = progress  ,
+                                       report      = progress  ,
+                                       lazy        = False     ) 
+
+    if parallel and isinstance ( data , ROOT.TChain ) and len ( data ) > LARGE :
+        if all_entries ( data , *args[:2] ) and not args [2:] : 
+            import ostap.trees.trees   
+            if 1 < data.nfiles () :
+                from ostap.parallel.paralle_statvar import parallel_statistic
+                return paralllel_statistic ( data        ,
+                                             expressions ,
+                                             cuts        = cuts       ,
+                                             as_weight   = as_weight  , 
+                                             progress    = progress   ,
+                                             use_frame   = use+_frame )
+
     ##  diplay progress ? 
     progress = progress_conf ( progress )
 
@@ -350,9 +407,12 @@ def data_statistic ( data               ,
     
     if input_string :
         varname  = var_lst [ 0 ] 
-        if   isinstance ( data , ROOT.RooAbsData ) : return sv.statVar     ( data , varname , cuts , cut_range , *args )
-        elif cuts and as_weight                    : return sv.statVar     ( data , varname , cuts ,             *args )
-        else                                       : return sv.statVar_cut ( data , varname , cuts ,             *args )
+        if   isinstance ( data , ROOT.RooAbsData ) :
+            return sv.statVar     ( data , varname , cuts , cut_range , *args )
+        elif cuts and as_weight                    :
+            return sv.statVar     ( data , varname , cuts ,             *args )
+        else                                       :
+            return sv.statVar_cut ( data , varname , cuts ,             *args )
            
     ## 
     
@@ -362,8 +422,6 @@ def data_statistic ( data               ,
         
     ## variable names 
     vnames = strings ( var_lst ) 
-    
-    print  ( 'ARGS: ' , args )
     
     if isinstance ( data , ROOT.RooAbsData ) :
         with rootException() :
@@ -705,7 +763,7 @@ def data_harmonic_mean ( data ,
     else : 
         stat = Ostap.StatVar. HarmonicMean ()
         
-    return fata_get_stat  ( data , stat , var_lst , *args , 
+    return data_get_stat  ( data , stat , var_lst , *args , 
                             cuts       = cuts      ,
                             cut_range  = cut_range ,
                             progress   = progress  ,
@@ -1095,7 +1153,82 @@ def data_kurtosis ( data  ,
                            parallel   = parallel  ) 
     return m6.kurtosis ()
 
+# =============================================================================
+def data_project ( data        ,
+                   target      ,
+                   expressions ,
+                   *args               , 
+                   cuts        = ''    ,
+                   cut_range   = ""    ,
+                   as_weight   = ""    ,
+                   progress    = True  ,
+                   use_frame   = False ,
+                   parallel    = False ) :
+    
+    ## (1) decode expressions & cuts
+    var_lst , cuts, _  = vars_and_cuts ( expressions , cuts )
+    nvars = len ( var_lst )
+    
+    ## (2) check consistency
+    if   1 == nvars and isinstance ( target , _s1D     ) : pass
+    elif 2 == nvars and isinstance ( target , _s2D     ) : pass
+    elif 3 == nvars and isinstance ( target , _s3D     ) : pass
+    elif 4 == nvars and isinstance ( target , _s4D     ) : pass
+    elif 3 == nvars and isinstance ( target , ROOT.TH3 ) and 3 == target.dim() : pass    
+    elif 2 == nvars and isinstance ( target , ROOT.TH2 ) and 2 == target.dim() : pass
+    elif 1 == nvars and isinstance ( target , ROOT.TH1 ) and 1 == target.dim() : pass
+    else :
+        raise TypeError ( 'Inconsistent statobj %s & expression(s): %s' % \
+                          ( typename ( statobj ) , str ( var_lst ) ) ) 
 
+    ## (3) cut_range defined *only* for RooFit datasets 
+    if cut_range and not isinstance ( data , ROOT.RooAbsData ) : 
+        raise TypeError ( "Invalid use of `cut_range':%s" % cut_range  ) 
+    
+    ## (4) display progress ? 
+    progress = progress_conf ( progress )
+
+    ## (5) create the driver 
+    pv = Ostap.Project ( progress )
+    
+    ## (6) RooFit ?
+    if isinstance ( data , ROOT.RooAbsData ) :
+        with rootException() :
+            the_args = var_lst +  ( cuts , cut_range ) + args
+            if   1 == nvars : sc = pv.project1 ( data , target , *the_args )
+            elif 2 == nvars : sc = pv.project2 ( data , target , *the_args )
+            elif 3 == nvars : sc = pv.project3 ( data , target , *the_args )            
+            elif 4 == nvars : sc = pv.project4 ( data , target , *the_args )            
+        assert sc.isSuccess() , 'Error %s from StatVar::project(1,2,3)' % sc 
+        return target
+    
+    if  use_frame and isinstance ( data , ROOT.TTee    ) and LARGE < len ( data ) :
+        if all_entries ( data , *args[:2] ) and not arg[2:]  :
+            return F.frame_project ( data                   ,
+                                     model       = target   ,
+                                     expressions = var_lst  ,
+                                     cuts        = cuts     ,
+                                     progress    = progress ,
+                                     report      = progress ,
+                                     lazy        = False    ) 
+    
+    if  parallel   and isinstance ( data , ROOT.TChain ) and LARGE < len ( data ) :
+        if all_entries ( data , *args[:2] ) and not args [2:]  :
+            import ostap.trees.trees
+            if 1 < len ( data.files () ) :
+                pass
+            
+    ## Branches to be activated
+    from ostap.trees.trees import ActiveBranches
+    with rootException() , ActiveBranches ( data , cuts , *var_lst ) :
+        the_args = var_lst + ( cuts , ) + args         
+        if   1 == nvars : sc = pv.project1 ( data , target , *the_args  )
+        elif 2 == nvars : sc = pv.project2 ( data , target , *the_args  )
+        elif 3 == nvars : sc = pv.project3 ( data , target , *the_args  )
+        elif 4 == nvars : sc = pv.project4 ( data , target , *the_args  )
+        assert sc.isSuccess() , 'Error %s from StatVar::project(1,2,3,4)' % sc 
+        return statobj
+    
 # =============================================================================
 ## decorate certain class with some useful  methods 
 def data_decorate ( klass ) :

@@ -123,7 +123,7 @@ Ostap::StatusCode Ostap::StatVar::get_stat
       //
       formula.evaluate ( results ) ;
       for ( const double value : results )
-	{ if ( in_range ( value , xmin , xmax ) ) { stat.update ( value ) ; } }
+        { if ( in_range ( value , xmin , xmax ) ) { stat.update ( value ) ; } }
     }
   //
   return Ostap::StatusCode::SUCCESS ;
@@ -167,7 +167,7 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   Ostap::Formula formula ( expression , data ) ;
   if ( !formula.ok()      ) { return INVALID_FORMULA ; }
   //
-  const std::unique_ptr<Ostap::Formula> cuts { Ostap::makeFormula ( expression , data , true ) } ; 
+  const std::unique_ptr<Ostap::Formula> cuts { Ostap::makeFormula ( selection , data , true ) } ; 
   const bool                with_cuts   = cuts && cuts->ok () ;
   //
   Ostap::Utils::Notifier    notify ( data , &formula  , cuts.get() ) ;
@@ -186,7 +186,7 @@ Ostap::StatusCode Ostap::StatVar::get_stat
       //
       formula.evaluate ( results ) ;
       for  ( const double value : results )
-	{ if ( in_range ( value , xmin , xmax ) ) { stat.update ( value , weight ) ; } }
+        { if ( in_range ( value , xmin , xmax ) ) { stat.update ( value , weight ) ; } }
     }
   //
   return Ostap::StatusCode::SUCCESS ;
@@ -1282,17 +1282,17 @@ Ostap::StatEntity Ostap::StatVar::statVar_cut
   ///
   Ostap::StatEntity result {} ;
   const Ostap::StatusCode sc = get_stat ( data       ,
-					  result     , 
-					  expression ,
-					  selection  , 
-					  first      ,
-					  last       ,
-					  xmin       ,
-					  xmax       ) ;
+                                          result     , 
+                                          expression ,
+                                          selection  , 
+                                          first      ,
+                                          last       ,
+                                          xmin       ,
+                                          xmax       ) ;
   // check status code 
   Ostap::Assert ( sc.isSuccess ()  ,
-		  "Error from Ostap::StatVar::get_stat " ,
-		  "Ostap::StatVar::statVar_cut" , sc , __FILE__ , __LINE__ ) ;
+                  "Error from Ostap::StatVar::get_stat " ,
+                  "Ostap::StatVar::statVar_cut" , sc , __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -1325,17 +1325,17 @@ Ostap::WStatEntity Ostap::StatVar::statVar
   ///
   Ostap::WStatEntity result {} ;
   const Ostap::StatusCode sc = get_stat ( data       ,
-					  result     , 
-					  expression ,
-					  selection  , 
-					  first      ,
-					  last       ,
-					  xmin       ,
-					  xmax       ) ;
+                                          result     , 
+                                          expression ,
+                                          selection  , 
+                                          first      ,
+                                          last       ,
+                                          xmin       ,
+                                          xmax       ) ;
   // check status code 
   Ostap::Assert ( sc.isSuccess ()  ,
-		  "Error from Ostap::StatVar::get_stat " ,
-		  "Ostap::StatVar::statVar" , sc , __FILE__ , __LINE__ ) ;
+                  "Error from Ostap::StatVar::get_stat " ,
+                  "Ostap::StatVar::statVar" , sc , __FILE__ , __LINE__ ) ;
   //
   return result ;
 }

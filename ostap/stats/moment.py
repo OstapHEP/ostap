@@ -33,7 +33,7 @@ __date__    = "2020-06-08"
 __all__     = ()
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, num_types
-from   ostap.math.base        import isfinite, isequal, pos_infinity, neg_infinity  
+from   ostap.math.base        import isfinite, isequal
 from   ostap.core.core        import Ostap, VE
 from   ostap.logger.pretty    import pretty_float
 from   ostap.logger.symbols   import times, sum_symbol 
@@ -44,6 +44,8 @@ import ROOT
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.moment' )
 else                       : logger = getLogger ( __name__             )
+# =============================================================================
+invalid_moment = Ostap.Math.Moments.invalid_moment () 
 # =============================================================================
 # new stuff: Ostap::Math::Moment_<N> 
 # =============================================================================
@@ -72,7 +74,6 @@ def _om_minmax ( obj ) :
     """ Get min/.max for the moment-counter
     >>> m = ...
     >>> mn , mx  = m.menamax () 
-    - If order of the moment-counter exceeds 1, the uncertainty is also evaluated 
     """
     o = obj.order
     assert 1 <= o , 'minmax: the order must be >=1!'
@@ -284,7 +285,6 @@ def _om_u5th ( obj ) :
     if isinstance ( m5 , VE ) and 0 < m5.cov2() : return VE ( r5 , m5.cov2() )
     return r5
     
-
 # =============================================================================
 ## get central moment 
 #  @code
@@ -300,7 +300,7 @@ def _om_cm2 ( obj , order  ) :
    """
    assert isinstance  ( order , integer_types ) and order <= obj.order ,\
     'central_moment: invalid order %s/%d' % ( order , obj.order )
-   if 2 <= order and obj.empty() : return neg_infinity
+   if 2 <= order and obj.empty() : return invalid_moment 
    return obj.moment_[order]()
 
 # =============================================================================
@@ -318,9 +318,27 @@ def _om_cm3 ( obj , order  ) :
     """
     assert isinstance  ( order , integer_types ) and order <= obj.order ,\
         'central_moment: invalid order %s/%d' % ( order , obj.order )
-    if 2 <= order and not obj.ok () : return neg_infinity
+    if 2 <= order and not obj.ok () : return invalid_moment
     ##
     return obj.moment_[order]()
+
+
+# =============================================================================
+## get centralized moment 
+#  @code
+#  m = ...
+#  v = m.centralized_moment ( center = 15. ) 
+#  @endcode
+def _om_cm4 ( obj , order , center ) :
+   """ Get the centralized  moment f
+   >>> m = ...
+   >>> v = m.centralized_moment ( 3 , center = 15.0 ) ## ditto 
+   """
+   assert isinstance  ( order , integer_types ) and order <= obj.order ,\
+       'centralized_moment: invalid order %s/%d' % ( order , obj.order )
+   assert isinstance  ( cener , num_types ) ,\
+       'centralized_moment: invalid center %s' % center   
+   return obj.centralized_moment_[order]( center )
 
 # =============================================================================
 ## get a RMS 
@@ -646,15 +664,16 @@ Ostap.Math.Moment.unbiased_3rd   = _om_u3rd
 Ostap.Math.Moment.unbiased_4th   = _om_u4th 
 Ostap.Math.Moment.unbiased_5th   = _om_u5th 
 
-Ostap.Math.Moment.mean           = _om_mean    
-Ostap.Math.Moment.rms            = _om_rms 
-Ostap.Math.Moment.variance       = _om_variance
-Ostap.Math.Moment.skewness       = _om_skewness
-Ostap.Math.Moment.kurtosis       = _om_kurtosis
-Ostap.Math.Moment.cmoment        = _om_cm2
-Ostap.Math.Moment.central_moment = _om_cm2
-Ostap.Math.Moment.std_moment2    = _om_std
-Ostap.Math.Moment.table          = _om_table
+Ostap.Math.Moment.mean               = _om_mean    
+Ostap.Math.Moment.rms                = _om_rms 
+Ostap.Math.Moment.variance           = _om_variance
+Ostap.Math.Moment.skewness           = _om_skewness
+Ostap.Math.Moment.kurtosis           = _om_kurtosis
+Ostap.Math.Moment.cmoment            = _om_cm2
+Ostap.Math.Moment.central_moment     = _om_cm2
+Ostap.Math.Moment.centralized_moment = _om_cm4
+Ostap.Math.Moment.std_moment2        = _om_std
+Ostap.Math.Moment.table              = _om_table
 
 Ostap.Math.Moment.cumulant_1st   = _om_cumulant_1st ## 1st cumulant is a mens
 Ostap.Math.Moment.cumulant_2nd   = _om_cumulant_2nd ## 2nd cumulant is a variance 

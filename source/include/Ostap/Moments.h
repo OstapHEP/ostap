@@ -1344,17 +1344,17 @@ namespace  Ostap
         /// INVALUID values and weights are ignored 
         if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
         /// ZERO weights are ignored 
-        if ( !w )                                           { return *this ; }  // ZERO weights are ignored 
+        if ( !w )                                           { return *this ; }  
         //
         const data_type wA = this -> w() ;
         const data_type wB = w ;
-        //
+        //`
         m_mu = ( wA * m_mu + wB * x ) / ( wA + wB ) ; // update mean
         // minimal 
-	      m_min = std::min ( m_min , x ) ;
-	      // maximal
-	      m_max = std::max ( m_max , x ) ;
-	      //
+        m_min = std::min ( m_min , x ) ;
+        // maximal
+        m_max = std::max ( m_max , x ) ;
+        //
         this->m_prev.add ( x , w ) ;
         //
         return *this ;
@@ -1372,10 +1372,10 @@ namespace  Ostap
         m_mu = ( wA * m_mu + wB * x.m_mu ) / ( wA + wB ) ; // update mean
         //
         // minimal 
-	      m_min = std::min ( m_min , x.m_min ) ;
-	      // maximal
-	      m_max = std::max ( m_max , x.m_max ) ;
-	      //
+        m_min = std::min ( m_min , x.m_min ) ;
+        // maximal
+        m_max = std::max ( m_max , x.m_max ) ;
+        //
         m_prev += x.m_prev ;                                 // update previous
         //
         return *this ;
@@ -1393,25 +1393,25 @@ namespace  Ostap
         return *this ;
       }
       // ====================================================================== 
-   public: // python operations 
+    public: // python operations 
       // ======================================================================
       WMoment_   __add__ ( const WMoment_& x ) const { WMoment_ r (*this) ; r += x ; return r ; }
       WMoment_  __radd__ ( const WMoment_& x ) const { return __add__ ( x ) ; }
       WMoment_& __iadd__ ( const WMoment_& x )       { return   add   ( x ) ; }
       // ======================================================================
-   public:      
+    public:      
       // ======================================================================
       /// update the counter 
       void update
       ( const double x     ,
-	      const double w = 1 ) override { add ( x , w ) ; }
+        const double w = 1 ) override { add ( x , w ) ; }
       /// Reset the content
       void reset  () override
       {
-	      m_mu = 0 ;
-	      m_min =   std::numeric_limits<double>::max () ;
-	      m_max = - std::numeric_limits<double>::max () ;
-	      m_prev.reset () ;
+        m_mu = 0 ;
+        m_min =   std::numeric_limits<double>::max () ;
+        m_max = - std::numeric_limits<double>::max () ;
+        m_prev.reset () ;
       }
       // ======================================================================      
     public :
@@ -1419,9 +1419,9 @@ namespace  Ostap
       /// is finite ?
       inline bool isfinite () const
       { return
-	        std::isfinite ( m_mu  ) &&
-	        std::isfinite ( m_min ) &&
-	        std::isfinite ( m_max ) && m_prev.isfinite () ;
+          std::isfinite ( m_mu  ) &&
+          std::isfinite ( m_min ) &&
+          std::isfinite ( m_max ) && m_prev.isfinite () ;
       }      
       // ======================================================================
     public:      
@@ -1672,7 +1672,7 @@ namespace  Ostap
       /// update the counter 
       void update
       ( const double x     ,
-	      const double w = 1 ) override { add ( x , w ) ; }
+        const double w = 1 ) override { add ( x , w ) ; }
       /// Reset the content
       void reset  () override
       {
@@ -1850,7 +1850,7 @@ namespace  Ostap
       /// invalid value aand weights are ignored 
       if ( !std::isfinite ( x ) || !std::isfinite ( w ) ) { return *this ; }
       /// ZERO weights are also ignored 
-      if ( !w )                                           { return *this ; }  // ZERO weights are ignored 
+      if ( !w )                                           { return *this ; }
       //
       const data_type wA    = this->w () ;
       const data_type wB    =       w    ;
@@ -2793,7 +2793,7 @@ namespace  Ostap
     namespace Moments
     {
       // ======================================================================
-      typedef Ostap::Math::ValueWithError VE    ;
+      typedef Ostap::Math::ValueWithError VE ;
       // ======================================================================
       /// get the invalid moment 
       double invalid_moment () ; 
@@ -2805,10 +2805,12 @@ namespace  Ostap
        *   <code>invalid_moment()</code> otherwise 
        */
       template <unsigned short N, typename std::enable_if<(N>=2),int>::type = 0 >
-      inline double unbiased_2nd ( const Moment_<N>& m )
+      inline double unbiased_2nd
+      ( const Moment_<N>& m )
       {
         const unsigned long long n = m.size() ;
-        return !m.ok() || n < 2 ? invalid_moment () : m.template M_<2> () / ( n - 1 ) ;  
+        return !m.ok() || n < 2 ? invalid_moment () :
+          m.template M_<2> () / ( n - 1 ) ;  
       }
       // ======================================================================
       /** get the unbiased estimator for the 3rd order moment:
@@ -2821,7 +2823,8 @@ namespace  Ostap
       inline double unbiased_3rd ( const Moment_<N>& m )
       {
         const unsigned long long n = m.size() ;
-        return !m.ok() || n < 3 ? invalid_moment() : m.template M_<3> * n / ( ( n - 1.0L ) * (  n - 2.0L  ) ) ;  
+        return !m.ok() || n < 3 ? invalid_moment() :
+          m.template M_<3> * n / ( ( n - 1.0L ) * (  n - 2.0L  ) ) ;  
       }
       // ======================================================================
       /** get the unbiased estimator for the 4th  order moment:
@@ -2994,6 +2997,17 @@ namespace  Ostap
       inline double std_moment ( const Moment_<N>& m )
       { return ( !m.ok() || m.size() < K ) ? invalid_moment() : m.template moment_<K> () ; }
       // ======================================================================
+      
+      // ======================================================================
+      /// get the centralized moment of order \f$ N \f$  
+      template <unsigned short K, unsigned short N,
+                typename std::enable_if<(K<=N),int>::type = 1 >
+      inline double centralized_moment
+      ( const Moment_<N>& m      ,
+        const double      center )
+      { return ( !m.ok() || m.size() < K ) ? invalid_moment() :
+          m.template centralized_moment_<K> ( center ) ; }
+            
 
       // ======================================================================
       /// get the first cumulant, well, it is actually the first central moment 
@@ -3240,7 +3254,8 @@ namespace  Ostap
       template <unsigned short K, unsigned short N,
                 typename std::enable_if<(2<=K) && (N>=2*K),int>::type = 0 >
       inline VE     central_moment ( const WMoment_<N>& m )
-      { return ( !m.ok() || m.size() < K ) ? VE( invalid_moment() , -1 ) : m.template moment_<K> () ; }
+      { return ( !m.ok() || m.size() < K ) ? VE( invalid_moment() , -1 )
+          : m.template moment_<K> () ; }
       
       // ======================================================================
       /// get the standartized moment of order 1
@@ -3255,7 +3270,19 @@ namespace  Ostap
       template <unsigned short K, unsigned short N,
                 typename std::enable_if<(K>=2)&&(K<=N),int>::type = 1 >
       inline double std_moment ( const WMoment_<N>& m )
-      { return ( !m.ok() || m.size() < K ) ? invalid_moment() : m.template moment_<K> () ; }      
+      { return ( !m.ok() || m.size() < K ) ? invalid_moment() :
+          m.template moment_<K> () ; }
+      
+      // ======================================================================
+      /// get the centralized moment of order \f$ N \f$  
+      template <unsigned short K, unsigned short N,
+                typename std::enable_if<(K<=N),int>::type = 1 >
+      inline double centralized_moment
+      ( const WMoment_<N>& m      ,
+        const double       center )
+      { return ( !m.ok() || m.size() < K ) ? invalid_moment() :
+          m.template centralized_moment_<K> ( center ) ; }
+            
       // ======================================================================
     } ; //                            The end of namespace Ostap::Math::Moments
     // ========================================================================
