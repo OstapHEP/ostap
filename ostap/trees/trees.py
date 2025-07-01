@@ -501,8 +501,6 @@ def tree_project ( tree                     ,
     ## Use our own loop/fill/project machinery
     hp = Ostap.Project ( progress_conf ( progress ) ) 
     
-    print ( 'PROGRESS!', progress )
-    
     ## get the list of active branches 
     with ActiveBranches  ( tree , *varlst ) :
         ## very special case of projection of several expressions into the same 1D-target 
@@ -673,10 +671,10 @@ def _tc_minmax_ ( tree , var , cuts = '' , delta = 0.0 )  :
     >>> mn,mx = chain.vminmax('pt','y>3')
     """
     if hasattr ( tree , 'pstatVar' ) : 
-        if cuts : s = tree.pstatVar ( var , cuts )
+        if cuts : s = tree.pstatVar ( var , cuts = cuts )
         else    : s = tree.pstatVar ( var )
     else :
-        if cuts : s = tree.statVar  ( var , cuts )
+        if cuts : s = tree.statVar  ( var , cuts = cuts )
         else    : s = tree.statVar  ( var )
 
     mn,mx = s.minmax()
@@ -897,11 +895,9 @@ def _rt_table_0_ ( tree ,
     ## collect information
     _vars = []
 
-    if   hasattr ( tree , 'fstatVar' ) : s0 = tree.fstatVar ( '1' , cuts , *args )
-    elif hasattr ( tree , 'pstatVar' ) : s0 = tree.pstatVar ( '1' , cuts , *args )
-    else                               : s0 = tree. statVar ( '1' , cuts , *args )
-    
-    n0    = s0.nEntries  ()
+    ## 
+    s0 = tree. statVar ( '1' , *args , cuts = cuts , use_frame = True , parallel = True )    
+    n0 = s0.nEntries   ()
 
     ## no entries passed the cuts 
     brs   = () if 0 == n0 else brs
@@ -928,10 +924,9 @@ def _rt_table_0_ ( tree ,
         
         bbs.append ( b ) 
 
-    
-    if   hasattr ( tree , 'fstatVar' ) : bbstats = tree.fstatVar ( bbs , cuts , *args )
-    elif hasattr ( tree , 'pstatVar' ) : bbstats = tree.pstatVar ( bbs , cuts , *args )
-    else                               : bbstats = tree. statVar ( bbs , cuts , *args )
+
+    ## get the statistic 
+    bbstats = tree. statVar ( bbs , *args , cuts = cuts , use_frame = True , parallel= True )
 
     from ostap.stats.counters import WSE, SE  
     if   isinstance ( bbstats , ( WSE , SE ) )  : bbstats = { bbs [ 0 ] : bbstats } 
@@ -1067,9 +1062,7 @@ def _rt_table_1_ ( tree ,
 
     bbs = tuple ( sorted ( variables ) ) 
 
-    if   hasattr ( tree , 'fstatVar' ) : bbstats = tree.fstatVar ( bbs , cuts , *args )
-    elif hasattr ( tree , 'pstatVar' ) : bbstats = tree.pstatVar ( bbs , cuts , *args )
-    else                               : bbstats = tree. statVar ( bbs , cuts , *args )
+    bbstats = tree. statVar ( bbs , *args , cuts = cuts , use_frame = True , parallel = True ) 
 
     from ostap.stats.counters import WSE 
     if isinstance ( bbstats , WSE )  : bbstats = { bbs[0] : bbstats } 

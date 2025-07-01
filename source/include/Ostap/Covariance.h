@@ -31,7 +31,7 @@ namespace Ostap
       // ======================================================================
       /// the actual type of counter 
       typedef Ostap::StatEntity                       Counter  ;
-      /// covarinace/correlation matrices 
+      /// covariance/correlation matrices 
       typedef Ostap::SymMatrix2x2                     Matrix   ;
       /// #of entries 
       typedef Counter::size_type                      size_type ;
@@ -88,10 +88,17 @@ namespace Ostap
       /// add x,y
       void update
       ( const double x ,
-	const double y ) override { add ( x , y ) ; }
+        const double y ) override { add ( x , y ) ; }
       // ======================================================================
       /// reset counters 
       void reset () override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      Covariance& __iadd__ ( const Covariance& right ) { return add ( right ) ; }
+      // ======================================================================
+      Covariance  __add__  ( const Covariance& right ) const
+      { Covariance result { *this } ; result.add ( right ) ; return result ; }      
       // ======================================================================
     public :
       // ======================================================================
@@ -128,7 +135,7 @@ namespace Ostap
       // ======================================================================
       /// the actual type of counter 
       typedef Ostap::WStatEntity                Counter  ;
-      /// covarinace/correlation matrices 
+      /// covariabce/correlation matrices 
       typedef Ostap::Math::Covariance::Matrix   Matrix   ;
       /// #of entries 
       typedef Counter::size_type                size_type ;
@@ -141,8 +148,8 @@ namespace Ostap
       // constructor from two counters and the correlation coefficient
       WCovariance
       ( const Counter& c1       , 
-	const Counter& c2       ,
-	const double   corr = 0 ) ;
+        const Counter& c2       ,
+        const double   corr = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -195,6 +202,13 @@ namespace Ostap
       // ======================================================================
       /// reset counters 
       void reset () override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      WCovariance& __iadd__ ( const WCovariance& right ) { return add ( right ) ; }
+      // ======================================================================
+      WCovariance  __add__  ( const WCovariance& right ) const
+      { WCovariance result { *this } ; result.add ( right ) ; return result ; }      
       // ======================================================================
     public:
       // ======================================================================

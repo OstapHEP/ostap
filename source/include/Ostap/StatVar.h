@@ -462,7 +462,61 @@ namespace Ostap
       const Ostap::DataType     tmin       = Ostap::MinValue   ,
       const Ostap::DataType     tmax       = Ostap::MaxValue   ) const ;
     // ========================================================================
-  public: /// statistc for sintgelvariable
+  public: /// statistc for single variable
+    // =========================================================================
+    /** Is there at leats one good entry in dataset ?
+     *  @param data       (INPUT) input data 
+     *  @param selecttion (INPUT) selection criteria 
+     *  @param first      (INPUT) the first event to process (inclusibe) 
+     *  @param last       (INPUT) the last event to process (exclusive) 
+     */
+    bool hasEntry 
+    ( TTree*                    data                           , 
+      const std::string         selection  = ""                , 
+      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last       = Ostap::LastEvent  ) const ;
+    // ========================================================================
+    /** Is there at leats one good entry in dataset ?
+     *  @param data       (INPUT) input data 
+     *  @param selecttion (INPUT) selection criteria 
+     *  @param first      (INPUT) the first event to process (inclusibe) 
+     *  @param last       (INPUT) the last event to process (exclusive) 
+     */
+    bool hasEntry 
+    ( const RooAbsData*         data                           , 
+      const std::string&        selection  = ""                ,
+      const std::string&        cut_range  = ""                ,   
+      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last       = Ostap::LastEvent  ) const ;    
+    // ========================================================================
+  public: /// statistc for single variable
+    // =========================================================================
+    /** get the nmnber of good entries 
+     *  @param data (INPUT) input dat 
+     *  @param selecttion (INPUT) selection criteria 
+     *  @param first      (INPUT) the first event to process (inclusibe) 
+     *  @param last       (INPUT) the last event to process (exclusive) 
+     */
+    Ostap::EventIndex size
+    ( TTree*                  data           ,
+      const std::string&      selection = "" ,
+      const Ostap::EventIndex first     = Ostap::FirstEvent ,
+      const Ostap::EventIndex last      = Ostap::LastEvent  ) const ;
+    // ======================================================================
+    /** get the nmnber of good entries 
+     *  @param data (INPUT) input dat 
+     *  @param selecttion (INPUT) selection criteria 
+     *  @param first      (INPUT) the first event to process (inclusibe) 
+     *  @param last       (INPUT) the last event to process (exclusive) 
+     */
+    Ostap::EventIndex size
+    ( const RooAbsData*       data           ,
+      const std::string&      selection = "" ,
+      const std::string&      cut_range = "" , 
+      const Ostap::EventIndex first     = Ostap::FirstEvent ,
+      const Ostap::EventIndex last      = Ostap::LastEvent  ) const ;    
+    // ========================================================================
+  public: /// statistc for single variable
     // =========================================================================
     /** build statistic for the <code>expression</code>
      *  @param tree       (INPUT) the tree 

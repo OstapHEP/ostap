@@ -20,7 +20,7 @@ namespace Ostap
   {
     // ========================================================================
     /** @class Covariances 
-     *  Covarinance N=-dimensional data 
+     *  Covariance N=-dimensional data 
      *  @author Vanya BELYAEV Ivan.Belyae@cern.ch
      *  @date 2025-06-17
      */
@@ -40,8 +40,8 @@ namespace Ostap
       // ======================================================================
       /// constructor from  the content
       Covariances
-	    ( const Counters&  counters , 
-	      const CovMatrix& cov2     ) ;
+      ( const Counters&  counters , 
+        const CovMatrix& cov2     ) ;
       // ======================================================================
     public :
       // ======================================================================
@@ -66,6 +66,27 @@ namespace Ostap
       /// update the correlation counter 
       Covariances& add ( const std::vector<double>& input ) ; 
       // ======================================================================
+    public: // add to conuters of the sam size 
+      // ======================================================================
+      Covariances& add
+      ( const Covariances& right ) ;
+      // ======================================================================
+      Covariances& operator+=( const Covariances& right )
+      { return add ( right ) ; }
+      // ======================================================================      
+    public:
+      // ======================================================================
+      Covariances& __iadd__ ( const Covariances& right )
+      { return add ( right ) ; }
+      // ======================================================================
+      Covariances  __add__  ( const Covariances& right ) const
+      { Covariances result { *this } ; result.add ( right ) ; return result ; }      
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /// swap two objects
+      void swap ( Covariances& c2 ) ;
+      // ======================================================================
     private :
       // ======================================================================
       /// Counters fom variables  
@@ -78,9 +99,18 @@ namespace Ostap
       mutable std::vector<double>  m_delta {} ;
       // ======================================================================
     } ;
+    // ========================================================================      
+    /// external operator for addition of two covariance objects
+    inline Covariances operator+( Covariances a , const Covariances& b ) 
+    { a += b ; return a ; }
+    // ========================================================================
+    /// swap two objects 
+    inline void swap
+    ( Covariances& a ,
+      Covariances& b ) { a.swap ( b ) ; } 
     // ========================================================================
     /** @class WCovariances 
-     *  Covarinance for  N-dimensional data (with weight) 
+     *  Covariance for  N-dimensional data (with weight) 
      *  @author Vanya BELYAEV Ivan.Belyae@cern.ch
      *  @date 2025-06-17
      */
@@ -100,8 +130,8 @@ namespace Ostap
       // ======================================================================
       /// constructor from  the content
       WCovariances
-	    ( const Counters&  counters , 
-	      const CovMatrix& cov2     ) ;
+      ( const Counters&  counters , 
+        const CovMatrix& cov2     ) ;
       // ======================================================================
     public :
       // ======================================================================
@@ -130,18 +160,48 @@ namespace Ostap
       ( const std::vector<double>& input      , 
         const  double              weight = 1) ; 
       // ======================================================================
+    public: // add to conuters of the sam size 
+      // ======================================================================
+      WCovariances& add
+      ( const WCovariances& right ) ;
+      // ======================================================================
+      WCovariances& operator+=( const WCovariances& right )
+      { return add ( right ) ; }
+      // ======================================================================      
+    public:
+      // ======================================================================
+      WCovariances& __iadd__ ( const WCovariances& right )
+      { return add ( right ) ; }
+      // ======================================================================
+      WCovariances  __add__  ( const WCovariances& right ) const
+      { WCovariances result { *this } ; result.add ( right ) ; return result ; }      
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// swap two objects
+      void swap ( WCovariances& c2 ) ;
+      // ======================================================================
     private :
       // ======================================================================
       /// Counters fom variables  
       Counters   m_counters   { 2 } ; // Counters fom variables  
       /// Covariance matrix 
-      CovMatrix  m_cov2       { 2  } ; // Covariance matrix  
+      CovMatrix  m_cov2       { 2 } ; // Covariance matrix  
       // ======================================================================
     private:
       // ======================================================================
       mutable std::vector<double>  m_delta {} ;
       // ======================================================================
     } ;
+    // ========================================================================
+    /// external operator for addition of two covariance objects
+    inline WCovariances operator+( WCovariances a , const WCovariances& b ) 
+    { a += b ; return a ; }
+    // ========================================================================
+    /// swap two objects 
+    inline void swap
+    ( WCovariances& a ,
+      WCovariances& b ) { a.swap ( b ) ; } 
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================

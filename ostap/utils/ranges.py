@@ -38,8 +38,6 @@ __all__     = (
     'RRange'    , ## simple looping from xmin to xmax in N-steps using random points 
     'rrange'    , ## simple looping from xmin to xmax in N-steps using random points 
     ##
-    'evt_range' , ## trivial function to adjut first/last indiced for collictios of given size
-    ##
     )
 #
 # =============================================================================
@@ -345,37 +343,6 @@ def rrange ( vmin , vmax , n = 10 , edges = True  ) :
     """
     return RRange ( vmin , vmax , n , edges )
 
-
-# =============================================================================
-### Get the event range from first/last
-#   @code
-#   data = ...
-#   first, last = ...
-#   first, last = evt_range ( len ( data ) , first ,  last ) 
-#   @endcode
-## def evt_range ( size , first = 0  , last = LAST_ENTRY ) :
-def evt_range ( size , first , last ) :
-    """ Get the event range from first/last
-    >>> data = ...
-    >>> first, last = ...
-    >>>  first, last = evt_range ( len ( data ) , first ,  last ) 
-    """
-    assert isinstance ( size  , integer_types ) and 0 <= size , "evt_range: Invalid type of `size'!"
-    assert isinstance ( first , integer_types ) , "evt_range: Invalid type of `first' : %s " % type ( first ) 
-    assert isinstance ( last  , integer_types ) , "evt_range: Invalid type of `last'  : %s " % type ( last  ) 
-    ## 
-    if not size : return 0, 0         ## empty contained
-    # 
-    if    0 <= first < size           : pass 
-    elif       first < 0 and 0 < size : first += size
-    ## 
-    if    first <= last               : pass 
-    elif  last  < 0 and 0 <= size     : last  += size
-    #+
-    assert 0 <= first <= last , 'evt_range(size=%d,first=%d,last=%d): invalid event range!' % ( size , first , last )
-    # 
-    return first, last 
-# =============================================================================
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -570,12 +570,12 @@ Ostap::StatusCode Ostap::StatVar::get_stat
       formulae.evaluate ( 2 , results [ 2 ] ) ;
       //
       for ( const double x : results [ 0 ] )
-	{ if ( !in_range ( x , xmin , xmax ) ) { continue ; } // CONTINUE 
-	  for ( const double y : results [ 1 ] )
-	    { if ( !in_range ( y , ymin , ymax ) ) { continue ; } // CONTINUE 
-	      for ( const double z : results [ 2 ] )
-		{ if ( !in_range ( z , zmin , zmax ) ) { continue ; } // CONTINUE 
-		  stat.update ( x , y , z ) ; } } }
+        { if ( !in_range ( x , xmin , xmax ) ) { continue ; } // CONTINUE 
+          for ( const double y : results [ 1 ] )
+            { if ( !in_range ( y , ymin , ymax ) ) { continue ; } // CONTINUE 
+              for ( const double z : results [ 2 ] )
+                { if ( !in_range ( z , zmin , zmax ) ) { continue ; } // CONTINUE 
+                  stat.update ( x , y , z ) ; } } }
       //
     }
   //
@@ -1025,7 +1025,6 @@ Ostap::StatusCode Ostap::StatVar::get_stat
 }
 // =============================================================================
 
-
 // =============================================================================
 /*  build statistic for the <code>expressions</code>
  *  @param tree        (INPUT)  the tree 
@@ -1057,7 +1056,7 @@ Ostap::StatusCode Ostap::StatVar::statVars
   if ( expressions.empty() ) { return Ostap::StatusCode::SUCCESS ; }
   //
   const Ostap::EventIndex num_entries =  data->GetEntries() ;
-  const Ostap::EventIndex the_last    = std::min ( first , num_entries ) ;
+  const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
   if ( the_last <= first   ) { return Ostap::StatusCode::SUCCESS ; }
   //
   /// formulae for exressons
@@ -1080,11 +1079,11 @@ Ostap::StatusCode Ostap::StatVar::statVars
       if ( !cut ) { continue  ; }
       //
       for ( std::size_t i = 0 ; i < N ; ++i ) 
-	{
-	  formulae.evaluate ( i , results ) ;
-	  for ( const double value : results )
-	    { if ( std::isfinite ( value ) ) { result[i].add ( value ) ; } } 
-	}
+        {
+          formulae.evaluate ( i , results ) ;
+          for ( const double value : results )
+            { if ( std::isfinite ( value ) ) { result[i].add ( value ) ; } } 
+        }
     }
   //
   return Ostap::StatusCode::SUCCESS ;
@@ -1120,7 +1119,7 @@ Ostap::StatusCode Ostap::StatVar::statVars
   if ( expressions.empty() ) { return Ostap::StatusCode::SUCCESS ; }
   //
   const Ostap::EventIndex num_entries =  data->GetEntries() ;
-  const Ostap::EventIndex the_last    = std::min ( first , num_entries ) ;
+  const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
   if ( the_last <= first   ) { return Ostap::StatusCode::SUCCESS ; }
   //
   /// formulae for exressons
@@ -1174,7 +1173,7 @@ Ostap::StatVar::statVars
   const Ostap::EventIndex         first       ,
   const Ostap::EventIndex         last        ) const
 {
-  // 
+  //
   const std::size_t N = expressions.size() ;
   result.resize ( N ) ; 
   for ( auto& r : result ) { r.reset () ; }
@@ -1183,7 +1182,7 @@ Ostap::StatVar::statVars
   if ( expressions.empty() ) { return Ostap::StatusCode::SUCCESS ; }
   //
   const Ostap::EventIndex num_entries =  data->numEntries() ;
-  const Ostap::EventIndex the_last    = std::min ( first , num_entries ) ;
+  const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
   if ( the_last <= first   ) { return Ostap::StatusCode::SUCCESS ; }
   //
   /// formulae for exressons
@@ -1213,17 +1212,224 @@ Ostap::StatVar::statVars
       if ( !weight || !std::isfinite ( weight ) ) { continue ; } // CONTINUE        
       //
       for ( std::size_t i = 0 ; i < N ; ++i ) 
-	{
-	  const double value = formulae.evaluate ( i ) ;
-	  if ( !std::isfinite ( value ) ) { continue ; } // CONTINUE 
-	  result [ i ].add ( value , weight ) ;
-	}
+        {
+          const double value = formulae.evaluate ( i ) ;
+          if ( !std::isfinite ( value ) ) { continue ; } // CONTINUE 
+          result [ i ].add ( value , weight ) ;
+        }
       //
     }
   //
   return Ostap::StatusCode::SUCCESS ; 
 }
 // ==========================================================================
+
+// =========================================================================
+/// Is there at leats one good entry in dataset ?
+// =========================================================================
+
+// =========================================================================
+/*  Is there at leats one good entry in dataset ?
+ *  @param data       (INPUT) input data 
+ *  @param selecttion (INPUT) selection criteria 
+ *  @param first      (INPUT) the first event to process (inclusibe) 
+ *  @param last       (INPUT) the last event to process (exclusive) 
+ */
+// =========================================================================
+bool Ostap::StatVar::hasEntry 
+( TTree*                    data                           , 
+  const std::string         selection  , 
+  const Ostap::EventIndex   first      ,
+  const Ostap::EventIndex   last       ) const 
+{
+  if ( !data ) { return false ; } // NB!
+  //
+  const Ostap::EventIndex num_entries =  data->GetEntries() ;
+  const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
+  if ( the_last <= first  ) { return false ; }
+  //
+  /// no cuts ? 
+  if ( Ostap::trivial ( selection ) ) { return first < the_last ; }
+  //
+  /// formulae for exression
+  const std::unique_ptr<Ostap::Formula> cuts { Ostap::makeFormula ( selection , data , true ) } ;
+  const bool with_cuts = cuts && cuts->ok() ;
+  //
+  if  ( !with_cuts ) { return first < the_last ; }
+  //
+  Ostap::Utils::Notifier    notify ( data , cuts.get() ) ;
+  Ostap::Utils::ProgressBar bar    ( the_last - first , m_progress ) ;
+  for ( Ostap::EventIndex   entry = first ; entry < the_last  ; ++entry , ++bar )
+    {
+      //
+      const long ievent = data -> GetEntryNumber ( entry ) ;
+      if ( 0 > ievent                    ) { return false ; } // RETURN
+      if ( 0 > data->LoadTree ( ievent ) ) { return false ; } // RETURN
+      //
+      const bool cut = with_cuts ? cuts ->evaluate() : 1.0 ;
+      if ( !cut ) { continue  ; }                        
+      //
+      return true ;                                            // RETURN 
+    }
+  return false ;                                               // RETURN
+}
+// ====================================================================================
+/*  Is there at leats one good entry in dataset ?
+ *  @param data       (INPUT) input data 
+ *  @param selecttion (INPUT) selection criteria 
+ *  @param first      (INPUT) the first event to process (inclusibe) 
+ *  @param last       (INPUT) the last event to process (exclusive) 
+ */
+// ====================================================================================
+bool Ostap::StatVar::hasEntry 
+( const RooAbsData*         data       , 
+  const std::string&        selection  ,
+  const std::string&        cut_range  , 
+  const Ostap::EventIndex   first      ,
+  const Ostap::EventIndex   last       ) const
+{
+  if ( !data ) { return false ; } // NB!                                 // RETURN 
+  //
+  const Ostap::EventIndex num_entries =  data->numEntries() ;
+  const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
+  if ( the_last <= first   ) { return false ; ; }                         // RETURN 
+  //
+  /// formulae for exressons
+  const std::unique_ptr<Ostap::FormulaVar> cuts     { Ostap::makeFormula ( selection , data , true ) } ;
+  //
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
+  const bool  weighted = data->isWeighted() ;
+  //
+  // No need to run the loop 
+  if ( !cuts && !cutrange && !weighted ) { return first < the_last ; }   // RETURN
+  //
+  // start the loop
+  Ostap::Utils::ProgressBar bar ( the_last - first , m_progress ) ;
+  for ( Ostap::EventIndex   entry = first ; entry < the_last ; ++entry , ++bar )
+    {
+      //
+      const RooArgSet* vars = data->get( entry ) ;
+      if ( nullptr == vars  )                           { return false ; } // RETURN
+      if ( cutrange && !vars->allInRange ( cutrange ) ) { continue     ; } // CONTINUE    
+      //
+      // apply weight:
+      const double wd = weighted  ? data->weight()        : 1.0 ;
+      if ( !wd ) { continue ; }                                   // CONTINUE    
+      // apply cuts:
+      const double wc = cuts ? cuts -> getVal() : 1.0 ;
+      if ( !wc ) { continue ; }                                   // CONTINUE  
+      // cuts & weight:
+      const double weight  = wd *  wc ;
+      if ( !weight || !std::isfinite ( weight ) ) { continue ; }  // CONTINUE        
+      //
+      return true ;                                               // RETURN 
+    }
+  return false ;
+}
+// =========================================================================
+
+
+// =========================================================================
+/*  Number of good entries 
+ *  @param data       (INPUT) input data 
+ *  @param selecttion (INPUT) selection criteria 
+ *  @param first      (INPUT) the first event to process (inclusibe) 
+ *  @param last       (INPUT) the last event to process (exclusive) 
+ */
+// =========================================================================
+Ostap::EventIndex Ostap::StatVar::size 
+( TTree*                    data                           , 
+  const std::string&        selection  , 
+  const Ostap::EventIndex   first      ,
+  const Ostap::EventIndex   last       ) const 
+{
+  if ( !data ) { return 0  ; } // NB!
+  //
+  const Ostap::EventIndex num_entries =  data->GetEntries() ;
+  const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
+  if ( the_last <= first  ) { return 0 ; }
+  //
+  /// no cuts ? 
+  if ( Ostap::trivial ( selection ) ) { return the_last - first  ; }
+  //
+  /// formulae for exression
+  const std::unique_ptr<Ostap::Formula> cuts { Ostap::makeFormula ( selection , data , true ) } ;
+  const bool with_cuts = cuts && cuts->ok() ;
+  //
+  if  ( !with_cuts ) { return the_last - first ; }
+  //
+  Ostap::Utils::Notifier    notify ( data , cuts.get() ) ;
+  Ostap::EventIndex         result { 0 } ; 
+  Ostap::Utils::ProgressBar bar    ( the_last - first , m_progress ) ;
+  for ( Ostap::EventIndex   entry = first ; entry < the_last  ; ++entry , ++bar )
+    {
+      //
+      const long ievent = data -> GetEntryNumber ( entry ) ;
+      if ( 0 > ievent                    ) { return result ; } // RETURN
+      if ( 0 > data->LoadTree ( ievent ) ) { return result ; } // RETURN
+      //
+      const bool cut = with_cuts ? cuts ->evaluate() : 1.0 ;
+      if ( !cut ) { continue  ; }                        
+      //
+      ++result ;
+    }
+  return result ;                                               // RETURN
+}
+// ====================================================================================
+/*  Is there at leats one good entry in dataset ?
+ *  @param data       (INPUT) input data 
+ *  @param selecttion (INPUT) selection criteria 
+ *  @param first      (INPUT) the first event to process (inclusibe) 
+ *  @param last       (INPUT) the last event to process (exclusive) 
+ */
+// ====================================================================================
+Ostap::EventIndex Ostap::StatVar::size 
+( const RooAbsData*         data       , 
+  const std::string&        selection  ,
+  const std::string&        cut_range  , 
+  const Ostap::EventIndex   first      ,
+  const Ostap::EventIndex   last       ) const
+{
+  if ( !data ) { return 0  ; } // NB!                                 // RETURN 
+  //
+  const Ostap::EventIndex num_entries =  data->numEntries() ;
+  const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
+  if ( the_last <= first   ) { return 0  ; ; }                         // RETURN 
+  //
+  /// formulae for exressons
+  const std::unique_ptr<Ostap::FormulaVar> cuts     { Ostap::makeFormula ( selection , data , true ) } ;
+  //
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
+  const bool  weighted = data->isWeighted() ;
+  //
+  // No need to run the loop 
+  if ( !cuts && !cutrange && !weighted ) { return the_last - first ; }   // RETURN
+  //
+  Ostap::EventIndex result { 0 } ;
+  // start the loop  
+  Ostap::Utils::ProgressBar bar ( the_last - first , m_progress ) ;
+  for ( Ostap::EventIndex   entry = first ; entry < the_last ; ++entry , ++bar )
+    {
+      //
+      const RooArgSet* vars = data->get( entry ) ;
+      if ( nullptr == vars  )                           { return  result ; } // RETURN
+      if ( cutrange && !vars->allInRange ( cutrange ) ) { continue       ; } // CONTINUE    
+      //
+      // apply weight:
+      const double wd = weighted  ? data->weight()        : 1.0 ;
+      if ( !wd ) { continue ; }                                   // CONTINUE    
+      // apply cuts:
+      const double wc = cuts ? cuts -> getVal() : 1.0 ;
+      if ( !wc ) { continue ; }                                   // CONTINUE  
+      // cuts & weight:
+      const double weight  = wd *  wc ;
+      if ( !weight || !std::isfinite ( weight ) ) { continue ; }  // CONTINUE        
+      //
+      ++result ;
+    }
+  return result;
+}
+// =========================================================================
 
 // =========================================================================
 // Collect information for single variable 
@@ -1537,7 +1743,7 @@ Ostap::StatusCode Ostap::StatVar::statCov
   if ( expressions.empty() ) { return Ostap::StatusCode::SUCCESS ; }
   //
   const Ostap::EventIndex num_entries =  data->GetEntries() ;
-  const Ostap::EventIndex the_last    = std::min ( first , num_entries ) ;
+  const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
   if ( the_last <= first   ) { return Ostap::StatusCode::SUCCESS ; }
   //
   /// formulae for exressons
@@ -1609,7 +1815,7 @@ Ostap::StatVar::statCov
   if ( expressions.empty() ) { return Ostap::StatusCode::SUCCESS ; }
   //
   const Ostap::EventIndex num_entries =  data->GetEntries() ;
-  const Ostap::EventIndex the_last    = std::min ( first , num_entries ) ;
+  const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
   if ( the_last <= first   ) { return Ostap::StatusCode::SUCCESS ; }
   //
   /// formulae for exressons
@@ -1683,7 +1889,7 @@ Ostap::StatVar::statCov
   if ( expressions.empty() ) { return Ostap::StatusCode::SUCCESS ; }
   //
   const Ostap::EventIndex num_entries =  data -> numEntries () ;
-  const Ostap::EventIndex the_last    = std::min ( first , num_entries ) ;
+  const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
   if ( the_last <= first   ) { return Ostap::StatusCode::SUCCESS ; }
   //
   /// formulae for exressons

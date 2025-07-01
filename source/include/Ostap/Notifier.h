@@ -50,8 +50,8 @@ namespace  Ostap
       template <class ITERATOR>
       Notifier
       ( ITERATOR  begin ,
-	ITERATOR  end   , 
-	TTree*    tree  ) ;
+        ITERATOR  end   , 
+        TTree*    tree  ) ;
       // templated constructor 
       template <class ITERATOR>
       Notifier
