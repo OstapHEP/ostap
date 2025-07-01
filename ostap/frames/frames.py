@@ -46,7 +46,7 @@ __all__     = (
     'frame_skewness'        , ## skewness for variable(s)
     'frame_kurtosis'        , ## skewness for variable(s)
     ##
-    'frame_aithmetic_mean'  , ## get the arithmetc mean for variables 
+    'frame_arithmetic_mean' , ## get the arithmetc mean for variables 
     'frame_harmonic_mean'   , ## get the harmonic  mean for variables 
     'frame_geometric_mean'  , ## get the geometric mean for variables 
     'frame_power_mean'      , ## get the power     mean for variables 

@@ -15,6 +15,7 @@ __date__    = "2011-06-07"
 __all__     = (
     'parallel_statistic' ,
     'parallel_get_stat'  ,
+    'parallel_project'   , 
     'parallel_sum'       , 
 ) 
 # =============================================================================
@@ -255,7 +256,7 @@ class ProjectTask(Task) :
 def parallel_statistic ( chain               ,
                          expressions         ,
                          cuts       = ''     ,
-                         first      = FIRTS  , 
+                         first      = FIRST  , 
                          last       = LAST   ,
                          as_weight  = True   ,
                          progress   = False  ,
@@ -285,7 +286,7 @@ def parallel_statistic ( chain               ,
     
     if 0 <= first and 0 < nevents < chunk_size :
         return data_statistic ( chain       ,
-                                expressions , first  , last
+                                expressions , first     , last , 
                                 cuts        = cuts      , 
                                 as_weight   = as_weight ,
                                 progress    = progress  ,
@@ -293,7 +294,7 @@ def parallel_statistic ( chain               ,
                                 parallel    = False     )
     elif isinstance ( chain , ROOT.TChain ) and 0 < nevents < chunk_size :
         return data_statistic ( chain       ,
-                                expressions , first  , last
+                                expressions , first     , last , 
                                 cuts        = cuts      , 
                                 as_weight   = as_weight ,
                                 progress    = progress  ,
@@ -330,7 +331,7 @@ def parallel_statistic ( chain               ,
 def parallel_sum ( chain               ,
                    expressions         ,
                    cuts       = ''     ,
-                   first      = FIRTS  , 
+                   first      = FIRST  , 
                    last       = LAST   ,                   
                    as_weight  = True   ,
                    progress   = False  ,
@@ -402,7 +403,7 @@ def parallel_get_stat ( chain               ,
     if 0 <= first and 0 < nevents < chunk_size :
         return data_get_stat  ( chain       ,
                                 target      , 
-                                expressions , first  , last
+                                expressions , first     , last , 
                                 cuts        = cuts      , 
                                 progress    = progress  ,
                                 use_frame   = use_frame ,
@@ -411,7 +412,7 @@ def parallel_get_stat ( chain               ,
     elif isinstance ( chain , ROOT.TChain ) and 0 < nevents < chunk_size :
         return data_get_stat ( chain       ,
                                target      , 
-                               expressions , first  , last
+                               expressions , first     , last , 
                                cuts        = cuts      , 
                                progress    = progress  ,
                                use_frame   = use_frame ,
@@ -474,7 +475,7 @@ def parallel_project ( chain               ,
     if 0 <= first and 0 < nevents < chunk_size :
         return data_project  ( chain       ,
                                target      , 
-                               expressions , first  , last
+                               expressions , first     , last , 
                                cuts        = cuts      , 
                                progress    = progress  ,
                                use_frame   = use_frame ,
@@ -483,7 +484,7 @@ def parallel_project ( chain               ,
     elif isinstance ( chain , ROOT.TChain ) and 0 < nevents < chunk_size :
         return data_project ( chain       ,
                               target      , 
-                              expressions , first  , last
+                              expressions , first     , last , 
                               cuts        = cuts      , 
                               progress    = progress  ,
                               use_frame   = use_frame ,

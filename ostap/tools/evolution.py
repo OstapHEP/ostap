@@ -23,11 +23,12 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types   import integer_types, sized_types  
 from   ostap.core.pyrouts       import Ostap, hID
-from   ostap.frames.frames      import frame_project, Frames_OK 
+from   ostap.frames.frames      import frame_project
 from   ostap.utils.valerrors    import ValWithErrors 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.timing       import timing 
+from   ostap.frames.frames      import frame_the_moment, frame_statistic
 import ostap.trees.trees
 import ostap.histos.histos 
 import ostap.histos.graphs 
@@ -42,31 +43,18 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.evolution' )
 else                       : logger = getLogger ( __name__                )
 # =============================================================================
-if Frames_OK : # ==============================================================
-    # =========================================================================
-    from ostap.frames.frames import frame_the_moment, frame_the_statVar
-    def _X_stat ( tree , xvar, cuts ) :
-        return frame_the_statVar ( tree , xvar , cuts , progress = False , report = False , lazy = False )
-    ## get the momnet anc x
-    def _X_and_Ymoment_ ( tree ,  N , yvar , xvar , cuts ) :
-        mm = frame_the_moment  ( tree , N , yvar , cuts , progress = False , report = False , lazy = True )
-        xs = frame_the_statVar ( tree ,     xvar , cuts , progress = False , report = False , lazy = True )
-        mm = mm.GetValue()
-        xs = xs.GetValue()
-        return xs, mm 
-    # ========================================================================= 
-else : # ======================================================================
-    #  ========================================================================
-    from ostap.frames.frames import frame_moment, frame_statVar
-    def _X_stat ( tree , xvar, cuts ) :
-        return frame_statVar ( tree , xvar , cuts )
-    ## get X and Y-moment the momnet anc x
-    def _X_and_Ymoment_ ( tree ,  N , yvar , xvar , cuts ) :
-        mm = frame_moment  ( tree , N , yvar , cuts )
-        xs = frame_statVar ( tree ,     xvar , cuts )
-        return xs, mm 
-    
-# ===========================================================================
+def _X_stat ( tree , xvar, cuts ) :
+    return frame_statistic ( tree , xvar , cuts , progress = False , report = False , lazy = False )
+# ============================================================================
+## get the moment and satistics in one go 
+def _X_and_Ymoment_ ( tree ,  N , yvar , xvar , cuts ) :
+    mm , current = frame_the_moment ( tree    , N , yvar , cuts , progress = False , report = False , lazy = True )
+    xs , current = frame_statistic  ( current ,     xvar , cuts , progress = False , report = False , lazy = True )
+    mm = mm.GetValue()
+    xs = xs.GetValue()
+    return xs, mm
+
+# ========================================================================= 
 ## Helper function to study the non-parametric evolution of the distribution
 #  shape of one variabl eas function of anmothe variable,
 #  e.f. shape of resolution function
