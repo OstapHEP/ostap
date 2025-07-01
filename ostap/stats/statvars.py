@@ -66,6 +66,7 @@ from   ostap.core.core           import Ostap, rootException, WSE, VE, std
 from   ostap.core.ostap_types    import ( string_types , integer_types  , 
                                           num_types    , dictlike_types )
 from   ostap.trees.cuts          import expression_types, vars_and_cuts
+from   ostap.math.base           import evt_range 
 from   ostap.utils.basic         import loop_items, typename 
 from   ostap.utils.progress_conf import progress_conf
 import ostap.frames.frames       as     F 
@@ -78,9 +79,6 @@ import ROOT
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.statvars' )
 else                       : logger = getLogger ( __name__               )
-# =============================================================================
-FIRST   = Ostap.FirstEvent
-LAST    = Ostap.LastEvent
 # =============================================================================
 LARGE   = 50000    ## allow frames or parallel for LARGE datasets 
 # =============================================================================
@@ -118,7 +116,7 @@ _s4D = Ostap.Math.Statistic4 , Ostap.Math.WStatistic4
 #  @code
 #  statobj = Ostap.Math.MinValue()
 #  data    = ...
-#  result  = data.get_stat ( statobj , 'x+y' , 'pt>1' ) 
+#  result  = data_get_stat ( data , statobj , 'x+y' , cuts = 'pt>1' ) 
 #  @encode
 #  @see Ostap::Math::Statistic
 #  @see Ostap::Math::WStatistic
@@ -128,7 +126,6 @@ _s4D = Ostap.Math.Statistic4 , Ostap.Math.WStatistic4
 #  @see Ostap::Math::WStatistic3
 #  @see Ostap::Math::Statistic4
 #  @see Ostap::Math::WStatistic4
-#  @see Ostap::statVar::the_moment
 def data_get_stat ( data               ,
                     statobj            ,
                     expressions        ,
@@ -223,7 +220,6 @@ def data_get_stat ( data               ,
 #  @code
 #  data =  ...
 #  print data_the_moment ( data , 3 , 0.0 , 'mass' , 'pt>1' ) 
-#  print data.the_moment (        3 , 0.0 , 'mass' , 'pt>1' ) ## ditto
 #  @endcode
 #  @see Ostap::Math::Moment_
 #  @see Ostap::Math::WMoment_
@@ -263,6 +259,132 @@ def data_the_moment ( data               ,
                            progress  = progress  , 
                            use_frame = use_frame , 
                            parallel  = parallel  )
+
+# =============================================================================
+## Is there at leats one good entry ?
+def data_hasEntry ( data      , *args  , 
+                    cuts      = ""     ,
+                    cut_range = ""     ,
+                    progress  = False  ,
+                    use_frame = False  ,
+                    parallel  = False  ) :
+    """ Is there at least one good entry? 
+    """
+    ## (1) decode expressions & cuts
+    _ , cuts , _  = vars_and_cuts ( "1" , cuts )
+
+    ##  (2) trivial case 
+    first , last = evt_range ( data , *args[:2] )
+    if last <= first : return False
+    
+    ## (2) cut_range defined *only* for RooFit datasets 
+    if cut_range and not isinstance ( data , ROOT.RooAbsData ) : 
+        raise TypeError ( "Invalid use of `cut_range':%s" % cut_range  )
+
+    ## (4) display progress ? 
+    progress = progress_conf ( progress )
+    
+    ## (5) create the driver 
+    sv = StatVar ( progress )
+
+    ## (6) RooFit ?
+    if isinstance ( data , ROOT.RooAbsData ) :
+        ## trivial case 
+        if not cuts and not cut_range and not data.isWeigted() : return True 
+        with rootException() :
+            return sv.hasEntry ( data , cuts , cut_range , *args )
+        
+    ## (7) trivial case 
+    if not cuts : return True 
+
+    ## use frame ? 
+    if use_frame and isinstance ( data , ROOT.TTree  ) and len ( data ) > LARGE :
+        if all_entries ( data , *args[:2] ) and not args [2:] :             
+            return 0 < F.frame_size ( data                ,
+                                      cuts     = cuts     , 
+                                      progress = progress ,
+                                      report   = progress ,
+                                      lazy     = False    ) 
+
+    ## paralell ? 
+    if parallel and isinstance ( data , ROOT.TChain ) and len ( data ) > LARGE :
+        if all_entries ( data , *args[:2] ) and not args [2:] : 
+            import ostap.trees.trees   
+            if 1 < data.nFiles () :
+                from ostap.parallel.parallel_statvar import parallel_size 
+                return 0 < paralel_size ( data                  ,
+                                          cuts      = cuts      ,
+                                          progress  = progress  , 
+                                          use_frame = use_frame )
+    
+    ## Branches to be activated
+    from ostap.trees.trees import ActiveBranches
+    with rootException() , ActiveBranches ( cuts ) :
+        return sv.hasEntry ( data , cuts , *args )
+
+# =============================================================================
+## How mant good entries ?
+def data_size ( data      , *args  , 
+                cuts      = ""     ,
+                cut_range = ""     ,
+                progress  = False  ,
+                use_frame = False  ,
+                parallel =  False  ) :
+    """ Is there at least one good entry? 
+    """
+    ## (1) decode expressions & cuts
+    _ , cuts , _  = vars_and_cuts ( "1" , cuts )
+
+    ##  (2) trivial case 
+    first , last = evt_range ( data , *args[:2] )
+    if last <= first : return 0 
+
+    ## (2) cut_range defined *only* for RooFit datasets 
+    if cut_range and not isinstance ( data , ROOT.RooAbsData ) : 
+        raise TypeError ( "Invalid use of `cut_range':%s" % cut_range  )
+
+    ## (4) display progress ? 
+    progress = progress_conf ( progress )
+    
+    ## (5) create the driver 
+    sv = StatVar ( progress )
+
+    ## (6) RooFit ?
+    if isinstance ( data , ROOT.RooAbsData ) :
+        ## trivial case 
+        if not cuts and not cut_range and not data.isWeighted() : return last - first 
+        with rootException() :
+            return sv.size ( data , cuts , cut_range , *args )
+
+    ## (7) trivial case 
+    if not cuts : return last - first 
+
+    ## use frame ? 
+    if use_frame and isinstance ( data , ROOT.TTree  ) and len ( data ) > LARGE :
+        if all_entries ( data , *args[:2] ) and not args [2:] :             
+            return F.frame_size ( data                 ,
+                                  cuts     = cuts      , 
+                                  progress = progress  ,
+                                  report   = progress  ,
+                                  lazy     = False     ) 
+
+    ## paralell ? 
+    if parallel and isinstance ( data , ROOT.TChain ) and len ( data ) > LARGE :
+        if all_entries ( data , *args[:2] ) and not args [2:] : 
+            import ostap.trees.trees   
+            if 1 < data.nFiles () :
+                from ostap.parallel.parallel_statvar import parallel_size 
+                return paralel_size ( data                  ,
+                                      cuts      = cuts      ,
+                                      progress  = progress  , 
+                                      use_frame = use_frame )
+            
+    ## Branches to be activated
+    from ostap.trees.trees import ActiveBranches
+    with rootException() , ActiveBranches ( cuts ) :
+        return sv.size ( data , cuts , *args )
+    
+# =============================================================================
 
 # =============================================================================
 ## get the moment (with uncertainty) of order 'order' 
@@ -377,13 +499,14 @@ def data_statistic ( data               ,
     var_lst, cuts, input_string = vars_and_cuts ( expressions , cuts )
     assert var_lst , "Invalid expressions!"
 
+    
     if use_frame and isinstance ( data , ROOT.TTree  ) and len ( data ) > LARGE :
         if all_entries ( data , *args[:2] ) and not args[2:] :
             return F.frame_statistic ( data        ,
                                        expressions ,
                                        cuts        = cuts      , 
                                        as_weight   = as_weight , 
-                                       progess     = progress  ,
+                                       progress    = progress  ,
                                        report      = progress  ,
                                        lazy        = False     ) 
 
@@ -391,7 +514,7 @@ def data_statistic ( data               ,
         if all_entries ( data , *args[:2] ) and not args [2:] : 
             import ostap.trees.trees   
             if 1 < data.nfiles () :
-                from ostap.parallel.paralle_statvar import parallel_statistic
+                from ostap.parallel.parallel_statvar import parallel_statistic
                 return paralllel_statistic ( data        ,
                                              expressions ,
                                              cuts        = cuts       ,
@@ -425,16 +548,17 @@ def data_statistic ( data               ,
     
     if isinstance ( data , ROOT.RooAbsData ) :
         with rootException() :
-            sc   = sv.statVars ( data , vcnt , vnames  , cuts , cut_range , *args ) 
+            sc   = sv.statVars ( data , vcnt , vnames  , cuts , cut_range , *args )
+            print ( vcnt ) 
             assert sc.isSuccess() , 'Error %s from Ostap::StatVar::statVars' % sc  
             assert len ( vcnt ) == len ( vnames ) , "Mismatch in structure"
-            return { name : cnt for ( name , cnt ) in zip ( var_lst , vct ) } 
+            return { name : cnt for ( name , cnt ) in zip ( var_lst , vcnt ) } 
             
     assert isinstance ( data , ROOT.TTree ) , "Invalid type for data!"
     
     from ostap.trees.trees import ActiveBranches
     with rootException() , ActiveBranches ( data , cuts , *var_lst ) :
-        sc   = sv.statVars ( data , vcnt , vnames , cuts , *args ) 
+        sc   = sv.statVars ( data , vcnt , vnames , cuts , *args   ) 
         assert sc.isSuccess() , 'Error %s from Ostap::StatVar::statVars' % sc 
         assert len ( vcnt ) == len ( vnames ) , "Mismatch in structure"
         return { name : cnt for ( name , cnt ) in zip ( var_lst , vcnt ) } 
@@ -532,7 +656,8 @@ def data_range ( data               ,
     else :
         mn , mx = results
         if mx < mn and ( cuts or cut_range or args ) :
-            mn , mx = data_minmax ( data , expressions    , 
+            mn , mx = data_minmax ( data                  ,
+                                    expressions           , 
                                     progress  = progress  ,
                                     use_frame = use_frame , 
                                     parallel  = parallel  )
@@ -595,11 +720,20 @@ def data_covariance ( data        ,
             return result 
 
     if  use_frame and isinstance ( data , ROOT.TTee   ) and all_entries ( data , *args[:2] ) :
-        raise NotImplementedError ( 'Not yet implemented yet!' )
+        ## raise NotImplementedError ( 'Not yet implemented yet!' )
+        pass
+    
     
     if  parallel  and isinstance ( data , ROOT.TChain ) and all_entries ( data , *args[:2] ) : 
         import ostap.trees.trees
-        if 1 < len ( data.files () ) : raise NotImplementedError ( 'Not yet implemented yet!' )
+        if 1 < len ( data.files () ) :
+            from ostap.parallel.parallel_statvar import parallel_covariance
+            return paralllel_covarinace ( data        ,
+                                          expressions ,
+                                          cuts        = cuts       ,
+                                          as_weight   = as_weight  , 
+                                          progress    = progress   ,
+                                          use_frame   = use+_frame )
         
     assert isinstance ( data , ROOT.TTree ) , "Invalid type for data!"
         
@@ -1238,6 +1372,9 @@ def data_decorate ( klass ) :
     if hasattr ( klass , 'get_moment'     ) : klass.orig_get_moment     = klass.get_moment
     if hasattr ( klass , 'the_moment'     ) : klass.orig_the_moment     = klass.the_moment
     
+    if hasattr ( klass , 'hasEntry'       ) : klass.orig_hasEntry       = klass.hasEntry 
+    if hasattr ( klass , 'has_entry'      ) : klass.orig_has_entry      = klass.has_entry 
+    
     if hasattr ( klass , 'ECDF'           ) : klass.orig_ECDF           = klass.ECDF    
     if hasattr ( klass , 'moment'         ) : klass.orig_moment         = klass.moment
     if hasattr ( klass , 'nEff'           ) : klass.orig_nEff           = klass.nEff
@@ -1258,7 +1395,10 @@ def data_decorate ( klass ) :
     
     klass.get_moment      = data_the_moment
     klass.the_moment      = data_the_moment
-    
+
+    klass.hasEntry        = data_hasEntry 
+    klass.has_entry       = data_hasEntry 
+
     klass.ECDF            = data_ECDF 
     klass.moment          = data_moment
     klass.nEff            = data_nEff 
@@ -1299,6 +1439,8 @@ def data_decorate ( klass ) :
 
     return ( klass.get_moment      , 
              klass.the_moment      , 
+             klass.hasEntry        , 
+             klass.has_entry       , 
              klass.ECDF            , 
              klass.moment          , 
              klass.nEff            , 

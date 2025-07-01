@@ -175,7 +175,7 @@ for iter in range ( 1 , maxIter + 1  ) :
     with timing ( tag + ': project weighted MC-dataset:' , logger = logger ) : 
         # ==============================================================================
         ## 3) make MC-histogram 
-        hmc = mcds .project  ( hmc , 'x' , 'weight'  )
+        hmc = mcds .project  ( hmc , 'x' , cuts = 'weight'  )
 
     with timing ( tag + ': compare DATA and MC distributions:' , logger = logger ) :  
         # ==============================================================================

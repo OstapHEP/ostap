@@ -225,16 +225,16 @@ def test_simfit1 () :
     model_sim.sPlot ( dataset ) 
 
     with use_canvas ( 'test_simfit1: sPlot/xyz for A (signal)'     , wait = 1 ) :
-        dataset.draw ( 'test_xyz' , '(sample==0)*S_M1_sw' )
+        dataset.draw ( 'test_xyz' , cuts = '(sample==0)*S_M1_sw' )
 
     with use_canvas ( 'test_simfit1: sPlot/xyz for A (background)' , wait = 1 ) :
-        dataset.draw ( 'test_xyz' , '(sample==0)*B_M1_sw' )
+        dataset.draw ( 'test_xyz' , cuts = '(sample==0)*B_M1_sw' )
 
     with use_canvas ( 'test_simfit1: sPlot/xyz for B (signal)'     , wait = 1 ) :
-        dataset.draw ( 'test_xyz' , '(sample==1)*S_M2_sw' )
+        dataset.draw ( 'test_xyz' , cuts = '(sample==1)*S_M2_sw' )
 
     with use_canvas ( 'test_simfit1: sPlot/xyz for B (background)' , wait = 1 ) :
-        dataset.draw ( 'test_xyz' , '(sample==1)*B_M2_sw' )
+        dataset.draw ( 'test_xyz' , cuts = '(sample==1)*B_M2_sw' )
 
 
     # =========================================================================

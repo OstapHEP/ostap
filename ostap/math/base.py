@@ -998,8 +998,9 @@ def evt_range ( sized , first = FIRST_ENTRY , last = LAST_ENTRY  ) :
     if last  < 0 : last  += size 
     assert 0 <= first <= last , "Invalid first/last setting!"
     ##
-    if   size <= first : return size, size 
-    elif size <= last  : return first, min ( size , last )
+    if   size <= first : return size  , size 
+    elif size <= last  : return first , min ( size , last )
+    ##
     return first , last 
 # =========================================================================
 ## Are all entries required to process?

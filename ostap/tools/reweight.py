@@ -490,7 +490,7 @@ class Weight(object) :
 def mc_data_projector  ( dataset , histo , what , how ) :
     """ Default function to make MC projection
     """
-    dataset.project ( histo , what , how )
+    dataset.project ( histo , what , cuts = how )
     return histo 
 
 

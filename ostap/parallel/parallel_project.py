@@ -17,7 +17,8 @@ __all__     = (
     'tproject' , ## parallel project from looong TTree 
     ) 
 # =============================================================================
-from   ostap.parallel.parallel_statvar parallel_project, FIRST, LAST 
+from   ostap.parallel.parallel_statvar parallel_project
+FIRST_ENTRY, LAST_ENTRY 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -37,12 +38,12 @@ else                       : logger = getLogger ( __name__     )
 #  For 12-core machine, clear speedup factor of about 8 is achieved 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-09-23
-def  cproject ( chain                ,
-                target               ,
-                expressions          ,
-                cuts       = ''      ,
-                first      = FIRTS   , 
-                last       = LAST    ,
+def  cproject ( chain                    ,
+                target                   ,
+                expressions              ,
+                cuts       = ''          ,
+                first      = FIRST_ENTRY , 
+                last       = LAST_ENTRY  ,
                 progress   = True    , 
                 use_frame  = True    ,                 
                 chunk_size = -1      ,
@@ -93,9 +94,9 @@ def  cproject ( chain                ,
 def  tproject ( tree                 ,   ## the tree 
                 target               ,   ## histogram 
                 expressions          ,   ## variable/expression/list to be projected 
-                cuts       = ''      ,   ## selection/weighting criteria                
-                first      = FIRTS   , 
-                last       = LAST    ,
+                cuts       = ''      ,   ## selection/weighting criteria
+                first      = FIRST_ENTRY , 
+                last       = LAST_ENTRY  ,
                 progress   = True    , 
                 use_frame  = True    ,
                 chunk_size = 1000000 ,   ## chunk size 

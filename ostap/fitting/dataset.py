@@ -39,11 +39,10 @@ from   ostap.utils.strings       import ( split_string         ,
                                           split_string_respect ,
                                           var_separators       )
 from   ostap.utils.basic         import loop_items  , typename            
-from   ostap.math.base           import islong
+from   ostap.math.base           import islong, evt_range, FIRST_ENTRY, LAST_ENTRY 
 from   ostap.utils.random_seed   import random_seed
 from   ostap.fitting.variables   import valid_formula, make_formula 
 from   ostap.trees.cuts          import expression_types, vars_and_cuts, order_warning
-from   ostap.utils.ranges        import evt_range
 from   ostap.stats.statvars      import data_decorate, data_range 
 from   ostap.utils.valerrors     import VAE
 from   ostap.logger.symbols      import cabinet, weight_lifter 
@@ -65,11 +64,6 @@ _new_methods_ = []
 # =============================================================================
 _maxv =  0.99 * sys.float_info.max
 _minv = -0.99 * sys.float_info.max
-# =============================================================================
-## the last index for laooping over TTRee/RooAbsData
-LAST_ENTRY  = ROOT.TVirtualTreePlayer.kMaxEntries
-## the last index for laooping over TTRee/RooAbsData
-ALL_ENTRIES = 0 , LAST_ENTRY 
 # =============================================================================
 ## iterator for RooAbsData entries 
 #  @cdoe
@@ -96,19 +90,20 @@ def _rad_iter_ ( self ) :
 #  for index , entry, weight in dataset.loop ( 'pt>1' ) :
 #     print (index, entry, weight) 
 #  @endcode 
-def _rad_loop_ ( dataset                ,
-                 cuts      = ''         ,
-                 cut_range = ''         ,
-                 first     = 0          ,
-                 last      = LAST_ENTRY ,
-                 progress = False       ) :
+def _rad_loop_ ( dataset                 ,
+                 cuts      = ''          ,
+                 cut_range = ''          ,
+                 first     = FIRST_ENTRY ,
+                 last      = LAST_ENTRY  ,
+                 progress = False        ) :
     """ Iterator for `good' events  in dataset
     >>> dataset = ...
     >>> for index, entry, weight in dataset.loop ( ''pt>1' ) :
     >>>    print (index, entry, weight) 
     """
 
-    first, last = evt_range (  len ( dataset ) , first , last ) 
+    first, last = evt_range ( dataset , first , last ) 
+    if last <= first : return
 
     assert isinstance ( cuts    , expression_types  ) or not cuts, \
         "Invalid type of cuts: %s" % type ( cuts )
@@ -668,7 +663,11 @@ def _rds_sub_ ( dataset , what ) :
 #      ...
 #  @endcode
 #  @see Ostap::MoreRooFit::delete_data
-def _rds_jackknife_ ( dataset , first = 0 , last = LAST_ENTRY , delete = False , progress = False ) :
+def _rds_jackknife_ ( dataset ,
+                      first    = FIRST_ENTRY  ,
+                      last     = LAST_ENTRY   ,
+                      delete   = False        ,
+                      progress = False        ) :
     """ Jackknife generator
 
     >>> dataset = ...
@@ -691,7 +690,7 @@ def _rds_jackknife_ ( dataset , first = 0 , last = LAST_ENTRY , delete = False ,
     - see `Ostap.MoreRooFit.delete_data`
 
     """
-    first , last = evt_range ( len ( dataset ) , first , last )    
+    first , last = evt_range ( dataset , first , last )    
     for i in progress_bar ( range ( first , last ) , silent = not progress ) :
         ds = dataset - i                    ## this is the line! 
         yield ds
@@ -830,12 +829,12 @@ def _rad_shuffle_ ( self ) :
 #  data =  data.subset ( ['a','b','c'] , 'a>0' )
 #  @endcode
 #  @see RooAbsData::reduce
-def _rad_subset_ ( dataset                 ,
-                   variables  = []         ,
-                   cuts       = ''         ,
-                   cut_range  = ''         ,
-                   first      = 0          ,
-                   last       = LAST_ENTRY ) :
+def _rad_subset_ ( dataset                  ,
+                   variables  = []          ,
+                   cuts       = ''          ,
+                   cut_range  = ''          ,
+                   first      = FIRST_ENTRY ,
+                   last       = LAST_ENTRY  ) :
 
     """ Improved reduce
     >>> data = ...
@@ -882,9 +881,9 @@ def _rad_subset_ ( dataset                 ,
     if cut_range : args.append ( ROOT.RooFit.CutRange   ( cut_range ) )
     ## 
     ## check the range:
-    if ( first, last ) != ALL_ENTRIES :
-        first, last = evt_range ( len ( dataset ) , first , last )
-        args.append           ( ROOT.RooFit.EventRange ( first , last ) )
+    first, last = evt_range ( dataset , first , last )
+    if 0 < first or last < len ( dataset ) : 
+        args.append ( ROOT.RooFit.EventRange ( first , last ) )
     ## 
     return dataset.reduce ( *args ) 
 
@@ -1222,12 +1221,12 @@ _printed = 10
 #  @see RooDataSet 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
-def ds_project  ( dataset                ,
+def ds_project  ( dataset                 ,
                   histo                   ,
-                  what                    ,
+                  what                    , * , 
                   cuts      = ''          ,
                   cut_range = ''          , 
-                  first     =  0          ,
+                  first     = FIRST_ENTRY ,
                   last      = LAST_ENTRY  ,
                   progress  = False       ) :
     """ Helper project method for RooDataSet/DataFrame/... and similar objects 
@@ -1238,128 +1237,25 @@ def ds_project  ( dataset                ,
     >>> h1   = ROOT.TH1D(... )
     >>> dataset.project ( h1           , 'm', 'chi2<10' ) ## use histo
     """
-
-    ## 1) redirect to approproate method
-    ## ROOT.Tree 
-    if isinstance ( dataset , ROOT.TTree ) :
-        assert not cut_range, "ds_project(tree,...) cannot be used with cut_range %s" % cut_range 
-        from ostap.trees.trees import tree_project
-        return tree_project ( datatet , histo ,
-                              what    = what   ,
-                              cuts    = cuts   ,
-                              first   = first  ,
-                              last    = last   )
-    target = histo
-
-    ## 2) if the histogram is specified by the name, try to locate it ROOT memory  
-    if isinstance ( target , string_types ) :
-        hname  = str ( target ) 
-        groot  = ROOT.ROOT.GetROOT()
-        h      = groot.FindObject ( hname )
-        assert h , 'Cannot get locate histo by name %s' % histos        
-        assert isinstance ( h , ROOT.TH1 ) , "The object `%s' is not ROOT.TH1!" % type ( h ) 
-        target = h
-        
-    ## 3) input histogram?
-    input_histo = isinstance ( target , ROOT.TH1 )
-
-    ## 4) valid target? 
-    from ostap.trees.param import param_types_nD    
-    assert input_histo or isinstance ( target , param_types_nD ) , 'Invalid target/histo type %s' % type ( target ) 
-
-    if   isinstance ( histo , ROOT.TProfile2D ) :
-        histo.Reset() 
-        logger.error ('ds_project: TProfile2D is not (yet) supported')
-        return histo 
-    elif isinstance ( histo , ROOT.TProfile  ) :
-        logger.error ('ds_project: TProfile   is not (yet) supported')
-        return histo
-
-    ## copy/clone the target 
-    def target_copy  ( t ) : return t.Clone() if isinstance ( t , ROOT.TH1 ) else type ( t ) ( t )
-    ## reset the target 
-    def target_reset ( t ) :
-        if isinstance ( t , ROOT.TH1 ) : t.Reset()
-        else                           : t *= 0.0
-        return t
+    from ostap.stats.statvars import data_project
+    first , last = evt_range ( dataset , first , last )
     
-    ## 5) reset the target 
-    target = target_reset ( target ) 
-
-    ## (5) dimension of the target 
-    dim = target.dim ()
-    assert 1 <= dim <= 4 , 'Invalid dimension of target: %s' % dim  
-
-    ## (6) parse input expressions
-    varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
-    if input_string and 2 <= len ( varlst ) and order_warning :
-        vv = ' ; '.join  ( varlst  ) 
-        logger.attention ("project: from v1.10.1.9 variables are in natural order [x;y;..]=[ %s ]" % vv  )
-
-    nvars = len ( varlst ) 
-    assert ( 1 == dim and dim <= nvars ) or dim == nvars , \
-        'Mismatch between the target/histo dimension %d and input variables %s' % ( dim , varlst )
-
-    ## RooAbsData 
-    if isinstance ( dataset , ROOT.RooAbsData ) :
-        
-        ## 3) adjust the first/last
-        first , last = evt_range ( len ( dataset ) , first , last )        
-        if not first < last : return target                             ## RETURN        
-        tail = cuts , cut_range , first , last
-
-    ## something convertible to DataFrame/Frame/Node
-    else :
-        
-        assert not cut_range                   , "ds_project: `cut-range' is not allowed!"
-        assert ( first , last ) == ALL_ENTRIES , "ds_project: `first&last' are not allowed!"
-        
-        from ostap.frames.frames import as_rnode
-        frame   = as_rnode ( dataset )
-        dataset = frame 
-        tail    = ()
-        
-    from ostap.utils.progress_conf import progress_conf
-    from ostap.trees.trees import ActiveBranches
-    active = ActiveBranches ( dataset , cuts , *varlst ) 
-                              
-    the_args = ( target , ) + varlst + tail 
-    ## very special case of projection several expressions into the same target 
-    if 1 == dim and dim < nvars : 
-        ## very special case of projection several expressions into the same target 
-        htmp  = target_copy ( target )  ## prepare temporary object 
-        for var in varlst :
-            htmp = target_reset ( htmp ) ## reset the temporary object 
-            args = ( htmp , var ) + tail
-            with active : 
-                if progress : sc = Ostap.HistoProject.project  ( dataset , progress_conf () , *args )
-                else        : sc = Ostap.HistoProject.project  ( dataset ,                    *args )
-            if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project %s" % sc )
-            ## update results 
-            target += htmp
-            del htmp 
-    elif 1 == dim :
-        with active : 
-            if progress : sc = Ostap.HistoProject.project  ( dataset , progress_conf () , *the_args )
-            else        : sc = Ostap.HistoProject.project  ( dataset ,                    *the_args )
-        if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project  %s" % sc )
-    elif 2 == dim : 
-        with active : 
-            if progress : sc = Ostap.HistoProject.project2 ( dataset , progress_conf () , *the_args )
-            else        : sc = Ostap.HistoProject.project2 ( dataset ,                    *the_args )
-        if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
-    elif 3 == dim : 
-        with active : 
-            if progress : sc = Ostap.HistoProject.project3 ( dataset , progress_conf () , *the_args )
-            else        : sc = Ostap.HistoProject.project3 ( dataset ,                    *the_args )
-        if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
-    elif 4 == dim : 
-        with active : 
-            if progress : sc = Ostap.HistoProject.project4 ( dataset , progress_conf () , *the_args )
-            else        : sc = Ostap.HistoProject.project4 ( dataset ,                    *the_args )
-        if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
-        
-    return target if sc.isSuccess() else None 
+    ## 2) if the histogram is specified by the name, try to locate it in ROOT memory  
+    if isinstance ( histo , string_types ) :
+        groot = ROOT.ROOT.GetROOT()
+        h     = groot.FindObject ( histo )
+        assert h , "Cannot get locate histogram by name:`%s'" % histo       
+        assert isinstance ( h , ROOT.TH1 ) , "Object `%s' exists, but not ROOT.TH1" % typename ( h ) 
+        histo = h
+    
+    return data_project ( dataset  ,
+                          histo ,
+                          what  , first , last  , 
+                          cuts      = cuts      ,
+                          cut_range = cut_range ,
+                          progress  = progress  ,
+                          use_frame = False     ,
+                          parallel  = False     ) 
 
 # =============================================================================
 ## Helper draw method for RooDataSet
@@ -1374,13 +1270,16 @@ def ds_project  ( dataset                ,
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
 def ds_draw ( dataset ,
-              what                    ,
+              what                    , * , 
               cuts      = ''          ,
               opts      = ''          ,
               cut_range = ''          ,
-              first     =  0          ,
-              last      =  LAST_ENTRY ,
-              delta     = 0.01        , **kwargs ) :
+              first     = FIRST_ENTRY ,
+              last      = LAST_ENTRY  ,
+              delta     = 0.01        ,
+              progress  = False       ,
+              use_frame = False       ,
+              paralell  = False       , **kwargs ) :
     """ Helper draw method for drawing of RooDataSet
     >>> dataset.draw ( 'm', 'chi2<10'                 )
     ## cuts & weight 
@@ -1391,8 +1290,7 @@ def ds_draw ( dataset ,
     ## for event in range 1000< i <10000
     >>> dataset.draw ( 'm', '(chi2<10)*weight' , 'e1' , 1000 , 100000 )
     """
-
-    print ( 'I AM DS_DRAW-0', what , cuts  )
+    first , last = evt_range ( dataset , first , last )
     
     ## check type of opts 
     assert isinstance ( opts , string_types ) , "Invalid type of `opts' : %s" % type ( opts ) 
@@ -1410,17 +1308,33 @@ def ds_draw ( dataset ,
     if isinstance ( dataset , ROOT.TTree ) :
         assert not cut_range , "ds_draw(ROOT.TTree): cut_range `%s'is not allowed!" % cut_range 
         from ostap.trees.trees import tree_draw 
-        return tree_draw ( dataset , what, cuts = cuts , opts = opts ,  first = first , last = last , delta = delta , **kwargs )
-    elif isinstance ( dataset , ROOT.RooAbsData ) : 
-        ranges = ds_range ( dataset , varlst , cuts = cuts , cut_range = cut_range , first = first , last  = last , delta = delta )
-        print ( 'RANGES/1' , ranges )             
+        return tree_draw ( dataset               ,
+                           what                  ,
+                           cuts      = cuts      ,
+                           opts      = opts      ,
+                           first     = first     ,
+                           last      = last      ,
+                           delta     = delta     ,
+                           progress  = progress  ,
+                           use_frame = use_frame , 
+                           parallel  = parallel  , **kwargs )
+    
+    elif isinstance ( dataset , ROOT.RooAbsData ) :
+        
+        ranges = ds_range ( dataset     ,
+                            varlst      ,
+                            cuts      = cuts      ,
+                            cut_range = cut_range ,
+                            first     = first     ,
+                            last      = last      ,
+                            delta     = delta     )
     else :
+        
         ## something else ? e.g. DataFrame 
         assert not cut_range                   , "ds_draw: `cut_range' is not allowed!"
         assert ( first , last ) == ALL_ENTRIES , "ds_draw: `first'/`last' are not allowed!"
         ranges = data_range ( dataset , varlst , cuts = cuts , delta = delta )
 
-    print ( 'RANGES/2' , ranges )             
     if not ranges :
         logger.warning ("ds_draw: nothing to draw, return None" ) 
         return None 
@@ -1464,38 +1378,7 @@ def get_var ( self, aname ) :
     _vars = self.get()
     return getattr ( _vars , aname )  
 
-# =============================================================================
-## Is there at least one entry that satisfy selection criteria?
-#  @code
-#  dataset = ...
-#  dataset.hasEntry ( 'pt>100' )
-#  dataset.hasEntry ( 'pt>100' , 0, 1000 ) ## 
-#  dataset.hasEntry ( 'pt>100' , 'fit_range' ) ## 
-#  dataset.hasEntry ( 'pt>100' , 'fit_range' , 0 , 1000 ) ## 
-#  @endcode
-#  @see Ostap::StatVar::hasEntry
-def _ds_has_entry_ ( dataset , selection , *args ) : 
-    """ Is there at leats one entry that satoisfies selection criteria?
-    >>> dataset = ...
-    >>> dataset.hasEntry ( 'pt>100' )
-    >>> dataset.hasEntry ( 'pt>100' , 0, 1000 ) ## 
-    >>> dataset.hasEntry ( 'pt>100' , 'fit_range' ) ## 
-    >>> dataset.hasEntry ( 'pt>100' , 'fit_range' , 0 , 1000 ) ## 
-    - see Ostap.StatVar.hasEntry
-    """
-    
-    assert isinstance ( selection , expression_types ) , 'Invalid expression!'
-    selection  = str  ( selection ).strip() 
 
-    result = Ostap.StatVar.hasEntry ( dataset , selection , *args ) 
-    return True if result else False 
-
-ROOT.RooAbsData.hasEntry  = _ds_has_entry_
-ROOT.RooAbsData.has_entry = _ds_has_entry_
-
-_new_methods_ += [  ROOT.RooAbsData.hasEntry  , 
-    ROOT.RooAbsData.has_entry , 
-    ]
 
 # =============================================================================\
 ## Get suitable ranges for drawing expressions/variables
@@ -1504,25 +1387,26 @@ _new_methods_ += [  ROOT.RooAbsData.hasEntry  ,
 #  result  = ds_range ( dataset , 'sin(x)*100*y' , 'x<0' )
 #  results = ds_range ( dataset , 'x,y,z,t,u,v'  , 'x<0' )
 #  @endcode 
-def ds_range  ( dataset                ,
-                expressions            ,
-                cuts      = ''         ,
-                cut_range = ''         ,
-                first     = 0          , 
-                last      = LAST_ENTRY ,
-                delta     = 0.05       ) :
+def ds_range  ( dataset                 ,
+                expressions             , * , 
+                cuts      = ''          ,
+                cut_range = ''          ,
+                first     = FIRST_ENTRY , 
+                last      = LAST_ENTRY  ,
+                delta     = 0.05        ,
+                progress  = False       ) :
     """ Get suitable ranges for drawing expressions/variables
     >>> dataset = ...
     >>> result  = ds_range ( dataset , 'sin(x)*100*y' , 'x<0' )
     >>> results = ds_range ( dataset , 'x,y,z,t,u,v'  , 'x<0' )
     """
+    first , last = evt_range ( dataset , first , last ) 
     return data_range ( dataset     ,
-                        expressions ,
-                        cuts        ,
-                        delta       ,
-                        cut_range   ,
-                        first       ,
-                        last        )
+                        expressions , first , last , 
+                        cuts        = cuts         ,
+                        cut_range   = cut_range    ,
+                        delta       = delta        ,
+                        progress    = progress     )
 
 # =============================================================================
 ## clear dataset storage
@@ -2180,15 +2064,15 @@ _new_methods_ += [
 
 # =============================================================================
 ## Print data set as table
-def _ds_table_0_ ( dataset                ,
-                   variables = []         ,
-                   cuts      = ''         ,
-                   cut_range = ''         , 
-                   first     = 0          ,
-                   last      = LAST_ENTRY ,
-                   prefix    = ''         ,
-                   title     = ''         ,
-                   style     = ''         ) :
+def _ds_table_0_ ( dataset                 ,
+                   variables = []          ,
+                   cuts      = ''          ,
+                   cut_range = ''          , 
+                   first     = FIRST_ENTRY ,
+                   last      = LAST_ENTRY  ,
+                   prefix    = ''          ,
+                   title     = ''          ,
+                   style     = ''          ) :
     """ Print data set as table
     """
     varset = dataset.get()
@@ -2208,13 +2092,13 @@ def _ds_table_0_ ( dataset                ,
     else         : vars , cuts     = [ v.name for v in varset ] , str ( cuts ).strip() 
 
     ## adjust first/last 
-    first, last = evt_range ( len ( dataset ) , first , last )
+    first, last = evt_range ( dataset , first , last )
     
     vars = [ i.GetName() for i in varset if i.GetName() in vars ]
         
     _vars = []
     
-    stat = dataset.statVars ( vars , cuts , cut_range , first , last ) 
+    stat = dataset.statVars ( vars , first , last , cuts = cuts , cut_range = cut_range )
     for v in  stat :
         vv  = getattr ( varset , v )
         s   = stat [ v ] 
@@ -2258,7 +2142,7 @@ def _ds_table_0_ ( dataset                ,
 
         ## name of weigth variabe
         weight = dataset.wname ()
-        wcnt   = dataset.statVar ( '1' , cuts , cut_range , first , last )
+        wcnt   = dataset.statVar ( '1' , first , last , cuts = cuts , cut_range = cut_range )
         wcnt   = wcnt.weights ()            
         r    = (  weight                            ,   ## 0 
                   'Weight variable'                 ,   ## 1 
@@ -2334,19 +2218,19 @@ def _ds_table_0_ ( dataset                ,
 
 # =============================================================================
 ## Print data set as table
-def _ds_table_1_ ( dataset                ,
-                   variables = []         ,
-                   cuts      = ''         ,
-                   cut_range = ''         , 
-                   first     = 0          ,
-                   last      = LAST_ENTRY ,
-                   prefix    = ''         ,
-                   title     = ''         ,
-                   style     = ''         ) :
+def _ds_table_1_ ( dataset                 ,
+                   variables = []          ,
+                   cuts      = ''          ,
+                   cut_range = ''          , 
+                   first     = FIRST_ENTRY ,
+                   last      = LAST_ENTRY  ,
+                   prefix    = ''          ,
+                   title     = ''          ,
+                   style     = ''          ) :
     """ Print data set as table
     """
     
-    first, last = evt_range ( len ( dataset ) , first , last ) 
+    first, last = evt_range ( dataset , first , last ) 
     
     assert isinstance ( cuts    , expression_types  ) or not cuts, \
         "Invalid type of cuts: %s" % type ( cuts )
@@ -2362,7 +2246,7 @@ def _ds_table_1_ ( dataset                ,
 
     _vars = []    
     vvars = tuple ( sorted ( vars ) )
-    stat = dataset.statVars ( vvars  , cuts , cut_range , first , last ) 
+    stat = dataset.statVars ( vvars  , first , last , cuts = cuts , cut_range = cut_range ) 
     for v in  stat :
         s   = stat [ v ] 
         mnmx = s.minmax ()
@@ -2445,15 +2329,15 @@ def _ds_table_1_ ( dataset                ,
 #  dataset = ...
 #  print dataset.table() 
 #  @endcode
-def _ds_table_ (  dataset                ,
-                  variables = []         ,
-                  cuts      = ''         ,
-                  cut_range = ''         ,
-                  first     = 0          ,
-                  last      = LAST_ENTRY ,                 
-                  prefix    = ''         ,
-                  title     = ''         ,
-                  style     = ''         ) :
+def _ds_table_ (  dataset                 ,
+                  variables = []          ,
+                  cuts      = ''          ,
+                  cut_range = ''          ,
+                  first     = FIRST_ENTRY ,
+                  last      = LAST_ENTRY  ,                 
+                  prefix    = ''          ,
+                  title     = ''          ,
+                  style     = ''          ) :
     """ Print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
@@ -2474,15 +2358,15 @@ def _ds_table_ (  dataset                ,
 #  dataset = ...
 #  print dataset.table2() 
 #  @endcode
-def _ds_table2_ (  dataset                ,
-                   variables = []         ,
-                   cuts      = ''         ,
-                   cut_range = ''         ,
-                   first     = 0          ,
-                   last      = LAST_ENTRY ,                 
-                   prefix    = ''         ,
-                   title     = ''         ,
-                   style     = ''         ) :
+def _ds_table2_ (  dataset                 ,
+                   variables = []          ,
+                   cuts      = ''          ,
+                   cut_range = ''          ,
+                   first     = FIRST_ENTRY ,
+                   last      = LAST_ENTRY  ,                 
+                   prefix    = ''          ,
+                   title     = ''          ,
+                   style     = ''          ) :
     """ Print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
@@ -3314,20 +3198,20 @@ except ImportError : # ======================================================
 #  for index, row , weight in dataset.rows ( 'pt, pt/p, mass ' , 'pt>1' ) :
 #     print (index, row, weight) 
 #  @endcode 
-def _rad_rows_ ( dataset                ,
-                 variables  = []         ,
-                 cuts       = ''         ,
-                 cut_range  = ''         ,
-                 first      = 0          ,
-                 last       = LAST_ENTRY ,
-                 progress   = False      ) :
+def _rad_rows_ ( dataset                  ,
+                 variables  = []          ,
+                 cuts       = ''          ,
+                 cut_range  = ''          ,
+                 first      = FIRST_ENTRY ,
+                 last       = LAST_ENTRY  ,
+                 progress   = False       ) :
     """ Iterator for rows in dataset
     >>> dataset = ...
     >>> for index, row , weight in dataset.rows ( 'pt, pt/p, mass ' , 'pt>1' ) :
     >>>    print (index, row, weight) 
     """
 
-    first  , last    = evt_range      ( len ( dataset ) , first , last ) 
+    first  , last    = evt_range      ( dataset   , first , last ) 
     varlst , cuts, _ = vars_and_cuts  ( variables , cuts )
     
     formulas = []

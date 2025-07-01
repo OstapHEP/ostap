@@ -2460,7 +2460,7 @@ class APDF1 ( Components ) :
 
     # ================================================================================
     ## Check the ranges for variables  in dataset 
-    def check_ranges ( self , dataset , range = '' ) :
+    def check_ranges ( self , dataset , cut_range = '' ) :
         """ Check the ranges for variables in dataset 
         """
 
@@ -2490,12 +2490,7 @@ class APDF1 ( Components ) :
             if   cuts : cuts  = cuts | ( vcut1 | vcut2 )
             else      : cuts  =          vcut1 | vcut2 
 
-
-        if dataset and not cuts : return  True
-
-        has_entry  = dataset.hasEntry ( cuts , range ) if range else dataset.hasEntry ( cuts )
-        
-        return not has_entry 
+        return not dataset.hasEntry ( cuts = cuts , cut_range = cut_range ) 
 
     # =========================================================================
     ## Make PDF1 object

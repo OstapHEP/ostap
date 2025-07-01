@@ -60,7 +60,6 @@ for r in range ( 100 ) :
             mass.setVal ( random.uniform ( 0 , 10 ) )
             dataset.add ( varset )
             
-
 # =============================================================================
 weighted = dataset.makeWeighted ( 'Weight' )
 
@@ -70,7 +69,7 @@ weighted = dataset.makeWeighted ( 'Weight' )
 logger.info ( 'Print         unweighted dataset:\n%s' % dataset .table ( prefix = '# ' ) )
 logger.info ( 'Print           weighted dataset:\n%s' % weighted.table ( prefix = '# ' ) )
 
-
+"""
 # =============================================================================
 ## (2) loop over some subset of entries 
 # =============================================================================
@@ -179,8 +178,8 @@ logger.info ( 'Print remove#Pt1,Pt2   weighted sample:\n%s' % ws10.table ( prefi
 hd = ROOT.TH1D ( hID() , 'Pt projection' , 50 , 0 , 100 )
 hw = ROOT.TH1D ( hID() , 'Pt projection' , 50 , 0 , 100 )
 
-hd = dataset .project ( hd  , 'Pt1' , 'Mass<5' )
-hw = weighted.project ( hw  , 'Pt1' , 'Mass<5' )
+hd = dataset .project ( hd  , 'Pt1' , cuts = 'Mass<5' )
+hw = weighted.project ( hw  , 'Pt1' , cuts = 'Mass<5' )
 
 # =============================================================================
 ## (15) parameterise (==project) 
@@ -188,8 +187,8 @@ hw = weighted.project ( hw  , 'Pt1' , 'Mass<5' )
 ld = Ostap.Math.LegendreSum ( 12 , 0 , 50 )
 lw = Ostap.Math.LegendreSum ( 12 , 0 , 50 )
 
-ld = dataset .project ( ld  , 'Pt1' , 'Mass<5' )
-lw = weighted.project ( lw  , 'Pt1' , 'Mass<5' )
+ld = dataset .project ( ld  , 'Pt1' , cuts = 'Mass<5' )
+lw = weighted.project ( lw  , 'Pt1' , cuts = 'Mass<5' )
 
 
 # =============================================================================
@@ -197,14 +196,14 @@ lw = weighted.project ( lw  , 'Pt1' , 'Mass<5' )
 # =============================================================================
 with use_canvas ( "test_fitting_datatset: dataset.draw" , wait = 2 ) :
     
-    hd = dataset.draw ( 'Pt1' , 'Mass<5' , color = 2 , xmin = 0 , xmax = 100 )
+    hd = dataset.draw ( 'Pt1' , cuts = 'Mass<5' , color = 2 , xmin = 0 , xmax = 100 )
 
     hd.draw ( 'same' , color = 2 )
     ld.draw ( 'same' , color = 2 , width = 3 )
     
 with use_canvas ( "test_fitting_datatset: weighted.draw" , wait  =2 ) :
 
-    hw = weighted.draw ( 'Pt1' , 'Mass<5' , color = 4 , xmin = 0 , xmax = 100 )
+    hw = weighted.draw ( 'Pt1' , cuts = 'Mass<5' , color = 4 , xmin = 0 , xmax = 100 )
     
     hw.draw ( 'same' , color = 4 )
     lw.draw ( 'same' , color = 4 , width = 3 )
@@ -220,6 +219,8 @@ chw = weighted.asTree()
 
 logger.info ( 'Print tree/chain unweighted sample:\n%s' % chd.table ( prefix = '# ' ) )
 logger.info ( 'Print tree/chain   weighted sample:\n%s' % chw.table ( prefix = '# ' ) )
+
+"""
 
 # =============================================================================
 ##                                                                      The END 
