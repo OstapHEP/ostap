@@ -2063,11 +2063,7 @@ void Ostap::Models::Needham::setPars () const
   //
   m_needham . setM0    ( m_m0     ) ;
   m_needham . setSigma ( m_sigma  ) ;
-  //
-  m_needham . setA0    ( m_a0     ) ;
-  m_needham . setA1    ( m_a1     ) ;
-  m_needham . setA2    ( m_a2     ) ;
-  //
+  m_needham . setA     ( m_a0  , m_a1 , m_a2 ) ;
   m_needham . setN     ( m_n      ) ;
 }
 // ============================================================================

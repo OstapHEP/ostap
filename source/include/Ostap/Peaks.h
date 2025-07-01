@@ -1389,9 +1389,9 @@ namespace Ostap
     public:
       // ====================================================================
       // setting sigma causses some change in alpha ...
-      bool        setSigma ( const double value ) ;
+      bool setSigma ( const double value ) ;
       // =====================================================================
-      /// set all three values together
+      /// set all three a-values together
       bool setA
       ( const double a0 ,
         const double a1 ,
