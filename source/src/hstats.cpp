@@ -26,23 +26,25 @@
 Ostap::Utils::H1::H1 ( TH1* histo )
   : m_histo ( histo )
 {
-  Ostap::Assert ( !!m_histo || 1 == m_histo->GetDimension () , 
+  Ostap::Assert ( m_histo && 1 == m_histo->GetDimension () , 
 		  "Invalid TH1"                              ,
 		  "Ostap::Utils::H1"                         ,
 		  INVALID_TH2 , __FILE__ , __LINE__          ) ;
 }
 // ==============================================================================
 Ostap::Utils::H2::H2 ( TH2* histo )
+: m_histo ( histo )
 {
-  Ostap::Assert ( !!m_histo || 2 == m_histo->GetDimension () , 
+  Ostap::Assert ( m_histo && 2 == m_histo->GetDimension () , 
 		  "Invalid TH2"                              ,
 		  "Ostap::Utils::H2"                         ,
 		  INVALID_TH2 , __FILE__ , __LINE__          ) ;
 }
 // ==============================================================================
 Ostap::Utils::H3::H3 ( TH3* histo )
+:  m_histo ( histo )
 {
-  Ostap::Assert ( !!m_histo || 3 == m_histo->GetDimension () , 
+  Ostap::Assert ( m_histo && 3 == m_histo->GetDimension () , 
 		  "Invalid TH3"                              ,
 		  "Ostap::Utils::H3"                         ,
 		  INVALID_TH3 , __FILE__ , __LINE__          ) ;

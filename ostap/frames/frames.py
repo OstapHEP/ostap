@@ -736,7 +736,6 @@ def frame_statistic ( frame               ,
                           lazy        = lazy      ,
                           title       = 'frame_statistic' )
 
-
 # ==================================================================================
 ## get min/max for variable 
 #  @code

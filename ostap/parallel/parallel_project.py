@@ -13,12 +13,14 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'cproject' , ## parallel project from looong TChain
-    'tproject' , ## parallel project from looong TTree 
+    'parallel_project' , ## parallel project  
+    'cproject'         , ## parallel project from looong TChain
+    'tproject'         , ## parallel project from looong TTree 
     ) 
 # =============================================================================
-from   ostap.parallel.parallel_statvar parallel_project
-FIRST_ENTRY, LAST_ENTRY 
+from   ostap.parallel.parallel_statvar import ( parallel_project, 
+                                                FIRST_ENTRY , LAST_ENTRY )  
+import ROOT
 # =============================================================================
 # logging 
 # =============================================================================
@@ -130,22 +132,13 @@ def  tproject ( tree                 ,   ## the tree
                                max_files  = max_files  , 
                                silent     = silent     , **kwargs )
 
-ROOT.TTree .tproject = tproject
-ROOT.TTree .pproject = tproject
-ROOT.TChain.tproject = cproject
-ROOT.TChain.pproject = cproject
-
 # =============================================================================
 _decorated_classes_ = (
-    ROOT.TTree  ,
-    ROOT.TChain ,    
     )
 
 _new_methods_       = (
-    ROOT.TTree .tproject ,
-    ROOT.TTree .pproject ,
-    ROOT.TChain.cproject ,
-    ROOT.TChain.pproject ,     
+    tproject ,
+    cproject ,
     )
 
 # =============================================================================

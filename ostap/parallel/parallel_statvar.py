@@ -17,7 +17,7 @@ __all__     = (
     'parallel_get_stat'   ,
     'parallel_project'    , 
     'parallel_size'       ,
-    'parallel_covarinace' ,
+    'parallel_covariance' ,
     'parallel_sum'        , 
 ) 
 # =============================================================================

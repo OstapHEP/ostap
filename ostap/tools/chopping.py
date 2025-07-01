@@ -98,10 +98,11 @@ from   ostap.tools.tmva        import ( dir_name      , good_for_negative ,
                                         trivial_opts  , make_tarfile      ,
                                         decode_vars   , NO_PROCESSING     )
 from   ostap.utils.basic       import items_loop 
+from   ostap.fitting.variables import make_formula 
+from   ostap.stats.statvars    import data_statistic
 import ostap.trees.trees 
 import ostap.trees.cuts
 import ostap.utils.utils       as     Utils 
-from   ostap.fitting.variables import make_formula 
 import ROOT, os, shutil, tarfile  
 # =============================================================================
 from ostap.logger.logger      import getLogger
@@ -477,9 +478,12 @@ class Trainer(object) :
         ## check for signal weigths
         # =====================================================================
         if self.signal_weight :
-            from ostap.frames.frames import frame_statVar 
-            sw = frame_statVar ( self.signal , self.signal_weight , self.signal_cuts )
-            if isinstance ( sw , WSE ) : sw = sw.values()
+            sw = data_statistic ( self.signal , 
+                                  self.signal_weight ,
+                                  cuts      = self.signal_cuts ,
+                                  progress  = False ,  
+                                  use_frame = True  , 
+                                  parallel  = True  )
             mn , mx = sw.minmax() 
             if mn < 0 : 
                 ## there are negative weights :
@@ -491,9 +495,12 @@ class Trainer(object) :
         ## check for background weigths
         # =================================================================
         if self.background_weight :
-            from ostap.frames.frames import frame_statVar 
-            bw = frame_statVar ( self.background , self.background_weight , self.background_cuts )
-            if isinstance ( bw , WSE ) : bw = bw.values()
+            bw = data_statistic ( self.background , 
+                                 self.background_weight , 
+                                 cuts      = self.background_cuts , 
+                                 progress  = False , 
+                                 use_frame = True  , 
+                                 parallel  = True  )
             mn , mx = bw.minmax() 
             if mn < 0 : 
                 ## there are negative weights :

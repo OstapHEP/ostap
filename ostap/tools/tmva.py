@@ -1191,9 +1191,13 @@ class Trainer(object):
             ## check for signal weights
             # =====================================================================
             if self.signal_weight :
-                from ostap.frames.frames import frame_statVar 
-                sw = frame_statVar ( self.signal , self.signal_weight , self.signal_cuts )                    
-                if isinstance ( sw , WSE ) : sw = sw.values()
+                from ostap.stats.statvars import data_statistic
+                sw = data_statistic ( self.signal, 
+                                      self.signal_weight ,
+                                      cuts      = self.signal_cuts ,
+                                      progress  = False ,   
+                                      use_frame = True  , 
+                                      parallel  = True  )                    
                 mn , mx = sw.minmax() 
                 if mn < 0 : 
                 ## there are negative weights :
@@ -1205,8 +1209,14 @@ class Trainer(object):
             ## check for background weights
             # =================================================================
             if self.background_weight :
-                from ostap.frames.frames import frame_statVar 
-                bw = frame_statVar ( self.background , self.background_weight , self.background_cuts )
+                from ostap.stats.statvars import data_statistic
+                bw = data_statistic ( self.background        , 
+                                      self.background_weight ,
+                                      cuts      = self.background_cuts ,
+                                      progress  = False ,   
+                                      use_frame = True  , 
+                                      parallel  = True  )         
+                
                 if isinstance ( bw , WSE ) : bw = bw.values()
                 mn , mx = bw.minmax() 
                 if mn < 0 : 
@@ -1221,24 +1231,26 @@ class Trainer(object):
             BW = None
             
             if 0<= self.signal_train_fraction <1 or 0<= self.background_train_fraction < 1 or self.verbose :
-                
-                from ostap.frames.frames import frame_statVar
-                
-                sc = ROOT.TCut     ( self.    signal_cuts )
-                bc = ROOT.TCut     ( self.background_cuts )
-                ss = frame_statVar ( self.signal     , '1' , sc )
-                sb = frame_statVar ( self.background , '1' , bc )
+                from ostap.stats.statvars import data_statistic
+                sc = ROOT.TCut      ( self.    signal_cuts )
+                bc = ROOT.TCut      ( self.background_cuts )
+                cnf = { 'use_frame' : True , 'parallel' : True , 'progress' :  False }
+                ss = data_statistic ( self.signal     , '1' , cuts = sc , **cnf )
+                sb = data_statistic ( self.background , '1' , cuts = bc , **cnf )
                 NS = ss.nEntries()
                 NB = sb.nEntries()
                 
+                cnf = {'use_frame' : True, 'parallel' : True , 'progress' :  False }
                 if self.    signal_weight :
+                    from ostap.stats.statvars import data_statistic
                     scw  = sc * self.    signal_weight
-                    sw   = frame_statVar ( self.signal      , '1' , scw )
+                    sw   = data_statistic ( self.signal , '1' , cuts = scw , **cnf )
                     sw   = WSE ( sw ) 
                     SW   = VE  ( sw.sum () , sw.sum2() ) 
                 if self.background_weight :
+                    from ostap.stats.statvars import data_statistic
                     bcw  = bc * self.background_weight                    
-                    bw   = frame_statVar ( self.background  , '1' , bcw )
+                    bw   = data_statistic ( self.background  , '1' , cuts = bcw , **cnf )
                     bw   = WSE ( bw ) 
                     BW   = VE  ( bw.sum () , bw.sum2() ) 
                 
