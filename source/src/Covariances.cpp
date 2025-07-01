@@ -106,8 +106,8 @@ Ostap::Math::Covariances::add
                   "Ostap::Math::Covariances::add"              ,  
                   INVALID_SIZE , __FILE__ , __LINE__           ) ;
   //
-  if      ( !right,n() ) {                  return *this ; } // nothuing to update
-  else if ( !n ()      ) { swap ( right ) ; return *this ; } // just swap 
+  if      ( !right.n() ) {                    return *this ; } // nothuing to update
+  else if ( !n ()      ) { (*this) = right  ; return *this ; } // just swap 
   //
   const std::size_t NN = N () ;
   const double      wA =       n () ;
@@ -115,11 +115,11 @@ Ostap::Math::Covariances::add
   //
   const double      WW =  wA * wB / ( wA + wB ) ;
   //
-  for ( std::size i = 0 ; i < NN ; ++i )
+  for ( std::size_t i = 0 ; i < NN ; ++i )
     {
       const double xA =       m_counters[i].mean() ; 
       const double xB = right.m_counters[i].mean() ;
-      for ( std::size j = i ; j < NN ; ++j )
+      for ( std::size_t j = i ; j < NN ; ++j )
         {
           const double yA =       m_counters[j].mean() ; 
           const double yB = right.m_counters[j].mean() ;
@@ -242,8 +242,8 @@ Ostap::Math::WCovariances::add
                   "Ostap::Math::WCovariances::add"             ,  
                   INVALID_SIZE , __FILE__ , __LINE__           ) ;
   //
-  if      ( !right.n() || !right.sumw() ) {                  return *this ; } // nothuing to update
-  else if ( !n ()      || !sumw()       ) { swap ( right ) ; return *this ; } // just swap 
+  if      ( !right.n() || !right.sumw() ) {                   return *this ; } // nothuing to update
+  else if ( !n ()      || !sumw()       ) { (*this) = right ; return *this ; } // just swap 
   //
   const std::size_t NN = N () ;
   const double      wA =      sumw  () ;
