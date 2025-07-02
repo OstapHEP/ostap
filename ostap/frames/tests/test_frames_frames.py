@@ -214,112 +214,111 @@ def test_frame2 ( ) :
 
     rows = [ ( 'Statistics' , 'Tree' , 'Frame' ) ]
 
-    s1    = tree.statVar    (         'b1' ) 
-    s2    = frame_statistic ( frame , 'b1' ) 
+    s1    = tree.statVar    (         'b1' ).mean() 
+    s2    = frame_statistic ( frame , 'b1' ).mean() 
 
-    row = 'StatVar    mean (b1)' , s1.mean().toString ( '%+.2f +/- %-.2f' ) , s2.mean().toString ( '%+.2f +/- %-.2f' ) 
+    row = 'StatVar    mean (b1)' , '%s'%  s1 , '%s' % s2 
     rows.append ( row )
 
-    s1    = tree.statVar    (         'b1' , '1/b1' ) 
-    s2    = frame_statistic ( frame , 'b1' , '1/b1' ) 
+    s1    = tree.statVar    (         'b1' , '1/b1' ).mean() 
+    s2    = frame_statistic ( frame , 'b1' , '1/b1' ).mean() 
 
-    row = 'StatVar    mean (b1,1/b1)' , s1.mean().toString ( '%+.2f +/- %-.2f' ) , s2.mean().toString ( '%+.2f +/- %-.2f' ) 
+    row = 'StatVar    mean (b1,1/b1)' , '%s'% s1 , '%s' % s2  
     rows.append ( row )
     
-    s1    = tree.statVar    (         'b1' , 'b1>0' ) 
-    s2    = frame_statistic ( frame , 'b1' , 'b1>0' ) 
+    s1    = tree.statVar    (         'b1' , 'b1>0' ).mean()  
+    s2    = frame_statistic ( frame , 'b1' , 'b1>0' ).mean()  
 
-    row = 'StatVar    mean (b1,b1>0)' ,  s1.mean().toString ( '%+.2f +/- %-.2f' ) , s2.mean().toString ( '%+.2f +/- %-.2f' ) 
+    row = 'StatVar    mean (b1,b1>0)' ,  '%s' % s1 , '%s'%  s2 
     rows.append ( row )
 
-    
     s1    = tree.arithmetic_mean  (         'b1' ) 
     s2    = frame_arithmetic_mean ( frame , 'b1' ) 
     
-    row = 'Arithmetic mean (b1)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value() 
+    row = 'Arithmetic mean (b1)' , '%s' % s1 , '%s' % s2 
     rows.append ( row )
     
     s1    = tree.arithmetic_mean  (         'b1' , '1/b1') 
     s2    = frame_arithmetic_mean ( frame , 'b1' , '1/b1') 
     
-    row = 'Arithmetic mean (b1,1/b1)' , '%+.2f' % s1.mean()  , '%+.2f' % s2.value() 
+    row = 'Arithmetic mean (b1,1/b1)' , '%s' % s1  , '%s' % s2 
     rows.append ( row )
     
     s1    = tree.arithmetic_mean  (         'b1' , 'b1>0') 
     s2    = frame_arithmetic_mean ( frame , 'b1' , 'b1>0') 
-    row = 'Arithmetic mean (b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value() 
+    row = 'Arithmetic mean (b1,b1>0)' , '%s' % s1 , '%s' % s2 
     rows.append ( row )
     
     s1    = tree.geometric_mean  (         'b1' ) 
     s2    = frame_geometric_mean ( frame , 'b1' ) 
     
-    row = 'Geometric  mean (b1)' , '%+.2f' % s1.mean()  , '%+.2f' % s2.value() 
+    row = 'Geometric  mean (b1)' , '%s' % s1  , '%s' % s2 
     rows.append ( row )
     
     s1    = tree.geometric_mean  (         'b1' , '1/b1') 
     s2    = frame_geometric_mean ( frame , 'b1' , '1/b1') 
     
-    row = 'Geometric  mean (b1,1/b1)' , '%+.2f' % s1.mean()   , '%+.2f' % s2.value() 
+    row = 'Geometric  mean (b1,1/b1)' , '%s' % s1 , '%s' % s2 
     rows.append ( row )
     
     s1    = tree.geometric_mean  (         'b1' , 'b1>0') 
     s2    = frame_geometric_mean ( frame , 'b1' , 'b1>0') 
     
-    row = 'Geometric  mean (b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value() 
+    row = 'Geometric  mean (b1,b1>0)' , '%s' % s1, '%s' % s2 
     rows.append ( row )
     
     s1    = tree.harmonic_mean  (         'b1' ) 
     s2    = frame_harmonic_mean ( frame , 'b1' ) 
     
-    row = 'Harmonic   mean (b1)' , '%+.2f' % s1.mean() , '%+.2f' %  s2.value() 
+    row = 'Harmonic   mean (b1)' , '%s' % s1 , '%s' %  s2  
     rows.append ( row )
     
     s1    = tree.harmonic_mean  (         'b1' , '1/b1') 
     s2    = frame_harmonic_mean ( frame , 'b1' , '1/b1') 
     
-    row = 'Harmonic   mean (b1,1/b1)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value() 
+    row = 'Harmonic   mean (b1,1/b1)' , '%s' % s1 , '%s' % s2
     rows.append ( row )
         
     s1    = tree.harmonic_mean  (         'b1' , 'b1>0') 
     s2    = frame_harmonic_mean ( frame , 'b1' , 'b1>0') 
     
-    row = 'Harmonic   mean (b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value() 
+    row = 'Harmonic   mean (b1,b1>0)' , '%s' % s1 , '%s' % s2
     rows.append ( row )
     
     s1    = tree.power_mean  (         2 , 'b1' ) 
     s2    = frame_power_mean ( frame , 2 , 'b1' ) 
     
-    row = 'Power      mean (2,b1)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value()
+    row = 'Power      mean (2,b1)' , '%s' % s1  , '%s' % s2 
     rows.append ( row )
     
     s1    = tree.power_mean  (         2 , 'b1' , '1/b1') 
     s2    = frame_power_mean ( frame , 2 , 'b1' , '1/b1') 
     
-    row = 'Power      mean (2,b1,1/b1)' , '%+.2f' % s1.mean()  , '%+.2f' % s2.value() 
+    row = 'Power      mean (2,b1,1/b1)' , '%s' % s1 , '%s' % s2  
     rows.append ( row )
     
     s1    = tree.power_mean  (         2 , 'b1' , 'b1>0') 
     s2    = frame_power_mean ( frame , 2 , 'b1' , 'b1>0') 
     
-    row = 'Power      mean (2,b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value() 
+    row = 'Power      mean (2,b1,b1>0)' , '%s' % s1  , '%s' % s2  
     rows.append ( row )
     
     s1    = tree.lehmer_mean  (         3 , 'b1' ) 
     s2    = frame_lehmer_mean ( frame , 3 , 'b1' ) 
     
-    row = 'Lehmer     mean (3,b1)' , '%+.2f' % s1.mean()  , '%+.2f' % s2.value() 
+    row = 'Lehmer     mean (3,b1)' , '%s' % s1  , '%s' % s2 
     rows.append ( row )
     
     s1    = tree.lehmer_mean  (         3 , 'b1' , '1/b1') 
     s2    = frame_lehmer_mean ( frame , 3 , 'b1' , '1/b1') 
     
-    row = 'Lehmer     mean (3,b1,1/b1)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value() 
+    row = 'Lehmer     mean (3,b1,1/b1)' , '%s' % s1  , '%s' % s2  
     rows.append ( row )
     
     s1    = tree.lehmer_mean  (         3 , 'b1' , 'b1>0') 
     s2    = frame_lehmer_mean ( frame , 3 , 'b1' , 'b1>0') 
     
-    row = 'Lehmer     mean (3,b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value() 
+    row = 'Lehmer     mean (3,b1,b1>0)' , '%s' % s1 , '%s' % s2  
     rows.append ( row )
     
     title = 'Frame/Tree statistics' 

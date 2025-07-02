@@ -1303,11 +1303,11 @@ def frame_power_mean ( frame      ,   p   ,
         if cut_name:            
             TT = SA1w [ Ostap.Math.WPowerMean  ]
             PP = Ostap.Math.WPowerMean ( p ) 
-            return node.Book ( std_move ( TT ( pp ) ) , CNT ( [ var_name , cut_name ] ) )
+            return node.Book ( std_move ( TT ( PP ) ) , CNT ( [ var_name , cut_name ] ) )
         else  :
             TT = SA1  [ Ostap.Math. PowerMean  ]
             PP = Ostap.Math. PowerMean ( p )             
-            return node.Book ( std_move ( TT ( pp ) ) , CNT ( 1 , var_name ) )     
+            return node.Book ( std_move ( TT ( PP ) ) , CNT ( 1 , var_name ) )     
         
     return _fr_helper2_ ( frame                ,
                           acreator             , 
@@ -1368,11 +1368,11 @@ def frame_lehmer_mean ( frame      , p     ,
         if cut_name:            
             TT = SA1w [ Ostap.Math.WLehmerMean  ]
             PP =       Ostap.Math.WLehmerMean ( p ) 
-            return node.Book ( std_move ( TT ( pp ) ) , CNT ( [ var_name , cut_name ] ) )
+            return node.Book ( std_move ( TT ( PP ) ) , CNT ( [ var_name , cut_name ] ) )
         else  :
             TT = SA1  [ Ostap.Math. LehmerMean  ]
             PP =        Ostap.Math. LehmerMean ( p )             
-            return node.Book ( std_move ( TT ( pp ) ) , CNT ( 1 , var_name ) )     
+            return node.Book ( std_move ( TT ( PP ) ) , CNT ( 1 , var_name ) )     
         
     return _fr_helper2_ ( frame                            ,
                           acreator                         , 

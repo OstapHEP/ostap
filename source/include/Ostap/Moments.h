@@ -671,13 +671,13 @@ namespace  Ostap
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(2<=K)&&(K==N),int>::type = 0 >
       inline data_type moment_ () const
-      { return !this->ok () ? 0 : this->m_M / this->size  () ; }
+      { return !this->ok () ? this->invalid_moment () : this->m_M / this->size  () ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(2<=K)&&(2*K<=N),int>::type = 0 >
       inline Ostap::Math::ValueWithError
       moment_ () const
       {
-        if  ( !this -> ok () ) { return 0 ; }
+        if  ( !this -> ok () ) { return this->invalid_moment () ; }
         const size_type n = this->size() ;
         //
         const data_type muo  = this->template M_<K>   () / n ;
@@ -880,6 +880,12 @@ namespace  Ostap
         - 37800 * m3 * m3 * m2 * m2  + 22680 * m2 * m2 * m2 * m2 * m2 ;
       }
       // ======================================================================
+    public:
+      // ======================================================================
+      ///  get the mean value with error estimate  
+      inline Ostap::Math::ValueWithError mean () const 
+      { return Ostap::Math::ValueWithError ( mu () , this->template moment_<2>() ) ; }
+      // ======================================================================
     private:
       // ======================================================================
       /// counter of (N-1)th order
@@ -918,10 +924,10 @@ namespace  Ostap
       m_M += ( nA * std::pow ( b_n , N ) + std::pow ( a_n , N ) ) * std::pow ( delta , N ) ;
       data_type d = 1 ;
       for ( unsigned int k = 1 ; k + 2 <= N ; ++k )
-	{
-	  d   *= d_n ;
-	  m_M += s_Ck [ k ] * this-> M ( N - k ) * d   ;
-	}
+	    {
+	      d   *= d_n ;
+	      m_M += s_Ck [ k ] * this-> M ( N - k ) * d   ;
+	    }
       /// update previous 
       this->m_prev += x ; // update previous
       //
@@ -1489,14 +1495,14 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// mean value 
-      inline double mean () const { return mu() ; }      
+      ///  get the mean value with error estimate  
+      inline double mean () const{ return mu () ; }  
       // =======================================================================
     private:
       // ======================================================================
       WMoment_<0>  m_prev {   } ;
       /// mean value
-      data_type m_mu    { 0 } ; // mean value
+      data_type m_mu      { 0 } ; // mean value
       // ======================================================================
       /// minimal value
       double    m_min  {   std::numeric_limits<double>::max () } ;
@@ -1823,7 +1829,13 @@ namespace  Ostap
           deltai *= delta ; 
         }
         return result ;  
-      }      
+      } 
+       // ======================================================================
+    public:
+      // ======================================================================
+      ///  get the mean value with error estimate  
+      inline Ostap::Math::ValueWithError mean () const 
+      { return Ostap::Math::ValueWithError ( mu () , this->template moment_<2>() ) ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -1942,7 +1954,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// the actual underlying counter 
-      typedef Moment_<1>         Counter   ;
+      typedef Moment_<2>         Counter   ;
       /// # entries
       typedef Counter::size_type size_type ;
       /// data type 
@@ -1958,8 +1970,8 @@ namespace  Ostap
     public:
       // ======================================================================
       /// get the geometric mean 
-      inline double mean  () const { return value () ; }
-      inline double value () const { return std::pow ( 2 , m_log.mean() ) ; }   
+      inline Ostap::Math::ValueWithError mean  () const { return value () ; }
+      inline Ostap::Math::ValueWithError value () const { return Ostap::Math::pow ( 2 , m_log.mean() ) ; }   
       // ======================================================================
     public:
       // ======================================================================
@@ -2032,7 +2044,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// the actual underlying counter 
-      typedef Moment_<1> Counter ;
+      typedef Moment_<2> Counter ;
       /// # entries
       typedef Counter::size_type size_type ;
       /// data type 
@@ -2048,8 +2060,8 @@ namespace  Ostap
     public:
       // ======================================================================
       /// get the harmonic mean 
-      inline double value () const { return 1. / m_inv.mean() ; }
-      inline double mean  () const { return value () ; }
+      inline Ostap::Math::ValueWithError value () const { return 1. / m_inv.mean() ; }
+      inline Ostap::Math::ValueWithError mean  () const { return value () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2122,7 +2134,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// the actual underlying counter 
-      typedef Moment_<1> Counter ;
+      typedef Moment_<2> Counter ;
       /// # entries
       typedef Counter::size_type size_type ;
       /// data type 
@@ -2138,8 +2150,10 @@ namespace  Ostap
     public:
       // ======================================================================
       /// get the power mean 
-      inline double value () const { return std::pow ( m_pow.mean() , 1 / m_p ) ; }
-      inline double mean  () const { return value () ; }
+      inline Ostap::Math::ValueWithError value () const 
+      { return Ostap::Math::pow ( m_pow.mean() , 1 / m_p ) ; }
+      inline Ostap::Math::ValueWithError mean  () const 
+      { return value () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2218,7 +2232,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// the actual underlying counter 
-      typedef Moment_<1> Counter ;
+      typedef Moment_<2> Counter ;
       /// # entries
       typedef Counter::size_type size_type ;
       /// data type 
@@ -2238,8 +2252,9 @@ namespace  Ostap
     public:
       // ======================================================================
       /// get the power mean 
-      inline double value () const { return m_lp.mean() / m_lpm1.mean () ; }
-      inline double mean  () const { return value () ; }
+      inline Ostap::Math::ValueWithError value () const 
+      { return m_lp.mean() / m_lpm1.mean () ; }
+      inline Ostap::Math::ValueWithError mean  () const { return value () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2298,11 +2313,11 @@ namespace  Ostap
     private:
       // ======================================================================
       /// the power
-      double m_p          {1} ;
+      double  m_p      {1} ;
       /// get the counter of x^p
-      Moment_<1> m_lp     {}  ;
+      Counter m_lp     {}  ;
       /// get the counter of x^(p-1)
-      Moment_<1> m_lpm1   {}  ;
+      Counter m_lpm1   {}  ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -2315,7 +2330,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// the actual underlying counter 
-      typedef WMoment_<1> Counter ;
+      typedef WMoment_<2> Counter ;
       /// # entries
       typedef Counter::size_type size_type ;
       /// data type 
@@ -2331,8 +2346,9 @@ namespace  Ostap
     public:
       // ======================================================================
       /// get the geometric mean 
-      inline double value () const { return std::pow ( 2 , m_log.mean() ) ; }
-      inline double mean  () const { return value () ; }
+      inline Ostap::Math::ValueWithError value () const 
+      { return Ostap::Math::pow ( 2 , m_log.mean() ) ; }
+      inline Ostap::Math::ValueWithError mean  () const { return value () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2415,7 +2431,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// the actual underlying counter 
-      typedef WMoment_<1> Counter ;
+      typedef WMoment_<2> Counter ;
       /// # entries
       typedef Counter::size_type size_type ;
       /// data type 
@@ -2431,8 +2447,8 @@ namespace  Ostap
     public:
       // ======================================================================
       /// get the harmonic mean 
-      inline double value () const { return 1. / m_inv.mean() ; }
-      inline double mean  () const { return value () ; }
+      inline Ostap::Math::ValueWithError value () const { return 1. / m_inv.mean() ; }
+      inline Ostap::Math::ValueWithError mean  () const { return value () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2513,7 +2529,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// the actual underlying counter 
-      typedef WMoment_<1> Counter ;
+      typedef WMoment_<2> Counter ;
       /// # entries
       typedef Counter::size_type size_type ;
       /// data type 
@@ -2521,16 +2537,17 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// defautl construictor
+      /// default constructor
       WPowerMean ( const double = 1 ) ;
-      /// constructor for the counters 
+      /// constructor from the counter 
       WPowerMean ( const double p , const Counter& cnt ) ;      
       // ======================================================================
     public:
       // ======================================================================
-      /// get the weighter power mean 
-      inline double value () const { return std::pow ( m_pow.mean() , 1 / m_p ) ; }
-      inline double mean  () const { return value () ; }
+      /// get the weighted power mean 
+      inline Ostap::Math::ValueWithError value () const 
+      { return Ostap::Math::pow ( m_pow.mean() , 1 / m_p ) ; }
+      inline Ostap::Math::ValueWithError mean  () const { return value () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2611,7 +2628,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// the actual underlying counter 
-      typedef WMoment_<1> Counter ;
+      typedef WMoment_<2> Counter ;
       /// # entries
       typedef Counter::size_type size_type ;
       /// data type 
@@ -2619,9 +2636,9 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// defautl construictor
+      /// default construictor
       WLehmerMean
-      ( const double = 1 ) ;
+      ( const double p = 1 ) ;
       /// constructor for the counters 
       WLehmerMean
       ( const double   p    ,
@@ -2631,8 +2648,8 @@ namespace  Ostap
     public:
       // ======================================================================
       /// get the Lehmer  mean 
-      inline double value () const { return m_lp.mean () / m_lpm1.mean () ; }
-      inline double mean  () const { return value () ; } 
+      inline Ostap::Math::ValueWithError value () const { return m_lp.mean () / m_lpm1.mean () ; }
+      inline Ostap::Math::ValueWithError mean  () const { return value () ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -2711,11 +2728,11 @@ namespace  Ostap
     /** @class ArithmeticMean 
      *  Calculate the arithmetic mean 
      */
-    class ArithmeticMean : public  Moment_<1>
+    class ArithmeticMean : public  Moment_<2>
     {
     public:
       // ======================================================================
-      typedef Moment_<1>  Counter ;
+      typedef Moment_<2>  Counter ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2724,7 +2741,7 @@ namespace  Ostap
       // ======================================================================
     public :
       // ======================================================================
-      using Moment_<1>::add ;
+      using Moment_<2>::add ;
       // ======================================================================
       /// add sequence of values  
       template <class ITERATOR>
@@ -2740,7 +2757,7 @@ namespace  Ostap
       // ====================================================================== 
     public:
       // ======================================================================
-      inline double value() const { return this->mean () ; }
+      inline Ostap::Math::ValueWithError value() const { return this->mean () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2751,11 +2768,11 @@ namespace  Ostap
     /** @class WArithmeticMean 
      *  Calculate the weighted arithmetic mean 
      */
-   class WArithmeticMean : public WMoment_<1>
+   class WArithmeticMean : public WMoment_<2>
     {
     public:
       // ======================================================================
-      typedef WMoment_<1>  Counter ;
+      typedef WMoment_<2>  Counter ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2764,7 +2781,7 @@ namespace  Ostap
       // ======================================================================
     public :
       // ======================================================================
-      using WMoment_<1>::add ;
+      using WMoment_<2>::add ;
       // ======================================================================
       /// add sequence of values  
       template <class ITERATOR>
@@ -2780,7 +2797,7 @@ namespace  Ostap
       // ====================================================================== 
     public:
       // ======================================================================
-      inline double value() const { return this->mean () ; }
+      inline Ostap::Math::ValueWithError value() const { return this->mean () ; }
       // ======================================================================
     public:
       // ======================================================================

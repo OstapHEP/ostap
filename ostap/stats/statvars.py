@@ -843,8 +843,7 @@ def data_sum ( data               ,
 #  @encode
 #  @see Ostap::StatVar::nEff 
 def data_nEff ( data ,
-                *args              , 
-                cuts       = ''    ,
+                cuts       = ''    , *args , 
                 cut_range  = ''    ,
                 as_weight  = True  , ## interpret cuts as weiggt 
                 progress   = False , 
@@ -899,7 +898,7 @@ def data_harmonic_mean ( data ,
     - see `Ostap.statVar.the_moment`
     """    
     ## decode expressions & cuts
-    var_lst, cuts, input_string = vars_and_cuts ( expressions , cuts )
+    var_lst, cuts, input_string = vars_and_cuts ( expression , cuts )
     assert 1 == len ( var_lst ) , "Invalid expression!"
     
     ## 
@@ -910,7 +909,7 @@ def data_harmonic_mean ( data ,
         
     return data_get_stat  ( data       ,
                             stat       ,
-                            var_lst    ,
+                            expression ,
                             cuts       , *args     , 
                             cut_range  = cut_range ,
                             progress   = progress  ,
@@ -930,8 +929,7 @@ def data_harmonic_mean ( data ,
 #  @see Ostap::statVar::the_moment
 def data_geometric_mean ( data , 
                           expression         ,
-                          *args              , 
-                          cuts       = ''    ,
+                          cuts       = ''    , *args , 
                           cut_range  = ''    ,
                           progress   = False , 
                           as_weight  = True  , ## interpret cuts as weiggt 
@@ -945,18 +943,18 @@ def data_geometric_mean ( data ,
     - see `Ostap.statVar.the_moment`
     """
     ## decode expressions & cuts
-    var_lst, cuts, input_string = vars_and_cuts ( expressions , cuts )
+    var_lst, cuts, input_string = vars_and_cuts ( expression , cuts )
     assert 1 == len ( var_lst ) , "Invalid expression!"
     
     ## 
     if isinstance ( data , ROOT.RooAbsData ) or ( cuts and as_weight ) :
-        stat = Ostap.Math.WHarmonicMean ()
+        stat = Ostap.Math.WGeometricMean ()
     else : 
-        stat = Ostap.Math. HarmonicMean ()
+        stat = Ostap.Math. GeometricMean ()
         
-    return fata_get_stat  ( data       ,
+    return data_get_stat  ( data       ,
                             stat       ,
-                            var_lst    ,
+                            expression ,
                             cuts       , *args     , 
                             cut_range  = cut_range ,
                             progress   = progress  ,
@@ -994,7 +992,7 @@ def data_power_mean ( data , p ,
     """
     assert isinstance ( p , num_types ) , 'Invalid p-parameter type: %s' % type ( p ) 
     ## decode expressions & cuts
-    var_lst, cuts, input_string = vars_and_cuts ( expressions , cuts )
+    var_lst, cuts, input_string = vars_and_cuts ( expression , cuts )
     assert 1 == len ( var_lst ) , "Invalid expression!"
 
     if    p == -1 or isequal ( p , -1. ) :
@@ -1025,13 +1023,13 @@ def data_power_mean ( data , p ,
     
     ## 
     if isinstance ( data , ROOT.RooAbsData ) or ( cuts and as_weight ) :
-        stat = Ostap.Math.WHarmonicMean ()
+        stat = Ostap.Math.WPowerMean ( p )
     else : 
-        stat = Ostap.Math. HarmonicMean ()
+        stat = Ostap.Math. PowerMean ( p )
         
     return data_get_stat  ( data       , 
                             stat       ,
-                            var_lst    , 
+                            expression , 
                             cuts       , *args     , 
                             cut_range  = cut_range ,
                             progress   = progress  ,
@@ -1115,7 +1113,7 @@ def data_lehmer_mean ( data , p ,
     """
     
     ## (1) decode expressions & cuts
-    var_lst , cuts , _  = vars_and_cuts ( expressions , cuts )
+    var_lst , cuts , _  = vars_and_cuts ( expression , cuts )
     assert 1 == len ( var_lst ) , "Invalid expression!"
     
     assert isinstance ( p , num_types ) , 'Invalid p-parameter!'
@@ -1139,13 +1137,13 @@ def data_lehmer_mean ( data , p ,
                                       
 
     if isinstance ( data , ROOT.RooAbsData ) or ( cuts and as_weight ) :
-        stat = Ostap.Math.WArithmeticMean ()
+        stat = Ostap.Math.WLehmerMean ( p )
     else : 
-        stat = Ostap.Math. ArithmeticMean ()
+        stat = Ostap.Math. LehmerMean ( p )
 
     return data_get_stat  ( data       ,
                             stat       ,
-                            var_lst    , 
+                            expression , 
                             cuts       , *args     ,
                             cut_range  = cut_range ,
                             progress   = progress  ,
