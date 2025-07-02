@@ -49,9 +49,9 @@ namespace
   ( const Ostap::DataType value                  ,
     const Ostap::DataType xmin = Ostap::MinValue , 
     const Ostap::DataType xmax = Ostap::MaxValue )
-  {
-    return std::isfinite ( value ) && ( xmin <= value ) && ( value <= xmax ) ;
-  }
+  { return std::isfinite ( value )
+      && ( xmin  <= value )
+      && ( value <= xmax  ) ; }
   // ==========================================================================
 } //                                             The end of anonymous namespace 
 // ============================================================================
@@ -1697,18 +1697,19 @@ Ostap::StatVar::statCov
   const Ostap::DataType     ymax      ) const
 {
   return get_stat ( data      ,
-		    stat      , 
-		    exp1      , 
-		    exp2      , 
-		    selection ,
-		    cut_range , 
-		    first     ,
-		    last      ,
-		    xmin      ,
-		    xmax      ,
-		    ymin      ,
-		    ymax      ) ;
+                    stat      , 
+                    exp1      , 
+                    exp2      , 
+                    selection ,
+                    cut_range , 
+                    first     ,
+                    last      ,
+                    xmin      ,
+                    xmax      ,
+                    ymin      ,
+                    ymax      ) ;
 }
+// ============================================================================
 
 // ============================================================================
 // Covarinaes for several variables 
@@ -1736,11 +1737,11 @@ Ostap::StatusCode Ostap::StatVar::statCov
   const Ostap::EventIndex         last        ) const
 {
   //
-  const std::size_t N = expressions.size() ;
-  stats = Ostap::Math::Covariances (  N  ) ; 
+  const std::size_t N = expressions.size() ;  
+  stats = Ostap::Math::Covariances (  N  ) ;
   //
+  if ( N < 2               ) { return INVALID_SIZE ; } 
   if ( nullptr == data     ) { return INVALID_TREE ; }
-  if ( expressions.empty() ) { return Ostap::StatusCode::SUCCESS ; }
   //
   const Ostap::EventIndex num_entries =  data->GetEntries() ;
   const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
@@ -1749,14 +1750,14 @@ Ostap::StatusCode Ostap::StatVar::statCov
   /// formulae for exressons
   const Ostap::Formulae                 formulae { data , expressions } ;  
   const std::unique_ptr<Ostap::Formula> cuts     { Ostap::makeFormula ( selection , data , true ) } ;    
-  // 
+  //
   Ostap::Utils::Notifier    notify  ( formulae.begin() , formulae.end() , cuts.get() , data ) ;
   // 
   const bool                with_cuts = cuts && cuts->ok() ;
   //
   typedef std::vector<double> RESULT  ;
   typedef std::vector<RESULT> RESULTS ;
-  RESULTS results {} ;
+  RESULTS results { N } ;
   RESULT  input   ( N , 0.0 ) ;
   //
   Ostap::Utils::ProgressBar bar {the_last - first , m_progress } ;
@@ -1770,18 +1771,20 @@ Ostap::StatusCode Ostap::StatVar::statCov
       const bool cut = with_cuts ? cuts ->evaluate() : 1.0 ;
       if ( !cut ) { continue  ; }
       //
+      results.resize ( N ) ;
       for ( std::size_t i = 0 ; i < N ; ++i )  { formulae.evaluate ( i , results [ i ] ) ; }
       //
       Ostap::Combiner_<RESULT> combiner { results.begin() , results.end() };
+      //
       while ( combiner.valid() ) 
-      {
-        //get the curren combination 
-        combiner.current ( input.begin() ) ;
-        // update counter 
-        stats.add ( input ) ; 
-        // go to next combination
-        ++combiner ; 
-      } 
+        {
+          // get the current combination 
+          combiner.current ( input.begin() ) ;
+          // update counter 
+          stats.add ( input ) ; 
+          // go to next combination
+          ++combiner ; 
+        } 
     }
   //
   return Ostap::StatusCode::SUCCESS ; 
@@ -1799,8 +1802,7 @@ Ostap::StatusCode Ostap::StatVar::statCov
  *  @date   2023-02-28
  */
 // ============================================================================
-Ostap::StatusCode 
-Ostap::StatVar::statCov
+Ostap::StatusCode  Ostap::StatVar::statCov
 ( TTree*                          data        ,   
   Ostap::Math::WCovariances&      stats       ,  
   const Ostap::Strings&           expressions , 
@@ -1811,8 +1813,8 @@ Ostap::StatVar::statCov
   const std::size_t N = expressions.size() ;
   stats = Ostap::Math::WCovariances (  N  ) ; 
   //
+  if ( N < 2               ) { return INVALID_SIZE ; } 
   if ( nullptr == data     ) { return INVALID_TREE ; }
-  if ( expressions.empty() ) { return Ostap::StatusCode::SUCCESS ; }
   //
   const Ostap::EventIndex num_entries =  data->GetEntries() ;
   const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
@@ -1828,7 +1830,7 @@ Ostap::StatVar::statCov
   //
   typedef std::vector<double> RESULT  ;
   typedef std::vector<RESULT> RESULTS ;
-  RESULTS results {} ;
+  RESULTS results { N } ;
   RESULT  input   ( N , 0.0 ) ;
   //
   Ostap::Utils::ProgressBar bar {the_last - first , m_progress } ;
@@ -1842,18 +1844,19 @@ Ostap::StatVar::statCov
       const double weight  = with_cuts ? cuts ->evaluate() : 1.0 ;
       if ( !weight || !std::isfinite ( weight ) ) { continue  ; }
       //
+      results.resize ( N ) ;
       for ( std::size_t i = 0 ; i < N ; ++i )  { formulae.evaluate ( i , results [ i ] ) ; }
       //
       Ostap::Combiner_<RESULT> combiner { results.begin() , results.end() };
       while ( combiner.valid() ) 
-	{
-	  //get the curren combination 
-	  combiner.current ( input.begin() ) ;
-	  // update counter 
-	  stats.add ( input , weight ) ; 
-	  // go to next combination
-	  ++combiner ; 
-	} 
+        {
+          //get the curren combination 
+          combiner.current ( input.begin() ) ;
+          // update counter 
+          stats.add ( input , weight ) ; 
+          // go to next combination
+          ++combiner ; 
+        } 
     }
   //
   return Ostap::StatusCode::SUCCESS ; 
@@ -1871,8 +1874,7 @@ Ostap::StatVar::statCov
  *  @date   2023-02-28
  */
 // ============================================================================
-Ostap::StatusCode 
-Ostap::StatVar::statCov
+Ostap::StatusCode Ostap::StatVar::statCov
 ( const RooAbsData*               data        , 
   Ostap::Math::WCovariances&      stats       ,   
   const Ostap::Strings&           expressions , 
@@ -1885,8 +1887,8 @@ Ostap::StatVar::statCov
   const std::size_t N = expressions.size() ;
   stats = Ostap::Math::WCovariances (  N  ) ; 
   //
+  if ( N < 2               ) { return INVALID_SIZE ; } 
   if ( nullptr == data     ) { return INVALID_DATA ; }
-  if ( expressions.empty() ) { return Ostap::StatusCode::SUCCESS ; }
   //
   const Ostap::EventIndex num_entries =  data -> numEntries () ;
   const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
@@ -1921,8 +1923,10 @@ Ostap::StatVar::statCov
       const double weight = wd * wc ;
       if ( !weight || !std::isfinite ( weight ) )       { continue ; } // CONTINUE  
       //
-      // evaluate all expressions 
-      for ( std::size_t i = 0 ; i < N ; ++i ) { result[i] = formulae.evaluate ( i ) ; }
+      // evaluate all expressions
+      result.resize ( N ) ;
+      for ( std::size_t i = 0 ; i < N ; ++i )
+        { result [ i ] = formulae.evaluate ( i ) ; }
       //
       stats.add ( result , weight ) ;
     } 

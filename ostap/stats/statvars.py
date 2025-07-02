@@ -15,6 +15,7 @@
 - data_minmax          = get min/max 
 - data_range           - get suitable rangess for drawing 
 - data_covariance      - get the covariaces 
+- data_statvector      - get the covariaces 
 - data_sun             - get the sum 
 - data_nEff            - get umber of effective entries 
 - data_mean            - get the mean              (with uncertainty)
@@ -41,6 +42,7 @@ __all__     = (
     'data_minmax'          , ## get min/max 
     'data_range'           , ## get suitable rangess for drawing 
     'data_covariance'      , ## get the covariaces
+    'data_statvector'      , ## get the covariaces
     'data_moment'          , ## get the moment  (with uncertainty)     
     'data_sum'             , ## get the sum 
     'data_nEff'            , ## get umber of effective entries 
@@ -129,8 +131,7 @@ _s4D = Ostap.Math.Statistic4 , Ostap.Math.WStatistic4
 def data_get_stat ( data               ,
                     statobj            ,
                     expressions        ,
-                    *args              , 
-                    cuts       = ""    , 
+                    cuts       = ""    , *args ,  
                     cut_range  = ""    ,
                     progress   = False , 
                     use_frame  = False ,
@@ -226,10 +227,9 @@ def data_get_stat ( data               ,
 def data_the_moment ( data               ,
                       order              ,
                       expression         ,
-                      *args              , 
-                      cuts       = ''    ,
-                      as_weight  = True  , ## interpret cuts as weight 
+                      cuts       = ''    , *args , 
                       cut_range  = ''    ,
+                      as_weight  = True  , ## interpret cuts as weight 
                       progress   = False , 
                       use_frame  = False ,
                       parallel   = False ) : 
@@ -250,20 +250,19 @@ def data_the_moment ( data               ,
     else :
         statobj = Ostap.Math. Moment_[order] ()
         
-    return data_get_stat ( data                  ,
-                           statobj               ,
-                           expression            , 
-                           *args                 ,
-                           cuts      = cuts      ,
-                           cut_range = cut_range ,
-                           progress  = progress  , 
-                           use_frame = use_frame , 
-                           parallel  = parallel  )
+    return data_get_stat ( data                   ,
+                           statobj                ,
+                           expression             , 
+                           cuts       , *args     ,
+                           cut_range  = cut_range ,
+                           progress   = progress  , 
+                           use_frame  = use_frame , 
+                           parallel   = parallel  )
 
 # =============================================================================
 ## Is there at leats one good entry ?
-def data_hasEntry ( data      , *args  , 
-                    cuts      = ""     ,
+def data_hasEntry ( data               ,
+                    cuts      = ""     , *args , 
                     cut_range = ""     ,
                     progress  = False  ,
                     use_frame = False  ,
@@ -324,8 +323,8 @@ def data_hasEntry ( data      , *args  ,
 
 # =============================================================================
 ## How mant good entries ?
-def data_size ( data      , *args  , 
-                cuts      = ""     ,
+def data_size ( data               ,       
+                cuts      = ""     , *args , 
                 cut_range = ""     ,
                 progress  = False  ,
                 use_frame = False  ,
@@ -397,8 +396,7 @@ def data_size ( data      , *args  ,
 def  data_moment ( data               ,
                    order              ,
                    expression         ,
-                   *args              , 
-                   cuts       = ''    ,
+                   cuts       = ''    , *args , 
                    cut_range  = ''    ,
                    as_weight  = True  , ## interpret cuts s as weiggt 
                    progress   = False , 
@@ -414,8 +412,8 @@ def  data_moment ( data               ,
 
     the_moment = data_the_moment ( data       ,
                                    2 * order  ,
-                                   expression , *args     ,                                   
-                                   cuts       = cut       ,
+                                   expression ,
+                                   cuts       , *args     , 
                                    cut_range  = cut_range ,
                                    progress   = progress  , 
                                    as_weight  = as_weight , 
@@ -435,8 +433,7 @@ def  data_moment ( data               ,
 #  @see Ostap::Math::WECDF
 def data_ECDF ( data               ,
                 expression         ,
-                *args              , 
-                cuts       = ''    ,
+                cuts       = ''    , *args , 
                 cut_range  = ''    ,
                 progress   = False , 
                 as_weight  = True  , ## interpret cuts as weiggt 
@@ -461,8 +458,7 @@ def data_ECDF ( data               ,
     return data_get_stat ( data                  ,
                            statobj               ,
                            expression            , 
-                           *args                 ,
-                           cuts      = cuts      ,
+                           cuts                  , *args , 
                            cut_range = cut_range ,
                            progress  = progress  , 
                            use_frame = use_frame , 
@@ -480,8 +476,7 @@ def data_ECDF ( data               ,
 #  @see Ostap::StatVar::statVar
 def data_statistic ( data               , 
                      expressions        ,
-                     *args              , 
-                     cuts       = ''    ,
+                     cuts       = ''    , *args , 
                      cut_range  = ''    ,
                      progress   = False , 
                      as_weight  = True  , ## interpret cuts as weiggt 
@@ -534,7 +529,8 @@ def data_statistic ( data               ,
             return sv.statVar     ( data , varname , cuts , cut_range , *args )
         elif cuts and as_weight                    :
             return sv.statVar     ( data , varname , cuts ,             *args )
-        else                                       :
+        else : 
+            print ( '_CUT:' , varname , cuts , args ) 
             return sv.statVar_cut ( data , varname , cuts ,             *args )
            
     ## 
@@ -575,8 +571,7 @@ def data_statistic ( data               ,
 #  @see Ostap::StatVar::statVar
 def data_minmax ( data , 
                   expressions        ,
-                  *args              , 
-                  cuts       = ''    ,
+                  cuts       = ''    , *args , 
                   cut_range  = ''    ,
                   progress   = False , 
                   use_frame  = False ,
@@ -590,8 +585,8 @@ def data_minmax ( data ,
     - see Ostap.StatVar.statVar
     """
     results = data_statistic ( data ,
-                               expressions , *args    ,
-                               cuts      = cuts       ,
+                               expressions            , 
+                               cuts                   , *args , 
                                cut_range = cut_range  ,
                                progress  = progress   ,
                                use_frame = use_frame  ,
@@ -619,8 +614,7 @@ def data_minmax ( data ,
 #  @see axis_range 
 def data_range ( data               ,
                  expressions        ,
-                 *args              , 
-                 cuts       = ''    ,
+                 cuts       = ''    , *args , 
                  cut_range  = ''    ,
                  progress   = False , 
                  use_frame  = False ,
@@ -632,9 +626,9 @@ def data_range ( data               ,
     >>> result  = data_range ( data , 'sin(x)*100*y' , 'x<0' )
     >>> results = data_range ( dataset , 'x,y,z,t,u,v'  , 'x<0' ) ## as dictionary
     """
-    results = data_minmax ( data,
-                            expressions , *args ,
-                            cuts      = cuts       ,
+    results = data_minmax ( data                   ,
+                            expressions            , 
+                            cuts                   , *args , 
                             cut_range = cut_range  ,
                             progress  = progress   ,
                             use_frame = use_frame  ,
@@ -678,11 +672,11 @@ def data_range ( data               ,
 #  @see Ostap::Math::WCovariances 
 #  @see Ostap::StatVar::statCov
 def data_covariance ( data        ,
-                      expressions , *args ,                       
-                      cuts        = ''    ,
+                      expressions ,               
+                      cuts        = ''    , *args , 
                       cut_range   = ''    ,
-                      progress    = False , 
                       as_weight   = True  ,  
+                      progress    = False , 
                       use_frame   = False ,
                       parallel    = False ) :
     """ Get the covariance from data 
@@ -698,6 +692,9 @@ def data_covariance ( data        ,
     var_lst, cuts, _ =  vars_and_cuts ( expressions , cuts )
     assert 2 <= len ( var_lst ) , "At least two variables are required!"
     N = len ( var_lst ) 
+
+    ## allow linear algebra manipulations are here 
+    import ostap.math.linalg
     
     if isinstance ( data , ROOT.RooAbsData ) or ( cuts and as_weight ) :
         result = Ostap.Math.WCovariance() if 2 == N else Ostap.Math.WCovariances ( N )
@@ -719,16 +716,21 @@ def data_covariance ( data        ,
             assert sc.isSuccess() , 'Error %s from StatVar::statVars' % sc 
             return result 
 
-    if  use_frame and isinstance ( data , ROOT.TTee   ) and all_entries ( data , *args[:2] ) :
-        ## raise NotImplementedError ( 'Not yet implemented yet!' )
-        pass
-    
-    
+    if  use_frame and isinstance ( data , ROOT.TTee   ) :
+        if all_entries ( data , *args[:2] ) and N == 2 and len ( data ) > LARGE :
+            return F.frame_covariance ( frame                 ,
+                                        var_lst [ 0 ]         ,
+                                        var_lst [ 1 ]         ,
+                                        cuts      = cuts      ,
+                                        as_weight = as_weight ,
+                                        progress  = progress  ,
+                                        lazy      = False     ) 
+                                                                                   
     if  parallel  and isinstance ( data , ROOT.TChain ) and all_entries ( data , *args[:2] ) : 
         import ostap.trees.trees
         if 1 < len ( data.files () ) :
             from ostap.parallel.parallel_statvar import parallel_covariance
-            return paralllel_covarinace ( data        ,
+            return paralllel_covariance ( data        ,
                                           expressions ,
                                           cuts        = cuts       ,
                                           as_weight   = as_weight  , 
@@ -736,7 +738,7 @@ def data_covariance ( data        ,
                                           use_frame   = use+_frame )
         
     assert isinstance ( data , ROOT.TTree ) , "Invalid type for data!"
-        
+
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
     with rootException() , ActiveBranches ( data , cuts , *var_lst ) :
@@ -751,15 +753,15 @@ def data_covariance ( data        ,
 #  vct = data_statvct ( data ,  'a,b,c' ) 
 #  @endcode 
 def data_statvector ( data        ,
-                      expressions , *args ,                       
-                      cuts        = ''    ,
+                      expressions ,               
+                      cuts        = ''    , *args , 
                       cut_range   = ''    ,
-                      progress    = False , 
                       as_weight   = True  ,  
+                      progress    = False , 
                       use_frame   = False ,
                       parallel    = False ) :
     """ Get the effective vector of mean-values with covariances for the dataset
-    >>> vct = data_statvct ( data , 'a,y,z' ,'w' ) 
+    >>> vct = data_statvct ( data , 'a,y,z' , cuts = 'w' ) 
     """
     
     ## decode expressions & cuts
@@ -767,19 +769,31 @@ def data_statvector ( data        ,
     N = len ( var_lst )
     
     assert 2 <= N , "At least two variables are needed!"
-
-    covs = data_covariance ( data , var_lst , *args ,
-                             cuts       = cuts      ,
+        
+    covs = data_covariance ( data , var_lst ,
+                             cuts       = cuts      , *args , 
                              cut_range  = cut_range ,                             
-                             progress   = progress  , 
                              as_weight  = as_weight ,  
+                             progress   = progress  , 
                              use_frame  = use_frame ,
                              parallel   = parallel  )
-
-    ## HERE !!!
-    ## FIX IT!!!
     
-    return ## Ostap.VectorE ( N ) ( v , cov2 ) 
+    ## some linear algebra manipulations are here 
+    import ostap.math.linalg
+
+    VCT = Ostap.VectorE ( N )
+    if 2 == N : 
+        cov2 = Ostap.Math.covariance ( covs )
+        vct  = VCT ( cov2 )
+        vct.setValue ( 0 , covs.counter1().mean() ) 
+        vct.setValue ( 1 , covs.counter2().mean() ) 
+        return vct
+    
+    cov2 = covs.cov2    ()
+    cov2 = cov2.smatrix () 
+    vct  = VCT ( cov2 )    
+    for i in range ( N ) : vct.setValue ( i , covs.counters()[i].mean() )
+    return vct
 
 # ==============================================================================
 ## Get the (weighted) sum over the variable(s)
@@ -789,10 +803,9 @@ def data_statvector ( data        ,
 #  results = data_sum ( data , 'x;y;z' , 'pt>1' ) ## result is dictionary 
 #  @encode
 #  @see Ostap::StatVar::statVar
-def data_sum ( data        ,
+def data_sum ( data               ,
                expressions        ,
-               *args              , 
-               cuts       = ''    ,
+               cuts       = ''    , *args , 
                cut_range  = ''    ,
                progress   = False , 
                as_weight  = True  , ## interpret cuts as weiggt 
@@ -805,8 +818,8 @@ def data_sum ( data        ,
     - see Ostap.StatVar.statVar
     """    
     result = data_statistic ( data                  ,
-                              expressions , *args   ,
-                              cuts      = cuts      ,
+                              expressions           ,  
+                              cuts                  , *args , 
                               cut_range = cut_range ,
                               progress  = progress  ,
                               as_weight = as_weight ,
@@ -830,12 +843,11 @@ def data_sum ( data        ,
 #  @encode
 #  @see Ostap::StatVar::nEff 
 def data_nEff ( data ,
-                expression         ,
                 *args              , 
                 cuts       = ''    ,
                 cut_range  = ''    ,
-                progress   = False , 
                 as_weight  = True  , ## interpret cuts as weiggt 
+                progress   = False , 
                 use_frame  = False ,
                 parallel   = False ) :         
     """ Get statistic from data 
@@ -844,16 +856,16 @@ def data_nEff ( data ,
     - see Ostap.StatVar.nEff
     """
     ## decode expressions & cuts
-    var_lst, cuts, input_string = vars_and_cuts ( expressions , cuts )    
-    assert 1 == len ( var_lst ) and input_string , "Inbvalid expressions: %s" % expression 
-    expression = var_list[0]
+    var_lst, cuts, input_string = vars_and_cuts ( '1' , cuts )    
+    assert 1 == len ( var_lst ) and input_string , "Invalid expressions: %s" % expression 
+    expression = var_lst[0]
 
-    stat = data_statistic ( data ,
-                            expression , *args     ,
-                            cuts       = cuts      ,
+    stat = data_statistic ( data       ,
+                            expression , 
+                            cuts       , *args     , 
                             cut_range  = cut_range ,
+                            as_weight  = as_weight ,
                             progress   = progress  ,
-                            as_weight  = as_Weight ,
                             use_frame  = use_frame ,
                             parallel   = parallel  ) 
     return stat.nEff () 
@@ -871,8 +883,7 @@ def data_nEff ( data ,
 #  @see Ostap::statVar::the_moment
 def data_harmonic_mean ( data , 
                          expression         ,
-                         *args              , 
-                         cuts       = ''    ,
+                         cuts       = ''    , *args , 
                          cut_range  = ''    ,
                          progress   = False , 
                          as_weight  = True  , ## interpret cuts as weiggt 
@@ -892,17 +903,19 @@ def data_harmonic_mean ( data ,
     assert 1 == len ( var_lst ) , "Invalid expression!"
     
     ## 
-    if isinstance ( ROOT.RooAbsData ) or ( cuts and as_weight ) :
-        stat = Ostap.StatVar.WHarmonicMean ()
+    if isinstance ( data , ROOT.RooAbsData ) or ( cuts and as_weight ) :
+        stat = Ostap.Math.WHarmonicMean ()
     else : 
-        stat = Ostap.StatVar. HarmonicMean ()
+        stat = Ostap.Math. HarmonicMean ()
         
-    return data_get_stat  ( data , stat , var_lst , *args , 
-                            cuts       = cuts      ,
+    return data_get_stat  ( data       ,
+                            stat       ,
+                            var_lst    ,
+                            cuts       , *args     , 
                             cut_range  = cut_range ,
                             progress   = progress  ,
                             use_frame  = use_frame ,
-                            parallel   = parallel  ) 
+                            parallel   = parallel  ) .value() 
 
 # =============================================================================
 ## Get geometric mean over the data
@@ -937,16 +950,18 @@ def data_geometric_mean ( data ,
     
     ## 
     if isinstance ( data , ROOT.RooAbsData ) or ( cuts and as_weight ) :
-        stat = Ostap.StatVar.WHarmonicMean ()
+        stat = Ostap.Math.WHarmonicMean ()
     else : 
-        stat = Ostap.StatVar. HarmonicMean ()
+        stat = Ostap.Math. HarmonicMean ()
         
-    return fata_get_stat  ( data , stat , var_lst , *args , 
-                            cuts       = cuts      ,
+    return fata_get_stat  ( data       ,
+                            stat       ,
+                            var_lst    ,
+                            cuts       , *args     , 
                             cut_range  = cut_range ,
                             progress   = progress  ,
                             use_frame  = use_frame ,
-                            parallel   = parallel  ) 
+                            parallel   = parallel  ) .value() 
 
     
 # =============================================================================
@@ -962,8 +977,7 @@ def data_geometric_mean ( data ,
 #  @see Ostap::statVar::the_moment
 def data_power_mean ( data , p ,
                       expression         ,
-                      *args              , 
-                      cuts       = ''    ,
+                      cuts       = ''    , *args , 
                       cut_range  = ''    ,
                       progress   = False , 
                       as_weight  = True  , ## interpret cuts as weiggt 
@@ -984,22 +998,25 @@ def data_power_mean ( data , p ,
     assert 1 == len ( var_lst ) , "Invalid expression!"
 
     if    p == -1 or isequal ( p , -1. ) :
-        return data_harmonic_mean   ( data , expression , *args ,
-                                      cuts       = cuts      ,
+        return data_harmonic_mean   ( data       ,
+                                      expression , 
+                                      cuts       , **args    , 
                                       cut_range  = cut_range ,
                                       progress   = progress  ,
                                       use_frame  = use_frame ,
                                       parallel   = parallel  ) 
     elif  p ==  0 or iszero  ( p       ) :
-        return data_geometric_mean  ( data , expression , *args , 
-                                      cuts       = cuts      ,
+        return data_geometric_mean  ( data       ,
+                                      expression , 
+                                      cuts       , *args     ,
                                       cut_range  = cut_range ,
                                       progress   = progress  ,
                                       use_frame  = use_frame ,
                                       parallel   = parallel  ) 
     elif  p ==  1 or isequal ( p ,  1. ) :
-        return data_arithmetic_mean ( data , expression , *args ,
-                                      cuts       = cuts      ,
+        return data_arithmetic_mean ( data       ,
+                                      expression ,
+                                      cuts       , *args     ,
                                       cut_range  = cut_range ,
                                       progress   = progress  ,
                                       use_frame  = use_frame ,
@@ -1008,16 +1025,18 @@ def data_power_mean ( data , p ,
     
     ## 
     if isinstance ( data , ROOT.RooAbsData ) or ( cuts and as_weight ) :
-        stat = Ostap.StatVar.WHarmonicMean ()
+        stat = Ostap.Math.WHarmonicMean ()
     else : 
-        stat = Ostap.StatVar. HarmonicMean ()
+        stat = Ostap.Math. HarmonicMean ()
         
-    return data_get_stat  ( data , stat , var_lst , *args , 
-                            cuts       = cuts      ,
+    return data_get_stat  ( data       , 
+                            stat       ,
+                            var_lst    , 
+                            cuts       , *args     , 
                             cut_range  = cut_range ,
                             progress   = progress  ,
                             use_frame  = use_frame ,
-                            parallel   = parallel  ) 
+                            parallel   = parallel  ).value() 
 
 # =============================================================================
 ## Get arithmetic mean over the data (just for completeness)
@@ -1032,8 +1051,7 @@ def data_power_mean ( data , p ,
 #  @see Ostap::statVar::the_moment
 def data_arithmetic_mean ( data , 
                            expression         ,
-                           *args              , 
-                           cuts       = ''    ,
+                           cuts       = ''    , *args , 
                            cut_range  = ''    ,
                            progress   = False , 
                            as_weight  = True  , ## interpret cuts as weiggt 
@@ -1050,20 +1068,22 @@ def data_arithmetic_mean ( data ,
     """
     ##
     ## (1) decode expressions & cuts
-    var_lst , cuts , _  = vars_and_cuts ( expressions , cuts )
+    var_lst , cuts , _  = vars_and_cuts ( expression , cuts )
     assert 1 == len ( var_lst ) , "Invalid expression!"
     
-    if isinstance ( ROOT.RooAbsData ) or ( cuts and as_weight ) :
-        stat = Ostap.StatVar.WArithmeticMean ()
+    if isinstance ( data , ROOT.RooAbsData ) or ( cuts and as_weight ) :
+        stat = Ostap.Math.WArithmeticMean ()
     else : 
-        stat = Ostap.StatVar. ArithmeticMean ()
+        stat = Ostap.Math. ArithmeticMean ()
         
-    return data_get_stat  ( data , stat , var_lst , *args , 
-                            cuts       = cuts      ,
+    return data_get_stat  ( data                   ,
+                            stat                   ,
+                            expression             , 
+                            cuts       , *args     , 
                             cut_range  = cut_range ,
                             progress   = progress  ,
                             use_frame  = use_frame ,
-                            parallel   = parallel  ) 
+                            parallel   = parallel  ).value()  
 
 # =============================================================================
 ## Get Lehmer mean over the data
@@ -1078,8 +1098,7 @@ def data_arithmetic_mean ( data ,
 #  @see Ostap::statVar::the_moment
 def data_lehmer_mean ( data , p , 
                        expression         ,
-                       *args              , 
-                       cuts       = ''    ,
+                       cuts       = ''    , *args , 
                        cut_range  = ''    ,
                        progress   = False , 
                        as_weight  = True  , ## interpret cuts as weiggt 
@@ -1102,15 +1121,17 @@ def data_lehmer_mean ( data , p ,
     assert isinstance ( p , num_types ) , 'Invalid p-parameter!'
     
     if   p == 0 or iszero  ( p       ) :
-        return data_harmonic_mean   ( data , expression , *args , 
-                                      cuts       = cuts      ,
+        return data_harmonic_mean   ( data       ,
+                                      expression , 
+                                      cuts       , *args     , 
                                       cut_range  = cut_range ,
                                       progress   = progress  ,
                                       use_frame  = use_frame ,
-                                      parallel   = parallel  ) 
+                                      parallel   = parallel  )
     elif p == 1 or isequal ( p , 1.0 ) :
-        return data_arithmetic_mean ( data , expression , *args ,
-                                      cuts       = cuts      ,
+        return data_arithmetic_mean ( data       ,
+                                      expression , 
+                                      cuts       , *args     ,
                                       cut_range  = cut_range ,
                                       progress   = progress  ,
                                       use_frame  = use_frame ,
@@ -1118,16 +1139,18 @@ def data_lehmer_mean ( data , p ,
                                       
 
     if isinstance ( data , ROOT.RooAbsData ) or ( cuts and as_weight ) :
-        stat = Ostap.StatVar.WArithmeticMean ()
+        stat = Ostap.Math.WArithmeticMean ()
     else : 
-        stat = Ostap.StatVar. ArithmeticMean ()
+        stat = Ostap.Math. ArithmeticMean ()
 
-    return data_get_stat  ( data , stat , var_lst , *args , 
-                            cuts       = cuts      ,
+    return data_get_stat  ( data       ,
+                            stat       ,
+                            var_lst    , 
+                            cuts       , *args     ,
                             cut_range  = cut_range ,
                             progress   = progress  ,
                             use_frame  = use_frame ,
-                            parallel   = parallel  ) 
+                            parallel   = parallel  ).value() 
         
 
 # =============================================================================
@@ -1140,8 +1163,7 @@ def data_lehmer_mean ( data , p ,
 #  @see Ostap::StatVar::moment
 def data_mean ( data  , 
                 expression         ,
-                *args              , 
-                cuts       = ''    ,
+                cuts       = ''    , *args , 
                 cut_range  = ''    ,
                 progress   = False , 
                 as_weight  = True  , ## interpret cuts as weiggt 
@@ -1152,8 +1174,9 @@ def data_mean ( data  ,
     >>> data_mean( data , 'mass*mass', 'pt>0')
     >>> data.mean(        'mass*mass', 'pt>0') ## ditto
     """
-    m2 = data_the_moment ( data , 2 , expression , *args ,
-                           cuts       = cuts      ,
+    m2 = data_the_moment ( data , 2   ,
+                           expression ,
+                           cuts       , *args     ,
                            cut_range  = cut_range ,
                            progress   = progress  ,
                            use_frame  = use_frame ,
@@ -1170,8 +1193,7 @@ def data_mean ( data  ,
 #  @see Ostap::StatVar::moment
 def data_variance ( data  , 
                     expression         ,
-                    *args              , 
-                    cuts       = ''    ,
+                    cuts       = ''    , *args , 
                     cut_range  = ''    ,
                     progress   = False , 
                     as_weight  = True  , ## interpret cuts as weiggt 
@@ -1182,8 +1204,9 @@ def data_variance ( data  ,
     >>> data_mean( data , 'mass*mass', 'pt>0')
     >>> data.mean(        'mass*mass', 'pt>0') ## ditto
     """
-    m4 = data_the_moment ( data , 4 , expression , *args ,
-                           cuts       = cuts      ,
+    m4 = data_the_moment ( data   , 4 ,
+                           expression , 
+                           cuts       , *args     , 
                            cut_range  = cut_range ,
                            progress   = progress  ,
                            use_frame  = use_frame ,
@@ -1201,10 +1224,9 @@ data_dispersion = data_variance
 #  data.mean(        'mass*mass', 'pt>0') ## ditto
 #  @endcode 
 #  @see Ostap::StatVar::moment
-def data_rms ( data  , 
+def data_rms ( data               , 
                expression         ,
-               *args              , 
-               cuts       = ''    ,
+               cuts       = ''    , *args , 
                cut_range  = ''    ,
                progress   = False , 
                as_weight  = True  , ## interpret cuts as weiggt 
@@ -1215,9 +1237,9 @@ def data_rms ( data  ,
     >>> data_mean( data , 'mass*mass', 'pt>0')
     >>> data.mean(        'mass*mass', 'pt>0') ## ditto
     """
-    
-    variance  = data_variance ( data , expression , *args ,
-                                cuts       = cuts      ,
+    variance  = data_variance ( data                   ,
+                                expression             , 
+                                cuts       , *args     , 
                                 cut_range  = cut_range ,
                                 progress   = progress  ,
                                 use_frame  = use_frame ,
@@ -1234,8 +1256,7 @@ def data_rms ( data  ,
 #  @see Ostap::StatVar::skewness
 def data_skewness ( data  , 
                     expression         ,
-                    *args              , 
-                    cuts       = ''    ,
+                    cuts       = ''    , *args , 
                     cut_range  = ''    ,
                     progress   = False , 
                     as_weight  = True  , ## interpret cuts as weiggt 
@@ -1247,14 +1268,13 @@ def data_skewness ( data  ,
     >>> print data.skewness (        'mass' , 'pt>1' ) ## ditto
     - see Ostap::StatVar::skewness
     """
-    m6 = data_the_moment ( data , 6 , expression , *args ,
-                           cuts       = cuts      ,
-                           cut_range  = cut_range ,
-                           progress   = progress  ,
-                           use_frame  = use_frame ,
-                           parallel   = parallel  ) 
-    return m6.skewness ()
-
+    result = data_the_moment ( data , 6 , expression , *args ,
+                               cuts       = cuts      ,
+                               cut_range  = cut_range ,
+                               progress   = progress  ,
+                               use_frame  = use_frame ,
+                               parallel   = parallel  ) 
+    return result.skewness ()
 
 # =============================================================================
 ## get the (excess) kurtosis (with uncertainty)
@@ -1264,10 +1284,9 @@ def data_skewness ( data  ,
 #  print data.kustosis (        'mass' , 'pt>1' ) ## ditto
 #  @endcode
 #  @see Ostap::StatVar::kurtosis
-def data_kurtosis ( data  , 
+def data_kurtosis ( data               , 
                     expression         ,
-                    *args              , 
-                    cuts       = ''    ,
+                    cuts       = ''    , *args , 
                     cut_range  = ''    ,
                     progress   = False , 
                     as_weight  = True  , ## interpret cuts as weiggt 
@@ -1279,20 +1298,20 @@ def data_kurtosis ( data  ,
     >>> print data.kurtosis (        'mass' , 'pt>1' ) ## ditto
     - see Ostap::StatVar::kurtosis
     """
-    m8 = data_the_moment ( data , 8 , expression , *args ,
-                           cuts       = cuts      ,
-                           cut_range  = cut_range ,
-                           progress   = progress  ,
-                           use_frame  = use_frame ,
-                           parallel   = parallel  ) 
-    return m6.kurtosis ()
+    result = data_the_moment ( data , 8   ,
+                               expression ,
+                               cuts       , *args     ,
+                               cut_range  = cut_range ,
+                               progress   = progress  ,
+                               use_frame  = use_frame ,
+                               parallel   = parallel  ) 
+    return result.kurtosis ()
 
 # =============================================================================
-def data_project ( data        ,
-                   target      ,
-                   expressions ,
-                   *args               , 
-                   cuts        = ''    ,
+def data_project ( data                ,
+                   target              ,
+                   expressions         ,
+                   cuts        = ''    , *args , 
                    cut_range   = ""    ,
                    as_weight   = ""    ,
                    progress    = True  ,
@@ -1390,9 +1409,12 @@ def data_decorate ( klass ) :
     if hasattr ( klass , 'statVar'        ) : klass.orig_statVar        = klass.statVar
     if hasattr ( klass , 'statVars'       ) : klass.orig_statVars       = klass.statVars
     if hasattr ( klass , 'statistic'      ) : klass.orig_statistic      = klass.statistic
-    if hasattr ( klass , 'statCov'        ) : klass.orig_statCov        = klass.statCov 
+    if hasattr ( klass , 'statCov'        ) : klass.orig_statCov        = klass.statCovs
     if hasattr ( klass , 'statCovs'       ) : klass.orig_statCovs       = klass.statCovs
-    
+
+    if hasattr ( klass , 'statVct'        ) : klass.orig_statVct        = klass.statVct
+    if hasattr ( klass , 'statvector'     ) : klass.orig_statvector     = klass.statvector
+
     klass.get_moment      = data_the_moment
     klass.the_moment      = data_the_moment
 
@@ -1418,6 +1440,8 @@ def data_decorate ( klass ) :
 
     klass.statCov         = data_covariance
     klass.statCovs        = data_covariance
+    klass.statvector      = data_statvector
+    klass.statVct         = data_statvector
 
     if hasattr ( klass , 'var_minmax'      ) : klass.orig_var_minmax      = klass.var_minmax 
     if hasattr ( klass , 'var_range'       ) : klass.orig_var_range       = klass.var_range 
@@ -1465,29 +1489,6 @@ def data_decorate ( klass ) :
              klass.arithmetic_mean ) 
 
 # =============================================================================
-
-## Quantile  = StatVar.Quantile
-## Quantiles = StatVar.Quantiles
-## Interval  = StatVar.Interval 
-## QInterval = StatVar.QInterval 
-
-## def _q_str_  ( o ) : return "Quantile(%.5g,n=%s)"         % ( o.quantile  , o.nevents )
-## def _qs_str_ ( o ) : return "Quantiles(%s,n=%s)"          % ( o.quantiles , o.nevents )
-## def _i_str_  ( o ) : return "Interval([%.5g,%.5g])"       % ( o.low       , o.high    )
-## def _qi_str_ ( o ) : return "QInterval([%.5g,%.5g],n=%s)" % ( o.interval.low  ,
-##                                                              o.interval.high , o.nevents )
-
-## Quantile  .__str__  = _q_str_
-## Quantile  .__repr__ = _q_str_
-## Quantiles .__str__  = _qs_str_
-## Quantiles .__repr__ = _qs_str_
-## Interval  .__str__  = _i_str_
-## Interval  .__repr__ = _i_str_
-## QInterval .__str__  = _qi_str_
-## QInterval .__repr__ = _qi_str_
-    
-# =============================================================================
-
 
 # =============================================================================
 if '__main__' == __name__ :

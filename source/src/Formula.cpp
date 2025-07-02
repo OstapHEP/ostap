@@ -71,7 +71,7 @@ Ostap::Formula::Formula
 ( const std::string& expression ,
   const TTree*       tree       ) 
   : Formula ( formula_name ( "formula_" , expression , tree ) ,
-	      Ostap::strip ( expression ) , tree )
+              Ostap::strip ( expression ) , tree )
 {}
 // ============================================================================
 Ostap::Formula::Formula

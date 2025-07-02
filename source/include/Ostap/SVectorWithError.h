@@ -43,10 +43,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      enum {
-            /// vector size
-            kSize = N // vector size 
-      } ;  
+      enum
+        {
+          /// vector size
+          kSize = N // vector size 
+        } ;  
       // ======================================================================
     public:
       // ======================================================================
@@ -111,24 +112,34 @@ namespace Ostap
       inline Covariance& cov2        ()       { return m_cov2       ; }      
       inline Covariance& covariance  ()       { return this->cov2() ; }
       // ======================================================================
-      const  SCALAR& value ( unsigned int i ) const  { return m_value ( i )     ; }
-      const  SCALAR& cov2  ( unsigned int i , 
-                             unsigned int j ) const  { return m_cov2  ( i , j ) ; }
+      const  SCALAR& value
+      ( unsigned int i ) const  { return m_value ( i )     ; }
+      const  SCALAR& cov2
+      ( unsigned int i , 
+        unsigned int j ) const  { return m_cov2  ( i , j ) ; }
       // ======================================================================
-      inline SCALAR& value ( unsigned int i )        { return m_value ( i )     ; }
-      inline SCALAR& cov2  ( unsigned int i , 
-                             unsigned int j )        { return m_cov2  ( i , j ) ; }      
+      inline SCALAR& value
+      ( unsigned int i )        { return m_value ( i )     ; }
+      inline SCALAR& cov2
+      ( unsigned int i , 
+        unsigned int j )        { return m_cov2  ( i , j ) ; }      
       // ======================================================================
     public:  // finally it is just a vector 
       // ======================================================================
-      const  SCALAR& operator() ( unsigned int i ) const { return m_value(i) ; }
-      inline SCALAR& operator() ( unsigned int i )       { return m_value(i) ; }
-      const  SCALAR& operator[] ( unsigned int i ) const { return m_value[i] ; }
-      inline SCALAR& operator[] ( unsigned int i )       { return m_value[i] ; }
-      const  SCALAR& operator() ( unsigned int i ,
-                                  unsigned int j ) const { return m_cov2(i,j) ; }
-      inline SCALAR& operator() ( unsigned int i ,
-                                  unsigned int j )       { return m_cov2(i,j) ; }      
+      const  SCALAR& operator()
+        ( unsigned int i ) const { return m_value(i) ; }
+      inline SCALAR& operator()
+        ( unsigned int i )       { return m_value(i) ; }
+      const  SCALAR& operator[]
+      ( unsigned int i ) const   { return m_value[i] ; }
+      inline SCALAR& operator[]
+      ( unsigned int i )         { return m_value[i] ; }
+      const  SCALAR& operator()
+        ( unsigned int i ,
+          unsigned int j ) const { return m_cov2(i,j) ; }
+      inline SCALAR& operator()
+        ( unsigned int i ,
+          unsigned int j )       { return m_cov2(i,j) ; }      
       // ======================================================================
     public: // 
       // ======================================================================

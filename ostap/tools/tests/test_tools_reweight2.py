@@ -380,9 +380,9 @@ for iter in range ( 1 , maxIter + 1 ) :
     with timing ( tag + ': project weighted MC-dataset:' , logger = logger ) : 
         # =========================================================================
         ## 3) make MC-histograms  
-        mcds .project  ( hmcx , 'x'   , 'weight'  )
-        mcds .project  ( hmcy , 'y'   , 'weight'  )
-        mcds .project  ( hmc  , 'x:y' , 'weight'  )
+        mcds .project  ( hmcx , 'x'   , cuts = 'weight' )
+        mcds .project  ( hmcy , 'y'   , cust = 'weight' )
+        mcds .project  ( hmc  , 'x:y' , cuts = 'weight' )
         
         ## 3.1) compare control and signal samples  
         vct_i = mcds.statVct ( 'x,y' , 'weight' )

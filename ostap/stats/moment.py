@@ -592,7 +592,7 @@ def _om_table ( obj , * ,
             if isfinite ( vv ) and IM != float ( v ) :                
                 if isinstance ( v , VE ) : field , n = v.pretty_print () 
                 else                     : field , n = pretty_float ( v )
-                row = ( "M" + fmt + "/raw" )  % i  , field , '' if not n else fmt_factor % n  
+                row = ( "M" + fmt + "" )  % i  , field , '' if not n else fmt_factor % n  
                 rows.append ( row )
 
     if cumulants and 1 <= order and 1 <= size and obj.ok () and hasattr ( obj , 'cumulant_1st' ) :
@@ -644,7 +644,7 @@ def _om_table ( obj , * ,
             if isfinite ( vv ) and IM != float ( v ) :
                 if isinstance ( v , VE ) : field , n = v.pretty_print () 
                 else                     : field , n = pretty_float ( v )
-                row = ( "K" + fmt + '/raw' ) % k , field , '' if not n else fmt_factor  % n
+                row = ( "K" + fmt + '' ) % k , field , '' if not n else fmt_factor  % n
                 rows.append ( row )
                 
     rows = tuple ( [ ( '' , 'value' , 'factor' ) ] +  rows  )

@@ -169,7 +169,7 @@ if root_info < ( 6, 29 ) : # ==================================================
             self._dir = None 
             del self._dir
     # ========================================================================
-else : # =====================================================================
+elif root_info < ( 6 , 37 ) : # ==============================================
     # ========================================================================
     class ROOTCWD(object) :
         """ Context manager to preserve current directory
@@ -198,7 +198,38 @@ else : # =====================================================================
                             groot = ROOT.ROOT.GetROOT ()
                             groot.cd ()
                             
-            return result 
+            return result
+
+    # ========================================================================
+else : # =================================================
+    # ========================================================================
+    class ROOTCWD(object) :
+        """ Context manager to preserve current directory
+        (rather confusing stuff in ROOT) 
+        >>> print the_ROOT.CurrentDirectory() 
+        >>> with ROOTCWD() :
+        ...     print the_ROOT.CurrentDirectory() 
+        ...     rfile = ROOT.TFile( 'test.root' , 'recreate' )
+        ...     print the_ROOT.CurrentDirectory() 
+        ... print the_ROOT.CurrentDirectory() 
+        """
+
+        def __enter__ ( self ) :            
+            self._cntx = ROOT.TDirectory.TContext()
+            self._cntx.__enter__()
+
+        def __exit__ ( self , *_ ) :
+            result = self._cntx.__exit__ ( *_ )
+            ## recheck the current directory 
+            cwd = ROOT.TDirectory.CurrentDirectory().load()
+            if valid_pointer ( cwd ) and isinstance ( cwd , ROOT.TDirectoryFile ) :
+                fdir = cwd.GetFile ()
+                if valid_pointer ( fdir ) and not fdir.IsOpen() :
+                    groot = ROOT.ROOT.GetROOT ()
+                    groot.cd ()                            
+            return result
+    
+    # ========================================================================
 
 # =============================================================================
 ## global identifier for ROOT objects 

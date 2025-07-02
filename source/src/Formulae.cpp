@@ -58,9 +58,9 @@ Ostap::FormulaVars::FormulaVars
   : m_formulae()
 {
   Ostap::Assert ( nullptr != vset                       ,
-		  "Invalid list of dependents"          ,
-		  "Ostap::FormulaVars"                  ,
-		  INVALID_ARGSET, __FILE__ , __LINE__ ) ;
+                  "Invalid list of dependents"          ,
+                  "Ostap::FormulaVars"                  ,
+                  INVALID_ARGSET, __FILE__ , __LINE__ ) ;
   //
   const RooArgList vlst { *vset } ;
   make_vars ( vlst , expressions ) ;
@@ -74,14 +74,14 @@ Ostap::FormulaVars::FormulaVars
   : m_formulae()
 {
   Ostap::Assert ( nullptr != data                    ,
-		  "Invalid list of dependents"       ,
-		  "Ostap::FormulaVars"               ,
-		  INVALID_DATA , __FILE__ , __LINE__ ) ;
+                  "Invalid list of dependents"       ,
+                  "Ostap::FormulaVars"               ,
+                  INVALID_DATA , __FILE__ , __LINE__ ) ;
   const RooArgSet* vset = data->get () ;
   Ostap::Assert ( nullptr != vset                       ,
-		  "Invalid list of dependents"          ,
-		  "Ostap::FormulaVars"                  ,
-		  INVALID_ARGSET, __FILE__ , __LINE__ ) ;  
+                  "Invalid list of dependents"          ,
+                  "Ostap::FormulaVars"                  ,
+                  INVALID_ARGSET, __FILE__ , __LINE__ ) ;  
   //
   const RooArgList vlst { *vset } ; 
   make_vars ( vlst , expressions ) ;
@@ -99,9 +99,9 @@ void Ostap::FormulaVars::make_vars
     {
       auto f = makeFormula ( expr , vars ) ;
       Ostap::Assert ( f && f->ok ()                         ,
-		      "Invalid expression:" + expr          ,
-		      "Ostap::FormulaVars"                  ,
-		      INVALID_FORMULA , __FILE__ , __LINE__ ) ;
+                      "Invalid expression:" + expr          ,
+                      "Ostap::FormulaVars"                  ,
+                      INVALID_FORMULA , __FILE__ , __LINE__ ) ;
       //
       m_formulae.push_back ( std::move ( f ) ) ;
     }

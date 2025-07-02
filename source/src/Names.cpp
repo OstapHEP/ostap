@@ -11,6 +11,7 @@
 // ROOT 
 // ============================================================================
 #include "TNamed.h"
+#include "TUUID.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -57,13 +58,25 @@ std::string Ostap::tmp_name
   const bool          random ) 
 {
   std::size_t hv = 
-    nullptr == named || random ? 
+    nullptr == named ? 
     Ostap::Utils::hash_combiner ( prefix , name , random ) :
     Ostap::Utils::hash_combiner ( prefix , name , random , 
                                   std::string ( named -> GetName  () ) , 
                                   std::string ( named -> GetTitle () ) ) ;
   //
-  if ( random ) { hv = Ostap::Utils::hash_combiner ( prefix , hv , std::rand() ) ; }
+  if ( random )
+    {
+      hv = Ostap::Utils::hash_combiner ( prefix , hv , std::rand() ) ; 
+      hv = Ostap::Utils::hash_combiner ( prefix , hv , std::rand() ) ; 
+      //
+      UChar_t     uuid  [ 16 ] ;
+      const TUUID tuuid {}     ;
+      tuuid.GetUUID ( uuid )   ;
+      //      
+      hv = Ostap::Utils::hash_combiner ( prefix       ,
+                                         hv           ,
+                                         Ostap::Utils::hash_range ( uuid , uuid + 16 ) ) ;      
+    }
   //
   return prefix + std::to_string ( hv ) ;
 }

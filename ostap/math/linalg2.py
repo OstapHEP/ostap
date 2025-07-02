@@ -26,7 +26,7 @@ from   ostap.utils.basic      import typename
 from   ostap.utils.clsgetter  import classgetter
 from   ostap.logger.pretty    import fmt_pretty_float, fmt_pretty_error 
 from   ostap.math.base        import pretty_array
-from   ostap.logger.colorized import infostr
+from   ostap.logger.colorized import infostr, warning_info 
 from   ostap.utils.gsl        import gsl_info
 from   ostap.logger.symbols   import ditto, times, labels 
 from   ostap.logger.colorized import colored_string  
@@ -1404,7 +1404,8 @@ class LinAlg(object) :
         row   = []
         for v in vct :
             vv = v / scale
-            if    0 == v or 0 == vv            : item = ''
+            if   not math.isfinite ( vv )      : item = warning_info ( '%s' % vv ) 
+            elif 0 == v or 0 == vv             : item = ''
             elif iszero ( v ) or iszero ( vv ) : item = ' 0'
             else :
                 item = fmtv % vv
@@ -1510,8 +1511,9 @@ class LinAlg(object) :
         ## 1st row : values
         row    = [ infostr ( 'V' )  ] 
         for v in values :
-            vv = v / scale 
-            if   0 == v or 0 == vv             : item = ''
+            vv = v / scale
+            if   not math.isfinite ( vv )      : item = warning_info ( '%s' % vv  ) 
+            elif 0 == v or 0 == vv             : item = ''
             elif iszero ( v ) or iszero ( vv ) : item = ' 0'
             else             :
                 item = fmtv % vv
@@ -1828,8 +1830,9 @@ class LinAlg(object) :
             row = [ infostr ( l )  ]
             for j in range ( cols ) :                
                 v     = mtrx ( i , j ) 
-                value = v / scale 
-                if   0 == v or 0 == value             : item = ''
+                value = v / scale
+                if   not math.isfinite ( value )      : item = warning_info ( '%s' % value  ) 
+                elif 0 == v or 0 == value             : item = ''
                 elif iszero ( v ) or iszero ( value ) : item = '0'
                 else :
                     item = fmtv % value
@@ -1991,7 +1994,8 @@ class LinAlg(object) :
                 else     :
                     v     = mtrx ( i , j ) 
                     value = v / scale
-                    if   0 == v or 0 == value             : item = ''
+                    if   not math.isfinite ( value )      : item = warning_info ( '%s' % value  )                     
+                    elif 0 == v or 0 == value             : item = ''
                     elif iszero ( v ) or iszero ( value ) : item = ' 0'
                     else :
                         item = fmtv % value
@@ -2104,34 +2108,49 @@ class LinAlg(object) :
         _c    = _t   ()
         
         rows = mtrx.kRows
-        ok1  = True 
-        ok2  = True 
+        bad1 = set ()
+        bad2 = {}
+        diag = [] 
         for i in range ( rows ) :
             
             ii  = mtrx  ( i , i )
-            if 0 > ii or iszero ( ii ) :
-                ok1 = False 
-                for j in range ( i , rows ) : _c [ i , j ] = NaN 
-                continue
-        
-            sii = sqrt ( ii )
-            _c[ i , i ] = 1
             
-            for j in range ( i + 1 , rows ) :            
-                jj  = mtrx ( j , j ) 
-                sjj = sqrt ( jj    )
-                if 0 > sjj or iszero ( sjj ) :
-                    ok1 = False
+            ## store diagonal 
+            diag.append ( ii    ) 
+            if 0 > ii or iszero ( ii ) :
+                bad1.add ( i )
+                for j in range ( i , rows ) : _c [ i , j ] = NaN
+                for j in range ( i , rows ) : _c [ j , i ] = NaN                
+                continue
+            
+            sii = sqrt ( ii )
+            _c [ i , i ] = 1
+            
+            for j in range ( i ) :
+                if j in bad1 : continue
+                
+                djj = diag [ j   ] 
+                sjj = sqrt ( djj )
+                
+                ij  = mtrx ( i , j )
+                
+                eij = ij / ( sii * sjj )
+                if   abs     ( eij ) < 1   : pass 
+                elif isequal ( eij ,   1 ) : eij =  1.0
+                elif isequal ( eij ,  -1 ) : eij = -1.0
+                else : 
+                    bad2 [ ( i , j ) ] = eij
                     _c [ i , j ] = NaN
                     _c [ j , i ] = NaN 
-                else : 
-                    ij  = mtrx ( i , j )
-                    eij = ij / ( sii * sjj )
-                    if  1 < abs ( eij ) : ok2 = False  
-            
-        if not ok1 : logger.error ( "correlations: zero or negative diagonal element" ) 
-        if not ok2 : logger.error ( "correlations: invalid non-diagonal element"      ) 
+                    continue
                 
+                _c [ i , j ] = eij 
+                _c [ j , i ] = eij 
+                    
+                    
+        if bad1 : logger.error ( "correlations: zero or negative diagonal elements: %s" % list ( bad1 ) ) 
+        if bad2 : logger.error ( "correlations: invalid non-diagonal elements     : %s" %        bad2   ) 
+                        
         return _c
 
 

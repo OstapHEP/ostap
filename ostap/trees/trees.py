@@ -581,10 +581,11 @@ def tree_draw ( tree                     ,
             histo.draw ( opts , **kw ) 
             return histo
             
-    ## get the suitable ranges for the variables 
-    ranges = data_range ( tree  ,
-                          varlst , first , last , 
-                          cuts      = cuts      ,
+    ## get the suitable ranges for the variables
+    args  = first, last 
+    ranges = data_range ( tree   ,
+                          varlst ,
+                          cuts   , *args , 
                           use_frame = use_frame , 
                           parallel  = parallel  , 
                           delta     = delta     , 

@@ -24,10 +24,10 @@ namespace  Ostap
    *  @see TNamed
    */  
   std::string tmp_name
-    ( const std::string& prefix        , 
-      const std::string& name          ,
-      const TNamed*      named         ,
-      const bool         random = true ) ;
+  ( const std::string& prefix        , 
+    const std::string& name          ,
+    const TNamed*      named         ,
+    const bool         random = true ) ;
   // ==========================================================================
   /** Genrate some valid (ranodm) name
    *  @param prefix (INPUT) prefix 
@@ -37,9 +37,9 @@ namespace  Ostap
    *  @return some random name 
    */  
   inline std::string tmp_name
-    ( const std::string& prefix        , 
-      const std::string& name          ,
-      const bool         random = true ) 
+  ( const std::string& prefix        , 
+    const std::string& name          ,
+    const bool         random = true ) 
   { return tmp_name ( prefix , name , nullptr , random ) ; }
   // ==========================================================================
   /** Is  the name "primitive" 
