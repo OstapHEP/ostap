@@ -94,22 +94,22 @@ namespace ROOT
         // ====================================================================
         /// The basic method: increment the counter 
         inline void Exec
-	( unsigned int slot ,
-	  const double value ) 
+		( unsigned int slot  ,
+	  	  const double value ) 
         { m_slots [ slot % m_N ].update ( value ) ; } 
         // ====================================================================
       public: // 1 vector column 
 	// ====================================================================
         /// The basic method: increment the counter for the vector-like columns       
         template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
         inline void Exec
-	( unsigned int slot ,
-	  const T&     vs   )
+		( unsigned int slot ,
+	  	  const T&     vs   )
         {
-	  Result_t& m = m_slots [ slot % m_N ] ;
-	  for ( const auto v : vs ) { m.update ( v ) ; }
-	}
+	  		Result_t& m = m_slots [ slot % m_N ] ;
+	  		for ( const auto v : vs ) { m.update ( v ) ; }
+		}
         // ====================================================================
       public:
         // ====================================================================
@@ -149,20 +149,20 @@ namespace ROOT
       public:
         // ====================================================================
         /// default constructor 
-	template <typename ...Args>
+		template <typename ...Args>
         StatAction2 ( const Args& ...args ) 
-	  : m_result ( std::make_shared<Result_t> ( args ... ) ) 
-          , m_N      ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
-	  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
+	  	: m_result ( std::make_shared<Result_t> ( args ... ) ) 
+        , m_N      ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
+	  	, m_slots  ( this->m_N , *(this->m_result.get() ) ) 
         {}
 	// ====================================================================
         /// constructor 
         StatAction2 ( const COUNTER& cnt  ) 
-	  : m_result ( std::make_shared<Result_t> ( cnt ) ) 
-          , m_N      ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
-	  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
+	  	: m_result ( std::make_shared<Result_t> ( cnt ) ) 
+        , m_N      ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
+	  	, m_slots  ( this->m_N , *(this->m_result.get() ) ) 
         {}	
-	/// Move constructor 
+		/// Move constructor 
         StatAction2      (       StatAction2&& ) = default ;
         /// Copy constructor is disabled 
         StatAction2      ( const StatAction2&  ) = delete ;
@@ -186,53 +186,53 @@ namespace ROOT
         // ====================================================================
         /// The basic method: increment the counter 
         inline void Exec
-	( unsigned int slot   ,
-	  const double value1 ,
-	  const double value2 ) 
+		( unsigned int slot   ,
+	      const double value1 ,
+	      const double value2 ) 
         { m_slots [ slot % m_N ].update ( value1 , value2 ) ; } 
         // ====================================================================
       public: // 1 vector column 
 	// ====================================================================
         /// The basic method: increment the counter for the vector-like columns       
         template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
-	inline void Exec
-	( unsigned int slot   ,
-	  const T&     vs     ,
-	  const double value2 )
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
+		inline void Exec
+		( unsigned int slot   ,
+	  	  const T&     vs     ,
+	  	  const double value2 )
         {
-	  Result_t& m = m_slots [ slot % m_N ] ;
-	  for ( const auto v : vs ) { m.update ( v , value2 ) ; }
-	}
+	  	Result_t& m = m_slots [ slot % m_N ] ;
+	  	for ( const auto v : vs ) { m.update ( v , value2 ) ; }
+		}
         /// The basic method: increment the counter for the vector-like columns       
         template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
-	inline void Exec
-	( unsigned int slot   ,
-	  const double value1 , 
-	  const T&     vs     ) 
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
+		inline void Exec
+		( unsigned int slot   ,
+	      const double value1 , 
+	      const T&     vs     ) 
         {
-	  Result_t& m = m_slots [ slot % m_N ] ;
-	  for ( const auto v : vs ) { m.update ( value1 , v ) ; }
-	}
+	   	Result_t& m = m_slots [ slot % m_N ] ;
+	    for ( const auto v : vs ) { m.update ( value1 , v ) ; }
+		}
         // ====================================================================
       public: // 2 vector columns 
 	// ====================================================================
         /// The basic method: increment the counter for the vector-like columns       
         template <typename T1,
 		  typename T2,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,  
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type> 
-	inline void Exec
-	( unsigned int slot   , 
-	  const T1&    vs1    ,
-	  const T2&    vs2    )	 
+		  typename  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,  
+		  typename  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type> 
+		inline void Exec
+		( unsigned int slot   , 
+	      const T1&    vs1    ,
+	      const T2&    vs2    )	 
         {
-	  Result_t& m = m_slots [ slot % m_N ] ;
-	  for ( const auto &v1 : vs1 )
-	    { for ( const auto &v2 : vs2 )
-		{ m.update ( v1 , v2 ) ; } }
-	} ; 
+	    Result_t& m = m_slots [ slot % m_N ] ;
+	    for ( const auto &v1 : vs1 )
+	    	{ for ( const auto &v2 : vs2 )
+			{ m.update ( v1 , v2 ) ; } }
+		} ; 
         // ====================================================================
       public:
         // ====================================================================
@@ -318,7 +318,7 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like columns       
 	template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type> 
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type> 
 	inline void Exec
 	( unsigned int slot ,
 	  const T&     vs   ,
@@ -331,7 +331,7 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like columns
 	template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type> 
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type> 
 	inline void Exec
 	( unsigned int slot ,
 	  const double v1   ,
@@ -344,7 +344,7 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like columns
 	template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type> 
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type> 
 	inline void Exec
 	( unsigned int slot ,
 	  const double v1   ,
@@ -360,8 +360,8 @@ namespace ROOT
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
 		  typename T2,	
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type, 
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type> 
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type, 
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type> 
 	inline void Exec
 	( unsigned int slot ,
 	  const T1&    vs1  ,
@@ -377,8 +377,8 @@ namespace ROOT
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
 		  typename T2,		  
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type, 
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type, 
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
 	inline void Exec
 	( unsigned int slot ,
 	  const T1&    vs1  ,
@@ -394,8 +394,8 @@ namespace ROOT
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
 		  typename T2,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type, 
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type, 
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
 	inline void Exec
 	( unsigned int slot ,
 	  const double v1   ,  		    
@@ -414,9 +414,9 @@ namespace ROOT
 	template <typename T1,
 		  typename T2,	
 		  typename T3,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type, 
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type, 
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type, 
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type, 
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
 	inline void Exec
 	( unsigned int slot ,
 	  const T1&    vs1  ,
@@ -515,7 +515,7 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like columns       
 	template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
 	inline void Exec
 	( unsigned int slot ,
 	  const T&     vs   ,
@@ -529,7 +529,7 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like columns
 	template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
 	inline void Exec
 	( unsigned int slot ,
 	  const double v1   ,
@@ -543,7 +543,7 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like columns
 	template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
 	void Exec
 	( unsigned int slot ,
 	  const double v1   ,
@@ -557,7 +557,7 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like columns
 	template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
 	void Exec
 	( unsigned int slot ,
 	  const double v1   ,
@@ -574,8 +574,8 @@ namespace ROOT
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
 		  typename T2,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
 	void Exec
 	( unsigned int slot ,
 	  const T1&    vs1  ,
@@ -592,8 +592,8 @@ namespace ROOT
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
 		  typename T2,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
 	void Exec
 	( unsigned int slot ,
 	  const T1&    vs1  ,
@@ -610,8 +610,8 @@ namespace ROOT
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
 		  typename T2,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
 	void Exec
 	( unsigned int slot ,
 	  const T1&    vs1  ,
@@ -628,8 +628,8 @@ namespace ROOT
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
 		  typename T2,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
 	void Exec
 	( unsigned int slot ,
 	  const double v1   ,		    
@@ -646,8 +646,8 @@ namespace ROOT
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
 		  typename T2,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
 	void Exec
 	( unsigned int slot ,
 	  const double v1   ,		    
@@ -664,8 +664,8 @@ namespace ROOT
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
 		  typename T2,	
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
 	void Exec
 	( unsigned int slot ,
 	  const double v1   ,		    
@@ -684,9 +684,9 @@ namespace ROOT
 	template <typename T1,
 		  typename T2,	
 		  typename T3,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
 	void Exec
 	( unsigned int slot ,
 	  const double v1   ,		    
@@ -704,9 +704,9 @@ namespace ROOT
 	template <typename T1,
 		  typename T2,	
 		  typename T3,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
 	void Exec
 	( unsigned int slot ,
 	  const T1&    vs1  ,
@@ -724,9 +724,9 @@ namespace ROOT
 	template <typename T1,
 		  typename T2,	
 		  typename T3,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
 	void Exec
 	( unsigned int slot ,
 	  const T1&    vs1  ,
@@ -744,9 +744,9 @@ namespace ROOT
 	template <typename T1,
 		  typename T2,	
 		  typename T3,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
 	void Exec
 	( unsigned int slot ,
 	  const T1&    vs1  ,
@@ -767,10 +767,10 @@ namespace ROOT
 		  typename T2,	
 		  typename T3,	
 		  typename T4,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T4>::value>::type>
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T4>::value>::type>
 	void Exec
 	( unsigned int slot ,
 	  const T1&    vs1  ,
@@ -834,13 +834,13 @@ namespace ROOT
         StatAction1w  ( const Args& ...args ) 
           : m_result  ( std::make_shared<Result_t>( args ... ) ) 
           , m_N       ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
-	  , m_slots   ( this->m_N , *(this->m_result.get() ) ) 
+	  	  , m_slots   ( this->m_N , *(this->m_result.get() ) ) 
         {}
         /// constructor 
         StatAction1w  ( const COUNTER& cnt ) 
           : m_result  ( std::make_shared<Result_t> ( cnt ) ) 
           , m_N       ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
-	  , m_slots   ( this->m_N , *(this->m_result.get() ) ) 
+	      , m_slots   ( this->m_N , *(this->m_result.get() ) ) 
         {}
         /// Move constructor 
         StatAction1w (       StatAction1w&& ) = default ;
@@ -857,7 +857,7 @@ namespace ROOT
         void Finalize   () 
         {
           for ( unsigned int i = 1 ; i < m_N ; ++i ) { m_slots [ 0 ] += m_slots [ i ] ; }
-	  *m_result = m_slots [ 0 ] ;	  
+	  	  *m_result = m_slots [ 0 ] ;	  
         }
         /// who am I ?
         std::string GetActionName() { return "StatAction1w" ; }
@@ -866,28 +866,28 @@ namespace ROOT
         // ====================================================================
         /// The basic method: increment the counter 
         inline void Exec
-	( unsigned int slot       ,
-	  const double value      ,
-	  const double weight = 1 ) 
+		( unsigned int slot       ,
+	  	  const double value      ,
+	      const double weight = 1 ) 
         {
-	  if ( !weight ) { return ; } 
-	  m_slots [ slot % m_N ].update ( value , weight ) ;
-	} 
+	  	   if ( !weight ) { return ; } 
+	  	   m_slots [ slot % m_N ].update ( value , weight ) ;
+		} 
         // ====================================================================
       public: // 1 vector column 
 	// ====================================================================
         /// The basic method: increment the counter for the vector-like columns       
         template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
+			typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
         inline void Exec
-	( unsigned int slot       ,
-	  const T&     vs         ,
-	  const double weight = 1 ) 
+		( unsigned int slot       ,
+	      const T&     vs         ,
+	      const double weight = 1 ) 
         {
-	  if ( !weight ) { return ; } 
-	  Result_t& m = m_slots [ slot % m_N ] ;
-	  for ( const auto v : vs ) { m.update ( v , weight ) ; }
-	}
+	      if ( !weight ) { return ; } 
+	      Result_t& m = m_slots [ slot % m_N ] ;
+	      for ( const auto v : vs ) { m.update ( v , weight ) ; }
+		}
         // ====================================================================
       public:
         // ====================================================================
@@ -927,20 +927,20 @@ namespace ROOT
       public:
         // ====================================================================
         /// default constructor 
-	template <typename ...Args>
+		template <typename ...Args>
         StatAction2w ( const Args& ...args ) 
-	  : m_result ( std::make_shared<Result_t> ( args ... ) ) 
-          , m_N      ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
-	  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
+	    : m_result ( std::make_shared<Result_t> ( args ... ) ) 
+        , m_N      ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
+	    , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
         {}
 	// ====================================================================
         /// constructor 
         StatAction2w ( const COUNTER& cnt  ) 
-	  : m_result ( std::make_shared<Result_t> ( cnt ) ) 
-          , m_N      ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
-	  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
+	    : m_result ( std::make_shared<Result_t> ( cnt ) ) 
+        , m_N      ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
+	    , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
         {}	
-	/// Move constructor 
+		/// Move constructor 
         StatAction2w      (       StatAction2w&& ) = default ;
         /// Copy constructor is disabled 
         StatAction2w      ( const StatAction2w&  ) = delete ;
@@ -964,63 +964,63 @@ namespace ROOT
         // ====================================================================
         /// The basic method: increment the counter 
         inline void Exec
-	( unsigned int slot       ,
-	  const double value1     ,
-	  const double value2     , 
-	  const double weight = 1 ) 
+		( unsigned int slot       ,
+	      const double value1     ,
+	      const double value2     , 
+	      const double weight = 1 ) 
         {
-	  if ( !weight ) { return ; } 
-	  m_slots [ slot % m_N ].update ( value1 , value2 , weight ) ;
-	} 
+	  	  if ( !weight ) { return ; } 
+	  	  m_slots [ slot % m_N ].update ( value1 , value2 , weight ) ;
+		} 
         // ====================================================================
       public: // 1 vector column 
 	// ====================================================================
         /// The basic method: increment the counter for the vector-like columns       
         template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
-	inline void Exec
-	( unsigned int slot       ,
-	  const T&     vs         ,
-	  const double value2     , 
-	  const double weight = 1 ) 
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
+		inline void Exec
+		( unsigned int slot       ,
+	  	  const T&     vs         ,
+	      const double value2     , 
+	      const double weight = 1 ) 
         {
-	  if ( !weight ) { return ; } 
-	  Result_t& m = m_slots [ slot % m_N ] ;
-	  for ( const auto v : vs ) { m.update ( v , value2 , weight ) ; }
-	}
+	      if ( !weight ) { return ; } 
+	      Result_t& m = m_slots [ slot % m_N ] ;
+	      for ( const auto v : vs ) { m.update ( v , value2 , weight ) ; }
+		}
         /// The basic method: increment the counter for the vector-like columns       
         template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
-	inline void Exec
-	( unsigned int slot       ,
-	  const double value1     , 
-	  const T&     vs         , 
-	  const double weight = 1 ) 
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
+		inline void Exec
+	    ( unsigned int slot       ,
+	      const double value1     , 
+	      const T&     vs         , 
+	      const double weight = 1 ) 
         {
-	  if ( !weight ) { return ; } 
-	  Result_t& m = m_slots [ slot % m_N ] ;
-	  for ( const auto v : vs ) { m.update ( value1 , v , weight ) ; }
-	}
+	  	  if ( !weight ) { return ; } 
+	      Result_t& m = m_slots [ slot % m_N ] ;
+	  	  for ( const auto v : vs ) { m.update ( value1 , v , weight ) ; }
+		}
         // ====================================================================
       public: // 2 vector columns 
 	// ====================================================================
         /// The basic method: increment the counter for the vector-like columns       
         template <typename T1,
 		  typename T2,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
-	inline void Exec
-	( unsigned int slot       , 
-	  const T1&    vs1        ,
-	  const T2&    vs2        ,	 
-	  const double weight = 1 ) 
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		  typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		inline void Exec
+		( unsigned int slot       , 
+	      const T1&    vs1        ,
+	      const T2&    vs2        ,	 
+	      const double weight = 1 ) 
         {
-	  if ( !weight ) { return ; } 
-	  Result_t& m = m_slots [ slot % m_N ] ;
-	  for ( const auto &v1 : vs1 )
-	    { for ( const auto &v2 : vs2 )
-		{ m.update ( v1 , v2 , weight ) ; } }
-	} ; 
+	      if ( !weight ) { return ; } 
+	      Result_t& m = m_slots [ slot % m_N ] ;
+	      for ( const auto &v1 : vs1 )
+	      { for ( const auto &v2 : vs2 )
+		    { m.update ( v1 , v2 , weight ) ; } }
+		} ; 
         // ====================================================================
       public:
         // ====================================================================
@@ -1054,10 +1054,10 @@ namespace ROOT
       {
       public:
 	// ====================================================================
-	/// define the resutl type 
-	using Result_t = COUNTER ;
+		/// define the resutl type 
+		using Result_t = COUNTER ;
 	// ====================================================================
-      public:
+    public:
 	// ====================================================================
 	/// default constructor 
 	template <typename ...Args>
@@ -1110,7 +1110,7 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like columns       
 	template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
 	inline void Exec
 	( unsigned int slot       ,
 	  const T&     vs         ,
@@ -1125,7 +1125,7 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like columns
 	template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
 	inline void Exec
 	( unsigned int slot       ,
 	  const double v1         ,
@@ -1140,7 +1140,7 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like columns
 	template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
 	inline void Exec
 	( unsigned int slot       ,
 	  const double v1         ,
@@ -1157,9 +1157,9 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
-		  typename T2,	
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		typename T2,	
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
 	inline void Exec
 	( unsigned int slot       ,
 	  const T1&    vs1        ,
@@ -1176,9 +1176,9 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
-		  typename T2,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		typename T2,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
 	inline void Exec
 	( unsigned int slot       ,
 	  const T1&    vs1        ,
@@ -1195,9 +1195,9 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
-		  typename T2,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		typename T2,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
 	inline void Exec
 	( unsigned int slot       ,
 	  const double v1         ,  		    
@@ -1216,11 +1216,11 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
-		  typename T2,	
-		  typename T3,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
+		typename T2,	
+		typename T3,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
 	inline void Exec
 	( unsigned int slot       ,
 	  const T1&    vs1        ,
@@ -1325,7 +1325,7 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like columns       
 	template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
 	inline void Exec
 	( unsigned int slot       ,
 	  const T&     vs         ,
@@ -1341,7 +1341,7 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like columns
 	template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
 	inline void Exec
 	( unsigned int slot       ,
 	  const double v1         ,
@@ -1357,7 +1357,7 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like columns
 	template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
 	void Exec
 	( unsigned int slot       ,
 	  const double v1         ,
@@ -1373,7 +1373,7 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like columns
 	template <typename T,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value>::type>
 	void Exec
 	( unsigned int slot       ,
 	  const double v1         ,
@@ -1391,9 +1391,9 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
-		  typename T2,	
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		typename T2,	
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
 	void Exec
 	( unsigned int slot       ,
 	  const T1&    vs1        ,
@@ -1411,9 +1411,9 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
-		  typename T2,	
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		typename T2,	
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
 	void Exec
 	( unsigned int slot       ,
 	  const T1&    vs1        ,
@@ -1431,9 +1431,9 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
-		  typename T2,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		typename T2,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
 	void Exec
 	( unsigned int slot       ,
 	  const T1&    vs1        ,
@@ -1451,9 +1451,9 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
-		  typename T2,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		typename T2,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
 	void Exec
 	( unsigned int slot       ,
 	  const double v1         ,		    
@@ -1471,9 +1471,9 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
-		  typename T2,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		typename T2,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
 	void Exec
 	( unsigned int slot       ,
 	  const double v1         ,		    
@@ -1491,9 +1491,9 @@ namespace ROOT
 	// ====================================================================
 	/// The basic method: increment the counter for the vector-like column of weight 
 	template <typename T1,
-		  typename T2,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
+		typename T2,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type>
 	void Exec
 	( unsigned int slot       ,
 	  const double v1         ,		    
@@ -1512,11 +1512,11 @@ namespace ROOT
       public: // 3 vector columns 
 	// ====================================================================
 	template <typename T1,
-		  typename T2,	
-		  typename T3,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
+		typename T2,	
+		typename T3,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
 	void Exec
 	( unsigned int slot       ,
 	  const double v1         ,		    
@@ -1534,11 +1534,11 @@ namespace ROOT
 	} ;	
 	// ====================================================================
 	template <typename T1,
-		  typename T2,	
-		  typename T3,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
+		typename T2,	
+		typename T3,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
 	void Exec
 	( unsigned int slot       ,
 	  const T1&    vs1        ,
@@ -1556,11 +1556,11 @@ namespace ROOT
 	} ;
 	// ====================================================================
 	template <typename T1,
-		  typename T2,	
-		  typename T3,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
+		typename T2,	
+		typename T3,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
 	void Exec
 	( unsigned int slot       ,
 	  const T1&    vs1        ,
@@ -1578,11 +1578,11 @@ namespace ROOT
 	} ;
 	// ====================================================================
 	template <typename T1,
-		  typename T2,	
-		  typename T3,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
+		typename T2,	
+		typename T3,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type>
 	void Exec
 	( unsigned int slot       ,
 	  const T1&    vs1        ,
@@ -1602,13 +1602,13 @@ namespace ROOT
       public: // 4 vector columns 
 	// ====================================================================
 	template <typename T1,
-		  typename T2,	
-		  typename T3,	
-		  typename T4,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type,
-		  std::enable_if<ROOT::Internal::RDF::IsDataContainer<T4>::value>::type>
+		typename T2,	
+		typename T3,	
+		typename T4,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T3>::value>::type,
+		typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T4>::value>::type>
 	void Exec
 	( unsigned int slot       ,
 	  const T1&    vs1        ,
