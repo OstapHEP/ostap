@@ -439,17 +439,19 @@ def tree_project ( tree                     ,
         
     ## 3) parse input expressions
     varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
-  
-    ## use frame if requested and if/when possible 
-    if use_frame and all_entries ( tree , first , last ) : 
-        import ostap.frames.frames as F 
-        frame  = F.DataFrame ( tree )
-        if progress : frame , _ = F.frame_progress ( frame , len ( tree ) )            
-        return F.frame_project ( frame , target , expressions = varlst , cuts = cuts , lazy = False  )
 
-    ## use parallel processing if requested and if/when possible  
-    if parallel and isinstance ( ROOT.TChain ) and all_entries ( tree , first , last ) and 1 < tree.nFiles () :
-            raise NotImplementedError ( 'Not implemented yet!' )
+    ## copy/clone the target 
+    def target_copy   ( t ) : return t.Clone() if isinstance ( t , ROOT.TH1 ) else type ( t ) ( t )
+    ## reset the target 
+    def target_reset  ( t ) :
+        if isinstance ( t , ROOT.TH1 ) : 
+            t.Reset ()
+            if not t.GetSumw2() : t.Sumw2 () 
+        else : t.reset ()
+        return t
+        
+    ## reset the target 
+    target = target_reset ( target ) 
 
     ## dimension of the target 
     dim = target.dim ()
@@ -462,33 +464,20 @@ def tree_project ( tree                     ,
     if input_string and 2 <= dim and order_warning :
         vv = ' ; '.join  ( varlst  ) 
         logger.attention ("project: from v1.10.1.9 variables are in natural order [x;y;..]=[ %s ]" % vv  )
-        
-    ## copy/clone the target 
-    def target_copy   ( t ) : return t.Clone() if isinstance ( t , ROOT.TH1 ) else type ( t ) ( t )
-    ## reset the target 
-    def target_reset  ( t ) :
-        if isinstance ( t , ROOT.TH1 ) : 
-            t.Reset ()
-            if not t.GetSumw2() : t.Sumw2 () 
-        else : t.reset ()
-        return t
-    
-    ## reset the target 
-    target = target_reset ( target ) 
-        
+            
     ## avoid looping 
     if first == last : return target
-      
+
     ## Native ROOT processing
-    if native and isinstance ( target , ROOT.TH1 ) and \
-        ROOT.ROOT.GetROOT().FindObject ( target.GetName() ) is target : 
-                    
+    if native and isinstance ( target , ROOT.TH1 ) and isinstance ( tree , ROOT.TTree ) and \
+       ROOT.ROOT.GetROOT().FindObject ( target.GetName() ) is target : 
+        
         ## ATTENTION: 
         ## here the inverse/contrintuitive ROOT convention
         ## is used for the ordering of variables
         the_vars = ' : '.join ( '( %s )' % v for v in reversed ( varlst ) )
         ## Use the native ROOT machinery
-        rr = data.Project ( target.GetName () , the_vars , cuts , '' , last - first , first )
+        rr = tree.Project ( target.GetName () , the_vars , cuts , '' , last - first , first )
         if rr < 0  : logger.error ("Error from TTree::Project %+d" % rr )
         else :
             nn = target.GetEntries ()
@@ -496,6 +485,19 @@ def tree_project ( tree                     ,
                 
         return target
     
+    ## use frame if requested and if/when possible 
+    if use_frame and all_entries ( tree , first , last ) : 
+        import ostap.frames.frames as F 
+        frame  = F.DataFrame ( tree )
+        if progress : frame , _ = F.frame_progress ( frame , len ( tree ) )            
+        return F.frame_project ( frame , target , expressions = varlst , cuts = cuts , lazy = False  )
+
+    ## use parallel processing if requested and if/when possible  
+    if parallel and isinstance ( tree , ROOT.TChain ) and all_entries ( tree , first , last ) and 1 < tree.nFiles () :
+        if input_histo :
+            from ostap.parallel.parallel_project import parallel_project
+            return parallel_project ( tree , target , what , cuts , use_frame = use_frame , progress = progress ) 
+
     tail = cuts , first , last
     
     ## Use our own loop/fill/project machinery

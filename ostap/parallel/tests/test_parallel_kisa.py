@@ -141,7 +141,7 @@ def test_kisa () :
 
     with timing('PARALLEL(%s):' % len(chain) , logger ) :
         chain.project ( h2 ,
-                        'emass' ,
+                        'mass' ,
                         '3<=mass && mass<=3.2 && 0<=c2dtf && c2dtf<5' ,
                         progress = True  , 
                         parallel = True  )
