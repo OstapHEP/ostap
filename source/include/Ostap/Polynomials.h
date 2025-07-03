@@ -2006,11 +2006,6 @@ namespace Ostap
         setPar ( N , 1 ) ;
       }
       // ======================================================================
-      /// copy 
-      ChebyshevSum ( const ChebyshevSum&  ) = default ;
-      /// move
-      ChebyshevSum (       ChebyshevSum&& ) = default ;
-      // ======================================================================
       ///  constructor from Polinomial           (efficient)
       explicit ChebyshevSum ( const Polynomial&  poly ) ;
       ///  constructor from Bernstein            (delegation) 
@@ -2021,9 +2016,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double evaluate    ( const double x ) const ;
+      double        evaluate    ( const double x ) const ;
       /// get the value
-      double operator () ( const double x ) const 
+      inline double operator () ( const double x ) const 
       { return x < m_xmin ? 0 : x > m_xmax ? 0 : evaluate ( x ) ; }
       // ======================================================================
     public:
@@ -2232,40 +2227,35 @@ namespace Ostap
         setPar ( N , 1 ) ;
       }
       // ======================================================================
-      /// copy 
-      LegendreSum  ( const LegendreSum&  ) = default ;
-      /// move
-      LegendreSum  (       LegendreSum&& ) = default ;
-      // ======================================================================
       /**  constructor from Bernstein polinomial (efficient)
        *  @see http://www.sciencedirect.com/science/article/pii/S0377042700003769 eq.21
        */
-      explicit LegendreSum ( const Bernstein&     poly ) ;
+      explicit LegendreSum ( const Bernstein&    poly ) ;
       /// constructor from polynoimial            (delegation)
-      explicit LegendreSum ( const Polynomial&    poly ) ;
+      explicit LegendreSum ( const Polynomial&   poly ) ;
       /// constructor from Chebyshev              (delegation)
-      explicit LegendreSum ( const ChebyshevSum&  poly ) ;
+      explicit LegendreSum ( const ChebyshevSum& poly ) ;
       // ======================================================================
     public:
       // ======================================================================
       /// get the value
-      double evaluate    ( const double x ) const ;
+      double        evaluate    ( const double x ) const ;
       /// get the value
-      double operator () ( const double x ) const 
+      inline double operator () ( const double x ) const 
       { return x < m_xmin ? 0 : x > m_xmax ? 0 : evaluate ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get lower edge
-      double xmin () const { return m_xmin ; }
+      inline double xmin () const { return m_xmin ; }
       /// get upper edge
-      double xmax () const { return m_xmax ; }
+      inline double xmax () const { return m_xmax ; }
       // ======================================================================
-    public:
+    public: //   x <--> t transformations 
       // ======================================================================
-      double x ( const double t ) const
+      inline double x ( const double t ) const
       { return  0.5 * ( t * ( m_xmax - m_xmin ) +   m_xmax + m_xmin ) ; }
-      double t ( const double x ) const
+      inline double t ( const double x ) const
       { return (  2 *   x   - m_xmax - m_xmin ) / ( m_xmax - m_xmin ) ; }
       // ======================================================================
     public:
@@ -2369,14 +2359,15 @@ namespace Ostap
        */
       bool fill ( const double x , const double weight = 1 ) ;
       bool Fill ( const double x , const double weight = 1 ) { return fill ( x , weight ) ; }
-      // ======================================================================
+      // =====================================================================
     public: // Ostap::Math::WStatistic 
       // =====================================================================
       /// Ostap::Math::WStatistic, add one event with weight 
       void update ( const double x , const double weight = 1 ) override
       { this -> fill ( x , weight ) ; }
       /// reet parameters to zeros 
-      void reset  () override { Parameters::reset () ; } 
+      void reset  () override { Parameters::reset () ; }
+      // ======================================================================
     public: 
       // ======================================================================      
       /// get unique tag 
@@ -2451,16 +2442,17 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double evaluate    ( const double x ) const ;
+      double        evaluate    ( const double x ) const ;
       /// get the value
-      double operator () ( const double x ) const ;
+      inline double operator () ( const double x ) const
+      { return x < m_xmin ? 0 : x > m_xmax ? 0 : evaluate ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get lower edge
-      double xmin () const { return m_xmin ; }
+      inline double xmin () const { return m_xmin ; }
       /// get upper edge
-      double xmax () const { return m_xmax ; }
+      inline double xmax () const { return m_xmax ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2517,8 +2509,6 @@ namespace Ostap
       // ======================================================================
       inline HermiteSum& operator+=( const HermiteSum& other ) { return isum ( other ) ; }
       inline HermiteSum& operator-=( const HermiteSum& other ) { return isub ( other ) ; }      
-      // ======================================================================
-    public:
       // ======================================================================
     public:
       // ======================================================================

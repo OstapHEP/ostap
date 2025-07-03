@@ -64,6 +64,7 @@ def _om_mean ( obj ) :
     o = obj.order
     assert 1 <= o , 'mean: the order must be >=1!'
     return Ostap.Math.Moments.mean ( obj )
+
 # ===========================================================================
 ## get min/max  for the moment-counter
 #  @code
@@ -95,6 +96,26 @@ def _om_variance ( obj ) :
     o = obj.order
     assert 2 <= o , 'variance: the order must be >=2!'
     return Ostap.Math.Moments.variance ( obj )
+
+# =============================================================================
+## get a RMS 
+#  @code
+#  m = ...
+#  v = m.rms  () 
+#  @endcode
+def _om_rms  ( obj ) :
+    """ Get a RMS value for the moment-counter
+    >>> m = ...
+    >>> v = m.rms () 
+    """    
+    assert 2 <= obj.order  , 'rms: the order must be >=2!'
+    ##
+    var = Ostap.Math.Moments.variance ( obj )    
+    if   isinstance ( var , VE ) :
+        if 0 > var.value()  : var = VE ( 0 , var.cov2() )
+    elif 0 > var : var = 0.0
+    
+    return  var ** 0.5 
 
 # =============================================================================
 ## get a skewness for the moment-counter
@@ -196,8 +217,8 @@ def _om_cumulant_( obj , order ) :
     >>> v = m.cumulant_4th() 
     """
     O = min ( obj.order , 10 ) 
-    assert isinstance ( order , integer_types ) and 1 <= order <= O, \
-        'cumulant: invalid order!'
+    assert isinstance ( order , integer_types ) and 1 <= order <= O, 'cumulant: invalid order!'
+    
     if   1 == order : return obj.cumulant_1st ()
     elif 2 == order : return obj.cumulant_2nd ()
     elif 3 == order : return obj.cumulant_3rd ()
@@ -221,7 +242,7 @@ def _om_u2nd ( obj ) :
     r2 = Ostap.Math.Moments.unbiased_2nd ( obj )
     if isinstance ( r2 , VE ) : return r2
     ## 
-    m2 = obj.moment_[2]()
+    m2 = Ostap.Math.Moments.moment[2]( obj )
     if isinstance ( m2 , VE ) and 0 < m2.cov2() : return VE ( r2 , m2.cov2() )
     return r2
 
@@ -241,7 +262,7 @@ def _om_u3rd ( obj ) :
     r3 = Ostap.Math.Moments.unbiased_3rd ( obj )  
     if isinstance ( r3 , VE ) : return r3
     ## 
-    m3 = obj.moment_[3]()
+    m3 = Ostap.Math.Moments.moment[3]( obj )
     if isinstance ( m3 , VE ) and 0 < m3.cov2() : return VE ( r3 , m3.cov2() )
     return r3
 
@@ -261,7 +282,7 @@ def _om_u4th ( obj ) :
     r4 = Ostap.Math.Moments.unbiased_4th ( obj )
     if isinstance ( r4 , VE ) : return r4
     ## 
-    m4 = obj.moment_[4]()
+    m4 = Ostap.Math.Moments.moment[4]( obj )
     if isinstance ( m4 , VE ) and 0 < m4.cov2() : return VE ( r4 , m4.cov2() )
     return r4
     
@@ -281,7 +302,7 @@ def _om_u5th ( obj ) :
     r5 = Ostap.Math.Moments.unbiased_5th ( obj )
     if isinstance ( r5 , VE ) : return r5
     ## 
-    m5 = obj.moment_[5]()
+    m5 = Ostap.Math.Moments.moment[5]( obj )
     if isinstance ( m5 , VE ) and 0 < m5.cov2() : return VE ( r5 , m5.cov2() )
     return r5
     
@@ -300,8 +321,9 @@ def _om_cm2 ( obj , order  ) :
    """
    assert isinstance  ( order , integer_types ) and order <= obj.order ,\
     'central_moment: invalid order %s/%d' % ( order , obj.order )
-   if 2 <= order and obj.empty() : return invalid_moment 
-   return obj.moment_[order]()
+   if 2 <= order and obj.empty() : return invalid_moment
+   ## 
+   return Ostap.Math.Moments.moment [ order ]( obj )
 
 # =============================================================================
 ## get central moment 
@@ -320,7 +342,7 @@ def _om_cm3 ( obj , order  ) :
         'central_moment: invalid order %s/%d' % ( order , obj.order )
     if 2 <= order and not obj.ok () : return invalid_moment
     ##
-    return obj.moment_[order]()
+    return Ostap.Math.Moments.moment [ order ]( obj )
 
 
 # =============================================================================
@@ -337,27 +359,9 @@ def _om_cm4 ( obj , order , center ) :
    assert isinstance  ( order , integer_types ) and order <= obj.order ,\
        'centralized_moment: invalid order %s/%d' % ( order , obj.order )
    assert isinstance  ( cener , num_types ) ,\
-       'centralized_moment: invalid center %s' % center   
-   return obj.centralized_moment_[order]( center )
-
-# =============================================================================
-## get a RMS 
-#  @code
-#  m = ...
-#  v = m.rms  () 
-#  @endcode
-def _om_rms  ( obj ) :
-    """ Get a RMS value for the moment-counter
-    >>> m = ...
-    >>> v = m.rms () 
-    """    
-    assert 2 <= obj.order  , 'rms: the order must be >=2!'
-    ##
-    var = obj.variance ()
-    if isinstance ( var , VE ) :
-        return VE ( max ( var.value() , 0 ) , var.cov2 () ) **  0.5 
-    
-    return  max ( var , 0 ) **  0.5 
+       'centralized_moment: invalid center %s' % center
+   ## 
+   return Ostap.Math.centralized_moment [ order ]( center )
 
 # =============================================================================
 ## Get the standartized moment of order `order` 
@@ -371,16 +375,7 @@ def _om_std ( obj , order ) :
     elif 1 == order : return 0            ## RETURN 
     elif 2 == order : return 1            ## RETURN
 
-    m = obj.std_moment_[order]()        
-    if isinstance ( m , VE ) : return m   ## RETURN
-
-    if 2 * order <= obj.order : 
-        raw = obj.central_moment ( order)        
-        if isinstance ( raw , VE ) :
-            o2 = float ( obj.moment_[2] () ) 
-            return raw / pow ( o2 , 0.5 * order ) 
-    
-    return m 
+    return Ostap.Math.Moments.std_moment [ order ] ( obj  )
     
 # =============================================================================
 ## print object as a table

@@ -160,7 +160,7 @@ Ostap::Math::HarmonicMean::HarmonicMean
 // ===========================================================================
 Ostap::Math::ArithmeticMean::ArithmeticMean
 ( const Ostap::Math::ArithmeticMean::Counter& cnt )
-  : Counter ( cnt ) 
+  : m_cnt ( cnt ) 
 {}
 // ===========================================================================
 Ostap::Math::PowerMean::PowerMean
@@ -192,7 +192,7 @@ Ostap::Math::LehmerMean::LehmerMean
   , m_lpm1 ( cnt2 )
 {
   Ostap::Assert  ( m_lp.size () == m_lpm1.size () ,
-		   "Inconsistent structure of two conuters!" ,
+		   "Inconsistent structure of two counters!" ,
 		   "Ostap::Math::LehmerMean" ) ;
   
 }
@@ -209,7 +209,7 @@ Ostap::Math::WHarmonicMean::WHarmonicMean
 // ===========================================================================
 Ostap::Math::WArithmeticMean::WArithmeticMean
 ( const Ostap::Math::WArithmeticMean::Counter& cnt )
-  : Counter ( cnt ) 
+  : m_cnt ( cnt ) 
 {}
 // ===========================================================================
 Ostap::Math::WPowerMean::WPowerMean
@@ -241,13 +241,13 @@ Ostap::Math::WLehmerMean::WLehmerMean
   , m_lpm1 ( cnt2 )
 {
   Ostap::Assert  ( m_lp.size () == m_lpm1.size () ,
-		   "Inconsistent structure of two conuters!" ,
+		   "Inconsistent structure of two counters!" ,
 		   "Ostap::Math::WLehmerMean" ) ;
   Ostap::Assert  ( s_equal ( m_lp.w  () , m_lpm1.w  () ) , 
-		   "Inconsistent structure of two conuters!" ,
+		   "Inconsistent structure of two counters!" ,
 		   "Ostap::Math::WLehmerMean" ) ;
   Ostap::Assert  ( s_equal ( m_lp.w2 () , m_lpm1.w2 () ) , 
-		   "Inconsistent structure of two conuters!" ,
+		   "Inconsistent structure of two counters!" ,
 		   "Ostap::Math::WLehmerMean" ) ;
 }
 

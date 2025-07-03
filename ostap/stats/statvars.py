@@ -530,7 +530,6 @@ def data_statistic ( data               ,
         elif cuts and as_weight                    :
             return sv.statVar     ( data , varname , cuts ,             *args )
         else : 
-            print ( '_CUT:' , varname , cuts , args ) 
             return sv.statVar_cut ( data , varname , cuts ,             *args )
            
     ## 

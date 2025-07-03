@@ -400,7 +400,7 @@ def test_frame6 () :
     
     h1 = ROOT.TH1D ( hID() , '' , 20 , -3, 3 )
     
-    rh = frame_project  ( frame , h1 , 'b4' , progress = True , report = True )
+    rh = frame_project  ( frame , h1 , 'b4' , progress = True , report = True , lazy = False )
 
     with use_canvas ( 'test_frame6: b4' , wait = 2 ) :
         h1.draw () 
@@ -425,15 +425,12 @@ def test_frame7 () :
     from ostap.frames.frames import frame_param
 
     with timing ( 'param: Bernstein [12]' , logger = logger ) : 
-        rb = frame_param ( frame , bs , 'b4' , '(b4>-1)*1.01' )
+        polb = frame_param ( frame , bs , 'b4' , '(b4>-1)*1.01' , lazy = False )
     with timing ( 'param: Legendre  [15]' , logger = logger ) :     
-        rl = frame_param ( frame , ls , 'b4' , '(b4>-1)*1.01' )
+        poll = frame_param ( frame , ls , 'b4' , '(b4>-1)*1.01' , lazy = False )
     with timing ( 'param: Chebyshev [18]' , logger = logger ) :             
-        rc = frame_param ( frame , cs , 'b4' , '(b4>-1)*1.01' )
+        polc = frame_param ( frame , cs , 'b4' , '(b4>-1)*1.01' , lazy = False )
 
-    with timing ( 'run  : Bernstein [12]' , logger = logger ) : polb = rb.GetValue()
-    with timing ( 'run  : Legendre  [15]' , logger = logger ) : poll = rl.GetValue()
-    with timing ( 'run  : Chebyshev [18]' , logger = logger ) : polc = rc.GetValue()
 
     with use_canvas ( 'test_frame7: b4 as polynomials [12/15/18] ' , wait = 2 ) :
         polb.draw (          linecolor = 2 , linewidth = 2 ) 
@@ -455,13 +452,10 @@ def test_frame8 () :
 
     from ostap.frames.frames   import frame_the_moment
 
-    m1    = frame_the_moment ( frame , 20 , 'b6'          )  ## simple 
-    m2    = frame_the_moment ( frame , 20 , 'b6' , '0<b4' )  ## cut 
-    m3    = frame_the_moment ( frame , 20 , 'b6' , 'b4'   )  ## weight 
+    mm1    = frame_the_moment ( frame , 20 , 'b6'          , lazy = False )  ## simple 
+    mm2    = frame_the_moment ( frame , 20 , 'b6' , '0<b4' , lazy = False )  ## cut 
+    mm3    = frame_the_moment ( frame , 20 , 'b6' , 'b4'   , lazy = False )  ## weight 
 
-    mm1 = m1.GetValue()
-    mm2 = m2.GetValue()
-    mm3 = m3.GetValue()
 
     title = 'Simple moments'
     logger.info ( '%s:\n%s' % ( title , mm1.table ( title = title , prefix = '# ' ) ) ) 

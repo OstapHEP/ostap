@@ -2100,8 +2100,6 @@ Ostap::Math::HermiteSum::HermiteSum
 // ============================================================================
 // get the value
 // ============================================================================
-double Ostap::Math::HermiteSum::operator() ( const double x ) const 
-{ return evaluate ( x ) ; }
 double Ostap::Math::HermiteSum:: evaluate  ( const double x ) const 
 {
   const double tx = t ( x ) ;

@@ -119,7 +119,7 @@ def as_rnode ( frame ) :
     return ROOT.RDF.AsRNode ( frame ) 
 # ==============================================================================
 ## Local helper function  to get the lazy results
-def get_values ( results                               ,
+def get_values ( results                               , * , 
                  frame     = None                      ,
                  transform = lambda s : s.GetValue ()  , 
                  report    = False                     ,
@@ -1108,7 +1108,10 @@ def frame_covariance ( frame              ,
     if lazy :
         return results , current  ## RETURN 
     
-    return get_values ( results , frame = current , report = report , title = 'frame_covariance' ) 
+    return get_values ( results ,
+                        frame  = current ,
+                        report = report  ,
+                        title  = 'frame_covariance' ) 
 
 # ==============================================================================
 ## Get an arithmetic mean
@@ -1585,7 +1588,10 @@ def frame_project ( frame               ,
         return action , current  ## RETUTRN
 
     ## make the actual looping 
-    result = get_values ( action , current , report = report , title = 'frame_project' )
+    result = get_values ( action ,
+                          frame  = current ,
+                          report = report  ,
+                          title  = 'frame_project' )
     
     if histo :
         histo  += result
@@ -1623,7 +1629,7 @@ def frame_param ( frame               ,
                   target              ,
                   expressions         , 
                   cuts        = ''    , * , 
-                  as_weight   = ''    , 
+                  as_weight   = True  , 
                   progress    = False ,
                   report      = False ,
                   lazy        = False ) :
@@ -1680,10 +1686,10 @@ def frame_param ( frame               ,
     nvars = len ( items )
 
     assert \
-        ( 1 == nvars and isinstance ( poly , _types_1D ) ) or \
-        ( 2 == nvars and isinstance ( poly , _types_2D ) ) or \
-        ( 3 == nvars and isinstance ( poly , _types_3D ) ) or \
-        ( 4 == nvars and isinstance ( poly , _types_4D ) ) ,  \
+        ( 1 == nvars and isinstance ( target , _types_1D ) ) or \
+        ( 2 == nvars and isinstance ( target , _types_2D ) ) or \
+        ( 3 == nvars and isinstance ( target , _types_3D ) ) or \
+        ( 4 == nvars and isinstance ( target , _types_4D ) ) ,  \
         "Invalid structure of  polynomial and variables/cuts!"
 
     ## variables 
@@ -1713,68 +1719,72 @@ def frame_param ( frame               ,
         if hasattr ( target , 'xmax' ) :
             current = current.Filter ( '%.10g >= %s ' %  ( target.xmax() , uvars[0] ) , 'ZMAX-FILTER' )
 
-    if cuts : uvars.append ( cname )
+    if cname : uvars.append ( cname )
     uvars = CNT ( uvars )
 
-    ## reser the target 
+    ## reset the target 
     target.reset()
     
     TT = type ( target )
     
     if   isinstance ( target , Ostap.Math.LegendreSum4 ) :
-        action = SA4w [ TT ] ( target ) if cuts else SA4 [ TT ] ( target )
+        action = SA4w [ TT ] ( target ) if cname else SA4 [ TT ] ( target )
         
     elif isinstance ( target , Ostap.Math.LegendreSum3 ) :
-        action = SA3w [ TT ] ( target ) if cuts else SA3 [ TT ] ( target )
+        action = SA3w [ TT ] ( target ) if cname else SA3 [ TT ] ( target )
         
     elif isinstance ( target , Ostap.Math.LegendreSum2 ) :
-        action = SA2w [ TT ] ( target ) if cuts else SA2 [ TT ] ( target )
+        action = SA2w [ TT ] ( target ) if cname else SA2 [ TT ] ( target )
         
     elif isinstance ( target , Ostap.Math.LegendreSum  ) :
-        action = SA1w [ TT ] ( target ) if cuts else SA1 [ TT ] ( target )
+        action = SA1w [ TT ] ( target ) if cname else SA1 [ TT ] ( target )
         
     elif isinstance ( target , Ostap.Math.ChebyshevSum ) :
-        action = SA1w [ TT ] ( target ) if cuts else SA1 [ TT ] ( target )
+        action = SA1w [ TT ] ( target ) if cname else SA1 [ TT ] ( target )
         
     elif isinstance ( target , Ostap.Math.Bernstein3D  ) :
-        action = SA3w [ TT ] ( target ) if cuts else SA3 [ TT ] ( target )
+        action = SA3w [ TT ] ( target ) if cname else SA3 [ TT ] ( target )
         
-    elif isinstance (target , Ostap.Math.Bernstein2D  ) :
-        action = SA2w [ TT ] ( target ) if cuts else SA2 [ TT ] ( target )
+    elif isinstance ( target , Ostap.Math.Bernstein2D  ) :
+        action = SA2w [ TT ] ( target ) if cname else SA2 [ TT ] ( target )
         
-    elif isinstance ( target , Ostap.Math.Bernstein1D  ) :
-        action = SA1w [ TT ] ( target ) if cuts else SA1 [ TT ]( poly )
+    elif isinstance ( target , Ostap.Math.Bernstein    ) :
+        action = SA1w [ TT ] ( target ) if cname else SA1 [ TT ] ( target )
         
-    elif isinstance ( target , Ostap.Math.WStatEntity  ) : action = SA1w [ TT ] ( poly)    
-    elif isinstance ( target , Ostap.Math.NStatEntity  ) : action = SA1  [ TT ] ( poly)
-    elif isinstance ( target , Ostap.Math. StatEntity  ) : action = SA1  [ TT ] ( poly)
+    elif isinstance ( target , Ostap.Math.WStatEntity  ) : action = SA1w [ TT ] ( target )    
+    elif isinstance ( target , Ostap.Math.NStatEntity  ) : action = SA1  [ TT ] ( target )
+    elif isinstance ( target , Ostap.Math. StatEntity  ) : action = SA1  [ TT ] ( target )
      
-    elif isinstance ( target , Ostap.Math.WStatictic4  ) : action = SA4w [ TT ]( poly)
-    elif isinstance ( target , Ostap.Math. Statictic4  ) : action = SA4  [ TT ]( poly)
+    elif isinstance ( target , Ostap.Math.WStatictic4  ) : action = SA4w [ TT ] ( target )
+    elif isinstance ( target , Ostap.Math. Statictic4  ) : action = SA4  [ TT ] ( target )
     
-    elif isinstance ( target , Ostap.Math.WStatictic3  ) : action = SA3w [ TT ]( poly)
-    elif isinstance ( target , Ostap.Math. Statictic3  ) : action = SA3  [ TT ]( poly)
+    elif isinstance ( target , Ostap.Math.WStatictic3  ) : action = SA3w [ TT ] ( target )
+    elif isinstance ( target , Ostap.Math. Statictic3  ) : action = SA3  [ TT ] ( target )
     
-    elif isinstance ( target , Ostap.Math.WStatictic2  ) : action = SA2w [ TT ]( poly)
-    elif isinstance ( target , Ostap.Math. Statictic2  ) : action = SA2  [ TT ]( poly)
+    elif isinstance ( target , Ostap.Math.WStatictic2  ) : action = SA2w [ TT ] ( target )
+    elif isinstance ( target , Ostap.Math. Statictic2  ) : action = SA2  [ TT ] ( target )
     
-    elif isinstance ( target , Ostap.Math.WStatictic2  ) : action = SA1w [ TT ]( poly)
-    elif isinstance ( target , Ostap.Math. Statictic2  ) : action = SA1  [ TT ]( poly)
+    elif isinstance ( target , Ostap.Math.WStatictic2  ) : action = SA1w [ TT ] ( target )
+    elif isinstance ( target , Ostap.Math. Statictic2  ) : action = SA1  [ TT ] ( target )
     
     else :
         
         raise TypeError ( "Unknown type of target: %s" % typename ( target  ) )
 
     ## Book the action:
-    
     result = current.Book ( std_move ( action ) , uvars ) 
     
     ## lazy processing ? 
-    if lasy :
+    if lazy :
         return result , current
     
-    ## make real looping
-    result  = get_value ( result , current , report , 'frame_param' ) 
+    ## make the real looping
+    result  = get_values ( result ,
+                           frame  = current ,
+                           report = report  ,
+                           title  = 'frame_param' )
+
+    ## update target
     target += result
     
     return target 

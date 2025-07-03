@@ -72,10 +72,10 @@ namespace Ostap
     public: 
       // ======================================================================
       /// get the value
-      double evaluate    ( const double x , const double y ) const ;
+      double        evaluate    ( const double x , const double y ) const ;
       // ======================================================================
       /// get the value
-      double operator () ( const double x , const double y ) const 
+      inline double operator () ( const double x , const double y ) const 
       { return 
           x < m_xmin || x > m_xmax ? 0 : 
           y < m_ymin || y > m_ymax ? 0 : evaluate ( x , y ) ; }
@@ -298,13 +298,13 @@ namespace Ostap
         const unsigned short iy ) const 
       { return ix * ( m_NY + 1 ) + iy ; }
       // ======================================================================
-      double calculate () const
+      inline double calculate () const
       {
         long double value = 0 ;
         for ( unsigned int ix = 0 ; ix <= m_NX ; ++ix ) 
-        { for ( unsigned int iy = 0 ; iy <= m_NY ; ++iy ) 
-          { value += m_pars [ index ( ix , iy ) ] * 1.0L
-              * m_cache_x [ ix ] * m_cache_y[ iy ] ; } }
+          { for ( unsigned int iy = 0 ; iy <= m_NY ; ++iy ) 
+              { value += m_pars [ index ( ix , iy ) ] * 1.0L
+                  * m_cache_x [ ix ] * m_cache_y[ iy ] ; } }
         return value ;
       }
       // ======================================================================
@@ -433,7 +433,7 @@ namespace Ostap
         const double z ) const ;
       // ======================================================================
       /// get the value
-      double operator () 
+      inline double operator () 
       ( const double x , 
         const double y , 
         const double z ) const 
@@ -541,9 +541,9 @@ namespace Ostap
       /// Ostap::Math::WStatistic, add one event with weight 
       void update
       ( const double x          ,
-	const double y          ,
-	const double z          ,
-	const double weight = 1 ) override
+        const double y          ,
+        const double z          ,
+        const double weight = 1 ) override
       { this -> fill ( x , y , z , weight ) ; }
       /// reet parameters to zeros 
       void reset  () override { Parameters::reset () ; } 
@@ -829,7 +829,7 @@ namespace Ostap
         const double u ) const ;
       // ======================================================================
       /// get the value
-      double operator ()
+      inline double operator ()
       ( const double x , 
         const double y , 
         const double z ,
@@ -956,10 +956,10 @@ namespace Ostap
       /// Ostap::Math::WStatistic4, add one event with weight 
       void update
       ( const double x          ,
-	const double y          ,
-	const double z          ,
-	const double u          ,
-	const double weight = 1 ) override
+        const double y          ,
+        const double z          ,
+        const double u          ,
+        const double weight = 1 ) override
       { this -> fill ( x , y , z , u , weight ) ; }
       /// reet parameters to zeros 
       void reset  () override { Parameters::reset () ; } 
@@ -1111,16 +1111,16 @@ namespace Ostap
         const unsigned short iu ) const 
       { return ( ( ix * ( m_NY + 1 ) + iy ) * ( m_NZ + 1 ) + iz ) * ( m_NU + 1 ) + iu ; }
       // ====================================================================== 
-      double calculate () const
+      inline double calculate () const
       {
         long double value = 0 ;
         for ( unsigned short ix = 0 ; ix <= m_NX ; ++ix ) 
-        { for ( unsigned short iy = 0 ; iy <= m_NY ; ++iy ) 
-          { for ( unsigned short iz = 0 ; iz <= m_NZ ; ++iz ) 
-            { for ( unsigned short iu = 0 ; iu <= m_NU ; ++iu ) 
-              { value += m_pars [ index ( ix , iy , iz , iu ) ] * 1.0L
-                  * m_cache_x[ ix ] * m_cache_y[ iy ] 
-                  * m_cache_z[ iz ] * m_cache_u[ iu ] ; } } } }
+          { for ( unsigned short iy = 0 ; iy <= m_NY ; ++iy ) 
+              { for ( unsigned short iz = 0 ; iz <= m_NZ ; ++iz ) 
+                  { for ( unsigned short iu = 0 ; iu <= m_NU ; ++iu ) 
+                      { value += m_pars [ index ( ix , iy , iz , iu ) ] * 1.0L
+                          * m_cache_x[ ix ] * m_cache_y[ iy ] 
+                          * m_cache_z[ iz ] * m_cache_u[ iu ] ; } } } }
         return value ;
       }
       // ======================================================================
