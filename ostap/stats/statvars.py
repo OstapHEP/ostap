@@ -29,6 +29,7 @@
 - data_arithmetic_mean - get the (weighted) geometric mean
 - data_power_mean      - get the (weighted) power     mean 
 - data_lehmer_mean     - get the (weighted) Lehmer    mean 
+- data_quantiles       - get the quantiles 
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -57,16 +58,19 @@ __all__     = (
     'data_arithmetic_mean' , ## get the (weighted) arithmetic mean
     'data_power_mean'      , ## get the (weighted) power      mean 
     'data_lehmer_mean'     , ## get the (weighted) Lehmer     mean 
+    'data_quantiles'       , ## get the quantiles 
     ##
     'data_decorate'        , ## technical function to decorate the classes
     'expression_types'     , ## valid types for expressions/cuts/weights
 )
 # =============================================================================
-from   ostap.math.base           import ( isequal, iszero, axis_range, strings, 
+from   ostap.math.base           import ( isequal     , iszero  , axis_range,
+                                          strings     , doubles ,  
                                           all_entries )      
 from   ostap.core.core           import Ostap, rootException, WSE, VE, std     
-from   ostap.core.ostap_types    import ( string_types , integer_types  , 
-                                          num_types    , dictlike_types )
+from   ostap.core.ostap_types    import ( string_types   , integer_types  , 
+                                          num_types      , dictlike_types ,
+                                          sequence_types )
 from   ostap.trees.cuts          import expression_types, vars_and_cuts
 from   ostap.math.base           import evt_range 
 from   ostap.utils.basic         import loop_items, typename 
@@ -1273,6 +1277,63 @@ def data_skewness ( data  ,
                                parallel   = parallel  ) 
     return result.skewness ()
 
+
+
+
+# =============================================================================
+## get the (approximate) quaniles for the data using P2-algorithm
+#  @code
+#  data =  ...
+#  print data_quantiles t ( data , 3 , 'mass' , 'pt>1' ) 
+#  @endcode
+#  @see Ostap::StatVar::moment
+#
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
+#
+#  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
+def  data_quantiles ( data               ,
+                      p                  , 
+                      expression         ,
+                      cuts       = ''    , *args , 
+                      cut_range  = ''    ,
+                      progress   = False , 
+                      use_frame  = False ,
+                      parallel   = False ) : 
+    """ Get the (approximate) quantiles for the dat ausing P2-algorithm 
+    >>> data =  ...
+    >>> data =  ...
+    >>> print data_quantiles t ( data , 3 , 'mass' , 'pt>1' ) 
+    - see https://aakinshin.net/posts/p2-quantile-estimator-intro/
+    - see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
+    - see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
+    - see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
+    - see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
+    """
+
+    if   isinstance ( p , integer_types  ) and 1 <= p     : qq = Ostap.Math.Quantiles_[p] ()
+    elif isinstance ( p , float          ) and 0 <  p < 1 : qq = Ostap.Math.Quantile  ( p  )    
+    elif isinstance ( p , sequence_types ) and all ( isinstance ( v , float ) and 0 < v < 1 for v in p ) :
+        qq = Ostap.Math.Quantiles ( doubles ( sorted ( float ( v ) for v in p ) ) ) 
+    else :
+        raise TypeError ( 'Invalid probabilities: %s/%s' % ( typename ( p ) , str ( p ) ) ) 
+    
+    result = data_get_stat ( data       ,
+                             qq         ,
+                             expression ,
+                             cuts       , *args    ,
+                             cut_range = cut_range ,
+                             progress  = progress  ,              
+                             use_frame = False     ,  ## ATTENTION 
+                             parallel  = False     )  ## ATTENTION 
+
+    qq = result.quantiles()
+    print ( 'TYPE', type ( qq ) , qq , len ( qq ) , [ qq[i] for i in range ( len ( qq ) ) ] ) 
+    return tuple ( q for q in result.quantiles() ) 
+    
+
 # =============================================================================
 ## get the (excess) kurtosis (with uncertainty)
 #  @code
@@ -1411,6 +1472,8 @@ def data_decorate ( klass ) :
 
     if hasattr ( klass , 'statVct'        ) : klass.orig_statVct        = klass.statVct
     if hasattr ( klass , 'statvector'     ) : klass.orig_statvector     = klass.statvector
+    
+    if hasattr ( klass , 'quanitles'      ) : klass.orig_quanitles      = klass.quantiles 
 
     klass.get_moment      = data_the_moment
     klass.the_moment      = data_the_moment
@@ -1440,6 +1503,8 @@ def data_decorate ( klass ) :
     klass.statvector      = data_statvector
     klass.statVct         = data_statvector
 
+    klass.quantiles       = data_quantiles 
+    
     if hasattr ( klass , 'var_minmax'      ) : klass.orig_var_minmax      = klass.var_minmax 
     if hasattr ( klass , 'var_range'       ) : klass.orig_var_range       = klass.var_range 
         

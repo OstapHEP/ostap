@@ -1223,8 +1223,8 @@ _printed = 10
 #  @date   2013-07-06
 def ds_project  ( dataset                 ,
                   histo                   ,
-                  what                    , * , 
-                  cuts      = ''          ,
+                  what                    , 
+                  cuts      = ''          , * , 
                   cut_range = ''          , 
                   first     = FIRST_ENTRY ,
                   last      = LAST_ENTRY  ,
@@ -1249,9 +1249,9 @@ def ds_project  ( dataset                 ,
         histo = h
     
     return data_project ( dataset  ,
-                          histo ,
-                          what  , first , last  , 
-                          cuts      = cuts      ,
+                          histo     ,
+                          what      ,
+                          cuts      , first , last  , 
                           cut_range = cut_range ,
                           progress  = progress  ,
                           use_frame = False     ,

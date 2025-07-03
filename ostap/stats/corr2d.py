@@ -13,9 +13,10 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-08"
 __all__     = ( 'Corr2D', )
 # =============================================================================
-from   ostap.core.core    import cpp , WSE, Ostap 
-from   ostap.trees.cuts   import expression_types
-from   ostap.math.base    import iszero 
+from   ostap.core.core      import cpp , WSE, Ostap 
+from   ostap.math.base      import iszero 
+from   ostap.trees.cuts     import expression_types
+from   ostap.stats.statvars import data_covariance 
 import ostap.math.linalg
 import ROOT,math
 # =============================================================================
@@ -82,11 +83,10 @@ class Corr2D(object) :
         self.__selection = str ( selection ).strip () if selection else ''
 
         ## get the statistics&covariances 
-        self.__wcov = Ostap.StatVar.statCov ( dataset        ,
-                                              self.var1      ,
-                                              self.var2      ,
-                                              self.selection ,
-                                              *self.args     ) 
+        self.__wcov = data_covariance ( dataset                   ,
+                                        ( self.var1 , self.var2 ) , 
+                                        self.selection            ,
+                                        *self.args                ) 
         
         if not self.__wcov.isfinite() : logger.error ( "Invalid covariance for '%s` : `%s'" % ( self.var1 , self.var2 ) ) 
         

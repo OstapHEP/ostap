@@ -95,14 +95,14 @@ def test_corr2d  ( var1 = 'x' , var2 = 'y') :
     
     c2d = Corr2D ( chain , var1 , var2 )
 
-    logger.info ( 'var1          %s' % chain.statVar ( var1 ) )
-    logger.info ( 'var2          %s' % chain.statVar ( var2 ) )
-    logger.info ( 'decorrelatd11 %s' % chain.statVar ( c2d.decorrelated1 ) )
-    logger.info ( 'decorrelated2 %s' % chain.statVar ( c2d.decorrelated2 ) )
-    logger.info ( 'normalized1   %s' % chain.statVar ( c2d.normalized1   ) )
-    logger.info ( 'normalized2   %s' % chain.statVar ( c2d.normalized2   ) )
-    logger.info ( 'uniform11     %s' % chain.statVar ( c2d.uniform1      ) )
-    logger.info ( 'uniform2      %s' % chain.statVar ( c2d.uniform2      ) )
+    logger.info ( 'var1          \n%s' % chain.statVar ( var1 ) )
+    logger.info ( 'var2          \n%s' % chain.statVar ( var2 ) )
+    logger.info ( 'decorrelatd11 \n%s' % chain.statVar ( c2d.decorrelated1 ) )
+    logger.info ( 'decorrelated2 \n%s' % chain.statVar ( c2d.decorrelated2 ) )
+    logger.info ( 'normalized1   \n%s' % chain.statVar ( c2d.normalized1   ) )
+    logger.info ( 'normalized2   \n%s' % chain.statVar ( c2d.normalized2   ) )
+    logger.info ( 'uniform11     \n%s' % chain.statVar ( c2d.uniform1      ) )
+    logger.info ( 'uniform2      \n%s' % chain.statVar ( c2d.uniform2      ) )
 
     with use_canvas ( 'test_corr2D(%s,%s)'              %  ( var1 , var2 ) , wait = 1 ) :
         chain.draw ( [ var1 , var2  ] )
@@ -136,12 +136,12 @@ def test_corr2d  ( var1 = 'x' , var2 = 'y') :
         u1 , _ = c2d.uniform      ( x , y ) 
         cnt2u += u1
 
-    logger.info ( 'cnt1d: %s' % cnt1d )
-    logger.info ( 'cnt2d: %s' % cnt2d )
-    logger.info ( 'cnt1n: %s' % cnt1n )
-    logger.info ( 'cnt2n: %s' % cnt2n )
-    logger.info ( 'cnt1u: %s' % cnt1u )
-    logger.info ( 'cnt2u: %s' % cnt2u )
+    logger.info ( 'cnt1d:\n%s' % cnt1d )
+    logger.info ( 'cnt2d:\n%s' % cnt2d )
+    logger.info ( 'cnt1n:\n%s' % cnt1n )
+    logger.info ( 'cnt2n:\n%s' % cnt2n )
+    logger.info ( 'cnt1u:\n%s' % cnt1u )
+    logger.info ( 'cnt2u:\n%s' % cnt2u )
     
 # ============================================================================
 if '__main__' == __name__ :
