@@ -611,7 +611,7 @@ if '__main__' == __name__ :
     test_parameterize_2D () 	
     test_parameterize_3D ()
     test_parameterize_4D ()
-    test_statistics_1D   () 
+    ## test_statistics_1D   () 
     
 # =============================================================================
 ##                                                                      The END 
