@@ -92,6 +92,7 @@ def OstapStyle ( name                           ,
         logger.debug ('The style %s is forced' % style.GetName() )
         groot = ROOT.ROOT.GetROOT() 
         groot.SetStyle   ( style.GetName()  )
+        print ( 'THE STYLE IS SET!' , style.GetName() ) 
         groot.ForceStyle ()
         
     return style     
@@ -199,12 +200,13 @@ class UseStyle(object):
         if self.__new_style : 
             self.__old_style = ROOT.gStyle 
             self.__new_style.cd   ()
+            if groot : groot.SetStyle   ( self.__new_style.GetName()  ) ## NEW!
             if self.__config :
                 self.__changed = set_style ( self.__new_style , self.__config ) 
             groot.ForceStyle ( True )
             pad = ROOT.Ostap.Utils.get_pad () 
             if pad : pad.UseCurrentStyle()
-            logger.debug ( "Swith to `%s' style!" % self.__new_style.GetName() ) 
+            logger.debug ( "Switch to `%s' style!" % self.__new_style.GetName() ) 
                            
     ## context  manager: exit
     def __exit__  ( self , *_ ) :
@@ -214,7 +216,8 @@ class UseStyle(object):
             
         if self.__old_style : 
             self.__old_style.cd()
-            groot = ROOT.ROOT.GetROOT()        
+            groot = ROOT.ROOT.GetROOT()
+            groot.SetStyle   ( self.__old_style.GetName()  ) ## NEW!
             groot.ForceStyle ( self.__force_style ) 
             logger.debug ( "Swith to `%s' style!" % self.__old_style.GetName() ) 
 
