@@ -2098,7 +2098,7 @@ def _ds_table_0_ ( dataset                 ,
         
     _vars = []
     
-    stat = dataset.statVars ( vars , first , last , cuts = cuts , cut_range = cut_range )
+    stat = dataset.statVars ( vars , cuts , first , last , cut_range = cut_range )
     for v in  stat :
         vv  = getattr ( varset , v )
         s   = stat [ v ] 
@@ -2142,7 +2142,7 @@ def _ds_table_0_ ( dataset                 ,
 
         ## name of weigth variabe
         weight = dataset.wname ()
-        wcnt   = dataset.statVar ( '1' , first , last , cuts = cuts , cut_range = cut_range )
+        wcnt   = dataset.statVar ( '1' , cuts , first , last , cut_range = cut_range )
         wcnt   = wcnt.weights ()            
         r    = (  weight                            ,   ## 0 
                   'Weight variable'                 ,   ## 1 
@@ -2246,7 +2246,7 @@ def _ds_table_1_ ( dataset                 ,
 
     _vars = []    
     vvars = tuple ( sorted ( vars ) )
-    stat = dataset.statVars ( vvars  , first , last , cuts = cuts , cut_range = cut_range ) 
+    stat = dataset.statVars ( vvars  , cuts , first , last , cut_range = cut_range ) 
     for v in  stat :
         s   = stat [ v ] 
         mnmx = s.minmax ()
