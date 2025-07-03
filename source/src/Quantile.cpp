@@ -24,10 +24,14 @@
  *  @author Vanya BELYAEV Ivan/Belyaev@itep.ru
  */
 // ============================================================================
+#include <iostream>
+#include "Ostap/ToStream.h"
+
+
 namespace
 {
   // ==========================================================================
-  /// Parablic interpolator for P2 algorithm 
+  /// Parabolic interpolator for P2 algorithm 
   template <class VN, class VQ>
   inline double Parabolic
   ( const VN&         n ,
@@ -41,7 +45,7 @@ namespace
     const double qp1 = q [ i + 1 ] - q [ i     ] ; 
     const double qm1 = q [ i     ] - q [ i - 1 ] ; 
     return q [ i ] + d / n2 * ( ( nm1 + d ) * qp1 / np1 + 
-				( np1 - d ) * qm1 / nm1 ) ; 
+                                ( np1 - d ) * qm1 / nm1 ) ; 
   }
   // ==========================================================================
   /// Linear interpolator for P2 algorithm 
@@ -52,8 +56,8 @@ namespace
     const std::size_t i , 
     const int         d )
   {
-    const double dq = q [ i + d ]       - q [ i ] ;
-    const double dn = n [ i + d ] * 1.0 - n [ i ] ;
+    const double dq = q [ i + d ] - q [ i ] ;
+    const double dn = n [ i + d ] - n [ i ] ;
     return q [ i ] + d * dq / dn ;
   }
   // =========================================================================
@@ -68,15 +72,30 @@ namespace
     const double d = ns [ i ] - n [ i ] ;
     //
     if ( (  1 <= d &&  1 < n [ i + 1 ] - n [ i ] ) ||
-	 ( -1 >= d && -1 > n [ i - 1 ] - n [ i ] )  ) 
+         ( -1 >= d && -1 > n [ i - 1 ] - n [ i ] )  ) 
       {
-	//
-	const int    di = 0 <= d ? 1 : -1 ;	  
-	const double qs = Parabolic ( n , q , i , di ) ;	
-	if ( q [ i - 1 ] < qs && qs < q [ i + 1 ] ) { q [ i ] = qs                      ; } 
-	else                                        { q [ i ] = Linear ( n , q , i , di ) ; }
-	//
-	n [ i ] += di ;
+        //
+        const int    di = 0 <= d ? 1 : -1 ;	  
+        const double qs = Parabolic ( n , q , i , di ) ;
+        if ( !std::isfinite ( qs ) )
+          {
+            std::cerr << "NOT FINITE/1: " << i << std::endl ;
+            Ostap::Utils::toStream ( q  , std::cout ) << std::endl;
+            Ostap::Utils::toStream ( ns , std::cout ) << std::endl;
+            Ostap::Utils::toStream ( n  , std::cout ) << std::endl;            
+          }
+        if ( std::isfinite ( qs ) && q [ i - 1 ] < qs && qs < q [ i + 1 ] ) { q [ i ] = qs; } 
+        else                       { q [ i ] = Linear ( n , q , i , di ) ; }
+        //
+        if ( !std::isfinite ( q [ i ] ) )
+          {
+            std::cerr << "NOT FINITE/2: " << i << std::endl ;
+            Ostap::Utils::toStream ( q  , std::cout ) << std::endl;
+            Ostap::Utils::toStream ( ns , std::cout ) << std::endl;
+            Ostap::Utils::toStream ( n  , std::cout ) << std::endl;            
+          }
+        //
+        n [ i ] += di ;
       } 
   } ;
   // ========================================================================
@@ -158,20 +177,20 @@ Ostap::Math::Quantile::add
       //
       //
       if ( 5 == m_N && Adaptive == m_init )
-	{
-	  //
-	  std::copy ( m_q.begin() , m_q.end() , m_ns.begin() ) ;
-	  //
-	  m_n [ 1 ] = Ostap::Math::round ( 2 * m_p     ) ;
-	  m_n [ 2 ] = Ostap::Math::round ( 4 * m_p     ) ;
-	  m_n [ 3 ] = Ostap::Math::round ( 2 * m_p + 2 ) ;
-	  //
-	  m_q [ 1 ] = m_ns [ m_n [ 1 ] ] ;
-	  m_q [ 2 ] = m_ns [ m_n [ 2 ] ] ;
-	  m_q [ 3 ] = m_ns [ m_n [ 3 ] ] ;
-	  // 
-	  m_ns = std::array<double,5> { 0 , 2 * m_p , 4 * m_p , 2 * m_p + 2 , 4  } ;
-	}      
+        {
+          //
+          std::copy ( m_q.begin() , m_q.end() , m_ns.begin() ) ;
+          //
+          m_n [ 1 ] = Ostap::Math::round ( 2 * m_p     ) ;
+          m_n [ 2 ] = Ostap::Math::round ( 4 * m_p     ) ;
+          m_n [ 3 ] = Ostap::Math::round ( 2 * m_p + 2 ) ;
+          //
+          m_q [ 1 ] = m_ns [ m_n [ 1 ] ] ;
+          m_q [ 2 ] = m_ns [ m_n [ 2 ] ] ;
+          m_q [ 3 ] = m_ns [ m_n [ 3 ] ] ;
+          // 
+          m_ns = std::array<double,5> { 0 , 2 * m_p , 4 * m_p , 2 * m_p + 2 , 4  } ;
+        }      
       //
       return *this ; 
     }
@@ -328,22 +347,35 @@ Ostap::Math::Quantiles::add
       // keep it sorted 
       std::sort ( m_q.begin() , m_q.begin() + m_N  ) ;
       //
-      if ( m_N == MC )
-	{
-	  //
-	  UpdateNs ( m_p , m_ns , MC - 1 ) ;
-	  //
-	  for ( std::size_t i = 0; i < MC  ; ++i )
-	    { m_n [ i ] = Ostap::Math::round ( m_ns [ i ] ) ; }
-	  //
-	  std::copy ( m_q.begin() , m_q.end() , m_ns.begin() ) ;
-	  //
-	  for ( std::size_t i = 0 ; i < MC ; ++i)
-	    { m_q [ i ] = m_ns [ m_n[ i ] ] ; }
-	  //
-	  UpdateNs ( m_p , m_ns , MC - 1 ) ;	  
-	}
+      std::cerr
+        << "(0)  ADD: " << value
+        << " m_N: "     << m_N ;
+      Ostap::Utils::toStream ( m_q  , std::cerr ) << std::endl;
+      Ostap::Utils::toStream ( m_ns , std::cerr ) << std::endl;
       //
+      if ( m_N == MC )
+        {
+          std::cout << "adjust it!" << m_N  << std::endl ;
+          //
+          UpdateNs ( m_p , m_ns , MC - 1 ) ;
+          //
+          for ( std::size_t i = 0 ; i < MC  ; ++i )
+            { m_n [ i ] = Ostap::Math::round ( m_ns [ i ] ) ; }
+          //
+          std::copy ( m_q.begin() , m_q.end() , m_ns.begin() ) ;
+          //
+          for ( std::size_t i = 0 ; i < MC ; ++i)
+            { m_q [ i ] = m_ns [ m_n [ i ] ] ; }
+          //
+          UpdateNs ( m_p , m_ns , MC - 1 ) ;	  
+        }
+      //
+      std::cerr
+        << "(*)  ADD: " << value
+        << " m_N: "     << m_N ;
+      Ostap::Utils::toStream ( m_q  , std::cerr ) << std::endl;
+      Ostap::Utils::toStream ( m_ns , std::cerr ) << std::endl;
+      Ostap::Utils::toStream ( m_n  , std::cerr ) << std::endl;
       return *this ;
       // ==============================================================
     }
@@ -356,27 +388,73 @@ Ostap::Math::Quantiles::add
     m_q.end   () == ik ? MC - 2 :
     ( ik - m_q.begin() ) - 1 ;
 
+  std::cerr
+    << " (1) Add: " << value
+    << " N : "      << m_N   
+    << " K:   "     << k     << std::endl ;
+  Ostap::Utils::toStream ( m_q  , std::cout ) << std::endl;
+  Ostap::Utils::toStream ( m_ns , std::cout ) << std::endl;
+  Ostap::Utils::toStream ( m_n  , std::cout ) << std::endl;
+  
   if      ( 0     == k  ) { m_q.front () = std::min ( m_q.front () , value ) ; } 
   else if ( k + 2 >= MC ) { m_q.back  () = std::max ( m_q.back  () , value ) ; } 
   
+  std::cerr
+    << " (2) Add: " << value
+    << " N : "      << m_N   
+    << " K:   "     << k     << std::endl ;
+  Ostap::Utils::toStream ( m_q  , std::cout ) << std::endl;
+  Ostap::Utils::toStream ( m_ns , std::cout ) << std::endl;
+  Ostap::Utils::toStream ( m_n  , std::cout ) << std::endl;
+  
   //
-  for ( std::size_t i = k + 1 ; i < MC ; ++i ) { ++m_n [ i ] ;}
+  for ( std::size_t i = k + 1 ; i < MC ; ++i ) { ++m_n [ i ] ; }
   //
   UpdateNs ( m_p , m_ns , m_N ) ;  
   //
-  std::size_t left  = 1      ;
-  std::size_t right = MC - 2 ;
+  std::cerr
+    << " (3) Add: " << value
+    << " N : "      << m_N   
+    << " K:   "     << k     << std::endl ;
+  Ostap::Utils::toStream ( m_q  , std::cout ) << std::endl;
+  Ostap::Utils::toStream ( m_ns , std::cout ) << std::endl;
+  Ostap::Utils::toStream ( m_n  , std::cout ) << std::endl;
   //
+  std::size_t left  = 1      ;
+  std::size_t right = MC - 2 ; 
   while ( left <= right )
     {
       const double l = std::abs ( m_ns [ left  ] / m_N - 0.5 ) ;
       const double r = std::abs ( m_ns [ right ] / m_N - 0.5 ) ;
       //
-      const double index = l <= r ? ++left : --right ;
+      const std::size_t index = ( l <= r ) ? left++ : right-- ;
+      
+      Ostap::Assert ( 1 <= index && 2 + index <= MC ,
+                      "invalid index1" , "ququ!" ) ;
+      
       Adjust ( m_n , m_q , m_ns , index ) ;
+      
+      std::cerr
+        << " (4) Add: " << value
+        << " N : "      << m_N
+        << " LEFT/RIGHT/INDEX " << left << "/" << right << "/" << index
+        << " L/R/INDEX " << l << "/" << r << "/" << index
+        << std::endl ;
+      Ostap::Utils::toStream ( m_q  , std::cout ) << std::endl;
+      Ostap::Utils::toStream ( m_ns , std::cout ) << std::endl;
+      Ostap::Utils::toStream ( m_n  , std::cout ) << std::endl;
+      
     }
   //
   ++m_N ;
+  //
+  std::cerr
+    << " (5) Add: " << value
+    << " N : "      << m_N   
+    << " K:   "     << k     << std::endl ;
+  Ostap::Utils::toStream ( m_q  , std::cout ) << std::endl;
+  Ostap::Utils::toStream ( m_ns , std::cout ) << std::endl;
+  Ostap::Utils::toStream ( m_n  , std::cout ) << std::endl;
   //
   return *this ;
 }

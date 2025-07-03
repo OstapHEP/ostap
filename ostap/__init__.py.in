@@ -66,15 +66,13 @@ banner = r"""
                                         @OSTAP_VERSION@ (@OSTAP_BUILD_TIMESTAMP@)
 
 
-
-
        .oooooo.                .                          .oooo.   
       d8P'  `Y8b             .o8                        .dP""Y88b  
      888      888  .oooo.o .o888oo  .oooo.   oo.ooooo.        ]8P' 
-     888      888 d88(  "8   888   `P  )88b   888' `88b     .d8P'  
-     888      888 `"Y88b.    888    .oP"888   888   888   .dP'     
-     `88b    d88' o.  )88b   888 . d8(  888   888   888 .oP     .o 
-      `Y8bood8P'  8""888P'   "888" `Y888""8o  888bod8P' 8888888888 
+     888      888 d88(  "8   888   `P  )88b   888' `88b     <88b.  
+     888      888 `"Y88b.    888    .oP"888   888   888      `88b. 
+     `88b    d88' o.  )88b   888 . d8(  888   888   888 o.   .88P  
+      `Y8bood8P'  8""888P'   "888" `Y888""8o  888bod8P' `8bd88P'   
                                               888                  
                                              o888o                 
                                            

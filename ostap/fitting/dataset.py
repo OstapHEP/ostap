@@ -1388,8 +1388,8 @@ def get_var ( self, aname ) :
 #  results = ds_range ( dataset , 'x,y,z,t,u,v'  , 'x<0' )
 #  @endcode 
 def ds_range  ( dataset                 ,
-                expressions             , * , 
-                cuts      = ''          ,
+                expressions             ,
+                cuts      = ''          , * , 
                 cut_range = ''          ,
                 first     = FIRST_ENTRY , 
                 last      = LAST_ENTRY  ,
@@ -1402,8 +1402,8 @@ def ds_range  ( dataset                 ,
     """
     first , last = evt_range ( dataset , first , last ) 
     return data_range ( dataset     ,
-                        expressions , first , last , 
-                        cuts        = cuts         ,
+                        expressions ,
+                        cuts        , first , last , 
                         cut_range   = cut_range    ,
                         delta       = delta        ,
                         progress    = progress     )

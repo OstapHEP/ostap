@@ -357,7 +357,7 @@ ROOT.TTree .rows  = _tt_rows_
 #    >>> tree.project ( h1.GetName() , 'm', cuts = 'chi2<10' ) ## ditto 
 #    
 #    >>> h1   = ROOT.TH1D(... )
-#    >>> tree.project ( h1           , 'm', cust = 'chi2<10' ) ## use histo
+#    >>> tree.project ( h1           , 'm', cuts = 'chi2<10' ) ## use histo
 # 
 #  @endcode
 #  @attention For 2D&3D cases if variables specifed as singel string, the order is Z,Y,X,
@@ -502,7 +502,7 @@ def tree_project ( tree                     ,
     hp = Ostap.Project ( progress_conf ( progress ) ) 
     
     ## get the list of active branches 
-    with ActiveBranches  ( tree , *varlst ) :
+    with ActiveBranches  ( tree , cuts , *varlst ) :
         ## very special case of projection of several expressions into the same 1D-target 
         if 1 == dim and dim < nvars : 
             ## very special case of projections of several expressions into the same 1D-target 

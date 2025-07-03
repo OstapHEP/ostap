@@ -625,7 +625,7 @@ def parallel_project ( chain                    ,
     from   ostap.stats.statvars import data_project
 
     furst , last = evt_range ( chain , first , last ) 
-    nevents = last - first 
+    nevents = last - first
     
     if nevents < chunk_size :
         return data_project  ( chain       ,

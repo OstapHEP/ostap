@@ -121,22 +121,30 @@ def test_kisa () :
 
     logger = getLogger ( 'test_parallel_kisa' )
     
-    if 62400 <= ROOT.gROOT.GetVersionInt() < 62406 :
-        logger.warning ('Test can fail for %s' % ROOT.gROOT.GetVersion() )
-    
     h1 = ROOT.TH1D( 'h1' , '' , 200 , 3 , 3.2 )
     h2 = h1.clone()
     
     chain = data.chain
     
+
+    print ( chain.table () )
     
     with timing('SEQUENTIAL(%s):' % len(chain) , logger ) :
-        chain. project ( h1 , 'mass' , '3<=mass && mass<=3.2 && 0<=c2dtf && c2dtf<5' )
+        chain. project ( h1              ,
+                         'mass'          ,
+                         '3<=mass && mass<=3.2 && 0<=c2dtf && c2dtf<5' ,
+                         progress = True ) 
+                        
 
     logger.info ( h1.dump(100,30) ) 
-    
+
+
     with timing('PARALLEL(%s):' % len(chain) , logger ) :
-        chain.pproject ( h2 , 'mass' , '3<=mass && mass<=3.2 && 0<=c2dtf && c2dtf<5' , silent = False )
+        chain.project ( h2 ,
+                        'emass' ,
+                        '3<=mass && mass<=3.2 && 0<=c2dtf && c2dtf<5' ,
+                        progress = True  , 
+                        parallel = True  )
         
     logger.info ( h2.dump(100,30) ) 
 
@@ -202,9 +210,6 @@ def test_kisa3 () :
 
     logger = getLogger ( 'test_parallel_kisa3' )
 
-    if 62400 <= ROOT.gROOT.GetVersionInt() < 62406 :
-        logger.warning ('Test can fail for %s' % ROOT.gROOT.GetVersion() )
-
     h1  = ROOT.TH1D('h1','',100,0,20)
     h1 += lambda x : x
     
@@ -240,8 +245,8 @@ def test_kisa3 () :
 if '__main__' == __name__ :
 
     test_kisa  ()
-    test_kisa2 ()    
-    test_kisa3 ()
+    ## test_kisa2 ()    
+    ## test_kisa3 ()
     
 # =============================================================================
 ##                                                                      The END 

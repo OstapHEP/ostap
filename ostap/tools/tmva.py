@@ -1674,7 +1674,9 @@ def show_correlations ( name , output , tmva_style = False ) :
 def show_mvas         ( name , output , htype , tmva_style = False ) :
     """ Simple wrapper for `ROOT.TMVA.mvas` macro
     """
-    return ROOT.TMVA.mvas ( name , output , htype , tmva_style )
+    logger.attention ( 'TMVA.mvas macro is disabled... ') 
+    ## return ROOT.TMVA.mvas ( name , output , htype , tmva_style )
+
 # ========================================================================================
 ## Simple wrapper for `ROOT.TMVA.efficiencies` macro
 def show_efficiencies ( name , output , htype , tmva_style = False ) :
@@ -1686,7 +1688,9 @@ def show_efficiencies ( name , output , htype , tmva_style = False ) :
 def show_network ( name , output , tmva_style = False ) :
     """ Simple wrapper for `ROOT.TMVA.network` macro
     """
-    return ROOT.TMVA.network ( name , output , True ) ## , tmva_style )
+    logger.attention ( 'TMVA.network macro is disabled... ') 
+    ## return ROOT.TMVA.network ( name , output , True ) ## , tmva_style )
+
 # =========================================================================================
 ## Simple wrapper for `ROOT.TMVA.annconvergencetest` macro
 def show_annconvergencetest ( name , output , tmva_style = False ) :

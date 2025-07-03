@@ -1428,7 +1428,8 @@ def data_project ( data                ,
             import ostap.trees.trees
             if 1 < len ( data.files () ) :
                 pass
-            
+
+    
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
     with rootException() , ActiveBranches ( data , cuts , *var_lst ) :
@@ -1438,7 +1439,7 @@ def data_project ( data                ,
         elif 3 == nvars : sc = pv.project3 ( data , target , *the_args  )
         elif 4 == nvars : sc = pv.project4 ( data , target , *the_args  )
         assert sc.isSuccess() , 'Error %s from StatVar::project(1,2,3,4)' % sc 
-        return statobj
+        return target
     
 # =============================================================================
 ## decorate certain class with some useful  methods 
