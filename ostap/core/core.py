@@ -1079,7 +1079,7 @@ def roo_silent ( silence , *args ) :
 #  .... do something here 
 #  @endcode 
 class RootError2Exception (object) :
-    """Helper context manager to activate ROOT Error -> Python exception converter
+    """ Helper context manager to activate ROOT Error -> Python exception converter
     #
     with RootError2Exception() :
     ... do something here 
@@ -1098,7 +1098,6 @@ class RootError2Exception (object) :
         if self.m_previous : self.e_handler ( False ) 
         self.m_previous = False 
 
-
 # =============================================================================
 ## helper context manager to activate ROOT Error -> Python exception converter 
 #  @see Ostap::Utils::useErrorHandler
@@ -1108,7 +1107,7 @@ class RootError2Exception (object) :
 #  .... do something here 
 #  @endcode
 def rootException () :
-    """Helper context manager to activate ROOT Error -> Python exception converter
+    """ Helper context manager to activate ROOT Error -> Python exception converter
     #
     with rootException() :
     ... do something here 

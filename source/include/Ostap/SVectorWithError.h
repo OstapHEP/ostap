@@ -375,7 +375,7 @@ namespace Ostap
     template <unsigned int I  ,  
               unsigned int N  , 
               typename SCALAR ,
-              typename = std::enable_if<(I<N)> > 
+              typename std::enable_if<(I<N),bool>::type = true > 
     inline 
     ValueWithError
     get

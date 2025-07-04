@@ -37,15 +37,15 @@ namespace Ostap
        *  @attention  data s assumed to be SORTED!
        */
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true>
       inline double operator()
       ( ITERATOR     first , 
-	ITERATOR     last  , 
-	const double p     ) const
+        ITERATOR     last  , 
+        const double p     ) const
       {
-	const QUANTILE& q = static_cast<const QUANTILE&>( *this ) ;
-	return q.quantile ( first , last , p ) ;
+        const QUANTILE& q = static_cast<const QUANTILE&>( *this ) ;
+        return q.quantile ( first , last , p ) ;
       }      
       // ==========================================================================
       /** get N-quantiles 
@@ -56,115 +56,115 @@ namespace Ostap
        *  @attention  data s assumed to be SORTED!
        */
       template <unsigned int N, class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value&&1<=N> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename std::enable_if<std::is_convertible<value_type,double>::value&&1<=N,bool>::type = true >
       inline std::array<double,N+1>
       quantiles_
       ( ITERATOR first , 
-	ITERATOR last  ) const 
+        ITERATOR last  ) const 
       {
-	const auto q = [this,first,last] ( const std::size_t k ) -> double
-	{ return (*this) ( first , last , k * 1.0 / N  ) ; } ;
-	return Ostap::Math::make_array ( q , std::make_index_sequence<N+1>() )  ;
+        const auto q = [this,first,last] ( const std::size_t k ) -> double
+        { return (*this) ( first , last , k * 1.0 / N  ) ; } ;
+        return Ostap::Math::make_array ( q , std::make_index_sequence<N+1>() )  ;
       } ;
       // 1-quantiles: min & max
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true >
       inline std::array<double,2>
       minmax 
       ( ITERATOR first , 
-	ITERATOR last  ) const
+        ITERATOR last  ) const
       { return this->template quantiles_<1> ( first  , last ) ;	 }
       // 2-quantiles: min,median,max
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true >
       inline std::array<double,3>
       median
       ( ITERATOR first , 
-	ITERATOR last  ) const
+        ITERATOR last  ) const
       { return this->template quantiles_<2> ( first  , last ) ;}
       /// 3-quantiles:
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       inline std::array<double,4>
       terciles
       ( ITERATOR first , 
-	ITERATOR last  ) const
+        ITERATOR last  ) const
       { return this->template quantiles_<3> ( first  , last ) ;}
       /// 4-quantiles:
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       inline std::array<double,5>
       quartiles
       ( ITERATOR first , 
-	ITERATOR last  ) const
+        ITERATOR last  ) const
       { return this->template quantiles_<4> ( first  , last ) ;}
       /// 5-quantiles:
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       inline std::array<double,6>
       quintiles 
       ( ITERATOR first , 
-	ITERATOR last  ) const
+        ITERATOR last  ) const
       { return this->template quantiles_<5> ( first  , last ) ;}
       /// 6-quantiles:
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       inline std::array<double,7>
       sextiles 
       ( ITERATOR first , 
-	ITERATOR last  ) const
+        ITERATOR last  ) const
       { return this->template quantiles_<6> ( first  , last ) ;}
       /// 7-quantiles:
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       inline std::array<double,8>
       septiles 
       ( ITERATOR first , 
-	ITERATOR last  ) const
+        ITERATOR last  ) const
       { return this->template quantiles_<7> ( first  , last ) ;}
       /// 8-quantiles:
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       inline std::array<double,9>
       octiles 
       ( ITERATOR first , 
-	ITERATOR last  ) const
+        ITERATOR last  ) const
       { return this->template quantiles_<8> ( first  , last ) ;}
       /// 10-quantiles:
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       inline std::array<double,11>
       deciles 
       ( ITERATOR first , 
-	ITERATOR last  ) const
+        ITERATOR last  ) const
       { return this->template quantiles_<10> ( first  , last ) ;}
       /// 20-quantiles:
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       inline std::array<double,21>
       ventiles 
       ( ITERATOR first , 
-	ITERATOR last  ) const
+        ITERATOR last  ) const
       { return this->template quantiles_<20> ( first  , last ) ;}
       /// 100-quantiles:
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       inline std::array<double,101>
       percentiles  
       ( ITERATOR first , 
-	ITERATOR last  ) const
+        ITERATOR last  ) const
       { return this->template quantiles_<100> ( first  , last ) ;}
       // ======================================================================
       template <unsigned short N,typename = std::enable_if<(1<=N)> >
@@ -218,47 +218,47 @@ namespace Ostap
       // ======================================================================
       inline double operator()
       ( const std::vector<double>& data , 
-	const double               p    ) const
+        const double               p    ) const
       { return (*this) ( data.begin () , data.end() , p ) ; }
       // ======================================================================
-     } ;
+    } ;
     // ========================================================================
     /** @class QCheck
      *  Helper checker for quantile estimators 
      */
     class QCheck
     {
-      public:
-        // ====================================================================
-        QCheck ( const bool check = false ) ;
-        // ====================================================================
-      public : 
-        // ====================================================================
-        template <class ITERATOR,
-              typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-              typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+    public:
+      // ====================================================================
+      QCheck ( const bool check = false ) ;
+      // ====================================================================
+    public : 
+      // ====================================================================
+      template <class ITERATOR,
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       inline void check
       ( ITERATOR first ,
         ITERATOR last  ) const 
-        {
-          if  ( first == last ) 
+      {
+        if  ( first == last ) 
           { this->throw_exception ( "Input data cannot be empty!" , __FILE__ , __LINE__ ) ; }
-          if ( this->m_check && !std::is_sorted ( first , last ) )
+        if ( this->m_check && !std::is_sorted ( first , last ) )
           { this->throw_exception ( "Input data must be sorted!"  , __FILE__ , __LINE__ ) ; }
-        }
-        // ====================================================================
-      private : 
-        // ====================================================================
-        void throw_exception 
-        ( const char* message            ,  
-          const char* file     = nullptr , 
-          const long  line     = -1      ) const ;
-        // ====================================================================
-      private:
-        // ====================================================================
-        /// chech data ?
-        bool m_check { false } ; //  check data 
-        // ====================================================================
+      }
+      // ====================================================================
+    private : 
+      // ====================================================================
+      void throw_exception 
+      ( const char* message            ,  
+        const char* file     = nullptr , 
+        const long  line     = -1      ) const ;
+      // ====================================================================
+    private:
+      // ====================================================================
+      /// chech data ?
+      bool m_check { false } ; //  check data 
+      // ====================================================================
     };
     // ========================================================================
     /** @class HyndmanFan
@@ -272,24 +272,24 @@ namespace Ostap
     public:
       // =======================================================================
       enum QuantileType
-	{
-	  One = 1 ,
-	  Two     ,
-	  Three   ,
-	  Four    ,
-	  Five    ,
-	  Six     ,
-	  Seven   ,
-	  Eight   ,
-	  Nine    , 
-	} ;
+        {
+          One = 1 ,
+          Two     ,
+          Three   ,
+          Four    ,
+          Five    ,
+          Six     ,
+          Seven   ,
+          Eight   ,
+          Nine    , 
+        } ;
       // =======================================================================
     public:
       // =======================================================================
       /// constructor
       HyndmanFan 
       ( const QuantileType t     = Eight , 
-	const bool         check = false ) ; 
+        const bool         check = false ) ; 
       // =======================================================================
     public:
       // =======================================================================
@@ -302,53 +302,53 @@ namespace Ostap
        *  @attention  exception if throw for the empty sequence
        */
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       inline double quantile
       ( ITERATOR      first ,
         ITERATOR      last  , 
         const double  p     ) const 
       {
-	// check input 
-	m_check.check ( first , last ) ;
-	if  ( 0 >= p ) { return *first ; } 
-	// 
-	const std::size_t  N  = std::distance ( first , last ) ;
-	// 
-	if  ( 1 == N ) { return *first ; }
-	//
-	if  ( 1 <= p ) { std::advance ( first , N - 1 ) ; return *first ; }
-	//
-	const double h = 
-	  ( One   == m_t ) ?   N * p                  :
-	  ( Two   == m_t ) ?   N * p + 0.5            :
-	  ( Three == m_t ) ?   N * p - 0.5            : 
-	  ( Four  == m_t ) ?   N * p                  :
-	  ( Five  == m_t ) ?   N * p + 0.5            : 
-	  ( Six   == m_t ) ?   N * p - 0.5            :
-	  ( Seven == m_t ) ? ( N - 1    ) * p + 1     :
-	  ( Eight == m_t ) ? ( N + 1./3 ) * p + 1./3  :
-	  ( N + 0.25 ) * p + 0.375 ;
-	//
-	/// clumped and adjusted for zero-indexed  
-	const double hh = std::clamp ( h - 1 , 0.0 , N - 1.0 ) ;
-	// 
-	if ( Ostap::Math::islong  ( hh ) )
-	  {
-	    const std::size_t nn = static_cast<std::size_t> ( hh ) ;
-	    if ( nn ) { std::advance ( first , nn ) ; }	    
-	    return *first ;
-	  }
-	//
-	// first three cases explicitley 
-	//
-	if ( One == m_t )
+        // check input 
+        m_check.check ( first , last ) ;
+        if  ( 0 >= p ) { return *first ; } 
+        // 
+        const std::size_t  N  = std::distance ( first , last ) ;
+        // 
+        if  ( 1 == N ) { return *first ; }
+        //
+        if  ( 1 <= p ) { std::advance ( first , N - 1 ) ; return *first ; }
+        //
+        const double h = 
+          ( One   == m_t ) ?   N * p                  :
+          ( Two   == m_t ) ?   N * p + 0.5            :
+          ( Three == m_t ) ?   N * p - 0.5            : 
+          ( Four  == m_t ) ?   N * p                  :
+          ( Five  == m_t ) ?   N * p + 0.5            : 
+          ( Six   == m_t ) ?   N * p - 0.5            :
+          ( Seven == m_t ) ? ( N - 1    ) * p + 1     :
+          ( Eight == m_t ) ? ( N + 1./3 ) * p + 1./3  :
+          ( N + 0.25 ) * p + 0.375 ;
+        //
+        /// clamped and adjusted for zero-indexed  
+        const double hh = std::clamp ( h - 1 , 0.0 , N - 1.0 ) ;
+        // 
+        if ( Ostap::Math::islong  ( hh ) )
+          {
+            const std::size_t nn = static_cast<std::size_t> ( hh ) ;
+            if ( nn ) { std::advance ( first , nn ) ; }	    
+            return *first ;
+          }
+        //
+        // first three cases explicitley 
+        //
+        if ( One == m_t )
           {
             const std::size_t nn = Ostap::Math::round_up ( hh ) ;
             if ( nn ) { std::advance ( first , nn ) ; } 
-	    return *first ;
+            return *first ;
           }
-	else if ( Two == m_t )
+        else if ( Two == m_t )
           {
             const std::size_t n1 = Ostap::Math::round_half_down ( hh ) ;
             const std::size_t n2 = Ostap::Math::round_half_up   ( hh ) ;
@@ -356,25 +356,25 @@ namespace Ostap
             const double v1 = *first ; 
             if ( n1 != n2 ) { std::advance ( first , n2 - n1 ) ; } 
             const double v2 = *first ;
-	    //
-	    return 0.5 * ( v1 + v2 ) ;
+            //
+            return 0.5 * ( v1 + v2 ) ;
           } 
-	else if( Three == m_t )
+        else if( Three == m_t )
           {
             const std::size_t nn = Ostap::Math::banker ( hh ) ;
             if ( nn ) { std::advance ( first ,  nn ) ; }	  
-	    return *first ;
+            return *first ;
           }
-	//
-	const std::size_t nf = Ostap::Math::round_down ( hh ) ;
-	const std::size_t nc = Ostap::Math::round_up   ( hh ) ; 
-	//
-	if ( nf        ) { std::advance ( first , nf      ) ; } 
-	const double vf = *first ;
-	if ( nc != nf  ) { std::advance ( first , nc - nf ) ; } 
-	const double vc = *first ;
-	//
-	return vf + ( hh - std::floor ( hh ) ) * ( vc - vf ) ;
+        //
+        const std::size_t nf = Ostap::Math::round_down ( hh ) ;
+        const std::size_t nc = Ostap::Math::round_up   ( hh ) ; 
+        //
+        if ( nf        ) { std::advance ( first , nf      ) ; } 
+        const double vf = *first ;
+        if ( nc != nf  ) { std::advance ( first , nc - nf ) ; } 
+        const double vc = *first ;
+        //
+        return vf + ( hh - std::floor ( hh ) ) * ( vc - vf ) ;
       }
       // ======================================================================
     private :
@@ -410,40 +410,40 @@ namespace Ostap
       // ====================================================================
       ABQuantile
       ( const double alpha = 0.4   , 
-	const double beta  = 0.4   , 
-	const bool   check = false ) ;
+        const double beta  = 0.4   , 
+        const bool   check = false ) ;
       // ====================================================================
     public:
       // ====================================================================
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       inline double quantile 
       ( ITERATOR      first ,
-	ITERATOR      last  , 
-	const double  p     ) const 
+        ITERATOR      last  , 
+        const double  p     ) const 
       {
-	m_check.check ( first , last ) ; 
-	if  ( 0 >= p ) { return *first      ; } 
-	// 
-	const std::size_t  N  = std::distance ( first , last ) ;
-	if  ( 1 == N ) { return *first ; }
-	if  ( 1 <= p ) { std::advance ( first , N - 1 ) ; return *first ;} 
-	//
-	const double m = m_alpha + p * ( 1 - m_alpha - m_beta ) ;
-	const double a = p * N  + m ;
-	const int    j = static_cast<int> ( std::floor ( a ) ) ;
-	//
-	if      ( 0 > j      ) { return *first ; }
-	else if ( N <= j + 1 ) { std::advance ( first , N - 1 ) ; return *first ; }
-	
-	const double          g = a - j ;
-	std::advance ( first , j ) ;
-	const double v1 = *first ;
-	std::advance ( first , 1 ) ;
-	const double v2 = *first ;
-	//
-	return ( 1 - g ) * v1  + g * v2  ;
+        m_check.check ( first , last ) ; 
+        if  ( 0 >= p ) { return *first      ; } 
+        // 
+        const std::size_t  N  = std::distance ( first , last ) ;
+        if  ( 1 == N ) { return *first ; }
+        if  ( 1 <= p ) { std::advance ( first , N - 1 ) ; return *first ;} 
+        //
+        const double m = m_alpha + p * ( 1 - m_alpha - m_beta ) ;
+        const double a = p * N  + m ;
+        const int    j = static_cast<int> ( std::floor ( a ) ) ;
+        //
+        if      ( 0 > j      ) { return *first ; }
+        else if ( N <= j + 1 ) { std::advance ( first , N - 1 ) ; return *first ; }
+        
+        const double          g = a - j ;
+        std::advance ( first , j ) ;
+        const double v1 = *first ;
+        std::advance ( first , 1 ) ;
+        const double v2 = *first ;
+        //
+        return ( 1 - g ) * v1  + g * v2  ;
       }
       // ====================================================================
     private:
@@ -472,8 +472,8 @@ namespace Ostap
     public:
       // ======================================================================
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
       inline double quantile 
       ( ITERATOR      first ,
         ITERATOR      last  , 
@@ -488,13 +488,13 @@ namespace Ostap
         //
         double result = 0 ;
         for ( std::size_t i = 0 ; first != last ; ++first , ++i )
-	  {
-	    const double ti    = ( i + 1.0 ) / N ;
-	    const double tm1   =   i * 1.0   / N ;
-	    const double value = *first ;
-	    if ( !value ) { continue ; }
-	    result += value * WHD ( N  , p , ( 1.0 + i ) / N , i * 1.0 / N ) ; 
-	  }
+          {
+            const double ti    = ( i + 1.0 ) / N ;
+            const double tm1   =   i * 1.0   / N ;
+            const double value = *first ;
+            if ( !value ) { continue ; }
+            result += value * WHD ( N  , p , ( 1.0 + i ) / N , i * 1.0 / N ) ; 
+          }
         return result ;
       } ;  
       // ======================================================================

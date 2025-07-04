@@ -43,11 +43,7 @@ namespace
     // error: throw exception 
     if      ( kError   <= level ) 
       {
-        // std::string msg  =
-        // location && location[0] ?
-        // message + std::string( " in " ) + location :
-        // std::string ( message ) ;
-        std::string tag = 
+        const std::string tag = 
           kError    == level ? "ROOT/Error  "    :
           kBreak    == level ? "ROOT/Break  "    :
           kSysError == level ? "ROOT/SysError  " : 
@@ -67,14 +63,14 @@ namespace
             message              , // (char*)
             location             , // (char*)
             0                    , // 
-            "ROOT"               , // (char*)
+            "ROOT/Warning "      , // (char*)
             NULL                 ) ;
         // ====================================================================
       }
     else if ( nullptr != s_handler && s_handler != &errorHandler ) 
-    { (*s_handler) ( level , abort , location , message ) ; }
+      { (*s_handler) ( level , abort , location , message ) ; }
     else 
-    { ::DefaultErrorHandler( level , abort , location , message ); } 
+      { ::DefaultErrorHandler( level , abort , location , message ) ; } 
   }
   // ==========================================================================
 }
@@ -84,29 +80,28 @@ namespace
 bool Ostap::Utils::useErrorHandler ( const bool use ) 
 {
   if      ( !use && GetErrorHandler() == &errorHandler ) 
-  {
-    if  ( nullptr != s_handler  && s_handler != &errorHandler ) 
-    { SetErrorHandler ( s_handler ) ; }             // RETURN
-  }
+    {
+      if  ( nullptr != s_handler  && s_handler != &errorHandler ) 
+        { SetErrorHandler ( s_handler ) ; }             // RETURN
+    }
   else if (  use && GetErrorHandler() != &errorHandler ) 
-  {
-    s_handler = GetErrorHandler() ; 
-    SetErrorHandler ( &errorHandler ) ; 
-  }
+    {
+      s_handler = GetErrorHandler() ; 
+      SetErrorHandler ( &errorHandler ) ; 
+    }
   return &errorHandler == GetErrorHandler() ;
 }  
 // ============================================================================
 // constructor: make use of local error handler
 // ============================================================================
 Ostap::Utils::ErrorSentry::ErrorSentry  () 
-  : m_previous      ( Ostap::Utils::useErrorHandler ( true ) ) 
+  : m_previous      ( Ostap::Utils::useErrorHandler  ( true  ) ) 
 {}
 // ============================================================================
 // destructor: stop local error handler
 // ============================================================================
 Ostap::Utils::ErrorSentry::~ErrorSentry () 
 { if ( m_previous )  { Ostap::Utils::useErrorHandler ( false ) ; } }
-
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

@@ -1585,7 +1585,7 @@ class Trainer(object):
         if not os.path.exists ( output ) or not os.path.isfile ( output ) :
             self.logger.error   ('No output file %s is found !' % output )
             return
-
+        
         # =====================================================================
         try : # ===============================================================
             # =================================================================
@@ -1597,7 +1597,7 @@ class Trainer(object):
             # =================================================================
             self.logger.error ("Output file %s can't be opened!"   % output )
             return
-          
+        
         #
         ## make the plots in TMVA  style
         #
@@ -1645,15 +1645,18 @@ class Trainer(object):
         ## change to some temporary directory
         
         from ostap.utils.root_utils import batch
-        from ostap.plotting.style   import useStyle 
-        with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) : 
+        from ostap.plotting.style   import useStyle
+        from ostap.core.core        import rootException 
+        with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) , rootException () : 
             for fun, args, kwargs in plots :
                 tag  = "Execute macro %s%s" % ( fun.__name__ , str ( args ) ) 
-                with timing ( tag , logger = self.logger ) , useStyle () :                    
-                    if kwargs : fun ( *args , **kwargs )
-                    else      : fun ( *args )
+                with timing ( tag , logger = self.logger ) , useStyle () :
+                    with warnings.catch_warning ( category = RuntimeWarning ) as w : 
+                        if kwargs : fun ( *args , **kwargs )
+                        else      : fun ( *args )
+                        if w : print ( 'IT IS A WARNING' , w )
+                        
                     
-
 # ========================================================================================
 ## Simple wrapper for `ROOT.TMVA.variables` macro
 def show_variables ( name , output , tmva_style = False ) :
