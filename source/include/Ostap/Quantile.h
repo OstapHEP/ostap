@@ -51,7 +51,7 @@ namespace Ostap
        */  
       Quantile
       ( const double         p = 0.5      ,
-	      const Initialization s = Adaptive ) ;
+        const Initialization s = Adaptive ) ;
       // ======================================================================
     public: // Ostap::Math::Statistic
       // =====================================================================
@@ -70,7 +70,7 @@ namespace Ostap
                 typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true >
       Quantile& add
       ( ITERATOR first ,
-	ITERATOR last  )
+        ITERATOR last  )
       { for ( ; first != last ; ++first ) { add ( *first ) ; } ; return *this ; }
       // =====================================================================
     public:
@@ -263,7 +263,7 @@ namespace Ostap
         // for normal regiome   o + 1 == N 
         const std::size_t L = o + 1 < N ? o + 1: N  ;
         for  ( std::size_t i = 0 ; i + 1 < L ; ++i )
-	  { result [ i + 1 ] = output [ 1 ] ; }  
+          { result [ i + 1 ] = output [ 1 ] ; }  
         return result ;
       }
       // ======================================================================

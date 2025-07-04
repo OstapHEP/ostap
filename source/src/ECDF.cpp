@@ -20,6 +20,7 @@
 #include "Ostap/StatEntity.h"
 #include "Ostap/WStatEntity.h"
 #include "Ostap/Moments.h"
+#include "Ostap/Quantiles.h"
 #include "Ostap/StatusCode.h"
 // ============================================================================
 // Local
@@ -301,186 +302,98 @@ double Ostap::Math::ECDF::uniform ( const double x ) const
       ( std::lower_bound ( m_data.begin () , m_data.end () , x ) - m_data.begin() ) * 1.0 / size () ) ;
 }
 // =============================================================================
-/* get p-quantile of distributtion: \f$ 1 \le p \le1  \f$
- *  @param p      (INPUT) quantile
- *  @param alphap (INPUT) parameter alphap \f$ 0 \le\alpha_p \le 1 \f$ 
- *  @param abetap (INPUT) parameter betap \f$ 0 \le\beta_p \le 1 \f$ 
-*/    
-// =============================================================================
-double Ostap::Math::ECDF::quantile
-( const double p      ,  
-  const double alphap , 
-  const double betap  ) const 
-{
-  if      ( !p     || s_zero  ( p )     ) { return xmin () ; }
-  else if ( 1 == p || s_equal ( p , 1 ) ) { return xmax () ; } 
-  //
-  Ostap::Assert ( 0 <= p && p <= 1 , 
-		  "Invalid quantile!" , 
-		  "Ostap::Math::ECDF::quantile" , 
-		  INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
-  Ostap::Assert ( 0 <= alphap && alphap <= 1 , 
-		  "Invalid alphap!" , 
-		  "Ostap::Math::ECDF::quantile" , 
-		  INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
-  Ostap::Assert ( 0 <= betap && betap <= 1 , 
-		  "Invalid betap!" , 
-		  "Ostap::Math::ECDF::quantile" , 
-		  INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
-  //
-  const double          m = alphap + p * ( 1 - alphap - betap ) ;
-  const Data::size_type n = N () ; 
-  const double          a = p * n  + m ; 
-  const int             j = static_cast<int> ( std::floor ( a ) ) ; 
-  //
-  if       ( j <  0     ) { return m_data.front() ; } 
-  else if  ( n <= j + 1 ) { return m_data.back () ; } 
-  //
-  const double          g = a - j ;
-  return ( 1 - g ) * m_data [ j ] + g * m_data [ j + 1 ] ; 
-}
-// ============================================================================
-/* get p-quantile
+/*  get p-quantile uaing Hyndman-Fan estimator 
  *  @see https://arxiv.org/abs/2304.07265
  *  @see Andrey Akinshin, "Weighted quantile estimators", arXiv:2304.07265     
  */
-// ============================================================================
-double Ostap::Math::ECDF::quantile_HF
-( const double                   p ,
-  const Ostap::Math::ECDF::QType t )
+// =============================================================================
+double Ostap::Math::ECDF::quantile
+( const double                               p ,
+  const Ostap::QuantileTypes::HyndmanFanType t ) const 
 {
-  if      ( !p     || s_zero  ( p )     ) { return xmin () ; }
-  else if ( 1 == p || s_equal ( p , 1 ) ) { return xmax () ; } 
   //
-  Ostap::Assert ( 0 <= p && p <= 1 , 
-		  "Invalid p-quantile!" , 
-		  "Ostap::Math::ECDF::quantile_HF" , 
-		  INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
-  Ostap::Assert ( One <= t && t <= Nine , 
-		  "Invalid quantile estimator type!" , 
-		  "Ostap::Math::ECDF::quantile_HF" , 
-		  INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
+  if      ( !p     || s_zero  ( p     ) || p < 0 ) { return xmin () ; }
+  else if ( 1 == p || s_equal ( p , 1 ) || p > 1 ) { return xmax () ; }
   //
-  const Data::size_type n = N ()  ;
+  Ostap::Assert ( 0 < p && p < 1     , 
+                  "Invalid probability"                      , 
+                  "Ostap::Math::ECDF::quantile"              , 
+                  INVALID_PROBABILITY , __FILE__  , __LINE__ ) ;
   //
-  auto index = [ n ] ( const double h ) -> std::size_t
-  {
-    const long j = Ostap::Math::round ( h ) ;
-    return  ( j < 0 ) ? 0 :  ( n <= j ) ? ( n - 1 ) : std::size_t ( j ) ;  
-  } ;
+  if ( 1 == size() ) { return m_data.front() ; }
   //
-  auto QF = [this,index] ( const double h ) ->double
-  {
-    const std::size_t jf = index ( std::floor ( h ) ) ;
-    const std::size_t jc = index ( std::ceil  ( h ) ) ;
-    const double xf = this->data ( jf ) ;
-    const double xc = this->data ( jc ) ;
-    //
-    return xf + ( h - jf ) * ( xc - xf ) ;
-  } ;
-  //
-  switch ( t ) 
-    {
-    case One :
-      {
-	const double h = n * p ;
-	const std::size_t j = index ( std::ceil ( h ) ) ; 
-	return data ( j ) ;
-      }
-    case Two :
-      {
-	const double h = n * p + 0.5 ;
-	const std::size_t j1 = index ( std::ceil ( h + 0.5 ) ) ; 
-	const std::size_t j2 = index ( std::ceil ( h - 0.5 ) ) ; 
-	const double x1 = data ( j1 ) ;
-	const double x2 = data ( j2 ) ;
-	return  0.5 * ( x1 + x2 ) ;
-      }
-    case Three :
-      {
-	const double h = n * p ;
-	const std::size_t j = index ( h  ) ; 
-	return data ( j ) ;
-      }
-    case Four :
-      {
-	const double h = n * p ;
-	return QF ( h ) ;
-      }
-    case Five :
-      {
-	const double h = n * p + 0.5 ;
-	return QF ( h ) ;
-      }
-    case Six :
-      {
-	const double h = ( n + 1 ) * p ;
-	return QF ( h ) ;
-      }
-    case Seven :
-      {
-	const double h = ( n - 1 ) * p + 1 ;
-	return QF ( h ) ;
-      }
-    case Eight :
-      {
-	const double h = ( n + 1./3  ) * p + 1./3  ;
-	return QF ( h ) ;
-      }
-    case Nine :
-      {
-	const double h = ( n + 0.25 ) * p + 0.375 ;
-	return QF ( h ) ;
-      }
-    default :
-      return 0 ;
-    } ;
-  //
-  return 0 ;
+  const Ostap::Math::HyndmanFan estimator { t , false } ;
+  return estimator.quantile ( m_data.begin () , m_data.end   () , p ) ;
 }
-// ============================================================================
-/* Get Harrel-Davis estimator for quantile function
+// =============================================================================
+/*  Get Harrell-Davis estimator for quantile function
  *  @param p  (INPUT) quantile 
  *  @retiurn Harrel-Davis quantile estimator
  *  @see https://doi.org/10.1093/biomet/69.3.635
  *  @see F.E. Harrel and C.E.Davis,  "A new distribution-free quantile estimator",
  *       Biometrika 63.9 (Dec 1982), pp. 635-640
  */
-// ============================================================================
-double Ostap::Math::ECDF::quantile_HD
-( const double p ) const 
+// =============================================================================
+double Ostap::Math::ECDF::quantile
+( const double                                     p ,
+  const Ostap::QuantileTypes::HarrellDavisType& /* t */ ) const
 {
-  if      ( !p     || s_zero  ( p     ) ) { return m_data.front () ; }
-  else if ( 1 == p || s_equal ( p , 1 ) ) { return m_data.back  () ; } 
   //
-  Ostap::Assert ( 0 <= p && p <= 1     , 
-		  "Invalid quantile!"              , 
-		  "Ostap::Math::ECDF::quantile_HD" , 
-		  INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
+  if      ( !p     || s_zero  ( p     ) || p < 0 ) { return xmin () ; }
+  else if ( 1 == p || s_equal ( p , 1 ) || p > 1 ) { return xmax () ; }
   //
-  double result = 0 ;
-  const std::size_t n = N () ;
-  const double alpha = ( n + 1 ) * p ;
-  const double beta  = ( n + 1 ) * ( 1 - p ) ;
-  for ( std::size_t i = 0 ; i < n ; ++i )
-    {
-      const double ti    = ( i + 1.0 ) / n ;
-      const double value = m_data [ i ] ; 
-      if ( !value ) { continue ; } 
-      // 
-      if (  n < 100 )
-	{
-	  result += value * ::beta_inc ( alpha , beta , ti          , 20 * n ) ; 
-	  result -= value * ::beta_inc ( alpha , beta , i * 1.0 / n , 20 * n ) ; 
-	}
-      else 
-	{
-	  const double t  =  ( i + 0.5 ) / n ;
-	  result += value  * ::beta_log ( alpha, beta , t , 1.0 / n , 20 * n ) ; 
-	}
-    }
+  Ostap::Assert ( 0 < p && p < 1     , 
+                  "Invalid probability"                      , 
+                  "Ostap::Math::ECDF::quantile"              , 
+                  INVALID_PROBABILITY , __FILE__  , __LINE__ ) ;
   //
-  return result ;  
+  if ( 1 == size() ) { return m_data.front() ; }
+  //
+  
+  const Ostap::Math::HarrellDavis estimator { false } ;
+  return estimator.quantile ( m_data.begin () , m_data.end   () , p ) ;
+}
+// =============================================================================
+/*  get p-quantile of distribution: \f$ 1 \le p \le1  \f$
+ *  @see scipy.stats.mstats
+ *
+ *  Typical values for alphap, betap are:
+ * 
+ * - (0,1) : p(k) = k/n : linear interpolation of cdf (R type 4)
+ * - (.5,.5) : p(k) = (k - 1/2.)/n : piecewise linear function (R type 5)
+ * - (0,0) : p(k) = k/(n+1) : (R type 6)
+ * - (1,1) : p(k) = (k-1)/(n-1): p(k) = mode[F(x[k])]. (R type 7, R default)
+ * - (1/3,1/3): p(k) = (k-1/3)/(n+1/3): Then p(k) ~ median[F(x[k])].
+ *   The resulting quantile estimates are approximately median-unbiased 
+ *   regardless of the distribution of x. (R type 8)
+ * - (3/8,3/8): p(k) = (k-3/8)/(n+1/4): Blom.
+ *   The resulting quantile estimates are approximately 
+ *   unbiased if x is normally distributed (R type 9)
+ * - 0(.4,.4) : approximately quantile unbiased (Cunnane)
+ * - (.35,.35): APL, used with PWM
+ *
+ *  @param p      (INPUT) quantile
+ *  @param alphap (INPUT) parameter alphap \f$ 0 \le\alpha_p \le 1 \f$ 
+ *  @param abetap (INPUT) parameter betap \f$ 0 \le\beta_p \le 1 \f$ 
+ */    
+// =============================================================================
+double Ostap::Math::ECDF::quantile
+( const double                                p  ,
+  const Ostap::QuantileTypes::ABQuantileType& ab ) const
+{
+  //
+  if      ( !p     || s_zero  ( p     ) || p < 0 ) { return xmin () ; }
+  else if ( 1 == p || s_equal ( p , 1 ) || p > 1 ) { return xmax () ; }
+  //
+  Ostap::Assert ( 0 < p && p < 1     , 
+                  "Invalid probability"                      , 
+                  "Ostap::Math::ECDF::quantile"              , 
+                  INVALID_PROBABILITY , __FILE__  , __LINE__ ) ;
+  //
+  if ( 1 == size() ) { return m_data.front() ; }
+  //
+  const Ostap::Math::ABQuantile estimator { ab , false } ;
+  return estimator.quantile ( m_data.begin () , m_data.end   () , p ) ;  
 }
 // ============================================================================
 /* statistics (as statistics)
@@ -496,7 +409,6 @@ Ostap::Math::ECDF::statistics
   return stat ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // For weighted data 
@@ -895,42 +807,55 @@ Ostap::Math::WECDF::statistics
  *       Biometrika 63.9 (Dec 1982), pp. 635-640
  */
 // ============================================================================
-double Ostap::Math::WECDF::quantile_HD ( const double p ) const 
+double Ostap::Math::WECDF::quantile
+( const double                                    p     ,
+  const Ostap::QuantileTypes::HarrellDavisType& /* t */ ) const 
 {
-  if      ( !p     || s_zero  ( p     ) ) { return xmin () ; }
-  else if ( 1 == p || s_equal ( p , 1 ) ) { return xmax () ; } 
+  if      ( !p     || s_zero  ( p     ) || p < 0 ) { return xmin () ; }
+  else if ( 1 == p || s_equal ( p , 1 ) || p > 1 ) { return xmax () ; }
   //
-  Ostap::Assert ( 0 <= p && p <= 1     , 
-		  "Invalid quantile!"              , 
-		  "Ostap::Math::WECDF::quantile_HD" , 
-		  INVALID_QUANTILE , __FILE__  , __LINE__ ) ;
+  Ostap::Assert ( 0 < p && p < 1     , 
+                  "Invalid probability"                      , 
+                  "Ostap::Math::WECDF::quantile"             , 
+                  INVALID_PROBABILITY , __FILE__  , __LINE__ ) ;
   //
-  const double sw_inv { 1./sumw () } ;
-  const double nstar  { nEff () } ; 
-  const double alpha = ( nstar + 1 ) * p ;
-  const double beta  = ( nstar + 1 ) * ( 1 - p ) ;
+  const double w  = sumw  () ;
+  const double w2 = sumw2 () ;
   //
-  double result = 0 ;
-  const std::size_t n = N () ;
-  double wsum         = 0    ;  
-  for ( std::size_t i = 0 ; i < n ; ++i )
-    {
-      const double value  = m_data [ i ].first  ;
-      const double weight = m_data [ i ].second ;
-      if ( !value || !weight ) { continue ; }
-      //
-      const double tp = sw_inv * ( wsum          ) ;
-      const double ti = sw_inv * ( wsum + weight ) ;
-      wsum += weight ;
-      // 
-      result += value * ::beta_inc ( alpha , beta , ti , 20 * N () ) ; 
-      result -= value * ::beta_inc ( alpha , beta , tp , 20 * N () ) ; 
-    }
+  Ostap::Assert (  0 < w   , 
+                   "Invalid sum of weights!"            , 
+                   "Ostap::Math::WECDF::quantile"       , 
+                   INVALID_SUMW  , __FILE__  , __LINE__ ) ;
   //
-  return result ;  
+  Ostap::Assert (  0 < w2  , 
+                   "Invalid sum of squared weights!"    , 
+                   "Ostap::Math::WECDF::quantile"       , 
+                   INVALID_SUMW2 , __FILE__  , __LINE__ ) ;
+  //
+  if ( 1 == size() ) { return m_data.front().first ; }
+  //
+  const Ostap::Math::WHarrellDavis estimator { false } ;
+  return estimator.quantile ( m_data.begin () , m_data.end () , p , w , w2 ) ;
 }
 // ============================================================================
-
+/* Get Harrel-Davis estimator for quantile function
+ *  @param p  (INPUT) quantile 
+ *  @retiurn Harrel-Davis quantile estimator
+ *
+ *  @see https://arxiv.org/abs/2304.07265
+ *  @see Andrey Akinshin, "Weighted quantile estimators", arXiv:2304.07265
+ *   
+ *  @see https://doi.org/10.1093/biomet/69.3.635
+ *  @see F.E. Harrel and C.E.Davis,  "A new distribution-free quantile estimator",
+ *       Biometrika 63.9 (Dec 1982), pp. 635-640
+ */
+// ============================================================================
+double Ostap::Math::WECDF::quantile
+( const double                                    p     ) const
+{
+  const Ostap::QuantileTypes::HarrellDavisType t {} ;
+  return quantile ( p , t ) ;
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

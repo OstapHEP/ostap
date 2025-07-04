@@ -3,7 +3,8 @@
   1. completel re-write `Ostap::HstoProject` (and rename itno `Ostap::Project`
   1. remove a lot of duplicated code between `Ostap::StatVar`, `Ostap::Project` and parameterization
   1. remove some legacy artifacts
- 
+  1. more progress for quantiles 
+     
 ##  BAckward-imcompatible 
 
 ## Bug fixes

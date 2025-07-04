@@ -18,6 +18,7 @@
 #include "Ostap/WStatEntity.h"
 #include "Ostap/Statistic.h"
 #include "Ostap/Moments.h"
+#include "Ostap/QuantileTypes.h"
 // ============================================================================
 namespace Ostap
 {
@@ -41,23 +42,6 @@ namespace Ostap
       /// the actual type of indices 
       typedef std::vector<Data::size_type>  Indices  ;
       // ======================================================================
-      /** quantile Hyndman Fan taxonomy
-       *  see Table 1 in 
-       *  @see https://arxiv.org/abs/2304.07265
-       *  @see Andrey Akinshin, "Weighted quantile estimators", arXiv:2304.07265
-       */
-      enum QType {
-	One = 1 ,
-	Two     ,
-	Three   ,
-	Four    ,
-	Five    ,
-	Six     ,
-	Seven   ,
-	Eight   ,
-	Nine    
-      } ;
-      // ======================================================================
     public: 
       // ======================================================================
       /** Constructor from  data
@@ -79,15 +63,15 @@ namespace Ostap
         const bool complementary = false ) 
         : m_data          ( begin , end   )
         , m_complementary ( complementary )
-	, m_counter       () 
+        , m_counter       () 
       {
-	/// (1) adjust the content 
-	this -> cleanup () ;
-	/// (2) sort it if needed 
+        /// (1) adjust the content 
+        this -> cleanup () ;
+        /// (2) sort it if needed 
         if ( !std::is_sorted ( m_data.begin () , m_data.end () ) )
           { std::sort ( m_data.begin () , m_data.end () ) ; }
-	/// (3) update counters 
-	for ( auto v : m_data ) { m_counter.add ( v ) ; }
+        /// (3) update counters 
+        for ( auto v : m_data ) { m_counter.add ( v ) ; }
       }
       /// constructor to create complementary/ordinary ECDF
       ECDF
@@ -141,7 +125,7 @@ namespace Ostap
         Data tmp ( begin, end ) ;	
         /// sort input data 
         std::sort ( tmp.begin () , tmp.end () ) ;
-	/// add sorted input 
+        /// add sorted input 
         return this->add_sorted ( tmp.begin() , tmp.end() ) ;
       }
       // ======================================================================
@@ -175,11 +159,11 @@ namespace Ostap
                      tmp.begin    () ) ;
         /// swap the merged result  with own data 
         std::swap ( m_data , tmp ) ;
-	/// (1) remove bad entries (if needed) 
-	this -> cleanup () ;
-	/// (2) update counter
-	for ( ITERATOR v = begin ; end != v ; ++v) { m_counter.add ( *v ) ; }
-	return *this ; 
+        /// (1) remove bad entries (if needed) 
+        this -> cleanup () ;
+        /// (2) update counter
+        for ( ITERATOR v = begin ; end != v ; ++v) { m_counter.add ( *v ) ; }
+        return *this ; 
       }
       // ======================================================================
     public :
@@ -257,7 +241,7 @@ namespace Ostap
       /** get p-quantile of distribution: \f$ 1 \le p \le1  \f$
        *  @see scipy.stats.mstats
        *
-       * Typical avleus for alphap, betap are:
+       *  Typical values for alphap, betap are:
        * 
        * - (0,1) : p(k) = k/n : linear interpolation of cdf (R type 4)
        * - (.5,.5) : p(k) = (k - 1/2.)/n : piecewise linear function (R type 5)
@@ -277,17 +261,8 @@ namespace Ostap
        *  @param abetap (INPUT) parameter betap \f$ 0 \le\beta_p \le 1 \f$ 
        */    
       double quantile
-      ( const double p            ,  
-        const double alphap = 0.4 , 
-        const double betap  = 0.4 ) const ;
-      // ======================================================================
-      /** get p-quantile
-       *  @see https://arxiv.org/abs/2304.07265
-       *  @see Andrey Akinshin, "Weighted quantile estimators", arXiv:2304.07265     
-       */
-      double quantile_HF
-      ( const double p         ,
-	const QType  t = Seven ) ;
+      ( const double                                p  ,
+        const Ostap::QuantileTypes::ABQuantileType& ab ) const ;
       // ======================================================================
       /** Get Harrel-Davis estimator for quantile function
        *  @param p  (INPUT) quantile 
@@ -295,8 +270,20 @@ namespace Ostap
        *  @see https://doi.org/10.1093/biomet/69.3.635
        *  @see F.E. Harrel and C.E.Davis,  "A new distribution-free quantile estimator",
        *       Biometrika 63.9 (Dec 1982), pp. 635-640
+       *  @attention It could be rather CPU expensive 
        */
-      double quantile_HD ( const double p ) const ;
+      double quantile
+      ( const double                                     p    , 
+        const Ostap::QuantileTypes::HarrellDavisType& /* t */ ) const ;
+      // ======================================================================
+      /** get p-quantile uaing Hyndman-Fan estimator 
+       *  @see https://arxiv.org/abs/2304.07265
+       *  @see Andrey Akinshin, "Weighted quantile estimators", arXiv:2304.07265     
+       */
+      double quantile
+      ( const double                               p      ,
+        const Ostap::QuantileTypes::HyndmanFanType t =
+        Ostap::QuantileTypes::HyndmanFanType::Eight ) const ;
       // ======================================================================
     public:
       //=======================================================================
@@ -314,11 +301,11 @@ namespace Ostap
       /// get the moments 
       template <unsigned short K>
       Ostap::Math::Moment_<K> moment_ () const
-     {
-       Ostap::Math::Moment_<K> m{} ;
-       for ( auto value : m_data ) { m.add ( value ) ; }
-       return m ;
-     } 
+      {
+        Ostap::Math::Moment_<K> m{} ;
+        for ( auto value : m_data ) { m.add ( value ) ; }
+        return m ;
+      } 
       // ======================================================================
     public:
       //=======================================================================
@@ -512,14 +499,14 @@ namespace Ostap
       /// ok ?
       inline bool            ok            () const
       { return !m_data.empty()
-	  && m_data.size() == m_counter.nEntries ()
-	  && 0 < m_counter.sumw () ; }      
+          && m_data.size () == m_counter.nEntries ()
+          && 0 < m_counter.sumw () ; }      
       /// empty?
-      inline bool            empty         () const { return m_data.empty () ; } 
+      inline bool            empty         () const { return m_data.empty   () ; } 
       /// data size 
-      inline Data::size_type N             () const { return m_data.size  () ; } 
+      inline Data::size_type N             () const { return m_data.size    () ; } 
       /// data size 
-      inline Data::size_type size          () const { return m_data.size  () ; }
+      inline Data::size_type size          () const { return m_data.size    () ; }
       /// number of effective entries
       inline double          nEff          () const { return m_counter.nEff () ;  }
       /// sum of all weights
@@ -568,24 +555,34 @@ namespace Ostap
       Ostap::Math::WMoment_<K> moment_ () const
       {
         Ostap::Math::WMoment_<K> m{} ;
-	for ( const auto& value : m_data ) { m.add ( value.first, value.second ) ; }
-	return m ;
+        for ( const auto& value : m_data ) { m.add ( value.first, value.second ) ; }
+        return m ;
       } 
       // =======================================================================
     public: 
       // =======================================================================
-      /** Get Harrel-Davis estimator for quantile function
+      /** Get (weighted) Harrel-Davis estimator for quantiles 
        *  @param p  (INPUT) quantile 
        *  @retiurn Harrel-Davis quantile estimator
-       *
-       *  @see https://arxiv.org/abs/2304.07265
-       *  @see Andrey Akinshin, "Weighted quantile estimators", arXiv:2304.07265
-       *   
        *  @see https://doi.org/10.1093/biomet/69.3.635
        *  @see F.E. Harrel and C.E.Davis,  "A new distribution-free quantile estimator",
        *       Biometrika 63.9 (Dec 1982), pp. 635-640
+       *  @attention It could be rather CPU expensive 
        */
-      double quantile_HD ( const double p ) const ;
+      double quantile
+      ( const double                                     p    , 
+        const Ostap::QuantileTypes::HarrellDavisType& /* t */ ) const ;
+      // ======================================================================
+      /** Get (weighted) Harrel-Davis estimator for quantiles 
+       *  @param p  (INPUT) quantile 
+       *  @retiurn Harrel-Davis quantile estimator
+       *  @see https://doi.org/10.1093/biomet/69.3.635
+       *  @see F.E. Harrel and C.E.Davis,  "A new distribution-free quantile estimator",
+       *       Biometrika 63.9 (Dec 1982), pp. 635-640
+       *  @attention It could be rather CPU expensive 
+       */
+      double quantile
+      ( const double                                     p    ) const ; 
       // ======================================================================
     public: 
       // ======================================================================
@@ -597,10 +594,10 @@ namespace Ostap
       /// calculate \f$ \sum_i^{n} w_i \f$
       inline double sumw  ( const unsigned long n ) const
       { return std::accumulate ( m_data.begin () ,
-				 m_data.begin () + std::min ( n , m_data.size() ) , 
-				 0.0             ,
-				 [] ( const double s , const Entry& entry ) -> double
-				 { return s + entry.second ; } ) ;	}
+                                 m_data.begin () + std::min ( n , m_data.size() ) , 
+                                 0.0             ,
+                                 [] ( const double s , const Entry& entry ) -> double
+                                 { return s + entry.second ; } ) ;	}
       /// calculate \f$ \sum_i^{n} w_i \f$
       inline double sumw2 ( const unsigned long n ) const
       { return std::accumulate ( m_data.begin () ,
@@ -618,7 +615,7 @@ namespace Ostap
       { return std::upper_bound ( m_data.begin ()   ,
                                   m_data.end   ()   ,
                                   Entry ( x , 1.0 ) ,
-				  COMPARE      ()   ) - m_data.begin() ; }
+                                  COMPARE      ()   ) - m_data.begin() ; }
       // ======================================================================
       /// get ranks for all elements from another sample 
       ECDF::Indices ranks ( const  ECDF& sample ) const ;

@@ -88,10 +88,11 @@ namespace
     INVALID_SMOOTH           = 838 ,
     // 
     INVALID_QUANTILE         = 840 ,
-    INVALID_SELECTION        = 841 ,
-    INVALID_SELECTIONS       = 842 ,  
-    INVALID_COUNTER          = 843 ,
-    INVALID_COUNTERS         = 844 ,
+    INVALID_PROBABILITY      = 841 ,
+    INVALID_SELECTION        = 842 ,
+    INVALID_SELECTIONS       = 843 ,  
+    INVALID_COUNTER          = 844 ,
+    INVALID_COUNTERS         = 845 ,
     //
     INVALID_FORMULA_CALL     = 850 ,
     //
@@ -99,6 +100,8 @@ namespace
     INVALID_SUMWEIGHT        = 862 ,
     //
     INVALID_SIZE             = 870 ,    
+    INVALID_SUMW             = 871 ,    
+    INVALID_SUMW2            = 872 ,    
     // =========================================================================
     // =========================================================================
     ERROR_ROOT            = 1000000 ,
