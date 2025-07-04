@@ -34,7 +34,7 @@ __all__     = (
     "tmvaGUI"
     )
 # =============================================================================
-from   ostap.core.meta_info    import python_info 
+from   ostap.core.meta_info    import python_info, root_info  
 from   ostap.core.ostap_types  import num_types, string_types, integer_types 
 from   ostap.core.core         import Ostap, WSE, VE, rootWarning
 from   ostap.utils.cleanup     import CleanUp
@@ -1058,8 +1058,9 @@ class Trainer(object):
 
         # =========================================================================
         ROOT.TMVA.gConfig().GetVariablePlotting().fMaxNumOfAllowedVariablesForScatterPlots = 0
-        VP = ROOT.TMVA.Config.VariablePlotting
-        ROOT.TMVA.gConfig().GetVariablePlotting().fPlotFormat = VP.kPDF 
+        if ( 6 , 32 ) <= root_info :             
+            VP = ROOT.TMVA.Config.VariablePlotting
+            ROOT.TMVA.gConfig().GetVariablePlotting().fPlotFormat = VP.kPDF 
         # =========================================================================                
         
         rf = []
@@ -1674,8 +1675,7 @@ def show_correlations ( name , output , tmva_style = False ) :
 def show_mvas         ( name , output , htype , tmva_style = False ) :
     """ Simple wrapper for `ROOT.TMVA.mvas` macro
     """
-    logger.attention ( 'TMVA.mvas macro is disabled... ') 
-    ## return ROOT.TMVA.mvas ( name , output , htype , tmva_style )
+    return ROOT.TMVA.mvas ( name , output , htype , tmva_style )
 
 # ========================================================================================
 ## Simple wrapper for `ROOT.TMVA.efficiencies` macro
@@ -1688,16 +1688,14 @@ def show_efficiencies ( name , output , htype , tmva_style = False ) :
 def show_network ( name , output , tmva_style = False ) :
     """ Simple wrapper for `ROOT.TMVA.network` macro
     """
-    logger.attention ( 'TMVA.network macro is disabled... ') 
-    ## return ROOT.TMVA.network ( name , output , True ) ## , tmva_style )
+    return ROOT.TMVA.network ( name , output , True ) ## , tmva_style )
 
 # =========================================================================================
 ## Simple wrapper for `ROOT.TMVA.annconvergencetest` macro
 def show_annconvergencetest ( name , output , tmva_style = False ) :
     """ Simple wrapper for `ROOT.TMVA.annconvergencetest` macro
     """
-    return ROOT.TMVA.annconvergencetest( name , output , tmva_style )
-
+    return ROOT.TMVA.annconvergencetest ( name , output , tmva_style )
 
 
 # =============================================================================
