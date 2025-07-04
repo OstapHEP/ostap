@@ -114,7 +114,7 @@ namespace Ostap
        */
       template<typename ITERATOR,
                typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
-               typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+               typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >
       inline bool setPars 
       ( ITERATOR begin , 
         ITERATOR end   ) 
@@ -349,7 +349,7 @@ namespace Ostap
        */
       template<typename ITERATOR,
                typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
-               typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+               typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >
       Positive
       ( ITERATOR     begin    , 
         ITERATOR     end      , 
@@ -407,7 +407,7 @@ namespace Ostap
        */
       template<typename ITERATOR,
                typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
-               typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+               typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >      
       inline bool setPars 
       ( ITERATOR begin , 
         ITERATOR end   ) 
@@ -665,7 +665,7 @@ namespace Ostap
       // ======================================================================
       template<typename ITERATOR,
                typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
-               typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+               typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >            
       inline bool setPars 
       ( ITERATOR begin , 
         ITERATOR end   ) 
@@ -866,7 +866,7 @@ namespace Ostap
        */
       template<typename ITERATOR,
                typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
-               typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+               typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >                  
       Monotonic 
       ( ITERATOR     begin             , 
         ITERATOR     end               , 
@@ -920,7 +920,7 @@ namespace Ostap
        */
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
-                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >                        
       inline bool setPars 
       ( ITERATOR begin , 
         ITERATOR end   ) 
@@ -1158,7 +1158,7 @@ namespace Ostap
        */
       template<typename ITERATOR,
                typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
-               typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+               typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >                              
       Convex ( ITERATOR     begin             , 
                ITERATOR     end               , 
                const double xmin       = 0    ,
@@ -1211,7 +1211,7 @@ namespace Ostap
        */
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
-                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >                                    
       inline bool setPars 
       ( ITERATOR begin , 
         ITERATOR end   ) 

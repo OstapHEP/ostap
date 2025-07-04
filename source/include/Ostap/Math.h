@@ -1279,8 +1279,8 @@ namespace Ostap
     template <unsigned int N, 
               class TYPE1 , 
               class TYPE2 , 
-              typename = std::enable_if<std::is_convertible<TYPE1,long double>::value> , 
-              typename = std::enable_if<std::is_convertible<TYPE2,long double>::value> >
+              typename std::enable_if<std::is_convertible<TYPE1,long double>::value,bool>::type = true , 
+              typename std::enable_if<std::is_convertible<TYPE2,long double>::value,bool>::type = true >
     inline double dot_kahan
     ( const std::array<TYPE1,N>& x , 
       const std::array<TYPE2,N>& y )  
@@ -1295,9 +1295,9 @@ namespace Ostap
     template <class TYPE     ,
               unsigned int N , 
               class ITERATOR , 
-              typename = std::enable_if<std::is_convertible<TYPE,long double>::value>       , 
               typename value_type = typename std::iterator_traits<ITERATOR>::value_type     ,
-              typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+              typename std::enable_if<std::is_convertible<TYPE,long double>::value,bool>::type       = true  , 
+              typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true>
     inline double dot_kahan 
     ( TYPE(&x)[N] , 
       ITERATOR y  ) { return dot_kahan ( x , x + N , y ) ; }
@@ -1311,8 +1311,8 @@ namespace Ostap
     template <class TYPE1, 
               class TYPE2, 
               unsigned int N ,
-              typename = std::enable_if<std::is_convertible<TYPE1,long double>::value> , 
-              typename = std::enable_if<std::is_convertible<TYPE2,long double>::value> >
+              typename std::enable_if<std::is_convertible<TYPE1,long double>::value,bool>::type = true  , 
+              typename std::enable_if<std::is_convertible<TYPE2,long double>::value,bool>::type = true  > 
     inline double dot_kahan
     ( TYPE1(&x)[N] , 
       TYPE2(&y)[N] ) { return dot_kahan ( x , x + N , y ) ; }
@@ -1340,8 +1340,8 @@ namespace Ostap
     template <class ITERATOR  , 
               typename SCALAR ,
               typename value_type = typename std::iterator_traits<ITERATOR>::value_type     ,
-              typename = std::enable_if<std::is_convertible<value_type,long double>::value> , 
-              typename = std::enable_if<std::is_convertible<SCALAR,long double>::value>     >
+              typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true , 
+              typename std::enable_if<std::is_convertible<SCALAR,long double>::value,bool>::type     = true >
     void scale
     ( ITERATOR first  ,
       ITERATOR last   , 
@@ -1352,8 +1352,8 @@ namespace Ostap
     template <class    ITERATOR, 
               typename SCALAR  ,
               typename value_type = typename std::iterator_traits<ITERATOR>::value_type     ,
-              typename = std::enable_if<std::is_convertible<value_type,long double>::value> , 
-              typename = std::enable_if<std::is_convertible<SCALAR,long double>::value>     >
+              typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true , 
+              typename std::enable_if<std::is_convertible<SCALAR,long double>::value,bool>::type     = true >
     void shift 
     ( ITERATOR first  ,
       ITERATOR last   , 
@@ -1364,8 +1364,8 @@ namespace Ostap
     template <class    ITERATOR, 
               typename SCALAR  ,
               typename value_type = typename std::iterator_traits<ITERATOR>::value_type     ,
-              typename = std::enable_if<std::is_convertible<value_type,long double>::value> , 
-              typename = std::enable_if<std::is_convertible<SCALAR,long double>::value>     >
+              typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true , 
+              typename std::enable_if<std::is_convertible<SCALAR,long double>::value,bool>::type     = true >
     void scale_and_shift 
     ( ITERATOR first ,
       ITERATOR last  , 
@@ -1378,8 +1378,8 @@ namespace Ostap
     template <class TYPE     , 
               class ALLOCATOR, 
               class SCALAR   , 
-              typename = std::enable_if<std::is_convertible<TYPE  ,long double>::value> , 
-              typename = std::enable_if<std::is_convertible<SCALAR,long double>::value> >    
+              typename std::enable_if<std::is_convertible<TYPE  ,long double>::value,bool>::type = true , 
+              typename std::enable_if<std::is_convertible<SCALAR,long double>::value,bool>::type = true >    
     inline void scale_and_shift
     ( std::vector<TYPE,ALLOCATOR>& vct , 
       SCALAR scale , 
@@ -1387,46 +1387,51 @@ namespace Ostap
     { scale_and_shift ( vct.begin() , vct.end() , scale , shift ) ; }
     // ========================================================================
     /// simple scaling of exponents for all elements of non-constant sequence        
-    template <class ITERATOR>
-    void scale_exp2 ( ITERATOR    first ,
-                      ITERATOR    last  , 
-                      const short iexp  )
+    template <class ITERATOR> 
+    void scale_exp2
+    ( ITERATOR    first ,
+      ITERATOR    last  , 
+      const short iexp  )
     { 
       if ( 0 != iexp ) 
       { for ( ; first != last ; ++first ) { (*first) = std::ldexp ( *first , iexp ) ; } }
     }
     // ========================================================================
     /// scale all elements of vector 
-    template <class TYPE , typename SCALAR>
-    void scale ( std::vector<TYPE>& vct , SCALAR factor ) 
+    template <class    TYPE      ,
+              class    ALLOCATOR , 
+              typename SCALAR    >
+    void scale
+    ( std::vector<TYPE,ALLOCATOR>& vct , SCALAR factor ) 
     { scale    ( vct.begin() , vct.end () , factor ) ; }
     // ========================================================================
     /// scale all elements of vector 
-    template <class TYPE>    
-    inline void scale_exp2 ( std::vector<TYPE>& vct , const int iexp  ) 
+    template <class TYPE, class ALLOCATOR>    
+    inline void scale_exp2
+    ( std::vector<TYPE,ALLOCATOR>& vct , const int iexp  ) 
     { scale_exp2 ( vct.begin() , vct.end () , iexp ) ; }
     // ========================================================================
     /// scale all elements of vector  by 2**s
-    template <class TYPE>    
+    template <class TYPE, class ALLOCATOR>    
     inline
-    std::vector<TYPE> 
-    ldexp ( std::vector<TYPE> vct , const short iexp )
+    std::vector<TYPE,ALLOCATOR> 
+    ldexp ( std::vector<TYPE,ALLOCATOR> vct , const short iexp )
     {
       if ( 0 != iexp ) { scale_exp2 ( vct , iexp ) ; }
       return vct ;
     }
     // ========================================================================
     /// shift all elements of vector 
-    template <class TYPE , typename SCALAR>
-    void shift ( std::vector<TYPE>& vct , SCALAR factor ) 
+    template <class TYPE , class ALLOCATOR, typename SCALAR>
+    void shift ( std::vector<TYPE, ALLOCATOR>& vct , SCALAR factor ) 
     { shift    ( vct.begin() , vct.end () , factor ) ; }
     // ========================================================================
     template <class ITERATOR> 
     void negate ( ITERATOR first , ITERATOR last ) 
     { for ( ; first != last ; ++first ) { (*first) = -(*first) ; } }
     // ========================================================================
-    template <class TYPE> 
-    void negate ( std::vector<TYPE>& vct ) 
+    template <class TYPE, class ALLOCATOR> 
+    void negate ( std::vector<TYPE,ALLOCATOR>& vct ) 
     { negate ( vct.begin() , vct.end() ) ; }
     // ========================================================================
     /** Calculate p-norm for the vector 
@@ -1501,11 +1506,11 @@ namespace Ostap
      *  @param pinv  (1/p)
      *  @return p-norm of the vector
      */
-    template <class TYPE>
+    template <class TYPE, class ALLOCATOR>
     long double p_norm 
-    ( const std::vector<TYPE>& vct  , 
-      const double             pinv )  //  1/p
-    { return p_norm (  vct.begin() , vct.end() , pinv ) ; }
+    ( const std::vector<TYPE, ALLOCATOR>& vct  , 
+      const double                        pinv )  //  1/p
+    { return p_norm ( vct.begin() , vct.end() , pinv ) ; }
     // ========================================================================
     /** sign of the number 
      *  @see https://stackoverflow.com/a/4609795

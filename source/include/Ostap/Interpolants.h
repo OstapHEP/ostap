@@ -524,8 +524,8 @@ namespace Ostap
                 class YITERATOR ,
                 typename xvalue_type = typename std::iterator_traits<XITERATOR>::value_type,
                 typename yvalue_type = typename std::iterator_traits<YITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<xvalue_type,long double>::value> ,
-                typename = std::enable_if<std::is_convertible<yvalue_type,long double>::value> >
+                typename std::enable_if<std::is_convertible<xvalue_type,long double>::value,bool>::type = true ,
+                typename std::enable_if<std::is_convertible<yvalue_type,long double>::value,bool>::type = true >
       Thiele 
       ( XITERATOR xbegin , 
         XITERATOR xend   ,

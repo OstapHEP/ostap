@@ -78,7 +78,7 @@ namespace Ostap
       /// create n-sphere from the sequence of phases 
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >
       NSphere 
       ( ITERATOR begin , 
         ITERATOR end   ) 

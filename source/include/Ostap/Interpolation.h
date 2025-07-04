@@ -114,7 +114,7 @@ namespace Ostap
          */
         template <class ITERATOR,
                   typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                  typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+                  typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >
         Abscissas 
         ( ITERATOR begin , 
           ITERATOR end   , 
@@ -289,7 +289,7 @@ namespace Ostap
          */
         template <class ITERATOR , 
                   typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                  typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+                  typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >
         Table 
         ( const Abscissas& x      , 
           ITERATOR         ybegin , 
@@ -345,8 +345,8 @@ namespace Ostap
                   class YITERATOR,
                   typename xvalue_type = typename std::iterator_traits<XITERATOR>::value_type    ,
                   typename yvalue_type = typename std::iterator_traits<YITERATOR>::value_type    ,
-                  typename = std::enable_if<std::is_convertible<xvalue_type,long double>::value> ,
-                  typename = std::enable_if<std::is_convertible<yvalue_type,long double>::value> >
+                  typename std::enable_if<std::is_convertible<xvalue_type,long double>::value,bool>::type = true ,
+                  typename std::enable_if<std::is_convertible<yvalue_type,long double>::value,bool>::type = true >
         Table
         ( XITERATOR  xbegin         ,
           XITERATOR  xend           ,
@@ -479,7 +479,7 @@ namespace Ostap
         template <class ITERATOR , 
                   class FUNCTION ,
                   typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                  typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+                  typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >
         Table 
         ( ITERATOR begin , 
           ITERATOR end   ,

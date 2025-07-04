@@ -72,7 +72,7 @@ namespace Ostap
        */ 
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename            = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true >
       ECDF
       ( ITERATOR   begin                 ,
         ITERATOR   end                   ,
@@ -131,7 +131,7 @@ namespace Ostap
       /// add a bunch of values 
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename            = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true >
       ECDF& add
       ( ITERATOR begin ,
         ITERATOR end   )
@@ -157,7 +157,7 @@ namespace Ostap
       /// add a bunch of sorted values 
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename            = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true >
       ECDF& add_sorted 
       ( ITERATOR begin ,
         ITERATOR end   )

@@ -66,8 +66,8 @@ namespace Ostap
       Quantile& add ( const double v ) ;
       /// add a range of values
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true >
       Quantile& add
       ( ITERATOR first ,
 	ITERATOR last  )
@@ -143,12 +143,12 @@ namespace Ostap
       Quantiles ( const std::size_t N ) ; 
       /// from soem range
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true >      
       Quantiles
       ( ITERATOR first ,
-	ITERATOR last  )
-	: Quantiles ( std::vector<double> ( first , last ) )
+        ITERATOR last  )
+        : Quantiles ( std::vector<double> ( first , last ) )
       {}
       // ======================================================================
     public: // 
@@ -156,11 +156,11 @@ namespace Ostap
       Quantiles& add ( const double value ) ;
       /// add a rageg of values
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true >            
       Quantiles& add
       ( ITERATOR first ,
-	ITERATOR last  )
+        ITERATOR last  )
       { for ( ; first != last ; ++first ) { add ( *first ) ; } ; return *this ; }
       // ======================================================================
     public: // Ostap::Math::Statistic
@@ -226,7 +226,8 @@ namespace Ostap
     // swap two objects 
     inline void swap ( Quantiles& a , Quantiles& b ) { a.swap ( b ) ; } 
     // ========================================================================
-    template <unsigned int N,typename = std::enable_if<(1<=N)> >
+    template <unsigned int N,
+              typename std::enable_if<(1<=N),bool>::type = true >
     class Quantiles_ : public Ostap::Math::Statistic
     {
       // ====================================================================
@@ -235,11 +236,11 @@ namespace Ostap
       Quantiles_& add  ( const  double v ) { m_qs.add ( v ) ; return *this ; }
       /// add a rageg of values
       template <class ITERATOR,
-		typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-		typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true  >
       Quantiles_& add
       ( ITERATOR first ,
-	ITERATOR last  )
+        ITERATOR last  )
       { for ( ; first != last ; ++first ) { this->add ( *first ) ; } ; return *this ; }
       // ====================================================================
     public: // Ostap::Math::Statistic
