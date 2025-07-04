@@ -26,6 +26,7 @@ namespace Ostap
       // =======================================================================
       /// actual type of parameters 
       typedef std::vector<double>        PARAMETERS ;
+      typedef PARAMETERS::value_type     data_type  ;
       /// iterator type 
       typedef PARAMETERS::const_iterator iterator   ;
       // =======================================================================
@@ -40,7 +41,7 @@ namespace Ostap
       /// templated constructor from the sequence of parameters 
       template <typename ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >           
+                typename std::enable_if<std::is_convertible<value_type,data_type>::value,bool>::type = true >           
       Parameters
       ( ITERATOR begin , 
         ITERATOR end   )
