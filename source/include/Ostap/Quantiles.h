@@ -88,7 +88,7 @@ namespace Ostap
       /// 3-quantiles:
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true  >
       inline std::array<double,4>
       terciles
       ( ITERATOR first , 
@@ -97,7 +97,7 @@ namespace Ostap
       /// 4-quantiles:
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true  >
       inline std::array<double,5>
       quartiles
       ( ITERATOR first , 
@@ -106,7 +106,7 @@ namespace Ostap
       /// 5-quantiles:
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true  >
       inline std::array<double,6>
       quintiles 
       ( ITERATOR first , 
@@ -115,7 +115,7 @@ namespace Ostap
       /// 6-quantiles:
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true  >
       inline std::array<double,7>
       sextiles 
       ( ITERATOR first , 
@@ -124,7 +124,7 @@ namespace Ostap
       /// 7-quantiles:
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true  >
       inline std::array<double,8>
       septiles 
       ( ITERATOR first , 
@@ -133,7 +133,7 @@ namespace Ostap
       /// 8-quantiles:
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true  >
       inline std::array<double,9>
       octiles 
       ( ITERATOR first , 
@@ -142,7 +142,7 @@ namespace Ostap
       /// 10-quantiles:
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true  >
       inline std::array<double,11>
       deciles 
       ( ITERATOR first , 
@@ -151,7 +151,7 @@ namespace Ostap
       /// 20-quantiles:
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true  >
       inline std::array<double,21>
       ventiles 
       ( ITERATOR first , 
@@ -160,7 +160,7 @@ namespace Ostap
       /// 100-quantiles:
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true  >
       inline std::array<double,101>
       percentiles  
       ( ITERATOR first , 
@@ -236,7 +236,7 @@ namespace Ostap
       // ====================================================================
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true  >
       inline void check
       ( ITERATOR first ,
         ITERATOR last  ) const 
@@ -303,7 +303,7 @@ namespace Ostap
        */
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true  >
       inline double quantile
       ( ITERATOR      first ,
         ITERATOR      last  , 
@@ -417,7 +417,7 @@ namespace Ostap
       // ====================================================================
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true  >
       inline double quantile 
       ( ITERATOR      first ,
         ITERATOR      last  , 
@@ -473,7 +473,7 @@ namespace Ostap
       // ======================================================================
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true  >
       inline double quantile 
       ( ITERATOR      first ,
         ITERATOR      last  , 

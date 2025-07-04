@@ -582,7 +582,7 @@ namespace Ostap
      */
     template <class ITERATOR,
               typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-              typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+              typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >
     inline void legendre_values
     ( ITERATOR          begin, 
       ITERATOR          end  ,
@@ -1676,7 +1676,7 @@ namespace Ostap
       /// constructor from sequence of parameters 
       template <typename ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >
       PolySum 
       ( ITERATOR begin , 
         ITERATOR end   )
@@ -1735,7 +1735,7 @@ namespace Ostap
       /// template constructor from sequence of parameters 
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >
       Polynomial
       ( ITERATOR                 first , 
         ITERATOR                 last  , 
@@ -1984,7 +1984,7 @@ namespace Ostap
       /// template constructor from sequence of parameters 
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >     
       ChebyshevSum 
       ( ITERATOR                 first , 
         ITERATOR                 last  , 
@@ -2205,7 +2205,7 @@ namespace Ostap
       /// template constructor from sequence of parameters 
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true > 
       LegendreSum
       ( ITERATOR                  first , 
         ITERATOR                  last  , 
@@ -2425,7 +2425,7 @@ namespace Ostap
       /// template constructor from sequence of parameters 
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >       
       HermiteSum 
       ( ITERATOR                  first , 
         ITERATOR                  last  , 

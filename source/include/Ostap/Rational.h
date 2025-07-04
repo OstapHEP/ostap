@@ -759,20 +759,14 @@ namespace Ostap
        */
       Ostap::Math::Pade pade
       ( const Ostap::Math::Interpolation::Table&  table                                           ,
-	const unsigned short                      n                                               ,
-	const std::vector<double>&                zeroes  = std::vector<double>()                 ,
-	const std::vector<double>&                poles   = std::vector<double>()                 ,	
-	const std::vector<std::complex<double> >& czeroes = std::vector<std::complex<double> > () ,
-	const std::vector<std::complex<double> >& cpoles  = std::vector<std::complex<double> > () ) ;      
+        const unsigned short                      n                                               ,
+        const std::vector<double>&                zeroes  = std::vector<double>()                 ,
+        const std::vector<double>&                poles   = std::vector<double>()                 ,	
+        const std::vector<std::complex<double> >& czeroes = std::vector<std::complex<double> > () ,
+        const std::vector<std::complex<double> >& cpoles  = std::vector<std::complex<double> > () ) ;      
       // ======================================================================      
     }
-    // ========================================================================
-    
-    // Ostap::Math::Pade
-    void pade_ququ ( const std::vector<double>& f ,
-		     const unsigned short       n ) ;
-    
-    
+    // ========================================================================    
   } //                                         The end of namespace Ostap::Math 
   // ==========================================================================
 } //                                                 The end of namespace Ostap 

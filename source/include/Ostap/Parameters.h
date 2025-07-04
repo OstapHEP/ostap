@@ -40,7 +40,7 @@ namespace Ostap
       /// templated constructor from the sequence of parameters 
       template <typename ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >           
       Parameters
       ( ITERATOR begin , 
         ITERATOR end   )
@@ -76,8 +76,8 @@ namespace Ostap
        *  @return true if at least one parameter is actually changed 
        */
       template <class ITERATOR,
-                typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
-                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,                
+                typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >           
       inline bool setPars 
       ( ITERATOR   begin         , 
         ITERATOR   end           ,

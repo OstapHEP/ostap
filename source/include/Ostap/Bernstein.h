@@ -126,7 +126,7 @@ namespace Ostap
        */
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
-                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+                typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true  >
       Bernstein 
       ( ITERATOR     first     ,
         ITERATOR     last      ,

@@ -41,7 +41,7 @@ from   ostap.utils.cleanup     import CleanUp
 from   ostap.utils.basic       import items_loop 
 from   ostap.utils.timing      import timing
 import ostap.io.root_file
-import ROOT, os, glob, math, tarfile, shutil, itertools 
+import ROOT, os, glob, math, tarfile, shutil, itertools, warnings  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -1646,15 +1646,15 @@ class Trainer(object):
         
         from ostap.utils.root_utils import batch
         from ostap.plotting.style   import useStyle
-        from ostap.core.core        import rootException 
+        from ostap.core.core        import rootException
         with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) , rootException () : 
             for fun, args, kwargs in plots :
                 tag  = "Execute macro %s%s" % ( fun.__name__ , str ( args ) ) 
                 with timing ( tag , logger = self.logger ) , useStyle () :
-                    with warnings.catch_warning ( category = RuntimeWarning ) as w : 
+                    with warnings.catch_warnings () :
+                        warnings.simplefilter ( 'always' , category = RuntimeWarning ) 
                         if kwargs : fun ( *args , **kwargs )
                         else      : fun ( *args )
-                        if w : print ( 'IT IS A WARNING' , w )
                         
                     
 # ========================================================================================
