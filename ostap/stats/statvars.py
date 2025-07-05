@@ -1494,7 +1494,7 @@ def data_quintiles  ( data       ,
                             parallel   = False     ) 
     
 
-a# =============================================================================
+# =============================================================================
 ## Get the (approximate) sextiles  for the data using P2-algorithm
 #  @code
 #  data =  ...
