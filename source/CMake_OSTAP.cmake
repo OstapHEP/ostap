@@ -38,7 +38,8 @@ add_library(ostap SHARED src/format.cpp
                          src/Fourier.cpp   
                          src/Funcs.cpp   
                          src/GetWeight.cpp 
-                         src/GSL_sentry.cpp 
+                         src/GSL_sentry.cpp
+                         src/GetQuantile.cpp    
                          src/Hesse.cpp
                          src/Hilbert.cpp
                          src/HistoDump.cpp
@@ -69,11 +70,11 @@ add_library(ostap SHARED src/format.cpp
                          src/MoreRooFit.cpp
                          src/MoreVars.cpp
                          src/Mute.cpp
-			 src/Names.cpp 
+            			 src/Names.cpp 
                          src/NStatEntity.cpp
                          src/Notifier.cpp
                          src/Ostap.cpp
-			 src/Quantile.cpp
+			             src/Quantile.cpp
                          src/Parameters.cpp
                          src/Parameterization.cpp
                          src/Peaks.cpp

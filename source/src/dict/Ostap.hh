@@ -57,6 +57,7 @@
 #include "Ostap/GeomFun.icpp"
 #include "Ostap/GetWeight.h"
 #include "Ostap/GoF.h"
+#include "Ostap/GetQuantile.h"
 #include "Ostap/HFuncs.h"
 #include "Ostap/Hash.h"
 #include "Ostap/Hesse.h"
@@ -174,7 +175,7 @@
 // ============================================================================
 // ALL 
 // ============================================================================
-#include "Ostap/Ostap.h"
+// #include "Ostap/Ostap.h"
 // ============================================================================
 namespace Ostap
 {

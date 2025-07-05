@@ -10,6 +10,7 @@
 // Ostap
 // =============================================================================
 #include "Ostap/Statistic.h"
+#include "Ostap/StatEntity.h"
 // =============================================================================
 namespace Ostap
 {
@@ -17,9 +18,8 @@ namespace Ostap
   namespace  Math
   {
     // ========================================================================
-    /** @class Qantile 
+    /** @class Quantile 
      *  P2 algorithm for (approximate) quantile estimamtion
-     *
      *  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
      *  @see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
      *  @see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
@@ -27,21 +27,23 @@ namespace Ostap
      * 
      *  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
      */
-    class  Quantile : public Ostap::Math::Statistic
+    class Quantile : public Ostap::Math::Statistic
     {
     public :
       // =======================================================================
-      /// # of events 
-      typedef unsigned long long  size_type ; 
+      /// the type of helper counter 
+      typedef typename Ostap::StatEntity  Counter   ;
+      /// #of entries 
+      typedef typename Counter::size_type size_type ; 
       // =======================================================================      
     public :
       // =======================================================================
       /// initialization strategy 
       enum Initialization
     	{
-	  Classic = 0 ,
-	  Adaptive 
-	} ;
+          Classic = 0 ,
+          Adaptive 
+        } ;
       // =======================================================================      
     public :
       // =======================================================================
@@ -58,7 +60,7 @@ namespace Ostap
       // Generic counter interface
       void update ( const double value ) override { add  ( value ) ; }
       // reset quantile 
-      void reset  ()                     override { m_N = 0 ; } ; 
+      void reset  ()                     override ; 
       // ======================================================================
     public :
       // ======================================================================
@@ -90,13 +92,15 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// minimal  value ( quantile for p=0)
-      double min () const ;
-      /// maximal value ( quantile for p=1)
-      double max () const ; 	
+      /// minimal value ( == quantile for  p = 0 )
+      inline double min () const { return m_counter.min () ; } 
+      /// maximal value ( == quantile for  p = 1 )
+      inline double max () const { return m_counter.max () ; } 
       // ======================================================================
     public:
       // ======================================================================
+      /// get the triplet: { min , quantile , max }
+      std::array<double,3> quantiles () const ; 
       /// get the quantile value
       double quantile () const ;
       // ======================================================================
@@ -105,18 +109,28 @@ namespace Ostap
       /// swap two objects
       void swap ( Quantile& right ) ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// helper counter 
+      inline const Counter& counter() const { return m_counter ; }
+      // ======================================================================
     private:
       // ======================================================================
       /// initialiation strategy
       Initialization          m_init { Adaptive } ; // initialiation strategy
       /// quantile
-      double                  m_p    { 0.5 } ; // quantile 
+      double                  m_p       { 0.5 } ; // quantile 
       /// sample size 
-      size_type               m_N    { 0   } ; // sample size
+      size_type               m_N       { 0   } ; // sample size
       //
-      std::array<double,5>    m_q    {     } ;
-      std::array<double,5>    m_ns   {     } ;
-      std::array<size_type,5> m_n    { 0 , 1 , 2 , 3 , 4 } ;
+      std::array<double,5>    m_q       {     } ;
+      std::array<double,5>    m_ns      {     } ;
+      std::array<size_type,5> m_n       { 0 , 1 , 2 , 3 , 4 } ;
+      // ======================================================================= 
+    public:
+      // =======================================================================
+      /// helper counter (non needed in the original algorithm)
+      Counter                 m_counter {} ;
       // =======================================================================
     };
     // ========================================================================
@@ -124,19 +138,21 @@ namespace Ostap
     inline void swap ( Quantile& a , Quantile& b ) { a.swap ( b ) ; } 
     // ========================================================================
     /** @class Quantiles 
-     *  Extended P2 algorithm for (approximate) quantile estimamtion
-     *  @see https://aakinshin.net/posts/ex-p2-quantile-estimator/
+     *  Extended P2 algorithm for (approximate) quantile estimation
+     *  @see https://aakinshin.net/posts/ex-p2-quantile-estimator
      */
     class Quantiles : public Ostap::Math::Statistic
     {
     public:
       // ======================================================================
+      /// helper countter 
+      typedef typename Quantile::Counter  Counter   ;
       /// #of entri4s
-      typedef typename Quantile::size_type  size_type ;
+      typedef typename Counter::size_type size_type ;
       // ======================================================================
     public:
       // ======================================================================
-      /// from vector oof probabiliies 
+      /// from vector of probabiliies 
       Quantiles
       ( const std::vector<double>& ps ) ;
       /// get N-quantiles 
@@ -168,12 +184,12 @@ namespace Ostap
       // Generic counter interface
       void update ( const double value ) override { add  ( value ) ; }
       // reset quantile 
-      void reset  ()                     override { m_N = 0 ; } ; 
+      void reset  ()                     override ; 
       // ======================================================================
     public:
       // ======================================================================
       /// sample size 
-      inline size_type    N     () const { return m_N  ; }
+      inline size_type   N     () const { return m_N  ; }
       /// sample size 
       inline size_type   size  () const { return N () ; }
       /// valid counter?
@@ -188,9 +204,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// minimal  value ( quantile for p = 0 )
-      double min () const ;
+      inline double min () const { return m_counter.min () ; }
       /// maximal value  ( quantile for p = 1 )
-      double max () const ; 	
+      inline double max () const { return m_counter.max () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -210,22 +226,36 @@ namespace Ostap
       /// swap two objects
       void swap ( Quantiles& right ) ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// helper counter 
+      inline const Counter& counter() const { return m_counter ; }
+      // ======================================================================
     private:
       // ======================================================================
       /// vector of probabilities 
-      std::vector<double>    m_p  {   } ; // vector of probabilities
+      std::vector<double>    m_p  {   } ; // vector of probabillities 
       /// sample size 
       size_type              m_N  { 0 } ; // sample size
       //
-      std::vector<double>    m_q  {} ;
-      std::vector<double>    m_ns {} ;
-      std::vector<size_type> m_n  {} ;
+      std::vector<double>    m_q  {   } ;
+      std::vector<double>    m_ns {   } ;
+      std::vector<size_type> m_n  {   } ;
       // ======================================================================
+    private: 
+      // ======================================================================
+      /// helper counter (non needed in the original algorithm)
+      Counter                m_counter {} ; // helper counter 
+      // =======================================================================
     } ;
     // ========================================================================
     // swap two objects 
     inline void swap ( Quantiles& a , Quantiles& b ) { a.swap ( b ) ; } 
     // ========================================================================
+    /** @class Quantiles_
+     *  Extended P2 algorithm for (approximate) equidistant quantiles 
+     *  @see https://aakinshin.net/posts/ex-p2-quantile-estimator
+     */
     template <unsigned int N,
               typename std::enable_if<(1<=N),bool>::type = true >
     class Quantiles_ : public Ostap::Math::Statistic
@@ -233,8 +263,9 @@ namespace Ostap
       // ====================================================================
     public :
       // ====================================================================
+      /// update the counter 
       Quantiles_& add  ( const  double v ) { m_qs.add ( v ) ; return *this ; }
-      /// add a rageg of values
+      /// add a range of of values
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
                 typename std::enable_if<std::is_convertible<value_type,double>::value,bool>::type = true  >
@@ -248,24 +279,28 @@ namespace Ostap
       // Generic counter interface
       void update ( const double value ) override { add  ( value ) ; }
       // reset quantile 
-      void reset  ()                     override { m_qs.reset () ; } ; 
+      void reset  ()                     override { m_qs.reset ()  ; } 
       // ======================================================================
     public :
       // ======================================================================
-      std::array<double,N+1> quantiles ()  const 
+      std::array<double,N+2> quantiles ()  const 
       {
-        const std::vector<double> output { m_qs.quantiles () } ;
-        std::array<double,N+1> result ;
-        result.front () = m_qs.min () ;
-        result.back  () = m_qs.max () ; 
-        // 
-        const std::size_t o = output.size() ; 
-        // for normal regiome   o + 1 == N 
-        const std::size_t L = o + 1 < N ? o + 1: N  ;
-        for  ( std::size_t i = 0 ; i + 1 < L ; ++i )
-          { result [ i + 1 ] = output [ 1 ] ; }  
+        const std::vector<double> _output { m_qs.quantiles () } ;
+        std::array<double,N+2> result ;
+        /// 
+        const std::size_t  o = _output.size() ; 
+        const std::size_t  L = o < N + 2 ? o : N + 2 ;
+        for  ( std::size_t i = 0 ; i < L ; ++i )
+          { result [ i ] = _output [ i ] ; }  
         return result ;
       }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// minimal  value ( quantile for p = 0 )
+      inline double min () const { return m_qs.min () ; }
+      /// maximal value  ( quantile for p = 1 )
+      inline double max () const { return m_qs.max () ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -301,7 +336,7 @@ namespace Ostap
   // ==========================================================================
 } //                                                The  end of namespace Ostap 
 // ============================================================================
-//                                                                      The END 
+#endif // OSTAP_QUANTILE_H
 // ============================================================================
-#endif // OSTAP_P2QUANTILE_H
+//                                                                      The END 
 // ============================================================================

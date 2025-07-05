@@ -69,7 +69,7 @@ namespace Ostap
      *  @param stat       (UDATE) statistical counter 
      *  @param expression (INPUT) the variable 
      *  @param selection  (INPUT) selection/cut (treated as boolean!)
-     *  @param first      (INPUT) the first event to process (inclusibe) 
+     *  @param first      (INPUT) the first event to process (inclusive) 
      *  @param last       (INPUT) the last event to process (exclusive) 
      *  @param xmin       (INPUT)  low  limit for expressoon 
      *  @param xmax       (INPUT)  high limit for expressoon 
@@ -110,6 +110,32 @@ namespace Ostap
       const Ostap::DataType     xmin       = Ostap::MinValue   ,
       const Ostap::DataType     xmax       = Ostap::MaxValue   ) const ;
     // ========================================================================
+    /** Fill/update statistical counter 
+     *  @param data       (input) data 
+     *  @param stat       (UDATE) statistical counter 
+     *  @param expression (INPUT) the variable 
+     *  @param selection  (INPUT) selection/cut (treated as weight!)
+     *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+     *  @param first      (INPUT) the first event to process (inclusibe) 
+     *  @param last       (INPUT) the last event to process (exclusive) 
+     *  @param xmin       (INPUT)  low  limit for expressoon 
+     *  @param xmax       (INPUT)  high limit for expressoon 
+     *  @return status code 
+     *  @see Ostap::Math::WStatistics
+     *  @attention selection/cut is treated as boolean 
+     *  @attention datatse must be nonn-weighted 
+     */
+    Ostap::StatusCode get_stat
+    ( const RooAbsData*         data                           ,
+      Ostap::Math::Statistic&   stat                           ,
+      const std::string&        expression                     , 
+      const std::string&        selection  = ""                ,
+      const std::string&        cut_range  = ""                ,
+      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last       = Ostap::LastEvent  , 
+      const Ostap::DataType     xmin       = Ostap::MinValue   ,
+      const Ostap::DataType     xmax       = Ostap::MaxValue   ) const ;
+   // ========================================================================    
     /** Fill/update statistical counter 
      *  @param data       (input) data 
      *  @param stat       (UDATE) statistical counter 
@@ -195,6 +221,38 @@ namespace Ostap
       const Ostap::DataType     ymin       = Ostap::MinValue   ,
       const Ostap::DataType     ymax       = Ostap::MaxValue   ) const ;
     // ========================================================================
+    /** Fill/update statistical counter 
+     *  @param data       (input) data 
+     *  @param stat       (UDATE) statistical counter 
+     *  @param expr1       (INPUT) the 1st variable 
+     *  @param expr1      (INPUT) the 2nd variable 
+     *  @param selection  (INPUT) selection/cut (treated as boolean!)
+     *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+     *  @param first      (INPUT) the first event to process (inclusibe) 
+     *  @param last       (INPUT) the last event to process (exclusive) 
+     *  @param xmin       (INPUT)  low  limit for expressoon 
+     *  @param xmax       (INPUT)  high limit for expressoon 
+     *  @param ymin       (INPUT)  low  limit for expressoon 
+     *  @param ymax       (INPUT)  high limit for expressoon 
+     *  @return status code 
+     *  @see Ostap::Math::WStatistics2
+     *  @attention selection/cut is treated as boolean 
+     *  @attention dat amust be non-weighted 
+     */
+    Ostap::StatusCode get_stat
+    ( const RooAbsData*         data                           ,
+      Ostap::Math::Statistic2&  stat                           ,
+      const std::string&        expr1                          , 
+      const std::string&        expr2                          ,       
+      const std::string&        selection  = ""                ,
+      const std::string&        cut_range  = ""                ,
+      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last       = Ostap::LastEvent  ,       
+      const Ostap::DataType     xmin       = Ostap::MinValue   ,
+      const Ostap::DataType     xmax       = Ostap::MaxValue   , 
+      const Ostap::DataType     ymin       = Ostap::MinValue   ,
+      const Ostap::DataType     ymax       = Ostap::MaxValue   ) const ;
+    // ========================================================================    
     /** Fill/update statistical counter 
      *  @param data       (input) data 
      *  @param stat       (UDATE) statistical counter 
@@ -298,6 +356,44 @@ namespace Ostap
       const Ostap::DataType     zmin       = Ostap::MinValue   ,
       const Ostap::DataType     zmax       = Ostap::MaxValue   ) const ;
     // ========================================================================
+    /** Fill/update statistical counter 
+     *  @param data       (input) data 
+     *  @param stat       (UDATE) statistical counter 
+     *  @param expr1      (INPUT) the 1st variable 
+     *  @param expr1      (INPUT) the 2nd variable 
+     *  @param expr3      (INPUT) the 3rd variable 
+     *  @param selection  (INPUT) selection/cut (treated as boolean !)
+     *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+     *  @param first      (INPUT) the first event to process (inclusibe) 
+     *  @param last       (INPUT) the last event to process (exclusive) 
+     *  @param xmin       (INPUT)  low  limit for expressoon 
+     *  @param xmax       (INPUT)  high limit for expressoon 
+     *  @param ymin       (INPUT)  low  limit for expressoon 
+     *  @param ymax       (INPUT)  high limit for expressoon 
+     *  @param zmin       (INPUT)  low  limit for expressoon 
+     *  @param zmax       (INPUT)  high limit for expressoon 
+     *  @return status code 
+     *  @see Ostap::Math::WStatistics3
+     *  @attention selection/cut is treated as weight!
+     *  @attention data MUST be non-weighted 
+     */
+    Ostap::StatusCode get_stat
+    ( const RooAbsData*         data                           ,
+      Ostap::Math::Statistic3&  stat                           ,
+      const std::string&        expr1                          , 
+      const std::string&        expr2                          , 
+      const std::string&        expr3                          ,      
+      const std::string&        selection  = ""                ,
+      const std::string&        cut_range  = ""                ,
+      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last       = Ostap::LastEvent  , 
+      const Ostap::DataType     xmin       = Ostap::MinValue   ,
+      const Ostap::DataType     xmax       = Ostap::MaxValue   , 
+      const Ostap::DataType     ymin       = Ostap::MinValue   ,
+      const Ostap::DataType     ymax       = Ostap::MaxValue   , 
+      const Ostap::DataType     zmin       = Ostap::MinValue   ,
+      const Ostap::DataType     zmax       = Ostap::MaxValue   ) const ;
+    // ======================================================================    
     /** Fill/update statistical counter 
      *  @param data       (input) data 
      *  @param stat       (UDATE) statistical counter 
@@ -408,6 +504,50 @@ namespace Ostap
       const std::string&        expr3                          ,
       const std::string&        expr4                          ,        
       const std::string&        selection  = ""                ,
+      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last       = Ostap::LastEvent  , 
+      const Ostap::DataType     xmin       = Ostap::MinValue   ,
+      const Ostap::DataType     xmax       = Ostap::MaxValue   , 
+      const Ostap::DataType     ymin       = Ostap::MinValue   ,
+      const Ostap::DataType     ymax       = Ostap::MaxValue   , 
+      const Ostap::DataType     zmin       = Ostap::MinValue   ,
+      const Ostap::DataType     zmax       = Ostap::MaxValue   , 
+      const Ostap::DataType     tmin       = Ostap::MinValue   ,
+      const Ostap::DataType     tmax       = Ostap::MaxValue   ) const ;
+    // ========================================================================
+    /** Fill/update statistical counter 
+     *  @param data       (input) data 
+     *  @param stat       (UDATE) statistical counter 
+     *  @param expr1      (INPUT) the 1st variable 
+     *  @param expr1      (INPUT) the 2nd variable 
+     *  @param expr3      (INPUT) the 3rd variable 
+     *  @param expr4      (INPUT) the 4th variable 
+     *  @param selection  (INPUT) selection/cut (treated as boolean)
+     *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+     *  @param first      (INPUT) the first event to process (inclusibe) 
+     *  @param last       (INPUT) the last event to process (exclusive) 
+     *  @param xmin       (INPUT)  low  limit for expressoon 
+     *  @param xmax       (INPUT)  high limit for expressoon 
+     *  @param ymin       (INPUT)  low  limit for expressoon 
+     *  @param ymax       (INPUT)  high limit for expressoon 
+     *  @param zmin       (INPUT)  low  limit for expressoon 
+     *  @param zmax       (INPUT)  high limit for expressoon 
+     *  @param tmin       (INPUT)  low  limit for expressoon 
+     *  @param tmax       (INPUT)  high limit for expressoon 
+     *  @return status code 
+     *  @see Ostap::Math::WStatistics2
+     *  @attention selection/cut is treated as boolean 
+     *  @attention data must be non-weighted 
+     */
+    Ostap::StatusCode get_stat
+    ( const RooAbsData*         data                           ,
+      Ostap::Math::Statistic4&  stat                           ,
+      const std::string&        expr1                          , 
+      const std::string&        expr2                          , 
+      const std::string&        expr3                          ,
+      const std::string&        expr4                          ,       
+      const std::string&        selection  = ""                ,
+      const std::string&        cut_range  = ""                ,
       const Ostap::EventIndex   first      = Ostap::FirstEvent ,
       const Ostap::EventIndex   last       = Ostap::LastEvent  , 
       const Ostap::DataType     xmin       = Ostap::MinValue   ,

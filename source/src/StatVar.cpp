@@ -191,6 +191,74 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   //
   return Ostap::StatusCode::SUCCESS ;
 }
+
+// =============================================================================
+/*  Fill/update statistical counter 
+ *  @param data       (input) data 
+ *  @param stat       (UDATE) statistical counter 
+ *  @param expression (INPUT) the variable 
+ *  @param selection  (INPUT) selection/cut (treated as weight!)
+ *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+ *  @param first      (INPIUT) the first event to process (inclusibe) 
+ *  @param last       (INPIUT) the last event to process (exclusive) 
+ *  @return status code 
+ *  @see Ostap::Math::WStatistic
+ *  @attention selection/cut is treated as boolean!
+ *  @attention data MUST be no-weighted! 
+ */
+// =============================================================================
+Ostap::StatusCode Ostap::StatVar::get_stat
+( const RooAbsData*         data       ,
+  Ostap::Math::Statistic&   stat       ,
+  const std::string&        expression , 
+  const std::string&        selection  ,
+  const std::string&        cut_range  ,
+  const Ostap::EventIndex   first      ,
+  const Ostap::EventIndex   last       , 
+  const Ostap::DataType     xmin       ,
+  const Ostap::DataType     xmax       ) const 
+{
+  /// reset the statistic
+  stat.reset() ; // reset the statistic
+  // 
+  // check the ranges
+  if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
+  if ( xmax <  xmin       ) { return Ostap::StatusCode::SUCCESS ; }
+  //
+  if ( nullptr == data    ) { return INVALID_DATA        ; }
+  if ( data->isWeighted() ) { return INVALID_DATA_WEIGHT ; }
+  //
+  const Ostap::EventIndex num_entries = data -> numEntries() ;
+  const Ostap::EventIndex the_last    = std::min ( num_entries , last ) ;
+  if ( the_last <= first  ) { return Ostap::StatusCode::SUCCESS ; }
+  //
+  const bool  weighted = data -> isWeighted() ;
+  const char* cutrange = cut_range.empty() ? nullptr : cut_range.c_str() ;
+  const std::unique_ptr<Ostap::FormulaVar> expr { Ostap::makeFormula ( expression , data       ) } ;
+  if ( !expr || !expr->ok()            ) { return INVALID_FORMULA ; }
+  //
+  const std::unique_ptr<Ostap::FormulaVar> cuts { Ostap::makeFormula ( selection  , data , true ) } ;
+  const bool                with_cuts   = cuts && cuts->ok () ;
+  //
+  Ostap::Utils::ProgressBar bar { the_last - first , m_progress } ; 
+  for ( Ostap::EventIndex entry = first ; entry < the_last ; ++entry , ++bar )
+    {
+      const RooArgSet* vars = data -> get ( entry ) ;
+      if ( nullptr == vars )                             { break    ; } // BREAK 
+      //
+      if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE    
+      // apply cuts:
+      const bool cut  = with_cuts ? cuts -> getVal () : 1.0 ;
+      if ( !cut ) { continue ; }                                    // CONTINUE  
+      //
+      const double value = expr -> getVal () ;
+      if ( !in_range ( value , xmin , xmax ) ) { continue ; }      // CONTINUE 
+      //
+      stat.update ( value ) ;
+    }
+  //
+  return Ostap::StatusCode::SUCCESS ; 
+}
 // =============================================================================
 /*  Fill/update statistical counter 
  *  @param data       (input) data 
@@ -268,6 +336,7 @@ Ostap::StatusCode Ostap::StatVar::get_stat
 // Get information about several varibales 
 // =============================================================================
 
+// =============================================================================
 /* Fill/update statistical counter 
  *  @param data       (input) data 
  *  @param stat       (UDATE) statistical counter 
@@ -427,6 +496,80 @@ Ostap::StatusCode Ostap::StatVar::get_stat
  *  @param last       (INPIUT) the last event to process (exclusive) 
  *  @return status code 
  *  @see Ostap::Math::WStatistic
+ *  @attention selection/cut is treated as boolean 
+ *  @attention datatse must be nonn-weighted 
+ */
+// =============================================================================
+Ostap::StatusCode Ostap::StatVar::get_stat
+( const RooAbsData*         data       ,
+  Ostap::Math::Statistic2&  stat       ,
+  const std::string&        expr1      ,
+  const std::string&        expr2      ,  
+  const std::string&        selection  , 
+  const std::string&        cut_range  ,
+  const Ostap::EventIndex   first      ,
+  const Ostap::EventIndex   last       , 
+  const Ostap::DataType     xmin       ,
+  const Ostap::DataType     xmax       , 
+  const Ostap::DataType     ymin       , 
+  const Ostap::DataType     ymax       ) const
+{
+  /// reset the statistic
+  stat.reset() ; // reset the statistic
+  //
+  // check the ranges
+  if ( last <= first       ) { return Ostap::StatusCode::SUCCESS ; }
+  if ( xmax <  xmin        ) { return Ostap::StatusCode::SUCCESS ; }
+  if ( ymax <  ymin        ) { return Ostap::StatusCode::SUCCESS ; }
+  //
+  if ( nullptr == data     ) { return INVALID_DATA        ; }
+  if ( data->isWeighted () ) { return INVALID_DATA_WEIGHT ; }  // data MUST be non-weighted 
+  //
+  const Ostap::EventIndex num_entries = data -> numEntries() ;
+  const Ostap::EventIndex the_last    = std::min ( num_entries , last ) ;
+  if ( the_last <= first  ) { return Ostap::StatusCode::SUCCESS ; }
+  //
+  const bool  weighted = data -> isWeighted() ;
+  const char* cutrange = cut_range.empty() ? nullptr : cut_range.c_str() ;
+  //
+  // formulae for exressons
+  const Ostap::FormulaVars                 formulae { data , { expr1 , expr2 } } ;
+  const std::unique_ptr<Ostap::FormulaVar> cuts { Ostap::makeFormula ( selection  , data , true ) } ;
+  const bool with_cuts   = cuts && cuts->ok () ;
+  //
+  Ostap::Utils::ProgressBar bar { the_last - first , m_progress } ; 
+  for ( Ostap::EventIndex entry = first ; entry < the_last ; ++entry , ++bar )
+    {
+      const RooArgSet* vars = data -> get ( entry ) ;
+      if ( nullptr == vars )                             { break    ; } // BREAK 
+      //
+      if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE    
+      // apply cuts:
+      const bool cut = with_cuts ? cuts -> getVal () : 1.0 ;
+      if ( !cut ) { continue ; }                                   // CONTINUE
+      //
+      const double x = formulae.evaluate ( 0 ) ;
+      if ( !in_range ( x , xmin , xmax ) ) { continue ; }  // CONTINUE 
+      //
+      const double y = formulae.evaluate ( 1 ) ;  
+      if ( !in_range ( y , ymin , ymax ) ) { continue ; }  // CONTINUE 
+      //
+      stat.update ( x , y ) ;
+    }
+  //
+  return Ostap::StatusCode::SUCCESS ; 
+}
+// =============================================================================
+/*  Fill/update statistical counter 
+ *  @param data       (input) data 
+ *  @param stat       (UDATE) statistical counter 
+ *  @param expression (INPUT) the variable 
+ *  @param selection  (INPUT) selection/cut (treated as weight!)
+ *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+ *  @param first      (INPIUT) the first event to process (inclusibe) 
+ *  @param last       (INPIUT) the last event to process (exclusive) 
+ *  @return status code 
+ *  @see Ostap::Math::WStatistic
  *  @attention selection/cut is treated as weight!
  */
 // =============================================================================
@@ -496,8 +639,11 @@ Ostap::StatusCode Ostap::StatVar::get_stat
 }
 // =============================================================================
 
+
 // ============================================================================
 // Get information about several varibales 
+// =============================================================================
+
 // =============================================================================
 /* Fill/update statistical counter 
  *  @param data       (input) data 
@@ -679,6 +825,86 @@ Ostap::StatusCode Ostap::StatVar::get_stat
 // =============================================================================
 Ostap::StatusCode Ostap::StatVar::get_stat
 ( const RooAbsData*         data       ,
+  Ostap::Math::Statistic3&  stat       ,
+  const std::string&        expr1      ,
+  const std::string&        expr2      ,  
+  const std::string&        expr3      , 
+  const std::string&        selection  , 
+  const std::string&        cut_range  ,
+  const Ostap::EventIndex   first      ,
+  const Ostap::EventIndex   last       , 
+  const Ostap::DataType     xmin       ,
+  const Ostap::DataType     xmax       , 
+  const Ostap::DataType     ymin       , 
+  const Ostap::DataType     ymax       , 
+  const Ostap::DataType     zmin       , 
+  const Ostap::DataType     zmax       ) const
+{
+  /// reset the statistic
+  stat.reset() ; // reset the statistic
+  //
+  // check the ranges
+  if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
+  if ( xmax <  xmin       ) { return Ostap::StatusCode::SUCCESS ; }
+  if ( ymax <  ymin       ) { return Ostap::StatusCode::SUCCESS ; }
+  if ( zmax <  zmin       ) { return Ostap::StatusCode::SUCCESS ; }
+  //
+  if ( nullptr == data    ) { return INVALID_DATA        ; }
+  if ( data->isWeighted() ) { return INVALID_DATA_WEIGHT ; }  // ATTENTION!! 
+  //
+  const Ostap::EventIndex num_entries = data -> numEntries() ;
+  const Ostap::EventIndex the_last    = std::min ( num_entries , last ) ;
+  if ( the_last <= first  ) { return Ostap::StatusCode::SUCCESS ; }
+  //
+  const bool  weighted = data -> isWeighted() ;
+  const char* cutrange = cut_range.empty() ? nullptr : cut_range.c_str() ;
+  //
+  // formulae for exressons
+  const Ostap::FormulaVars                 formulae { data , { expr1 , expr2 , expr3} } ;
+  const std::unique_ptr<Ostap::FormulaVar> cuts { Ostap::makeFormula ( selection  , data , true ) } ;
+  const bool                with_cuts   = cuts && cuts->ok () ;
+  //
+  Ostap::Utils::ProgressBar bar { the_last - first , m_progress } ; 
+  for ( Ostap::EventIndex entry = first ; entry < the_last ; ++entry , ++bar )
+    {
+      const RooArgSet* vars = data -> get ( entry ) ;
+      if ( nullptr == vars )                             { break    ; } // BREAK 
+      //
+      if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE    
+      // apply cuts:
+      const bool cut  = with_cuts ? cuts -> getVal () : 1.0 ;
+      if ( !cut ) { continue ; }                                   // CONTINUE  
+      //
+      const double x = formulae.evaluate ( 0 ) ;
+      if ( !in_range ( x , xmin , xmax ) ) { continue ; }  // CONTINUE 
+      //
+      const double y = formulae.evaluate ( 1 ) ;
+      if ( !in_range ( y , ymin , ymax ) ) { continue ; }  // CONTINUE 
+      //
+      const double z = formulae.evaluate ( 2 ) ;
+      if ( !in_range ( z , zmin , zmax ) ) { continue ; }  // CONTINUE 
+      //
+      stat.update ( x , y , z ) ;
+    }
+  //
+  return Ostap::StatusCode::SUCCESS ; 
+}
+// =============================================================================
+/*  Fill/update statistical counter 
+ *  @param data       (input) data 
+ *  @param stat       (UDATE) statistical counter 
+ *  @param expression (INPUT) the variable 
+ *  @param selection  (INPUT) selection/cut (treated as weight!)
+ *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+ *  @param first      (INPIUT) the first event to process (inclusibe) 
+ *  @param last       (INPIUT) the last event to process (exclusive) 
+ *  @return status code 
+ *  @see Ostap::Math::WStatistic
+ *  @attention selection/cut is treated as weight!
+ */
+// =============================================================================
+Ostap::StatusCode Ostap::StatVar::get_stat
+( const RooAbsData*         data       ,
   Ostap::Math::WStatistic3& stat       ,
   const std::string&        expr1      ,
   const std::string&        expr2      ,  
@@ -749,6 +975,7 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   return Ostap::StatusCode::SUCCESS ; 
 }
 // =============================================================================
+
 
 // ============================================================================
 // Get information about several varibales 
@@ -931,6 +1158,100 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   //
   return Ostap::StatusCode::SUCCESS ;
 }
+
+
+
+
+
+
+
+// =============================================================================
+/*  Fill/update statistical counter 
+ *  @param data       (input) data 
+ *  @param stat       (UDATE) statistical counter 
+ *  @param expression (INPUT) the variable 
+ *  @param selection  (INPUT) selection/cut (treated as weight!)
+ *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+ *  @param first      (INPIUT) the first event to process (inclusibe) 
+ *  @param last       (INPIUT) the last event to process (exclusive) 
+ *  @return status code 
+ *  @see Ostap::Math::WStatistic
+ *  @attention selection/cut is treated as weight!
+ */
+// =============================================================================
+Ostap::StatusCode Ostap::StatVar::get_stat
+( const RooAbsData*         data       ,
+  Ostap::Math::Statistic4&  stat       ,
+  const std::string&        expr1      ,
+  const std::string&        expr2      ,  
+  const std::string&        expr3      ,
+  const std::string&        expr4      ,  
+  const std::string&        selection  , 
+  const std::string&        cut_range  ,
+  const Ostap::EventIndex   first      ,
+  const Ostap::EventIndex   last       , 
+  const Ostap::DataType     xmin       ,
+  const Ostap::DataType     xmax       , 
+  const Ostap::DataType     ymin       , 
+  const Ostap::DataType     ymax       , 
+  const Ostap::DataType     zmin       , 
+  const Ostap::DataType     zmax       , 
+  const Ostap::DataType     tmin       , 
+  const Ostap::DataType     tmax       ) const
+{
+  /// reset the statistic
+  stat.reset() ; // reset the statistic
+  //
+  // check the ranges
+  if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
+  if ( xmax <  xmin       ) { return Ostap::StatusCode::SUCCESS ; }
+  if ( ymax <  ymin       ) { return Ostap::StatusCode::SUCCESS ; }
+  if ( zmax <  zmin       ) { return Ostap::StatusCode::SUCCESS ; }
+  if ( tmax <  tmin       ) { return Ostap::StatusCode::SUCCESS ; }
+  //
+  if ( nullptr == data    ) { return INVALID_DATA        ; }
+  if ( data->isWeighted() ) { return INVALID_DATA_WEIGHT ; } // ATTENTION
+  //
+  const Ostap::EventIndex num_entries = data -> numEntries() ;
+  const Ostap::EventIndex the_last    = std::min ( num_entries , last ) ;
+  if ( the_last <= first  ) { return Ostap::StatusCode::SUCCESS ; }
+  //
+  const bool  weighted = data -> isWeighted() ;
+  const char* cutrange = cut_range.empty() ? nullptr : cut_range.c_str() ;
+  //
+  // formulae for exressons
+  const Ostap::FormulaVars                 formulae { data , { expr1 , expr2 , expr3 , expr4 } } ;
+  const std::unique_ptr<Ostap::FormulaVar> cuts { Ostap::makeFormula ( selection  , data , true ) } ;
+  const bool                with_cuts   = cuts && cuts->ok () ;
+  //
+  Ostap::Utils::ProgressBar bar { the_last - first , m_progress } ; 
+  for ( Ostap::EventIndex entry = first ; entry < the_last ; ++entry , ++bar )
+    {
+      const RooArgSet* vars = data -> get ( entry ) ;
+      if ( nullptr == vars )                             { break    ; } // BREAK 
+      //
+      if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE    
+      // apply cuts:
+      const bool  cut = with_cuts ? cuts -> getVal () : 1.0 ;
+      if ( !cut ) { continue ; }                                   // CONTINUE  
+      //
+      const double x = formulae.evaluate ( 0 ) ;
+      if ( !in_range ( x , xmin , xmax ) ) { continue ; }  // CONTINUE 
+      //
+      const double y = formulae.evaluate ( 1 ) ;
+      if ( !in_range ( y , ymin , ymax ) ) { continue ; }  // CONTINUE 
+      //
+      const double z = formulae.evaluate ( 2 ) ;
+      if ( !in_range ( z , zmin , zmax ) ) { continue ; }  // CONTINUE
+      //
+      const double t = formulae.evaluate ( 3 ) ;
+      if ( !in_range ( t , tmin , tmax ) ) { continue ; }  // CONTINUE 
+      //
+      stat.update ( x , y , z , t ) ;
+    }
+  //
+  return Ostap::StatusCode::SUCCESS ; 
+}
 // =============================================================================
 /*  Fill/update statistical counter 
  *  @param data       (input) data 
@@ -1024,6 +1345,8 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   return Ostap::StatusCode::SUCCESS ; 
 }
 // =============================================================================
+
+
 
 // =============================================================================
 /*  build statistic for the <code>expressions</code>

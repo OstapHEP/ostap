@@ -1277,63 +1277,6 @@ def data_skewness ( data  ,
                                parallel   = parallel  ) 
     return result.skewness ()
 
-
-
-
-# =============================================================================
-## get the (approximate) quaniles for the data using P2-algorithm
-#  @code
-#  data =  ...
-#  print data_quantiles t ( data , 3 , 'mass' , 'pt>1' ) 
-#  @endcode
-#  @see Ostap::StatVar::moment
-#
-#  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
-#  @see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
-#  @see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
-#  @see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
-#
-#  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
-def  data_quantiles ( data               ,
-                      p                  , 
-                      expression         ,
-                      cuts       = ''    , *args , 
-                      cut_range  = ''    ,
-                      progress   = False , 
-                      use_frame  = False ,
-                      parallel   = False ) : 
-    """ Get the (approximate) quantiles for the dat ausing P2-algorithm 
-    >>> data =  ...
-    >>> data =  ...
-    >>> print data_quantiles t ( data , 3 , 'mass' , 'pt>1' ) 
-    - see https://aakinshin.net/posts/p2-quantile-estimator-intro/
-    - see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
-    - see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
-    - see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
-    - see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
-    """
-
-    if   isinstance ( p , integer_types  ) and 1 <= p     : qq = Ostap.Math.Quantiles_[p] ()
-    elif isinstance ( p , float          ) and 0 <  p < 1 : qq = Ostap.Math.Quantile  ( p  )    
-    elif isinstance ( p , sequence_types ) and all ( isinstance ( v , float ) and 0 < v < 1 for v in p ) :
-        qq = Ostap.Math.Quantiles ( doubles ( sorted ( float ( v ) for v in p ) ) ) 
-    else :
-        raise TypeError ( 'Invalid probabilities: %s/%s' % ( typename ( p ) , str ( p ) ) ) 
-    
-    result = data_get_stat ( data       ,
-                             qq         ,
-                             expression ,
-                             cuts       , *args    ,
-                             cut_range = cut_range ,
-                             progress  = progress  ,              
-                             use_frame = False     ,  ## ATTENTION 
-                             parallel  = False     )  ## ATTENTION 
-
-    qq = result.quantiles()
-    print ( 'TYPE', type ( qq ) , qq , len ( qq ) , [ qq[i] for i in range ( len ( qq ) ) ] ) 
-    return tuple ( q for q in result.quantiles() ) 
-    
-
 # =============================================================================
 ## get the (excess) kurtosis (with uncertainty)
 #  @code
@@ -1364,6 +1307,383 @@ def data_kurtosis ( data               ,
                                use_frame  = use_frame ,
                                parallel   = parallel  ) 
     return result.kurtosis ()
+
+# =============================================================================
+## get the (approximate) quantiles for the data using P2-algorithm
+#  @code
+#  data =  ...
+#  print data_quantiles t ( data , 3 , 'mass' , 'pt>1' ) 
+#  @endcode
+#
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
+#
+#  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
+def  data_quantiles ( data               ,
+                      p                  , 
+                      expression         ,
+                      cuts       = ''    , *args , 
+                      cut_range  = ''    ,
+                      progress   = False , 
+                      use_frame  = False ,
+                      parallel   = False ) : 
+    """ Get the (approximate) quantiles for the data using P2-algorithm 
+    >>> data =  ...
+    >>> data =  ...
+    >>> print data_quantiles t ( data , 3 , 'mass' , 'pt>1' ) 
+    - see https://aakinshin.net/posts/p2-quantile-estimator-intro/
+    - see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
+    - see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
+    - see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
+    - see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
+    """
+
+    if   isinstance ( p , integer_types  ) and 1 <= p     : qq = Ostap.Math.Quantiles_[p] ()
+    elif isinstance ( p , float          ) and 0 <  p < 1 : qq = Ostap.Math.Quantile  ( p  )    
+    elif isinstance ( p , sequence_types ) and all ( isinstance ( v , float ) and 0 < v < 1 for v in p ) :
+        qq = Ostap.Math.Quantiles ( doubles ( sorted ( float ( v ) for v in p ) ) ) 
+    else :
+        raise TypeError ( 'Invalid probabilities: %s/%s' % ( typename ( p ) , str ( p ) ) ) 
+    
+    result = data_get_stat ( data                  ,
+                             qq                    ,
+                             expression            ,
+                             cuts       , *args    ,
+                             cut_range = cut_range ,
+                             progress  = progress  ,              
+                             use_frame = False     ,  ## ATTENTION 
+                             parallel  = False     )  ## ATTENTION 
+
+    qq = result.quantiles()
+    nq = len ( qq ) 
+    return tuple ( qq [ i ] for i in range ( nq ) ) 
+
+# =============================================================================
+## get the (approximate) mediane for the data using P2-algorithm
+#  @code
+#  data =  ...
+#  print data_median  ( data , 'mass' , 'pt>1' ) 
+#  @endcode
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
+#  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
+def data_median ( data       ,
+                  expression ,
+                  cuts       = ""    , *args ,
+                  cut_range  = ''    ,
+                  progress   = False , 
+                  use_frame  = False ,
+                  parallel   = False ) :
+    
+    """ Get the (approximate) median for the data using P2-algorithm 
+    >>> data =  ...
+    >>> data =  ...
+    >>> print data_median  ( data , 'mass' , 'pt>1' ) 
+    - see https://aakinshin.net/posts/p2-quantile-estimator-intro/
+    - see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
+    - see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
+    - see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
+    - see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
+    """
+    
+    qs = data_quantiles ( data       ,
+                          0.5        ,
+                          expression ,
+                          cuts       , *args     ,
+                          cut_range  = cut_range , 
+                          progress   = progress  ,  
+                          use_frame  = False     ,
+                          parallel   = False     ) 
+    return qs [ 1 ]
+
+# =============================================================================
+## Get the (approximate) terciles for the data using P2-algorithm
+#  @code
+#  data =  ...
+#  print data_terciles ( data , 'mass' , 'pt>1' ) 
+#  @endcode
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
+#  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
+def data_terciles ( data       ,
+                    expression ,
+                    cuts       = ""    , *args ,
+                    cut_range  = ""    , 
+                    progress   = False , 
+                    use_frame  = False ,
+                    parallel   = False ) :
+    """ Get the (approximate) terciles for the data using P2-algorithm
+    >>> data =  ...
+    >>> print data_terciles ( data , 'mass' , 'pt>1' ) 
+    """
+    return data_quantiles ( data       ,
+                            2          ,
+                            expression ,
+                            cuts       , *args     ,
+                            cut_range  = cut_range , 
+                            progress   = progress  ,  
+                            use_frame  = False     ,
+                            parallel   = False     ) 
+
+# =============================================================================
+## Get the (approximate) quartiles  for the data using P2-algorithm
+#  @code
+#  data =  ...
+#  print data_quartiles ( data , 'mass' , 'pt>1' ) 
+#  @endcode
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
+#  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
+def data_quartiles  ( data       ,
+                      expression ,
+                      cuts       = ""    , *args ,
+                      cut_range  = ""    , 
+                      progress   = False , 
+                      use_frame  = False ,
+                      parallel   = False ) :
+    """ Get the (approximate) quartiles for the data using P2-algorithm
+    >>> data =  ...
+    >>> print data_quartiles ( data , 'mass' , 'pt>1' ) 
+    """
+    return data_quantiles ( data       ,
+                            3          ,
+                            expression ,
+                            cuts       , *args     ,
+                            cut_range  = cut_range , 
+                            progress   = progress  ,  
+                            use_frame  = False     ,
+                            parallel   = False     ) 
+    
+# =============================================================================
+## Get the (approximate) quintiles for the data using P2-algorithm
+#  @code
+#  data =  ...
+#  print data_quintiles( data , 'mass' , 'pt>1' ) 
+#  @endcode
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
+#  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
+def data_quintiles  ( data       ,
+                      expression ,
+                      cuts       = ""    , *args ,
+                      cut_range  = ""    , 
+                      progress   = False , 
+                      use_frame  = False ,
+                      parallel   = False ) :
+    """ Get the (approximate) quintiles for the data using P2-algorithm
+    >>> data =  ...
+    >>> print data_quartiles ( data , 'mass' , 'pt>1' ) 
+    """
+    return data_quantiles ( data       ,
+                            4          ,
+                            expression ,
+                            cuts       , *args     ,
+                            cut_range  = cut_range , 
+                            progress   = progress  ,  
+                            use_frame  = False     ,
+                            parallel   = False     ) 
+    
+
+a# =============================================================================
+## Get the (approximate) sextiles  for the data using P2-algorithm
+#  @code
+#  data =  ...
+#  print data_quintiles( data , 'mass' , 'pt>1' ) 
+#  @endcode
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
+#  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
+def data_sextiles   ( data       ,
+                      expression ,
+                      cuts       = ""    , *args ,
+                      cut_range  = ""    , 
+                      progress   = False , 
+                      use_frame  = False ,
+                      parallel   = False ) :
+    """ Get the (approximate) sextile  for the data using P2-algorithm
+    >>> data =  ...
+    >>> print data_sextiles ( data , 'mass' , 'pt>1' ) 
+    """
+    return data_quantiles ( data       ,
+                            5          ,
+                            expression ,
+                            cuts       , *args     ,
+                            cut_range  = cut_range , 
+                            progress   = progress  ,  
+                            use_frame  = False     ,
+                            parallel   = False     ) 
+    
+
+# =============================================================================
+## Get the (approximate) septiles  for the data using P2-algorithm
+#  @code
+#  data =  ...
+#  print data_septiles ( data , 'mass' , 'pt>1' ) 
+#  @endcode
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
+#  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
+def data_septiles   ( data       ,
+                      expression ,
+                      cuts       = ""    , *args ,
+                      cut_range  = ""    , 
+                      progress   = False , 
+                      use_frame  = False ,
+                      parallel   = False ) :
+    """ Get the (approximate) septiles for the data using P2-algorithm
+    >>> data =  ...
+    >>> print data_septiles ( data , 'mass' , 'pt>1' ) 
+    """
+    return data_quantiles ( data       ,
+                            6          ,
+                            expression ,
+                            cuts       , *args     ,
+                            cut_range  = cut_range , 
+                            progress   = progress  ,  
+                            use_frame  = False     ,
+                            parallel   = False     ) 
+    
+
+# =============================================================================
+## Get the (approximate) octiles for the data using P2-algorithm
+#  @code
+#  data =  ...
+#  print data_octiles ( data , 'mass' , 'pt>1' ) 
+#  @endcode
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
+#  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
+def data_octiles    ( data       ,
+                      expression ,
+                      cuts       = ""    , *args ,
+                      cut_range  = ""    , 
+                      progress   = False , 
+                      use_frame  = False ,
+                      parallel   = False ) :
+    """ Get the (approximate) octiles for the data using P2-algorithm
+    >>> data =  ...
+    >>> print data_octiles ( data , 'mass' , 'pt>1' ) 
+    """
+    return data_quantiles ( data       ,
+                            7          ,
+                            expression ,
+                            cuts       , *args     ,
+                            cut_range  = cut_range , 
+                            progress   = progress  ,  
+                            use_frame  = False     ,
+                            parallel   = False     ) 
+    
+
+# =============================================================================
+## Get the (approximate) deciles for the data using P2-algorithm
+#  @code
+#  data =  ...
+#  print data_deciles ( data , 'mass' , 'pt>1' ) 
+#  @endcode
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
+#  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
+def data_deciles    ( data       ,
+                      expression ,
+                      cuts       = ""    , *args ,
+                      cut_range  = ""    , 
+                      progress   = False , 
+                      use_frame  = False ,
+                      parallel   = False ) :
+    """ Get the (approximate) deciles for the data using P2-algorithm
+    >>> data =  ...
+    >>> print data_deciles ( data , 'mass' , 'pt>1' ) 
+    """
+    return data_quantiles ( data       ,
+                            9          ,
+                            expression ,
+                            cuts       , *args     ,
+                            cut_range  = cut_range , 
+                            progress   = progress  ,  
+                            use_frame  = False     ,
+                            parallel   = False     ) 
+    
+# =============================================================================
+## Get the (approximate) ventiles for the data using P2-algorithm
+#  @code
+#  data =  ...
+#  print data_ventiles ( data , 'mass' , 'pt>1' ) 
+#  @endcode
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
+#  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
+def data_ventiles   ( data       ,
+                      expression ,
+                      cuts       = ""    , *args ,
+                      cut_range  = ""    , 
+                      progress   = False , 
+                      use_frame  = False ,
+                      parallel   = False ) :
+    """ Get the (approximate) ventiles for the data using P2-algorithm
+    >>> data =  ...
+    >>> print data_ventiles ( data , 'mass' , 'pt>1' ) 
+    """
+    return data_quantiles ( data       ,
+                            19         ,
+                            expression ,
+                            cuts       , *args     ,
+                            cut_range  = cut_range , 
+                            progress   = progress  ,  
+                            use_frame  = False     ,
+                            parallel   = False     ) 
+    
+
+# =============================================================================
+## Get the (approximate) procentiles for the data using P2-algorithm
+#  @code
+#  data =  ...
+#  print data_procentiles ( data , 'mass' , 'pt>1' ) 
+#  @endcode
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
+#  @see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
+#  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
+def data_procentiles ( data       ,
+                       expression ,
+                       cuts       = ""    , *args ,
+                       cut_range  = ""    , 
+                       progress   = False , 
+                       use_frame  = False ,
+                       parallel   = False ) :
+    """ Get the (approximate) procentiles for the data using P2-algorithm
+    >>> data =  ...
+    >>> print data_procentiles ( data , 'mass' , 'pt>1' ) 
+    """
+    return data_quantiles ( data       ,
+                            99         ,
+                            expression ,
+                            cuts       , *args     ,
+                            cut_range  = cut_range , 
+                            progress   = progress  ,  
+                            use_frame  = False     ,
+                            parallel   = False     ) 
+    
 
 # =============================================================================
 def data_project ( data                ,
@@ -1475,7 +1795,19 @@ def data_decorate ( klass ) :
     if hasattr ( klass , 'statvector'     ) : klass.orig_statvector     = klass.statvector
     
     if hasattr ( klass , 'quanitles'      ) : klass.orig_quanitles      = klass.quantiles 
+    if hasattr ( klass , 'terciles'       ) : klass.orig_terciles       = klass.terciles 
+    if hasattr ( klass , 'quartiles'      ) : klass.orig_quartiles      = klass.quartiles 
+    if hasattr ( klass , 'quintiles'      ) : klass.orig_quintiles      = klass.quintiles
+    if hasattr ( klass , 'sextiles'       ) : klass.orig_sextiles       = klass.sextiles 
+    if hasattr ( klass , 'septiles'       ) : klass.orig_septiles       = klass.septiles 
+    if hasattr ( klass , 'octiles'        ) : klass.orig_octiles        = klass.octiles 
+    if hasattr ( klass , 'deciles'        ) : klass.orig_deciles        = klass.deciles 
+    if hasattr ( klass , 'ventiles'       ) : klass.orig_ventiles       = klass.ventiles  
+    if hasattr ( klass , 'procentiles'    ) : klass.orig_procentiles    = klass.procentiles 
 
+    
+    if hasattr ( klass , 'median'         ) : klass.orig_median         = klass.median 
+    
     klass.get_moment      = data_the_moment
     klass.the_moment      = data_the_moment
 
@@ -1505,6 +1837,18 @@ def data_decorate ( klass ) :
     klass.statVct         = data_statvector
 
     klass.quantiles       = data_quantiles 
+
+    klass.median          = data_median
+    klass.terciles        = data_terciles 
+    klass.quartiles       = data_quartiles 
+    klass.quintiles       = data_quintiles  
+    klass.sextiles        = data_sextiles 
+    klass.septiles        = data_septiles 
+    klass.octiles         = data_octiles 
+    klass.deciles         = data_deciles  
+    klass.ventiles        = data_ventiles  
+    klass.procentiles     = data_procentiles 
+    
     
     if hasattr ( klass , 'var_minmax'      ) : klass.orig_var_minmax      = klass.var_minmax 
     if hasattr ( klass , 'var_range'       ) : klass.orig_var_range       = klass.var_range 

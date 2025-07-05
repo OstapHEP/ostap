@@ -24,10 +24,6 @@
  *  @author Vanya BELYAEV Ivan/Belyaev@itep.ru
  */
 // ============================================================================
-#include <iostream>
-#include "Ostap/ToStream.h"
-
-
 namespace
 {
   // ==========================================================================
@@ -39,11 +35,13 @@ namespace
     const std::size_t i , 
     const double      d )
   {
-    const double n2  = n [ i + 1 ] - n [ i - 1 ] ;
-    const double nm1 = n [ i     ] - n [ i - 1 ] ; 
-    const double np1 = n [ i + 1 ] - n [ i     ] ; 
+    //
+    const double n2  = n [ i + 1 ] * 1.0 - n [ i - 1 ] ;
+    const double nm1 = n [ i     ] * 1.0 - n [ i - 1 ] ; 
+    const double np1 = n [ i + 1 ] * 1.0 - n [ i     ] ; 
     const double qp1 = q [ i + 1 ] - q [ i     ] ; 
-    const double qm1 = q [ i     ] - q [ i - 1 ] ; 
+    const double qm1 = q [ i     ] - q [ i - 1 ] ;
+    //
     return q [ i ] + d / n2 * ( ( nm1 + d ) * qp1 / np1 + 
                                 ( np1 - d ) * qm1 / nm1 ) ; 
   }
@@ -56,8 +54,9 @@ namespace
     const std::size_t i , 
     const int         d )
   {
-    const double dq = q [ i + d ] - q [ i ] ;
-    const double dn = n [ i + d ] - n [ i ] ;
+    const double dq = q [ i + d ]       - q [ i ] ;
+    const double dn = n [ i + d ] * 1.0 - n [ i ] ;
+    //
     return q [ i ] + d * dq / dn ;
   }
   // =========================================================================
@@ -69,31 +68,19 @@ namespace
     const VS&         ns ,
     const std::size_t i  ) 
   {  
-    const double d = ns [ i ] - n [ i ] ;
+    const double dd = ns [ i ] - n [ i ] ;
     //
-    if ( (  1 <= d &&  1 < n [ i + 1 ] - n [ i ] ) ||
-         ( -1 >= d && -1 > n [ i - 1 ] - n [ i ] )  ) 
+    const long long dnp = n [ i + 1 ] * 1L - n [ i ] ;
+    const long long dnm = n [ i - 1 ] * 1L - n [ i ] ;
+    //
+    if ( (  1 <= dd &&  1 < dnp ) || ( -1 >= dd && -1 > dnm )  )  
       {
         //
-        const int    di = 0 <= d ? 1 : -1 ;	  
-        const double qs = Parabolic ( n , q , i , di ) ;
-        if ( !std::isfinite ( qs ) )
-          {
-            std::cerr << "NOT FINITE/1: " << i << std::endl ;
-            Ostap::Utils::toStream ( q  , std::cout ) << std::endl;
-            Ostap::Utils::toStream ( ns , std::cout ) << std::endl;
-            Ostap::Utils::toStream ( n  , std::cout ) << std::endl;            
-          }
-        if ( std::isfinite ( qs ) && q [ i - 1 ] < qs && qs < q [ i + 1 ] ) { q [ i ] = qs; } 
-        else                       { q [ i ] = Linear ( n , q , i , di ) ; }
+        const int di =  ( 0 <= dd ) ? 1 : -1 ;
         //
-        if ( !std::isfinite ( q [ i ] ) )
-          {
-            std::cerr << "NOT FINITE/2: " << i << std::endl ;
-            Ostap::Utils::toStream ( q  , std::cout ) << std::endl;
-            Ostap::Utils::toStream ( ns , std::cout ) << std::endl;
-            Ostap::Utils::toStream ( n  , std::cout ) << std::endl;            
-          }
+        const double qp = Parabolic ( n , q , i , di ) ;
+        if ( std::isfinite ( qp ) && q [ i - 1 ] < qp && qp < q [ i + 1 ] ) { q [ i ] = qp                        ; }
+        else                                                                { q [ i ] = Linear ( n , q , i , di ) ; }
         //
         n [ i ] += di ;
       } 
@@ -138,27 +125,36 @@ namespace
 Ostap::Math::Quantile::Quantile
 ( const double                                p , 
   const Ostap::Math::Quantile::Initialization s ) 
-  : m_init ( s ) 
-  , m_p    ( p ) 
-  , m_N    ( 0 )
-  , m_q    {}
-  , m_ns   {}
-  , m_n    { 0 , 1 , 2 , 3 , 4 }
+  : m_init    ( s ) 
+  , m_p       ( p ) 
+  , m_N       ( 0 )
+  , m_q       {}
+  , m_ns      {}
+  , m_n       { 0 , 1 , 2 , 3 , 4 }
+  , m_counter {}  
 {
   Ostap::Assert ( Classic  == s || Adaptive == s          ,
                   "Invalid Initialization steategy"       ,  
-		  "Ostap::Math::Quantile"                 ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+                  "Ostap::Math::Quantile"                 ,
+                  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //		  
-  Ostap::Assert ( 0 < m_p && m_p < 1                      ,  
-		  "Invalid quantile probability"          ,  
-		  "Ostap::Math::Quantile"                 , 
-		  INVALID_QUANTILE , __FILE__ , __LINE__  ) ;
+  Ostap::Assert ( 0 < m_p && m_p < 1                         ,  
+                  "Invalid quantile probability"             ,  
+                  "Ostap::Math::Quantile"                    , 
+                  INVALID_PROBABILITY , __FILE__ , __LINE__  ) ;
   //
   // Classic initialization strategy 
   m_ns = std::array<double,5> { 0 , 2 * m_p , 4 * m_p , 2 * m_p + 2 , 4 } ;
   //
 }
+// =============================================================================
+// reset quantile 
+// =============================================================================
+void Ostap::Math::Quantile::reset  ()
+{
+  m_N = 0 ;
+  m_counter.reset() ;
+} 
 // =============================================================================
 // update the counter 
 // =============================================================================
@@ -166,16 +162,17 @@ Ostap::Math::Quantile&
 Ostap::Math::Quantile::add  
 ( const double value ) 
 {
+  /// (1) skip non-finite values 
   if ( !std::isfinite ( value ) ) { return *this ; }
+  /// (2) update the helper counter 
+  m_counter.add ( value ) ;
   //
   if ( m_N  < 5 )
     {
       m_q [ m_N ] = value ;
       ++m_N ;
-      //
-      std::sort ( m_q.begin() , m_q.begin() + m_N ) ;
-      //
-      //
+      /// explicitely sort them 
+      std::sort ( m_q.begin () , m_q.begin() + m_N ) ;
       if ( 5 == m_N && Adaptive == m_init )
         {
           //
@@ -201,14 +198,14 @@ Ostap::Math::Quantile::add
     value < m_q [ 2 ] ? 1 :
     value < m_q [ 3 ] ? 2 : 3 ;
   //
-  // adjust minimal & maximal 
+  /// adjust minimal & maximal 
   if      ( 0 == k ) { m_q .front () = std::min ( m_q.front () , value ) ; } 
   else if ( 3 <= k ) { m_q .back  () = std::max ( m_q.back  () , value ) ; } 
   //
-  // increment 
+  /// increment 
   for ( std::size_t i = k + 1 ; i < 5 ; ++i ) { ++m_n [ i ] ; }
   //
-  // adjust ns 
+  /// adjust ns 
   m_ns [ 1 ] = m_N *       m_p   / 2 ;
   m_ns [ 2 ] = m_N *       m_p       ;
   m_ns [ 3 ] = m_N * ( 1 + m_p ) / 2 ;
@@ -238,69 +235,47 @@ Ostap::Math::Quantile::add
 // ============================================================================
 // swap two objects
 // ============================================================================
-void Ostap::Math::Quantile::swap ( Quantile& right )
+void Ostap::Math::Quantile::swap
+( Ostap::Math::Quantile& right )
 {
   std::swap ( m_init , right.m_init ) ;
   std::swap ( m_p    , right.m_p    ) ;
   std::swap ( m_N    , right.m_N    ) ;
   std::swap ( m_q    , right.m_q    ) ;
   std::swap ( m_ns   , right.m_ns   ) ;
-  std::swap ( m_n    , right.m_n    ) ;	
-}
-// ============================================================================
-// minimal  value ( quantile for p=0)
-// ============================================================================
-double Ostap::Math::Quantile::min () const
-{
-  return !m_N ? std::numeric_limits<double>::max() : m_q.front() ;
-}
-// ============================================================================
-// maximal  value ( quantile for p=0)
-// ============================================================================
-double Ostap::Math::Quantile::max () const
-{
-  return
-    !m_N     ? -std::numeric_limits<double>::max() : 
-    5 <= m_N ? m_q.back () : m_q [ m_N - 1 ] ;     
+  std::swap ( m_n    , right.m_n    ) ;
+  //
+  m_counter.swap  ( right.m_counter ) ;
 }
 // ============================================================================
 // get the quantile value
 // ============================================================================
 double Ostap::Math::Quantile::quantile () const
 {
+  // regular case 
   if ( 5 < m_N ) { return m_q [ 2 ] ; }  
-  // 
+  //
+  /// if there are not enogth entry, use the explicit quantile  estimator
   const Ostap::Math::HarrellDavis hd {} ;
   return hd ( m_q.begin() , m_q.begin() + m_N , m_p ) ; 
 }
+// ============================================================================
+// get the triplet: (min. quantile, max)
+// ============================================================================
+std::array<double,3> Ostap::Math::Quantile::quantiles () const
+{ return {{ this->min () , this->quantile() , this->max() }} ; }
 // ============================================================================
 
 // ============================================================================
 // Extended P2 algorithm for (approximate) quantile estimamtion
 // ============================================================================
 
-namespace 
-{
-  // ==========================================================================
-  std::vector<double> vct ( const std::size_t  N )
-  {
-    std::vector<double> result ( N ) ;
-    for ( std::size_t i = 0 ; i + 1 < N ; ++i )
-    { result [ i ] = ( i + 1.0 ) / N ; }
-    return result ;  
-  }
-  // ========================================================================
-}
 // ============================================================================
-// from vector oof probabiliies 
+// Constructor from vector of probabiliies 
 // ============================================================================
-Ostap::Math::Quantiles::Quantiles
-( const std::size_t N  )
-: Quantiles ( vct ( N ) ) 
-{}
-// ============================================================================
-// from vector oof probabiliies 
-// ============================================================================
+#include <iostream>
+#include "Ostap/ToStream.h"
+
 Ostap::Math::Quantiles::Quantiles
 ( const std::vector<double>& p )
   : m_p  (   )
@@ -310,34 +285,84 @@ Ostap::Math::Quantiles::Quantiles
   , m_n  (   )    
 {
   //
-  m_p.reserve  ( p.size()     ) ;
-  std::copy_if ( p.begin   () , p.end    () ,
-		 std::back_inserter ( m_p ) , 
-		 []( const double v ) -> bool
-		 { return 0 < v && v < 1 ; } ) ;
+  // use only good/valid probabilities
   //
-  std::sort ( m_p.begin() , m_p.end() );
-  m_p.erase ( std::unique ( m_p.begin() , m_p.end() ) , m_p.end() ) ;
-  Ostap::Assert ( !m_p.empty()                            ,
-		  "Empty array of quantile probabilities" ,
-		  "Ostap::Math::Quantiles"                ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  m_p.reserve  ( p.size  () ) ;
+  std::copy_if ( p.begin () ,
+                 p.end   () ,
+                 std::back_inserter ( m_p ) , 
+                 []( const double v ) -> bool
+                 { return 0 < v && v < 1 ; } ) ;
+  //
+  std::sort ( m_p.begin () , m_p.end () );
+  m_p.erase ( std::unique ( m_p.begin () , m_p.end () ) , m_p.end () ) ;
+  //
+  Ostap::Assert ( !m_p.empty ()                              ,
+                  "Empty array of probabilities"             ,
+                  "Ostap::Math::Quantiles"                   ,
+                  INVALID_PROBABILITIES, __FILE__ , __LINE__ ) ;
   //
   const std::size_t MC = 2 * m_p.size() + 3 ;
   //
-  m_q .resize ( MC ) ;
-  m_ns.resize ( MC ) ;
-  m_n .resize ( MC ) ;
+  m_q  . resize ( MC , 0.0 ) ;
+  m_ns . resize ( MC , 0.0 ) ;
+  m_n  . resize ( MC , 0   ) ;
   //
+  std::cerr << " PROBS " ;
+  Ostap::Utils::toStream ( m_p , std::cerr) << std::endl ;
+           
 }
-// ======================================================================
+// ============================================================================
+// from quantile index 
+// ============================================================================
+Ostap::Math::Quantiles::Quantiles
+( const std::size_t N  )
+  : m_p  (   )
+  , m_N  ( 0 )
+  , m_q  (   )
+  , m_ns (   )
+  , m_n  (   )    
+  , m_counter ()
+{
+  // =========================================================================
+  Ostap::Assert ( 1 <= N ,
+                  "Invalid quantile index "                     ,
+                  "Ostap::Math::Quantiles"                      ,
+                  INVALID_QUANTILE_INDEX  , __FILE__ , __LINE__ ) ;
+  //
+  m_p.resize ( N ) ;
+  for ( std::size_t i = 0 ; i < N ; ++ i )
+    { m_p [ i ] = ( i + 1.0 ) / ( N + 1 ) ; }
+  //
+  const std::size_t MC = 2 * m_p.size() + 3 ;
+  //
+  m_q  . resize ( MC , 0.0 ) ;
+  m_ns . resize ( MC , 0.0 ) ;
+  m_n  . resize ( MC , 0   ) ;
+  // ===========================================================================
+  std::cerr << " PROBS: " ;
+  Ostap::Utils::toStream ( m_p , std::cerr) << std::endl ;
+}
+// =============================================================================
+// reset quantile 
+// =============================================================================
+void Ostap::Math::Quantiles::reset  ()
+{
+  m_N = 0 ;
+  m_counter.reset() ;
+}
+// =============================================================================
 // add the value 
-// ======================================================================
+// =============================================================================
 Ostap::Math::Quantiles&
 Ostap::Math::Quantiles::add
 ( const double value )
 {
-  // 
+  /// (1) skip non-finite values; 
+  if ( !std::isfinite ( value ) ) { return *this ; }  
+  /// (2) update internal helper counter (mainly for debugging) 
+  m_counter.add ( value ) ;
+  //
   const std::size_t MC  = m_ns.size() ;
   //
   if ( m_N < MC )
@@ -347,15 +372,8 @@ Ostap::Math::Quantiles::add
       // keep it sorted 
       std::sort ( m_q.begin() , m_q.begin() + m_N  ) ;
       //
-      std::cerr
-        << "(0)  ADD: " << value
-        << " m_N: "     << m_N ;
-      Ostap::Utils::toStream ( m_q  , std::cerr ) << std::endl;
-      Ostap::Utils::toStream ( m_ns , std::cerr ) << std::endl;
-      //
       if ( m_N == MC )
         {
-          std::cout << "adjust it!" << m_N  << std::endl ;
           //
           UpdateNs ( m_p , m_ns , MC - 1 ) ;
           //
@@ -370,16 +388,10 @@ Ostap::Math::Quantiles::add
           UpdateNs ( m_p , m_ns , MC - 1 ) ;	  
         }
       //
-      std::cerr
-        << "(*)  ADD: " << value
-        << " m_N: "     << m_N ;
-      Ostap::Utils::toStream ( m_q  , std::cerr ) << std::endl;
-      Ostap::Utils::toStream ( m_ns , std::cerr ) << std::endl;
-      Ostap::Utils::toStream ( m_n  , std::cerr ) << std::endl;
       return *this ;
       // ==============================================================
     }
-  
+
   // ==================================================================
   const auto ik = std::upper_bound ( m_q.begin() , m_q.end() , value ) ;
   
@@ -387,38 +399,14 @@ Ostap::Math::Quantiles::add
     m_q.begin () == ik ? 0      :
     m_q.end   () == ik ? MC - 2 :
     ( ik - m_q.begin() ) - 1 ;
-
-  std::cerr
-    << " (1) Add: " << value
-    << " N : "      << m_N   
-    << " K:   "     << k     << std::endl ;
-  Ostap::Utils::toStream ( m_q  , std::cout ) << std::endl;
-  Ostap::Utils::toStream ( m_ns , std::cout ) << std::endl;
-  Ostap::Utils::toStream ( m_n  , std::cout ) << std::endl;
   
+  //
   if      ( 0     == k  ) { m_q.front () = std::min ( m_q.front () , value ) ; } 
   else if ( k + 2 >= MC ) { m_q.back  () = std::max ( m_q.back  () , value ) ; } 
-  
-  std::cerr
-    << " (2) Add: " << value
-    << " N : "      << m_N   
-    << " K:   "     << k     << std::endl ;
-  Ostap::Utils::toStream ( m_q  , std::cout ) << std::endl;
-  Ostap::Utils::toStream ( m_ns , std::cout ) << std::endl;
-  Ostap::Utils::toStream ( m_n  , std::cout ) << std::endl;
-  
   //
   for ( std::size_t i = k + 1 ; i < MC ; ++i ) { ++m_n [ i ] ; }
   //
   UpdateNs ( m_p , m_ns , m_N ) ;  
-  //
-  std::cerr
-    << " (3) Add: " << value
-    << " N : "      << m_N   
-    << " K:   "     << k     << std::endl ;
-  Ostap::Utils::toStream ( m_q  , std::cout ) << std::endl;
-  Ostap::Utils::toStream ( m_ns , std::cout ) << std::endl;
-  Ostap::Utils::toStream ( m_n  , std::cout ) << std::endl;
   //
   std::size_t left  = 1      ;
   std::size_t right = MC - 2 ; 
@@ -428,33 +416,10 @@ Ostap::Math::Quantiles::add
       const double r = std::abs ( m_ns [ right ] / m_N - 0.5 ) ;
       //
       const std::size_t index = ( l <= r ) ? left++ : right-- ;
-      
-      Ostap::Assert ( 1 <= index && 2 + index <= MC ,
-                      "invalid index1" , "ququ!" ) ;
-      
       Adjust ( m_n , m_q , m_ns , index ) ;
-      
-      std::cerr
-        << " (4) Add: " << value
-        << " N : "      << m_N
-        << " LEFT/RIGHT/INDEX " << left << "/" << right << "/" << index
-        << " L/R/INDEX " << l << "/" << r << "/" << index
-        << std::endl ;
-      Ostap::Utils::toStream ( m_q  , std::cout ) << std::endl;
-      Ostap::Utils::toStream ( m_ns , std::cout ) << std::endl;
-      Ostap::Utils::toStream ( m_n  , std::cout ) << std::endl;
-      
     }
   //
   ++m_N ;
-  //
-  std::cerr
-    << " (5) Add: " << value
-    << " N : "      << m_N   
-    << " K:   "     << k     << std::endl ;
-  Ostap::Utils::toStream ( m_q  , std::cout ) << std::endl;
-  Ostap::Utils::toStream ( m_ns , std::cout ) << std::endl;
-  Ostap::Utils::toStream ( m_n  , std::cout ) << std::endl;
   //
   return *this ;
 }
@@ -468,23 +433,9 @@ void Ostap::Math::Quantiles::swap
   std::swap ( m_N    , right.m_N    ) ;
   std::swap ( m_q    , right.m_q    ) ;
   std::swap ( m_ns   , right.m_ns   ) ;
-  std::swap ( m_n    , right.m_n    ) ;	
-}
-// ============================================================================
-// minimal  value ( quantile for p=0)
-// ============================================================================
-double Ostap::Math::Quantiles::min () const
-{
-  return !m_N ? std::numeric_limits<double>::max() : m_q.front() ;
-}
-// ============================================================================
-// maximal  value ( quantile for p=0)
-// ============================================================================
-double Ostap::Math::Quantiles::max () const
-{
-  return
-    !m_N              ? -std::numeric_limits<double>::max() : 
-    m_q.size() <= m_N ? m_q.back () : m_q [ m_N - 1 ] ;     
+  std::swap ( m_n    , right.m_n    ) ;
+  //
+  m_counter.swap ( right.m_counter ) ;
 }
 // ============================================================================
 // get all quantiles 
@@ -493,16 +444,18 @@ std::vector<double>
 Ostap::Math::Quantiles::quantiles () const
 {
   std::vector<double> result {} ;
-  if (  m_N <= m_q.size() )
-  {
-    Ostap::Math::HarrellDavis hd { false } ;
-    for ( const auto p : m_p )
-    { result.push_back ( hd ( m_q.begin() , m_q.begin() + m_N , p ) ) ; }
-    //
-    return result ; 
-  }
+  result.reserve   ( m_p.size() + 2 ) ; // ATTENTION!!! 
+  result.push_back ( this->min()    ) ; // ADD MIN
   //
-  result.reserve ( NP () ) ; 
+  if (  m_N <= m_q.size() )
+    {
+      Ostap::Math::HarrellDavis hd { false } ;
+      for ( const auto p : m_p )
+        { result.push_back ( hd ( m_q.begin() , m_q.begin() + m_N , p ) ) ; }
+      //
+      result.push_back ( this->max() ) ; // ADD MAX 
+      return result ; 
+    }
   //
   const std::size_t M = NP () ;
   for ( std::size_t i = 0 ; i < M ; ++i  )
@@ -511,6 +464,7 @@ Ostap::Math::Quantiles::quantiles () const
       result.push_back ( m_q [ index ] ) ;
     }
   //
+  result.push_back ( this->max() ) ; // ADD MAX
   return result ; 
 }
 // ============================================================================
@@ -520,16 +474,13 @@ double Ostap::Math::Quantiles::quantile
 ( const std::size_t index ) const
 {
   if ( m_p.size () <= index ) { return max () ; }
-  //
-  if ( m_N <= m_q.size() )
-  {
-     Ostap::Math::HarrellDavis hd { false } ;
-     return hd ( m_q.begin() , m_q.begin() + m_N , m_p [ index ] ) ;  
-  }
-  // regular case  
-  return m_q [ index * 2 + 2 ] ; 
+  //  
+  /// regular case  
+  if ( m_q.size () < m_N    ) { return m_q [ index * 2 + 2 ] ; }
+  /// if there are not enought quantiles, use the explicit algorithms 
+  const Ostap::Math::HarrellDavis hd { false } ;
+  return hd ( m_q.begin() , m_q.begin() + m_N , m_p [ index ] ) ;  
 }
-
 // ============================================================================
 //                                                                      The END  
 // ============================================================================
