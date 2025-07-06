@@ -286,6 +286,63 @@ namespace Ostap
         Ostap::QuantileTypes::HyndmanFanType::Eight ) const ;
       // ======================================================================
     public:
+      // =====================================================================
+      /** get the equidistant quantiles     
+       *  @see Ostap::ECDF::quantile 
+       */
+      template <unsigned short N>
+      inline std::array<double,N+2>
+      quantiles_
+      ( const Ostap::QuantileTypes::ABQuantileType& ab ) const 
+      {
+        std::array<double,N+2> result {} ;
+        result.front() = this->xmin () ;
+        result.back () = this->xmax () ;
+        //
+        for ( std::size_t i = 1 ; i <= N ; ++ i )
+          { result[i] = this->quantile ( i * 1.0 / ( N + 1 ) , ab ) ; }
+        //
+        return result ;        
+      }        
+      // ======================================================================
+      /** get the equidistant quantiles       
+       *  @see Ostap::ECDF::quantile 
+       */
+      template <unsigned short N>
+      inline std::array<double,N+2>
+      quantiles_
+      ( const Ostap::QuantileTypes::HarrellDavisType&  t ) const 
+      {
+        std::array<double,N+2> result {} ;
+        result.front() = this->xmin () ;
+        result.back () = this->xmax () ;
+        //
+        for ( std::size_t i = 1 ; i <= N ; ++ i )
+          { result[i] = this->quantile ( i * 1.0 / ( N + 1 ) , t ) ; }
+        //
+        return result ;        
+      }        
+      // ======================================================================
+      /** get the equidistant quantiles       
+       *  @see Ostap::ECDF::quantile 
+       */
+      template <unsigned short N>
+      inline std::array<double,N+2>
+      quantiles_
+      ( const Ostap::QuantileTypes::HyndmanFanType t =
+        Ostap::QuantileTypes::HyndmanFanType::Eight ) const 
+      {
+        std::array<double,N+2> result {} ;
+        result.front() = this->xmin () ;
+        result.back () = this->xmax () ;
+        //
+        for ( std::size_t i = 1 ; i <= N ; ++ i )
+          { result[i] = this->quantile ( i * 1.0 / ( N + 1 ) , t ) ; }
+        //
+        return result ;        
+      }        
+      // ======================================================================      
+    public:
       //=======================================================================
       /// get simple statistics 
       const Ostap::StatEntity& counter() const { return m_counter ; }
