@@ -39,8 +39,9 @@ namespace Ostap
     // ========================================================================
   public:
     // ========================================================================
-    iterator begin () const { return m_formulae.begin () ; }
-    iterator end   () const { return m_formulae.end   () ; }
+    inline iterator    begin () const { return m_formulae.begin () ; }
+    inline iterator    end   () const { return m_formulae.end   () ; }
+    inline std::size_t size  () const { return m_formulae.size  () ; }
     // ========================================================================
   private: 
     // ========================================================================
@@ -78,8 +79,9 @@ namespace Ostap
     // ========================================================================
   public:
     // ========================================================================
-    iterator begin () const { return m_formulae.begin () ; }
-    iterator end   () const { return m_formulae.end   () ; }
+    inline iterator    begin () const { return m_formulae.begin () ; }
+    inline iterator    end   () const { return m_formulae.end   () ; }
+    inline std::size_t size  () const { return m_formulae.size  () ; }
     // ========================================================================
   public:
     // ========================================================================

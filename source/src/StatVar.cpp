@@ -30,6 +30,7 @@
 #include "Ostap/Covariance.h"
 #include "Ostap/Covariances.h"
 #include "Ostap/ProgressBar.h"
+#include "Ostap/GetWeight.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -2258,6 +2259,95 @@ Ostap::StatusCode Ostap::StatVar::statCov
 }
 // ============================================================================
 
+// ============================================================================
+// get tanle fomr RooAbsData 
+// ============================================================================
+/* Get data table from RooAbsData 
+ *  @param data       (input)  data 
+ *  @param table      (UPDATE) table 
+ *  @param selection  (INPUT)  selection/cut (treated as weight!)
+ *  @param cut_range  (INPUT)  if non empty: use events only from this cut-range
+ *  @param first      (INPUT)  the first event to process (inclusibe) 
+ *  @param last       (INPUT)  the last event to process (exclusive) 
+ *  @return status code  
+ */
+// ============================================================================
+Ostap::StatusCode Ostap::StatVar::get_table
+( const RooAbsData*         data       ,
+  Ostap::StatVar::Table&    table      ,
+  const std::string&        selection  ,
+  const std::string&        cut_range  ,
+  const Ostap::EventIndex   first      ,
+  const Ostap::EventIndex   last       ) const
+{
+  // clear data dable ;
+  for ( Table::iterator i = table.begin () ; table.end() != i ; ++i ) { i->second.clear() ; }
+  //
+  if  ( nullptr == data     ) { table.clear() ; return INVALID_DATA ; }
+  //
+  const Ostap::EventIndex num_entries =  data -> numEntries () ;
+  const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
+  if ( the_last <= first   ) { table.clear() ; return Ostap::StatusCode::SUCCESS ; }
+  //
+  std::vector<std::string> expressions{} ; expressions.reserve ( table.size() + 1 ) ;
+  for ( Table::const_iterator i = table.begin () ; table.end() != i ; ++i )
+    { expressions.push_back ( i->first ) ; }
+  //
+  /// formulae for expressons
+  const Ostap::FormulaVars                 formulae { data , expressions } ;  
+  const std::unique_ptr<Ostap::FormulaVar> cuts     { Ostap::makeFormula ( selection , data , true ) } ;  
+  ///
+  const bool  with_cuts = cuts && cuts->ok() ;
+  const char* cutrange  = cut_range.empty() ? nullptr : cut_range.c_str() ;
+  const bool  weighted  = data->isWeighted() ;
+  //
+  /// the name of weight variable
+  const std::string wname   { weighted ? Ostap::Utils::getWeight ( data ) :  "" } ;  
+  const bool        wsep =  ( weighted || with_cuts ) ;
+  ///
+  const std::size_t N = formulae.size () ;
+  /// 
+  typedef std::vector<Column>  TABLE ;
+  TABLE results { wsep ? N + 1 : N } ;
+  //
+  /// reserved the space 
+  for ( auto& r : results ) { r.reserve ( ( last - first ) / 3 ) ; } 
+  ///
+  Ostap::Utils::ProgressBar bar { the_last - first , m_progress } ; 
+  for ( Ostap::EventIndex entry = first ; entry < the_last ; ++entry , ++bar )
+    {
+      const RooArgSet* vars = data -> get ( entry ) ;
+      if ( nullptr == vars )                             { break    ; } // BREAK 
+      //
+      if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE    
+      // apply weight:
+      const double wd = weighted  ? data -> weight () : 1.0 ;
+      if ( !wd ) { continue ; }                                   // CONTINUE    
+      // apply cuts:
+      const double wc = with_cuts ? cuts -> getVal () : 1.0 ;
+      if ( !wc ) { continue ; }                                   // CONTINUE  
+      // Total: cuts & weight:
+      const double weight  = wd *  wc ;
+      if ( !weight || !std::isfinite ( weight )  ) { continue ; }   // CONTINUE        
+      //
+      /// fill the table 
+      for ( std::size_t i = 0 ; i < N ; ++i )
+        { results [ i ].push_back ( formulae.evaluate ( i ) ) ; }
+      /// add the combined weight 
+      if ( wsep ) { results.back().push_back ( weight  ) ; }  
+      //     
+    }
+  //
+  // move data to the output table
+  std::size_t i = 0 ;
+  for ( Table::iterator c = table.begin ()  ; table.end() != c ; ++c , ++i )
+    { std::swap ( c->second , results [ i ] ) ; }
+  //
+  /// add the weight/cuts column 
+  if ( wsep ) { table [ wname ] = results.back () ;  }
+  //
+  return Ostap::StatusCode::SUCCESS ;
+}
 // ============================================================================
 //                                                                      The END
 // ============================================================================

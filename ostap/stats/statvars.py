@@ -30,6 +30,16 @@
 - data_power_mean      - get the (weighted) power     mean 
 - data_lehmer_mean     - get the (weighted) Lehmer    mean 
 - data_quantiles       - get the quantiles 
+- data_median          - get the median
+- data_terciles        - get the terciles 
+- data_quartiles       - get the quartiles  
+- data_quintiles       - get the quintiles 
+- data_sextiles        - get the sextiles 
+- data_septiles        - get the septiles 
+- data_octiles         - get the octiles  
+- data_deciles         - get the deciles  
+- data_ventiles        - get the ventiles  
+- data_percentiles     - get the percentiles  
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -59,6 +69,16 @@ __all__     = (
     'data_power_mean'      , ## get the (weighted) power      mean 
     'data_lehmer_mean'     , ## get the (weighted) Lehmer     mean 
     'data_quantiles'       , ## get the quantiles 
+    'data_median'          , ## get the median
+    'data_terciles'        , ## get the terciles 
+    'data_quartiles'       , ## get the quartiles  
+    'data_quintiles'       , ## get the quintiles 
+    'data_sextiles'        , ## get the sextiles 
+    'data_septiles'        , ## get the septiles 
+    'data_octiles'         , ## get the octiles  
+    'data_deciles'         , ## get the deciles  
+    'data_ventiles'        , ## get the ventiles  
+    'data_percentiles'     , ## get the percentiles  
     ##
     'data_decorate'        , ## technical function to decorate the classes
     'expression_types'     , ## valid types for expressions/cuts/weights
@@ -253,7 +273,7 @@ def data_the_moment ( data               ,
         statobj = Ostap.Math.WMoment_[order] ()
     else :
         statobj = Ostap.Math. Moment_[order] ()
-        
+
     return data_get_stat ( data                   ,
                            statobj                ,
                            expression             , 
@@ -1654,26 +1674,26 @@ def data_ventiles   ( data       ,
     
 
 # =============================================================================
-## Get the (approximate) procentiles for the data using P2-algorithm
+## Get the (approximate) percentiles for the data using P2-algorithm
 #  @code
 #  data =  ...
-#  print data_procentiles ( data , 'mass' , 'pt>1' ) 
+#  print data_percentiles ( data , 'mass' , 'pt>1' ) 
 #  @endcode
 #  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
 #  @see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
 #  @see https://aakinshin.net/posts/p2-quantile-estimator-initialization/
 #  @see https://aakinshin.net/posts/p2-quantile-estimator-rounding-issue/
 #  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
-def data_procentiles ( data       ,
+def data_percentiles ( data       ,
                        expression ,
                        cuts       = ""    , *args ,
                        cut_range  = ""    , 
                        progress   = False , 
                        use_frame  = False ,
                        parallel   = False ) :
-    """ Get the (approximate) procentiles for the data using P2-algorithm
+    """ Get the (approximate) percentiles for the data using P2-algorithm
     >>> data =  ...
-    >>> print data_procentiles ( data , 'mass' , 'pt>1' ) 
+    >>> print data_percentiles ( data , 'mass' , 'pt>1' ) 
     """
     return data_quantiles ( data       ,
                             99         ,
@@ -1684,6 +1704,147 @@ def data_procentiles ( data       ,
                             use_frame  = False     ,
                             parallel   = False     ) 
     
+
+# =============================================================================
+## Get "center" for data  using Pragmastat toolkit 
+#  @see https://pragmastat.dev/
+def data_center ( data       ,
+                  expression ,
+                  cuts       = ''    , *args , 
+                  cut_range  = ''    , 
+                  progress   = False ,  
+                  use_frame  = False ,
+                  parallel   = False ) :
+    """ Get "center" for data using Pragmastat toolkit 
+    - see https://pragmastat.dev/
+    """
+    
+    ## (1) decode expressions & cuts
+    var_lst , cuts , _  = vars_and_cuts ( expression , cuts )
+    assert 1 == len ( var_lst ) , "Invalid expression!"
+    
+    if cuts : logger.warning ( "selection cuts      will be used only as boolean!" )
+    if isinstance ( data , ROOT.RooAbsData ) and data.isWeighted () :
+        logger.warning ( "Weight from dataset will be used only as boolean!" )
+
+    npdata , weights = data_slice  ( data                   ,
+                                     expression             ,
+                                     cuts       , *args     ,
+                                     cut_range  = cut_range ,
+                                     structured = False     ,
+                                     transpose  = False     ,
+                                     progress   = progress  , 
+                                     use_frame  = use_frame ,
+                                     parallel   = parallel  )
+    
+    import ostap.stats.pragmastat as PS 
+    return PS.center ( npdata )
+
+# =============================================================================
+## Get "spread" for data  using Pragmastat toolkit 
+#  @see https://pragmastat.dev/
+def data_spread ( data       ,
+                  expression ,
+                  cuts       = ''    , *args , 
+                  cut_range  = ''    , 
+                  progress   = False ,  
+                  use_frame  = False ,
+                  parallel   = False ) :
+    """ Get "spread" for data  using Pragmastat toolkit 
+    - see https://pragmastat.dev/
+    """
+    
+    ## (1) decode expressions & cuts
+    var_lst , cuts , _  = vars_and_cuts ( expression , cuts )
+    assert 1 == len ( var_lst ) , "Invalid expression!"
+    
+    if cuts : logger.warning ( "selection cuts      will be used only as boolean!" )
+    if isinstance ( data , ROOT.RooAbsData ) and data.isWeighted () :
+        logger.warning ( "Weight from dataset will be used only as boolean!" )
+
+    npdata , weights = data_slice  ( data                   ,
+                                     expression             ,
+                                     cuts       , *args     ,
+                                     cut_range  = cut_range ,
+                                     structured = False     ,
+                                     transpose  = False     ,
+                                     progress   = progress  , 
+                                     use_frame  = use_frame ,
+                                     parallel   = parallel  )
+    
+    import ostap.stats.pragmastat as PS 
+    return PS.spread ( npdata )
+
+
+# =============================================================================
+## Get "volatility" for data  using Pragmastat toolkit: spread/abs(center)
+#  @see https://pragmastat.dev/
+def data_volatility ( data       ,
+                      expression ,
+                      cuts       = ''    , *args , 
+                      cut_range  = ''    , 
+                      progress   = False ,  
+                      use_frame  = False ,
+                      parallel   = False ) :
+    """ Get "volatility" for data using Pragmastat toolkit 
+    - see https://pragmastat.dev/
+    """
+    
+    ## (1) decode expressions & cuts
+    var_lst , cuts , _  = vars_and_cuts ( expression , cuts )
+    assert 1 == len ( var_lst ) , "Invalid expression!"
+    
+    if cuts : logger.warning ( "selection cuts      will be used only as boolean!" )
+    if isinstance ( data , ROOT.RooAbsData ) and data.isWeighted () :
+        logger.warning ( "Weight from dataset will be used only as boolean!" )
+        
+    npdata , weights = data_slice  ( data                   ,
+                                     expression             ,
+                                     cuts       , *args     ,
+                                     cut_range  = cut_range ,
+                                     structured = False     ,
+                                     transpose  = False     ,
+                                     progress   = progress  , 
+                                     use_frame  = use_frame ,
+                                     parallel   = parallel  )
+    
+    import ostap.stats.pragmastat as PS 
+    return PS.volatility ( npdata )
+
+# =============================================================================
+## Get "orecision" for data  using Pragmastat toolkit: 2*spread/sqrt(n) 
+#  @see https://pragmastat.dev/
+def data_precision ( data       ,
+                     expression ,
+                     cuts       = ''    , *args , 
+                     cut_range  = ''    , 
+                     progress   = False ,  
+                     use_frame  = False ,
+                     parallel   = False ) :
+    """ Get "precision" for data  using Pragmastat toolkit: 2*spread/sqrt(n) 
+    - see https://pragmastat.dev/
+    """
+    
+    ## (1) decode expressions & cuts
+    var_lst , cuts , _  = vars_and_cuts ( expression , cuts )
+    assert 1 == len ( var_lst ) , "Invalid expression!"
+    
+    if cuts : logger.warning ( "selection cuts      will be used only as boolean!" )
+    if isinstance ( data , ROOT.RooAbsData ) and data.isWeighted () :
+        logger.warning ( "Weight from dataset will be used only as boolean!" )
+        
+    npdata , weights = data_slice  ( data                   ,
+                                     expression             ,
+                                     cuts       , *args     ,
+                                     cut_range  = cut_range ,
+                                     structured = False     ,
+                                     transpose  = False     ,
+                                     progress   = progress  , 
+                                     use_frame  = use_frame ,
+                                     parallel   = parallel  )
+    
+    import ostap.stats.pragmastat as PS 
+    return PS.precision ( npdata )
 
 # =============================================================================
 def data_project ( data                ,
@@ -1747,9 +1908,15 @@ def data_project ( data                ,
         if all_entries ( data , *args[:2] ) and not args [2:]  :
             import ostap.trees.trees
             if 1 < len ( data.files () ) :
-                pass
-
-    
+                from ostap.parallel.parallel_statvars import parallel_project
+                return parallel_project ( data                   ,
+                                          target                 ,
+                                          expressions            ,
+                                          cuts       = cuts      ,
+                                          as_weight  = as_weight ,
+                                          progress   = progress  ,
+                                          use_frame  = use_frame )
+                                                                                       
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
     with rootException() , ActiveBranches ( data , cuts , *var_lst ) :
@@ -1760,7 +1927,94 @@ def data_project ( data                ,
         elif 4 == nvars : sc = pv.project4 ( data , target , *the_args  )
         assert sc.isSuccess() , 'Error %s from StatVar::project(1,2,3,4)' % sc 
         return target
+
     
+# =============================================================================
+## Get slice of dat s in form of Numpy array
+#  @code
+#  data = ...
+#  arr , weight = data_slice ( data , "x,y,x" , "pt>1" ) 
+#  @endif 
+# =============================================================================
+def data_slice ( data        ,
+                 expressions ,
+                 cuts        = ""    , *args , 
+                 cut_range   = ""    ,
+                 structured  = True  ,
+                 transpose   = True  ,
+                 progress    = False , 
+                 use_frame   = False ,
+                 parallel    = False ) :
+    """ Get slice of dat s in form of Numpy array
+    >>> data = ...
+    >>> arr , weight = data_slice ( data , "x,y,x" , "pt>1" ) 
+    """
+    
+    ## (1) decode expressions & cuts
+    var_lst , cuts, _  = vars_and_cuts ( expressions , cuts )
+    
+    ## (2) adjust first/last 
+    first , last = evt_range ( data , *args )
+
+
+    ## (3) cut_range defined *only* for RooFit datasets 
+    if cut_range and not isinstance ( data , ROOT.RooAbsData ) : 
+        raise TypeError ( "Invalid use of `cut_range':%s" % cut_range  ) 
+    
+    ## (3) RooFit ?
+    if isinstance ( data , ROOT.RooAbsData ) :
+        from ostap.fitting.dataset import ds_slice
+        return ds_slice ( data                    ,
+                          expressions             ,
+                          cuts       = cuts       ,
+                          cut_range  = cut_range  ,
+                          structured = structured ,
+                          transpose  = transpose  , 
+                          first      = first      ,
+                          last       = last       )
+    
+    if  use_frame and isinstance ( data , ROOT.TTee ) and LARGE < len ( data ) :
+        if all_entries ( data , first , last ) :
+            return F.frame_slice ( data                    ,
+                                   expression              ,
+                                   cuts       = cuts       ,
+                                   structured = structured ,
+                                   transpose  = transpose  , 
+                                   progress   = prorgess   ) 
+        
+        
+    if parallel   and isinstance ( data , ROOT.TChain ) and LARGE < len ( data ) :
+        if all_entries ( first , last ) :
+            import ostap.trees.trees
+            if 1 < len ( data.files () ) :
+                from ostap.parallel.parallel_stavar import parallel_slice 
+                return parallel_slice ( data                    ,
+                                        expressions             ,
+                                        cuts       = cuts       ,
+                                        structured = structured ,
+                                        transpose  = transpose  , 
+                                        first      = first      ,
+                                        last       = last       ,
+                                        progress   = prorgess   ,
+                                        use_frame  = use_frame  ) 
+        
+    assert isinstance ( data , ROOT.TTree ) , "Here data must be TTree!"
+
+    from ostap.trees.trees import tree_slice
+    return tree_slice ( data                     ,
+                        expressions              ,
+                        cuts        = cuts       ,
+                        structured  = structured ,
+                        transpose   = transpose  , 
+                        progress    = progress   , 
+                        first       = first      , 
+                        last        = last       ,
+                        use_frame   = False      ,
+                        parallel    = False      )
+
+
+
+
 # =============================================================================
 ## decorate certain class with some useful  methods 
 def data_decorate ( klass ) :
@@ -1794,7 +2048,7 @@ def data_decorate ( klass ) :
     if hasattr ( klass , 'statVct'        ) : klass.orig_statVct        = klass.statVct
     if hasattr ( klass , 'statvector'     ) : klass.orig_statvector     = klass.statvector
     
-    if hasattr ( klass , 'quanitles'      ) : klass.orig_quanitles      = klass.quantiles 
+    if hasattr ( klass , 'quantiles'      ) : klass.orig_quanitles      = klass.quantiles 
     if hasattr ( klass , 'terciles'       ) : klass.orig_terciles       = klass.terciles 
     if hasattr ( klass , 'quartiles'      ) : klass.orig_quartiles      = klass.quartiles 
     if hasattr ( klass , 'quintiles'      ) : klass.orig_quintiles      = klass.quintiles
@@ -1803,10 +2057,15 @@ def data_decorate ( klass ) :
     if hasattr ( klass , 'octiles'        ) : klass.orig_octiles        = klass.octiles 
     if hasattr ( klass , 'deciles'        ) : klass.orig_deciles        = klass.deciles 
     if hasattr ( klass , 'ventiles'       ) : klass.orig_ventiles       = klass.ventiles  
-    if hasattr ( klass , 'procentiles'    ) : klass.orig_procentiles    = klass.procentiles 
+    if hasattr ( klass , 'percentiles'    ) : klass.orig_percentiles    = klass.percentiles 
 
-    
     if hasattr ( klass , 'median'         ) : klass.orig_median         = klass.median 
+
+    if hasattr ( klass , 'center'         ) : klass.orig_center         = klass.center
+    if hasattr ( klass , 'spread'         ) : klass.orig_spread         = klass.spread
+    if hasattr ( klass , 'volatility'     ) : klass.orig_volatility     = klass.volatility
+    if hasattr ( klass , 'precision'      ) : klass.orig_precision      = klass.precision
+
     
     klass.get_moment      = data_the_moment
     klass.the_moment      = data_the_moment
@@ -1847,9 +2106,13 @@ def data_decorate ( klass ) :
     klass.octiles         = data_octiles 
     klass.deciles         = data_deciles  
     klass.ventiles        = data_ventiles  
-    klass.procentiles     = data_procentiles 
+    klass.percentiles     = data_percentiles 
     
-    
+    klass.center          = data_center
+    klass.spread          = data_spread
+    klass.volatilty       = data_volatility
+    klass.precision       = data_precision
+
     if hasattr ( klass , 'var_minmax'      ) : klass.orig_var_minmax      = klass.var_minmax 
     if hasattr ( klass , 'var_range'       ) : klass.orig_var_range       = klass.var_range 
         

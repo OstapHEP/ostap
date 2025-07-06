@@ -46,7 +46,7 @@ from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.scp_copy      import scp_copy
 from   ostap.utils.utils         import chunked
-from   ostap.math.base           import numpy, np2raw  
+from   ostap.math.base           import np2raw  
 from   ostap.math.base           import FIRST_ENTRY, LAST_ENTRY, evt_range, all_entries
 from   ostap.logger.symbols      import tree           as tree_symbol
 from   ostap.logger.symbols      import branch         as branch_symbol
@@ -57,7 +57,7 @@ import ostap.trees.treereduce
 import ostap.trees.param
 import ostap.trees.funcs 
 import ostap.io.root_file 
-import ROOT, os, math, array, sys   
+import ROOT, os, math, array, sys, numpy    
 # =============================================================================
 # logging 
 # =============================================================================
@@ -1413,177 +1413,106 @@ ROOT.TChain.__getitem__ = _rc_getitem_
 ## get "slice" from TTree in a form of numpy.array
 #  @code
 #  tree = ...
-#  varr = tree.slice('Pt','eta>3')
-#  print ( varr )  
+#  vars , weight = tree.slice ( ['Pt', 'mass'] , 'eta>3' )
 #  @endcode 
 #  @see numpy.array 
 #  @author Albert BURSCHE
 #  @date 2015-07-08
-def _rt_slice_ ( tree                   ,
-                 varname                ,
-                 cut       = ''         ,
-                 weight    = ''         ,
-                 transpose = False      ,
-                 first     = 0          ,
-                 last      = LAST_ENTRY ) :
+def tree_slice ( tree                     ,
+                 expressions              ,
+                 cuts       = ''          , 
+                 structured = True        ,
+                 transpose  = True        , 
+                 progress   = False       , 
+                 use_frame  = False       ,
+                 parallel   = False       , 
+                 first      = FIRST_ENTRY ,
+                 last       = LAST_ENTRY  ) :
+    
     """ Get `slice' from TTree in a form of numpy.array
-    ##
     >>> tree = ...
-    >>> varr , _  = tree.slice('Pt','eta>3')
+    >>> varr , _  = tree.slice ( ['Pt','mass'] , 'eta>3' )
     >>> print ( varr )  
     """
-
+    
     ## adjust first/last indices 
-    first, last = evt_range ( len ( tree ) , first , last ) 
+    first , last = evt_range ( tree , first , last ) 
+    if last <= first :
+        return () , None 
 
-    if isinstance ( varname , string_types ) :
-        varname = split_string ( varname , var_separators , strip = True , respect_groups = True )
-    names = []
-    for v in varname :
-        names += split_string ( v , var_separators, strip = True , respect_groups = True )
-              
-    if weight : names.append ( weight )
-        
-    if not names : return () 
+    if parallel or use_frame : 
+        from ostap.stats.data_statvars import data_slice
+        return data_slice ( tree         ,
+                            expressions  ,  
+                            cuts         , first , last , 
+                            structured   = structured   ,
+                            progress     = progress     ,
+                            use_frame    = use_frame    ,
+                            parallel     = parallel     ) 
     
-    result = []
+    ## decode cuts & the expressions 
+    varlst, cuts , _ = vars_and_cuts  ( expressions , cuts )
     
-    import numpy    
-    for chunk in chunked ( names , 10 ) : ## blocks up to 10 variables 
-        
-        l    = len ( chunk )
-        vars = ':'.join ( chunk )
+    ## preliminary result: list of arrays 
+    result = [] 
 
-        ge   = tree.GetEstimate() 
-        n    = tree.Draw ( vars , cut , "goff" , last - first , first )
-        n    = tree.GetSelectedRows () 
-        if 0 <= ge <= n + 1 :
-            tree.SetEstimate ( max ( n + 1 , ge ) )
-            n = tree.Draw ( vars , cut , "goff" )
-            n = tree.GetSelectedRows () 
+    nvars = len ( varlst ) 
+    vars  = ' : '.join ( '(%s)' % v for v in varlst )
+
+    import numpy
+    
+    with rootException () :
         
-        for k in range ( l ) :
-            result.append ( numpy.array ( numpy.frombuffer ( tree.GetVal ( k ) , count = n ) , copy = True ) )
+        ge   = tree.GetEstimate()
+        
+        ## redefine the expected estimate
+        tree.SetEstimate ( last - first )
+        
+        ## run internal ROOT machinery 
+        num   = tree.Draw ( vars , cuts , "goff" , last - first , first )
+        num  = tree.GetSelectedRows ()    
+        if tree.GetEstimate() < num :
+            tree.SetEstimate ( num )
+            logger.debug ( 'Re-run Draw(goff) machinery' ) 
+            num = tree.Draw ( vars , cut , "goff" , last - first , first )
+            num = tree.GetSelectedRows ()
             
-        tree.SetEstimate ( ge ) 
-
-    if not result :
-        return None , None 
+        assert num <= tree.GetEstimate  () , "Something wrong with SetEstimate/GetEstimate/GetSelectedRows"
+            
+        for k, v  in enumerate ( varlst ) :
+            result.append ( numpy.array ( numpy.frombuffer ( tree.GetVal ( k ) , count = num , dtype = numpy.float64 ) , copy = True ) )
+        if cuts   :
+            result.append ( numpy.array ( numpy.frombuffer ( tree.GetW   (   ) , count = num , dtype = numpy.float64 ) , copy = True ) )
         
-    if weight :
-        weights = result[ -1]
-        result  = result[:-1]
-    else :
-        weights = None 
-
+        ## reset estimate to the previosus value
+        tree.SetEstimate ( ge ) 
+            
     if not result :
-        return result, weights 
+        return () , None 
 
-    result = numpy.stack ( result )
-
-    if transpose :
-        result = result.transpose()
+    if not cuts :
+        weights = None
+    else : 
+        weights = result [ -1]
+        result  = result [:-1]
+        if numpy.all ( weights == 1 ) : weights = None 
+        
+    if structured :
+        
+        dt   = numpy.dtype ( [ ( v , numpy.float64 ) for v in varlst ] )
+        part = numpy.zeros ( num  , dtype = dt )
+        for v , a in zip ( varlst , result ) : part [ v ] = a 
+        result = part
+        
+    else :
+        
+        result = numpy.stack ( result )
+        if transpose : result = numpy.transpose ( result )
         
     return result, weights
 
-# =============================================================================
-## get "slices" from TTree in a form of numpy.array
-#  @code
-#  tree = ...
-#  varrs1 = tree.slices ( ['Pt','eta'] , 'eta>3' )
-#  print varrs1 
-#  varrs2 = tree.slices (  'Pt , eta'  , 'eta>3' )
-#  print varrs2
-#  varrs3 = tree.slices (  'Pt : eta'  , 'eta>3' )
-#  print varrs3
-#  @endcode 
-#  @see numpy.array 
-#  @author Albert BURSCHE
-#  @date 2015-07-08  
-def _rt_slices_ ( tree                   ,
-                  varnames               ,
-                  cut       = ''         ,
-                  weight    = ''         ,
-                  transpose = False      ,
-                  first     = 0          ,
-                  last      = LAST_ENTRY ) :
-    """ Get ``slices'' from TTree in a form of numpy.array
-    
-    >>> tree = ...
-    
-    >>> vars1 = tree.slices( ['Pt' , 'eta'] ,'eta>3')
-    >>> print vars1
-    
-    >>> vars2 = tree.slices( 'Pt,eta'  ,'eta>3')
-    >>> print vars2
-    
-    >>> vars3 = tree.slices( 'Pt : eta' ,'eta>3')
-    >>> print vars3
-    """
-    #
-    first , last = evt_range ( len ( tree ) , first , last ) 
-    return tree.slice ( varnames , cut , weight , transpose , first , last )
-
-
-ROOT.TTree .slice  = _rt_slice_
-ROOT.TTree .slices = _rt_slices_
-
-
-# =============================================================================
-## get "slices" from TChain in a form of numpy.array
-#  @code
-#  chain = ...
-#  varrs1 = chain.slices ( ['Pt','eta'] , 'eta>3' )
-#  print varrs1 
-#  varrs2 = chain.slices (  'Pt , eta'  , 'eta>3' )
-#  print varrs2
-#  varrs3 = chain.slices (  'Pt : eta'  , 'eta>3' )
-#  print varrs3
-#  @endcode 
-#  @see numpy.array 
-def _rc_slice_ ( chain , varname , cut = '' , weight = '', transpose = False ) :
-    """ Get ``slices'' from TChain in a form of numpy.array
-    >>> chain = ...
-    >>> varrs1 = chain.slices ( ['Pt','eta'] , 'eta>3' )
-    >>> print varrs1 
-    >>> varrs2 = chain.slices (  'Pt , eta'  , 'eta>3' )
-    >>> print varrs2
-    >>> varrs3 = chain.slices (  'Pt : eta'  , 'eta>3' )
-    >>> print varrs3
-    - see numpy.array 
-    """
-
-    files = chain.files()
-    
-    import numpy    
-
-    result , weights = () , () 
-    
-    for  i , f in enumerate ( files ) :
-        
-        t = ROOT.TChain( chain.GetName() )
-        t.Add ( f )
-        
-        r , w = _rt_slice_ ( t , varname , cut , weight , transpose )
-        if 0 == i :
-            result  = r
-            weights = w
-        else :
-            result  = numpy.concatenate ( ( result  , r ) , axis = 0 if transpose else 1 )
-            
-            if    weight is None or 0 == len ( weights ) : weights = w
-            elif  w      is None or 0 == len ( w       ) : pass
-            else :
-                weights = numpy.concatenate ( ( weights , w ) )
-            
-        del t
-        
-    return result , weights
-
-
-ROOT.TChain .slice  = _rc_slice_
-ROOT.TChain .slices = _rc_slice_
-
+ROOT.TTree .slice  = tree_slice
+ROOT.TTree .slices = tree_slice
 
 # =============================================================================
 ## extending the existing chain 

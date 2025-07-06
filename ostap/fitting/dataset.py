@@ -2140,7 +2140,7 @@ def _ds_table_0_ ( dataset                 ,
         if dataset.isNonPoissonWeighted() : title += ' Weighted' 
         else :                              title += ' Weighted/Poisson'
 
-        ## name of weigth variabe
+        ## name of weight variabe
         weight = dataset.wname ()
         wcnt   = dataset.statVar ( '1' , cuts , first , last , cut_range = cut_range )
         wcnt   = wcnt.weights ()            
@@ -2780,7 +2780,15 @@ _new_methods_ += [
 #  varr , weights = data.slice ( 'a , b , c' , 'd>0' )
 #  varr , weights = data.slice ( 'a ; b ; c' , 'd>0' )
 #  @endcode
-def _rda_slice_ ( dataset , variables , cuts = '' , transpose = False , cut_range = '' , *args ) :
+def ds_slice ( data                     ,
+               expressions              ,
+               cuts       = ''          ,
+               cut_range  = ''          ,
+               structured = True        ,
+               transpose  = True        , 
+               first      = FIRST_ENTRY ,
+               last       = LAST_ENTRY  ) :
+    
     """ Get "slice" from <code>RooAbsData</code> in form of numpy array
     >>> data = ...
     >>> varr , weights = data.slice ( 'a : b : c' , 'd>0' )
@@ -2788,74 +2796,81 @@ def _rda_slice_ ( dataset , variables , cuts = '' , transpose = False , cut_rang
     >>> varr , weights = data.slice ( 'a ; b ; c' , 'd>0' )
     """
     
-    if isinstance ( variables , string_types ) :
-        variables = split_string ( variables , var_separators , strip = True , respect_groups = True )
+    ## adjust first/last indices 
+    first , last = evt_range ( data , first , last ) 
+    if last <= first :
+        return () , None 
     
-    names = []
-    for v in variables :
-        names += split_string ( v , var_separators , strip = True , respect_groups = True )
-
-    names = strings ( names )
+    ## decode cuts & the expressions 
+    varlst, cuts , _ = vars_and_cuts  ( expressions , cuts )
     
-    tab = Ostap.StatVar.Table  ()
-    col = Ostap.StatVar.Column ()
 
-    ## get data 
-    n   = Ostap.StatVar.get_table ( dataset   ,
-                                    names     ,
-                                    cuts      ,
-                                    tab       ,
-                                    col       , 
-                                    cut_range ,
-                                    *args     )
-    nc = len ( col )    
-    assert ( dataset.isWeighted() and nc == n ) or ( 0 == nc and not dataset.isWeighted() ), \
-           "slice: invalid size of `weights' column! %s/%s/%s" % ( n , nc , dataset.isWeighted() ) 
+    ## (4) display progress ? 
+    progress = progress_conf ( progress )
     
-    if 0 == n :
-        return () , () 
+    ## (5) create the driver 
+    sv = StatVar ( progress )
 
-    import numpy
-
+    ## 
+    table = Ostap.StatVar.Table  ()
+    for v in varlst : table [ v ] 
+    
+    ## get data
+    with rootException() :        
+        sc = Ostap.StatVar.get_table ( dataset   ,
+                                       table     ,
+                                       cuts      ,
+                                       cut_range ,
+                                       first     ,
+                                       last      )        
+        assert sc.isSuccess () , "Error code from Ostap::StatVar::get_table %s" % s
+        
     result = []
-    for column in tab :
-        
-        nc = len ( column )
-        assert 0 <= nc and nc == n, 'slice: invalid column size! %s/%s' % ( nc , n ) 
+    for var in varlst :
+        column = table [ var ]
+        result.append  ( numpy.asarray ( column , dtype = numpy.float64 ) )
+        column.clear   () 
+        table.erase    ( var ) 
 
-        l = column.begin().__follow__()
-        
-        result.append ( numpy.array ( numpy.frombuffer ( l , count = n ) , copy = True ) )
-        
-        column.clear()
-        
-    del tab 
-
-    
     if not result :
-        return None, None 
+        return () , None 
     
-    result = numpy.stack ( result )
-
-    if transpose : result = result.transpose()
-
-    if not dataset.isWeighted() :
-        return result, None 
+    weights = None 
+    if cuts or data.isWeighted() :
+        assert 1 == table.size()  , "Here table must have size equal to 1!"
+        for key in table :
+            column  = table [ key ]        
+            weights = numpy.asarray ( column , dtype = numpy.float64 ) 
+            result.append ( weights ) 
+            column.clear () 
+        del table
         
-    nn = len ( col ) 
-    l  = col.begin().__follow__()        
-    weights = numpy.array ( numpy.frombuffer ( l , count = nn ) , copy = True )
-    col.clear()
-    
-    del col
-    
-    return result , weights 
+    if structured :
+        
+        dt    = numpy.dtype (  ( v , numpy.float64 ) for v in varlst )
+        dt    = numpy.dtype ( dt )
+        part  = numpy.zeros ( num , dtype = dt )        
+        for v in result : part [ v ] = result [ v ]
+        result = part
+        
+    else :
+
+        if weights :
+            weights = result [ -1]
+            result  = result [:-1]
+            if numpy.all ( weights == 1 ) : weights = None 
+   
+        result = numpy.stack ( result )
+        if transpose : result = numpy.transpose ( result )
+
+    return result, weights 
 
 
-ROOT.RooAbsData.slice = _rda_slice_
+ROOT.RooAbsData.slice = ds_slice 
 
 _new_methods_ += [
-    ROOT.RooAbsData.slice 
+    ROOT.RooAbsData.slice , 
+    ds_slice             
     ]
 
 # =============================================================================

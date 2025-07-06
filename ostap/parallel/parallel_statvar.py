@@ -18,6 +18,7 @@ __all__     = (
     'parallel_project'    , 
     'parallel_size'       ,
     'parallel_covariance' ,
+    'parallel_slice'      ,
     'parallel_sum'        , 
 ) 
 # =============================================================================
@@ -388,7 +389,93 @@ class CovTask(Task) :
         
     ## get the results 
     def results ( self ) : return self.__output 
+
+
+# ================================================================================
+## The simple task object to collecy slices 
+#  @see GaudiMP.Parallel
+#  @see GaudiMP.Parallel.Task
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-09-23
+class SliceTask(Task) :
+    """ The simple task object collect slices 
+    """
+    ## constructor: histogram 
+    def __init__ ( self        ,
+                   what        ,
+                   cuts   = "" , 
+                   **kwargs    ) :
+        """ Constructor        
+        >>> task  = StatVarTask ( 'mass' , 'pt>0') 
+        """
+        self.what     = what
+        self.cuts     = cuts 
+        self.kwargs   = {}
+        self.kwargs.update ( kwargs )
+        self.__output = None 
         
+    # =============================================================
+    ## the actual processing
+    #   `params' is assumed to be a tuple/list :
+    #  - the file name
+    #  - the tree name in the file
+    #  - the variable/expression/expression list of quantities to project
+    #  - the selection/weighting criteria 
+    #  - the first entry in tree to process
+    #  - number of entries to process
+    def process ( self , jobid , item ) :
+        """ The actual processing
+        `params' is assumed to be a tuple-like entity:
+        - the file name
+        - the tree name in the file
+        - the variable/expression/expression list of quantities to project
+        - the selection/weighting criteria 
+        - the first entry in tree to process
+        - number of entries to process
+        """
+        from ostap.logger.utils import logWarning
+        with logWarning() :
+            from   ostap.stats.statvars import data_slice 
+            import ostap.trees.trees
+            import ROOT
+            
+        chain = item.chain 
+        first = item.first
+        last  = min ( LAST_ENTRY , first + item.nevents if 0 < item.nevents else LAST_ENTRY )
+        
+        self.__output = data_slice ( chain     ,
+                                     self.what ,
+                                     self.cuts , first , last ,
+                                     **self.kwargs ) 
+        return self.__output 
+    
+    ## merge results 
+    def merge_results ( self , result , jobid = -1 ) :        
+        if not self.__output : self.__output  = result
+        else                 :
+            v1 , w1 = self.__output
+            v2 , w2 =        result
+
+            import numpy
+            
+            if   w1 is None and w2 is None : ww = None 
+            elif w1 is None                :
+                w1 = numpy.ones ( len  ( v1 ) , dtype = numpy.float64 )
+                ww = numpy.concatenate ( ( w1 , w2 ) )
+            elif w2 is None                :
+                w2 = numpy.ones ( len  ( v2 ) , dtype = numpy.float64 )
+                ww = numpy.concatenate ( ( w1 , w2 ) )
+            else :
+                ww = numpy.concatenate ( ( w1 , w2 ) )
+                
+            vv = numpy.concatenate ( ( v1 , v2 ) )            
+            
+            self.__output = vv , ww 
+        
+    ## get the results 
+    def results ( self ) : return self.__output 
+    
+    
 # ===================================================================================
 ## parallel processing of loooong chain/tree 
 #  @code
@@ -736,8 +823,73 @@ def parallel_covariance ( chain                    ,
     
     return results 
 
+# ===================================================================================
+## parallel processing of loooong chain/tree 
+#  @code
+#  chain          = ...
+#  chain.pStatVar ( .... ) 
+#  @endcode
+def parallel_slice ( chain                    ,
+                     expressions              ,
+                     cuts       = ''          , * ,
+                     structured = True        ,
+                     transpose  = True        , 
+                     first      = FIRST_ENTRY , 
+                     last       = LAST_ENTRY  ,
+                     progress   = False       ,
+                     use_frame  = True        , 
+                     chunk_size = 100000      ,
+                     max_files  = 1           ,
+                     silent     = True        , **kwargs ) :
+    """ Parallel processing of loooong chain/tree 
+    >>> chain    = ...
+    >>> chain.pstatVar( 'mass' , 'pt>1') 
+    """
+    ## few special/trivial cases
 
+    import ostap.trees.trees
+    from   ostap.stats.statvars import data_slice 
+    
+    ## adjust first/last 
+    first, last = evt_range ( chain , first , last )
+    
+    ## number of evetnts to process 
+    nevents     = last - first 
+    
+    if nevents <= chunk_size :
+        return data_slice( chain       ,
+                           expressions ,
+                           cuts        , first     , last ,
+                           structured  = transpose ,
+                           transpose   = transpose , 
+                           progress    = progress  ,
+                           use_frame   = use_frame ,
+                           parallel    = False     )
+    
+    ## split data 
+    from ostap.trees.trees import Chain
+    ch     = Chain   ( chain , first = first , nevents = nevents )
+    
+    task   = SliceTask ( expressions             ,
+                         cuts       = cuts       ,
+                         structured = structured ,
+                         transpose  = transpose  , 
+                         as_weight  = as_weight  ,
+                         use_frame  = use_frame  , 
+                         progress   = False      ,
+                         parallel   = False      )
+    
+    wmgr   = WorkManager ( silent = silent , progress = progress or not silent , **kwargs )
+    trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
 
+    wmgr.process ( task , trees )
+
+    del trees
+    del ch    
+
+    results = task.results()
+    
+    return results 
 
 # =============================================================================
 _decorated_classes_ = (
@@ -748,6 +900,7 @@ _new_methods_       = (
     'parallel_get_stat'   ,
     'parallel_project'    ,
     'parallel_covariance' ,
+    'parallel_slice'      ,
     'parallel_sum'        ,
 )
 

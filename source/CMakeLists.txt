@@ -14,10 +14,15 @@ if(ROOT_VERSION VERSION_LESS "6.26")
 endif() 
     
 message ( "----> ROOT            version    : " ${ROOT_VERSION} )
-        
+       
+find_program ( ROOT_CONFIG_EXECUTABLE NAMES root-config )
+find_program ( ROOT_EXECUTABLE        NAMES root.exe    )        
+message ( "----> ROOT            executable : " ${ROOT_EXECUTABLE} )
+message ( "----> ROOT config     executable : " ${ROOT_CONFIG_EXECUTABLE} )
+
+    
 # =============================================================================
 ## Locate proper Python/PythonLibs 
-find_program(ROOT_CONFIG_EXECUTABLE NAMES root-config)
 
 execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python3-version
                  OUTPUT_VARIABLE PY3VERSION_ROOT
@@ -61,10 +66,12 @@ endif ()
 if ( EXISTS "$ENV{GSL_ROOT_DIR}" )
   file( TO_CMAKE_PATH "$ENV{GSL_ROOT_DIR}" GSL_ROOT_DIR )
   set( GSL_ROOT_DIR "${GSL_ROOT_DIR}" CACHE PATH "Prefix for GSL installation." )
+  message ( "----> GSL_ROOT_DIR               : " ${GSL_ROOT_DIR} )   
 endif()
 if ( NOT EXISTS "${GSL_ROOT_DIR}" )
  find_program( GSL_CONFIG_EXECUTABLE NAMES gsl-config )        
  if( EXISTS "${GSL_CONFIG_EXECUTABLE}" )
+  message ( "----> GSL config      executable : " ${GSL_CONFIG_EXECUTABLE} )
   execute_process(
     COMMAND "${GSL_CONFIG_EXECUTABLE}" --prefix
     OUTPUT_VARIABLE GSL_ROOT_DIR

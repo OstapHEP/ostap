@@ -53,8 +53,9 @@ __all__     = (
     'frame_lehmer_mean'     , ## get the Lehmer    mean for variables 
     ## 
     'frame_ECDF'            , ## get the empirical cumulative distribution functions for variable(s)
+    'frame_slice'           , ## get the slice as numpy array 
     ## 
-    'frame_project'         , ## project data frame to the (1D/2D/3D) histogram
+    'frame_project'         , ## project data frame to the (1D/2D/3D) histogram    
     'frame_param'           , ## parameterize data n flight     
     'frame_draw'            , ## draw variable from the frame
     ## 
@@ -1875,6 +1876,95 @@ def frame_draw ( frame               ,
 
     return histo 
 
+# =============================================================================
+## @class SliceHelper
+#  helper class to get the slice from the frame
+class SliceHelper(object) :
+    """ Helper class to get the slice from the frame
+    """
+    
+    def __init__ ( self              ,
+                   result            ,   ## RAW result 
+                   vardct            ,   ## name <-> name disctionary
+                   cname      = ''   ,   ## name for the cuts-variable 
+                   structured = True ,   ## structured ?
+                   transpose  = True ) : ## transpose 
+        
+        self.raw_result = result ## RAW result 
+        self.vardct     = vardct
+        self.cname      = cname 
+        self.structured = True if structured else False 
+        self.transpose  = True if transpose  else False 
+        
+    ## get the value 
+    def GetValue ( self ) :
+        
+        values = self.raw_result.GetValue()
+        
+        num    = 0 
+        result = {} 
+        dtypes = []
+
+        import numpy
+        
+        for key, value in self.vardct.items() :
+            
+            dtypes.append ( ( key , numpy.float64 ) )
+            result [ key ] = values [ value ]
+            num = max ( num , len ( result [ key ] ) )            
+            
+        if self.structured :            
+            part = numpy.zeros ( num , dtype = dtypes )        
+            for v in result : part [ v ] = result [ v ]
+            result = part            
+        else :            
+            result = [ r for r in result.values() ]
+            result = numpy.stack ( result )
+            ## 
+            if self.transpose : result = numpy.transpose ( result )
+
+        ## get the weights 
+        weights = None
+        if self.cname :
+            weights = values [ cname ]
+            if numpy.all ( weights == 1 ) : weight = None
+
+        return result, weights 
+                
+# ==============================================================================
+## get slice form frame as numpy array
+#  @code
+# 
+#  @endcode
+# ==============================================================================
+def frame_slice ( frame               ,
+                  expressions         , 
+                  cuts        = ""    ,
+                  structured  = True  ,
+                  transpose   = True  ,
+                  progress    = False , 
+                  lazy        = False ) :
+    
+    """ Get the slice from frame as numpy array 
+    """
+    
+    ## decode expressions & cuts 
+    current , items , cname , _ = _fr_helper_ ( frame , expressions , cuts , progress = progress )
+    
+    columns = [ v for v in items.values () ]
+    if cname : columns.append ( cname )
+    
+    result = current.AsNumpy ( columns = columns , lazy = True )
+    
+    result  = SliceHelper ( result                  ,
+                            items                   ,
+                            cname                   ,
+                            structured = structured ,
+                            transpose  = transpose  ) 
+    
+    return ( result , current ) if lazy else result.GetValue()
+    
+    
 # ==============================================================================
 # decorate 
 # ==============================================================================

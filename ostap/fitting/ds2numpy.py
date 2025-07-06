@@ -72,7 +72,7 @@ if numpy and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
         if isinstance ( var_lst , string_types ) : var_lst = [ var_lst ]
         
         # =====================================================================
-        ## 1) get names of all requested variables
+        ## (1) get names of all requested variables
         if   all ( isinstance ( v , string_types   ) for v in var_lst ) :
             vnames , cuts , _ = vars_and_cuts ( var_lst , cuts ) 
         elif all ( isinstance ( v , ROOT.RooAbsArg ) for v in var_lst ) :
@@ -84,11 +84,11 @@ if numpy and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
         cut_range = str ( cut_range ).strip () if cut_range else ''
         
         # =====================================================================
-        ## 2) check that all variables are present in the dataset 
+        ## (2) check that all variables are present in the dataset 
         assert all ( ( v in dataset ) for v in vnames ) , 'Not all variables are in dataset!'
 
         # =====================================================================
-        ## 3) reduce dataset if only a small subset of variables is requested 
+        ## (3) reduce dataset if only a small subset of variables is requested 
         nvars = len ( dataset.get() )
         if 2 * len ( vnames )  <= nvars and not more_vars  :            
             with useStorage ( ROOT.RooAbsData.Vector ) : 
@@ -100,7 +100,7 @@ if numpy and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
             return result
 
         # =========================================================================
-        ## 4) if cuts or cut-range is specified, assume cuts are hash and make a filtering 
+        ## (4) if cuts or cut-range is specified, assume cuts are harsh and make a filtering 
         if cuts or cut_range :
             with useStorage ( ROOT.RooAbsData.Vector ) :
                 dstmp = dataset.subset ( vnames if not more_vars else [] , cuts = cuts , cut_range = cut_range )
@@ -236,7 +236,7 @@ if numpy and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                 data = numpy.concatenate ( [ data , part ] )
                 del part
 
-        ## add PDF values
+        ## add PDF values (explicit loop)
         if funcs :  
             for i, item  in enumerate ( source ) :
                 entry , weight = item 
@@ -248,8 +248,8 @@ if numpy and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
             source.reset()
             del source
             
-        del funcs
-        del formulas 
+        del    funcs
+        del    formulas 
         return data
 
     # =========================================================================
