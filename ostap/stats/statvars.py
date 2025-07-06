@@ -84,19 +84,20 @@ __all__     = (
     'expression_types'     , ## valid types for expressions/cuts/weights
 )
 # =============================================================================
-from   ostap.math.base           import ( isequal     , iszero  , axis_range,
-                                          strings     , doubles ,  
-                                          all_entries )      
+from   ostap.math.base           import ( isequal     , iszero    ,
+                                          axis_range  ,
+                                          strings     , doubles   ,  
+                                          all_entries , evt_range )      
 from   ostap.core.core           import Ostap, rootException, WSE, VE, std     
 from   ostap.core.ostap_types    import ( string_types   , integer_types  , 
                                           num_types      , dictlike_types ,
                                           sequence_types )
 from   ostap.trees.cuts          import expression_types, vars_and_cuts
-from   ostap.math.base           import evt_range 
-from   ostap.utils.basic         import loop_items, typename 
-from   ostap.utils.progress_conf import progress_conf
-import ostap.frames.frames       as     F 
-import ostap.logger.table        as     T
+from   ostap.utils.basic               import loop_items, typename 
+from   ostap.utils.progress_conf       import progress_conf
+import ostap.frames.frames             as     F 
+import ostap.parallel.parallel_statvar as P 
+import ostap.logger.table              as     T
 import ostap.stats.moment 
 import ROOT 
 # =============================================================================
@@ -107,6 +108,12 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.statvars' )
 else                       : logger = getLogger ( __name__               )
 # =============================================================================
 LARGE   = 50000    ## allow frames or parallel for LARGE datasets 
+# =============================================================================
+## is data (tree or chain) good for processing via RDataFrame ? 
+def good_for_frame ( data , *args ) :
+    return True 
+def good_for_parallel (data, *args ) :
+    return True 
 # =============================================================================
 StatVar = Ostap.StatVar
 # =============================================================================

@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/parallel/parallel_statvar.py
-#  (parallel) Use of stat-var for looong TChains 
+#  (parallel) Use of stat-var functions for looong TChains 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-09-23
 # =============================================================================
-"""(parallel) Use of stat-var for looong TChains
+""" (parallel) Use of stat-var functions for looong TChains
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -20,12 +20,14 @@ __all__     = (
     'parallel_covariance' ,
     'parallel_slice'      ,
     'parallel_sum'        , 
+    ## 
+    'CHUNK_SIZE'          , ## maximal number of events in singel chunk 
+    'MAX_FILES'           , ## maximal number of files
 ) 
 # =============================================================================
+from   ostap.math.base         import ( FIRST_ENTRY , LAST_ENTRY  , 
+                                        evt_range   , all_entries )  
 from   ostap.parallel.parallel import Task, WorkManager
-from   ostap.core.core         import VE
-from   ostap.stats.statvars    import target_reset, target_copy
-from   ostap.math.base         import FIRST_ENTRY , LAST_ENTRY , evt_range 
 import ROOT
 # =============================================================================
 # logging 
@@ -34,6 +36,21 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.parallel.statvar' )
 else                       : logger = getLogger ( __name__     )
 # =============================================================================
+## (default) Maximal lnumber of events for the single job
+CHUNK_SIZE = 100000
+## (default) Maximal number of files for single job
+MAX_FILES  = 1 
+# =============================================================================
+## Is TTree/TChain good for parallel processing ?
+def good_for_parallel_processing ( tree  , *args ,
+                                   chunk_size = CHUNK_SIZE , 
+                                   max_files  = MAX_FILES  ) :
+    """ Is TTree/TChain good for parallel procesinng ?
+    """
+    ## get number of events 
+    first , last = evt_range ( tree , *args ) 
+    if 0 < chunk_size < last - first : return True
+    
 ## The simple task object collect statistics for loooooong chains 
 #  @see GaudiMP.Parallel
 #  @see GaudiMP.Parallel.Task
@@ -160,7 +177,7 @@ class GetStatTask(Task) :
         """
         from ostap.logger.utils import logWarning
         with logWarning() :
-            from   ostap.stats.statvars import data_get_stat
+            from   ostap.stats.statvars import data_get_stat, target_copy, target_reset 
             import ostap.trees.trees
             import ROOT
             
@@ -234,9 +251,8 @@ class ProjectTask(Task) :
         """
         from ostap.logger.utils import logWarning
         with logWarning() :
-            from   ostap.stats.statvars import data_project
+            from   ostap.stats.statvars import data_project, target_copy, targer_reset
             import ostap.trees.trees
-            import ROOT
             
         chain = item.chain 
         first = item.first
@@ -307,7 +323,6 @@ class SizeTask(Task) :
         with logWarning() :
             from   ostap.stats.statvars import data_size 
             import ostap.trees.trees
-            import ROOT
             
         chain = item.chain 
         first = item.first
@@ -370,7 +385,6 @@ class CovTask(Task) :
         with logWarning() :
             from   ostap.stats.statvars import data_covariance 
             import ostap.trees.trees
-            import ROOT
             
         chain = item.chain 
         first = item.first
@@ -437,7 +451,6 @@ class SliceTask(Task) :
         with logWarning() :
             from   ostap.stats.statvars import data_slice 
             import ostap.trees.trees
-            import ROOT
             
         chain = item.chain 
         first = item.first
@@ -451,26 +464,28 @@ class SliceTask(Task) :
     
     ## merge results 
     def merge_results ( self , result , jobid = -1 ) :        
-        if not self.__output : self.__output  = result
-        else                 :
-            v1 , w1 = self.__output
-            v2 , w2 =        result
+        if not self.__output : 
+            self.__output  = result
+            return
+        ## acgtual  merging
+        v1 , w1 = self.__output
+        v2 , w2 =        result
 
-            import numpy
-            
-            if   w1 is None and w2 is None : ww = None 
-            elif w1 is None                :
-                w1 = numpy.ones ( len  ( v1 ) , dtype = numpy.float64 )
-                ww = numpy.concatenate ( ( w1 , w2 ) )
-            elif w2 is None                :
-                w2 = numpy.ones ( len  ( v2 ) , dtype = numpy.float64 )
-                ww = numpy.concatenate ( ( w1 , w2 ) )
-            else :
-                ww = numpy.concatenate ( ( w1 , w2 ) )
+        import numpy
+        
+        if   w1 is None and w2 is None : ww = None 
+        elif w1 is None                :
+            w1 = numpy.ones ( len  ( v1 ) , dtype = numpy.float64 )
+            ww = numpy.concatenate ( ( w1 , w2 ) )
+        elif w2 is None                :
+            w2 = numpy.ones ( len  ( v2 ) , dtype = numpy.float64 )
+            ww = numpy.concatenate ( ( w1 , w2 ) )
+        else :
+            ww = numpy.concatenate ( ( w1 , w2 ) )
                 
-            vv = numpy.concatenate ( ( v1 , v2 ) )            
+        vv = numpy.concatenate ( ( v1 , v2 ) )            
             
-            self.__output = vv , ww 
+        self.__output = vv , ww 
         
     ## get the results 
     def results ( self ) : return self.__output 
@@ -479,19 +494,19 @@ class SliceTask(Task) :
 # ===================================================================================
 ## parallel processing of loooong chain/tree 
 #  @code
-#  chain          = ...
-#  chain.pStatVar ( .... ) 
+#  chain  = ...
+#  result = parallel_statistic ( .... ) 
 #  @endcode
 def parallel_statistic ( chain                    ,
-                         expressions              , * , 
-                         cuts       = ''          ,
+                         expressions              ,
+                         cuts       = ''          , * , 
                          first      = FIRST_ENTRY , 
                          last       = LAST_ENTRY  ,
                          as_weight  = True        , 
                          use_frame  = True        , 
                          progress   = False       ,
-                         chunk_size = 100000      ,
-                         max_files  = 1           ,
+                         chunk_size = CHUNK_SIZE  ,
+                         max_files  = MAX_FILES   ,
                          silent     = True        , **kwargs ) :
     """ Parallel processing of loooong chain/tree 
     >>> chain    = ...
@@ -499,13 +514,13 @@ def parallel_statistic ( chain                    ,
     """
     ## few special/trivial cases
 
-    import ostap.trees.trees
-    from   ostap.stats.statvars import data_statistic
-
+    from ostap.stats.statvars import data_statistic
+    from ostap.trees.trees    import Chain
+    
     ## adjust first/last 
     first, last = evt_range ( chain , first , last )
     
-    ## number of evetns to proecedd 
+    ## number of events  to proecedd 
     nevents     = last - first 
     
     if nevents <= chunk_size :
@@ -517,18 +532,17 @@ def parallel_statistic ( chain                    ,
                                 use_frame   = use_frame ,
                                 parallel    = False     )
 
-    ## split data 
-    from ostap.trees.trees import Chain
-    ch     = Chain ( chain , first = first , nevents = nevents )
-    
+    ##   
     task   = StatVarTask ( expressions           ,
                            cuts      = cuts      ,
                            as_weight = True      ,
                            progress  = False     ,
                            use_frame = use_frame , 
-                           paralell  = False     ) 
+                           parallel   = False     ) 
     
     wmgr   = WorkManager ( silent = silent , progress = progress or not silent , **kwargs )
+
+    ch     = Chain    ( chain , first = first   , nevents = nevents )
     trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
 
     wmgr.process ( task , trees )
@@ -745,7 +759,7 @@ def parallel_project ( chain                    ,
                            as_weight = as_weight , 
                            progress  = False     ,
                            use_frame = use_frame ,
-                           paralell  = False     ) 
+                           parallel  = False     ) 
     
     wmgr   = WorkManager ( silent = silent , progress = progress or not silent , **kwargs )
     trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
@@ -824,10 +838,10 @@ def parallel_covariance ( chain                    ,
     return results 
 
 # ===================================================================================
-## parallel processing of loooong chain/tree 
+## parallel processing of loooong chain/tree: get slice from TTree/TChain  
 #  @code
-#  chain          = ...
-#  chain.pStatVar ( .... ) 
+#  chain           = ...
+#  result , weight = parallel_slice ( chain , 'pt,mass', 'y<4.5' ) 
 #  @endcode
 def parallel_slice ( chain                    ,
                      expressions              ,
@@ -838,12 +852,12 @@ def parallel_slice ( chain                    ,
                      last       = LAST_ENTRY  ,
                      progress   = False       ,
                      use_frame  = True        , 
-                     chunk_size = 100000      ,
-                     max_files  = 1           ,
+                     chunk_size = CHUNK_SIZE  ,
+                     max_files  = MAX_FILES   ,
                      silent     = True        , **kwargs ) :
     """ Parallel processing of loooong chain/tree 
-    >>> chain    = ...
-    >>> chain.pstatVar( 'mass' , 'pt>1') 
+    >>> chain = ...
+    >>> result = parallel_slice ( chain, 'mass' , 'pt>1') 
     """
     ## few special/trivial cases
 
@@ -853,7 +867,10 @@ def parallel_slice ( chain                    ,
     ## adjust first/last 
     first, last = evt_range ( chain , first , last )
     
-    ## number of evetnts to process 
+    ## nothing to process 
+    if last <= first : return () , None  
+    
+    ## number of events to process 
     nevents     = last - first 
     
     if nevents <= chunk_size :
@@ -868,20 +885,19 @@ def parallel_slice ( chain                    ,
     
     ## split data 
     from ostap.trees.trees import Chain
-    ch     = Chain   ( chain , first = first , nevents = nevents )
+    ch     = Chain     ( chain , first = first , nevents = nevents )
     
     task   = SliceTask ( expressions             ,
                          cuts       = cuts       ,
                          structured = structured ,
                          transpose  = transpose  , 
-                         as_weight  = as_weight  ,
                          use_frame  = use_frame  , 
                          progress   = False      ,
                          parallel   = False      )
     
     wmgr   = WorkManager ( silent = silent , progress = progress or not silent , **kwargs )
-    trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
-
+    trees  = ch.split    ( chunk_size = chunk_size , max_files = max_files )
+    
     wmgr.process ( task , trees )
 
     del trees
@@ -896,12 +912,12 @@ _decorated_classes_ = (
     )
 
 _new_methods_       = (
-    'parallel_statistic'  ,
-    'parallel_get_stat'   ,
-    'parallel_project'    ,
-    'parallel_covariance' ,
-    'parallel_slice'      ,
-    'parallel_sum'        ,
+    ## 'parallel_statistic'  ,
+    ## 'parallel_get_stat'   ,
+    ## 'parallel_project'    ,
+    ## 'parallel_covariance' ,
+    ## 'parallel_slice'      ,
+    ## 'parallel_sum'        ,
 )
 
 # =============================================================================
