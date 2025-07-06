@@ -266,7 +266,7 @@ namespace Ostap
       // ======================================================================
       /** Get Harrel-Davis estimator for quantile function
        *  @param p  (INPUT) quantile 
-       *  @retiurn Harrel-Davis quantile estimator
+       *  @return Harrel-Davis quantile estimator
        *  @see https://doi.org/10.1093/biomet/69.3.635
        *  @see F.E. Harrel and C.E.Davis,  "A new distribution-free quantile estimator",
        *       Biometrika 63.9 (Dec 1982), pp. 635-640
@@ -289,6 +289,23 @@ namespace Ostap
       // =====================================================================
       /** get the equidistant quantiles     
        *  @see Ostap::ECDF::quantile 
+       *  @see scipy.stats.mstats
+       *
+       *  Typical values for alphap, betap are:
+       * 
+       * - (0,1) : p(k) = k/n : linear interpolation of cdf (R type 4)
+       * - (.5,.5) : p(k) = (k - 1/2.)/n : piecewise linear function (R type 5)
+       * - (0,0) : p(k) = k/(n+1) : (R type 6)
+       * - (1,1) : p(k) = (k-1)/(n-1): p(k) = mode[F(x[k])]. (R type 7, R default)
+       * - (1/3,1/3): p(k) = (k-1/3)/(n+1/3): Then p(k) ~ median[F(x[k])].
+       *   The resulting quantile estimates are approximately median-unbiased 
+       *   regardless of the distribution of x. (R type 8)
+       * - (3/8,3/8): p(k) = (k-3/8)/(n+1/4): Blom.
+       *   The resulting quantile estimates are approximately 
+       *   unbiased if x is normally distributed (R type 9)
+       * - 0(.4,.4) : approximately quantile unbiased (Cunnane)
+       * - (.35,.35): APL, used with PWM
+       *
        */
       template <unsigned short N>
       inline std::array<double,N+2>
@@ -307,6 +324,10 @@ namespace Ostap
       // ======================================================================
       /** get the equidistant quantiles       
        *  @see Ostap::ECDF::quantile 
+       *  @see https://doi.org/10.1093/biomet/69.3.635
+       *  @see F.E. Harrel and C.E.Davis,  "A new distribution-free quantile estimator",
+       *       Biometrika 63.9 (Dec 1982), pp. 635-640
+       *  @attention It could be rather CPU expensive 
        */
       template <unsigned short N>
       inline std::array<double,N+2>
@@ -325,6 +346,8 @@ namespace Ostap
       // ======================================================================
       /** get the equidistant quantiles       
        *  @see Ostap::ECDF::quantile 
+       *  @see https://arxiv.org/abs/2304.07265
+       *  @see Andrey Akinshin, "Weighted quantile estimators", arXiv:2304.07265     
        */
       template <unsigned short N>
       inline std::array<double,N+2>
