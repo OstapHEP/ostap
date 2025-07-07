@@ -25,11 +25,12 @@ __all__     = (
 ) 
 # =============================================================================
 from   itertools              import accumulate 
-from   ostap.core.ostap_types import string_types 
+from   ostap.core.ostap_types import string_types, integer_types 
 from   ostap.utils.cleanup    import CleanUp
 from   ostap.core.core        import valid_pointer, rootException
 from   ostap.math.base        import FIRST_ENTRY, LAST_ENTRY, evt_range, all_entries
 from   ostap.utils.basic      import file_info
+from   ostap.utils.utils      import split_range 
 import ostap.trees.base   
 import ROOT, os 
 # =============================================================================
@@ -119,7 +120,7 @@ class Chain(CleanUp) :
                             s =  cinfo [ 1 ] / float ( 1024 ) / 1025 ##  MB 
                             v = s / t                  ## MB/s 
                             logger.debug ( 'File copied %s :  %.3f[MB] %.2f[s] %.3f[MB/s]' % ( c , s , t , v ) )
-                            self.__files..append ( copied ) ## APPEND 
+                            self.__files.append ( copied ) ## APPEND 
                         else :
                             logger.error ( 'Something wrong with the copy %s : %s vs %s ' % ( c , cinfo[:4] , finfo[:4] ) )
                     else : logger.error ("Cannot copy the file %s"  % full_name )
@@ -203,8 +204,8 @@ class Chain(CleanUp) :
             else     : 
                 ## Memory resident tree? put it into the temporary file. keep ?
                 tmpfile = Cleanup.tmpfile ( suffix = '.root' , prefix = 'ostap-tree-' , keep = True ) 
-                logger.info ( "TTree is memory resident! Write in into the temporary TFile:%s" % tmpfile )
-                with ROOT.TFile ( tmpfile , 'NEW' as rf ) : rf [ self.name ] = tree    
+                logger.info ( "TTree is memory resident! Write it into the temporary TFile:%s" % tmpfile )
+                with ROOT.TFile ( tmpfile , 'NEW' ) as rf : rf [ self.name ] = tree    
                 self.__files = tmpfile ,
 
             self.__first   = first
@@ -216,7 +217,7 @@ class Chain(CleanUp) :
 
         ## check & adjust first/last setting 
         first , last = evt_range ( ch , first , last ) 
-        assert 0 <= first <= last , "Chain: invalid first/last setting!" )
+        assert 0 <= first <= last , "Chain: invalid first/last setting!"
         
         self.__first = first
         self.__last  = last 
@@ -224,7 +225,7 @@ class Chain(CleanUp) :
         nfiles  = self.nFiles
         nevents = len ( ch )
         
-        ## remove the files that are outsize of the range 
+        ## remove the files that are outside of the range 
         if 2 <= self.nFiles and ( 0 < self.first or self.last < nevents ) :
 
             first, last = self.first, self.last 
@@ -432,11 +433,11 @@ class Tree(Chain) :
             'Tree.split : invalid chunk_size %s' % chunk_size
 
         ## small enough ?
-        if self.last - self.first < chunk_size ) :  yield self,
+        if self.last - self.first < chunk_size :  yield self
         
         ## split it!
         the_file = self.file
-        for first, last in split_range ( self.first , self.last , chubnk_size ) :
+        for first, last in split_range ( self.first , self.last , chunk_size ) :
             yield Tree ( name  = self.name ,
                          file  = the_file  ,
                          first = first     ,

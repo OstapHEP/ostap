@@ -25,8 +25,9 @@ __all__     = (
     'tree_leaf'     , ## get the leaf by name 
 ) 
 # =============================================================================
-from   ostap.core.core    import valid_pointer
-from   ostap.io.root_file import top_dir
+from   ostap.core.core        import valid_pointer
+from   ostap.core.ostap_types import string_types 
+from   ostap.io.root_file     import top_dir
 import ROOT, os 
 # =============================================================================
 # logging 
@@ -35,7 +36,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.trees.base' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-logger.debug ( 'Couple of simpel basic utilities for TTree/TChain')
+logger.debug ( 'Couple of simple basic utilities for TTree/TChain')
 # =============================================================================
 ## check validity/emptiness  of TTree/TChain
 #  require non-zero poniter and non-empty Tree/Chain
@@ -135,8 +136,11 @@ def chain_nfiles ( chain ) :
     >>> n = chain_nfiles ( chain ))
     >>> n = chain.nFiles()
     """
-    if tree_valid ( chain ) and isinstance ( chain , ROOT.TChain ) :
-        return len ( chain.GetListOfFiles() )
+    if tree_valid ( chain ) and isinstance ( chain , ROOT.TTree  ) :
+        if  isinstance ( chain , ROOT.TChain ) : return len ( chain.GetListOfFiles() )
+        else : 
+            td = chain.topdir
+            if td and isinstance ( td , ROOT.TDirectoryFile ) : return 1       
     return 0
 
 ROOT.TChain. nFiles = chain_nfiles
@@ -155,7 +159,7 @@ chain_nFiles        = chain_nfiles
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-02-04
-def tree_branches ( t , pattern = '' , *args ) :
+def tree_branches ( tree , pattern = '' , *args ) :
     """ Get the list of branch names
     
     >>> tree = ...
@@ -165,10 +169,10 @@ def tree_branches ( t , pattern = '' , *args ) :
     >>> for b in lst : print b
     
     """
-    assert valid_pointer ( tree ) and not isinstance ( tree , ROOT.TTree ) , \
-        "Invalid `tree' argument!"
+    assert valid_pointer ( tree ) and isinstance ( tree , ROOT.TTree ) , \
+        "tree_branches: Invalid `tree' argument!"
     ##
-    vlst = tuple ( sorted ( b.GetName() for b in t.GetListOfBranches() ) )
+    vlst = tuple ( sorted ( b.GetName() for b in tree.GetListOfBranches() ) )
     if not vlst or not pattern : return vlst 
     
     import re
@@ -199,7 +203,7 @@ ROOT.TTree.branches = tree_branches
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-02-04
-def tree_leaves ( t , pattern = '' , *args ) :
+def tree_leaves ( tree , pattern = '' , *args ) :
     """ Get the list of leaves names        
     
     >>> tree = ...
@@ -208,10 +212,10 @@ def tree_leaves ( t , pattern = '' , *args ) :
     >>> lst = tree.leaves( '.*(muon).*', re.I )
     >>> for l in lst : print l
     """
-    assert valid_pointer ( tree ) and not isinstance ( tree , ROOT.TTree ) , \
-        "Invalid `tree' argument!"
+    assert valid_pointer ( tree ) and isinstance ( tree , ROOT.TTree ) , \
+        "tree_leaves: Invalid `tree' argument!"
     
-    vlst =  tuple ( sorted ( v.GetName()  for v in t.GetListOfLeaves() ) ) 
+    vlst =  tuple ( sorted ( v.GetName()  for v in tree.GetListOfLeaves() ) ) 
     if not vlst or not pattern : return vlst 
 
     if isinstance ( pattern , string_types ) : pattern  = [ pattern ]
@@ -229,7 +233,6 @@ def tree_leaves ( t , pattern = '' , *args ) :
             logger.error ('leaves("%s"): exception is caught, use all ' % p  , exc_info = True )
             
     return tuple ( sorted ( lst ) ) 
-
 
 ROOT.TTree.leaves   = tree_leaves
 
@@ -259,15 +262,11 @@ def tree_branch( tree , branch ) :
 
 ROOT.TTree.branch = tree_branch
 
-
-
 # ===============================================================================
 _decorated_classes_ = (
     ROOT.TTree  ,
     ROOT.TChain ,   
 )
-
-
 
 _new_methods_ = (
     ##

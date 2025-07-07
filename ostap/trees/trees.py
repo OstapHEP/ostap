@@ -47,6 +47,7 @@ from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.utils         import chunked
 from   ostap.math.base           import np2raw  
 from   ostap.math.base           import FIRST_ENTRY, LAST_ENTRY, evt_range, all_entries
+from   ostap.trees.utils         import Tree, Chain
 from   ostap.logger.symbols      import tree           as tree_symbol
 from   ostap.logger.symbols      import branch         as branch_symbol
 from   ostap.logger.symbols      import leaves         as leaves_symbol
@@ -645,37 +646,7 @@ ROOT.TChain.__contains__ = _rt_contains_
 
 # =============================================================================
 
-# =============================================================================
-## Get min/max for the certain variable in chain/tree
-#  @code  
-#  chain = ...
-#  mn,mx = chain.vminmax('pt')
-#  mn,mx = chain.vminmax('pt','y>3')
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2015-09-19
-def _tc_minmax_ ( tree , var , cuts = '' , delta = 0.0 )  :
-    """ Get min/max for the certain variable in chain/tree
-    >>> chain = ...
-    >>> mn,mx = chain.vminmax('pt')
-    >>> mn,mx = chain.vminmax('pt','y>3')
-    """
-    if hasattr ( tree , 'pstatVar' ) : 
-        if cuts : s = tree.pstatVar ( var , cuts = cuts )
-        else    : s = tree.pstatVar ( var )
-    else :
-        if cuts : s = tree.statVar  ( var , cuts = cuts )
-        else    : s = tree.statVar  ( var )
 
-    mn,mx = s.minmax()
-    if mn < mn and 0.0 < delta :
-        dx   = delta * 1.0 * ( mx - mn )  
-        mx  += dx   
-        mn  -= dx   
-    return mn , mx
-
-ROOT.TTree     . vminmax = _tc_minmax_
-ROOT.TChain    . vminmax = _tc_minmax_
 
 # =============================================================================
 ## simplified printout for TTree/TChain
@@ -937,9 +908,8 @@ def _rt_table_1_ ( tree ,
                    style   = ''   , *args ) :
     """ Print tree as table 
     """
-    if isinstance ( variables , string_types ) :
-        variables = split_string ( variables , strip = True , respect_groups = True )
-
+    
+    variables , cuts , _ = vars_and_cuts ( variables , cuts )
     bbs = tuple ( sorted ( variables ) ) 
 
     bbstats = tree. statVar ( bbs , *args , cuts = cuts , use_frame = True , parallel = True ) 
@@ -2500,9 +2470,6 @@ _new_methods_  += (
     #
     ROOT.TTree .statCovs  ,
     ROOT.TChain.statCovs  ,
-    #
-    ROOT.TTree .vminmax   ,
-    ROOT.TChain.vminmax   ,
     #  
     ROOT.TTree.branches        , 
     ROOT.TTree.active_branches , 

@@ -99,7 +99,7 @@ __all__ = (
     'SelectorWithCuts' ,        ## The "fixed" TPySelector with TTree-formula 
     'SelectorWithVars' ,        ## Generic selctor to fill RooDataSet from TTree/TChain
     'Variable'         ,        ## helper class to define variable
-    'SelectorWithVarsCached'    ## Generic selector with cache   
+    'SelectorWithVarsCached'    ## Cached version of selector    
 )
 # =============================================================================
 from   ostap.core.meta_info     import root_info 
@@ -110,7 +110,7 @@ from   ostap.fitting.variables  import make_formula
 from   ostap.utils.progress_bar import ProgressBar
 from   ostap.utils.basic        import items_loop 
 from   ostap.math.reduce        import root_factory 
-from   ostap.trees.trees        import Chain 
+from   ostap.trees.utils        import Chain 
 import ostap.fitting.roofit 
 import ROOT, os, cppyy, math, sys
 # =============================================================================
