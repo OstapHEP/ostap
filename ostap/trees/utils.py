@@ -98,8 +98,9 @@ class Chain(CleanUp) :
         self.__chain   = None
         self.__files   = [] 
         
+        same_host = origin == host 
         for fname , finfo in file_infos :
-            if   same_host : self.__files.append ( fname )
+            if same_host  : self.__files.append ( fname )
             else :
                 fnew = file_info ( fname )
                 if fnew == finfo :
@@ -108,22 +109,22 @@ class Chain(CleanUp) :
                 else :
                     # =========================================================
                     ## the file needs to be copied locally
-                    ## @todo implement the parallel copy! 
+                    ## @todo implement the parallel copy? 
                     from ostap.utils.scp_copy import scp_copy
                     full_name  = '%s:%s' % ( origin , fname ) 
                     copied , t = scp_copy  ( full_name )
                     if copied :
                         cinfo = file_info ( copied )
-                        c = '%s -> %s' % ( full_name , "%s:%s" % ( self.__host , copied ) )
+                        c = '%s --> %s' % ( full_name , "%s:%s" % ( host , copied ) )
                         if cinfo[:4] == finfo [:4] :
                             size = cinfo[1]
                             s =  cinfo [ 1 ] / float ( 1024 ) / 1025 ##  MB 
                             v = s / t                  ## MB/s 
-                            logger.debug ( 'File copied %s :  %.3f[MB] %.2f[s] %.3f[MB/s]' % ( c , s , t , v ) )
+                            logger.debug ( 'Chain.__setstate__ : file copied %s :  %.3f[MB] %.2f[s] %.3f[MB/s]' % ( c , s , t , v ) )
                             self.__files.append ( copied ) ## APPEND 
                         else :
-                            logger.error ( 'Something wrong with the copy %s : %s vs %s ' % ( c , cinfo[:4] , finfo[:4] ) )
-                    else : logger.error ("Cannot copy the file %s"  % full_name )
+                            logger.error ( 'Chain.__setstate__ : Something wrong with the copy %s : %s vs %s ' % ( c , cinfo[:4] , finfo[:4] ) )
+                    else : logger.error ("Chain.__setstate__: Failure to scp_copy the file: %s"  % full_name )
 
         self.__files = tuple ( self.__files )
 
@@ -138,7 +139,7 @@ class Chain(CleanUp) :
     #  @code
     #  ch = Chain ( name = 'n', files = [ ... ] )
     #  @endcode 
-    def __init__ ( self                  ,
+    def __init__ ( self                  ,  
                    tree    = None        ,
                    name    = None        ,
                    files   =  []         ,
@@ -167,7 +168,7 @@ class Chain(CleanUp) :
         if isinstance  ( tree , Chain ) and tree.chain :
 
             if name  and name != tree.name : logger.warning ( 'Chain: explicitley specified name is inored!' )
-            if files and set ( files ) != set ( ttee.files ) :
+            if files and set ( files ) != set ( tree.files ) :
                 logger.warning ( 'Chain: explicitely specified files are inored!' )
                 
             self.__name  = tree.name 
@@ -176,8 +177,9 @@ class Chain(CleanUp) :
             
         elif name and files :
             
-            self.__name    = tree.name 
-            self.__files   = tree.files
+            self.__name    = name  
+            self.__files   = files
+            self.__first   = first 
             self.__last    = last 
             
             ## check that object exists for each file:
@@ -191,8 +193,6 @@ class Chain(CleanUp) :
             assert chain , "Chain:  invalid reconstructed TChain!"
             
         elif isinstance ( tree , ROOT.TTree  ) and valid_pointer ( tree ) :
-            
-            input_chain = tree
             
             ## ATTENTION: full path is specified here! 
             self.__name = tree.full_path
@@ -289,29 +289,31 @@ class Chain(CleanUp) :
         assert isinstance ( chunk_size , integer_types ) and 0 < chunk_size , \
             'Chain.split : invalid chunk_size %s' % chunk_size
         
+        if not self.nFiles  : return                     ## RETURN 
+        
         if 1 == self.nFiles :
-            tree = Tree ( self.name                 ,
+            tree = Tree ( name  = self.name         ,
                           file  = self.files [ 0 ]  ,
                           first = self.first        ,  
                           last  = self.last         )
-            for t in tree.split ( chunk_size = chunk_size ) : yield t
+            for t in tree.split ( chunk_size = chunk_size ) : yield t  ## YIELD
             
         asizes = tuple ( s for s in self.accumulated_sizes()  )
-        first  = self.first
-        last   = self.last = asizes [ -2 ] ## ATTENTION HERE!
         
-        ## the first tree, can be incomplete 
-        tree = Tree ( self.name , file = self.files[0 ] , first = first )
-        for t in tree.split ( chunk_size = chubnk_size ) : yield t
+        ## the first tree: can be incomplete 
+        first  = self.first
+        tree   = Tree ( name = self.name , file = self.files [ 0 ] , first = first )
+        for t in tree.split ( chunk_size = chunk_size ) : yield t     ## YIELD  
         
         ## full trees (all of them are complete 
         for f in self.files [1:-1] :
-            tree = Tree ( self.name , file = f  )
-            for t in tree.split ( chunk_size = chunk_size ) : yield t
+            tree = Tree ( name = self.name , file = f  )
+            for t in tree.split ( chunk_size = chunk_size ) : yield t ## YIELD 
             
-        ## the last tree (can be incomplete) 
-        tree = Tree ( self.name , files = self.files[-1] , last = last  )
-        for t in tree.split ( chunk_size = chunk_size ) : yield t 
+        ## the last tree: can be incomplete
+        last   = self.last - asizes [ -2 ] ## ATTENTION HERE!
+        tree   = Tree ( name = self.name , file = self.files[-1] , last = last  )
+        for t in tree.split ( chunk_size = chunk_size ) : yield t     ## YIELD 
 
     @property
     def chain ( self ) :
@@ -401,8 +403,8 @@ class Tree(Chain) :
     def __getstate__  ( self )         : return Chain.__getstate__  ( self )
     ## unpickle 
     def __setstate__  ( self , state ) :        Chain.__setstate__  ( self , state ) 
-    ## constructir 
-    def __init__      ( self                   ,
+    ## constructor 
+    def __init__      ( self                   ,  
                         tree    =  None        ,
                         name    =  None        ,
                         file    =  ''          ,
@@ -410,15 +412,18 @@ class Tree(Chain) :
                         last    =  LAST_ENTRY  ) :
         
         if name and file :            
-            assert isinstance ( file , string_type  ), 'Tree: `file` should be single file name!'
+            assert isinstance ( file , string_types ), 'Tree: `file` should be single file name!'
             
-        elif valid_pointer    ( tree ) :
-            assert isinstance ( tree , ROOT.TTree ) , 'Tree: tree is not TTree!'
-            
+        elif isinstance ( tree , Chain  )  : 
+            assert 1 ==  tree.nFiles , "Tree: only single files are OK!"
+             
+        else :
+            assert isinstance    ( tree , ROOT.TTree ) , 'Tree: tree  is not TTree!'
+            assert valid_pointer ( tree )              , "Tree: TTree is invalid!" 
             if isinstance ( tree , ROOT.TChain ) :
                 assert 1 == tree.nFiles() , 'Tree: only single file is allowed!'
-                
-        Chain.__init__ ( self , tree , name  , files = [ file ] , first = first , last = last  )
+              
+        Chain.__init__ ( self , tree = tree , name = name , files = [ file ] , first = first , last = last  )
         
         assert 1 == self.nFiles , 'Invalid number of files!'
 
@@ -430,27 +435,21 @@ class Tree(Chain) :
         if chunk_size <= 0 : chunk_size = 1000000
 
         assert isinstance ( chunk_size , integer_types ) and 0 < chunk_size , \
-            'Tree.split : invalid chunk_size %s' % chunk_size
-
-        ## small enough ?
-        if self.last - self.first < chunk_size :  yield self
+            'Tree.split: invalid chunk_size %s' % chunk_size
         
-        ## split it!
         the_file = self.file
         for first, last in split_range ( self.first , self.last , chunk_size ) :
             yield Tree ( name  = self.name ,
                          file  = the_file  ,
                          first = first     ,
                          last  = last      )
-            
     @property
     def file ( self ) :
         """`file'   : the file name """
         fs = self.files 
-        assert 1 == len  ( fs ) , 'Tree: Invalid number of files %s' % len ( fs ) 
+        assert 1 == len  ( fs ) , 'Tree.file: Invalid number of files %s' % len ( fs ) 
         return fs [ 0 ] 
     
-
     # =========================================================================
     ## delegate all other attributes to the underlying chain object 
     def __getattr__  ( self , attr ) :
