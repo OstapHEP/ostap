@@ -67,18 +67,6 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some useful decorations for Tree/Chain objects')
 # =============================================================================
-## check validity/emptiness  of TTree/TChain
-#  require non-zero poniter and non-empty Tree/Chain
-def _tt_nonzero_ ( tree ) :
-    """ Check validity/emptiness  of TTree/TChain
-    - require non-zero pointer and non-empty Tree/Chain
-    """
-    return valid_pointer ( tree ) and 0 < tree.GetEntries() 
-
-ROOT.TTree .__nonzero__ = _tt_nonzero_
-ROOT.TChain.__nonzero__ = _tt_nonzero_
-ROOT.TTree .__bool__    = _tt_nonzero_
-ROOT.TChain.__bool__    = _tt_nonzero_
 
 # =============================================================================
 ## Iterator over ``good events'' in TTree/TChain:
@@ -246,7 +234,7 @@ ROOT.TChain.__call__  = _tc_call_
 # =============================================================================
 if numpy : 
     # =========================================================================
-    def get_result ( vct ) : return numpyfrombuffer ( vct.data() , count = len ( vct ) , dtype = float )
+    def get_result ( vct ) : return numpy.frombuffer ( vct.data() , count = len ( vct ) , dtype = float )
     # =========================================================================
 else : # ======================================================================
     # =========================================================================
@@ -657,7 +645,6 @@ ROOT.TChain.__contains__ = _rt_contains_
 
 # =============================================================================
 
-
 # =============================================================================
 ## Get min/max for the certain variable in chain/tree
 #  @code  
@@ -689,21 +676,6 @@ def _tc_minmax_ ( tree , var , cuts = '' , delta = 0.0 )  :
 
 ROOT.TTree     . vminmax = _tc_minmax_
 ROOT.TChain    . vminmax = _tc_minmax_
-
-# ==============================================================================
-## Get the leaf with the certain name 
-def _rt_leaf_ ( tree , leaf ) :
-    """ Get the leaf with certain name:
-    >>> tree = ...
-    >>> l = tree.leaf('pt') 
-    """
-    lst = tuple ( v for v in tree.GetListOfLeaves() )
-    for i in lst :
-        if leaf == i.GetName() : return i
-    return None
-
-ROOT.TTree.leaf   = _rt_leaf_
-
 
 # =============================================================================
 ## simplified printout for TTree/TChain

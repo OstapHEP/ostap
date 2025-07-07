@@ -19,7 +19,7 @@ __all__     = (
     'Files'       , ## base class tool to handle set of files
     'copy_files'  , ## a bit specific copy of set of files
     'sync_files'  , ## synchonize the files
-    'sync_dirs'   , ## synchonize the directories     
+    'sync_dirs'   , ## synchonize the directories
 )
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, path_types, sized_types  

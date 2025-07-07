@@ -301,7 +301,7 @@ _new_methods_ = (
     ## 
     ROOT.TTree.branches     ,
     ROOT.TTree.leaves       ,
-    ROOT.TTree.branche      ,
+    ROOT.TTree.branch       ,
     ROOT.TTree.leaf         ,
 )
 # =============================================================================
