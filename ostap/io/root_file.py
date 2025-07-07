@@ -982,7 +982,7 @@ if not hasattr ( ROOT.TFile , 'close' ) :
 # =============================================================================
 ## `topdir': get the top directory for the given directory"""
 def top_dir ( rdir ) :
-    """`topdir': get the top directory for the given directory"""
+    """`topdir': get the top directory for the given directory/object"""
 
     if not rdir : return None
 
@@ -992,14 +992,14 @@ def top_dir ( rdir ) :
         if   isinstance ( rdir , ROOT.TDirectory ) : top = rdir
         elif hasattr    ( rdir , 'GetDirectory'  ) : top = rdir.GetDirectory()
         
-        while top :
+        while top and hasattr ( top , 'GetMotherDir' ) : 
             moth = top.GetMotherDir()
             if not moth : return top  
             top  = moth
         else :
             return None 
 
-ROOT.TDirectory.topdir = property ( top_dir , None , None )
+ROOT.TDirectory.topdir = property ( top_dir , None , None , top_dir . __doc__ )
 
 # ==============================================================================
 ## get a full path of the directory
@@ -1019,9 +1019,9 @@ def full_path ( rdir ) :
     if n <= 0 :
         logger.error('Invalid directory path')
         return ''
-    return path[n+2:] 
+    return path[n+2:]
 
-ROOT.TDirectory.full_path = property ( full_path , None , None )
+ROOT.TDirectory.full_path = property ( full_path , None , None , full_path . __doc__ )
     
 # ==============================================================================
 ## Trivial context manager to treat TFile.ReOpen for 'UPDATE' mode

@@ -44,6 +44,8 @@ __all__     = (
     'num_fds'              , ## get number of opened file descriptors 
     'get_open_fds'         , ## get list of opened file descriptors
     ##
+    'file_info'            , ## very simple infrmation for the file 
+    ##
     # =========================================================================
 ) # ===========================================================================
 # =============================================================================
@@ -435,6 +437,27 @@ def numcpu () :
     - it uses the function `cpu_count` from `%s` module  
     """
     return max ( 1 , cpu_count () ) 
+
+
+# =============================================================================
+## get some file info for the given path
+#  - used for multiprocessing of TTree/Tchain
+def file_info ( fname ) :
+    """ Get some file info for the given path
+    - used for multiprocessing of TTree/Tchain    
+    """
+    p , s , f = fname.partition ( '://' )
+    if p and s : return 'Protocol'
+    if os.path.exists ( fname ) and os.path.isfile ( fname ) and os.access ( fname , os.R_OK ) :
+        s = os.stat ( fname )
+        return ( s.st_mode  ,
+                 s.st_size  , 
+                 s.st_uid   ,
+                 s.st_gid   ,
+                 s.st_atime ,
+                 s.st_mtime ,
+                 s.st_ctime ) 
+    return 'Invalid'
 
 # =============================================================================
 if __name__ == '__main__' :

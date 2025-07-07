@@ -25,8 +25,10 @@ __all__     = (
     'MAX_FILES'           , ## maximal number of files
 ) 
 # =============================================================================
-from   ostap.math.base         import ( FIRST_ENTRY , LAST_ENTRY  , 
-                                        evt_range   , all_entries )  
+from   ostap.math.base         import ( FIRST_ENTRY ,
+                                        LAST_ENTRY  , 
+                                        evt_range   ,
+                                        all_entries )  
 from   ostap.parallel.parallel import Task, WorkManager
 import ROOT
 # =============================================================================
@@ -48,9 +50,10 @@ def good_for_parallel_processing ( tree  , *args ,
     """ Is TTree/TChain good for parallel procesinng ?
     """
     ## get number of events 
-    first , last = evt_range ( tree , *args ) 
+    first , last = evt_range ( tree , *args )    
     if 0 < chunk_size < last - first : return True
     
+# =============================================================================
 ## The simple task object collect statistics for loooooong chains 
 #  @see GaudiMP.Parallel
 #  @see GaudiMP.Parallel.Task
@@ -103,7 +106,7 @@ class StatVarTask(Task) :
             
         chain = item.chain 
         first = item.first
-        last  = min ( LAST_ENTRY , first + item.nevents if 0 < item.nevents else LAST_ENTRY )
+        last  = item.last  
         
         from   ostap.stats.statvars import data_statistic
         self.__output = data_statistic ( chain     ,
@@ -183,7 +186,7 @@ class GetStatTask(Task) :
             
         chain = item.chain 
         first = item.first
-        last  = min ( LAST_ENTRY , first + item.nevents if 0 < item.nevents else LAST_ENTRY )
+        last  = item.last 
 
         # ================================
         target = target_copy ( self.__target )
@@ -256,7 +259,7 @@ class ProjectTask(Task) :
             
         chain = item.chain 
         first = item.first
-        last  = min ( LAST_ENTRY , first + item.nevents if 0 < item.nevents else LAST_ENTRY )
+        last  = item.last 
 
         # ================================
         target = target_copy ( self.__target )
@@ -326,7 +329,7 @@ class SizeTask(Task) :
             
         chain = item.chain 
         first = item.first
-        last  = min ( LAST_ENTRY , first + item.nevents if 0 < item.nevents else LAST_ENTRY )
+        last  = item.last 
         
         self.__output = data_size ( chain , self.cuts , first , last , **self.kwargs )
         return self.__output 
@@ -388,7 +391,7 @@ class CovTask(Task) :
             
         chain = item.chain 
         first = item.first
-        last  = min ( LAST_ENTRY , first + item.nevents if 0 < item.nevents else LAST_ENTRY )
+        last  = item.last 
         
         self.__output = data_covariance  ( chain     ,
                                            self.what ,
@@ -454,7 +457,7 @@ class SliceTask(Task) :
             
         chain = item.chain 
         first = item.first
-        last  = min ( LAST_ENTRY , first + item.nevents if 0 < item.nevents else LAST_ENTRY )
+        last  = item.last 
         
         self.__output = data_slice ( chain     ,
                                      self.what ,
@@ -515,7 +518,6 @@ def parallel_statistic ( chain                    ,
     ## few special/trivial cases
 
     from ostap.stats.statvars import data_statistic
-    from ostap.trees.trees    import Chain
     
     ## adjust first/last 
     first, last = evt_range ( chain , first , last )
@@ -532,17 +534,20 @@ def parallel_statistic ( chain                    ,
                                 use_frame   = use_frame ,
                                 parallel    = False     )
 
-    ##   
+    ## The Task
     task   = StatVarTask ( expressions           ,
                            cuts      = cuts      ,
                            as_weight = True      ,
                            progress  = False     ,
                            use_frame = use_frame , 
                            parallel   = False     ) 
-    
+
+    ## Manager 
     wmgr   = WorkManager ( silent = silent , progress = progress or not silent , **kwargs )
 
-    ch     = Chain    ( chain , first = first   , nevents = nevents )
+    ## split data 
+    from ostap.trees.utils   import Chain
+    ch     = Chain    ( chain , first = first   , last = last )
     trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
 
     wmgr.process ( task , trees )
@@ -637,17 +642,20 @@ def parallel_size ( chain                    ,
                            use_frame = use_frame ,
                            parallel  = False     )
 
-    ## split data 
-    from ostap.trees.trees import Chain
-    ch     = Chain ( chain , first = first , nevents = nevents )
-
+    ## The Task 
     task   = SizeTask ( cuts      = cuts      ,
                         use_frame = use_frame , 
                         progress  = False     )
-    
+
+    ## Manager 
     wmgr   = WorkManager ( silent = silent , progress = progress or not silent , **kwargs )
+
+    ## split data 
+    from ostap.trees.utils import Chain
+    ch     = Chain ( chain , first = first , last = last  )
     trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
 
+    
     wmgr.process ( task , trees )
 
     del trees
@@ -691,18 +699,21 @@ def parallel_get_stat ( chain                    ,
                                 progress    = progress  ,
                                 use_frame   = use_frame ,
                                 parallel    = False     )
-
-    from ostap.trees.trees import Chain
-    ch     = Chain ( chain , first = first , nevents = nevents )
-
+    
+    ## The Task
     task   = GetStatTask ( target                ,
                            expressions           , 
                            cuts      = cuts      ,
                            progress  = False     ,
                            use_frame = use_frame ,
                            parallel  = False     ) 
-    
+
+    ## Manager 
     wmgr   = WorkManager ( silent = silent , progress = progress or not silent , **kwargs )
+
+    ## split data 
+    from ostap.trees.utils import Chain
+    ch     = Chain    ( chain , first = first , last = last  )
     trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
 
     wmgr.process ( task , trees )
@@ -749,10 +760,7 @@ def parallel_project ( chain                    ,
                               progress    = progress  ,
                               use_frame   = use_frame ,
                               parallel    = False     )
-    
-    from ostap.trees.trees import Chain
-    ch     = Chain ( chain , first = first , nevents = nevents )
-    
+    ## The Task 
     task   = ProjectTask ( target                ,
                            expressions           , 
                            cuts      = cuts      ,
@@ -760,8 +768,13 @@ def parallel_project ( chain                    ,
                            progress  = False     ,
                            use_frame = use_frame ,
                            parallel  = False     ) 
-    
+
+    ## Manager 
     wmgr   = WorkManager ( silent = silent , progress = progress or not silent , **kwargs )
+
+    ## split data 
+    from ostap.trees.utils import Chain
+    ch     = Chain ( chain , first = first , last = last  )    
     trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
     
     wmgr.process ( task , trees )
@@ -813,21 +826,24 @@ def parallel_covariance ( chain                    ,
                                  progress    = progress  ,
                                  use_frame   = use_frame ,
                                  parallel    = False     )
-    
-    ## split data 
-    from ostap.trees.trees import Chain
-    ch     = Chain   ( chain , first = first , nevents = nevents )
-    
+
+    ## prepare task 
     task   = CovTask ( expressions           ,
                        cuts      = cuts      ,
                        as_weight = as_weight  ,
                        use_frame = use_frame , 
                        progress  = False     ,
                        parallel  = False     )
-    
+
+    ## Manager
     wmgr   = WorkManager ( silent = silent , progress = progress or not silent , **kwargs )
+    
+    ## split data 
+    from ostap.trees.utils import Chain
+    ch     = Chain    ( chain , first = first , last = last )    
     trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
 
+    ## process 
     wmgr.process ( task , trees )
 
     del trees
@@ -882,11 +898,8 @@ def parallel_slice ( chain                    ,
                            progress    = progress  ,
                            use_frame   = use_frame ,
                            parallel    = False     )
-    
-    ## split data 
-    from ostap.trees.trees import Chain
-    ch     = Chain     ( chain , first = first , nevents = nevents )
-    
+
+    ## Task 
     task   = SliceTask ( expressions             ,
                          cuts       = cuts       ,
                          structured = structured ,
@@ -894,9 +907,14 @@ def parallel_slice ( chain                    ,
                          use_frame  = use_frame  , 
                          progress   = False      ,
                          parallel   = False      )
-    
+
+    ## Manager 
     wmgr   = WorkManager ( silent = silent , progress = progress or not silent , **kwargs )
-    trees  = ch.split    ( chunk_size = chunk_size , max_files = max_files )
+
+    ## Split data 
+    from ostap.trees.utils import Chain
+    ch     = Chain    ( chain , first = first , last = last  )    
+    trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
     
     wmgr.process ( task , trees )
 
@@ -912,12 +930,12 @@ _decorated_classes_ = (
     )
 
 _new_methods_       = (
-    ## 'parallel_statistic'  ,
-    ## 'parallel_get_stat'   ,
-    ## 'parallel_project'    ,
-    ## 'parallel_covariance' ,
-    ## 'parallel_slice'      ,
-    ## 'parallel_sum'        ,
+    parallel_statistic  ,
+    parallel_get_stat   ,
+    parallel_project    ,
+    parallel_covariance ,
+    parallel_slice      ,
+    parallel_sum        ,
 )
 
 # =============================================================================
@@ -925,7 +943,7 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-        
+    
 # =============================================================================
 #                                                                       The END 
 # =============================================================================
