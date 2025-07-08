@@ -62,6 +62,7 @@ from   ostap.core.ostap_types   import ( is_integer     , string_types   ,
 from   ostap.math.base          import iszero , frexp10, numpy  
 from   ostap.core.core          import ( Ostap , VE , hID , dsID , rootID   ,
                                          valid_pointer , in_test , 
+                                         rootException , 
                                          roo_silent    , rootWarning  )
 from   ostap.fitting.utils      import ( RangeVar   , numcpu     ,
                                          make_name  , fit_status ,
@@ -2230,13 +2231,15 @@ class APDF1 ( Components ) :
                                   hpars = hpars ,
                                   histo = histo , **kwargs )
 
-        hh = self.pdf.createHistogram (
-            hID ()    ,
-            self.xvar ,
-            self.binning ( histo.GetXaxis() , 'histo1x' ) ,
-            ROOT.RooFit.Extended ( False ) ,
-            ROOT.RooFit.Scaling  ( False ) ,            
-            )
+        with rootException() , warnings.catch_warnings() :
+            warnings.simplefilter ( "ignore" , category = RuntimeWarning )
+            hh = self.pdf.createHistogram (
+                hID ()    ,
+                self.xvar ,
+                self.binning ( histo.GetXaxis() , 'histo1x' ) ,
+                ROOT.RooFit.Extended ( False ) ,
+                ROOT.RooFit.Scaling  ( False ) ,            
+                )
 
         ## nullify errors 
         for i in hh : hh.SetBinError ( i , 0 ) 
@@ -3748,12 +3751,14 @@ class APDF2 (APDF1) :
                                   hpars = hpars ,
                                   histo = histo , **kwargs )
         
-        hh = self.pdf.createHistogram (
-            hID()     ,
-            self.xvar ,                    self.binning ( histo.GetXaxis() , 'histo2x' )   ,
-            ROOT.RooFit.YVar ( self.yvar , self.binning ( histo.GetYaxis() , 'histo2y' ) ) , 
-            ROOT.RooFit.Scaling  ( False ) , 
-            ROOT.RooFit.Extended ( False ) ) 
+        with rootException() , warnings.catch_warnings():
+            warnings.simplefilter ( "ignore" , category = RuntimeWarning )
+            hh = self.pdf.createHistogram (
+                hID()     ,
+                self.xvar ,                    self.binning ( histo.GetXaxis() , 'histo2x' )   ,
+                ROOT.RooFit.YVar ( self.yvar , self.binning ( histo.GetYaxis() , 'histo2y' ) ) , 
+                ROOT.RooFit.Scaling  ( False ) , 
+                ROOT.RooFit.Extended ( False ) ) 
 
         ## nullify errors 
         for i , j in hh : hh.SetBinError ( i , j , 0 ) 
@@ -5021,14 +5026,16 @@ class APDF3 (APDF2) :
                                   zbins = zbins , 
                                   hpars = hpars ,
                                   histo = histo , **kwargs )
-
-        hh = self.pdf.createHistogram (
-            hID()     ,
-            self.xvar ,                    self.binning ( histo.GetXaxis() , 'histo3x' )   ,
-            ROOT.RooFit.YVar ( self.yvar , self.binning ( histo.GetYaxis() , 'histo3y' ) ) , 
-            ROOT.RooFit.ZVar ( self.zvar , self.binning ( histo.GetZaxis() , 'histo3z' ) ) , 
-            ROOT.RooFit.Scaling  ( False ) , 
-            ROOT.RooFit.Extended ( False ) )
+        
+        with rootException() , warnings.catch_warnings():
+            warnings.simplefilter ( "ignore" , category = RuntimeWarning )
+            hh = self.pdf.createHistogram (
+                hID()     ,
+                self.xvar ,                    self.binning ( histo.GetXaxis() , 'histo3x' )   ,
+                ROOT.RooFit.YVar ( self.yvar , self.binning ( histo.GetYaxis() , 'histo3y' ) ) , 
+                ROOT.RooFit.ZVar ( self.zvar , self.binning ( histo.GetZaxis() , 'histo3z' ) ) , 
+                ROOT.RooFit.Scaling  ( False ) , 
+                ROOT.RooFit.Extended ( False ) )
         
         for i,j,k in hh : hh.SetBinError ( i , j , k , 0 ) 
         
