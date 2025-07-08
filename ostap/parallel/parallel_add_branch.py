@@ -18,8 +18,8 @@ __all__     = (
 # =============================================================================
 from   ostap.core.core                 import valid_pointer 
 from   ostap.utils.basic               import loop_items 
-from   ostap.parallel.parallel         import Task, WorkManager, Checker 
-import ostap.parallel.parallel_statvar
+from   ostap.parallel.parallel         import Task, WorkManager, Checker
+import ostap.trees.base 
 import ROOT
 # =============================================================================
 # logging 
@@ -43,9 +43,14 @@ class AddNewBranch(Task) :
     def process           ( self , jobid , tree ) :
         
         from ostap.trees.trees import push_2chain
+        from ostap.math.base   import all_entries
         
         files = []
         chain = tree.chain
+        first = tree.first
+        last  = tree.last
+        
+        assert all_entries ( chain , first , last ) , 'Invald first/last setting!'
         push_2chain ( chain , *self.recipe_args , progress = False , report = False )
         for f in tree.files :
             if not f in files : files.append ( f )
@@ -82,7 +87,11 @@ class AddUnpreparedBranch(AddNewBranch) :
         
         from ostap.trees.trees import prepare_branches
         chain = tree.chain
+        first = tree.first
+        last  = tree.last
+        assert all_entries ( chain , first , last ) 
         args, expected , kw , keep = prepare_branches ( chain , self.branch_arg , **self.recipe_kwargs )
+        
         self.recipe_args = args
         return AddNewBranch.process ( self , jobid , tree ) 
     
@@ -109,7 +118,7 @@ def add_new_branch ( chain           ,
 
     from ostap.trees.trees import Chain, prepare_branches, push_2chain  
 
-    if   isinstance ( chain , ROOT.TChain ) and 1 < len ( chain.files () ) : pass 
+    if   isinstance ( chain , ROOT.TChain ) and 1 <= len ( chain.files () ) : pass 
     elif isinstance ( chain , ROOT.TTree  ) :        
         from ostap.trees.trees import add_new_branch as _add_branch_ 
         return _add_branch_ ( chain , branch , progress = progress , report = report , **kwargs ) 
@@ -164,20 +173,24 @@ def add_new_branch ( chain           ,
         return
     
     files    = chain.files () 
-    cname    = chain.name
-    ch       = Chain ( chain ) 
-    branches = set   ( chain.branches() ) | set ( chain.leaves() ) 
-
+    cname    = chain.full_path 
+    
+    branches = set ( chain.branches() ) | set ( chain.leaves() ) 
+    
+    from ostap.trees.utils import Chain
+    ch       = Chain    ( chain ) 
+    trees    = ch.split ( chunk_size = -1 , max_files = 1  )
+    
     wmgr     = WorkManager ( silent = not progress , **kw )
-    trees    = ch.split    ( max_files = 1  )
     
     wmgr.process ( task , trees )
-
+    
+    ## reconstruct the chain 
     nc = ROOT.TChain ( cname )
     for f in files : nc.Add ( f )
 
     if report : 
-        new_branches = sorted ( ( set ( nc.branches () ) | set ( nc.leaves() ) ) - set ( branches ) ) 
+        new_branches = sorted ( ( set ( nc.branches () ) | set ( nc.leaves() ) ) - set ( branches ) )
         if new_branches : 
             n = len ( new_branches )  
             if 1 == n  : title = 'Added %s branch to TChain'   % n

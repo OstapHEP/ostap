@@ -25,10 +25,6 @@ __all__     = (
     # =========================================================================
 ) # ===========================================================================
 # =============================================================================
-from   ostap.core.meta_info import python_info 
-from   itertools            import zip_longest
-import sys, os, datetime, shutil 
-# =============================================================================
 ## defalt separators for the string expressions
 var_separators = ',:;'
 # =============================================================================
@@ -46,6 +42,7 @@ def split_string_respect  ( text , separators = var_separators , strip = True ) 
     """ Split string using separators and respecting the (),[] and {} groups.
     - groups can be nested
     """
+    assert isinstance ( text , str ) , "Invalid `text` %s" % type ( text ) 
     protected = False 
     if ':' in separators and '::' in text :
         text      = text.replace ( '::' , dc_mark ) 
@@ -80,7 +77,7 @@ def split_string_respect  ( text , separators = var_separators , strip = True ) 
                               
     ## strip items if required 
     if strip : items = [ item.strip() for item in items ] 
-    ## remove empty items 
+    ## remove empty items
     return tuple ( item for item in items if item  )
 
 # =============================================================================
@@ -95,6 +92,8 @@ def split_string ( line                            ,
     """ Split the string using separators
     >>> split_string ( ' a b cde,fg;jq', ',;:' )
     """
+    assert isinstance ( line , str ) , "Invalid `line` %s" % type ( line )
+    
     if respect_groups :
         return split_string_respect ( line                    ,
                                       separators = separators ,
@@ -125,21 +124,22 @@ def split_string ( line                            ,
     ## remove empty items 
     return tuple ( item for item in items if item )
 
-
 # =========================================================================
 ## Has any of the symbols?
 def has_symbol ( expression , symbols ) :
     """ Has any of the symbols?"""
+    assert isinstance ( expression , str ) , "Invalid `expression` %s" % type ( expression  )
     return any ( s in expression for s in symbols )
 
 # =========================================================================
 ## markers of the math formulas 
 math_symbols = ' +-*/=><()[]^%&|'
 ## Does this string expression represent math formula?
-def is_formula ( expr , symbols = math_symbols ) :
+def is_formula ( expression , symbols = math_symbols ) :
     """ Does  this string expression represent math formula?
     """
-    return has_symbol ( expr.strip() , symbols ) 
+    assert isinstance ( expression , str ) , "Invalid `expression` %s" % type ( expression  )
+    return has_symbol ( expression.strip() , symbols ) 
 
 # =============================================================================
 if '__main__' == __name__ :

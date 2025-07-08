@@ -222,14 +222,16 @@ def the_table ( rows                          ,
     ## take care on "wrapped&wrapped-like" columns 
     rows = [ list ( row ) for row in preprocess_table ( rows ) ]
     
-    if not rows : return ''
+    if not rows : return ''                                  ## RETURN 
 
     # =================================================================
     ## Basis structure 
     # =================================================================
 
     ## (max)number of columns
-    num_cols    = max ( len ( row ) for row in rows )        
+    num_cols    = max ( len ( row ) for row in rows )
+    if not num_cols : return ''                              ## RETURN 
+    
     ## take care on "wrapped&wrapped-like" columns 
     rows        = [ list ( row ) for row in preprocess_table ( rows ) ]
     ## equalize columns: ensure that all rows have the same (max) length  
@@ -388,7 +390,8 @@ def table ( rows                          ,
     if not maxwidth or maxwidth <= pwidth : maxwidth = terminal_size() [ 0 ]
 
     rows = [ list ( row ) for row in preprocess_table ( rows ) ]
-
+    if not rows : return ''                               ## RETURN 
+    
     if rows and colorize_header : 
         header_row = rows [ 0 ]
         header_row = [ infostr ( decolorize ( c ) ) for c in header_row ]
@@ -407,7 +410,9 @@ def table ( rows                          ,
     # =================================================================
 
     ## (max)number of columns
-    num_cols    = max ( len ( row ) for row in rows )        
+    num_cols    = max ( len ( row ) for row in rows )
+    if not num_cols : return ''                              ## RETURN 
+
     ## take care on "wrapped&wrapped-like" columns 
     rows        = [ list ( row ) for row in preprocess_table ( rows ) ]
     ## equalize columns: ensure that all rows have the same (max) length  

@@ -84,16 +84,16 @@ __all__     = (
     'expression_types'     , ## valid types for expressions/cuts/weights
 )
 # =============================================================================
-from   ostap.math.base           import ( isequal     , iszero    ,
-                                          axis_range  ,
-                                          strings     , doubles   ,  
-                                          all_entries , evt_range )      
-from   ostap.core.core           import Ostap, rootException, WSE, VE, std     
-from   ostap.core.ostap_types    import ( string_types   , integer_types  , 
-                                          num_types      , dictlike_types ,
-                                          sequence_types )
-from   ostap.trees.cuts          import expression_types, vars_and_cuts
-from   ostap.utils.basic               import loop_items, typename 
+from   ostap.math.base                import ( isequal     , iszero    ,
+                                               axis_range  ,
+                                               strings     , doubles   ,  
+                                               all_entries , evt_range )      
+from   ostap.core.core                 import Ostap, rootException, WSE, VE, std     
+from   ostap.core.ostap_types          import ( string_types   , integer_types  , 
+                                                num_types      , dictlike_types ,
+                                                sequence_types )
+from   ostap.trees.cuts                import expression_types, vars_and_cuts
+from   ostap.utils.basic               import loop_items, typename, numcpu
 from   ostap.utils.progress_conf       import progress_conf
 import ostap.frames.frames             as     F 
 import ostap.parallel.parallel_statvar as P 
@@ -109,11 +109,53 @@ else                       : logger = getLogger ( __name__               )
 # =============================================================================
 LARGE   = 50000    ## allow frames or parallel for LARGE datasets 
 # =============================================================================
-## is data (tree or chain) good for processing via RDataFrame ? 
-def good_for_frame ( data , *args ) :
-    return True 
-def good_for_parallel (data, *args ) :
-    return True 
+## IS data (tree or chain) good for processing via RDataFrame ?
+MIN_ENTRIES_FOR_FRAME    = 100000
+MIN_ENTRIES_FOR_PARALLEL = 500000
+MIN_FILES_FOR_PARALLEL   = 2
+# =============================================================================
+## Good for provcssing via frames?
+def good_for_frame    ( data , *args ,
+                        min_events = MIN_ENTRIES_FOR_FRAME ) :
+    """ Good for provcessing via frames?
+    """
+    if 2 < len ( args )                                    : return False
+    
+    ## Not TTree ?
+    if not isinstance ( data , ROOT.TTree  )               : return False
+    
+    ## do we have at least two CPUs?
+    if numcpu() < 2                                        : return False
+
+    ## Is multithreading enabled? 
+    if not ROOT.ROOT.IsImplicitMTEnabled()                 : return False 
+
+    ## check number of events 
+    first, last = evt_range ( data , *args[:2] )
+    ## dataset is too small
+    return 0 <= first < last and min_events <= ( last - first ) and all_entries ( data , first , last ) 
+
+# ============================================================================
+## good for parallel processing 
+def good_for_parallel ( data ,
+                        *args ,
+                        min_events = MIN_ENTRIES_FOR_PARALLEL , 
+                        min_files  = MIN_FILES_FOR_PARALLEL   ) :
+    
+    ## Not TTree ?
+    if not isinstance ( data , ROOT.TTree  )               : return False
+
+    ## do we have at least two CPUs?
+    if numcpu() < 2                                        : return False
+
+            
+    first, last = evt_range ( data , *args[:2] )
+    if 0 <= first < last and min_events < ( last - first ) : return True ## ATTENTION
+
+    if isinstance ( data , ROOT.TChain ) : return min_files <= data.nFiles ()
+    
+    return False
+
 # =============================================================================
 StatVar = Ostap.StatVar
 # =============================================================================
@@ -212,31 +254,27 @@ def data_get_stat ( data               ,
         assert sc.isSuccess() , 'Error %s from StatVar::get_stat' % sc 
         return statobj
 
-    if  use_frame and isinstance ( data , ROOT.TTee    ) and LARGE < len ( data ) :
-        if all_entries ( data , *args[:2] ) and not arg[2:]  :
-            return F.frame_project ( data                   ,
-                                     model       = statobj  ,
-                                     expressions = var_lst  ,
-                                     cuts        = cuts     ,
-                                     progress    = progress ,
-                                     report      = progress ,
-                                     lazy        = False    ) 
+    if  use_frame and good_for_frame ( data , *args ) : 
+        return F.frame_project ( data                   ,
+                                 model       = statobj  ,
+                                 expressions = var_lst  ,
+                                 cuts        = cuts     ,
+                                 progress    = progress ,
+                                 report      = progress ,
+                                lazy        = False    )
     
-    if  parallel   and isinstance ( data , ROOT.TChain ) and LARGE < len ( data ) :
-        if all_entries ( data , *args[:2] ) and not args [2:]  :
-            import ostap.trees.trees
-            if 1 < len ( data.files () ) :
-                from ostap.parallel.parallel_stavar import parallel_get_stat
-                return parallel_get_stat ( data        ,
-                                           statobj     ,
-                                           expressions ,
-                                           cuts       = cuts          ,
-                                           progress   = progress      ,
-                                           use_frame  = False         , ## NB!!
-                                           chunk_size = 2 * LARGE     ,
-                                           maX_files  = 1             ,
-                                           silent     = not progress  ) ;
-
+    if  parallel and good_for_parallel ( data , *args ) : 
+        from ostap.parallel.parallel_stavar import parallel_get_stat        
+        return parallel_get_stat ( data        ,
+                                   statobj     ,
+                                   expressions ,
+                                   cuts        , *args         ,  
+                                   progress    = progress      ,
+                                   use_frame   = False         , ## NB!!
+                                   chunk_size  = 2 * LARGE     ,
+                                   max_files   = 1             ,
+                                   silent      = not progress  ) ;
+    
     assert isinstance ( data , ROOT.TTree ) , "Invalid type for data!"
     
     ## Branches to be activated
@@ -328,24 +366,20 @@ def data_hasEntry ( data               ,
     if not cuts : return True 
 
     ## use frame ? 
-    if use_frame and isinstance ( data , ROOT.TTree  ) and len ( data ) > LARGE :
-        if all_entries ( data , *args[:2] ) and not args [2:] :             
-            return 0 < F.frame_size ( data                ,
-                                      cuts     = cuts     , 
-                                      progress = progress ,
-                                      report   = progress ,
-                                      lazy     = False    ) 
-
-    ## paralell ? 
-    if parallel and isinstance ( data , ROOT.TChain ) and len ( data ) > LARGE :
-        if all_entries ( data , *args[:2] ) and not args [2:] : 
-            import ostap.trees.trees   
-            if 1 < data.nFiles () :
-                from ostap.parallel.parallel_statvar import parallel_size 
-                return 0 < paralel_size ( data                  ,
-                                          cuts      = cuts      ,
-                                          progress  = progress  , 
-                                          use_frame = use_frame )
+    if use_frame and good_for_frame ( data , *args ) :
+        return 0 < F.frame_size ( data                ,
+                                  cuts     = cuts     , 
+                                  progress = progress ,
+                                  report   = progress ,
+                                  lazy     = False    ) 
+    
+    ## parallel ? 
+    if parallel and good_for_parallel ( data , *args ) :
+        from ostap.parallel.parallel_statvar import parallel_size 
+        return 0 < paralel_size ( data                  ,
+                                  cuts      , *args     , 
+                                  progress  = progress  , 
+                                  use_frame = use_frame )
     
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
@@ -390,25 +424,21 @@ def data_size ( data               ,
     if not cuts : return last - first 
 
     ## use frame ? 
-    if use_frame and isinstance ( data , ROOT.TTree  ) and len ( data ) > LARGE :
-        if all_entries ( data , *args[:2] ) and not args [2:] :             
-            return F.frame_size ( data                 ,
-                                  cuts     = cuts      , 
-                                  progress = progress  ,
-                                  report   = progress  ,
-                                  lazy     = False     ) 
-
-    ## paralell ? 
-    if parallel and isinstance ( data , ROOT.TChain ) and len ( data ) > LARGE :
-        if all_entries ( data , *args[:2] ) and not args [2:] : 
-            import ostap.trees.trees   
-            if 1 < data.nFiles () :
-                from ostap.parallel.parallel_statvar import parallel_size 
-                return paralel_size ( data                  ,
-                                      cuts      = cuts      ,
-                                      progress  = progress  , 
-                                      use_frame = use_frame )
-            
+    if use_frame and good_for_frame ( data , *args ) : 
+        return F.frame_size ( data                 ,
+                              cuts     = cuts      , 
+                              progress = progress  ,
+                              report   = progress  ,
+                              lazy     = False     ) 
+    
+    ## parallel ? 
+    if parallel and good_for_parallel ( data , *args ) : 
+        from ostap.parallel.parallel_statvar import parallel_size 
+        return paralel_size ( data                  ,
+                              cuts      , *args     ,
+                              progress  = progress  , 
+                              use_frame = use_frame )
+    
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
     with rootException() , ActiveBranches ( cuts ) :
@@ -526,28 +556,24 @@ def data_statistic ( data               ,
     assert var_lst , "Invalid expressions!"
 
     
-    if use_frame and isinstance ( data , ROOT.TTree  ) and len ( data ) > LARGE :
-        if all_entries ( data , *args[:2] ) and not args[2:] :
-            return F.frame_statistic ( data        ,
-                                       expressions ,
-                                       cuts        = cuts      , 
-                                       as_weight   = as_weight , 
-                                       progress    = progress  ,
-                                       report      = progress  ,
-                                       lazy        = False     ) 
+    if use_frame and good_for_frame ( data , *args ) : 
+        return F.frame_statistic ( data        ,
+                                   expressions ,
+                                   cuts        = cuts      , 
+                                   as_weight   = as_weight , 
+                                   progress    = progress  ,
+                                   report      = progress  ,
+                                   lazy        = False     ) 
 
-    if parallel and isinstance ( data , ROOT.TChain ) and len ( data ) > LARGE :
-        if all_entries ( data , *args[:2] ) and not args [2:] : 
-            import ostap.trees.trees   
-            if 1 < data.nfiles () :
-                from ostap.parallel.parallel_statvar import parallel_statistic
-                return paralllel_statistic ( data        ,
-                                             expressions ,
-                                             cuts        = cuts       ,
-                                             as_weight   = as_weight  , 
-                                             progress    = progress   ,
-                                             use_frame   = use+_frame )
-
+    if parallel and good_for_parallel ( data , *args ) : 
+        from ostap.parallel.parallel_statvar import parallel_statistic
+        return parallel_statistic ( data        ,
+                                    expressions ,
+                                    cuts        , *args      ,
+                                    as_weight   = as_weight  , 
+                                    progress    = progress   ,
+                                    use_frame   = use_frame  )
+    
     ##  diplay progress ? 
     progress = progress_conf ( progress )
 
@@ -745,28 +771,25 @@ def data_covariance ( data        ,
             else      : sc = sv.statCov ( data , result , vnames                  , cuts , cut_range , *args )
             assert sc.isSuccess() , 'Error %s from StatVar::statVars' % sc 
             return result 
-
-    if  use_frame and isinstance ( data , ROOT.TTee   ) :
-        if all_entries ( data , *args[:2] ) and N == 2 and len ( data ) > LARGE :
-            return F.frame_covariance ( frame                 ,
-                                        var_lst [ 0 ]         ,
-                                        var_lst [ 1 ]         ,
-                                        cuts      = cuts      ,
-                                        as_weight = as_weight ,
-                                        progress  = progress  ,
-                                        lazy      = False     ) 
-                                                                                   
-    if  parallel  and isinstance ( data , ROOT.TChain ) and all_entries ( data , *args[:2] ) : 
-        import ostap.trees.trees
-        if 1 < len ( data.files () ) :
-            from ostap.parallel.parallel_statvar import parallel_covariance
-            return paralllel_covariance ( data        ,
-                                          expressions ,
-                                          cuts        = cuts       ,
-                                          as_weight   = as_weight  , 
-                                          progress    = progress   ,
-                                          use_frame   = use+_frame )
         
+    if  use_frame and good_for_frame ( data , *args )  and 2 == N : 
+        return F.frame_covariance ( frame                 ,
+                                    var_lst [ 0 ]         ,
+                                    var_lst [ 1 ]         ,
+                                    cuts      = cuts      ,
+                                    as_weight = as_weight ,
+                                    progress  = progress  ,
+                                    lazy      = False     ) 
+    
+    if  parallel and good_for_parallel ( data , *args ) : 
+        from ostap.parallel.parallel_statvar import parallel_covariance
+        return parallel_covariance ( data        ,
+                                     expressions ,
+                                     cuts        , *args      , 
+                                     as_weight   = as_weight  , 
+                                     progress    = progress   ,
+                                     use_frame   = use+_frame )
+    
     assert isinstance ( data , ROOT.TTree ) , "Invalid type for data!"
 
     ## Branches to be activated
@@ -800,8 +823,8 @@ def data_statvector ( data        ,
     
     assert 2 <= N , "At least two variables are needed!"
         
-    covs = data_covariance ( data , var_lst ,
-                             cuts       = cuts      , *args , 
+    covs = data_covariance ( data       , var_lst   ,
+                             cuts       , *args     , 
                              cut_range  = cut_range ,                             
                              as_weight  = as_weight ,  
                              progress   = progress  , 
@@ -1028,7 +1051,7 @@ def data_power_mean ( data , p ,
     if    p == -1 or isequal ( p , -1. ) :
         return data_harmonic_mean   ( data       ,
                                       expression , 
-                                      cuts       , **args    , 
+                                      cuts       , *args     , 
                                       cut_range  = cut_range ,
                                       progress   = progress  ,
                                       use_frame  = use_frame ,
@@ -1380,15 +1403,15 @@ def  data_quantiles ( data               ,
                              cuts       , *args    ,
                              cut_range = cut_range ,
                              progress  = progress  ,              
-                             use_frame = False     ,  ## ATTENTION 
-                             parallel  = False     )  ## ATTENTION 
+                             use_frame = False     ,  ## ATTENTION!
+                             parallel  = False     )  ## ATTENTION!
 
     qq = result.quantiles()
     nq = len ( qq ) 
     return tuple ( qq [ i ] for i in range ( nq ) ) 
 
 # =============================================================================
-## get the (approximate) mediane for the data using P2-algorithm
+## get the (approximate) median for the data using P2-algorithm
 #  @code
 #  data =  ...
 #  print data_median  ( data , 'mass' , 'pt>1' ) 
@@ -1901,28 +1924,24 @@ def data_project ( data                ,
         assert sc.isSuccess() , 'Error %s from StatVar::project(1,2,3)' % sc 
         return target
     
-    if  use_frame and isinstance ( data , ROOT.TTee    ) and LARGE < len ( data ) :
-        if all_entries ( data , *args[:2] ) and not arg[2:]  :
-            return F.frame_project ( data                   ,
-                                     model       = target   ,
-                                     expressions = var_lst  ,
-                                     cuts        = cuts     ,
-                                     progress    = progress ,
-                                     report      = progress ,
-                                     lazy        = False    ) 
+    if  use_frame and good_for_frame ( data , *args ) : 
+        return F.frame_project ( data                   ,
+                                 model       = target   ,
+                                 expressions = var_lst  ,
+                                 cuts        = cuts     ,
+                                 progress    = progress ,
+                                 report      = progress ,
+                                 lazy        = False    ) 
     
-    if  parallel   and isinstance ( data , ROOT.TChain ) and LARGE < len ( data ) :
-        if all_entries ( data , *args[:2] ) and not args [2:]  :
-            import ostap.trees.trees
-            if 1 < len ( data.files () ) :
-                from ostap.parallel.parallel_statvars import parallel_project
-                return parallel_project ( data                   ,
-                                          target                 ,
-                                          expressions            ,
-                                          cuts       = cuts      ,
-                                          as_weight  = as_weight ,
-                                          progress   = progress  ,
-                                          use_frame  = use_frame )
+    if  parallel and good_for_parallel ( data , *args ) : 
+        from ostap.parallel.parallel_statvars import parallel_project
+        return parallel_project ( data                   ,
+                                  target                 ,
+                                  expressions            ,
+                                  cuts       , *args     ,
+                                  as_weight  = as_weight ,
+                                  progress   = progress  ,
+                                  use_frame  = use_frame )
                                                                                        
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
@@ -1963,7 +1982,6 @@ def data_slice ( data        ,
     ## (2) adjust first/last 
     first , last = evt_range ( data , *args )
 
-
     ## (3) cut_range defined *only* for RooFit datasets 
     if cut_range and not isinstance ( data , ROOT.RooAbsData ) : 
         raise TypeError ( "Invalid use of `cut_range':%s" % cut_range  ) 
@@ -1980,46 +1998,35 @@ def data_slice ( data        ,
                           first      = first      ,
                           last       = last       )
     
-    if  use_frame and isinstance ( data , ROOT.TTee ) and LARGE < len ( data ) :
-        if all_entries ( data , first , last ) :
-            return F.frame_slice ( data                    ,
-                                   expression              ,
-                                   cuts       = cuts       ,
-                                   structured = structured ,
-                                   transpose  = transpose  , 
-                                   progress   = prorgess   ) 
+    if  use_frame and good_for_frame ( data , *args ) : 
+        return F.frame_slice ( data                    ,
+                               expression              ,
+                               cuts       = cuts       ,
+                               structured = structured ,
+                               transpose  = transpose  , 
+                               progress   = prorgess   ) 
+
         
-        
-    if parallel   and isinstance ( data , ROOT.TChain ) and LARGE < len ( data ) :
-        if all_entries ( first , last ) :
-            import ostap.trees.trees
-            if 1 < len ( data.files () ) :
-                from ostap.parallel.parallel_stavar import parallel_slice 
-                return parallel_slice ( data                    ,
-                                        expressions             ,
-                                        cuts       = cuts       ,
-                                        structured = structured ,
-                                        transpose  = transpose  , 
-                                        first      = first      ,
-                                        last       = last       ,
-                                        progress   = prorgess   ,
-                                        use_frame  = use_frame  ) 
-        
+    if parallel   and good_for_parallel ( data , *args ) :        
+        return parallel_slice ( data                     ,
+                                expressions              ,
+                                cuts        , *args      ,
+                                structured  = structured ,
+                                transpose   = transpose  , 
+                                progress    = prorgess   ,
+                                use_frame   = use_frame  ) 
+
     assert isinstance ( data , ROOT.TTree ) , "Here data must be TTree!"
 
     from ostap.trees.trees import tree_slice
     return tree_slice ( data                     ,
                         expressions              ,
-                        cuts        = cuts       ,
+                        cuts        , *args      , 
                         structured  = structured ,
                         transpose   = transpose  , 
                         progress    = progress   , 
-                        first       = first      , 
-                        last        = last       ,
                         use_frame   = False      ,
                         parallel    = False      )
-
-
 
 
 # =============================================================================

@@ -2,15 +2,14 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/trees/utils.py
-#  Simple utilities for TTree/TChain treatment in multiprocesisng 
+#  Utilities to make TTree/TChain suitable for multiprocessing:
 #  - pickling
 #  - unpickling 
 #  - spltitting 
-#  machinery for splitting
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 # =============================================================================
-""" Simple utilities for TTree/TChain treatment in multiprocesisng 
+""" Utilities to make TTree/TChain suitable for multiprocessing:
 - pickling
 - unpickling 
 - spltitting 
@@ -21,7 +20,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
     'Chain' , ## wrapper for Chain 
-    'Ttree' , ## wrapper for TTree
+    'Tree'  , ## wrapper for TTree
 ) 
 # =============================================================================
 from   itertools              import accumulate 
@@ -40,17 +39,16 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.trees.utils' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-logger.debug ( 'Utilities for TTree/TChain pickling/unpickling and splitting' )
+logger.debug ( 'Utilities to make TTree/TChain suitable for multiptocessing' )
 # =============================================================================
+
 ## @class Chain
-#  Simple class to make TChain "pickleable"
-#  It is needed for multiprcessing:
+#  Simple class to make TChain suitable for multiprocessing:
 # - pickling
 # - unpickling 
 # - spltitting
 class Chain(CleanUp) :
-    """ Simple class to make TTree/TChain "pickleable 
-    It is needed mainly for multiprocessing: 
+    """ Simple class to make TChain suitable for multiprocesisng:
     - pickling
     - unpickling 
     - spltitting
@@ -90,43 +88,43 @@ class Chain(CleanUp) :
         #
         origin         = state [ 'host'    ]
         file_infos     = state [ 'files'   ]
-        #
         ##
         import socket 
         host    = socket.getfqdn ().lower()
         ##
-        self.__chain   = None
-        self.__files   = [] 
+        files = [] 
         
-        same_host = origin == host 
-        for fname , finfo in file_infos :
-            if same_host  : self.__files.append ( fname )
-            else :
-                fnew = file_info ( fname )
-                if fnew == finfo :
+        same_host = origin == host
+        if same_host : files = [ f [ 0 ] for f in file_infos ]
+        else         :
+            for fname , finfo in file_infos :
+                if file_info ( fname )  == finfo :
                     ## hosts are different but the files are the same (shared file system?)
-                    self.__files.append ( fname )
+                    files.append ( fname )
                 else :
                     # =========================================================
                     ## the file needs to be copied locally
-                    ## @todo implement the parallel copy? 
+                    ## @todo implement here  the parallel copy? 
                     from ostap.utils.scp_copy import scp_copy
                     full_name  = '%s:%s' % ( origin , fname ) 
                     copied , t = scp_copy  ( full_name )
                     if copied :
                         cinfo = file_info ( copied )
                         c = '%s --> %s' % ( full_name , "%s:%s" % ( host , copied ) )
-                        if cinfo[:4] == finfo [:4] :
-                            size = cinfo[1]
-                            s =  cinfo [ 1 ] / float ( 1024 ) / 1025 ##  MB 
-                            v = s / t                  ## MB/s 
+                        if cinfo [ : 4 ] == finfo [ : 4 ] :
+                            size = cinfo [ 1 ]
+                            s = size / float ( 1024 ) / 1025 ##  MB 
+                            v = s    / t                     ## MB/s 
                             logger.debug ( 'Chain.__setstate__ : file copied %s :  %.3f[MB] %.2f[s] %.3f[MB/s]' % ( c , s , t , v ) )
-                            self.__files.append ( copied ) ## APPEND 
+                            files.append ( copied ) ## APPEND 
                         else :
                             logger.error ( 'Chain.__setstate__ : Something wrong with the copy %s : %s vs %s ' % ( c , cinfo[:4] , finfo[:4] ) )
-                    else : logger.error ("Chain.__setstate__: Failure to scp_copy the file: %s"  % full_name )
+                    else : logger.error  ( "Chain.__setstate__: Failure to scp_copy the file: %s"  % full_name )
 
-        self.__files = tuple ( self.__files )
+        if len ( files ) != len ( file_infos ) :
+            logger.error ( "Chain.__setstate__: Some files are missing!" )
+            
+        self.__files = tuple ( files )
 
     # ======================================================================================
     ## create Chain object:
@@ -159,6 +157,7 @@ class Chain(CleanUp) :
         
         if   isinstance ( files , string_types ) : files = files ,
 
+        ## 3 valid cases: 
         assert ( isinstance ( tree , Chain ) and tree.chain ) or \
             ( name and files                                ) or \
             ( isinstance ( tree , ROOT.TTree                ) and valid_pointer ( tree ) ) , \
@@ -226,7 +225,7 @@ class Chain(CleanUp) :
         nevents = len ( ch )
         
         ## remove the files that are outside of the range 
-        if 2 <= self.nFiles and ( 0 < self.first or self.last < nevents ) :
+        if 2 <= nfiles and ( 0 < self.first or self.last < nevents ) :
 
             first, last = self.first, self.last 
             files       = list ( self.files )
@@ -277,19 +276,24 @@ class Chain(CleanUp) :
         for ss in accumulate ( self.sizes () ) : yield ss
         
     # =========================================================================
-    ## GENERATOR to split the chain for several chains with at most chunk_size entries and at most max_files 
-    def split ( self , chunk_size = -1 , max_files = -1  ) :
-        """ GENERATOR Split the tree for several trees with chunk_size entries
-        >>> tree = ....
-        >>> trees = tree.split ( chunk_size = 1000000 ) 
-        """        
-        if chunk_size <= 0 : chunk_size = 100000
-        if max_files  <= 0 : max_files  = 1 
-
-        assert isinstance ( chunk_size , integer_types ) and 0 < chunk_size , \
+    ## *GENERATOR* to split the chain for several chains with at most
+    #  chunk_size entries and at most max_files
+    #  @code
+    #  chain = Chain ( ... )
+    #  for i in chain.split ( chunk_size = 1000 ) :
+    #  ... 
+    #  @endcode 
+    def split ( self , chunk_size , max_files = -1  ) :
+        """ GENERATOR Split the tree for several trees 
+        with at most  `chunk_size` entries
+        >>> chain  = Chain ( .... ) 
+        >>> for t in tree.split ( chunk_size = 1000000 )  : 
+        >>> ...
+        """
+        assert isinstance ( chunk_size , integer_types ) , \
             'Chain.split : invalid chunk_size %s' % chunk_size
-        
-        if not self.nFiles  : return                     ## RETURN 
+
+        if not self.nFiles  : return                                   ## RETURN 
         
         if 1 == self.nFiles :
             tree = Tree ( name  = self.name         ,
@@ -297,23 +301,24 @@ class Chain(CleanUp) :
                           first = self.first        ,  
                           last  = self.last         )
             for t in tree.split ( chunk_size = chunk_size ) : yield t  ## YIELD
-            
-        asizes = tuple ( s for s in self.accumulated_sizes()  )
+            return                                                     ## RETURN 
         
+        asizes = tuple ( s for s in self.accumulated_sizes()  )
+
         ## the first tree: can be incomplete 
         first  = self.first
         tree   = Tree ( name = self.name , file = self.files [ 0 ] , first = first )
-        for t in tree.split ( chunk_size = chunk_size ) : yield t     ## YIELD  
+        for t in tree.split ( chunk_size = chunk_size ) : yield t      ## YIELD  
         
         ## full trees (all of them are complete 
         for f in self.files [1:-1] :
             tree = Tree ( name = self.name , file = f  )
-            for t in tree.split ( chunk_size = chunk_size ) : yield t ## YIELD 
+            for t in tree.split ( chunk_size = chunk_size ) : yield t  ## YIELD 
             
         ## the last tree: can be incomplete
         last   = self.last - asizes [ -2 ] ## ATTENTION HERE!
         tree   = Tree ( name = self.name , file = self.files[-1] , last = last  )
-        for t in tree.split ( chunk_size = chunk_size ) : yield t     ## YIELD 
+        for t in tree.split ( chunk_size = chunk_size ) : yield t      ## YIELD 
 
     @property
     def chain ( self ) :
@@ -387,14 +392,12 @@ class Chain(CleanUp) :
 
 # =============================================================================
 ## @class Tree
-#  Simple class to make TTree "pickleable"
-#  It is needed for multiprcessing: 
+#  Simple class to make TTree suitable for multiprcessing: 
 # - pickling
 # - unpickling 
 # - spltitting
 class Tree(Chain) :
-    """ Simple class to make TTree "pickleable"
-    It is needed for multiprcessing: 
+    """ Simple class to make TTree suitable for multiprocessing:
     - pickling
     - unpickling 
     - spltitting
@@ -428,14 +431,26 @@ class Tree(Chain) :
         assert 1 == self.nFiles , 'Invalid number of files!'
 
     # ==========================================================================
-    ## Generator to split the tree into smaller trees
-    def split ( self , chunk_size = -1 , max_files = -1  ) :
-        """ GENERATOR to split the tree into smaller Tree objects 
-        """
-        if chunk_size <= 0 : chunk_size = 1000000
-
-        assert isinstance ( chunk_size , integer_types ) and 0 < chunk_size , \
+    ## *GENERATOR* split the tree into smaller trees
+    #  @code
+    #  tree = Tree  ( ... )
+    #  for i in tree.split ( chunk_size = 1000 ) :
+    #  ... 
+    #  @endcode 
+    def split ( self , chunk_size , max_files = -1  ) :
+        """ *GENERATOR* split the tree into smaller Tree objects 
+        with at most  `chunk_size` entries
+        >>> tree  = Tree ( .... ) 
+        >>> for t in tree.split ( chunk_size = 1000000 )  : 
+        >>> ...
+        """        
+        assert isinstance ( chunk_size , integer_types ) , \
             'Tree.split: invalid chunk_size %s' % chunk_size
+
+        ## no split 
+        if chunk_size <= 0 :
+            yield self                     ## YIELD            
+            return                         ## RETUN
         
         the_file = self.file
         for first, last in split_range ( self.first , self.last , chunk_size ) :

@@ -27,8 +27,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.core        import valid_pointer
 from   ostap.core.ostap_types import string_types 
-from   ostap.io.root_file     import top_dir
-import ROOT, os 
+import ROOT 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -74,24 +73,32 @@ ROOT.TChain.__len__ = _tree_len_
 ## get a full path of the TTree object 
 #  @code
 #  rdir = ...
-#  path = rdirt.full_path 
+#  path = rdir.full_path 
+#  path = rdir.fullpath 
 #  @endcode
 def tree_path ( tree ) :
     """ Get a full path of the directory
     >>> tree = ...
     >>> path = tree.full_path 
+    >>> path = tree.fullpath 
     """
     assert valid_pointer ( tree ) and isinstance ( tree , ROOT.TTree ) , \
         "tree_path: Invalid `tree' argument!"
     ## 
     rdir = tree.GetDirectory()
-    if not rdir : return tree.GetName()
-    return os.path.join ( rdir.full_path , tree.GetName() ) 
+    if valid_pointer ( rdir ) :
+        path      = rdir.GetPath ()
+        h , s , p = path.rpartition(':/')
+        if p : return  '/'.join ( ( p , tree.GetName () ) )
+    return tree.GetName()
 
-ROOT.TTree.full_path = property ( tree_path , None , None , tree_path . __doc__ ) 
-ROOT.TTree.fullpath  = property ( tree_path , None , None , tree_path . __doc__ ) 
-ROOT.TTree.topdir    = property ( top_dir   , None , None , top_dir   . __doc__ )
-ROOT.TTree.top_dir   = property ( top_dir   , None , None , top_dir   . __doc__ ) 
+    ## if not rdir : return tree.GetName()
+    ## return os.path.join ( rdir.full_path , tree.GetName() ) 
+
+## ROOT.TTree.full_path = property ( tree_path , None , None , tree_path . __doc__ ) 
+## ROOT.TTree.top_dir   = property ( top_dir   , None , None , top_dir   . __doc__ )
+## ROOT.TTree.fullpath  = property ( tree_path , None , None , tree_path . __doc__ ) 
+## ROOT.TTree.topdir    = property ( top_dir   , None , None , top_dir   . __doc__ )
 
 # =============================================================================
 ## get list of files used for the given chain
@@ -288,12 +295,6 @@ _new_methods_ = (
     ROOT.TTree .__len__     , 
     ROOT.TChain.__len__     ,
     ##
-    ROOT.TTree.fullpath     , ## full path of TTree in TFile 
-    ROOT.TTree.full_path    , ## full path of TTree in TFile
-    ## 
-    ROOT.TTree.topdir       , ## top-directory for TTree 
-    ROOT.TTree.top_dir      , ## top-directory for TTree 
-    ## 
     ROOT.TChain. files      ,
     ROOT.TChain.nfiles      ,
     ROOT.TChain.nFiles      ,    

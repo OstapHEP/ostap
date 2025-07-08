@@ -55,7 +55,7 @@ namespace MyTest
 # =============================================================================
 ## create a file with tree 
 def create_tree ( fname , nentries = 1000 ) :
-    """Create a file with a tree
+    """ Create a file with a tree
     >>> create_tree ( 'file.root' ,  1000 ) 
     """
     
@@ -128,7 +128,7 @@ def test_addbranch() :
     """
     
     ## files = prepare_data ( 100 , 1000 )
-    files = prepare_data ( 10 , 1000 )
+    files = prepare_data ( 1  , 1000 )
     
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data ( files , 'S'  )
@@ -145,7 +145,7 @@ def test_addbranch() :
     rows.append ( ( timer.name , '%.3f' % timer.delta ) ) 
     ## reload the chain and check: 
     assert 'et1' in chain , "Branch `et1' is  not here!"
-
+    
     # =========================================================================
     ## (2) add new branch as TTree-formula:
     # =========================================================================

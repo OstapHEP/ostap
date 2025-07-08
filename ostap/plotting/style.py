@@ -26,6 +26,12 @@ __all__ = (
     'Style3Z'          ,  ## the style for downscaled 3-in-row COLZ plots
     )
 # =============================================================================
+from ostap.plotting.makestyles import ( ostap_font       ,
+                                        ostap_label      ,
+                                        ostap_line_width ,
+                                        ostap_latex      ,
+                                        root_style       , 
+                                        set_style        )
 import ostap.plotting.color 
 import ROOT
 # =============================================================================
@@ -34,13 +40,6 @@ import ROOT
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.plotting.style' )
 else                       : logger = getLogger( __name__ )
-# =============================================================================
-from ostap.plotting.makestyles import ( ostap_font       ,
-                                        ostap_label      ,
-                                        ostap_line_width ,
-                                        ostap_latex      ,
-                                        root_style       , 
-                                        set_style        )
 # =============================================================================
 ## the dictionary of known  styles 
 styles = {}
@@ -52,7 +51,7 @@ def OstapStyle ( name                           ,
                  base_style  = None             , 
                  line_width  = ostap_line_width ,
                  font        = ostap_font       ,                 
-                 force       = True             ,
+                 force       = False            ,
                  scale       = 1.0              ,
                  colz        = False            ) :
     """ Create Ostap-style for the plots    
@@ -92,7 +91,6 @@ def OstapStyle ( name                           ,
         logger.debug ('The style %s is forced' % style.GetName() )
         groot = ROOT.ROOT.GetROOT() 
         groot.SetStyle   ( style.GetName()  )
-        print ( 'THE STYLE IS SET!' , style.GetName() ) 
         groot.ForceStyle ()
         
     return style     

@@ -4,12 +4,12 @@
 # @file ostap/plotting/makestyles.py
 # Helper utilities to deal with ROOT styles 
 # =============================================================================
-"""Helper utilities to deal with ROOT styles 
+""" Helper utilities to deal with ROOT styles 
 """
 # =============================================================================
-import ostap.plotting.color
 from   ostap.utils.cidict import cidict, cidict_fun
 from   ostap.utils.utils  import classprop 
+import ostap.plotting.color
 import ROOT, ctypes 
 # =============================================================================
 __all__ = (

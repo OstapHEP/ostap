@@ -38,22 +38,8 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.parallel.statvar' )
 else                       : logger = getLogger ( __name__     )
 # =============================================================================
-## (default) Maximal lnumber of events for the single job
-CHUNK_SIZE = 100000
-## (default) Maximal number of files for single job
+CHUNK_SIZE = 50000
 MAX_FILES  = 1 
-# =============================================================================
-## Is TTree/TChain good for parallel processing ?
-def good_for_parallel_processing ( tree  , *args ,
-                                   chunk_size = CHUNK_SIZE , 
-                                   max_files  = MAX_FILES  ) :
-    """ Is TTree/TChain good for parallel procesinng ?
-    """
-    ## get number of events 
-    first , last = evt_range ( tree , *args )    
-    if 0 < chunk_size < last - first : return True
-    
-# =============================================================================
 ## The simple task object collect statistics for loooooong chains 
 #  @see GaudiMP.Parallel
 #  @see GaudiMP.Parallel.Task
@@ -63,13 +49,14 @@ class StatVarTask(Task) :
     """ The simple task object collect statistics for loooooong chains 
     """
     ## constructor: histogram 
-    def __init__ ( self , what , cuts = ""  , **kwargs ) :
+    def __init__ ( self , what , cuts = ""  , *args , **kwargs ) :
         """ Constructor        
         >>> task  = StatVarTask ( 'mass' , 'pt>0') 
         """
         self.what   = what
         self.cuts   = cuts  
         self.kwargs = {}
+        self.args   = args 
         self.kwargs.update ( kwargs )        
         self.__output = None
         
@@ -109,9 +96,10 @@ class StatVarTask(Task) :
         last  = item.last  
         
         from   ostap.stats.statvars import data_statistic
-        self.__output = data_statistic ( chain     ,
-                                         self.what ,
-                                         self.cuts , first , last,
+        self.__output = data_statistic ( chain         ,
+                                         self.what     ,
+                                         self.cuts     , first , last,
+                                         *self.args    , 
                                          **self.kwargs )
         
         return self.__output 
@@ -145,16 +133,17 @@ class GetStatTask(Task) :
     """ The simple task object collect statistics for loooooong chains 
     """
     ## constructor: histogram 
-    def __init__ ( self        ,
-                   target      ,
-                   expressions ,
-                   cuts        = '' , **kwargs ) :
+    def __init__ ( self             ,
+                   target           ,
+                   expressions      ,
+                   cuts        = '' , *args ,**kwargs ) :
         """ Constructor        
         >>> task  = StatVarTask ( 'mass' , 'pt>0') 
         """
         self.what   = expressions
         self.cuts   = "" 
         self.kwargs = {}
+        self.args   = () 
         self.kwargs.update ( kwargs )
         self.__target = target
         self.__output = None 
@@ -193,10 +182,11 @@ class GetStatTask(Task) :
         target_reset ( target ) 
         # ================================
         
-        self.__output = data_get_stat ( chain     ,
-                                        target    ,
-                                        self.what ,
-                                        self.cuts , first , last,
+        self.__output = data_get_stat ( chain         ,
+                                        target        ,
+                                        self.what     ,
+                                        self.cuts     , first , last ,
+                                        *self.args    , 
                                         **self.kwargs )
         return self.__output 
     
@@ -221,7 +211,8 @@ class ProjectTask(Task) :
     def __init__ ( self             ,
                    target           , 
                    expressions      ,
-                   cuts        = "" , 
+                   cuts        = "" ,
+                   *args            , 
                    **kwargs         ) :
         """ Constructor        
         >>> task  = StatVarTask ( 'mass' , 'pt>0') 
@@ -229,6 +220,7 @@ class ProjectTask(Task) :
         self.what   = expressions
         self.cuts   = cuts 
         self.kwargs = {}
+        self.args   = args 
         self.kwargs.update ( kwargs )
         self.__target = target
         self.__output = None 
@@ -266,10 +258,11 @@ class ProjectTask(Task) :
         target_reset ( target )
         # ================================
         
-        self.__output = data_project ( chain     ,
-                                       target    ,
-                                       self.what ,
-                                       self.cuts , first , last ,
+        self.__output = data_project ( chain         ,
+                                       target        ,
+                                       self.what     ,
+                                       self.cuts     , first , last ,
+                                       *self.args    , 
                                        **self.kwargs )
         return self.__output 
     
@@ -293,13 +286,15 @@ class SizeTask(Task) :
     """
     ## constructor: histogram 
     def __init__ ( self        ,
-                   cuts   = '' , 
+                   cuts   = '' ,
+                   *args       , 
                    **kwargs    ) :
         """ Constructor        
         >>> task  = StatVarTask ( 'mass' , 'pt>0') 
         """
         self.cuts     = cuts 
         self.kwargs   = {}
+        self.args     = args 
         self.kwargs.update ( kwargs )
         self.__output = 0 
 
@@ -331,7 +326,7 @@ class SizeTask(Task) :
         first = item.first
         last  = item.last 
         
-        self.__output = data_size ( chain , self.cuts , first , last , **self.kwargs )
+        self.__output = data_size ( chain , self.cuts , first , last , *self.args , **self.kwargs )
         return self.__output 
     
     ## merge results 
@@ -354,7 +349,8 @@ class CovTask(Task) :
     ## constructor: histogram 
     def __init__ ( self        ,
                    what        ,
-                   cuts   = "" , 
+                   cuts   = "" ,
+                   *args       , 
                    **kwargs    ) :
         """ Constructor        
         >>> task  = StatVarTask ( 'mass' , 'pt>0') 
@@ -362,6 +358,7 @@ class CovTask(Task) :
         self.what     = what
         self.cuts     = cuts 
         self.kwargs   = {}
+        self.args     = args 
         self.kwargs.update ( kwargs )
         self.__output = None 
         
@@ -393,9 +390,10 @@ class CovTask(Task) :
         first = item.first
         last  = item.last 
         
-        self.__output = data_covariance  ( chain     ,
-                                           self.what ,
-                                           self.cuts , first , last ,
+        self.__output = data_covariance  ( chain         ,
+                                           self.what     ,
+                                           self.cuts     , first , last ,
+                                           *self.args    , 
                                            **self.kwargs )
         return self.__output 
     
@@ -420,7 +418,8 @@ class SliceTask(Task) :
     ## constructor: histogram 
     def __init__ ( self        ,
                    what        ,
-                   cuts   = "" , 
+                   cuts   = "" ,
+                   *args       , 
                    **kwargs    ) :
         """ Constructor        
         >>> task  = StatVarTask ( 'mass' , 'pt>0') 
@@ -428,6 +427,7 @@ class SliceTask(Task) :
         self.what     = what
         self.cuts     = cuts 
         self.kwargs   = {}
+        self.args     = () 
         self.kwargs.update ( kwargs )
         self.__output = None 
         
@@ -459,9 +459,10 @@ class SliceTask(Task) :
         first = item.first
         last  = item.last 
         
-        self.__output = data_slice ( chain     ,
-                                     self.what ,
-                                     self.cuts , first , last ,
+        self.__output = data_slice ( chain         ,
+                                     self.what     ,
+                                     self.cuts     , first , last ,
+                                     *self.args    , 
                                      **self.kwargs ) 
         return self.__output 
     
@@ -502,9 +503,7 @@ class SliceTask(Task) :
 #  @endcode
 def parallel_statistic ( chain                    ,
                          expressions              ,
-                         cuts       = ''          , * , 
-                         first      = FIRST_ENTRY , 
-                         last       = LAST_ENTRY  ,
+                         cuts       = ''          , *args , 
                          as_weight  = True        , 
                          use_frame  = True        , 
                          progress   = False       ,
@@ -520,7 +519,7 @@ def parallel_statistic ( chain                    ,
     from ostap.stats.statvars import data_statistic
     
     ## adjust first/last 
-    first, last = evt_range ( chain , first , last )
+    first, last = evt_range ( chain , *args[:2] )
     
     ## number of events  to proecedd 
     nevents     = last - first 
@@ -528,18 +527,18 @@ def parallel_statistic ( chain                    ,
     if nevents <= chunk_size :
         return data_statistic ( chain       ,
                                 expressions ,
-                                cuts        , first     , last , 
+                                cuts        , first     , last , *args [2:] , 
                                 as_weight   = as_weight ,
                                 progress    = progress  ,
                                 use_frame   = use_frame ,
                                 parallel    = False     )
 
     ## The Task
-    task   = StatVarTask ( expressions           ,
-                           cuts      = cuts      ,
-                           as_weight = True      ,
-                           progress  = False     ,
-                           use_frame = use_frame , 
+    task   = StatVarTask ( expressions            ,
+                           cuts      , *args[2:]  , 
+                           as_weight = True       ,
+                           progress  = False      ,
+                           use_frame = use_frame  , 
                            parallel   = False     ) 
 
     ## Manager 
@@ -567,9 +566,7 @@ def parallel_statistic ( chain                    ,
 #  @endcode 
 def parallel_sum ( chain                    ,
                    expressions              , 
-                   cuts       = ''          , * , 
-                   first      = FIRST_ENTRY , 
-                   last       = LAST_ENTRY  ,                   
+                   cuts       = ''          , *args , 
                    as_weight  = True        ,
                    progress   = False       ,
                    use_frame  = True        , 
@@ -582,17 +579,15 @@ def parallel_sum ( chain                    ,
     """
     ## few special/trivial cases
     
-    result = parallel_statistic ( chain                   ,
-                                  expressions             ,
-                                  cuts       = cuts       ,
-                                  first      = first      ,
-                                  last       = last       ,
-                                  as_weight  = as_weight  ,
-                                  progress   = progress   ,
-                                  use_frame  = use_frame  , 
-                                  chunk_size = chunk_size , 
-                                  max_files  = max_files  ,
-                                  silent     = silent     , **kwargs )
+    result = parallel_statistic ( chain                    ,
+                                  expressions              ,
+                                  cuts        , *args      , 
+                                  as_weight   = as_weight  ,
+                                  progress    = progress   ,
+                                  use_frame   = use_frame  , 
+                                  chunk_size  = chunk_size , 
+                                  max_files   = max_files  ,
+                                  silent      = silent     , **kwargs )
     
     if isinstance ( result , dict ) :
         sumres = {}
@@ -611,9 +606,7 @@ def parallel_sum ( chain                    ,
 #  chain.pStatVar ( .... ) 
 #  @endcode
 def parallel_size ( chain                    ,  
-                    cuts       = ''          , * , 
-                    first      = FIRST_ENTRY , 
-                    last       = LAST_ENTRY  ,
+                    cuts       = ''          , *args  , 
                     as_weight  = True        , 
                     progress   = False       ,
                     use_frame  = True        , 
@@ -630,22 +623,22 @@ def parallel_size ( chain                    ,
     from   ostap.stats.statvars import data_size 
     
     ## adjust first/last 
-    first, last = evt_range ( chain , first , last )
+    first, last = evt_range ( chain , *args[:2] )
     
-    ## number of evetns to proecedd 
+    ## number of events to proecedd 
     nevents     = last - first 
     
     if nevents <= chunk_size :
         return data_size ( chain ,
-                           cuts      , first     , last , 
+                           cuts      , *args     , 
                            progress  = progress  ,
                            use_frame = use_frame ,
                            parallel  = False     )
 
     ## The Task 
-    task   = SizeTask ( cuts      = cuts      ,
-                        use_frame = use_frame , 
-                        progress  = False     )
+    task   = SizeTask ( cuts      , *args [2:] ,
+                        use_frame = use_frame  , 
+                        progress  = False      )
 
     ## Manager 
     wmgr   = WorkManager ( silent = silent , progress = progress or not silent , **kwargs )
@@ -669,10 +662,8 @@ def parallel_size ( chain                    ,
 ## parallel processing of loooong chain/tree 
 def parallel_get_stat ( chain                    ,
                         target                   , 
-                        expressions              , * , 
-                        cuts       = ''          ,
-                        first      = FIRST_ENTRY , 
-                        last       = LAST_ENTRY  ,
+                        expressions              ,
+                        cuts       = ''          , *args , 
                         progress   = False       ,
                         use_frame  = True        , 
                         chunk_size = 100000      ,
@@ -687,7 +678,7 @@ def parallel_get_stat ( chain                    ,
     import ostap.trees.trees
     from   ostap.stats.statvars import data_get_stat 
 
-    first , last = evt_range ( chain , first , last )
+    first , last = evt_range ( chain , *args[:2]  )
     
     nevents = last - first 
     
@@ -695,7 +686,7 @@ def parallel_get_stat ( chain                    ,
         return data_get_stat  ( chain       ,
                                 target      , 
                                 expressions ,
-                                cuts        , first     , last , 
+                                cuts        , first     , last , *args[2:] , 
                                 progress    = progress  ,
                                 use_frame   = use_frame ,
                                 parallel    = False     )
@@ -703,7 +694,7 @@ def parallel_get_stat ( chain                    ,
     ## The Task
     task   = GetStatTask ( target                ,
                            expressions           , 
-                           cuts      = cuts      ,
+                           cuts      , *args[2:] ,
                            progress  = False     ,
                            use_frame = use_frame ,
                            parallel  = False     ) 
@@ -730,9 +721,7 @@ def parallel_get_stat ( chain                    ,
 def parallel_project ( chain                    ,
                        target                   , 
                        expressions              ,  
-                       cuts       = ''          , * , 
-                       first      = FIRST_ENTRY , 
-                       last       = LAST_ENTRY  ,
+                       cuts       = ''          , *args , 
                        as_weight  = True        , 
                        progress   = False       ,
                        use_frame  = False       , 
@@ -748,26 +737,26 @@ def parallel_project ( chain                    ,
     import ostap.trees.trees
     from   ostap.stats.statvars import data_project
 
-    furst , last = evt_range ( chain , first , last ) 
+    first , last = evt_range ( chain , *args[:2] ) 
     nevents = last - first
     
     if nevents < chunk_size :
         return data_project ( chain       ,
                               target      , 
                               expressions ,
-                              cuts        , first     , last , 
+                              cuts        , first     , last , *args[2:] , 
                               as_weight   = as_weight , 
                               progress    = progress  ,
                               use_frame   = use_frame ,
                               parallel    = False     )
     ## The Task 
-    task   = ProjectTask ( target                ,
-                           expressions           , 
-                           cuts      = cuts      ,
-                           as_weight = as_weight , 
-                           progress  = False     ,
-                           use_frame = use_frame ,
-                           parallel  = False     ) 
+    task   = ProjectTask ( target                 ,
+                           expressions            , 
+                           cuts      , *args [2:] ,
+                           as_weight = as_weight  , 
+                           progress  = False      ,
+                           use_frame = use_frame  ,
+                           parallel  = False      ) 
 
     ## Manager 
     wmgr   = WorkManager ( silent = silent , progress = progress or not silent , **kwargs )
@@ -794,9 +783,7 @@ def parallel_project ( chain                    ,
 #  @endcode
 def parallel_covariance ( chain                    ,
                           expressions              ,
-                          cuts       = ''          , * , 
-                          first      = FIRST_ENTRY , 
-                          last       = LAST_ENTRY  ,
+                          cuts       = ''          , *args  , 
                           as_weight  = True        , 
                           progress   = False       ,
                           use_frame  = True        , 
@@ -813,7 +800,7 @@ def parallel_covariance ( chain                    ,
     from   ostap.stats.statvars import data_covariance 
 
     ## adjust first/last 
-    first, last = evt_range ( chain , first , last )
+    first, last = evt_range ( chain , *args[:2] )
     
     ## number of evetns to proecedd 
     nevents     = last - first 
@@ -821,7 +808,7 @@ def parallel_covariance ( chain                    ,
     if nevents <= chunk_size :
         return data_covariance ( chain       ,
                                  expressions ,
-                                 cuts        , first     , last , 
+                                 cuts        , first     , last , *args[2:] , 
                                  as_weight   = as_weight ,
                                  progress    = progress  ,
                                  use_frame   = use_frame ,
@@ -829,8 +816,8 @@ def parallel_covariance ( chain                    ,
 
     ## prepare task 
     task   = CovTask ( expressions           ,
-                       cuts      = cuts      ,
-                       as_weight = as_weight  ,
+                       cuts      , *args[2:] ,
+                       as_weight = as_weight ,
                        use_frame = use_frame , 
                        progress  = False     ,
                        parallel  = False     )
@@ -861,11 +848,9 @@ def parallel_covariance ( chain                    ,
 #  @endcode
 def parallel_slice ( chain                    ,
                      expressions              ,
-                     cuts       = ''          , * ,
+                     cuts       = ''          , *args ,
                      structured = True        ,
                      transpose  = True        , 
-                     first      = FIRST_ENTRY , 
-                     last       = LAST_ENTRY  ,
                      progress   = False       ,
                      use_frame  = True        , 
                      chunk_size = CHUNK_SIZE  ,
@@ -881,27 +866,29 @@ def parallel_slice ( chain                    ,
     from   ostap.stats.statvars import data_slice 
     
     ## adjust first/last 
-    first, last = evt_range ( chain , first , last )
+    first, last = evt_range ( chain , *args[:2] )
     
     ## nothing to process 
     if last <= first : return () , None  
     
     ## number of events to process 
     nevents     = last - first 
-    
+
+    """
     if nevents <= chunk_size :
         return data_slice( chain       ,
                            expressions ,
-                           cuts        , first     , last ,
+                           cuts        , first     , last , *args[2:] , 
                            structured  = transpose ,
                            transpose   = transpose , 
                            progress    = progress  ,
                            use_frame   = use_frame ,
                            parallel    = False     )
-
+    """
+    
     ## Task 
     task   = SliceTask ( expressions             ,
-                         cuts       = cuts       ,
+                         cuts       , *args[2:]  ,
                          structured = structured ,
                          transpose  = transpose  , 
                          use_frame  = use_frame  , 

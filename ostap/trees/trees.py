@@ -765,7 +765,7 @@ def _rt_table_0_ ( tree ,
         l = tree.leaf ( b )
 
         if not l :
-            logger.warning ("table: can't get the leaf  \"%s\"" % b )
+            logger.warning ("table: can't get the leaf/1  \"%s\"" % b )
             continue
         
         tn        = l.GetTypeName ()
@@ -775,19 +775,21 @@ def _rt_table_0_ ( tree ,
         
         bbs.append ( b ) 
 
-
-    ## get the statistic 
-    bbstats = tree. statVar ( bbs , *args , cuts = cuts , use_frame = True , parallel= True )
+    ## get the statistic
+    if bbs : bbstats = tree. statVar ( bbs           , *args , cuts = cuts , use_frame = True , parallel= True )
+    else   :
+        allvars = sorted ( set ( tree.branches() ) | set ( tree.leaves() ) )         
+        bbstats = tree. statVar ( allvars , *args , cuts = cuts , use_frame = True , parallel= True )
 
     from ostap.stats.counters import WSE, SE  
-    if   isinstance ( bbstats , ( WSE , SE ) )  : bbstats = { bbs [ 0 ] : bbstats } 
-    
+    if   isinstance ( bbstats , ( WSE , SE ) )  : bbstats = { bbs [ 0 ] : bbstats }
+        
     for b in brs :
         
         l = tree.leaf ( b )
 
         if not l :
-            logger.warning ("table: can't get the leaf  \"%s\"" % b )
+            logger.warning ("table: can't get the leaf/2  \"%s\"" % b )
             continue
         
         type_name = l.get_type()
@@ -891,7 +893,6 @@ def _rt_table_0_ ( tree ,
             nfiles = len ( tree.files() )
             if 1 < nfiles : title += ',%d%s' %  ( nfiles , files_symbol if files_symbol else 'files' )
              
-
     import ostap.logger.table as T
     if table_data : table_data = T.remove_empty_columns ( table_data ) 
     t  = T.table ( table_data , title , prefix = prefix , style = style )
@@ -908,10 +909,11 @@ def _rt_table_1_ ( tree ,
                    style   = ''   , *args ) :
     """ Print tree as table 
     """
-    
-    variables , cuts , _ = vars_and_cuts ( variables , cuts )
-    bbs = tuple ( sorted ( variables ) ) 
 
+    if not variables : variables = tree.branches() 
+    variables , cuts , _ = vars_and_cuts ( variables , cuts )
+    
+    bbs    = tuple ( sorted ( variables ) )
     bbstats = tree. statVar ( bbs , *args , cuts = cuts , use_frame = True , parallel = True ) 
 
     from ostap.stats.counters import WSE 
@@ -1166,7 +1168,7 @@ ROOT.TChain. files = _rc_files_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-02-04
 def _rc_nfiles_ ( chain ) :
-    """Get number of of files used for the chain
+    """ Get number of of files used for the chain
     
     >>> chain = ... ## get the files 
     >>> n = chain.nFiles()
@@ -1267,14 +1269,12 @@ ROOT.TChain.__getitem__ = _rc_getitem_
 #  @date 2015-07-08
 def tree_slice ( tree                     ,
                  expressions              ,
-                 cuts       = ''          , 
+                 cuts       = ''          , *args ,  
                  structured = True        ,
                  transpose  = True        , 
                  progress   = False       , 
                  use_frame  = False       ,
-                 parallel   = False       , 
-                 first      = FIRST_ENTRY ,
-                 last       = LAST_ENTRY  ) :
+                 parallel   = False       ) : 
     
     """ Get `slice' from TTree in a form of numpy.array
     >>> tree = ...
@@ -1283,7 +1283,7 @@ def tree_slice ( tree                     ,
     """
     
     ## adjust first/last indices 
-    first , last = evt_range ( tree , first , last ) 
+    first , last = evt_range ( tree , *args [ : 2 ] ) 
     if last <= first :
         return () , None 
 
@@ -1291,7 +1291,7 @@ def tree_slice ( tree                     ,
         from ostap.stats.data_statvars import data_slice
         return data_slice ( tree         ,
                             expressions  ,  
-                            cuts         , first , last , 
+                            cuts         , *args        , 
                             structured   = structured   ,
                             progress     = progress     ,
                             use_frame    = use_frame    ,
@@ -2031,48 +2031,53 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
     
     if isinstance ( tree , ROOT.TChain ) and 1 < len ( tree.files() ) :
         return push_2chain ( tree , *config , progress = progress , report = report ) 
-
-    treepath = tree.path
-    the_file = tree.topdir
-    groot = ROOT.ROOT.GetROOT() 
-    assert treepath and the_file and ( not the_file is groot ) and isinstance ( the_file , ROOT.TFile ) , \
-        'This is not the file-resident TTree* object! addition of new branch is not posisble!'
-    the_file = the_file.GetName() 
     
-    tname = tree.GetName      ()
-    tdir  = tree.GetDirectory ()
-    tpath = tree.path
-
     ## list of existing brranches/leaves 
     branches = ( set ( tree.branches() ) | set ( tree.leaves() ) ) if report else set() 
+    
+    treepath = tree.path
+    the_file = tree.topdir
+    groot    = ROOT.ROOT.GetROOT() 
+    assert treepath and the_file and ( not the_file is groot ) and isinstance ( the_file , ROOT.TFile ) , \
+        'This is not the file-resident TTree* object! addition of new branch is not posisble!'
 
-    from ostap.utils.progress_conf import progress_conf
+    the_file = the_file.GetFile ()    
+    assert the_file and isinstance ( the_file, ROOT.TFile )  , \
+        'This is not the file-resident TTree* object! addition of new branch is not posisble!'
+
+    filename = the_file.GetName()  
+
     
     args = tuple ( a for a in config  ) 
+    from ostap.utils.progress_conf import progress_conf
     if progress : args += ( progress_conf ( progress ) , ) 
 
-    from ostap.io.root_file  import REOPEN     
-    with ROOTCWD() , REOPEN ( tdir ) as tfile :
-        
-        tfile.cd()
-        ttree    = tfile.Get ( tpath )
-        assert valid_pointer ( ttree ) , 'Invalid TTree:%s in file:%s' % ( tpath , the_file )
+    from ostap.io.root_file  import REOPEN
+    
+    with ROOTCWD() :
 
-        assert tfile.IsWritable() , 'The file:%s is not writeable!'
-        
-        ## Add the branch!
-        ## table = print_args ( *args ) 
-        ## logger.always ( 'ARGUMETS:\n%s' % table )
-        sc    = Ostap.Trees.add_branch ( ttree , *args  )
-        assert sc.isSuccess () , "Error from Ostap.Trees.add_branch %s" % sc
+        with REOPEN ( the_file ) as tfile :
 
-        from ostap.utils.root_utils import implicitMT 
-        with implicitMT ( False ) : tfile.Write ( "" , ROOT.TObject.kOverwrite )
+            tfile.cd()
+            the_tree = tfile.Get ( treepath )
+            assert valid_pointer ( the_tree ) and isinstance ( the_tree , ROOT.TTree ) , \
+                'Invalid TTree:%s in file:%s' % ( treepath , filename  )
+
+            assert tfile.IsWritable() , 'The file:%s is not writeable!'
+        
+            ## Add the branch!
+            ## table = print_args ( *args ) 
+            ## logger.always ( 'ARGUMETS:\n%s' % table )
+            sc    = Ostap.Trees.add_branch ( the_tree , *args  )
+            assert sc.isSuccess () , "Error from Ostap.Trees.add_branch %s" % sc
+
+            from ostap.utils.root_utils import implicitMT 
+            with implicitMT ( False ) : tfile.Write ( "" , ROOT.TObject.kOverwrite )
          
-        ttree = ROOT.nullptr 
+            the_tree = ROOT.nullptr 
 
-    chain = ROOT.TChain ( tpath )
-    chain.Add  ( the_file )
+    chain = ROOT.TChain ( treepath )
+    chain.Add  ( filename )
 
     if report :
         new_branches = sorted ( ( set ( chain.branches () ) | set ( chain.leaves () ) ) - branches )
@@ -2082,8 +2087,8 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
             else      : title = 'Added %s branches to TChain' % n 
             table = chain.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
-            chain = ROOT.TChain ( tpath )
-            chain.Add  ( the_file )     
+            chain = ROOT.TChain ( treepath )
+            chain.Add  ( filename )     
             
     return chain
 

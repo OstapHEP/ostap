@@ -491,7 +491,8 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
 
         """
 
-        from ostap.utils.cidict import cidict, cidict_fun
+        from   ostap.utils.cidict import cidict, cidict_fun
+        import ostap.plotting.style 
         kw = cidict ( transform = cidict_fun , **kwargs )
 
         ## Global color (Line, Marker, Fill) 
@@ -674,21 +675,73 @@ ROOT.TNamed.title = property ( _tn_title_get_ ,  _tn_title_set_ , None , _tn_tit
 #  @code
 #  obj  = ...
 #  path = obj.path
+#  path = obj.fullpath
+#  path = obj.full_path
 #  @endcode 
-def _tn_path_ ( obj ) :
+def tnamed_path ( obj ) :
     """ Get the full path of the named object
     >>> obj  = ...
     >>> path = obj.path
+    >>> path = obj.full_path
+    >>> path = obj.fullpath
     """
-    if not valid_pointer ( obj ) : return "<INVALID-OBJECT>"
-    d = obj.GetDirectory() if hasattr ( obj , 'GetDirectory' ) else None 
-    if not d : return obj.GetName()
-    dp = d.GetPath()
-    h , s , p = dp.rpartition(':/')
+    if not valid_pointer ( obj ) : return '<INVALID-OBJECT>'
+    if isinstance ( obj , ROOT.TDirectory ) :
+        path = obj.GetPath ()
+        _ , _ , p = path.rpartition(':/')
+        if p : return  '/'.join ( [ p , obj.GetName () ] )
+        return obj.GetName() 
+
+    ## 
+    if not hasattr ( obj ,  'GetDirectory' ) : return obj.GetName()
+    
+    rdir = obj.GetDirectory() 
+    if not valid_pointer ( rdir ) : return obj.GetName()
+        
+    path = rdir.GetPath() 
+    h , s , p = path.rpartition(':/')
     if p : return  '/'.join ( [ p , obj.GetName () ] )
     return obj.GetName() 
 
-ROOT.TNamed.path = property ( _tn_path_ , None , None , None  ) 
+ROOT.TNamed.path      = property ( tnamed_path , None , None , tnamed_path.__doc__ ) 
+ROOT.TNamed.fullpath  = property ( tnamed_path , None , None , tnamed_path.__doc__ )  
+ROOT.TNamed.full_path = property ( tnamed_path , None , None , tnamed_path.__doc__ ) 
+
+
+# =============================================================================
+## `topdir': get the top directory for the given directory
+#  @code
+#  rdir = ...
+#  tdir = tdit.top_dir 
+#  tdir = tdit.topdir 
+#  @endcode 
+def top_dir ( rdir ) :    
+    """`topdir': get the top directory for the given directory/object
+    >>> rdir = ...
+    >>> tdir = tdit.top_dir 
+    >>> tdir = tdit.topdir 
+    """
+    
+    if not rdir : return None
+
+    with ROOTCWD()  :
+
+        top = rdir 
+        if   isinstance ( rdir , ROOT.TDirectory ) : top = rdir
+        elif hasattr    ( rdir , 'GetDirectory'  ) : top = rdir.GetDirectory()
+        else                                       : return None 
+            
+        while top : ## and hasattr ( top , 'GetMotherDir' ) : 
+            moth = top.GetMotherDir()
+            if not moth : return top  
+            top  = moth
+        else :
+            return None 
+
+# ROOT.TDirectory.top_dir = property ( top_dir , None , None , top_dir . __doc__ )
+# ROOT.TDirectory.topdir  = property ( top_dir , None , None , top_dir . __doc__ )
+ROOT.TNamed.top_dir = property ( top_dir , None , None , top_dir . __doc__ )
+ROOT.TNamed.topdir  = property ( top_dir , None , None , top_dir . __doc__ )
 
 # =============================================================================
 ## valid TDirectory?
@@ -710,7 +763,7 @@ def _rd_valid_ ( rdir ) :
     if not valid_pointer ( rdir ) : return False
 
     # ========================================================================
-    ## for the file directories check the validity of the file
+    ## for the file directories check also the validity of the file
     if isinstance ( rdir , ROOT.TDirectoryFile ) : # =========================
         # ====================================================================
         fdir = rdir.GetFile()
@@ -1135,7 +1188,6 @@ else :
         logger.debug ("Implicit MT is disabled")
         ROOT.ROOT.DisableImplicitMT ()
 
-
 # =============================================================================
 ## Use/Force BATCH processing ? 
 if not ROOT.ROOT.GetROOT().IsBatch() :
@@ -1145,13 +1197,16 @@ if not ROOT.ROOT.GetROOT().IsBatch() :
     else : 
         from ostap.utils.root_utils import batch_env
         batch_env ( logger )
-    
+
 # =============================================================================
 ## Are we in CMAKE-test regime?
 def in_test () :
     """ Are we in CMAKE-test regime?"""
     return os.environ.get ( 'OSTAP_CMAKE_TEST' , False )
 
+# ==============================================================================
+## make the default style 
+import ostap.plotting.style 
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TObject        ,

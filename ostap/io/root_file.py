@@ -69,7 +69,7 @@ __all__     = (
     'RootFiles'    , ## utility to collect an ddeal wth ROOT files 
     ) 
 # =============================================================================
-from   ostap.core.core   import ROOTCWD, valid_pointer
+from   ostap.core.core   import ROOTCWD, valid_pointer, top_dir 
 from   ostap.io.files    import Files
 import ROOT, sys, os   
 # =============================================================================
@@ -978,28 +978,6 @@ else :
 if not hasattr ( ROOT.TFile , 'close' ) :
     ROOT.TFile.close = ROOT.TFile._new_close_
 
-
-# =============================================================================
-## `topdir': get the top directory for the given directory"""
-def top_dir ( rdir ) :
-    """`topdir': get the top directory for the given directory/object"""
-
-    if not rdir : return None
-
-    with ROOTCWD()  :
-
-        top = rdir 
-        if   isinstance ( rdir , ROOT.TDirectory ) : top = rdir
-        elif hasattr    ( rdir , 'GetDirectory'  ) : top = rdir.GetDirectory()
-        
-        while top and hasattr ( top , 'GetMotherDir' ) : 
-            moth = top.GetMotherDir()
-            if not moth : return top  
-            top  = moth
-        else :
-            return None 
-
-ROOT.TDirectory.topdir = property ( top_dir , None , None , top_dir . __doc__ )
 
 # ==============================================================================
 ## get a full path of the directory
