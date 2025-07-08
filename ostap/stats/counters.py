@@ -526,6 +526,7 @@ from ostap.math.reduce import root_factory
 def  _se_reduce_ ( cnt ) :
     """ Reduce `Ostap.StatEntity` object
     """
+    print ( 'REDUCE:' , cnt.n() , cnt.mu() , cnt.mu2() , cnt.min() , cnt.max() )
     return  root_factory , ( type ( cnt ) ,
                              cnt.n   () ,
                              cnt.mu  () ,

@@ -35,7 +35,7 @@ namespace
   // ==========================================================================
 }
 // ============================================================================
-/* The full contructor from all important values
+/* The full constructor from all important values
  * @see StatEntity::format
  * @param entries number of entries
  * @param mu   the mean value 
@@ -133,8 +133,8 @@ Ostap::StatEntity::add ( const double value )
   const long double        fB    = 1.0L - fA           ;
   const long double        delta = 1.0L * value - m_mu ;
   //
-  m_n  += 1                                     ; // UPDATE 
-  m_mu  = fA * m_mu  + fB * value               ; // UPDATE 
+  m_n   += 1                                    ; // UPDATE 
+  m_mu   = fA * m_mu  + fB * value              ; // UPDATE 
   m_mu2  = fA * m_mu2 + fA * fB * delta * delta ; // UPDATE
   //
   m_min  = std::min ( m_min , value ) ;                                // UPDATE       
@@ -218,10 +218,10 @@ Ostap::StatEntity::add ( const Ostap::StatEntity& other )
     return *this ;
   }
   //
-  const unsigned long long N     = m_n + other.m_n          ;
-  const long double        fA    = m_n * 1.0L / N           ;
-  const long double        fB    = 1.0L - fA                ;
-  const long double        delta = 1.0L * other.m_mu - m_mu ;
+  const size_type    N     = m_n + other.m_n          ;
+  const long double  fA    = m_n * 1.0L / N           ;
+  const long double  fB    = 1.0L - fA                ;
+  const long double  delta = 1.0L * other.m_mu - m_mu ;
   //
   m_n   = m_n + other.m_n                   ;                       // UPDATE 
   m_mu  = fA * m_mu  + fB * other.m_mu      ;                       // UPDATE 
