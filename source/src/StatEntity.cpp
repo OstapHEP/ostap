@@ -34,6 +34,13 @@ namespace
   const Ostap::Math::Zero    <double> s_zero  {} ;
   // ==========================================================================
 }
+Ostap::StatEntity::StatEntity()
+: m_n   { 0 }
+, m_mu  { 0 }
+, m_mu2 { 0 }
+, m_min {   std::numeric_limits<double>::max() } 
+, m_max { - std::numeric_limits<double>::max() } 
+{}
 // ============================================================================
 /* The full constructor from all important values
  * @see StatEntity::format
@@ -128,10 +135,10 @@ Ostap::StatEntity::add ( const double value )
   //
   // update the regular case 
   //
-  const unsigned long long N     = m_n + 1             ;  
-  const long double        fA    = m_n * 1.0L / N      ;
-  const long double        fB    = 1.0L - fA           ;
-  const long double        delta = 1.0L * value - m_mu ;
+  const size_type   N     = m_n + 1             ;  
+  const long double fA    = m_n * 1.0L / N      ;
+  const long double fB    = 1.0L - fA           ;
+  const long double delta = 1.0L * value - m_mu ;
   //
   m_n   += 1                                    ; // UPDATE 
   m_mu   = fA * m_mu  + fB * value              ; // UPDATE 

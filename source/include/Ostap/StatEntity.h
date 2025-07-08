@@ -57,8 +57,9 @@ namespace Ostap
     typedef unsigned long long size_type ;
     // ======================================================================
   public:
+    // ======================================================================
     /// the default constructor
-    StatEntity  () = default ;
+    StatEntity  () ;
     // ======================================================================
     /* The full constructor from all important values:
      *  @param entries number of entries
