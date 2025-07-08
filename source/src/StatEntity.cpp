@@ -44,6 +44,7 @@ namespace
  * @param maxv the maximum value 
  */  
 // ============================================================================
+#include <iostream>
 Ostap::StatEntity::StatEntity
 ( const unsigned long entries ,
   const double        mu      ,
@@ -78,7 +79,12 @@ Ostap::StatEntity::StatEntity
     }
   else
     {
-      Ostap::Assert ( m_min <= mu && mu <= m_max         , 
+      if ( m_mu < m_min || m_max < mu )
+      {
+        std::cerr << " PROBLEM HERE "
+        << m_min << " / " << m_mu << " / " << m_max << std::endl ;
+      }
+      Ostap::Assert ( m_min <= m_mu && m_mu <= m_max     , 
                       "Invalid minv/mu/maxv"             ,
                       "Ostap::StatEntity"                ,
                       INVALID_PARS , __FILE__ , __LINE__ ) ; 
