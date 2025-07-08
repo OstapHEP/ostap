@@ -79,11 +79,9 @@ Ostap::StatEntity::StatEntity
     }
   else
     {
-      if ( m_mu < m_min || m_max < m_mu )
-      {
-        std::cout << " MIN/MAX "
+        std::cerr << " MIN/MAX "
         << m_min << " / " << m_mu << " / " <<  m_max <<  std::endl; 
-      }
+        
       Ostap::Assert ( m_min <= m_mu && m_mu <= m_max     , 
                       "Invalid minv/mu/maxv"             ,
                       "Ostap::StatEntity"                ,
