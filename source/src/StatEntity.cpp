@@ -46,11 +46,11 @@ namespace
 // ============================================================================
 #include <iostream>
 Ostap::StatEntity::StatEntity
-( const unsigned long entries ,
-  const double        mu      ,
-  const double        mu2     ,
-  const double        minv    ,
-  const double        maxv    )
+( const Ostap::StatEntity::size_type entries ,
+  const double                       mu      ,
+  const double                       mu2     ,
+  const double                       minv    ,
+  const double                       maxv    )
   : m_n   ( entries )
   , m_mu  ( mu      )
   , m_mu2 ( mu2     )
@@ -80,8 +80,10 @@ Ostap::StatEntity::StatEntity
   else
     {
         std::cerr << " MIN/MAX "
+        << " N "  << m_n << "  mu2:" <<  m_mu2
+        << "   " 
         << m_min << " / " << m_mu << " / " <<  m_max <<  std::endl; 
-        
+
       Ostap::Assert ( m_min <= m_mu && m_mu <= m_max     , 
                       "Invalid minv/mu/maxv"             ,
                       "Ostap::StatEntity"                ,

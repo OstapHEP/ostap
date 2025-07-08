@@ -68,11 +68,11 @@ namespace Ostap
      *  @param maxv the maximum value 
      */
     StatEntity 
-    ( const unsigned long entries ,
-      const double        mu      ,
-      const double        mu2     ,
-      const double        minv    ,
-      const double        maxv    ) ;
+    ( const size_type entries ,
+      const double    mu      ,
+      const double    mu2     ,
+      const double    minv    ,
+      const double    maxv    ) ;
     // ======================================================================
   public: // the basic accessors 
     // ======================================================================
