@@ -731,7 +731,7 @@ def frame_statistic ( frame               ,
     """
     current, vname , cname , input_string = \
         _fr_helper_ ( frame , expressions , cuts ) 
-    
+
     ## ATTENTION HERE!!
     if cname and not as_weight :
         logger.warning ( "The cut is treated as boolean: %s" % cuts ) 
@@ -781,7 +781,9 @@ def frame_minmax ( frame               ,
                                 as_weight    = as_weight ,
                                 progress     = progress  ,
                                 report       = report    ,
-                                lazy         = lazy      ) 
+                                lazy         = lazy      )
+
+    
     ##
     return results if lazy else \
         get_values ( results , transform = lambda s : ( s.min(), s.max() ) )
@@ -813,7 +815,7 @@ def frame_range ( frame               ,
                             progress     = progress  ,
                             report       = report    ,
                             lazy         = False     )
-
+    
     if isinstance ( result , dictlike_types ) :
         ranges = {}
         for key , value in loop_items ( result ) :
@@ -939,7 +941,7 @@ def frame_the_moment ( frame , N           ,
                           progress    = progress  ,
                           report      = report    ,
                           lazy        = lazy      ,
-                          title       = 'frame_minmax' )
+                          title       = 'frame_the_moment' )
 
 # ==================================================================================
 ## get -values through the action
@@ -1200,15 +1202,15 @@ def frame_harmonic_mean ( frame              ,
             TT = SA1  [ Ostap.Math. HarmonicMean  ] 
             return node.Book ( std_move ( TT () ) , CNT ( 1 , var_name ) )     
         
-        return _fr_helper2_ ( frame               ,
-                              acreator            , 
-                              expressions         ,
-                              cuts     = cuts     ,
-                              progress = progress ,
-                              report   = report   ,
-                              lazy     = lazy     ,
-                              title    = 'frame_harmonic_mean'  , 
-                              transform = lambda s : s.value () )       
+    return _fr_helper2_ ( frame               ,
+                          acreator            , 
+                          expressions         ,
+                          cuts     = cuts     ,
+                          progress = progress ,
+                          report   = report   ,
+                          lazy     = lazy     ,
+                          title    = 'frame_harmonic_mean'  , 
+                          transform = lambda s : s.value () )       
 
 # ==============================================================================
 ## Get geometric mean
@@ -1810,7 +1812,7 @@ def frame_draw ( frame               ,
     """
 
     if progress and isinstance ( frame , ROOT.TTree ) : progress = len ( frame )
-
+ 
     ## decode expressions & cuts 
     current , items, cname , _ = \
         _fr_helper_ ( frame , expressions , cuts , progress = progress )
@@ -1819,7 +1821,7 @@ def frame_draw ( frame               ,
     if cname and not as_weight :
         logger.warning ( "The cut is treated as boolean: %s" % cuts ) 
         cname = ''
-    
+
     nvars = len ( items )
     assert 1 <= nvars <= 3 , 'Invalid expressions: %s' % str ( items ) 
 
@@ -1837,6 +1839,7 @@ def frame_draw ( frame               ,
                            delta    = delta    ,
                            report   = report   ,
                            progress = progress )
+
     if not ranges :
         ## remove cuts and recalculate the ranges 
         ranges = frame_range ( current ,

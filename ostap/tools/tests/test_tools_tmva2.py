@@ -17,7 +17,7 @@ __date__    = "2015-10-26"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
 from   ostap.core.core          import ROOTCWD,SE
-from   ostap.stats.counters     import counters_table  
+from   ostap.stats.counters     import table_counters   
 from   ostap.utils.timing       import timing
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.utils.cleanup      import CleanUp
@@ -238,7 +238,7 @@ def test_tmva2() :
         for evt in tSignal :
             for method in methods : counters[method] += reader ( method , evt )
         title = 'Signal     response (TTree)'
-        table = counters_table ( counters , title = title , prefix = '# ' )
+        table = table_counters ( counters , title = title , prefix = '# ' )
         logger.info ( '%s\n%s' % ( title , table ) )
         
     with timing ( "TMVA response via explicit loop over background TTree" , logger =logger ) :
@@ -249,7 +249,7 @@ def test_tmva2() :
         for evt in tBkg :
             for method in methods : counters[method] += reader ( method , evt )
         title = 'Background response (TTree)'
-        table = counters_table ( counters , title = title , prefix = '# ' )
+        table = table_counters ( counters , title = title , prefix = '# ' )
         logger.info ( '%s\n%s' % ( title , table ) )
 
     # ===============================================================================
@@ -263,7 +263,7 @@ def test_tmva2() :
         for evt, _ in ds_S1 :
             for method in methods : counters[method] += reader ( method , evt )
         title = 'Signal     response (RooDataSet)'
-        table = counters_table ( counters , title = title , prefix = '# ' )
+        table = table_counters ( counters , title = title , prefix = '# ' )
         logger.info ( '%s\n%s' % ( title , table ) )
             
     with timing ( "TMVA response via explicit loop over background RooDataSet" , logger = logger ) :        
@@ -273,7 +273,7 @@ def test_tmva2() :
         for evt, _ in ds_B1 :
             for method in methods : counters[method] += reader ( method , evt )
         title = 'Background response (RooDataSet)'
-        table = counters_table ( counters , title = title , prefix = '# ' )
+        table = table_counters ( counters , title = title , prefix = '# ' )
         logger.info ( '%s\n%s' % ( title , table ) )
     
 # =============================================================================

@@ -178,9 +178,8 @@ def test_frame1 ( ) :
     tree  = Tree      ( name = tname , file = fname ).chain
     
     with use_canvas ( 'test_frame1/draw'   , wait = 2 ) : 
-        hh1 = tree .draw ( 'b1'  , '1.0/b1' , color = 2                                       )
+        hh1 = tree .draw ( 'b1'  , '1.0/b1' , color = 2                                              )
         hh2 = frame_draw ( frame , 'b1' , '1.0/b1' , color = 4 , opts  = 'same hist' , report = True )
-
     
     xmnmx1 = hh1.xminmax()
     xmnmx2 = hh2.xminmax()

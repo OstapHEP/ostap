@@ -123,7 +123,7 @@ Ostap::StatEntity::add ( const double value )
   /// ignore non-finite values 
   if ( !std::isfinite ( value ) ) { return *this ; }
   //
-  if ( 0 == m_n ) 
+  if ( !m_n ) 
     {
       m_n   = 1 ;
       m_mu  = value ;
@@ -214,8 +214,8 @@ Ostap::StatEntity&
 Ostap::StatEntity::add ( const Ostap::StatEntity& other )
 {
   /// trivial updates:
-  if      ( 0 == other.m_n ) {                  return *this ; }
-  else if ( 0 ==       m_n ) { *this == other ; return *this ; }
+  if      ( !other.m_n ) {                 return *this ; }
+  else if (       !m_n ) { *this = other ; return *this ; }  
   //
   const size_type    N     = m_n + other.m_n          ;
   const long double  fA    = m_n * 1.0L / N           ;

@@ -299,13 +299,6 @@ namespace Ostap
     inline bool operator>=( const StatEntity& s ) const { return    (*this) == s || (*this) > s ; }
     inline bool operator!=( const StatEntity& s ) const { return   !(*this  == s ) ; }
     // ======================================================================
-  public: // assignements 
-    // ======================================================================
-    /// copy assignement 
-    // StatEntity& operator=( const StatEntity&  right ) ;
-    /// move assignement 
-    // StatEntity& operator=(       StatEntity&& right ) ;
-    // ======================================================================
   public:
     // ======================================================================
     /** add a value : the main method 

@@ -14,18 +14,8 @@
 // ============================================================================
 #include "Ostap/DataFrame.h"
 #include "Ostap/Statistic.h"
-
 #include "Ostap/StatEntity.h"
 #include "Ostap/WStatEntity.h"
-
-
-// #include "Ostap/Polynomials.h"
-// #include "Ostap/Bernstein.h"
-// #include "Ostap/Bernstein2D.h"
-// #include "Ostap/Bernstein3D.h"
-// #include "Ostap/Parameterization.h"
-// #include "Ostap/Moments.h"
-// #include "Ostap/ECDF.h"
 // ============================================================================
 #include "Ostap/DataFrameUtils.h"
 // ============================================================================
@@ -99,7 +89,7 @@ namespace ROOT
         { m_slots [ slot % m_N ].update ( value ) ; } 
         // ====================================================================
       public: // 1 vector column 
-	// ====================================================================
+        // ====================================================================
         /// The basic method: increment the counter for the vector-like columns       
         template <typename T,
                   typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value,bool>::type = true> 

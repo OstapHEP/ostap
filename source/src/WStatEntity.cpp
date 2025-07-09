@@ -107,13 +107,12 @@ Ostap::WStatEntity::add
   /// ignore non-finite values and zero weights 
   if ( !weight || !std::isfinite ( value  ) || !std::isfinite ( weight ) ) { return *this ; }
   //
-  if ( 0 == n() ) 
+  if ( empty () ) 
     {
       m_mu       = value  ;
       m_mu2      = 0      ;
       m_values  += value  ; 
       m_weights += weight ;    
-      //
       return *this ;
     }
   //
@@ -154,8 +153,8 @@ Ostap::WStatEntity::add
 ( const Ostap::WStatEntity& other ) 
 {
   // treat the trivial cases  
-  if      ( 0 == other.n () ) {                  return *this ; }
-  else if ( 0 ==       n () ) { *this == other ; return *this ; }
+  if      ( other.empty () ) {                 return *this ; }
+  else if (       empty () ) { *this = other ; return *this ; }
   //
   const long double wA    = 1.0L *       n () *       m_weights.mu () ; //       sumw () 
   const long double wB    = 1.0L * other.n () * other.m_weights.mu () ; // other.sumw ()     ;

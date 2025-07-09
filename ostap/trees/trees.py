@@ -747,8 +747,11 @@ def _rt_table_0_ ( tree ,
 
     ## 
     from ostap.stats.statvars import data_size
-    n0 = data_size ( cuts , *args , use_frame = True , parallel = True ) 
-
+    n0 = data_size ( tree , cuts , *args , use_frame = False , parallel = True )
+    
+    if not n0 :
+        return '', 0  
+    
     ## no entries passed the cuts 
     brs   = () if 0 == n0 else brs
 
@@ -756,6 +759,8 @@ def _rt_table_0_ ( tree ,
     ## progress = ProgressBar ( max_value = len ( brs ) )
 
     ## get the interesting branches:
+
+    if not brs : brs = sorted ( set ( tree.branches() ) | set ( tree.leaves() ) )         
     
     bbs     = []
     selvars = 0 
@@ -773,14 +778,12 @@ def _rt_table_0_ ( tree ,
         if not _in_types ( tn ) : continue
         
         bbs.append ( b ) 
-
+        
+    if not bbs : bbs = sorted ( set ( tree.branches() ) | set ( tree.leaves() ) )         
+        
     ## get the statistic
-    if bbs :
-        bbstats = tree. statVar ( bbs           , *args , cuts = cuts , use_frame = True , parallel= True )
-    else   :
-        allvars = sorted ( set ( tree.branches() ) | set ( tree.leaves() ) )         
-        bbstats = tree. statVar ( allvars , *args , cuts = cuts , use_frame = True , parallel= True )
-
+    bbstats = tree. statVar ( bbs , *args , cuts = cuts , use_frame = True , parallel= True )
+    
     from ostap.stats.counters import WSE, SE  
     if   isinstance ( bbstats , ( WSE , SE ) )  : bbstats = { bbs [ 0 ] : bbstats }
         
@@ -812,7 +815,8 @@ def _rt_table_0_ ( tree ,
             
         _vars.append ( tuple  ( rr ) )
         
-    _vars.sort() 
+    _vars.sort()
+
     name_l  = len ( 'Variable' )  
     mean_l  = len ( 'mean' ) 
     rms_l   = len ( 'rms'  ) 
@@ -874,6 +878,7 @@ def _rt_table_0_ ( tree ,
                               fmt_max   %           v [ 5 ] ,
                               fmt_num   %           v [ 6 ] ) )
 
+    
     if not title :
         
         tt = tree.GetTitle()
@@ -892,7 +897,7 @@ def _rt_table_0_ ( tree ,
         if isinstance ( tree , ROOT.TChain ) :
             nfiles = len ( tree.files() )
             if 1 < nfiles : title += ',%d%s' %  ( nfiles , files_symbol if files_symbol else 'files' )
-             
+
     import ostap.logger.table as T
     if table_data : table_data = T.remove_empty_columns ( table_data ) 
     t  = T.table ( table_data , title , prefix = prefix , style = style )
@@ -910,6 +915,7 @@ def _rt_table_1_ ( tree ,
     """ Print tree as table 
     """
 
+    print ( 'TREE_TABLE_1' ) 
     if not variables :
         variables = sorted ( set ( tree.branches() ) | set ( tree.leaves () ) )
         
