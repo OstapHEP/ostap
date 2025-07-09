@@ -103,23 +103,15 @@ namespace Ostap
     std::string toString() const ;
     // =====================================================================
     // all finite values ?
-    inline bool isfinite () const
-    { return m_cnt1.isfinite () && m_cnt2.isfinite() ; }
+    bool isfinite () const ;
+    // =====================================================================    
+    // all OK ?
+    bool ok       () const ;
     // =====================================================================    
   public: // the main method without decorations  
     // ======================================================================
     /// the main method without decorations  
-    NStatEntity& add ( const double f ) 
-    {
-      /// increment both counters 
-      m_cnt1.add ( f ) ;
-      m_cnt2.add ( f ) ;
-      // reset them when needed 
-      if ( 0    == m_cnt1.nEntries() % ( 2 * m_N ) ) { m_cnt1.reset() ; }
-      if ( m_N  == m_cnt1.nEntries() % ( 2 * m_N ) ) { m_cnt2.reset() ; }
-      //
-      return *this ;
-    }
+    NStatEntity& add ( const double f ) ;
     // ======================================================================
   public:
     // ======================================================================
@@ -135,7 +127,7 @@ namespace Ostap
     /// the second counter 
     StatEntity    m_cnt2 {} ;                          // the second counter 
     /// the sliding window 
-    unsigned long m_N       ;                         // the sliding window 
+    unsigned long m_N       ;                          // the sliding window 
     // ======================================================================
   };
   // ========================================================================

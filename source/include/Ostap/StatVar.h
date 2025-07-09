@@ -51,7 +51,7 @@ namespace Ostap
   {
     // ========================================================================
   public: // helper typedef 
-    // ========================================================================
+    // ========================================================================    
     typedef std::vector<Ostap::StatEntity>   StatVector ;
     typedef std::vector<Ostap::WStatEntity> WStatVector ;
     typedef Ostap::Dict<Ostap::StatEntity>   StatMap    ;
@@ -114,16 +114,16 @@ namespace Ostap
      *  @param data       (input) data 
      *  @param stat       (UDATE) statistical counter 
      *  @param expression (INPUT) the variable 
-     *  @param selection  (INPUT) selection/cut (treated as weight!)
-     *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+     *  @param selection  (INPUT) selection/cut (treated as boolean!!)
+     *  @param cut_range  (INPUT) if non empty: use events only from this range 
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
-     *  @param xmin       (INPUT)  low  limit for expressoon 
-     *  @param xmax       (INPUT)  high limit for expressoon 
+     *  @param xmin       (INPUT) low  limit for expressoon 
+     *  @param xmax       (INPUT) high limit for expressoon 
      *  @return status code 
      *  @see Ostap::Math::WStatistics
-     *  @attention selection/cut is treated as boolean 
-     *  @attention datatse must be nonn-weighted 
+     *  @attention selection is treated as boolean 
+     *  @attention for weighted datasets, the weigth is treated as boolean! 
      */
     Ostap::StatusCode get_stat
     ( const RooAbsData*         data                           ,
@@ -141,7 +141,7 @@ namespace Ostap
      *  @param stat       (UDATE) statistical counter 
      *  @param expression (INPUT) the variable 
      *  @param selection  (INPUT) selection/cut (treated as weight!)
-     *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+     *  @param cut_range  (INPUT) if non empty: use events only from this range 
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
      *  @param xmin       (INPUT)  low  limit for expressoon 
@@ -224,20 +224,20 @@ namespace Ostap
     /** Fill/update statistical counter 
      *  @param data       (input) data 
      *  @param stat       (UDATE) statistical counter 
-     *  @param expr1       (INPUT) the 1st variable 
+     *  @param expr1      (INPUT) the 1st variable 
      *  @param expr1      (INPUT) the 2nd variable 
      *  @param selection  (INPUT) selection/cut (treated as boolean!)
-     *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+     *  @param cut_range  (INPUT) if non empty: use events only forn this range!
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
-     *  @param xmin       (INPUT)  low  limit for expressoon 
-     *  @param xmax       (INPUT)  high limit for expressoon 
-     *  @param ymin       (INPUT)  low  limit for expressoon 
-     *  @param ymax       (INPUT)  high limit for expressoon 
+     *  @param xmin       (INPUT) low  limit for expressoon 
+     *  @param xmax       (INPUT) high limit for expressoon 
+     *  @param ymin       (INPUT) low  limit for expressoon 
+     *  @param ymax       (INPUT) high limit for expressoon 
      *  @return status code 
      *  @see Ostap::Math::WStatistics2
-     *  @attention selection/cut is treated as boolean 
-     *  @attention dat amust be non-weighted 
+     *  @attention selection is treated as boolean 
+     *  @attention for weighted datasets, the weigth is treated as boolean! 
      */
     Ostap::StatusCode get_stat
     ( const RooAbsData*         data                           ,
@@ -259,7 +259,7 @@ namespace Ostap
      *  @param expr1       (INPUT) the 1st variable 
      *  @param expr1      (INPUT) the 2nd variable 
      *  @param selection  (INPUT) selection/cut (treated as weight!)
-     *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+     *  @param cut_range  (INPUT) if non empty: use events only from this range 
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
      *  @param xmin       (INPUT)  low  limit for expressoon 
@@ -363,19 +363,19 @@ namespace Ostap
      *  @param expr1      (INPUT) the 2nd variable 
      *  @param expr3      (INPUT) the 3rd variable 
      *  @param selection  (INPUT) selection/cut (treated as boolean !)
-     *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+     *  @param cut_range  (INPUT) if non empty: use events only from this range 
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
-     *  @param xmin       (INPUT)  low  limit for expressoon 
-     *  @param xmax       (INPUT)  high limit for expressoon 
-     *  @param ymin       (INPUT)  low  limit for expressoon 
-     *  @param ymax       (INPUT)  high limit for expressoon 
-     *  @param zmin       (INPUT)  low  limit for expressoon 
-     *  @param zmax       (INPUT)  high limit for expressoon 
+     *  @param xmin       (INPUT) low  limit for expressoon 
+     *  @param xmax       (INPUT) high limit for expressoon 
+     *  @param ymin       (INPUT) low  limit for expressoon 
+     *  @param ymax       (INPUT) high limit for expressoon 
+     *  @param zmin       (INPUT) low  limit for expressoon 
+     *  @param zmax       (INPUT) high limit for expressoon 
      *  @return status code 
      *  @see Ostap::Math::WStatistics3
-     *  @attention selection/cut is treated as weight!
-     *  @attention data MUST be non-weighted 
+     *  @attention selection is treated as boolean 
+     *  @attention for weighted datasets, the weigth is treated as boolean! 
      */
     Ostap::StatusCode get_stat
     ( const RooAbsData*         data                           ,
@@ -401,7 +401,7 @@ namespace Ostap
      *  @param expr1      (INPUT) the 2nd variable 
      *  @param expr3      (INPUT) the 3rd variable 
      *  @param selection  (INPUT) selection/cut (treated as weight!)
-     *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+     *  @param cut_range  (INPUT) if non empty: use events only from this range 
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
      *  @param xmin       (INPUT)  low  limit for expressoon 
@@ -523,21 +523,21 @@ namespace Ostap
      *  @param expr3      (INPUT) the 3rd variable 
      *  @param expr4      (INPUT) the 4th variable 
      *  @param selection  (INPUT) selection/cut (treated as boolean)
-     *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+     *  @param cut_range  (INPUT) if non empty: use events only from this range 
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
-     *  @param xmin       (INPUT)  low  limit for expressoon 
-     *  @param xmax       (INPUT)  high limit for expressoon 
-     *  @param ymin       (INPUT)  low  limit for expressoon 
-     *  @param ymax       (INPUT)  high limit for expressoon 
-     *  @param zmin       (INPUT)  low  limit for expressoon 
-     *  @param zmax       (INPUT)  high limit for expressoon 
-     *  @param tmin       (INPUT)  low  limit for expressoon 
-     *  @param tmax       (INPUT)  high limit for expressoon 
+     *  @param xmin       (INPUT) low  limit for expressoon 
+     *  @param xmax       (INPUT) high limit for expressoon 
+     *  @param ymin       (INPUT) low  limit for expressoon 
+     *  @param ymax       (INPUT) high limit for expressoon 
+     *  @param zmin       (INPUT) low  limit for expressoon 
+     *  @param zmax       (INPUT) high limit for expressoon 
+     *  @param tmin       (INPUT) low  limit for expressoon 
+     *  @param tmax       (INPUT) high limit for expressoon 
      *  @return status code 
-     *  @see Ostap::Math::WStatistics2
-     *  @attention selection/cut is treated as boolean 
-     *  @attention data must be non-weighted 
+     *  @see Ostap::Math::Statistics4
+     *  @attention selection is treated as boolean 
+     *  @attention for weighted datasets, the weigth is treated as boolean! 
      */
     Ostap::StatusCode get_stat
     ( const RooAbsData*         data                           ,
@@ -567,7 +567,7 @@ namespace Ostap
      *  @param expr3      (INPUT) the 3rd variable 
      *  @param expr4      (INPUT) the 4th variable 
      *  @param selection  (INPUT) selection/cut (treated as weight!)
-     *  @param cut_range  (INPUT) if non empty: use evene only fomthis cut-range
+     *  @param cut_range  (INPUT) if non empty: use events only from this range      
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
      *  @param xmin       (INPUT)  low  limit for expressoon 
@@ -579,7 +579,7 @@ namespace Ostap
      *  @param tmin       (INPUT)  low  limit for expressoon 
      *  @param tmax       (INPUT)  high limit for expressoon 
      *  @return status code 
-     *  @see Ostap::Math::WStatistics2
+     *  @see Ostap::Math::WStatistics4
      *  @attention selection/cut is treated as weight!
      */
     Ostap::StatusCode get_stat

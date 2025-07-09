@@ -204,8 +204,8 @@ Ostap::StatusCode Ostap::StatVar::get_stat
  *  @param last       (INPIUT) the last event to process (exclusive) 
  *  @return status code 
  *  @see Ostap::Math::WStatistic
- *  @attention selection/cut is treated as boolean!
- *  @attention data MUST be no-weighted! 
+ *  @attention selection is treated as boolean 
+ *  @attention for weighted datasets, the weigth is treated as boolean! 
  */
 // =============================================================================
 Ostap::StatusCode Ostap::StatVar::get_stat
@@ -227,7 +227,6 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   if ( xmax <  xmin       ) { return Ostap::StatusCode::SUCCESS ; }
   //
   if ( nullptr == data    ) { return INVALID_DATA        ; }
-  if ( data->isWeighted() ) { return INVALID_DATA_WEIGHT ; }
   //
   const Ostap::EventIndex num_entries = data -> numEntries() ;
   const Ostap::EventIndex the_last    = std::min ( num_entries , last ) ;
@@ -247,13 +246,18 @@ Ostap::StatusCode Ostap::StatVar::get_stat
       const RooArgSet* vars = data -> get ( entry ) ;
       if ( nullptr == vars )                             { break    ; } // BREAK 
       //
-      if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE    
-      // apply cuts:
+      if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE
+      //
+      /// data weight?
+      const bool keep = weighted ? data-> weight() : 1.0 ;
+      if ( !keep ) { continue ; }                                       // CONTINUE
+      //
+      /// apply cuts:
       const bool cut  = with_cuts ? cuts -> getVal () : 1.0 ;
-      if ( !cut ) { continue ; }                                    // CONTINUE  
+      if ( !cut ) { continue ; }                                        // CONTINUE  
       //
       const double value = expr -> getVal () ;
-      if ( !in_range ( value , xmin , xmax ) ) { continue ; }      // CONTINUE 
+      if ( !in_range ( value , xmin , xmax ) ) { continue ; }          // CONTINUE 
       //
       stat.update ( value ) ;
     }
@@ -497,8 +501,9 @@ Ostap::StatusCode Ostap::StatVar::get_stat
  *  @param last       (INPIUT) the last event to process (exclusive) 
  *  @return status code 
  *  @see Ostap::Math::WStatistic
- *  @attention selection/cut is treated as boolean 
- *  @attention datatse must be nonn-weighted 
+ *  @attention selection is treated as boolean 
+ *  @attention for weighted datasets, the weigth is treated as boolean! 
+ 
  */
 // =============================================================================
 Ostap::StatusCode Ostap::StatVar::get_stat
@@ -524,7 +529,6 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   if ( ymax <  ymin        ) { return Ostap::StatusCode::SUCCESS ; }
   //
   if ( nullptr == data     ) { return INVALID_DATA        ; }
-  if ( data->isWeighted () ) { return INVALID_DATA_WEIGHT ; }  // data MUST be non-weighted 
   //
   const Ostap::EventIndex num_entries = data -> numEntries() ;
   const Ostap::EventIndex the_last    = std::min ( num_entries , last ) ;
@@ -543,9 +547,13 @@ Ostap::StatusCode Ostap::StatVar::get_stat
     {
       const RooArgSet* vars = data -> get ( entry ) ;
       if ( nullptr == vars )                             { break    ; } // BREAK 
+      if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE
       //
-      if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE    
-      // apply cuts:
+      /// data weight?
+      const bool keep = weighted ? data-> weight() : 1.0 ;
+      if ( !keep ) { continue ; }                                       // CONTINUE
+      //
+      /// apply cuts:
       const bool cut = with_cuts ? cuts -> getVal () : 1.0 ;
       if ( !cut ) { continue ; }                                   // CONTINUE
       //
@@ -821,7 +829,8 @@ Ostap::StatusCode Ostap::StatVar::get_stat
  *  @param last       (INPIUT) the last event to process (exclusive) 
  *  @return status code 
  *  @see Ostap::Math::WStatistic
- *  @attention selection/cut is treated as weight!
+ *  @attention selection is treated as boolean 
+ *  @attention for weighted datasets, the weigth is treated as boolean! 
  */
 // =============================================================================
 Ostap::StatusCode Ostap::StatVar::get_stat
@@ -851,7 +860,6 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   if ( zmax <  zmin       ) { return Ostap::StatusCode::SUCCESS ; }
   //
   if ( nullptr == data    ) { return INVALID_DATA        ; }
-  if ( data->isWeighted() ) { return INVALID_DATA_WEIGHT ; }  // ATTENTION!! 
   //
   const Ostap::EventIndex num_entries = data -> numEntries() ;
   const Ostap::EventIndex the_last    = std::min ( num_entries , last ) ;
@@ -871,7 +879,12 @@ Ostap::StatusCode Ostap::StatVar::get_stat
       const RooArgSet* vars = data -> get ( entry ) ;
       if ( nullptr == vars )                             { break    ; } // BREAK 
       //
-      if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE    
+      if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE
+      //
+      /// data weight?
+      const bool keep = weighted ? data-> weight() : 1.0 ;
+      if ( !keep ) { continue ; }                                       // CONTINUE
+      //
       // apply cuts:
       const bool cut  = with_cuts ? cuts -> getVal () : 1.0 ;
       if ( !cut ) { continue ; }                                   // CONTINUE  
@@ -1177,7 +1190,8 @@ Ostap::StatusCode Ostap::StatVar::get_stat
  *  @param last       (INPIUT) the last event to process (exclusive) 
  *  @return status code 
  *  @see Ostap::Math::WStatistic
- *  @attention selection/cut is treated as weight!
+ *  @attention selection is treated as boolean 
+ *  @attention for weighted datasets, the weigth is treated as boolean!  
  */
 // =============================================================================
 Ostap::StatusCode Ostap::StatVar::get_stat
@@ -1211,7 +1225,6 @@ Ostap::StatusCode Ostap::StatVar::get_stat
   if ( tmax <  tmin       ) { return Ostap::StatusCode::SUCCESS ; }
   //
   if ( nullptr == data    ) { return INVALID_DATA        ; }
-  if ( data->isWeighted() ) { return INVALID_DATA_WEIGHT ; } // ATTENTION
   //
   const Ostap::EventIndex num_entries = data -> numEntries() ;
   const Ostap::EventIndex the_last    = std::min ( num_entries , last ) ;
@@ -1231,7 +1244,12 @@ Ostap::StatusCode Ostap::StatVar::get_stat
       const RooArgSet* vars = data -> get ( entry ) ;
       if ( nullptr == vars )                             { break    ; } // BREAK 
       //
-      if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE    
+      if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE
+      //
+      /// data weight?
+      const bool keep = weighted ? data-> weight() : 1.0 ;
+      if ( !keep ) { continue ; }                                       // CONTINUE
+      //      
       // apply cuts:
       const bool  cut = with_cuts ? cuts -> getVal () : 1.0 ;
       if ( !cut ) { continue ; }                                   // CONTINUE  

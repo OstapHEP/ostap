@@ -19,12 +19,13 @@ __all__     = (
     'SE'             , ## simple smart counter (1-bi histo)  C++ Ostap::StatEntity 
     'WSE'            , ## simple smart counter with weight :     Ostap::WStatEntity 
     'NSE'            , ## simple smart running counter     :     Ostap::NStatEntity
-    'counters_table' , ## make table of counters
+    'table_counters' , ## make table of counters
     'EffCounter'     , ## simple counter for efficiency
     ) 
 # =============================================================================
 from   ostap.math.ve          import Ostap, VE
-from   ostap.math.base        import isequal, isequalf, iszero 
+from   ostap.math.base        import std, isequal, isequalf, iszero
+from   ostap.utils.basic      import typename 
 from   ostap.core.ostap_types import ( dictlike_types , sequence_types ,
                                        integer_types  , sized_types    )
 import ROOT, cppyy, math, sys  
@@ -221,10 +222,9 @@ _new_methods_ += [
     SE.count ,
     ]
 
-
 # ============================================================================== 
 ## Build the single row from the counter 
-def row_se ( counter ) :
+def cnt_row ( counter , key = '' ) :
     """ Build the single row from the SE-counter 
     """
     mean        = counter.mean   ()
@@ -249,45 +249,82 @@ def row_se ( counter ) :
     mnmx = mnmx % ( minv * scale , maxv * scale  )
 
     from   ostap.logger.symbols   import times
-
-    row = \
-        ( nEff  , '%s10^{%+d}' % ( times , expo0 ) if expo0 else '' ) , \
-        ( vsum  , '%s10^{%+d}' % ( times , expo1 ) if expo1 else '' ) , \
-        ( mean  , '%s10^{%+d}' % ( times , expo2 ) if expo2 else '' ) , \
-        ( rms   , '%s10^{%+d}' % ( times , expo3 ) if expo3 else '' ) , \
-        ( mnmx  , '%s10^{%+d}' % ( times , expo4 ) if expo4 else '' )
     
-    return row 
+    return '%s' % key , \
+        nEff  , '%s10^{%+d}' % ( times , expo0 ) if expo0 else ''  , \
+        vsum  , '%s10^{%+d}' % ( times , expo1 ) if expo1 else ''  , \
+        mean  , '%s10^{%+d}' % ( times , expo2 ) if expo2 else ''  , \
+        rms   , '%s10^{%+d}' % ( times , expo3 ) if expo3 else ''  , \
+        mnmx  , '%s10^{%+d}' % ( times , expo4 ) if expo4 else '' 
 
+# =============================================================================
+## Build 1 or 3 rows in the table for the counter :
+def cnt_rows ( cnt , key = '' ) :
+    """ Build 1 or 3 rows in the table for the counter """
+    
+    if   isinstance ( cnt , WSE ) :
+        return \
+            cnt_row ( cnt             , ( '%s'         % key ) if key else ''       ) , \
+            cnt_row ( cnt.values   () , ( '%s/values'  % key ) if key else 'values' ) , \
+            cnt_row ( cnt.weights  () , ( '%s/weights' % key ) if key else 'weight' ) ,
+    
+    elif isinstance ( cnt , NSE ) :
+        return \
+            cnt_row ( cnt             , ( '%s'         % key ) if key else ''       ) , \
+            cnt_row ( cnt.counter1 () , ( '%s/first'   % key ) if key else 'first'  ) , \
+            cnt_row ( cnt.counter2 () , ( '%s/second'  % key ) if key else 'second' ) ,
+    
+    return cnt_row ( cnt  , '%s' % key  ) , 
+    
+VSE  = std.vector(SE)
+VWSE = std.vector(WSE)
+counter_types = SE, WSE, NSE 
 # =============================================================================
 ## Make table of counters
 #  @code
 #  counters = .... ## sequence or mapping for counters
-#  table    = counters_table ( counters , prrefix = '# ' )
+#  table    = table_counters ( counters , prrefix = '# ' )
 #  logger.info ( 'Table is \n%s' % table )
 #  @endcode
-def counters_table ( counters , prefix = '' , title = '' , style = None ) :
+def table_counters ( counters , prefix = '' , title = '' , style = None ) :
     """ Make table of counters
     >>> counters = .... ## sequence or mapping for counters
     >>> table     = counters_table ( counters , prrefix = '# ' )
     >>> logger.info ( 'Table is \n%s' % table )
-    """    
-    if   isinstance ( counters , dictlike_types ) : pass 
+    """
+                              
+    if   isinstance ( counters , dictlike_types ) and \
+         all ( isinstance ( v  , counter_types  ) for v in counters.values() ) : pass
+    
     elif isinstance ( counters , sequence_types ) and \
-         isinstance ( counters , sized_types    ) :
+         isinstance ( counters , sized_types )    and \
+         all ( isinstance ( v  , counter_types  ) for v in counters  ) :
+        
         cnts = {}
         n = len ( counters )
         from ostap.logger.symbols import labels 
-        for l , c in zip ( labels ( n ) , counters ) : cnts [ l ] = c         
-        counters = cnts
-    elif isinstance ( counters , sequence_types ) :
+        for l , c in zip ( labels ( n ) , counters ) : cnts [ l ] = c
+        counters = cnts 
+    
+    elif isinstance ( counters , sequence_types ) and \
+         all ( isinstance ( v  , counter_types  ) for v in counters  ) :
+        
         cnts = {}
         for c , i  in enumerate ( counters , start = 1 ) : cnts [ i ] = c
-        counters = cnts        
-    elif isinstance ( counters , ( SE , WSE , NSE ) ) :
-        counters = { 1 : counters } 
+        counters = cnts 
+        
+    elif isinstance ( counters , counter_types ) :
+        
+        counters = { 1 : counters }
+        
+    ## vectors of counters 
+    elif  isinstance ( counters , ( VSE , VWSE ) ) :        
+        cnts = tuple ( v for v in counters )
+        return table_counters ( cnts , prefix = prefix , title = title , style = style )
+    
     else :
-        raise TypeError ( "cnt_table: Invalid type for 'counters' %s" % type ( counters ) )
+        
+        raise TypeError ( "counter_table: Invalid type for 'counters' %s" % typename ( counters ) )
 
     from   ostap.logger.symbols  import sum_symbol, rms_symbol  
     rows = [ ( ''         , '#' , 
@@ -297,124 +334,47 @@ def counters_table ( counters , prefix = '' , title = '' , style = None ) :
                'min/max'  , ''  ) ]
     
     for key in counters :
-        
-        counter = counters [ key ]
-
-        record = row_se ( counter ) 
-
-        row = ( '%s' % key                 ,
-                '%d' % counter.nEntries()  ) 
-                
-        row = row + record [ 1 ]   ## sum
-        row = row + record [ 2 ]   ## mean 
-        row = row + record [ 3 ]   ## rms 
-        row = row + record [ 4 ]   ## min/max
-
-        rows.append ( row ) 
+        cnt = counters [ key ]        
+        for row in cnt_rows ( cnt , key ) : rows.append ( row )
 
     import ostap.logger.table as T
     rows = T.remove_empty_columns ( rows ) 
-    if not title : title = 'Table of %d counters' % len ( counters )    
+    if not title : title = 'Table of %d counters' 
     table = T.table ( rows , prefix = prefix , title = title , alignment = "lcccccccccccc" , style = style )
     #
     return table 
 
 # =============================================================================
-SE  .__repr__ = lambda s : counters_table ( { '' : s } , title = 'Counter' )
-SE  .__str__  = lambda s : counters_table ( { '' : s } , title = 'Counter' )  
+SE   .__repr__ = lambda s : table_counters ( { '' : s } , title = 'Counter' )
+SE   .__str__  = lambda s : table_counters ( { '' : s } , title = 'Counter' )  
+NSE  .__repr__ = lambda s : table_counters ( { '' : s } , title = 'Counter' )
+NSE  .__str__  = lambda s : table_counters ( { '' : s } , title = 'Counter' )  
 
 _new_methods_ += [
-    SE.__repr__  ,
-    SE.__str__   ,
-    ]
+    SE .__repr__   ,
+    SE .__str__    ,
+    NSE.__repr__   ,
+    NSE.__str__    ,
+    table_counters ]
 
-# ==============================================================================
-_new_methods_ += [
-    counters_table  
-    ]
-
-# ==============================================================================
-## Print weighetd counters: 3 rows per counter 
-def wcounters_table ( counters , title = '' , prefix = '' , style = '' ) :
-    """ Print weighetd counters: 3 rows per counter 
-    """
-    if   isinstance ( counters , dictlike_types ) : pass 
-    elif isinstance ( counters , sequence_types ) and \
-         isinstance ( counters , sized_types    ) :
-        cnts = {}
-        n = len ( counters )
-        from ostap.logger.symbols import labels 
-        for l , c in zip ( labels ( n ) , counters ) : cnts [ l ] = c         
-        counters = cnts
-    elif isinstance ( counters , sequence_types ) :
-        cnts = {}
-        for c , i  in enumerate ( counters , start = 1 ) : cnts [ i ] = c
-        counters = cnts        
-    elif isinstance ( counters , ( SE , WSE , NSE ) ) :
-        counters = { 1 : counters } 
-    else :
-        raise TypeError ( "cnt_table: Invalid type for 'counters' %s" % type ( counters ) )
-
-    assert all ( isinstance ( w , WSE ) for w in counters.values() ) , \
-        "Invalid type of counter!"
-    
-    from   ostap.logger.symbols  import sum_symbol, rms_symbol  
-    rows = [ ( '' ,
-               '#eff/#'   , '' ,  
-               sum_symbol , '' ,  ## 'sum'     , ''  ,
-               'mean'     , '' ,
-               rms_symbol , '' ,  ## 'rms'     , ''  ,
-               'min/max'  , '' ) ]
-
-    for key in counters :
-        
-        counter = counters [ key ]
-
-        rec  = row_se ( counter            ) ## statistics 
-        recv = row_se ( counter.values  () ) ## statistics of values 
-        recw = row_se ( counter.weights () ) ## statistics of weights 
-
-        row  = ( '%s' % key , ) + \
-            rec [ 0 ] + \
-            rec [ 1 ] + \
-            rec [ 2 ] + \
-            rec [ 3 ] + \
-            rec [ 4 ]   ## min/max
-        
-        rowv = ( '%s(values)' % key , ) + \
-            recv [ 0 ] + \
-            recv [ 1 ] + \
-            recv [ 2 ] + \
-            recv [ 3 ] + \
-            recv [ 4 ]   ## min/max
-        
-        roww = ( '%s(weights)' % key , ) + \
-            recw [ 0 ] + \
-            recw [ 1 ] + \
-            recw [ 2 ] + \
-            recw [ 3 ] + \
-            recw [ 4 ]   ## min/max
-        
-        rows.append ( row  )
-        rows.append ( rowv )
-        rows.append ( roww )
-        
-    import ostap.logger.table as T
-    rows = T.remove_empty_columns ( rows ) 
-    if not title : title = 'Table of %d counters' % len ( counters )    
-    table = T.table ( rows , prefix = prefix , title = title , alignment = "lcccccccccccc" , style = style )
-    #
-    return table 
         
 # =============================================================================
-WSE .__repr__ = lambda s : wcounters_table ( { '' : s } , title = 'Counter' )
-WSE .__str__  = lambda s : wcounters_table ( { '' : s } , title = 'Counter' )  
+WSE .__repr__ = lambda s : table_counters ( { '' : s } , title = 'Counter' )
+WSE .__str__  = lambda s : table_counters ( { '' : s } , title = 'Counter' )  
+
+VSE .__str__  = lambda s : table_counters ( s , title = 'Counters' )
+VSE .__repr__ = lambda s : table_counters ( s , title = 'Counters' )
+VWSE.__str__  = lambda s : table_counters ( s , title = 'Counters' )
+VWSE.__repr__ = lambda s : table_counters ( s , title = 'Counters' )
 
 _new_methods_ += [
-    WSE.__repr__  ,
-    WSE.__str__   ,
-    ]
-
+    WSE.__repr__    ,
+    WSE.__str__     ,
+    ##
+    VWSE.__repr__   ,
+    VWSE.__str__    ,
+    VSE .__repr__   ,
+    VSE .__str__    ]
 
 
 # ==============================================================================
@@ -526,7 +486,7 @@ from ostap.math.reduce import root_factory
 def  _se_reduce_ ( cnt ) :
     """ Reduce `Ostap.StatEntity` object
     """
-    print ( 'REDUCE:' , cnt.n() , cnt.mu() , cnt.mu2() , cnt.min() , cnt.max() )
+    print ( 'REDUCE:' , cnt.n() , cnt.mu() , cnt.mu2() , cnt.min() , cnt.max() , cnt.ok () )
     return  root_factory , ( type ( cnt ) ,
                              cnt.n   () ,
                              cnt.mu  () ,

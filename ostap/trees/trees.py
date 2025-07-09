@@ -573,10 +573,9 @@ def tree_draw ( tree                     ,
             return histo
             
     ## get the suitable ranges for the variables
-    args  = first, last 
     ranges = data_range ( tree   ,
                           varlst ,
-                          cuts   , *args , 
+                          cuts   , first , last , 
                           use_frame = use_frame , 
                           parallel  = parallel  , 
                           delta     = delta     , 
@@ -747,8 +746,8 @@ def _rt_table_0_ ( tree ,
     _vars = []
 
     ## 
-    s0 = tree. statVar ( '1' , *args , cuts = cuts , use_frame = True , parallel = True )    
-    n0 = s0.nEntries   ()
+    from ostap.stats.statvars import data_size
+    n0 = data_size ( cuts , *args , use_frame = True , parallel = True ) 
 
     ## no entries passed the cuts 
     brs   = () if 0 == n0 else brs
@@ -776,7 +775,8 @@ def _rt_table_0_ ( tree ,
         bbs.append ( b ) 
 
     ## get the statistic
-    if bbs : bbstats = tree. statVar ( bbs           , *args , cuts = cuts , use_frame = True , parallel= True )
+    if bbs :
+        bbstats = tree. statVar ( bbs           , *args , cuts = cuts , use_frame = True , parallel= True )
     else   :
         allvars = sorted ( set ( tree.branches() ) | set ( tree.leaves() ) )         
         bbstats = tree. statVar ( allvars , *args , cuts = cuts , use_frame = True , parallel= True )
@@ -910,9 +910,11 @@ def _rt_table_1_ ( tree ,
     """ Print tree as table 
     """
 
-    if not variables : variables = tree.branches() 
+    if not variables :
+        variables = sorted ( set ( tree.branches() ) | set ( tree.leaves () ) )
+        
     variables , cuts , _ = vars_and_cuts ( variables , cuts )
-    
+
     bbs    = tuple ( sorted ( variables ) )
     bbstats = tree. statVar ( bbs , *args , cuts = cuts , use_frame = True , parallel = True ) 
 

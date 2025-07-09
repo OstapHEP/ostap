@@ -387,14 +387,14 @@ def data_hasEntry ( data               ,
         return sv.hasEntry ( data , cuts , *args )
 
 # =============================================================================
-## How mant good entries ?
+## How many good entries in dataset?
 def data_size ( data               ,       
                 cuts      = ""     , *args , 
                 cut_range = ""     ,
                 progress  = False  ,
                 use_frame = False  ,
                 parallel =  False  ) :
-    """ Is there at least one good entry? 
+    """ How many  good entries in the dataset ?
     """
     ## (1) decode expressions & cuts
     _ , cuts , _  = vars_and_cuts ( "1" , cuts )
@@ -589,12 +589,18 @@ def data_statistic ( data               ,
         else : 
             return sv.statVar_cut ( data , varname , cuts ,             *args )
            
-    ## 
-    
-    if   isinstance ( data , ROOT.RooAbsData ) : vcnt = Ostap.StatVar.WStatVector ()
-    elif cuts and as_weight                    : vcnt = Ostap.StatVar.WStatVector ()
-    else                                       : vcnt = Ostap.StatVar. StatVector ()
-        
+    ##     
+    if   isinstance ( data , ROOT.RooAbsData ) :
+        TCNT = Ostap.WStatEntity 
+        vcnt = Ostap.StatVar.WStatVector ()
+    elif cuts and as_weight                    : 
+        TCNT = Ostap.WStatEntity            
+        vcnt = Ostap.StatVar.WStatVector ()
+    else                                       :
+        TCNT = Ostap.StatEntity
+        vcnt = Ostap.StatVar. StatVector ()
+
+
     ## variable names 
     vnames = strings ( var_lst ) 
     
@@ -604,16 +610,16 @@ def data_statistic ( data               ,
             print ( vcnt ) 
             assert sc.isSuccess() , 'Error %s from Ostap::StatVar::statVars' % sc  
             assert len ( vcnt ) == len ( vnames ) , "Mismatch in structure"
-            return { name : cnt for ( name , cnt ) in zip ( var_lst , vcnt ) } 
+            return { name : TCNT ( cnt ) for ( name , cnt ) in zip ( var_lst , vcnt ) } 
             
     assert isinstance ( data , ROOT.TTree ) , "Invalid type for data!"
     
     from ostap.trees.trees import ActiveBranches
-    with rootException() , ActiveBranches ( data , cuts , *var_lst ) :
+    with rootException() , ActiveBranches ( data  , cuts , *var_lst ) :
         sc   = sv.statVars ( data , vcnt , vnames , cuts , *args   ) 
         assert sc.isSuccess() , 'Error %s from Ostap::StatVar::statVars' % sc 
-        assert len ( vcnt ) == len ( vnames ) , "Mismatch in structure"
-        return { name : cnt for ( name , cnt ) in zip ( var_lst , vcnt ) } 
+        assert len ( vcnt ) == len ( vnames ) , "Mismatch in structure"    
+        return { name : TCNT ( cnt ) for ( name , cnt ) in zip ( var_lst , vcnt ) } 
 
 # ==============================================================================
 ## Get the minmax from data

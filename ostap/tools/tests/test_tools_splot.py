@@ -112,14 +112,15 @@ def test_splotting  () :
     
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data  ( files , 'S' )
+
     logger.info ( 'Initial Tree/Chain:\n%s' % data.chain.table ( prefix = '# ' ) )
-    
+
     chain  = data.chain 
     histo = ROOT.TH1D ( hID() , 'x-distibution' , 200 , xmin , xmax  )
 
     chain.project ( histo , 'x' )
     
-    xvar   = ROOT.RooRealVar ( 'x' , 'c-variable' , xmin , xmax )    
+    xvar  = ROOT.RooRealVar  ( 'x' , 'c-variable' , xmin , xmax )    
     gauss = Models.Gauss_pdf ( 'G' , xvar = xvar ,
                                mean  = ( mean  , mean - 2 * sigma , mean + 2 * sigma ) ,
                                sigma = ( sigma , 0.5 * sigma , 2.0 * sigma           ) )
@@ -131,7 +132,7 @@ def test_splotting  () :
     
     model.S.setMax ( 3 * NS )
     model.B.setMax ( 3 * NS )
-    
+
     model.S = NS 
     model.B = NB 
 
@@ -189,6 +190,7 @@ def test_splotting  () :
         sp.cows2tree ( chain , 'x' , names = names  , parallel = True )
           
     chain = data.chain
+
     
     nS_hw = chain.statVar ( 'nS_hw' )
     fS_hw = chain.statVar ( 'fS_hw' )

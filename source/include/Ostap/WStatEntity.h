@@ -30,7 +30,7 @@ namespace Ostap
     /// constructor from StatEntity of values 
     WStatEntity					
     ( const StatEntity& values ) ;
-    /// full consructor
+    /// full constructor
     WStatEntity
     ( const double      mu      ,
       const double      mu2     ,
@@ -91,14 +91,17 @@ namespace Ostap
     // ======================================================================
   public:
     // ======================================================================
-    /// add   the  value      (with weight=1) to the counter 
+    /// add   the  value (with weight=+1) to the counter 
     inline WStatEntity& operator+= ( const double value ) { return add (  value ) ; }
+    /// add   the  value (with weight=+1) to the counter 
+    inline WStatEntity& operator-= ( const double value ) { return add ( -value ) ; }
+    // ========================================================================
+  public: 
+    // ========================================================================
     /// add   the  value +1   (with weight=1) to the counter 
     inline WStatEntity& operator++ ()      { return   (*this) += 1 ; }
     /// add   the  value +1   (with weight=1) to the counter 
     inline WStatEntity& operator++ ( int ) { return ++(*this)      ; }    
-    /// add   the -value      (with weight=1) to the counter 
-    inline WStatEntity& operator-= ( const double value ) { return add ( -value ) ; }
     /// add   the  value -1   (with weight=1) to the counter 
     inline WStatEntity& operator-- ()      { return   (*this) -= 1 ; }
     /// add   the  value -1   (with weight=1) to the counter 
@@ -110,10 +113,10 @@ namespace Ostap
     bool operator< ( const WStatEntity& s ) const ;
     bool operator==( const WStatEntity& s ) const ;
     /// derived comparisons:
-    bool operator> ( const WStatEntity& s ) const { return s < *this ; }
-    bool operator<=( const WStatEntity& s ) const { return    (*this) == s || (*this) < s ; }
-    bool operator>=( const WStatEntity& s ) const { return    (*this) == s || (*this) > s ; }
-    bool operator!=( const WStatEntity& s ) const { return   !(*this  == s ) ; }
+    inline bool operator> ( const WStatEntity& s ) const { return s < *this ; }
+    inline bool operator<=( const WStatEntity& s ) const { return    (*this) == s || (*this) < s ; }
+    inline bool operator>=( const WStatEntity& s ) const { return    (*this) == s || (*this) > s ; }
+    inline bool operator!=( const WStatEntity& s ) const { return   !(*this  == s ) ; }
     // ======================================================================
   public: // various technical helper methods  
     // ========================================================================
@@ -124,15 +127,11 @@ namespace Ostap
     /// printout  to std::ostream
     std::ostream& fillStream ( std::ostream& o ) const ;
     // ======================================================================
-    // all finite values ?
-    inline bool isfinite () const
-    {
-      return
-    	std::isfinite ( m_mu  ) &&
-	    std::isfinite ( m_mu2 ) &&
-	    m_values .isfinite ()   &&
-	    m_weights.isfinite ()   ;
-    }
+    /// all values are finite  ?
+    bool isfinite () const ;
+    // ======================================================================
+    /// Is it OK ? 
+    bool ok       () const ;
     // ======================================================================
   public: // the main methods 
     // ======================================================================
@@ -193,6 +192,14 @@ namespace Ostap
   // ========================================================================
   /// add two counters 
   inline WStatEntity operator+ ( WStatEntity a , const WStatEntity& b ) 
+  { a += b ; return a ; }
+  // ========================================================================
+  /// add two counters 
+  inline WStatEntity operator+ ( WStatEntity a , const  StatEntity& b ) 
+  { a += b ; return a ; }
+  // ========================================================================
+  /// add two counters 
+  inline WStatEntity operator+ ( const StatEntity& b , WStatEntity  a ) 
   { a += b ; return a ; }
   // ========================================================================
   inline std::ostream& operator<<( std::ostream& s, const WStatEntity& e )

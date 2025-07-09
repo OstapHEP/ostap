@@ -59,7 +59,7 @@ namespace Ostap
   public:
     // ======================================================================
     /// the default constructor
-    StatEntity  () ;
+    StatEntity  () = default ;
     // ======================================================================
     /* The full constructor from all important values:
      *  @param entries number of entries
@@ -74,6 +74,11 @@ namespace Ostap
       const double    mu2     ,
       const double    minv    ,
       const double    maxv    ) ;
+    // ======================================================================
+    /// copy constructire
+    // StatEntity ( const StatEntity&   ) ;
+    /// move constructire
+    // StatEntity (       StatEntity&&  ) ;
     // ======================================================================
   public: // the basic accessors 
     // ======================================================================
@@ -285,7 +290,7 @@ namespace Ostap
     // ======================================================================
   public:
     // ======================================================================
-    /// basic comparison
+    /// basic comparison: ordering 
     bool operator< ( const StatEntity& s ) const ;
     bool operator==( const StatEntity& s ) const ;
     /// derived comparisons:
@@ -293,6 +298,13 @@ namespace Ostap
     inline bool operator<=( const StatEntity& s ) const { return    (*this) == s || (*this) < s ; }
     inline bool operator>=( const StatEntity& s ) const { return    (*this) == s || (*this) > s ; }
     inline bool operator!=( const StatEntity& s ) const { return   !(*this  == s ) ; }
+    // ======================================================================
+  public: // assignements 
+    // ======================================================================
+    /// copy assignement 
+    // StatEntity& operator=( const StatEntity&  right ) ;
+    /// move assignement 
+    // StatEntity& operator=(       StatEntity&& right ) ;
     // ======================================================================
   public:
     // ======================================================================
@@ -333,15 +345,11 @@ namespace Ostap
     /// printout  to std::ostream
     std::ostream& fillStream ( std::ostream& o ) const ;
     // ======================================================================
-    // all finite values ?
-    inline bool isfinite () const
-    {
-      return
-	std::isfinite ( m_mu  ) &&
-	std::isfinite ( m_mu2 ) &&
-	std::isfinite ( m_min ) &&
-	std::isfinite ( m_max ) ;	
-    }
+    /// all values are finite ? 
+    bool isfinite () const ;
+    // =======================================================================
+    /// OK ?
+    bool ok       () const ;
     // ======================================================================
   private: // data members 
     // ======================================================================
@@ -353,7 +361,7 @@ namespace Ostap
     double    m_min {   std::numeric_limits<double>::max() } ;
     double    m_max { - std::numeric_limits<double>::max() } ;
     // ======================================================================
-  };
+  } ;
   // ========================================================================
   /// external operator for addition of StatEntity and a number
   inline StatEntity    operator+ ( StatEntity   e , const double      v ) 

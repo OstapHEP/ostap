@@ -76,9 +76,34 @@ Ostap::NStatEntity::NStatEntity
                   "Ostap::NStatEntity"    ,
                   INVALID_PARS , __FILE__ , __LINE__ ) ;
 }
-// ======================================================================
-
-
+// ============================================================================
+// the main method without decorations  
+// ============================================================================
+Ostap::NStatEntity&
+Ostap::NStatEntity::add
+( const double f ) 
+{
+  /// skip infinities and NaNs 
+  if ( !std::isfinite ( f ) ) { return *this ; } 
+  /// increment both counters 
+  m_cnt1.add ( f ) ;
+  m_cnt2.add ( f ) ;
+  // reset them when needed 
+  if ( 0    == m_cnt1.nEntries() % ( 2 * m_N ) ) { m_cnt1.reset() ; }
+  if ( m_N  == m_cnt1.nEntries() % ( 2 * m_N ) ) { m_cnt2.reset() ; }
+  //
+  return *this ;
+}
+// ============================================================================
+// finite values? 
+// ============================================================================
+bool Ostap::NStatEntity::isfinite () const
+{ return m_cnt1.isfinite() && m_cnt2.isfinite() ; }
+// ============================================================================
+// Is it OK ?
+// ============================================================================
+bool Ostap::NStatEntity::ok () const
+{ return isfinite () && m_cnt1.ok() && m_cnt2.ok () ; }  
 // ===========================================================================
 /*  printout  to std::ostream
  *  @param s the reference to the output stream

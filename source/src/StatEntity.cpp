@@ -34,13 +34,6 @@ namespace
   const Ostap::Math::Zero    <double> s_zero  {} ;
   // ==========================================================================
 }
-Ostap::StatEntity::StatEntity()
-: m_n   { 0 }
-, m_mu  { 0 }
-, m_mu2 { 0 }
-, m_min {   std::numeric_limits<double>::max() } 
-, m_max { - std::numeric_limits<double>::max() } 
-{}
 // ============================================================================
 /* The full constructor from all important values
  * @see StatEntity::format
@@ -51,7 +44,6 @@ Ostap::StatEntity::StatEntity()
  * @param maxv the maximum value 
  */  
 // ============================================================================
-#include <iostream>
 Ostap::StatEntity::StatEntity
 ( const Ostap::StatEntity::size_type entries ,
   const double                       mu      ,
@@ -86,11 +78,6 @@ Ostap::StatEntity::StatEntity
     }
   else
     {
-        std::cerr << " MIN/MAX "
-        << " N "  << m_n << "  mu2:" <<  m_mu2
-        << "   " 
-        << m_min << " / " << m_mu << " / " <<  m_max <<  std::endl; 
-
       Ostap::Assert ( m_min <= m_mu && m_mu <= m_max     , 
                       "Invalid minv/mu/maxv"             ,
                       "Ostap::StatEntity"                ,
@@ -99,15 +86,29 @@ Ostap::StatEntity::StatEntity
   //
   if ( s_zero ( m_mu2 ) ) { m_mu2 = 0 ; }
   //
-  Ostap::Assert ( ( !empty () ) || ( empty() && !m_mu2 ) ,		  
-                  "Inconsistent mu2/empty!"              ,
-                  "Ostap::StatEntity"                    ,
-                  INVALID_PARS , __FILE__ , __LINE__     ) ;  
-  //
   Ostap::Assert ( 0 <= m_mu2                         , 
                   "Invalid second moment"            ,
                   "Ostap::StatEntity"                , 
                   INVALID_PARS , __FILE__ , __LINE__ ) ;
+}
+// ===============================================================================/
+// all values are finite ? 
+// ===============================================================================/
+bool Ostap::StatEntity::isfinite () const
+{
+  return
+    std::isfinite ( m_mu  ) &&
+    std::isfinite ( m_mu2 ) &&
+    std::isfinite ( m_min ) &&
+    std::isfinite ( m_max ) ;
+} 
+// ===============================================================================/
+// is it ok ? 
+// ===============================================================================
+bool Ostap::StatEntity::ok () const
+{
+  if ( empty () ) { return !m_mu && !m_mu2 ; }
+  return isfinite () && m_min <= m_mu && m_mu  <= m_max ; 
 }
 // ============================================================================
 /* add a value : the main method 
@@ -123,15 +124,15 @@ Ostap::StatEntity::add ( const double value )
   if ( !std::isfinite ( value ) ) { return *this ; }
   //
   if ( 0 == m_n ) 
-  {
-    m_n   = 1 ;
-    m_mu  = value ;
-    m_mu2 = 0 ;
-    m_min = value ;
-    m_max = value ;
-    //
-    return *this ;      // RETURN
-  }
+    {
+      m_n   = 1 ;
+      m_mu  = value ;
+      m_mu2 = 0 ;
+      m_min = value ;
+      m_max = value ;
+      //
+      return *this ;      // RETURN
+    }
   //
   // update the regular case 
   //
@@ -213,17 +214,8 @@ Ostap::StatEntity&
 Ostap::StatEntity::add ( const Ostap::StatEntity& other )
 {
   /// trivial updates:
-  if      ( 0 == other.m_n ) { return *this ; }
-  else if ( 0 ==       m_n ) 
-  {
-    m_n   = other.m_n   ;
-    m_mu  = other.m_mu  ;
-    m_mu2 = other.m_mu2 ;
-    m_min = other.m_min ;
-    m_max = other.m_max ;
-    //
-    return *this ;
-  }
+  if      ( 0 == other.m_n ) {                  return *this ; }
+  else if ( 0 ==       m_n ) { *this == other ; return *this ; }
   //
   const size_type    N     = m_n + other.m_n          ;
   const long double  fA    = m_n * 1.0L / N           ;

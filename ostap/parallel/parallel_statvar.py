@@ -38,8 +38,9 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.parallel.statvar' )
 else                       : logger = getLogger ( __name__     )
 # =============================================================================
-CHUNK_SIZE = 50000
-MAX_FILES  = 1 
+CHUNK_SIZE = 100000
+MAX_FILES  = 1
+# =============================================================================
 ## The simple task object collect statistics for loooooong chains 
 #  @see GaudiMP.Parallel
 #  @see GaudiMP.Parallel.Task
@@ -108,6 +109,7 @@ class StatVarTask(Task) :
     def merge_results ( self , result , jobid = -1 ) :
         
         from ostap.stats.counters   import WSE
+    
         from ostap.core.ostap_types import dictlike_types
         
         if not self.__output : self.__output = result
@@ -119,7 +121,7 @@ class StatVarTask(Task) :
                     else                     : self.__output [ key ]  = result [ key ] 
             else :
                 self.__output += result
-
+                
     ## get the results 
     def results ( self ) : return self.__output 
 
