@@ -197,21 +197,29 @@ def test_splotting  () :
     uS_sw = chain.statVar ( 'uS_sw' )
     S_cw  = chain.statVar ( 'S_cw'  )
     B_cw  = chain.statVar ( 'B_cw'  )
+    
 
     dun   = chain.statVar ( 'uS_sw - nS_hw' )
     duf   = chain.statVar ( 'uS_sw - fS_hw' )
     dnf   = chain.statVar ( 'nS_hw - fS_hw' )
     duc   = chain.statVar ( 'uS_sw -  S_cw' )
-    
-    logger.info ( 'nS_hw: %s' % nS_hw )
-    logger.info ( 'fS_hw: %s' % fS_hw )    
-    logger.info ( 'uS_sw: %s' % uS_sw )
-    logger.info ( 'S_cw : %s' %  S_cw )
-    
-    logger.info ( 'u-n  : %s' % dun   )
-    logger.info ( 'u-f  : %s' % duf   )
-    logger.info ( 'n-f  : %s' % dnf   )
-    logger.info ( 'u-c  : %s' % duc   )
+
+    counters = {
+        ##
+        'hS_hw'         : nS_hw ,
+        'fS_hw'         : fS_hw ,
+        'uS_sw'         : uS_sw ,
+        'S_cw'          : S_cw  ,
+        'B_cw'          : B_cw  ,
+        ##
+        'uS_sw - hS_hw' : dun ,
+        'uS_sw - fS_hw' : duf ,
+        'nS-hw - fS_hw' : dnf ,
+        'uS-sw -  S_hw' : duc ,        
+    }
+    title = "sPlot counters"
+    from ostap.stats.counters import table_counters
+    logger.info ( '%s\n%s' %  ( title , table_counters ( counters , prefix = '# ', title = title ) ) ) 
 
     hsn  = ROOT.TH1D( hID() , 'y for signal'     , 100 , ymin , ymax )
     hbn  = ROOT.TH1D( hID() , 'y for background' , 100 , ymin , ymax )

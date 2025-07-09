@@ -167,13 +167,11 @@ class KeepCanvas(Wait) :
         ## 
         cnv = self.current 
         self.__old_canvas = cnv if cnv else None
-        print ( 'KEEP CANVAS ENTER:' , cnv.GetName() if cnv else cnv )
         
     def __exit__  ( self , *_ ) :
         Wait.__exit__ ( self , *_ )         
         if self.__old_canvas:
             cnv = self.__old_canvas 
-            print ( 'KEEP CANVAS EXIT: ' , cnv.GetName() if cnv else cnv )                    
             self.__old_canvas.cd()
         ## self.__old_canvas = None             
     @property

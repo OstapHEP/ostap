@@ -1,3 +1,5 @@
+# v3.0.0.0
+
 ## New features
 
   1. completel re-write `Ostap::HstoProject` (and rename it into  `Ostap::Project`

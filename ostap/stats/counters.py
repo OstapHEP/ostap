@@ -327,16 +327,17 @@ def table_counters ( counters , prefix = '' , title = '' , style = None ) :
         raise TypeError ( "counter_table: Invalid type for 'counters' %s" % typename ( counters ) )
 
     from   ostap.logger.symbols  import sum_symbol, rms_symbol  
-    rows = [ ( ''         , '#' , 
-               sum_symbol , ''  ,  ## 'sum'     , ''  ,
-               'mean'     , ''  ,
-               rms_symbol , ''  ,  ## 'rms'     , ''  ,
-               'min/max'  , ''  ) ]
+    rows = [ ( ''          ,    \
+               '#'        , '' , 
+               sum_symbol , '' , 
+               'mean'     , '' ,
+               rms_symbol , '' , 
+               'min/max'  , '' ) ]
     
     for key in counters :
         cnt = counters [ key ]        
         for row in cnt_rows ( cnt , key ) : rows.append ( row )
-
+        
     import ostap.logger.table as T
     rows = T.remove_empty_columns ( rows ) 
     if not title : title = 'Table of %d counters' 
