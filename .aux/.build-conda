@@ -7,10 +7,10 @@ then
 elif [[ -f $HOME/conda.sh  ]]
 then 
     source $HOME/conda.sh 
-    echo 'source conda.sh    : ' $HOME/conda.sh 
+    echo 'BUILD WITH CONDA: source conda.sh    : ' $HOME/conda.sh 
 else
-    echo 'Do not know how to access CONDA'
-    return 5 
+    echo 'BUILD WITH CONDA: Do not know how to access CONDA'
+    return 170 
 fi 
 
 OSTAP_CONDA_ENV=${1:-test-env}
@@ -18,12 +18,12 @@ OSTAP_CONDA_ENV=${1:-test-env}
 conda activate $OSTAP_CONDA_ENV
 conda_code=$?
 
-if [[ $conda_code ]] 
+if [[ $conda_code -ne 0 ]] 
 then
-    echo 'Failure to activate CONDA environment ' $OSTAP_CONDA_ENV
-    echo 'Valid CONDA  environments are:'
+    echo 'BUILD WITH CONDA: Failure to activate CONDA environment ' $OSTAP_CONDA_ENV
+    echo 'BUILD WITH CONDA: Valid CONDA  environments are:'
     conda info --envs
-    return 6 
+    return 180 
 fi 
 
 if [[ -d /teo/user/ibelyaev/ostap ]]
@@ -51,8 +51,8 @@ if [[ $OSTAP_SOURCE                      &&
 then
     true  
 else
-    echo 'No valid SOURCE directory is found!' $OSTAP_SOURCE 
-    return 5 
+    echo 'BUILD_WITH_CONDA: No valid SOURCE directory is found!' $OSTAP_SOURCE 
+    return 190 
 fi 
 
 OSTAP_BUILD=${3:-$OSTAP_SOURCE/build}
@@ -64,24 +64,24 @@ elif [[ -w $OSTAP_SOURCE ]]
 then 
     mkdir $OSTAP_SOURCE/build
     OSTAP_BUILD=$OSTAP_SOURCE/build  
-    echo 'Build directory is created' $OSTAP_BUILD
+    echo 'BUILD WITH CONDA: Build directory is created' $OSTAP_BUILD
 else
     OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
-    echo 'Build directory is created' $OSTAP_BUILD
+    echo 'BUILD WITH CONDA: Build directory is created' $OSTAP_BUILD
 fi
 
 if [[ ! -f $OSTAP_BUILD/.build-ostap ]]
 then
-    cp $OSTAP_SOURCE/.aux/build-ostap $OSTAP_BUILD/.build-ostap
-    echo 'copy .build-ostap from  ' $OSTAP_SOURCE/.aux/.build-ostap
+    cp $OSTAP_SOURCE/.aux/.build-ostap $OSTAP_BUILD/.build-ostap
+    echo 'BUILD WITH CONDA: copy .build-ostap from  ' $OSTAP_SOURCE/.aux/.build-ostap
 fi
 
 OSTAP_INSTALL=${4:~$OSTAP_BUILD/INSTALL/CONDA-$OSTAP_CONDA_ENV}
 
-echo 'OSTAP_CONDA_ENV    : ' $OSTAP_CONDA_ENV
-echo 'OSTAP_SOURCE       : ' $OSTAP_SOURCE
-echo 'OSTAP_BUILD        : ' $OSTAP_BUILD
-echo 'OSTAP_INSTALL      : ' $OSTAP_INSTALL
+echo 'BUILD WITH CONDA: OSTAP_CONDA_ENV    : ' $OSTAP_CONDA_ENV
+echo 'BUILD WITH CONDA: OSTAP_SOURCE       : ' $OSTAP_SOURCE
+echo 'BUILD WITH CONDA: OSTAP_BUILD        : ' $OSTAP_BUILD
+echo 'BUILD WITH CONDA: OSTAP_INSTALL      : ' $OSTAP_INSTALL
 
-source  $OSTAP_BUILD/.build-ostap $OSTAP_SOURCE $OSTAP_BUILD $OSTAP_INSTALL
+source $OSTAP_BUILD/.build-ostap $OSTAP_SOURCE $OSTAP_BUILD $OSTAP_INSTALL
 
