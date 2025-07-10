@@ -1,9 +1,12 @@
 #!/usr/bin/bash
 
 conda_path = $(command -v conda)
-if   [[ $conda_path ]]
+echo 'conda path:' $conda_path
+
+
+if   [[ ! -z $conda_path  ]]
 then
-    true 
+    echo 'non empty?'
 elif [[ -f $HOME/conda.sh  ]]
 then 
     source $HOME/conda.sh 
@@ -46,7 +49,7 @@ if [[ $OSTAP_SOURCE                      &&
       -d $OSTAP_SOURCE/examples          &&
       -d $OSTAP_SOURCE/data              &&
       -f $OSTAP_SOURCE/CMakeLists.txt    &&
-      -f $OSTAP_SOURCE/.aux/.build-ostap && 
+      -f $OSTAP_SOURCE/.aux/.build-ostap &&
       -x $OSTAP_SOURCE/.aux/.build-ostap ]]
 then
     true  

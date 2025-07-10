@@ -3,9 +3,11 @@
 OSTAP_SOURCE=${1}
 
 if [[ $ROOTSYS && -d $ROOTSYS ]]
+then 
+  true  
 else 
-    echo 'BUILD OSTAP No ROOTSYS directory:' $ROOTSYS 
-    return 100
+  echo 'BUILD OSTAP No ROOTSYS directory:' $ROOTSYS 
+  return 100
 fi
 
 if [[ $OSTAP_SOURCE                &&
