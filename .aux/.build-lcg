@@ -56,16 +56,16 @@ fi
 
 OSTAP_SOURCE=${4:-$OSTAP_HOME}
 
-if [[ $OSTAP_SOURCE                     &&
-      -d $OSTAP_SOURCE                  &&
-      -d $OSTAP_SOURCE/ostap            &&
-      -d $OSTAP_SOURCE/source           &&
-      -d $OSTAP_SOURCE/scripts          &&
-      -d $OSTAP_SOURCE/examples         &&
-      -d $OSTAP_SOURCE/data             &&
-      -f $OSTAP_SOURCE/CMakeLists.txt   &&
-      -f $OSTAP_SOURCE/.aux/build-ostap && 
-      -x $OSTAP_SOURCE/.aux/build-ostap ]]
+if [[ $OSTAP_SOURCE                      &&
+      -d $OSTAP_SOURCE                   &&
+      -d $OSTAP_SOURCE/ostap             &&
+      -d $OSTAP_SOURCE/source            &&
+      -d $OSTAP_SOURCE/scripts           &&
+      -d $OSTAP_SOURCE/examples          &&
+      -d $OSTAP_SOURCE/data              &&
+      -f $OSTAP_SOURCE/CMakeLists.txt    &&
+      -f $OSTAP_SOURCE/.aux/.build-ostap && 
+      -x $OSTAP_SOURCE/.aux/.build-ostap ]]
 then
     echo 'OSTAP_SOURCE       : ' $OSTAP_SOURCE   
 else
@@ -89,10 +89,10 @@ else
     echo 'Build directory is created' $OSTAP_BUILD
 fi 
 
-if [[ ! -f $OSTAP_BUILD/build-ostap ]]
+if [[ ! -f $OSTAP_BUILD/.build-ostap ]]
 then
-    cp $OSTAP_SOURCE/.aux/build-ostap $OSTAP_BUILD/build-lcg
-    echo 'copy build-ostap from  ' $OSTAP_BUILD/.aux/build-ostap
+    cp $OSTAP_SOURCE/.aux/.build-ostap $OSTAP_BUILD/.build-ostap
+    echo 'copy build-ostap from  ' $OSTAP_BUILD/.aux/.build-ostap
 fi
 
 ## parameter #5: install directory 
@@ -102,5 +102,5 @@ echo 'OSTAP_SOURCE       : ' $OSTAP_SOURCE
 echo 'OSTAP_BUILD        : ' $OSTAP_BUILD
 echo 'OSTAP_INSTALL      : ' $OSTAP_INSTALL
 
-source $OSTAP_BUILD/build-ostap $OSTAP_SOURCE $OSTAP_BUILD $OSTAP_INSTALL 
+source $OSTAP_BUILD/.build-ostap $OSTAP_SOURCE $OSTAP_BUILD $OSTAP_INSTALL 
 

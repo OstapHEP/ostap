@@ -1,0 +1,87 @@
+#!/usr/bin/bash
+
+conda_path = $(command -v conda)
+if   [[ $conda_path ]]
+then
+    true 
+elif [[ -f $HOME/conda.sh  ]]
+then 
+    source $HOME/conda.sh 
+    echo 'source conda.sh    : ' $HOME/conda.sh 
+else
+    echo 'Do not know how to access CONDA'
+    return 5 
+fi 
+
+OSTAP_CONDA_ENV=${1:-test-env}
+
+conda activate $OSTAP_CONDA_ENV
+conda_code=$?
+
+if [[ $conda_code ]] 
+then
+    echo 'Failure to activate CONDA environment ' $OSTAP_CONDA_ENV
+    echo 'Valid CONDA  environments are:'
+    conda info --envs
+    return 6 
+fi 
+
+if [[ -d /teo/user/ibelyaev/ostap ]]
+then 
+    THE_SRC=/teo/user/ibelyaev/ostap
+elif [[ -d $HOME/ostap ]]
+then 
+    THE_SRC=$HOME/ostap
+else 
+    THE_SRC=$PWD
+fi
+
+OSTAP_SOURCE=${2:-$THE_SRC}
+
+if [[ $OSTAP_SOURCE                      &&
+      -d $OSTAP_SOURCE                   &&
+      -d $OSTAP_SOURCE/ostap             &&
+      -d $OSTAP_SOURCE/source            &&
+      -d $OSTAP_SOURCE/scripts           &&
+      -d $OSTAP_SOURCE/examples          &&
+      -d $OSTAP_SOURCE/data              &&
+      -f $OSTAP_SOURCE/CMakeLists.txt    &&
+      -f $OSTAP_SOURCE/.aux/.build-ostap && 
+      -x $OSTAP_SOURCE/.aux/.build-ostap ]]
+then
+    true  
+else
+    echo 'No valid SOURCE directory is found!' $OSTAP_SOURCE 
+    return 5 
+fi 
+
+OSTAP_BUILD=${3:-$OSTAP_SOURCE/build}
+
+if   [[ $OSTAP_BUILD && -d $OSTAP_BUILD && -w $OSTAP_BUILD ]]
+then
+    true
+elif [[ -w $OSTAP_SOURCE ]]
+then 
+    mkdir $OSTAP_SOURCE/build
+    OSTAP_BUILD=$OSTAP_SOURCE/build  
+    echo 'Build directory is created' $OSTAP_BUILD
+else
+    OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
+    echo 'Build directory is created' $OSTAP_BUILD
+fi
+
+if [[ ! -f $OSTAP_BUILD/.build-ostap ]]
+then
+    cp $OSTAP_SOURCE/.aux/build-ostap $OSTAP_BUILD/.build-ostap
+    echo 'copy .build-ostap from  ' $OSTAP_SOURCE/.aux/.build-ostap
+fi
+
+OSTAP_INSTALL=${4:~$OSTAP_BUILD/INSTALL/CONDA-$OSTAP_CONDA_ENV}
+
+echo 'OSTAP_CONDA_ENV    : ' $OSTAP_CONDA_ENV
+echo 'OSTAP_SOURCE       : ' $OSTAP_SOURCE
+echo 'OSTAP_BUILD        : ' $OSTAP_BUILD
+echo 'OSTAP_INSTALL      : ' $OSTAP_INSTALL
+
+source  $OSTAP_BUILD/.build-ostap $OSTAP_SOURCE $OSTAP_BUILD $OSTAP_INSTALL
+
