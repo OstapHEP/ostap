@@ -63,8 +63,7 @@ if [[ $OSTAP_SOURCE                      &&
       -d $OSTAP_SOURCE/examples          &&
       -d $OSTAP_SOURCE/data              &&
       -f $OSTAP_SOURCE/CMakeLists.txt    &&
-      -f $OSTAP_SOURCE/.aux/.build-ostap &&
-      -x $OSTAP_SOURCE/.aux/.build-ostap ]]
+      -f $OSTAP_SOURCE/.aux/.build-ostap ]]
 then
     true
 else
