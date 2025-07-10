@@ -1,3 +1,9 @@
+## New features
+
+## Backward-imcompatible 
+
+## Bug fixes
+
 # v3.0.0.0
 
 ## New features
@@ -14,7 +20,7 @@
   1. simplify, extend  and make  it more universal `parallel_statvars` module
   
 
-##  Backward-imcompatible 
+## Backward-imcompatible 
 
 ## Bug fixes
 

@@ -1,0 +1,106 @@
+#!/usr/bin/bash
+
+echo 'build Ostap with LCG-cvmfs' 
+
+LCG=${1:-dev3/latest}
+PLATFORM=${2:-x86_64-el9-clang19-opt} 
+
+echo 'Platform           : ' $PLATFORM
+
+if [[ $LCG && -d /cvmfs/sft.cern.ch/lcg/views/$LCG ]]
+then
+    echo 'LCG version        : ' $LCG
+else
+    echo 'Valid LCGs are:' `ls /cvmfs/sft.cern.ch/lcg/views`
+    return 1  
+fi
+
+if [[ $PLATFORM && -d /cvmfs/sft.cern.ch/lcg/views/$LCG/$PLATFORM ]]
+then
+    true 
+    echo 'Platform           : ' $PLATFORM
+else
+    echo 'Valid platforms are:' `ls /cvmfs/sft.cern.ch/lcg/views/$LCG`
+    return 2  
+fi
+
+LCG_SETUP=/cvmfs/sft.cern.ch/lcg/views/$LCG/$PLATFORM/setup.sh 
+ls -al $LCG_SETUP
+
+if [[ $LCG && $PLATFORM && -f $LCG_SETUP ]]
+then
+    echo 'source LCG setup   : ' $LCG_SETUP  
+    source $LCG_SETUP
+else
+    echo 'no valid LCG/PLATFORM/setup script: ' $LCG_SETUP
+    return 3 
+fi
+
+if [[ -d $ROOTSYS ]]
+then
+    echo 'ROOTSYS directory  : ' $ROOTSYS     
+else 
+    echo 'No ROOTSYS directory : ' $ROOTSYS 
+    return 4
+fi
+ 
+if   [[ "$HOME" == "/afs/infn.it/user/i/ibelyaev" ]]
+then 
+    OSTAP_HOME=/teo/user/ibelyaev/ostap
+elif [[ "$HOME" == "/afs/cern.ch/user/i/ibelyaev" ]]
+then 
+    OSTAP_HOME=$HOME/cmtuser/RELEASE/ostap
+else    
+    OSTAP_HOME=$HOME/ostap
+fi
+
+OSTAP_SOURCE=${4:-$OSTAP_HOME}
+
+if [[ $OSTAP_SOURCE                     &&
+      -d $OSTAP_SOURCE                  &&
+      -d $OSTAP_SOURCE/ostap            &&
+      -d $OSTAP_SOURCE/source           &&
+      -d $OSTAP_SOURCE/scripts          &&
+      -d $OSTAP_SOURCE/examples         &&
+      -d $OSTAP_SOURCE/data             &&
+      -f $OSTAP_SOURCE/CMakeLists.txt   &&
+      -f $OSTAP_SOURCE/.aux/build-ostap && 
+      -x $OSTAP_SOURCE/.aux/build-ostap ]]
+then
+    echo 'OSTAP_SOURCE       : ' $OSTAP_SOURCE   
+else
+    echo 'No valid source directory is found!' $OSTAP_SOURCE 
+    return 5 
+fi 
+
+## parameter #4: build directory
+OSTAP_BUILD=${4:-$OSTAP_SOURCE/build}
+
+if   [[ $OSTAP_BUILD && -d $OSTAP_BUILD && -w $OSTAP_BUILD ]]
+then
+    true
+elif [[ -w $OSTAP_SOURCE ]]
+then 
+    mkdir $OSTAP_SOURCE/build
+    OSTAP_BUILD=$OSTAP_SOURCE/build  
+    echo 'Build directory is created' $OSTAP_BUILD
+else
+    OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
+    echo 'Build directory is created' $OSTAP_BUILD
+fi 
+
+if [[ ! -f $OSTAP_BUILD/build-ostap ]]
+then
+    cp $OSTAP_SOURCE/.aux/build-ostap $OSTAP_BUILD/build-lcg
+    echo 'copy build-ostap from  ' $OSTAP_BUILD/.aux/build-ostap
+fi
+
+## parameter #5: install directory 
+OSTAP_INSTALL=${5:-$OSTAP_BUILD/INSTALL/LCG$LCG_VERSION/$PLATFORM}
+
+echo 'OSTAP_SOURCE       : ' $OSTAP_SOURCE
+echo 'OSTAP_BUILD        : ' $OSTAP_BUILD
+echo 'OSTAP_INSTALL      : ' $OSTAP_INSTALL
+
+source $OSTAP_BUILD/build-ostap $OSTAP_SOURCE $OSTAP_BUILD $OSTAP_INSTALL 
+
