@@ -78,7 +78,7 @@ then
     echo 'BUILD WITH CONDA: copy .build-ostap from  ' $OSTAP_SOURCE/.aux/.build-ostap
 fi
 
-OSTAP_INSTALL=${4:~$OSTAP_BUILD/INSTALL/CONDA-$OSTAP_CONDA_ENV}
+OSTAP_INSTALL=${4:-$OSTAP_BUILD/INSTALL/CONDA-$OSTAP_CONDA_ENV}
 
 echo 'BUILD WITH CONDA: OSTAP_CONDA_ENV    : ' $OSTAP_CONDA_ENV
 echo 'BUILD WITH CONDA: OSTAP_SOURCE       : ' $OSTAP_SOURCE
@@ -87,3 +87,16 @@ echo 'BUILD WITH CONDA: OSTAP_INSTALL      : ' $OSTAP_INSTALL
 
 source $OSTAP_BUILD/.build-ostap $OSTAP_SOURCE $OSTAP_BUILD $OSTAP_INSTALL
 
+result=$?
+
+echo ''
+echo 'BUILD WITH CONDA: OSTAP_CONDA_ENV    : ' $OSTAP_CONDA_ENV
+
+if [[ $result -eq 0 ]]
+then
+    echo 'BUILD WITH CONDA: RESULT             : ' SUCCESS 
+else 
+    echo 'BUILD WITH CONDA: RESULT             : ' FAILURE $result 
+fi
+
+return $result
