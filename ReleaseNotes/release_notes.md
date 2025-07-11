@@ -1,9 +1,8 @@
 ## New features
     
  1. add `-v/--version` flag for `ostap`  : print the version and exit
- 1. refactor the main ostap parser into separate module  (it speeds up 'soatp -v' action)  
+ 1. refactor the main ostap parser into separate module  (it speeds up the `ostap -v` action)  
 
-       
 ## Backward-imcompatible 
 
 ## Bug fixes
