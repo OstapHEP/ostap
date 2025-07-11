@@ -1,5 +1,6 @@
 ## New features
-
+ 1. add `-v/--version` flag for `ostap`  : print the version and exit
+    
 ## Backward-imcompatible 
 
 ## Bug fixes

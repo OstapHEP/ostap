@@ -40,7 +40,6 @@ else
     echo 'Build directory is created' $OSTAP_BUILD
 fi 
 
-
 OSTAP_INSTALL=${3:-$OSTAP_BUILD/INSTALL}
 
 if [[ -f $OSTAP_BUILD/build.ninja ]]
@@ -63,12 +62,13 @@ fi
 (  echo '[5/6] BUILD OSTAP: THIRD  PASS OF CMAKE+NINJA' ; cd $OSTAP_BUILD ; pwd ; cmake $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
 (  echo '[6/6] BUILD OSTAP: LAST   PASS OF NINJA'       ; cd $OSTAP_BUILD ; pwd ; ninja ; ninja install | grep -v Up-to-date )
 
-echo 'BUILD OSTAP: OSTAP_SOURCE  :' $OSTAP_SOURCE
-echo 'BUILD OSTAP: OSTAP_BUILD   :' $OSTAP_BUILD
-echo 'BUILD OSTAP: OSTAP_INSTALL :' $OSTAP_INSTALL
-echo 'BUILD OSTAP: OSTAPDIR      :' $OSTAPDIR
-echo 'BUILD OSTAP: ROOTSYS       :' $ROOTSYS
-echo 'BUILD OSTAP: PYTHON        :' `python --version`
-echo 'BUILD OSTAP: python        :' `which python`
-echo 'BUILD OSTAP: root.exe      :' `which root.exe`
-echo 'BUILD OSTAP: ostap         :' `which ostap`
+echo 'BUILD OSTAP: OSTAP_SOURCE   :' $OSTAP_SOURCE
+echo 'BUILD OSTAP: OSTAP_BUILD    :' $OSTAP_BUILD
+echo 'BUILD OSTAP: OSTAP_INSTALL  :' $OSTAP_INSTALL
+echo 'BUILD OSTAP: OSTAPDIR       :' $OSTAPDIR
+echo 'BUILD OSTAP: ROOTSYS        :' $ROOTSYS
+echo 'BUILD OSTAP: python         :' `which python`
+echo 'BUILD OSTAP: root.exe       :' `which root.exe`
+echo 'BUILD OSTAP: ostap          :' `which ostap`
+echo 'BUILD OSTAP: PYTHON VERSION :' `python --version`
+echo 'BUILD OSTAP: OSTAP  VERSION :' `ostap  --version`

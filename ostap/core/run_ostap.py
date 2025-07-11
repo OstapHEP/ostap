@@ -32,6 +32,7 @@ __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = "2012-09-10"
 __version__ = '$Revision$'
 # =============================================================================
+import ostap 
 from   ostap.core.core     import rootError
 ## ROOT.PyConfig.IgnoreCommandLineOptions = True
 from   io      import StringIO
@@ -138,8 +139,7 @@ def parse_args ( args = [] ) :
         choices = range ( -1 , 8 ) , 
         type    = int              , 
         help    =  "Printout level [default: %(default)s]" ,
-    default = -1       )
-    
+    default = -1       )    
     #
     parser.add_argument (
         "files" ,
@@ -149,20 +149,25 @@ def parse_args ( args = [] ) :
         default = []  )
     #
     parser.add_argument ( 
-        '-c'        ,
-        '--command' ,
-        dest    = 'Commands'   ,
-        nargs   = '*'          ,
-        action  = Collect      , 
-        help    = "The commands for ``exec'' [default: %(default)s]" , 
-        default = []           )
+        '-v'    , '--version'     ,
+        dest    = 'Commands'      ,
+        action  = 'version'       , 
+        version = 'Ostap %s' % ostap.__version__ )  
     #
     parser.add_argument ( 
-        "-m" , "--macros"      ,
-        metavar = "MACROS"     ,
-        dest    = 'Macros'     ,
-        nargs   = '*'          ,
-        action  = Collect      , 
+        '-c'    , '--command'     ,
+        dest    = 'Commands'      ,
+        nargs   = '*'             ,
+        action  = Collect         , 
+        help    = "The commands for ``exec'' [default: %(default)s]" , 
+        default = []              )
+    #
+    parser.add_argument ( 
+        "-m"    , "--macros"      ,
+        metavar = "MACROS"        ,
+        dest    = 'Macros'        ,
+        nargs   = '*'             ,
+        action  = Collect         , 
         help    = "ROOT macros to be loaded [default: %(default)s]",
         default = []  )
     #
