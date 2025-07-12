@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 LCG=$1
-PLATFORM=$2
+CMTCONFIG=$2
+
+source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
+mkdir build
+cd    build
+cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ -GNinja && ninja && ninja install
 
 ## OSTAP_SOURCE=$PWD
 ## OSTAP_BUILD=$OSTAP_SOURCE
 ## OSTAP_INSTALL=$OSTAP_build/INSTALL
-## source .build-lcg $LCG $PLATFORM $OSTAP_SOURCE $OSTAP_BUILD $OSTAP_INSTALL
+## source .build-lcg $LCG $CMTCONFIG $OSTAP_SOURCE $OSTAP_BUILD $OSTAP_INSTALL
 
-source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh
-mkdir build
-cd    build
-cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ -GNinja && ninja && ninja install

@@ -51,7 +51,7 @@ else
     OSTAP_HOME=$HOME/ostap
 fi
 
-OSTAP_SOURCE=${4:-$OSTAP_HOME}
+OSTAP_SOURCE=${3:-$OSTAP_HOME}
 
 if [[ $OSTAP_SOURCE                      &&
       -d $OSTAP_SOURCE                   &&
