@@ -174,12 +174,11 @@ Ostap::Utils::RooFun::clone () const
  */
 // ============================================================================
 Ostap::StatusCode
-Ostap::Trees::add_branch
+Ostap::AddBranch::add_branch
 ( TTree*                            tree      ,
   const std::string&                bname     , 
   const Ostap::Utils::RooFun&       fun       ,
-  const DCT&                        mapping   ,
-  const Ostap::Utils::ProgressConf& progress  ) 
+  const Ostap::Dict<std::string>&   mapping   ) const 
 {
   //
   if ( !tree )                       { return INVALID_TREE ; }
@@ -200,7 +199,7 @@ Ostap::Trees::add_branch
   //
   // loop over the TTree entries
   const Long64_t nentries = tree->GetEntries(); 
-  Ostap::Utils::ProgressBar bar ( nentries , progress  ) ;
+  Ostap::Utils::ProgressBar bar ( nentries , m_progress  ) ;
   for ( Long64_t i = 0 ; i < nentries ; ++i , ++bar )
     {
       if ( tree->GetEntry ( i ) < 0 ) { break ; };
@@ -216,7 +215,7 @@ Ostap::Trees::add_branch
   return Ostap::StatusCode::SUCCESS ;  
 }
 // ============================================================================
-/** add new branch to the tree from RooFir function
+/** add new branch to the tree from RooFit function
  *  @param tree input tree 
  *  @param bname branch name 
  *  @param fun   the function 
@@ -226,14 +225,13 @@ Ostap::Trees::add_branch
  */
 // ========================================================================
 Ostap::StatusCode
-Ostap::Trees::add_branch
+Ostap::AddBranch::add_branch
 ( TTree*                            tree          ,
   const std::string&                bname         , 
   const RooAbsReal&                 fun           ,
   const RooAbsCollection&           observables   ,
   const RooAbsCollection*           normalization , 
-  const Ostap::Trees::DCT&          mapping       , 
-  const Ostap::Utils::ProgressConf& progress      ) 
+  const Ostap::Dict<std::string>&   mapping       ) const 
 {
   //
   if ( !tree )                       { return INVALID_TREE ; }
@@ -243,8 +241,7 @@ Ostap::Trees::add_branch
   return add_branch ( tree     ,
                       bname    , 
                       *the_fun ,
-                      mapping  ,
-                      progress ) ;
+                      mapping  ) ;
 }
 
 // ============================================================================

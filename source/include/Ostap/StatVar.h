@@ -59,7 +59,7 @@ namespace Ostap
     // ========================================================================
   public :
     // ========================================================================
-    /// construtctor with the progress flag
+    /// constructor with the progress flag
     StatVar ( const Ostap::Utils::ProgressConf& progress = false) ;
     // ========================================================================    
   public:  // Statistics&WStatistics 

@@ -308,21 +308,20 @@ Ostap::Utils::COWs::clone() const
  */
 // ==============================================================================
 Ostap::StatusCode
-Ostap::Trees::add_branch
+Ostap::AddBranch::add_branch
 ( TTree*                            tree     ,     
   const Ostap::Utils::COWs&         cows     ,
   const std::vector<std::string>&   names    ,  
-  const Ostap::Trees::DCT&          mapping  ,
-  const Ostap::Utils::ProgressConf& progress )
+  const Ostap::Dict<std::string>&   mapping  ) const
 {
   if ( nullptr == tree ) { return INVALID_TREE  ; } 
   /// use local version 
   const std::unique_ptr<Ostap::Utils::COWs> the_cows { cows.clone() } ;
   /// the size of the problem
   const std::size_t N { the_cows->size() } ; 
-  Ostap::Assert ( N == names.size()          , 
-                  "Invalid vector of names"  , 
-                  "Ostap::Trees::add_branch" ,
+  Ostap::Assert ( N == names.size()              , 
+                  "Invalid vector of names"      , 
+                  "Ostap::AddBRanch::add_branch" ,
                   INVALID_NAME , __FILE__  , __LINE__ ) ; 
   //                   bname/0   bvalue/1 
   typedef std::tuple<std::string,double> ITEM  ;
@@ -338,9 +337,9 @@ Ostap::Trees::add_branch
       const std::string& bname = std::get<0> ( item  ) ;
       const std::string  bspec { bname  + "/D" } ;
       TBranch* branch = tree->Branch ( bname.c_str() , &std::get<1> ( item ) , bspec.c_str () ) ; // get<1>
-      Ostap::Assert ( nullptr != branch                          ,
+      Ostap::Assert ( nullptr != branch                  ,
 		      "Cannot create branch '" + bname  + "'"    ,
-		      "Ostap::Trees::add_branch"                 , 
+		      "Ostap::AddBranch::add_branch"             , 
 		      CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;
       branches.push_back ( branch ) ;
     } //
@@ -353,7 +352,7 @@ Ostap::Trees::add_branch
   // 
   // loop over the TTree entries
   const Long64_t nentries = tree->GetEntries(); 
-  Ostap::Utils::ProgressBar bar ( nentries , progress  ) ;
+  Ostap::Utils::ProgressBar bar ( nentries , m_progress  ) ;
   TVectorD cmpvals { static_cast<Int_t> ( N ) } ; 
   for ( Long64_t entry = 0 ; entry < nentries ; ++entry , ++bar )
     {

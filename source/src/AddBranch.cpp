@@ -25,6 +25,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Names.h"
 #include "Ostap/StatusCode.h"
 #include "Ostap/AddBranch.h"
 #include "Ostap/Funcs.h"
@@ -40,8 +41,8 @@
 #include "status_codes.h" 
 // ============================================================================
 /** @file
- *  Implementation file for function Ostap::Trees::add_branch 
- *  @see Ostap::Trees::add_branch 
+ *  Implementation file for function Ostap::AddBranch
+ *  @see Ostap::AddBranch::add_branch 
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2019-05-14
  */
@@ -49,10 +50,7 @@
 // valid name for branch ?
 // ============================================================================
 bool Ostap::Trees::valid_name_for_branch ( const std::string& name )
-{
-  static const std::string s_veto { " !@#$%^&*()-+={}[]\\;:\"\'<>?,./\n\t" } ; 
-  return !name.empty() && std::string::npos == name.find_first_of ( s_veto ) ;
-}
+{ return Ostap::primitive ( name ) ; }
 // ============================================================================
 // default constructor 
 // ============================================================================
@@ -127,7 +125,7 @@ bool Ostap::Trees::Branches::add
   const Ostap::IFuncTree&    func    ,
   const TTree*            /* tree */ ) 
 {
-  Ostap::Assert ( valid_name_for_branch ( name )             ,
+  Ostap::Assert ( Ostap::Trees::valid_name_for_branch ( name ) ,
                   "Invalid name for branch:\'" + name + "\'" ,
                   "Ostap::Trees::Branches"                   ,
                   INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
@@ -173,6 +171,17 @@ Ostap::Trees::Branches::branch
   return found->second ; // FIX ME! 
 }
 // ============================================================================
+
+
+
+// ============================================================================
+// constructor with ProgressBar configuration
+// =============================================================================
+Ostap::AddBranch::AddBranch
+( const Ostap::Utils::ProgressConf& progress)
+  : m_progress ( progress )
+{}
+// ============================================================================
 /* add new branch with name <code>name</code> to the tree
  * the value of the branch is taken from  function <code>func</code>
  * @param tree    input tree 
@@ -185,16 +194,15 @@ Ostap::Trees::Branches::branch
  */
 // ============================================================================
 Ostap::StatusCode 
-Ostap::Trees::add_branch 
+Ostap::AddBranch::add_branch 
 ( TTree*                            tree     ,  
   const std::string&                name     , 
-  const Ostap::IFuncTree&           func     ,
-  const Ostap::Utils::ProgressConf& progress ) 
+  const Ostap::IFuncTree&           func     ) const 
 {
   if ( !tree   ) { return INVALID_TREE ; }
   Ostap::Trees::Branches branches {} ;
   branches.add ( name , func , tree ) ;
-  return add_branch ( tree , branches , progress ) ;
+  return add_branch ( tree , branches ) ;
 }
 // =============================================================================
 /*   add new branch with name <code>name</code> to the tree
@@ -209,16 +217,15 @@ Ostap::Trees::add_branch
  */
 // =============================================================================
 Ostap::StatusCode 
-Ostap::Trees::add_branch 
+Ostap::AddBranch::add_branch 
 ( TTree*                            tree     ,  
   const std::string&                name     , 
-  const std::string&                formula  ,
-  const Ostap::Utils::ProgressConf& progress ) 
+  const std::string&                formula  ) const 
 {
   if ( !tree ) { return INVALID_TREE  ; }
   Ostap::Trees::Branches branches {} ;
   branches.add ( name , formula , tree ) ;
-  return add_branch ( tree , branches , progress ) ;
+  return add_branch ( tree , branches ) ;
 }
 // =============================================================================
 /*  add new branches to the tree
@@ -233,10 +240,9 @@ Ostap::Trees::add_branch
  */
 // ============================================================================
 Ostap::StatusCode 
-Ostap::Trees::add_branch 
-( TTree*                                   tree     ,  
-  const std::map<std::string,std::string>& branches , 
-  const Ostap::Utils::ProgressConf&        progress )
+Ostap::AddBranch::add_branch 
+( TTree*                          tree     ,  
+  const Ostap::Dict<std::string>& branches ) const 
 {
   //
   if      ( !tree            ) { return INVALID_TREE               ; }
@@ -244,7 +250,7 @@ Ostap::Trees::add_branch
   //
   Ostap::Trees::Branches brs {} ;
   for ( const auto& entry : branches ) { brs.add ( entry.first , entry.second , tree ) ; }
-  return add_branch ( tree , brs , progress ) ;
+  return add_branch ( tree , brs ) ;
 }
 // ============================================================================
 /* add new branches to the tree
@@ -259,10 +265,9 @@ Ostap::Trees::add_branch
  */
 // ============================================================================
 Ostap::StatusCode 
-Ostap::Trees::add_branch 
+Ostap::AddBranch::add_branch 
 ( TTree*                            tree     ,  
-  const Ostap::Trees::Branches&     branches , 
-  const Ostap::Utils::ProgressConf& progress ) 
+  const Ostap::Trees::Branches&     branches ) const 
 {
   //
   if      ( !tree            ) { return INVALID_TREE               ; }
@@ -271,10 +276,10 @@ Ostap::Trees::add_branch
 
   /// (1) keep branches locally 
   const Ostap::Trees::Branches lbranches { branches } ;
-
+  
   /// #of brached to be added 
   const std::size_t N = lbranches.size() ;  
-
+  
   // ==========================================================================
   //                 branch   function          store 
   typedef std::tuple<TBranch*,const Ostap::IFuncTree*,double> ITEM  ;
@@ -293,7 +298,7 @@ Ostap::Trees::add_branch
       // ======================================================================
       Ostap::Assert ( func                                       ,
                       "Invalid IFuncTree"                        ,
-                      "Ostap::Trees::add_branch"                 ,
+                      "Ostap::AddBranch::add_branch"             ,
                       INVALID_TREEFUNCTION , __FILE__ , __LINE__ ) ;
       //
       const TObject* o = dynamic_cast<const TObject*> ( func ) ;
@@ -307,7 +312,7 @@ Ostap::Trees::add_branch
           ( name + "/D" ).c_str()        ) ; // spoecification 
       Ostap::Assert ( branch ,
                       "Cannot create branch: " + name            ,
-                      "Ostap::Trees::add_branch"                 ,
+                      "Ostap::AddBranch::add_branch"             ,
                       CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;
       //
       std::get<0> ( items.back() ) = branch ;  // TBranch 
@@ -319,8 +324,7 @@ Ostap::Trees::add_branch
   notifier.Notify() ;
   //
   const Long64_t nentries = tree->GetEntries(); 
-  Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
-  //
+  Ostap::Utils::ProgressBar bar ( nentries , m_progress ) ;
   for ( Long64_t entry = 0 ; entry < nentries ; ++entry , ++bar  )
     {
       if ( tree->GetEntry ( entry ) < 0 ) { break ; };
@@ -343,22 +347,21 @@ Ostap::Trees::add_branch
  */
 // ============================================================================
 Ostap::StatusCode 
-Ostap::Trees::add_branch 
+Ostap::AddBranch::add_branch 
 ( TTree*                            tree     , 
   const std::string&                name     , 
-  const TH1&                        histo    ,
-  const Ostap::Utils::ProgressConf& progress ) 
+  const TH1&                        histo    ) const 
 {
   if ( !tree ) { return INVALID_TREE ; }
   //
-  Ostap::Assert ( valid_name_for_branch ( name )             ,
+  Ostap::Assert ( Ostap::Trees::valid_name_for_branch ( name ) ,
                   "Invalid name for branch:\"" + name + "\"" ,
-                  "Ostap::Trees::add_branch"                 ,
+                  "Ostap::AddBracnh::add_branch"             ,
                   INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
   //
   Ostap::Assert  ( 1 == histo.GetDimension()                     ,
                    "Invalid TH1 type:"  + std::string ( typeid( histo ).name() ) ,
-                   "Ostap::Trees::add_branch"                    ,
+                   "Ostap::AddBranch::add_branch"                ,
                    INVALID_TH1  , __FILE__ , __LINE__            ) ; 
   //
   TH1D hh {} ;
@@ -369,11 +372,11 @@ Ostap::Trees::add_branch
   TBranch* branch = tree->Branch( name.c_str() , &value , (name + "/D").c_str() );
   Ostap::Assert ( branch ,
                   "Cannot create branch: " + name            ,
-                  "Ostap::Trees::add_branch"                 ,
+                  "Ostap::AddBranch::add_branch"             ,
                   CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;
   //
   const Long64_t nentries = tree->GetEntries(); 
-  Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
+  Ostap::Utils::ProgressBar bar ( nentries , m_progress ) ;
   for ( Long64_t entry = 0 ; entry < nentries ; ++entry , ++bar )
     {
       if ( tree->GetEntry ( entry ) < 0 ) { break ; };
@@ -396,28 +399,27 @@ Ostap::Trees::add_branch
  */
 // ============================================================================
 Ostap::StatusCode 
-Ostap::Trees::add_branch 
+Ostap::AddBranch::add_branch 
 ( TTree*                            tree     , 
   const std::string&                namex    , 
   const std::string&                namey    , 
-  const TH2&                        histo    ,
-  const Ostap::Utils::ProgressConf& progress )
+  const TH2&                        histo    ) const 
 {
   if ( !tree ) { return INVALID_TREE ; }
   //
-  Ostap::Assert ( valid_name_for_branch ( namex )             ,
-                  "Invalid name for branch:\"" + namex + "\"" ,
-                  "Ostap::Trees::add_branch"                  ,
-                  INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
+  Ostap::Assert ( Ostap::Trees::valid_name_for_branch ( namex ) ,
+                  "Invalid name for branch:\"" + namex + "\""   ,
+                  "Ostap::AddBranch::add_branch"                ,
+                  INVALID_BRANCH_NAME , __FILE__ , __LINE__     ) ;
   //
-  Ostap::Assert ( valid_name_for_branch ( namey )             ,
-                  "Invalid name for branch:\"" + namey + "\"" ,
-                  "Ostap::Trees::add_branch"                  ,
-                  INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
+  Ostap::Assert ( Ostap::Trees::valid_name_for_branch ( namey ) ,
+                  "Invalid name for branch:\"" + namey + "\""   ,
+                  "Ostap::AddBranch::add_branch"                ,
+                  INVALID_BRANCH_NAME , __FILE__ , __LINE__     ) ;
   //
   Ostap::Assert  ( 2 == histo.GetDimension()                     ,
                    "Invalid TH2 type:"  + std::string ( typeid( histo ).name() ) ,
-                   "Ostap::Trees::add_branch"                    ,
+                   "Ostap::AddBranch::add_branch"                    ,
                    INVALID_TH2  , __FILE__ , __LINE__            ) ; 
   //
   TH2D hh {} ;
@@ -428,18 +430,18 @@ Ostap::Trees::add_branch
   TBranch* branch_x  = tree->Branch( namex.c_str() , &value_x , (namex + "/D").c_str() );
   Ostap::Assert ( branch_x                                   ,
                   "Cannot create branch: " + namex           ,
-                  "Ostap::Trees::add_branch"                 ,
+                  "Ostap::AddBranch::add_branch"                 ,
                   CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;  
   //
   Double_t value_y   = 0  ;
   TBranch* branch_y  = tree->Branch( namey.c_str() , &value_y , (namey + "/D").c_str() ) ;
   Ostap::Assert ( branch_y                                   ,
                   "Cannot create branch: " + namey           ,
-                  "Ostap::Trees::add_branch"                 ,
+                  "Ostap::AddBranch::add_branch"                 ,
                   CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;  
   //
   const Long64_t nentries = tree->GetEntries(); 
-  Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
+  Ostap::Utils::ProgressBar bar ( nentries , m_progress ) ;
   for ( Long64_t i = 0 ; i < nentries ; ++i, ++bar )
     {
       if ( tree->GetEntry ( i ) < 0 ) { break ; };
@@ -465,29 +467,28 @@ Ostap::Trees::add_branch
  */
 // ============================================================================
 Ostap::StatusCode 
-Ostap::Trees::add_branch 
+Ostap::AddBranch::add_branch 
 ( TTree*                            tree     , 
   const std::string&                namex    , 
   const std::string&                namey    , 
   const std::string&                namez    , 
-  const TH3&                        histo    ,
-  const Ostap::Utils::ProgressConf& progress )
+  const TH3&                        histo    ) const 
 {
   if ( !tree ) { return INVALID_TREE ; }
   //
-  Ostap::Assert ( valid_name_for_branch ( namex )             ,
-                  "Invalid name for branch:\"" + namex + "\"" ,
-                  "Ostap::Trees::add_branch"                  ,
-                  INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
+  Ostap::Assert ( Ostap::Trees::valid_name_for_branch ( namex ) ,
+                  "Invalid name for branch:\"" + namex + "\""   ,
+                  "Ostap::AddBranch::add_branch"                ,
+                  INVALID_BRANCH_NAME , __FILE__ , __LINE__     ) ;
   //
-  Ostap::Assert ( valid_name_for_branch ( namey )             ,
-                  "Invalid name for branch:\"" + namey + "\"" ,
-                  "Ostap::Trees::add_branch"                  ,
-                  INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
+  Ostap::Assert ( Ostap::Trees::valid_name_for_branch ( namey ) ,
+                  "Invalid name for branch:\"" + namey + "\""   ,
+                  "Ostap::AddBranch::add_branch"                ,
+                  INVALID_BRANCH_NAME , __FILE__ , __LINE__     ) ;
   //
   Ostap::Assert  ( 3 == histo.GetDimension()                     ,
                    "Invalid TH3 type:"  + std::string ( typeid( histo ).name() ) ,
-                   "Ostap::Trees::add_branch"                    ,
+                   "Ostap::AddBranch::add_branch"                    ,
                    INVALID_TH3  , __FILE__ , __LINE__            ) ;   
   //
   TH3D hh {} ;
@@ -498,25 +499,25 @@ Ostap::Trees::add_branch
   TBranch* branch_x  = tree->Branch( namex.c_str() , &value_x , (namex + "/D").c_str() );
   Ostap::Assert ( branch_x                                   ,
                   "Cannot create branch: " + namex           ,
-                  "Ostap::Trees::add_branch"                 ,
+                  "Ostap::AddBranch::add_branch"                 ,
                   CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;    
   //
   Double_t value_y   = 0  ;
   TBranch* branch_y  = tree->Branch( namey.c_str() , &value_y , (namey + "/D").c_str() );
   Ostap::Assert ( branch_y                                   ,
                   "Cannot create branch: " + namey           ,
-                  "Ostap::Trees::add_branch"                 ,
+                  "Ostap::AddBranch::add_branch"                 ,
                   CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;  
   //
   Double_t value_z   = 0  ;
   TBranch* branch_z  = tree->Branch( namez.c_str() , &value_z , (namez + "/D").c_str() );
   Ostap::Assert ( branch_z                                   ,
                   "Cannot create branch: " + namez           ,
-                  "Ostap::Trees::add_branch"                 ,
+                  "Ostap::AddBranch::add_branch"                 ,
                   CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;  
   //
   const Long64_t nentries = tree->GetEntries(); 
-  Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
+  Ostap::Utils::ProgressBar bar ( nentries , m_progress ) ;
   for ( Long64_t i = 0 ; i < nentries ; ++i , ++bar )
     {
       if ( tree->GetEntry ( i ) < 0 ) { break ; };
@@ -543,17 +544,16 @@ Ostap::Trees::add_branch
  */
 // ============================================================================
 Ostap::StatusCode 
-Ostap::Trees::add_branch 
+Ostap::AddBranch::add_branch 
 ( TTree*                            tree     , 
   const std::string&                name     , 
-  const Ostap::Math::Histo1D&       histo    ,
-  const Ostap::Utils::ProgressConf& progress ) 
+  const Ostap::Math::Histo1D&       histo    ) const 
 {
   if ( !tree ) { return INVALID_TREE ; }
   //
-  Ostap::Assert ( valid_name_for_branch ( name )             ,
+  Ostap::Assert ( Ostap::Trees::valid_name_for_branch ( name )             ,
                   "Invalid name for branch:\"" + name + "\"" ,
-                  "Ostap::Trees::add_branch"                 ,
+                  "Ostap::AddBranch::add_branch"                 ,
                   INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
   //
   const Ostap::Math::Histo1D hh { histo } ;
@@ -562,11 +562,11 @@ Ostap::Trees::add_branch
   TBranch* branch = tree->Branch( name.c_str() , &value , (name + "/D").c_str() );
   Ostap::Assert ( branch ,
                   "Cannot create branch: " + name            ,
-                  "Ostap::Trees::add_branch"                 ,
+                  "Ostap::AddBranch::add_branch"                 ,
                   CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;
   //
   const Long64_t nentries = tree->GetEntries(); 
-  Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
+  Ostap::Utils::ProgressBar bar ( nentries , m_progress ) ;
   for ( Long64_t entry = 0 ; entry < nentries ; ++entry , ++bar )
     {
       if ( tree->GetEntry ( entry ) < 0 ) { break ; };
@@ -589,23 +589,22 @@ Ostap::Trees::add_branch
  */
 // ============================================================================
 Ostap::StatusCode 
-Ostap::Trees::add_branch 
+Ostap::AddBranch::add_branch 
 ( TTree*                            tree     , 
   const std::string&                namex    , 
   const std::string&                namey    , 
-  const Ostap::Math::Histo2D&       histo    ,
-  const Ostap::Utils::ProgressConf& progress )
+  const Ostap::Math::Histo2D&       histo    ) const 
 {
   if ( !tree ) { return INVALID_TREE ; }
   //
-  Ostap::Assert ( valid_name_for_branch ( namex )             ,
+  Ostap::Assert ( Ostap::Trees::valid_name_for_branch ( namex )             ,
                   "Invalid name for branch:\"" + namex + "\"" ,
-                  "Ostap::Trees::add_branch"                  ,
+                  "Ostap::AddBranch::add_branch"                  ,
                   INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
   //
-  Ostap::Assert ( valid_name_for_branch ( namey )             ,
+  Ostap::Assert ( Ostap::Trees::valid_name_for_branch ( namey )             ,
                   "Invalid name for branch:\"" + namey + "\"" ,
-                  "Ostap::Trees::add_branch"                  ,
+                  "Ostap::AddBranch::add_branch"                  ,
                   INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
   //
   const Ostap::Math::Histo2D hh { histo } ;
@@ -614,20 +613,20 @@ Ostap::Trees::add_branch
   TBranch* branch_x  = tree->Branch( namex.c_str() , &value_x , (namex + "/D").c_str() );
   Ostap::Assert ( branch_x                                   ,
                   "Cannot create branch: " + namex           ,
-                  "Ostap::Trees::add_branch"                 ,
+                  "Ostap::AddBranch::add_branch"                 ,
                   CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;  
   //
   Double_t value_y   = 0  ;
   TBranch* branch_y  = tree->Branch( namey.c_str() , &value_y , (namey + "/D").c_str() ) ;
   Ostap::Assert ( branch_y                                   ,
                   "Cannot create branch: " + namey           ,
-                  "Ostap::Trees::add_branch"                 ,
+                  "Ostap::AddBranch::add_branch"                 ,
                   CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;  
   //
   std::array<double,2> result {} ;
   //
   const Long64_t nentries = tree->GetEntries(); 
-  Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
+  Ostap::Utils::ProgressBar bar ( nentries , m_progress ) ;
   for ( Long64_t i = 0 ; i < nentries ; ++i, ++bar )
     {
       if ( tree->GetEntry ( i ) < 0 ) { break ; };
@@ -653,24 +652,23 @@ Ostap::Trees::add_branch
  */
 // ============================================================================
 Ostap::StatusCode 
-Ostap::Trees::add_branch 
+Ostap::AddBranch::add_branch 
 ( TTree*                            tree     , 
   const std::string&                namex    , 
   const std::string&                namey    , 
   const std::string&                namez    , 
-  const Ostap::Math::Histo3D&       histo    ,
-  const Ostap::Utils::ProgressConf& progress )
+  const Ostap::Math::Histo3D&       histo    ) const 
 {
   if ( !tree ) { return INVALID_TREE ; }
   //
-  Ostap::Assert ( valid_name_for_branch ( namex )             ,
+  Ostap::Assert ( Ostap::Trees::valid_name_for_branch ( namex )             ,
                   "Invalid name for branch:\"" + namex + "\"" ,
-                  "Ostap::Trees::add_branch"                  ,
+                  "Ostap::AddBranch::add_branch"                  ,
                   INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
   //
-  Ostap::Assert ( valid_name_for_branch ( namey )             ,
+  Ostap::Assert ( Ostap::Trees::valid_name_for_branch ( namey )             ,
                   "Invalid name for branch:\"" + namey + "\"" ,
-                  "Ostap::Trees::add_branch"                  ,
+                  "Ostap::AddBranch::add_branch"                  ,
                   INVALID_BRANCH_NAME , __FILE__ , __LINE__  ) ;
   //
   const Ostap::Math::Histo3D hh { histo } ;
@@ -679,27 +677,27 @@ Ostap::Trees::add_branch
   TBranch* branch_x  = tree->Branch( namex.c_str() , &value_x , (namex + "/D").c_str() );
   Ostap::Assert ( branch_x                                   ,
                   "Cannot create branch: " + namex           ,
-                  "Ostap::Trees::add_branch"                 ,
+                  "Ostap::AddBranch::add_branch"                 ,
                   CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;    
   //
   Double_t value_y   = 0  ;
   TBranch* branch_y  = tree->Branch( namey.c_str() , &value_y , (namey + "/D").c_str() );
   Ostap::Assert ( branch_y                                   ,
                   "Cannot create branch: " + namey           ,
-                  "Ostap::Trees::add_branch"                 ,
+                  "Ostap::AddBranch::add_branch"                 ,
                   CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;  
   //
   Double_t value_z   = 0  ;
   TBranch* branch_z  = tree->Branch( namez.c_str() , &value_z , (namez + "/D").c_str() );
   Ostap::Assert ( branch_z                                   ,
                   "Cannot create branch: " + namez           ,
-                  "Ostap::Trees::add_branch"                 ,
+                  "Ostap::AddBranch::add_branch"                 ,
                   CANNOT_CREATE_BRANCH , __FILE__ , __LINE__ ) ;  
   //
   std::array<double,3> result {} ;
   //
   const Long64_t nentries = tree->GetEntries(); 
-  Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
+  Ostap::Utils::ProgressBar bar ( nentries , m_progress ) ;
   for ( Long64_t i = 0 ; i < nentries ; ++i , ++bar )
     {
       if ( tree->GetEntry ( i ) < 0 ) { break ; };
@@ -728,17 +726,16 @@ Ostap::Trees::add_branch
  */
 // ============================================================================
 Ostap::StatusCode 
-Ostap::Trees::add_branch
+Ostap::AddBranch::add_branch
 ( TTree*                            tree      , 
   const std::string&                bname     , 
   const std::string&                xname     , 
-  std::function<double(double)>     fun       ,
-  const Ostap::Utils::ProgressConf& progress  ) 
+  std::function<double(double)>     fun       ) const 
 {
   if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
   // create the function 
   const Ostap::Functions::Func1D fun1d { std::cref ( fun ) , xname  , tree } ;
-  return add_branch ( tree , bname , fun1d , progress ) ;
+  return add_branch ( tree , bname , fun1d ) ;
 }
 // ============================================================================
 // Generic 2D-functions 
@@ -754,18 +751,17 @@ Ostap::Trees::add_branch
  */
 // ============================================================================
 Ostap::StatusCode 
-Ostap::Trees::add_branch
+Ostap::AddBranch::add_branch
 ( TTree*                               tree      , 
   const std::string&                   bname     , 
   const std::string&                   xname     , 
   const std::string&                   yname     , 
-  std::function<double(double,double)> fun       ,
-  const Ostap::Utils::ProgressConf&    progress  ) 
+  std::function<double(double,double)> fun       ) const 
 {
   if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
   // create the function 
   const Ostap::Functions::Func2D fun2d { std::cref ( fun ) , xname  , yname , tree } ;
-  return add_branch ( tree , bname , fun2d , progress ) ;
+  return add_branch ( tree , bname , fun2d ) ;
 }
 // ============================================================================
 // Generic 3D-functions 
@@ -782,19 +778,18 @@ Ostap::Trees::add_branch
  */
 // ============================================================================
 Ostap::StatusCode 
-Ostap::Trees::add_branch
+Ostap::AddBranch::add_branch
 ( TTree*                                      tree      , 
   const std::string&                          bname     , 
   const std::string&                          xname     , 
   const std::string&                          yname     , 
   const std::string&                          zname     , 
-  std::function<double(double,double,double)> fun       , 
-  const Ostap::Utils::ProgressConf&           progress  ) 
+  std::function<double(double,double,double)> fun       ) const 
 {
   if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
   // create the function 
   const Ostap::Functions::Func3D fun3d { std::cref ( fun ) , xname  , yname , zname , tree } ;
-  return add_branch ( tree , bname , fun3d , progress ) ;
+  return add_branch ( tree , bname , fun3d ) ;
 }
 
   

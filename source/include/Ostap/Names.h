@@ -44,9 +44,9 @@ namespace  Ostap
   // ==========================================================================
   /** Is  the name "primitive" 
    *  the name is primitive if it could represent
-   *  the variable name in container (e.g. TTree, RooabsData)
-   *  - no whotespace symbols 
-   *  - no symbols of operaions 
+   *  the variable name in container (e.g. TTree, RooAbsData)
+   *  - no whitespace symbols 
+   *  - no symbols of operations
    *  @see TTree
    *  @see RooAbsData 
    */

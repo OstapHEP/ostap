@@ -30,18 +30,7 @@ namespace Ostap { class IFuncData ; }
 // ============================================================================
 namespace Ostap
 {
-  // ==========================================================================
-  class IFuncTree ;
-  class IFuncData ;
   // =========================================================================
-  namespace Utils 
-  {
-    // ========================================================================
-    /// progress bar configrutaion 
-    class ProgressConf ; // progress bar configuration 
-    // ========================================================================
-  }
-  // ==========================================================================
   /** @class AddVar 
    *  Helper class to add  the variables into RooDataSet 
    *  @see RooDataSet 
@@ -66,7 +55,7 @@ namespace Ostap
     const RooAbsReal* add_var 
     ( RooDataSet&                       dataset  , 
       const std::string&                name     , 
-      const Ostap::IFuncData&           func     ) ; 
+      const Ostap::IFuncData&           func     ) const ; 
     // ========================================================================    
     /** add new variable to dataset
      *  @param  dataset input dataset
@@ -77,7 +66,7 @@ namespace Ostap
     const RooAbsReal* add_var 
     ( RooDataSet&             dataset , 
       const std::string&      name    , 
-      const std::string&      formula ) ;
+      const std::string&      formula ) const ;
     // ========================================================================
     /** add new variable to dataset, sampled from 1D-histogram
      *  @param  dataset input    dataset
@@ -89,7 +78,7 @@ namespace Ostap
     const RooAbsReal* add_var 
     ( RooDataSet&             dataset , 
       const std::string&      name    , 
-      const TH1&              histo   ) ;
+      const TH1&              histo   ) const ;
     // ========================================================================
     /** add new variables to dataset, sampled from 2D-histogram
      *  @param  dataset input    dataset
@@ -103,7 +92,7 @@ namespace Ostap
     ( RooDataSet&             dataset , 
       const std::string&      namex   , 
       const std::string&      namey   , 
-      const TH2&              histo   ) ;
+      const TH2&              histo   ) const ;
     // ========================================================================
     /** add new variables to dataset, sampled from 3D-histogram
      *  @param  dataset input    dataset
@@ -119,7 +108,7 @@ namespace Ostap
       const std::string&      namex   , 
       const std::string&      namey   , 
       const std::string&      namez   , 
-      const TH3&              histo   ) ;
+      const TH3&              histo   ) const ;
     // ========================================================================
     // Generic 1D function
     // ========================================================================
@@ -133,7 +122,7 @@ namespace Ostap
     ( RooDataSet&                   dataset , 
       const std::string&            vname   , 
       const std::string&            xname   , 
-      std::function<double(double)> fun     ) ;
+      std::function<double(double)> fun     ) const ;
     // ========================================================================
     /** add new variable to dataset, calculated from generic function 
      *  @param  dataset input    dataset
@@ -146,7 +135,7 @@ namespace Ostap
     ( RooDataSet&                   dataset , 
       const std::string&            vname   , 
       FUNCTION                      fun     , 
-      const std::string&            xname   ) 
+      const std::string&            xname   ) const 
     { return add_var ( dataset , vname , xname , std::cref ( fun ) ) ; }
     // ========================================================================
     // Generic 2D function
@@ -163,7 +152,7 @@ namespace Ostap
       const std::string&                   vname   , 
       const std::string&                   xname   , 
       const std::string&                   yname   , 
-      std::function<double(double,double)> fun     ) ;
+      std::function<double(double,double)> fun     ) const ;
     // ========================================================================
     /** add new variable to dataset, calculated from generic function 
      *  @param  dataset input    dataset
@@ -178,7 +167,7 @@ namespace Ostap
       const std::string&            vname   , 
       FUNCTION                      fun     , 
       const std::string&            xname   ,
-      const std::string&            yname   ) 
+      const std::string&            yname   ) const
     { return add_var ( dataset , vname , xname , yname , std::cref ( fun ) ) ; }
     // ========================================================================
     // Generic 3d function
@@ -197,7 +186,7 @@ namespace Ostap
       const std::string&                          xname   , 
       const std::string&                          yname   , 
       const std::string&                          zname   , 
-      std::function<double(double,double,double)> fun     ) ;
+      std::function<double(double,double,double)> fun     ) const ;
     // ========================================================================
     /** add new variable to dataset, calculated from generic function 
      *  @param  dataset input    dataset
@@ -214,7 +203,7 @@ namespace Ostap
       FUNCTION                      fun     , 
       const std::string&            xname   ,
       const std::string&            yname   ,
-      const std::string&            zname   ) 
+      const std::string&            zname   ) const
     { return add_var ( dataset , vname , xname , yname , zname , std::cref ( fun ) ) ; }
     // ========================================================================
   public: 

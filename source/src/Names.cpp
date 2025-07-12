@@ -28,7 +28,7 @@ namespace
   /** Any of from these symbols implies that the variable name 
    *  is NOT a primitive one
    */
-  const std::string s_FORMULA = " */+-%|&^()[]!$?<>=\t\n\r\t\v";
+  const std::string s_FORMULA { " ~`!@#$%^&*/()-+={}[]\\;:\"\'<>?,./\n\t\v\r" } ; 
   // ==========================================================================
   /// Good (non-whetespace symbol) 
   static const auto s_GOOD_SYMBOL =

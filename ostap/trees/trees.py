@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+[#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/trees/trees.py
@@ -1763,10 +1763,10 @@ store = []
 func_keywords = 'function' , 'callable' , 'what' , 'how' , 'calculator'
 # ===============================================================================
 ## parse&prepare branches
-#  @see Ostap::Trees::add_branch 
+#  @see Ostap::AddBranch::add_branch 
 def prepare_branches ( tree , branch , / , **kwargs ) :
     """ parse& prepare new branches  
-    - see `Ostap.Trees.add_branch` 
+    - see `Ostap.AddBranch.add_branch` 
     """
     assert isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree ) , \
         "prepare_branches: TTree* is invalis!"
@@ -1986,10 +1986,10 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
 
 # ===============================================================================
 ## Add new branch to the tree
-#  @see Ostap::Trees::adD_branch 
+#  @see Ostap::AddBranch::add_branch 
 def add_new_branch ( tree , branch , / , **kwargs ) :
     """ Add new branch to the tree
-    - see `Ostap,Trees.add_branch`
+    - see `Ostap.AddBranch.add_branch`
     """
     assert valid_pointer ( tree ) and isinstance ( tree , ROOT.TTree ) , \
         "Tree* is invalid!"
@@ -2058,8 +2058,9 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
     
     args = tuple ( a for a in config  ) 
     from ostap.utils.progress_conf import progress_conf
-    if progress : args += ( progress_conf ( progress ) , ) 
-
+    progress = progress_conf ( progress ) 
+    adder    = Ostap.AddBranch ( progress ) 
+    
     from ostap.io.root_file  import REOPEN
     
     with ROOTCWD() :
@@ -2076,8 +2077,8 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
             ## Add the branch!
             ## table = print_args ( *args ) 
             ## logger.always ( 'ARGUMETS:\n%s' % table )
-            sc    = Ostap.Trees.add_branch ( the_tree , *args  )
-            assert sc.isSuccess () , "Error from Ostap.Trees.add_branch %s" % sc
+            sc    = adder.add_branch ( the_tree , *args  )
+            assert sc.isSuccess () , "Error from Ostap.AddBranch.add_branch %s" % sc
 
             from ostap.utils.root_utils import implicitMT 
             with implicitMT ( False ) : tfile.Write ( "" , ROOT.TObject.kOverwrite )
@@ -2183,10 +2184,10 @@ array_buffer_types = ( 'f' , 'd' , 'h' , 'i' , 'l' , 'H' , 'I' , 'L' , 'b' , 'B'
 
 # ============================================================================
 ## Add new buyffer to TTree
-#  @see Ostap::Trees::add_buffer 
+#  @see Ostap::AddBuffer::add_buffer 
 def add_new_buffer ( tree , name , buffer , **kwargs ) :
-    """ Add new buyffer to TTree
-    - see `Ostap.Trees.add_buffer` 
+    """ Add new buffer to TTree
+    - see `Ostap.AddBuffer.add_buffer` 
     """
     
     assert valid_pointer ( tree ) and isinstance ( tree , ROOT.TTree ) , \
@@ -2266,7 +2267,7 @@ def add_new_buffer ( tree , name , buffer , **kwargs ) :
         return add_new_buffer ( tree , name , the_array , **kwargs )
 
     elif isinstance ( buffer , sequence_types ) :
-        ## seqence convertivel to array-array 
+        ## sequence convertible to array-array 
 
         typecode  = kwargs.pop ( 'typecode' , 'd'    ) 
         the_array = array.array ( typecode  , buffer )
@@ -2294,13 +2295,13 @@ def add_new_buffer ( tree , name , buffer , **kwargs ) :
     return buffer_2chain ( tree , name , the_buffer , progress = progress , report = report )
 
 # =============================================================================
-## Add new branch(s) to (single) TTree
+## Add new buffer to (single) TTree
 #  @param tree input tree
 #  @param params parameters
-#  @see Ostap::Trees::add_branch
+#  @see Ostap::AddBuffer::add_buffer
 def buffer_2tree ( tree , name , buffer , progress = True , report = True ) :
-    """ Add new brnaches to (snigole) TTree accoring to specificaions
-    - @see Ostap.Trees.add_branch 
+    """ Add buffer  to (single) TTree accoring to specificaions
+    - @see Ostap.AddBuffer.add_buffer 
     """
     assert isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree  ) , \
         "buffer_2tree: `tree' is invalid"
@@ -2320,11 +2321,13 @@ def buffer_2tree ( tree , name , buffer , progress = True , report = True ) :
     tpath = tree.path
 
     ## list of existing brranches/leaves 
-    branches = ( set ( tree.branches() ) | set ( tree.leaves() ) ) if report else set() 
+    branches = ( set ( tree.branches() ) | set ( tree.leaves() ) ) if report else set()
+    
     from ostap.utils.progress_conf import progress_conf
+    progress = progress_conf   ( progress )
+    adder    = Ostap.AddBuffer ( progress ) 
 
-    if progress : args = name , buffer , progress_conf ( progress )
-    else        : args = name , buffer 
+    args = name , buffer 
 
     from ostap.io.root_file  import REOPEN     
     with ROOTCWD() , REOPEN ( tdir ) as tfile :
@@ -2336,13 +2339,13 @@ def buffer_2tree ( tree , name , buffer , progress = True , report = True ) :
         assert tfile.IsWritable() , 'The file:%s is not writeable!'
         
         ## Add the branch!
-        sc = Ostap.Trees.add_buffer ( ttree , *args  )
+        sc = adder.add_buffer ( ttree , *args  )
         assert sc.isSuccess () , "Error from Ostap.Trees.add_branch %s" % sc
 
         from ostap.utils.root_utils import implicitMT 
         with implicitMT ( False ) : tfile.Write ( "" , ROOT.TObject.kOverwrite )
 
-    ## recostrut the tree/chain 
+    ## reconstruct the tree/chain 
     chain = ROOT.TChain ( tpath )
     chain.Add  ( the_file )
 
@@ -2361,10 +2364,10 @@ def buffer_2tree ( tree , name , buffer , progress = True , report = True ) :
 ## Add new branch(s) to chain 
 #  @param tree input tree
 #  @param params parameters
-#  @see Ostap::Trees::add_branch
+#  @see Ostap::AddBuffer::add_branch
 def buffer_2chain ( chain , name , buffer , progress = True , report = True ) :
-    """ Add new brnaches to (snigole) TTree accoring to specificaions
-    - @see Ostap.Trees.add_branch 
+    """ Add new buffer to (single) TTree according to specificaions
+    - @see Ostap.AddBuffer.add_buffer
     """
     assert isinstance  ( chain , ROOT.TTree ) and valid_pointer ( chain ) , \
         "buffer_2chain: `chain' is invalid"

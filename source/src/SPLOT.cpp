@@ -187,13 +187,12 @@ Ostap::Utils::SPLOT::clone () const
  */
 // ============================================================================
 Ostap::StatusCode
-Ostap::Trees::add_branch
+Ostap::AddBranch::add_branch
 ( TTree*                            tree     ,
   const Ostap::Utils::SPLOT&        splot    ,
   const std::string&                prefix   ,
   const std::string&                suffix   , 
-  const Ostap::Trees::DCT&          mapping  ,
-  const Ostap::Utils::ProgressConf& progress )
+  const Ostap::Dict<std::string>&   mapping  ) const 
 {
   //
   if ( !tree ) { return INVALID_TREE ; }
@@ -211,17 +210,16 @@ Ostap::Trees::add_branch
       const RooAbsArg*       aa = splot.fitresult().floatParsFinal().find ( c->GetName() ) ;
       if ( nullptr == aa ) { aa = splot.fitresult().constPars()     .find ( c->GetName() ) ; }
       Ostap::Assert ( nullptr != aa  ,
-		      "Coefficient is not found:" + Ostap::Utils::toString ( *c ) ,
-		      "Ostap::Trees::add_branch"           ,                      
-		      INVALID_ABSARG , __FILE__ , __LINE__ ) ;
+                      "Coefficient is not found:" + Ostap::Utils::toString ( *c ) ,
+                      "Ostap::Trees::add_branch"           ,                      
+                      INVALID_ABSARG , __FILE__ , __LINE__ ) ;
       names.push_back (  prefix + aa->GetName() + suffix ) ;
     }
   // =========================================================================
   return add_branch ( tree     , 
                       splot    , 
                       names    ,   
-                      mapping  ,  
-                      progress ) ;  
+                      mapping  ) ;  
 }
 // ============================================================================
 //                                                                      The END 

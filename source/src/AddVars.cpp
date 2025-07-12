@@ -29,6 +29,13 @@
  *  @date 2019-06-22
  */
 // ============================================================================
+// constructor with ProgressBar configuration
+// =============================================================================
+Ostap::AddVars::AddVars
+( const Ostap::Utils::ProgressConf& progress)
+  : m_progress ( progress )
+{}
+// ============================================================================
 /*  add new variable to dataset
  *  @param  dataset input    dataset
  *  @param  name    variable name 
@@ -40,7 +47,7 @@ const RooAbsReal*
 Ostap::AddVars::add_var 
 ( RooDataSet&                       dataset  , 
   const std::string&                name     , 
-  const Ostap::IFuncData&           func     ) 
+  const Ostap::IFuncData&           func     ) const  
 {  
   //
   RooRealVar var         { name.c_str() , ""        , 0.0 } ;
@@ -86,7 +93,7 @@ const RooAbsReal*
 Ostap::AddVars::add_var 
 ( RooDataSet&             dataset , 
   const std::string&      name    , 
-  const std::string&      formula ) 
+  const std::string&      formula ) const 
 {
   //
   const RooArgSet* vars =  dataset.get(0);
@@ -120,7 +127,7 @@ const RooAbsReal*
 Ostap::AddVars::add_var 
 ( RooDataSet&             dataset , 
   const std::string&      name    , 
-  const TH1&              histo   ) 
+  const TH1&              histo   ) const 
 {
   //
   const TH1* h1 = &histo ;
@@ -173,7 +180,7 @@ Ostap::AddVars::add_var
 ( RooDataSet&             dataset , 
   const std::string&      namex   , 
   const std::string&      namey   , 
-  const TH2&              histo   ) 
+  const TH2&              histo   ) const 
 {
   //
   const TH2* h = &histo ;
@@ -235,7 +242,7 @@ Ostap::AddVars::add_var
   const std::string&      namex   , 
   const std::string&      namey   , 
   const std::string&      namez   , 
-  const TH3&              histo   ) 
+  const TH3&              histo   ) const 
 {
   //
   RooRealVar varx        { namex.c_str() , "" , 0.0 } ;
@@ -296,7 +303,7 @@ Ostap::AddVars::add_var
 ( RooDataSet&                   dataset , 
   const std::string&            vname   , 
   const std::string&            xname   , 
-  std::function<double(double)> fun     ) 
+  std::function<double(double)> fun     ) const 
 {
   // create the function 
   const Ostap::Functions::FuncRoo1D func { std::cref ( fun ) , xname , &dataset } ;
@@ -320,7 +327,7 @@ Ostap::AddVars::add_var
   const std::string&                   vname   , 
   const std::string&                   xname   , 
   const std::string&                   yname   , 
-  std::function<double(double,double)> fun     ) 
+  std::function<double(double,double)> fun     ) const  
 {
   // create the function 
   const Ostap::Functions::FuncRoo2D func { std::cref ( fun ) , xname , yname , &dataset } ;
@@ -346,7 +353,7 @@ Ostap::AddVars::add_var
   const std::string&                          xname   , 
   const std::string&                          yname   , 
   const std::string&                          zname   , 
-  std::function<double(double,double,double)> fun     ) 
+  std::function<double(double,double,double)> fun     ) const 
 {
   // create thje function 
   const Ostap::Functions::FuncRoo3D func { std::cref ( fun ) , xname , yname , zname , &dataset } ;
