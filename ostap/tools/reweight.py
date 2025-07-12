@@ -1262,11 +1262,7 @@ def data_add_reweighting ( data                ,
     ## create the weigthting function 
     wfun = W2Data ( weighter  )
 
-    if progress :
-        from ostap.utils.progress_conf import progress_conf
-        return data.add_new_var ( name , wfun , progress_conf() )
-    
-    return data.add_new_var ( name , wfun ) 
+    return data.add_new_var ( name , wfun , progress = progress ) 
 
 ROOT.RooDataSet.add_reweighting = data_add_reweighting
 

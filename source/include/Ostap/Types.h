@@ -52,20 +52,22 @@ namespace Ostap
   const DataType MaxValue {  std::numeric_limits<DataType>::max () } ; 
   // ==========================================================================
   /// Types for keys 
-  using Key  = std::string ; 
+  using Key        = std::string ; 
   /// Type fot names 
-  using Name = Key ;
+  using Name       = Key ;
   /// Disctionanry type with string keys 
   template <typename Value>
-  using Dict    = std::map<Key,Value> ;
+  using Dict       = std::map<Key,Value>  ;
+  /// the dictorinnaty 
+  using Dictionary = Dict<std::string> ; 
   /// vector of strings/keys  
-  using Strings = std::vector<Key>    ;
+  using Strings    = std::vector<Key>     ;
   /// vector of strings/keys  
-  using Keys    =  std::vector<Key>   ; 
+  using Keys       =  std::vector<Key>    ; 
   /// Ditto 
-  using Names   = std::vector<Name>   ;
+  using Names      = std::vector<Name>    ;
   /// vector of doubles 
-  using Doubles = std::vector<double> ;  
+  using Doubles    = std::vector<double>  ;  
   // =========================================================================
 }  //                                               The end of namespace Ostap
 // ===========================================================================

@@ -1795,7 +1795,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         prefix   = kwargs.pop ( 'prefix'  , ''    )
         suffix   = kwargs.pop ( 'suffix'  , '_sw' )
         mapping  = kwargs.pop ( 'mapping' , {}    )
-        the_map  = Ostap.Trees.DCT()
+        the_map  = Ostap.AddBranch.DCT()
         for key, value in loop_items ( mapping ) : the_map [ key ] = value
         for c in branch.coefficients() : new_branches.add ( prefix + c.name + suffix )        
         args     = branch , prefix , suffix , the_map 
@@ -1808,7 +1808,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         names    = kwargs.pop ( 'names' , names ) 
         names    = strings    ( names ) 
         mapping  = kwargs.pop ( 'mapping' , {} )
-        the_map  = Ostap.Trees.DCT() 
+        the_map  = Ostap.AddBranch.DCT () 
         for key, value in loop_items ( mapping ) : the_map [ key ] = value
         for name in names : new_branches.add ( name )        
         args     = branch , names , the_map
@@ -1845,7 +1845,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
     elif isinstance ( branch , Ostap.Utils.RooFun )  and 'name' in kwargs :
         ## RooFit construction 
         mapping  = kwargs.pop ( 'mapping' , {}  )
-        the_map  = Ostap.Trees.DCT()
+        the_map  = Ostap.AddBranch.DCT()
         for key, value in loop_items ( mapping ) : the_map[ key ] = value
         args     = branch , the_map
         logger.debug ( 'prepare_branches: case [7] %s' % typename ( branch ) ) 
@@ -1858,7 +1858,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         observables   = kwargs.pop ( 'obsevables'    )
         normalization = kwargs.pop ( 'normalization' , ROOT.nullptr )
         mapping       = kwargs.pop ( 'mapping' , {}  )
-        the_map  = Ostap.Trees.DCT()
+        the_map  = Ostap.AddBranch.DCT()
         for key, value in loop_items ( mapping ) : the_map[ key ] = value
         keeper.append ( observables   )
         keeper.append ( normalization )
@@ -1964,7 +1964,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         
         table = print_args ( branch , **kwargs ) 
         logger.error    ( 'Invalid/inconsistent branch/kwargs structure:\n%s' % table )  
-        raise TypeError ( 'Invalid/inconsistent branch?kwargs structure') 
+        raise TypeError ( 'Invalid/inconsistent branch/kwargs structure') 
 
     if not new_branches :
         name = kwargs.pop ( 'name' )
@@ -1974,13 +1974,13 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
 
     ## check names for new brnaches 
     for name in new_branches :
-        assert name and isinstance ( name , string_types ) , "Invalid new brach name!"
-        assert Ostap.Trees.valid_name_for_branch ( name  ) , "Invalid name for bew brnach:'%s'" % name
-        assert not name in tree , "Branch/leave `%s' is already in the Treee!" % name   
+        assert name and isinstance ( name , string_types ) , "Invalid new branch name!"
+        assert Ostap.Trees.valid_name_for_branch ( name  ) , "Invalid name for bew branch:'%s'" % name
+        assert not name in tree , "Branch/leaf `%s' is already in the Tree!" % name   
 
     for a in args : keeper.append ( a )
     
-    logger.debug ( 'prepare_bramnches, end...' ) 
+    logger.debug ( 'prepare_branches, end...' ) 
     return args , new_branches , kwargs , keeper 
 
 

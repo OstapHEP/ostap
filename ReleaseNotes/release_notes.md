@@ -2,8 +2,9 @@
     
  1. add `-v/--version` flag for `ostap`  : print the version and exit
  1. refactor the main ostap parser into separate module  (it speeds up the `ostap -v` action)  
+ 1. improve  a bit the `add_var/add_branch/add_buffer` machinery 
 
-## Backward-imcompatible 
+## Backward-incompatible 
 
 ## Bug fixes
 
@@ -11,7 +12,7 @@
 
 ## New features
 
-  1. completel re-write `Ostap::HstoProject` (and rename it into  `Ostap::Project`
+  1. completly re-write `Ostap::HstoProject` (and rename it into  `Ostap::Project`
   1. remove a lot of duplicated code between `Ostap::StatVar`, `Ostap::Project` and parameterization
   1. remove some legacy artifacts
   1. more progress for quantiles 
@@ -23,7 +24,7 @@
   1. simplify, extend  and make  it more universal `parallel_statvars` module
   
 
-## Backward-imcompatible 
+## Backward-incompatible 
 
 ## Bug fixes
 

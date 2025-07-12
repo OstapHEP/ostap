@@ -1692,6 +1692,8 @@ def add_new_var ( dataset , varname , what , *args , progress = False ) :
 
     progress = progress_conf ( progress )
     adder    = Ostap.AddVars ( progress ) 
+    print ( 'ARGS HERE' , args ) 
+    
     vv = adder.add_var ( dataset , varname , what , *args )
     if not  vv : logger.error('add_new_var: NULLPTR from Ostap.AddVars.add_var')
     #
