@@ -37,31 +37,10 @@
  */
 // ============================================================================
 const RooAbsReal* 
-Ostap::Functions::add_var 
+Ostap::AddVars::add_var 
 ( RooDataSet&                       dataset  , 
   const std::string&                name     , 
   const Ostap::IFuncData&           func     ) 
-{
-  /// create fake progress bar
-  Ostap::Utils::ProgressConf progress { 0 } ;
-  /// delegate to another mehtod 
-  return add_var ( dataset , name , func , progress ) ;
-}
-// ============================================================================
-/*  add new variable to dataset
- *  @param  dataset input    dataset
- *  @param  name    variable name 
- *  @param  func    rule to  calculate new variable
- *  @param progress configuration of the progress bar
- *  @return the added variable 
- */
-// ============================================================================
-const RooAbsReal* 
-Ostap::Functions::add_var 
-( RooDataSet&                       dataset  , 
-  const std::string&                name     , 
-  const Ostap::IFuncData&           func     , 
-  const Ostap::Utils::ProgressConf& progress ) 
 {  
   //
   RooRealVar var         { name.c_str() , ""        , 0.0 } ;
@@ -70,9 +49,9 @@ Ostap::Functions::add_var
   //
   // loop over events in the input data set 
   const unsigned long nEntries = dataset.numEntries() ;
-  Ostap::Utils::ProgressBar bar ( nEntries , progress  ) ;
+  Ostap::Utils::ProgressBar bar ( nEntries , m_progress  ) ;
   for ( unsigned long entry = 0 ; entry < nEntries ; ++entry , ++bar )   
-  {
+    {
     //
     if ( 0 == dataset.get( entry)  ) { break ; }                    // BREAK
     //
@@ -95,7 +74,6 @@ Ostap::Functions::add_var
   //
   return dynamic_cast<const RooAbsReal*> ( nvar ) ;   
 }
-
 // ============================================================================
 /*  add new variable to dataset
  *  @param  dataset input dataset
@@ -105,7 +83,7 @@ Ostap::Functions::add_var
  */
 // ============================================================================
 const RooAbsReal* 
-Ostap::Functions::add_var 
+Ostap::AddVars::add_var 
 ( RooDataSet&             dataset , 
   const std::string&      name    , 
   const std::string&      formula ) 
@@ -139,7 +117,7 @@ Ostap::Functions::add_var
  */
 // ============================================================================
 const RooAbsReal* 
-Ostap::Functions::add_var 
+Ostap::AddVars::add_var 
 ( RooDataSet&             dataset , 
   const std::string&      name    , 
   const TH1&              histo   ) 
@@ -155,8 +133,9 @@ Ostap::Functions::add_var
   //
   // loop over events in the input data set 
   const unsigned long nEntries = dataset.numEntries() ;
-  for ( unsigned long entry = 0 ; entry < nEntries ; ++entry )   
-  {
+  Ostap::Utils::ProgressBar bar ( nEntries , m_progress  ) ;
+  for ( unsigned long entry = 0 ; entry < nEntries ; ++entry , ++bar )   
+    {
     //
     if ( 0 == dataset.get( entry)  ) { break ; }                    // BREAK
     //
@@ -190,7 +169,7 @@ Ostap::Functions::add_var
  */
 // ============================================================================
 const RooAbsReal* 
-Ostap::Functions::add_var 
+Ostap::AddVars::add_var 
 ( RooDataSet&             dataset , 
   const std::string&      namex   , 
   const std::string&      namey   , 
@@ -213,6 +192,7 @@ Ostap::Functions::add_var
   //
   // loop over events in the input data set 
   const unsigned long nEntries = dataset.numEntries() ;
+  Ostap::Utils::ProgressBar bar ( nEntries , m_progress  ) ;
   for ( unsigned long entry = 0 ; entry < nEntries ; ++entry )   
   {
     //
@@ -250,7 +230,7 @@ Ostap::Functions::add_var
  */
 // ============================================================================
 const RooAbsReal* 
-Ostap::Functions::add_var 
+Ostap::AddVars::add_var 
 ( RooDataSet&             dataset , 
   const std::string&      namex   , 
   const std::string&      namey   , 
@@ -273,6 +253,7 @@ Ostap::Functions::add_var
   //
   // loop over events in the input data set 
   const unsigned long nEntries = dataset.numEntries() ;
+  Ostap::Utils::ProgressBar bar ( nEntries , m_progress  ) ;
   for ( unsigned long entry = 0 ; entry < nEntries ; ++entry )   
   {
     //
@@ -311,7 +292,7 @@ Ostap::Functions::add_var
  */
 // ============================================================================
 const RooAbsReal* 
-Ostap::Functions::add_var 
+Ostap::AddVars::add_var 
 ( RooDataSet&                   dataset , 
   const std::string&            vname   , 
   const std::string&            xname   , 
@@ -334,7 +315,7 @@ Ostap::Functions::add_var
  */
 // ============================================================================
 const RooAbsReal* 
-Ostap::Functions::add_var 
+Ostap::AddVars::add_var 
 ( RooDataSet&                          dataset , 
   const std::string&                   vname   , 
   const std::string&                   xname   , 
@@ -359,7 +340,7 @@ Ostap::Functions::add_var
  */
 // ============================================================================
 const RooAbsReal* 
-Ostap::Functions::add_var 
+Ostap::AddVars::add_var 
 ( RooDataSet&                                 dataset , 
   const std::string&                          vname   , 
   const std::string&                          xname   , 

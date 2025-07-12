@@ -24,7 +24,6 @@ __all__     = (
     'ds_combine' , ## combine two datasets with weights 
     )
 # =============================================================================
-from   ostap.utils.progress_bar  import progress_bar 
 from   collections               import defaultdict
 from   ostap.core.meta_info      import root_info
 from   ostap.core.core           import ( Ostap         ,
@@ -46,6 +45,8 @@ from   ostap.trees.cuts          import expression_types, vars_and_cuts, order_w
 from   ostap.stats.statvars      import data_decorate, data_range 
 from   ostap.utils.valerrors     import VAE
 from   ostap.logger.symbols      import cabinet, weight_lifter 
+from   ostap.utils.progress_conf import progress_conf
+from   ostap.utils.progress_bar  import progress_bar 
 import ostap.fitting.roocollections
 import ostap.fitting.printable
 import ostap.io.root_file 
@@ -1648,7 +1649,7 @@ def _rds_addVar_ ( dataset , vname , formula ) :
 #  dataset.add_new_var ( 'Pt' , 'eta' , 'A' , h3 ) ## sample from 3D histogram
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-def add_new_var ( dataset , varname , what , *args ) : 
+def add_new_var ( dataset , varname , what , *args , progress = False ) : 
     """ Add/calculate/sample variable to RooDataSet
 
     >>> dataset.add_new_var ( 'ratio' , 'pt/pz' )  ## use RooFormulaVar
@@ -1688,9 +1689,11 @@ def add_new_var ( dataset , varname , what , *args ) :
             del vset
             del vvar 
             raise TypeError("Invalid type/length of 'what' argument")
-        
-    vv = Ostap.Functions.add_var ( dataset , varname , what , *args )
-    if not  vv : logger.error('add_new_var: NULLPTR from Ostap.Functions.add_var')
+
+    progress = progress_conf ( progress )
+    adder    = Ostap.AddVars ( progress ) 
+    vv = adder.add_var ( dataset , varname , what , *args )
+    if not  vv : logger.error('add_new_var: NULLPTR from Ostap.AddVars.add_var')
     #
     return dataset 
 
@@ -1704,7 +1707,6 @@ _new_methods_ += [
     ROOT.RooDataSet .add_new_var ,
     ROOT.RooDataSet .add_var     ,
     ]
-
 
 # =============================================================================
 ## make weighted data set from unweighted dataset

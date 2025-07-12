@@ -8,12 +8,14 @@
 // ============================================================================
 #include <string>
 #include <functional>
-// ============================================================================
+// ============================================================================\
 // Ostap
 // ============================================================================
-#include "Ostap/IFuncs.h"
+#include "Ostap/ProgressConf.h"
 // ============================================================================
 // Forward declarations 
+// ============================================================================
+// ROOT 
 // ============================================================================
 class TTree      ; // from ROOT 
 class TH1        ; // from ROOT 
@@ -22,9 +24,16 @@ class TH3        ; // from ROOT
 class RooDataSet ; // from RooFit 
 class RooAbsReal ; // from RooFit 
 // ============================================================================
+// Ostap 
+// ============================================================================
+namespace Ostap { class IFuncData ; }
+// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
+  class IFuncTree ;
+  class IFuncData ;
+  // =========================================================================
   namespace Utils 
   {
     // ========================================================================
@@ -33,20 +42,20 @@ namespace Ostap
     // ========================================================================
   }
   // ==========================================================================
-  namespace Functions
+  /** @class AddVar 
+   *  Helper class to add  the variables into RooDataSet 
+   *  @see RooDataSet 
+   */
+  class AddVars 
   {
     // ========================================================================
-    /** add new variable to dataset
-     *  @param  dataset input    dataset
-     *  @param  name    variable name 
-     *  @param  func    rule to  calculate new variable
-     *  @return the added variable 
-     */
-    const RooAbsReal* add_var 
-    ( RooDataSet&             dataset , 
-      const std::string&      name    , 
-      const Ostap::IFuncData& func    ) ;
+  public :
+    // ========================================================================
+    /// constructor with the progress flag
+    AddVars ( const Ostap::Utils::ProgressConf& progress = false) ;
     // ========================================================================    
+  public:
+    // ========================================================================
     /** add new variable to dataset
      *  @param  dataset input    dataset
      *  @param  name    variable name 
@@ -57,8 +66,7 @@ namespace Ostap
     const RooAbsReal* add_var 
     ( RooDataSet&                       dataset  , 
       const std::string&                name     , 
-      const Ostap::IFuncData&           func     , 
-      const Ostap::Utils::ProgressConf& progress ) ;
+      const Ostap::IFuncData&           func     ) ; 
     // ========================================================================    
     /** add new variable to dataset
      *  @param  dataset input dataset
@@ -209,7 +217,18 @@ namespace Ostap
       const std::string&            zname   ) 
     { return add_var ( dataset , vname , xname , yname , zname , std::cref ( fun ) ) ; }
     // ========================================================================
-  } //                                    The end of namespace Ostap::Functions 
+  public: 
+    // ========================================================================
+    /// congfiguration of the progress bar 
+    inline const Ostap::Utils::ProgressConf& progress () const
+    { return m_progress ; }
+    // ========================================================================
+  private:
+    // ========================================================================
+    /// configuration of progress bar 
+    Ostap::Utils::ProgressConf m_progress {} ;     // progess bar configuration
+    // ========================================================================    
+  } ; //                                        The end of class Ostap::AddVar 
   // ==========================================================================
 } //                                                 The end of namespace Ostap
 // ============================================================================
