@@ -1,3 +1,5 @@
+# v3.0.0.2
+
 ## New features
     
  1. add `-v/--version` flag for `ostap`  : print the version and exit
