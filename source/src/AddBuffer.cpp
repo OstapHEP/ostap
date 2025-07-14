@@ -316,13 +316,13 @@ Ostap::AddBuffer::add_buffer
 
 // ============================================================================
 Ostap::StatusCode
-Ostap::AddBuffer::add_buffers
+Ostap::AddBuffer::add_buffer
 ( TTree*                                  tree     ,
   const Ostap::Utils::Buffers<Double_t>&  buffers  ) const 
 { return ::_add_buffers_ ( tree , m_progress , "/D" , buffers ) ; }
 // ============================================================================
 Ostap::StatusCode
-Ostap::AddBuffer::add_buffers
+Ostap::AddBuffer::add_buffer
 ( TTree*                                  tree     ,
   const Ostap::Utils::Buffers<Float_t>&   buffers  ) const 
 { return ::_add_buffers_ ( tree , m_progress , "/F" , buffers ) ; }

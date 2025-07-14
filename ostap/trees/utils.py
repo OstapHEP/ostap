@@ -283,7 +283,7 @@ class Chain(CleanUp) :
     #  for i in chain.split ( chunk_size = 1000 ) :
     #  ... 
     #  @endcode 
-    def split ( self , chunk_size , max_files = -1  ) :
+    def split ( self , chunk_size = -1 , max_files = -1  ) :
         """ GENERATOR Split the tree for several trees 
         with at most  `chunk_size` entries
         >>> chain  = Chain ( .... ) 
@@ -437,7 +437,7 @@ class Tree(Chain) :
     #  for i in tree.split ( chunk_size = 1000 ) :
     #  ... 
     #  @endcode 
-    def split ( self , chunk_size , max_files = -1  ) :
+    def split ( self , chunk_size = -1 , max_files = -1  ) :
         """ *GENERATOR* split the tree into smaller Tree objects 
         with at most  `chunk_size` entries
         >>> tree  = Tree ( .... ) 

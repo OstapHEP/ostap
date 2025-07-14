@@ -54,6 +54,7 @@ class StatVarTask(Task) :
         """ Constructor        
         >>> task  = StatVarTask ( 'mass' , 'pt>0') 
         """
+        
         self.what   = what
         self.cuts   = cuts  
         self.kwargs = {}
@@ -69,22 +70,8 @@ class StatVarTask(Task) :
 
     # =============================================================
     ## the actual processing
-    #   `params' is assumed to be a tuple/list :
-    #  - the file name
-    #  - the tree name in the file
-    #  - the variable/expression/expression list of quantities to project
-    #  - the selection/weighting criteria 
-    #  - the first entry in tree to process
-    #  - number of entries to process
     def process ( self , jobid , item ) :
         """ The actual processing
-        `params' is assumed to be a tuple-like entity:
-        - the file name
-        - the tree name in the file
-        - the variable/expression/expression list of quantities to project
-        - the selection/weighting criteria 
-        - the first entry in tree to process
-        - number of entries to process
         """
         from ostap.logger.utils import logWarning
         with logWarning() :

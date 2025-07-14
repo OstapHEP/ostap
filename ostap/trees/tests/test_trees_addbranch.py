@@ -477,7 +477,7 @@ def test_addbuffer() :
             buffer = numpy.full ( 200 , 10 , dtype = btype )            
             with timing ('numpy %s' % btype.__name__  , logger = logger ) as timer :
                 chain  = data.chain
-                chain  = chain.add_new_buffer ( bname , buffer )            
+                chain  = chain.add_new_buffer ( buffer = buffer , name = bname )            
             rows.append ( ( timer.name  , '%.3f' % timer.delta ) )            
             assert bname in chain , "Branch `%s' is  not here!" % bname 
             checked.add ( btype )
@@ -499,7 +499,7 @@ def test_addbuffer() :
         buffer = array.array ( atype , ( 10 for i in range ( 200 ) ) )         
         with timing ('array %s' % atype , logger = logger ) as timer :
             chain  = data.chain
-            chain  = chain.add_new_buffer ( aname , buffer )            
+            chain  = chain.add_new_buffer ( buffer = buffer , name = aname  )            
         rows.append ( ( timer.name  , '%.3f' % timer.delta ) )            
         assert aname in chain , "Branch `%s' is  not here!" % bname 
 
@@ -510,7 +510,7 @@ def test_addbuffer() :
     with timing ('bytes_array' , logger = logger ) as timer :
         bname  = 'bytes_array'
         chain  = data.chain
-        chain  = chain.add_new_buffer ( bname , buffer )
+        chain  = chain.add_new_buffer ( buffer = buffer , name = bname )
     rows.append ( ( timer.name  , '%.3f' % timer.delta ) )            
     assert bname in chain , "Branch `%s' is  not here!" % bname 
 
@@ -518,7 +518,7 @@ def test_addbuffer() :
     with timing ('bytes' , logger = logger ) as timer :
         bname  = 'bytes'
         chain  = data.chain
-        chain  = chain.add_new_buffer ( bname , buffer )
+        chain  = chain.add_new_buffer ( buffer = buffer , name = bname )
     rows.append ( ( timer.name  , '%.3f' % timer.delta ) )            
     assert bname in chain , "Branch `%s' is  not here!" % bname 
     
@@ -526,7 +526,7 @@ def test_addbuffer() :
     with timing ( 'memory_view' , logger = logger ) as timer :
         bname  = 'memory_view'
         chain  = data.chain
-        chain  = chain.add_new_buffer ( bname , buffer )
+        chain  = chain.add_new_buffer ( buffer = buffer , name = bname )
     rows.append ( ( timer.name  , '%.3f' % timer.delta ) )            
     assert bname in chain , "Branch `%s' is  not here!" % bname 
 
@@ -534,7 +534,7 @@ def test_addbuffer() :
     with timing ( 'list' , logger = logger ) as timer :
         bname  = 'list'
         chain  = data.chain
-        chain  = chain.add_new_buffer ( bname , buffer )
+        chain  = chain.add_new_buffer ( buffer = buffer , name = bname )
     rows.append ( ( timer.name  , '%.3f' % timer.delta ) )            
     assert bname in chain , "Branch `%s' is  not here!" % bname 
 
@@ -542,7 +542,7 @@ def test_addbuffer() :
     with timing ( 'tuple' , logger = logger ) as timer :
         bname  = 'tuple'
         chain  = data.chain
-        chain  = chain.add_new_buffer ( bname , buffer )
+        chain  = chain.add_new_buffer ( buffer = buffer , name = bname )
     rows.append ( ( timer.name  , '%.3f' % timer.delta ) )            
     assert bname in chain , "Branch `%s' is  not here!" % bname 
 

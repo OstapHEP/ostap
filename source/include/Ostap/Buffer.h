@@ -206,8 +206,13 @@ namespace Ostap
     public :
       // ======================================================================
       /// add new buffer into the map 
-      void add ( const std::string& name , const BUFFER& buffer )
-      { m_buffers.insert ( BUFFERS::value_type ( name , buffer ) ) ; }
+      inline void add
+      ( const std::string& name ,
+        const BUFFER& buffer )
+      {
+        typedef typename BUFFERS::value_type value_type ;
+        m_buffers.insert ( value_type ( name , buffer ) ) ;
+      }
       // ======================================================================
     public :
       // ======================================================================

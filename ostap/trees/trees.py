@@ -2182,9 +2182,9 @@ except ImportError : # =========================================================
 array_buffer_types = ( 'f' , 'd' , 'h' , 'i' , 'l' , 'H' , 'I' , 'L' , 'b' , 'B' , 'q' , 'Q' )
 
 # ============================================================================
-## Add new buyffer to TTree
+## Add new buffer to TTree
 #  @see Ostap::AddBuffer::add_buffer 
-def add_new_buffer ( tree , name , buffer , **kwargs ) :
+def add_new_buffer ( tree , buffer , * , name = '' , **kwargs ) :
     """ Add new buffer to TTree
     - see `Ostap.AddBuffer.add_buffer` 
     """
@@ -2192,20 +2192,64 @@ def add_new_buffer ( tree , name , buffer , **kwargs ) :
     assert valid_pointer ( tree ) and isinstance ( tree , ROOT.TTree ) , \
         "add_new_buffer: Tree* is invalis!"
 
-    assert name and isinstance ( name , string_types ) , \
+    assert not name or isinstance ( name , string_types ) , \
         "add_new_buffer: Invalid name for new branch: :%s/%s" % ( typoname ( name ) , name )
-
+    
     ## assert not name in tree , "Name `'%s' is already in TTree!" % name
-    assert Ostap.Trees.valid_name_for_branch ( name ) , \
+    assert not name or Ostap.Trees.valid_name_for_branch ( name ) , \
         "add_new_buffer: name `%s' is not valid!" % name
-
+    
+    if name and name in tree :
+        logger.error ( "The branch/leaf `%s' already exists, skip it!!" % name )
+        return tree
+    
+    ## if the buffer is a dictionary of "buffers", pre-check the names 
+    if not name and isinstance ( buffer , dictlike_types ) :        
+        for key in buffer.keys () :
+            if key in tree :           
+                logger.error ( "The branch/leaf `%s' already exists, skip it!!" % key )
+                return tree
+            assert Ostap.Trees.valid_name_for_branch ( key ) , \
+                "add_new_buffer: name `%s' is not valid!" % key
+                
     keep  = [ buffer ] 
     for k , v in loop_items ( kwargs ) : keep.append ( ( k , v ) )
 
     extra_floats = () if not numpy else ( numpy.float16 , )
     extra_ints   = () if not numpy else ( numpy.int8    , )
-    
-    if numpy and np2raw and isinstance ( buffer , numpy.ndarray ) and buffer.dtype in numpy_buffer_types :
+
+    ## structured arrray 
+    if not name and numpy and np2raw and isinstance ( buffer , numpy.ndarray ) and \
+       1 == len ( buffer.shape ) and buffer.dtype.names :
+
+        ## convert the structured array into the dictionary of arrays 
+        newbuff = {}
+        for key in buffer.dtype.names :
+            newbuff [ key ] = buffer [ key ]
+        keep.append ( newbuff )
+        ##
+        return add_new_buffer ( tree , newbuff , name = name , **kwargs ) 
+
+    ## dictionary of numpy arrays
+    elif not name and numpy and np2raw and isinstance ( buffer , dictlike_types ) and \
+       all ( isinstance ( v , numpy.ndarray ) for v in buffer.values() ) :
+                    
+        newbuff = {}
+        for key, v in buffer.items() :
+            assert not key in tree , "The branch/leaf `%s' already exists!" % key
+            newbuff [ key ] = numpy.asarray ( v , dtype = numpy.float64 )
+        keep.append ( newbuff )
+
+        ## Ostap's buffers
+        the_buffer = Ostap.Utils.Buffers['double']() 
+        for key, b  in newbuff.items () :
+            buflen         = len    ( b ) 
+            raw_buffer , _ = np2raw ( b )
+            the_buffer.add ( key , Ostap.Utils.make_buffer ( raw_buffer , buflen ) )
+            
+        keep.append ( the_buffer )
+        
+    elif name and numpy and np2raw and isinstance ( buffer , numpy.ndarray ) and buffer.dtype in numpy_buffer_types :
         ## numpy array of valid types
 
         keep.append ( buffer )
@@ -2213,7 +2257,7 @@ def add_new_buffer ( tree , name , buffer , **kwargs ) :
         ## recast 
         if   buffer.dtype == numpy.float16 :
             buffer = numpy.asarray ( buffer , dtype = numpy.float32 )
-            return add_new_buffer ( tree , name , buffer , **kwargs ) 
+            return add_new_buffer ( tree , buffer , name = name , **kwargs ) 
 
         buflen = len ( buffer ) 
         ## convert ndarray into raw C++ buffer 
@@ -2230,8 +2274,8 @@ def add_new_buffer ( tree , name , buffer , **kwargs ) :
         value      = kwargs.pop ( 'value' , 0 )
         if value : the_buffer.setValue ( value )
             
-    elif isinstance ( buffer , array.array ) and buffer.typecode in array_buffer_types :
-        ## arra.array f valied types
+    elif name and isinstance ( buffer , array.array ) and buffer.typecode in array_buffer_types :
+        ## array.array of valid types
 
         if   'b' == buffer.typecode : the_buffer = Ostap.Utils.schar_buffer ( buffer , len ( buffer ) )
         elif 'B' == buffer.typecode : the_buffer = Ostap.Utils.uchar_buffer ( buffer , len ( buffer ) )
@@ -2240,45 +2284,45 @@ def add_new_buffer ( tree , name , buffer , **kwargs ) :
         value      = kwargs.pop ( 'value' , 0  )
         if value : the_buffer.setValue ( value )
 
-    elif numpy and isinstance ( buffer ,  ( bytes , bytearray , memoryview ) ) :
+    elif name and numpy and isinstance ( buffer ,  ( bytes , bytearray , memoryview ) ) :
 
         ## construct numpyarray from raw buffer 
         the_array = numpy.frombuffer ( buffer , dtype = numpy.byte )
         
         keep.append ( the_array ) 
-        return add_new_buffer ( tree , name , the_array , **kwargs )
+        return add_new_buffer ( tree , the_array , name = name , **kwargs )
 
-    elif isinstance ( buffer ,  ( bytes , bytearray , memoryview ) ) :
+    elif name and isinstance ( buffer ,  ( bytes , bytearray , memoryview ) ) :
 
         ## construct arra from raw  buffer 
         the_array = array.array ( 'b' , buffer )
         
         keep.append ( the_array )                
-        return add_new_buffer ( tree , name , the_array , **kwargs )
+        return add_new_buffer ( tree , the_array , name = name , **kwargs )
     
-    elif numpy and isinstance ( buffer , sequence_types ) :
+    elif name and numpy and isinstance ( buffer , sequence_types ) :
         ## seqence convertivel to numpy
 
-        ## construct arrat from the sequence 
+        ## construct array from the sequence 
         the_array = numpy.asarray ( buffer )
-        
-        keep.append ( the_array )
-        return add_new_buffer ( tree , name , the_array , **kwargs )
 
-    elif isinstance ( buffer , sequence_types ) :
+        keep.append ( the_array )
+        return add_new_buffer ( tree , the_array , name = name , **kwargs )
+
+    elif name and isinstance ( buffer , sequence_types ) :
         ## sequence convertible to array-array 
 
         typecode  = kwargs.pop ( 'typecode' , 'd'    ) 
         the_array = array.array ( typecode  , buffer )
 
         keep.append ( the_array ) 
-        return add_new_buffer ( tree , name , the_array , **kwargs )
+        return add_new_buffer ( tree , the_array , name = name , **kwargs )
 
     else :
         
-        table = print_args ( name , buffer , **kwargs ) 
-        logger.error    ( 'Invalid/inconsistent name/buffer/kwargs structure:\n%s' % table )  
-        raise TypeError ( 'Invalid/inconsistent name/buffer/kwargs structure') 
+        table = print_args ( buffer , name , **kwargs ) 
+        logger.error    ( 'Invalid/inconsistent buffer/name/kwargs structure:\n%s' % table )  
+        raise TypeError ( 'Invalid/inconsistent buffer/name/kwargs structure') 
 
     keep.append ( the_buffer )
     
@@ -2286,27 +2330,27 @@ def add_new_buffer ( tree , name , buffer , **kwargs ) :
     report   = kwargs.pop ( 'report'   , True  ) 
 
     if kwargs :
-        title1 = 'add_new_branch: Unknown arguments'
+        title1 = 'add_new_buffer: Unknown arguments'
         title2 = 'Unknown arguments'
         logger.warning  ( '%s:\n%s' % ( title1 , print_args ( prefix = '# ' , title = title2 , **kwargs ) ) ) 
 
     ## start the actual processing 
-    return buffer_2chain ( tree , name , the_buffer , progress = progress , report = report )
+    return buffer_2chain ( tree , the_buffer , name = name , progress = progress , report = report )
 
 # =============================================================================
 ## Add new buffer to (single) TTree
 #  @param tree input tree
 #  @param params parameters
 #  @see Ostap::AddBuffer::add_buffer
-def buffer_2tree ( tree , name , buffer , progress = True , report = True ) :
-    """ Add buffer  to (single) TTree accoring to specificaions
+def buffer_2tree ( tree , buffer , * ,  name = '' , progress = True , report = True ) :
+    """ Add buffer  to (single) TTree according to specifications
     - @see Ostap.AddBuffer.add_buffer 
     """
     assert isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree  ) , \
         "buffer_2tree: `tree' is invalid"
     
     if isinstance ( tree , ROOT.TChain ) and 1 < len ( tree.files() ) :
-        return  buffer_2chain ( tree , config , progress = progress , report = report ) 
+        return  buffer_2chain ( tree , buffer , name = name , progress = progress , report = report ) 
 
     treepath = tree.path
     the_file = tree.topdir
@@ -2326,7 +2370,8 @@ def buffer_2tree ( tree , name , buffer , progress = True , report = True ) :
     progress = progress_conf   ( progress )
     adder    = Ostap.AddBuffer ( progress ) 
 
-    args = name , buffer 
+    if name : args = name , buffer
+    else    : args =        buffer , 
 
     from ostap.io.root_file  import REOPEN     
     with ROOTCWD() , REOPEN ( tdir ) as tfile :
@@ -2364,7 +2409,7 @@ def buffer_2tree ( tree , name , buffer , progress = True , report = True ) :
 #  @param tree input tree
 #  @param params parameters
 #  @see Ostap::AddBuffer::add_branch
-def buffer_2chain ( chain , name , buffer , progress = True , report = True ) :
+def buffer_2chain ( chain , buffer , * , name = '' , progress = True , report = True ) :
     """ Add new buffer to (single) TTree according to specificaions
     - @see Ostap.AddBuffer.add_buffer
     """
@@ -2373,7 +2418,7 @@ def buffer_2chain ( chain , name , buffer , progress = True , report = True ) :
 
     ## delegate to TTree: 
     if not isinstance ( chain , ROOT.TChain ) or 2 > len ( chain.files() ) :
-        return buffer_2tree ( chain , name , buffer , report = report , progress = progress ) 
+        return buffer_2tree ( chain , buffer , name = name , report = report , progress = progress ) 
 
     ## name & path 
     cname, cpath = chain.GetName () , chain.path
@@ -2392,7 +2437,7 @@ def buffer_2chain ( chain , name , buffer , progress = True , report = True ) :
         tree.Add ( fname ) 
         ## treat the tree
         
-        tree   = buffer_2tree ( tree , name , buffer , report = False , progress = tree_progress )
+        tree   = buffer_2tree ( tree , buffer , name = name , report = False , progress = tree_progress )
         offset = len ( tree )         
         buffer = buffer.offset ( offset )
 

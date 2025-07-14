@@ -137,13 +137,13 @@ namespace Ostap
     // ========================================================================
     /// add several (same type) buffers at once 
     Ostap::StatusCode
-    add_buffers
+    add_buffer
     ( TTree*                                     tree             ,
       const Ostap::Utils::Buffers<Double_t>&     buffers          ) const ;
     // ========================================================================
     /// add several (same type) buffers at once 
     Ostap::StatusCode
-    add_buffers
+    add_buffer
     ( TTree*                                     tree             ,
       const Ostap::Utils::Buffers<Float_t>&      buffers          ) const ;
     // ========================================================================
