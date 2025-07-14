@@ -2055,7 +2055,6 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
 
     filename = the_file.GetName()  
 
-    
     args = tuple ( a for a in config  ) 
     from ostap.utils.progress_conf import progress_conf
     progress = progress_conf ( progress ) 

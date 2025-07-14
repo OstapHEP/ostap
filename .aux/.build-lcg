@@ -85,10 +85,12 @@ else
     echo 'BUILD WITH LCG: Build directory is created' $OSTAP_BUILD
 fi 
 
-if [[ ! -f $OSTAP_BUILD/.build-ostap ]]
+if [[ -f $OSTAP_BUILD/.build-ostap ]]
 then
+    echo 'BUILD WITH LCG: use  existing .build.ostap ' $OSTAP_BUILD/.build-ostap
+else 
     cp $OSTAP_SOURCE/.aux/.build-ostap $OSTAP_BUILD/.build-ostap
-    echo 'BUILD WITH LCG: copy build-ostap from  ' $OSTAP_BUILD/.aux/.build-ostap
+    echo 'BUILD WITH LCG: copy .build-ostap from     ' $OSTAP_BUILD/.aux/.build-ostap
 fi
 
 ## parameter #5: install directory 

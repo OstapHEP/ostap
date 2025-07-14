@@ -72,10 +72,12 @@ else
     echo 'BUILD WITH CONDA: Build directory is created' $OSTAP_BUILD
 fi
 
-if [[ ! -f $OSTAP_BUILD/.build-ostap ]]
+if [[ -f $OSTAP_BUILD/.build-ostap ]]
 then
+    echo 'BUILD WITH CONDA: use existing .build-ostap ' $OSTAP_SOURCE/.build-ostap
+else 
     cp $OSTAP_SOURCE/.aux/.build-ostap $OSTAP_BUILD/.build-ostap
-    echo 'BUILD WITH CONDA: copy .build-ostap from  ' $OSTAP_SOURCE/.aux/.build-ostap
+    echo 'BUILD WITH CONDA: copy .build-ostap from    ' $OSTAP_SOURCE/.aux/.build-ostap
 fi
 
 OSTAP_INSTALL=${4:-$OSTAP_BUILD/INSTALL/CONDA-$OSTAP_CONDA_ENV}
