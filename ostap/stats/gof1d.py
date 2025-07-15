@@ -38,9 +38,6 @@ from   ostap.stats.gof_utils    import Estimators,Summary
 import ostap.fitting.ds2numpy 
 import ostap.fitting.roofit
 import ROOT, math
-
-
-from ostap.utils.timing import timing 
 # =============================================================================
 # logging 
 # =============================================================================

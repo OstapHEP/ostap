@@ -1,10 +1,20 @@
+## New features
+
+      1. add `TTree.good_variables` method to check if variables are in TTree or could be computed
+
+## Backward-incompatible 
+
+## Bug fixes
+
+
 # v3.0.0.4
 
 ## New features
 
   1. allow add the dictionary `{ name : numpy.ndarray }` to `ROOT.TTree
   1. allow to add the structured numpy arrays            to `ROOT.TTree
-     
+  1. add `TTree.good_variables` method to check if variables are in TTree or could be computed
+    
 ## Backward-incompatible 
 
   1.  change the order of `buffer` and `name` arguments for `add_new_buffer`, `buffer_2tree` and `buffer_2chain` functions

@@ -1163,7 +1163,7 @@ class TaskManager(object) :
         """
         if args or kwargs :
             from ostap.logger.utils import print_args
-            title = 'Unuser/extra arguments'
+            title = 'Unused/extra arguments'
             logger.warning  ( '%s:\n%s' % ( title , print_args ( *args , prefix = '#' , **kwargs ) ) )
             
 # =============================================================================

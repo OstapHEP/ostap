@@ -28,7 +28,7 @@ from   ostap.core.ostap_types    import ( integer_types      , long_type      ,
                                           dictlike_types     , list_types     )
 from   ostap.core.core           import ( std , Ostap , VE   , WSE ,
                                           hID , fID   ,  
-                                          rootException      ,  
+                                          rootException      , rootError  ,   
                                           ROOTCWD , strings  , 
                                           valid_pointer      , rootError  ) 
 from   ostap.logger.utils        import print_args  
@@ -1421,34 +1421,36 @@ ROOT.TChain.__radd__ = _tc_add_
 #  vars = tree.the_variables ( [ 'x>0&& y<13' , 'zzz*15' ] )   
 #  vars = the_variables ( tree , [ 'x>0&& y<13' , 'zzz*15' ] ) ## ditto
 #  @endcode 
-def the_variables ( tree , expression , *args ) :
+def the_variables ( tree , *expressions ) :
     """ Get all variables needed to evaluate the expressions for the given tree
     >>> tree = 
     >>> vars = tree.the_variables ( tree , [ 'x>0&& y<13' , 'zzz' ]  )
     >>> vars =      the_variables (        [ 'x>0&& y<13' , 'zzz' ]  ) ##  ditto
     """
     from ostap.core.core import fID
+
+    if not expressions : return True
+    exprs = []
     
-    if isinstance  ( expression, ( list , tuple ) ) :
-        exprs = list ( expression ) 
-    else :
-        exprs = [ expression ]
-        
-    for e in args :
-        if isinstance  ( e , ( list , tuple ) ) :
-            exprs = exprs + list ( e ) 
+    for expr in expressions :
+        if   isinstance ( expr , string_types ) : exprs.append (       expr   )
+        elif isinstance ( expr , ROOT.TCut    ) : exprs.append ( str ( expr ) )
         else :
-            exprs.append ( e )
+            for e in expr  : exprs.append ( e ) ;
+
+    expressions = exprs 
+
+    ## expressions , _ , _ = vars_and_cuts ( expressions , '' )
 
     vars = set() 
-    for e in exprs :
+    for e in expressions :
 
         if not e : continue
         
         tf = Ostap.Formula ( fID() , str ( e ) , tree )
-        assert tf.ok () , "the_variables: Invalid expression : `%s'" % e 
+        assert tf.ok () ,  "the_variables: Invalid expression : `%s'" % e 
         if not tf.ok()  :
-            logger.error ("the_variables: Invalid expression : `%s'" % e )
+            logger.error ( "the_variables: Invalid expression : `%s'" % e )
             del tf 
             return None
 
@@ -1506,6 +1508,34 @@ def the_variables ( tree , expression , *args ) :
 
 
 ROOT.TTree.the_variables = the_variables
+
+# ===============================================================================
+## "Silent" version of `the_variables`
+#   @param expressions  expressions to be teste
+#   @return True if there are expressios and allof them are OK 
+def good_variables ( tree  , *expressions ) :
+    """ Silent version of `the_variables`
+    - expressions  expressions to be teste
+    return True if there are expressios and allof them are OK 
+    """
+
+    if not expressions : return False
+
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        with rootError () : # =================================================
+            # =================================================================
+            result = the_variables ( tree , *expressions )
+            return True
+        # =====================================================================
+    except AssertionError : # =================================================
+        # =====================================================================
+        return False
+    
+    return False 
+    
+ROOT.TTree.good_variables = good_variables
 
 # ===============================================================================
 ## valid formula expression?
@@ -2550,6 +2580,7 @@ _new_methods_  += (
     ROOT.TTree.valid_expression ,
     #
     ROOT.TTree.the_variables    ,
+    ROOT.TTree.good_variables   ,
     ROOT.TTree.add_new_branch   ,
     ##
     ROOT.TLeaf.get_type         ,
