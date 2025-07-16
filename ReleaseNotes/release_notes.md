@@ -4,6 +4,8 @@
 
 ## Backward-incompatible 
 
+      1. From now `ostap.utils.cleanup.TempFile.__enter__` return the actual name of the temporary name (intead of `self`) 
+
 ## Bug fixes
 
 

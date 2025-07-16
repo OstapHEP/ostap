@@ -415,7 +415,7 @@ class CUBase(object) :
 # ============================================================================
 ## Context manager to cleanup PID-dependent directories 
 class CleanUpPID(object) :
-    """Context manager to cleanup PID-dependent directories
+    """ Context manager to cleanup PID-dependent directories
     """
     def __enter__ ( self ) :
         
@@ -596,10 +596,10 @@ class TempFile(object) :
         return self.__filename
 
     # =========================================================================
-    ## context  manager enter: no action 
+    ## context  manager enter: no action return the file name  
     def __enter__ ( self      ) :
-        """ Context  manager enter: no action"""
-        return self
+        """ Context  manager enter: no action, return the file name """
+        return self.__filename 
 
     # =========================================================================
     ## Context manager  exit: delete the file 

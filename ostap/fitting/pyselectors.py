@@ -1734,13 +1734,14 @@ def fill_dataset2 ( self              ,
                 logger.debug  ( 'PROCESS: add cut %s ' % rcuts )
                 
             from ostap.utils.cleanup import TempFile
-            with TempFile ( suffix = '.root' , prefix = 'ostap-frame-' ) as tf :
-                if not silent : logger.info ( 'Prepare snapshot/loop over the tree %s' % tf.filename )
+            with TempFile ( suffix = '.root' , prefix = 'ostap-frame-snapshot-' ) as filename  :
+
+                if not silent : logger.info ( 'Prepare snapshot/loop over the tree %s' % filename )
                 report   = frame . Report ()
 
                 if vars_  :
                     ## If some variables are non-trivial: dump the whole tree 
-                    snapshot = frame . Snapshot ( 'tree' , tf.filename )
+                    snapshot = frame . Snapshot ( 'tree' , filename )
                 else      :
                     ## otherwise dump only needed variables 
                     bvars  = self.the_variables( [ v.formula for v in tvars ] )
@@ -1750,7 +1751,7 @@ def fill_dataset2 ( self              ,
                     logger.debug ('PROCESS: dump only %s' % list ( avars ) )
                     from ostap.core.core import strings as _strings
                     avars    = _strings ( avars ) 
-                    snapshot = frame . Snapshot ( 'tree' , tf.filename , avars )
+                    snapshot = frame . Snapshot ( 'tree' , filename , avars )
 
                 if not silent :
                     from ostap.frames.frames import report_print
@@ -1758,7 +1759,7 @@ def fill_dataset2 ( self              ,
 
                     ## reduce in number of branches 
                     otv = len ( self.branches()     )
-                    with ROOT.TFile.Open ( tf.filename  , 'read' ) as tt : 
+                    with ROOT.TFile.Open ( filename  , 'read' ) as tt : 
                         ntv = len ( tt.tree.branches () )
                     eff = binomEff ( ntv , otv ) * 100
                     fmt_eff =  '%4.1g +- %-4.1g'
@@ -1775,13 +1776,13 @@ def fill_dataset2 ( self              ,
                 if not silent :
                     s = -1 
                     try :
-                        s = os.path.getsize ( tf.filename ) 
+                        s = os.path.getsize ( filename ) 
                     except :
                         s = -1
                     if 0 < s : 
-                        logger.info ( 'Snapshot at %s %.3g[MB]' % ( tf.filename , float ( s ) / 2**20 ) )  
+                        logger.info ( 'Snapshot at %s %.3g[MB]' % ( filename , float ( s ) / 2**20 ) )  
                     else :
-                        logger.info ( 'Snapshot at %s '         %   tf.filename ) 
+                        logger.info ( 'Snapshot at %s '         %   filename ) 
 
                             
                 import ostap.io.root_file
@@ -1792,7 +1793,7 @@ def fill_dataset2 ( self              ,
                 elif not silent :
                     logger.info    ( 'Selected frame %d entries' % nn  )
                 
-                with ROOT.TFile.Open ( tf.filename  , 'read' ) as tt : 
+                with ROOT.TFile.Open ( filename  , 'read' ) as tt : 
                     tree         = tt.tree
                     if not silent :
                         import ostap.logger.table as  T

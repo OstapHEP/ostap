@@ -1412,8 +1412,6 @@ ROOT.TChain.__iadd__ = _tc_iadd_
 ROOT.TChain.__add__  = _tc_add_
 ROOT.TChain.__radd__ = _tc_add_
 
-
-
 # =============================================================================
 ## get all variables needed to evaluate the expressions for the given tree
 #  @code
@@ -2121,8 +2119,8 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
         new_branches = sorted ( ( set ( chain.branches () ) | set ( chain.leaves () ) ) - branches )
         if new_branches :
             n = len ( new_branches )
-            if 1 == n : title = 'Added %s branch to TChain'   % n 
-            else      : title = 'Added %s branches to TChain' % n 
+            if 1 >= n : title = "Added %s branch to TTree(%s)"   % ( n , treepath ) 
+            else      : title = "Added %s branches to TTree(%s)" % ( n , treepath )  
             table = chain.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
             chain = ROOT.TChain ( treepath )
@@ -2172,8 +2170,8 @@ def push_2chain ( chain , *config , progress = True , report = True ) :
         new_branches = sorted ( ( set ( chain.branches () ) | set ( chain.leaves () ) ) - branches )
         if new_branches :
             n = len ( new_branches )
-            if 1 >= n : title = 'Added %s branch to TChain'   % n 
-            else      : title = 'Added %s branches to TChain' % n 
+            if 1 >= n : title = "Added %s branch to TChain(%s)"   % ( n , cname ) 
+            else      : title = "Added %s branches to TChain(%s)" % ( n , cname )  
             table = chain.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
             chain = ROOT.TChain ( cname )
@@ -2427,8 +2425,8 @@ def buffer_2tree ( tree , buffer , * ,  name = '' , progress = True , report = T
         new_branches = sorted ( ( set ( chain.branches () ) | set ( chain.leaves () ) ) - branches )
         if new_branches :
             n = len ( new_branches )
-            if 1 == n : title = 'Added %s branch to TChain'   % n 
-            else      : title = 'Added %s branches to TChain' % n 
+            if 1 == n : title = "Added %s branch to TTree(%s)"   % ( n , tpath )  
+            else      : title = "Added %s branches to TTree(%s)" % ( n , tpath ) 
             table = chain.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
           
@@ -2476,11 +2474,11 @@ def buffer_2chain ( chain , buffer , * , name = '' , progress = True , report = 
     for fname in files : chain.Add ( fname )
 
     if report :        
-        new_branches = sorted ( ( set ( chain.branches () ) | set ( chain.leaves () ) ) - branches )
+        new_branches = sorted ( ( set ( chain.branches () ) | set ( chain.leaves () ) ) - branches )        
         if new_branches :
             n = len ( new_branches )
-            if 1 >= n : title = 'Added %s branch to TChain'   % n 
-            else      : title = 'Added %s branches to TChain' % n 
+            if 1 >= n : title = "Added %s branch to TChain(%s)"   % ( n , cname ) 
+            else      : title = "Added %s branches to TChain(%s)" % ( n , cname ) 
             table = chain.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
           
