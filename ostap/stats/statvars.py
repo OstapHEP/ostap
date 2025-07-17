@@ -2325,6 +2325,8 @@ def data_decorate ( klass ) :
     if hasattr ( klass , 'spread'         ) : klass.orig_spread         = klass.spread
     if hasattr ( klass , 'volatility'     ) : klass.orig_volatility     = klass.volatility
     if hasattr ( klass , 'precision'      ) : klass.orig_precision      = klass.precision
+    
+    if hasattr ( klass , 'efficiency'     ) : klass.orig_efficiency     = klass.efficiency 
 
     
     klass.get_moment      = data_the_moment
@@ -2372,6 +2374,8 @@ def data_decorate ( klass ) :
     klass.spread          = data_spread
     klass.volatilty       = data_volatility
     klass.precision       = data_precision
+    
+    klass.efficiency      = data_efficiency 
 
     if hasattr ( klass , 'var_minmax'      ) : klass.orig_var_minmax      = klass.var_minmax 
     if hasattr ( klass , 'var_range'       ) : klass.orig_var_range       = klass.var_range 
