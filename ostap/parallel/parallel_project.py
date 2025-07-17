@@ -13,13 +13,16 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'parallel_project' , ## parallel project  
-    'cproject'         , ## parallel project from looong TChain
-    'tproject'         , ## parallel project from looong TTree 
+    'parallel_project'    , ## parallel project  
+    'parallel_efficiency' , ## parallel project  
+    'cproject'            , ## parallel project from looong TChain
+    'tproject'            , ## parallel project from looong TTree 
     ) 
 # =============================================================================
-from   ostap.parallel.parallel_statvar import ( parallel_project, 
-                                                FIRST_ENTRY , LAST_ENTRY )  
+from   ostap.parallel.parallel_statvar import ( parallel_project     ,
+                                                parallel_effficiency , 
+                                                FIRST_ENTRY          ,
+                                                LAST_ENTRY           )  
 import ROOT
 # =============================================================================
 # logging 

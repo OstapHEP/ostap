@@ -152,9 +152,10 @@ def get_values ( results                               , * ,
 def var_name ( prefix , used_names , *garbage ) :
     """ Local helper method to generate new, unique name for the variable 
     """
-    name =     prefix + '%x' % ( hash ( (        prefix , used_names , garbage ) ) % ( 2**32 ) ) 
+    names = tuple ( n for n in used_names ) 
+    name  =    prefix + '%x' % ( hash ( (        prefix , names , garbage ) ) % ( 2**32 ) ) 
     while name in used_names :
-        name = prefix + '%x' % ( hash ( ( name , prefix , used_names , garbage ) ) % ( 2**32 ) )
+        name = prefix + '%x' % ( hash ( ( name , prefix , names , garbage ) ) % ( 2**32 ) )
     return name
 
 # ===============================================================================
@@ -1533,7 +1534,7 @@ def frame_project ( frame               ,
     
     ## add the fiducial cuts
 
-    cvars = [ v for v in items.values () ]
+    cvars = tuple ( v for v in items.values () ) 
     if isinstance ( model , ROOT.TH3 ) :
         zvar    = cvars [ 2 ] 
         axis    = model.GetZaxis()
@@ -1967,7 +1968,232 @@ def frame_slice ( frame               ,
     
     return ( result , current ) if lazy else result.GetValue()
     
+# =============================================================================
+## @class EffHelper
+#  helper class to get the efficiency from the frame
+#  @see frame_efficiency 
+class EffHelper(object) :
+    """ Helper class to get the slice from the frame
+    - see frame_efficiency 
+    """    
+    def __init__ ( self     ,
+                   accepted  , ## RAW result for accepted histogram
+                   rejected  , ## RAW result for rejected histogram
+                   title     ) : 
+        
+        self.accepted = accepted
+        self.rejected = rejected 
+        self.__title  = title
+        
+    ## get the value 
+    def GetValue ( self ) :
+        
+        hA = self.accepted.GetValue()
+        hR = self.rejected.GetValue()
+        hE = 1 / ( 1 + hR / hA )
+        hE.SetTitle ( self.__title )
+
+        return hE , hA , hR 
+
+# ==============================================================================
+## Get "Efficincy" histogram for frame
+#  Actually it makes two distributions/histograms
+# for events that are accepted and rejected by certain
+# (boolean) <code>criterion</code>
+# and calcualted the efficiency histogram usng the rule: 
+# \f[ e = \left( 1 + \frac{r}{a} \right)^{-1}\f]
+#
+#  @code
+#  histo_1D = ...
+#  frae     = ...
+#  eff, accepted, rejected = frame_efficiency
+#  ...   ( frame        ,  
+#  ...     'DLL>5'      , 
+#  ...     histo_1D     ,
+#  ...     'PT'         ,
+#  ...     cuts = 'A>2' ,
+#          lazy = False ) 
+#  @code
+#
+#  @code
+#  histo_1D = ...
+#  frae     = ...
+#  result , frame = frame_efficiency
+#  ...   ( frame        ,  
+#  ...     'DLL>5'      , 
+#  ...     histo_1D     ,
+#  ...     'PT'         ,
+#  ...     cuts = 'A>2' ,
+#          lazy = True  ) 
+#  @code
+#
+#
+#  @param frame       (INPUT) input frame (or TTree)
+#  @param criterion   (INPUT) (boolean) criterion, e.g <code>PT>10</code>
+#  @param histo       (INPUT) the 1D/2D or 3D (template) histogram
+#  @param expressions (INPUT) expressions rtaht defined the axes of the histogram
+#  @param cuts        (INPUT) only event that satisfy these (boolean) cuts are procesed
+#  @param weight      (INPUT) optional weihgt to be used for filling the historgams
+#  @param progress    (INPUT) show the porogress bar for the actual processing?
+#  @param report      (INPUT) produce the processing report?
+#  @param lazy        (INPUT) lazy processing?
+#  @attention  criterion and cuts are treated as boolean! 
+#  @see tree_efficiency
+#  @see data_efficiency
+def frame_efficiency ( frame               ,
+                       criterion           ,  
+                       histo               , 
+                       expressions         ,
+                       cuts        = ''    , 
+                       weight      = ''    , 
+                       progress    = False ,
+                       report      = False , 
+                       lazy        = False ) :
+    """ Get "Efficincy" histogram for frame
+    Actually it makes two distributions/histograms
+    for events that are accepted and rejected by certain
+    (boolean) <code>criterion</code>
+    and calculated  the efficiency histogram
     
+    >>> histo_1D = ...
+    >>> frame     = ...
+    >>> eff, accepted, rejected = frame_efficiency
+    ...     ( frame        ,  
+    ...       'DLL>5'      , 
+    ...       histo_1D     ,
+    ...       'PT'         ,
+    ...       cuts = 'A>2' ,
+    ...       lazy = False ) ## attention! 
+
+    >>> histo_1D = ...
+    >>> framee   = ...
+    >>> result , frame = frame_efficiency
+    ...     ( frame        ,  
+    ...       'DLL>5'      , 
+    ...       histo_1D     ,
+    ...       'PT'         ,
+    ...       cuts = 'A>2' ,
+    ...       lazy = True  ) 
+    
+    frame       : (INPUT) input frame (or TTree)
+    criterion   : (INPUT) (boolean) criterion, e.g <code>PT>10</code>
+    histo       : (INPUT) the 1D/2D or 3D (template) histogram
+    expressions : (INPUT) expressions rtaht defined the axes of the histogram
+    cuts        : (INPUT) only event that satisfy these (boolean) cuts are procesed
+    weight      : (INPUT) optional weihgt to be used for filling the historgams
+    progress    : (INPUT) show the porogress bar for the actual processing?
+    report      : (INPUT) produce the processing report?
+    lazy        : (INPUT) lazy processing?
+
+    ATTENTION: criterion and cuts are treated as boolean! 
+    - see tree_efficiency
+    - see data_efficiency
+    """
+    
+    ## decode expressions & cuts 
+    current , items , cut_name , _ = _fr_helper_ ( frame , expressions , cuts , progress = progress )
+    nvars = len ( items )
+
+    _ , criterion , _ = SV.vars_and_cuts ( expressions , criterion ) 
+    assert criterion , "Valid criterion *MUST* be specified!"
+    
+    _ , weight    , _ = SV.vars_and_cuts ( expressions , weight    ) 
+    
+    assert isinstance ( histo , ROOT.TH1 ) , "Invalid `histo` type : %s " % typename ( histo )
+    
+    hdim = histo.GetDimension()    
+    assert 1 <= hdim <= 3 and hdim == nvars , \
+        "Mismatch histogram dimension/#vars: %s/%d"% ( hdim, nvars ) 
+
+    ## get all current variables
+
+    ## fiducial cuts
+    cvars = tuple ( v for v in items.values () ) 
+ 
+    if isinstance ( histo , ROOT.TH3 ) :
+        zvar    = cvars [ 2 ] 
+        axis    = histo.GetZaxis()
+        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmin() , zvar ) , 'ZMIN-FILTER' )
+        current = current.Filter ( '%.12g >= %s ' %  ( axis.GetXmax() , zvar ) , 'ZMAX-FILTER' )
+        
+    if isinstance ( histo , ROOT.TH2 ) :
+        yvar    = cvars [ 1 ]         
+        axis    = histo.GetYaxis()
+        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmin() , yvar ) , 'YMIN-FILTER' )
+        current = current.Filter ( '%.12g >= %s ' %  ( axis.GetXmax() , yvar ) , 'YMAX-FILTER' )
+        
+    if isinstance ( histo , ROOT.TH1 ) :
+        xvar    = cvars [ 0 ]                 
+        axis    = histo.GetXaxis()
+        current = current.Filter ( '%.12g <= %s ' %  ( axis.GetXmin() , xvar ) , 'XMIN-FILTER' )
+        current = current.Filter ( '%.12g >= %s ' %  ( axis.GetXmax() , xvar ) , 'XMAX-FILTER' )
+   
+
+    histo.Reset()
+    if not histo.GetSumw2() : histo.Sumw2() 
+    
+    all_cols = frame_columns ( current ) 
+    all_vars = set ( all_cols )
+
+    ##
+    wname = ''
+    if weight :
+        wname = var_name ( 'weight_'  , all_vars , *all_cols )
+        all_vars.add ( wname ) 
+        wcut  = var_name ( 'weight_cut_' , all_vars , *all_cols )
+        all_vars.add ( wcut  ) 
+        current = current.Define ( wname , '1.0*(%s)' % weight ) ## weight as variable
+        current = current.Define ( wcut  , '!!(%s)'   % wname  ) ## weight as cut 
+        current = current.Filter ( wcut  , "FILTER-WEIGTH: %s" % weight)
+        
+    ## add criterion 
+    critname = var_name ( 'criterion_' , all_vars , *all_cols )
+    current  = current.Define ( critname , '!!(%s)' % criterion ) ## criterion as boolean 
+
+    ## split into two branches
+    accepted = current.Filter (           critname , 'ACCEPTED' )
+    rejected = current.Filter ( '!(%s)' % critname , 'REJECTED' )
+
+
+    ## the models 
+    modelA = histo.model()
+    modelR = histo.model()
+
+    modelA.fTitle = "Distribution for events accepted by %s" % criterion
+    modelR.fTitle = "Distribution for events rejected by %s" % criterion
+    etitle        = "Efficiency   for criterion: %s"         % criterion 
+
+    pvars = cvars if not wname else cvars + ( wname ,  ) 
+
+    if   1 == hdim : 
+        hA = accepted.Histo1D ( modelA , *pvars ) 
+        hR = rejected.Histo1D ( modelR , *pvars )
+    elif 2 == hdim : 
+        hA = accepted.Histo2D ( modelA , *pvars ) 
+        hR = rejected.Histo2D ( modelR , *pvars )
+    elif 3 == hdim : 
+        hA = accepted.Histo3D ( modelA , *pvars ) 
+        hR = rejected.Histo3D ( modelR , *pvars )
+
+    result = EffHelper ( hA , hR , etitle )
+    
+    if lazy :
+        return result, current
+    
+    ## get the actual triplet of histograms 
+    result  = result.GetValue()
+
+    histo.SetTitle ( etitle ) 
+    histo  += result [ 0 ]  
+
+    if report :
+        the_report = current.Report()
+        title      = "frame_efficiency"
+        logger.info ( '%s\n%s' % ( title , report_print ( the_report , title = title , prefix = '# ') ) )
+   
+    return result 
+
+
 # ==============================================================================
 # decorate 
 # ==============================================================================
@@ -2006,7 +2232,10 @@ for f in frame_types :
     f.project         = frame_project          , ## project data frame to the (1D/2D/3D) histogram
     f.param           = frame_param            , ## parameterize data on-flight     
     f.draw            = frame_draw             , ## draw variable from the frame
-
+    ##
+    f.slice           = frame_slice            , ## get the (numpy) slice from the frame
+    f.efficiency      = frame_efficiency       , ## get the efficiency histos from the frame 
+    
 _new_methods_       = (
     report_print_table    , ## print the report 
     report_as_table       , ## print the report
@@ -2051,6 +2280,9 @@ _new_methods_       = (
     frame_project         , ## project data frame to the (1D/2D/3D) histogram
     frame_param           , ## parameterize data on-flight     
     frame_draw            , ## draw variable from the frame
+    ## 
+    frame_slice           , ## the get (numpy) slice form the frame 
+    frame_efficiency      , ## the get efficiency histos form the frame 
     ## 
 )
 

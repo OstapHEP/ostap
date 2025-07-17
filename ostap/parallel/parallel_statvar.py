@@ -18,8 +18,9 @@ __all__     = (
     'parallel_project'    , 
     'parallel_size'       ,
     'parallel_covariance' ,
-    'parallel_slice'      ,
     'parallel_sum'        , 
+    'parallel_slice'      ,
+    'parallel_efficiency' ,
     ## 
     'CHUNK_SIZE'          , ## maximal number of events in singel chunk 
     'MAX_FILES'           , ## maximal number of files
@@ -482,6 +483,88 @@ class SliceTask(Task) :
         
     ## get the results 
     def results ( self ) : return self.__output 
+
+# ================================================================================
+## The simple task object to collecy slices 
+#  @see GaudiMP.Parallel
+#  @see GaudiMP.Parallel.Task
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-09-23
+class EffTask(Task) :
+    """ The simple tast object to get the efficiency 
+    """
+    ## constructor: histogram 
+    def __init__ ( self        ,
+                   criterion   ,
+                   histo       ,
+                   expressions ,
+                   cuts        , **kwargs ) : 
+
+        """ Constructor        
+        >>> task  = StatVarTask ( 'mass' , 'pt>0') 
+        """
+        self.criterion   = criterion 
+        self.histo       = histo
+        self.expressions = expressions 
+        self.cuts        = cuts   
+        ## 
+        self.kwargs      = {}
+        self.kwargs.update ( kwargs )
+        self.__output    = () 
+        
+    # =============================================================
+    ## the actual processing
+    #   `params' is assumed to be a tuple/list :
+    #  - the file name
+    #  - the tree name in the file
+    #  - the variable/expression/expression list of quantities to project
+    #  - the selection/weighting criteria 
+    #  - the first entry in tree to process
+    #  - number of entries to process
+    def process ( self , jobid , item ) :
+        """ The actual processing
+        `params' is assumed to be a tuple-like entity:
+        - the file name
+        - the tree name in the file
+        - the variable/expression/expression list of quantities to project
+        - the selection/weighting criteria 
+        - the first entry in tree to process
+        - number of entries to process
+        """
+        from ostap.logger.utils import logWarning
+        with logWarning() :
+            from   ostap.stats.statvars import data_efficiency
+            import ostap.trees.trees
+            
+        chain = item.chain 
+        first = item.first
+        last  = item.last 
+        
+        self.__output = data_efficiency ( chain            ,
+                                          self.criterion   ,
+                                          self.histo       ,
+                                          self.expressions ,                                          
+                                          self.cuts        , first , last , 
+                                          **self.kwargs    ) 
+        return self.__output 
+    
+    ## merge results 
+    def merge_results ( self , result , jobid = -1 ) :        
+        if not self.__output : 
+            self.__output  = result
+            return
+
+        _ , _a1 , _r1 = self.__output
+        _ , _a2 , _r2 =        result
+
+        _a1 += _a2                   ## UPDATE ACCEPTED 
+        _r1 += _r2                   ## UPDATE REJECTED 
+        _e1  = 1 / ( 1 + _r1 / _a1 ) ## RECALCULATE EFFICIENCY
+        
+        self.__output = _e1 , _a1 , _r1
+        
+    ## get the results 
+    def results ( self ) : return self.__output 
     
     
 # ===================================================================================
@@ -901,6 +984,78 @@ def parallel_slice ( chain                    ,
     
     return results 
 
+
+# ===================================================================================
+## parallel processing of loooong chain/tree 
+#  @code
+#  chain  = ...
+#  result = parallel_statistic ( .... ) 
+#  @endcode
+def parallel_efficiency ( chain                    ,
+                          criterion                ,
+                          histo                    , 
+                          expressions              ,
+                          cuts       = ''          , *args , 
+                          weight     = ''          , 
+                          use_frame  = True        , 
+                          progress   = False       ,
+                          chunk_size = CHUNK_SIZE  ,
+                          max_files  = MAX_FILES   ,
+                          silent     = True        , **kwargs ) :
+    """ Parallel processing of loooong chain/tree 
+    >>> chain    = ...
+    >>> chain.pstatVar( 'mass' , 'pt>1') 
+    """
+    ## few special/trivial cases
+
+    from ostap.stats.statvars import data_efficiency
+    ## 
+    
+    
+    ## adjust first/last 
+    first, last = evt_range ( chain , *args[:2] )
+    
+    ## number of events  to proecedd 
+    nevents     = last - first 
+    
+    if nevents <= chunk_size :
+        return data_efficiency ( chain       ,
+                                 criterion   ,
+                                 histo       , 
+                                 expressions ,
+                                 cuts        , first , last , 
+                                 weight      = weight       ,
+                                 use_frame   = use_frame    ,
+                                 parallel    = False        ,
+                                 progress    = progress     )
+
+    ## The Task
+    task   = EffTask ( criterion   ,
+                       histo       ,
+                       expressions ,
+                       cuts        = cuts      ,
+                       weight      = weight    ,
+                       use_frame   = use_frame , 
+                       progress    = False     ,
+                       parallel    = False     ) 
+
+    ## Manager 
+    wmgr   = WorkManager ( silent = silent , progress = progress or not silent , **kwargs )
+
+    ## split data 
+    from ostap.trees.utils   import Chain
+    ch     = Chain    ( chain , first = first   , last = last )
+    trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
+
+    wmgr.process ( task , trees )
+
+    del trees
+    del ch    
+
+    results = task.results()
+    
+    return results 
+
 # =============================================================================
 _decorated_classes_ = (
     )
@@ -910,8 +1065,9 @@ _new_methods_       = (
     parallel_get_stat   ,
     parallel_project    ,
     parallel_covariance ,
-    parallel_slice      ,
     parallel_sum        ,
+    parallel_slice      ,
+    parallel_efficiency ,
 )
 
 # =============================================================================

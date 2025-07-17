@@ -2508,7 +2508,7 @@ ROOT.TH2D.  zechEff    = zechEff_h2
 #  @code 
 #  >>> accepted   = ...
 #  >>> total      = ...
-#  >>> efficiency = acepted // total
+#  >>> efficiency = acepted % total
 #  @endcode 
 #  @see Ostap::Math::zechEff
 #  @param h1 histogram of "accepted" sample
@@ -2582,15 +2582,12 @@ def _h_binomEff_2_ ( accepted , total ) :
 
     result = accepted.clone()
     result.Reset()
-    ok = result.Divide ( accepted , total , 1.0 , 1.0 , 'b' )
-    if not ok :
-        logger.warning("Can't ``B''-divide histograms, switch to Zech's method")
+    if not result.Divide ( accepted , total , 1.0 , 1.0 , 'b' ) : 
+        logger.warning("Can't `B'-divide histograms, switch to Zech's rule")
         return accepted % total 
     return result 
     
-
 ROOT.TH1.binomEff_2 = _h_binomEff_2_
-
 
 # =============================================================================
 ## consider object as function:

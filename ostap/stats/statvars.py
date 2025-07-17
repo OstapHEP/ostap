@@ -109,9 +109,8 @@ else                       : logger = getLogger ( __name__               )
 # =============================================================================
 LARGE   = 50000    ## allow frames or parallel for LARGE datasets 
 # =============================================================================
-## IS data (tree or chain) good for processing via RDataFrame ?
 MIN_ENTRIES_FOR_FRAME    = 100000
-MIN_ENTRIES_FOR_PARALLEL = 500000
+MIN_ENTRIES_FOR_PARALLEL = 200000
 MIN_FILES_FOR_PARALLEL   = 2
 # =============================================================================
 ## Good for provcssing via frames?
@@ -254,16 +253,17 @@ def data_get_stat ( data               ,
         assert sc.isSuccess() , 'Error %s from StatVar::get_stat' % sc 
         return statobj
 
-    if  use_frame and good_for_frame ( data , *args ) : 
+    ## Use frame processing ?
+    if   use_frame and good_for_frame ( data , *args ) : 
         return F.frame_project ( data                   ,
                                  model       = statobj  ,
                                  expressions = var_lst  ,
                                  cuts        = cuts     ,
                                  progress    = progress ,
                                  report      = progress ,
-                                lazy        = False    )
-    
-    if  parallel and good_for_parallel ( data , *args ) : 
+                                 lazy        = False    )
+    ## Use parallel processon 
+    elif parallel and good_for_parallel ( data , *args ) : 
         from ostap.parallel.parallel_stavar import parallel_get_stat        
         return parallel_get_stat ( data        ,
                                    statobj     ,
@@ -275,7 +275,7 @@ def data_get_stat ( data               ,
                                    max_files   = 1             ,
                                    silent      = not progress  ) ;
     
-    assert isinstance ( data , ROOT.TTree ) , "Invalid type for data!"
+    assert isinstance ( data , ROOT.TTree ) , "Here data must be TTree: %s" % typename ( data ) 
     
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
@@ -371,16 +371,17 @@ def data_hasEntry ( data               ,
                                   cuts     = cuts     , 
                                   progress = progress ,
                                   report   = progress ,
-                                  lazy     = False    ) 
-    
+                                  lazy     = False    )     
     ## parallel ? 
-    if parallel and good_for_parallel ( data , *args ) :
+    elif parallel and good_for_parallel ( data , *args ) :
         from ostap.parallel.parallel_statvar import parallel_size 
         return 0 < paralel_size ( data                  ,
                                   cuts      , *args     , 
                                   progress  = progress  , 
                                   use_frame = use_frame )
-    
+
+    assert isinstance ( data , ROOT.TTree ) , "Here data must be TTree: %s" % typename ( data ) 
+
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
     with rootException() , ActiveBranches ( cuts ) :
@@ -424,21 +425,22 @@ def data_size ( data               ,
     if not cuts : return last - first 
 
     ## use frame ? 
-    if use_frame and good_for_frame ( data , *args ) : 
+    if   use_frame and good_for_frame ( data , *args ) : 
         return F.frame_size ( data                 ,
                               cuts     = cuts      , 
                               progress = progress  ,
                               report   = progress  ,
-                              lazy     = False     ) 
-    
-    ## parallel ? 
-    if parallel and good_for_parallel ( data , *args ) : 
+                              lazy     = False     )
+    ## parallel ?
+    elif parallel and good_for_parallel ( data , *args ) : 
         from ostap.parallel.parallel_statvar import parallel_size 
         return paralel_size ( data                  ,
                               cuts      , *args     ,
                               progress  = progress  , 
                               use_frame = use_frame )
     
+    assert isinstance ( data , ROOT.TTree ) , "Here data must be TTree: %s" % typename ( data ) 
+
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
     with rootException() , ActiveBranches ( cuts ) :
@@ -555,7 +557,8 @@ def data_statistic ( data               ,
     var_lst, cuts, input_string = vars_and_cuts ( expressions , cuts )
     assert var_lst , "Invalid expressions!"
 
-    
+
+    ## Use frames? 
     if use_frame and good_for_frame ( data , *args ) : 
         return F.frame_statistic ( data        ,
                                    expressions ,
@@ -563,9 +566,9 @@ def data_statistic ( data               ,
                                    as_weight   = as_weight , 
                                    progress    = progress  ,
                                    report      = progress  ,
-                                   lazy        = False     ) 
-
-    if parallel and good_for_parallel ( data , *args ) : 
+                                   lazy        = False     )
+    ## Use parallel processing ?
+    elif parallel and good_for_parallel ( data , *args ) : 
         from ostap.parallel.parallel_statvar import parallel_statistic
         return parallel_statistic ( data        ,
                                     expressions ,
@@ -573,6 +576,7 @@ def data_statistic ( data               ,
                                     as_weight   = as_weight  , 
                                     progress    = progress   ,
                                     use_frame   = use_frame  )
+
     
     ##  diplay progress ? 
     progress = progress_conf ( progress )
@@ -1929,7 +1933,7 @@ def data_project ( data                ,
             elif 4 == nvars : sc = pv.project4 ( data , target , *the_args )            
         assert sc.isSuccess() , 'Error %s from StatVar::project(1,2,3)' % sc 
         return target
-    
+     
     if  use_frame and good_for_frame ( data , *args ) : 
         return F.frame_project ( data                   ,
                                  model       = target   ,
@@ -1977,7 +1981,7 @@ def data_slice ( data        ,
                  progress    = False , 
                  use_frame   = False ,
                  parallel    = False ) :
-    """ Get slice of dat s in form of Numpy array
+    """ Get slice of data s in form of Numpy array
     >>> data = ...
     >>> arr , weight = data_slice ( data , "x,y,x" , "pt>1" ) 
     """
@@ -2003,36 +2007,272 @@ def data_slice ( data        ,
                           transpose  = transpose  , 
                           first      = first      ,
                           last       = last       )
-    
-    if  use_frame and good_for_frame ( data , *args ) : 
+
+    ## Frame processing ? 
+    if  use_frame and good_for_frame ( data , first , last  ) : 
         return F.frame_slice ( data                    ,
                                expression              ,
                                cuts       = cuts       ,
                                structured = structured ,
                                transpose  = transpose  , 
-                               progress   = prorgess   ) 
-
-        
-    if parallel   and good_for_parallel ( data , *args ) :        
+                               progress   = prorgess   )
+    ## Parallel processing?
+    elif parallel   and good_for_parallel ( data , first , last ) :
+        from ostap.parallel.parallel_statvar import parallel_slice 
         return parallel_slice ( data                     ,
                                 expressions              ,
-                                cuts        , *args      ,
+                                cuts        , first      , last ,
                                 structured  = structured ,
                                 transpose   = transpose  , 
                                 progress    = prorgess   ,
                                 use_frame   = use_frame  ) 
 
-    assert isinstance ( data , ROOT.TTree ) , "Here data must be TTree!"
+    assert isinstance ( data , ROOT.TTree ) , "Here data must be TTree: %s" % typename ( data ) 
 
     from ostap.trees.trees import tree_slice
-    return tree_slice ( data                     ,
-                        expressions              ,
-                        cuts        , *args      , 
+    return tree_slice ( data        ,
+                        expressions ,
+                        cuts        ,
+                        first       = first      ,
+                        last        = last       , 
                         structured  = structured ,
                         transpose   = transpose  , 
                         progress    = progress   , 
                         use_frame   = False      ,
                         parallel    = False      )
+
+
+# =============================================================================
+## Produce  "efficiency" histogram for boolean <code>criteriaon</c>
+#  as function of valiabed listed as <code>expressions</code>
+#  internally it creatd two histogram
+#  - "accepted" for events accepted by (boolean) criterion
+#  - "rejected" for events rekected by (boolean) criterion
+#
+#  @code
+#  histo_1D = ...
+#  data     = ...
+#  eff, accepted, rejected = data_efficiency
+#  ...   ( tree         ,  
+#  ...     'DLL>5'      , 
+#  ...     histo_1D     ,
+#  ...     'PT'         ,
+#  ...     cuts = 'A>2' ) 
+#  @code
+#
+#  @code
+#  histo_2D = ...
+#  data     = ...
+#  eff, accepted, rejected = data_efficiency
+#  ...   ( tree         ,  
+#  ...     'DLL>5'      , 
+#  ...     histo_2D     ,
+#  ...     'PT, y'      , 
+#  ...     cuts = 'A>2' ) 
+#  @code
+#
+#  @code
+#  histo_3D = ...
+#  data     = ...
+#  eff, accepted, rejected = data_efficiency
+#  ...   ( tree             ,  
+#  ...     'DLL>5'          , 
+#  ...     histo_3D         ,
+#  ...     'PT, y, nTracks' , 
+#  ...     cuts = 'A>2'     ) 
+#  @code
+#
+#  @param tree       (INPUT)  input data
+#  @param criterion  (INPUT)  (boolean) criterion
+#  @param histo      (UPDATE) outptu efficiency histogram 
+#  @param exressions (INPUT)  expressions for the histiogram axes
+#  @param cuts       (INPUT)  (boolean) selection criteria to be applied 
+#  @param weight     (INPUT)  expression to be used as weight 
+#  @return triplet of histigrams: efficiency, accepted & rejected 
+#
+#  @attention both `cuts` and `criterion` are treated as boolean! 
+#  @see tree_project  
+#  @see frame_project  
+def data_efficiency ( data        ,
+                      criterion   ,  
+                      histo       , 
+                      expressions ,
+                      cuts        = ''          , *args ,
+                      cut_range   = ''          , 
+                      weight      = ''          , 
+                      use_frame   = False       , 
+                      parallel    = False       , 
+                      progress    = False       ) : 
+    """ Produce  "efficiency" histogram for boolean <code>criteriaon</c>
+    as function of valiabed listed as <code>expressions</code>
+    internally it creatd two histogram
+    - "acepted" for events accepted by (boolean) criterion
+    - "rejected" for events rekected by (boolean) criterion 
+    
+    tree:       (INPUT)  input tree 
+    criterion:  (INPUT)  (boolean) criterion
+    histo:      (UPDATE) outptu efficiency histogram 
+    exressions: (INPUT)  expressions for the histiogram axes
+    cuts:       (INPUT)  (boolean) selection criteria to be applied 
+    weight:     (INPUT)  expression to be used as weight 
+
+    return triplet of histigrams: 
+        - efficiency
+        - distribution for accepted events
+        - distribution for rejected events
+        
+    ATTENTION: both `cuts` and `criterion` are treated as boolean!  
+    
+    - see `ostap.trees.trees.tree_project` 
+
+    >>> histo_1D = ...
+    >>> tree     = ...
+    >>> eff, accepted, rejected = tree_efficiency
+    ...    ( tree               ,  
+    ...      'DLL>5'            , ## criterion 
+    ...      histo_1D           , 
+    ...      'PT'               , ## axes 
+    ...      cuts   = 'A>2'     , 
+    ...      weight = 'sWeight' )
+
+    >>> histo_2D = ...
+    >>> tree     = ...
+    >>> eff, accepted, rejected = tree_efficiency
+    ...    ( tree               ,  
+    ...      'DLL>5'            , ## criterion 
+    ...      histo_2D           , 
+    ...      'PT, y'            , ## axes 
+    ...      cuts   = 'A>2'     , 
+    ...      weight = 'sWeight' )
+
+    >>> histo_3D = ...
+    >>> tree     = ...
+    >>> eff, accepted, rejected = tree_efficiency
+    ...    ( tree               ,  
+    ...      'DLL>5'            , ## criterion 
+    ...      histo_3D           , 
+    ...      'PT, y, nTracks'   , ## axes 
+    ...      cuts   = 'A>2'     , 
+    ...      weight = 'sWeight' )
+
+    """
+    
+    ## (1) decode expressions & cuts
+    var_lst , cuts      , _  = vars_and_cuts ( expressions , cuts      )    
+    ## (2) decode expressions & criterion 
+    var_lst , criterion , _  = vars_and_cuts ( var_lst     , criterion )
+    ## (3) decode expressions & weight 
+    var_lst , weight    , _  = vars_and_cuts ( var_lst     , weight    )
+
+    nvars  = len ( var_lst )
+    
+    assert criterion, "Invalid criterion: %s" % criterion 
+    assert isinstance ( histo , ROOT.TH1 ) , "Invalid `histo` type: %s" % typename ( histo )
+    
+    hdim = histo.GetDimension() 
+    assert 1 <= hdim <= 3 and hdim == nvars , \
+        "Mismatch histogram dimension/#vars: %s/%d"% ( hdim, nvars ) 
+    
+    ## (4) cut_range defined *only* for RooFit datasets 
+    if cut_range and not isinstance ( data , ROOT.RooAbsData ) : 
+        raise TypeError ( "Invalid use of `cut_range':%s" % cut_range  ) 
+    
+    ## (5) RooFit ?
+    if isinstance ( data , ROOT.RooAbsData ) :
+        
+        histo.Reset() 
+        if not histo.GetSumw2() : histo.Sumw2() 
+        
+        h_efficiency = histo.clone ()
+        h_accepted   = histo.clone ()
+        h_rejected   = histo.clone ()
+        
+        if not h_efficiency.GetSumw2() : h_efficiency.Sumw2() 
+        if not h_rejected  .GetSumw2() : h_rejected  .Sumw2() 
+        if not h_rejected  .GetSumw2() : h_rejected  .Sumw2() 
+        
+        h_accepted   .SetTitle ( "Distribution for events `accepted` by %s" % criterion ) 
+        h_rejected   .SetTitle ( "Distribution for events `rejected` by %s" % criterion )
+        h_efficiency .SetTitle ( "Efficiency   for criterion: %s"           % criterion )
+        
+        ## use cuts as boolean!     
+        the_cut  = ROOT.TCut( '!!(%s)' % cuts ) if cuts else ROOT.TCut() 
+        
+        ## use criterion as boolean 
+        accept = the_cut * ( "!!(%s)" % criterion ) ## times boolean  
+        reject = the_cut * (  "!(%s)" % criterion ) ## times boolean
+        
+        if weight : 
+            accept *= weight  
+            reject *= weight 
+
+        ## fill 1st histogram 
+        h_accept = data_project ( data       , 
+                                  h_accepted , 
+                                  var_lst    , 
+                                  cuts       = accept    ,
+                                  cut_range  = cut_range , 
+                                  use_frame  = False     ,
+                                  parallel   = False     , 
+                                  progress   = progress  ) 
+            
+        ## fill 2nd histogram 
+        h_reject = data_project ( tree       , 
+                                  h_rejected , 
+                                  var_lst    , 
+                                  cuts       = reject    , *args , 
+                                  cut_range  = cut_range ,                                       
+                                  use_frame  = use_frame ,
+                                  parallel   = parallel  , 
+                                  progress   = progress  )
+        
+        ## calculate binomial efficiency and assign it to the `histo``
+        h_efficiency += 1 / ( 1 + h_rejected / h_accepted )            
+        histo        += h_efficiency
+        return h_efficiency, h_accepted, h_rejected
+
+    ## unpack&update  first/last evens 
+    first , last = evt_range ( data , *args[:2] )
+    
+    if  use_frame and good_for_frame ( data , first , last ) : 
+        return F.frame_efficiency ( data                    ,
+                                    criterion   = criterion ,
+                                    histo       = histo     ,
+                                    expressions = var_lst   , 
+                                    cuts        = cuts      ,
+                                    weight      = weight    ,
+                                    progress    = progress  ,
+                                    report      = False     ,
+                                    lazy        = False     )
+    
+    ## delegate processing to parallel machinery if requested and possible 
+    elif parallel and good_for_parallel ( data , first , last ) :
+        from ostap.parallel.parallel_project import parallel_efficiency 
+        return parallel_efficiency ( tree      ,
+                                     criterion ,
+                                     histo     ,
+                                     var_lst   ,
+                                     cuts      , first     , last ,   
+                                     weight    = weight    ,
+                                     use_frame = use_frame , 
+                                     progress  = progress  )
+
+    
+    assert isinstance ( data , ROOT.TTree ) , "Here data must be TTree: %s" % typename ( data ) 
+    
+    from ostap.trees.trees import tree_efficiency
+    return tree_efficiency ( data        ,
+                             criterion   ,
+                             histo       , 
+                             expressions ,
+                             cuts        ,
+                             weight      = weight     , 
+                             first       = first      ,
+                             last        = last       , 
+                             progress    = progress   , 
+                             use_frame   = use_frame  ,
+                             parallel    = parallel   )
+
 
 
 # =============================================================================
