@@ -999,7 +999,7 @@ def parallel_efficiency ( chain                    ,
                           weight     = ''          , 
                           use_frame  = True        , 
                           progress   = False       ,
-                          chunk_size = CHUNK_SIZE  ,
+                          chunk_size = -1          , ## CHUNK_SIZE  ,
                           max_files  = MAX_FILES   ,
                           silent     = True        , **kwargs ) :
     """ Parallel processing of loooong chain/tree 
@@ -1017,7 +1017,7 @@ def parallel_efficiency ( chain                    ,
     
     ## number of events  to proecedd 
     nevents     = last - first 
-    
+
     if nevents <= chunk_size :
         return data_efficiency ( chain       ,
                                  criterion   ,
@@ -1040,11 +1040,13 @@ def parallel_efficiency ( chain                    ,
                        parallel    = False     ) 
 
     ## Manager 
-    wmgr   = WorkManager ( silent = silent , progress = progress or not silent , **kwargs )
+    wmgr   = WorkManager ( silent   = silent   and not progress ,
+                           progress = progress or  not silent   , **kwargs )
 
     ## split data 
     from ostap.trees.utils   import Chain
     ch     = Chain    ( chain , first = first   , last = last )
+
     trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
 
     wmgr.process ( task , trees )

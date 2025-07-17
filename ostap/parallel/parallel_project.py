@@ -19,10 +19,10 @@ __all__     = (
     'tproject'            , ## parallel project from looong TTree 
     ) 
 # =============================================================================
-from   ostap.parallel.parallel_statvar import ( parallel_project     ,
-                                                parallel_effficiency , 
-                                                FIRST_ENTRY          ,
-                                                LAST_ENTRY           )  
+from   ostap.parallel.parallel_statvar import ( parallel_project    ,
+                                                parallel_efficiency , 
+                                                FIRST_ENTRY         ,
+                                                LAST_ENTRY          )  
 import ROOT
 # =============================================================================
 # logging 

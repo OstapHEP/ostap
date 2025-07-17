@@ -2,7 +2,8 @@
 
       1. add `TTree.good_variables` method to check if variables are in TTree or could be computed
       1. add `data_efficiency/tree_efficiency/frame_efficiency' methods  to get the historgams of efficiencies
-    
+      1. more tweaks and fixes for `*_efficiency` functions
+        
 ## Backward-incompatible 
 
       1. From now `ostap.utils.cleanup.TempFile.__enter__` return the actual name of the temporary name (intead of `self`) 

@@ -2248,7 +2248,7 @@ def data_efficiency ( data        ,
     ## delegate processing to parallel machinery if requested and possible 
     elif parallel and good_for_parallel ( data , first , last ) :
         from ostap.parallel.parallel_project import parallel_efficiency 
-        return parallel_efficiency ( tree      ,
+        return parallel_efficiency ( data      ,
                                      criterion ,
                                      histo     ,
                                      var_lst   ,
