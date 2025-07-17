@@ -2487,6 +2487,119 @@ def buffer_2chain ( chain , buffer , * , name = '' , progress = True , report = 
 ROOT.TTree.add_new_branch  = add_new_branch 
 ROOT.TTree.add_new_buffer  = add_new_buffer 
 
+
+# ============================================================================
+## Produce  "efficiency" histogram for boolean <code>criteriaon</c>
+#  as function of valiabed listed as <code>expressions</code>
+#  internally it creatd two histogram
+#  - "acepted" for events accepted by (boolean) criterion
+#  - "rejected" for events rekected by (boolean) criterion
+# 
+#  @param tree       (INPUT)  input tree 
+#  @param criterion  (INPUT)  (boolean) criterion
+#  @param histo      (UPDATE) outptu efficiency histogram 
+#  @param exressions (INPUT)  expressions for the histiogram axes
+#  @param cuts       (INPUT)  (boolean) selection criteria to be applied 
+#  @param weight     (INPUT)  expression to be used as weight 
+#  return tripet of histigrams: efficiency, accepted & rejected 
+#
+#  @attention both `cuts` and `criterion` are treated as boolean! 
+#  @see ostap.trees.trees.tree_project  
+def tree_efficiency ( tree       ,
+                     criterion   ,  
+                     histo       , 
+                     expressions ,
+                     cuts       = '' , 
+                     weight     = "" , 
+                     first      = FIRST_ENTRY , 
+                     last       = LAST_ENTRY  , 
+                     use_frame  = False       , 
+                     parallel   = False       , 
+                     progress   = False       ) : 
+    """ Produce  "efficiency" histogram for boolean <code>criteriaon</c>
+    as function of valiabed listed as <code>expressions</code>
+    internally it creatd two histogram
+    - "acepted" for events accepted by (boolean) criterion
+    - "rejected" for events rekected by (boolean) criterion 
+    
+    tree:       (INPUT)  input tree 
+    criterion:  (INPUT)  (boolean) criterion
+    histo:      (UPDATE) outptu efficiency histogram 
+    exressions: (INPUT)  expressions for the histiogram axes
+    cuts:       (INPUT)  (boolean) selection criteria to be applied 
+    weight:     (INPUT)  expression to be used as weight 
+
+    return tripet of histigrams: 
+        - efficiency
+        - distribution for accepted events
+        - distribution for rejected events
+        
+    ATTENTION: both `cuts` and `criterion` are treated as boolean!  
+    
+    - see `ostap.trees.trees.tree_project` 
+    """ 
+    
+    var_lst , cuts      , _  = vars_and_cuts ( expressions , cuts      )
+    var_lst , weight    , _  = vars_and_cuts ( var_lst     , weight    ) 
+    var_lst , criterion , _  = vars_and_cuts ( var_lst     , criterion )  
+    nvars = len ( var_lst )
+    
+    assert criterion, "Invalid criterion: %s" % criterion 
+    assert isinstance ( histo , ROOT.TH1 ) , "Invalid `histo` type: %s" % typename ( histo )
+    
+    hdim = histo.GetDimension() 
+    assert hdim == nvars , "Mismatch histogram dimension/#vars: %s/%d"% ( hdim, nvars ) 
+    
+    histo.Reset() 
+    if not histo.GetSumw2() : histo.Sumw2() 
+    
+    h_accepted = histo.clone ()
+    h_rejected = histo.clone ()
+    
+    if not h_accepted.GetSumw2() : h_accepted.Sumw2() 
+    if not h_rejected.GetSumw2() : h_rejected.Sumw2() 
+    
+    h_accepted.SetTitle ( "Distribution for events `accepted` by %s" % criterion ) 
+    h_rejected.SetTitle ( "Distribution for events `rejected` by %s" % criterion )
+    histo     .SetTitle ( "Efficiency   for criterion: %s"           % criterion )
+    
+    ## use cuts as boolean!     
+    the_cut  = ROOT.TCut( '!!(%s)' % cuts ) if cuts else ROOT.TCut() 
+    
+    ## use cirtarion as boolean 
+    accept = the_cut * ( "!!(%s)" % criterion ) ## times boolean  
+    reject = the_cut * (  "!(%s)" % criterion ) ## times boolean
+    
+    if weight : 
+        accept *= weight  
+        reject *= weight 
+        
+    h_accept = tree_project ( tree      , 
+                             h_accepted , 
+                             var_lst    , 
+                             cuts       = accept    , 
+                             first      = first     , 
+                             last       = last      , 
+                             use_frame  = use_frame ,
+                             parallel   = parallel  , 
+                             progress   = progress  ) 
+    
+    h_reject = tree_project ( tree      , 
+                             h_rejected , 
+                             var_lst    , 
+                             cuts       = reject    , 
+                             first      = first     , 
+                             last       = last      , 
+                             use_frame  = use_frame ,
+                             parallel   = parallel  , 
+                             progress   = progress  ) 
+    
+    ## calculate efficiency and assign it to `histo``
+    histo += 1 / ( 1 + h_rejected / h_accepted )
+    
+    return histo , h_accepted, h_rejected
+
+
 # =============================================================================
 ## Context manager to temporariliy redefine aliases
 #  @code
