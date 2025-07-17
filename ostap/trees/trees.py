@@ -1290,7 +1290,7 @@ def tree_slice ( tree                     ,
     """
     
     ## adjust first/last indices 
-    first , last = evt_range ( tree , *args [ : 2 ] ) 
+    first , last = evt_range ( tree , first , last ) 
     if last <= first :
         return () , None 
 
