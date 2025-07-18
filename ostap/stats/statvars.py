@@ -2041,7 +2041,6 @@ def data_slice ( data        ,
                         use_frame   = False      ,
                         parallel    = False      )
 
-
 # =============================================================================
 ## Produce  "efficiency" histogram for boolean <code>criteriaon</c>
 #  as function of valiabed listed as <code>expressions</code>
@@ -2210,7 +2209,7 @@ def data_efficiency ( data        ,
         h_accept = data_project ( data       , 
                                   h_accepted , 
                                   var_lst    , 
-                                  cuts       = accept    ,
+                                  cuts       = accept    , *args , 
                                   cut_range  = cut_range , 
                                   use_frame  = False     ,
                                   parallel   = False     , 
@@ -2257,7 +2256,6 @@ def data_efficiency ( data        ,
                                      use_frame = use_frame , 
                                      progress  = progress  )
 
-    
     assert isinstance ( data , ROOT.TTree ) , "Here data must be TTree: %s" % typename ( data ) 
     
     from ostap.trees.trees import tree_efficiency
@@ -2272,8 +2270,6 @@ def data_efficiency ( data        ,
                              progress    = progress   , 
                              use_frame   = use_frame  ,
                              parallel    = parallel   )
-
-
 
 # =============================================================================
 ## decorate certain class with some useful  methods 

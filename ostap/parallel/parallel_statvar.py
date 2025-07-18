@@ -1011,7 +1011,6 @@ def parallel_efficiency ( chain                    ,
     from ostap.stats.statvars import data_efficiency
     ## 
     
-    
     ## adjust first/last 
     first, last = evt_range ( chain , *args[:2] )
     
@@ -1030,8 +1029,8 @@ def parallel_efficiency ( chain                    ,
                                  progress    = progress     )
 
     ## The Task
-    task   = EffTask ( criterion   ,
-                       histo       ,
+    task   = EffTask ( criterion   , 
+                       histo       , 
                        expressions ,
                        cuts        = cuts      ,
                        weight      = weight    ,

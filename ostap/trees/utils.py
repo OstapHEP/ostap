@@ -23,8 +23,9 @@ __all__     = (
     'Tree'  , ## wrapper for TTree
 ) 
 # =============================================================================
+from   collections            import namedtuple 
 from   itertools              import accumulate 
-from   ostap.core.ostap_types import string_types, integer_types 
+from   ostap.core.ostap_types import string_types, integer_types, path_types  
 from   ostap.utils.cleanup    import CleanUp
 from   ostap.core.core        import valid_pointer, rootException
 from   ostap.math.base        import FIRST_ENTRY, LAST_ENTRY, evt_range, all_entries
@@ -41,7 +42,17 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Utilities to make TTree/TChain suitable for multiptocessing' )
 # =============================================================================
-
+### helper type to represenrt the file/tree  with correct/valid  number of entries 
+FileItem        = namedtuple ( 'FileItem' , ( 'file_name' , 'size' , 'hash' ) )
+file_item_types = path_types + ( FileItem , )
+# =============================================================================
+## full file name 
+def fullfn ( f ) :
+    if os.path.exists ( f ) and os.path.isfile ( f ) :
+        ff = os.path.abspath ( f  )
+        if os.path.samefile  ( ff , f ) : return ff
+    return f
+# =============================================================================
 ## @class Chain
 #  Simple class to make TChain suitable for multiprocessing:
 # - pickling
@@ -58,15 +69,8 @@ class Chain(CleanUp) :
     def __getstate__  ( self ) :
         """ Chain -> pickled state 
         """
-        ## full file name 
-        def fullfn ( f ) :
-            if os.path.exists ( f ) and os.path.isfile ( f ) :
-                ff = os.path.abspath ( f  )
-                if os.path.samefile  ( ff , f ) : return ff
-            return f
-
         ## 
-        file_infos = tuple ( ( fullfn ( f ) , file_info ( f ) ) for f in self.files )         
+        file_infos = tuple ( ( item , file_info ( item.file_name ) ) for item in self.__items )         
         ## the the host name 
         import socket 
         host = socket.getfqdn ().lower()        
@@ -74,7 +78,7 @@ class Chain(CleanUp) :
         return { 'name'     : self.__name  ,
                  'first'    : self.__first ,            
                  'last'     : self.__last  ,            
-                 'files'    : file_infos   ,
+                 'items'    : file_infos   ,
                  'host'     : host         }
     # =========================================================================
     ## pickled state -> Chain 
@@ -82,31 +86,31 @@ class Chain(CleanUp) :
         """ Pickled state -> Chain 
         """
         
-        self.__name    = state [ 'name'    ]
-        self.__first   = state [ 'first'   ]
-        self.__last    = state [ 'last'    ]
+        self.__name    = state [ 'name'  ]
+        self.__first   = state [ 'first' ]
+        self.__last    = state [ 'last'  ]
         #
-        origin         = state [ 'host'    ]
-        file_infos     = state [ 'files'   ]
+        origin         = state [ 'host'  ]
+        file_infos     = state [ 'items' ]
         ##
         import socket 
         host    = socket.getfqdn ().lower()
         ##
-        files = [] 
+        items   = [] 
         
         same_host = origin == host
-        if same_host : files = [ f [ 0 ] for f in file_infos ]
+        if same_host : items = [ f [ 0 ] for f in file_infos ]
         else         :
-            for fname , finfo in file_infos :
-                if file_info ( fname )  == finfo :
+            for item , finfo in file_infos :
+                if file_info ( item.file_name ) == finfo :
                     ## hosts are different but the files are the same (shared file system?)
-                    files.append ( fname )
+                    item.append ( entry )
                 else :
                     # =========================================================
                     ## the file needs to be copied locally
                     ## @todo implement here  the parallel copy? 
                     from ostap.utils.scp_copy import scp_copy
-                    full_name  = '%s:%s' % ( origin , fname ) 
+                    full_name  = '%s:%s' % ( origin , entry.file_name ) 
                     copied , t = scp_copy  ( full_name )
                     if copied :
                         cinfo = file_info ( copied )
@@ -116,16 +120,46 @@ class Chain(CleanUp) :
                             s = size / float ( 1024 ) / 1025 ##  MB 
                             v = s    / t                     ## MB/s 
                             logger.debug ( 'Chain.__setstate__ : file copied %s :  %.3f[MB] %.2f[s] %.3f[MB/s]' % ( c , s , t , v ) )
-                            files.append ( copied ) ## APPEND 
+                            ## 
+                            items.append ( self.__mke_item (  copied ) ) ## APPEND 
                         else :
                             logger.error ( 'Chain.__setstate__ : Something wrong with the copy %s : %s vs %s ' % ( c , cinfo[:4] , finfo[:4] ) )
                     else : logger.error  ( "Chain.__setstate__: Failure to scp_copy the file: %s"  % full_name )
 
-        if len ( files ) != len ( file_infos ) :
+        if len ( items ) != len ( file_infos ) :
             logger.error ( "Chain.__setstate__: Some files are missing!" )
             
-        self.__files = tuple ( files )
+        self.__items = tuple ( items )
 
+    # ======================================================================================
+    def __make_item ( self , file_name ) :
+        
+        if isinstance ( file_name , string_types ) :
+
+            file_name  = fullfn ( file_name ) 
+            ch         = ROOT.TChain ( self.name )
+            ch.Add ( file_name )
+            size       = len ( ch )
+            size_hash  = self.__make_hash ( self.name , file_name , size )
+            # 
+            return FileItem ( file_name , size , size_hash )
+        
+        elif isinstance ( file_name , path_types ) : return self.__make_item ( str ( file_name ) )
+        elif isinstance ( file_name , FileItem   ) :
+            return file_name if self.__good_item ( file_name ) else self.__make_item ( file_name.file_name )
+
+        raise TypeError ( "Unknown/invalid `file_name` type %s" % typename ( file_name ) ) 
+
+    # ======================================================================================
+    def __make_hash  ( self , tree_name , file_name , size ) :
+        return hash ( ( self.name , file_name , size ) ) 
+
+    
+    ## of this is a good/valid entry? 
+    def __good_item  ( self , item  ) :
+        return isinstance ( item , FileItem ) and \
+            item.hash == self.__make_hash ( self.name , item.file_name , item.size  )
+    
     # ======================================================================================
     ## create Chain object:
     #  - either from the real TTree/TChain:
@@ -140,7 +174,7 @@ class Chain(CleanUp) :
     def __init__ ( self                  ,  
                    tree    = None        ,
                    name    = None        ,
-                   files   =  []         ,
+                   files   = []          ,
                    first   = FIRST_ENTRY ,
                    last    = LAST_ENTRY  ) :         
         """ Create Chain object 
@@ -154,102 +188,100 @@ class Chain(CleanUp) :
         
         >>> ch = Chain ( name = 'n', files = [ ... ] )
         """
+
+        if   isinstance ( files , file_item_types ) : files = files ,
         
-        if   isinstance ( files , string_types ) : files = files ,
+        ## "copy" constructor 
+        if isinstance ( tree , Chain ) :
+            
+            if name  and name  != tree.name  : logger.warning ( "explicitly specified name `%s` is ignored!" % name  )
+            if files :
+                if   files == tree.items : pass
+                elif files == tree.files : pass
+                else : logger.warning ( "explicitly  specified list of `files` is ignored!" )
+                
+            tfirst , tlast = evt_range  ( sum ( s for s in tree.sizes () ) , first , last )
+            if tfirst != tree.first or tlast != tree.last : logger.warning ( "explicitly specified `first/last` %s/%s are ignored!"  % ( first , last ) )
+            
+            self.__name  = tree.name
+            self.__items = tree.items            
+            self.__first = tree.first
+            self.__last  = tree.last  
 
-        ## 3 valid cases: 
-        assert ( isinstance ( tree , Chain ) and tree.chain ) or \
-            ( name and files                                ) or \
-            ( isinstance ( tree , ROOT.TTree                ) and valid_pointer ( tree ) ) , \
-            "Invalid tree/name/files combination: %s/%s%s" % ( tree , name , files    )
+        elif isinstance ( tree , ROOT.TTree  ) and valid_pointer ( tree ) and 1 <= tree.nFiles() : 
+            
+            self.__name  = tree.fullpath
+            self.__items = [ self.__make_item ( fname ) for fname in tree.files () ]             
+            self.__first = first
+            self.__last  = last 
+                    
+        elif isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree ) : 
+
+            self.__name  = tree.fullpath
+            
+            ## Memory resident tree? put it into the temporary file. keep ?
+            tmpfile = Cleanup.tmpfile ( suffix = '.root' , prefix = 'ostap-tree-' , keep = True ) 
+            logger.attention ( "TTree is a memory resident! Write it into the temporary TFile:%s" % tmpfile )
+            with ROOT.TFile ( tmpfile , 'NEW' ) as rf : rf [ self.name ] = tree
+            
+            self.__items = [ self.__make_item ( tmpfile ) ]
+            self.__first = first
+            self.__last  = last 
+            
+        elif not tree is None :
+            raise TypeError ( 'Unknown/invalid type of `tree` : %s' % typename ( tree ) )
         
-        ## copy-like, ignore other arguments  
-        if isinstance  ( tree , Chain ) and tree.chain :
+        elif not name or not isinstance ( name , string_types ) :            
+            raise TypeError ( 'Unknown/invalid type of `name` : %s' % typename ( name ) )
+        
+        elif files and all ( isinstance ( e , file_item_types ) for e in files ) :
+            
+            self.__name  = name
+            self.__items = [ self.__make_item  ( e ) for e in files ]
+            self.__first = first
+            self.__last  = last 
+            
+        else :
+            
+            raise TypeError ( 'Inconsistent tree/name/path: %s/%s/%s' % ( typename ( tree  ) ,
+                                                                          typename ( name  ) ,
+                                                                          typename ( files ) ) )        
 
-            if name  and name != tree.name : logger.warning ( 'Chain: explicitley specified name is inored!' )
-            if files and set ( files ) != set ( tree.files ) :
-                logger.warning ( 'Chain: explicitely specified files are inored!' )
-                
-            self.__name  = tree.name 
-            self.__files = tree.files
-            self.__last  = tree.last 
-            
-        elif name and files :
-            
-            self.__name    = name  
-            self.__files   = files
-            self.__first   = first 
-            self.__last    = last 
-            
-            ## check that object exists for each file:
-            for i , f in enumerate ( self.__files ) :
-                with ROOT.TFile.Open ( f , 'read' , exception = False ) as rf : 
-                    assert rf                , "Tree: TFile (%s) is invalid or non-existing " % f 
-                    assert self.__name in rf , "Tree: TFile (%s) ihas no `%s` object"         % ( f , self.__name  ) 
-
-            ## reconstruct the chain 
-            chain = self.chain
-            assert chain , "Chain:  invalid reconstructed TChain!"
-            
-        elif isinstance ( tree , ROOT.TTree  ) and valid_pointer ( tree ) :
-            
-            ## ATTENTION: full path is specified here! 
-            self.__name = tree.full_path
-            
-            ## get the files from Tree/TChain 
-            files = tree.files () ## get the files from Tree/TChain 
-            
-            if files : self.__files = tuple ( files ) 
-            else     : 
-                ## Memory resident tree? put it into the temporary file. keep ?
-                tmpfile = Cleanup.tmpfile ( suffix = '.root' , prefix = 'ostap-tree-' , keep = True ) 
-                logger.info ( "TTree is memory resident! Write it into the temporary TFile:%s" % tmpfile )
-                with ROOT.TFile ( tmpfile , 'NEW' ) as rf : rf [ self.name ] = tree    
-                self.__files = tmpfile ,
-
-            self.__first   = first
-            self.__last    = last 
-                
-        ## reconstruct the chain
-        ch = self.chain 
-        assert ch , "Chain: invalid reconstructed TChain!"
-
+        
+        asizes  = [ s for s in self.accumulated_sizes() ]
+        nevents = asizes [ -1 ]
+        
         ## check & adjust first/last setting 
-        first , last = evt_range ( ch , first , last ) 
+        first , last = evt_range ( nevents  , first , last ) 
         assert 0 <= first <= last , "Chain: invalid first/last setting!"
         
         self.__first = first
-        self.__last  = last 
-
-        nfiles  = self.nFiles
-        nevents = len ( ch )
+        self.__last  = last
         
         ## remove the files that are outside of the range 
-        if 2 <= nfiles and ( 0 < self.first or self.last < nevents ) :
+        if 2 <= self.nFiles and ( 0 < self.first or self.last < nevents ) :
 
             first, last = self.first, self.last 
-            files       = list ( self.files )
-            
-            asizes = [ s for s in self.accumulated_sizes() ]
-            
+            items       = list ( self.items )
+                        
             while 2 <= len ( asizes ) and last < asizes [ -2 ]  :
                 asizes.pop ()
-                files .pop ()
+                items.pop  ()
 
             while 2 <= len ( asizes ) and asizes [ 0 ] <= first :
                 first -= asizes [ 0 ]
                 last  -= asizes [ 0 ]
-                asizes.pop ( 0 )
-                files .pop ( 0 )
+                asizes  .pop    ( 0 )
+                items   .pop    ( 0 )
                 
             ## redefine files, first & last
                 
-            self.__nfiles = tuple ( files )
+            self.__items  = tuple ( items  )
             self.__first  = first
             self.__last   = last 
             
     # =========================================================================
-    ## Generator to Get the sizes for all files
+    ## Generator to get the sizes for all files
     #  @code
     #  ch = Chain ( ... )
     #  for s in ch.sizes () : 
@@ -259,9 +291,8 @@ class Chain(CleanUp) :
         >>> ch = Chain ( ... )
         >>> for s in ch.sizes () : 
         """
-        for f in self.__files :
-            ch = ROOT.TChain ( self.name , f )
-            yield len ( ch )
+        for item in self.__items : yield item.size
+
     # ===========================================================================
     ## Generator to get accumulated sized for all files
     #  @code
@@ -295,11 +326,11 @@ class Chain(CleanUp) :
 
         if not self.nFiles  : return                                   ## RETURN 
         
-        if 1 == self.nFiles :
-            tree = Tree ( name  = self.name         ,
-                          file  = self.files [ 0 ]  ,
-                          first = self.first        ,  
-                          last  = self.last         )
+        if 1 == self.nFiles : 
+            tree = Tree ( name  = self.name        ,
+                          file  = self.items [ 0 ] ,
+                          first = self.first       ,  
+                          last  = self.last        )
             for t in tree.split ( chunk_size = chunk_size ) : yield t  ## YIELD
             return                                                     ## RETURN 
         
@@ -307,24 +338,24 @@ class Chain(CleanUp) :
 
         ## the first tree: can be incomplete 
         first  = self.first
-        tree   = Tree ( name = self.name , file = self.files [ 0 ] , first = first )
+        tree   = Tree ( name = self.name , file = self.items [ 0 ] , first = first )
         for t in tree.split ( chunk_size = chunk_size ) : yield t      ## YIELD  
         
         ## full trees (all of them are complete 
-        for f in self.files [1:-1] :
-            tree = Tree ( name = self.name , file = f  )
+        for entry in self.items [ 1 : -1 ] :
+            tree = Tree ( name = self.name , file = entry  )
             for t in tree.split ( chunk_size = chunk_size ) : yield t  ## YIELD 
             
         ## the last tree: can be incomplete
         last   = self.last - asizes [ -2 ] ## ATTENTION HERE!
-        tree   = Tree ( name = self.name , file = self.files[-1] , last = last  )
+        tree   = Tree ( name = self.name , file = self.items [ -1 ] , last = last  )
         for t in tree.split ( chunk_size = chunk_size ) : yield t      ## YIELD 
 
     @property
     def chain ( self ) :
         """`chain' : get the underlying tree/chain"""
         chain = ROOT.TChain ( self.name )
-        for f in self.__files : chain.Add ( f ) 
+        for item in self.items  : chain.Add ( item.file_name ) 
         return chain 
 
     @property
@@ -333,14 +364,19 @@ class Chain(CleanUp) :
         return self.__name
     
     @property
+    def items  ( self ) :
+        """`items'   : a tuple of items """
+        return self.__items 
+    
+    @property
     def files   ( self ) :
         """`files'   : the files"""
-        return self.__files
+        return tuple ( f.file_name  for f in self.items ) 
     
     @property    
     def nFiles   ( self ) :
         """`nFiles'   : the numer of files"""
-        return len(self.__files)
+        return len ( self.items )
     
     @property    
     def first   ( self ) :
@@ -408,25 +444,25 @@ class Tree(Chain) :
     def __setstate__  ( self , state ) :        Chain.__setstate__  ( self , state ) 
     ## constructor 
     def __init__      ( self                   ,  
-                        tree    =  None        ,
+                        tree    =  None        , * , 
                         name    =  None        ,
                         file    =  ''          ,
                         first   =  FIRST_ENTRY ,
                         last    =  LAST_ENTRY  ) :
+
+        assert tree is None or isinstance ( tree , Tree ) or \
+            ( isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree ) ) , \
+            "Tree: Unknonw/invalid type for `tree`:%s" % typename ( tree )
         
-        if name and file :            
-            assert isinstance ( file , string_types ), 'Tree: `file` should be single file name!'
-            
-        elif isinstance ( tree , Chain  )  : 
-            assert 1 ==  tree.nFiles , "Tree: only single files are OK!"
-             
-        else :
-            assert isinstance    ( tree , ROOT.TTree ) , 'Tree: tree  is not TTree!'
-            assert valid_pointer ( tree )              , "Tree: TTree is invalid!" 
-            if isinstance ( tree , ROOT.TChain ) :
-                assert 1 == tree.nFiles() , 'Tree: only single file is allowed!'
-              
-        Chain.__init__ ( self , tree = tree , name = name , files = [ file ] , first = first , last = last  )
+        assert not file or isinstance ( file , file_item_types ) , \
+            "Tree: `file` must be either None or single file/entry! %s" % typename ( file ) 
+        
+        Chain.__init__ ( self             ,
+                         tree  = tree     ,
+                         name  = name     ,
+                         files = [ file ] ,
+                         first = first    ,
+                         last  = last     )
         
         assert 1 == self.nFiles , 'Invalid number of files!'
 
@@ -452,18 +488,16 @@ class Tree(Chain) :
             yield self                     ## YIELD            
             return                         ## RETUN
         
-        the_file = self.file
         for first, last in split_range ( self.first , self.last , chunk_size ) :
-            yield Tree ( name  = self.name ,
-                         file  = the_file  ,
-                         first = first     ,
-                         last  = last      )
+            yield Tree ( name  = self.name        ,
+                         file  = self.items [ 0 ] ,
+                         first = first            ,
+                         last  = last             )
     @property
     def file ( self ) :
         """`file'   : the file name """
-        fs = self.files 
-        assert 1 == len  ( fs ) , 'Tree.file: Invalid number of files %s' % len ( fs ) 
-        return fs [ 0 ] 
+        assert 1 == self.nFiles , 'Tree.file: Invalid number of files %s' % self.nFiles 
+        return self.items [ 0 ].file_name 
     
     # =========================================================================
     ## delegate all other attributes to the underlying chain object 
