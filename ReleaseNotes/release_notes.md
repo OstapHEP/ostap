@@ -3,7 +3,7 @@
       1. add `TTree.good_variables` method to check if variables are in TTree or could be computed
       1. add `data_efficiency/tree_efficiency/frame_efficiency' methods  to get the historgams of efficiencies
       1. more tweaks and fixes for `*_efficiency` functions
-      1, drasticaly speedup creatio ,splitting anc pickling/unpickling of `Tree/Chain` objects
+      1, drasticaly speed-up creation ,splitting and pickling/unpickling of `Tree/Chain` objects
     
 ## Backward-incompatible 
 
