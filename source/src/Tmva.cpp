@@ -64,9 +64,10 @@ namespace
     // ========================================================================
   public: 
     // ========================================================================
-    READER ( RooDataSet& data                     ,
-             const Ostap::TMVA::MAP& inputs       , 
-             const Ostap::TMVA::MAP& weight_files )
+    READER
+    ( RooDataSet& data                     ,
+      const Ostap::TMVA::MAP& inputs       , 
+      const Ostap::TMVA::MAP& weight_files )
       : m_data         ( &data        ) 
       , m_inputs       ( inputs       )
       , m_weight_files ( weight_files )

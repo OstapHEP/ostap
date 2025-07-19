@@ -254,17 +254,17 @@ namespace Ostap
      *                              where it represents the efficiency cutoff
      */ 
     Ostap::StatusCode addChoppingResponse 
-    ( TTree*                            tree          ,
-      const Ostap::Utils::ProgressConf& progress      ,
-      const std::string&                chopping      , // category function 
-      const std::string&                category_name , // category variable 
-      const unsigned short              N             , // number of categories 
-      const MAP&                        inputs        , // mapping of input variables 
-      const MAPS&                       weight_files  ,
-      const std::string&                options  = "" ,
-      const std::string&                prefix   = "" , 
-      const std::string&                suffix   = "" ,
-      const double                     aux      = 0.9 ) ;
+    ( TTree*                            tree           ,
+      const Ostap::Utils::ProgressConf& progress       ,
+      const std::string&                chopping       , // category function 
+      const std::string&                category_name  , // category variable 
+      const unsigned short              N              , // number of categories 
+      const MAP&                        inputs         , // mapping of input variables 
+      const MAPS&                       weight_files   ,
+      const std::string&                options  = ""  ,
+      const std::string&                prefix   = ""  , 
+      const std::string&                suffix   = ""  ,
+      const double                      aux      = 0.9 ) ;
     // ========================================================================
   } //                                         The END of namespace Ostap::TMVA 
   // ==========================================================================

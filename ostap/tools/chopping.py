@@ -1895,7 +1895,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
 
     args = chopper , category_name , N , _inputs , _maps , options , prefix , suffix , aux
 
-    if   isinstance ( dataset , ROOT.TChain  ) :
+    if   isinstance ( dataset , ROOT.TChain  ) and 1 < dataset.nFiles  :
         
         sc , newdata = _add_response_chain ( dataset , verbose , *args ) 
         if   NO_PROCESSING == sc :
