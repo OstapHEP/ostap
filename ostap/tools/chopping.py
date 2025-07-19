@@ -1770,8 +1770,6 @@ def _add_response_tree ( tree , verbose , *args ) :
 ##         return sc , tree                               ## RETURN
     
     
-
-
 # =============================================================================d
 ## Specific action to ROOT.TChain
 def _add_response_chain ( chain , verbose , *args ) :
@@ -1780,8 +1778,8 @@ def _add_response_chain ( chain , verbose , *args ) :
     
     import ostap.trees.trees
     
-    files    = chain.files    ()
-    cname    = chain.GetName  ()
+    files    = chain.files   
+    cname    = chain.fullpath
     branches = set ( chain.branches () ) | set ( chain.leaves() ) if verbose else set() 
     
     if not files :
@@ -1811,8 +1809,8 @@ def _add_response_chain ( chain , verbose , *args ) :
         new_branches = sorted ( new_branches - set ( branches ) ) 
         if new_branches : 
             n = len ( new_branches )  
-            if 1 == n  : title = 'Added %s branch to TChain'   % n
-            else       : title = 'Added %s branches to TChain' % n
+            if 1 == n  : title = 'Added %s branch to TChain(%s)'   % ( n , cname ) 
+            else       : title = 'Added %s branches to TChain(%s)' % ( n , cname ) 
             table = newc.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
    
