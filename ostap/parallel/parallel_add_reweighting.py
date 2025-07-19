@@ -110,7 +110,7 @@ def add_reweighting ( chain            ,
         if new_branches : 
             n = len ( new_branches )  
             if 1 == n  : title = 'Added %s branch to TChain(%s)'   % ( n , cname ) 
-            else       : title = 'Added %s branches to TChain(%s)' % ( n , cname n
+            else       : title = 'Added %s branches to TChain(%s)' % ( n , cname ) 
             table = nc.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
             
