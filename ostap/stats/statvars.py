@@ -151,7 +151,7 @@ def good_for_parallel ( data ,
     first, last = evt_range ( data , *args[:2] )
     if 0 <= first < last and min_events < ( last - first ) : return True ## ATTENTION
 
-    if isinstance ( data , ROOT.TChain ) : return min_files <= data.nFiles ()
+    if isinstance ( data , ROOT.TChain ) : return min_files <= data.nFiles
     
     return False
 

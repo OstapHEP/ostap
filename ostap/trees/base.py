@@ -105,7 +105,7 @@ def tree_path ( tree ) :
 #  @code
 #  >>> chain = ... ## get the files 
 #  >>> chain_files ( chain )
-#  >>> chain.files () 
+#  >>> chain.files             ## property! 
 #  @endcode  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-02-04
@@ -113,26 +113,25 @@ def chain_files ( chain ) :
     """ Get the list of files used for the chain    
     >>> chain = ..
     >>> chain_files( chain )
-    >>> chain.files()
+    >>> chain.files             ## property! 
     """
     if tree_valid ( chain ) :
         if   isinstance ( chain , ROOT.TChain ) :
             return tuple ( i.GetTitle() for i in chain.GetListOfFiles() )
         elif isinstance ( chain , ROOT.TTree  ) :
             td = chain.topdir
-            if isinstance ( td , ROOT.TDirectoryFile ) :
-                return td.GetName () ,             
+            if isinstance ( td , ROOT.TDirectoryFile ) : return td.GetName () ,             
     return ()
 
-ROOT.TTree.  files  = chain_files 
-ROOT.TChain. files  = chain_files 
+ROOT.TTree.  files  = property ( chain_files , None , None , chain_files.__doc__ )
+ROOT.TChain. files  = property ( chain_files , None , None , chain_files.__doc__ )
 
 # =============================================================================
 ## get number of files used for the chain 
 #  @code
 #  >>> chain = ... ## get the files 
-#  >>> n = chain_nfiles() 
-#  >>> n = chain.nFiles() 
+#  >>> n = chain_nfiles (  chain )  
+#  >>> n = chain.nFiles            ## property! 
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-02-04
@@ -140,8 +139,8 @@ def chain_nfiles ( chain ) :
     """ Get number of of files used for the chain
     
     >>> chain = ... ## get the files 
-    >>> n = chain_nfiles ( chain ))
-    >>> n = chain.nFiles()
+    >>> n = chain_nfiles ( chain )
+    >>> n = chain.nFiles             ## property! 
     """
     if tree_valid ( chain ) and isinstance ( chain , ROOT.TTree  ) :
         if  isinstance ( chain , ROOT.TChain ) : return len ( chain.GetListOfFiles() )
@@ -150,8 +149,9 @@ def chain_nfiles ( chain ) :
             if td and isinstance ( td , ROOT.TDirectoryFile ) : return 1       
     return 0
 
-ROOT.TChain. nFiles = chain_nfiles
-ROOT.TChain. nfiles = chain_nfiles
+ROOT.TTree.  nFiles = property ( chain_nfiles , None , None , chain_nfiles.__doc__ )
+ROOT.TChain. nFiles = property ( chain_nfiles , None , None , chain_nfiles.__doc__ )
+
 chain_nFiles        = chain_nfiles
 
 # =============================================================================
@@ -295,8 +295,9 @@ _new_methods_ = (
     ROOT.TTree .__len__     , 
     ROOT.TChain.__len__     ,
     ##
+    ROOT.TTree. files       ,
+    ROOT.TTree. nFiles      ,    
     ROOT.TChain. files      ,
-    ROOT.TChain.nfiles      ,
     ROOT.TChain.nFiles      ,    
     ## 
     ROOT.TTree.branches     ,

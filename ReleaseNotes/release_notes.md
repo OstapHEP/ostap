@@ -8,7 +8,9 @@
 ## Backward-incompatible 
 
       1. From now `ostap.utils.cleanup.TempFile.__enter__` return the actual name of the temporary name (intead of `self`) 
+      1. From now `files` and `nFiles` are properties (not metoids!) for `TTree/TChain` clases
 
+    
 ## Bug fixes
 
 

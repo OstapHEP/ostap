@@ -208,10 +208,10 @@ class Chain(CleanUp) :
             self.__first = tree.first
             self.__last  = tree.last  
 
-        elif isinstance ( tree , ROOT.TTree  ) and valid_pointer ( tree ) and 1 <= tree.nFiles() : 
+        elif isinstance ( tree , ROOT.TTree  ) and valid_pointer ( tree ) and 1 <= tree.nFiles : 
             
             self.__name  = tree.fullpath
-            self.__items = [ self.__make_item ( fname ) for fname in tree.files () ]             
+            self.__items = tuple ( self.__make_item ( fname ) for fname in tree.files ) 
             self.__first = first
             self.__last  = last 
                     
@@ -224,7 +224,7 @@ class Chain(CleanUp) :
             logger.attention ( "TTree is a memory resident! Write it into the temporary TFile:%s" % tmpfile )
             with ROOT.TFile ( tmpfile , 'NEW' ) as rf : rf [ self.name ] = tree
             
-            self.__items = [ self.__make_item ( tmpfile ) ]
+            self.__items = self.__make_item ( tmpfile ) , 
             self.__first = first
             self.__last  = last 
             
@@ -237,7 +237,7 @@ class Chain(CleanUp) :
         elif files and all ( isinstance ( e , file_item_types ) for e in files ) :
             
             self.__name  = name
-            self.__items = [ self.__make_item  ( e ) for e in files ]
+            self.__items = tuple ( self.__make_item  ( e ) for e in files ) 
             self.__first = first
             self.__last  = last 
             
@@ -452,7 +452,7 @@ class Tree(Chain) :
 
         assert tree is None or isinstance ( tree , Tree ) or \
             ( isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree ) ) , \
-            "Tree: Unknonw/invalid type for `tree`:%s" % typename ( tree )
+            "Tree: Unknown/invalid type for `tree`:%s" % typename ( tree )
         
         assert not file or isinstance ( file , file_item_types ) , \
             "Tree: `file` must be either None or single file/entry! %s" % typename ( file ) 

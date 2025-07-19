@@ -2459,7 +2459,7 @@ def _add_response_chain ( chain , verbose , *args ) :
     
     import ostap.trees.trees
     
-    files  = chain.files()
+    files  = chain.files 
     cname  = chain.GetName() 
     
     if not files :

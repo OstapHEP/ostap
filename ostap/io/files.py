@@ -161,6 +161,7 @@ class Files(object):
     def description ( self ) :
         """'description': description of this collection"""
         return self.__description
+    
     @description.setter
     def description ( self , value ) :
         self.__description = str ( value )

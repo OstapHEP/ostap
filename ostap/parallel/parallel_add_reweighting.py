@@ -84,14 +84,15 @@ def add_reweighting ( chain            ,
     >>> chain = ....
     >>> chain.padd_reweighting ( 'new_branch' , 'px*py' )     
     """
-    from ostap.trees.trees    import Chain
+    from ostap.trees.utils    import Chain
     from ostap.tools.reweight import tree_add_reweighting as _add_reweighting_ 
     
-    if   isinstance ( chain , ROOT.TChain ) and 1 < len ( chain.files () ) : pass 
+    if   isinstance ( chain , ROOT.TChain ) and 1 < chain.nFiles : pass 
     elif isinstance ( chain , ROOT.TTree  ) : 
         return _add_reweighting_ ( chain , weighter , name , verbose = verbose , report = report  ) 
     
-    ch       = Chain ( chain ) 
+    ch       = Chain ( chain )
+    cname    = ch.name 
     branches = set   ( chain.branches() ) | set ( chain.leaves() ) 
     
     task     = AddReweighting ( name  ,  weighter )
@@ -108,8 +109,8 @@ def add_reweighting ( chain            ,
         new_branches = sorted ( new_branches - branches )
         if new_branches : 
             n = len ( new_branches )  
-            if 1 == n  : title = 'Added %s branch to TChain'   % n
-            else       : title = 'Added %s branches to TChain' % n
+            if 1 == n  : title = 'Added %s branch to TChain(%s)'   % ( n , cname ) 
+            else       : title = 'Added %s branches to TChain(%s)' % ( n , cname n
             table = nc.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
             

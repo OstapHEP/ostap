@@ -116,9 +116,10 @@ def add_new_branch ( chain           ,
     assert valid_pointer ( chain ) and isinstance ( chain , ROOT.TTree ) , \
         "TTree* is invalid!"
 
-    from ostap.trees.trees import Chain, prepare_branches, push_2chain  
+    from ostap.trees.utils import Chain
+    from ostap.trees.trees import  prepare_branches, push_2chain  
 
-    if   isinstance ( chain , ROOT.TChain ) and 1 <= len ( chain.files () ) : pass 
+    if   isinstance ( chain , ROOT.TChain ) and 1 <= chain.nFiles : pass 
     elif isinstance ( chain , ROOT.TTree  ) :        
         from ostap.trees.trees import add_new_branch as _add_branch_ 
         return _add_branch_ ( chain , branch , progress = progress , report = report , **kwargs ) 
@@ -172,7 +173,7 @@ def add_new_branch ( chain           ,
         logger.error ( 'Arguments are *NOT* pickleable:\n%s' % table )
         return
     
-    files    = chain.files () 
+    files    = chain.files
     cname    = chain.full_path 
     
     branches = set ( chain.branches() ) | set ( chain.leaves() ) 
@@ -193,8 +194,8 @@ def add_new_branch ( chain           ,
         new_branches = sorted ( ( set ( nc.branches () ) | set ( nc.leaves() ) ) - set ( branches ) )
         if new_branches : 
             n = len ( new_branches )  
-            if 1 == n  : title = 'Added %s branch to TChain'   % n
-            else       : title = 'Added %s branches to TChain' % n
+            if 1 == n  : title = 'Added %s branch to TChain(%s)'   % ( n , cname ) 
+            else       : title = 'Added %s branches to TChain(%s)' % ( n , cname ) 
             table = nc.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
 

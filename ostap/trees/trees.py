@@ -892,7 +892,7 @@ def _rt_table_0_ ( tree ,
             title += '%d%s'  % ( nl , leaves_symbol if leaves_symbole else  'leaves' )  
         
         if isinstance ( tree , ROOT.TChain ) :
-            nfiles = len ( tree.files() )
+            nfiles = tree.nFiles 
             if 1 < nfiles : title += ',%d%s' %  ( nfiles , files_symbol if files_symbol else 'files' )
 
     import ostap.logger.table as T
@@ -1144,43 +1144,6 @@ ROOT.TTree.__repr__ = _rt_print2_
 ROOT.TTree.__str__  = _rt_print2_
 ROOT.TTree.table    = _rt_table_ 
 ROOT.TTree.table2   = _rt_table2_ 
-
-# =============================================================================
-## get list of files used for the given chain
-#  @code
-#  >>> chain = ... ## get the files 
-#  >>> files = chain.files() 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2014-02-04
-def _rc_files_ ( chain ) :
-    """ Get the list of files used for the chain
-    
-    >>> chain = ... ## get the files 
-    >>> files = chain.files()
-    """
-    return tuple ( i.GetTitle() for i in chain.GetListOfFiles() )
-
-
-ROOT.TChain. files = _rc_files_
-
-# =============================================================================
-## get number of used for the given chain
-#  @code
-#  >>> chain = ... ## get the files 
-#  >>> n = chain.nFiles() 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2014-02-04
-def _rc_nfiles_ ( chain ) :
-    """ Get number of of files used for the chain
-    
-    >>> chain = ... ## get the files 
-    >>> n = chain.nFiles()
-    """
-    return len ( _rc_files_ ( chain ) )
-
-ROOT.TChain. nFiles = _rc_nfiles_
 
 # =============================================================================
 ## get the chain of reduced size (in terms of number of input files)
@@ -2074,7 +2037,7 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
     assert isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree  ) , \
         "push_2tree: `tree' is invalid"
     
-    if isinstance ( tree , ROOT.TChain ) and 1 < len ( tree.files() ) :
+    if isinstance ( tree , ROOT.TChain ) and 1 < tree.nFiles :
         return push_2chain ( tree , *config , progress = progress , report = report ) 
     
     ## list of existing brranches/leaves 
@@ -2150,7 +2113,7 @@ def push_2chain ( chain , *config , progress = True , report = True ) :
         "push_2chain: `chain' is invalid"
 
     ## delegate to TTree: 
-    if not isinstance ( chain , ROOT.TChain ) or 2 > len ( chain.files() ) :
+    if not isinstance ( chain , ROOT.TChain ) or 2 > chain.nFiles  :
         return push_2tree ( chain , *config , report = report , progress = progress ) 
 
     ## name & path 
@@ -2160,7 +2123,7 @@ def push_2chain ( chain , *config , progress = True , report = True ) :
     branches = ( set ( chain.branches() ) | set ( chain.leaves() ) ) if report else set() 
 
     ## files to be processed 
-    files = chain.files()
+    files = chain.files
     
     chain_progress = progress and ( 5 <= len ( files ) ) 
     tree_progress  = progress and ( 5 >  len ( files ) ) 
@@ -2386,7 +2349,7 @@ def buffer_2tree ( tree , buffer , * ,  name = '' , progress = True , report = T
     assert isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree  ) , \
         "buffer_2tree: `tree' is invalid"
     
-    if isinstance ( tree , ROOT.TChain ) and 1 < len ( tree.files() ) :
+    if isinstance ( tree , ROOT.TChain ) and 1 < tree.nFiles :
         return  buffer_2chain ( tree , buffer , name = name , progress = progress , report = report ) 
 
     treepath = tree.path
@@ -2454,7 +2417,7 @@ def buffer_2chain ( chain , buffer , * , name = '' , progress = True , report = 
         "buffer_2chain: `chain' is invalid"
 
     ## delegate to TTree: 
-    if not isinstance ( chain , ROOT.TChain ) or 2 > len ( chain.files() ) :
+    if not isinstance ( chain , ROOT.TChain ) or 2 > chain.nFiles :
         return buffer_2tree ( chain , buffer , name = name , report = report , progress = progress ) 
 
     ## name & path 
@@ -2464,7 +2427,7 @@ def buffer_2chain ( chain , buffer , * , name = '' , progress = True , report = 
     branches = ( set ( chain.branches() ) | set ( chain.leaves() ) ) if report else set() 
 
     ## files to be processed 
-    files = chain.files()
+    files = chain.files
     
     chain_progress = progress and ( 5 <= len ( files ) ) 
     tree_progress  = progress and ( 5 >  len ( files ) ) 
