@@ -202,7 +202,7 @@ with timing ( "Add TMVA/Chopping response to input TTree" , logger = logger ) as
     cSignal = ROOT.TChain ( 'S' ) ; cSignal.Add ( data_file )
     cBkg    = ROOT.TChain ( 'B' ) ; cBkg   .Add ( data_file )
     
-    config = { 'chopper'       : "137*evt+813*run"             ,
+    config = { 'chopping'      : "137*evt+813*run"             ,
                'N'             : N                             , 
                'inputs'        : ( 'var1' ,  'var2' , 'var3' ) ,
                'weights_files' : tar_file                      ,
@@ -253,7 +253,7 @@ if True :
 ## B.2) add response 
 with timing ( "Add TMVA/Chopping response to (existing) RooDataSet " , logger = logger ) as time_B :
     
-    config = { 'chopper'       : "137*evt+813*run"             ,
+    config = { 'chopping'      : "137*evt+813*run"             ,
                'N'             : N                             , 
                'inputs'        : ( 'var1' ,  'var2' , 'var3' ) ,
                'weights_files' : tar_file                      ,

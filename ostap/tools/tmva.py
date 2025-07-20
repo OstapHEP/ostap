@@ -34,12 +34,14 @@ __all__     = (
     "tmvaGUI"
     )
 # =============================================================================
-from   ostap.core.meta_info    import python_info, root_info  
-from   ostap.core.ostap_types  import num_types, string_types, integer_types 
-from   ostap.core.core         import Ostap, WSE, VE, rootWarning
-from   ostap.utils.cleanup     import CleanUp
-from   ostap.utils.basic       import items_loop 
-from   ostap.utils.timing      import timing
+from   ostap.core.meta_info      import python_info, root_info  
+from   ostap.core.ostap_types    import num_types, string_types, integer_types 
+from   ostap.core.core           import Ostap, WSE, VE, rootWarning
+from   ostap.utils.cleanup       import CleanUp
+from   ostap.utils.basic         import items_loop, typename  
+from   ostap.utils.progress_conf import progress_conf
+from   ostap.utils.progress_bar  import progress_bar
+from   ostap.utils.timing        import timing
 import ostap.io.root_file
 import ROOT, os, glob, math, tarfile, shutil, itertools, warnings  
 # =============================================================================
@@ -2396,107 +2398,161 @@ def _weights2map_ ( weights ) :
     return _map , weights  
 
 # =============================================================================
-def _add_response_tree  ( tree , verbose , *args ) :
+## Add TMVA response to TTree 
+def _add_response_tree_ ( tree     , * ,
+                          inputs   ,
+                          weights  ,
+                          options  ,
+                          prefix   ,
+                          suffix   ,
+                          aux      = 0.9   , 
+                          report   = True  ,
+                          progress = True  ) :
     """ Specific action to ROOT.TChain
     """
             
     import ostap.trees.trees
+    from   ostap.core.core   import   valid_pointer
+    
+    assert isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree ) , \
+        "vvnalid TTree/TChain object"
+
+    ## delegate to chain 
+    if isinstance ( tree , ROOT.TChain ) and 2 <= tree.nFiles :
+        return _add_response_chain_ ( tree     ,
+                                      inputs   = inputs   ,
+                                      weights  = weights  ,
+                                      options  = options  ,
+                                      prefix   = prefix   ,
+                                      suffix   = suffix   ,
+                                      aux      = aux      , 
+                                      report   = report   ,
+                                      progress = progress ) 
+
+    
     from   ostap.core.core           import Ostap, ROOTCWD
     from   ostap.io.root_file        import REOPEN
-    from   ostap.utils.progress_conf import progress_conf
 
-    vars = set ( tree.branches() ) | set ( tree.leaves () )
+    branches = set ( tree.branches() ) | set (  tree.leaves () ) if report else set() 
 
-    ## args = _inputs, _map, options, prefix , suffix , aux
-    prefix, suffix  = args [ 3 : 5 ]
+    treepath = tree.fullpath
+    the_file = tree.topdir
+    groot    = ROOT.ROOT.GetROOT() 
+    assert treepath and the_file and ( not the_file is groot ) and isinstance ( the_file , ROOT.TFile ) , \
+        'This is not the file-resident TTree* object! addition of new branch is not posisble!'
+
+    the_file = the_file.GetFile ()    
+    assert the_file and isinstance ( the_file, ROOT.TFile )  , \
+        'This is not the file-resident TTree* object! addition of new branch is not posisble!'
     
-    matched = []
-    if prefix or suffix :
-        matched = sorted ( v for v in vars if v.startswith ( prefix ) and v.endswith (  suffix ) ) 
-        
-    if matched :
-        matched = ','.join ( matched ) 
-        logger.warning ( "add_response_tree: Variables '%s' already in TTree, skip" % matched ) 
-        return NO_PROCESSING , tree
+    filename = the_file.GetName()  
 
-    tdir  = tree.GetDirectory ()
+    ## (5) display progress ? 
+    progress = progress_conf ( progress )
+    adder    = Ostap.AddTMVA ( progress ) 
+
     tname = tree.full_path
-    with ROOTCWD () , REOPEN ( tdir ) as tfile : 
+    with ROOTCWD () , REOPEN ( the_file  ) as tfile : 
+        
+        tfile.cd()
+        assert tfile.IsWritable() , "The file `%s` is not writable!" % flename
+        
+        the_tree = tfile.Get ( treepath )
+        assert valid_pointer ( the_tree ) and isinstance ( the_tree , ROOT.TTree ) , \
+            'Invalid TTree:%s in file:%s' % ( treepath , filename  )
+        
+        ## run it! 
+        sc = adder.addResponse ( the_tree , inputs , weights , options , prefix , suffix , aux ) 
+        assert sc.isSuccess () , 'Error from Ostap::AddTMVA::addResponse %s' % sc
 
-        fname = tfile.GetName() 
-        logger.debug ( "Procesing %s file" % fname )
-        
-        if not tfile.IsWritable() :
-            logger.error  ( "Can't write TTree back to the file %s" % fname )
-            return Ostap.StatusCode ( 1000 ), tree 
-        
-        tdir.cd()
-        
-        ## add the progress bar 
-        if verbose : sc = Ostap.TMVA.addResponse ( tree , progress_conf () , *args )
-        else       : sc = Ostap.TMVA.addResponse ( tree ,                    *args )
-        
-        if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )
-        
         ## tfile.Write() ##  "" ) ## , ROOT.TFile.kOverwrite )
         tfile.Write( "" , ROOT.TFile.kOverwrite )
         
-    tree = ROOT.TChain ( tname )
-    tree.Add ( fname ) 
-    
-    if verbose :
-        vars  = sorted ( ( set ( tree.branches() ) | set ( tree.leaves () ) ) - vars ) 
-        title = "Added TMVA responses [%d entries in '%s'" % ( len ( tree ) , fname  ) 
-        table = tree.table ( vars ,  prefix = '# ' , title = title )
-        logger.info ( '%s\n%s' % ( title , table ) ) 
-        
-    return sc , tree 
+        the_tree = ROOT.nullptr 
+
+    chain = ROOT.TChain ( treepath )
+    chain.Add  ( filename )
+
+    if report :
+        new_branches = sorted ( ( set ( chain.branches () ) | set ( chain.leaves () ) ) - branches )
+        if new_branches :
+            n = len ( new_branches )
+            if 1 >= n : title = "Added %s branch to TTree(%s)"   % ( n , treepath ) 
+            else      : title = "Added %s branches to TTree(%s)" % ( n , treepath )  
+            table = chain.table ( new_branches , title = title , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) ) 
+            chain = ROOT.TChain ( treepath )
+            chain.Add  ( filename )     
+            
+    return chain
 
 # =============================================================================
-def _add_response_chain ( chain , verbose , *args ) :
+def _add_response_chain_ ( chain    , * ,
+                           inputs   ,
+                           weights  ,
+                           options  ,
+                           prefix   ,
+                           suffix   ,
+                           aux      = 0.9   , 
+                           report   = True  ,
+                           progress = True  ) :
     """ Specific action to ROOT.TChain
     """
     
     import ostap.trees.trees
+    from   ostap.core.core   import   valid_pointer
     
-    files  = chain.files 
-    cname  = chain.GetName() 
+    assert isinstance ( chain , ROOT.TTree ) and valid_pointer ( chain ) , \
+        "Ivnalid TTree/TChain object!"
+
+    if not isinstance ( chain , ROOT.TChain ) or chain.nFiles <= 1 :
+        return _add_response_tree_ ( chain    ,
+                                     inputs   = inputs   ,
+                                     weights  = weights  ,
+                                     options  = options  ,
+                                     prefix   = prefix   ,
+                                     suffix   = suffix   ,
+                                     aux      = aux      ,
+                                     report   = report   ,
+                                     progress = progress ) 
     
-    if not files :
-        logger.warning ( 'addTMVAResponse: empty chain (no files)' )
-        return Ostap.StatusCode ( 900 ) , chain 
+    branches = set ( tree.branches() ) | set ( tree.leaves () ) if report else set() 
+    
+    files    = chain.files 
+    treepath = chain.full_path
 
-    status = None 
+    tree_progress  = progrees and      len ( files ) < 5
+    chain_progress = progress and 5 <= len ( files )
 
-    tree_verbose  = verbose and      len ( files ) < 5
-    chain_verbose = verbose and 5 <= len ( files )
-
-    vars = set() 
-    if verbose :
-        vars = set ( chain.branches() ) | set ( chain.leaves () ) 
-        
-    from ostap.utils.progress_bar import progress_bar
     nfiles = 0 
-    for f in progress_bar ( files , len ( files ) , silent = not chain_verbose  ) :
+    for f in progress_bar ( files , len ( files ) , silent = not chain_progress   ) :
+        tree = ROOT.TChain ( treepath )
+        tree.Add ( f )
+        _add_response_tree_ ( tree                      ,
+                              inputs   = inputs         ,
+                              weights  = weights        ,
+                              options  = options        ,
+                              prefix   = prefix         ,
+                              suffix   = suffix         ,
+                              aux      = aux            ,                              
+                              progress = tree_progress  ,
+                              report   = False          )
         
-        with ROOT.TFile.Open ( f , 'UPDATE' ,  exception = True ) as rfile :
-            ## get the tree
-            tt =   rfile.Get ( cname )
-            ## treat the tree
-            sc , nt = _add_response_tree ( tt  , tree_verbose , *args )
-            if status is None or sc.isFailure() : status = sc
-            nfiles += 1
-            
-    newc = ROOT.TChain ( cname )
-    for f in  files : newc.Add ( f  )
+    chain = ROOT.TChain ( treepath )
+    chain.Add  ( filename )
 
-    if verbose :
-        vars  = sorted ( ( set ( newc.branches() ) | set ( newc.leaves () ) ) - vars )
-        title = 'Added TMVA responses [%d entries in %d files]' % ( len ( newc ) , nfiles )
-        table = newc.table ( vars ,  prefix = '# ' , title = title )
-        logger.info ( '%s\n%s' % ( title , table ) )
-                      
-    return status, newc
+    if report :
+        new_branches = sorted ( ( set ( chain.branches () ) | set ( chain.leaves () ) ) - branches )
+        if new_branches :
+            n = len ( new_branches )
+            if 1 >= n : title = "Added %s branch to TTree(%s)"   % ( n , treepath ) 
+            else      : title = "Added %s branches to TTree(%s)" % ( n , treepath )  
+            table = chain.table ( new_branches , title = title , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) ) 
+            chain = ROOT.TChain ( treepath )
+            chain.Add  ( filename )     
+            
+    return chain
         
 # =============================================================================
 ## Helper function to add TMVA response into dataset
@@ -2520,31 +2576,33 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
                       prefix   = 'tmva_'     ,   ## prefix for TMVA-variable 
                       suffix   = '_response' ,   ## suffix for TMVA-variable
                       options  = ''          ,   ## TMVA-reader options
-                      verbose  = True        ,   ## verbosity flag 
-                      aux      = 0.9         ) : ## for Cuts method : efficiency cut-off
+                      verbose  = True        , ## verbosity flag
+                      progress = True        ,   ## verbosity flag
+                      aux      = 0.9         ,   ## for Cuts method : efficiency cut-off                      
+                      report   = True        ) : ## final report?
     """ Helper function to add TMVA  response into dataset
     >>> tar_file = trainer.tar_file
     >>> dataset  = ...
     >>> inputs = [ 'var1' , 'var2' , 'var2' ]
     >>> dataset.addTMVAResponse (  inputs , tar_file , prefix = 'tmva_' )
     """
-    assert isinstance ( dataset , ( ROOT.TTree , ROOT.RooAbsData ) ),\
-           'Invalid dataset type!'
+    
+    from   ostap.core.core import   valid_pointer
+    
+    assert isinstance ( dataset , ( ROOT.TTree , ROOT.RooDataSet ) ) and valid_pointer ( dataset ) ,\
+           'Invalid dataset type: %s' % typename ( datatset ) 
 
     assert prefix or suffix , 'addTMVAResponse: invalid prefix/suffix %s/%s' % ( prefix , suffix ) 
-
     
     if isinstance ( dataset , ROOT.TTree ) :
         import ostap.trees.trees        
-        vars    = set( dataset.branches() ) | set( dataset.leaves () ) 
+        vars    = set ( dataset.branches() ) | set( dataset.leaves () ) 
         matched = sorted ( v for v in vars if v.startswith ( prefix ) and v.endswith (  suffix ) ) 
         if matched :
             matched = ','.join ( matched ) 
-            logger.warning ( "addTMVAResponse:: Variables '%s' already in TTree, skip" % matched ) 
+            logger.warning ( "addTMVAResponse:: Variables '%s' already in TTree, skip!" % matched ) 
             return dataset
-        
-    from ostap.core.core           import cpp, std, Ostap
-    from ostap.utils.progress_conf import progress_conf
+
     from ostap.utils.basic         import isatty
 
     _inputs       = _inputs2map_  ( inputs        )
@@ -2556,34 +2614,34 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
     options = opts_replace ( options , 'Silent:' , not verbose    )
     options = opts_replace ( options , 'Color:'  ,     isatty  () )
     
-    args = _inputs, _map, options, prefix , suffix , aux
+    if isinstance ( dataset , ROOT.TTree ) :
+        return _add_response_chain_ ( dataset  ,
+                                      inputs   = _inputs  ,
+                                      weights  = _map     ,
+                                      options  = options  ,
+                                      prefix   = prefix   ,
+                                      suffix   = suffix   ,
+                                      aux      = aux      , 
+                                      progress = progress ,
+                                      report   = report   )
 
-    if   isinstance ( dataset , ROOT.TChain     ) :
-        
-        sc , newdata = _add_response_chain ( dataset , verbose , *args )
-        if   NO_PROCESSING == sc :
-            if verbose : logger.warning ( 'No processing...' )
-        elif sc.isFailure()      : logger.error   ( 'Error from Ostap::TMVA::addResponse %s' % sc )
-        return newdata
+    assert isinstance ( dataset , ROOT.RooDataSet ) , "RooDataSet must be here!"
+    ## RooDataSet here!
     
-    elif isinstance ( dataset , ROOT.TTree      ) :
+    progress = progress_conf ( progress )
+    adder    = Ostap.AddTMVA ( progress ) 
 
-        sc , newdata = _add_response_tree  ( dataset , verbose , *args )
-        if   NO_PROCESSING == sc :
-            if verbose : logger.warning ( 'No processing...' )
-        elif sc.isFailure     () : logger.error   ( 'Error from Ostap::TMVA::addResponse %s' % sc )
-        
-    else :
+    sc       = adder.addResponse  ( dataset ,
+                                    _inputs ,
+                                    _map    ,
+                                    options ,
+                                    prefix  ,
+                                    suffix  ,
+                                    aux     ) 
+    assert sc.isSuccess () , 'Error from Ostap::AddTMVA::addResponse %s' % sc 
+    
+    return dataset
 
-        ## add progress bar 
-        if verbose :  sc = Ostap.TMVA.addResponse  ( dataset , progress_conf () , *args )
-        else       :  sc = Ostap.TMVA.addResponse  ( dataset                    , *args )
-        
-        if sc.isFailure     () : logger.error   ( 'Error from Ostap::TMVA::addResponse %s' % sc )
-        
-        newdata = dataset
-
-    return newdata
 
 # =============================================================================
 if '__main__' == __name__ :

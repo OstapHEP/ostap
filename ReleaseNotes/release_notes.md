@@ -4,7 +4,8 @@
       1. add `data_efficiency/tree_efficiency/frame_efficiency' methods  to get the historgams of efficiencies
       1. more tweaks and fixes for `*_efficiency` functions
       1. drasticaly speed-up creation ,splitting and pickling/unpickling of `Tree/Chain` objects
-    
+      1. Update `AddTMVAResponse` : merge `OStap::TMVA::addResponce` snd `Ostap::TMVA::addChoppingResponse` functions into `Ostap::AddTMVA` class and modernize the ptython layer
+         
 ## Backward-incompatible 
 
       1. From now `ostap.utils.cleanup.TempFile.__enter__` return the actual name of the temporary name (intead of `self`) 

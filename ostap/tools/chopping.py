@@ -87,19 +87,21 @@ __all__     = (
     'addChoppingResponse'  , ## add `chopping' response to TTree or RooDataSet
     )
 # =============================================================================
-from   ostap.core.meta_info    import python_info, root_info
-from   ostap.core.ostap_types  import integer_types 
-from   ostap.core.core         import WSE 
-from   ostap.core.pyrouts      import hID, h1_axis, Ostap 
-from   ostap.utils.cleanup     import CleanUp
-from   ostap.tools.tmva        import Trainer as TMVATrainer
-from   ostap.tools.tmva        import Reader  as TMVAReader
-from   ostap.tools.tmva        import ( dir_name      , good_for_negative ,
-                                        trivial_opts  , make_tarfile      ,
-                                        decode_vars   , NO_PROCESSING     )
-from   ostap.utils.basic       import items_loop 
-from   ostap.fitting.variables import make_formula 
-from   ostap.stats.statvars    import data_statistic
+from   ostap.core.meta_info      import python_info, root_info
+from   ostap.core.ostap_types    import integer_types 
+from   ostap.core.core           import WSE 
+from   ostap.core.pyrouts        import hID, h1_axis, Ostap 
+from   ostap.utils.cleanup       import CleanUp
+from   ostap.tools.tmva          import Trainer as TMVATrainer
+from   ostap.tools.tmva          import Reader  as TMVAReader
+from   ostap.tools.tmva          import ( dir_name      , good_for_negative ,
+                                          trivial_opts  , make_tarfile      ,
+                                          decode_vars   , NO_PROCESSING     )
+from   ostap.utils.basic         import items_loop, typename 
+from   ostap.fitting.variables   import make_formula 
+from   ostap.stats.statvars      import data_statistic
+from   ostap.utils.progress_conf import progress_conf 
+from   ostap.utils.progress_bar  import progress_bar
 import ostap.trees.trees 
 import ostap.trees.cuts
 import ostap.utils.utils       as     Utils 
@@ -151,7 +153,7 @@ else                       : logger = getLogger ( __name__               )
 # >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
 # @endcode
 class Trainer(object) :
-    """The `chopping'  trainer. The interface is very similar to TMVA Trainer
+    """ The `chopping'  trainer. The interface is very similar to TMVA Trainer
     with two   additional mandatory parameters:
     1. `N'        : number of categories 
     2. `category' : the string/expression with TTree variables 
@@ -1712,109 +1714,199 @@ class Reader(object) :
 
 # =============================================================================
 ## Specific action to ROOT.TTree
-def _add_response_tree ( tree , verbose , *args ) :
+def _add_response_tree_ ( tree     , *   , 
+                          chopping , 
+                          category ,
+                          N        ,
+                          inputs   ,
+                          weights  ,
+                          options  ,
+                          prefix   = ""   ,
+                          suffix   = ""   ,
+                          aux      = 0.9  ,
+                          progress = True ,
+                          report   = True ) :
     """ Specific action to ROOT.TTree
     """
     
     import ostap.trees.trees
+    from   ostap.core.core   import   valid_pointer
+    
+    assert isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree ) , \
+        "Invalid TTree/TChain object"
+    
+    ## delegate to chain 
+    if isinstance ( tree , ROOT.TChain ) and 2 <= tree.nFiles :
+        return _add_response_chain_ ( tree     , 
+                                      chopping = chopping , 
+                                      category = category ,
+                                      N        = N        ,
+                                      inputs   = inputs   ,
+                                      weights  = weights  ,
+                                      options  = options  ,
+                                      prefix   = prefix   ,
+                                      suffix   = suffix   ,
+                                      aux      = 0.9      , 
+                                      report   = report   ,
+                                      progress = progress ) 
+    
+    
     from   ostap.core.core           import Ostap, ROOTCWD
     from   ostap.io.root_file        import REOPEN
-    from   ostap.utils.progress_conf import progress_conf
 
-    tdir     = tree.GetDirectory()
     
-    vars     = set ( tree.branches() ) | set ( tree.leaves () )
     
-    ## args = chopper , category_name , N , _inputs , _maps , options , prefix , suffix , aux
+    treepath = tree.fullpath
+    the_file = tree.topdir    
+    groot    = ROOT.ROOT.GetROOT() 
+    assert treepath and the_file and ( not the_file is groot ) and isinstance ( the_file , ROOT.TFile ) , \
+        'This is not the file-resident TTree* object! addition of new branch is not posisble!'
+
+    the_file = the_file.GetFile ()    
+    assert the_file and isinstance ( the_file, ROOT.TFile )  , \
+        'This is not the file-resident TTree* object! addition of new branch is not posisble!'
     
-    category       = args [ 1 ]
-    prefix, suffix = args [ 6 : 8 ]
+    filename = the_file.GetName()
+    
+    branches = set ( tree.branches() ) | set (  tree.leaves () ) 
 
     matched = []    
     if prefix or suffix :
-        matched = sorted ( v for v in vars if v.startswith ( prefix ) and v.endswith ( suffix ) ) 
+        matched = sorted ( v for v in branches if v.startswith ( prefix ) and v.endswith ( suffix ) ) 
         
-    if matched or category in vars :
+    if matched or category in branches :
         matched = ','.join ( matched )         
         logger.warning ( "add_response_tree: Variables/Category '%s/%s' already in TTree, skip" % ( matched , category ) )
-        return NO_PROCESSING , tree
+        return tree
     
-    with ROOTCWD () , REOPEN ( tdir )  as tfile  : 
+    ## (5) display progress ? 
+    progress = progress_conf ( progress )
+    adder    = Ostap.AddTMVA ( progress ) 
+    
+    with ROOTCWD () , REOPEN ( the_file  ) as tfile : 
         
-        tdir.cd()
+        tfile.cd()
+        assert tfile.IsWritable() , "The file `%s` is not writable!" % flename
 
-        ## add progress bar 
-        if verbose : sc = Ostap.TMVA.addChoppingResponse ( tree , progress_conf () , *args  )
-        else       : sc = Ostap.TMVA.addChoppingResponse ( tree ,                    *args  )
+        the_tree = tfile.Get ( treepath )
+        assert valid_pointer ( the_tree ) and isinstance ( the_tree , ROOT.TTree ) , \
+            'Invalid TTree:%s in file:%s' % ( treepath , filename  )
         
-        if sc.isFailure() :
-            logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
-            
-        if tfile.IsWritable () : tfile.Write( "" , ROOT.TFile.kOverwrite )
-        else : logger.error ( "Can't write TTree back to the file" )
-            
-    return sc , tdir.Get ( tree.GetName() )    ## RETURN
+        ## run it! 
+        sc = adder.addChoppingResponse ( the_tree ,
+                                         chopping ,
+                                         category ,
+                                         N        ,
+                                         inputs   ,
+                                         weights  ,
+                                         options  , 
+                                         prefix   ,
+                                         suffix   ,
+                                         aux      ) 
 
-## status = sc
-## newt   = tdir.Get ( tree.GetName() )
-## if verbose :
-##     new_branches = set ( newt.branches () ) | set ( newt.leaves() )
-##     new_branches = sorted ( new_branches - set ( branches ) )
-##     if new_branches : 
-##         n = len ( new_branches )  
-##         if 1 == n  : title = 'Added %s branch to TChain'   % n
-##         else       : title = 'Added %s branches to TChain' % n
-##         table = newt.table ( new_branches , title = title , prefix = '# ' )
-##         logger.info ( '%s:\n%s' % ( title , table ) ) 
+        assert sc.isSuccess () , 'Error from Ostap::AddTMVA::addChoppingResponse %s' % sc
         
-##         return sc , tree                               ## RETURN
-    
-    
+        ## tfile.Write() ##  "" ) ## , ROOT.TFile.kOverwrite )
+        tfile.Write( "" , ROOT.TFile.kOverwrite )
+        
+        the_tree = ROOT.nullptr 
+
+    chain = ROOT.TChain ( treepath )
+    chain.Add  ( filename )
+
+    if report :
+        new_branches = sorted ( ( set ( chain.branches () ) | set ( chain.leaves () ) ) - branches )
+        if new_branches :
+            n = len ( new_branches )
+            if 1 >= n : title = "Added %s branch to TTree(%s)"   % ( n , treepath ) 
+            else      : title = "Added %s branches to TTree(%s)" % ( n , treepath )  
+            table = chain.table ( new_branches , title = title , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) ) 
+            chain = ROOT.TChain ( treepath )
+            chain.Add  ( filename )     
+            
+    return chain
+
+        
 # =============================================================================d
 ## Specific action to ROOT.TChain
-def _add_response_chain ( chain , verbose , *args ) :
+def _add_response_chain_ ( chain    , * ,
+                           chopping , 
+                           category ,
+                           N        ,
+                           inputs   ,
+                           weights  ,
+                           options  ,
+                           prefix   = ""   ,
+                           suffix   = ""   ,
+                           aux      = 0.9  , 
+                           progress = True ,
+                           report   = True ) :
     """ Specific action to ROOT.TChain
     """
     
     import ostap.trees.trees
-    
+    from   ostap.core.core   import   valid_pointer
+
+    assert isinstance ( chain , ROOT.TTree ) and valid_pointer ( chain ) , \
+        "Invalid TChain/TTree!"
+
+    if not isinstance ( chain , ROOT.TChain ) or chain.nFiles <= 1 :
+        return _add_response_tree_ ( chain    ,
+                                     chopping = chopping , 
+                                     category = category ,
+                                     N        = N        ,
+                                     inputs   = inputs   ,
+                                     weights  = weights  ,
+                                     options  = options  ,
+                                     prefix   = prefix   ,
+                                     suffix   = suffix   ,
+                                     aux      = 0.9      , 
+                                     report   = report   ,
+                                     progress = progress ) 
+        
     files    = chain.files   
-    cname    = chain.fullpath
-    branches = set ( chain.branches () ) | set ( chain.leaves() ) if verbose else set() 
+    treepath = chain.fullpath
     
-    if not files :
-        logger.warning ( 'addChoppingResponse: empty chain (no files)' )
-        return Ostap.StatusCode ( 900 ) , chain 
-
-    status  = None 
-
-    tree_verbose  = verbose and      len ( files ) < 5
-    chain_verbose = verbose and 5 <= len ( files )
+    branches = set ( chain.branches () ) | set ( chain.leaves() ) if report else set()
+    
+    tree_progress  = progress and      len ( files ) < 5
+    chain_progress = progress and 5 <= len ( files )
  
-    from ostap.utils.progress_bar import progress_bar
-    for f in progress_bar ( files , len ( files ) , silent = not chain_verbose ) :
+    for f in progress_bar ( files , len ( files ) , silent = not chain_progress ) :
 
-        with  ROOT.TFile.Open ( f , 'UPDATE' ) as ff  :
-            ## get the tree 
-            tt      = ff.Get(cname)
-            ## treat the tree 
-            sc , nt = _add_response_tree ( tt , tree_verbose , *args )
-            if status is None or sc.isFailure() : status = sc 
-            
-    newc = ROOT.TChain ( cname )
-    for f in  files : newc.Add ( f  )
+        ch = ROOT.TChain ( treepath  )
+        ch.Add ( f )
+        ## treat the single tree 
+        _add_response_tree_ ( ch  ,
+                              chopping = chopping ,     
+                              category = category      ,
+                              N        = N             ,
+                              inputs   = inputs        ,
+                              weights  = weights       ,
+                              options  = options       ,
+                              prefix   = prefix        ,
+                              suffix   = suffix        ,
+                              aux      = 0.9           , 
+                              report   = False         ,
+                              progress = tree_progress ) 
+        
+        
+    chain = ROOT.TChain ( treepath )
+    chain.Add  ( filename )
 
-    if verbose :
-        new_branches = set ( newc.branches () ) | set ( newc.leaves() )
-        new_branches = sorted ( new_branches - set ( branches ) ) 
-        if new_branches : 
-            n = len ( new_branches )  
-            if 1 == n  : title = 'Added %s branch to TChain(%s)'   % ( n , cname ) 
-            else       : title = 'Added %s branches to TChain(%s)' % ( n , cname ) 
-            table = newc.table ( new_branches , title = title , prefix = '# ' )
+    if report :
+        new_branches = sorted ( ( set ( chain.branches () ) | set ( chain.leaves () ) ) - branches )
+        if new_branches :
+            n = len ( new_branches )
+            if 1 >= n : title = "Added %s branch to TChain(%s)"   % ( n , treepath ) 
+            else      : title = "Added %s branches to TChain(%s)" % ( n , treepath )  
+            table = chain.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
-   
-    return status, newc
+            chain = ROOT.TChain ( treepath )
+            chain.Add  ( filename )     
+            
+    return chain
   
 
 # =============================================================================
@@ -1826,7 +1918,7 @@ def _add_response_chain ( chain , verbose , *args ) :
 #  dataset.addTMVAResponse ( dataset , chopper , inputs , tar_file , prefix = 'tmva_' )
 #  @endcode
 #  @param dataset input dataset to be updated
-#  @param chopper       chopping category/formula
+#  @param chopping      chopping category/formula
 #  @param N             number of categories
 #  @param inputs        input variables
 #  @param weights_files files with TMVA weigths (tar/gz or xml)
@@ -1837,7 +1929,7 @@ def _add_response_chain ( chain , verbose , *args ) :
 #  @param verbose       verbose operation?
 #  @param aux           obligatory for the cuts method, where it represents the efficiency cutoff 
 def addChoppingResponse ( dataset                     , ## input dataset to be updated
-                          chopper                     , ## chopping category/formula 
+                          chopping                    , ## chopping category/formula 
                           N                           , ## number of categrories
                           inputs                      , ## input variables 
                           weights_files               , ## files with TMVA weigths (tar/gz or xml)
@@ -1845,10 +1937,11 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
                           prefix        = 'tmva_'     , ## prefix for TMVA-variable         
                           suffix        = '_response' , ## suffix for TMVA-variable 
                           options       =  ''         , ## TMVA-reader options
-                          verbose       = True        , ## verbosity flag 
-                          aux           = 0.9         ) :
-    """
-    Helper function to add TMVA/chopping  response into dataset
+                          verbose       = True        , ## verbosity flag
+                          progress      = True        ,   ## verbosity flag
+                          aux           = 0.9         ,   ## for Cuts method : efficiency cut-off                      
+                          report        = True        ) : ## final report?
+    """ Helper function to add TMVA/chopping  response into dataset
     >>> tar_file = trainer.tar_file
     >>> dataset  = ...
     >>> inputs   = [ 'var1' , 'var2' , 'var2' ] ## input variables to TMVA 
@@ -1893,38 +1986,35 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     from ostap.utils.basic import isatty
     options = opts_replace ( options , 'Color:'  , verbose and isatty() )
 
-    args = chopper , category_name , N , _inputs , _maps , options , prefix , suffix , aux
-
-    if   isinstance ( dataset , ROOT.TChain  ) and 1 < dataset.nFiles  :
-        
-        sc , newdata = _add_response_chain ( dataset , verbose , *args ) 
-        if   NO_PROCESSING == sc :
-            if verbose : logger.warning ( 'No processing...' )
-        elif sc.isFailure     () : logger.error   ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
-        return newdata
+    if   isinstance ( dataset , ROOT.TTree ) :        
+        return _add_response_chain_ ( dataset ,
+                                      chopping = chopping      ,
+                                      category = category_name ,
+                                      N        = N             ,
+                                      inputs   = _inputs       ,
+                                      weights  = _maps         ,
+                                      options  = options       ,
+                                      prefix   = prefix        ,
+                                      suffix   = suffix        ,
+                                      aux      = aux           ,
+                                      report   = report        ,
+                                      progress = progress      )
     
-    elif isinstance ( dataset , ROOT.TTree   ) :
-        
-        sc , newdata = _add_response_tree  ( dataset , verbose , *args )
-        if   NO_PROCESSING == sc :
-            if verbose : logger.warning ( 'No processing...' )
-        elif sc.isFailure     () : logger.error   ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )        
-        return newdata 
-
     ## here we deal with RooAbsData
     
-    if isinstance ( chopper , str ) :
+    if isinstance ( chopping , str ) :
         
-        if chopper in dataset : chopper = getattr ( dataset , chopper )            
+        if chopping in dataset : chopping = getattr ( dataset , chopping )            
         else :
             
-            varset  = dataset.get()
-            chopper = make_formula ( 'chopping' , chopper , varset )
+            varset    = dataset.get()
+            choppping = make_formula ( 'chopping' , chopping , varset )
             
-    assert isinstance ( chopper , ROOT.RooAbsReal ), 'Invalid chopper type %s' % chopper 
+    assert isinstance ( chopping , ROOT.RooAbsReal ), \
+        'Invalid chopping type %s' % typename ( chopping ) 
 
     category = ROOT.RooCategory ( category_name ,
-                                  'Chopping category: (%s)%%%d' %  ( chopper.GetTitle() , N ) )
+                                  'Chopping category: (%s)%%%d' %  ( choppping.GetTitle() , N ) )
 
     
     if   N <    10 : fmt = category_name + '_%d'    
@@ -1935,14 +2025,21 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     ## 
     for i in range ( N ) : category.defineType ( fmt % i  , i )
 
-    args = chopper , category , N , _inputs , _maps , options , prefix , suffix , aux
     
-    from   ostap.utils.progress_conf import progress_conf
-    ## add progress bar 
-    if verbose : sc = Ostap.TMVA.addChoppingResponse ( dataset , progress_conf () , *args )
-    else       : sc = Ostap.TMVA.addChoppingResponse ( dataset ,                    *args )
+    progress = progress_conf ( progress )
+    adder    = Ostap.AddTMVA ( progress ) 
 
-    if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
+    ac = adder.addChoppingResponse ( dataset   ,
+                                     choppping ,
+                                     category  ,
+                                     N         ,
+                                     _inputs   ,
+                                     _maps     ,
+                                     options   ,
+                                     prefix    ,
+                                     suffix    ,
+                                     aux       )
+    assert sc.isSuccess () , 'Error from Ostap::AddTMVA::addChoppingResponse %s' % sc 
 
     return dataset 
 
