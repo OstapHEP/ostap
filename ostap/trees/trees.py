@@ -2067,11 +2067,12 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
         with REOPEN ( the_file ) as tfile :
 
             tfile.cd()
+            assert tfile.IsWritable() , 'The file:%s is not writeable!'
+            
             the_tree = tfile.Get ( treepath )
             assert valid_pointer ( the_tree ) and isinstance ( the_tree , ROOT.TTree ) , \
                 'Invalid TTree:%s in file:%s' % ( treepath , filename  )
 
-            assert tfile.IsWritable() , 'The file:%s is not writeable!'
         
             ## Add the branch!
             ## table = print_args ( *args ) 
