@@ -88,7 +88,7 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.meta_info      import python_info, root_info
-from   ostap.core.ostap_types    import integer_types 
+from   ostap.core.ostap_types    import integer_types, string_types  
 from   ostap.core.core           import WSE 
 from   ostap.core.pyrouts        import hID, h1_axis, Ostap 
 from   ostap.utils.cleanup       import CleanUp
@@ -98,13 +98,12 @@ from   ostap.tools.tmva          import ( dir_name      , good_for_negative ,
                                           trivial_opts  , make_tarfile      ,
                                           decode_vars   , NO_PROCESSING     )
 from   ostap.utils.basic         import items_loop, typename 
-from   ostap.fitting.variables   import make_formula 
 from   ostap.stats.statvars      import data_statistic
 from   ostap.utils.progress_conf import progress_conf 
 from   ostap.utils.progress_bar  import progress_bar
 import ostap.trees.trees 
 import ostap.trees.cuts
-import ostap.utils.utils       as     Utils 
+import ostap.utils.utils         as     Utils 
 import ROOT, os, shutil, tarfile  
 # =============================================================================
 from ostap.logger.logger      import getLogger
@@ -2002,19 +2001,18 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     
     ## here we deal with RooAbsData
     
-    if isinstance ( chopping , str ) :
+    if isinstance ( chopping , string_types ) :
         
-        if chopping in dataset : chopping = getattr ( dataset , chopping )            
-        else :
-            
-            varset    = dataset.get()
-            choppping = make_formula ( 'chopping' , chopping , varset )
+        from   ostap.fitting.variables   import make_formula
+        varset    = dataset.get()
+        chopping = make_formula ( 'chopping' , chopping , varset )
             
     assert isinstance ( chopping , ROOT.RooAbsReal ), \
         'Invalid chopping type %s' % typename ( chopping ) 
 
+
     category = ROOT.RooCategory ( category_name ,
-                                  'Chopping category: (%s)%%%d' %  ( choppping.GetTitle() , N ) )
+                                  'Chopping category: (%s)%%%d' %  ( chopping.GetTitle() , N ) )
 
     
     if   N <    10 : fmt = category_name + '_%d'    
@@ -2029,16 +2027,16 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     progress = progress_conf ( progress )
     adder    = Ostap.AddTMVA ( progress ) 
 
-    ac = adder.addChoppingResponse ( dataset   ,
-                                     choppping ,
-                                     category  ,
-                                     N         ,
-                                     _inputs   ,
-                                     _maps     ,
-                                     options   ,
-                                     prefix    ,
-                                     suffix    ,
-                                     aux       )
+    sc = adder.addChoppingResponse ( dataset  ,
+                                     chopping ,
+                                     category ,
+                                     N        ,
+                                     _inputs  ,
+                                     _maps    ,
+                                     options  ,
+                                     prefix   ,
+                                     suffix   ,
+                                     aux      )  
     assert sc.isSuccess () , 'Error from Ostap::AddTMVA::addChoppingResponse %s' % sc 
 
     return dataset 
