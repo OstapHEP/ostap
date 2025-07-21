@@ -1,9 +1,15 @@
-## New features
+# v3.0.1.2
 
+## New features
+    
+  1. imporve/extend the `Data.table` methdod - now it the add information about the tree/chains
+     
 ## Backward-incompatible 
 
 ## Bug fixes
 
+  1. fix `Files.table`
+    
 # v3.0.1.0
 
 ## New features

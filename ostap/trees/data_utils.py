@@ -315,7 +315,7 @@ class Data(RootFiles):
                     ' %s  ' % ( file_symbol   if file_symbol   else 'Files'      ) ) ] 
         
         for c,t  in zip ( self.chain_names , self.chains ) :
-            row = c , '%d' % len ( t ) , '%d' % len ( t.branches () ) , '%s' % len ( t.files() )
+            row = c , '%d' % len ( t ) , '%d' % len ( t.branches () ) , '%s' % len ( t.files )
             rows.append ( row )
             
         if not title :
@@ -325,6 +325,60 @@ class Data(RootFiles):
         import ostap.logger.table as T
         return T.table ( rows , title = title , prefix = prefix , alignment = 'lrcc' , style = style ) 
 
+
+    # =========================================================================
+    ## Print collection of files as table
+    #  @code
+    #  files = ...
+    #  print ( files.table() )    
+    #  @endcode
+    def table ( self , title = '' , prefix = '' ) :
+        """ Print collection of files as table
+        """
+        rows  = [ [ '#' , 'size' ] + [ cname for cname in self.chain_names ] + [ 'name' ]  ]
+        files = self.files
+        nn    = len ( files ) 
+        nfmt  = '%%%dd' % ( math.floor ( math.log10 ( nn ) ) + 1 )
+
+        total_size =  0 
+        for i , f in enumerate ( files , start = 1 ) : 
+
+            row   = [ nfmt % i ]
+            fsize = self.get_file_size ( f )
+            if 0 <= fsize :
+                total_size += fsize 
+                vv , unit   = fsize_unit ( fsize )
+                row.append ( '%3d %s' % ( vv , unit ) ) 
+            else : 
+                row.append ( '???' )
+
+            for cname in self.chain_names :
+                ch = ROOT.TChain ( cname )
+                ch.Add ( f )
+                row.append ( str ( len ( ch ) ) ) 
+                
+            row .append ( f   ) 
+            rows.append ( row )
+
+        ## the last row: summary
+        from ostap.logger.colorized import infostr
+        from ostap.logger.symbols   import show 
+        vv , unit  = fsize_unit ( total_size  )
+        row   = infostr ( ' \U000003A3 ' ) if show else '' , infostr ( '%3d %s' % ( vv , unit ) )        
+        for c , t  in zip ( self.chain_names , self.chains ) : row +=  infostr ( str ( len ( t ) ) ) ,         
+        row += infostr ( self.commonpath ) ,        
+        rows.append ( row )
+
+        if not title :
+            title = '%s %s' % ( typename ( self ) , self.description )
+            if folder_symbol : title = '%s %s' % ( folder_symbol , title )
+            
+        import ostap.logger.table as T
+        alignment = len ( self.chain_names ) * 'r'
+        alignment = 'rr' + alignment + 'w' 
+        return T.table ( rows , title = title , prefix = prefix , alignment = alignment ) 
+
+    
     # =========================================================================
     ## check operations
     def check_ops ( self , other ):
