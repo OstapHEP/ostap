@@ -233,10 +233,16 @@ class Files(object):
         
         _files = set ()
         for pattern in  self.patterns :
+            _nfiles = len ( _files ) 
             for f in glob.iglob ( pattern ) :
                 f = os.path.abspath  ( f )
                 f = os.path.normpath ( f )                    
                 _files.add ( f )
+            if len ( _files ) == _nfiles and not self.silent :
+                logger.warning ( "No files are selected by `%s`" % pattern )
+            elif not self.silent :
+                logger.warning ( "%d files are selected by `%s`" % ( len ( _files ) -  _nfiles ) )
+
                 
         return tuple ( sorted ( _files ) ) 
 

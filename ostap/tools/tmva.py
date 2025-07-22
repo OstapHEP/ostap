@@ -2576,7 +2576,7 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
                       prefix   = 'tmva_'     ,   ## prefix for TMVA-variable 
                       suffix   = '_response' ,   ## suffix for TMVA-variable
                       options  = ''          ,   ## TMVA-reader options
-                      verbose  = True        , ## verbosity flag
+                      verbose  = True        ,   ## verbosity flag
                       progress = True        ,   ## verbosity flag
                       aux      = 0.9         ,   ## for Cuts method : efficiency cut-off                      
                       report   = True        ) : ## final report?

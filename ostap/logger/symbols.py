@@ -81,6 +81,7 @@ __all__     = (
     'delta_symbol'        ,
     'number'              ,
     'permille'            , 
+    'size'                , ## size/diameter symbol or 'size'
     ##
     'union'               , 
     'intersection'        , 
@@ -186,6 +187,7 @@ difference       = '\U000022BB' if show else '-'
 
 iteration        = '\U00003005' if show else ''
 permille         = '\U00002030' if show else '/1000'
+size             = '\U00002300' if show else 'size'
 
 ## indices: circled numbes from 0 to 50 (inclusive) 
 indices2 = '\U000024FF' + \
