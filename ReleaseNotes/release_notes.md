@@ -1,7 +1,7 @@
 ## New features
 
    1. slightly improve printts from for `Files/Data/...` - make them a bit more informative
-    
+   1. add `truncate_middle` function into `ostap.utils.strings` module: A little bit modified version of the code from the `pidgen2` project by Anton Pluektov
     
 ## Backward-incompatible 
 

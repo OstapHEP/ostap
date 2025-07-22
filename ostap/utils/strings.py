@@ -21,7 +21,9 @@ __all__     = (
     ##
     'math_symbols'         , ## symbols for math-operations
     'has_symbol'           , ## Has any of the symbols?
-    'is_formula'           , ## Is this string expression represent math formula?    
+    'is_formula'           , ## Is this string expression represent math formula?
+    ##
+    'truncate_middle'      , ## truncate long string from the mddle 
     # =========================================================================
 ) # ===========================================================================
 # =============================================================================
@@ -140,6 +142,42 @@ def is_formula ( expression , symbols = math_symbols ) :
     """
     assert isinstance ( expression , str ) , "Invalid `expression` %s" % type ( expression  )
     return has_symbol ( expression.strip() , symbols ) 
+
+# =============================================================================
+## Truncate the middle of the string to fit into N-symbols,
+#  - Truncated content is replaced with ellipses
+#  - Unicode ellipsis symbol '\U00002026' is used for tty-output if/when Unicode supported 
+# 
+# A little bit modified version of the code from the pidgen2 project by Anton Pluektov
+# @code
+# text = '123----------------------------789'
+# test = truncate_middle ( text , 9 ) 
+# @endcode
+def truncate_middle ( text , N ) :
+    """ Truncate the middle of the string to fit into N-symbols,
+    
+    - Truncated middle is replaced with ellipses
+    - Unicode ellipsis symbol '\U00002026' is used for tty-output if/when Unicode supported 
+    
+    A little bit modified version of the code from the pidgen2 project by Anton Pluektov
+    
+    >>> text = '123----------------------------789'
+    >>> text = truncate_middle ( text , 9 ) 
+
+    """
+    
+    from ostap.logger.symbols import ellipsis as _ellipsis 
+    _Ne = len ( _ellipsis )
+    
+    assert isinstance ( N , int ) and _Ne  <= N , "Invalid `N`: %s" % N
+
+    n  = len ( text )
+    if n <= N : return text
+    
+    n1 = ( N - _Ne ) // 2
+    n2 =   N - _Ne - n1
+    
+    return text [ : n1 ] + _ellipsis +  ( text [ -n2 : ] if n2 else '' ) 
 
 # =============================================================================
 if '__main__' == __name__ :
