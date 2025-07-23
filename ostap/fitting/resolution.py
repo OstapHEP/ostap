@@ -674,7 +674,8 @@ class ResoNeedham(RESOLUTION) :
         return self.__N
   
 
-        
+models.add ( ResoNeedham )
+
 # ===============================================================================
 ## @class ResoCB2
 #  (A)Symmetrical double-sided Crystal Ball model for resolution

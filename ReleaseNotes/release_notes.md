@@ -1,12 +1,12 @@
 ## New features
 
-   1. slightly improve printts from for `Files/Data/...` - make them a bit more informative
-   1. add `truncate_middle` function into `ostap.utils.strings` module: A little bit modified version of the code from the `pidgen2` project by Anton Pluektov
-   1. add `ResoNeedham` as explicit resolution function
+   1. Alightly improve printts from for `Files/Data/...` - make them a bit more informative
+   1. Add `truncate_middle` function into `ostap.utils.strings` module: A little bit modified version of the code from the `pidgen2` project by Anton Pluektov
+   1. Add `ResoNeedham` as explicit resolution function
      
 ## Backward-incompatible 
 
-   1.  Rename `a0`, `a1` and `a2` parameterd of Needham's function to `c0`, `c1` and `c2`. Update `Ostap::Math::Needham`, `Ostap::Models::Needham` and `Needham_pdf` `
+   1. Rename `a0`, `a1` and `a2` parameterd of Needham's function to `c0`, `c1` and `c2`. Update `Ostap::Math::Needham`, `Ostap::Models::Needham` and `Needham_pdf` `
     
 ## Bug fixes
 
