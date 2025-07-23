@@ -6,7 +6,7 @@
      
 ## Backward-incompatible 
 
-   1. Rename `a0`, `a1` and `a2` parameterd of Needham's function to `c0`, `c1` and `c2`. Update `Ostap::Math::Needham`, `Ostap::Models::Needham` and `Needham_pdf` `
+   1. Rename `a0`, `a1` and `a2` parameters of Needham's function to `c0`, `c1` and `c2`. Update `Ostap::Math::Needham`, `Ostap::Models::Needham` and `Needham_pdf` `
     
 ## Bug fixes
 
