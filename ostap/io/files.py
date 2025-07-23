@@ -239,9 +239,9 @@ class Files(object):
                 f = os.path.normpath ( f )                    
                 _files.add ( f )
             if len ( _files ) == _nfiles and not self.silent :
-                logger.warning ( "No files are selected by `%s`" % pattern )
+                logger.warning ( "No   files are selected by `%s`" % pattern )
             elif not self.silent :
-                logger.warning ( "%d files are selected by `%s`" % ( len ( _files ) -  _nfiles ) )
+                logger.info    ( "%4d files are selected by `%s`" % ( len ( _files ) -  _nfiles , pattern ) ) 
 
                 
         return tuple ( sorted ( _files ) ) 
