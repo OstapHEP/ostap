@@ -449,7 +449,7 @@ def _ommatt_reduce_ ( peak ) :
     - see `Ostap.Math.Needham`
     """
     return root_factory , ( type ( peak ) , peak.m0 () , peak.sigma() ,
-                            peak.a0 ()    , peak.a1 () , peak.a2   () , peak.n () ) 
+                            peak.c0 ()    , peak.c1 () , peak.c2   () , peak.n () ) 
 
 Ostap.Math.Needham  . __reduce__ = _ommatt_reduce_
 

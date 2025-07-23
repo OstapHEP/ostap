@@ -9,6 +9,7 @@
 #  - Sech/hyperbolic  secant             (exponenial tails)
 #  - Bukin                               (exponential or gaussian tails)
 #  - double-sided Crystal Ball           (power-law  tails)
+#  - Needham's function                  (variant of Crystal Ball(
 #  - Student-T                           (power-law  tails)
 #  - Sinh-Asinh model                    (tails can be heavy or light)
 #  - JohnsonSU  model                    (tails can be heavy or light)
@@ -30,6 +31,7 @@
 - GenLogisticIV                       (exponential tails+asymmetry) 
 - Bukin                               (exponential or gaussian tails)
 - double-sided Crystal Ball           (power-law  tails)
+- Needham's function                  (variant of Crystal Ball(
 - Student-T                           (power-law  tails)
 - Sinh-Asinh model                    (tails can be heavy or light)
 - JohnsonSU  model                    (tails can be heavy or light)
@@ -533,6 +535,146 @@ class ResoCB2a(RESOLUTION) :
         return self.__AV_N.psi
         
 models.add ( ResoCB2a )
+# ===============================================================================
+## @class ResoNeedham
+#  Needham's functiobn:
+#  - variant of Crystall Ball function with alpha = alpha(sigma)
+#
+# - alpha is parameterized as function of sigma 
+#  \f$ \alpha(\sigma) = c_0\frac{ (\sigma/c_1)^{c_2}}{ 1 + (\sigma/c_1)^{c_2} }\f$ 
+#
+#  @attention For majority of physics cases <code>n</code> 
+#             can be fixed <code>n=0</code> (corresponds to <code>N=1</code>
+#
+#  @attention parameter \f$ c_1 \f$ is inverse with respect to the original 
+#             Matt's code
+#
+#  Reasonable values:
+#  - for \f$ c_0 \f$ :  \f$ 1.7 \le c_0 \le 3.5 \f$ 
+#  - for \f$ c_1 \f$ :  \f$ c_2 \approx O(\sigma) \f$ 
+#  - for \f$ c_2 \f$ :  \f$ c_2 \approx O(10) \f$
+# 
+#  @see Ostap::Math::Needham
+#  @see Ostap::Models::Needham
+#  @see Nededham_pdf
+class ResoNeedham(RESOLUTION) :
+    """ Nedham's function
+    - variant of Crystal Ball function with alpha = alpha(sigma)     
+    """
+    def __init__ ( self           ,  
+                   name           ,   ## the  name 
+                   xvar           ,   ## the  variable 
+                   sigma          ,   ## core resolution                                 
+                   c0             ,   ## c0: between 1.8 and 3.5
+                   c1             ,   ## c1: close to sigma
+                   c2             ,   ## c2: close to 10
+                   n       = ROOT.RooFit.RooConst ( 0 ) , 
+                   fudge   = 1    ,   ## fudge-factor
+                   mean    = None ) : ## the mean value
+        
+        super(ResoNeedham,self).__init__ ( name  = name  ,
+                                           xvar  = xvar  ,
+                                           sigma = sigma ,
+                                           mean  = mean  ,
+                                           fudge = fudge )
+        
+        self.__c0 = self.make_var ( c0                  ,
+                                    "c0_%s"     % name  ,
+                                    "c_{0}(%s)" % name  ,
+                                    True , 2.5 , 1.5    , 4.0 )
+        
+        s_minmax = self.sigma.minmax        
+        if s_minmax :
+            smin, smax = s_minmax
+            c1limits = 0.1 * smin , 10 * smax
+        else :
+            c1limits = () 
+        
+        self.__c1 = self.make_var ( c1                  ,
+                                    "c1_%s"     % name  ,
+                                    "c_{1}(%s)" % name  ,
+                                    True , *c1limits    )  
+        
+        self.__c2 = self.make_var ( c2                  ,
+                                    "c2_%s"     % name  ,
+                                    "c_{2}(%s)" % name  ,
+                                    True , 10 , 1 , 50  )
+        
+        ## effective parameteter 
+        self.__n     = self.make_var ( n   ,
+                                       'n_%s'            % name ,
+                                       'n_{CB}(%s)'      % name ,
+                                       None , 0 , -1 , 100 )
+        
+        ## true parameter 
+        self.__N = Ostap.MoreRooFit.TailN ( 'N_%s' % name , self.__n )
+        
+        self.needham = Ostap.Models.Needham (
+            self.roo_name ( 'needham_' ) , 
+            'Needham function %s' % self.name ,
+            self.xvar  ,
+            self.mean  ,
+            self.sigma_corr , ## ATTENTION HERE
+            self.c0    ,
+            self.c1    ,
+            self.c2    ,
+            self.n     , 
+            )
+        
+        self.pdf = self.needham
+        
+        ## save the configuration
+        self.config = {
+            'name'   : self.name  ,
+            'xvar'   : self.xvar  ,
+            'mean'   : self.mean  ,
+            'sigma'  : self.sigma ,
+            'c0'     : self.c0    ,
+            'c1'     : self.c1    ,
+            'c2'     : self.c2    ,
+            'n'      : self.n     ,
+            'fudge'  : self.fudge ,
+        }
+
+    @property
+    def c0 ( self ) :
+        """'c0'-parameter for Needham' function"""
+        return self.__c0
+    @c0.setter
+    def c0 ( self, value ) :
+        self.set_value ( self.__c0 , value ) 
+
+    @property
+    def c1 ( self ) :
+        """'c1'-parameter for Needham' function, INVERSE with respect ot originam Matt's code!"""
+        return self.__c1
+    @c1.setter
+    def c1 ( self, value ) :
+        self.set_value ( self.__c1 , value ) 
+
+    @property
+    def c2 ( self ) :
+        """'c2'-parameter for Needham' function"""
+        return self.__c2
+    @c2.setter
+    def c2 ( self, value ) :
+        self.set_value ( self.__c2 , value )
+        
+    @property
+    def n ( self ) :
+        """n-parameter for Crystal Ball tail"""
+        return self.__n
+    @n.setter
+    def n ( self, value ) :
+        self.set_value ( self.__n , value ) 
+
+    @property
+    def N ( self ) :
+        """`N` : actual N-parameter used for Crystal Ball """
+        return self.__N
+  
+
+        
 # ===============================================================================
 ## @class ResoCB2
 #  (A)Symmetrical double-sided Crystal Ball model for resolution

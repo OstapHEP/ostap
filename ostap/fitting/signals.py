@@ -603,15 +603,25 @@ class CB2_pdf(PEAK) :
 models.append ( CB2_pdf )    
 # =============================================================================
 ## @class Needham_pdf
-#  Needham function: specific parameterisation of Crystal Ball function with
-#   - \f$ \alpha(\sigma) = a_0 + \sigma\times (a_1+\sigma \times a_2) \f$
-#  For majority of physics cases n can/should  ne fixed to 0 (corresponds to N=1)
-#  The function is very well sutable to fit
-#  \f$J/\psi \rightarrow \mu^+\mu^-\f$,
-#  \f$\psi^{\prime} \rightarrow \mu^+\mu^-\f$ and
-#  \f$\Upsilon \rightarrow \mu^+\mu^-\f$ signals and
-#  is has been used with great success for all LCHb papers
-#  on quarkonia production in dimuon final states
+# The special parametrization by Matthew NEEDHAM of
+# `Crystal Ball-function' suitable for \f$J/\psi/\Upsilon\f$-peaks
+#
+# - thanks to Matthew Needham
+# 
+# - alpha is parameterized as function of sigma 
+#  \f$ \alpha(\sigma) = c_0\frac{ (\sigma/c_1)^{c_2}}{ 1 + (\sigma/c_1)^{c_2} }\f$ 
+#
+#  @attention For majority of physics cases <code>n</code> 
+#             can be fixed <code>n=0</code> (corresponds to <code>N=1</code>
+#
+#  @attention parameter \f$ c_1 \f$ is inverse with respect to the original 
+#             Matt's code
+#
+#  Reasonable values:
+#  - for \f$ c_0 \f$ :  \f$ 1.7 \le c_0 \le 3.5 \f$ 
+#  - for \f$ c_1 \f$ :  \f$ c_2 \approx O(\sigma) \f$ 
+#  - for \f$ c_2 \f$ :  \f$ c_2 \approx O(10) \f$
+# 
 #  @see CrystalBall_pdf 
 #  @see Ostap::Models::Needham 
 #  @see Ostap::Math::Needham 
@@ -630,40 +640,38 @@ class Needham_pdf(PEAK) :
     Is has been used with great success for all LHCb papers on
     quarkonia production in dimuon final states
     """
-    def __init__ ( self                 ,
-                   name                 ,
-                   xvar                 ,
-                   mean     =  3.096    ,   ## GeV  
-                   sigma    =  0.013    ,   ## GeV 
-                   a0       =  1.975    ,
-                   a1       = -0.0011   ,   ## GeV^-1
-                   a2       =   10      ,
+    def __init__ ( self                ,
+                   name                ,
+                   xvar                ,
+                   mean     = 3.096    ,   ## GeV  
+                   sigma    = 0.013    ,   ## GeV 
+                   c0       = 2.5      ,   ## s
+                   c1       = 1/0.013  ,   ## shold be close to sigma (inverse with respect to original Matt's code)
+                   c2       = 10.0     ,
                    n        = ROOT.RooFit.RooConst ( 0 ) ) : 
         
         PEAK.__init__ ( self , name , xvar , mean , sigma )
         
-        #
-        unit = 1000
-        #
-        if   3.096 in self.xvar : unit = 1000 
-        elif 3096  in self.xvar : unit = 1
-        elif 9.460 in self.xvar : unit = 1000 
-        elif 9460  in self.xvar : unit = 1
-        #
-        self.__a0 = self.make_var ( a0                  ,
-                                    "a0_%s"     % name  ,
-                                    "a_{0}(%s)" % name  ,
-                                    True , 1.975 , 0 , 10  )
+        self.__c0 = self.make_var ( c0                  ,
+                                    "c0_%s"     % name  ,
+                                    "c_{0}(%s)" % name  ,
+                                    True , 2.5 , 1.5    , 3.5 ) 
         
-        self.__a1 = self.make_var ( a1                  ,
-                                    "a1_%s"     % name  ,
-                                    "a_{1}(%s)" % name  ,
-                                    True , -0.0011   * unit , -10 * unit , 10 * unit )
+        s_minmax = self.sigma.minmax
+        if s_minmax :
+            smin, smax = s_minmax
+            c1limits = 0.1 * smin , 10 * smax
+        else : c1limits = () 
         
-        self.__a2 = self.make_var ( a2                  ,
-                                    "a2_%s"     % name  ,
-                                    "a_{2}(%s)" % name  ,
-                                    True , -0.00018  * unit**2 , -10 * unit**2 , 10 * unit**2 )
+        self.__c1 = self.make_var ( c1                  ,
+                                    "c1_%s"     % name  ,
+                                    "c_{1}(%s)" % name  ,
+                                    True , *c1pars   )  
+        
+        self.__c2 = self.make_var ( c2                  ,
+                                    "c2_%s"     % name  ,
+                                    "c_{2}(%s)" % name  ,
+                                    True , 10 , 1 , 50 )
 
         self.__n     = self.make_var ( n   ,
                                        'n_%s'            % name ,
@@ -679,9 +687,9 @@ class Needham_pdf(PEAK) :
             self.xvar  ,
             self.mean  ,
             self.sigma ,
-            self.a0    ,
-            self.a1    ,
-            self.a2    ,
+            self.c0    ,
+            self.c1    ,
+            self.c2    ,
             self.n     , 
             )
         
@@ -691,39 +699,39 @@ class Needham_pdf(PEAK) :
             'xvar'   : self.xvar  ,
             'mean'   : self.mean  ,
             'sigma'  : self.sigma ,
-            'a0'     : self.a0    ,
-            'a1'     : self.a1    ,
-            'a2'     : self.a2    ,
+            'c0'     : self.c0    ,
+            'c1'     : self.c1    ,
+            'c2'     : self.c2    ,
             'n'      : self.n     ,
         }
         
     @property
-    def a0 ( self ) :
-        """'a0'-parameter for Needham function"""
-        return self.__a0
-    @a0.setter
-    def a0 ( self, value ) :
-        self.set_value ( self.__a0 , value ) 
+    def c0 ( self ) :
+        """'c0'-parameter for Needham function"""
+        return self.__c0
+    @c0.setter
+    def c0 ( self, value ) :
+        self.set_value ( self.__c0 , value ) 
 
     @property
-    def a1 ( self ) :
-        """'a1'-parameter for Needham function"""
-        return self.__a1
-    @a1.setter
-    def a1 ( self, value ) :
-        self.set_value ( self.__a1 , value ) 
+    def c1 ( self ) :
+        """'c1'-parameter for Needham function, INVERSE with respect ot originam Matt's code!"""
+        return self.__c1
+    @c1.setter
+    def c1 ( self, value ) :
+        self.set_value ( self.__c1 , value ) 
 
     @property
-    def a2 ( self ) :
-        """'a2'-parameter for Needham function"""
-        return self.__a2
-    @a2.setter
-    def a2 ( self, value ) :
-        self.set_value ( self.__a2 , value )
+    def c2 ( self ) :
+        """'c2'-parameter for Needham function"""
+        return self.__c2
+    @c2.setter
+    def c2 ( self, value ) :
+        self.set_value ( self.__c2 , value )
         
     @property
     def n ( self ) :
-        """n-parameter for Crystal Ball tail , same as nL"""
+        """n-parameter for Crystal Ball tail"""
         return self.__n
     @n.setter
     def n ( self, value ) :

@@ -1987,12 +1987,12 @@ Ostap::Models::Needham::Needham
   RooAbsReal&          x         ,
   RooAbsReal&          m0        ,
   RooAbsReal&          sigma     ,    
-  RooAbsReal&          a0        ,    
-  RooAbsReal&          a1        ,    
-  RooAbsReal&          a2        )
+  RooAbsReal&          c0        ,    
+  RooAbsReal&          c1        ,    
+  RooAbsReal&          c2        )
   : Needham ( name , title ,
-	      x  , m0 , sigma ,
-	      a0 , a1 , a2 , RooFit::RooConst ( 0 ) )
+              x  , m0 , sigma ,
+              c0 , c1 , c2 , RooFit::RooConst ( 0 ) )
 {}
 // ============================================================================
 // Needham
@@ -2003,9 +2003,9 @@ Ostap::Models::Needham::Needham
   RooAbsReal&          x         ,
   RooAbsReal&          m0        ,
   RooAbsReal&          sigma     ,    
-  RooAbsReal&          a0        ,    
-  RooAbsReal&          a1        ,    
-  RooAbsReal&          a2        ,
+  RooAbsReal&          c0        ,    
+  RooAbsReal&          c1        ,    
+  RooAbsReal&          c2        ,
   RooAbsReal&          n         )
   : RooAbsPdf ( name , title )
     //
@@ -2013,9 +2013,9 @@ Ostap::Models::Needham::Needham
   , m_m0      ( "!m0"      , "mass"                       , this , m0     ) 
   , m_sigma   ( "!sigma"   , "sigma"                      , this , sigma  )
     //
-  , m_a0      ( "!a0"      , "a0-parameter"               , this , a0     ) 
-  , m_a1      ( "!a1"      , "a1-parameter"               , this , a1     ) 
-  , m_a2      ( "!a2"      , "a2-parameter"               , this , a2     )
+  , m_c0      ( "!c0"      , "c0-parameter"               , this , c0     ) 
+  , m_c1      ( "!c1"      , "c1-parameter"               , this , c1     ) 
+  , m_c2      ( "!c2"      , "c2-parameter"               , this , c2     )
     //
   , m_n       ( "!n"       , "n-parameter"                , this , n     ) 
     //
@@ -2037,11 +2037,11 @@ Ostap::Models::Needham::Needham
   , m_m0      ( "!m0"      , this , right.m_m0     ) 
   , m_sigma   ( "!sigma"   , this , right.m_sigma  )
     //
-  , m_a0      ( "!a0"      , this , right.m_a0     ) 
-  , m_a1      ( "!a1"      , this , right.m_a1     ) 
-  , m_a2      ( "!a2"      , this , right.m_a2     ) 
+  , m_c0      ( "!c0"      , this , right.m_c0     ) 
+  , m_c1      ( "!c1"      , this , right.m_c1     ) 
+  , m_c2      ( "!c2"      , this , right.m_c2     ) 
     //
-  , m_n       ( "!n"      , this , right.m_n       )
+  , m_n       ( "!n"       , this , right.m_n       )
     //
   , m_needham ( right.m_needham ) 
 {
@@ -2063,7 +2063,7 @@ void Ostap::Models::Needham::setPars () const
   //
   m_needham . setM0    ( m_m0     ) ;
   m_needham . setSigma ( m_sigma  ) ;
-  m_needham . setA     ( m_a0  , m_a1 , m_a2 ) ;
+  m_needham . setC     ( m_c0  , m_c1 , m_c2 ) ;
   m_needham . setN     ( m_n      ) ;
 }
 // ============================================================================

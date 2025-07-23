@@ -1339,9 +1339,9 @@ namespace Ostap
       const RooAbsReal& x      () const { return m_x      .arg() ; }
       const RooAbsReal& m0     () const { return m_m0     .arg() ; }
       const RooAbsReal& sigma  () const { return m_sigma  .arg() ; }
-      const RooAbsReal& a0     () const { return m_a0     .arg() ; }
-      const RooAbsReal& a1     () const { return m_a1     .arg() ; }
-      const RooAbsReal& a2     () const { return m_a2     .arg() ; }
+      const RooAbsReal& c0     () const { return m_c0     .arg() ; }
+      const RooAbsReal& c1     () const { return m_c1     .arg() ; }
+      const RooAbsReal& c2     () const { return m_c2     .arg() ; }
       const RooAbsReal& n      () const { return m_n      .arg() ; }
       // ======================================================================
     protected:
@@ -1349,9 +1349,9 @@ namespace Ostap
       RooRealProxy m_x      ;
       RooRealProxy m_m0     ;
       RooRealProxy m_sigma  ;
-      RooRealProxy m_a0     ;
-      RooRealProxy m_a1     ;
-      RooRealProxy m_a2     ;
+      RooRealProxy m_c0     ;
+      RooRealProxy m_c1     ;
+      RooRealProxy m_c2     ;
       RooRealProxy m_n      ;
       // ======================================================================
     private:

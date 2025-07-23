@@ -1320,12 +1320,20 @@ namespace Ostap
      *  `Crystal Ball-function' suitable for \f$J/\psi/\Upsilon\f$-peaks     
      *  - thanks to Matthew Needham
      *
-     *  - alpha is parameterized as functio of sigma 
+     *  - alpha is parameterized as function of sigma 
      *  \f$ \alpha(\sigma) = c_0\frac{ (\sigma/c_1)^{c_2}}{ 1 + (\sigma/c_1)^{c_2} }\f$ 
      *
      *  @attention For majority of physics cases <code>n</code> 
      *             can be fixed <code>n=0</code> (corresponds to <code>N=1</code>
      *
+     *  @attention parameter \f$ c_1 \f$ is inverse with respect to the original 
+     *             Matt's code
+     *
+     *  Reasonable values:
+     *  - for \f$ c_0 \f$ :  \f$ 2.0 \le c_0 \le 3.0 \f$ 
+     *  - for \f$ c_1 \f$ :  \f$ c_2 \approx O(\sigma) \f$ 
+     *  - for \f$ c_2 \f$ :  \f$ c_2 \approx O(10) \f$   
+     * 
      *  @see Ostap::Math::CrystalBall
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2012-05-13
@@ -1337,16 +1345,16 @@ namespace Ostap
       /** constructor from all parameters
        *  @param m0     m0       parameter
        *  @param sigma  sigma    parameter
-       *  @param a0     a0       parameter
-       *  @param a1     a1       parameter
-       *  @param a2     a2       parameter
+       *  @param c0     c0       parameter
+       *  @param c1     c1       parameter
+       *  @param c2     c2       parameter
        */
       Needham
       ( const double m0    = 3096.0 ,  // for J/psi
         const double sigma =   13.5 ,
-        const double a0    =    2.5 ,
-        const double a1    =   13.5 ,
-        const double a2    =   10   ,
+        const double c0    =    2.5 ,
+        const double c1    =   13.5 , // similar to sigma 
+        const double c2    =   10   ,
         const double n     =    0   ) ; // notethat it is different from internal N!
       /// destructor
       ~Needham() ;
@@ -1365,9 +1373,9 @@ namespace Ostap
       inline double peak  () const { return m_cb.peak  () ; }
       inline double mode  () const { return m_cb.mode  () ; }
       inline double sigma () const { return m_cb.sigma () ; }
-      inline double a0    () const { return m_a0          ; }
-      inline double a1    () const { return m_a1          ; }
-      inline double a2    () const { return m_a2          ; }
+      inline double c0    () const { return m_c0          ; }
+      inline double c1    () const { return m_c1          ; }
+      inline double c2    () const { return m_c2          ; }
       inline double alpha () const { return m_cb.alpha () ; }
       inline double n     () const { return m_cb.n     () ; }
       inline double N     () const { return m_cb.N     () ; }      
@@ -1391,11 +1399,11 @@ namespace Ostap
       // setting sigma causses some change in alpha ...
       bool setSigma ( const double value ) ;
       // =====================================================================
-      /// set all three a-values together
-      bool setA
-      ( const double a0 ,
-        const double a1 ,
-        const double a2 ) ;
+      /// set all three c-values together
+      bool setC
+      ( const double c0 ,
+        const double c1 ,
+        const double c2 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1414,12 +1422,12 @@ namespace Ostap
       // ======================================================================
       /// the function itself
       Ostap::Math::CrystalBall m_cb ; // the function itself
-      /// a0-parameter
-      double m_a0                   ;  // a0_parameter
-      /// a0-parameter
-      double m_a1                   ;  // a1_parameter
-      /// a0-parameter
-      double m_a2                   ;  // a2_parameter
+      /// c0-parameter
+      double m_c0                   ;  // c0_parameter
+      /// c0-parameter
+      double m_c1                   ;  // c1_parameter
+      /// c0-parameter
+      double m_c2                   ;  // c2_parameter
       // ======================================================================
     } ;
     // ========================================================================
