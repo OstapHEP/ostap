@@ -660,13 +660,13 @@ class Needham_pdf(PEAK) :
         s_minmax = self.sigma.minmax()
         if s_minmax :
             smin, smax = s_minmax
-            c1limits = 0.1 * smin , 10 * smax
+            c1limits = 0.2 * smin , 10 * smax
         else : c1limits = () 
         
         self.__c1 = self.make_var ( c1                  ,
                                     "c1_%s"     % name  ,
                                     "c_{1}(%s)" % name  ,
-                                    True , *c1pars   )  
+                                    True , *c1limits   )  
         
         self.__c2 = self.make_var ( c2                  ,
                                     "c2_%s"     % name  ,
