@@ -583,7 +583,7 @@ class ResoNeedham(RESOLUTION) :
                                     "c_{0}(%s)" % name  ,
                                     True , 2.5 , 1.5    , 4.0 )
         
-        s_minmax = self.sigma.minmax        
+        s_minmax = self.sigma.minmax ()         
         if s_minmax :
             smin, smax = s_minmax
             c1limits = 0.1 * smin , 10 * smax
