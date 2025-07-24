@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file ostap/tools/tests/test_tools_chopping.py
+## @file ostap/tools/tests/test_tools_chopping2.py
 #  Test for TMVA `chopping' (k-fold cross-validation) machinery
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-10-25 
@@ -26,7 +26,7 @@ import ROOT, os, array, random
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__'  == __name__ : 
-    logger = getLogger ( 'ostap.test_tools_chopping' )
+    logger = getLogger ( 'ostap.test_tools_chopping2' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
@@ -52,21 +52,25 @@ if not os.path.exists( data_file ) :
         treeSignal.SetDirectory ( test_file ) 
         treeBkg   .SetDirectory ( test_file ) 
         
-        var1 = array.array ( 'd', [0] )
-        var2 = array.array ( 'd', [0] )
-        var3 = array.array ( 'd', [0] )
-        vevt = array.array ( 'i', [0] )
-        vrun = array.array ( 'i', [0] )
+        var1 = array.array ( 'd',  [ 0 ] )
+        var2 = array.array ( 'd',  [ 0 ] )
+        var3 = array.array ( 'd',  [ 0 ] )
+        var4 = array.array ( 'd',  [ 0 ] )
+        vevt = array.array ( 'i',  [ 0 ] )
+        vrun = array.array ( 'i',  [ 0 ] )
         
         treeSignal.Branch ( 'var1' , var1 , 'var1/D' )
         treeSignal.Branch ( 'var2' , var2 , 'var2/D' )
         treeSignal.Branch ( 'var3' , var3 , 'var3/D' )
+        treeSignal.Branch ( 'VARS' , var4 , 'VARS/D' )
+        
         treeSignal.Branch ( 'evt'  , vevt , 'evt/I'  )
         treeSignal.Branch ( 'run'  , vrun , 'run/I'  )
         
         treeBkg   .Branch ( 'var1' , var1 , 'var1/D' )
         treeBkg   .Branch ( 'var2' , var2 , 'var2/D' )
         treeBkg   .Branch ( 'var3' , var3 , 'var3/D' )
+        treeBkg   .Branch ( 'VARB' , var4 , 'VARB/D' )
         treeBkg   .Branch ( 'evt'  , vevt , 'evt/I'  )
         treeBkg   .Branch ( 'run'  , vrun , 'run/I'  )
         
@@ -79,10 +83,12 @@ if not os.path.exists( data_file ) :
             x = random.uniform ( -2.0 , 2.0 )
             y = random.uniform ( -2.0 , 2.0 )
             z = random.gauss   (   .0 , 0.5 )
+            w = random.gauss   (   .2 , 0.5 )
             
             var1[0] =  x + 0.1 * y  
             var2[0] =  x - 0.1 * y  
             var3[0] = -x +       z
+            var4[0] =  w
             
             ievt += 1
             if 0 ==  ( ievt % b_evt_per_run ) :
@@ -103,10 +109,12 @@ if not os.path.exists( data_file ) :
             x = random.gauss  (  0.0 , 0.1 )
             y = random.gauss  (  0.0 , 0.2 )
             z = random.gauss  (  0.5 , 0.5 )
+            w = random.gauss  ( -0.2 , 0.5 )
             
             var1[0] =  x
             var2[0] =  y  
             var3[0] =  z
+            var4[0] =  w
             
             ievt += 1
             if 0 == ( ievt % s_evt_per_run ) :
@@ -151,13 +159,18 @@ trainer = Trainer (
     ( ROOT.TMVA.Types.kFisher     , "Fisher"     , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
     ( ROOT.TMVA.Types.kLikelihood , "Likelihood" , "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" )
     ] ,
-    variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training 
-    signal         = cSignal                  , ## ``Signal'' sample
-    background     = cBkg                     , ## ``Background'' sample         
-    verbose        = True     ,
-    make_plots     = True     ,   
-    logging        = True     ,  ## produce  log-files 
-    parallel       = True     ,  ## parallel training
+    ## 
+    variables       = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training
+    signal_vars     = { 'VARX' : 'VARS' } , 
+    background_vars = { 'VARX' : 'VARB' } ,      
+    ##     
+    signal         = cSignal                  , ## `Signal' sample
+    background     = cBkg                     , ## `Background' sample         
+    verbose        = True                     ,
+    make_plots     = True                     ,   
+    logging        = True                     ,  ## produce  log-files 
+    parallel       = True                     ,  ## parallel training
+    ## 
     prefilter      = 'var1>-1.8'  ,
     ##
     chop_signal     = True ,
@@ -169,7 +182,6 @@ trainer = Trainer (
     workdir        = CleanUp.tempdir ( prefix = 'ostap-chopping-workdir-' ) , ##  working directory 
     ## parallel_conf  = { 'ncpus' : 0 , 'ppservers' : 'auto' }
     )
-
 
 # train it!  
 with timing ( 'for TMVA/Chopping training' , logger ) :
@@ -193,7 +205,6 @@ for f in trainer.output_files :
 #    but it is very flexible and powerful with respect to variable transformations
 # =============================================================================
 
-
 # =============================================================================
 ## A) Add TMVA/Chopping decision to (input) TTrees 
 # =============================================================================
@@ -202,17 +213,19 @@ with timing ( "Add TMVA/Chopping response to input TTree" , logger = logger ) as
     cSignal = ROOT.TChain ( 'S' ) ; cSignal.Add ( data_file )
     cBkg    = ROOT.TChain ( 'B' ) ; cBkg   .Add ( data_file )
     
+    signal_inputs      = ( 'var1' ,  'var2' , 'var3' , 'VARX : VARS' ) 
+    background_inputs  = ( 'var1' ,  'var2' , 'var3' , 'VARX : VARB' )   
+       
     config = { 'chopping'      : "137*evt+813*run"             ,
                'N'             : N                             , 
-               'inputs'        : ( 'var1' ,  'var2' , 'var3' ) ,
                'weights_files' : tar_file                      ,
                'prefix'        : 'tmva_'                       ,
                'suffix'        : '_response'                   }
     
     from ostap.tools.chopping import addChoppingResponse
     
-    addChoppingResponse ( cSignal  , **config ) 
-    addChoppingResponse ( cBkg     , **config )
+    addChoppingResponse ( cSignal  , inputs = signal_inputs     , **config ) 
+    addChoppingResponse ( cBkg     , inputs = background_inputs , **config )
 
     cSignal = ROOT.TChain ( 'S' ) ; cSignal.Add ( data_file )
     cBkg    = ROOT.TChain ( 'B' ) ; cBkg   .Add ( data_file )
@@ -220,131 +233,6 @@ with timing ( "Add TMVA/Chopping response to input TTree" , logger = logger ) as
     logger.info ('TTree   SIG (with TMVA decisions):\n%s' % cSignal.table ( prefix = '# ') ) 
     logger.info ('TTree   BKG (with TMVA decisions):\n%s' % cBkg   .table ( prefix = '# ') ) 
 
-# =============================================================================
-## B) Add TMVA/Choppnig desision to (existing) RooDataSet 
-# =============================================================================  
-## B.1) prepare "existing" datasets
-if True : 
-    ## category function
-    category = lambda s :  int ( s.evt*137 + 813*s.run ) % N
-    
-    ## prepare dataset with TMVA/Chopping result
-    
-    from ostap.fitting.pyselectors import SelectorWithVars, Variable
-    
-    variables = [
-        Variable ( 'var1' , 'variable#1' ) ,
-        Variable ( 'var2' , 'variable#2' ) ,
-        Variable ( 'var3' , 'variable#3' ) ,
-        ## extra: needed for addChoppingResponse 
-        Variable ( 'evt'  , 'event'      ) ,
-        Variable ( 'run'  , 'run'        ) ,
-        ## extra: needed for cross-checks  
-        Variable ( 'cat'  , 'category'   , accessor = category ) ,
-        ## Variable ( 'cat'  , 'category'   , accessor = '((137*evt+813*run)%%%d)*1.0' % N ) ,
-        ]
-    
-    cSignal = ROOT.TChain ( 'S' ) ; cSignal.Add ( data_file )
-    cBkg    = ROOT.TChain ( 'B' ) ; cBkg   .Add ( data_file )
-    
-    dsS1, _ = cSignal.fill_dataset ( variables , selection = 'var1<100' , use_frame = -1 )
-    dsB1, _ = cBkg   .fill_dataset ( variables , selection = 'var1<100' , use_frame = -1 )
-# =============================================================================
-## B.2) add response 
-with timing ( "Add TMVA/Chopping response to (existing) RooDataSet " , logger = logger ) as time_B :
-    
-    config = { 'chopping'      : "137*evt+813*run"             ,
-               'N'             : N                             , 
-               'inputs'        : ( 'var1' ,  'var2' , 'var3' ) ,
-               'weights_files' : tar_file                      ,
-               'prefix'        : 'tmva_'                       ,
-               'suffix'        : '_response'                   }
-    
-    addChoppingResponse ( dsS1 , **config ) 
-    addChoppingResponse ( dsB1 , **config )
-
-    logger.info ('dataset SIG (with TMVA decisions):\n%s' % dsS1.table ( prefix = '# ') ) 
-    logger.info ('dataset BKG (with TMVA decisions):\n%s' % dsB1.table ( prefix = '# ') ) 
-
-# =============================================================================
-## C) Add TMVA/Choppnig desision to (newly created) RooDataSet 
-# =============================================================================  
-with timing ( "Add TMVA/Chopping response to (newly created) RooDataSet " , logger = logger ) as time_C :
-    
-    from ostap.tools.chopping import Reader
-    reader = Reader (
-        N             = N         , ##  number of   categories
-        categoryfunc  = category  , ## category 
-        ## other argument  as for plain TMVA     
-        name          = 'ChopReader' ,
-        variables     = [ ('var1' , lambda s : s.var1 )   ,
-                          ('var2' , lambda s : s.var2 )   ,
-                          ('var3' , lambda s : s.var3 ) ] ,
-        weights_files = tar_file )
-
-    extended_vars = list ( variables )
-
-    for m in reader.methods :
-        extended_vars += [ Variable ( 'tmva_%s_response' % m , 'TMVA response (%s)' % m , accessor = reader[m] ) ]
-                
-    cSignal = ROOT.TChain ( 'S' ) ; cSignal.Add ( data_file )
-    cBkg    = ROOT.TChain ( 'B' ) ; cBkg   .Add ( data_file )
-    
-    dsS2, _ = cSignal.fill_dataset ( extended_vars , selection = 'var1<100' , use_frame = -1 )
-    dsB2, _ = cBkg   .fill_dataset ( extended_vars , selection = 'var1<100' , use_frame = -1 )
-    
-    logger.info ('dataset SIG (with TMVA decisions):\n%s' % dsS2.table ( prefix = '# ') ) 
-    logger.info ('dataset BKG (with TMVA decisions):\n%s' % dsB2.table ( prefix = '# ') ) 
-
-    decisions = [ 'tmva_%s_response' % m for m in reader.methods ]
-
-    del extended_vars
-    del reader 
-
-# =============================================================================
-## Check TMVA results 
-# =============================================================================
-cSignal = ROOT.TChain ( 'S' ) ; cSignal.Add ( data_file )
-cBkg    = ROOT.TChain ( 'B' ) ; cBkg   .Add ( data_file )
-    
-s_stats   = cSignal.statVars ( decisions )
-b_stats   = cBkg   .statVars ( decisions )
-s1_stats  = dsS1   .statVars ( decisions )
-b1_stats  = dsB1   .statVars ( decisions )
-s2_stats  = dsS2   .statVars ( decisions )
-b2_stats  = dsB2   .statVars ( decisions )
-
-table = [ ( '' , 'Method ', 'Signal' , 'Background ' ) ]
-for t, s,b in ( ( 'A' , s_stats , b_stats  ) ,
-                ( 'B' , s1_stats, b1_stats ) ,
-                ( 'C' , s2_stats, b2_stats ) ) : 
-    for d in decisions :
-        
-        ms = s [ d ]
-        mb = b [ d ]
-        
-        row = t , d , \
-              '%+7.3f +/- %-7.3f' % ( float ( ms.mean() ) , ms.rms() ) ,\
-              '%+7.3f +/- %-7.3f' % ( float ( mb.mean() ) , mb.rms() )
-        table.append ( row )
-        
-import ostap.logger.table as T
-table  = T.table (  table , title = 'TMVA performance', prefix = '# ' , alignment = 'llcc' )
-logger.info ( 'TMVA performance for Signal and Background\n%s' % table )
-
-
-rows = [ ( 'Method' , 'Time [s]' ) ] 
-row  = 'A' , '%.1f' % time_A.delta
-rows.append ( row )
-row  = 'B' , '%.1f' % time_B.delta
-rows.append ( row )
-row  = 'C' , '%.1f' % time_C.delta
-rows.append ( row )
-title = 'Timing'
-table = T.table ( rows , title = title , prefix = '# ' , alignment = 'cc' )
-logger.info ( '%s\n%s' % ( title , table ) ) 
-
-    
                           
 # =============================================================================
 ##                                                                      The END

@@ -516,12 +516,11 @@ class Trainer(object):
         self.__log_file      = '' 
         self.__plots         = []
         
-        self.__output_file   = os.path.abspath ( self.output_file ) if self.output_file else None  
+        self.__output_file   = os.path.abspath ( self.output_file ) if self.output_file else None
 
         #
         ## minor adjustment
-        #
-        
+        #        
         opts = self.__bookingoptions
         
         if 0 > opts.find ( "AnalysisType=" ) :
@@ -566,6 +565,9 @@ class Trainer(object):
         self.__pattern_plots = pattern_PLOTS % self.name
 
         self.__multithread = multithread 
+
+        ## dictionary { method : AUC}
+        self.__AUC= {}
 
         if self.verbose :
             
@@ -870,6 +872,44 @@ class Trainer(object):
         """'show_plots': show plots?"""
         return self.verbose and ( self.category in ( 0 , -1 ) )
 
+    
+    @property
+    def AUC ( self ) :
+        """`auc` : dictionary { method : AUC }, where
+        - -AUC is "Area Under ROC curce 
+        """
+        return self.__AUC
+
+    # =========================================================================
+    ## build a summary AUC table
+    #  @code
+    #  trainer = ...
+    #  print ( trainer.AUC_table() )
+    #  @endcode 
+    def AUC_table ( self , title = '' , prefix = '' , style = '' ) :
+        """ Build a summary AUC table  
+        >>> trainer = ...
+        >>> print ( trainer.AUC_table() )
+        """
+        from ostap.logger.pretty  import pretty_float
+        from ostap.logger.symbols import times
+        header = 'Method' , 'AUC' , '1-AUC' , '' , '-log10(1-AUC)'
+        rows   = [] 
+        for key, auc in self.AUC.items() : 
+            da = 1 - auc 
+            a1 , e1             = pretty_float ( da                 , precision = 4 , width = 6 )
+            if 0 < da : a2 , e2 = pretty_float ( -math.log10 ( da ) , precision = 3 , width = 5 )
+            else      : a2 , e2 = '' , 0             
+            row = key , '%.6f' % auc                              , \
+                a1 ,  '%s10^{%+d}' % ( times , e1 ) if e1 else '' , \
+                a2 ,  '%s10^{%+d}' % ( times , e2 ) if e2 else ''             
+            rows.append ( row )            
+        rows = [ header ] + sorted ( rows )        
+        import ostap.logger.table as T
+        title = title if title else "ROC/AUC compare"
+        rows  = T.remove_empty_columns ( rows ) 
+        return T.table ( rows , prefix = prefix , title = title , alignment = "lcc" , style = '' )
+
     # =========================================================================
     ## train TMVA 
     #  @code
@@ -1044,6 +1084,11 @@ class Trainer(object):
         else : 
             self.__log_file = None 
 
+        if self.verbose and self.AUC :
+            title = 'ROC/AUC summary'
+            table = self.AUC_table ( prefix = '# ' , title = title )
+            self.logger.info ( '%s:\n%s' % ( title , table ) )
+            
         return result
                 
     # =========================================================================
@@ -1491,23 +1536,11 @@ class Trainer(object):
                     del cnv
                     
         ## AUC for ROC curves
-        if self.verbose : 
-            rows = [ ('Method' , 'AUC' ) ]
-            for m in self.methods :
-                mname = m[1]
-                ## if m [ 0 ] == ROOT.TMVA.Types.kCuts and root_info < ( 6 , 24 ) :
-                ##     self.logger.warning ( 'Skip ROC/AUC for %s' % m[1] ) 
-                ##     continue 
-                ## auc = factory.GetROCIntegral ( dataloader , mname )
-                auc = factory.GetROCIntegral ( self.name , mname )
-                row = mname , '%.6g' % auc
-                rows.append ( row ) 
-            import ostap.logger.table as T
-            title = "ROC/AUC compare"
-            table = T.table ( rows , prefix = "# " , title = title , alignment = "ll" )
-            self.logger.info ( "%s:\n%s" % ( title , table  ) )
+        for m in self.methods :
+            mname = m [ 1 ]
+            auc = factory.GetROCIntegral ( self.name , mname )
+            self.__AUC [ mname ] = auc
             
-
         # check the output.
         if os.path.exists ( self.output_file ) :
 

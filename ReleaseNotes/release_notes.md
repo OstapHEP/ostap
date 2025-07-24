@@ -1,8 +1,17 @@
+# v3.0.1.8 
+
+## New features
+
+    1. Improve print of the summary AUC/ROC tables for tmva&chopping
+    1. Add new example `test_tools_tmva3.py`     to illustrate the usage of signal/background samples with different variables  
+    1. Add new example `test_tools_chopping2.py` to illustrate the usage of signal/background samples with different variables  
+     
+# v3.0.1.6 
 # v3.0.1.4 
 
 ## New features
 
-   1. Alightly improve printts from for `Files/Data/...` - make them a bit more informative
+   1. Slightly improve prints from for `Files/Data/...` - make them a bit more informative
    1. Add `truncate_middle` function into `ostap.utils.strings` module: A little bit modified version of the code from the `pidgen2` project by Anton Pluektov
    1. Add `ResoNeedham` as explicit resolution function
      

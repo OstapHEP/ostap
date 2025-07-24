@@ -104,7 +104,7 @@ from   ostap.utils.progress_bar  import progress_bar
 import ostap.trees.trees 
 import ostap.trees.cuts
 import ostap.utils.utils         as     Utils 
-import ROOT, os, shutil, tarfile  
+import ROOT, os, math, shutil, tarfile  
 # =============================================================================
 from ostap.logger.logger      import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.chopping' )
@@ -344,7 +344,8 @@ class Trainer(object) :
         background_vars  = _bkg_vars 
 
         self.__signal_vars          = {}
-        if signal_vars     : self.__signal_vars.update     ( signal_vars )        
+        if signal_vars     : self.__signal_vars.update     ( signal_vars )
+        
         self.__background_vars      = {}
         if background_vars : self.__background_vars.update ( background_vars ) 
         
@@ -425,7 +426,7 @@ class Trainer(object) :
             self.__SigTR = TR.reduce ( self.signal        ,
                                        selection = scuts  ,
                                        save_vars = avars  ,
-                                       ## new_vars  = self.signal_vars     , 
+                                       new_vars  = self.signal_vars     , 
                                        prescale  = self.prescale_signal ,  
                                        silent    = False  )
 
@@ -465,7 +466,7 @@ class Trainer(object) :
             self.__BkgTR = TR.reduce ( self.background    ,
                                        selection = bcuts  ,
                                        save_vars = bvars  ,
-                                       ## new_vars  = self.background_vars     , 
+                                       new_vars  = self.background_vars     , 
                                        prescale  = self.prescale_background ,  
                                        silent    = False  )
             
@@ -558,6 +559,7 @@ class Trainer(object) :
         self.__tar_file      = None 
         self.__log_file      = None 
 
+        self.__AUCs          = {} 
         
         if self.verbose :
             
@@ -668,7 +670,7 @@ class Trainer(object) :
         
     ## create the trainer for category "i"
     def create_trainer ( self , i , verbose = True ) :
-        """Create the trainer for category `i'
+        """ Create the trainer for category `i'
         """
         cat       = '(%s)%%%d' % ( self.category , self.N  )
         nam       =  '%s_%03d' % ( self.name , i )
@@ -945,6 +947,13 @@ class Trainer(object) :
         """`workdir' : working directory"""
         return self.__workdir
 
+    @property
+    def AUCs ( self ) :
+        """`AUCs` : dictionary of dictionaries { category : { method : AUC } } , where
+        - AUC is "Area Under ROC curce 
+        """
+        return self.__AUCs
+
 
     # =========================================================================
     ## The main method: training of all subsamples 
@@ -1128,7 +1137,13 @@ class Trainer(object) :
                         shutil.move ( tdir , self.dirname )
                     except :
                         pass
-                    
+
+
+        if self.verbose and self.AUCs :
+            title = 'ROC/AUC summary'
+            table = self.AUC_table ( prefix = '# ' , title = title )
+            self.logger.info ( '%s:\n%s' % ( title , table ) )
+            
         return self.tar_file
 
 
@@ -1167,7 +1182,7 @@ class Trainer(object) :
         outputs  = [] 
         tarfiles = [] 
         logfiles = []
-
+        
         from ostap.utils.progress_bar import progress_bar
         for t in progress_bar ( self.trainers , silent = self.verbose ) :
             if self.verbose : self.logger.info  ( "Train the trainer `%s'" % ( t.name ) ) 
@@ -1177,8 +1192,8 @@ class Trainer(object) :
             outputs  += [ t. output_file  ] 
             tarfiles += [ t.    tar_file  ] 
             logfiles += [ t.    log_file  ] if t.log_file and os.path.exists ( t.log_file ) else [] 
-
-
+            self.__AUCs [ t.category ] = t.AUC
+            
         self.__weights_files = tuple ( weights ) 
         self.__class_files   = tuple ( classes )
         self.__output_files  = tuple ( outputs )
@@ -1216,7 +1231,7 @@ class Trainer(object) :
 
     ## use the parallel training 
     def p_train ( self ) :
-        """The main method: training of all subsamples in parallel  
+        """ The main method: training of all subsamples in parallel  
         - Use the trainer for parallel training 
         >>> trainer.p_train()
         
@@ -1231,24 +1246,29 @@ class Trainer(object) :
         ##  train it!
         results = _training_ ( self , **self.parallel_conf )
         
-        assert self.N == len ( results [0] ) , 'Invalid number of weights files '
-        assert self.N == len ( results [1] ) , 'Invalid number of   class files '
-        assert self.N == len ( results [2] ) , 'Invalid number of  output files '
-        assert self.N == len ( results [3] ) , 'Invalid number of     tar files '
-        assert self.N == len ( results [4] ) , 'Invalid number of     dir files '
-        assert self.N == len ( results [5] ) , 'Invalid number of     log files '
+        assert self.N == len ( results [ 0 ] ) , 'Invalid number of weights files'
+        assert self.N == len ( results [ 1 ] ) , 'Invalid number of   class files'
+        assert self.N == len ( results [ 2 ] ) , 'Invalid number of  output files'
+        assert self.N == len ( results [ 3 ] ) , 'Invalid number of     tar files'
+        assert self.N == len ( results [ 4 ] ) , 'Invalid number of     dir files'
+        assert self.N == len ( results [ 5 ] ) , 'Invalid number of     log files'
         
-        weights  = [ i[1] for i in results [0]         ]
-        classes  = [ i[1] for i in results [1]         ]
-        outputs  = [ i[1] for i in results [2]         ]
-        tarfiles = [ i[1] for i in results [3]         ]
-        dirnames = [ i[1] for i in results [4]         ]
-        logfiles = [ i[1] for i in results [5] if i[1] ]
+        ## assert self.N == len ( results [ 6 ] ) , 'Invalid AUC results'
+        
+        weights  = [ i [ 1 ] for i in results [ 0 ]            ]
+        classes  = [ i [ 1 ] for i in results [ 1 ]            ]
+        outputs  = [ i [ 1 ] for i in results [ 2 ]            ]
+        tarfiles = [ i [ 1 ] for i in results [ 3 ]            ]
+        dirnames = [ i [ 1 ] for i in results [ 4 ]            ]
+        logfiles = [ i [ 1 ] for i in results [ 5 ] if i [ 1 ] ]
         
         self.__weights_files = tuple ( weights ) 
         self.__class_files   = tuple ( classes )
         self.__output_files  = tuple ( outputs )
 
+        ## get the AUCs from all trainers 
+        for c, auc in results [ 6 ] : self.__AUCs [ c ] = auc
+        
         ## create the final tar-file 
         self.__tar_file      = make_tarfile ( output  = '.'.join ( [ self.name , 'tgz' ] ) ,
                                               files   = tarfiles     ,
@@ -1266,12 +1286,43 @@ class Trainer(object) :
         self.__trainer_dirs = tuple ( dirnames ) 
         
         return self.tar_file
-        
+
+    # =========================================================================
+    ## build a summary AUC table
+    #  @code
+    #  trainer = ...
+    #  print ( trainer.AUC_table() )
+    #  @endcode 
+    def AUC_table ( self , title = '' , prefix = '' , style = '' ) :
+        """ Build a summary AUC table  
+        >>> trainer = ...
+        >>> print ( trainer.AUC_table() )
+        """
+        from ostap.logger.pretty  import pretty_float
+        from ostap.logger.symbols import times
+        header = 'Method' , '#' , 'AUC' , '1-AUC' , '' , '-log10(1-AUC)' 
+        rows   = [] 
+        for category , aucs in self.AUCs.items()  :
+            for key, auc in aucs.items() : 
+                da = 1 - auc 
+                a1 , e1             = pretty_float ( da                 , precision = 4 , width = 6 )
+                if 0 < da : a2 , e2 = pretty_float ( -math.log10 ( da ) , precision = 3 , width = 5 )
+                else      : a2 , e2 = '' , 0             
+                row = key , '%d' % category , '%.6f' % auc                              , \
+                    a1 ,  '%s10^{%+d}' % ( times , e1 ) if e1 else '' , \
+                    a2 ,  '%s10^{%+d}' % ( times , e2 ) if e2 else ''             
+                rows.append ( row )
+        rows = [ header ] + sorted ( rows ) 
+        import ostap.logger.table as T
+        title = title if title else "ROC/AUC compare"
+        rows  = T.remove_empty_columns ( rows ) 
+        return T.table ( rows , prefix = prefix , title = title , alignment = "lrcc" , style = '' )
+
 # =============================================================================
 ## @class WeightFiles
 #  helper structure  to deal with weights files
 class WeightsFiles(CleanUp) :
-    """Helper structure  to deal with weights files
+    """ Helper structure  to deal with weights files
     """
     def __init__ ( self , weights_files ) :
         
@@ -1297,7 +1348,8 @@ class WeightsFiles(CleanUp) :
 
     @property
     def files   ( self ) :
-        "`files': the weights file"
+        """`files': the weights file
+        """
         import copy
         return copy.deepcopy ( self.__weights_files ) 
 # =============================================================================
@@ -1349,7 +1401,7 @@ class WeightsFiles(CleanUp) :
 # @endcode 
 # - It it natually merges with Ostap's <code>SelectorWithVars</code> utility
 class Reader(object) :
-    """The `chopping' TMVA reader.
+    """ The `chopping' TMVA reader.
     The interface is very similar to TMVA Trainer
     with two   additional mandatory parameters:
     1. `N'           : number of categories (must be the  same as for training) 

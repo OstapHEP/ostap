@@ -33,7 +33,7 @@ else                       : logger = getLogger ( __name__     )
 ## @class AddChopping
 #  Add TMVA/Chopping response to looong TChain 
 class AddChopping(Task) :
-    """Add TMVA/Chopping response to looong TChain 
+    """ Add TMVA/Chopping response to looong TChain 
     """
     def __init__          ( self , *args , **kwargs ) :
         self.  args   =   args
@@ -78,17 +78,21 @@ class AddChopping(Task) :
 #  parallel procession for TMVA chopping
 #  @see ostap/tools/chopping.py
 class ChopperTraining(Task) :
+    """ Parallel procession for TMVA chopping
+    """
     def __init__          ( self ) : self.__output = ()
     def initialize_local  ( self ) : self.__output = () 
     def process           ( self , jobid , params ) :
         
-        import ROOT, ostap.tools.tmva        
-        category , chopper = params
+        import ostap.tools.tmva        
         from   ostap.utils.root_utils import batch
-        ## in_batch = 2 < python_version.major or 0 != category 
+        ## nupack arguments 
+        category , chopper = params
+        ## process...
         with batch ( True ) : 
             trainer  = chopper.create_trainer ( category , False )
             trainer.train ()
+        ## Full output from TMVA trainer 
         self.__output = (
             [ ( category , trainer.weights_files ) ] ,
             [ ( category , trainer.  class_files ) ] ,
@@ -96,6 +100,7 @@ class ChopperTraining(Task) :
             [ ( category , trainer.    tar_file  ) ] ,
             [ ( category , trainer.     dirname  ) ] ,
             [ ( category , trainer.    log_file  ) ] ,
+            [ ( category , trainer.         AUC  ) ] ,
             )
 
         return self.__output
@@ -104,18 +109,20 @@ class ChopperTraining(Task) :
     def merge_results ( self , result , jobid = -1 ) :
         if not  self.__output : self.__output =  result
         else :
-            weights  = list ( self.__output [0] ) + list ( result [0] ) 
-            classes  = list ( self.__output [1] ) + list ( result [1] ) 
-            outputs  = list ( self.__output [2] ) + list ( result [2] ) 
-            tarfiles = list ( self.__output [3] ) + list ( result [3] ) 
-            dirnames = list ( self.__output [4] ) + list ( result [4] ) 
-            logfiles = list ( self.__output [5] ) + list ( result [5] ) 
+            weights  = list ( self.__output [ 0 ] ) + list ( result [ 0 ] ) 
+            classes  = list ( self.__output [ 1 ] ) + list ( result [ 1 ] ) 
+            outputs  = list ( self.__output [ 2 ] ) + list ( result [ 2 ] ) 
+            tarfiles = list ( self.__output [ 3 ] ) + list ( result [ 3 ] ) 
+            dirnames = list ( self.__output [ 4 ] ) + list ( result [ 4 ] ) 
+            logfiles = list ( self.__output [ 5 ] ) + list ( result [ 5 ] ) 
+            aucs     = list ( self.__output [ 6 ] ) + list ( result [ 6 ] ) 
             weights  . sort ()
             classes  . sort ()
             outputs  . sort ()
             tarfiles . sort ()
             logfiles . sort ()
-            self.__output = weights , classes , outputs , tarfiles, dirnames , logfiles  
+            aucs     . sort () 
+            self.__output = weights , classes , outputs , tarfiles, dirnames , logfiles , aucs   
 
     ## get the results 
     def results  ( self ) : return self.__output 
@@ -218,7 +225,7 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
 #  - internal  function for ostap.tools.chopping.Trainer
 #  @see  ostap.tools.chopping.Trainer
 def chopping_training ( chopper , **kwargs ) :
-    """Perform parallel traning of TMVA/Chopping
+    """ Perform parallel traning of TMVA/Chopping
     - internal  function for ostap.tools.chopping.Trainer
     - see  ostap.tools.chopping.Trainer
     """
