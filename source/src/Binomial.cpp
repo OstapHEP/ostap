@@ -3,6 +3,7 @@
 // STD& STL
 // ============================================================================
 #include <cmath>
+#include <limits>
 // ============================================================================
 // GSL 
 // ============================================================================
@@ -13,6 +14,10 @@
 // ============================================================================
 #include "Ostap/Binomial.h"
 #include "Ostap/MoreMath.h"
+// ============================================================================
+// Local 
+// ============================================================================
+#include "local_math.h"
 // ============================================================================
 /** @file
  *  implementation of funcntions from file Ostap/Binomial.h
@@ -50,8 +55,11 @@ namespace
 double Ostap::Math::probit ( const double alpha  )
 {
   return
-    alpha <= 0 ? -1.0/0.0  :
-    alpha >= 1 ? +1.0/0.0  : _probit_ ( alpha  ) ;  
+    s_zero  ( alpha     ) ? -std::numeric_limits<double>::max () :
+    s_equal ( alpha , 1 ) ?  std::numeric_limits<double>::max () : 
+    alpha < 0             ?  std::numeric_limits<double>::quiet_NaN () :
+    alpha > 1             ?  std::numeric_limits<double>::quiet_NaN () :  
+    _probit_ ( alpha  ) ;  
 }
 // ============================================================================
 /* normal approximation interval for binomial proportion/efficiency 

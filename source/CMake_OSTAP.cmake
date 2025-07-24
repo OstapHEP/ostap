@@ -18,6 +18,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Chi2Fit.cpp
                          src/Clausen.cpp
                          src/Combine.cpp
+                         src/CornishFisher.cpp
                          src/Covariance.cpp
                          src/Covariances.cpp
                          src/COWs.cpp

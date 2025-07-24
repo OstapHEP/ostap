@@ -30,6 +30,7 @@
 #include "Ostap/Clenshaw.h"
 #include "Ostap/Combine.h"
 #include "Ostap/Combiner.h"
+#include "Ostap/CornishFisher.h"
 #include "Ostap/Covariance.h"
 #include "Ostap/Covariances.h"
 #include "Ostap/Dalitz.h"
