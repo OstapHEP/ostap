@@ -16,6 +16,7 @@
 #include "Ostap/Choose.h"
 #include "Ostap/ValueWithError.h"
 #include "Ostap/Statistic.h"
+#include "Ostap/CornishFisher.h"
 // ============================================================================
 namespace  Ostap
 {
@@ -3450,6 +3451,156 @@ namespace  Ostap
       ( const WMoment_<N>& m      ,
         const double       center )
       { return m.template centralized_moment_<K> ( center ) ; }
+      
+     
+      // ======================================================================
+      /** quantile estimates using Cornish-Fisher asymptoco expansion
+       * @see Ostap::Math::cornish_fisher
+       * @see https://en.wikipedia.org/wiki/Cornish%E2%80%93Fisher_expansion
+       */
+      template <unsigned short N,
+                typename std::enable_if<(2==N),int>::type = 1 >
+      inline double quantile_ 
+      ( const Moment_<N>& m  ,
+        const double      p  )
+      {
+        const double mu     = m.mu () ;
+        const double sigma2 = variance ( m ) ;
+        const double sigma  = sigma2 <= 0 ? 0 : std::sqrt ( sigma2 ) ;
+        return Ostap::Math::cornish_fisher  ( p , mu , sigma ) ;
+      }
+      // ======================================================================
+      /** quantile estimates using Cornish-Fisher asymptoco expansion
+       * @see Ostap::Math::cornish_fisher
+       * @see https://en.wikipedia.org/wiki/Cornish%E2%80%93Fisher_expansion
+       */
+      template <unsigned short N,
+                typename std::enable_if<(3==N),int>::type = 1 >
+      inline double quantile_ 
+      ( const Moment_<N>& m  ,
+        const double      p  )
+      {
+        const double mu         = m.mu () ;
+        const double sigma2     = variance ( m ) ;
+        const double sigma      = sigma2 <= 0 ? 0 : std::sqrt ( sigma2 ) ;
+        const double v_skewness = skewness ( m ) ;
+        return Ostap::Math::cornish_fisher  ( p , mu , sigma , v_skewness ) ;
+      }
+      // ======================================================================
+      /** quantile estimates using Cornish-Fisher asymptoco expansion
+       * @see Ostap::Math::cornish_fisher
+       * @see https://en.wikipedia.org/wiki/Cornish%E2%80%93Fisher_expansion
+       */
+      template <unsigned short N,
+                typename std::enable_if<(4==N),int>::type = 1 >
+      inline double quantile_ 
+      ( const Moment_<N>& m  ,
+        const double      p  )
+      {
+        const double mu         = m.mu () ;
+        const double sigma2     = variance ( m ) ;
+        const double sigma      = sigma2 <= 0 ? 0 : std::sqrt ( sigma2 ) ;
+        const double v_skewness = skewness ( m ) ;
+        const double v_kurtosis = kurtosis ( m ) ; 
+        return Ostap::Math::cornish_fisher  ( p , mu , sigma , v_skewness , v_kurtosis ) ;
+      }
+      // ======================================================================
+      /** quantile estimates using Cornish-Fisher asymptoco expansion
+       * @see Ostap::Math::cornish_fisher
+       * @see https://en.wikipedia.org/wiki/Cornish%E2%80%93Fisher_expansion
+       */
+      template <unsigned short N,
+                typename std::enable_if<(5<=N),int>::type = 1 >
+      inline double quantile_ 
+      ( const Moment_<N>& m  ,
+        const double      p  )
+      {
+        const double mu         = m.mu () ;
+        const double sigma2     = variance ( m ) ;
+        const double sigma      = sigma2 <= 0 ? 0 : std::sqrt ( sigma2 ) ;
+        const double v_skewness = skewness  ( m ) ;
+        const double v_kurtosis = kurtosis  ( m ) ; 
+        const double m5         = m.template moment_<5> () ;
+        const double m3         = m.template moment_<3> () ;
+        const double m2         = m.template moment_<2> () ;
+        const double v_kappa5   = m5 - 10 * m3 * m2 ;
+        return Ostap::Math::cornish_fisher  ( p , mu , sigma , v_skewness , v_kurtosis , v_kappa5 ) ;
+      }
+
+      // ======================================================================
+      /** quantile estimates using Cornish-Fisher asymptoco expansion
+       * @see Ostap::Math::cornish_fisher
+       * @see https://en.wikipedia.org/wiki/Cornish%E2%80%93Fisher_expansion
+       */
+      template <unsigned short N,
+                typename std::enable_if<(2==N),int>::type = 1 >
+      inline double quantile_ 
+      ( const WMoment_<N>& m  ,
+        const double       p  )
+      {
+        const double mu     = m.mu () ;
+        const double sigma2 = variance ( m ) ;
+        const double sigma  = sigma2 <= 0 ? 0. : std::sqrt ( sigma2 ) ;
+        return Ostap::Math::cornish_fisher  ( p , mu , sigma ) ;
+      }
+      // ======================================================================
+      /** quantile estimates using Cornish-Fisher asymptoco expansion
+       * @see Ostap::Math::cornish_fisher
+       * @see https://en.wikipedia.org/wiki/Cornish%E2%80%93Fisher_expansion
+       */
+      template <unsigned short N,
+                typename std::enable_if<(3==N),int>::type = 1 >
+      inline double quantile_ 
+      ( const WMoment_<N>& m  ,
+        const double       p  )
+      {
+        const double mu         = m.mu () ;
+        const double sigma2     = variance ( m ) ;
+        const double sigma      = sigma2 <= 0 ? 0. : std::sqrt ( sigma2 ) ;
+        const double v_skewness = skewness ( m ) ;
+        return Ostap::Math::cornish_fisher  ( p , mu , sigma , v_skewness ) ;
+      }
+      // ======================================================================
+      /** quantile estimates using Cornish-Fisher asymptoco expansion
+       * @see Ostap::Math::cornish_fisher
+       * @see https://en.wikipedia.org/wiki/Cornish%E2%80%93Fisher_expansion
+       */
+      template <unsigned short N,
+                typename std::enable_if<(4==N),int>::type = 1 >
+      inline double quantile_ 
+      ( const WMoment_<N>& m  ,
+        const double       p  )
+      {
+        const double mu         = m.mu () ;
+        const double sigma2     = variance ( m ) ;
+        const double sigma      = sigma2 <= 0 ? 0. : std::sqrt ( sigma2 ) ;
+        const double v_skewness = skewness ( m ) ;
+        const double v_kurtosis = kurtosis ( m ) ; 
+        return Ostap::Math::cornish_fisher  ( p , mu , sigma , v_skewness , v_kurtosis ) ;
+      }
+      // ======================================================================
+      /** quantile estimates using Cornish-Fisher asymptoco expansion
+       * @see Ostap::Math::cornish_fisher
+       * @see https://en.wikipedia.org/wiki/Cornish%E2%80%93Fisher_expansion
+       */
+      template <unsigned short N,
+                typename std::enable_if<(5<=N),int>::type = 1 >
+      inline double quantile_ 
+      ( const WMoment_<N>& m  ,
+        const double       p  )
+      {
+        const double mu         = m.mu () ;
+        const double sigma2     = variance ( m ) ;
+        const double sigma      = sigma2 <= 0 ? 0. : std::sqrt ( sigma2 ) ;
+        const double v_skewness = skewness  ( m ) ;
+        const double v_kurtosis = kurtosis  ( m ) ;
+        const double m5         = m.template moment_<5> () ;
+        const double m3         = m.template moment_<3> () ;
+        const double m2         = m.template moment_<2> () ;
+        const double v_kappa5   = m5 - 10 * m3 * m2 ;
+        return Ostap::Math::cornish_fisher  ( p , mu , sigma , v_skewness , v_kurtosis , v_kappa5 ) ;
+      }
+
       
      
       // ======================================================================

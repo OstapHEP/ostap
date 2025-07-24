@@ -358,7 +358,7 @@ def _om_cm4 ( obj , order , center ) :
    """
    assert isinstance  ( order , integer_types ) and order <= obj.order ,\
        'centralized_moment: invalid order %s/%d' % ( order , obj.order )
-   assert isinstance  ( cener , num_types ) ,\
+   assert isinstance  ( center , num_types ) ,\
        'centralized_moment: invalid center %s' % center
    ## 
    return Ostap.Math.centralized_moment [ order ]( center )
@@ -376,6 +376,25 @@ def _om_std ( obj , order ) :
     elif 2 == order : return 1            ## RETURN
 
     return Ostap.Math.Moments.std_moment [ order ] ( obj  )
+    
+# =============================================================================
+## Get quantile estimate using Cornish-Fisher approximation
+#  @code
+#  moment = ...
+#  q = moment.quantile ( 0.5 )
+#  @endcode 
+# @see https://en.wikipedia.org/wiki/Cornish%E2%80%93Fisher_expansion
+def _om_quantile ( obj , p ) :
+    """ Get quantile estimatw using Cornish-Fisher approximation
+    >>> moment = ...
+    >>> q = moment.quantile ( 0.5 )
+    - see https://en.wikipedia.org/wiki/Cornish%E2%80%93Fisher_expansion
+    """
+    assert 2 <= obj.order , "Cornish-Fisher methodd requres order >=2!"
+    if   p <= 0 : return obj.min() 
+    elif 1 <= p : return obj.max()
+    ## 
+    return Ostap.Math.Moments.quantile_  ( obj , p )
     
 # =============================================================================
 ## print object as a table
@@ -695,6 +714,9 @@ Ostap.Math.WMoment.table          = _om_table
 
 Ostap.Math.Moment.minmax           = _om_minmax
 Ostap.Math.WMoment.minmax          = _om_minmax
+
+Ostap.Math.Moment.quantile         = _om_quantile
+Ostap.Math.WMoment.quantile        = _om_quantile
 
 for t in ( Ostap.Math.WMoment ,
            Ostap.Math. Moment ) :
