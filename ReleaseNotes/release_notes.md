@@ -1,5 +1,8 @@
 ## New features
 
+ 1. Improve a little bit the prinntout of `Ostap::Math::Modment_` objects in python
+ 
+
 ## Backward-incompatible 
 
 ## Bug fixes

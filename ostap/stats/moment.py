@@ -519,7 +519,7 @@ def _om_table ( obj , * ,
         if isfinite ( vv ) and IM != float ( v ) :
             if isinstance ( v , VE ) : field , n = v.pretty_print () 
             else                     : field , n = pretty_float ( v )
-            row = "kurtosis"  , field , '' if not n else fmt_factor % n  
+            row = "kurtosis (excess)"  , field , '' if not n else fmt_factor % n  
             rows.append ( row )
             
     fmt = '[%d]'
@@ -577,9 +577,16 @@ def _om_table ( obj , * ,
             if isfinite ( vv ) and IM != float ( v ) :                
                 if isinstance ( v , VE ) : field , n = v.pretty_print () 
                 else                     : field , n = pretty_float ( v )
-                row = ( "M" + fmt + "/std" )  % i , field , '' if not n else fmt_factor % n
+                if 4 == i : 
+                    row = "kurtosis (classic)" , field , '' if not n else fmt_factor % n
+                elif 5  == i : 
+                    row = "hyperskewness" , field , '' if not n else fmt_factor % n
+                elif 6 == i :
+                    row = "hypertailedness" , field , '' if not n else fmt_factor % n
+                else  :
+                    row = ( "M" + fmt + "/std" )  % i , field , '' if not n else fmt_factor % n
                 rows.append ( row )
-
+                
         elif not standard :
 
             v  = obj.central_moment ( i )
