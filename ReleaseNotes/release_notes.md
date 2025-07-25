@@ -1,4 +1,5 @@
-## New features
+
+    ## New features
 
  1. Improve a little bit the prinntout of `Ostap::Math::Modment_` objects in python
  1. Add Cornish-Fisher estimate for approximate quantile functions
@@ -9,7 +10,6 @@
 
 ## Bug fixes
 
-    
 # v3.0.1.8 
 
 ## New features
