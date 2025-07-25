@@ -293,7 +293,7 @@ class Components ( object ) :
                 n    = c.GetName() 
                 what = '' 
                 if   c in self.signals     : what = 'signal'
-                elif c in self.background  : what = 'bkg.'    
+                elif c in self.backgrounds : what = 'bkg.'    
                 elif c in self.crossterms1 : what = 'X-term-1'
                 elif c in self.crossterms2 : what = 'X-term-2'
                 elif c in self.components  : what = 'cmp.'
