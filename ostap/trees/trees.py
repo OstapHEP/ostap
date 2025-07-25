@@ -477,7 +477,7 @@ def tree_project ( tree                     ,
     ## use frame processing if requested and if/when possible 
     if use_frame and good_for_frame ( tree , first , last ) : 
         import ostap.frames.frames as F 
-        return F.frame_project ( tree , target , expressions = varlst , cuts = cuts , progress = progres , lazy = False  )
+        return F.frame_project ( tree , target , expressions = varlst , cuts = cuts , progress = progress , lazy = False  )
 
     ## use parallel processing if requested and if/when possible  
     if parallel and good_for_parallel ( tree , first , last ) and input_histo :
