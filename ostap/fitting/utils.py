@@ -167,16 +167,32 @@ class RangeVar(object) :
     def __enter__ ( self ) :
         self.omin = self.var.getMin ()
         self.omax = self.var.getMax ()
-        self.var.setMin ( self.vmin ) 
-        self.var.setMax ( self.vmax )
+
+        if   self.omax <= self.vmax :
+            self.var.setMax ( self.vmax )
+            self.var.setMin ( self.vmin ) 
+        elif self.omin >= self.vmin :
+            self.var.setMin ( self.vmin ) 
+            self.var.setMax ( self.vmax )
+        else :             
+            self.var.setMin ( self.vmin ) 
+            self.var.setMax ( self.vmax )
+            
         return self
     
-    def __exit__  ( self , *_ ) :        
-        self.var.setMin ( self.omin ) 
-        self.var.setMax ( self.omax )
+    def __exit__  ( self , *_ ) :
 
+        if   self.omax >= self.vmax :
+            self.var.setMax ( self.omax )
+            self.var.setMin ( self.omin ) 
+        elif self.omin <= self.vmin :  
+            self.var.setMin ( self.omin ) 
+            self.var.setMax ( self.omax ) 
+        else : 
+            self.var.setMin ( self.omin ) 
+            self.var.setMax ( self.omax ) 
 
-
+            
 # ==============================================================================
 ## Should one use "similar" component?
 def component_similar ( same ) :
