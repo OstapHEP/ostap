@@ -56,6 +56,7 @@ __all__     = (
     'ResoApo2'          , ## Apollonios-2 resolution model,
     'ResoCB2'           , ## double-sided Crystal Ball resolution model,
     'ResoCB2a'          , ## double-sided Crystal Ball resolution model,
+    'ResoNeedham'       , ## variant of Crystal Ball funxtion
     'ResoStudentT'      , ## Student-T resolution model,
     'ResoPearsonIV'     , ## Pearson Tyep IV resolution model
     'ResoSkewGenT'      , ## Skewed Generalized t-distribution 
