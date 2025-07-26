@@ -8,7 +8,7 @@
 
 ## Bug fixes
 
-   1. fix tiny typo in `tree_reduce`
+   1. fix a tiny typo in `tree_reduce`
     
 # v3.0.1.10
 

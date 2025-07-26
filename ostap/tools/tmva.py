@@ -1180,9 +1180,9 @@ class Trainer(object):
             
             # =================================================================
             ## prefilter/prescale signal if required 
+            ## -- self.signal_cuts              or \
             if self.prefilter_signal         or \
                self.prefilter                or \
-               ## self.signal_cuts              or \
                self.__more_signals           or \
                ( 1 != self.prescale_signal ) or self.signal_vars :
                 
@@ -1226,9 +1226,9 @@ class Trainer(object):
 
             # =================================================================
             ## prefilter/prescale background if required 
+            ## -- self.background_cuts          or \
             if self.prefilter_background     or \
                self.prefilter                or \
-               ## self.background_cuts          or \
                self.__more_backgrounds       or \
                1 != self.prescale_background or self.background_vars :
                 
