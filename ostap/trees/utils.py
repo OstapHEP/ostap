@@ -214,15 +214,16 @@ class Chain(CleanUp) :
             self.__items = tuple ( self.__make_item ( fname ) for fname in tree.files ) 
             self.__first = first
             self.__last  = last 
-                    
+            
         elif isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree ) : 
-
+            
             self.__name  = tree.fullpath
             
             ## Memory resident tree? put it into the temporary file. keep ?
-            tmpfile = Cleanup.tmpfile ( suffix = '.root' , prefix = 'ostap-tree-' , keep = True ) 
+            tmpfile = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-tree-' , keep = True ) 
             logger.attention ( "TTree is a memory resident! Write it into the temporary TFile:%s" % tmpfile )
-            with ROOT.TFile ( tmpfile , 'NEW' ) as rf : rf [ self.name ] = tree
+            with ROOT.TFile ( tmpfile , 'NEW' ) as rf :
+                rf [ self.name ] = tree
             
             self.__items = self.__make_item ( tmpfile ) , 
             self.__first = first

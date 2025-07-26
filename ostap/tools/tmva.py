@@ -1208,7 +1208,8 @@ class Trainer(object):
                 self.__RS = tuple ( TR.reduce ( i                    ,
                                                 selection = scuts    ,
                                                 save_vars = avars    ,
-                                                name      = 'SIGNAL' , 
+                                                name      = 'SIGNAL' ,
+                                                output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-tmva-SIGNAL-' ) , ## , keep = True ) ,
                                                 new_vars  = self.signal_vars     , 
                                                 prescale  = self.prescale_signal ,  
                                                 silent    = silent   ) for i in inputs )
@@ -1253,7 +1254,8 @@ class Trainer(object):
                 self.__RB = tuple ( TR.reduce ( i                  ,
                                                 selection = bcuts  ,
                                                 save_vars = avars  ,
-                                                name      = 'BACKGROUND'             , 
+                                                name      = 'BACKGROUND'             ,
+                                                output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-tmva-BACKGROUND-' ) , ## , keep = True ) ,
                                                 new_vars  = self.background_vars     , 
                                                 prescale  = self.prescale_background ,  
                                                 silent    = silent ) for i in inputs )

@@ -291,10 +291,17 @@ class Trainer(object) :
         self.__category  = category 
         self.__N         = N
 
+        
+        from ostap.trees.trees import Chain      
+
+        source_types = Chain, ROOT.TTree
+        
+        print ( 'SIGNAL'     , type ( signal     ) , signal      )
+        print ( 'BACKGROUND' , type ( background ) , background  )
+        
         assert signal     , 'Invalid Signal     is specified!'
         assert background , 'Invalid Background is specified!'
 
-        from ostap.trees.trees import Chain      
         if   isinstance ( signal     , Chain           ) : pass 
         elif isinstance ( signal     , ROOT.TTree      ) : signal = Chain ( signal ) 
         elif isinstance ( signal     , ROOT.RooAbsData ) :
@@ -441,7 +448,8 @@ class Trainer(object) :
             self.__RS = tuple ( TR.reduce ( i                    ,
                                             selection = scuts    ,
                                             save_vars = avars    ,
-                                            name      = 'SIGNAL' , 
+                                            name      = 'SIGNAL' ,
+                                            output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-chopping-SIGNAL-' ) , ## , keep = True ) , 
                                             new_vars  = self.signal_vars     , 
                                             prescale  = self.prescale_signal ,  
                                             silent    = False    ) for i in inputs )
@@ -494,7 +502,8 @@ class Trainer(object) :
             self.__RB = tuple ( TR.reduce ( i                  ,
                                             selection = bcuts  ,
                                             save_vars = bvars  ,
-                                            name      = 'BACKGROUND'             , 
+                                            name      = 'BACKGROUND'             ,
+                                            output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-chopping-BACKGROUND-' ) , ## , keep = True ) , 
                                             new_vars  = self.background_vars     , 
                                             prescale  = self.prescale_background ,  
                                             silent    = silent ) for i in inputs )

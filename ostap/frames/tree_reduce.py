@@ -318,18 +318,17 @@ def reduce  ( tree               ,
         ## sys.stdout.write('\n')
         title = 'Tree -> Frame -> Tree filter/transformation'
         logger.info ('Reduce: %s\n%s' % ( title , reduced  ) ) 
-    else     : 
-        nb = len ( result.chain.branches() )
-        ne = len ( result.chain            )
-        f  = float ( nb0 * ne0 * 100 ) / ( nb  * ne )
-        ##
-        if   0.100 <= f : f = '%.1f%%' %   f
-        elif 0.010 <= f : f = '%.2f%%' %   f
-        elif 0.001 <= f : f = '%.3f%%' %   f
-        else            : f = '%.3g'   % ( f / 100 )
-        ##
-        ## sys.stdout.write('\n')
-        logger.info ( 'reduce: (%dx%d) -> (%dx%d) %s (branches x entries) ' % ( nb0  , ne0 ,  nb , ne , f ) ) 
+    else     :
+
+        nb = len ( result.chain.branches () )
+        ne = len ( result.chain             )
+        ff = float ( nb * ne * 100 ) / ( nb0 * ne0 ) 
+        
+        if   0.100 <= ff : ff = '%.1f%%' %   ff
+        elif 0.010 <= ff : ff = '%.2f%%' %   ff
+        elif 0.001 <= ff : ff = '%.3f%%' %   ff
+        else             : ff = '%.3g'   % ( ff / 100 )         
+        logger.info ( 'Reduce: (%dx%d) -> (%dx%d) branches x entries => %s ' % ( nb0  ,  ne0 ,  nb , ne , ff ) ) 
                       
     return result
 

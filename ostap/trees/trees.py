@@ -912,7 +912,6 @@ def _rt_table_1_ ( tree ,
     """ Print tree as table 
     """
 
-    print ( 'TREE_TABLE_1' ) 
     if not variables :
         variables = sorted ( set ( tree.branches() ) | set ( tree.leaves () ) )
         
