@@ -46,7 +46,7 @@ message ( " ********************************************************************
 set(OSTAP_VERSION_MAJOR 3)
 set(OSTAP_VERSION_MINOR 0)
 set(OSTAP_VERSION_PATCH 1)
-set(OSTAP_VERSION_TWEAK 10)
+set(OSTAP_VERSION_TWEAK 11)
 
 set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_PATCH}.${OSTAP_VERSION_TWEAK})
 
