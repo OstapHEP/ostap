@@ -1,9 +1,15 @@
+# v3.0.1.12
+
 ## New features
+
+   1. TMVA&Choppnig: allow to specify several signal and backgroud samples  
 
 ## Backward-incompatible 
 
 ## Bug fixes
 
+   1. fix tiny typo in `tree_reduce`
+    
 # v3.0.1.10
 
 ## New features

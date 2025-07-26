@@ -195,6 +195,9 @@ class Trainer(object) :
                    signal                            ,  ## signal tree
                    background                        ,  ## background tree
                    ##
+                   more_signals      = ()            ,  ## addtitiona signal sources 
+                   more_backgrounds  = ()            ,  ## addtitiona background  sources 
+                   ## 
                    signal_vars       = {}            ,  ## dictionary with new variables for signal sample 
                    background_vars   = {}            ,  ## dictionary with new variables for background sample 
                    ##                   
@@ -322,7 +325,12 @@ class Trainer(object) :
 
         self.__signal               = signal     
         self.__background           = background 
+
+        from ostap.trees.trees import Chain
         
+        self.__more_signals         = tuple ( Chain ( o ) for o in more_signals     ) 
+        self.__more_backgrounds     = tuple ( Chain ( o ) for o in more_backgrounds ) 
+                
         self.__methods              = tuple ( methods)
         
         self.__signal_weight        = signal_weight 
@@ -391,16 +399,21 @@ class Trainer(object) :
             
         if self.prefilter         : all_vars.append ( self.prefilter )
         
-        ## if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
         if self.signal_weight     : all_vars.append ( self.signal_weight     )
         if self.background_weight : all_vars.append ( self.background_weight )
+        
+        ## if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
         ## if self.background_cuts   : all_vars.append ( self.background_cuts   )
         
         ## do not forget to process the chopping category index!
         all_vars.append ( self.category ) 
 
         ## prefilter signal if required 
-        if self.prefilter_signal or self.prefilter or 1 != self.prescale_signal or self.signal_vars :
+        if self.prefilter_signal     or \
+           self.prefilter            or \
+           self.signal_cuts          or \
+           self.__more_signals       or \
+           1 != self.prescale_signal or self.signal_vars :
 
             if self.signal_weight : all_vars.append ( self.signal_weight )
 
@@ -422,24 +435,35 @@ class Trainer(object) :
             import ostap.frames.tree_reduce       as TR
                         
             silent = not self.verbose or not self.category in ( 0, -1 )
-            self.logger.info ( 'Pre-filter Signal     before processing' )
-            self.__SigTR = TR.reduce ( self.signal        ,
-                                       selection = scuts  ,
-                                       save_vars = avars  ,
-                                       new_vars  = self.signal_vars     , 
-                                       prescale  = self.prescale_signal ,  
-                                       silent    = False  )
-
+            self.logger.info ( 'Pre-filter Signal     before processing' )           
+            inputs = ( self.signal, )  + self.__more_signals
+            ## reduced signals 
+            self.__RS = tuple ( TR.reduce ( i                    ,
+                                            selection = scuts    ,
+                                            save_vars = avars    ,
+                                            name      = 'SIGNAL' , 
+                                            new_vars  = self.signal_vars     , 
+                                            prescale  = self.prescale_signal ,  
+                                            silent    = False    ) for i in inputs )
+            ## merge signals 
+            files = ()
+            for rs in self.__RS : files += rs.files
+            self.__SigTR  = Chain ( name = 'SIGNAL' , files = files )                 
             
-            self.__signal      = self.__SigTR
-            self.__signal_cuts = ROOT.TCut() 
+            self.__signal       = self.__SigTR
+            self.__signal_cuts  = ROOT.TCut() 
+            self.__more_signals = () 
             
         missvars = [ v for v in self.signal_vars if not v in self.signal ]
         assert not missvars , "Variables %s are not in signal sample!" % missvars                          
         
         # =================================================================
         ## prefilter background if required 
-        if self.prefilter_background or self.prefilter or 1 != self.prescale_background or self.background_vars :
+        if self.prefilter_background     or \
+           self.prefilter                or \
+           self.background_cuts          or \
+           self.__more_backgrounds       or \
+           1 != self.prescale_background or self.background_vars :
             
             if self.background_weight : all_vars.append ( self.background_weight )
 
@@ -455,7 +479,7 @@ class Trainer(object) :
 
             bcuts = {}
             if self.prefilter_background : bcuts.update ( { 'PreFilter/Background' : self.prefilter_background } )                    
-            if self.prefilter            : bcuts.update ( { 'PreFilter/Common'      : self.prefilter            } )
+            if self.prefilter            : bcuts.update ( { 'PreFilter/Common'     : self.prefilter            } )
             if self.background_cuts      : bcuts.update ( { 'Background'           : self.background_cuts      } )
             
             import ostap.frames.frames 
@@ -463,16 +487,26 @@ class Trainer(object) :
                     
             silent = not self.verbose or not self.category in ( 0, -1 )
             self.logger.info ( 'Pre-filter Background before processing' )
-            self.__BkgTR = TR.reduce ( self.background    ,
-                                       selection = bcuts  ,
-                                       save_vars = bvars  ,
-                                       new_vars  = self.background_vars     , 
-                                       prescale  = self.prescale_background ,  
-                                       silent    = False  )
+
+
+            inputs = ( self.background , ) + self.__more_backgrounds 
+            ## reduced backgrounds 
+            self.__RB = tuple ( TR.reduce ( i                  ,
+                                            selection = bcuts  ,
+                                            save_vars = bvars  ,
+                                            name      = 'BACKGROUND'             , 
+                                            new_vars  = self.background_vars     , 
+                                            prescale  = self.prescale_background ,  
+                                            silent    = silent ) for i in inputs )
+            ## merge signals 
+            files = ()
+            for rb in self.__RB : files += rb.files
+            self.__BkgTR  = Chain ( name = 'BACKGROUND' , files = files ) 
             
-            self.__background      = self.__BkgTR
-            self.__background_cuts = ROOT.TCut() 
-            
+            self.__background       = self.__BkgTR
+            self.__background_cuts  = ROOT.TCut() 
+            self.__more_backgrounds = () 
+
         missvars = [ v for v in self.background_vars if not v in self.background ]
         assert not missvars , "Variables %s are not in background sample!" % missvars                         
 
@@ -694,34 +728,38 @@ class Trainer(object) :
         for v in self.background_vars : vv.add ( v )
         vv = sorted ( vv )
         
-        t  = TMVATrainer ( methods           = self.methods           ,
-                           variables         = vv                     ,
+        t  = TMVATrainer ( methods           = self.methods            ,
+                           variables         = vv                      ,
                            ##
-                           signal            = self.__signal          ,
-                           background        = self.__background      ,
-                           spectators        = self.spectators        ,
-                           bookingoptions    = self.bookingoptions    ,
-                           configuration     = self.configuration     ,
-                           signal_weight     = self.signal_weight     ,
-                           background_weight = self.background_weight ,
+                           signal            = self.__signal           ,
+                           background        = self.__background       ,
                            ##
-                           prefilter         = ''                     , ## attention! 
+                           more_signals      = self.__more_signals     , ## ()
+                           more_backgrounds  = self.__more_backgrounds ,
+                           ## 
+                           spectators        = self.spectators         ,
+                           bookingoptions    = self.bookingoptions     ,
+                           configuration     = self.configuration      ,
+                           signal_weight     = self.signal_weight      ,
+                           background_weight = self.background_weight  ,
+                           ##
+                           prefilter         = ''                      , ## attention! 
                            ##
                            signal_train_fraction     = self.signal_train_fraction     ,  
                            background_train_fraction = self.background_train_fraction ,
                            ##
-                           output_file       = ''                     , 
+                           output_file       = ''                      , 
                            ##                           
-                           signal_cuts       = scuts                  , 
-                           background_cuts   = bcuts                  ,
+                           signal_cuts       = scuts                   , 
+                           background_cuts   = bcuts                   ,
                            ##
-                           name              = nam                    ,
-                           verbose           = vb                     , ## verbose 
-                           logging           = self.logging           ,
-                           make_plots        = mp                     , ## make plots 
-                           multithread       = self.multithread       ,
-                           category          = i                      ,
-                           workdir           = self.workdir           )
+                           name              = nam                     ,
+                           verbose           = vb                      , ## verbose 
+                           logging           = self.logging            ,
+                           make_plots        = mp                      , ## make plots 
+                           multithread       = self.multithread        ,
+                           category          = i                       ,
+                           workdir           = self.workdir            )
         
         return t
     

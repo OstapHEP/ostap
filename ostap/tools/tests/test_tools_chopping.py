@@ -151,17 +151,22 @@ trainer = Trainer (
     ( ROOT.TMVA.Types.kFisher     , "Fisher"     , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
     ( ROOT.TMVA.Types.kLikelihood , "Likelihood" , "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" )
     ] ,
-    variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training 
-    signal         = cSignal                  , ## ``Signal'' sample
-    background     = cBkg                     , ## ``Background'' sample         
-    verbose        = True     ,
-    make_plots     = True     ,   
-    logging        = True     ,  ## produce  log-files 
-    parallel       = True     ,  ## parallel training
-    prefilter      = 'var1>-1.8'  ,
+    variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training
+    ## 
+    signal           = cSignal                  , ## ``Signal'' sample
+    background       = cBkg                     , ## ``Background'' sample
     ##
-    chop_signal     = True ,
-    chop_background = True ,
+    ## more_signals     = [ cSignal ]  ,
+    ## more_backgrounds = [ cBkg    ]  ,
+    ## 
+    verbose          = True     ,
+    make_plots       = True     ,   
+    logging          = True     ,  ## produce  log-files 
+    parallel         = True     ,  ## parallel training
+    prefilter        = 'var1>-1.8'  ,
+    ## 
+    chop_signal      = True ,
+    chop_background  = True ,
     ## 
     signal_train_fraction     = 0.85 , 
     background_train_fraction = 0.85 ,

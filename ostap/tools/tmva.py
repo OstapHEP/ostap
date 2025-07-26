@@ -235,7 +235,7 @@ def make_tarfile ( output , files , verbose = False , tmp = False ) :
            "Non-existing or invalid tar-file:`%s'" % output 
 
     return output 
-    
+
 # =============================================================================
 ## @class Trainer
 #  Helper class to train TMVA
@@ -326,6 +326,9 @@ class Trainer(object):
                    variables                      ,  ## list of variables
                    signal                         ,  ## signal sample/tree
                    background                     ,  ## background sample/tree
+                   ##
+                   more_signals         = ()      ,  ## addtitional signal sources 
+                   more_backgrounds     = ()      ,  ## addtitional background sources 
                    ## 
                    signal_vars          = {}      ,  ## dictionary with new variables for signal sample 
                    background_vars      = {}      ,  ## dictionary with new variables for background sample 
@@ -475,6 +478,9 @@ class Trainer(object):
         self.__background_cuts      = background_cuts 
         self.__background_weight    = background_weight
 
+        self.__more_signals         = tuple ( Chain ( o ) for o in more_signals     ) 
+        self.__more_backgrounds     = tuple ( Chain ( o ) for o in more_backgrounds ) 
+        
         self.__signal_vars          = {}
         if signal_vars     : self.__signal_vars.update     ( signal_vars )        
         self.__background_vars      = {}
@@ -1171,13 +1177,19 @@ class Trainer(object):
             if self.signal_weight     : all_vars.append ( self.signal_weight     )
             if self.background_weight : all_vars.append ( self.background_weight )
 
+            
             # =================================================================
             ## prefilter/prescale signal if required 
-            if self.prefilter_signal or self.prefilter or 1 != self.prescale_signal or self.signal_vars :
+            if self.prefilter_signal         or \
+               self.prefilter                or \
+               ## self.signal_cuts              or \
+               self.__more_signals           or \
+               ( 1 != self.prescale_signal ) or self.signal_vars :
                 
                 if self.signal_weight     : all_vars.append ( self.signal_weight     )
                 
                 import ostap.trees.trees
+                from ostap.trees.trees import Chain
                 avars = self.signal.the_variables ( all_vars )
                 
                 scuts = {}
@@ -1189,27 +1201,40 @@ class Trainer(object):
                 import ostap.frames.tree_reduce       as TR
                 
                 silent = not self.verbose or not self.category in ( 0, -1 )
-                self.logger.info ( 'Pre-filter Signal     before processing' )
-                self.__SigTR = TR.reduce ( self.signal        ,
-                                           selection = scuts  ,
-                                           save_vars = avars  ,
-                                           new_vars  = self.signal_vars     , 
-                                           prescale  = self.prescale_signal ,  
-                                           silent    = silent )
+                self.logger.info ( 'Pre-filter Signal      before processing' )
+                ## 
+                inputs  = ( self.signal , ) + self.__more_signals
+                ## reduced signals 
+                self.__RS = tuple ( TR.reduce ( i                    ,
+                                                selection = scuts    ,
+                                                save_vars = avars    ,
+                                                name      = 'SIGNAL' , 
+                                                new_vars  = self.signal_vars     , 
+                                                prescale  = self.prescale_signal ,  
+                                                silent    = silent   ) for i in inputs )
+                ## merge signals 
+                files = ()
+                for rs in self.__RS : files += rs.files
+                self.__SigTR  = Chain ( name = 'SIGNAL' , files = files )                 
                 
-                self.__signal      = self.__SigTR
-                self.__signal_cuts = ROOT.TCut() 
+                self.__signal       = self.__SigTR
+                self.__signal_cuts  = ROOT.TCut()
+                self.__more_signals = () 
                 
             missvars = [ v for v in self.signal_vars if not v in self.signal ]
             assert not missvars , "Variables %s are not in signal sample!" % missvars                          
 
             # =================================================================
             ## prefilter/prescale background if required 
-            if self.prefilter_background or self.prefilter or 1 != self.prescale_background or self.background_vars :
+            if self.prefilter_background     or \
+               self.prefilter                or \
+               ## self.background_cuts          or \
+               self.__more_backgrounds       or \
+               1 != self.prescale_background or self.background_vars :
                 
                 if self.background_weight : all_vars.append ( self.background_weight )
                 
-                import ostap.trees.trees
+                from ostap.trees.trees import Chain
                 avars = self.background.the_variables ( all_vars )
                 
                 bcuts = {}
@@ -1221,16 +1246,26 @@ class Trainer(object):
                 import ostap.frames.tree_reduce       as TR
                                 
                 silent = not self.verbose or not self.category in ( 0, -1 )
-                self.logger.info ( 'Pre-filter Background before processing' )
-                self.__BkgTR = TR.reduce ( self.background    ,
-                                           selection = bcuts  ,
-                                           save_vars = avars  ,
-                                           new_vars  = self.background_vars     , 
-                                           prescale  = self.prescale_background ,  
-                                           silent    = silent )
+                self.logger.info ( 'Pre-filter Background  before processing' )
+
+                inputs = ( self.background , ) + self.__more_backgrounds 
+                ## reduced backgrounds 
+                self.__RB = tuple ( TR.reduce ( i                  ,
+                                                selection = bcuts  ,
+                                                save_vars = avars  ,
+                                                name      = 'BACKGROUND'             , 
+                                                new_vars  = self.background_vars     , 
+                                                prescale  = self.prescale_background ,  
+                                                silent    = silent ) for i in inputs )
+                ## merge signals 
+                files = ()
+                for rb in self.__RB : files += rb.files
+                self.__BkgTR  = Chain ( name = 'BACKGROUND' , files = files ) 
+
                 
-                self.__background      = self.__BkgTR
-                self.__background_cuts = ROOT.TCut() 
+                self.__background       = self.__BkgTR
+                self.__background_cuts  = ROOT.TCut()
+                self.__more_backgrounds = () 
 
             missvars = [ v for v in self.background_vars if not v in self.background ]
             assert not missvars , "Variables %s are not in background sample!" % missvars                         

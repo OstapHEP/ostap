@@ -44,7 +44,7 @@ logger.debug ( "`Reduce' TTree using ROOT::RDataFrame object")
 #  reduced = t.tree 
 #  @endcode
 class ReduceTree(CleanUp):
-    """Reduce ROOT.TTree object 
+    """ Reduce ROOT.TTree object 
     >>> tree    = ...
     >>> r       = ReduceTree ( tree , cuts , [ 'px', 'py', 'pz' ]
     >>> reduced = r.tree    
@@ -290,7 +290,10 @@ def reduce  ( tree               ,
     >>> reduced5 = tree.reduce  ( 'pt>1' , new_vars = { 'pt2' : 'pt*pt' } , output = 'OUTPUT.root' )
     
     """
-    
+    from ostap.trees.trees import Chain
+
+    if isinstance  ( tree , Chain ) : tree = tree.chain
+
     nb0 = len ( tree.branches() )
     ne0 = len ( tree            )
 
@@ -306,7 +309,6 @@ def reduce  ( tree               ,
                            tmp_keep   = True       ,
                            silent     = silent     )
 
-    from ostap.trees.trees import Chain
     
     result = Chain ( reduced.chain )
     if not output : result.trash.add ( reduced.output )  
@@ -321,13 +323,13 @@ def reduce  ( tree               ,
         ne = len ( result.chain            )
         f  = float ( nb0 * ne0 * 100 ) / ( nb  * ne )
         ##
-        if   0.100 <= f : f = '%.1f%%' % f
-        elif 0.010 <= f : f = '%.2f%%' % f
-        elif 0.001 <= f : f = '%.3f%%' % f
+        if   0.100 <= f : f = '%.1f%%' %   f
+        elif 0.010 <= f : f = '%.2f%%' %   f
+        elif 0.001 <= f : f = '%.3f%%' %   f
         else            : f = '%.3g'   % ( f / 100 )
-        ## 
+        ##
         ## sys.stdout.write('\n')
-        logger.info ( 'reduce: (%dx%d) -> (%dx%d) %d (branches x entries) ' % ( nb0  , ne0 ,  nb , ne , f ) ) 
+        logger.info ( 'reduce: (%dx%d) -> (%dx%d) %s (branches x entries) ' % ( nb0  , ne0 ,  nb , ne , f ) ) 
                       
     return result
 
