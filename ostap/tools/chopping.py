@@ -1809,7 +1809,7 @@ class Reader(object) :
 # =============================================================================
 ## Specific action to ROOT.TTree
 def _add_response_tree_ ( tree     , *   , 
-                          chopping , 
+                          chopper  , 
                           category ,
                           N        ,
                           inputs   ,
@@ -1832,7 +1832,7 @@ def _add_response_tree_ ( tree     , *   ,
     ## delegate to chain 
     if isinstance ( tree , ROOT.TChain ) and 2 <= tree.nFiles :
         return _add_response_chain_ ( tree     , 
-                                      chopping = chopping , 
+                                      chopper  = chopper  , 
                                       category = category ,
                                       N        = N        ,
                                       inputs   = inputs   ,
@@ -1888,7 +1888,7 @@ def _add_response_tree_ ( tree     , *   ,
         
         ## run it! 
         sc = adder.addChoppingResponse ( the_tree ,
-                                         chopping ,
+                                         chopper  ,
                                          category ,
                                          N        ,
                                          inputs   ,
@@ -1925,7 +1925,7 @@ def _add_response_tree_ ( tree     , *   ,
 # =============================================================================d
 ## Specific action to ROOT.TChain
 def _add_response_chain_ ( chain    , * ,
-                           chopping , 
+                           chopper  , 
                            category ,
                            N        ,
                            inputs   ,
@@ -1947,7 +1947,7 @@ def _add_response_chain_ ( chain    , * ,
 
     if not isinstance ( chain , ROOT.TChain ) or chain.nFiles <= 1 :
         return _add_response_tree_ ( chain    ,
-                                     chopping = chopping , 
+                                     chopper  = chopper  , 
                                      category = category ,
                                      N        = N        ,
                                      inputs   = inputs   ,
@@ -1973,7 +1973,7 @@ def _add_response_chain_ ( chain    , * ,
         ch.Add ( f )
         ## treat the single tree 
         _add_response_tree_ ( ch  ,
-                              chopping = chopping ,     
+                              chopper  = chopper       ,     
                               category = category      ,
                               N        = N             ,
                               inputs   = inputs        ,
@@ -2012,7 +2012,7 @@ def _add_response_chain_ ( chain    , * ,
 #  dataset.addTMVAResponse ( dataset , chopper , inputs , tar_file , prefix = 'tmva_' )
 #  @endcode
 #  @param dataset input dataset to be updated
-#  @param chopping      chopping category/formula
+#  @param chopper       chopping category/formula
 #  @param N             number of categories
 #  @param inputs        input variables
 #  @param weights_files files with TMVA weigths (tar/gz or xml)
@@ -2023,7 +2023,7 @@ def _add_response_chain_ ( chain    , * ,
 #  @param verbose       verbose operation?
 #  @param aux           obligatory for the cuts method, where it represents the efficiency cutoff 
 def addChoppingResponse ( dataset                     , ## input dataset to be updated
-                          chopping                    , ## chopping category/formula 
+                          chopper                     , ## chopping category/formula 
                           N                           , ## number of categrories
                           inputs                      , ## input variables 
                           weights_files               , ## files with TMVA weigths (tar/gz or xml)
@@ -2082,7 +2082,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
 
     if   isinstance ( dataset , ROOT.TTree ) :        
         return _add_response_chain_ ( dataset ,
-                                      chopping = chopping      ,
+                                      chopper  = chopper       ,
                                       category = category_name ,
                                       N        = N             ,
                                       inputs   = _inputs       ,
@@ -2096,18 +2096,18 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     
     ## here we deal with RooAbsData
     
-    if isinstance ( chopping , string_types ) :
+    if isinstance ( chopper , string_types ) :
         
         from   ostap.fitting.variables   import make_formula
-        varset    = dataset.get()
-        chopping = make_formula ( 'chopping' , chopping , varset )
+        varset  = dataset.get()
+        chopper = make_formula ( 'chopper' , chopper , varset )
             
-    assert isinstance ( chopping , ROOT.RooAbsReal ), \
-        'Invalid chopping type %s' % typename ( chopping ) 
+    assert isinstance ( chopper , ROOT.RooAbsReal ), \
+        'Invalid chopping type %s' % typename ( chopper ) 
 
 
     category = ROOT.RooCategory ( category_name ,
-                                  'Chopping category: (%s)%%%d' %  ( chopping.GetTitle() , N ) )
+                                  'Chopping category: (%s)%%%d' %  ( chopper.GetTitle() , N ) )
 
     
     if   N <    10 : fmt = category_name + '_%d'    
@@ -2123,7 +2123,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     adder    = Ostap.AddTMVA ( progress ) 
 
     sc = adder.addChoppingResponse ( dataset  ,
-                                     chopping ,
+                                     chopper  ,
                                      category ,
                                      N        ,
                                      _inputs  ,

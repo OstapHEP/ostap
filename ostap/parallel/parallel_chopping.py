@@ -87,10 +87,10 @@ class ChopperTraining(Task) :
         import ostap.tools.tmva        
         from   ostap.utils.root_utils import batch
         ## nupack arguments 
-        category , chopper = params
+        category , chopping = params
         ## process...
         with batch ( True ) : 
-            trainer  = chopper.create_trainer ( category , False )
+            trainer  = chopping.create_trainer ( category , False )
             trainer.train ()
         ## Full output from TMVA trainer 
         self.__output = (
@@ -155,14 +155,16 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
                           prefix        = 'tmva_'     , ## prefix for TMVA-variable         
                           suffix        = '_response' , ## suffix for TMVA-variable 
                           options       =  ''         , ## TMVA-reader options
-                          verbose       = True        , ## verbosity flag 
+                          verbose       = True        , ## verbosity flag
+                          progress      = True        , ## progress bar
+                          report        = True        , ## final report ? 
                           aux           = 0.9         , **kwargs ) :
     """
     Helper function to add TMVA/chopping  response into dataset
     >>> tar_file = trainer.tar_file
     >>> chain    = ...
     >>> inputs   = [ 'var1' , 'var2' , 'var2' ] ## input varibales to TMVA 
-    >>> addChoppingResponse ( chain , chopper ,  inputs , tar_file , prefix = 'tmva_' )
+    >>> addChoppingResponse ( chain , chopping ,  inputs , tar_file , prefix = 'tmva_' )
     """
 
     from ostap.tools.chopping import addChoppingResponse as _add_response_
@@ -179,7 +181,7 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
             logger.warning ( "addChoppingResponse: Variables/Category '%s/%s' already in TTree, skip" % ( matched , category_name ) )
             return chain 
       
-    if isinstance ( chain , ROOT.TChain ) and 1 < len ( chain.files () ) : pass
+    if isinstance ( chain , ROOT.TChain ) and 1 < len ( chain.files ) : pass
     else : return _add_response_ ( dataset       = chain         ,
                                    chopper       = chopper       ,
                                    N             = N             ,
@@ -194,7 +196,7 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
     
     from ostap.trees.trees import Chain
     ch       = Chain ( chain )
-    branches = set   ( chain.branches() ) | set ( chain.leaves() ) 
+    branches =  ( set   ( chain.branches() ) | set ( chain.leaves() ) ) if report else set () 
 
     task     = AddChopping ( chopper       = chopper       ,
                              N             = N             ,
@@ -204,20 +206,24 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
                              prefix        = prefix        ,
                              suffix        = suffix        ,
                              options       = options       , 
-                             verbose       = verbose       ,
+                             verbose       = False         ,
+                             progress      = False         ,
+                             report        = False         , 
                              aux           = aux           )
     
-    wmgr  = WorkManager ( silent = False , **kwargs )
+    wmgr  = WorkManager ( silent = False , progress = progress , **kwargs )
     trees = ch.split    ( max_files = 1  )
     
     wmgr.process ( task , trees )
-    
+
     nc = ROOT.TChain ( chain.name )
     for f in ch.files :  nc.Add ( f )
 
-    nb = list ( ( set ( nc.branches () ) | set ( nc.leaves() ) ) - branches ) 
-    if nb : logger.info ( 'Added branches:\n%s' % nc.table ( variables = nb , prefix = '# ' ) ) 
-    
+    if report : 
+        
+        nb = list ( ( set ( nc.branches () ) | set ( nc.leaves() ) ) - branches ) 
+        if nb : logger.info ( 'Added branches:\n%s' % nc.table ( variables = nb , prefix = '# ' ) ) 
+        
     return nc
 
 # =============================================================================

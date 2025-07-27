@@ -216,7 +216,7 @@ with timing ( "Add TMVA/Chopping response to input TTree" , logger = logger ) as
     signal_inputs      = ( 'var1' ,  'var2' , 'var3' , 'VARX : VARS' ) 
     background_inputs  = ( 'var1' ,  'var2' , 'var3' , 'VARX : VARB' )   
        
-    config = { 'chopping'      : "137*evt+813*run"             ,
+    config = { 'chopper'       : "137*evt+813*run"             ,
                'N'             : N                             , 
                'weights_files' : tar_file                      ,
                'prefix'        : 'tmva_'                       ,

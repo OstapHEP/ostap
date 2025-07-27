@@ -1,8 +1,10 @@
 ## New features
     
   1. improve printout for TMVA&Choppnig stuff
-  1, suppress unesessary ROOT printout from TMVA&chopping
-     
+  1. suppress unesessary ROOT printout from TMVA&chopping
+  1. Consistently use `chopper` argument insteads of `chopping` for chopping-stuff
+    
+        
 ## Backward-incompatible
 
 ## Bug fixes
