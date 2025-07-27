@@ -25,26 +25,28 @@ class RooCategory ; // from RooFit
 namespace Ostap 
 {
   // ==========================================================================
-  /** @namespace Ostap::TMVA Ostap/Tmva.h 
+  /** @namespace Ostap::Tmva Ostap/Tmva.h 
    *  collection of helper functions to deal with TMVA
    */
-  namespace TMVA 
+  namespace Tmva
   {
     // ========================================================================
-    enum {
-      InvalidInputVariables = 201 ,
-      InvalidWeightFiles          ,
-      InvalidChoppingWeightFiles  ,
-      InvalidBookTMVA       = 301 , 
-      InvalidDataSet              ,
-      InvalidFormula              ,
-      InvalidChoppingFormula      ,
-      InvalidChoppingCategory     ,
-      InvalidVariable             ,
-      InvalidBranch               , 
-      InvalidTree                 , 
-      InvalidEntry          = 401 ,
-    } ;  
+    /** Disable scatter pltof form TMVA 
+     *  Unfortunately thee recommended action in PyROOT has no effect
+     *
+     * <code>
+     * <PlotVariables> Will not produce scatter plots ==> 
+     * : |  The number of 5 input variables and 0 target values would require 10 two-dimensional
+     * : |  histograms, which would occupy the computer's memory. Note that this
+     * : |  suppression does not have any consequences for your analysis, other
+     * : |  than not disposing of these scatter plots. You can modify the maximum
+     * : |  number of input variables allowed to generate scatter plots in your
+     * : |  script via the command line:
+     * : |  "(TMVA::gConfig().GetVariablePlotting()).fMaxNumOfAllowedVariablesForScatterPlots = <some int>;"
+     * </code>      
+     *
+     */
+    void disable_scatter_plots () ;
     // ========================================================================
   }
   // ==========================================================================

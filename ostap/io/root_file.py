@@ -31,7 +31,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 # =============================================================================
-"""Decoration of TFile objects for efficient use in python
+""" Decoration of TFile objects for efficient use in python
 
 It provides TFile (well, actually any TDirectory) with python-like protocol
 
@@ -716,7 +716,7 @@ def _rd_ls_tree_ ( rdir ) :
 #  rdir = ...
 #  rdir.ls_table ()
 #  @endcode  
-def _rd_table_ ( rdir , prefix = '# ' ) :
+def _rd_table_ ( rdir , title = '' , prefix = '# ' ) :
     """ Show the content of the directory as a table
     >>> rdir = ...
     >>> rdir.ls_table ()
@@ -760,7 +760,8 @@ def _rd_table_ ( rdir , prefix = '# ' ) :
         name = '<.>' + name [ -maxkey - maxtype : ]
         
     import ostap.logger.table as T
-    return T.table ( table , title = '%s' % name , prefix = '# ' , alignment = 'llr' )
+    title = title if title else '%s' % name 
+    return T.table ( table , title = title , prefix = prefix , alignment = 'llr' )
 
 # =============================================================================
 ## Show the content of the directory as a table

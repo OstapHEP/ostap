@@ -26,6 +26,7 @@
 // ============================================================================
 #include "TTree.h"
 #include "TBranch.h"
+#include "TMVA/Config.h"
 // ============================================================================
 // RooFit 
 // ============================================================================
@@ -786,6 +787,35 @@ Ostap::StatusCode Ostap::AddTMVA::addChoppingResponse
                                    aux           );
 }
 // ============================================================================
+
+
+// ============================================================================
+/* Disable scatter pltof form TMVA 
+ *  Unfortunately thee recommended action in PyROOT has no effect
+ *   
+ * <code>
+ * <PlotVariables> Will not produce scatter plots ==> 
+ * : |  The number of 5 input variables and 0 target values would require 10 two-dimensional
+ * : |  histograms, which would occupy the computer's memory. Note that this
+ * : |  suppression does not have any consequences for your analysis, other
+ * : |  than not disposing of these scatter plots. You can modify the maximum
+ * : |  number of input variables allowed to generate scatter plots in your
+ * : |  script via the command line:
+ * : |  "(TMVA::gConfig().GetVariablePlotting()).fMaxNumOfAllowedVariablesForScatterPlots = <some int>;"
+ * </code>      
+ */
+// ============================================================================
+void Ostap::Tmva::disable_scatter_plots ()
+{
+  TMVA::Config&                   config = TMVA::gConfig() ;
+  TMVA::Config::VariablePlotting& plots  = config.GetVariablePlotting() ;
+  /// disable? 
+  plots.fMaxNumOfAllowedVariablesForScatterPlots = 0 ;
+  /// PDF! 
+  plots.fPlotFormat = TMVA::Config::VariablePlotting:: kPDF ;
+  //
+}
+
 
 // ============================================================================
 //                                                                      The END 

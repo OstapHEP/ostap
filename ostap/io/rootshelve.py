@@ -143,7 +143,7 @@ logger.debug ( "Simple generic ROOT-based shelve-like-database" )
 #  @endcode 
 #  @see Ostap.TFileDeco
 class RootOnlyShelf(shelve.Shelf):
-    """Plain vanilla DBASE for ROOT-object (only)
+    """ Plain vanilla DBASE for ROOT-object (only)
     Essentially it is nothing more than just shelve-like
     interface for ROOT-files
     Attention: It CRUCIALLY depends on the proper

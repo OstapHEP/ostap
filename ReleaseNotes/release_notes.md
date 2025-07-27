@@ -1,5 +1,8 @@
 ## New features
-
+    
+  1. improve printout for TMVA&Choppnig stuff
+  1, suppress unesessary ROOT printout from TMVA&chopping
+     
 ## Backward-incompatible
 
 ## Bug fixes

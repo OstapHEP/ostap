@@ -576,104 +576,9 @@ class Trainer(object):
         self.__AUC= {}
 
         if self.verbose :
-            
-            rows = [ ( 'Item' , 'Value' ) ]
-            
-            row  = 'Name'      , self.name
-            rows.append ( row )
-
-            row = 'Variables'      , ' '.join ( self.variables )
-            rows.append ( row )
-
-            if self.nicknames :
-                row = 'Nicknames' , ''
-                rows.append ( row )
-                for k , v  in items_loop ( self.nicknames ) :
-                    row = ' - ' + k , v
-                    rows.append ( row )
-                    
-            if self.signal_vars :
-                row = 'Signal vars'  , str ( self.signal_vars  ) 
-                rows.append ( row )
-                
-            if self.background_vars :
-                row = 'Background vars'  , str ( self.background_vars  ) 
-                rows.append ( row )
-                
-            if self.spectators :
-                row = 'Spectators' , ' '.join ( self.spectators )
-                rows.append ( row )
-            
-            for i , o in enumerate ( [ o for o in self.bookingoptions.split ( ':' ) if not o in trivial_opts ] ) :
-                if 0 == i : row = 'Booking options' , o
-                else      : row = ''                , o 
-                rows.append ( row )
-                
-            for i , o in enumerate ( [ o for o in self.configuration.split ( ':' ) if not o in trivial_opts ] ) :
-                if 0 == i : row = 'TMVA configuraton'    , o
-                else      : row = ''                     , o 
-                rows.append ( row )
-
-            if self.prefilter :
-                row = 'Prefilter'  , str ( self.prefilter ) 
-                rows.append ( row )
-                
-            if self.prefilter_signal :
-                row = 'Prefilter Signal' , str ( self.prefilter_signal ) 
-                rows.append ( row )
-                
-            if self.prefilter_background :
-                row = 'Prefilter Background' , str ( self.prefilter_background ) 
-                rows.append ( row )
-                
-            if self.signal_cuts : 
-                row = 'Signal cuts' , str ( self.signal_cuts ) 
-                rows.append ( row )
-
-            if self.signal_weight : 
-                row = 'Signal weight' , str ( self.signal_weight ) 
-
-            if 0 < self.signal_train_fraction < 1 :
-                row = 'Signal train fraction' , '%.1f%%' % ( 100 *  self.signal_train_fraction ) 
-                rows.append ( row )
-
-            if 1 != self.prescale_signal :
-                row = 'Signal prescale'       , '%s' % self.prescale_signal 
-                rows.append ( row )
-                
-            if self.background_cuts : 
-                row = 'Background cuts' , str ( self.background_cuts ) 
-                rows.append ( row )
-
-            if self.background_weight : 
-                row = 'Background weight'    , str ( self.background_weight ) 
-                rows.append ( row )
-
-            if 0 < self.background_train_fraction < 1 :
-                row = 'Background train fraction' , '%.1f%%' % ( 100 *  self.background_train_fraction ) 
-                rows.append ( row )
-
-            if 1 != self.prescale_background:
-                row = 'Background prescale'      , '%s' % self.prescale_background
-                rows.append ( row )
-
-            ms  = [ m[1] for m in self.methods ]
-            row = 'Methods' , ' '.join ( ms ) 
-            rows.append ( row )
-            
-            from ostap.logger.colorized import allright 
-            for m in self.methods :
-                row = 'Method' , '%s Id:%s' % ( allright ( m[1] ) , m[0] )
-                rows.append ( row )
-                for i , o in enumerate ( [ o for o in m[2].split(':' ) if not o in trivial_opts ] ) :
-                    if 0 == i : row = 'Method configuration' , o
-                    else      : row =   ''                    , o 
-                    rows.append ( row ) 
-                
-            import ostap.logger.table as T
-            title = "TMVA Trainer %s created" % self.name 
-            table = T.table (  rows , title = title , prefix = "# " , alignment = "lw" )
-            self.logger.info ( "%s\n%s" % ( title , table ) )
+            title  = 'TMVA Trainer %s init configuration' % self.name 
+            table = self.table_init ( title = title , prefix = '# ' ) 
+            self.logger.info ( '%s:\n%s' % ( title , table ) )
             
     @property
     def name    ( self ) :
@@ -705,6 +610,17 @@ class Trainer(object):
         """'nicknames' : short names for the certain long expressions"""
         return self.__nicknames 
 
+    # =========================================================================
+    ## actual variables 
+    @property 
+    def the_variables ( self ) :
+        """`the_variables` : full list of TMVA variables
+        """
+        vv  = set ( self.variables )
+        for k in self.signal_vars     : vv.add ( k )
+        for k in self.background_vars : vv.add ( k )
+        return tuple ( sorted ( vv ) ) 
+            
     @property
     def maxvarlen ( self ) :
         """`maxvarlen` : maximal length of varibale name/expression beforw autimatich 
@@ -885,7 +801,235 @@ class Trainer(object):
         - -AUC is "Area Under ROC curce 
         """
         return self.__AUC
+    
+    # =========================================================================
+    ## Prepare a table at the end of __init__ 
+    def table_init ( self , title = 'TMVA Trainet/init configuration' , prefix = '' ) :
+        """ Prepare a table just before TMVA factory booking 
+        """
+        
+        rows = [ ( '' , 'Value' ) ]
+        
+        row  = 'Name'      , self.name
+        rows.append ( row )
+        
+        vv  = self.the_variables 
 
+        ## (1) list of variables 
+        row = 'Variables'      , ' '.join ( vv )
+        rows.append ( row )
+
+        ## (2) sub-table of nicknames 
+        if self.nicknames :
+            row = 'Nicknames:' , ''
+            rows.append ( row )
+            for k , v  in items_loop ( self.nicknames ) :
+                row = ' - ' + k , v
+                rows.append ( row )
+                
+        ## (3)
+        if self.spectators :
+            row = 'Spectators' , ' '.join ( self.spectators )
+            rows.append ( row )
+
+        ## (4) bookimg options 
+        for i , o in enumerate ( [ o for o in self.bookingoptions.split ( ':' ) if not o in trivial_opts ] ) :
+            if 0 == i : row = 'Booking options' , o
+            else      : row = ''                , o 
+            rows.append ( row )
+
+        ## (5) TMVA configuration 
+        for i , o in enumerate ( [ o for o in self.configuration.split ( ':' ) if not o in trivial_opts ] ) :
+            if 0 == i : row = 'TMVA configuraton' , o
+            else      : row = ''                  , o 
+            rows.append ( row )
+
+        ## (6) TMVA methods 
+        ms  = [ m[1] for m in self.methods ]
+        row = 'Methods' , ' '.join ( ms ) 
+        rows.append ( row )
+
+        ## (7) method configurtaions         
+        from ostap.logger.colorized import allright 
+        for m in self.methods :
+            row = 'Method' , '%s Id:%s' % ( allright ( m[1] ) , m[0] )
+            rows.append ( row )
+            for i , o in enumerate ( [ o for o in m[2].split(':' ) if not o in trivial_opts ] ) :
+                if 0 == i : row = 'Method configuration' , o
+                else      : row =   ''                    , o 
+                rows.append ( row ) 
+                
+        ## (8) prefilter        
+        if self.prefilter :
+            row = 'Prefilter'  , str ( self.prefilter ) 
+            rows.append ( row )
+            
+        ## (9) prefilter        
+        if self.prefilter_signal :
+            row = 'Prefilter Signal' , str ( self.prefilter_signal ) 
+            rows.append ( row )
+            
+        ## (10) prefilter        
+        if self.prefilter_background :
+            row = 'Prefilter Background' , str ( self.prefilter_background ) 
+            rows.append ( row )
+         
+        ## (11) signal cuts 
+        if self.signal_cuts : 
+            row = 'Signal cuts' , str ( self.signal_cuts ) 
+            rows.append ( row )
+
+        ## (12) signal weight 
+        if self.signal_weight : 
+            row = 'Signal weight' , str ( self.signal_weight ) 
+            rows.append ( row )
+            
+        ## (13) backgound cuts 
+        if self.background_cuts : 
+            row = 'Background cuts' , str ( self.background_cuts ) 
+            rows.append ( row )
+
+        ## (14) background weight 
+        if self.background_weight : 
+            row = 'Background weight'    , str ( self.background_weight ) 
+            rows.append ( row )
+
+        import ostap.logger.table as T
+        title = title if title else "TMVA Trainer %s start " % self.name 
+        return T.table (  rows , title = title , prefix = prefix , alignment = "lw" )
+
+        
+    # =========================================================================
+    ## Prepare a table after training at start of TMVA factory booking 
+    def table_start ( self , title = 'TMVA Trainer/start configuration' , prefix = '' ) :
+        """ Prepare a table just before TMVA factory booking 
+        """
+        
+        rows = [ ( '' , 'Value' ) ]
+        
+        row  = 'Name'      , self.name
+        rows.append ( row )
+        
+        ## (4) bookimg options 
+        for i , o in enumerate ( [ o for o in self.bookingoptions.split ( ':' ) if not o in trivial_opts ] ) :
+            if 0 == i : row = 'Booking options' , o
+            else      : row = ''                , o 
+            rows.append ( row )
+
+        ## (5) TMVA configuration 
+        for i , o in enumerate ( [ o for o in self.configuration.split ( ':' ) if not o in trivial_opts ] ) :
+            if 0 == i : row = 'TMVA configuraton' , o
+            else      : row = ''                  , o 
+            rows.append ( row )
+
+        ## (6) signal cuts 
+        if self.signal_cuts : 
+            row = 'Signal cuts' , str ( self.signal_cuts ) 
+            rows.append ( row )
+
+        ## (7) signal weight 
+        if self.signal_weight : 
+            row = 'Signal weight' , str ( self.signal_weight ) 
+            rows.append ( row )
+            
+        ## (8) backgound cuts 
+        if self.background_cuts : 
+            row = 'Background cuts' , str ( self.background_cuts ) 
+            rows.append ( row )
+
+        ## (9) backgriund weight 
+        if self.background_weight : 
+            row = 'Background weight'    , str ( self.background_weight ) 
+            rows.append ( row )
+            
+        import ostap.logger.table as T
+        title = title if title else "TMVA Trainer %s start " % self.name 
+        return T.table (  rows , title = title , prefix = prefix , alignment = "lw" )
+
+    # =========================================================================
+    ## Prepare a table just before TMVA factory booking 
+    def table_output ( self , title = 'TMVA Trainer output' , prefix = '' ) :
+        """ Prepare a table just before TMVA factory booking 
+        """
+        
+        rows = [ ( '' , 'Value' ) ]
+        
+        row  = 'Name'      , self.name
+        rows.append ( row )
+        
+        if self.workdir and os.path.exists ( self.workdir ) and os.path.isdir ( self.workdir ) :
+            row = "Workdir" , self.workdir 
+            rows.append ( row )
+            
+        from ostap.utils.basic import commonpath
+        if self.weights_files :
+            ##
+            if 1 == len ( self.weights_files ) :
+                wd , wf = os.path.split( self.weights_files [ 0 ] )
+                row = "Weights directory" , wd
+                rows.append ( row )
+                row = "Weights file"      , wf 
+                rows.append ( row )
+            else : 
+                wd = commonpath      ( self.weights_files )
+                ll = len ( wd ) + 1 if wd else 0
+                ## 
+                if wd :
+                    row = "Weights directory" , wd
+                    rows.append ( row )
+                row = 'Weight files:' , ', '.join ( w [ ll : ] for w in self.weights_files )                
+                rows.append ( row )
+
+        if self.class_files :
+            if 1 == len ( self.class_files ) :            
+                wd , wf = os.path.split( self.class_files [ 0 ] )
+                row = "Class   directory" , wd
+                rows.append ( row )
+                row = "Class   file"      , wf 
+                rows.append ( row )
+            else : 
+                wd = commonpath      ( self.class_files )
+                ll = len ( wd ) + 1 if wd else 0
+                ## 
+                if wd :
+                    row = "Class    directory" , wd
+                    rows.append ( row )
+                row = 'Class   files:' , ', '.join ( w [ ll : ] for w in self.class_files )                
+                rows.append ( row )
+                
+        if self.plots :
+            if 1 == len ( self.plots ) :            
+                wd , wf = os.path.split( self.plots [ 0 ] )
+                row = "Plots   directory" , wd
+                rows.append ( row )
+                row = "Plot    file"      , wf 
+                rows.append ( row )
+            else : 
+                wd = commonpath      ( self.plots  )
+                ll = len ( wd ) + 1 if wd else 0
+                ## 
+                if wd :
+                    row = "Plots    directory" , wd
+                    rows.append ( row )
+                row = 'Plots   files' , ', '.join ( w [ ll : ] for w in self.plots )                
+                rows.append ( row )
+            
+        if self.output_file and os.path.exists ( self.output_file  ) : 
+            row = "Output ROOT file" , self.output_file
+            rows.append ( row )
+            
+        if self.log_file and os.path.exists ( self.log_file  ) : 
+            row = "Log file" , self.log_file 
+            rows.append ( row )
+            
+        if self.tar_file and os.path.exists ( self.tar_file  ) and tarfile.is_tarfile ( self.tar_file ) : 
+            row = "Tar file" , self.tar_file 
+            rows.append ( row )
+            
+        import ostap.logger.table as T
+        title = title if title else "TMVA Trainer %s output" % self.name 
+        return T.table (  rows , title = title , prefix = prefix , alignment = "lw" )
+    
     # =========================================================================
     ## build a summary AUC table
     #  @code
@@ -974,110 +1118,15 @@ class Trainer(object):
             
             result = self.__train ()
             
-            ## Training outputs
-                    
-            rows = [ ( 'Item' , 'Value' ) ]
-
-            vv = set ( self.variables )
-            for k in self.signal_vars     : vv.add ( k )
-            for k in self.background_vars : vv.add ( k )
-            vv = sorted ( vv ) 
+            title  = 'TMVA Trainer %s output' % self.name 
+            table = self.table_output ( title = title , prefix = '# ' ) 
+            self.logger.info ( '%s:\n%s' % ( title , table ) )
             
-            row  = 'Variables', ', '.join( vv )
-            rows.append ( row )
-
-            if self.nicknames :
-                row = 'Nicknames' , ''
-                rows.append ( row )
-                for k , v  in items_loop ( self.nicknames ) :
-                    row = ' - ' + k , v
-                    rows.append ( row )
-            
-            if self.signal_vars :
-                row = 'Signal vars'  , str ( self.signal_vars  ) 
-                rows.append ( row )
+            if self.verbose and self.AUC :
+                title = 'ROC/AUC summary'
+                table = self.AUC_table ( prefix = '# ' , title = title )
+                self.logger.info ( '%s:\n%s' % ( title , table ) )
                 
-            if self.background_vars :
-                row = 'Background vars'  , str ( self.background_vars  ) 
-                rows.append ( row )
-                
-            if self.spectators : 
-                row  = 'Spectators', ', '.join( self.spectators )
-                rows.append ( row )
-
-            row = 'Methods' ,  ', '.join( [ i[1] for i in  self.methods ] )
-            rows.append ( row )
-            
-            if self.workdir and os.path.exists ( self.workdir ) and os.path.isdir ( self.workdir ) :
-                row = "Workdir" , self.workdir 
-                rows.append ( row )
-                
-            if self.weights_files : 
-                from ostap.utils.basic import commonpath
-                wd = commonpath ( self.weights_files ) if 1 < len ( self.weights_files ) else ''
-                if wd :
-                    row = "Weights directory" , wd
-                    rows.append ( row )
-                lw = len ( wd )
-                for w in self.weights_files :
-                    row = "Weights file" , w if not lw else w[lw+1:]
-                    rows.append ( row )
-
-            if self.class_files : 
-                from ostap.utils.basic import commonpath 
-                wd = commonpath ( self.class_files ) if 1 < len ( self.class_files ) else ''
-                if wd :
-                    row = "Classes directory" , wd
-                    rows.append ( row )
-                lw = len ( wd )
-                for w in self.class_files :
-                    row = "Class file" , w if not lw else w[lw+1:]
-                    rows.append ( row )
-                    
-            if self.plots :
-                from ostap.utils.basic import commonpath 
-                wd = commonpath ( self.plots ) if 1 < len ( self.plots ) else ''
-                if wd :
-                    row = "Plots directory" , wd
-                    rows.append ( row )
-                lw = len ( wd )
-                for w in self.plots :
-                    row = "Plot file" , w if not lw else w[lw+1:]
-                    rows.append ( row )
-                
-            if self.output_file and os.path.exists ( self.output_file  ) : 
-                row = "Output ROOT file" , self.output_file
-                rows.append ( row )
-                
-            if self.log_file and os.path.exists ( self.log_file  ) : 
-                row = "Log file" , self.log_file 
-                rows.append ( row )
-                
-            if self.tar_file and os.path.exists ( self.tar_file  ) and tarfile.is_tarfile ( self.tar_file ) : 
-                row = "Tar file" , self.tar_file 
-                rows.append ( row )
-                
-            import ostap.logger.table as T
-            title = "TMVA %s outputs" % self.name 
-            table = T.table (  rows , title = title , prefix = "# " , alignment = "lw" )
-            self.logger.info ( "%s\n%s" % ( title , table ) ) 
-            
-            if self.verbose                          and \
-                   self.tar_file                     and \
-                   os.path.exists ( self.tar_file  ) and \
-                   tarfile.is_tarfile ( self.tar_file ) :
-                self.logger.info ( 'Content of the tar file %s' % self.tar_file )
-                with tarfile.open ( self.tar_file , 'r' ) as tar : tar.list ()
-                
-            if self.verbose and self.output_file       and \
-                   os.path.exists ( self.output_file ) and \
-                   os.path.isfile ( self.output_file ) :
-                import ostap.io.root_file 
-                with ROOT.TFile.open ( self.output_file , 'r' ) as rf :
-                    table = rf.as_table()
-                    self.logger.info ( "Content of the output ROOT file %s\n%s" % ( self.output_file , table ) )
-
-                   
         if log and os.path.exists ( log ) and os.path.isfile ( log ) :
             try :
                 shutil.move ( log , self.dirname )
@@ -1090,11 +1139,6 @@ class Trainer(object):
         else : 
             self.__log_file = None 
 
-        if self.verbose and self.AUC :
-            title = 'ROC/AUC summary'
-            table = self.AUC_table ( prefix = '# ' , title = title )
-            self.logger.info ( '%s:\n%s' % ( title , table ) )
-            
         return result
                 
     # =========================================================================
@@ -1109,11 +1153,11 @@ class Trainer(object):
         >>> trainer.train () 
         """
 
-        # =========================================================================
-        ROOT.TMVA.gConfig().GetVariablePlotting().fMaxNumOfAllowedVariablesForScatterPlots = 0
-        if ( 6 , 32 ) <= root_info :             
-            VP = ROOT.TMVA.Config.VariablePlotting
-            ROOT.TMVA.gConfig().GetVariablePlotting().fPlotFormat = VP.kPDF 
+        ## # =========================================================================
+        ## ROOT.TMVA.gConfig().GetVariablePlotting().fMaxNumOfAllowedVariablesForScatterPlots = 1
+        ## if ( 6 , 32 ) <= root_info :             
+        ##    VP = ROOT.TMVA.Config.VariablePlotting
+        ##    ROOT.TMVA.gConfig().GetVariablePlotting().fPlotFormat = VP.kPDF 
         # =========================================================================                
         
         rf = []
@@ -1125,351 +1169,299 @@ class Trainer(object):
             rf.append ( f )
             os.remove ( f )
         if rf : self.logger.debug ( "Remove existing xml/class-files %s" % rf  ) 
+        
+        # =====================================================================
+        ## the final (?)  adjustment
+        # =====================================================================
+        
+        opts = self.__bookingoptions
+        from ostap.utils.basic import isatty
+        OK1  = self.verbose and self.category in ( 0 , -1 )
+        OK2  = OK1 and isatty ()             
+        opts = opts_replace ( opts , 'DrawProgressBar:' , OK1 ) 
+        opts = opts_replace ( opts , 'Color:'           , OK2 ) 
+        self.__bookingoptions = opts 
+        
+        # =====================================================================
+        ## Variables 
+        # =====================================================================
+        
+        all_vars = []        
+        for v in self.variables :
+            
+            vv = v
+            if isinstance ( vv , str ) : vv = ( vv , 'F' )
+            
+            varexp = vv [ 0 ].strip()  
+            nick , sep , expr = varexp.partition ( ":=" )
+            nick = nick.strip()
+            expr = expr.strip() 
+            if nick and sep and expr : varexp = expr
+            else                     : nick   = varexp 
+            
+            if   varexp in self.signal_vars     or ( nick and nick in self.signal_vars     ) : continue
+            elif varexp in self.background_vars or ( nick and nick in self.background_vars ) : continue 
+            else  : all_vars.append ( varexp )
+            
+        for v in self.spectators :
+            vv = v
+            if isinstance ( vv , str ) : vv = ( vv , 'F' )
+            all_vars.append ( vv [ 0 ] )
+            
+        ## if self.prefilter         : all_vars.append ( self.prefilter         )                
+        ## if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
+        ## if self.background_cuts   : all_vars.append ( self.background_cuts   )
+            
+        if self.signal_weight     : all_vars.append ( self.signal_weight     )
+        if self.background_weight : all_vars.append ( self.background_weight )
+        
+        # =====================================================================
+        ## prefilter/prescale signal if required
+        # =====================================================================
+        if self.prefilter_signal         or \
+           self.prefilter                or \
+           self.__more_signals           or \
+           ( 1 != self.prescale_signal ) or self.signal_vars :
+            
+            if self.signal_weight     : all_vars.append ( self.signal_weight     )
+            
+            import ostap.trees.trees
+            from ostap.trees.trees import Chain
+            avars = self.signal.the_variables ( all_vars )
+            
+            scuts = {}
+            if self.prefilter_signal : scuts.update ( { 'PreFilter/Signal' : self.prefilter_signal } )                    
+            if self.prefilter        : scuts.update ( { 'PreFilter/Common' : self.prefilter        } )
+            if self.signal_cuts      : scuts.update ( { 'Signal'           : self.signal_cuts      } )
+            
+            import ostap.frames.frames 
+            import ostap.frames.tree_reduce       as TR
+            
+            silent = not self.verbose or not self.category in ( 0, -1 )
+            self.logger.info ( 'Pre-filter Signal      before processing' )
+            ## 
+            inputs  = ( self.signal , ) + self.__more_signals
+            ## reduced signals 
+            self.__RS = tuple ( TR.reduce ( i                    ,
+                                            selection = scuts    ,
+                                            save_vars = avars    ,
+                                            name      = 'SIGNAL' ,
+                                            output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-tmva-SIGNAL-' ) , 
+                                            new_vars  = self.signal_vars     , 
+                                            prescale  = self.prescale_signal ,  
+                                            silent    = silent   ) for i in inputs )
+            ## merge signals 
+            files = ()
+            for rs in self.__RS : files += rs.files
+            self.__SigTR  = Chain ( name = 'SIGNAL' , files = files )                 
+            
+            self.__signal       = self.__SigTR
+            self.__signal_cuts  = ROOT.TCut()
+            self.__more_signals = () 
+            
+        missvars = [ v for v in self.signal_vars if not v in self.signal ]
+        assert not missvars , "Variables %s are not in signal sample!" % missvars                          
 
+        # =====================================================================
+        ## prefilter/prescale background if required
+        # =====================================================================
+        ## -- self.background_cuts          or 
+        if self.prefilter_background     or \
+           self.prefilter                or \
+           self.__more_backgrounds       or \
+           1 != self.prescale_background or self.background_vars :
+            
+            if self.background_weight : all_vars.append ( self.background_weight )
+            
+            from ostap.trees.trees import Chain
+            avars = self.background.the_variables ( all_vars )
+    
+            bcuts = {}
+            if self.prefilter_background : bcuts.update ( { 'PreFilter/Background' : self.prefilter_background } )                  
+            if self.prefilter            : bcuts.update ( { 'PreFilter/Common'     : self.prefilter            } )
+            if self.background_cuts      : bcuts.update ( { 'Background'           : self.background_cuts      } )
+            
+            import ostap.frames.frames 
+            import ostap.frames.tree_reduce       as TR
+            
+            silent = not self.verbose or not self.category in ( 0, -1 )
+            self.logger.info ( 'Pre-filter Background  before processing' )
+            
+            inputs = ( self.background , ) + self.__more_backgrounds 
+            ## reduced backgrounds 
+            self.__RB = tuple ( TR.reduce ( i                  ,
+                                            selection = bcuts  ,
+                                            save_vars = avars  ,
+                                            name      = 'BACKGROUND'             ,
+                                            output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-tmva-BACKGROUND-' ) ,
+                                            new_vars  = self.background_vars     , 
+                                            prescale  = self.prescale_background ,  
+                                            silent    = silent ) for i in inputs )
+            ## merge signals 
+            files = ()
+            for rb in self.__RB : files += rb.files
+            self.__BkgTR  = Chain ( name = 'BACKGROUND' , files = files ) 
+            
+            
+            self.__background       = self.__BkgTR
+            self.__background_cuts  = ROOT.TCut()
+            self.__more_backgrounds = () 
+            
+        missvars = [ v for v in self.background_vars if not v in self.background ]
+        assert not missvars , "Variables %s are not in background sample!" % missvars                         
+                         
+        # =====================================================================
+        ## check for (negative) signal weights
+        # =====================================================================
+        if self.signal_weight :
+            from ostap.stats.statvars import data_statistic
+            sw = data_statistic ( self.signal, 
+                                  self.signal_weight ,
+                                  cuts      = self.signal_cuts ,
+                                  progress  = False ,   
+                                  use_frame = True  , 
+                                  parallel  = True  )                    
+            mn , mx = sw.minmax() 
+            if mn < 0 : 
+                ## there are negative weights :
+                for m in self.methods :
+                    if not m [ 0 ] in good_for_negative :
+                        self.logger.error ( "Method '%s' does not support negative (signal) weights" % m[1] )
+                            
+        # =================================================================
+        ## check for (negative) background weights
+        # =================================================================
+        if self.background_weight :
+            from ostap.stats.statvars import data_statistic
+            bw = data_statistic ( self.background        , 
+                                  self.background_weight ,
+                                  cuts      = self.background_cuts ,
+                                  progress  = False ,   
+                                  use_frame = True  , 
+                                  parallel  = True  )         
+            
+            if isinstance ( bw , WSE ) : bw = bw.values()
+            mn , mx = bw.minmax() 
+            if mn < 0 : 
+                ## there are negative weights :
+                for m in self.methods :
+                    if not m [ 0 ] in good_for_negative :
+                        self.logger.error ( "Method '%s' does not support negative (background) weights" % m[1] )
+
+        # =====================================================================
+        ## some statistic
+        # =====================================================================
+        
+        NS  = -1
+        NB  = -1
+        SW  = None
+        BW  = None
+        cnf = {'use_frame' : True, 'parallel' : True , 'progress' :  False }
+            
+        if 0 <= self.signal_train_fraction     < 1 or \
+           0 <= self.background_train_fraction < 1 or \
+           self.signal_weight                      or \
+           self.background_weight                  or self.verbose :
+            
+            from ostap.stats.statvars import data_statistic
+            sc = ROOT.TCut      ( self.    signal_cuts )
+            bc = ROOT.TCut      ( self.background_cuts )
+            ss = data_statistic ( self.signal     , '1' , cuts = sc , **cnf )
+            sb = data_statistic ( self.background , '1' , cuts = bc , **cnf )
+            NS = ss.nEntries()
+            NB = sb.nEntries()
+
+        if self.    signal_weight :
+            from ostap.stats.statvars import data_statistic
+            scw  = sc * self.    signal_weight
+            sw   = data_statistic ( self.signal , '1' , cuts = scw , **cnf )
+            sw   = WSE ( sw ) 
+            SW   = VE  ( sw.sumw () , sw.sumw2() )
+            
+        if self.background_weight :
+            from ostap.stats.statvars import data_statistic
+            bcw  = bc * self.background_weight                    
+            bw   = data_statistic ( self.background  , '1' , cuts = bcw , **cnf )
+            bw   = WSE ( bw ) 
+            BW   = VE  ( bw.sumw () , bw.sumw2() ) 
+            
+        if 0 < self.signal_train_fraction < 1 :
+            nt = math.ceil ( NS * self.signal_train_fraction )
+            bo = self.configuration.split ( ':' )
+            bo = [ b for b in bo if not b.startswith('nTrain_Signal') ]
+            bo = [ b for b in bo if not b.startswith('nTest_Signal' ) ]
+            nt =  'nTrain_Signal=%s' % nt
+            self.__configuration = ':'.join ( [ nt ] + bo ) 
+            self.logger.info ( "Extend TMVA configuration for '%s'" % nt ) 
+            
+        if 0 < self.background_train_fraction < 1 :
+            nt = math.ceil ( NB * self.background_train_fraction )
+            bo = self.configuration.split ( ':' )
+            bo = [ b for b in bo if not b.startswith('nTrain_Background') ]
+            bo = [ b for b in bo if not b.startswith('nTest_Background' ) ]
+            nt =  'nTrain_Background=%s' % nt
+            self.__configuration = ':'.join ( [ nt ] + bo ) 
+            self.logger.info ( "Extend TMVA configuration for '%s'" % nt ) 
+            
+        # =================================================================
+        # The table
+        # =================================================================            
+        
+        if self.verbose :
+            title  = 'TMVA Trainer/start configuration'
+            table = self.table_start ( title = title , prefix = '# ' ) 
+            self.logger.info ( '%s:\n%s' % ( title , table ) )
+            
+            import ostap.trees.trees
+            import ostap.trees.cuts
+
+            stitle = 'Input Signal     variables'
+            sc = ROOT.TCut ( self.signal_cuts )
+            if self.signal_weight : sc *= self.signal_weight                
+            tS = self.signal.table2     ( self.variables , title = stitle , cuts = sc , prefix = '# ' )
+            self.logger.info ( '%s\n%s' % ( stitle , tS ) )
+            
+            btitle = 'Input Background variables'
+            bc = ROOT.TCut ( self.background_cuts )
+            if self.background_weight : bc *= self.background_weight                
+            tB = self.background.table2 ( self.variables , title = btitle , cuts = bc , prefix = '# ' )
+            self.logger.info ( '%s\n%s' % ( btitle , tB ) )
+
+            ## one more table:
+            
+            from ostap.logger.symbols import times, sum_symbol
+            
+            rows = [ ( 'Sample' , '#Events' , '%sw' % sum_symbol , '' ) ]
+
+            if isinstance ( SW , VE ) :
+                s , expo = SW.pretty_print ( precision = 4 , width = 6 , parentheses = False )
+                row = 'Signal' , '%d' % NS , s , '%s10^{%+d}' % ( times , expo ) if expo else '' 
+            else :
+                row = 'Signal' , '%d' % NS
+                
+            rows.append ( row )
+            
+            if isinstance ( BW , VE ) :
+                s , expo = BW.pretty_print ( BW , precision = 4 , width = 6 , parentheses = False )
+                row = 'Background' , '%d' % NB , s , '%s10^{%+d}' % ( times , expo ) if expo else '' 
+            else :
+                row = 'Background' , '%d' % NB
+                
+            rows.append ( row )
+
+            import ostap.logger.table as T
+            rows  = T.remove_empty_columns ( rows ) 
+            title = "Training samples"
+            table = T.table ( rows , prefix = '# ' , title = title , alignment = "lccc" )
+            self.logger.info ( '%s:\n%s' % ( title , table ) ) 
+
+        # =====================================================================
         ## open the output ROOT file ...
+        # =====================================================================
         with ROOT.TFile.Open ( self.output_file, 'RECREATE' )  as outFile :
 
             self.logger.debug ( 'Output ROOT file: %s ' %  outFile.GetName() )
-
-            # =================================================================
-            ## the final adjustment
-            # =================================================================
             
-            opts = self.__bookingoptions
-            from ostap.utils.basic import isatty
-            OK1  = self.verbose and self.category in ( 0 , -1 )
-            OK2  = OK1 and isatty ()             
-            opts = opts_replace ( opts , 'DrawProgressBar:' , OK1 ) 
-            opts = opts_replace ( opts , 'Color:'           , OK2 ) 
-            self.__bookingoptions = opts 
-
-            # =================================================================
-            #
-            # =================================================================
-            
-            all_vars = []
-            
-            for v in self.variables :
-                
-                vv = v
-                if isinstance ( vv , str ) : vv = ( vv , 'F' )
-                
-                varexp = vv [ 0 ].strip()  
-                nick , sep , expr = varexp.partition ( ":=" )
-                nick = nick.strip()
-                expr = expr.strip() 
-                if nick and sep and expr : varexp = expr
-                else                     : nick   = varexp 
-                
-                if   varexp in self.signal_vars     or ( nick and nick in self.signal_vars     ) : continue
-                elif varexp in self.background_vars or ( nick and nick in self.background_vars ) : continue 
-                else  : all_vars.append ( varexp )
-
-            for v in self.spectators :
-                vv = v
-                if isinstance ( vv , str ) : vv = ( vv , 'F' )
-                all_vars.append ( vv [ 0 ] )
-
-            ## if self.prefilter         : all_vars.append ( self.prefilter         )                
-            ## if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
-            ## if self.background_cuts   : all_vars.append ( self.background_cuts   )
-            
-            if self.signal_weight     : all_vars.append ( self.signal_weight     )
-            if self.background_weight : all_vars.append ( self.background_weight )
-
-            
-            # =================================================================
-            ## prefilter/prescale signal if required 
-            ## -- self.signal_cuts              or \
-            if self.prefilter_signal         or \
-               self.prefilter                or \
-               self.__more_signals           or \
-               ( 1 != self.prescale_signal ) or self.signal_vars :
-                
-                if self.signal_weight     : all_vars.append ( self.signal_weight     )
-                
-                import ostap.trees.trees
-                from ostap.trees.trees import Chain
-                avars = self.signal.the_variables ( all_vars )
-                
-                scuts = {}
-                if self.prefilter_signal : scuts.update ( { 'PreFilter/Signal' : self.prefilter_signal } )                    
-                if self.prefilter        : scuts.update ( { 'PreFilter/Common' : self.prefilter        } )
-                if self.signal_cuts      : scuts.update ( { 'Signal'           : self.signal_cuts      } )
-                
-                import ostap.frames.frames 
-                import ostap.frames.tree_reduce       as TR
-                
-                silent = not self.verbose or not self.category in ( 0, -1 )
-                self.logger.info ( 'Pre-filter Signal      before processing' )
-                ## 
-                inputs  = ( self.signal , ) + self.__more_signals
-                ## reduced signals 
-                self.__RS = tuple ( TR.reduce ( i                    ,
-                                                selection = scuts    ,
-                                                save_vars = avars    ,
-                                                name      = 'SIGNAL' ,
-                                                output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-tmva-SIGNAL-' ) , ## , keep = True ) ,
-                                                new_vars  = self.signal_vars     , 
-                                                prescale  = self.prescale_signal ,  
-                                                silent    = silent   ) for i in inputs )
-                ## merge signals 
-                files = ()
-                for rs in self.__RS : files += rs.files
-                self.__SigTR  = Chain ( name = 'SIGNAL' , files = files )                 
-                
-                self.__signal       = self.__SigTR
-                self.__signal_cuts  = ROOT.TCut()
-                self.__more_signals = () 
-                
-            missvars = [ v for v in self.signal_vars if not v in self.signal ]
-            assert not missvars , "Variables %s are not in signal sample!" % missvars                          
-
-            # =================================================================
-            ## prefilter/prescale background if required 
-            ## -- self.background_cuts          or \
-            if self.prefilter_background     or \
-               self.prefilter                or \
-               self.__more_backgrounds       or \
-               1 != self.prescale_background or self.background_vars :
-                
-                if self.background_weight : all_vars.append ( self.background_weight )
-                
-                from ostap.trees.trees import Chain
-                avars = self.background.the_variables ( all_vars )
-                
-                bcuts = {}
-                if self.prefilter_background : bcuts.update ( { 'PreFilter/Background' : self.prefilter_background } )                  
-                if self.prefilter            : bcuts.update ( { 'PreFilter/Common'     : self.prefilter            } )
-                if self.background_cuts      : bcuts.update ( { 'Background'           : self.background_cuts      } )
-                
-                import ostap.frames.frames 
-                import ostap.frames.tree_reduce       as TR
-                                
-                silent = not self.verbose or not self.category in ( 0, -1 )
-                self.logger.info ( 'Pre-filter Background  before processing' )
-
-                inputs = ( self.background , ) + self.__more_backgrounds 
-                ## reduced backgrounds 
-                self.__RB = tuple ( TR.reduce ( i                  ,
-                                                selection = bcuts  ,
-                                                save_vars = avars  ,
-                                                name      = 'BACKGROUND'             ,
-                                                output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-tmva-BACKGROUND-' ) , ## , keep = True ) ,
-                                                new_vars  = self.background_vars     , 
-                                                prescale  = self.prescale_background ,  
-                                                silent    = silent ) for i in inputs )
-                ## merge signals 
-                files = ()
-                for rb in self.__RB : files += rb.files
-                self.__BkgTR  = Chain ( name = 'BACKGROUND' , files = files ) 
-
-                
-                self.__background       = self.__BkgTR
-                self.__background_cuts  = ROOT.TCut()
-                self.__more_backgrounds = () 
-
-            missvars = [ v for v in self.background_vars if not v in self.background ]
-            assert not missvars , "Variables %s are not in background sample!" % missvars                         
-                         
-            # =====================================================================
-            ## check for signal weights
-            # =====================================================================
-            if self.signal_weight :
-                from ostap.stats.statvars import data_statistic
-                sw = data_statistic ( self.signal, 
-                                      self.signal_weight ,
-                                      cuts      = self.signal_cuts ,
-                                      progress  = False ,   
-                                      use_frame = True  , 
-                                      parallel  = True  )                    
-                mn , mx = sw.minmax() 
-                if mn < 0 : 
-                ## there are negative weights :
-                    for m in self.methods :
-                        if not m[0] in good_for_negative :
-                            self.logger.error ( "Method '%s' does not support negative (signal) weights" % m[1] )
-                            
-            # =================================================================
-            ## check for background weights
-            # =================================================================
-            if self.background_weight :
-                from ostap.stats.statvars import data_statistic
-                bw = data_statistic ( self.background        , 
-                                      self.background_weight ,
-                                      cuts      = self.background_cuts ,
-                                      progress  = False ,   
-                                      use_frame = True  , 
-                                      parallel  = True  )         
-                
-                if isinstance ( bw , WSE ) : bw = bw.values()
-                mn , mx = bw.minmax() 
-                if mn < 0 : 
-                ## there are negative weights :
-                    for m in self.methods :
-                        if not m[0] in good_for_negative :
-                            self.logger.error ( "Method '%s' does not support negative (background) weights" % m[1] )
-                                                        
-            NS = -1
-            NB = -1
-            SW = None
-            BW = None
-            
-            if 0<= self.signal_train_fraction <1 or 0<= self.background_train_fraction < 1 or self.verbose :
-                from ostap.stats.statvars import data_statistic
-                sc = ROOT.TCut      ( self.    signal_cuts )
-                bc = ROOT.TCut      ( self.background_cuts )
-                cnf = { 'use_frame' : True , 'parallel' : True , 'progress' :  False }
-                ss = data_statistic ( self.signal     , '1' , cuts = sc , **cnf )
-                sb = data_statistic ( self.background , '1' , cuts = bc , **cnf )
-                NS = ss.nEntries()
-                NB = sb.nEntries()
-                
-                cnf = {'use_frame' : True, 'parallel' : True , 'progress' :  False }
-                if self.    signal_weight :
-                    from ostap.stats.statvars import data_statistic
-                    scw  = sc * self.    signal_weight
-                    sw   = data_statistic ( self.signal , '1' , cuts = scw , **cnf )
-                    sw   = WSE ( sw ) 
-                    SW   = VE  ( sw.sum () , sw.sum2() ) 
-                if self.background_weight :
-                    from ostap.stats.statvars import data_statistic
-                    bcw  = bc * self.background_weight                    
-                    bw   = data_statistic ( self.background  , '1' , cuts = bcw , **cnf )
-                    bw   = WSE ( bw ) 
-                    BW   = VE  ( bw.sum () , bw.sum2() ) 
-                
-                if 0 < self.signal_train_fraction < 1 :
-                    nt = math.ceil ( NS * self.signal_train_fraction )
-                    bo = self.configuration.split ( ':' )
-                    bo = [ b for b in bo if not b.startswith('nTrain_Signal') ]
-                    bo = [ b for b in bo if not b.startswith('nTest_Signal' ) ]
-                    nt =  'nTrain_Signal=%s' % nt
-                    self.__configuration = ':'.join ( [ nt ] + bo ) 
-                    self.logger.info ( "Extend TMVA configuration for '%s'" % nt ) 
-                    
-                if 0 < self.background_train_fraction < 1 :
-                    nt = math.ceil ( NB * self.background_train_fraction )
-                    bo = self.configuration.split ( ':' )
-                    bo = [ b for b in bo if not b.startswith('nTrain_Background') ]
-                    bo = [ b for b in bo if not b.startswith('nTest_Background' ) ]
-                    nt =  'nTrain_Background=%s' % nt
-                    self.__configuration = ':'.join ( [ nt ] + bo ) 
-                    self.logger.info ( "Extend TMVA configuration for '%s'" % nt ) 
-
-            # =================================================================
-            # The table
-            # =================================================================            
-
-            if self.verbose :
-                
-                rows = [ ( 'Item' , 'Value' ) ]
-                
-                row  = 'Name'      , self.name
-                rows.append ( row )
-
-                vv  = set ( self.variables )
-                for k in self.signal_vars     : vv.add ( k )
-                for k in self.background_vars : vv.add ( k )
-                vv = sorted ( vv )
-                
-                row = 'Variables'      , ' '.join ( vv )
-                rows.append ( row )
-        
-                if self.nicknames :
-                    row = 'Nicknames:' , ''
-                    rows.append ( row )
-                    for k , v  in items_loop ( self.nicknames ) :
-                        row = ' - ' + k , v
-                        rows.append ( row )
-                    
-                if self.spectators :
-                    row = 'Spectators' , ' '.join ( self.spectators )
-                    rows.append ( row )
-                    
-                for i , o in enumerate ( [ o for o in self.bookingoptions.split ( ':' ) if not o in trivial_opts ] ) :
-                    if 0 == i : row = 'Booking options' , o
-                    else      : row = ''                , o 
-                    rows.append ( row )
-                    
-                for i , o in enumerate ( [ o for o in self.configuration.split ( ':' ) if not o in trivial_opts ] ) :
-                    if 0 == i : row = 'TMVA configuraton' , o
-                    else      : row = ''                  , o 
-                    rows.append ( row )
-                    
-                if self.signal_cuts : 
-                    row = 'Signal cuts' , str ( self.signal_cuts ) 
-                    rows.append ( row )
-
-                if self.signal_weight : 
-                    row = 'Signal weight' , str ( self.signal_weight ) 
-                    rows.append ( row )
-                    row = 'Signal total'     , '%s' % NS
-                    rows.append ( row ) 
-                    row = 'Signal weighted'  , '%s' % SW
-                    rows.append ( row ) 
-                else :
-                    row = 'Signal total'     , '%s' % NS
-                    rows.append ( row ) 
-
-                if 0 < self.signal_train_fraction < 1 :
-                    row = 'Signal train fraction' , '%.1f%%' % ( 100 *  self.signal_train_fraction ) 
-                    rows.append ( row )
-                    
-                if self.background_cuts : 
-                    row = 'Background cuts' , str ( self.background_cuts ) 
-                    rows.append ( row )
-                    
-                if self.background_weight : 
-                    row = 'Background weight'    , str ( self.background_weight ) 
-                    rows.append ( row )
-                    row = 'Background total'     , '%s' % NB
-                    rows.append ( row ) 
-                    row = 'Background weighted'  , '%s' % BW
-                    rows.append ( row ) 
-                else :
-                    row = 'Background total'     , '%s' % NB
-                    rows.append ( row ) 
-                    
-                if 0 < self.background_train_fraction < 1 :
-                    row = 'Background train fraction' , '%.1f%%' % ( 100 *  self.background_train_fraction ) 
-                    rows.append ( row )
-                    
-                ## for m in self.methods :
-                ##    row = 'Method' , '%s #%s' % ( m[1] , m[0] )
-                ##    rows.append ( row )
-                ##    for i , o in enumerate ( m[2].split(':' ) ) :
-                ##        if 0 == i : row = 'Method configruration' , o
-                ##        else      : row =   ''                    , o 
-                ##        rows.append ( row ) 
-                        
-                import ostap.logger.table as T
-                title = "TMVA Trainer %s start " % self.name 
-                table = T.table (  rows , title = title , prefix = "# " , alignment = "lw" )
-                self.logger.info ( "%s\n%s" % ( title , table ) ) 
-                
-                if self.verbose :
-                    
-                    import ostap.trees.trees
-                    import ostap.trees.cuts
-
-                    stitle = 'Input Signal     variables'
-                    sc = ROOT.TCut ( self.signal_cuts )
-                    if self.signal_weight : sc *= self.signal_weight                
-                    tS = self.signal.table2     ( vv , title = stitle , cuts = sc , prefix = '# ' )
-                    self.logger.info ( '%s\n%s' % ( stitle , tS ) )
-                    
-                    btitle = 'Input Background variables'
-                    bc = ROOT.TCut ( self.background_cuts )
-                    if self.background_weight : bc *= self.background_weight                
-                    tB = self.background.table2 ( vv , title = btitle , cuts = bc , prefix = '# ' )
-                    self.logger.info ( '%s\n%s' % ( btitle , tB ) )
-
-            bo = self.bookingoptions.split (':')
-            bo.sort() 
-            if self.verbose : self.logger.info  ( 'Book TMVA-factory %s ' % bo ) 
-            else            : self.logger.debug ( 'Book TMVA-factory %s ' % bo ) 
-
             factory = ROOT.TMVA.Factory (                
                 self.name             ,
                 outFile               ,
@@ -1545,22 +1537,21 @@ class Trainer(object):
                 bo = m[2].split(':')
                 bo.sort() 
                 if  self.verbose : self.logger.info  ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )
-                else             : self.logger.debug ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )
-                
+                else             : self.logger.debug ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )                
                 factory.BookMethod ( dataloader , *m )
 
+            # ==========================================================================
             # Train MVAs
-            ms = self.method_names 
-            self.logger.info  ( "Train    all methods %s " % str ( ms ) )
-            factory.TrainAllMethods    ()
+            ms = self.method_names
+            with timing ( "Train    all methods %s " % str ( ms ) , logger = self.logger ) : factory.TrainAllMethods    ()
             ## Test MVAs
-            self.logger.info  ( "Test     all methods %s " % str ( ms ) )
-            factory.TestAllMethods     ()
+            with timing ( "Test     all methods %s " % str ( ms ) , logger = self.logger ) : factory.TestAllMethods     ()
             # Evaluate MVAs
-            self.logger.info  ( "Evaluate all methods %s " % str ( ms ) )
-            factory.EvaluateAllMethods ()
+            with timing ( "Evaluate all methods %s " % str ( ms ) , logger = self.logger ) : factory.EvaluateAllMethods ()
 
-        ## ROC curves 
+        # =====================================================================
+        ## prepare ROC curves
+        # =====================================================================
         if ( self.make_plots or self.verbose ) :
             import ostap.plotting.canvas 
             from   ostap.plotting.style   import useStyle 
@@ -1571,44 +1562,22 @@ class Trainer(object):
                     cnv.Draw()
                     cnv >> ( "%s/plots/ROC" % self.dirname )
                     del cnv
-                    
-        ## AUC for ROC curves
+
+        # =====================================================================
+        ## Calculate AUCs for ROC curves
+        # =====================================================================
         for m in self.methods :
             mname = m [ 1 ]
             auc = factory.GetROCIntegral ( self.name , mname )
             self.__AUC [ mname ] = auc
-            
-        # check the output.
-        if os.path.exists ( self.output_file ) :
-
-            if self.output_file == '%s.root' % self.name and os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) : 
-                import shutil
-                # =============================================================
-                try : # =======================================================
-                    # =========================================================
-                    shutil.move ( self.output_file , self.dirname )
-                    noof = os.path.join ( self.dirname , self.output_file )
-                    if os.path.exists ( noof ) : self.__output_file = noof
-                    # =========================================================
-                except : # ====================================================
-                    # =========================================================
-                    pass
-            # ================================================================
-            try : # ==========================================================
-                # ============================================================
-                with ROOT.TFile.Open ( self.output_file, 'READ' ) as outFile : 
-                    self.logger.debug ( "Output ROOT file is %s" % outFile.GetName() ) 
-                    if self.verbose : outFile.ls()
-                # ===========================================================
-            except : # ======================================================
-                # ===========================================================
-                pass
 
         del dataloader
         del factory 
-
-        if  self.make_plots : self.makePlots ()                
         
+        if  self.make_plots :
+            Ostap.Tmva.disable_scatter_plots ()
+            self.makePlots ()                
+            
         import glob, os 
         self.__weights_files = tuple ( [ f for f in glob.glob ( self.__pattern_xml   ) ] )
         self.__class_files   = tuple ( [ f for f in glob.glob ( self.__pattern_C     ) ] ) 
@@ -1622,8 +1591,10 @@ class Trainer(object):
         self.__weights_files = tuple ( [ os.path.abspath ( f ) for f in self.weights_files ] ) 
         self.__class_files   = tuple ( [ os.path.abspath ( f ) for f in self.class_files   ] ) 
         self.__plots         = tuple ( [ os.path.abspath ( f ) for f in self.__plots       ] ) 
-        
-        ## finally set tar-file 
+
+        # =====================================================================
+        ## Check tar-file
+        # =====================================================================
         if os.path.exists ( tfile ) and tarfile.is_tarfile( tfile ) :            
             if os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) :
                 # =============================================================
@@ -1637,7 +1608,64 @@ class Trainer(object):
                     # =========================================================
                     pass 
             self.__tar_file = os.path.abspath ( tfile ) 
-                        
+
+
+        self.__add_decision = True 
+        # =====================================================================
+        ## Check the output ROOT file
+        # =====================================================================
+        if os.path.exists ( self.output_file ) :
+
+            import ostap.trees.trees 
+            
+            if self.verbose                         and \
+               os.path.exists     ( self.tar_file ) and \
+               tarfile.is_tarfile ( self.tar_file ) :
+                
+                for ch in ( 'TrainTree' , 'TestTree' ) :
+                    chain = ROOT.TChain ( '%s/%s' % ( self.name , ch ) )
+                    chain.Add ( self.output_file )
+
+                    title = chain.fullpath 
+                    table = chain.table ( title = title , prefix = '# ' )
+                    self.logger.info ( '%s:\n%s' % ( title , table ) )
+                    
+                    """
+                    addTMVAResponse ( chain         ,
+                                      inputs        = self.the_variables ,
+                                      weights_files = self.tar_file      ,
+                                      verbose       = False              ,
+                                      progress      = self.verbose       ,
+                                      report        = self.verbose       )
+                    """
+                    
+            if os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) :
+                
+                import shutil
+                # =============================================================
+                try : # =======================================================
+                    # =========================================================
+                    shutil.move ( self.output_file , self.dirname )                    
+                    noof = os.path.join ( self.dirname , os.path.basename ( self.output_file ) )
+                    noof = os.path.abspath ( noof ) 
+                    if os.path.exists ( noof ) : self.__output_file = noof
+                    # =========================================================
+                except : # ====================================================
+                    # =========================================================
+                    pass
+            # ================================================================
+            try : # ==========================================================
+                # ============================================================
+                with ROOT.TFile.Open ( self.output_file, 'READ' ) as outFile :
+                    if self.verbose :
+                        table = outFile.ls_table ( prefix = '# ' )
+                        self.logger.info ( 'Output ROOT file:%s' % table )
+                # ===========================================================
+            except : # ======================================================
+                # ===========================================================
+                pass
+
+                    
         return self.tar_file 
 
     # =========================================================================
@@ -1718,8 +1746,8 @@ class Trainer(object):
         
         from ostap.utils.root_utils import batch
         from ostap.plotting.style   import useStyle
-        from ostap.core.core        import rootException
-        with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) , rootException () : 
+        from ostap.core.core        import rootException, rootError 
+        with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) , rootError() , rootException () : 
             for fun, args, kwargs in plots :
                 tag  = "Execute macro %s%s" % ( fun.__name__ , str ( args ) ) 
                 with timing ( tag , logger = self.logger ) , useStyle () :
@@ -1824,7 +1852,6 @@ def make_Plots ( name , output , show_plots = True ) :
         ## 
         ## ( ROOT.TMVA.likelihoodrefs ,  ( name , output     ) ) ,
         ]
-
     
     ##    plots.append   ( ( ROOT.TMVA.mvaeffs            , ( name , output ) ) )
     logger.warning ( 'make_Plots: Skip    macro ROOT.TMVA.%s%s' % ( 'mvaeffs'  , str ( ( name , output ) ) ) ) 

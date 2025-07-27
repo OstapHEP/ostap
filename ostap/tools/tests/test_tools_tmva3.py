@@ -43,8 +43,8 @@ batch_env ( logger )
 def prepare_data ( nB = 10000 , nS = 10000 ) :
     """ Prepare training and testing data for TMVA"""
 
-    logger = getLogger ( 'test_tmva2:prepare_data' )
-    data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-test-tools-tmva2-' )
+    logger = getLogger ( 'test_tmva3:prepare_data' )
+    data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-test-tools-tmva3-' )
     
     logger.info('Prepare input ROOT file with data  %s' % data_file )
     import ostap.io.root_file 
@@ -119,7 +119,8 @@ def prepare_data ( nB = 10000 , nS = 10000 ) :
 # =============================================================================
 ## Run TMVA test 
 def test_tmva3 () :
-    """ Run TMVA test """
+    """ Run TMVA test
+    """
 
     logger = getLogger ( 'test_tmva3' )
 
@@ -140,7 +141,7 @@ def test_tmva3 () :
         #
         from ostap.tools.tmva import Trainer 
         trainer = Trainer (
-            name    = 'TestTMVA2' ,   
+            name    = 'TestTMVA3' ,   
             methods = [ # type               name   configuration
             ( ROOT.TMVA.Types.kMLP        , "MLP1"         , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=500:HiddenLayers=N+1:TestRate=5:!UseRegulator" ) ,                
             ( ROOT.TMVA.Types.kMLP        , "MLP2"         , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=500:HiddenLayers=N+2:TestRate=5:!UseRegulator" ) ,
@@ -177,9 +178,10 @@ def test_tmva3 () :
             background_vars = { 'VAR1' : 'VARB1' , 'VAR2' : 'VARB2' } , 
             ##                         
             signal         = tSignal                  , ## `Signal' sample
-            background     = tBkg                     , ## `Background' sample         
+            background     = tBkg                     , ## `Background' sample
+            ##
             verbose        = True                     , 
-            workdir        = CleanUp.tempdir ( prefix = 'ostap-tmva2-workdir-' ) ) ##  working directory 
+            workdir        = CleanUp.tempdir ( prefix = 'ostap-tmva3-workdir-' ) ) ##  working directory 
         
         with timing ( 'for TMVA training' , logger ) : 
             weights_files = trainer.train ()            
@@ -218,7 +220,7 @@ def test_tmva3 () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    with timing ( 'test_tmva2', logger = logger ) :
+    with timing ( 'test_tmva3', logger = logger ) :
         test_tmva3 () 
 
 # =============================================================================
