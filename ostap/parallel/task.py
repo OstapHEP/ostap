@@ -904,7 +904,7 @@ class TaskManager(object) :
         """
         
         job_chunk = kwargs.pop ( 'chunk_size', self.chunk_size  )
-        if job_chunk <= 0 : job_chunk = self.chunk_size 
+        if job_chunk <= 1 : job_chunk = self.chunk_size 
 
         from ostap.utils.utils import chunked 
         chunks    = list ( chunked ( args , job_chunk ) )

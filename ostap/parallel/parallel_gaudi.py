@@ -85,7 +85,7 @@ class WorkManager(TaskManager) :
                                 dump_jobs  = dump_jobs  ,
                                 dump_freq  = dump_freq  ) 
         
-        self.pool   = MP.Pool ( self.ncpus )
+        ## self.pool   = MP.Pool ( self.ncpus )
         
         if kwargs : self.extra_arguments ( **kwargs )
 
@@ -121,8 +121,11 @@ class WorkManager(TaskManager) :
         """
         
         njobs = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , Sized ) else None ) ) 
-        with pool_context ( self.pool ) as pool :
+        with MP.Pool ( self.ncpus ) as pool : ##  pool_context ( self.pool ) as pool :
 
+            sys.stdout .flush ()
+            sys.stderr .flush ()
+            
             ## create and submit jobs 
             jobs = pool.imap_unordered ( job , jobs_args )
             
@@ -135,6 +138,9 @@ class WorkManager(TaskManager) :
                                          silent      = silent               ) :
                 yield result                
                 
+            sys.stdout .flush ()
+            sys.stderr .flush ()
+            
         if kwargs :
             import ostap.logger.table as T 
             rows = [ ( 'Argument' , 'Value' ) ]
@@ -160,9 +166,9 @@ class WorkManager(TaskManager) :
     
     ## context protocol: close/join/clear the pool 
     def __exit__   ( self , *_ ) :        
-        if  self.pool :
-            self.pool.close()
-            self.pool.join  ()
+        ##  if  self.pool :
+        ##    self.pool.close()
+        ##    self.pool.join  ()
         sys.stdout .flush ()
         sys.stderr .flush ()
         

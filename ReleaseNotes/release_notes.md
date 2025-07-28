@@ -1,3 +1,9 @@
+# v3.0.1.18
+
+## Bug fixes 
+
+   1. couple of minor  fixes in parallel processing 
+
 # v3.0.1.16
 
 ## New features
