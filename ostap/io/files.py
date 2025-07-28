@@ -65,11 +65,11 @@ class TreatFileTask(Task) :
 def fsize_unit ( size ) :
     """ Get the size with units for the file-size units"""
     assert isinstance ( size , integer_types ) , "unit: invalid 'size' type"
-    if   ( 1024 ** 5 ) <= size : return  size // ( 1024 ** 5 ) , 'PB'
-    elif ( 1024 ** 4 ) <= size : return  size // ( 1024 ** 4 ) , 'TB'
-    elif ( 1024 ** 3 ) <= size : return  size // ( 1024 ** 3 ) , 'GB'
-    elif ( 1024 ** 2 ) <= size : return  size // ( 1024 ** 2 ) , 'MB'
-    elif ( 1024      ) <= size : return  size // ( 1024      ) , 'kB'
+    if   ( 1024 ** 5 ) <= size : return  size / ( 1024 ** 5 ) , 'PB'
+    elif ( 1024 ** 4 ) <= size : return  size / ( 1024 ** 4 ) , 'TB'
+    elif ( 1024 ** 3 ) <= size : return  size / ( 1024 ** 3 ) , 'GB'
+    elif ( 1024 ** 2 ) <= size : return  size / ( 1024 ** 2 ) , 'MB'
+    elif ( 1024      ) <= size : return  size / ( 1024      ) , 'kB'
     return size , 'B'
 
 # =============================================================================
