@@ -1855,7 +1855,7 @@ def _add_response_tree_ ( tree     , *   ,
     
     from   ostap.core.core           import Ostap, ROOTCWD
     from   ostap.io.root_file        import REOPEN
-
+    from   ostap.utils.root_utils    import implicitMT
     
     
     treepath = tree.fullpath
@@ -1909,7 +1909,7 @@ def _add_response_tree_ ( tree     , *   ,
         assert sc.isSuccess () , 'Error from Ostap::AddTMVA::addChoppingResponse %s' % sc
         
         ## tfile.Write() ##  "" ) ## , ROOT.TFile.kOverwrite )
-        tfile.Write( "" , ROOT.TFile.kOverwrite )
+        with implicitMT ( False  ) : tfile.Write( "" , ROOT.TFile.kOverwrite )
         
         the_tree = ROOT.nullptr 
 
