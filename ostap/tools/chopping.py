@@ -88,7 +88,7 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.meta_info      import python_info, root_info
-from   ostap.core.ostap_types    import integer_types, string_types  
+from   ostap.core.ostap_types    import integer_types, string_types, sequence_types   
 from   ostap.core.core           import WSE 
 from   ostap.core.pyrouts        import hID, h1_axis, Ostap 
 from   ostap.utils.cleanup       import CleanUp

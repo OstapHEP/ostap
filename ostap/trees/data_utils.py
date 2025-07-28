@@ -348,7 +348,8 @@ class Data(RootFiles):
             if 0 <= fsize :
                 total_size += fsize 
                 vv , unit   = fsize_unit ( fsize )
-                row.append ( '%3d %s' % ( vv , unit ) ) 
+                size_fmt    = '%3d %s' if 'B' == unit else '%.1f %s' 
+                row.append ( size_fmt % ( vv , unit ) ) 
             else : 
                 row.append ( '???' )
 
@@ -364,7 +365,8 @@ class Data(RootFiles):
         from ostap.logger.colorized import infostr
         from ostap.logger.symbols   import show 
         vv , unit  = fsize_unit ( total_size  )
-        row   = infostr ( ' \U000003A3 ' ) if show else '' , infostr ( '%3d %s' % ( vv , unit ) )        
+        size_fmt   = '%3d %s' if 'B' == unit else '%.1f %s' 
+        row = infostr ( ' \U000003A3 ' ) if show else '' , infostr ( size_fmt % ( vv , unit ) )
         for c , t  in zip ( self.chain_names , self.chains ) : row +=  infostr ( str ( len ( t ) ) ) ,         
         row += infostr ( self.commonpath ) ,        
         rows.append ( row )

@@ -559,7 +559,8 @@ class Files(object):
             if 0 <= fsize :
                 total_size += fsize 
                 vv , unit   = fsize_unit ( fsize )
-                row.append ( '%3d %s' % ( vv , unit ) ) 
+                size_fmt    = '%3d %s' if 'B' == unit else '%.1f %s' 
+                row.append ( size_fmt % ( vv , unit ) ) 
             else : 
                 row.append ( '???' )
                 
@@ -570,9 +571,11 @@ class Files(object):
         from ostap.logger.colorized import infostr
         from ostap.logger.symbols   import show 
         vv , unit  = fsize_unit ( total_size  )
+        size_fmt   = '%3d %s' if 'B' == unit else '%.1f %s'         
         row   = infostr ( ' \U000003A3 ' ) if show else ''   , \
-            infostr ( '%3d %s' % ( vv , unit ) ) , \
-            infostr ( self.commonpath )  
+            infostr ( size_fmt % ( vv , unit ) ) , \
+            infostr ( self.commonpath )
+            
         rows.append ( row )
 
         if not title :

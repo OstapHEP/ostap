@@ -79,14 +79,14 @@ NO_PROCESSING = Ostap.StatusCode ( 88888 ) ## unique enought?
 def dir_name ( name ) :
     name = str( name )
     for s in ' %!><\n?(){}[]+:.,;-^&|$#@="\'/' :
-        while s in name : name = name.replace ( ' ' , '_' )
+        while s in name : name = name.replace ( s , '_' )
     while '__' in name : name = name.replace ('__','_')
     return  name 
 # =============================================================================
 ## @class WeightFiles
 #  helper structure to deal with weights files
 class WeightsFiles(CleanUp) :
-    """Helper structure  to deal with weights files
+    """ Helper structure  to deal with weights files
     """
     def __init__ ( self , weights_files ) :
 
