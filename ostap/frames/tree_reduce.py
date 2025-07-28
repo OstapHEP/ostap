@@ -308,7 +308,6 @@ def reduce  ( tree               ,
                            prescale   = prescale   , 
                            tmp_keep   = True       ,
                            silent     = silent     )
-
     
     result = Chain ( reduced.chain )
     if not output : result.trash.add ( reduced.output )  

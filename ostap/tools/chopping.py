@@ -101,6 +101,7 @@ from   ostap.utils.basic         import items_loop, typename
 from   ostap.stats.statvars      import data_statistic
 from   ostap.utils.progress_conf import progress_conf 
 from   ostap.utils.progress_bar  import progress_bar
+from   ostap.utils.timing        import timing 
 import ostap.trees.trees 
 import ostap.trees.cuts
 import ostap.utils.utils         as     Utils 
@@ -343,9 +344,6 @@ class Trainer(object) :
         self.__background        = self.__backgrounds [ 0  ] 
         self.__more_backgrounds  = self.__backgrounds [ 1: ]
 
-        
-        
-        
         self.__methods              = tuple ( methods)
         
         self.__signal_weight        = signal_weight 
@@ -450,17 +448,18 @@ class Trainer(object) :
             import ostap.frames.tree_reduce       as TR
                         
             silent = not self.verbose or not self.category in ( 0, -1 )
-            self.logger.info ( 'Pre-filter Signal     before processing' )           
             inputs = ( self.signal, )  + self.__more_signals
-            ## reduced signals 
-            self.__RS = tuple ( TR.reduce ( i                    ,
-                                            selection = scuts    ,
-                                            save_vars = avars    ,
-                                            name      = 'SIGNAL' ,
-                                            output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-chopping-SIGNAL-' ) , 
-                                            new_vars  = self.signal_vars     , 
-                                            prescale  = self.prescale_signal ,  
-                                            silent    = False    ) for i in inputs )
+            ## reduced signals
+            ROOT.ROOT.EnableImplicitMT() 
+            with timing ( 'Pre-filter Signal     before processing' , logger = self.logger ) :                 
+                self.__RS = tuple ( TR.reduce ( i                    ,
+                                                selection = scuts    ,
+                                                save_vars = avars    ,
+                                                name      = 'SIGNAL' ,
+                                                output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-chopping-SIGNAL-' ) , 
+                                                new_vars  = self.signal_vars     , 
+                                                prescale  = self.prescale_signal ,  
+                                                silent    = False    ) for i in inputs )
             ## merge signals 
             files = ()
             for rs in self.__RS : files += rs.files
@@ -502,19 +501,20 @@ class Trainer(object) :
             import ostap.frames.tree_reduce       as TR
                     
             silent = not self.verbose or not self.category in ( 0, -1 )
-            self.logger.info ( 'Pre-filter Background before processing' )
 
             inputs = ( self.background , ) + self.__more_backgrounds 
             ## reduced backgrounds 
-            self.__RB = tuple ( TR.reduce ( i                  ,
-                                            selection = bcuts  ,
-                                            save_vars = bvars  ,
-                                            name      = 'BACKGROUND'             ,
-                                            output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-chopping-BACKGROUND-' ) ,
-                                            new_vars  = self.background_vars     , 
-                                            prescale  = self.prescale_background ,  
-                                            silent    = silent ) for i in inputs )
-            ## merge signals 
+            ROOT.ROOT.EnableImplicitMT() 
+            with timing ( 'Pre-filter Background before processing' , logger = self.logger ) : 
+                self.__RB = tuple ( TR.reduce ( i                  ,
+                                                selection = bcuts  ,
+                                                save_vars = bvars  ,
+                                                name      = 'BACKGROUND'             ,
+                                                output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-chopping-BACKGROUND-' ) ,
+                                                new_vars  = self.background_vars     , 
+                                                prescale  = self.prescale_background ,  
+                                                silent    = False  ) for i in inputs )
+            ## "merge" backgrounds 
             files = ()
             for rb in self.__RB : files += rb.files
             self.__BkgTR  = Chain ( name = 'BACKGROUND' , files = files ) 
