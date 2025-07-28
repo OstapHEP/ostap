@@ -156,9 +156,6 @@ trainer = Trainer (
     signal           = cSignal                  , ## ``Signal'' sample
     background       = cBkg                     , ## ``Background'' sample
     ##
-    ## more_signals     = [ cSignal ]  ,
-    ## more_backgrounds = [ cBkg    ]  ,
-    ## 
     verbose          = True     ,
     make_plots       = True     ,   
     logging          = True     ,  ## produce  log-files 

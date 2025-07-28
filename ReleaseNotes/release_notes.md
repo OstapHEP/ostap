@@ -1,9 +1,9 @@
-# v3.0.1.14
+# v3.0.1.16
 
 ## New features
     
   1. improve printout for TMVA&Choppnig stuff
-  1. suppress unesessary ROOT printout from TMVA&chopping
+  1. suppress unesessary ROOT printout from TMVA & chopping
             
 ## Backward-incompatible
 

@@ -35,7 +35,8 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.meta_info      import python_info, root_info  
-from   ostap.core.ostap_types    import num_types, string_types, integer_types 
+from   ostap.core.ostap_types    import ( num_types    , integer_types  ,                                          
+                                          string_types , sequence_types ) 
 from   ostap.core.core           import Ostap, WSE, VE, rootWarning
 from   ostap.utils.cleanup       import CleanUp
 from   ostap.utils.basic         import items_loop, typename  
@@ -327,9 +328,6 @@ class Trainer(object):
                    signal                         ,  ## signal sample/tree
                    background                     ,  ## background sample/tree
                    ##
-                   more_signals         = ()      ,  ## addtitional signal sources 
-                   more_backgrounds     = ()      ,  ## addtitional background sources 
-                   ## 
                    signal_vars          = {}      ,  ## dictionary with new variables for signal sample 
                    background_vars      = {}      ,  ## dictionary with new variables for background sample 
                    ## 
@@ -437,16 +435,16 @@ class Trainer(object):
         
         self.__prescale_signal     = prescale_signal
         self.__prescale_background = prescale_background
+
+        ##
+        ## Signal/background sources 
+        ##
         
-        from ostap.trees.trees import Chain
-        
-        if   isinstance ( signal     , Chain           ) : pass 
-        elif isinstance ( background , ROOT.TTree      ) : signal = Chain ( signal ) 
-        elif isinstance ( signal     , ROOT.RooAbsData ) :
+        ## RooDataSet as signal source 
+        if isinstance ( signal     , ROOT.RooDataSet ) :
+            self.logger.info ( 'Signal     converted from RooDataSet to TTree')
             signal.convertToTreeStore ()
             if signal.isWeighted() : 
-                from ostap.core.core import Ostap
-                ## try to get the weight from dataset 
                 ws = Ostap.Utils.getWeight ( signal ) 
                 if ws :
                     sw = ws if not signal_weight else signal_weight * ROOT.TCut ( ws )
@@ -454,10 +452,9 @@ class Trainer(object):
                     self.logger.info ( 'Redefine Signal     weight to be %s' % signal_weight )
             signal     = Chain ( signal.tree () ) 
 
-            
-        if   isinstance ( background , Chain           ) : pass 
-        elif isinstance ( background , ROOT.TTree      ) : background = Chain ( background ) 
-        elif isinstance ( background , ROOT.RooAbsData ) :
+        ## RooDataSet as background source 
+        if isinstance ( background , ROOT.RooDataSet ) :
+            self.logger.info ( 'Background converted from RooDataSet to TTree')
             background.convertToTreeStore ()
             if background.isWeighted() : 
                 from ostap.core.core import Ostap             
@@ -468,19 +465,41 @@ class Trainer(object):
                     backround_weight = bw 
                     self.logger.info ( 'Redefine Background weight to be %s' % background_weight )
             background = Chain ( background.tree () )
-            
 
-        self.__signal               = signal
+
+        from ostap.trees.trees import Chain
+        source_types = Chain, ROOT.TTree
+        
+        assert isinstance ( signal     , source_types   ) or  \
+            (  isinstance ( signal     , sequence_types ) and \
+               all ( isinstance ( s    , source_types ) for s in signal ) ) , \
+               "Invalid `signal` type %s" % typename ( signal ) 
+        
+        assert isinstance ( background , source_types   ) or  \
+            ( isinstance  ( background , sequence_types ) and \
+              all ( isinstance ( s , source_types ) for s in background  ) ) , \
+              "Invalid `signal` type %s" % typename ( backdound ) 
+
+        if  isinstance ( signal     , source_types ) : signal     = signal     , 
+        if  isinstance ( background , source_types ) : background = background , 
+        
+        
+        self.__signals           = tuple ( Chain ( o ) for o in signal ) 
+        self.__signal            = self.__signals [ 0  ] 
+        self.__more_signals      = self.__signals [ 1: ]
+
+        self.__backgrounds       = tuple ( Chain ( o ) for o in background ) 
+        self.__background        = self.__backgrounds [ 0  ] 
+        self.__more_backgrounds  = self.__backgrounds [ 1: ]
+
+        
+        
         self.__signal_cuts          = signal_cuts  
         self.__signal_weight        = signal_weight
 
-        self.__background           = background
         self.__background_cuts      = background_cuts 
         self.__background_weight    = background_weight
 
-        self.__more_signals         = tuple ( Chain ( o ) for o in more_signals     ) 
-        self.__more_backgrounds     = tuple ( Chain ( o ) for o in more_backgrounds ) 
-        
         self.__signal_vars          = {}
         if signal_vars     : self.__signal_vars.update     ( signal_vars )        
         self.__background_vars      = {}
