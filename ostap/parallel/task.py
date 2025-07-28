@@ -46,6 +46,7 @@ __all__     = (
     )
 # =============================================================================
 from   itertools          import repeat, count
+from   ostap.utils.basic  import numcpu 
 import ostap.io.zipshelve as     DBASE 
 import os, operator, abc  
 # =============================================================================
@@ -823,13 +824,19 @@ class TaskManager(object) :
                     ncpus               ,
                     silent      = False ,
                     progress    = True  ,
+                    chunk_size  = -1    ,   
                     dump_dbase  = None  ,
                     dump_jobs   = 0     ,
                     dump_freq   = 0     ) :
+     
+           
+        self.__ncpus  = ncpus if isinstance  ( ncpus , int ) and 1 <= ncpus else numcpu()         
         
-        self.__ncpus     = ncpus        
-        self.__silent    = silent
-        self.__progress  = True if ( progress or not silent ) else False
+        if isinstance ( chunk_size , int ) and 1 < chunk_size : self.__chunk_size = chunk_size 
+        else : self.__chunk_size  = 5 * ( self.__ncpus + 1 )
+        
+        self.__silent     = silent
+        self.__progress   = True if ( progress or not silent ) else False
 
         assert isinstance ( dump_freq , int ) and 0 <= dump_freq , \
             "Invalid `dump_freq' argument: %s" % dumpfreq
@@ -896,8 +903,8 @@ class TaskManager(object) :
         
         """
         
-        job_chunk = kwargs.pop ( 'chunk_size', 10000 )
-        if job_chunk <= 0 : job_chunk = 10000
+        job_chunk = kwargs.pop ( 'chunk_size', self.chunk_size  )
+        if job_chunk <= 0 : job_chunk = self.chunk_size 
 
         from ostap.utils.utils import chunked 
         chunks    = list ( chunked ( args , job_chunk ) )
@@ -1085,6 +1092,12 @@ class TaskManager(object) :
         """`ncpus' : number of CPUs"""
         return self.__ncpus
 
+    @property 
+    def chunk_size  ( self ) : 
+        """`chunk_size: split huge sequence of jobs into chunks.. Reasonabel size fo chun is 5-10* #cpus 
+        """
+        return self.__chunk_size 
+        
     @property
     def dump_dbase  ( self ) :
         """`dump_dbase` : database name (or None) to save intermediate resurtlas if requetsed
