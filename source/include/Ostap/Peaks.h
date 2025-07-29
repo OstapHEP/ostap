@@ -4300,7 +4300,7 @@ namespace Ostap
       inline double scale    () const { return a    () ; } 
       inline double shape    () const { return d    () ; }
       /// kappa = b/pi:  \f$ -1 < \kapppa < 1 \f$   
-      double kappa           () const 
+      double kappa           () const ;
       // =======================================================================      
     public: // setters 
       // =======================================================================
@@ -4350,7 +4350,7 @@ namespace Ostap
       /// location parameter
       double m_mu   { 0 } ; // location parameter 
       /// scale parameter
-      double m_a    { 0 } ; // scale parameter
+      double m_a    { 1 } ; // scale parameter
       /// asymmetry/skew parameter
       double m_psi  { 0 } ; // skew/asymmetry parameter
       /// shape parameter
