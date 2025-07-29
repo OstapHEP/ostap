@@ -1,3 +1,8 @@
+
+## Bug fixes 
+  
+  1. fix a stupid bug in `Ostap::Math::lgamma` for complex arguments 
+
 # v3.0.1.20
 
 ## New features

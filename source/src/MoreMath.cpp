@@ -887,6 +887,10 @@ double Ostap::Math::igamma ( const double x )
 // ============================================================================
 /* Logarithm of gamma function for complex argument 
  *  \f$ \log \Gamma ( x ) $
+ * Note that the imaginary part (arg) is not well-determined 
+ *   when |z| is very large, due to inevitable roundoff in restricting 
+ *   to (-\pi,\pi]. This will result in a GSL_ELOSS error when it occurs. 
+ *   The absolute value part (lnr), however, never suffers from loss of precision.
  */
 // ============================================================================
 std::complex<double> 
@@ -904,16 +908,16 @@ Ostap::Math::lgamma ( const std::complex<double>& x )
   //
   const int ierror = gsl_sf_lngamma_complex_e ( x.real() , x.imag() , &r , &a ) ;
   //
-  if ( ierror ) 
+  if ( ierror && GSL_ELOSS != ierror ) 
   {
-    //
+    // 
     gsl_error ( "Error from gsl_sf_gammainv_e" , __FILE__ , __LINE__ , ierror ) ;
     if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
     { return std::numeric_limits<double>::quiet_NaN(); }
     //
   }
   //
-  return std::polar ( r.val , a.val ) ;  
+  return std::complex<double>( r.val , a.val ) ;  
 }
 // ===========================================================================
 /*  Gamma function of complex argument 
