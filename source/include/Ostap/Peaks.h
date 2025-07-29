@@ -4190,7 +4190,7 @@ namespace Ostap
       double integral
       ( const double low  , 
         const double high ) const ;
-      // // ======================================================================
+      // ======================================================================
     public:
       // ======================================================================
       /// get the unique tag 
@@ -4246,6 +4246,131 @@ namespace Ostap
     } ;
     // ========================================================================
 
+
+
+    // ========================================================================
+    /** @class Meixner
+     *  Meixner distribution
+     *  @see Grigoletto, M., & Provasi, C. (2008). 
+     *       "Simulation and Estimation of the Meixner Distribution". 
+     *       Communications in Statistics - Simulation and Computation, 38(1), 58–77. 
+     *  @see https://doi.org/10.1080/03610910802395679
+     *  @see https://reference.wolfram.com/language/ref/MeixnerDistribution.html
+     *
+     *  Original distribtion is parameterise with 
+     *   - location parameter m 
+     *   - scale parameter    a 
+     *   - shape parameter b : \f$ - \pi < b < +\pi \f$
+     *   - shape parameter f : \f$ 0 < d \f$
+     *
+     *  Here we use a slight reparameterisation:
+     *   - \f$ b = 2 \atan \psi \f$ 
+     *    
+     */ 
+    class Meixner
+    {
+    public :
+      // =======================================================================
+      Meixner
+      ( const double mu  = 0 , // location
+        const double a   = 1 , // scale
+        const double psi = 0 , // b = 2 * atan ( psi )
+        const double d   = 1 ) ;  
+      // =======================================================================
+    public:      
+      // =======================================================================
+      /// evaluate Meixner function
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Meixner function
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Meixner function
+      double        evaluate   ( const double x ) const ;
+      // =======================================================================
+    public: // primary getters 
+      // =======================================================================
+      inline double mu       () const { return m_mu    ; }
+      inline double a        () const { return m_a     ; }
+      inline double psi      () const { return m_psi   ; }
+      inline double d        () const { return m_d     ; }
+      // =======================================================================
+    public: // primary getters 
+      // =======================================================================
+      inline double b        () const { return m_b     ; }      
+      inline double location () const { return mu   () ; } 
+      inline double scale    () const { return a    () ; } 
+      inline double shape    () const { return d    () ; }
+      /// kappa = b/pi:  \f$ -1 < \kapppa < 1 \f$   
+      double kappa           () const 
+      // =======================================================================      
+    public: // setters 
+      // =======================================================================
+      /// set mu 
+      bool setMu  ( const double value ) ;
+      /// set scale
+      bool setA   ( const double value ) ;
+      /// set D 
+      bool setD   ( const double value ) ;
+      /// set psi 
+      bool setPsi ( const double value ) ;
+      // =======================================================================
+      /// set location 
+      inline bool setLocation ( const double value ) { return setMu  ( value ) ; }  
+      /// set scale
+      inline bool setScale    ( const double value ) { return setA   ( value ) ; }  
+      // =======================================================================
+    public: 
+      // =======================================================================/
+      /// mena value
+      double mean     () const ;
+      /// variance/dispersion 
+      double variance () const ;
+      /// RMS 
+      double rms      () const ;
+      /// get skewness 
+      double skewness () const ;
+      /// get (excess) kurtosis 
+      double kurtosis () const ;      
+      // =======================================================================
+    public: // integrals 
+      // ======================================================================
+      /// integral 
+      double integral () const ;
+      /// integral from low to high 
+      double integral
+      ( const double low  , 
+        const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the unique tag 
+      std::size_t tag () const ; // get the unique tag 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// location parameter
+      double m_mu   { 0 } ; // location parameter 
+      /// scale parameter
+      double m_a    { 0 } ; // scale parameter
+      /// asymmetry/skew parameter
+      double m_psi  { 0 } ; // skew/asymmetry parameter
+      /// shape parameter
+      double m_d    { 1 } ; // shape parameter 
+      // =======================================================================
+    public:
+      // =======================================================================
+      /// keep b
+      double m_b    { 0 }  ; // b-value
+      /// normalization 
+      double m_C    { -1 } ; // normalization 
+      // =======================================================================
+    private:
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace {} ; // integration workspace
+      // ======================================================================            
+    };
+
+    
     // ========================================================================
     /// some finite functions 
     // ========================================================================
