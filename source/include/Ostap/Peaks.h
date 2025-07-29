@@ -4247,7 +4247,6 @@ namespace Ostap
     // ========================================================================
 
 
-
     // ========================================================================
     /** @class Meixner
      *  Meixner distribution
@@ -4265,7 +4264,13 @@ namespace Ostap
      *
      *  Here we use a slight reparameterisation:
      *   - \f$ b = 2 \atan \psi \f$ 
-     *    
+     * 
+     * Asymptotic:
+     *  - \f$  x \rightarrow +\infty\f$ : \f$ f  \sim \left| x \right|^\rho \mathrm{e}^{\sigma_-x}\f$
+     *  - \f$  x \rightarrow -\infty\f$ : \f$ f  \sim \left| x \right|^\rho \mathrm{e}^{\sigma_+x}\f$
+     *  where 
+     * - \f$  \sigma_+ = \frac{\pi + b }{a} \f$    
+     *  - \f$  \sigma_+ = \frac{\pi + b }{a} \f$    
      */ 
     class Meixner
     {
@@ -4330,6 +4335,8 @@ namespace Ostap
       double skewness () const ;
       /// get (excess) kurtosis 
       double kurtosis () const ;      
+      /// sigma 
+      inline double  sigma () const { return rms () ; } 
       // =======================================================================
     public: // integrals 
       // ======================================================================

@@ -1,3 +1,8 @@
+## New features
+
+   1. Add Meixnerdistribution
+            
+## Backward-incompatible
 
 ## Bug fixes 
   
@@ -7,7 +12,7 @@
 
 ## New features
 
-   1. More polishingaround `chinunk_size` for parallel processing 
+   1. More polishing around `chunk_size` for parallel processing 
             
 ## Backward-incompatible
 

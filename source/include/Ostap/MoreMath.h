@@ -424,7 +424,7 @@ namespace Ostap
      * 
      *   Note that the imaginary part (arg) is not well-determined 
      *   when |z| is very large, due to inevitable roundoff in restricting 
-     *   to (-\pi,\pi]. This will result in a GSL_ELOSS error when it occurs. 
+ x    *   to (-\pi,\pi]. This will result in a GSL_ELOSS error when it occurs. 
      *   The real part (lnr), however, never suffers from loss of precision.
      */
     std::complex<double> lgamma ( const std::complex<double>& x ) ;

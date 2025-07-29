@@ -10268,6 +10268,127 @@ namespace Ostap
       // ======================================================================      
     } ;
     // ========================================================================
+
+
+
+   // ========================================================================
+    /** @class Meixner
+     *  Modified PERT distribution 
+     *  @see https://en.wikipedia.org/wiki/PERT_distribution
+     *  @see https://www.vosesoftware.com/riskwiki/ModifiedPERTdistribution.php
+     *  @see Ostap::Math::MExner
+     * 
+     *  Meixner distribution
+     *  @see Grigoletto, M., & Provasi, C. (2008). 
+     *       "Simulation and Estimation of the Meixner Distribution". 
+     *       Communications in Statistics - Simulation and Computation, 38(1), 58–77. 
+     *  @see https://doi.org/10.1080/03610910802395679
+     *  @see https://reference.wolfram.com/language/ref/MeixnerDistribution.html
+     *
+     *  Original distribtion is parameterise with 
+     *   - location parameter m 
+     *   - scale parameter    a 
+     *   - shape parameter b : \f$ - \pi < b < +\pi \f$
+     *   - shape parameter f : \f$ 0 < d \f$
+     *
+     *  Here we use a slight reparameterisation:
+     *   - \f$ b = 2 \atan \psi \f$ 
+     * 
+     * Asymptotic:
+     *  - \f$  x \rightarrow +\infty\f$ : \f$ f  \sim \left| x \right|^\rho \mathrm{e}^{\sigma_-x}\f$
+     *  - \f$  x \rightarrow -\infty\f$ : \f$ f  \sim \left| x \right|^\rho \mathrm{e}^{\sigma_+x}\f$
+     *  where 
+     * - \f$  \sigma_+ = \frac{\pi + b }{a} \f$    
+     *  - \f$  \sigma_+ = \frac{\pi + b }{a} \f$    
+     */
+    class Meixner: public RooAbsPdf 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Meixner, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// general case
+      Meixner
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mu        ,
+        RooAbsReal&          a         , 
+        RooAbsReal&          psi       , 
+        RooAbsReal&          d         ) ;
+      /// symmetric case: psi = 0 
+      Meixner
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mu        ,
+        RooAbsReal&          a         ,  
+        RooAbsReal&          d         ) ;
+      /// copy
+      Meixner
+      ( const Meixner&       right     ,
+        const char*          name = 0  ) ;
+      /// destructor
+      virtual ~Meixner () ;
+      /// clone
+      Meixner* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for proper (de)serialization
+      Meixner   () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Meixner& function () const { return m_meixner; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x   .arg () ; }
+      const RooAbsReal& mu     () const { return m_mu  .arg () ; }
+      const RooAbsReal& a      () const { return m_a   .arg () ; }
+      const RooAbsReal& psi    () const { return m_psi .arg () ; }
+      const RooAbsReal& d      () const { return m_d   .arg () ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x   {} ;
+      RooRealProxy m_mu  {} ;
+      RooRealProxy m_a   {} ;
+      RooRealProxy m_psi {} ;
+      RooRealProxy m_d   {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Meixner m_meixner {} ;  // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
   } //                                           end of namespace Ostap::Models
   // ==========================================================================
 } //                                                     end of namespace Ostap

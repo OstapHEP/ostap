@@ -63,6 +63,7 @@ Empricial PDFs to describe narrow peaks
   - BatesShape_pdf 
   - FisherZ_pdf 
   - Hat, Up & FupN finite functions
+  - Meixner
   
 PDF to describe 'wide' peaks
 
@@ -133,6 +134,7 @@ __all__ = (
     'Hat_pdf'                , ## hat function (smoth&finite)
     'Up_pdf'                 , ## finite atomin fnuction up
     'FupN_pdf'               , ## finite atomin fnuction up
+    'Meixner_pdf'            , ## Meixner 
     #
     ## pdfs for "wide" peaks, to be used with care - phase space corrections are large!
     # 
@@ -2518,6 +2520,145 @@ class JohnsonSU_pdf(PEAK) :
         self.set_value ( self.__lambd , value ) 
 
 models.append ( JohnsonSU_pdf )      
+
+
+
+# =============================================================================
+## @class Meixner_pdf
+# Meixner distribution
+# @see Grigoletto, M., & Provasi, C. (2008). 
+#      "Simulation and Estimation of the Meixner Distribution". 
+#       Communications in Statistics - Simulation and Computation, 38(1), 58–77. 
+# @see https://doi.org/10.1080/03610910802395679
+# @see https://reference.wolfram.com/language/ref/MeixnerDistribution.html
+# 
+# Original distribtion is parameterise with 
+#  - location parameter m 
+#  - scale parameter    a 
+#  - shape parameter b : \f$ - \pi < b < +\pi \f$
+#  - shape parameter f : \f$ 0 < d \f$
+#
+# Here we use a slight reparameterisation:
+#  - \f$ b = 2 \atan \psi \f$ 
+#
+# Asymptotic:
+# - \f$  x \rightarrow +\infty\f$ : \f$ f  \sim \left| x \right|^\rho \mathrm{e}^{\sigma_-x}\f$
+# - \f$  x \rightarrow -\infty\f$ : \f$ f  \sim \left| x \right|^\rho \mathrm{e}^{\sigma_+x}\f$
+# where 
+# - \f$  \sigma_+ = \frac{\pi + b }{a} \f$    
+# - \f$  \sigma_+ = \frac{\pi + b }{a} \f$    
+#
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2015-07-019
+class Meixner_pdf(PEAK) :
+    """ Meixner distribution
+    - see Grigoletto, M., & Provasi, C. (2008). 
+        `Simulation and Estimation of the Meixner Distribution'. 
+         Communications in Statistics - Simulation and Computation, 38(1), 58–77. 
+    - see https://doi.org/10.1080/03610910802395679
+    - see https://reference.wolfram.com/language/ref/MeixnerDistribution.html
+
+    Original distribtion is parameterise with 
+      - location parameter m 
+      - scale parameter    a 
+      - shape parameter b :  -pi < b < +pip 
+      - shape parameter d :  0 < d 
+
+    Here we use a slight reparameterisation:
+      - b = 2  atan ( psi )  
+
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mu               ,   ## locationn 
+                   a                ,   ## scale/sigma
+                   psi       = ROOT.RooFit.RooConst ( 0 ) ,   
+                   d         = 1    ,
+                   gamma     = 0    ) :  
+
+        #
+        ## initialize the base
+        #
+        PEAK.__init__  ( self    , name , xvar ,
+                         mean        = mu               ,
+                         sigma       = a                ,
+                         mean_name   = 'mu_%s'   % name ,
+                         mean_title  = '#mu(%s)' % name ,
+                         sigma_name  = 'a_%s'    % name ,
+                         sigma_title = '#a(%s)'  % name )
+        
+        self.__mu = self.mean
+        self.__a  = self.sigma
+        
+        self.__psi   = self.make_var ( psi                  ,
+                                      'psi_%s'     % name   ,
+                                      '#psi(%s)'   % name   , 
+                                      None , 0 , -100 , 100 )
+        self.__d     = self.make_var ( d                ,
+                                      'd_%s'   % name  ,
+                                      '#d(%s)' % name  , 
+                                      None , 1 , 1.e-6 , +100 )
+        
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.MEixner (
+            self.roo_name ( 'meixner_' ) , 
+            "Meixner %s" % self.name ,
+            self.xvar      ,
+            self.mu        ,
+            self.a         ,
+            self.psi       ,
+            self.d         )
+
+        ## save the configuration
+        self.config = {
+            'name'      : self.name    ,
+            'xvar'      : self.xvar    ,
+            'mu'        : self.a       ,
+            'a'         : self.a       ,
+            'psi'       : self.psi     ,
+            'd'         : self.d        ,
+            }
+
+    @property
+    def mu  ( self ) :
+        """`mu`: mu-parameter for Meixner function, same as `mean` but not a mean!"""
+        return self.__mu
+    @mu.setter
+    def mu ( self , value ) :
+        self.set_value ( self.__mu , value ) 
+
+    @property
+    def a  ( self ) :
+        """`a`: a-parameter for Meixner functions, same as `sigma` but  not sigma!
+        """
+        return self.__a 
+    @a.setter  
+    def a ( self , value  ) :
+        self.set_value ( self.__a , value ) 
+
+    @property
+    def psi ( self ) :
+        """'psi' : psi-parameter for Meixner function: b = 2 * atan ( psi ) """
+        return self.__psi
+    @psi.setter
+    def psi ( self, value ) :
+        self.set_value ( self.__psi , value ) 
+
+    @property
+    def d ( self ) :
+        """'d' : d-parameter for Meixner function"""
+        return self.__d
+    @d.setter
+    def d ( self, value ) :
+        self.set_value ( self.__d , value ) 
+
+models.append ( Meixner_pdf )  
+
+
+
 # =============================================================================
 ## @class Atlas_pdf
 #  Modified gaussian with exponential tails

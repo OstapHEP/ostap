@@ -11189,6 +11189,107 @@ Double_t Ostap::Models::Rational::analyticalIntegral
 // ============================================================================
 
 
+
+
+
+
+// ============================================================================
+Ostap::Models::Meixner::Meixner
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          mu        , 
+  RooAbsReal&          a         , 
+  RooAbsReal&          psi       , 
+  RooAbsReal&          d         ) 
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"      , "Observable" , this , x   ) 
+  , m_mu      ( "!mu"     , "Location"   , this , mu  )
+  , m_a       ( "!a"      , "Scale"      , this , a   )
+  , m_psi     ( "!psi"    , "Skew"       , this , psi )
+  , m_d       ( "!d"      , "Shape"      , this , d   ) 
+    //
+  , m_meixner ()
+{
+  setPars () ;
+}
+// ============================================================================
+Ostap::Models::Meixner::Meixner
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          mu        , 
+  RooAbsReal&          a         , 
+  RooAbsReal&          d         ) 
+  : Meixner  ( name  , title , x  , mu , a , RooFit::RooConst ( 0 ) , d  )
+  {}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::Meixner::Meixner
+( const Ostap::Models::Meixner& right , 
+  const char*                       name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x       ( "!x"    , this , right.m_x    ) 
+  , m_mu      ( "!mu"   , this , right.m_mu   ) 
+  , m_a       ( "!a"    , this , right.m_a    ) 
+  , m_psi     ( "!psi"  , this , right.m_psi  ) 
+  , m_d       ( "!d"    , this , right.m_d    ) 
+  , m_meixner (  right.m_meixner ) 
+{}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::Meixner::~Meixner(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Meixner*
+Ostap::Models::Meixner::clone ( const char* name ) const 
+{ return new Ostap::Models::Meixner ( *this , name ) ; }
+// ============================================================================
+// set parameters 
+// ============================================================================
+void Ostap::Models::Meixner::setPars () const 
+{
+ m_meixner.setMu  ( m_mu  ) ;
+ m_meixner.setA   ( m_a   ) ; 
+ m_meixner.setPsi ( m_psi ) ;
+ m_meixner.setD   ( m_d   ) ; 
+}    
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Meixner::evaluate() const 
+{ setPars() ; return  m_meixner ( m_x ) ; }
+// ============================================================================
+// integration
+// ============================================================================
+Int_t Ostap::Models::Meixner::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+// integration
+// ============================================================================
+Double_t Ostap::Models::Meixner::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars() ;
+  return m_meixner.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+// ============================================================================
+
+
 // ============================================================================
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,36,0)
 // ============================================================================
@@ -11304,6 +11405,7 @@ ClassImp(Ostap::Models::MPERT              )
 ClassImp(Ostap::Models::FisherZ            )
 ClassImp(Ostap::Models::BirnbaumSaunders   )
 ClassImp(Ostap::Models::Rational           )
+ClassImp(Ostap::Models::Meixner            )
 // ============================================================================
 #endif
 // ============================================================================

@@ -6407,6 +6407,188 @@ std::size_t Ostap::Math::FupN::tag () const
 
 
                   
+// ===========================================================================
+// Meixner distribution
+// =========================================================================== 
+Ostap::Math::Meixner::Meixner
+( const double mu  , // location
+  const double a   , // scale
+  const double psi , // b = 2 * atan ( psi )
+  const double d   )   
+: m_mu  (  0 ) 
+, m_a   (  1 ) 
+, m_psi (  0 )
+, m_d   (  1 )
+, m_b   (  0 )
+, m_C   ( -1 ) 
+{
+  setMu  ( mu  ) ; 
+  setA   ( a   ) ;
+  setPsi ( psi ) ; 
+  setD   ( d   ) ; 
+  //
+  m_C = 2 * m_d * std::log ( 2 * std::cos ( 0.5 * m_b ) ) 
+  - std::lgamma ( 2 * m_d ) - std::log ( 2 * M_PI ); 
+}
+// ============================================================================
+// set Mu
+// ============================================================================
+bool  Ostap::Math::Meixner::setMu
+( const double value ) 
+{
+  if ( s_equal( value , m_mu) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ============================================================================
+// set A 
+// ============================================================================
+bool Ostap::Math::Meixner::setA  
+( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_a ) ) { return false ; }
+  m_a = avalue ;
+  return true ;
+} 
+// ============================================================================
+// set d 
+// ============================================================================
+bool Ostap::Math::Meixner::setD  
+( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_d ) ) { return false ; }
+  m_d = avalue ;
+  //
+  m_C = 2 * m_d * std::log ( 2 * std::cos ( 0.5 * m_b ) )
+  - std::lgamma ( 2 * m_d ) - std::log ( 2 * M_PI ); 
+  //
+  return true ;
+} 
+// ============================================================================
+// set psi 
+// ============================================================================
+bool Ostap::Math::Meixner::setPsi  
+( const double value ) 
+{
+  if ( s_equal ( value , m_psi ) ) { return false ; }
+  m_psi = value ;
+  if  ( s_zero ( m_psi ) ) { m_psi = 0 ; }
+  //
+  m_b   = m_psi ? 2 * std::atan ( m_psi ) : 0.0 ; 
+  //
+  m_C = 2 * m_d * std::log ( 2 * std::cos ( 0.5 * m_b ) ) 
+  - std::lgamma ( 2 * m_d ) - std::log ( 2 * M_PI ); 
+  //
+  return true ;
+} 
+// ============================================================================
+// evaluate Meixner function
+// ============================================================================
+double Ostap::Math::Meixner::evaluate   ( const double x ) const 
+{
+  const double z  = ( x - m_mu ) /  m_a ;
+  const std::complex<double> v { m_d , z } ; 
+  const double r = std::real ( Ostap::Math::lgamma ( v ) ) ;
+  //
+  const double f = m_C + m_b * z + 2 * r ; 
+  return std::exp ( f ) / m_a  ;
+}
+// ============================================================================
+// kappa 
+// ============================================================================
+double Ostap::Math::Meixner::kappa () const 
+{ return m_b / M_PI ; }
+// ============================================================================
+// mean values  
+// ============================================================================
+double Ostap::Math::Meixner::mean() const
+{ return m_psi ? m_mu + m_a * m_d + std::tan ( 0.5 * m_b ) : m_mu ;}
+// ============================================================================
+//  variance 
+// ============================================================================
+double Ostap::Math::Meixner::variance () const
+{ return m_a * m_a * m_d  / ( std::cos ( m_b ) + 1 ) ;   }
+// ============================================================================
+//  RMS   
+// ============================================================================
+double Ostap::Math::Meixner::rms () const
+{ return std::sqrt ( variance ( )) ;   }
+// ============================================================================
+//  skewness 
+// =============================================================================
+double Ostap::Math::Meixner::skewness  () const 
+{ return m_psi ? std::sin ( m_b ) / std::sqrt ( m_d * ( std::cos ( m_b ) + 1 ) ) : 0.0 ; }
+// ============================================================================
+//  (excess) kurtosis
+// ============================================================================
+double Ostap::Math::Meixner::kurtosis() const
+{ return ( 2 - std::cos ( m_b) ) / m_d  ; }
+// ============================================================================
+// integral
+// ============================================================================
+double Ostap::Math::Meixner::integral () const { return 1 ; }
+// ============================================================================
+// integral
+// ============================================================================
+double Ostap::Math::Meixner::integral
+( const double low  , 
+  const double high ) const 
+{
+  //
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high < low             ) { return - integral ( high , low ) ; }
+  //
+  const double mean_  = mean () ;
+  const double x0 = 0.5 * ( m_mu + mean_ ) ; 
+  if  ( low < x0 && x0 < high ) { return integral ( low , x0 ) + integral ( x0 , high ) ; }
+  //
+  const double sigma_ = rms  () ; 
+  //
+  for  ( unsigned int  j = 1 ; j <= 4 ; ++j )
+  {
+    const double x1 = std::max ( m_mu , mean_ ) + j * sigma_ ; 
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1  , high ) ; }
+    const double x2 = std::min ( m_mu , mean_ ) - j * sigma_ ; 
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2  , high ) ; }
+  }
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<Meixner> s_integrator {} ;
+  static char s_message[] = "Integral(Meixner)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
+    ( tag () , 
+      &F     ,  
+      low    , high             , // low & high edges
+      workspace ( m_workspace ) , // workspace
+      s_APRECISION              , // absolute precision
+      s_RPRECISION              , // relative precision
+      m_workspace.size ()       , // size of workspace
+      s_message                 , 
+      __FILE__ , __LINE__       ) ;
+  //
+  return result ;
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Meixner::tag () const 
+{ 
+  static const std::string s_name = "Mexner" ;
+  return Ostap::Utils::hash_combiner ( s_name , m_mu , m_a , m_psi , m_d ) ;
+}
+// ============================================================================
+
+
+
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
