@@ -1,3 +1,13 @@
+# v3.0.1.20
+
+## New features
+
+   1. More polishingaround `chinunk_size` for parallel processing 
+            
+## Backward-incompatible
+
+## Bug fixes
+
 # v3.0.1.18
 
 ## Bug fixes 

@@ -830,11 +830,12 @@ class TaskManager(object) :
                     dump_freq   = 0     ) :
      
            
-        self.__ncpus  = ncpus if isinstance  ( ncpus , int ) and 1 <= ncpus else numcpu()         
+        self.__ncpus  = ncpus if isinstance  ( ncpus , int ) and 1 <= ncpus else numcpu()
         
-        if isinstance ( chunk_size , int ) and 1 < chunk_size : self.__chunk_size = chunk_size 
-        else : self.__chunk_size  = 5 * ( self.__ncpus + 1 )
-        
+        if not isinstance ( chunk_size , int ) or chunk_size <= 1 :
+            chunk_size  = 5 * ( ncpus + 1 )
+            
+        self.__chunk_size = chunk_size 
         self.__silent     = silent
         self.__progress   = True if ( progress or not silent ) else False
 
@@ -1096,8 +1097,14 @@ class TaskManager(object) :
     def chunk_size  ( self ) : 
         """`chunk_size: split huge sequence of jobs into chunks.. Reasonabel size fo chun is 5-10* #cpus 
         """
-        return self.__chunk_size 
-        
+        return self.__chunk_size
+    @chunk_size.setter
+    def chunk_size ( self, value ) :
+        if isinstance ( value , int ) and 1 < value : self.__chunk_size = value 
+        else                                        :
+            self.__chunk_size = 5 * ( self.ncpus + 1 )
+            logger.warning ( "Specified `chunk_size` of %s is ignored, use %d instead" % ( value , self.chunk_size ) ) 
+            
     @property
     def dump_dbase  ( self ) :
         """`dump_dbase` : database name (or None) to save intermediate resurtlas if requetsed

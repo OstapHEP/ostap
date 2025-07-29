@@ -61,18 +61,19 @@ class WorkManager(TaskManager) :
                   pp         = False        ,
                   silent     = False        ,
                   progress   = True         ,
+                  chunk_size = -1           , 
                   dump_dbase = None         ,
                   dump_jobs  = 0            ,
                   dump_freq  = 0            ,         
                   **kwargs                  ) :
         
-        if not ( isinstance ( ncpus , int ) and 0 <= ncpus ) :
+        if not ( isinstance ( ncpus , int ) and 1 <= ncpus ) :
             from ostap.utils.basic import numcpu 
             ncpus = numcpu () 
             
-        if isinstance ( ncpus , int ) and 1 <= ncpus : pass
-        else                                         : ncpus = MP.cpu_count()
-
+        if not isinstance ( chunk_size , int ) or chunk_size <= 1 :
+            chunk_size  = 5 * ( ncpus + 1 )
+            
         ## if pp        : logger.warning ( "WorkManager: option ``pp'' is ignored" )
         ## if ppservers : logger.warning ( "WorkManager: option ``ppservers'' is ignored" )
         
@@ -80,7 +81,8 @@ class WorkManager(TaskManager) :
         TaskManager.__init__  ( self ,
                                 ncpus      = ncpus      ,
                                 silent     = silent     ,
-                                progress   = progress   , 
+                                progress   = progress   ,
+                                chunk_size = chunk_size , 
                                 dump_dbase = dump_dbase ,
                                 dump_jobs  = dump_jobs  ,
                                 dump_freq  = dump_freq  ) 

@@ -62,6 +62,7 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
                       progress   = True  ,
                       balanced   = False ,
                       use_dill   = True  ,
+                      chunk_size = -1    , 
                       dump_dbase = None  ,
                       dump_jobs  = 0     ,
                       dump_freq  = 0     ,                             
@@ -72,14 +73,18 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
                 ncpus = numcpu() 
                 
             n = kwargs.get ( 'n' , ncpus )
-            if isinstance ( n , int ) and 0 < n :     kwargs [ 'n' ] = n
+            if isinstance ( n , int ) and 1 <= n :    kwargs [ 'n' ] = n
             elif 'n' in kwargs                  : del kwargs [ 'n' ]
-            
+
+            if not isinstance ( chunk_size , int ) or chunk_size <= 1 :
+                chunk_size = 5 * ( ncpus + 1 )
+              
             ## initialize the base class 
             TaskManager.__init__  ( self ,
                                     ncpus      = ncpus      ,
                                     silent     = silent     ,
                                     progress   = progress   ,
+                                    chunk_size = chunk_size , 
                                     dump_dbase = dump_dbase ,
                                     dump_jobs  = dump_jobs  ,
                                     dump_freq  = dump_freq  ) 

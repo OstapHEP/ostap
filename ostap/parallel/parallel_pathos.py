@@ -88,11 +88,12 @@ class WorkManager (TaskManager) :
     >>> wm2 = WorkManager ( ppservers = ... ) ## use local and remote servers
     >>> wm3 = WorkManager ( ncpus = 0 , ppservers = ... ) ## use only remote servers
     """
-    def __init__( self                       ,
+    def __init__( self                      ,
                   ncpus      = 'autodetect' ,
                   ppservers  = ()           ,
                   silent     = False        ,
-                  progress   = True         ,                  
+                  progress   = True         ,
+                  chunk_size = -1           , 
                   dump_dbase = None         ,
                   dump_jobs  = 0            ,
                   dump_freq  = 0            ,         
@@ -107,6 +108,7 @@ class WorkManager (TaskManager) :
                                ncpus      = ncpus      ,
                                silent     = silent     , 
                                progress   = progress   ,
+                               chunk_size = chunk_size , 
                                dump_dbase = dump_dbase ,
                                dump_jobs  = dump_jobs  ,
                                dump_freq  = dump_freq  ) 
@@ -215,6 +217,15 @@ class WorkManager (TaskManager) :
             from pathos.pools import ProcessPool 
             self.__pool      = ProcessPool ( self.ncpus )
 
+        ##
+        ## adjust chunk size 
+        if isinstance ( chunk_size , int ) and 1 < chunk_size :
+            self.chunk_size = chunk_size
+        else :
+            ## assume that the remote machines are `similar' to the local one ..
+            self.chunk_size = 5 * ( self.ncpus + 1 ) * ( len ( self.ppservers ) + 1 ) 
+            
+        ##
         ps = '%s' % self.pool
         ps = ps.replace( '<pool ' , '' ).replace  ('>','').replace ('servers','remotes')
         for p in self.ppservers : ps = ps.replace ( p.local , p.remote )
@@ -224,22 +235,22 @@ class WorkManager (TaskManager) :
 
     @property
     def pool ( self ) :
-        """``pool'' : the actual processing (ParallelPool or ProcessPool) pool"""
+        """`pool' : the actual processing (ParallelPool or ProcessPool) pool"""
         return self.__pool
 
     @property
     def ppservers ( self ) :
-        """``ppservers'' : the actual list of remote pp-servers"""
+        """`ppservers' : the actual list of remote pp-servers"""
         return self.__ppservers
     
     @property
     def locals  ( self ) :
-        """``locals'' : list of (local) tunnel ports"""
+        """`locals' : list of (local) tunnel ports"""
         return self.__locals 
     
     @property
     def remotes ( self ) :
-        """``remotes'' : list of (remote) tunnel ports"""
+        """`remotes' : list of (remote) tunnel ports"""
         return tuple (  ( p.remote for p in self.ppservers ) ) 
 
     ## context protocol: restart the pool 
