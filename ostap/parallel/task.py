@@ -1026,7 +1026,7 @@ class TaskManager(object) :
         ## total number of jobs 
         njobs = sum  ( len ( c ) for c in chunks ) 
         from ostap.utils.progress_bar import ProgressBar
-        with ProgressBar ( max_value = njobs , silent = not self.progress , description = "Jobs:") as bar :
+        with ProgressBar ( max_value = njobs , silent = not self.progress , description = "Jobs:" ) as bar :
 
             while chunks :
 

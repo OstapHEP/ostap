@@ -648,7 +648,7 @@ class Needham_pdf(PEAK) :
                    mean     = 3.096    ,   ## GeV  
                    sigma    = 0.013    ,   ## GeV 
                    c0       = 2.5      ,   ## s
-                   c1       = 1/0.013  ,   ## shold be close to sigma (inverse with respect to original Matt's code)
+                   c1       = 0.013    ,   ## should be close to sigma  (inverse with respect to original Matt's code)
                    c2       = 10.0     ,
                    n        = ROOT.RooFit.RooConst ( 0 ) ) : 
         
@@ -661,24 +661,24 @@ class Needham_pdf(PEAK) :
         
         s_minmax = self.sigma.minmax()
         if s_minmax :
-            smin, smax = s_minmax
-            c1limits = 0.2 * smin , 10 * smax
+            smin, smax  = s_minmax
+            c1limits    = 0.05 * max ( smin , ( smax - smin ) / 1000 ) , 10 * smax
         else : c1limits = () 
         
         self.__c1 = self.make_var ( c1                  ,
                                     "c1_%s"     % name  ,
                                     "c_{1}(%s)" % name  ,
-                                    True , *c1limits   )  
+                                    True , *c1limits    )  
         
         self.__c2 = self.make_var ( c2                  ,
                                     "c2_%s"     % name  ,
                                     "c_{2}(%s)" % name  ,
-                                    True , 10 , 1 , 50 )
-
-        self.__n     = self.make_var ( n   ,
-                                       'n_%s'            % name ,
-                                       'n_{CB}(%s)'      % name ,
-                                       None , 0 , -1 , 100 )
+                                    True , 10 , 1 , 50  )
+        
+        self.__n  = self.make_var ( n   ,
+                                    'n_%s'            % name ,
+                                    'n_{CB}(%s)'      % name ,
+                                    None , 0 , -1 , 100 )
 
         self.__N = Ostap.MoreRooFit.TailN ( 'N_%s' % name , self.__n )
 
@@ -2522,7 +2522,6 @@ class JohnsonSU_pdf(PEAK) :
 models.append ( JohnsonSU_pdf )      
 
 
-
 # =============================================================================
 ## @class Meixner_pdf
 # Meixner distribution
@@ -2566,60 +2565,56 @@ class Meixner_pdf(PEAK) :
 
     Here we use a slight reparameterisation:
       - b = 2  atan ( psi )  
+      - a^2 = sigma^2 * ( cos ( b ) + 1 ) / d 
 
     """
     def __init__ ( self             ,
                    name             ,
                    xvar             ,
                    mu               ,   ## locationn 
-                   a                ,   ## scale/sigma
+                   sigma            ,   ## scale/sigma
                    psi       = ROOT.RooFit.RooConst ( 0 ) ,   
-                   d         = 1    ,
-                   gamma     = 0    ) :  
-
+                   shape     = 1    ) : 
         #
         ## initialize the base
         #
         PEAK.__init__  ( self    , name , xvar ,
                          mean        = mu               ,
-                         sigma       = a                ,
+                         sigma       = sigma            ,
                          mean_name   = 'mu_%s'   % name ,
-                         mean_title  = '#mu(%s)' % name ,
-                         sigma_name  = 'a_%s'    % name ,
-                         sigma_title = '#a(%s)'  % name )
+                         mean_title  = '#mu(%s)' % name )
         
-        self.__mu = self.mean
-        self.__a  = self.sigma
+        self.__mu   = self.mean
         
-        self.__psi   = self.make_var ( psi                  ,
+        self.__psi  = self.make_var ( psi                  ,
                                       'psi_%s'     % name   ,
                                       '#psi(%s)'   % name   , 
-                                      None , 0 , -100 , 100 )
-        self.__d     = self.make_var ( d                ,
-                                      'd_%s'   % name  ,
-                                      '#d(%s)' % name  , 
-                                      None , 1 , 1.e-6 , +100 )
+                                      None , 0 , -100 , 200 )
+        self.__shape = self.make_var ( shape                ,
+                                       'shape_%s'   % name  ,
+                                       '#shape(%s)' % name  , 
+                                       None , 1 , 1.e-6 , +100 )
         
         #
         ## finally build pdf
         # 
-        self.pdf = Ostap.Models.MEixner (
+        self.pdf = Ostap.Models.Meixner (
             self.roo_name ( 'meixner_' ) , 
             "Meixner %s" % self.name ,
             self.xvar      ,
             self.mu        ,
-            self.a         ,
+            self.sigma     ,
             self.psi       ,
-            self.d         )
+            self.shape     )
 
         ## save the configuration
         self.config = {
             'name'      : self.name    ,
             'xvar'      : self.xvar    ,
-            'mu'        : self.a       ,
-            'a'         : self.a       ,
+            'mu'        : self.mu      ,
+            'sigma'     : self.sigma   ,
             'psi'       : self.psi     ,
-            'd'         : self.d        ,
+            'shape'     : self.shape   ,
             }
 
     @property
@@ -2631,15 +2626,6 @@ class Meixner_pdf(PEAK) :
         self.set_value ( self.__mu , value ) 
 
     @property
-    def a  ( self ) :
-        """`a`: a-parameter for Meixner functions, same as `sigma` but  not sigma!
-        """
-        return self.__a 
-    @a.setter  
-    def a ( self , value  ) :
-        self.set_value ( self.__a , value ) 
-
-    @property
     def psi ( self ) :
         """'psi' : psi-parameter for Meixner function: b = 2 * atan ( psi ) """
         return self.__psi
@@ -2648,16 +2634,22 @@ class Meixner_pdf(PEAK) :
         self.set_value ( self.__psi , value ) 
 
     @property
+    def shape ( self ) :
+        """'shape' : d-parameter for Meixner function, same as `d`"""
+        return self.__shape
+    @shape.setter
+    def shape ( self, value ) :
+        self.set_value ( self.__shape , value ) 
+
+    @property
     def d ( self ) :
-        """'d' : d-parameter for Meixner function"""
-        return self.__d
+        """'d' : d-parameter for Meixner function, same as `shape"""
+        return self.shape
     @d.setter
     def d ( self, value ) :
-        self.set_value ( self.__d , value ) 
+        self.shape = value 
 
 models.append ( Meixner_pdf )  
-
-
 
 # =============================================================================
 ## @class Atlas_pdf

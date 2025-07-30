@@ -10270,7 +10270,6 @@ namespace Ostap
     // ========================================================================
 
 
-
    // ========================================================================
     /** @class Meixner
      *  Modified PERT distribution 
@@ -10292,13 +10291,14 @@ namespace Ostap
      *   - shape parameter f : \f$ 0 < d \f$
      *
      *  Here we use a slight reparameterisation:
-     *   - \f$ b = 2 \atan \psi \f$ 
+     *   - \f$ b   = 2 \atan \psi \f$ 
+     *   - \f$ a^2 = \sigma^2 \frac{ \cos b + 1} {d}  \f$ 
      * 
      * Asymptotic:
      *  - \f$  x \rightarrow +\infty\f$ : \f$ f  \sim \left| x \right|^\rho \mathrm{e}^{\sigma_-x}\f$
      *  - \f$  x \rightarrow -\infty\f$ : \f$ f  \sim \left| x \right|^\rho \mathrm{e}^{\sigma_+x}\f$
      *  where 
-     * - \f$  \sigma_+ = \frac{\pi + b }{a} \f$    
+     *  - \f$  \sigma_+ = \frac{\pi + b }{a} \f$    
      *  - \f$  \sigma_+ = \frac{\pi + b }{a} \f$    
      */
     class Meixner: public RooAbsPdf 
@@ -10316,17 +10316,17 @@ namespace Ostap
         const char*          title     ,
         RooAbsReal&          x         ,
         RooAbsReal&          mu        ,
-        RooAbsReal&          a         , 
+        RooAbsReal&          sigma     , 
         RooAbsReal&          psi       , 
-        RooAbsReal&          d         ) ;
+        RooAbsReal&          shape     ) ;
       /// symmetric case: psi = 0 
       Meixner
       ( const char*          name      ,
         const char*          title     ,
         RooAbsReal&          x         ,
         RooAbsReal&          mu        ,
-        RooAbsReal&          a         ,  
-        RooAbsReal&          d         ) ;
+        RooAbsReal&          sigma     ,  
+        RooAbsReal&          shape     ) ;
       /// copy
       Meixner
       ( const Meixner&       right     ,
@@ -10368,19 +10368,19 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const RooAbsReal& x      () const { return m_x   .arg () ; }
-      const RooAbsReal& mu     () const { return m_mu  .arg () ; }
-      const RooAbsReal& a      () const { return m_a   .arg () ; }
-      const RooAbsReal& psi    () const { return m_psi .arg () ; }
-      const RooAbsReal& d      () const { return m_d   .arg () ; }
+      const RooAbsReal& x      () const { return m_x     .arg () ; }
+      const RooAbsReal& mu     () const { return m_mu    .arg () ; }
+      const RooAbsReal& sigma  () const { return m_sigma .arg () ; }
+      const RooAbsReal& psi    () const { return m_psi   .arg () ; }
+      const RooAbsReal& shape  () const { return m_shape .arg () ; }
       // ======================================================================
     protected :
       // ======================================================================
-      RooRealProxy m_x   {} ;
-      RooRealProxy m_mu  {} ;
-      RooRealProxy m_a   {} ;
-      RooRealProxy m_psi {} ;
-      RooRealProxy m_d   {} ;
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_mu    {} ;
+      RooRealProxy m_sigma {} ;
+      RooRealProxy m_psi   {} ;
+      RooRealProxy m_shape {} ;
       // ======================================================================
     private:
       // ======================================================================

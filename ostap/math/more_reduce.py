@@ -454,6 +454,21 @@ def _ommatt_reduce_ ( peak ) :
 Ostap.Math.Needham  . __reduce__ = _ommatt_reduce_
 
 # =============================================================================
+## Reduce Ostap::Math::Meixner
+#  @see Ostap::Math::Meixner
+def _ommeixner_reduce_ ( peak ) :
+    """ Reduce `Ostap.Math.Meixner`
+    - see `Ostap.Math.Meixner`
+    """
+    return root_factory , ( type ( peak ) ,
+                            peak.mu    () ,
+                            peak.sigma () ,
+                            peak.psi   () ,
+                            peak.shape () )
+
+Ostap.Math.Meixner  . __reduce__ = _ommeixner_reduce_
+
+# =============================================================================
 ## Reduce Ostap::Math::CrystalBallDoubleSided
 #  @see Ostap::Math::CristalBallDoubleSided 
 def _omcb2_reduce_ ( peak ) :

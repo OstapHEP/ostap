@@ -2112,8 +2112,15 @@ std::size_t Ostap::Math::Needham::tag () const
 double Ostap::Math::Needham::alpha
 ( const double sigma ) const 
 {
-  const double q = std::pow ( std::abs ( sigma / m_c1 ) , m_c2 ) ;
-  return m_c0 * q / ( 1 + q ) ;
+  const double sc1 = std::abs ( sigma / m_c1 ) ;
+  if ( sc1 < 1 )
+    {
+      const double q = std::pow ( sc1 , m_c2 ) ;
+      return q < 1 ? m_c0 * q / ( 1 + q ) : m_c0 * 1 / ( 1 / q + 1 ) ;
+    }
+  //
+  const double q = std::pow ( sc1 , m_c2 ) ;
+  return q < 1 ? m_c0 * q / ( 1 + q ) : m_c0 * 1 / ( 1 / q + 1 ) ;
 }
 // ============================================================================
 /*  constructor from all parameters
@@ -6405,30 +6412,32 @@ std::size_t Ostap::Math::FupN::tag () const
 }
 // ============================================================================
 
-
                   
 // ===========================================================================
 // Meixner distribution
 // =========================================================================== 
 Ostap::Math::Meixner::Meixner
-( const double mu  , // location
-  const double a   , // scale
-  const double psi , // b = 2 * atan ( psi )
-  const double d   )   
-: m_mu  (  0 ) 
-, m_a   (  1 ) 
-, m_psi (  0 )
-, m_d   (  1 )
-, m_b   (  0 )
-, m_C   ( -1 ) 
+( const double mu    , // location
+  const double sigma , // sigma 
+  const double psi   , // b = 2 * atan ( psi )
+  const double shape ) // d    
+  : m_mu    (  0 ) 
+  , m_sigma (  1 ) 
+  , m_psi   (  0 )
+  , m_shape (  1 )
+  , m_a     (  1 )
+  , m_b     (  0 )
+  , m_C     ( -1 ) 
 {
-  setMu  ( mu  ) ; 
-  setA   ( a   ) ;
-  setPsi ( psi ) ; 
-  setD   ( d   ) ; 
+  setMu    ( mu    ) ; 
+  setSigma ( sigma ) ;
+  setPsi   ( psi   ) ; 
+  setShape ( shape ) ; 
   //
-  m_C = 2 * m_d * std::log ( 2 * std::cos ( 0.5 * m_b ) ) 
-  - std::lgamma ( 2 * m_d ) - std::log ( 2 * M_PI ); 
+  m_C = 2 * m_shape * std::log ( 2 * std::cos ( 0.5 * m_b ) ) 
+    - std::lgamma ( 2 * m_shape ) - std::log ( 2 * M_PI ) ;
+  //
+  m_a = m_sigma * std::sqrt ( ( std::cos ( m_b ) + 1 ) / m_shape ) ;
 }
 // ============================================================================
 // set Mu
@@ -6441,29 +6450,32 @@ bool  Ostap::Math::Meixner::setMu
   return true ;
 }
 // ============================================================================
-// set A 
+// set Sigma 
 // ============================================================================
-bool Ostap::Math::Meixner::setA  
+bool Ostap::Math::Meixner::setSigma 
 ( const double value ) 
 {
   const double avalue = std::abs ( value ) ;
-  if ( s_equal ( avalue , m_a ) ) { return false ; }
-  m_a = avalue ;
+  if ( s_equal ( avalue , m_sigma ) ) { return false ; }
+  m_sigma = avalue ;
+  //
+  m_a  = m_sigma * std::sqrt ( ( std::cos ( m_b ) + 1 ) / m_shape ) ;
   return true ;
 } 
 // ============================================================================
-// set d 
+// set Shape 
 // ============================================================================
-bool Ostap::Math::Meixner::setD  
+bool Ostap::Math::Meixner::setShape 
 ( const double value ) 
 {
   const double avalue = std::abs ( value ) ;
-  if ( s_equal ( avalue , m_d ) ) { return false ; }
-  m_d = avalue ;
+  if ( s_equal ( avalue , m_shape ) ) { return false ; }
+  m_shape = avalue ;
   //
-  m_C = 2 * m_d * std::log ( 2 * std::cos ( 0.5 * m_b ) )
-  - std::lgamma ( 2 * m_d ) - std::log ( 2 * M_PI ); 
+  m_C = 2 * m_shape * std::log ( 2 * std::cos ( 0.5 * m_b ) )
+    - std::lgamma ( 2 * m_shape ) - std::log ( 2 * M_PI ) ;
   //
+  m_a = m_sigma * std::sqrt ( ( std::cos ( m_b ) + 1 ) / m_shape ) ;
   return true ;
 } 
 // ============================================================================
@@ -6476,11 +6488,12 @@ bool Ostap::Math::Meixner::setPsi
   m_psi = value ;
   if  ( s_zero ( m_psi ) ) { m_psi = 0 ; }
   //
-  m_b   = m_psi ? 2 * std::atan ( m_psi ) : 0.0 ; 
+  m_b = m_psi ? 2 * std::atan ( m_psi ) : 0.0 ; 
   //
-  m_C = 2 * m_d * std::log ( 2 * std::cos ( 0.5 * m_b ) ) 
-  - std::lgamma ( 2 * m_d ) - std::log ( 2 * M_PI ); 
+  m_C = 2 * m_shape * std::log ( 2 * std::cos ( 0.5 * m_b ) ) 
+    - std::lgamma ( 2 * m_shape ) - std::log ( 2 * M_PI ) ;
   //
+  m_a = m_sigma * std::sqrt ( ( std::cos ( m_b ) + 1 ) / m_shape ) ;
   return true ;
 } 
 // ============================================================================
@@ -6489,7 +6502,7 @@ bool Ostap::Math::Meixner::setPsi
 double Ostap::Math::Meixner::evaluate   ( const double x ) const 
 {
   const double z  = ( x - m_mu ) /  m_a ;
-  const std::complex<double> v { m_d , z } ; 
+  const std::complex<double> v { m_shape , z } ; 
   const double r = std::real ( Ostap::Math::lgamma ( v ) ) ;
   //
   const double f = m_C + m_b * z + 2 * r ; 
@@ -6504,27 +6517,17 @@ double Ostap::Math::Meixner::kappa () const
 // mean values  
 // ============================================================================
 double Ostap::Math::Meixner::mean() const
-{ return m_psi ? m_mu + m_a * m_d + std::tan ( 0.5 * m_b ) : m_mu ;}
-// ============================================================================
-//  variance 
-// ============================================================================
-double Ostap::Math::Meixner::variance () const
-{ return m_a * m_a * m_d  / ( std::cos ( m_b ) + 1 ) ;   }
-// ============================================================================
-//  RMS   
-// ============================================================================
-double Ostap::Math::Meixner::rms () const
-{ return std::sqrt ( variance ( )) ;   }
+{ return m_psi ? m_mu + m_a * m_shape + std::tan ( 0.5 * m_b ) : m_mu ; }
 // ============================================================================
 //  skewness 
 // =============================================================================
 double Ostap::Math::Meixner::skewness  () const 
-{ return m_psi ? std::sin ( m_b ) / std::sqrt ( m_d * ( std::cos ( m_b ) + 1 ) ) : 0.0 ; }
+{ return m_psi ? std::sin ( m_b ) / std::sqrt ( m_shape * ( std::cos ( m_b ) + 1 ) ) : 0.0 ; }
 // ============================================================================
 //  (excess) kurtosis
 // ============================================================================
 double Ostap::Math::Meixner::kurtosis() const
-{ return ( 2 - std::cos ( m_b) ) / m_d  ; }
+{ return ( 2 - std::cos ( m_b ) ) / m_shape  ; }
 // ============================================================================
 // integral
 // ============================================================================
@@ -6540,19 +6543,21 @@ double Ostap::Math::Meixner::integral
   if      ( s_equal ( low , high ) ) { return 0 ; }
   else if ( high < low             ) { return - integral ( high , low ) ; }
   //
-  const double mean_  = mean () ;
-  const double x0 = 0.5 * ( m_mu + mean_ ) ; 
-  if  ( low < x0 && x0 < high ) { return integral ( low , x0 ) + integral ( x0 , high ) ; }
+  if  ( low < m_mu && m_mu < high )
+    { return integral ( low , m_mu   ) + integral ( m_mu   , high ) ; }
   //
-  const double sigma_ = rms  () ; 
+  const double x_mean = mean () ;
   //
-  for  ( unsigned int  j = 1 ; j <= 4 ; ++j )
-  {
-    const double x1 = std::max ( m_mu , mean_ ) + j * sigma_ ; 
-    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1  , high ) ; }
-    const double x2 = std::min ( m_mu , mean_ ) - j * sigma_ ; 
-    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2  , high ) ; }
-  }
+  if ( m_psi && low < x_mean && x_mean < high )
+    { return integral ( low , x_mean ) + integral ( x_mean , high ) ; }
+  //
+  for  ( unsigned int  j = 1 ; j <= 5 ; j += 2  )
+    {
+      const double x1 = std::max ( m_mu , x_mean ) + j * m_sigma ; 
+      if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+      const double x2 = std::min ( m_mu , x_mean ) - j * m_sigma  ; 
+      if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+    }
   //
   // use GSL to evaluate the integral
   //
@@ -6582,11 +6587,14 @@ double Ostap::Math::Meixner::integral
 std::size_t Ostap::Math::Meixner::tag () const 
 { 
   static const std::string s_name = "Mexner" ;
-  return Ostap::Utils::hash_combiner ( s_name , m_mu , m_a , m_psi , m_d ) ;
+  return Ostap::Utils::hash_combiner ( s_name , m_mu , m_sigma , m_psi , m_shape ) ;
 }
 // ============================================================================
-
-
+// Asymptotic 
+// ===========================================================================
+double Ostap::Math::Meixner::rho         () const { return 2 * d() - 1 ; }
+double Ostap::Math::Meixner::sigma_plus  () const { return ( M_PI + m_b ) / m_a ; }
+double Ostap::Math::Meixner::sigma_minus () const { return ( M_PI - m_b ) / m_a ; }
 
 
 // ============================================================================

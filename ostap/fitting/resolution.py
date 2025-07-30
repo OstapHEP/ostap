@@ -17,6 +17,7 @@
 #  - generalized Hyperbolic model        (tails are exponential or heavier)
 #  - Hypatia model                       (tails are exponential or heavier)
 #  - Das model                           (gaussian with exponential tails)
+#  - Meixner model                       (gaussian with exponential tails)
 #  - Normal Laplace model                (gaussian with exponential tails)
 #  - PearsonIV model                     (power-law tails+asymmetry) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -41,6 +42,7 @@
 - Normal Laplace model                (gaussian with exponential tails) 
 - Buin2  model                        (gaussian with exponential tails) 
 - Das model                           (gaussian with exponential tails)
+- Meixner model                       (gaussian with exponential tails)
 - Generalized Gaussian v1             (family that included Gaussian, Laplace, uniform etc...)
 - PearsonIV model                     (power-law tails+asymmetry)
 - Bates-shape models                  (spline-like finite model)
@@ -71,6 +73,7 @@ __all__     = (
     'ResoGenHyperbolic' , ## Generalised Hyperbolic resolution model
     'ResoHypatia'       , ## Hypatia resoltuion model
     'ResoDas'           , ## Das resolution model
+    'ResoMeixner'       , ## Meixner resolution model    
     'ResoBukin2'        , ## Bukin2 resolution model
     'ResoNormalLaplace' , ## Normal Laplace resolution model
     'ResoGenGaussV1'    , ## Generalized  Gaussian v1
@@ -2410,6 +2413,121 @@ class ResoDas(RESOLUTION) :
         """'kR' : right tail parameter"""
         return self.__AV_K.var2 
 
+
+# =============================================================================
+## @class ResoMeixner
+# Meixner resoltuion model
+#
+# @see Grigoletto, M., & Provasi, C. (2008). 
+#      "Simulation and Estimation of the Meixner Distribution". 
+#       Communications in Statistics - Simulation and Computation, 38(1), 58–77. 
+# @see https://doi.org/10.1080/03610910802395679
+# @see https://reference.wolfram.com/language/ref/MeixnerDistribution.html
+# 
+# Original distribtion is parameterise with 
+#  - location parameter m 
+#  - scale parameter    a 
+#  - shape parameter b : \f$ - \pi < b < +\pi \f$
+#  - shape parameter f : \f$ 0 < d \f$
+#
+# Here we use a slight reparameterisation:
+#  - \f$ b = 2 \atan \psi \f$ 
+#
+# Asymptotic:
+# - \f$  x \rightarrow +\infty\f$ : \f$ f  \sim \left| x \right|^\rho \mathrm{e}^{\sigma_-x}\f$
+# - \f$  x \rightarrow -\infty\f$ : \f$ f  \sim \left| x \right|^\rho \mathrm{e}^{\sigma_+x}\f$
+# where 
+# - \f$  \sigma_+ = \frac{\pi + b }{a} \f$    
+# - \f$  \sigma_+ = \frac{\pi + b }{a} \f$    
+#
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2015-07-019
+class ResoMeixner(RESOLUTION) :
+    """ Meixner distribution
+    - see Grigoletto, M., & Provasi, C. (2008). 
+        `Simulation and Estimation of the Meixner Distribution'. 
+         Communications in Statistics - Simulation and Computation, 38(1), 58–77. 
+    - see https://doi.org/10.1080/03610910802395679
+    - see https://reference.wolfram.com/language/ref/MeixnerDistribution.html
+
+    Original distribtion is parameterise with 
+      - location parameter m 
+      - scale parameter    a 
+      - shape parameter b :  -pi < b < +pip 
+      - shape parameter d :  0 < d 
+
+    Here we use a slight reparameterisation:
+      - b = 2  atan ( psi )  
+      - a^2 = sigma^2 * ( cos ( b ) + 1 ) / d 
+    
+    For resoltuionn model  we keep psi=0 (symmetric case)
+    """
+    def __init__ ( self         ,
+                   name         ,
+                   xvar         ,
+                   sigma        ,
+                   shape = 1    ,
+                   fudge = 1    , 
+                   mean  = None ) : 
+        
+        ## initialize the base
+        super(ResoMeixner,self).__init__( name        = name  ,
+                                          xvar        = xvar  ,
+                                          sigma       = alpha ,                                     
+                                          mean        = mean  ,
+                                          fudge       = fudge )
+
+        ## Here we consider only symmetri case 
+        self.__psi   = ROOT.RooFit.RooConst ( 0 )
+    
+        self.__shape = self.make_var ( shape                ,
+                                       'shape_%s'   % name  ,
+                                       '#shape(%s)' % name  , 
+                                       None , 1 , 1.e-6 , +100 )
+        
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.Meixner (
+            self.roo_name ( 'reso_meixner_' ) , 
+            "Meixner %s" % self.name ,
+            self.xvar       ,
+            self.mean       ,
+            self.sigma_corr ,
+            self.__psi      , ## ATTENTION! 
+            self.shape      )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'sigma'     : self.sigma ,
+            'shape'     : self.shape ,
+            'fudge'     : self.fudge , 
+        }
+
+    @property
+    def psi ( self ) :
+        """'psi' : psi-parameter for Meixner function: b = 2 * atan ( psi ) """
+        return self.__psi
+
+    @property
+    def shape ( self ) :
+        """'shape' : d-parameter for Meixner function, same as `d`"""
+        return self.__shape
+    @shape.setter
+    def shape ( self, value ) :
+        self.set_value ( self.__shape , value ) 
+
+    @property
+    def d ( self ) :
+        """'d' : d-parameter for Meixner function, same as `shape"""
+        return self.shape
+    @d.setter
+    def d ( self, value ) :
+        self.shape = value 
+       
 # =============================================================================
 ## @class ResoGenGaussV1
 #  Simple class that implements the generalized normal distribution v1

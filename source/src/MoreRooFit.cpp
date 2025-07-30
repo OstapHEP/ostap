@@ -80,6 +80,7 @@ ClassImp(Ostap::MoreRooFit::ATanh         )
 //
 ClassImp(Ostap::MoreRooFit::Sech          )
 ClassImp(Ostap::MoreRooFit::Atan2         )
+ClassImp(Ostap::MoreRooFit::Atan          )
 ClassImp(Ostap::MoreRooFit::Sigmoid       )
 ClassImp(Ostap::MoreRooFit::Hypot         )
 ClassImp(Ostap::MoreRooFit::AbsAplusB     )
@@ -1037,6 +1038,17 @@ Ostap::MoreRooFit::Atan2::Atan2
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
+Ostap::MoreRooFit::Atan::Atan
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "atan" , a , b ) ,
+              title1_ ( title , "atan" , a , b ) , a , b )
+{}
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
 Ostap::MoreRooFit::Sigmoid::Sigmoid
 ( const std::string& name  , 
   const std::string& title , 
@@ -1276,6 +1288,9 @@ Double_t Ostap::MoreRooFit::Sech::evaluate () const
 // ============================================================================
 Double_t Ostap::MoreRooFit::Atan2::evaluate () const 
 { const double a = m_x ; const double b = m_y ; return std::atan2  ( a , b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Atan::evaluate  () const 
+{ const double a = m_x ; const double b = m_y ; return std::atan   ( a * b ) ; }
 // ============================================================================
 Double_t Ostap::MoreRooFit::Sigmoid::evaluate () const 
 { const double a = m_x ; const double b = m_y ; return 0.5 * ( 1 + std::tanh ( a * b ) ) ; }

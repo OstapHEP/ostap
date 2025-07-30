@@ -11199,15 +11199,15 @@ Ostap::Models::Meixner::Meixner
   const char*          title     ,
   RooAbsReal&          x         ,
   RooAbsReal&          mu        , 
-  RooAbsReal&          a         , 
+  RooAbsReal&          sigma     , 
   RooAbsReal&          psi       , 
-  RooAbsReal&          d         ) 
+  RooAbsReal&          shape     ) 
   : RooAbsPdf ( name , title     ) 
-  , m_x       ( "!x"      , "Observable" , this , x   ) 
-  , m_mu      ( "!mu"     , "Location"   , this , mu  )
-  , m_a       ( "!a"      , "Scale"      , this , a   )
-  , m_psi     ( "!psi"    , "Skew"       , this , psi )
-  , m_d       ( "!d"      , "Shape"      , this , d   ) 
+  , m_x       ( "!x"      , "Observable" , this , x     ) 
+  , m_mu      ( "!mu"     , "Location"   , this , mu    )
+  , m_sigma   ( "!sigma"  , "Scale"      , this , sigma )
+  , m_psi     ( "!psi"    , "Skew"       , this , psi   )
+  , m_shape   ( "!shape"  , "Shape"      , this , shape ) 
     //
   , m_meixner ()
 {
@@ -11219,9 +11219,9 @@ Ostap::Models::Meixner::Meixner
   const char*          title     ,
   RooAbsReal&          x         ,
   RooAbsReal&          mu        , 
-  RooAbsReal&          a         , 
-  RooAbsReal&          d         ) 
-  : Meixner  ( name  , title , x  , mu , a , RooFit::RooConst ( 0 ) , d  )
+  RooAbsReal&          sigma     , 
+  RooAbsReal&          shape     ) 
+  : Meixner  ( name  , title , x  , mu , sigma , RooFit::RooConst ( 0 ) , shape )
   {}
 // ============================================================================
 // "copy" constructor 
@@ -11231,11 +11231,11 @@ Ostap::Models::Meixner::Meixner
   const char*                       name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x       ( "!x"    , this , right.m_x    ) 
-  , m_mu      ( "!mu"   , this , right.m_mu   ) 
-  , m_a       ( "!a"    , this , right.m_a    ) 
-  , m_psi     ( "!psi"  , this , right.m_psi  ) 
-  , m_d       ( "!d"    , this , right.m_d    ) 
+  , m_x       ( "!x"     , this , right.m_x     ) 
+  , m_mu      ( "!mu"    , this , right.m_mu    ) 
+  , m_sigma   ( "!sigma" , this , right.m_sigma ) 
+  , m_psi     ( "!psi"   , this , right.m_psi   ) 
+  , m_shape   ( "!shape" , this , right.m_shape ) 
   , m_meixner (  right.m_meixner ) 
 {}
 // ============================================================================
@@ -11253,10 +11253,10 @@ Ostap::Models::Meixner::clone ( const char* name ) const
 // ============================================================================
 void Ostap::Models::Meixner::setPars () const 
 {
- m_meixner.setMu  ( m_mu  ) ;
- m_meixner.setA   ( m_a   ) ; 
- m_meixner.setPsi ( m_psi ) ;
- m_meixner.setD   ( m_d   ) ; 
+  m_meixner.setMu    ( m_mu    ) ;
+  m_meixner.setSigma ( m_sigma ) ; 
+  m_meixner.setPsi   ( m_psi   ) ;
+  m_meixner.setShape ( m_shape ) ; 
 }    
 // ============================================================================
 // the actual evaluation of function 

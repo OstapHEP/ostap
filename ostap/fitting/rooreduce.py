@@ -1417,6 +1417,21 @@ def _rneedham_reduce_ ( pdf ):
 Ostap.Models.Needham .__reduce__ = _rneedham_reduce_ 
 
 # =============================================================================
+## reduce Meixner
+def _rmeixner_reduce_ ( pdf ):
+    """ Reduce Meixner"""
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () , 
+                                  pdf.mu     () ,
+                                  pdf.sigma  () ,
+                                  pdf.psi    () ,
+                                  pdf.shape  () ) 
+
+Ostap.Models.Meixner .__reduce__ = _rmeixner_reduce_ 
+
+# =============================================================================
 ## reduce Apollonious
 def _rapo_reduce_ ( pdf ):
     """ Reduce Apollonios"""

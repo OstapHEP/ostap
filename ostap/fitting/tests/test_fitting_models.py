@@ -316,15 +316,20 @@ def test_needham() :
         signal = Models.Needham_pdf ( name  = 'Matt'             , 
                                       xvar  = mass               ,
                                       sigma = signal_gauss.sigma ,  
-                                      mean  = signal_gauss.mean  ) ,
+                                      mean  = signal_gauss.mean  ,
+                                      c0    = ROOT.RooFit.RooConst ( 2.7     ) ,
+                                      c1    = ( 0.015 , 0.001  , 10 * 0.015 ) , 
+                                      c2    = ROOT.RooFit.RooConst ( 10      ) ) ,                                      
         background = background   ,
         S = S , B = B 
         )
-    
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 , silent = True )
         model.signal.mean .release()
         model.signal.sigma.release()
+        
+        model.signal.c1.release() 
+
         result, frame = model. fitTo ( dataset0 , silent = True )
         result, frame = model. fitTo ( dataset0 , silent = True )
 
@@ -1686,7 +1691,55 @@ def test_normlapl () :
 
     models.add     ( model  )
     results.append ( result )
+
+# ==========================================================================
+## Meixner
+# ==========================================================================
+def test_meixner () :
+    
+    logger = getLogger ( 'test_Meixner' )
+    
+    
+    logger.info ('Test Meixner_pdf' ) 
+    model = Models.Fit1D (
+        signal = Models.Meixner_pdf ( name    = 'Meixner'           , 
+                                      xvar    = mass                ,
+                                      mu      = signal_gauss.mean   ,
+                                      sigma   = signal_gauss.sigma  ,
+                                      psi     = ( 0 , -1   , 1    ) ,
+                                      shape   = ( 1 , 1.e-3 , 100 ) ) ,
+        background = background   ,
+        S = S , B = B ,
+        )
+    
+    signal_gauss.mean .fix ( m.value() )
+    signal_gauss.sigma.fix ( m.error() )
+    
+    model.signal.shape.fix ( 1 )
+    model.signal.psi  .fix ( 0 )
+    
+    model.S = NS 
+    model.B = NB
+    
+    with rooSilent() :
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        print ( 'FIT1' , result )
+        signal_gauss.mean .release() 
+        signal_gauss.sigma.release() 
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        print ( 'FIT2' , result )
+        model.signal.psi  .release()
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        print ( 'FIT3' , result )
+        model.signal.shape.release()
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        print ( 'FIT4' , result )
         
+    make_print ( model , result , "Meixner model" , logger )        
+
+    models.add     ( model  )
+    results.append ( result )
+    
 # ==========================================================================
 ## Hyperbolic
 # ==========================================================================
@@ -1777,7 +1830,6 @@ def test_genhyperbolic() :
 ## Hypatia 
 # ==========================================================================
 def test_hypatia () :
-## if 1 < 2 :
     
     logger = getLogger ( 'test_hypatia' )
        
@@ -2040,6 +2092,7 @@ def dump_models () :
 # =============================================================================
 if '__main__' == __name__ :
 
+    
     ## simple Gaussian PDF                       + background
     with timing ('test_gauss'          , logger ) :
         test_gauss          () 
@@ -2198,13 +2251,19 @@ if '__main__' == __name__ :
         test_exgauss2           ()
         
     ## Bukin2                                       + background 
-    with timing ('test_Bukin22'             , logger ) :
+    with timing ('test_Bukin2'             , logger ) :
         test_bukin2            () 
 
     ## Normal Laplace                                       + background
     with timing ('test_NormalLaplas'        , logger ) :
-        test_normlapl           () 
+        test_normlapl           ()
+    
+    """
+    ## Meixner                                       + background
+    with timing ('test_Meixner'        , logger ) :
+        test_meixner           () 
 
+    """
     ## Hyperbolic                                 + background 
     with timing ('test_hyperbolic'     , logger ) :
         test_hyperbolic        () 

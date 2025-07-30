@@ -2766,7 +2766,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class Losev 
-     *  ``Losev distribution'' - asymmetric variant of Hyperbolic secant/Sech-function
+     *  `Losev distribution' - asymmetric variant of Hyperbolic secant/Sech-function
      *  \f[ f(x;\mu,\alpha,\beta) \equiv 
      *   \frac{A}{\mathrm{e}^{-\left|\alpha\right| (x-\mu)} + 
      *                         \mathrm{e}^{\left|\beta\right|(x-mu)}}, \f]
@@ -4245,9 +4245,6 @@ namespace Ostap
       // ======================================================================      
     } ;
     // ========================================================================
-
-
-    // ========================================================================
     /** @class Meixner
      *  Meixner distribution
      *  @see Grigoletto, M., & Provasi, C. (2008). 
@@ -4263,13 +4260,14 @@ namespace Ostap
      *   - shape parameter f : \f$ 0 < d \f$
      *
      *  Here we use a slight reparameterisation:
-     *   - \f$ b = 2 \atan \psi \f$ 
+     *   - \f$ b   = 2 \atan \psi \f$ 
+     *   - \f$ a^2 = \sigma^2 \frac{ \cos b + 1} {d}  \f$ 
      * 
      * Asymptotic:
      *  - \f$  x \rightarrow +\infty\f$ : \f$ f  \sim \left| x \right|^\rho \mathrm{e}^{\sigma_-x}\f$
      *  - \f$  x \rightarrow -\infty\f$ : \f$ f  \sim \left| x \right|^\rho \mathrm{e}^{\sigma_+x}\f$
      *  where 
-     * - \f$  \sigma_+ = \frac{\pi + b }{a} \f$    
+     *  - \f$  \sigma_+ = \frac{\pi + b }{a} \f$    
      *  - \f$  \sigma_+ = \frac{\pi + b }{a} \f$    
      */ 
     class Meixner
@@ -4277,10 +4275,10 @@ namespace Ostap
     public :
       // =======================================================================
       Meixner
-      ( const double mu  = 0 , // location
-        const double a   = 1 , // scale
-        const double psi = 0 , // b = 2 * atan ( psi )
-        const double d   = 1 ) ;  
+      ( const double mu    = 0 ,   // location
+        const double sigma = 1 ,   // scale
+        const double psi   = 0 ,   // b = 2 * atan ( psi )
+        const double shape = 1 ) ; // shape 
       // =======================================================================
     public:      
       // =======================================================================
@@ -4294,49 +4292,47 @@ namespace Ostap
     public: // primary getters 
       // =======================================================================
       inline double mu       () const { return m_mu    ; }
-      inline double a        () const { return m_a     ; }
+      inline double sigma    () const { return m_sigma ; }
       inline double psi      () const { return m_psi   ; }
-      inline double d        () const { return m_d     ; }
+      inline double shape    () const { return m_shape ; }
       // =======================================================================
-    public: // primary getters 
+    public: // derived getters 
       // =======================================================================
-      inline double b        () const { return m_b     ; }      
-      inline double location () const { return mu   () ; } 
-      inline double scale    () const { return a    () ; } 
-      inline double shape    () const { return d    () ; }
+      inline double a        () const { return m_a      ; }      
+      inline double b        () const { return m_b      ; }      
+      inline double d        () const { return shape () ; }      
+      inline double location () const { return mu    () ; } 
       /// kappa = b/pi:  \f$ -1 < \kapppa < 1 \f$   
       double kappa           () const ;
       // =======================================================================      
     public: // setters 
       // =======================================================================
       /// set mu 
-      bool setMu  ( const double value ) ;
-      /// set scale
-      bool setA   ( const double value ) ;
+      bool setMu    ( const double value ) ;
+      /// set sigma
+      bool setSigma ( const double value ) ;
       /// set D 
-      bool setD   ( const double value ) ;
+      bool setShape ( const double value ) ;
       /// set psi 
-      bool setPsi ( const double value ) ;
+      bool setPsi   ( const double value ) ;
       // =======================================================================
       /// set location 
-      inline bool setLocation ( const double value ) { return setMu  ( value ) ; }  
-      /// set scale
-      inline bool setScale    ( const double value ) { return setA   ( value ) ; }  
+      inline bool setLocation ( const double value ) { return setMu    ( value ) ; }  
+      /// set D 
+      inline bool setD        ( const double value ) { return setShape ( value ) ; }  
       // =======================================================================
     public: 
-      // =======================================================================/
-      /// mena value
+      // =======================================================================
+      /// mean value
       double mean     () const ;
       /// variance/dispersion 
-      double variance () const ;
+      inline double variance () const { return m_sigma * m_sigma ; }
       /// RMS 
-      double rms      () const ;
+      inline double rms      () const { return           m_sigma ; }
       /// get skewness 
       double skewness () const ;
       /// get (excess) kurtosis 
       double kurtosis () const ;      
-      /// sigma 
-      inline double  sigma () const { return rms () ; } 
       // =======================================================================
     public: // integrals 
       // ======================================================================
@@ -4347,6 +4343,21 @@ namespace Ostap
       ( const double low  , 
         const double high ) const ;
       // ======================================================================
+    public: // asymptotoc 
+      // ======================================================================
+      /** Asymptotic :
+       *  - \f$ x \rigtharrow +\infty\f$
+       *   \f$ f \sim \left| x\right|^{\rho} \mathrm{e}^{-\sigma_+\left|x\right|}\f$
+       *  - \f$ x \rigtharrow -\infty\f$
+       *   \f$ f \sim \left| x\right| ^{\rho} \mathrm{e}^{-\sigma_-\left|x\right|}\f$
+       *  - \f$ \rho     = 2d-1 \f$ 
+       *  - \f$ \sigma_+ = \frac{\pi + b}{s}  \f$ 
+       *  - \f$ \sigma_- = \frac{\pi - b}{s}  \f$ 
+       */
+      double rho         () const ;
+      double sigma_plus  () const ; 
+      double sigma_minus () const ; 
+      // ======================================================================
     public:
       // ======================================================================
       /// get the unique tag 
@@ -4355,20 +4366,22 @@ namespace Ostap
     private:
       // ======================================================================
       /// location parameter
-      double m_mu   { 0 } ; // location parameter 
-      /// scale parameter
-      double m_a    { 1 } ; // scale parameter
+      double m_mu    {  0 } ; // location parameter 
+      /// sigma parameter
+      double m_sigma {  1 } ; // scale parameter
       /// asymmetry/skew parameter
-      double m_psi  { 0 } ; // skew/asymmetry parameter
+      double m_psi   {  0 } ; // skew/asymmetry parameter
       /// shape parameter
-      double m_d    { 1 } ; // shape parameter 
+      double m_shape {  1 } ; // shape parameter 
       // =======================================================================
-    public:
+    private :
       // =======================================================================
+      /// keep a
+      double m_a     {  1 } ; // a-value
       /// keep b
-      double m_b    { 0 }  ; // b-value
+      double m_b     {  0 } ; // b-value
       /// normalization 
-      double m_C    { -1 } ; // normalization 
+      double m_C     { -1 } ; // normalization 
       // =======================================================================
     private:
       // ======================================================================
