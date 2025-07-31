@@ -1,6 +1,8 @@
+# v3.0.1.22
+
 ## New features
 
-   1. Add Meixner distribution
+   1. Add Meixner distribution+PDF
    1. Add (symmetric) Meixner resolution function 
             
 ## Backward-incompatible
