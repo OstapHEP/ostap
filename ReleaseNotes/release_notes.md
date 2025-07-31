@@ -1,3 +1,6 @@
+
+# v3.0.1.24
+
 ## New features
 
    1. Extend `pdf_convolution` to accept the histogram as th efirst argument using historgam to PDF transformation
