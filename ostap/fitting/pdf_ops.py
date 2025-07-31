@@ -649,7 +649,18 @@ def pdf_convolution ( pdf , resolution ) :
     """
     import ostap.fitting.convolution as     CNV
     from   ostap.fitting.fit1d       import RESOLUTION
-    from   ostap.fitting.pdfbasic    import Generic1D_pdf, Sum1D 
+    from   ostap.fitting.pdfbasic    import Generic1D_pdf, Sum1D, PDF1
+    from   ostap.core.core           import Ostap 
+    ##
+    if isinstance ( pdf , ROOT.TH1 ) and 1 == pdf.GetDimension () :
+        pdf = Ostap.Math.Histo1D ( pdf , 0 )
+        
+    if isinstance ( pdf , Ostap.Math.Histo1D ) and isinstance ( resolution , PDF1 ) : 
+        from ostap.fitting.pdfbasic  import Histo1D_pdf
+        xvar = resolution.xvar 
+        pdf  = Histo1D_pdf ( name   = ''   ,
+                             histo  = pdf  ,
+                             xvar   = xvar ) 
     ##
     if not isinstance ( pdf , PDF1 ) : return NotImplemented
     ##
@@ -699,14 +710,10 @@ def pdf_convolution ( pdf , resolution ) :
 
     else : return NotImplemented 
 
-    print ( 'PDF_CONVOLUTION/5' , type ( pdf ) , pdf ) 
-
     ## create convolution object 
     cnv = CNV.Convolution ( pdf        = pdf        ,
                             resolution = resolution ,
                             xvar       = pdf.xvar   , **config )
-    
-    print ( 'PDF_CONVOLUTION/6' )  
     
     return CNV.Convolution_pdf ( pdf , cnv )
     

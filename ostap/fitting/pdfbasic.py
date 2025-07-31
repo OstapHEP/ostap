@@ -5944,8 +5944,11 @@ class Histo1D_pdf(PDF1) :
         assert isinstance ( histo , Ostap.Math.Histo1D ) or  \
                ( isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim()  ) , 'Invalid histogram object'
         
+        name = name if name else VarMaker.generate_name ( prefix = 'h1d' , suffix = 'pdf' , name = histo.name ) 
+
         th1 = histo if isinstance ( histo , ROOT.TH1 ) else histo.h ()         
         if not xvar : xvar = th1.xminmax ()
+
         
         ##  initialize the base 
         PDF1.__init__ ( self , name , xvar ) 
@@ -5990,6 +5993,8 @@ class Histo2D_pdf(PDF2) :
         assert isinstance ( histo , Ostap.Math.Histo2D ) or  \
                ( isinstance ( histo , ROOT.TH2 ) and 2 == histo.dim()  ) , 'Invalid histogram object'
         
+        name = name if name else VarMaker.generate_name ( prefix = 'h2d' , suffix = 'pdf' , name = histo.name ) 
+
         th2 = histo if isinstance ( histo , ROOT.TH2 ) else histo.h ()         
         if not xvar : xvar = th2.xminmax ()
         if not yvar : yvar = th2.yminmax ()
@@ -6039,6 +6044,8 @@ class Histo3D_pdf(PDF3) :
         assert isinstance ( histo , Ostap.Math.Histo3D ) or  \
                ( isinstance ( histo , ROOT.TH3 ) and 3 == histo.dim()  ) , 'Invalid histogram object'
         
+        name = name if name else VarMaker.generate_name ( prefix = 'h3d' , suffix = 'pdf' , name = histo.name ) 
+
         th3 = histo if isinstance ( histo , ROOT.TH3 ) else histo.h ()         
         if not xvar : xvar = th3.xminmax ()
         if not yvar : yvar = th3.yminmax ()
@@ -6098,6 +6105,8 @@ class H1D_pdf(PDF1) :
         
         assert isinstance ( order, integer_types ) and 0 <= order ,\
                'Invalid interpolation order: %s/%s' % ( order , type ( order ) )
+
+        name = name if name else VarMaker.generate_name ( prefix = 'h1d' , suffix = 'pdf' , name = histo.name ) 
 
         self.__ds = H1D_dset ( histo             ,
                                xaxis   = xvar    ,
@@ -6195,6 +6204,8 @@ class H2D_pdf(PDF2) :
 
         assert isinstance ( order, integer_types ) and 0 <= order ,\
                'Invalid interpolation order: %s/%s' % ( order , type ( order ) )
+
+        name = name if name else VarMaker.generate_name ( prefix = 'h1d' , suffix = 'pdf' , name = histo.name ) 
 
         self.__ds = H2D_dset ( histo             ,
                                xaxis   = xvar    ,
@@ -6302,6 +6313,8 @@ class H3D_pdf(PDF3) :
         
         assert isinstance ( order, integer_types ) and 0 <= order ,\
                'Invalid interpolation order: %s/%s' % ( order , type ( order ) )
+
+        name = name if name else VarMaker.generate_name ( prefix = 'h1d' , suffix = 'pdf' , name = histo.name ) 
 
         self.__ds = H3D_dset ( histo ,
                                xaxis   = xvar    ,

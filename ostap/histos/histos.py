@@ -861,6 +861,29 @@ _interpolate_2D_ = Ostap.Math.HistoInterpolation.interpolate_2D
 _interpolate_3D_ = Ostap.Math.HistoInterpolation.interpolate_3D
 # =============================================================================
 
+
+# =============================================================================
+## Get the name of underlying histogram for
+#  @code
+#  hi  ...
+#  hi.GetName() 
+#  hi.name 
+#  @endcode 
+def _hi_name_ ( hi ) :
+    """ Get the name of the underlyinh histogram 
+    >>> hi  ...
+    >>> hi.GetName() 
+    >>> hi.name 
+    """
+    return h().GetName()
+
+Ostap.Math.Histo1D.GetName = _hi_name_ 
+Ostap.Math.Histo2D.GetName = _hi_name_ 
+Ostap.Math.Histo3D.GetName = _hi_name_ 
+Ostap.Math.Histo1D.name    = property ( _hi_name_ , None , None , _hi_name_.__doc__ )
+Ostap.Math.Histo2D.name    = property ( _hi_name_ , None , None , _hi_name_.__doc__ )
+Ostap.Math.Histo3D.name    = property ( _hi_name_ , None , None , _hi_name_.__doc__ )
+
 # =============================================================================
 ## histogram as function 
 #  @see Ostap::Math::HistoInterpolation
@@ -4913,9 +4936,47 @@ def _smear_ ( h1 , sigma , addsigmas = 5 , silent = True ) :
     h2.ResetStats() 
     return h2
 
-
 ROOT.TH1F. smear = _smear_
 ROOT.TH1D. smear = _smear_
+
+# =============================================================================
+## Convolute the historgam with resolution function
+#  @code
+#  histo      = ...
+#  resolution = ...
+#  result     = histo.convolute ( resolution ) 
+#  @endcode 
+def _h1_convolute_ ( h1 , resolution , as_pdf = False ) :
+    """ Convolute the historgam with resolution function
+    >>> histo      = ...
+    >>> resolution = ...
+    >>> result     = histo.convolute ( resolution ) 
+    """
+    
+    from ostap.fitting.fit1d import RESOLUTION    
+    assert isinstance ( resolution , RESOLUTION ) , \
+        "Invalid type of `resolution` : %s" % typename ( resolution )
+    
+    from ostap.fitting.pdf_ops import pdf_convolution
+    pdf = pdf_convolution ( h1 , resulution )
+
+    ## 
+    if as_pdf : return pdf   ## RETURN 
+
+    hr  = h1.clone()
+    hr.Reset ()
+    if not hr.GetSumw2() : hr.Sumw2()
+
+    hr += pdf
+
+    ## keep the same integral
+    hr *= h1.Integal() / h1.Integral() 
+    
+    return hr 
+    
+# =============================================================================
+ROOT.TH1F. convolute = _h1_convolute_ 
+ROOT.TH1D. convolute = _h1_convolute_ 
 
 # =============================================================================
 ## Smooth the histogram

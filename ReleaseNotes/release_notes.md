@@ -1,3 +1,12 @@
+## New features
+
+   1. Extend `pdf_convolution` to accept the histogram as th efirst argument using historgam to PDF transformation
+   1. Add `convolute` method for histogram (internally using `odf_convolution`
+          
+## Backward-incompatible
+
+## Bug fixes 
+
 # v3.0.1.22
 
 ## New features
