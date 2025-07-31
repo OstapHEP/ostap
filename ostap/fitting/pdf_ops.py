@@ -662,7 +662,7 @@ def pdf_convolution ( pdf , resolution ) :
                              histo  = pdf  ,
                              xvar   = xvar ) 
     ##
-    if not isinstance ( pdf , PDF1 ) : return NotImplemented
+    if not isinstance ( pdf , ( PDF1 , ROOT.RooAbsPdf ) ) : return NotImplemented
     ##
     config = {}
     config.update ( CNV.CnvConfig.config() )
@@ -678,7 +678,7 @@ def pdf_convolution ( pdf , resolution ) :
         cnvs = [ pdf_convolution ( pdf , reso ) for reso in resolution ]
         return Sum1D ( cnvs , fractions = resolution.fractions  )
     
-    if isinstance ( pdf , Sum1D ) :
+    if isinstance ( pdf        , Sum1D ) :
         logger.info ( "Convolution of sum --> sum of convolutions" ) 
         cnvs = [ pdf_convolution ( p , resoluton ) for  p in pdf  ]
         return Sum1D ( cnvs , fractions = pdf.fractions  )
