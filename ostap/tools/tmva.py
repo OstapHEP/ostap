@@ -39,6 +39,7 @@ from   ostap.core.ostap_types    import ( num_types    , integer_types  ,
                                           string_types , sequence_types ) 
 from   ostap.core.core           import Ostap, WSE, VE, rootWarning
 from   ostap.utils.cleanup       import CleanUp
+from   ostap.utils.root_utils    import ImplicitMT 
 from   ostap.utils.basic         import items_loop, typename  
 from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.progress_bar  import progress_bar
@@ -330,9 +331,10 @@ class Trainer(object):
                    ##
                    signal_vars          = {}      ,  ## dictionary with new variables for signal sample 
                    background_vars      = {}      ,  ## dictionary with new variables for background sample 
-                   ## 
+                   ##
                    signal_cuts          = ''      ,  # signal cuts 
-                   background_cuts      = ''      ,  # background cuts                   
+                   background_cuts      = ''      ,  # background cuts
+                   ## 
                    spectators           = []      ,
                    bookingoptions       = "Transformations=I;D;P;G,D" , 
                    configuration        = "SplitMode=Random:NormMode=NumEvents" ,
@@ -349,6 +351,9 @@ class Trainer(object):
                    ##
                    prescale_signal      = 1       , ## prescale factor for the signal 
                    prescale_background  = 1       , ## prescale factor for the background
+                   ##
+                   signal_add_vars      = {}      , ## add signal     vars, presumably fake/misisng  vars 
+                   background_add_vars  = {}      , ## add backgriund vars, presumably fake/misisng  vars 
                    ## 
                    output_file          = ''      , ## the name of output file
                    verbose              = True    ,
@@ -358,7 +363,7 @@ class Trainer(object):
                    workdir              = ''      , 
                    category             = -1      ,
                    maxvarlen            = 12      , ## maximal lenth of the variable name 
-                   multithread          = False   ,
+                   multithread          = True    ,
                    logger               = None    ) :
         
         """ Constructor with list of methods
@@ -483,7 +488,6 @@ class Trainer(object):
         if  isinstance ( signal     , source_types ) : signal     = signal     , 
         if  isinstance ( background , source_types ) : background = background , 
         
-        
         self.__signals           = tuple ( Chain ( o ) for o in signal ) 
         self.__signal            = self.__signals [ 0  ] 
         self.__more_signals      = self.__signals [ 1: ]
@@ -492,8 +496,6 @@ class Trainer(object):
         self.__background        = self.__backgrounds [ 0  ] 
         self.__more_backgrounds  = self.__backgrounds [ 1: ]
 
-        
-        
         self.__signal_cuts          = signal_cuts  
         self.__signal_weight        = signal_weight
 
@@ -504,8 +506,10 @@ class Trainer(object):
         if signal_vars     : self.__signal_vars.update     ( signal_vars )        
         self.__background_vars      = {}
         if background_vars : self.__background_vars.update ( background_vars ) 
-        
 
+        self.__signal_add_vars      = signal_add_vars
+        self.__background_add_vars  = background_add_vars
+        
         self.__prefilter            = ROOT.TCut ( prefilter ) 
         self.__prefilter_signal     = prefilter_signal     if prefilter_signal     else '' 
         self.__prefilter_background = prefilter_background if prefilter_background else '' 
@@ -589,7 +593,7 @@ class Trainer(object):
         self.__pattern_C     = pattern_C 
         self.__pattern_plots = pattern_PLOTS % self.name
 
-        self.__multithread = multithread 
+        self.__multithread   = True if isinstance ( multithread , bool ) or ( isinstance ( multithread , int ) and 0 <= multithread ) else False 
 
         ## dictionary { method : AUC}
         self.__AUC= {}
@@ -695,6 +699,16 @@ class Trainer(object):
         result = {}
         if self.__background_vars : result.update ( self.__background_vars ) 
         return result 
+
+    @property
+    def signal_add_vars ( self ) :
+        """'signal_add_vars' : the variables to be added into signal sampoe"""
+        return self.__signal_add_vars
+    
+    @property
+    def background_add_vars ( self ) :
+        """'background_add_vars' : the  variables to be added into background sample"""
+        return self.__background_add_vars
 
     @property
     def prefilter ( self ) :
@@ -1131,11 +1145,10 @@ class Trainer(object):
         from ostap.utils.basic      import NoContext
         from ostap.utils.root_utils import ImplicitMT
         
-        context2 = ImplicitMT ( True ) if self.multithread else NoContext () 
+        with context : 
 
-        with context , context2 :
-            
-            result = self.__train ()
+            with ImplicitMT ( self.multithread ) : 
+                result = self.__train ()
             
             title  = 'TMVA Trainer %s output' % self.name 
             table = self.table_output ( title = title , prefix = '# ' ) 
@@ -1230,23 +1243,40 @@ class Trainer(object):
         ## if self.prefilter         : all_vars.append ( self.prefilter         )                
         ## if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
         ## if self.background_cuts   : all_vars.append ( self.background_cuts   )
+
+        if self.signal_weight :
+            assert self.signal    .good_variables ( self.signal_weight )  or self.signal_add_vars        , \
+                "Do no know how to treat `signal_weight`: %s" %  self.signal_weight
+            assert self.background.good_variables ( self.signal_weight )  or self.background_add_vars    , \
+                "Do no know how to treat `signal_weight`: %s" %  self.signal_weight
             
-        if self.signal_weight     : all_vars.append ( self.signal_weight     )
-        if self.background_weight : all_vars.append ( self.background_weight )
+        if self.background_weight :
+            assert self.signal    .good_variables ( self.background_weight ) or self.signal_add_vars     , \
+                "Do no know how to treat `background_weight`: %s" %  self.background_weight
+            assert self.background.good_variables ( self.background_weight ) or self.background_add_vars , \
+                "Do no know how to treat `background_weight`: %s" %  self.background_weight
+            
+        ## if self.signal_weight     : all_vars.append ( self.signal_weight     )                        
+        ## if self.background_weight : all_vars.append ( self.background_weight )
         
         # =====================================================================
         ## prefilter/prescale signal if required
         # =====================================================================
         if self.prefilter_signal         or \
            self.prefilter                or \
-           self.__more_signals           or \
-           ( 1 != self.prescale_signal ) or self.signal_vars :
-            
-            if self.signal_weight     : all_vars.append ( self.signal_weight     )
-            
+           self.signal_vars              or \
+           self.signal_add_vars          or \
+           self.__more_signals           or ( 1 != self.prescale_signal ) :
+
+            the_vars = list ( all_vars ) 
+            for weight in ( self.signal_weight , self.background_weight ) :
+                if not weight             : continue
+                if   self.signal_add_vars : continue ## assume it defines the missnig/nesessary variabes 
+                elif self.signal.good_variables ( weight ) : the_vars.append ( weight  )
+                
             import ostap.trees.trees
             from ostap.trees.trees import Chain
-            avars = self.signal.the_variables ( all_vars )
+            avars = self.signal.the_variables ( the_vars )
             
             scuts = {}
             if self.prefilter_signal : scuts.update ( { 'PreFilter/Signal' : self.prefilter_signal } )                    
@@ -1257,43 +1287,56 @@ class Trainer(object):
             import ostap.frames.tree_reduce       as TR
             
             silent = not self.verbose or not self.category in ( 0, -1 )
-            self.logger.info ( 'Pre-filter Signal      before processing' )
-            ## 
-            inputs  = ( self.signal , ) + self.__more_signals
-            ## reduced signals 
-            self.__RS = tuple ( TR.reduce ( i                    ,
-                                            selection = scuts    ,
-                                            save_vars = avars    ,
-                                            name      = 'SIGNAL' ,
-                                            output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-tmva-SIGNAL-' ) , 
-                                            new_vars  = self.signal_vars     , 
-                                            prescale  = self.prescale_signal ,  
-                                            silent    = silent   ) for i in inputs )
+            ## reduced signals
+            with timing ( 'Pre-filter Signal     before processing' , logger = self.logger ) , ImplicitMT ( True ) :                                 
+                inputs   = ( self.signal , ) + self.__more_signals
+                new_vars = { }
+                new_vars.update ( self.signal_vars     )
+                new_vars.update ( self.signal_add_vars )
+                self.__RS = tuple ( TR.reduce ( i                    ,
+                                                selection = scuts    ,
+                                                save_vars = avars    ,
+                                                name      = 'SIGNAL' ,
+                                                output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-tmva-SIGNAL-' ) , 
+                                                new_vars  = new_vars             , 
+                                                prescale  = self.prescale_signal ,  
+                                                silent    = silent   ) for i in inputs )
             ## merge signals 
             files = ()
             for rs in self.__RS : files += rs.files
             self.__SigTR  = Chain ( name = 'SIGNAL' , files = files )                 
             
-            self.__signal       = self.__SigTR
-            self.__signal_cuts  = ROOT.TCut()
-            self.__more_signals = () 
+            self.__signal          = self.__SigTR
+            self.__signal_cuts     = ROOT.TCut()
+            self.__more_signals    = ()
+            self.__signal_add_vars = {} 
             
         missvars = [ v for v in self.signal_vars if not v in self.signal ]
-        assert not missvars , "Variables %s are not in signal sample!" % missvars                          
-
+        assert not missvars , "Variables %s are not in signal sample!" % missvars
+        
+        assert not self.signal_weight     or self.signal.good_variables ( self.signal_weight     ) , \
+            "The weight %s is not accessible in signal sample" % self.signal_weight 
+        assert not self.background_weight or self.signal.good_variables ( self.background_weight ) , \
+            "The weight %s is not accessible in signal sample" % self.backgound_weight 
+        
         # =====================================================================
         ## prefilter/prescale background if required
         # =====================================================================
         ## -- self.background_cuts          or 
         if self.prefilter_background     or \
            self.prefilter                or \
-           self.__more_backgrounds       or \
-           1 != self.prescale_background or self.background_vars :
-            
-            if self.background_weight : all_vars.append ( self.background_weight )
+           self.background_vars          or \
+           self.background_add_vars      or \
+           self.__more_backgrounds       or ( 1 != self.prescale_background ) : 
+
+            the_vars = list ( all_vars ) 
+            for weight in ( self.signal_weight , self.background_weight ) :
+                if not weight : continue 
+                if   self.background_add_vars  : continue ## assume it defines missing/nesessary variables 
+                elif self.background.good_variables ( weight ) : the_vars.append ( weight  )
             
             from ostap.trees.trees import Chain
-            avars = self.background.the_variables ( all_vars )
+            avars = self.background.the_variables ( the_vars )
     
             bcuts = {}
             if self.prefilter_background : bcuts.update ( { 'PreFilter/Background' : self.prefilter_background } )                  
@@ -1303,32 +1346,40 @@ class Trainer(object):
             import ostap.frames.frames 
             import ostap.frames.tree_reduce       as TR
             
-            silent = not self.verbose or not self.category in ( 0, -1 )
-            self.logger.info ( 'Pre-filter Background  before processing' )
-            
-            inputs = ( self.background , ) + self.__more_backgrounds 
-            ## reduced backgrounds 
-            self.__RB = tuple ( TR.reduce ( i                  ,
-                                            selection = bcuts  ,
-                                            save_vars = avars  ,
-                                            name      = 'BACKGROUND'             ,
-                                            output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-tmva-BACKGROUND-' ) ,
-                                            new_vars  = self.background_vars     , 
-                                            prescale  = self.prescale_background ,  
-                                            silent    = silent ) for i in inputs )
+            ## reduced backgrounds
+            with timing ( 'Pre-filter Signal     before processing' , logger = self.logger ) , ImplicitMT ( True ) :                                 
+                inputs   = ( self.background , ) + self.__more_backgrounds 
+                silent   = not self.verbose or not self.category in ( 0, -1 )
+                new_vars = {}
+                new_vars.update ( self.background_vars     ) 
+                new_vars.update ( self.background_add_vars )
+                self.__RB = tuple ( TR.reduce ( i                  ,
+                                                selection = bcuts  ,
+                                                save_vars = avars  ,
+                                                name      = 'BACKGROUND'             ,
+                                                output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-tmva-BACKGROUND-' ) ,
+                                                new_vars  = new_vars                 , 
+                                                prescale  = self.prescale_background ,  
+                                                silent    = silent ) for i in inputs )
             ## merge signals 
             files = ()
             for rb in self.__RB : files += rb.files
             self.__BkgTR  = Chain ( name = 'BACKGROUND' , files = files ) 
             
             
-            self.__background       = self.__BkgTR
-            self.__background_cuts  = ROOT.TCut()
-            self.__more_backgrounds = () 
+            self.__background          = self.__BkgTR
+            self.__background_cuts     = ROOT.TCut()
+            self.__more_backgrounds    = () 
+            self.__background_add_vars = {}
             
         missvars = [ v for v in self.background_vars if not v in self.background ]
         assert not missvars , "Variables %s are not in background sample!" % missvars                         
                          
+        assert not self.signal_weight     or self.background.good_variables ( self.signal_weight     ) , \
+            "The weight %s is not accessible in background sample!" % self.signal_weight 
+        assert not self.background_weight or self.background.good_variables ( self.background_weight ) , \
+            "The weight %s is not accessible in background sample!" % self.background_weight 
+        
         # =====================================================================
         ## check for (negative) signal weights
         # =====================================================================
@@ -1375,6 +1426,8 @@ class Trainer(object):
         NB  = -1
         SW  = None
         BW  = None
+        ES  = None #effective entries 
+        EB  = None #effective entries 
         cnf = {'use_frame' : True, 'parallel' : True , 'progress' :  False }
             
         if 0 <= self.signal_train_fraction     < 1 or \
@@ -1389,12 +1442,13 @@ class Trainer(object):
             sb = data_statistic ( self.background , '1' , cuts = bc , **cnf )
             NS = ss.nEntries()
             NB = sb.nEntries()
-
+            
         if self.    signal_weight :
             from ostap.stats.statvars import data_statistic
             scw  = sc * self.    signal_weight
             sw   = data_statistic ( self.signal , '1' , cuts = scw , **cnf )
             sw   = WSE ( sw ) 
+            ES   = sw.nEff () 
             SW   = VE  ( sw.sumw () , sw.sumw2() )
             
         if self.background_weight :
@@ -1402,6 +1456,7 @@ class Trainer(object):
             bcw  = bc * self.background_weight                    
             bw   = data_statistic ( self.background  , '1' , cuts = bcw , **cnf )
             bw   = WSE ( bw ) 
+            EB   = bw.nEff () 
             BW   = VE  ( bw.sumw () , bw.sumw2() ) 
             
         if 0 < self.signal_train_fraction < 1 :
@@ -1446,23 +1501,34 @@ class Trainer(object):
             tB = self.background.table2 ( self.variables , title = btitle , cuts = bc , prefix = '# ' )
             self.logger.info ( '%s\n%s' % ( btitle , tB ) )
 
-            ## one more table:
+        ## one more table:
+        if self.verbose or SW or BW or ES or EB :  
             
             from ostap.logger.symbols import times, sum_symbol
             
-            rows = [ ( 'Sample' , '#Events' , '%sw' % sum_symbol , '' ) ]
+            rows = [ ( 'Sample' , '#Events' , '%sw' % sum_symbol , '' , '#Eff' , '' ) ]
 
-            if isinstance ( SW , VE ) :
-                s , expo = SW.pretty_print ( precision = 4 , width = 6 , parentheses = False )
-                row = 'Signal' , '%d' % NS , s , '%s10^{%+d}' % ( times , expo ) if expo else '' 
+            if isinstance ( SW , VE ) or ES :
+                SW = VE ( SW )
+                ES = VE ( ES ) 
+                s1 , e1  = SW.pretty_print ( precision = 4 , width = 6 , parentheses = False )
+                s2 , e2  = ES.pretty_print ( precision = 4 , width = 6 , parentheses = False )
+                row = 'Signal' , '%d' % NS , \
+                    s1 , '%s10^{%+d}' % ( times , e1 ) if e1 else '' , \
+                    s2 , '%s10^{%+d}' % ( times , e2 ) if e2 else '' 
             else :
                 row = 'Signal' , '%d' % NS
                 
             rows.append ( row )
             
-            if isinstance ( BW , VE ) :
-                s , expo = BW.pretty_print ( BW , precision = 4 , width = 6 , parentheses = False )
-                row = 'Background' , '%d' % NB , s , '%s10^{%+d}' % ( times , expo ) if expo else '' 
+            if isinstance ( BW , VE ) or EB :
+                BW = VE ( BW )
+                EB = VE ( EB )
+                s1 , e1  = BW.pretty_print ( precision = 4 , width = 6 , parentheses = False )
+                s2 , e2  = WB.pretty_print ( precision = 4 , width = 6 , parentheses = False )
+                row = 'Background' , \
+                    s1 , '%s10^{%+d}' % ( times , e1 ) if e1 else '' , \
+                    s2 , '%s10^{%+d}' % ( times , e2 ) if e2 else '' 
             else :
                 row = 'Background' , '%d' % NB
                 

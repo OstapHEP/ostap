@@ -1,9 +1,15 @@
+## New features
 
+   1. More improvements in TMVA &Choping printout
+   1. For TMVA & Chppoing add new arguemnts `signal_add_vars` and `backrgound_add_vars` to add more variables to transformed data sets
+       to release the intrincis requirmeent fot the same structure for singal ad backgrnu samples.
+       In this way one can `on-fly` add more  missing variables to please TMVA, see example `test_tools_chopping2.py`
+          
 # v3.0.1.24
 
 ## New features
 
-   1. Extend `pdf_convolution` to accept the histogram as th efirst argument using historgam to PDF transformation
+   1. Extend `pdf_convolution` to accept the histogram as the first argument using the historgam->PDF transformation
    1. Add `convolute` method for histogram (internally using `odf_convolution`
           
 ## Backward-incompatible
@@ -37,13 +43,13 @@
 
 ## Bug fixes 
 
-   1. couple of minor  fixes in parallel processing 
+   1. couple of minor fixes in parallel processing 
 
 # v3.0.1.16
 
 ## New features
     
-  1. improve printout for TMVA&Choppnig stuff
+  1. improve printout for TMVA & Chopping stuff
   1. suppress unesessary ROOT printout from TMVA & chopping
             
 ## Backward-incompatible
@@ -78,7 +84,7 @@
 
 ## New features
 
- 1. Improve a little bit the prinntout of `Ostap::Math::Modment_` objects in python
+ 1. Improve a little bit the prinntout of `Ostap::Math::Moment_` objects in python
  1. Add Cornish-Fisher estimate for approximate quantile functions
  1. Tiny fix for `Ostap::Math::probit`
  1. add `Ostap::Math::Moments::quantile_` functions for `Ostap::Math::(W)Moment_` objects, based on Cornish-fishef asymptotoc expansion
@@ -114,7 +120,7 @@
 
 ## New features
     
-  1. imporve/extend the `Data.table` methdod - now it the add information about the tree/chains
+  1. imporve/extend the `Data.table` method - now it the add information about the tree/chains
      
 ## Backward-incompatible 
 

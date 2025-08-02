@@ -52,6 +52,7 @@ if not os.path.exists( data_file ) :
         treeSignal.SetDirectory ( test_file ) 
         treeBkg   .SetDirectory ( test_file ) 
         
+        var0 = array.array ( 'd',  [ 0 ] )
         var1 = array.array ( 'd',  [ 0 ] )
         var2 = array.array ( 'd',  [ 0 ] )
         var3 = array.array ( 'd',  [ 0 ] )
@@ -59,6 +60,7 @@ if not os.path.exists( data_file ) :
         vevt = array.array ( 'i',  [ 0 ] )
         vrun = array.array ( 'i',  [ 0 ] )
         
+        treeSignal.Branch ( 'var0' , var1 , 'var0/D' )
         treeSignal.Branch ( 'var1' , var1 , 'var1/D' )
         treeSignal.Branch ( 'var2' , var2 , 'var2/D' )
         treeSignal.Branch ( 'var3' , var3 , 'var3/D' )
@@ -110,11 +112,13 @@ if not os.path.exists( data_file ) :
             y = random.gauss  (  0.0 , 0.2 )
             z = random.gauss  (  0.5 , 0.5 )
             w = random.gauss  ( -0.2 , 0.5 )
+            u = random.gauss  (  0.0 , 1.0 )
             
             var1[0] =  x
             var2[0] =  y  
             var3[0] =  z
             var4[0] =  w
+            var0[0] =  u
             
             ievt += 1
             if 0 == ( ievt % s_evt_per_run ) :
@@ -152,18 +156,23 @@ trainer = Trainer (
     name    = 'TestChopping' ,   
     methods = [ # type               name   configuration
     ( ROOT.TMVA.Types.kMLP        , "MLP1"       , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=400:HiddenLayers=N+1:TestRate=5:!UseRegulator" ) ,
-    ( ROOT.TMVA.Types.kMLP        , "MLP5"       , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=400:HiddenLayers=N+5:TestRate=5:!UseRegulator" ) ,
-    ( ROOT.TMVA.Types.kBDT        , "BDTG2"      , "H:!V:NTrees=200:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=2" ) , 
-    ( ROOT.TMVA.Types.kBDT        , "BDTG4"      , "H:!V:NTrees=200:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=4" ) , 
-    ( ROOT.TMVA.Types.kCuts       , "Cuts"       , "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,
-    ( ROOT.TMVA.Types.kFisher     , "Fisher"     , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
-    ( ROOT.TMVA.Types.kLikelihood , "Likelihood" , "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" )
+    ## ( ROOT.TMVA.Types.kMLP        , "MLP5"       , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=400:HiddenLayers=N+5:TestRate=5:!UseRegulator" ) ,
+    ## ( ROOT.TMVA.Types.kBDT        , "BDTG2"      , "H:!V:NTrees=200:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=2" ) , 
+    ## ( ROOT.TMVA.Types.kBDT        , "BDTG4"      , "H:!V:NTrees=200:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=4" ) , 
+    ## ( ROOT.TMVA.Types.kCuts       , "Cuts"       , "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,
+    ## ( ROOT.TMVA.Types.kFisher     , "Fisher"     , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
+    ## ( ROOT.TMVA.Types.kLikelihood , "Likelihood" , "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" )
     ] ,
     ## 
     variables       = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training
     signal_vars     = { 'VARX' : 'VARS' } , 
-    background_vars = { 'VARX' : 'VARB' } ,      
-    ##     
+    background_vars = { 'VARX' : 'VARB' } ,
+    ##
+    ## add some weigth for the signal smaple 
+    signal_weight       = '1.0 + var0'     ,
+    ## add fake variable to backgrund sample to please TMVA 
+    background_add_vars = {'var0' : '-567' } ,  
+    ##
     signal         = cSignal                  , ## `Signal' sample
     background     = cBkg                     , ## `Background' sample         
     verbose        = True                     ,

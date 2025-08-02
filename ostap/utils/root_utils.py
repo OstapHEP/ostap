@@ -36,7 +36,8 @@ __all__     = (
     )
 
 # =============================================================================
-from   ostap.utils.timing import Wait 
+from   ostap.utils.timing import Wait
+from   ostap.utils.basic  import typename 
 import ROOT
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -262,13 +263,13 @@ class ImplicitMT(object) :
     def __init__  ( self , enable = True ) :
 
         if   isinstance ( enable , bool ) : 
-            self.__enable   =        enable
-            self.__nthreads =        0
+            self.__enable   = True if enable else False 
+            self.__nthreads = 0
         elif isinstance ( enable , int  ) and 0 <= enable : 
-            self.__enable   = bool ( enable ) 
-            self.__nthreads =        enable 
+            self.__enable   = True if enable else False 
+            self.__nthreads = enable 
         else :
-            raise  TypeError ( "ImplicitMT: invalid ``enable'' flag :%s/%s" % ( enable , type ( enable ) ) )
+            raise  TypeError ( "ImplicitMT: invalid `enable' flag :%s/%s" % ( enable , typename ( enable ) ) )
 
     @property
     def enable   ( self ) : return self.__enable
@@ -278,9 +279,9 @@ class ImplicitMT(object) :
     ## Context manager: ENTER 
     def __enter__ ( self ) :
             
-        self.__initial = ROOT.ROOT. IsImplicitMTEnabled ()
+        self.__initial = True if ROOT.ROOT. IsImplicitMTEnabled () else False 
         
-        if bool ( self.__initial ) == bool ( self.enable ) : pass 
+        if   self.__initial  == self.enable : pass 
         elif self.enable : ROOT.ROOT.EnableImplicitMT  ( self.__nthreads )
         else             : ROOT.ROOT.DisableImplicitMT ()
 
@@ -289,7 +290,7 @@ class ImplicitMT(object) :
     ## Context manager: EXIT
     def __exit__ ( self , *_ ) :
 
-        _current = ROOT.ROOT.IsImplicitMTEnabled()
+        _current = True if ROOT.ROOT.IsImplicitMTEnabled() else False 
 
         if   _current == self.__initial : pass
         elif _current                   : ROOT.ROOT.DisableImplicitMT ()
@@ -375,8 +376,10 @@ def hadd ( files , output = None , dir = None , opts = "-ff -O" ) :
     # -f6                                  Use compression level 6. (See TFile::SetCompressionSettings for the support range of value.)                            
     """
 
-    if isinstance ( files , string_types ) : files = [ files ]
 
+    from ostap.core.ostap_types import path_types 
+    if isinstance ( files , pathlike_types ) : files = [ str ( files ) ]
+    
     import glob
     all_files = []
     for p in files :
@@ -410,8 +413,10 @@ def hadd ( files , output = None , dir = None , opts = "-ff -O" ) :
 # =============================================================================
 def hadd2 ( args ) :
 
-    if   isinstance ( args , string_types     ) : return hadd ( args )
-    elif isinstance ( args , listlike_types   ) \
+    from ostap.core.ostap_types import path_types, string_types , listlike_types, dictline_types  
+
+    if   isinstance ( args , path_types      ) : return hadd ( args )
+    elif isinstance ( args , listlike_types  ) \
          and all ( ( isinstance ( i , string_types ) and i ) for i in args ) :
         return hadd ( args )    
     elif isinstance ( args , dictlike_types   ) :

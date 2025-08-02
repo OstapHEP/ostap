@@ -89,7 +89,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info      import python_info, root_info
 from   ostap.core.ostap_types    import integer_types, string_types, sequence_types   
-from   ostap.core.core           import WSE 
+from   ostap.core.core           import VE, WSE 
 from   ostap.core.pyrouts        import hID, h1_axis, Ostap 
 from   ostap.utils.cleanup       import CleanUp
 from   ostap.tools.tmva          import Trainer as TMVATrainer
@@ -101,6 +101,7 @@ from   ostap.utils.basic         import items_loop, typename
 from   ostap.stats.statvars      import data_statistic
 from   ostap.utils.progress_conf import progress_conf 
 from   ostap.utils.progress_bar  import progress_bar
+from   ostap.utils.root_utils    import ImplicitMT 
 from   ostap.utils.timing        import timing 
 import ostap.trees.trees 
 import ostap.trees.cuts
@@ -217,6 +218,9 @@ class Trainer(object) :
                    prescale_signal      = 1       , ## prescale factor for signal 
                    prescale_background  = 1       , ## prescale factor for background 
                    ##
+                   signal_add_vars      = {}      , ## add signal     vars, presumably fake/misisng  vars 
+                   background_add_vars  = {}      , ## add backgriund vars, presumably fake/misisng  vars 
+                   ##                    
                    name              = 'TMVAChopper'         ,   # the name 
                    verbose           = False                 ,   # verbose ? 
                    chop_signal       = False                 ,   # chop the signal     ?
@@ -224,7 +228,7 @@ class Trainer(object) :
                    logging           = True                  ,   # create log-files    ?
                    make_plots        = False                 ,   # make standard plots ?
                    workdir           = ''                    ,   # working directory   
-                   multithread       = False                 ,   # use multithreading  ?
+                   multithread       = True                  ,   # use multithreading  ?
                    parallel          = True                  ,   # parallel training   ? 
                    parallel_conf     = {}                    ,   # parallel configuration ?
                    logger            = None                  ) : # logger to be used 
@@ -369,7 +373,10 @@ class Trainer(object) :
         
         self.__background_vars      = {}
         if background_vars : self.__background_vars.update ( background_vars ) 
-        
+
+        self.__signal_add_vars      = signal_add_vars
+        self.__background_add_vars  = background_add_vars
+                
         self.__variables         = tuple ( variables  )
         
         self.__spectators        = tuple ( spectators )
@@ -383,7 +390,7 @@ class Trainer(object) :
         self.__dirname           = dirname 
         self.__trainer_dirs      = [] 
 
-        self.__multithread       = multithread 
+        self.__multithread   = True if isinstance ( multithread , bool ) or ( isinstance ( multithread , int ) and 0 <= multithread ) else False 
 
         if not workdir : workdir = os.getcwd()
 
@@ -412,8 +419,8 @@ class Trainer(object) :
             
         if self.prefilter         : all_vars.append ( self.prefilter )
         
-        if self.signal_weight     : all_vars.append ( self.signal_weight     )
-        if self.background_weight : all_vars.append ( self.background_weight )
+        ## if self.signal_weight     : all_vars.append ( self.signal_weight     )
+        ## if self.background_weight : all_vars.append ( self.background_weight )
         
         ## if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
         ## if self.background_cuts   : all_vars.append ( self.background_cuts   )
@@ -421,18 +428,36 @@ class Trainer(object) :
         ## do not forget to process the chopping category index!
         all_vars.append ( self.category ) 
 
+
+        if self.signal_weight :
+            assert self.signal    .good_variables ( self.signal_weight )  or self.signal_add_vars        , \
+                "Do no know how to treat `signal_weight`: %s" %  self.signal_weight
+            assert self.background.good_variables ( self.signal_weight )  or self.background_add_vars    , \
+                "Do no know how to treat `signal_weight`: %s" %  self.signal_weight
+            
+        if self.background_weight :
+            assert self.signal    .good_variables ( self.background_weight ) or self.signal_add_vars     , \
+                "Do no know how to treat `background_weight`: %s" %  self.background_weight
+            assert self.background.good_variables ( self.background_weight ) or self.background_add_vars , \
+                "Do no know how to treat `background_weight`: %s" %  self.background_weight
+            
+        
         ## prefilter signal if required 
         if self.prefilter_signal     or \
            self.prefilter            or \
            self.signal_cuts          or \
-           self.__more_signals       or \
-           1 != self.prescale_signal or self.signal_vars :
-
-            if self.signal_weight : all_vars.append ( self.signal_weight )
-
+           self.signal_vars          or \
+           self.signal_add_vars      or \
+           self.__more_signals       or 1 != self.prescale_signal :
+            
+            the_vars = list ( all_vars ) 
+            for weight in ( self.signal_weight , self.background_weight ) :
+                if not weight             : continue
+                if   self.signal_add_vars : continue ## assume it defines the missnig/nesessary variabes 
+                elif self.signal.good_variables ( weight ) : the_vars.append ( weight  )
+                
             import ostap.trees.trees
             
-            the_vars = list ( all_vars )
             for k, v in items_loop ( self.signal_vars ) : the_vars.append ( v ) 
             avars = self.signal.the_variables ( the_vars )
             
@@ -447,17 +472,19 @@ class Trainer(object) :
             import ostap.frames.frames 
             import ostap.frames.tree_reduce       as TR
                         
-            silent = not self.verbose or not self.category in ( 0, -1 )
-            inputs = ( self.signal, )  + self.__more_signals
             ## reduced signals
-            ROOT.ROOT.EnableImplicitMT() 
-            with timing ( 'Pre-filter Signal     before processing' , logger = self.logger ) :                 
+            with timing ( 'Pre-filter Signal     before processing' , logger = self.logger ) , ImplicitMT ( True ) :                 
+                inputs   = ( self.signal, )  + self.__more_signals
+                silent   = not self.verbose or not self.category in ( 0, -1 )
+                new_vars = { }
+                new_vars.update ( self.signal_vars     )
+                new_vars.update ( self.signal_add_vars )
                 self.__RS = tuple ( TR.reduce ( i                    ,
                                                 selection = scuts    ,
                                                 save_vars = avars    ,
                                                 name      = 'SIGNAL' ,
                                                 output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-chopping-SIGNAL-' ) , 
-                                                new_vars  = self.signal_vars     , 
+                                                new_vars  = new_vars , 
                                                 prescale  = self.prescale_signal ,  
                                                 silent    = False    ) for i in inputs )
             ## merge signals 
@@ -465,30 +492,39 @@ class Trainer(object) :
             for rs in self.__RS : files += rs.files
             self.__SigTR  = Chain ( name = 'SIGNAL' , files = files )                 
             
-            self.__signal       = self.__SigTR
-            self.__signal_cuts  = ROOT.TCut() 
-            self.__more_signals = () 
-            
+            self.__signal          = self.__SigTR
+            self.__signal_cuts     = ROOT.TCut() 
+            self.__more_signals    = () 
+            self.__signal_add_vars = {} 
+     
         missvars = [ v for v in self.signal_vars if not v in self.signal ]
         assert not missvars , "Variables %s are not in signal sample!" % missvars                          
         
+        assert not self.signal_weight     or self.signal.good_variables ( self.signal_weight     ) , \
+            "The weight %s is not accessible in signal sample" % self.signal_weight 
+        assert not self.background_weight or self.signal.good_variables ( self.background_weight ) , \
+            "The weight %s is not accessible in signal sample" % self.backgound_weight 
+  
         # =================================================================
         ## prefilter background if required 
         if self.prefilter_background     or \
            self.prefilter                or \
            self.background_cuts          or \
-           self.__more_backgrounds       or \
-           1 != self.prescale_background or self.background_vars :
+           self.backgruund_vars          or \
+           self.background_add_vars      or \
+           self.__more_backgrounds       or 1 != self.prescale_background  :
             
-            if self.background_weight : all_vars.append ( self.background_weight )
+            the_vars = list ( all_vars ) 
+            for weight in ( self.signal_weight , self.background_weight ) :
+                if not weight : continue 
+                if   self.background_add_vars  : continue ## assume it defines missing/nesessary variables 
+                elif self.background.good_variables ( weight ) : the_vars.append ( weight  )
 
             import ostap.trees.trees
 
-            the_vars = list ( all_vars )
             for k, v in items_loop ( self.background_vars ) : the_vars.append ( v )             
             bvars = self.background.the_variables ( the_vars )
-            
-            
+                        
             keys  = set   ( self.signal_vars.keys () ) - set ( self.background_vars    .keys () )
             bvars = tuple ( sorted ( set ( bvars ).union ( keys ) ) ) 
 
@@ -500,18 +536,19 @@ class Trainer(object) :
             import ostap.frames.frames 
             import ostap.frames.tree_reduce       as TR
                     
-            silent = not self.verbose or not self.category in ( 0, -1 )
-
-            inputs = ( self.background , ) + self.__more_backgrounds 
             ## reduced backgrounds 
-            ROOT.ROOT.EnableImplicitMT() 
-            with timing ( 'Pre-filter Background before processing' , logger = self.logger ) : 
+            with timing ( 'Pre-filter Background before processing' , logger = self.logger ) , ImplicitMT ( True ) :
+                silent   = not self.verbose or not self.category in ( 0, -1 )
+                inputs   = ( self.background , ) + self.__more_backgrounds 
+                new_vars = {}
+                new_vars.update ( self.background_vars     ) 
+                new_vars.update ( self.background_add_vars )                
                 self.__RB = tuple ( TR.reduce ( i                  ,
                                                 selection = bcuts  ,
                                                 save_vars = bvars  ,
                                                 name      = 'BACKGROUND'             ,
                                                 output    = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-chopping-BACKGROUND-' ) ,
-                                                new_vars  = self.background_vars     , 
+                                                new_vars  = new_vars                 , 
                                                 prescale  = self.prescale_background ,  
                                                 silent    = False  ) for i in inputs )
             ## "merge" backgrounds 
@@ -519,17 +556,24 @@ class Trainer(object) :
             for rb in self.__RB : files += rb.files
             self.__BkgTR  = Chain ( name = 'BACKGROUND' , files = files ) 
             
-            self.__background       = self.__BkgTR
-            self.__background_cuts  = ROOT.TCut() 
-            self.__more_backgrounds = () 
+            self.__background          = self.__BkgTR
+            self.__background_cuts     = ROOT.TCut() 
+            self.__more_backgrounds    = () 
+            self.__background_add_vars = {}
 
         missvars = [ v for v in self.background_vars if not v in self.background ]
         assert not missvars , "Variables %s are not in background sample!" % missvars                         
-
+                              
+        assert not self.signal_weight     or self.background.good_variables ( self.signal_weight     ) , \
+            "The weight %s is not accessible in background sample!" % self.signal_weight 
+        assert not self.background_weight or self.background.good_variables ( self.background_weight ) , \
+            "The weight %s is not accessible in background sample!" % self.background_weight 
+          
         # =====================================================================
         ## check for signal weigths
         # =====================================================================
         if self.signal_weight :
+            from ostap.stats.statvars import data_statistic
             sw = data_statistic ( self.signal , 
                                   self.signal_weight ,
                                   cuts      = self.signal_cuts ,
@@ -544,15 +588,16 @@ class Trainer(object) :
                         self.logger.error ( "Method `%s' does not support negative (signal) weights" % m[1] )
             
         # =====================================================================
-        ## check for background weigths
+        ## check for background weights
         # =================================================================
         if self.background_weight :
+            from ostap.stats.statvars import data_statistic
             bw = data_statistic ( self.background , 
-                                 self.background_weight , 
-                                 cuts      = self.background_cuts , 
-                                 progress  = False , 
-                                 use_frame = True  , 
-                                 parallel  = True  )
+                                  self.background_weight , 
+                                  cuts      = self.background_cuts , 
+                                  progress  = False , 
+                                  use_frame = True  , 
+                                  parallel  = True  )
             mn , mx = bw.minmax() 
             if mn < 0 : 
                 ## there are negative weights :
@@ -584,7 +629,6 @@ class Trainer(object) :
             st = hb2.stat()
             if 0 >=  st.min()  : self.logger.warning ("Some background categories are empty!")                 
             self.logger.info('Background category population mean/rms: %.1f/%-.1f min/max: %.1f/%-.1f' % ( st.mean() , st.rms() , st.min() , st.max() ) )
-
         
         ##  trick to please Kisa 
         from ostap.trees.trees import Chain
@@ -708,7 +752,70 @@ class Trainer(object) :
             import ostap.logger.table as T
             title = "Chopping Trainer %s created" % self.name 
             table = T.table (  rows , title = title , prefix = "# " , alignment = "lw" )
-            self.logger.info ( "%s\n%s" % ( title , table ) ) 
+            self.logger.info ( "%s\n%s" % ( title , table ) )
+
+        ## one more table (a short one with input samples summary:
+        if self.verbose or self.signal_weight or self.background_weight :
+
+            ES, EB, SW, BW = None, None , None , None
+            cnf = {'use_frame' : True, 'parallel' : True , 'progress' :  False }
+
+            from ostap.stats.statvars import data_statistic
+            sc = ROOT.TCut      ( self.    signal_cuts )
+            bc = ROOT.TCut      ( self.background_cuts )
+            ss = data_statistic ( self.signal     , '1' , cuts = sc , **cnf )
+            sb = data_statistic ( self.background , '1' , cuts = bc , **cnf )
+            NS = ss.nEntries()
+            NB = sb.nEntries()
+            
+            if self.    signal_weight :
+                scw  = sc * self.    signal_weight
+                sw   = data_statistic ( self.signal , '1' , cuts = scw , **cnf )
+                sw   = WSE ( sw ) 
+                ES   = sw.nEff () 
+                SW   = VE  ( sw.sumw () , sw.sumw2() )
+                
+            if self.background_weight :
+                bcw  = bc * self.background_weight                    
+                bw   = data_statistic ( self.background  , '1' , cuts = bcw , **cnf )
+                bw   = WSE ( bw ) 
+                EB   = bw.nEff () 
+                BW   = VE  ( bw.sumw () , bw.sumw2() ) 
+                
+            from ostap.logger.symbols import times, sum_symbol        
+            rows = [ ( 'Sample' , '#Events' , '%sw' % sum_symbol , '' , '#Eff' , '' ) ]
+            
+            if isinstance ( SW , VE ) or ES :
+                SW = VE ( SW )
+                ES = VE ( ES ) 
+                s1 , e1  = SW.pretty_print ( precision = 4 , width = 6 , parentheses = False )
+                s2 , e2  = ES.pretty_print ( precision = 4 , width = 6 , parentheses = False )
+                row = 'Signal' , '%d' % NS , \
+                    s1 , '%s10^{%+d}' % ( times , e1 ) if e1 else '' , \
+                    s2 , '%s10^{%+d}' % ( times , e2 ) if e2 else '' 
+            else :
+                row = 'Signal' , '%d' % NS
+                
+            rows.append ( row )
+            
+            if isinstance ( BW , VE ) or EB :
+                BW = VE ( BW )
+                EB = VE ( EB )
+                s1 , e1  = BW.pretty_print ( precision = 4 , width = 6 , parentheses = False )
+                s2 , e2  = WB.pretty_print ( precision = 4 , width = 6 , parentheses = False )
+                row = 'Background' , \
+                    s1 , '%s10^{%+d}' % ( times , e1 ) if e1 else '' , \
+                    s2 , '%s10^{%+d}' % ( times , e2 ) if e2 else '' 
+            else :
+                row = 'Background' , '%d' % NB
+                
+            rows.append ( row )
+
+            import ostap.logger.table as T
+            rows  = T.remove_empty_columns ( rows ) 
+            title = "Input samples"
+            table = T.table ( rows , prefix = '# ' , title = title , alignment = "lccc" )
+            self.logger.info ( '%s:\n%s' % ( title , table ) ) 
 
     ## create all trainers 
     def __create_trainers ( self ) :
@@ -760,6 +867,9 @@ class Trainer(object) :
                            ##
                            signal_train_fraction     = self.signal_train_fraction     ,  
                            background_train_fraction = self.background_train_fraction ,
+                           ##
+                           signal_add_vars     = self.signal_add_vars     ,
+                           background_add_vars = self.background_add_vars ,                           
                            ##
                            output_file       = ''                      , 
                            ##                           
@@ -899,6 +1009,16 @@ class Trainer(object) :
         result = {}
         if self.__background_vars : result.update ( self.__background_vars ) 
         return result 
+
+    @property
+    def signal_add_vars ( self ) :
+        """'signal_add_vars' :  variables to be added into signal sampoe"""
+        return self.__signal_add_vars
+    
+    @property
+    def background_add_vars ( self ) :
+        """'background_add_vars' :  variables to be added into background sample"""
+        return self.__background_add_vars
 
     @property
     def prefilter ( self ) :
