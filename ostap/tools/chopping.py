@@ -88,7 +88,9 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.meta_info      import python_info, root_info
-from   ostap.core.ostap_types    import integer_types, string_types, sequence_types   
+from   ostap.core.ostap_types    import ( integer_types  , string_types   ,
+                                          num_types      , 
+                                          sequence_types , dictlike_types )  
 from   ostap.core.core           import VE, WSE 
 from   ostap.core.pyrouts        import hID, h1_axis, Ostap 
 from   ostap.utils.cleanup       import CleanUp
@@ -374,8 +376,40 @@ class Trainer(object) :
         self.__background_vars      = {}
         if background_vars : self.__background_vars.update ( background_vars ) 
 
-        self.__signal_add_vars      = signal_add_vars
-        self.__background_add_vars  = background_add_vars
+        ## addtional signal variables 
+        self.__signal_add_vars      = {}
+        if signal_add_vars :
+            addvars = signal_add_vars 
+            assert isinstance ( addvars , dictlike_types ) , \
+                "Invalid `signal_add_vars` %s` " % typename ( addvars) 
+            assert all ( isinstance ( k , string_types ) for k in addvars.keys() ) , \
+                "Invalid keys  in `signal_add_vars`"
+            assert all ( isinstance ( v , string_types + num_types ) for v in addvars.values() ) , \
+                "Invalid value in `signal_add_vars`"
+            
+            for k , v in addvars.items () :
+                if    isinstance ( v , string_types  ) : vv =          v 
+                elif  isinstance ( v , integer_types ) : vv = '%d'   % v 
+                elif  isinstance ( v , num_types     ) : vv = '%.9g' % v
+                self.__signal_add_vars [ k ] = vv 
+                
+        ## addtional background variables 
+        self.__background_add_vars  = {}
+        if background_add_vars :
+            addvars = background_add_vars 
+            assert isinstance ( addvars , dictlike_types ) , \
+                "Invalid `background_add_vars` %s` " % typename ( addvars) 
+            assert all ( isinstance ( k , string_types ) for k in addvars.keys() ) , \
+                "Invalid keys  in `background_add_vars`"
+            assert all ( isinstance ( v , string_types + num_types ) for v in addvars.values() ) , \
+                "Invalid value in `background_add_vars`"
+            
+            for k , v in addvars.items () :
+                if    isinstance ( v , string_types  ) : vv =          v 
+                elif  isinstance ( v , integer_types ) : vv = '%d'   % v 
+                elif  isinstance ( v , num_types     ) : vv = '%.9g' % v
+                self.__background_add_vars [ k ] = vv 
+
                 
         self.__variables         = tuple ( variables  )
         
