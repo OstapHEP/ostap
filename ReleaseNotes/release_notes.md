@@ -4,7 +4,11 @@
    1. For TMVA & Chppoing add new arguemnts `signal_add_vars` and `backrgound_add_vars` to add more variables to transformed data sets
        to release the intrincis requirmeent fot the same structure for singal ad backgrnu samples.
        In this way one can `on-fly` add more  missing variables to please TMVA, see example `test_tools_chopping2.py`
+   1. Modernize `AFUN1.load_params` : issue  warnigs for the parameter setting outside the allowed range.
+    
 
+
+    
 ## Backward-incompatible
 
 ## Bug fixes 

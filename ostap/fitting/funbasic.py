@@ -29,6 +29,7 @@ __all__     = (
 from   ostap.core.meta_info          import root_info 
 from   ostap.core.ostap_types        import ( integer_types  , num_types    ,
                                               dictlike_types , list_types   ,
+                                              sequence_types , 
                                               is_good_number , string_types )
 from   ostap.core.core               import ( Ostap         , hID ,
                                               valid_pointer ,
@@ -45,7 +46,8 @@ from   ostap.fitting.fithelpers      import ( FitHelper      ,
 from   ostap.utils.cidict            import cidict
 from   ostap.utils.basic             import typename 
 from   ostap.plotting.fit_draw       import key_transform, draw_options
-from   ostap.logger.pretty           import pretty_float 
+from   ostap.logger.pretty           import pretty_float, fmt_pretty_values
+from   ostap.logger.symbols          import times 
 # 
 import ostap.fitting.roocollections
 import ROOT, math, sys, abc  
@@ -387,12 +389,12 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         """
 
         if dataset :
-            assert isinstance ( dataset , ROOT.RooAbsData ) , "load_params: invalid type of 'dataset:%s'" % type ( dataset ) 
+            assert isinstance ( dataset , ROOT.RooAbsData ) , "load_params: invalid type of 'dataset:%s'" % typename ( dataset ) 
         else :
             dataset = ROOT.nullptr
             
         if params :
-            assert not isinstance ( params  , ROOT.RooAbsData ) , "load_params: invalid type of 'params':%s" % type ( params ) 
+            assert not isinstance ( params  , ROOT.RooAbsData ) , "load_params: invalid type of 'params':%s" % typename ( params ) 
             
         if isinstance ( params , ROOT.RooFitResult ) :
             params = params.dct_params () 
@@ -403,64 +405,71 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             pars [ p.name ] = p
 
         not_used = set()
-        table    = [] 
-        if isinstance ( params , dictlike_types ) :
-            keys   = set () 
-            for key in params :
-                if not key in pars : continue
-                p  = pars   [ key ]
-                if not hasattr ( p  , 'setVal' ) : continue
-                v  = params [ key ]
-                pv = float  ( p )
-                vv = float  ( v )
-                if vv != pv : 
-                    p.setVal ( vv )
-                    item = p.name , "%-+15.7g" % pv , "%-+15.7g" % vv 
-                    table.append ( item ) 
-                keys.add ( key )
+        table    = []
 
-            not_used |= set ( params.keys() ) - keys 
 
-        ## list of objects 
+        the_params = {}
+        the_params.update ( kwargs ) 
+        if   isinstance ( params , dictlike_types ) : the_params.update ( params )
+        elif isinstance ( params , sequence_types ) and \
+             all ( isinstance ( p  , ROOT.RooAbsArg ) for p in params ) :
+            for p in params : the_params [ p.name ] = float ( p ) 
         else :
-            
-            keys = set()        
-            for i , v in enumerate ( params ) :  
-                if not isinstance ( v, ROOT.RooAbsReal ) : continue
-                key = v.name 
-                if not key in pars                       : continue
-                p = pars [ key ]
-                if not hasattr ( p  , 'setVal' )         : continue
-                ##
-                vv = float  ( v )
-                pv = float  ( p ) 
-                if vv != pv :
-                    p.setVal   ( vv )
-                    item = p.name , "%-+15.7g" % pv , "%-+15.7g" % vv 
-                    table.append ( item ) 
-                keys.add  ( i )
-
-            for i , pp in enumerate ( params ) :  
-                if i in keys : continue
-                not_used.add ( pp ) 
-
-        ## explicit parameters 
-        keys = set()        
-        for key in kwargs :
-            if not key in pars : continue 
-            p = pars   [ key ] 
-            v = kwargs [ key ]
-            if not hasattr ( p  , 'setVal' )         : continue
-            ##
+            raise TypeError ( 'Invalid `params` %s' % typename ( params ) )
+                   
+        keys   = set () 
+        for key, value  in the_params.items()  :
+            if not key in pars : continue
+            p  = pars   [ key ]
+            if not hasattr ( p  , 'setVal' ) : continue
+            v  = value   
+            pv = float  ( p )
             vv = float  ( v )
-            pv = float  ( p ) 
-            if vv != pv :
-                p.setVal   ( vv )
-                item = p.name , "%-+15.7g" % pv , "%-+15.7g" % vv 
-                table.append ( item ) 
-            keys.add  ( key )
+                
+            if isequal ( pv , vv ) : continue 
+            pminmax = p.minmax ()
+            if pminmax : 
+                pmin, pmax = pminmax
+                if   vv < pmin :
+                    fmtv , expo = fmt_pretty_values ( vv , pmin , precision = 6 , width = 8 )
+                    v1 = ( fmtv % ( vv   / ( 10 ** expo ) ) ) + ( '%s10^%+d' % ( times , expo ) if expo else '' )
+                    v2 = ( fmtv % ( pmin / ( 10 ** expo ) ) ) + ( '%s10^%+d' % ( times , expo ) if expo else '' )
+                    logger.warning ( 'Parameter %s: proposed value %s is smaller than a minimum %s! skip' % ( key , v1 , v2 ) )
+                    v0 , expo = pretty_float ( pv ) 
+                    item = p.name , v0 , ( '%s1-^%+d' % ( times , expo ) ) if expo else '' , ' --- '
+                    table.append ( item ) 
+                    continue 
+                elif pmax < vv :                            
+                    fmtv , expo = fmt_pretty_values ( vv , pmin , precision = 6 , width = 8 )
+                    v1 = ( fmtv % ( vv   / ( 10 ** expo ) ) ) + ( '%s10^%+d' % ( times , expo ) if expo else '' )
+                    v2 = ( fmtv % ( pmax / ( 10 ** expo ) ) ) + ( '%s10^%+d' % ( times , expo ) if expo else '' )
+                    logger.warning ( 'Parameter %s: proposed value %s is larger  than a maximum %s! skip' % ( key , v1 , v2 ) )
+                    v0 , expo = pretty_float ( pv ) 
+                    item = p.name , v0 , ( '%s10^%+d' % ( times , expo ) ) if expo else '' , ' --- '                            
+                    table.append ( item ) 
+                    continue
+                elif isequal ( vv , pmin ) :
+                    fmtv , expo = fmt_pretty_values ( vv , pmin , precision = 6 , width = 8 )
+                    v1 = ( fmtv % ( vv   / ( 10 ** expo ) ) ) + ( '%s10^%+d' % ( times , expo ) if expo else '' )
+                    v2 = ( fmtv % ( pmin / ( 10 ** expo ) ) ) + ( '%s10^%+d' % ( times , expo ) if expo else '' )                            
+                    logger.warning ( 'Parameter %s: proposed value %s is at the lower edge %s' % ( key , v1 , v2 ) )
+                elif isequal ( vv , pmin ) :
+                    fmtv , expo = fmt_pretty_values ( vv , pmin , precision = 6 , width = 8 )
+                    v1 = ( fmtv % ( vv   / ( 10 ** expo ) ) ) + ( '%s10^%+d' % ( times , expo ) if expo else '' )
+                    v2 = ( fmtv % ( pmax / ( 10 ** expo ) ) ) + ( '%s10^%+d' % ( times , expo ) if expo else '' )                            
+                    logger.warning ( 'Parameter %s: proposed value %s is at the upper edge %s' % ( key , v1 , v2 ) )
+                    
+            p.setVal ( vv )
+            v1 , e1 = pretty_float ( pv ) 
+            v2 , e2 = pretty_float ( vv )                             
+            item = p.name , \
+                v1 , '%s10^%+d' % ( times , e1 ) if e1 else '' , \
+                v2 , '%s10^%+d' % ( times , e2 ) if e2 else ''  
             
-        not_used |= set ( kwargs.keys() ) - keys 
+            table.append ( item ) 
+            keys.add ( key )
+            
+            not_used |= set ( params.keys() ) - keys 
 
         if not silent :
             
@@ -470,9 +479,10 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             if npars :            
                 if 1 == npars : title = '%s parameter loaded '  % npars
                 else          : title = '%s parameters loaded ' % npars
-                table = [ ('Parameter' ,'old value' , 'new value' ) ] + table
-                import ostap.logger.table
-                table = ostap.logger.table.table ( table , title , prefix = "# " )
+                table = [ ('Parameter' ,'old value' , '' , 'new value' , '' ) ] + table
+                import ostap.logger.table as T
+                table = T.remove_empty_columns ( table  ) 
+                table = T.table ( table , title = title , prefix = "# " , alignment = 'lcccc' )
                 if 1 == npars : self.info ( "%d parameter  loaded:\n%s" % ( npars , table ) )
                 else          : self.info ( "%d parameters loaded:\n%s" % ( npars , table ) )
             else :
@@ -483,7 +493,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             if not_used :
                 self.warning ("Following keys are unused %s" % not_used ) 
         
-        return 
+        return
     
     # =========================================================================
     ## get the certain predefined drawing option
