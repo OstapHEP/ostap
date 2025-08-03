@@ -410,7 +410,9 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
 
         the_params = {}
         the_params.update ( kwargs ) 
-        if   isinstance ( params , dictlike_types ) : the_params.update ( params )
+        if   isinstance ( params , dictlike_types        ) : the_params.update ( params )
+        elif isinstance ( params , ROOT.RooAbsCollection ) :
+            for p in params : the_params [ p.name  ] = float ( p ) 
         elif isinstance ( params , sequence_types ) and \
              all ( isinstance ( p  , ROOT.RooAbsArg ) for p in params ) :
             for p in params : the_params [ p.name ] = float ( p ) 
@@ -469,7 +471,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             table.append ( item ) 
             keys.add ( key )
             
-            not_used |= set ( params.keys() ) - keys 
+            not_used |= set ( the_params.keys() ) - keys 
 
         if not silent :
             
