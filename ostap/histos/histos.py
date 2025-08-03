@@ -4625,12 +4625,12 @@ def _h1_effic3_ ( h1 , cut_low ) :
     edges = list ( xa.edges() )
     
     if h1.uniform_bins () :
-        minbin =  ( xa.GetXmax() - xa.GetXmin() ) / xa.GetNbins()
+        minbin =  abs ( xa.GetXmax() - xa.GetXmin() ) / xa.GetNbins()
     else :        
         nn     = len ( edges )
-        minbin =  ( xa.GetXmax() - xa.GetXmin() )
-        for i in xa :
-            bw = xa.GetBinUpEdge() - xa.GetBinLowEdge()
+        minbin = ( xa.GetXmax() - xa.GetXmin() )
+        for ibin in xa :
+            bw = xa.GetBinUpEdge ( ibin ) - xa.GetBinLowEdge ( ibin )
             if abs ( bw ) < minbin : minbin = abs ( bw )
     
     xf = edges [  0 ] + 0.001 * minbin

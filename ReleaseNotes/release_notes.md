@@ -4,7 +4,13 @@
    1. For TMVA & Chppoing add new arguemnts `signal_add_vars` and `backrgound_add_vars` to add more variables to transformed data sets
        to release the intrincis requirmeent fot the same structure for singal ad backgrnu samples.
        In this way one can `on-fly` add more  missing variables to please TMVA, see example `test_tools_chopping2.py`
-          
+
+## Backward-incompatible
+
+## Bug fixes 
+
+   1. fix a bug in `histo.eff` for non-uniform bining  (tahnks to Evgenia Nekrasova(
+                  
 # v3.0.1.24
 
 ## New features
