@@ -46,7 +46,7 @@ message ( " ********************************************************************
 set(OSTAP_VERSION_MAJOR 3)
 set(OSTAP_VERSION_MINOR 0)
 set(OSTAP_VERSION_PATCH 1)
-set(OSTAP_VERSION_TWEAK 26)
+set(OSTAP_VERSION_TWEAK 27)
 
 set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_PATCH}.${OSTAP_VERSION_TWEAK})
 
@@ -61,14 +61,61 @@ cmake_host_system_information(RESULT OSTAP_DOMAIN   QUERY FQDN    )
 message ( "----> Host name                  : " ${OSTAP_HOSTNAME}  )
 message ( "----> Domain                     : " ${OSTAP_DOMAIN}    )
 
-cmake_host_system_information(RESULT OSTAP_OS_NAME    QUERY OS_NAME)
-cmake_host_system_information(RESULT OSTAP_OS_VERSION QUERY OS_VERSION)
-cmake_host_system_information(RESULT OSTAP_OS_RELEASE QUERY OS_RELEASE)
+cmake_host_system_information(RESULT OSTAP_PROCESSOR_NAME            QUERY PROCESSOR_NAME)
+cmake_host_system_information(RESULT OSTAP_PROCESSOR_DESCRIPTION     QUERY PROCESSOR_DESCRIPTION)
+cmake_host_system_information(RESULT OSTAP_TOTAL_PHYSICAL_MEMORY     QUERY TOTAL_PHYSICAL_MEMORY)
+cmake_host_system_information(RESULT OSTAP_AVAILABLE_PHYSICAL_MEMORY QUERY AVAILABLE_PHYSICAL_MEMORY)
+cmake_host_system_information(RESULT OSTAP_NUMBER_OF_LOGICAL_CORES   QUERY NUMBER_OF_LOGICAL_CORES )
+cmake_host_system_information(RESULT OSTAP_NUMBER_OF_PHYSICAL_CORES  QUERY NUMBER_OF_PHYSICAL_CORES )
+    
+message ( "----> Processor name             : " ${OSTAP_PROCESSOR_NAME}            )
+message ( "----> Processor description      : " ${OSTAP_PROCESSOR_DESCRIPTION}     )
+message ( "----> Logical  cores             : " ${OSTAP_NUMBER_OF_LOGICAL_CORES}   )
+message ( "----> Physical cores             : " ${OSTAP_NUMBER_OF_PHYSICAL_CORES}  )
+message ( "----> Total     memory [MiB]     : " ${OSTAP_TOTAL_PHYSICAL_MEMORY}     )
+message ( "----> Available memory [MiB]     : " ${OSTAP_AVAILABLE_PHYSICAL_MEMORY} )
+        
+cmake_host_system_information(RESULT OSTAP_IS_64BIT QUERY IS_64BIT)
+message ( "----> 64-bit     ?               : " ${OSTAP_IS_64BIT} )
 
-message ( "----> OS name                    : " ${OSTAP_OS_NAME}    )
-message ( "----> OS version                 : " ${OSTAP_OS_VERSION} )
-message ( "----> OS release                 : " ${OSTAP_OS_RELEASE} )
+cmake_host_system_information(RESULT OSTAP_HAS_FPU QUERY HAS_FPU)
+message ( "----> FPU        ?               : " ${OSTAP_HAS_FPU}  ) 
+    
+cmake_host_system_information(RESULT OSTAP_HAS_MMX QUERY HAS_MMX)
+message ( "----> MMX        ?               : " ${OSTAP_HAS_MMX} )
+
+cmake_host_system_information(RESULT OSTAP_HAS_MMX_PLUS QUERY HAS_MMX_PLUS)
+message ( "----> MMX+       ?               : " ${OSTAP_HAS_MMX_PLUS} ) 
+
+cmake_host_system_information(RESULT OSTAP_HAS_SSE QUERY HAS_SSE)
+message ( "----> SSE        ?               : " ${OSTAP_HAS_SSE} )
+
+cmake_host_system_information(RESULT OSTAP_HAS_SSE2 QUERY HAS_SSE2)
+message ( "----> SSE2       ?               : " ${OSTAP_HAS_SSE2} )
+
+cmake_host_system_information(RESULT OSTAP_HAS_SSE_FP QUERY HAS_SSE_FP)
+message ( "----> SSE_FP     ?               : " ${OSTAP_HAS_SSE_FP} ) 
+
+cmake_host_system_information(RESULT OSTAP_HAS_SSE_MMX QUERY HAS_SSE_MMX)
+message ( "----> SSE_MMX    ?               : " ${OSTAP_HAS_SSE_MMX} )
+
+cmake_host_system_information(RESULT OSTAP_AMD_3DNOW QUERY HAS_AMD_3DNOW)
+message ( "----> AMD 3DNOW  ?               : " ${OSTAP_AMD_3DNOW} ) 
+
+cmake_host_system_information(RESULT OSTAP_AMD_3DNOW_PLUS QUERY HAS_AMD_3DNOW_PLUS)
+message ( "----> AMD 3DNOW+ ?               : " ${OSTAP_AMD_3DNOW_PLUS} )
             
+cmake_host_system_information(RESULT OSTAP_OS_NAME     QUERY OS_NAME)
+cmake_host_system_information(RESULT OSTAP_OS_PLATFORM QUERY OS_PLATFORM)
+cmake_host_system_information(RESULT OSTAP_OS_VERSION  QUERY OS_VERSION)
+cmake_host_system_information(RESULT OSTAP_OS_RELEASE  QUERY OS_RELEASE)
+
+message ( "----> OS name                    : " ${OSTAP_OS_NAME}     )
+message ( "----> OS platform                : " ${OSTAP_OS_PLATFORM} )
+message ( "----> OS version                 : " ${OSTAP_OS_VERSION}  )
+message ( "----> OS release                 : " ${OSTAP_OS_RELEASE}  )
+
+    
 # Use compiler from PATH, not the system one
 # http://stackoverflow.com/a/29904501/504346
 find_program(CMAKE_C_COMPILER   NAMES $ENV{CC}  gcc PATHS ENV PATH NO_DEFAULT_PATH)
