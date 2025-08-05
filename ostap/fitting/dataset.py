@@ -1205,7 +1205,7 @@ _new_methods_ += [
    ROOT.RooAbsDataStore . __contains__
    ]
 # =============================================================================\
-## number of warninf prints 
+## number of warning prints 
 _printed = 10 
 # =============================================================================
 ## Helper project method for RooDataSet/DataFrame/... and similar objects 
@@ -1692,7 +1692,6 @@ def add_new_var ( dataset , varname , what , *args , progress = False ) :
 
     progress = progress_conf ( progress )
     adder    = Ostap.AddVars ( progress ) 
-    print ( 'ARGS HERE' , args ) 
     
     vv = adder.add_var ( dataset , varname , what , *args )
     if not  vv : logger.error('add_new_var: NULLPTR from Ostap.AddVars.add_var')
@@ -2101,7 +2100,7 @@ def _ds_table_0_ ( dataset                 ,
     vars = [ i.GetName() for i in varset if i.GetName() in vars ]
         
     _vars = []
-    
+
     stat = dataset.statVars ( vars , cuts , first , last , cut_range = cut_range )
     for v in  stat :
         vv  = getattr ( varset , v )
@@ -2118,7 +2117,7 @@ def _ds_table_0_ ( dataset                 ,
                  ('%+.5g' % mnmx[1]      ).strip() )   ## 5            
         _vars.append ( r )
     _vars.sort() 
-        
+
     tt = dataset.GetTitle()
     if not title :    
             
@@ -2727,37 +2726,26 @@ def ds_to_tree ( dataset , filename = '' , silent = True ) :
     
     return dataset.GetClonedTree()
         
-    
-    print ( 'T-TREE/1' )
+
     store = dataset.store()
     if store and isinstance ( store , ROOT.RooTreeDataStore ) :
-        print ( 'T-TREE/2.1' )
         tree = store.tree()
         if valid_pointer ( tree ) :
-            print ( 'found-TREE/1', type ( tree ) )                 
             return tree
-        print ( 'T-TREE/2.2' )
         
     if not filename :
         import ostap.utils.cleanup as CU 
         filename = CU.CleanUp.tempfile ( suffix = '.root' )
         if not silent : logger.info ( "Temporary ROOT file is created: %s" % filename ) 
         
-    print ( 'T-TREE/3', filename )
     with useStorage ( RAD.Tree ) :
         dataset.convertToTreeStore ()
         store = dataset.store()        
-        print ( 'T-TREE/4', filename )
         if store and isinstance ( store , ROOT.RooTreeDataStore ) :
-            print ( 'T-TREE/5', filename )
             tree = store.tree()
-            print ( 'T-TREE/6', filename )
             if valid_pointer ( tree ) :
-                print ( 'T-TREE/7', filename )
-                print ( 'found-TREE/1', type ( tree ) )                 
                 return tree
             
-    print ( 'T-TREE/8', filename )
     return dataset.GetClonedTree()
             
 # ============================================================================

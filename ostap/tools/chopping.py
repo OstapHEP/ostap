@@ -413,7 +413,7 @@ class Trainer(object) :
                 
         self.__variables         = tuple ( variables  )
         
-        self.__spectators        = tuple ( spectators )
+        self.__spectators        = tuple ( s for s in spectators )
         self.__bookingoptions    = bookingoptions
         self.__configuration     = configuration        
         
@@ -1647,11 +1647,12 @@ class Reader(object) :
     
     - It it natually merges with Ostap's `SelectorWithVars' utility     
     """
-    def __init__ ( self                           ,
+    def __init__ ( self                           , * , 
                    categoryfunc                   ,
                    N                              , 
                    variables                      ,
-                   weights_files                  , 
+                   weights_files                  ,
+                   spectators   = ()              , 
                    name         = 'ChopperReader' ,
                    options      = ''              ,
                    logger       = None            ,
@@ -1679,8 +1680,8 @@ class Reader(object) :
         self.__categoryfunc  = categoryfunc, 
         self.__N             = N
         
-        variables            = list  ( variables ) ; variables.sort ()        
-        self.__variables     = tuple(variables)
+        self.__variables     = tuple ( sorted ( variables  ) ) 
+        self.__spectators    = tuple ( sorted ( spectators ) ) 
         self.__methods       = []
 
         import copy
@@ -1696,6 +1697,7 @@ class Reader(object) :
             inam = '%s_%03d'   % ( self.name , i )            
             self.__readers.append ( TMVAReader ( name          = inam                  ,
                                                  variables     = self.variables        ,
+                                                 spectators    = self.spectators       , 
                                                  weights_files = self.weights_files[i] ,
                                                  options       = options               ,
                                                  verbose       = verbose and i == 0    ) )
@@ -1743,6 +1745,11 @@ class Reader(object) :
         """
         return self.__variables
     
+    @property
+    def spectators ( self ) :
+        """'spectators' : the list of spectators to be used"""
+        return self.__spectators
+
     @property
     def weights_files( self ) :
         """`weight_files' - TMVA weight files"""
@@ -1970,18 +1977,19 @@ class Reader(object) :
 
 # =============================================================================
 ## Specific action to ROOT.TTree
-def _add_response_tree_ ( tree     , *   , 
-                          chopper  , 
-                          category ,
-                          N        ,
-                          inputs   ,
-                          weights  ,
-                          options  ,
-                          prefix   = ""   ,
-                          suffix   = ""   ,
-                          aux      = 0.9  ,
-                          progress = True ,
-                          report   = True ) :
+def _add_response_tree_ ( tree , * , 
+                          chopper                  , 
+                          category                 ,
+                          N                        ,
+                          inputs                   ,
+                          weights                  ,
+                          options    = ""          ,
+                          prefix     = 'tmva_'     ,
+                          suffix     = '_response' ,
+                          spectators = ()   ,                          
+                          aux        = 0.9  ,
+                          progress   = True ,
+                          report     = True ) :
     """ Specific action to ROOT.TTree
     """
     
@@ -1994,17 +2002,18 @@ def _add_response_tree_ ( tree     , *   ,
     ## delegate to chain 
     if isinstance ( tree , ROOT.TChain ) and 2 <= tree.nFiles :
         return _add_response_chain_ ( tree     , 
-                                      chopper  = chopper  , 
-                                      category = category ,
-                                      N        = N        ,
-                                      inputs   = inputs   ,
-                                      weights  = weights  ,
-                                      options  = options  ,
-                                      prefix   = prefix   ,
-                                      suffix   = suffix   ,
-                                      aux      = 0.9      , 
-                                      report   = report   ,
-                                      progress = progress ) 
+                                      chopper    = chopper    , 
+                                      category   = category   ,
+                                      N          = N          ,
+                                      inputs     = inputs     ,
+                                      weights    = weights    ,
+                                      spectators = spectators , 
+                                      options    = options    ,
+                                      prefix     = prefix     ,
+                                      suffix     = suffix     ,
+                                      aux        = 0.9        , 
+                                      report     = report     ,
+                                      progress   = progress   ) 
     
     
     from   ostap.core.core           import Ostap, ROOTCWD
@@ -2038,6 +2047,10 @@ def _add_response_tree_ ( tree     , *   ,
     ## (5) display progress ? 
     progress = progress_conf ( progress )
     adder    = Ostap.AddTMVA ( progress ) 
+
+    from ostap.math.base import strings
+    if isinstance ( spectators , string_types ) : spectators = spectators,    
+    _spectators = strings ( *spectators ) 
     
     with ROOTCWD () , REOPEN ( the_file  ) as tfile : 
         
@@ -2049,16 +2062,17 @@ def _add_response_tree_ ( tree     , *   ,
             'Invalid TTree:%s in file:%s' % ( treepath , filename  )
         
         ## run it! 
-        sc = adder.addChoppingResponse ( the_tree ,
-                                         chopper  ,
-                                         category ,
-                                         N        ,
-                                         inputs   ,
-                                         weights  ,
-                                         options  , 
-                                         prefix   ,
-                                         suffix   ,
-                                         aux      ) 
+        sc = adder.addChoppingResponse ( the_tree    ,
+                                         chopper     ,
+                                         category    ,
+                                         N           ,
+                                         inputs      ,
+                                         weights     ,
+                                         _spectators , 
+                                         options     , 
+                                         prefix      ,
+                                         suffix      ,
+                                         aux         ) 
 
         assert sc.isSuccess () , 'Error from Ostap::AddTMVA::addChoppingResponse %s' % sc
         
@@ -2086,18 +2100,19 @@ def _add_response_tree_ ( tree     , *   ,
         
 # =============================================================================d
 ## Specific action to ROOT.TChain
-def _add_response_chain_ ( chain    , * ,
-                           chopper  , 
-                           category ,
-                           N        ,
-                           inputs   ,
-                           weights  ,
-                           options  ,
-                           prefix   = ""   ,
-                           suffix   = ""   ,
-                           aux      = 0.9  , 
-                           progress = True ,
-                           report   = True ) :
+def _add_response_chain_ ( chain      , * ,
+                           chopper    , 
+                           category   ,
+                           N          ,
+                           inputs     ,
+                           weights    ,
+                           options    ,
+                           prefix     = 'tmva_'      ,
+                           suffix     = '_response'  ,
+                           spectators = ()   ,                          
+                           aux        = 0.9  , 
+                           progress   = True ,
+                           report     = True ) :
     """ Specific action to ROOT.TChain
     """
     
@@ -2108,18 +2123,19 @@ def _add_response_chain_ ( chain    , * ,
         "Invalid TChain/TTree!"
 
     if not isinstance ( chain , ROOT.TChain ) or chain.nFiles <= 1 :
-        return _add_response_tree_ ( chain    ,
-                                     chopper  = chopper  , 
-                                     category = category ,
-                                     N        = N        ,
-                                     inputs   = inputs   ,
-                                     weights  = weights  ,
-                                     options  = options  ,
-                                     prefix   = prefix   ,
-                                     suffix   = suffix   ,
-                                     aux      = 0.9      , 
-                                     report   = report   ,
-                                     progress = progress ) 
+        return _add_response_tree_ ( chain      ,
+                                     chopper    = chopper    ,   
+                                     category   = category   ,
+                                     N          = N          ,
+                                     inputs     = inputs     ,
+                                     weights    = weights    ,
+                                     spectators = spectators , 
+                                     options    = options    ,
+                                     prefix     = prefix     ,
+                                     suffix     = suffix     ,
+                                     aux        = 0.9        , 
+                                     report     = report     ,
+                                     progress   = progress   ) 
         
     files    = chain.files   
     treepath = chain.fullpath
@@ -2135,17 +2151,18 @@ def _add_response_chain_ ( chain    , * ,
         ch.Add ( f )
         ## treat the single tree 
         _add_response_tree_ ( ch  ,
-                              chopper  = chopper       ,     
-                              category = category      ,
-                              N        = N             ,
-                              inputs   = inputs        ,
-                              weights  = weights       ,
-                              options  = options       ,
-                              prefix   = prefix        ,
-                              suffix   = suffix        ,
-                              aux      = 0.9           , 
-                              report   = False         ,
-                              progress = tree_progress ) 
+                              chopper    = chopper       ,     
+                              category   = category      ,
+                              N          = N             ,
+                              inputs     = inputs        ,
+                              weights    = weights       ,
+                              spectators = spectators    , 
+                              options    = options       ,
+                              prefix     = prefix        ,
+                              suffix     = suffix        ,
+                              aux        = aux           , 
+                              report     = False         ,
+                              progress   = tree_progress ) 
         
         
     chain = ROOT.TChain ( treepath )
@@ -2185,10 +2202,12 @@ def _add_response_chain_ ( chain    , * ,
 #  @param verbose       verbose operation?
 #  @param aux           obligatory for the cuts method, where it represents the efficiency cutoff 
 def addChoppingResponse ( dataset                     , ## input dataset to be updated
+                          * , 
                           chopper                     , ## chopping category/formula 
                           N                           , ## number of categrories
                           inputs                      , ## input variables 
                           weights_files               , ## files with TMVA weigths (tar/gz or xml)
+                          spectators    =  ()         , 
                           category_name = 'chopping'  , ## category name 
                           prefix        = 'tmva_'     , ## prefix for TMVA-variable         
                           suffix        = '_response' , ## suffix for TMVA-variable 
@@ -2243,18 +2262,19 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     options = opts_replace ( options , 'Color:'  , verbose and isatty() )
 
     if   isinstance ( dataset , ROOT.TTree ) :        
-        return _add_response_chain_ ( dataset ,
-                                      chopper  = chopper       ,
-                                      category = category_name ,
-                                      N        = N             ,
-                                      inputs   = _inputs       ,
-                                      weights  = _maps         ,
-                                      options  = options       ,
-                                      prefix   = prefix        ,
-                                      suffix   = suffix        ,
-                                      aux      = aux           ,
-                                      report   = report        ,
-                                      progress = progress      )
+        return _add_response_chain_ ( dataset    ,
+                                      chopper    = chopper       ,
+                                      category   = category_name ,
+                                      N          = N             ,
+                                      inputs     = _inputs       ,
+                                      weights    = _maps         ,
+                                      spectators = spectators    , 
+                                      options    = options       ,
+                                      prefix     = prefix        ,
+                                      suffix     = suffix        ,
+                                      aux        = aux           ,
+                                      report     = report        ,
+                                      progress   = progress      )
     
     ## here we deal with RooAbsData
     
@@ -2268,8 +2288,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
         'Invalid chopping type %s' % typename ( chopper ) 
 
 
-    category = ROOT.RooCategory ( category_name ,
-                                  'Chopping category: (%s)%%%d' %  ( chopper.GetTitle() , N ) )
+    category = ROOT.RooCategory ( category_name , 'Chopping category: (%s)%%%d' %  ( chopper.GetTitle() , N ) )
 
     
     if   N <    10 : fmt = category_name + '_%d'    
@@ -2282,18 +2301,23 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
 
     
     progress = progress_conf ( progress )
-    adder    = Ostap.AddTMVA ( progress ) 
-
-    sc = adder.addChoppingResponse ( dataset  ,
-                                     chopper  ,
-                                     category ,
-                                     N        ,
-                                     _inputs  ,
-                                     _maps    ,
-                                     options  ,
-                                     prefix   ,
-                                     suffix   ,
-                                     aux      )  
+    adder    = Ostap.AddTMVA ( progress )
+    
+    from ostap.math.base import strings
+    if isinstance ( spectators , string_types ) : spectators = spectators,    
+    _spectators = strings ( *spectators ) 
+    
+    sc = adder.addChoppingResponse ( dataset     ,
+                                     chopper     ,
+                                     category    ,
+                                     N           ,
+                                     _inputs     ,
+                                     _maps       ,
+                                     _spectators , 
+                                     options     ,
+                                     prefix      ,
+                                     suffix      ,
+                                     aux         )  
     assert sc.isSuccess () , 'Error from Ostap::AddTMVA::addChoppingResponse %s' % sc 
 
     return dataset 

@@ -257,7 +257,7 @@ class Variable(object) :
     
     >>> v = Variable ( 'my_name1' , 'my_description1' , -100 , 100 ) ]
     
-    - Get a variable 'my_name' from the tree/chain using the explicit accessor function, making some on-fly transforomation:
+    - Get a variable 'my_name' from the tree/chain using the explicit accessor function, making some on-fly transformation:
     
     >>> v = Variable ( 'my_name2' , 'my_description2' , -100 , 100 , lambda s : s.my_name2/1000 ) ]
     

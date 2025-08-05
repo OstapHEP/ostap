@@ -71,13 +71,15 @@ namespace
   public: 
     // ========================================================================
     READER
-    ( RooDataSet&                data         ,
-      const Ostap::AddTMVA::MAP& inputs       , 
-      const Ostap::AddTMVA::MAP& weight_files )
+    ( RooDataSet&                  data         ,
+      const Ostap::AddTMVA::MAP&   inputs       , 
+      const Ostap::AddTMVA::MAP&   weight_files , 
+      const Ostap::AddTMVA::NAMES& spectators   )
       : m_data         ( &data        ) 
       , m_inputs       ( inputs       )
       , m_weight_files ( weight_files )
-    {}
+      , m_specs        ( spectators   )
+      {}
     // prepare it  for usage 
     Ostap::StatusCode build ( const std::string& options = "" ) 
     {
@@ -88,7 +90,7 @@ namespace
       RooArgList       varlst { *varset } ;      
       //
       m_vars.reserve ( m_inputs.size() ) ;
-      // 1)  create variables 
+      // 1)  create input variables 
       for ( const auto& i : m_inputs ) 
         {
           const std::string& name   = i.first  ;
@@ -110,18 +112,42 @@ namespace
                           "Ostap::AddTMVA::READER"               ,
                           INVALID_VARIABLE , __FILE__ , __LINE__ ) ;
           // ========================================================================
-          //
-          m_variables.push_back ( std::make_tuple ( name , var , 0.0f ) ) ;  
+          m_variables.push_back ( std::make_tuple ( name , var , 0.0f ) ) ;
+          // ========================================================================
         }
       //
-      // 2) create the actual reader 
+      // (2) spectators (is any)
+      for ( const auto& s : m_specs  )
+        {
+          const std::string formula { s } ;
+          RooAbsReal* var = nullptr ;
+          /// 
+          auto _v = std::make_unique<Ostap::FormulaVar>( formula , varlst , false ) ;
+          // ========================================================================
+          Ostap::Assert ( _v && _v -> ok ()                       , 
+                          "Invalid spectator formula:" + formula  ,
+                          "Ostap::AddTMVA::READER"                ,
+                          INVALID_FORMULA , __FILE__ , __LINE__   ) ;
+          // ========================================================================
+          var    = _v.get() ;
+          m_vars.push_back ( std::move ( _v ) ) ;
+          // ========================================================================
+          Ostap::Assert ( var                                      , 
+                          "Invalid spectator  variable:" + formula ,
+                          "Ostap::AddTMVA::READER"                 ,
+                          INVALID_VARIABLE , __FILE__ , __LINE__   ) ;
+          // ========================================================================
+          m_spectators.push_back ( std::make_tuple ( formula , var , 0.0f ) ) ;  
+          // ========================================================================
+        }
+      // (3) create the actual reader 
       m_reader = std::make_unique<TMVAReader>( options ) ;
       //
-      // 3) connect the reader with names&placeholders
-      for ( auto& v : m_variables ) 
-        {  m_reader->AddVariable ( std::get<0> ( v ) , &std::get<2>( v ) ) ; }
+      // (4) connect the reader with names&placeholders
+      for ( auto& v : m_variables  ) {  m_reader->AddVariable  ( std::get<0> ( v ) , &std::get<2>( v ) ) ; }
+      for ( auto& v : m_spectators ) {  m_reader->AddSpectator ( std::get<0> ( v ) , &std::get<2>( v ) ) ; }
       //
-      // 4) book   TMVA methods 
+      // (5) book   TMVA methods 
       for ( const auto& p : m_weight_files ) 
         { 
           auto m = m_reader->BookMVA   ( p.first , p.second ) ;
@@ -145,11 +171,13 @@ namespace
     const Ostap::AddTMVA::MAP&     inputs       () const { return m_inputs       ; }
     const Ostap::AddTMVA::MAP&     weight_files () const { return m_weight_files ; }
     VARIABLES&                     variables    ()       { return m_variables    ; }
+    VARIABLES&                     spectators   ()       { return m_spectators   ; }
     // ========================================================================
   private:
     // ========================================================================     
     Ostap::AddTMVA::MAP      m_inputs                   ;
     Ostap::AddTMVA::MAP      m_weight_files             ;
+    std::vector<std::string> m_specs        {}          ;
     std::vector<std::string> m_methods      {}          ;
     const RooAbsData*        m_data         { nullptr } ;
     // ========================================================================    
@@ -160,6 +188,7 @@ namespace
   private:  
     // ========================================================================    
     VARIABLES                   m_variables  {}           ;
+    VARIABLES                   m_spectators {}           ;
     std::unique_ptr<TMVAReader> m_reader     { nullptr }  ;
     // ========================================================================
   } ;  
@@ -200,7 +229,8 @@ namespace
       {
         if ( 0 == data.get( entry ) ) { return INVALID_ENTRY ; }
         //
-        for ( auto& e : reader.variables() ) { std::get<2>(e) = std::get<1> ( e )->getVal() ; }
+        for ( auto& e : reader.variables  () ) { std::get<2>(e) = std::get<1> ( e )->getVal() ; }
+        for ( auto& e : reader.spectators () ) { std::get<2>(e) = std::get<1> ( e )->getVal() ; }
         // 
         // call TMVA here ... 
         for ( auto& e : varmap ) 
@@ -271,8 +301,8 @@ namespace
       category.setIndex ( index ) ;
       //
       READER& reader = readers[index] ;
-      for ( auto& e : reader.variables() ) 
-      { std::get<2>(e) = std::get<1> ( e )->getVal() ; }
+      for ( auto& e : reader.variables  () )  { std::get<2>(e) = std::get<1> ( e )->getVal() ; }
+      for ( auto& e : reader.spectators () )  { std::get<2>(e) = std::get<1> ( e )->getVal() ; }
       // 
       // call TMVA here ... 
       for ( auto& e : varmap ) 
@@ -305,18 +335,20 @@ namespace
   public: 
     // ========================================================================
     READER2
-    ( TTree*                     data         ,
-      const Ostap::AddTMVA::MAP& inputs       , 
-      const Ostap::AddTMVA::MAP& weight_files )
+    ( TTree*                       data         ,
+      const Ostap::AddTMVA::MAP&   inputs       , 
+      const Ostap::AddTMVA::MAP&   weight_files ,
+      const Ostap::AddTMVA::NAMES& spectators   )
       : m_data         ( data         ) 
       , m_inputs       ( inputs       )
       , m_weight_files ( weight_files )
+      , m_specs        ( spectators   ) 
     {}
     // prepare it  for usage 
     Ostap::StatusCode build ( const std::string& options = "" ) 
     {
       //
-      // 1)  create variables 
+      // (1)  create variables 
       for ( const auto& i : m_inputs ) 
       {
         const std::string& name = i.first  ;
@@ -339,18 +371,41 @@ namespace
                         INVALID_VARIABLE , __FILE__ , __LINE__ ) ;
         // ========================================================================
         if ( nullptr == var ) { return INVALID_VARIABLE ; }
-        //
+        // ========================================================================
         m_variables.push_back ( std::make_tuple ( name , var , 0.0f ) ) ;  
+        // ========================================================================
       }
-      //
-      // 2) create the actual reader 
+      // (2)  create spectators 
+      for ( const auto& i : m_specs  ) 
+      {
+        const std::string  formula { i } ;
+        //
+        auto _v = std::make_unique<Ostap::Formula>( formula , m_data ) ;        
+        // ======================================================================
+        Ostap::Assert ( _v && _v->ok  ()                       ,
+                        "Invalid spectatir formula:" + formula ,
+                        "Ostap::AddTMVA:READER2"               ,
+                        INVALID_FORMULA , __FILE__ , __LINE__  ) ;                                              
+        // ======================================================================
+        Ostap::Formula* var = _v.get() ;
+        _vars.push_back ( std::move ( _v ) ) ;        
+        //
+        Ostap::Assert ( var                                    , 
+                        "Invalid spectatr variable:" + formula ,
+                        "Ostap::AddTMVA::READER2"              ,
+                        INVALID_VARIABLE , __FILE__ , __LINE__ ) ;
+        // ========================================================================
+        if ( nullptr == var ) { return INVALID_VARIABLE ; }
+        // ========================================================================
+        m_spectators.push_back ( std::make_tuple ( formula , var , 0.0f ) ) ;  
+        // ========================================================================
+      }
+      // (3) create the actual reader 
       m_reader = std::make_unique<TMVAReader>( options ) ;
       //
-      // 3) connect the reader with names&placeholders
-      for ( auto& v : m_variables ) 
-        { 
-          m_reader->AddVariable ( std::get<0> ( v ) , &std::get<2>( v ) ) ;
-        }
+      // (3) connect the reader with names&placeholders
+      for ( auto& v : m_variables  ) { m_reader->AddVariable  ( std::get<0> ( v ) , &std::get<2>( v ) ) ; }
+      for ( auto& v : m_spectators ) { m_reader->AddSpectator ( std::get<0> ( v ) , &std::get<2>( v ) ) ; }
       //
       // 4) book   TMVA methods 
       for ( const auto& p : m_weight_files ) 
@@ -376,11 +431,13 @@ namespace
     const Ostap::AddTMVA::MAP&     inputs       () const { return m_inputs       ; }
     const Ostap::AddTMVA::MAP&     weight_files () const { return m_weight_files ; }
     VARIABLES2&                    variables    ()       { return m_variables    ; }
+    VARIABLES2&                    spectators   ()       { return m_spectators   ; }
     // ========================================================================
   private:
     // ========================================================================     
     Ostap::AddTMVA::MAP      m_inputs                   ;
     Ostap::AddTMVA::MAP      m_weight_files             ;
+    std::vector<std::string> m_specs        {}          ;
     std::vector<std::string> m_methods      {}          ;
     TTree*                   m_data         { nullptr } ;
     // ========================================================================    
@@ -391,6 +448,7 @@ namespace
   private:  
     // ========================================================================    
     VARIABLES2                  m_variables  {}           ;
+    VARIABLES2                  m_spectators {}           ;
     std::unique_ptr<TMVAReader> m_reader     { nullptr }  ;
     // ========================================================================
   } ;  
@@ -433,6 +491,7 @@ namespace
     //
     Ostap::Utils::Notifier  notifier { tree } ;
     for ( auto& e : reader.variables () ) { notifier.add ( std::get<1> ( e ) ) ; }
+    for ( auto& e : reader.spectators() ) { notifier.add ( std::get<1> ( e ) ) ; }
     //
     Ostap::Utils::ProgressBar  bar ( pconf , nEntries ) ;
     for ( Long64_t entry = 0 ; entry < nEntries ; ++entry, ++bar ) 
@@ -440,7 +499,8 @@ namespace
         if ( tree->GetEntry ( entry ) < 0 ) { break ; }
         //
         // prepare TMVA input 
-        for ( auto& e : reader.variables() ) { std::get<2>(e) = std::get<1> ( e )->evaluate () ; }
+        for ( auto& e : reader.variables  () ) { std::get<2>(e) = std::get<1> ( e )->evaluate () ; }
+        for ( auto& e : reader.spectators () ) { std::get<2>(e) = std::get<1> ( e )->evaluate () ; }
         //
         // evalaute TMVA and fill braches
         for ( auto& branch : branches ) 
@@ -535,8 +595,8 @@ namespace
       //
       // prepare TMVA input 
       READER2& reader = readers[index] ;
-      for ( auto& e : reader.variables() ) 
-      { std::get<2>(e) = std::get<1> ( e )->evaluate () ; }
+      for ( auto& e : reader.variables  () )  { std::get<2>(e) = std::get<1> ( e )->evaluate () ; }
+      for ( auto& e : reader.spectators () )  { std::get<2>(e) = std::get<1> ( e )->evaluate () ; }
       //
       // evaluate TMVA and fill braches
       for ( auto& branch : branches ) 
@@ -578,6 +638,7 @@ Ostap::StatusCode Ostap::AddTMVA::addResponse
 ( RooDataSet*                       data         ,
   const Ostap::AddTMVA::MAP&        inputs       , 
   const Ostap::AddTMVA::MAP&        weight_files ,
+  const Ostap::AddTMVA::NAMES&      spectators   , 
   const std::string&                options      ,
   const std::string&                prefix       , 
   const std::string&                suffix       , 
@@ -585,7 +646,7 @@ Ostap::StatusCode Ostap::AddTMVA::addResponse
 {
   if ( !data          ) { return INVALID_DATA ; }  
   // create the helper structure  
-  READER reader  ( *data , inputs , weight_files ) ;
+  READER reader  ( *data , inputs , weight_files , spectators ) ;
   Ostap::StatusCode sc =  reader.build ( options ) ;
   // ========================================================================
   Ostap::Assert ( sc.isSuccess ()                       ,
@@ -621,6 +682,7 @@ Ostap::StatusCode Ostap::AddTMVA::addResponse
 ( TTree*                            tree          ,
   const Ostap::AddTMVA::MAP&        inputs        , 
   const Ostap::AddTMVA::MAP&        weight_files  ,
+  const Ostap::AddTMVA::NAMES&      spectators    , 
   const std::string&                options       ,
   const std::string&                prefix        , 
   const std::string&                suffix        , 
@@ -628,7 +690,7 @@ Ostap::StatusCode Ostap::AddTMVA::addResponse
 {
   if ( nullptr == tree ) { return INVALID_TREE  ; }
   // create the helper structure  
-  READER2 reader  ( tree , inputs , weight_files ) ;
+  READER2 reader  ( tree , inputs , weight_files , spectators ) ;
   Ostap::StatusCode sc =  reader.build ( options ) ;
   // ========================================================================
   Ostap::Assert ( sc.isSuccess ()                       ,
@@ -676,6 +738,7 @@ Ostap::StatusCode Ostap::AddTMVA::addChoppingResponse
   const unsigned short              N            , // number of categories
   const Ostap::AddTMVA::MAP&        inputs       , 
   const Ostap::AddTMVA::MAPS&       weight_files ,
+  const Ostap::AddTMVA::NAMES&      spectators   , 
   const std::string&                options      , 
   const std::string&                prefix       , 
   const std::string&                suffix       ,
@@ -691,7 +754,7 @@ Ostap::StatusCode Ostap::AddTMVA::addChoppingResponse
   readers.reserve ( N ) ;
   //
   for ( const auto& wfs : weight_files )
-    { readers.emplace_back ( *data , inputs ,  wfs ) ; }
+    { readers.emplace_back ( *data , inputs ,  wfs , spectators ) ; }
   //
   // initialize the  readers:
   bool first = true ;
@@ -742,6 +805,7 @@ Ostap::StatusCode Ostap::AddTMVA::addChoppingResponse
   const unsigned short              N             , // number of categories
   const Ostap::AddTMVA::MAP&        inputs        , 
   const Ostap::AddTMVA::MAPS&       weight_files  ,
+  const Ostap::AddTMVA::NAMES&      spectators    , 
   const std::string&                options       ,
   const std::string&                prefix        , 
   const std::string&                suffix        ,
@@ -760,7 +824,7 @@ Ostap::StatusCode Ostap::AddTMVA::addChoppingResponse
   readers.reserve ( N ) ;
   //
   for ( const auto& wfs : weight_files )
-  { readers.emplace_back ( tree , inputs ,  wfs ) ;}
+    { readers.emplace_back ( tree , inputs ,  wfs , spectators ) ;}
   //
   // initialize the  readers:
   bool first = true ;
@@ -790,7 +854,7 @@ Ostap::StatusCode Ostap::AddTMVA::addChoppingResponse
 
 
 // ============================================================================
-/* Disable scatter pltof form TMVA 
+/* Disable scatter plots from TMVA 
  *  Unfortunately thee recommended action in PyROOT has no effect
  *   
  * <code>

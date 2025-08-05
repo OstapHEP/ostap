@@ -61,6 +61,8 @@ __all__     = (
     ##
     'CallThem'           , ## convert sequence of callables into single callable
     ##
+    'Singleton'          , ## Metaclass for the singleton 
+    ##
     )
 # =============================================================================
 from   itertools              import repeat, chain, islice
@@ -989,6 +991,39 @@ class NumCalls (object):
 # ==============================================================================        
 #  Count a number of  times a callable object is invoked
 numcalls = NumCalls
+
+
+## @class Singleton
+#  Simple metaclass for the singleton
+#  @code
+#  class MyClass(metaclass = Singleton ) :
+#      ....
+#  a = MyClass()
+#  b = MyClass()
+#  print ( a is b ) 
+#  endcode 
+class Singleton(type) :
+    """ Simple metaclass for the singleton:
+    >>> class MyClass(metaclass = Singleton ) :
+        ...
+    >>> a = MyClass()
+    >>> b = MyClass()
+    >>> print ( a is b ) 
+    """
+    _INSTANCES = {}
+    def __call__ ( klass , *args , **kwargs):
+        """ Singleton """
+        cls = klass._INSTANCES.get ( klass , None )
+        if cls is None :
+            ## create it:  
+            cls = super(Singleton, klass).__call__ ( *args , **kwargs )
+            klass._INSTANCES [ klass ] = cls
+        else:
+            ## Re-initialize it 
+            cls.__init__ ( *args , **kwargs )
+
+        return cls 
+
 
 # ==============================================================================
 ## Copy file with the progress

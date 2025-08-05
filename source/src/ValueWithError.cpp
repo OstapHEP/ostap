@@ -1158,6 +1158,8 @@ Ostap::Math::zechEff
 {
   //
   const double e   =        accepted.value () / total.value () ;
+  if ( accepted.cov2() <= 0 || total.cov2() <= 0 ) { return e ; }
+  //
   const double v2  = total.value() * total.value() ;
   const double t1  =           total.cov2  () / v2 ;
   const double t2  =        accepted.cov2  () / v2 ;

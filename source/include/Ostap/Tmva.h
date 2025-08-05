@@ -58,8 +58,9 @@ namespace Ostap
     // ======================================================================
   public:
     // ======================================================================
-    typedef Ostap::Dict<std::string>                                   MAP  ;
-    typedef std::vector<MAP>                                           MAPS ;
+    typedef Ostap::Dict<std::string>                                  MAP   ;
+    typedef std::vector<MAP>                                          MAPS  ;
+    typedef Ostap::Names                                              NAMES ; 
     // ======================================================================
   public:
     // ======================================================================
@@ -82,13 +83,14 @@ namespace Ostap
      *                              where it represents the efficiency cutoff
      */ 
     Ostap::StatusCode addResponse
-    ( RooDataSet*        data          ,
-      const MAP&         inputs        , 
-      const MAP&         weight_files  ,
-      const std::string& options = ""  ,
-      const std::string& prefix  = ""  , 
-      const std::string& suffix  = ""  , 
-      const double       aux     = 0.9 ) const ;
+    ( RooDataSet*        data                    ,
+      const MAP&         inputs                  , 
+      const MAP&         weight_files            ,
+      const NAMES&       spectators    = NAMES() , 
+      const std::string& options       = ""      ,
+      const std::string& prefix        = ""      , 
+      const std::string& suffix        = ""      , 
+      const double       aux           =0.9      ) const ;
     // =========================================================================
   public: // TMVA response --> TTree 
     // ========================================================================
@@ -106,13 +108,14 @@ namespace Ostap
      *                              where it represents the efficiency cutoff
      */ 
     Ostap::StatusCode addResponse
-    ( TTree*             tree          ,
-      const MAP&         inputs        , 
-      const MAP&         weight_files  ,
-      const std::string& options = ""  ,
-      const std::string& prefix  = ""  , 
-      const std::string& suffix  = ""  , 
-      const double       aux     = 0.9 ) const ;
+    ( TTree*             tree                    ,
+      const MAP&         inputs                  , 
+      const MAP&         weight_files            ,
+      const NAMES&       spectators    = NAMES() , 
+      const std::string& options       = ""      ,
+      const std::string& prefix        = ""      , 
+      const std::string& suffix        = ""      , 
+      const double       aux           = 0.9     ) const ;
     // ========================================================================
   public : // Chopping response --> RooDataSet 
     // ========================================================================
@@ -133,16 +136,17 @@ namespace Ostap
      *                              where it represents the efficiency cutoff
      */ 
     Ostap::StatusCode addChoppingResponse 
-    ( RooDataSet*          data                   ,
-      RooAbsReal&          chopping               , // category function 
-      RooCategory&         category               , // category variable 
-      const unsigned short N                      , // number of categories 
-      const MAP&           inputs                 , // mapping of input variables 
-      const MAPS&          weight_files           ,
-      const std::string&   options  = ""          ,
-      const std::string&   prefix   = ""          , 
-      const std::string&   suffix   = ""          ,
-      const double         aux      = 0.9         ) const ;
+    ( RooDataSet*          data                    ,
+      RooAbsReal&          chopping                , // category function 
+      RooCategory&         category                , // category variable 
+      const unsigned short N                       , // number of categories 
+      const MAP&           inputs                  , // mapping of input variables 
+      const MAPS&          weight_files            ,
+      const NAMES&         spectators    = NAMES() , 
+      const std::string&   options       = ""      ,
+      const std::string&   prefix        = ""      , 
+      const std::string&   suffix        = ""      ,
+      const double         aux           = 0.9     ) const ;
     // ========================================================================
   public : // Chopping response --> TTree
     // ========================================================================
@@ -163,16 +167,17 @@ namespace Ostap
      *                              where it represents the efficiency cutoff
      */ 
     Ostap::StatusCode addChoppingResponse 
-    ( TTree*               tree                   ,
-      const std::string&   chopping               , // category function 
-      const std::string&   category_name          , // category variable 
-      const unsigned short N                      , // number of categories 
-      const MAP&           inputs                 , // mapping of input variables 
-      const MAPS&          weight_files           ,
-      const std::string&   options  = ""          ,
-      const std::string&   prefix   = ""          , 
-      const std::string&   suffix   = ""          ,
-      const double         aux      = 0.9         ) const ;
+    ( TTree*               tree                    ,
+      const std::string&   chopping                , // category function 
+      const std::string&   category_name           , // category variable 
+      const unsigned short N                       , // number of categories 
+      const MAP&           inputs                  , // mapping of input variables 
+      const MAPS&          weight_files            ,
+      const NAMES&         spectators    = NAMES() ,       
+      const std::string&   options       = ""      ,
+      const std::string&   prefix        = ""      , 
+      const std::string&   suffix        = ""      ,
+      const double         aux           = 0.9     ) const ;
     // ========================================================================  
   public: 
     // ========================================================================

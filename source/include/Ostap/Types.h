@@ -42,7 +42,7 @@ namespace Ostap
   typedef double DataType ;
   // ==========================================================================
   /** @var MinValue 
-   *  minimal value for varioys ranges 
+   *  minimal value for various ranges 
    */
   const DataType MinValue { -std::numeric_limits<DataType>::max () } ; 
   // ==========================================================================

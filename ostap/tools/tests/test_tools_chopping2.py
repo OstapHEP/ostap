@@ -57,6 +57,7 @@ if not os.path.exists( data_file ) :
         var2 = array.array ( 'd',  [ 0 ] )
         var3 = array.array ( 'd',  [ 0 ] )
         var4 = array.array ( 'd',  [ 0 ] )
+        var5 = array.array ( 'd',  [ 0 ] )
         vevt = array.array ( 'i',  [ 0 ] )
         vrun = array.array ( 'i',  [ 0 ] )
         
@@ -65,6 +66,7 @@ if not os.path.exists( data_file ) :
         treeSignal.Branch ( 'var2' , var2 , 'var2/D' )
         treeSignal.Branch ( 'var3' , var3 , 'var3/D' )
         treeSignal.Branch ( 'VARS' , var4 , 'VARS/D' )
+        treeSignal.Branch ( 'VARA' , var5 , 'VARA/D' )
         
         treeSignal.Branch ( 'evt'  , vevt , 'evt/I'  )
         treeSignal.Branch ( 'run'  , vrun , 'run/I'  )
@@ -75,6 +77,7 @@ if not os.path.exists( data_file ) :
         treeBkg   .Branch ( 'VARB' , var4 , 'VARB/D' )
         treeBkg   .Branch ( 'evt'  , vevt , 'evt/I'  )
         treeBkg   .Branch ( 'run'  , vrun , 'run/I'  )
+        treeBkg   .Branch ( 'VARA' , var5 , 'VARA/D' )
         
         ievt = 0
         irun = 1 
@@ -91,6 +94,7 @@ if not os.path.exists( data_file ) :
             var2[0] =  x - 0.1 * y  
             var3[0] = -x +       z
             var4[0] =  w
+            var5[0] = random.gauss ( 0 , 1 ) - 1 
             
             ievt += 1
             if 0 ==  ( ievt % b_evt_per_run ) :
@@ -119,6 +123,7 @@ if not os.path.exists( data_file ) :
             var3[0] =  z
             var4[0] =  w
             var0[0] =  u
+            var5[0] = random.gauss ( 0 , 1 ) + 1 
             
             ievt += 1
             if 0 == ( ievt % s_evt_per_run ) :
@@ -173,6 +178,8 @@ trainer = Trainer (
     ## add fake variable to backgrund sample to please TMVA 
     background_add_vars = {'var0' : '-567' } ,  
     ##
+    spectators     = ( 'VARA', )              , ## spectator
+    ## 
     signal         = cSignal                  , ## `Signal' sample
     background     = cBkg                     , ## `Background' sample         
     verbose        = True                     ,
@@ -228,6 +235,7 @@ with timing ( "Add TMVA/Chopping response to input TTree" , logger = logger ) as
     config = { 'chopper'       : "137*evt+813*run"             ,
                'N'             : N                             , 
                'weights_files' : tar_file                      ,
+               'spectators'    : 'VARA'                        , ## ATTENTION! 
                'prefix'        : 'tmva_'                       ,
                'suffix'        : '_response'                   }
     

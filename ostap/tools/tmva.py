@@ -39,6 +39,7 @@ from   ostap.core.ostap_types    import ( num_types      , integer_types  ,
                                           dictlike_types , 
                                           string_types   , sequence_types ) 
 from   ostap.core.core           import Ostap, WSE, VE, rootWarning
+from   ostap.math.base           import strings 
 from   ostap.utils.cleanup       import CleanUp
 from   ostap.utils.root_utils    import ImplicitMT 
 from   ostap.utils.basic         import items_loop, typename  
@@ -550,7 +551,7 @@ class Trainer(object):
         self.__category             = int ( category )
         self.__make_plots           = True if make_plots else False
         
-        self.__spectators           = [] 
+        self.__spectators           = tuple ( s for s in spectators ) 
         
         ## self.__verbose = True if verbose else False 
         self.__verbose = True if ( verbose and  self.category <= 0 ) else False 
@@ -687,7 +688,7 @@ class Trainer(object):
     @property
     def spectators ( self ) :
         """'spectators' : the list of spectators to be used"""
-        return tuple(self.__spectators)
+        return self.__spectators
 
     @property
     def signal ( self ) :
@@ -2191,13 +2192,14 @@ class Reader(object)  :
     #  @code
     #  weights_files = [ ('MPL','my_weights.xml') , ('BDTG','weights2.xml') ] 
     #  @endcode
-    def __init__ ( self                 ,
-                   name                 , 
-                   variables            ,
-                   weights_files        ,
-                   options      = ''    ,
-                   logger       = None  , 
-                   verbose      = True  ) :
+    def __init__ ( self                 , * , 
+                   variables                   ,
+                   weights_files               ,
+                   spectators   = ()           ,   
+                   options      = ''           ,
+                   name         = 'TMVAReader' , 
+                   logger       = None         , 
+                   verbose      = True         ) :
         """ Construct the TMVA reader         
         >>> from ostap.tools.tmva import Reader
         >>> r = Reader ( 'MyTMVA' ,
@@ -2274,13 +2276,45 @@ class Reader(object)  :
             ##                     name    accessor   address 
             self.__variables += [ ( vname , vfun     , vfield  ) ] 
 
-
+            
         self.__variables = tuple ( self.__variables )
+
+
+        ## spectators
+        self.__spectators = []
         
-        ## declare all variables to TMVA.Reader
-        for v in self.__variables :
-            self.__reader.AddVariable ( v [ 0 ] , v [ 2 ] )            
-        
+        spectators = tuple ( sorted ( spectators ) ) 
+
+        for v in spectators : 
+
+            if   isinstance ( v , str ) :
+                
+                vname  = v
+                vfun   = lambda s : getattr ( s , vname )
+                vfield = array ( 'f' , [1] )                  ## NB: note the type 
+                
+            elif isinstance ( v , tuple ) and 2 == len ( v ) :
+
+                vname  = v[0]
+                vfun   = v[1]
+                vfield = array ( 'f' , [1] )                  ## NB: note the type here 
+
+            else :
+                
+                self.logger.error ('Invalid spectator description!'     )
+                raise AttributeError ( 'Invalid spectator description!' )
+
+            ##                     name    accessor   address 
+            self.__spectators += [ ( vname , vfun     , vfield  ) ] 
+
+            
+        self.__spectators  = tuple ( self.__spectators  )
+
+
+        ## declare all variables & spectators to TMVA.Reader
+        for v in self.__variables  : self.__reader.AddVariable  ( v [ 0 ] , v [ 2 ] )
+        for v in self.__spectators : self.__reader.AddSpectator ( v [ 0 ] , v [ 2 ] )
+
         self.__methods = self.weights.methods
 
         for method , xml in  items_loop ( self.weights.files ) :
@@ -2614,15 +2648,17 @@ def _weights2map_ ( weights ) :
 
 # =============================================================================
 ## Add TMVA response to TTree 
-def _add_response_tree_ ( tree     , * ,
-                          inputs   ,
-                          weights  ,
-                          options  ,
-                          prefix   ,
-                          suffix   ,
-                          aux      = 0.9   , 
-                          report   = True  ,
-                          progress = True  ) :
+def _add_response_tree_ ( tree       ,
+                          *          ,                          
+                          inputs     ,
+                          weights    ,
+                          options    ,
+                          prefix     = 'tmva_'     ,
+                          suffix     = '_response' ,
+                          spectators = ()          , 
+                          aux        = 0.9         , 
+                          report     = True        ,
+                          progress   = True        ) :
     """ Specific action to ROOT.TChain
     """
             
@@ -2635,14 +2671,15 @@ def _add_response_tree_ ( tree     , * ,
     ## delegate to chain 
     if isinstance ( tree , ROOT.TChain ) and 2 <= tree.nFiles :
         return _add_response_chain_ ( tree     ,
-                                      inputs   = inputs   ,
-                                      weights  = weights  ,
-                                      options  = options  ,
-                                      prefix   = prefix   ,
-                                      suffix   = suffix   ,
-                                      aux      = aux      , 
-                                      report   = report   ,
-                                      progress = progress ) 
+                                      inputs     = inputs     ,
+                                      weights    = weights    ,
+                                      spectators = spectators , 
+                                      options    = options    ,
+                                      prefix     = prefix     ,
+                                      suffix     = suffix     ,
+                                      aux        = aux        , 
+                                      report     = report     ,
+                                      progress   = progress   ) 
 
     
     from   ostap.core.core           import Ostap, ROOTCWD
@@ -2667,6 +2704,10 @@ def _add_response_tree_ ( tree     , * ,
     progress = progress_conf ( progress )
     adder    = Ostap.AddTMVA ( progress ) 
 
+    from ostap.math.base import strings
+    if isinstance ( spectators , string_types ) : spectators = spectators,    
+    _spectators = strings ( *spectators ) 
+    
     tname = tree.full_path
     with ROOTCWD () , REOPEN ( the_file  ) as tfile : 
         
@@ -2678,7 +2719,13 @@ def _add_response_tree_ ( tree     , * ,
             'Invalid TTree:%s in file:%s' % ( treepath , filename  )
         
         ## run it! 
-        sc = adder.addResponse ( the_tree , inputs , weights , options , prefix , suffix , aux ) 
+        sc = adder.addResponse ( the_tree    ,
+                                 inputs      ,
+                                 weights     ,
+                                 _spectators ,
+                                 options     ,
+                                 prefix      ,
+                                 suffix      , aux ) 
         assert sc.isSuccess () , 'Error from Ostap::AddTMVA::addResponse %s' % sc
 
         ## tfile.Write() ##  "" ) ## , ROOT.TFile.kOverwrite )
@@ -2703,15 +2750,17 @@ def _add_response_tree_ ( tree     , * ,
     return chain
 
 # =============================================================================
-def _add_response_chain_ ( chain    , * ,
-                           inputs   ,
-                           weights  ,
-                           options  ,
-                           prefix   ,
-                           suffix   ,
-                           aux      = 0.9   , 
-                           report   = True  ,
-                           progress = True  ) :
+def _add_response_chain_ ( chain      ,
+                           * ,
+                           inputs     ,
+                           weights    , 
+                           options    ,
+                           prefix     = 'tmva_'     ,
+                           suffix     = '_response' ,
+                           spectators = ()          , 
+                           aux        = 0.9         , 
+                           report     = True        ,
+                           progress   = True        ) :
     """ Specific action to ROOT.TChain
     """
     
@@ -2722,15 +2771,16 @@ def _add_response_chain_ ( chain    , * ,
         "Ivnalid TTree/TChain object!"
 
     if not isinstance ( chain , ROOT.TChain ) or chain.nFiles <= 1 :
-        return _add_response_tree_ ( chain    ,
-                                     inputs   = inputs   ,
-                                     weights  = weights  ,
-                                     options  = options  ,
-                                     prefix   = prefix   ,
-                                     suffix   = suffix   ,
-                                     aux      = aux      ,
-                                     report   = report   ,
-                                     progress = progress ) 
+        return _add_response_tree_ ( chain      ,
+                                     inputs     = inputs     ,
+                                     weights    = weights    ,
+                                     spectators = spectators , 
+                                     options    = options    ,
+                                     prefix     = prefix     ,
+                                     suffix     = suffix     ,
+                                     aux        = aux        ,
+                                     report     = report     ,
+                                     progress   = progress   ) 
     
     branches = set ( tree.branches() ) | set ( tree.leaves () ) if report else set() 
     
@@ -2744,15 +2794,16 @@ def _add_response_chain_ ( chain    , * ,
     for f in progress_bar ( files , len ( files ) , silent = not chain_progress   ) :
         tree = ROOT.TChain ( treepath )
         tree.Add ( f )
-        _add_response_tree_ ( tree                      ,
-                              inputs   = inputs         ,
-                              weights  = weights        ,
-                              options  = options        ,
-                              prefix   = prefix         ,
-                              suffix   = suffix         ,
-                              aux      = aux            ,                              
-                              progress = tree_progress  ,
-                              report   = False          )
+        _add_response_tree_ ( tree                        ,
+                              inputs     = inputs         ,
+                              weights    = weights        ,
+                              spectators = spectators     , 
+                              options    = options        ,
+                              prefix     = prefix         ,
+                              suffix     = suffix         ,
+                              aux        = aux            ,                              
+                              progress   = tree_progress  ,
+                              report     = False          )
         
     chain = ROOT.TChain ( treepath )
     chain.Add  ( filename )
@@ -2786,16 +2837,18 @@ def _add_response_chain_ ( chain    , * ,
 #  @param options  options to be used in TMVA Reader
 #  @param verbose  verbose operation?
 #  @param aux       obligatory for the cuts method, where it represents the efficiency cutoff
-def addTMVAResponse ( dataset                ,   ## input dataset to be updated
-                      inputs                 ,   ## input variables 
-                      weights_files          ,   ## files with TMVA weigths (tar/gz or xml)
-                      prefix   = 'tmva_'     ,   ## prefix for TMVA-variable 
-                      suffix   = '_response' ,   ## suffix for TMVA-variable
-                      options  = ''          ,   ## TMVA-reader options
-                      verbose  = True        ,   ## verbosity flag
-                      progress = True        ,   ## verbosity flag
-                      aux      = 0.9         ,   ## for Cuts method : efficiency cut-off                      
-                      report   = True        ) : ## final report?
+def addTMVAResponse ( dataset                     ,   ## input dataset to be updated
+                      * , 
+                      inputs                      ,   ## input variables 
+                      weights_files               ,   ## files with TMVA weigths (tar/gz or xml)
+                      spectators    = ()          ,  
+                      prefix        = 'tmva_'     ,   ## prefix for TMVA-variable 
+                      suffix        = '_response' ,   ## suffix for TMVA-variable
+                      options       = ''          ,   ## TMVA-reader options
+                      verbose       = True        ,   ## verbosity flag
+                      progress      = True        ,   ## verbosity flag
+                      aux           = 0.9         ,   ## for Cuts method : efficiency cut-off                      
+                      report        = True        ) : ## final report?
     """ Helper function to add TMVA  response into dataset
     >>> tar_file = trainer.tar_file
     >>> dataset  = ...
@@ -2829,17 +2882,20 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
     options = opts_replace ( options , 'V:'      ,     verbose    )
     options = opts_replace ( options , 'Silent:' , not verbose    )
     options = opts_replace ( options , 'Color:'  ,     isatty  () )
+
+    
     
     if isinstance ( dataset , ROOT.TTree ) :
-        return _add_response_chain_ ( dataset  ,
-                                      inputs   = _inputs  ,
-                                      weights  = _map     ,
-                                      options  = options  ,
-                                      prefix   = prefix   ,
-                                      suffix   = suffix   ,
-                                      aux      = aux      , 
-                                      progress = progress ,
-                                      report   = report   )
+        return _add_response_chain_ ( dataset    ,
+                                      inputs     = _inputs    ,
+                                      weights    = _map       ,
+                                      spectators = spectators , 
+                                      options    = options    ,
+                                      prefix     = prefix     ,
+                                      suffix     = suffix     ,
+                                      aux        = aux        , 
+                                      progress   = progress   ,
+                                      report     = report     )
 
     assert isinstance ( dataset , ROOT.RooDataSet ) , "RooDataSet must be here!"
     ## RooDataSet here!
@@ -2847,13 +2903,19 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
     progress = progress_conf ( progress )
     adder    = Ostap.AddTMVA ( progress ) 
 
-    sc       = adder.addResponse  ( dataset ,
-                                    _inputs ,
-                                    _map    ,
-                                    options ,
-                                    prefix  ,
-                                    suffix  ,
-                                    aux     ) 
+    
+    from ostap.math.base import strings
+    if isinstance ( spectators , string_types ) : spectators = spectators,    
+    _spectators = strings ( *spectators ) 
+    
+    sc = adder.addResponse  ( dataset     ,
+                              _inputs     ,
+                              _map        ,
+                              _spectators , 
+                              options     ,
+                              prefix      ,
+                              suffix      ,
+                              aux         ) 
     assert sc.isSuccess () , 'Error from Ostap::AddTMVA::addResponse %s' % sc 
     
     return dataset

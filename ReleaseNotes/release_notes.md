@@ -1,8 +1,12 @@
 ## New features
 
 ## Backward-incompatible
+    
+  1. From now all arguments for (TMVA&Chopping) `Reader` are keyword-only 
 
-## Bug fixes 
+## Bug fixes
+    
+  1. `Spectators` were not propagated to TMVA/Chopping
 
 # v3.0.1.26
 

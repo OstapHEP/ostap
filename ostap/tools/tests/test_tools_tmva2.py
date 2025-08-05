@@ -185,7 +185,7 @@ def test_tmva2() :
     variables = [ 'var1' , 'var2' , 'var3' ]
     
     ## (2.1) Create TMVA reader
-    reader = Reader ( 'MyMLP' ,
+    reader = Reader ( name          = 'MyMLP' ,
                       variables     = [ ('var1' , lambda s : s.var1 )   ,
                                         ('var2' , lambda s : s.var2 )   ,
                                         ('var3' , lambda s : s.var3 ) ] ,

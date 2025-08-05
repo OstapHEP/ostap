@@ -611,7 +611,6 @@ def data_statistic ( data               ,
     if isinstance ( data , ROOT.RooAbsData ) :
         with rootException() :
             sc   = sv.statVars ( data , vcnt , vnames  , cuts , cut_range , *args )
-            print ( vcnt ) 
             assert sc.isSuccess() , 'Error %s from Ostap::StatVar::statVars' % sc  
             assert len ( vcnt ) == len ( vnames ) , "Mismatch in structure"
             return { name : TCNT ( cnt ) for ( name , cnt ) in zip ( var_lst , vcnt ) } 
