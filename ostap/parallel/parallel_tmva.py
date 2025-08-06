@@ -21,6 +21,7 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.parallel.parallel         import Task, WorkManager
+from   ostap.basic.utils               import typename 
 import ostap.parallel.parallel_statvar
 import ROOT
 # =============================================================================
@@ -33,7 +34,7 @@ else                       : logger = getLogger ( __name__     )
 ## @class AddTMVA
 #  Add TMVA response to looong TChain 
 class AddTMVA(Task) :
-    """Add TMVA response to looong TChain 
+    """ Add TMVA response to looong TChain 
     """
     def __init__          ( self , *args , **kwargs ) :
         self.  args   =   args
@@ -89,14 +90,17 @@ class AddTMVA(Task) :
 #  @param options  options to be used in TMVA Reader
 #  @param verbose  verbose operation?
 #  @param aux       obligatory for the cuts method, where it represents the efficiency cutoff
-def addTMVAResponse ( chain                  ,   ## input chain 
-                      inputs                 ,   ## input variables 
-                      weights_files          ,   ## files with TMVA weigths (tar/gz or xml)
-                      prefix   = 'tmva_'     ,   ## prefix for TMVA-variable 
-                      suffix   = '_response' ,   ## suffix for TMVA-variable
-                      options  = ''          ,   ## TMVA-reader options
-                      verbose  = True        ,   ## verbosity flag 
-                      aux      = 0.9         , **kwargs ) : ## for Cuts method : efficiency cut-off
+def addTMVAResponse ( chain                         , ## input chain 
+                      inputs                        , ## input variables 
+                      weights_files                 , ## files with TMVA weigths (tar/gz or xml)
+                      spectators      = ()          , ## spectator variables                       
+                      prefix          = 'tmva_'     , ## prefix for TMVA-variable 
+                      suffix          = '_response' , ## suffix for TMVA-variable
+                      options         = ''          , ## TMVA-reader options
+                      verbose         = False       , ## verbosity flag 
+                      aux             = 0.9         , ## ## for Cuts method : efficiency cut-off
+                      progress        = True        , ## show progress ? 
+                      report          = True        , **kwargs ) : ## mare a report? 
     """
     Helper function to add TMVA  response into loong TChain
     >>> tar_file = trainer.tar_file
@@ -117,37 +121,58 @@ def addTMVAResponse ( chain                  ,   ## input chain
             logger.warning ( "addTMVAResponse:: Variables '%s' already in TTree, skip" % matched ) 
             return chain
         
-    if isinstance ( chain , ROOT.TChain ) and 1 < len ( chain.files () ) : pass
-    else : return _add_response_ ( dataset       = chain         ,
-                                   inputs        = inputs        ,
-                                   weights_files = weights_files ,
-                                   prefix        = prefix        ,
-                                   suffix        = suffix        ,
-                                   verbose       = verbose       ,
-                                   aux           = aux           )
+    if isinstance ( chain , ROOT.RooDataset ) or ( isinstance ( chain , ROOT.TTree ) and chain.nFiles <= 1 )  : 
+        return _add_response_ ( dataset       = chain         ,
+                                inputs        = inputs        ,
+                                weights_files = weights_files ,
+                                spectators    = spectators    , 
+                                prefix        = prefix        ,
+                                suffix        = suffix        ,
+                                verbose       = verbose       ,
+                                aux           = aux           ,
+                                progress      = progress      , 
+                                report        = report        )
+    
+    # =========================================================================
+    ## TTree or TChain here
+    # =========================================================================
+    assert isinstance ( chain , ROOT.TTree ) , "Invalid type of `chain` %s" % typename ( chain)
 
     from ostap.trees.trees import Chain
-    ch       = Chain ( chain ) 
-    branches = set   ( chain.branches() ) | set ( chain.leaves() ) 
+    ch       = Chain ( chain )
+    treepath = ch.name 
+    branches = set  ( chain.branches() ) | set ( chain.leaves() ) if report else set() 
     
     ## create the task 
     task  = AddTMVA     ( inputs        = inputs        ,
                           weights_files = weights_files ,
+                          spectators    = spectators    , 
                           prefix        = prefix        ,
                           suffix        = suffix        ,
-                          verbose       = verbose       ,
+                          verbose       = False         ,
+                          prorgess      = False         ,
+                          report        = False         , 
                           aux           = aux           )
     
-    wmgr  = WorkManager ( silent = False , **kwargs )
+    wmgr  = WorkManager ( silent = False , progress = progress , **kwargs )
     trees = ch.split    ( max_files = 1  )
     
     wmgr.process( task , trees )
     
-    nc = ROOT.TChain ( chain.name )
+    nc = ROOT.TChain ( treepath )
     for f in ch.files :  nc.Add ( f )
-
-    nb = list ( ( set ( nc.branches () ) | set ( nc.leaves() ) ) - branches )
-    if nb : logger.info ( 'Added branches:\n%s' % nc.table ( variables = nb , prefix = '# ' ) ) 
+    
+    if report :
+    
+        new_branches = sorted ( ( set ( nc.branches () ) | set ( nc.leaves () ) ) - branches )
+        if new_branches :
+            n = len ( new_branches )
+            if 1 >= n : title = "Added %s branch to TTree(%s)"   % ( n , treepath ) 
+            else      : title = "Added %s branches to TTree(%s)" % ( n , treepath )  
+            table = cn.table ( new_branches , title = title , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) ) 
+            nc = ROOT.TChain ( ch.name  )
+            for f in ch.files :  nc.Add ( f )
     
     return nc
 

@@ -2261,6 +2261,9 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     from ostap.utils.basic import isatty
     options = opts_replace ( options , 'Color:'  , verbose and isatty() )
 
+    # =========================================================================
+    ## TTree or TChain here
+    # =========================================================================
     if   isinstance ( dataset , ROOT.TTree ) :        
         return _add_response_chain_ ( dataset    ,
                                       chopper    = chopper       ,
@@ -2275,7 +2278,12 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
                                       aux        = aux           ,
                                       report     = report        ,
                                       progress   = progress      )
-    
+
+    # =========================================================================
+    ## RooFit ?
+    # =========================================================================
+    assert isinstance ( dataset , ROOT.RooDataSet ) , "Invalid type of `dataset` %s" %  typename ( dataset ) 
+   
     ## here we deal with RooAbsData
     
     if isinstance ( chopper , string_types ) :
@@ -2286,7 +2294,6 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
             
     assert isinstance ( chopper , ROOT.RooAbsReal ), \
         'Invalid chopping type %s' % typename ( chopper ) 
-
 
     category = ROOT.RooCategory ( category_name , 'Chopping category: (%s)%%%d' %  ( chopper.GetTitle() , N ) )
 

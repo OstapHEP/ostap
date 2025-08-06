@@ -1749,15 +1749,6 @@ class Trainer(object):
                     table = chain.table ( title = title , prefix = '# ' )
                     self.logger.info ( '%s:\n%s' % ( title , table ) )
                     
-                    """
-                    addTMVAResponse ( chain         ,
-                                      inputs        = self.the_variables ,
-                                      weights_files = self.tar_file      ,
-                                      verbose       = False              ,
-                                      progress      = self.verbose       ,
-                                      report        = self.verbose       )
-                    """
-                    
             if os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) :
                 
                 import shutil
@@ -1783,7 +1774,6 @@ class Trainer(object):
             except : # ======================================================
                 # ===========================================================
                 pass
-
                     
         return self.tar_file 
 
@@ -2018,7 +2008,6 @@ def make_Plots ( name , output , show_plots = True ) :
             return tfile 
                 
         return '' 
-
     
 # =============================================================================
 ## Decode the varibales
@@ -2751,7 +2740,7 @@ def _add_response_tree_ ( tree       ,
 
 # =============================================================================
 def _add_response_chain_ ( chain      ,
-                           * ,
+                           *          ,
                            inputs     ,
                            weights    , 
                            options    ,
@@ -2841,7 +2830,7 @@ def addTMVAResponse ( dataset                     ,   ## input dataset to be upd
                       * , 
                       inputs                      ,   ## input variables 
                       weights_files               ,   ## files with TMVA weigths (tar/gz or xml)
-                      spectators    = ()          ,  
+                      spectators    = ()          ,   ## spectator variables 
                       prefix        = 'tmva_'     ,   ## prefix for TMVA-variable 
                       suffix        = '_response' ,   ## suffix for TMVA-variable
                       options       = ''          ,   ## TMVA-reader options
@@ -2874,8 +2863,7 @@ def addTMVAResponse ( dataset                     ,   ## input dataset to be upd
 
     from ostap.utils.basic         import isatty
 
-    _inputs       = _inputs2map_  ( inputs        )
-    
+    _inputs       = _inputs2map_  ( inputs        )    
     weights_files = WeightsFiles  ( weights_files ) 
     _map , _w     = _weights2map_ ( weights_files )
     
@@ -2883,42 +2871,46 @@ def addTMVAResponse ( dataset                     ,   ## input dataset to be upd
     options = opts_replace ( options , 'Silent:' , not verbose    )
     options = opts_replace ( options , 'Color:'  ,     isatty  () )
 
-    
-    
-    if isinstance ( dataset , ROOT.TTree ) :
-        return _add_response_chain_ ( dataset    ,
-                                      inputs     = _inputs    ,
-                                      weights    = _map       ,
-                                      spectators = spectators , 
-                                      options    = options    ,
-                                      prefix     = prefix     ,
-                                      suffix     = suffix     ,
-                                      aux        = aux        , 
-                                      progress   = progress   ,
-                                      report     = report     )
+                
+    # =========================================================================
+    ## RooFit ?
+    # =========================================================================
+    if isinstance ( dataset , ROOT.RooDataSet ) :
+        
+        progress = progress_conf ( progress )
+        adder    = Ostap.AddTMVA ( progress ) 
+        
+        from ostap.math.base import strings
+        if isinstance ( spectators , string_types ) : spectators = spectators,    
+        _spectators = strings ( *spectators ) 
+        
+        sc = adder.addResponse  ( dataset     ,
+                                  _inputs     ,
+                                  _map        ,
+                                  _spectators , 
+                                  options     ,
+                                  prefix      ,
+                                  suffix      ,
+                                  aux         ) 
+        assert sc.isSuccess () , 'Error from Ostap::AddTMVA::addResponse %s' % sc         
+        return dataset
 
-    assert isinstance ( dataset , ROOT.RooDataSet ) , "RooDataSet must be here!"
-    ## RooDataSet here!
+    # =========================================================================
+    ## TTree or TChain here
+    # =========================================================================
+    assert isinstance ( dataset , ROOT.TTree ) , \
+        "Invalid type of `dataset` %s" % typename ( dataset )
     
-    progress = progress_conf ( progress )
-    adder    = Ostap.AddTMVA ( progress ) 
-
-    
-    from ostap.math.base import strings
-    if isinstance ( spectators , string_types ) : spectators = spectators,    
-    _spectators = strings ( *spectators ) 
-    
-    sc = adder.addResponse  ( dataset     ,
-                              _inputs     ,
-                              _map        ,
-                              _spectators , 
-                              options     ,
-                              prefix      ,
-                              suffix      ,
-                              aux         ) 
-    assert sc.isSuccess () , 'Error from Ostap::AddTMVA::addResponse %s' % sc 
-    
-    return dataset
+    return _add_response_chain_ ( dataset    ,
+                                  inputs     = _inputs    ,
+                                  weights    = _map       ,
+                                  spectators = spectators , 
+                                  options    = options    ,
+                                  prefix     = prefix     ,
+                                  suffix     = suffix     ,
+                                  aux        = aux        , 
+                                  progress   = progress   ,
+                                  report     = report     )
 
 
 # =============================================================================

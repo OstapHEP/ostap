@@ -21,6 +21,7 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.parallel.parallel         import Task, WorkManager
+from   ostap.basic.utils               import typename 
 import ostap.parallel.parallel_statvar
 import ROOT
 # =============================================================================
@@ -145,22 +146,23 @@ class ChopperTraining(Task) :
 #  @param suffix        suffix for TMVA-variable
 #  @param options       options to be used in TMVA Reader
 #  @param verbose       verbose operation?
-#  @param aux           obligatory for the cuts method, where it represents the efficiency cutoff 
+#  @param aux           obligatory for the cuts method, where it represents the efficiency cutoff
 def addChoppingResponse ( chain                       , ## input dataset to be updated
+                          *                           , 
                           chopper                     , ## chopping category/formula 
                           N                           , ## number of categrories
                           inputs                      , ## input variables 
                           weights_files               , ## files with TMVA weigths (tar/gz or xml)
+                          spectators    = ()          , ## spectators 
                           category_name = 'chopping'  , ## category name 
                           prefix        = 'tmva_'     , ## prefix for TMVA-variable         
                           suffix        = '_response' , ## suffix for TMVA-variable 
                           options       =  ''         , ## TMVA-reader options
-                          verbose       = True        , ## verbosity flag
+                          verbose       = False       , ## verbosity flag
                           progress      = True        , ## progress bar
                           report        = True        , ## final report ? 
                           aux           = 0.9         , **kwargs ) :
-    """
-    Helper function to add TMVA/chopping  response into dataset
+    """ Helper function to add TMVA/chopping  response into dataset
     >>> tar_file = trainer.tar_file
     >>> chain    = ...
     >>> inputs   = [ 'var1' , 'var2' , 'var2' ] ## input varibales to TMVA 
@@ -180,19 +182,29 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
             matched = ','.join ( matched )
             logger.warning ( "addChoppingResponse: Variables/Category '%s/%s' already in TTree, skip" % ( matched , category_name ) )
             return chain 
-      
-    if isinstance ( chain , ROOT.TChain ) and 1 < len ( chain.files ) : pass
-    else : return _add_response_ ( dataset       = chain         ,
-                                   chopper       = chopper       ,
-                                   N             = N             ,
-                                   inputs        = inputs        , 
-                                   weights_files = weights_files ,
-                                   category_name = category_name , 
-                                   prefix        = prefix        ,
-                                   suffix        = suffix        ,
-                                   options       = options       , 
-                                   verbose       = verbose       ,
-                                   aux           = aux           )
+
+    if isinstance ( chain , ROOT.RooDataset ) or \
+       ( isinstance ( chain , ROOT.TTree ) and chain.nFiles <= 1 )  : 
+        return _add_response_ ( dataset       = chain         ,
+                                chopper       = chopper       ,
+                                N             = N             ,
+                                inputs        = inputs        , 
+                                weights_files = weights_files ,
+                                spectators    = spectators    , 
+                                category_name = category_name , 
+                                prefix        = prefix        ,
+                                suffix        = suffix        ,
+                                options       = options       , 
+                                verbose       = verbose       ,
+                                progress      = progress      ,
+                                report        = report        , 
+                                aux           = aux           )
+
+
+    # =========================================================================
+    ## TTree or TChain here
+    # =========================================================================
+    assert isinstance ( chain , ROOT.TTree ) , "Invalid type of `chain` %s" % typename ( chain)
     
     from ostap.trees.trees import Chain
     ch       = Chain ( chain )
@@ -202,6 +214,7 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
                              N             = N             ,
                              inputs        = inputs        , 
                              weights_files = weights_files ,
+                             spectators    = spectators    , 
                              category_name = category_name , 
                              prefix        = prefix        ,
                              suffix        = suffix        ,

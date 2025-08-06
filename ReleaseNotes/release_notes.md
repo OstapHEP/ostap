@@ -1,9 +1,11 @@
 ## New features
 
+  1. Add treatment of TMVA&Chopping `spectators` into parallel TMVA&Chopping `addResponse` methods 
+
 ## Backward-incompatible
     
   1. From now all arguments for (TMVA&Chopping) `Reader` are keyword-only 
-
+    
 ## Bug fixes
     
   1. `Spectators` were not propagated to TMVA/Chopping
