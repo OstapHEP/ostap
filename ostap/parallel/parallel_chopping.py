@@ -21,7 +21,7 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.parallel.parallel         import Task, WorkManager
-from   ostap.basic.utils               import typename 
+from   ostap.utils.basic               import typename 
 import ostap.parallel.parallel_statvar
 import ROOT
 # =============================================================================
