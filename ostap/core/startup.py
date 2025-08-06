@@ -28,22 +28,23 @@ else                      : logger = getLogger ( __name__ )
 # =============================================================================
 ## check if the file is actually "empty"
 def _empty_ ( fname ) :
-    """Check if the file is actually ``empty''
+    """ Check if the file is actually ``empty''
     """
-    
-    try :
-
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
         import os 
         if not os.path.exists ( fname ) or 0 == os.path.getsize( fname ) : return True
-                
+        # =====================================================================
         ## find at least one non-empty line not starting from '#'
         with open ( fname , 'r' ) as f :
             for l in f :
                 if not l  or  '#' == l [0] : continue
                 l1 = l.strip()
                 if     l1 and '#' != l1[0] : return False 
-            
-    except IOError :
+        # ====================================================================
+    except IOError : # =======================================================
+        # ====================================================================
         pass
 
     return True
@@ -56,9 +57,12 @@ logger.info ( 'Ostap  session started %s' % start_time.strftime('%c')  )
 
 import os,sys
 ## define the name of the history file
-__history__ = os.path.curdir + os.sep + '.ostap_history'
+__history__ = os.path.join ( os.path.curdir , '.ostap_history' )
 
+# =============================================================================
 def _rename_ ( base , version = 0  ) :
+
+    if 100 <= version : return
     
     if version <= 0 :
         version = 0 
@@ -98,13 +102,15 @@ readline.parse_and_bind("tab: complete")
 # =============================================================================
 ## write history
 def write_history ( fname ) :
-    """Write history file 
+    """ Write history file 
     """
-    ## first, delete old history file
-
-    try :        
+    ## first, delete/move/rename  old history file
+    # =========================================================================
+    try : # ===================================================================
         _rename_ ( __history__  )
-    except :
+        # =====================================================================
+    except : # ================================================================
+        # =====================================================================
         logger.warning ( "Can't erase old history file(s)", exc_info = True ) 
 
     end_time = datetime.datetime.now()   
@@ -145,7 +151,7 @@ def write_history ( fname ) :
     except :
         written = False
     
-    if written and os.path.exists( fname ) and os.path.isfile ( fname ) and not _empty_ ( fname ) : 
+    if written and os.path.exists ( fname ) and os.path.isfile ( fname ) and not _empty_ ( fname ) : 
         logger.info ( 'Ostap  history file: %s' % __history__ )
     
 # =============================================================================
@@ -161,5 +167,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

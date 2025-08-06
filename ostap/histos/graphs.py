@@ -42,9 +42,10 @@ from   ostap.math.base                import isint, pos_infinity, neg_infinity
 from   ostap.core.ostap_types         import ( num_types   , integer_types ,
                                                sized_types , string_types  )   
 from   ostap.plotting.draw_attributes import copy_graph_attributes
+from   ostap.logger.pretty            import pretty_float
 from   ostap.utils.valerrors          import ( AsymErrors         ,
                                                ValWithErrors      ,
-                                               ValWithMultiErrors ) 
+                                               ValWithMultiErrors )
 import ROOT, ctypes, array 
 # =============================================================================
 # logging 

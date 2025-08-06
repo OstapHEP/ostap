@@ -279,12 +279,12 @@ class CrystalBall_pdf(PEAK) :
         self.__alpha = self.make_var ( alpha ,
                                        'alpha_%s'        % name ,
                                        '#alpha_{CB}(%s)' % name ,
-                                       None , 2.0 , 0.05 , 5 )
+                                       None , 1.5 , 0.10 , 5 )
         
         self.__n     = self.make_var ( n   ,
                                        'n_%s'            % name ,
                                        'n_{CB}(%s)'      % name ,
-                                       None , 5.0 , 1.e-6 , 100 )
+                                       None , 1.0 , -1 , 100 )
         
         ## N = Ostap.Math.CrystalBall.N ( n ) 
         self.__N = Ostap.MoreRooFit.TailN ( 'N_%s' % name , self.__n )
