@@ -2,7 +2,7 @@
 
   1. Add treatment of TMVA&Chopping `spectators` into parallel TMVA&Chopping `addResponse` methods 
   1. Tweak a bit `Ostap::Math::beta` and `Ostap::Math::lnbeta`
-  1. add am overloaf for `Ostap::Math::beta` for (positive) integer arguments
+  1. Add an overloaf for `Ostap::Math::beta` for the (positive) integer arguments
 
 ## Backward-incompatible
     
