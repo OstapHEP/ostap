@@ -182,8 +182,8 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
             matched = ','.join ( matched )
             logger.warning ( "addChoppingResponse: Variables/Category '%s/%s' already in TTree, skip" % ( matched , category_name ) )
             return chain 
-
-    if isinstance ( chain , ROOT.RooDataset ) or \
+        
+    if isinstance ( chain , ROOT.RooDataSet ) or \
        ( isinstance ( chain , ROOT.TTree ) and chain.nFiles <= 1 )  : 
         return _add_response_ ( dataset       = chain         ,
                                 chopper       = chopper       ,

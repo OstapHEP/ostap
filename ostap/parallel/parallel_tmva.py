@@ -121,7 +121,7 @@ def addTMVAResponse ( chain                         , ## input chain
             logger.warning ( "addTMVAResponse:: Variables '%s' already in TTree, skip" % matched ) 
             return chain
         
-    if isinstance ( chain , ROOT.RooDataset ) or ( isinstance ( chain , ROOT.TTree ) and chain.nFiles <= 1 )  : 
+    if isinstance ( chain , ROOT.RooDataSet ) or ( isinstance ( chain , ROOT.TTree ) and chain.nFiles <= 1 )  : 
         return _add_response_ ( dataset       = chain         ,
                                 inputs        = inputs        ,
                                 weights_files = weights_files ,
