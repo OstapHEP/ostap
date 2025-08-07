@@ -1645,7 +1645,10 @@ class Trainer(object):
             if self.background_weight :
                 dataloader.SetBackgroundWeightExpression ( self.background_weight )
                 self.logger.info ( "Background weight: '%s'" % ( attention ( self.background_weight ) ) )
-                
+
+            ## disbale scatter plots...
+            Ostap.Tmva.disable_scatter_plots ()
+
             self.logger.info     ( "Configuration    : '%s'" % str ( self.configuration ) )
             dataloader.PrepareTrainingAndTestTree(
                 ROOT.TCut ( self.signal_cuts     ) ,
@@ -1694,7 +1697,6 @@ class Trainer(object):
         del factory 
         
         if  self.make_plots :
-            Ostap.Tmva.disable_scatter_plots ()
             self.makePlots ()                
             
         import glob, os 
