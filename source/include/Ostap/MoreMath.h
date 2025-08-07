@@ -489,6 +489,14 @@ namespace Ostap
      *  @return value of beta function 
      */
     double beta  ( const double x , const double y ) ;
+    // =======================================================================
+    /** beta function for 
+     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+     *  - \f$ 0<x\f$
+     *  - \f$ 0<y\f$ 
+     *  @return value of beta function 
+     */
+    double beta  ( const unsigned short x , const unsigned short y ) ;
     // ========================================================================
     /** natural logarith of beta function 
      *  \f$ \log \Beta(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 

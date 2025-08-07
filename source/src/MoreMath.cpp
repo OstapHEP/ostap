@@ -1008,8 +1008,6 @@ double Ostap::Math::psi
   
   
 
-
-
 // ============================================================================
 /** beta function for 
  *  \f$ B(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
@@ -1021,6 +1019,11 @@ double Ostap::Math::psi
 double Ostap::Math::beta ( const double x , const double y ) 
 { 
   //
+  if  ( x <  0 && s_zero ( x ) ) { return std::numeric_limits<double>::quiet_NaN(); }
+  if  ( y <  0 && s_zero ( y ) ) { return std::numeric_limits<double>::quiet_NaN(); }
+  if  ( s_equal ( x , 1 )      ) { return 1 / y ; }
+  if  ( s_equal ( y , 1 )      ) { return 1 / x ; }
+  //
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
   //
@@ -1028,7 +1031,9 @@ double Ostap::Math::beta ( const double x , const double y )
   const int ierror = gsl_sf_beta_e ( x , y , &result ) ;
   if ( ierror ) 
   {
-    //
+    // 
+    if ( GSL_EUNDRFLW == ierror ) { return 0 ;}
+    // 
     gsl_error ( "Error from gsl_sf_beta_e" , __FILE__ , __LINE__ , ierror ) ;
     if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
     { return std::numeric_limits<double>::quiet_NaN(); }
@@ -1037,6 +1042,36 @@ double Ostap::Math::beta ( const double x , const double y )
   //
   return result.val ;
 }
+// ============================================================================
+/** beta function for 
+ *  \f$ B(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+ *  - \f$ 0<x\f$
+ *  - \f$ 0<y\f$ 
+ *  @return value of beta function 
+ */
+// ============================================================================
+namespace
+{
+  inline double _beta_
+  ( const unsigned short i , 
+    const unsigned short j )
+  {
+    double result = 1.0 / j ; 
+    for ( unsigned short k = 1 ; k < i ; ++k )
+    { result *= k * 1.0 / ( k + j ) ; }
+    return result ; 
+  }
+}
+// ============================================================================
+double Ostap::Math::beta 
+( const unsigned short x , 
+  const unsigned short y )
+  {
+    return 
+     ( x < 1 || y < 1 )      ? std::numeric_limits<double>::quiet_NaN () :
+     std::min ( x , y ) < 51 ? _beta_ ( std::min ( x  , y ) , std::max ( x , y ) ) : 
+     beta ( 1.0 * x , 1.0 * y ) ;
+  } 
 // ============================================================================
 /* natural logarith of beta function 
  *  \f$ \log B(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
@@ -1047,6 +1082,11 @@ double Ostap::Math::beta ( const double x , const double y )
 // ============================================================================
 double Ostap::Math::lnbeta ( const double x , const double y ) 
 { 
+  //
+  if  ( x <  0 && s_zero ( x ) ) { return std::numeric_limits<double>::quiet_NaN(); }
+  if  ( y <  0 && s_zero ( y ) ) { return std::numeric_limits<double>::quiet_NaN(); }
+  if  ( s_equal ( x , 1 )      ) { return - std::log ( y )  ; }
+  if  ( s_equal ( y , 1 )      ) { return - std::log ( x )  ; }
   //
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
