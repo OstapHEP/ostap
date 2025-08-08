@@ -126,6 +126,18 @@ namespace Ostap
      */
     std::pair<double,double>
     clopper_pearson_interval
+    ( const unsigned long  accepted  ,
+      const unsigned long  rejected  ,
+      const double         conflevel ) ;
+    // ========================================================================
+    /** Bayes' theorem based interval
+     *  @see M.Paterno, "Calculationg efficiencies and their uncertainties", 
+     *                   FERMILAB-TM-2286-CD
+     *  @see https://inspirehep.net/literature/669498
+     *  @see DOI: 10.2172/15017262
+     */
+    std::pair<double,double>
+    bayes_interval
     ( const unsigned long accepted  ,
       const unsigned long rejected  ,
       const double        conflevel ) ;

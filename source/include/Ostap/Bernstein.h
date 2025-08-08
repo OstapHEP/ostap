@@ -48,8 +48,9 @@ namespace Ostap
      *  \f$ B^n_k(x) = C^n_k x^k(1-x)^{n-k}\f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      */
-    class Bernstein : public Ostap::Math::PolySum
-		    , public Ostap::Math::WStatistic		      
+    class Bernstein
+      : public Ostap::Math::PolySum
+      , public Ostap::Math::WStatistic		      
     {
       // ======================================================================
     public:

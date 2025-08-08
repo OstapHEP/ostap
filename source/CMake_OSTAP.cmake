@@ -1,5 +1,6 @@
 #---Create a shared library 
 add_library(ostap SHARED src/format.cpp
+                         src/calceff.cpp
                          src/gauss.cpp
                          src/AddBranch.cpp
                          src/AddBuffer.cpp

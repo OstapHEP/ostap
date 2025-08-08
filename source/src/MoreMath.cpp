@@ -15,6 +15,7 @@
 #include "gsl/gsl_math.h"
 #include "gsl/gsl_errno.h"
 #include "gsl/gsl_math.h"
+#include "gsl/gsl_cdf.h"
 #include "gsl/gsl_sf_airy.h"
 #include "gsl/gsl_sf_fermi_dirac.h"
 #include "gsl/gsl_sf_hyperg.h"
@@ -38,6 +39,7 @@
 #include "Ostap/Clausen.h"
 #include "Ostap/Choose.h"
 #include "Ostap/Interpolants.h"
+#include "Ostap/Bernstein.h"
 #include "Ostap/ChebyshevApproximation.h"
 // ============================================================================
 // Local
@@ -1009,20 +1011,27 @@ double Ostap::Math::psi
   
 
 // ============================================================================
-/** beta function for 
+// Beta function
+// ============================================================================
+/*  beta function for 
  *  \f$ B(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
  *  - \f$ 0<x\f$
  *  - \f$ 0<y\f$ 
  *  @return value of beta function 
  */
 // ============================================================================
-double Ostap::Math::beta ( const double x , const double y ) 
+double Ostap::Math::beta
+( const double x ,
+  const double y ) 
 { 
   //
-  if  ( x <  0 && s_zero ( x ) ) { return std::numeric_limits<double>::quiet_NaN(); }
-  if  ( y <  0 && s_zero ( y ) ) { return std::numeric_limits<double>::quiet_NaN(); }
-  if  ( s_equal ( x , 1 )      ) { return 1 / y ; }
-  if  ( s_equal ( y , 1 )      ) { return 1 / x ; }
+  if ( x <  0 && s_zero ( x ) ) { return std::numeric_limits<double>::quiet_NaN(); }
+  if ( y <  0 && s_zero ( y ) ) { return std::numeric_limits<double>::quiet_NaN(); }
+  if ( s_equal ( x , 1 )      ) { return 1 / y ; }
+  if ( s_equal ( y , 1 )      ) { return 1 / x ; }
+  //
+  if ( 0.9 < x && x <= 50 && isushort ( x ) ) { return beta ( (unsigned short) round ( x ) , y ) ; }
+  if ( 0.9 < y && y <= 50 && isushort ( y ) ) { return beta ( x , (unsigned short) round ( y ) ) ; }
   //
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
@@ -1043,37 +1052,60 @@ double Ostap::Math::beta ( const double x , const double y )
   return result.val ;
 }
 // ============================================================================
-/** beta function for 
+/*  beta function for 
  *  \f$ B(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
  *  - \f$ 0<x\f$
  *  - \f$ 0<y\f$ 
  *  @return value of beta function 
  */
 // ============================================================================
-namespace
-{
-  inline double _beta_
-  ( const unsigned short i , 
-    const unsigned short j )
-  {
-    double result = 1.0 / j ; 
-    for ( unsigned short k = 1 ; k < i ; ++k )
-    { result *= k * 1.0 / ( k + j ) ; }
-    return result ; 
-  }
-}
-// ============================================================================
 double Ostap::Math::beta 
 ( const unsigned short x , 
   const unsigned short y )
-  {
-    return 
-     ( x < 1 || y < 1 )      ? std::numeric_limits<double>::quiet_NaN () :
-     std::min ( x , y ) < 51 ? _beta_ ( std::min ( x  , y ) , std::max ( x , y ) ) : 
-     beta ( 1.0 * x , 1.0 * y ) ;
-  } 
+{
+  if ( x < 1 || y < 1 ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  //
+  const unsigned short i = std::min ( x , y ) ;
+  const unsigned short j = std::max ( x , y ) ;
+  //
+  if ( 51 <= i ) { return beta ( 1.0 * x , 1.0 * y ) ; }
+  //
+  double result = 1.0 / j ;
+  for ( unsigned short  k = 1 ; k < i ; ++k ) { result *= k * 1.0 / ( k + j ) ; }
+  return result ;
+}
 // ============================================================================
-/* natural logarith of beta function 
+/*  beta function for 
+ *  \f$ B(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+ *  - \f$ 0<x\f$
+ *  - \f$ 0<y\f$ 
+ *  @return value of beta function 
+ */
+// ============================================================================
+double Ostap::Math::beta 
+( const unsigned short x , 
+  const double         y )
+{
+  if ( x < 1 || y <= 0  ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  if ( 51 <= x ) { return beta ( 1.0 * x , y ) ; }
+  //
+  double result = 1.0 / y ;
+  for ( unsigned short k = 1 ; k < x ; ++k ) { result *= k * 1.0 / ( k + y ) ; }
+  return result ;
+}
+// ============================================================================
+/*  beta function for 
+ *  \f$ B(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+ *  - \f$ 0<x\f$
+ *  - \f$ 0<y\f$ 
+ *  @return value of beta function 
+ */
+// ============================================================================
+double Ostap::Math::beta 
+( const double         x , 
+  const unsigned short y ) { return beta ( y , x ) ; }
+// ============================================================================
+/* natural logarithm of beta function 
  *  \f$ \log B(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
  *  - \f$ 0<x\f$
  *  - \f$ 0<y\f$ 
@@ -1459,9 +1491,21 @@ double Ostap::Math::beta_inc
   const double alpha2 , 
   const double z      ) 
 {
-  if ( z < 0 || 1 < z ) { return std::numeric_limits<double>::quiet_NaN(); }
-  if ( alpha1 <= 0    ) { return std::numeric_limits<double>::quiet_NaN(); }
-  if ( alpha2 <= 0    ) { return std::numeric_limits<double>::quiet_NaN(); }
+  //
+  if ( alpha1 <= 0       ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  if ( alpha2 <= 0       ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  //
+  if ( s_zero  ( z     ) ) { return 0 ; }
+  if ( s_equal ( z , 1 ) ) { return 1 ; }
+  //
+  if ( z < 0 || 1 < z    ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  //
+  if ( 0.99 < alpha1       && 0.99 < alpha2 &&
+       alpha1 < 50         && alpha2 < 50   &&
+       isushort ( alpha1 ) && alpha2 < 50     )
+    { return beta_inc ( (unsigned short) round ( alpha1 ) ,
+                        (unsigned short) round ( alpha2 ) , z ) ; }
+  // =============================================================================  
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
   //
@@ -1476,6 +1520,105 @@ double Ostap::Math::beta_inc
     //
   }
   return result.val ;         
+}
+// ============================================================================
+/*  Normalized incomplete Beta function  
+ *  \f$ f ( \alpha_1,\alpha_2, z ) = 
+ *      I_z( \alpha_1, \alpha_2 ) = 
+ *      \frac{\Beta_z(\alpha_1,\alpha_2}}
+ *           {\Beta  (\alpha_1,\alpha_2}
+ *  - \f$ 0<z<1\f$
+ *  - \f$ 0<\alpha_1\f$
+ *  - \f$ 0<\alpha_2\f$ 
+ */
+// ============================================================================
+double Ostap::Math::beta_inc 
+( const unsigned short alpha1 , 
+  const unsigned short alpha2 , 
+  const double         z      )
+{
+  if ( !alpha1 || !alpha2 ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  //
+  if ( s_zero  ( z     ) ) { return 0 ; }
+  if ( s_equal ( z , 1 ) ) { return 1 ; }
+  //
+  if ( z < 0 || 1 < z    ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  //
+  if ( 51 <= alpha1 || 51 <= alpha2 ) { return beta_inc ( 1.0 * alpha1 , 1.0 * alpha2 , z ) ; }
+  //
+  const unsigned short k = alpha1 - 1 ;
+  const unsigned short m = alpha2 - 1 ;
+  const unsigned short N { static_cast<unsigned short> ( k + m ) } ;
+  //
+  const Ostap::Math::Bernstein::Basic bb { k , N } ;
+  const Ostap::Math::Bernstein        B  { bb    } ;
+  //
+  return B.integral ( 0 , z ) * ( k + m + 1 ) ;
+}
+// ============================================================================
+/** Derivatibe of the normalized incomplete Beta function  
+ *  \f$ f ( \alpha_1,\alpha_2, z ) = 
+ *      I_z( \alpha_1, \alpha_2 ) = 
+ *      \frac{\Beta_z(\alpha_1,\alpha_2}}
+ *           {\Beta  (\alpha_1,\alpha_2}
+ *  - \f$ 0<z<1\f$
+ *  - \f$ 0<\alpha_1\f$
+ *  - \f$ 0<\alpha_2\f$ 
+ */
+// ============================================================================
+double Ostap::Math::dbeta_inc 
+( const double alpha1 , 
+  const double alpha2 , 
+  const double z      )
+{
+  //
+  if ( alpha1 <= 0       ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  if ( alpha2 <= 0       ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  if ( z < 0 || 1 < z    ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  //
+  if ( 0.99 < alpha1       && 0.99 < alpha2 &&
+       alpha1 < 50         && alpha2 < 50   &&
+       isushort ( alpha1 ) && alpha2 < 50     )
+    { return dbeta_inc ( (unsigned short) round ( alpha1 ) ,
+                         (unsigned short) round ( alpha2 ) , z ) ; }
+  // ==========================================================================
+  if ( s_zero  ( z     ) && 1 < alpha1 ) { return  0 ; }
+  if ( s_equal ( z , 1 ) && 1 < alpha2 ) { return  0 ; }
+  // ==========================================================================
+  const double result = std::pow ( z , alpha1 - 1 ) * std::pow ( 1 - z , alpha2 - 1 ) ;
+  return result / beta ( alpha1 , alpha2 ) ;
+  // ==========================================================================
+}
+// ============================================================================
+/*  Derivative of the normalized incomplete Beta function  
+ *  \f$ f ( \alpha_1,\alpha_2, z ) = 
+ *      I_z( \alpha_1, \alpha_2 ) = 
+ *      \frac{\Beta_z(\alpha_1,\alpha_2}}
+ *           {\Beta  (\alpha_1,\alpha_2}
+ *  - \f$ 0<z<1\f$
+ *  - \f$ 0<\alpha_1\f$
+ *  - \f$ 0<\alpha_2\f$ 
+ */
+// ============================================================================
+double Ostap::Math::dbeta_inc 
+( const unsigned short alpha1 , 
+  const unsigned short alpha2 , 
+  const double         z      )
+{
+  if ( !alpha1 || !alpha2 ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  //
+  if ( z < 0 || 1 < z     ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  //
+  if ( 51 <= alpha1 || 51 <= alpha2 ) { return dbeta_inc ( 1.0 * alpha1 , 1.0 * alpha2 , z ) ; }
+  //
+  const unsigned short k = alpha1 - 1 ;
+  const unsigned short m = alpha2 - 1 ;
+  const unsigned short N { static_cast<unsigned short> ( k + m ) } ;
+  //
+  const Ostap::Math::Bernstein::Basic bb { k , N } ;
+  const Ostap::Math::Bernstein        B  { bb    } ;
+  //
+  return B ( z ) * ( k + m + 1 ) ;
 }
 // ============================================================================
 namespace 
@@ -5518,7 +5661,23 @@ double Ostap::Math::smooth_transtion
     x >= xmax ? 1.0 :
     ::_smooth_phi_ ( ( x - xmin ) / ( xmax - xmin ) ) ;
 }
-
+// ============================================================================
+/* get quantile function for standard normal distribution
+ *  @see http://en.wikipedia.org./wiki/Probitq
+ *  @param alpha argument    \f$  0<\alpha<1 \f$  
+ *  @return quantile value 
+ */
+// ============================================================================
+double Ostap::Math::probit
+( const double alpha  )
+{
+  return
+    s_zero  ( alpha     ) ? -std::numeric_limits<double>::max () :
+    s_equal ( alpha , 1 ) ?  std::numeric_limits<double>::max () : 
+    alpha < 0             ?  std::numeric_limits<double>::quiet_NaN () :
+    alpha > 1             ?  std::numeric_limits<double>::quiet_NaN () :
+    gsl_cdf_ugaussian_Pinv ( alpha ) ; 
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

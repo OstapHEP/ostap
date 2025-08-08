@@ -8,7 +8,6 @@
 // GSL 
 // ============================================================================
 #include "gsl/gsl_cdf.h"
-#include "gsl/gsl_sf_gamma.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -33,33 +32,12 @@
 namespace
 {
   // ===========================================================================
-  /** get quantile function for standard normal distribution
-   *  @see http://en.wikipedia.org./wiki/Probit
-   */
-  inline double  _probit_ ( const double alpha  )
-  { return gsl_cdf_ugaussian_Pinv ( alpha ) ; }
+  inline double ibeta_inv
+  ( const double a ,
+    const double b ,
+    const double p )
+  { return gsl_cdf_beta_Pinv ( p , a , b ) ; } 
   // ==========================================================================
-  inline double ibeta_inv  ( const double a ,
-                             const double b ,
-                             const double p )
-  { return gsl_cdf_beta_Pinv      ( p , a , b ) ; } 
-  // ==========================================================================
-}
-// ============================================================================
-/* get quantile function for standard normal distribution
- *  @see http://en.wikipedia.org./wiki/Probitq
- *  @param alpha argument    \f$  0<\alpha<1 \f$  
- *  @return quantile value 
- */
-// ============================================================================
-double Ostap::Math::probit ( const double alpha  )
-{
-  return
-    s_zero  ( alpha     ) ? -std::numeric_limits<double>::max () :
-    s_equal ( alpha , 1 ) ?  std::numeric_limits<double>::max () : 
-    alpha < 0             ?  std::numeric_limits<double>::quiet_NaN () :
-    alpha > 1             ?  std::numeric_limits<double>::quiet_NaN () :  
-    _probit_ ( alpha  ) ;  
 }
 // ============================================================================
 /* normal approximation interval for binomial proportion/efficiency 
@@ -87,7 +65,7 @@ Ostap::Math::wald_interval
   if ( 0 >= conflevel  ) { return std::make_pair ( p , p )     ; }
   //
   const double alpha = 1 - conflevel ;
-  const double  z    = _probit_ ( 1 - 0.5  * alpha ) ;
+  const double  z    = probit ( 1 - 0.5  * alpha ) ;
   //
   // adjust cases of p=0 and p=1
   //
@@ -127,7 +105,7 @@ Ostap::Math::wilson_score_interval
   if ( 0 >= conflevel  ) { return std::make_pair ( p , p )     ; }
   //
   const double alpha = 1 - conflevel ;
-  const double  z  = _probit_ ( 1 - 0.5  * alpha ) ;
+  const double  z  = probit ( 1 - 0.5  * alpha ) ;
   //
   const long double n = accepted + rejected ;
   const double dx  = std::sqrt ( p * ( 1 - p ) / n + z * z / ( 4 * n * n ) ) ;
@@ -163,7 +141,7 @@ Ostap::Math::wilson_score_continuity_interval
   if ( 0 >= conflevel  ) { return std::make_pair ( p , p )     ; }
   //
   const double alpha = 1 - conflevel ;
-  const double  z  = _probit_ ( 1 - 0.5  * alpha ) ;
+  const double  z  = probit ( 1 - 0.5  * alpha ) ;
   //
   const double      np =  accepted ;
   const long double n  = accepted + rejected ;
@@ -202,7 +180,7 @@ Ostap::Math::arcsin_interval
   if ( 0 >= conflevel  ) { return std::make_pair ( p , p )     ; }
   //
   const double alpha = 1 - conflevel ;
-  const double  z  = _probit_ ( 1 - 0.5  * alpha ) ;
+  const double  z    = probit ( 1 - 0.5  * alpha ) ;
   //
   // const double p1  =
   //  0 == accepted ? ( a + 1 ) / ( a + rejected     ) :
@@ -249,7 +227,7 @@ Ostap::Math::agresti_coull_interval
   if ( 0 >= conflevel  ) { return std::make_pair ( p , p )     ; }
   //
   const double alpha = 1 - conflevel ;
-  const double  z  = _probit_ ( 1 - 0.5  * alpha ) ;
+  const double  z    = probit ( 1 - 0.5  * alpha ) ;
   //
   const double n1 = accepted + rejected + z * z ;
   const double p1 = ( accepted + 0.5 * z * z ) / n1 ;
@@ -330,9 +308,9 @@ Ostap::Math::clopper_pearson_interval
   //
   return std::make_pair ( low  , high ) ;
 }
-
+// ============================================================================
 
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================
 
