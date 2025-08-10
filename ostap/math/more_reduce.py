@@ -860,15 +860,18 @@ def _omlgam_reduce_ ( s ) :
 Ostap.Math.LogGamma . __reduce__ = _omlgam_reduce_
 
 # =============================================================================
-## Reduce Ostap::Math::BetaPrime
+## Reduce Ostap::Math::BetaPrime and Ostap::Math::Beta
 #  @see Ostap::Math::BetaPrime
+#  @see Ostap::Math::Beta
 def _ombprim_reduce_ ( s ) :
-    """Reduce `Ostap.Math.BetaPrime`
+    """Reduce `Ostap.Math.BetaPrime` & `Ostap.Math.Beta`
     - see `Ostap.Math.BetaPrime`
+    - see `Ostap.Math.Beta`
     """
     return root_factory , ( type ( s ) , s.alpha () , s.beta() , s.scale() , s.shift () )
 
 Ostap.Math.BetaPrime. __reduce__ = _ombprim_reduce_
+Ostap.Math.Beta     . __reduce__ = _ombprim_reduce_
 
 # =============================================================================
 ## Reduce Ostap::Math::GenBetaPrime

@@ -1963,9 +1963,9 @@ def _rloggam_reduce_ ( pdf ):
 Ostap.Models.LogGamma   .__reduce__ = _rloggam_reduce_ 
 
 # =============================================================================
-## reduce BetaPrime
+## reduce BetaPrime & Beta 
 def _rbetap_reduce_ ( pdf ):
-    """ Reduce BetaPrime"""
+    """ Reduce BetaPrime & Beta """
     return root_store_factory , ( type ( pdf )      ,
                                   pdf.name          ,
                                   pdf.title         ,
@@ -1976,6 +1976,7 @@ def _rbetap_reduce_ ( pdf ):
                                   pdf.shift      () )
 
 Ostap.Models.BetaPrime.__reduce__ = _rbetap_reduce_ 
+Ostap.Models.Beta     .__reduce__ = _rbetap_reduce_ 
 
 # =============================================================================
 ## reduce GenBetaPrime

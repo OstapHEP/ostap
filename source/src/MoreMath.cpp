@@ -1560,7 +1560,7 @@ double Ostap::Math::beta_inc
   return B.integral ( 0 , z ) * ( k + m + 1 ) ;
 }
 // ============================================================================
-/** Derivatibe of the normalized incomplete Beta function  
+/** Derivative of the normalized incomplete Beta function  
  *  \f$ f ( \alpha_1,\alpha_2, z ) = 
  *      I_z( \alpha_1, \alpha_2 ) = 
  *      \frac{\Beta_z(\alpha_1,\alpha_2}}
@@ -1586,8 +1586,13 @@ double Ostap::Math::dbeta_inc
     { return dbeta_inc ( (unsigned short) round ( alpha1 ) ,
                          (unsigned short) round ( alpha2 ) , z ) ; }
   // ==========================================================================
-  if ( s_zero  ( z     ) && 1 < alpha1 ) { return  0 ; }
-  if ( s_equal ( z , 1 ) && 1 < alpha2 ) { return  0 ; }
+  // density diverges
+  if ( alpha1 < 1 && s_zero (     z ) ) { return std::numeric_limits<double>::max () ; }
+  if ( alpha2 < 1 && s_zero ( 1 - z ) ) { return std::numeric_limits<double>::max () ; }
+  //
+  if ( alpha1 > 1 && s_zero (     z ) ) { return 0 ; }
+  if ( alpha2 > 1 && s_zero ( 1 - z ) ) { return 0 ; }
+  //
   // ==========================================================================
   double presult  = ( alpha1 - 1 ) * std::log ( z     ) ;
   presult        += ( alpha2 - 1 ) * std::log ( 1 - z ) ;
@@ -1642,7 +1647,9 @@ double Ostap::Math::beta_pdf
 ( const double x     ,
   const double alpha ,
   const double beta  )
-{ return dbeta_inc ( alpha , beta , x ) ; }
+{
+  return dbeta_inc ( alpha , beta , x ) ;
+}
 // ============================================================================
 /*  get CDF for beta distribution 
  *  \f[ F(x,\alpha, \beta ) = I_x(\alpha,\beta)\f] 

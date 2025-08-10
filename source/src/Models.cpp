@@ -44,6 +44,7 @@
 #include "local_math.h"
 #include "local_hash.h"
 #include "local_gsl.h"
+#include "status_codes.h"
 #include "Integrator1D.h"
 // ============================================================================
 /** @file
@@ -1398,6 +1399,212 @@ std::size_t Ostap::Math::LogGamma::tag () const
 
 
 
+
+// ============================================================================
+// Beta
+// ============================================================================
+/*  constructor with all parameters
+ *  @param alpha \f$\alpha\f$-parameter
+ *  @param beta  \f$\beta\f$-parameter
+ *  @param scale  scale-parameter
+ *  @param shift  shift-parameter
+ */
+// ============================================================================
+Ostap::Math::Beta::Beta
+( const double alpha ,
+  const double beta  ,
+  const double scale ,
+  const double shift ) 
+  : m_alpha ( std::abs ( alpha ) ) 
+  , m_beta  ( std::abs ( beta  ) )
+  , m_scale ( std::abs ( scale ) )
+  , m_shift (            shift   )
+{
+  Ostap::Assert ( 0 < m_alpha && !s_zero ( m_alpha )          ,
+                  "Invalid value of alpha (must be positive)" ,
+                  "Ostap::Math::Beta"                         ,
+                  INVALID_PARAMETER  , __FILE__ , __LINE__    ) ;
+  Ostap::Assert ( 0 < m_beta  && !s_zero ( m_beta  )          ,
+                  "Invalid value of beta  (must be positive)" ,
+                  "Ostap::Math::Beta"                         ,
+                  INVALID_PARAMETER  , __FILE__ , __LINE__    ) ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Math::Beta::~Beta (){}
+// ============================================================================
+bool Ostap::Math::Beta::setAlpha ( const double value ) 
+{
+  const double value_ = std::abs ( value ) ;
+  if ( s_equal ( value_ , m_alpha ) ) { return false ; }
+  m_alpha = value_ ;
+  //
+  Ostap::Assert ( 0 < m_alpha && !s_zero ( m_alpha )          ,
+                  "Invalid value of alpha (must be positive)" ,
+                  "Ostap::Math::Beta"                         ,
+                  INVALID_PARAMETER  , __FILE__ , __LINE__    ) ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::Beta::setBeta  ( const double value ) 
+{
+  const double value_ = std::abs ( value ) ;
+  if ( s_equal ( value_ , m_beta  ) ) { return false ; }
+  m_beta  = value_ ;
+  //
+  Ostap::Assert ( 0 < m_beta  && !s_zero ( m_beta  )          ,
+                  "Invalid value of beta  (must be positive)" ,
+                  "Ostap::Math::Beta"                         ,
+                  INVALID_PARAMETER  , __FILE__ , __LINE__    ) ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::Beta::setScale ( const double value ) 
+{
+  const double value_ = std::abs ( value ) ;
+  if ( s_equal ( value_ , m_scale  ) ) { return false ; }
+  m_scale  = value_ ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::Beta::setShift ( const double value ) 
+{
+  if ( s_equal ( value , m_shift  ) ) { return false ; }
+  m_shift  = value ;
+  return true ;
+}
+// ============================================================================
+// evaluate beta-distributions
+// ============================================================================
+double Ostap::Math::Beta::evaluate  ( const double x ) const
+{
+  const double tt = t ( x ) ;
+  if ( tt < 0 || 1 < tt ) { return 0 ; }
+  // density diverges
+  if ( m_alpha < 1 && s_zero (     tt ) ) { return std::numeric_limits<double>::max () ; }
+  if ( m_beta  < 1 && s_zero ( 1 - tt ) ) { return std::numeric_limits<double>::max () ; }
+  //
+  if ( m_alpha > 1 && s_zero (     tt ) ) { return 0 ; }
+  if ( m_beta  > 1 && s_zero ( 1 - tt ) ) { return 0 ; }
+  //
+  return beta_pdf ( tt , m_alpha , m_beta ) / m_scale ;
+}
+// ============================================================================
+// get CDF 
+// ============================================================================
+double Ostap::Math::Beta::cdf ( const double x ) const 
+{
+  //
+  const double tt = t ( x ) ;
+  if      ( tt <= 0 ) { return 0 ; }
+  else if ( tt >= 1 ) { return 1 ; }
+  //
+  return beta_cdf ( tt , m_alpha , m_beta ) ;
+}
+// ============================================================================
+// get integral 
+// ============================================================================
+double Ostap::Math::Beta::integral () const { return 1 ; }
+double Ostap::Math::Beta::integral
+( const double low  ,
+  const double high ) const
+{
+  if      ( s_equal ( low  , high ) ) { return 0 ; }
+  else if (           high < low    ) { return - integral ( high , low ) ; }
+  //
+  const double tlow  = t ( low  ) ;
+  const double thigh = t ( high ) ;
+  //
+  if ( thigh <= 0 || 1 <= tlow ) { return 0 ; }
+  //
+  const double flow  = tlow  <= 0 ? 0 : tlow >= 1 ? 1 : beta_cdf ( tlow , m_alpha , m_beta ) ;
+  const double fhigh = thigh <= 0 ? 0 : tlow >= 1 ? 1 : beta_cdf ( tlow , m_alpha , m_beta ) ;
+  //
+  return fhigh - flow ;
+}
+// ===========================================================================
+// mean
+// ===========================================================================
+double Ostap::Math::Beta::mean () const
+{
+  const double  value = m_alpha / ( m_alpha + m_beta ) ;
+  return x ( value ) ;
+}
+// ===========================================================================
+// mode 
+// ===========================================================================
+double Ostap::Math::Beta::mode () const
+{
+  const double  value =
+    m_alpha <  1                ? 0   :
+    m_beta  <  1                ? 1   :
+    1 == m_alpha && 1 == m_beta ? 0.5 :
+    ( m_alpha - 1 ) / ( m_alpha + m_beta - 2 ) ;
+  //
+  return x ( value ) ;
+}
+// ===========================================================================
+// variance 
+// ===========================================================================
+double Ostap::Math::Beta::variance () const
+{
+  const double value = m_alpha * m_beta /
+    ( std::pow ( m_alpha + m_beta , 2 ) * ( m_alpha + m_beta + 1 ) );
+  //
+  return value  * m_scale * m_scale ;
+}
+// ===========================================================================
+// RMS  
+// ===========================================================================
+double Ostap::Math::Beta::rms   () const
+{ return std::sqrt ( variance ()  ) ; }
+// ===========================================================================
+// skeness 
+// ===========================================================================
+double Ostap::Math::Beta::skewness () const
+{
+  return
+    2 * ( m_beta - m_alpha )   
+    * std::sqrt ( ( m_alpha + m_beta + 1 ) / ( m_alpha * m_beta ) )
+    / ( m_alpha + m_beta + 2 ) ;   
+}
+// ===========================================================================
+// (excess) kurtosis
+// ===========================================================================
+double Ostap::Math::Beta::kurtosis () const
+{
+  const double ab  = m_alpha * m_beta     ;
+  const double ab1 = m_alpha + m_beta + 1 ;
+  const double ab2 = ab1 + 1 ;
+  const double ab3 = ab2 + 1 ;
+  //
+  return 6 * ( std::pow ( m_alpha - m_beta , 2 ) * ab1 - ab * ab2 ) / ( ab * ab2 * ab3 ) ;
+}
+// ===========================================================================
+// quantile \f$ 0 \le p \le 1 \f$
+// ===========================================================================
+double Ostap::Math::Beta::quantile ( const double p  ) const
+{
+  //
+  if      ( p <= 0 ) { return x ( 0 ) ; } 
+  else if ( p >= 1 ) { return x ( 1 ) ; } 
+  //
+  const double tt = beta_quantile ( p , m_alpha , m_beta ) ;
+  return x ( tt ) ;
+}
+// ===========================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Beta::tag () const 
+{ 
+  static const std::string s_name = "Beta" ;
+  return Ostap::Utils::hash_combiner ( s_name , m_alpha , m_beta , m_scale , m_shift ) ; 
+}
+// ============================================================================
+
+
+
 // ============================================================================
 // Beta' 
 // ============================================================================
@@ -1419,12 +1626,14 @@ Ostap::Math::BetaPrime::BetaPrime
   , m_shift ( shift )
   , m_aux () 
 {
-  Ostap::Assert ( 0 < m_alpha && !s_zero ( m_alpha ) ,
-		  "Invalid value of alpha (must be positive" ,
-		  "Ostap::Math::BetaPrime" ) ;
-  Ostap::Assert ( 0 < m_beta  && !s_zero ( m_beta ) ,
-		  "Invalid value of beta  (must be positive" ,
-		  "Ostap::Math::BetaPrime" ) ;  
+  Ostap::Assert ( 0 < m_alpha && !s_zero ( m_alpha )          ,
+                  "Invalid value of alpha (must be positive)" ,
+                  "Ostap::Math::BetaPrime"                    ,
+                  INVALID_PARAMETER  , __FILE__ , __LINE__    ) ;
+  Ostap::Assert ( 0 < m_beta  && !s_zero ( m_beta  )          ,
+                  "Invalid value of beta  (must be positive)" ,
+                  "Ostap::Math::BetaPrime"                    ,
+                  INVALID_PARAMETER  , __FILE__ , __LINE__    ) ;
   // 
   m_aux = 1.0 / Ostap::Math::beta ( m_alpha , m_beta ) ;
 }

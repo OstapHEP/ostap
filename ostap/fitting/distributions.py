@@ -19,6 +19,7 @@
 - Landau_pdf           : Landau distribution 
 - Argus_pdf            : ARGUS distribution 
 - GenArgus_pdf         : Generalized ARGUS distribution 
+- Beta_pdf             : Beta distribution
 - TwoExpos_pdf         : Difference of two exponents
 - Gumbel_pdf           : Gumbel distributions
 - Rice_pdf             : Rice distribution
@@ -50,7 +51,8 @@ __all__     = (
     'GenBetaPrime_pdf'     , ## generalized Beta-prime distribution 
     'Landau_pdf'           , ## Landau distribution 
     'Argus_pdf'            , ## ARGUS distribution 
-    'GenArgus_pdf'         , ## Generalized ARGUS distribution 
+    'GenArgus_pdf'         , ## Generalized ARGUS distribution
+    'Beta_pdf'             , ## Beta distribution
     'TwoExpos_pdf'         , ## difference of two exponents
     'Gumbel_pdf'           , ## Gumbel distributions
     'Rice_pdf'             , ## Rice distribution 
@@ -947,6 +949,117 @@ class GenArgus_pdf(Argus_pdf) :
         self.set_value ( self.__dp , value )
 
 models.append ( GenArgus_pdf ) 
+
+
+# =============================================================================
+## @class Beta_pdf
+#  Beta distribution 
+#  @see https://en.wikipedia.org/wiki/Beta_distribution
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2025-08-10
+#  @see Ostap::Models::Beta
+#  @see Ostap::Math::Beta
+class Beta_pdf(PDF1) :
+    """  Beta distribution 
+    - see https://en.wikipedia.org/wiki/Beta_distribution
+    with scale and shift 
+    """
+    ## constructor
+    def __init__ ( self             ,
+                   name             , ## the name 
+                   xvar             , ## the variable
+                   alpha            ,
+                   beta             ,
+                   scale    = 1     ,
+                   shift    = 0     ) :
+        # =====================================================================
+        # Initiailze the base
+        PDF1.__init__ ( self , name , xvar )
+        # =====================================================================
+
+        ## ilmits (if any for X)
+        xminmax = self.xminmax()
+
+        name = self.name
+        
+        self.__alpha  = self.make_var ( alpha                   ,  
+                                        'alpha_%s'       % name ,
+                                        '#alpha_{B}(%s)' % name ,
+                                        None , alpha , 1.e-6 , 1.e+5 )
+        self.__beta   = self.make_var ( beta                    ,  
+                                        'beta_%s'        % name ,
+                                        '#beta_{B}(%s)'  % name ,
+                                        None , beta , 1.e-6 , 1.e+5 )
+        scale_lims = () 
+        shift_lims = () 
+        if xminmax :
+            xmn , xmx  = xminmax
+            xlen = xmx - xmn 
+            scale_lims = 0.001 * min ( 1 , xlen ) , 5 * max ( 1 , xlen ) 
+            shift_lims = xmn - 2 * xlen , xmx + 2 * xlen 
+            
+        self.__scale  = self.make_var ( scale                   ,
+                                        '#scale_%s'      % name ,
+                                        '#sigma_{B}(%s)' % name ,
+                                        None , scale  , *scale_lims )
+        self.__scale  = self.make_var ( shift                   ,  
+                                        '#shift_%s'      % name ,
+                                        '#delta_{B}(%s)' % name ,
+                                        None , shift  , *shift_lims )
+        
+        ## create PDF 
+        self.pdf  = Ostap.Models.Beta (
+            self.roo_name ( 'beta_' ) ,
+            'Beta %s' % self.name     , 
+            self.x     ,            
+            self.alpha ,
+            self.beta  ,
+            self.scale ,
+            self.shift )
+        
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'alpha' : self.alpha ,            
+            'beta'  : self.beta  ,            
+            'scale' : self.scale ,            
+            'shift' : self.shift ,            
+            }
+
+    @property
+    def alpha ( self ) :
+        """`alpha'-parameter of Beta distribution"""
+        return self.__alpha
+    @alpha.setter 
+    def alpha ( self , value ) :
+        self.set_value ( self.__alpha , value )
+        
+    @property
+    def beta ( self ) :
+        """`beta'-parameter of Beta distribution"""
+        return self.__beta
+    @beta.setter 
+    def beta ( self , value ) :
+        self.set_value ( self.__beta , value )
+
+    @property
+    def scale ( self ) :
+        """`scale'-parameter of Beta distribution"""
+        return self.__scale
+    @scale.setter 
+    def scale ( self , value ) :
+        self.set_value ( self.__scale , value )
+
+    @property
+    def shift ( self ) :
+        """`shift'-parameter of Beta distribution"""
+        return self.__shift
+    @shift.setter 
+    def shift ( self , value ) :
+        self.set_value ( self.__shift , value )
+
+models.append ( Beta_pdf ) 
 
 # =============================================================================
 ## @class TwoExpos_pdf

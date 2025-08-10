@@ -6,7 +6,8 @@
   1. Add `beta_pdf`, `beta_cdf` & `beta_quantile`
   1. Add `bayes_interval` for eauation of binomial intervals
   1. Add `histogram.eff_bayes` to get the "efficiency" graph 
-  
+  1. Add `Ostap::Math::Beta` , `Ostap::Models::Beta` and `ostap.fitting.distributions.Beta_pdf`
+      
 ## Backward-incompatible
     
   1. From now all arguments for (TMVA&Chopping) `Reader` are keyword-only 

@@ -6489,6 +6489,99 @@ Double_t Ostap::Models::LogGamma::analyticalIntegral
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================
+Ostap::Models::Beta::Beta
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          alpha  ,
+  RooAbsReal&          beta   ,
+  RooAbsReal&          scale  ,
+  RooAbsReal&          shift  )
+  : RooAbsPdf ( name , title ) 
+//
+  , m_x       ( "!x"      , "Observable" , this , x      ) 
+  , m_alpha   ( "!alpha"  , "alpha"      , this , alpha  ) 
+  , m_beta    ( "!beta"   , "beta"       , this , beta   ) 
+  , m_scale   ( "!scale"  , "scale"      , this , scale  ) 
+  , m_shift   ( "!shift"  , "shift"      , this , shift  ) 
+    //
+  , m_bfun    ( 1 , 1 , 1 , 0 ) 
+{
+  setPars() ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::Beta::Beta
+( const Ostap::Models::Beta& right ,
+  const char*                       name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_alpha  ( "!alpha"  , this , right.m_alpha  )
+  , m_beta   ( "!beta"   , this , right.m_beta   )
+  , m_scale  ( "!scale"  , this , right.m_scale  )
+  , m_shift  ( "!shift"  , this , right.m_shift  )
+    //
+  , m_bfun   (                   right.m_bfun    ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::Beta::~Beta () {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Beta*
+Ostap::Models::Beta::clone( const char* name ) const 
+{ return new Ostap::Models::Beta ( *this , name) ; }
+// ============================================================================
+void Ostap::Models::Beta::setPars () const 
+{
+  //
+  m_bfun.setAlpha  ( m_alpha  ) ;
+  m_bfun.setBeta   ( m_beta   ) ;
+  m_bfun.setScale  ( m_scale  ) ;
+  m_bfun.setShift  ( m_shift  ) ;
+  //
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Beta::evaluate() const 
+{
+  //
+  setPars () ;
+  //
+  return m_bfun ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::Beta::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Beta::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_bfun.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
 Ostap::Models::BetaPrime::BetaPrime
 ( const char*          name   , 
   const char*          title  ,
@@ -11348,6 +11441,7 @@ ClassImp(Ostap::Models::LogGammaDist       )
 ClassImp(Ostap::Models::Log10GammaDist     ) 
 ClassImp(Ostap::Models::LogGamma           )
 ClassImp(Ostap::Models::BetaPrime          ) 
+ClassImp(Ostap::Models::Beta               ) 
 ClassImp(Ostap::Models::GenBetaPrime       ) 
 ClassImp(Ostap::Models::Landau             ) 
 ClassImp(Ostap::Models::SinhAsinh          ) 

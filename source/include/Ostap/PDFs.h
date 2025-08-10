@@ -82,6 +82,7 @@ namespace Ostap
    *  - log10(Gamma-distribution)
    *  - Log-Gamma distribution
    *  - Beta-prime distribution
+   *  - Beta       distribution
    *
    *  Non-factorazeable smooth 2D-models
    *
@@ -4798,6 +4799,94 @@ namespace Ostap
       mutable Ostap::Math::LogGamma m_lgamma ; // the actual function
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class Beta
+     *  http://en.wikipedia.org/wiki/Beta_prime_distribution
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2025-08-10
+     *  @see Ostap::Math::Beta
+     */
+    class  Beta : public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Beta, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      Beta
+      ( const char*           name      ,
+        const char*           title     ,
+        RooAbsReal&           x         ,
+        RooAbsReal&           alpha     ,
+        RooAbsReal&           beta      ,
+        RooAbsReal&           scale     ,
+        RooAbsReal&           shift     ) ;
+      /// "copy constructor"
+      Beta
+      ( const Beta&           right     ,
+        const char*           name  = 0 )  ;
+      /// destructor
+      virtual ~Beta () ;
+      /// clone
+      Beta* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Beta () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Beta& function() const { return m_bfun ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x      .arg() ; }
+      const RooAbsReal& alpha () const { return m_alpha  .arg() ; }
+      const RooAbsReal& beta  () const { return m_beta   .arg() ; }
+      const RooAbsReal& scale () const { return m_scale  .arg() ; }
+      const RooAbsReal& shift () const { return m_shift  .arg() ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x        ;
+      RooRealProxy m_alpha    ;
+      RooRealProxy m_beta     ;
+      RooRealProxy m_scale    ;
+      RooRealProxy m_shift    ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Beta m_bfun ; // the actual function
+      // ======================================================================
+    } ;
+
+
     // ========================================================================
     /** @class BetaPrime
      *  http://en.wikipedia.org/wiki/Beta_prime_distribution

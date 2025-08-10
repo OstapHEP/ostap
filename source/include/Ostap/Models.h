@@ -987,7 +987,113 @@ namespace Ostap
       double  m_lambda  ;
       double  m_alpha   ;
       // ======================================================================
-    } ;
+    } ;    
+    // ========================================================================
+    /** @class Beta
+     *  http://en.wikipedia.org/wiki/Beta_prime_distribution
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+     *  @date   2025-08-10
+     */
+    class  Beta
+    {
+    public:
+      // ======================================================================
+      /** constructor with all parameters
+       *  @param alpha \f$\alpha\f$-parameter
+       *  @param beta  \f$\beta\f$-parameter
+       *  @param scale  scale-parameter
+       *  @param shift  shift-parameter
+       */
+      Beta
+      ( const double alpha = 1 ,
+        const double beta  = 1 ,
+        const double scale = 1 ,
+        const double shift = 0 ) ;
+      /// destructor
+      ~Beta () ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate beta-distributions
+      double        evaluate  ( const double x ) const ;
+      /// evaluate beta'-distributions
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      /// evaluate beta'-distributions
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public: // direct getters
+      // ======================================================================
+      double alpha () const { return m_alpha ; }
+      double beta  () const { return m_beta  ; }
+      double scale () const { return m_scale ; }
+      double shift () const { return m_shift ; }
+      // ======================================================================
+    public: // general properties
+      // ======================================================================
+      /// mean 
+      double        mean       () const ;
+      ///  mode 
+      double        mode       () const ;
+      /// Variance 
+      double        variance   () const ;
+      /// RMS == sqrt (variance)
+      double        rms        () const ;
+      /// skewness 
+      double        skewness   () const ;
+      /// (excess kurtosis)
+      double        kurtosis   () const ;
+      /// dispersion == variance
+      inline double dispersion () const { return variance () ; }
+      /// sigma == RMS 
+      inline double sigma      () const { return rms      () ; }
+      // ======================================================================
+    public: // direct setters
+      // ======================================================================
+      bool   setAlpha ( const double value ) ;
+      bool   setBeta  ( const double value ) ;
+      bool   setScale ( const double value ) ;
+      bool   setShift ( const double value ) ;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      double integral ()                    const ;
+      double cdf      ( const double x    ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      // ======================================================================
+    public: // internal <--> external tsranformation 
+      // ======================================================================
+      /// internal t to external x 
+      inline double x ( const double t ) const { return m_shift + t * m_scale     ; }
+      /// externa x to internal t 
+      inline double t ( const double x ) const { return ( x - m_shift ) / m_scale ; }
+      // ======================================================================
+    public: // support 
+      // ======================================================================
+      /// minimal x 
+      inline double xmin () const { return m_shift           ; } 
+      /// maximal x 
+      inline double xmax () const { return m_shift + m_scale ; } 
+      // ======================================================================
+    public: // quantile 
+      // ======================================================================
+      /// quantile \f$ 0 \le p \le1 \f$
+      double quantile ( const double p  ) const ; 
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      double m_alpha { 1 } ;
+      double m_beta  { 5 } ;
+      double m_scale { 1 } ;
+      double m_shift { 0 } ;
+      // ======================================================================
+    } ;    
     // ========================================================================
     /** @class BetaPrime
      *  http://en.wikipedia.org/wiki/Beta_prime_distribution
@@ -2703,7 +2809,7 @@ namespace Ostap
       // ======================================================================
       /// evalaute the function 
       double evaluate ( const double x )  const ;
-      /// evalaute the function 
+      /// evaluate the function 
       inline double operator () ( const double x )  const 
       { return evaluate ( x ) ;  }
       // ======================================================================
