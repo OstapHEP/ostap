@@ -199,8 +199,9 @@ namespace
 // ============================================================================
 // constructor: make use of Gsl Error Handler: print error to stderr 
 // ============================================================================
-Ostap::Utils::GslError::GslError ( Ostap::Utils::GslError::handler* h     , 
-                                   const bool                       force )
+Ostap::Utils::GslError::GslError
+( Ostap::Utils::GslError::handler* h     , 
+  const bool                       force )
   : m_previous ( gsl_set_error_handler ( h ) ) 
   , m_force    ( force ) 
 { 

@@ -1507,18 +1507,22 @@ double Ostap::Math::beta_inc
                         (unsigned short) round ( alpha2 ) , z ) ; }
   // =============================================================================  
   // use GSL: 
-  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  // Ostap::Math::GSL::GSL_Error_Handler sentry { false } ;
+  // Ostap::Utils::GslCount sentry { true } ;
+  Ostap::Utils::GslIgnore sentry { true } ;
   //
   gsl_sf_result result ;
   const int ierror = gsl_sf_beta_inc_e ( alpha1 , alpha2 , z , &result ) ;
   if ( ierror ) 
-  {
-    //
-    gsl_error ( "Error from gsl_sf_beta_inc_e" , __FILE__ , __LINE__ , ierror ) ;
-    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-    { return std::numeric_limits<double>::quiet_NaN(); }
-    //
-  }
+    {
+      if ( ierror == GSL_EMAXITER ) {}
+      if ( ierror == GSL_EUNDRFLW ) { return 0 ; }
+      //
+      gsl_error ( "Error from gsl_sf_beta_inc_e" , __FILE__ , __LINE__ , ierror ) ;
+      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+        { return std::numeric_limits<double>::quiet_NaN(); }
+      //
+    }
   return result.val ;         
 }
 // ============================================================================
@@ -1585,8 +1589,13 @@ double Ostap::Math::dbeta_inc
   if ( s_zero  ( z     ) && 1 < alpha1 ) { return  0 ; }
   if ( s_equal ( z , 1 ) && 1 < alpha2 ) { return  0 ; }
   // ==========================================================================
-  const double result = std::pow ( z , alpha1 - 1 ) * std::pow ( 1 - z , alpha2 - 1 ) ;
-  return result / beta ( alpha1 , alpha2 ) ;
+  double presult  = ( alpha1 - 1 ) * std::log ( z     ) ;
+  presult        += ( alpha2 - 1 ) * std::log ( 1 - z ) ;
+  presult        -= lnbeta ( alpha1 , alpha2 ) ;
+  //
+  return presult  <= s_EXP_UNDERFLOW ? 0.0 : std::exp ( presult ) ;
+  // const double result = std::pow ( z , alpha1 - 1 ) * std::pow ( 1 - z , alpha2 - 1 ) ;
+  // return result / beta ( alpha1 , alpha2 ) ;
   // ==========================================================================
 }
 // ============================================================================
@@ -1621,13 +1630,155 @@ double Ostap::Math::dbeta_inc
   return B ( z ) * ( k + m + 1 ) ;
 }
 // ============================================================================
+/*   get PDF for beta distribution 
+ *  \f[ f(x,\alpha, \beta ) =  
+ *   \frac{ x^(\alpha-1) (1-x)^{\beta-1}} { B(\alpha,\beta} \f] 
+ *  - \f$ 0 < x < 1 \f$ 
+ *  - \f$ 0 < alpha \f$ 
+ *  - \f$ 0 < beta   \f$ 
+ */
+// ============================================================================
+double Ostap::Math::beta_pdf
+( const double x     ,
+  const double alpha ,
+  const double beta  )
+{ return dbeta_inc ( alpha , beta , x ) ; }
+// ============================================================================
+/*  get CDF for beta distribution 
+ *  \f[ F(x,\alpha, \beta ) = I_x(\alpha,\beta)\f] 
+ *  - \f$ 0 < x < 1 \f$ 
+ *  - \f$ 0 < alpha \f$ 
+ *  - \f$ 0 < beta   \f$ 
+ */
+// ============================================================================
+double Ostap::Math::beta_cdf
+( const double x     ,
+  const double alpha ,
+  const double beta  )
+{
+  return
+    x <= 0 || s_zero  ( x     ) ? 0.0 :
+    x >= 1 || s_equal ( x , 1 ) ? 1.0 : beta_inc ( alpha , beta , x ) ;
+}
+// ============================================================================
+/*  Quantile function CDF for beta distribution 
+ *  - \f$ 0 \le  p \le 1 \f$ 
+ *  - \f$ 0 < alpha \f$ 
+ *  - \f$ 0 < beta   \f$ 
+ */
+// ============================================================================
+double Ostap::Math::beta_quantile 
+( const double p     ,
+  const double alpha ,
+  const double beta  )
+{
+  if ( p <= 0 || s_zero  ( p     ) ) { return 0 ; }
+  if ( p >= 1 || s_equal ( p , 1 ) ) { return 1 ; }
+  //
+  if ( alpha <= 0 ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  if ( beta  <= 0 ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  //
+  auto f  = [ alpha, beta, p ] ( const double x ) -> double
+  { return beta_cdf ( x , alpha , beta ) - p ; } ;
+  //
+  double xlow  = 0 ; 
+  double xhigh = 1 ;
+  //
+  double flow  =   - p ;
+  double fhigh = 1 - p ;
+  // ==========================================================================
+  // (1) several bisection iterations 
+  // ==========================================================================
+  static const std::size_t NB = 10    ;
+  static const std::size_t NN = 10    ;
+  static const double      DX = 1.e-9 ;
+  //
+  for ( std::size_t i = 0 ; i < NB ; ++i )
+    {
+      const double xmid = 0.5 * ( xlow + xhigh ) ;
+      const double fmid = f ( xmid ) ;
+      //
+      if   ( s_zero ( fmid ) ) { return xmid ; }              // RETURN
+      //
+      if   ( flow * fmid < 0 ) { xhigh = xmid ; fhigh = fmid ; }
+      else                     { xlow  = xmid ; flow  = fmid ; }
+      //
+      flow  *= 2 ;
+      fhigh *= 2 ;
+    }
+  // ==========================================================================
+  // (2) switch to Newton method
+  // ==========================================================================
+  // derivative 
+  auto df = [ alpha, beta    ] ( const double x ) -> double
+  { return beta_pdf ( x , alpha , beta ) ; } ;
+  //
+  double x0 = 0.5 * ( xlow + xhigh ) ;
+  // (1) several Newton iterations 
+  for ( std::size_t i = 0 ; i < NN ; ++i )
+    {
+      const double x1 = x0 - f ( x0 ) / df ( x0 ) ;
+      if ( x1 <= xlow || xhigh <=  x1 ) 
+        {
+          /// if Newton jumps outside the interval: more bisection iterations!
+          for ( std::size_t j = 0 ; j < NB ; ++j )
+            {
+              const double xmid = 0.5 * ( xlow + xhigh ) ;
+              const double fmid = f ( xmid ) ;
+              //
+              if   ( s_zero ( fmid ) ) { return xmid ; }  // RETURN 
+              //
+              if   ( flow * fmid < 0 ) { xhigh = xmid ; fhigh = fmid ; }
+              else                     { xlow  = xmid ; flow  = fmid ; }
+              //
+              flow  *= 2 ;
+              fhigh *= 2 ;
+            }
+          //
+          x0 = 0.5 * ( xlow + xhigh ) ;          
+          continue ;                                      // CONTINUE 
+        }
+      // 
+      // check convergency:
+      //
+      // (a) step size 
+      if ( std::abs ( x0 - x1 ) < DX ) { return x1 ; } // RETURN
+      //
+      // (b) funcion is zero
+      const double f0 = f ( x1 ) ;
+      if ( s_zero   ( f0 )           ) { return x1 ; } // RETURN
+      //
+      x0 = x1 ;
+    }
+  // ==========================================================================
+  // (3) no Newton convergency ? more bisection iterations!
+  // ==========================================================================
+  for ( std::size_t j = 0 ; j < 2 * NB ; ++j )
+    {
+      const double xmid = 0.5 * ( xlow + xhigh ) ;
+      const double fmid = f ( xmid ) ;
+      //
+      if   ( s_zero ( fmid ) ) { return xmid ; }                     // RETURN 
+      //
+      if   ( flow * fmid < 0 ) { xhigh = xmid ; fhigh = fmid ; }
+      else                     { xlow  = xmid ; flow  = fmid ; }
+      //
+      flow  *= 2 ;
+      fhigh *= 2 ;
+      //
+      if ( std::abs ( xlow - xhigh ) < DX ) { return 0.5 * ( xlow + xhigh ) ; } // RETURN
+    }
+  //
+  return 0.5 * ( xlow + xhigh )  ;
+}
+// ============================================================================
 namespace 
 {
   // ==========================================================================
   typedef unsigned long long ULL ;
-  // ==============================================================================
+  // ==========================================================================
   // calculate Pochhammer symbol
-  // ==============================================================================
+  // ==========================================================================
   inline long double _pochhammer_ ( const long double x , const unsigned short N ) 
   {
     if      (  0 == N ) { return 1 ; }

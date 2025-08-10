@@ -2206,13 +2206,19 @@ ROOT.TH1D. agrestiCoullEff = lambda haccepted,htotal : binomEff_h1 ( haccepted ,
 # =============================================================================
 ## @var one_sigma
 #  the width of the +-1 sigma confidence interval 
-one_sigma   = 0.682689492137086  ## the width of the +-1 sigma confidence interval 
+one_sigma   = Ostap.Math.gauss_cdf ( 1.0 ) - Ostap.Math.gauss_cdf ( -1.0 )
 ## @var two_sigma
 #  the width of the +-2 sigma confidence interval 
-two_sigma   = 0.9544997361036415 ## the width of the +-2 sigma confidence interval 
+two_sigma   = Ostap.Math.gauss_cdf ( 2.0 ) - Ostap.Math.gauss_cdf ( -2.0 )
 ## @var three_sigma
 #  the width of the +-3 sigma confidence interval 
-three_sigma = 0.9973002039367398 ## the width of the +-3 sigma confidence interval 
+three_sigma = Ostap.Math.gauss_cdf ( 3.0 ) - Ostap.Math.gauss_cdf ( -3.0 )
+## @var four_sigma
+#  the width of the +-4 sigma confidence interval 
+four_sigma  = Ostap.Math.gauss_cdf ( 4.0 ) - Ostap.Math.gauss_cdf ( -4.0 )
+## @var five_sigma
+#  the width of the +-5 sigma confidence interval 
+five_sigma  = Ostap.Math.gauss_cdf ( 5.0 ) - Ostap.Math.gauss_cdf ( -5.0 )
 # =============================================================================
 ## calculate the efficiency graph using the binomial intervals 
 #  @code 
@@ -2224,7 +2230,8 @@ three_sigma = 0.9973002039367398 ## the width of the +-3 sigma confidence interv
 #  >>> efficiency = acepted.eff_arcsin                  ( rejected )
 #  >>> efficiency = acepted.eff_agresti_coull           ( rejected )
 #  >>> efficiency = acepted.eff_jeffreys                ( rejected )
-#  >>> efficiency = acepted.eff_clopper_pearson         ( rejected )#
+#  >>> efficiency = acepted.eff_clopper_pearson         ( rejected )
+#  >>> efficiency = acepted.eff_bayes                   ( rejected )
 #  @endcode
 #  @see Ostap::Math::wald_interval
 #  @see Ostap::Math::wilson_score_interval
@@ -2233,6 +2240,7 @@ three_sigma = 0.9973002039367398 ## the width of the +-3 sigma confidence interv
 #  @see Ostap::Math::agresti_coull_interval
 #  @see Ostap::Math::jeffreys_interval
 #  @see Ostap::Math::clopper_pearson_interval
+#  @see Ostap::Math::bayes_interval
 #  @see https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
@@ -2247,6 +2255,7 @@ def binom_interval_h1 ( accepted , rejected , func , interval = one_sigma ) :
     >>> efficiency = acepted.eff_agresti_coull           ( rejected )
     >>> efficiency = acepted.eff_jeffreys                ( rejected )
     >>> efficiency = acepted.eff_clopper_pearson         ( rejected )
+    >>> efficiency = acepted.eff_bayes                   ( rejected )
     - see https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval
     - see Ostap::Math::wald_interval
     - see Ostap::Math::wilson_score_interval
@@ -2255,6 +2264,7 @@ def binom_interval_h1 ( accepted , rejected , func , interval = one_sigma ) :
     - see Ostap::Math::agresti_coull_interval
     - see Ostap::Math::jeffreys_interval
     - see Ostap::Math::clopper_pearson_interval
+    - see Ostap::Math::bayes_interval
     """
     #
     h1 = accepted
@@ -2321,6 +2331,8 @@ ROOT.TH1F.eff_jeffreys                = lambda accepted,rejected,interval=one_si
 ROOT.TH1D.eff_jeffreys                = lambda accepted,rejected,interval=one_sigma : binom_interval_h1 ( accepted , rejected , Ostap.Math.jeffreys_interval                , interval ) 
 ROOT.TH1F.eff_clopper_pearson         = lambda accepted,rejected,interval=one_sigma : binom_interval_h1 ( accepted , rejected , Ostap.Math.clopper_pearson_interval         , interval ) 
 ROOT.TH1D.eff_clopper_pearson         = lambda accepted,rejected,interval=one_sigma : binom_interval_h1 ( accepted , rejected , Ostap.Math.clopper_pearson_interval         , interval ) 
+ROOT.TH1F.eff_bayes                   = lambda accepted,rejected,interval=one_sigma : binom_interval_h1 ( accepted , rejected , Ostap.Math.bayes_interval                   , interval ) 
+ROOT.TH1D.eff_bayes                   = lambda accepted,rejected,interval=one_sigma : binom_interval_h1 ( accepted , rejected , Ostap.Math.bayes_interval                   , interval ) 
 
 # =============================================================================
 ## calculate the efficiency histogram using the binomial errors 
@@ -9597,6 +9609,8 @@ _new_methods_  += (
     ROOT.TH1D.eff_jeffreys                ,
     ROOT.TH1F.eff_clopper_pearson         ,
     ROOT.TH1D.eff_clopper_pearson         ,
+    ROOT.TH1F.eff_bayes                   ,
+    ROOT.TH1D.eff_bayes                   ,
     #
     ROOT.TH2F.  binomEff    ,
     ROOT.TH2D.  binomEff    ,

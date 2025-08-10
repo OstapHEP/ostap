@@ -887,7 +887,7 @@ namespace Ostap
     ( const double h , 
       const double a ) ;
     // ========================================================================
-
+    
     // ========================================================================
     /** get the gaussian integral
      *  \f[ f = \int_a^b \exp { -\alpha^2 x^2 + \beta x } \mathrm{d}x \f]
@@ -1978,6 +1978,40 @@ namespace Ostap
       const double         x ) ;
     // ========================================================================
 
+    // ========================================================================
+    /**  get PDF for beta distribution 
+     *  \f[ f(x,\alpha, \beta ) =  
+     *   \frac{ x^(\alpha-1) (1-x)^{\beta-1}} { B(\alpha,\beta} \f] 
+     *  - \f$ 0 < x < 1 \f$ 
+     *  - \f$ 0 < alpha \f$ 
+     *  - \f$ 0 < beta   \f$ 
+     */
+    double beta_pdf
+    ( const double x     ,
+      const double alpha ,
+      const double beta  ) ;
+    // ========================================================================
+    /**  get CDF for beta distribution 
+     *  \f[ F(x,\alpha, \beta ) = I_x(\alpha,\beta)\f] 
+     *  - \f$ 0 < x < 1 \f$ 
+     *  - \f$ 0 < alpha \f$ 
+     *  - \f$ 0 < beta   \f$ 
+     */
+    double beta_cdf
+    ( const double x     ,
+      const double alpha ,
+      const double beta  ) ;
+    // ========================================================================
+    /**  Quantile function CDF for beta distribution 
+     *  - \f$ 0 \le  p \le 1 \f$ 
+     *  - \f$ 0 < alpha \f$ 
+     *  - \f$ 0 < beta   \f$ 
+     */
+    double beta_quantile 
+    ( const double p     ,
+      const double alpha ,
+      const double beta  ) ;
+        
     // ========================================================================
     // clenshaw summation algorithms 
     // ========================================================================
