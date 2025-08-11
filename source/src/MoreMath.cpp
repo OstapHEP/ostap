@@ -1668,6 +1668,164 @@ double Ostap::Math::beta_cdf
     x >= 1 || s_equal ( x , 1 ) ? 1.0 : beta_inc ( alpha , beta , x ) ;
 }
 // ============================================================================
+#include <iostream> 
+namespace
+{
+  // ==========================================================================
+  double _beta_quantile_
+  ( const double p     ,
+    const double alpha ,
+    const double beta  )
+  {
+    // make real calculations
+    // 
+    auto f  = [ alpha, beta, p ] ( const double x ) -> double
+    { return Ostap::Math::beta_cdf ( x , alpha , beta ) - p ; } ;
+    //
+    double xlow  = 0 ; 
+    double xhigh = 1 ;
+    //
+    double flow  =   - p ;
+    double fhigh = 1 - p ;
+    //
+    // ==========================================================================
+    // (1) several bisection iterations 
+    // ==========================================================================
+    static const std::size_t s_N1 = 10       ; // #first bisections 
+    static const std::size_t s_N2 = 10       ; // #newton
+    static const std::size_t s_N3 = 10       ; // #second bisections
+    static const std::size_t s_N4 = 20       ; // #last bisection 
+    static const double      s_DX = 1.e-9    ;
+    //
+    double xmid = 0.5 * ( xlow + xhigh ) ;
+    for ( std::size_t i = 0 ; i < s_N1 ; ++i )
+      {
+	//
+	const double dx = std::abs ( xhigh - xlow ) ;
+	//
+	// (1) regular falsi step 
+	const double xrf = ( xlow * fhigh - xhigh * flow ) / ( fhigh - flow ) ;
+	
+	std::cout
+	  << " iteration : " << i
+	  << " xrf         "    << xrf 
+	  << " xlow/xhigh/dx "      << xlow << " / " << xhigh << " / " << dx 
+	  << std::endl ;
+	
+	if ( xlow < xrf && xrf < xhigh )
+	  {
+	    const double frf  = f ( xrf ) ;
+	    if   ( s_zero ( frf  ) ) { return xrf ; }               // RETURN
+	    //
+	    if   ( flow * frf < 0 ) { xhigh = xrf ; fhigh = frf ; }
+	    else                    { xlow  = xrf ; flow  = frf ; }
+	    // interval is very small
+	    
+	    std::cout
+	      << " ItErAtIoN : " << i
+	      << " xrf         " << xrf 
+	      << " xlow/xhigh/dx "      << xlow << " / " << xhigh << " / " << ( ( xhigh - xlow ) / dx -1 ) * 100 
+	      << std::endl ;
+	    
+	   
+	    if ( std::abs ( xhigh - xlow ) < s_DX   ) { return  0.5 * ( xlow + xhigh ) ; }
+	    // successful regular falsi step 
+	    if ( 2 * std::abs ( xhigh - xlow ) < dx ) { continue ; } 
+	  }
+	//
+ 	//
+	// normal bisection:
+	xmid = 0.5 * ( xlow + xhigh ) ;
+	//
+	const double fmid = f ( xmid ) ;	
+	if   ( s_zero ( fmid ) ) { return xmid ; }                  // RETURN 
+	//
+	if   ( flow * fmid < 0 ) { xhigh = xmid ; fhigh = fmid ; }
+	else                     { xlow  = xmid ; flow  = fmid ; }
+	//
+	if ( std::abs ( xhigh - xlow ) < s_DX ) { return  0.5 * ( xlow + xhigh ) ; } 
+	//
+	flow  *= 2 ;
+	fhigh *= 2 ;
+	//
+	std::cout
+	  << " ITERATION : " << i
+	  << " xmid        " << xmid
+	  << " dx "          << ( xhigh - xlow )
+	  << std::endl ;
+      }
+    // ==========================================================================
+    // (2) switch to Newton method
+    // ==========================================================================
+    // derivative 
+    auto df = [ alpha, beta    ] ( const double x ) -> double
+    { return Ostap::Math::beta_pdf ( x , alpha , beta ) ; } ;
+    //
+    double x0 = 0.5 * ( xlow + xhigh ) ;
+    // (1) several Newton iterations 
+    for ( std::size_t i = 0 ; i < s_N2 ; ++i )
+      {
+	const double x1 = x0 - f ( x0 ) / df ( x0 ) ;
+	/// if Newton jumps outside the interval: more bisection iterations!
+	if ( x1 <= xlow || xhigh <= x1 ) 
+	  {
+	    for ( std::size_t j = 0 ; j < s_N3 ; ++j )
+	      {
+		const double xmid = 0.5 * ( xlow + xhigh ) ;
+		const double fmid = f ( xmid ) ;
+		//
+		if   ( s_zero ( fmid ) ) { return xmid ; }      // RETURN
+		//
+		if   ( flow * fmid < 0 ) { xhigh = xmid ; fhigh = fmid ; }
+		else                     { xlow  = xmid ; flow  = fmid ; }
+		//
+		if ( std::abs ( xhigh - xlow ) < s_DX )
+		  { return 0.5 * ( xlow + xhigh ) ; }           // RETURN
+		//	      
+		flow  *= 2 ;
+		fhigh *= 2 ;
+		//	      
+	      }
+	    //
+	    x0 = 0.5 * ( xlow + xhigh ) ;          
+	    continue ;                                      // CONTINUE 
+	  }
+	// 
+	// check convergency:
+	//
+	// (a) function is zero 
+	if ( s_zero ( f ( x1 ) )         ) { return x1 ; } // RETURN 
+	// (b) step is very small 
+	if ( std::abs ( x1 - x0 ) < s_DX ) { return x1 ; } // RETURN 
+	//
+	x0 = x1 ;
+      }
+    // ========================================================================
+    // (3) no Newton convergency ? more bisection iterations!
+    // ========================================================================
+    for ( std::size_t j = 0 ; j < s_N4 ; ++j )
+      {
+	xmid = 0.5 * ( xlow + xhigh ) ;
+	const double fmid = f ( xmid ) ;
+	//
+	if ( s_zero ( fmid ) ) { return xmid ; }                    // RETURN
+	//
+	if   ( flow * fmid < 0 ) { xhigh = xmid ; fhigh = fmid ; }
+	else                     { xlow  = xmid ; flow  = fmid ; }
+	//
+	if ( std::abs ( xhigh - xlow ) < s_DX ) { return 0.5 * ( xlow + xhigh ) ; }
+	//	            
+	flow  *= 2 ;
+	fhigh *= 2 ;
+	//
+      }
+    //
+    // What can we do here ? nothing...just the final bisection step.... 
+    return 0.5 * ( xlow + xhigh ) ;
+  }
+  // ==========================================================================
+}
+// ============================================================================
 /*  Quantile function CDF for beta distribution 
  *  - \f$ 0 \le  p \le 1 \f$ 
  *  - \f$ 0 < alpha \f$ 
@@ -1685,98 +1843,35 @@ double Ostap::Math::beta_quantile
   if ( alpha <= 0 ) { return std::numeric_limits<double>::quiet_NaN () ; }
   if ( beta  <= 0 ) { return std::numeric_limits<double>::quiet_NaN () ; }
   //
-  auto f  = [ alpha, beta, p ] ( const double x ) -> double
-  { return beta_cdf ( x , alpha , beta ) - p ; } ;
   //
-  double xlow  = 0 ; 
-  double xhigh = 1 ;
+  typedef std::map<std::size_t,double>  MAP   ;
+  typedef SyncedCache<MAP>              CACHE ;
+  /// the cache
+  static CACHE                        s_CACHE {} ; // the cache
   //
-  double flow  =   - p ;
-  double fhigh = 1 - p ;
-  // ==========================================================================
-  // (1) several bisection iterations 
-  // ==========================================================================
-  static const std::size_t NB = 10    ;
-  static const std::size_t NN = 10    ;
-  static const double      DX = 1.e-9 ;
+  static const std::size_t s_MAX_CACHE { 50000 } ; 
   //
-  for ( std::size_t i = 0 ; i < NB ; ++i )
-    {
-      const double xmid = 0.5 * ( xlow + xhigh ) ;
-      const double fmid = f ( xmid ) ;
-      //
-      if   ( s_zero ( fmid ) ) { return xmid ; }              // RETURN
-      //
-      if   ( flow * fmid < 0 ) { xhigh = xmid ; fhigh = fmid ; }
-      else                     { xlow  = xmid ; flow  = fmid ; }
-      //
-      flow  *= 2 ;
-      fhigh *= 2 ;
-    }
-  // ==========================================================================
-  // (2) switch to Newton method
-  // ==========================================================================
-  // derivative 
-  auto df = [ alpha, beta    ] ( const double x ) -> double
-  { return beta_pdf ( x , alpha , beta ) ; } ;
+  static const std::string s_name = "BetaQ" ;
+  const std::size_t key = Ostap::Utils::hash_combiner ( s_name , alpha , beta , p ) ;
   //
-  double x0 = 0.5 * ( xlow + xhigh ) ;
-  // (1) several Newton iterations 
-  for ( std::size_t i = 0 ; i < NN ; ++i )
-    {
-      const double x1 = x0 - f ( x0 ) / df ( x0 ) ;
-      if ( x1 <= xlow || xhigh <=  x1 ) 
-        {
-          /// if Newton jumps outside the interval: more bisection iterations!
-          for ( std::size_t j = 0 ; j < NB ; ++j )
-            {
-              const double xmid = 0.5 * ( xlow + xhigh ) ;
-              const double fmid = f ( xmid ) ;
-              //
-              if   ( s_zero ( fmid ) ) { return xmid ; }  // RETURN 
-              //
-              if   ( flow * fmid < 0 ) { xhigh = xmid ; fhigh = fmid ; }
-              else                     { xlow  = xmid ; flow  = fmid ; }
-              //
-              flow  *= 2 ;
-              fhigh *= 2 ;
-            }
-          //
-          x0 = 0.5 * ( xlow + xhigh ) ;          
-          continue ;                                      // CONTINUE 
-        }
-      // 
-      // check convergency:
-      //
-      // (a) step size 
-      if ( std::abs ( x0 - x1 ) < DX ) { return x1 ; } // RETURN
-      //
-      // (b) funcion is zero
-      const double f0 = f ( x1 ) ;
-      if ( s_zero   ( f0 )           ) { return x1 ; } // RETURN
-      //
-      x0 = x1 ;
-    }
-  // ==========================================================================
-  // (3) no Newton convergency ? more bisection iterations!
-  // ==========================================================================
-  for ( std::size_t j = 0 ; j < 2 * NB ; ++j )
-    {
-      const double xmid = 0.5 * ( xlow + xhigh ) ;
-      const double fmid = f ( xmid ) ;
-      //
-      if   ( s_zero ( fmid ) ) { return xmid ; }                     // RETURN 
-      //
-      if   ( flow * fmid < 0 ) { xhigh = xmid ; fhigh = fmid ; }
-      else                     { xlow  = xmid ; flow  = fmid ; }
-      //
-      flow  *= 2 ;
-      fhigh *= 2 ;
-      //
-      if ( std::abs ( xlow - xhigh ) < DX ) { return 0.5 * ( xlow + xhigh ) ; } // RETURN
-    }
+  // (1) check a value already calculated 
   //
-  return 0.5 * ( xlow + xhigh )  ;
+  { 
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    auto it = s_CACHE->find ( key ) ;
+    if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
+  }
+  //
+  // (2) make the real calculations
+  const double result = _beta_quantile_ ( p , alpha , beta ) ;
+  // add calculated value into the cache 
+  { 
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear() ; }
+    s_CACHE->insert ( std::make_pair ( key , result ) ) ;
+  }
+  //
+  return result ;
 }
 // ============================================================================
 namespace 

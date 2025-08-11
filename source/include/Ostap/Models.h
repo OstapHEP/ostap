@@ -1034,6 +1034,8 @@ namespace Ostap
       double        mean       () const ;
       ///  mode 
       double        mode       () const ;
+      ///  median 
+      double        median     () const ;
       /// Variance 
       double        variance   () const ;
       /// RMS == sqrt (variance)
