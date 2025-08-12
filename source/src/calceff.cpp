@@ -7,6 +7,7 @@
 #include <cmath>
 #include <limits>
 #include <array>
+#include <map>
 // ============================================================================
 // GSL 
 // ============================================================================
@@ -16,12 +17,15 @@
 // ============================================================================
 #include "Ostap/Binomial.h"
 #include "Ostap/MoreMath.h"
+#include "Ostap/Hash.h"
 #include "Ostap/LinAlg.h"
 // ============================================================================
 // Local 
 // ============================================================================
 #include "local_math.h"
 #include "local_gsl.h"
+#include "local_hash.h"
+#include "syncedcache.h" 
 #include "GSL_sentry.h"
 // ============================================================================
 /** @file
@@ -77,6 +81,27 @@ Ostap::Math::bayes_interval
   if ( !accepted ) { return std::make_pair ( 0.0 , 1 - std::pow ( 1 - conflevel , 1.0 / ( rejected + 1 ) )       ) ; }
   if ( !rejected ) { return std::make_pair (           std::pow ( 1 - conflevel , 1.0 / ( accepted + 1 ) ) , 1.0 ) ; }  
   ///
+  typedef std::pair<double,double>     RESULT ; 
+  typedef std::map<std::size_t,RESULT> MAP    ;
+  typedef SyncedCache<MAP>             CACHE  ;
+  /// the cache
+  static CACHE                        s_CACHE {} ; // the cache
+  //
+  static const std::size_t s_MAX_CACHE { 50000 } ; 
+  //
+  static const std::string s_name = "BetaQ" ;
+  const std::size_t key = Ostap::Utils::hash_combiner ( s_name , accepted , rejected , conflevel ) ;
+  //
+  // (1) check a value already calculated 
+  //
+  { 
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    auto it = s_CACHE->find ( key ) ;
+    if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
+  }
+  //
+  // (2) perform calcuations! 
+  // 
   const double par_alpha = accepted + 1 ;
   const double par_beta  = rejected + 1 ;
   //
@@ -90,7 +115,6 @@ Ostap::Math::bayes_interval
   auto Q   = [par_alpha,par_beta] ( const double p ) -> double
   { return Ostap::Math::beta_quantile ( p , par_alpha , par_beta   ) ; } ;       
   ///
-
 
   // use GSL: 
   // Ostap::Math::GSL::GSL_Error_Handler sentry ;
@@ -150,8 +174,18 @@ Ostap::Math::bayes_interval
   gsl_min_fminimizer_free( s ) ;
   // upper edge of the interval 
   const double beta = Q ( CDF ( alpha ) + conflevel ) ;
-  // result 
-  return std::make_pair ( alpha , beta ) ;  
+  // result
+  //
+  RESULT result { alpha , beta } ;
+  //
+  // add calculated value into the cache 
+  { 
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear() ; }
+    s_CACHE->insert ( std::make_pair ( key , result ) ) ;
+  }  
+  //
+  return result ;
 }
 // ============================================================================
 //                                                                      The END 

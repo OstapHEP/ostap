@@ -2426,6 +2426,38 @@ Ostap::Math::ValueWithError Ostap::Math::b2s
   //
   return  cov2 / v -  1.0 ; 
 }
+// ===========================================================================
+/** calculate Punzi's Figure-of-merit 
+ * 
+ * Punzi's estimator is defined as :
+ *  \f$ P_{\alpha} = \frac{ epsilon} { \frac{\alpha}{2} + \sqrt{B} }}\f$  
+ * where 
+ * - \f$ \epsilon \f$ stands for efficiency 
+ * - \f$ \alpha \f$ is a target significance 
+ * - \f$ B \f$ is background 
+ *
+ * Here we use the signal itself instead of efficiency and
+ * effective backround is taken from the signal uncertainty
+ *
+ * Also we use \f$ \alpha = \max ( 0,alpha ) \f$ 
+ *
+ * @param s     (INPUT) signal (with uncertainty)
+ * @param alpha (INPUT) the target significance in number of stantard deviations
+ * @return      Punzi's Figure-of-merit 
+ */
+// ===========================================================================
+double Ostap::Math::punzi
+( const Ostap::Math::ValueWithError& s     ,
+  const double                       alpha )
+{
+  //
+  const double value = s.value () ;
+  if ( value <= 0 || s_zero ( value ) ) { return 0 ; } 
+  //
+  // attention!
+  const double b = std::max ( s.cov2() - value , 0.0 ) ;
+  return s / ( 0.5 * std::abs ( alpha ) + std::sqrt ( b ) ) ;
+}
 // ============================================================================
 /* calculate the useful Figure-of-merit, aka "significance" 
  *  \f$ \frac{S}{\sqrt{S+B}} = \frac{S}{\sigma} \f$

@@ -1597,6 +1597,28 @@ namespace Ostap
     ValueWithError purity 
     ( const ValueWithError& v ) ;
     // ========================================================================
+    /** calculate Punzi's Figure-of-merit 
+     * 
+     * Punzi's estimator is defined as :
+     *  \f$ P_{\alpha} = \frac{ epsilon} { \frac{\alpha}{2} + \sqrt{B} }}\f$  
+     * where 
+     * - \f$ \epsilon \f$ stands for efficiency 
+     * - \f$ \alpha \f$ is a target significance 
+     * - \f$ B \f$ is background 
+     *
+     * Here we use the signal itself instead of efficiency and
+     * effective backround is taken from the signal uncertainty
+     *
+     * also we use \f$ \alpha = \max ( 0,alpha ) \f$ 
+     *
+     * @param s     (INPUT) signal (with uncertainty)
+     * @param alpha (INPUT) the target significance in number of stantard deviations
+     * @return      Punzi's Figure-of-merit 
+     */
+    double punzi
+    ( const ValueWithError& s           ,
+      const double          alpha = 5.0 ) ;
+    // ========================================================================
     /** calculate "asymmetry" of two elements: \f$ \kappa = \frac{a-b}{a+b}\f$ 
      *  taking into account the correlation coefficient  
      *  @param a  (input) the first value 

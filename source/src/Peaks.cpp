@@ -5591,12 +5591,11 @@ void Ostap::Math::SkewGenT::calc_b
   double& b3 )    // B(3/p,q-2/p) / B ( 1/p.q) 
 {
   //
-  const long double qq = q () ;
-  //
+  const double qq   = q () ;
   const double lnb1 = Ostap::Math::lnbeta ( m_r , qq ) ;
   b1 = std::exp ( - lnb1 ) ;
-  b2 = std::exp ( Ostap::Math::lnbeta ( 2*m_r , qq -     m_r ) - lnb1 ) ;
-  b3 = std::exp ( Ostap::Math::lnbeta ( 3*m_r , qq - 2 * m_r ) - lnb1 ) ;
+  b2 = std::exp ( Ostap::Math::lnbeta ( 2 * m_r , qq -     m_r ) - lnb1 ) ;
+  b3 = std::exp ( Ostap::Math::lnbeta ( 3 * m_r , qq - 2 * m_r ) - lnb1 ) ;
   //
 }
 // ======================================================================

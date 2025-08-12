@@ -12,7 +12,7 @@
 # @endcode
 # @see Ostap::Math::ValueWithError
 # ============================================================================= 
-r""" Simple `value-with-error' concept
+""" Simple `value-with-error' concept
 
 >>> a = VE (1,0.1**2) 
 >>> b = VE (2,0.2**2)
@@ -110,6 +110,43 @@ def _ve_b2s_ ( s )  :
     return Ostap.Math.b2s ( VE ( s ) ) 
 
 # =============================================================================
+## Calculate Punzi's figure of merit
+#
+#  P(alpha) = efficiency / ( 0.5 * alpha * sqrt ( B ) )
+#
+#  where
+#  - efficiency is (MC) efficiency
+#  - alpha is a target significnace
+#  - B is an effective background.
+#
+#  Here we use the signal instead of efficiency
+#  and we derive the background from the signal uncertainty
+#
+#  @param s     (INPUT) signal (with uncertainty)
+#  @param alpha (INPUT) the target significance in number of stantard deviations
+#  @return      Punzi's Figure-of-merit 
+#  @see Ostap::Math::punzi
+def _ve_punzi_ ( s , alpha = 5.0 ) :
+    """ Calculate Punzi's figure of meritЖ
+
+      P(alpha) = efficiency / ( 0.5 * alpha * sqrt ( B ) )
+
+      where
+    - efficiency is (MC) efficiency
+    - alpha is a target significnace
+    - B is an effective background.
+    
+    Here we use the signal instead of efficiency
+    and we derive the background from the signal uncertainty
+    - see `Ostap.Math.punzi`
+    
+    - s     : (INPUT) signal (with uncertainty)
+    - alpha : (INPUT) the target significance in number of stantard deviations
+    - return Punzi's Figure-of-merit 
+    """
+    return Ostap.Math.punzi ( VE ( s ) , float ( alpha ) ) 
+
+# =============================================================================
 ## Calculate the "effective purity" ratio using the identity
 #  \f$ p_{\mathrm{eff}} = \frac{S}{S+B} = \frac{1}{1+\frac{B}{S}}\f$
 #  and the effective "background-to-signal" ratio is estimated as 
@@ -165,6 +202,7 @@ def _ve_fom2_  ( s ) :
 VE . b2s        = _ve_b2s_
 VE . B2S        = _ve_b2s_
 VE . purity     = _ve_purity_
+VE . punzi      = _ve_punzi_
 VE . precision  = _ve_precision_
 VE . prec       = _ve_precision_
 VE . FoM        = _ve_fom_
@@ -491,7 +529,7 @@ def ve_factory ( value , cov2 ) :
     """ Factory for unpickling of <code>Ostap::Math::ValueWithError</code>
     - see Ostap::Math::ValueWithError
     """
-    return  VE ( value , cov2 ) 
+    return VE ( value , cov2 ) 
     
 # =============================================================================
 ## reduce <code>Ostap::Math::ValueWithError</code>
@@ -528,6 +566,7 @@ _new_methods_ = (
     VE . b2s              , 
     VE . B2S              , 
     VE . purity           ,  
+    VE . punzi            ,  
     VE . precision        , 
     VE . prec             , 
     VE . FoM              , 

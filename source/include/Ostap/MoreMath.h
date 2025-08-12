@@ -526,11 +526,41 @@ namespace Ostap
      *  \f$ \log \Beta(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
      *  - \f$ 0<x\f$
      *  - \f$ 0<y\f$ 
-     *  @return value of logarith of beta function 
+     *  @return value of logarithm of beta function 
      */
     double lnbeta
     ( const double x ,
       const double y ) ;
+    // ========================================================================
+    /** natural logarithm of beta function 
+     *  \f$ \log \Beta(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+     *  - \f$ 0<x\f$
+     *  - \f$ 0<y\f$ 
+     *  @return value of logarithm of beta function 
+     */
+    double lnbeta
+    ( const unsigned short x ,
+      const unsigned short y ) ;
+    // ========================================================================
+    /** natural logarithm of beta function 
+     *  \f$ \log \Beta(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+     *  - \f$ 0<x\f$
+     *  - \f$ 0<y\f$ 
+     *  @return value of logarithm of beta function 
+     */
+    double lnbeta
+    ( const unsigned short x ,
+      const double         y ) ;
+    // ========================================================================
+    /** natural logarithm of beta function 
+     *  \f$ \log \Beta(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+     *  - \f$ 0<x\f$
+     *  - \f$ 0<y\f$ 
+     *  @return value of logarithm of beta function 
+     */
+    double lnbeta
+    ( const double         x , 
+      const unsigned short y ) ;
     // ========================================================================
     /** Normalized incomplete Beta function  
      *  \f$ f ( \alpha_1,\alpha_2, z ) = 
@@ -1906,10 +1936,23 @@ namespace Ostap
     /** Ramanudjan' sum
      *  \f$ R(x) = \sum_{n=1}^{+\infty} \frac{ (-1)^{n-1}x^n}{n!2^{n-1}
      *  \sum_{k=0}{ floor (\frac{n-1}{2})} \frac{1}{2k+1}\f$ 
-     *  Helpe sum function to calcaltuon integral logarithm or integral exponent 
+     *  Helper sum function to calcaltuon integral logarithm or integral exponent 
      */
     double ramanudjan_sum ( const double x ) ;
     // ========================================================================
+    /** Integal sinh 
+     *  \f[ f(x) = \int\limits_{0}^x}\frac{\sinh t}{t} dt \f]
+     *  @see gsl_fs_Shi_e 
+     */
+    double Shi ( const double x ) ;
+    // =========================================================================
+    /** Integral cosh 
+     *  \f[ f(x) = R\left[ \gamma + \log x \int\limits_{0}^x}\frac{\cosh t - t }{t} dt \right]\f]
+     *  @see gsl_fs_Chi_e 
+     */
+    double Chi ( const double x ) ; 
+    // =========================================================================
+    
 
     // ========================================================================
     /** get Clausen function \f$ Cl_2 \f$ 
@@ -2012,6 +2055,87 @@ namespace Ostap
       const double alpha ,
       const double beta  ) ;
         
+    // ========================================================================
+    // Hypergeometric functions 
+    // ========================================================================
+    /** Confluent Kummer's Hypergeometric function of  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
+     *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+     *  @see gsl_sf_hyperg_1F1_e
+     */
+    double hyperg_1F1
+    ( const double a ,
+      const double b ,
+      const double x ) ;
+    // ======================================================================
+    /** Confluent Kummer's Hypergeometric  function  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
+     *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+     *  @see gsl_sf_hyperg_1F1_int_e
+     */
+    double hyperg_1F1 
+    ( const int            a ,
+      const unsigned short b ,
+      const double         x ) ;
+    // ======================================================================
+    /** Confluent Kummer's Hypergeometric function of  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
+     *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+     *  @see gsl_sf_hyperg_1F1_e
+     */
+    inline double M 
+    ( const double a ,
+      const double b ,
+      const double x ) { return hyperg_1F1 ( a, b, x ) ; } 
+    // ======================================================================
+    /** Confluent Kummer's Hypergeometric  function  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
+     *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+     *  @see gsl_sf_hyperg_1F1_int_e
+     */
+    inline double M
+    ( const int            a ,
+      const unsigned short b ,
+      const double         x ) { return hyperg_1F1 ( a, b, x ) ; } 
+    // ======================================================================    
+    /** Confluent Kummer's Hypergeometric function of  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
+     *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+     *  @see gsl_sf_hyperg_1F1_e
+     */
+    inline double kummer
+    ( const double a ,
+      const double b ,
+      const double x ) { return hyperg_1F1 ( a, b, x ) ; } 
+    // ======================================================================
+    /** Confluent Kummer's Hypergeometric  function  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
+     *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+     *  @see gsl_sf_hyperg_1F1_int_e
+     */
+    inline double kummer
+    ( const int            a ,
+      const unsigned short b ,
+      const double         x ) { return hyperg_1F1 ( a, b, x ) ; } 
+    // ======================================================================
+    
+    // ======================================================================
+    /** Gauss's hypergeometric function 
+     *  \f$ {}_2F_1 (a,b,c,x) = \sum \frac{a_nb_n}{c_n} \frac{x^n}{n!}\f$ 
+     *  for \f$ \left|x\right|<1\f$
+     *  @see gsl_sf_hyperg_2F1
+     */
+    double hyperg_2F1
+    ( const double a ,
+      const double b ,
+      const double c ,
+      const double x ) ;
+    // ========================================================================
+    /** Regularized/renormalized  Gauss's hypergeometric function 
+     *  \f$   \frac{ {}_2F_1 (a,b,c,x)}{\Gamma(c)} \f$ 
+     *  for \f$ \left|x\right|<1\f$ 
+     *  @see gsl_sf_hyperg_2F1_renorm
+     */
+    double hyperg_2F1_renorm
+    ( const double a ,
+      const double b ,
+      const double c ,
+      const double x ) ;
+    
     // ========================================================================
     // clenshaw summation algorithms 
     // ========================================================================

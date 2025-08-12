@@ -7,7 +7,8 @@
   1. Add `bayes_interval` for eauation of binomial intervals
   1. Add `histogram.eff_bayes` to get the "efficiency" graph 
   1. Add `Ostap::Math::Beta` , `Ostap::Models::Beta` and `ostap.fitting.distributions.Beta_pdf`
-      
+  1. Add `Ostap::Math::punzi` fnuction to obtain estiamate for Punzi's figure-of-merit
+  
 ## Backward-incompatible
     
   1. From now all arguments for (TMVA&Chopping) `Reader` are keyword-only 

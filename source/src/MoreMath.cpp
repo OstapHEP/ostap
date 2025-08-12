@@ -19,6 +19,7 @@
 #include "gsl/gsl_sf_airy.h"
 #include "gsl/gsl_sf_fermi_dirac.h"
 #include "gsl/gsl_sf_hyperg.h"
+#include "gsl/gsl_sf_expint.h"
 #include "gsl/gsl_sf_gamma.h"
 #include "gsl/gsl_sf_exp.h"
 #include "gsl/gsl_sf_log.h"
@@ -1025,13 +1026,17 @@ double Ostap::Math::beta
   const double y ) 
 { 
   //
-  if ( x <  0 && s_zero ( x ) ) { return std::numeric_limits<double>::quiet_NaN(); }
-  if ( y <  0 && s_zero ( y ) ) { return std::numeric_limits<double>::quiet_NaN(); }
+  if ( x <  0 || s_zero ( x ) ) { return std::numeric_limits<double>::quiet_NaN(); }
+  if ( y <  0 || s_zero ( y ) ) { return std::numeric_limits<double>::quiet_NaN(); }
   if ( s_equal ( x , 1 )      ) { return 1 / y ; }
   if ( s_equal ( y , 1 )      ) { return 1 / x ; }
   //
-  if ( 0.9 < x && x <= 50 && isushort ( x ) ) { return beta ( (unsigned short) round ( x ) , y ) ; }
-  if ( 0.9 < y && y <= 50 && isushort ( y ) ) { return beta ( x , (unsigned short) round ( y ) ) ; }
+  const bool x_int = 0.95 < x && x <= 200 && isushort ( y ) ;
+  const bool y_int = 0.95 < y && y <= 200 && isushort ( y ) ;
+  //
+  if ( x_int && y_int ) { return beta ( (unsigned short) round ( x ) , (unsigned short) round ( y ) ) ; } 
+  else if (     x_int ) { return beta ( (unsigned short) round ( x ) , y ) ; }
+  else if (     y_int ) { return beta ( x , (unsigned short) round ( y ) ) ; }
   //
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
@@ -1041,7 +1046,7 @@ double Ostap::Math::beta
   if ( ierror ) 
   {
     // 
-    if ( GSL_EUNDRFLW == ierror ) { return 0 ;}
+    if ( GSL_EUNDRFLW == ierror ) { return 0 ; }
     // 
     gsl_error ( "Error from gsl_sf_beta_e" , __FILE__ , __LINE__ , ierror ) ;
     if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
@@ -1063,12 +1068,12 @@ double Ostap::Math::beta
 ( const unsigned short x , 
   const unsigned short y )
 {
-  if ( x < 1 || y < 1 ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  if ( !x || !y ) { return std::numeric_limits<double>::quiet_NaN () ; }
   //
   const unsigned short i = std::min ( x , y ) ;
   const unsigned short j = std::max ( x , y ) ;
   //
-  if ( 51 <= i ) { return beta ( 1.0 * x , 1.0 * y ) ; }
+  if ( 201 <= i ) { return beta ( 1.0 * x , 1.0 * y ) ; }
   //
   double result = 1.0 / j ;
   for ( unsigned short  k = 1 ; k < i ; ++k ) { result *= k * 1.0 / ( k + j ) ; }
@@ -1086,8 +1091,12 @@ double Ostap::Math::beta
 ( const unsigned short x , 
   const double         y )
 {
-  if ( x < 1 || y <= 0  ) { return std::numeric_limits<double>::quiet_NaN () ; }
-  if ( 51 <= x ) { return beta ( 1.0 * x , y ) ; }
+  if ( !x || y < 0 || s_zero ( y ) ) { return std::numeric_limits<double>::quiet_NaN(); }
+  // y is integer? 
+  const bool y_int = 0.95 < y && y <= 200 && isushort ( y ) ;
+  if ( y_int    ) { return beta ( x , (unsigned short) round ( y ) ) ; }
+  //
+  if ( 201 <= x ) { return beta ( 1.0 * x , y ) ; }
   //
   double result = 1.0 / y ;
   for ( unsigned short k = 1 ; k < x ; ++k ) { result *= k * 1.0 / ( k + y ) ; }
@@ -1109,16 +1118,25 @@ double Ostap::Math::beta
  *  \f$ \log B(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
  *  - \f$ 0<x\f$
  *  - \f$ 0<y\f$ 
- *  @return value of logarith of beta function 
+ *  @return value of logarithm of beta function 
  */
 // ============================================================================
-double Ostap::Math::lnbeta ( const double x , const double y ) 
+double Ostap::Math::lnbeta
+( const double x ,
+  const double y ) 
 { 
   //
-  if  ( x <  0 && s_zero ( x ) ) { return std::numeric_limits<double>::quiet_NaN(); }
-  if  ( y <  0 && s_zero ( y ) ) { return std::numeric_limits<double>::quiet_NaN(); }
+  if  ( x <  0 || s_zero ( x ) ) { return std::numeric_limits<double>::quiet_NaN(); }
+  if  ( y <  0 || s_zero ( y ) ) { return std::numeric_limits<double>::quiet_NaN(); }
   if  ( s_equal ( x , 1 )      ) { return - std::log ( y )  ; }
   if  ( s_equal ( y , 1 )      ) { return - std::log ( x )  ; }
+  //
+  const bool x_int = 0.95 < x && x <= 200 && isushort ( y ) ;
+  const bool y_int = 0.95 < y && y <= 200 && isushort ( y ) ;
+  //
+  if ( x_int && y_int ) { return lnbeta ( (unsigned short) round ( x ) , (unsigned short) round ( y ) ) ; } 
+  else if (     x_int ) { return lnbeta ( (unsigned short) round ( x ) , y ) ; }
+  else if (     y_int ) { return lnbeta ( x , (unsigned short) round ( y ) ) ; }
   //
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
@@ -1136,6 +1154,70 @@ double Ostap::Math::lnbeta ( const double x , const double y )
   //
   return result.val ;
 }
+// ============================================================================
+/* Natural logarithm of beta function     
+ *  \f$ \log \Beta(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+ *  - \f$ 0<x\f$
+ *  - \f$ 0<y\f$ 
+ *  @return value of logarithm of beta function 
+ */
+// ============================================================================
+double Ostap::Math::lnbeta
+( const unsigned short x ,
+  const unsigned short y )
+{
+  if ( !x || !y ) { return std::numeric_limits<double>::quiet_NaN(); }
+  if ( 1 == x   ) { return - std::log ( 1.0 * y ) ; }
+  if ( 1 == y   ) { return - std::log ( 1.0 * x ) ; }
+  //
+  const unsigned short i = std::min ( x , y ) ;
+  const unsigned short j = std::max ( x , y ) ;
+  //
+  if ( 201 <= i ) { return lnbeta ( 1.0 * x , 1.0 * y ) ; }
+  //
+  double result = - std::log ( 1.0 * y ) ;
+  for ( unsigned short  k = 1 ; k < i ; ++k ) { result +=
+      std::log ( k * 1.0 / ( k + j ) ) ; }
+  return result ;  
+}
+// ============================================================================
+/* Natural logarithm of beta function     
+ *  \f$ \log \Beta(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+ *  - \f$ 0<x\f$
+ *  - \f$ 0<y\f$ 
+ *  @return value of logarithm of beta function 
+ */
+// ============================================================================
+double Ostap::Math::lnbeta
+( const unsigned short x ,
+  const double         y )
+{
+  if ( !x || y < 0 || s_zero ( y ) ) { return std::numeric_limits<double>::quiet_NaN(); }
+  if ( 1 == x ) { return - std::log ( y ) ; }
+  //
+  // y is integer? 
+  const bool y_int = 0.95 < y && y <= 200 && isushort ( y ) ;
+  if ( y_int    ) { return lnbeta ( x , (unsigned short) round ( y ) ) ; }
+  //
+  if ( 201 <= x ) { return lnbeta ( 1.0 * x , 1.0 * y ) ; }
+  //  
+  double result = - std::log ( 1.0 * y ) ;
+  for ( unsigned short  k = 1 ; k < x ; ++k ) { result += std::log ( k * 1.0 / ( k + y ) ) ; }
+  return result ;  
+}
+// ============================================================================
+/* Natural logarithm of beta function     
+ *  \f$ \log \Beta(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+ *  - \f$ 0<x\f$
+ *  - \f$ 0<y\f$ 
+ *  @return value of logarithm of beta function 
+ */
+// ============================================================================
+double Ostap::Math::lnbeta
+( const double         x , 
+  const unsigned short y )
+{ return lnbeta ( y , x ) ; }
+
 // ============================================================================
 /*  get the gaussian integral
  *  \f[ f = \int_a^b \exp { -\alpha^2 x^2 + \beta x } \mathrm{d}x \f]
@@ -1668,7 +1750,6 @@ double Ostap::Math::beta_cdf
     x >= 1 || s_equal ( x , 1 ) ? 1.0 : beta_inc ( alpha , beta , x ) ;
 }
 // ============================================================================
-#include <iostream> 
 namespace
 {
   // ==========================================================================
@@ -1689,51 +1770,50 @@ namespace
     double fhigh = 1 - p ;
     //
     // ==========================================================================
-    // (1) several bisection iterations 
+    // (1) several blended bisection/regular falsi  iterations 
     // ==========================================================================
-    static const std::size_t s_N1 = 10       ; // #first bisections 
+    static const std::size_t s_N1 =  6       ; // #first bisections 
     static const std::size_t s_N2 = 10       ; // #newton
-    static const std::size_t s_N3 = 10       ; // #second bisections
-    static const std::size_t s_N4 = 20       ; // #last bisection 
+    static const std::size_t s_N3 =  6       ; // #second bisections
+    static const std::size_t s_N4 = 10       ; // #last bisection 
     static const double      s_DX = 1.e-9    ;
     //
-    double xmid = 0.5 * ( xlow + xhigh ) ;
+    const double DD = std::min ( 1.e-4 , 0.1 * std::min ( alpha , beta ) / ( alpha + beta ) ) ;
+    //
+    // Blended bisection/regular falsi iterations 
     for ( std::size_t i = 0 ; i < s_N1 ; ++i )
       {
 	//
-	const double dx = std::abs ( xhigh - xlow ) ;
+	// (1) normal bisection:
+	double xmid = 0.5 * ( xlow + xhigh ) ;
+	// (2) regular falsi step 
+	const double xrf  = ( xlow * fhigh - xhigh * flow ) / ( fhigh - flow ) ;
 	//
-	// (1) regular falsi step 
-	const double xrf = ( xlow * fhigh - xhigh * flow ) / ( fhigh - flow ) ;
-	
-	std::cout
-	  << " iteration : " << i
-	  << " xrf         "    << xrf 
-	  << " xlow/xhigh/dx "      << xlow << " / " << xhigh << " / " << dx 
-	  << std::endl ;
-	
 	if ( xlow < xrf && xrf < xhigh )
 	  {
 	    const double frf  = f ( xrf ) ;
-	    if   ( s_zero ( frf  ) ) { return xrf ; }               // RETURN
 	    //
-	    if   ( flow * frf < 0 ) { xhigh = xrf ; fhigh = frf ; }
-	    else                    { xlow  = xrf ; flow  = frf ; }
-	    // interval is very small
-	    
-	    std::cout
-	      << " ItErAtIoN : " << i
-	      << " xrf         " << xrf 
-	      << " xlow/xhigh/dx "      << xlow << " / " << xhigh << " / " << ( ( xhigh - xlow ) / dx -1 ) * 100 
-	      << std::endl ;
-	    
-	   
+	    const double x1 = std::min ( xmid , xrf ) ;
+	    const double x2 = std::max ( xmid , xrf ) ;
+	    // 
+	    const double f1 = f ( x1 ) ;
+	    if   ( s_zero ( x1  ) ) { return x1 ; }               // RETURN
+	    const double f2 = f ( x2 ) ; 
+	    if   ( s_zero ( x2  ) ) { return x2 ; }               // RETURN
+	    //
+	    const int sl = ( 0 < flow  ) ? +1 : -1 ;
+	    const int s1 = ( 0 < f1    ) ? +1 : -1 ;
+	    const int s2 = ( 0 < f2    ) ? +1 : -1 ;
+	    const int sh = ( 0 < fhigh ) ? +1 : -1 ;
+	    //
+	    if      ( sl * s1 < 0 )  { xhigh = x1 ; fhigh = f1 ; } 
+	    else if ( s1 * s2 < 0 )  { xlow  = x1 ; flow  = f1 ; xhigh = x2 ; fhigh = f2 ; } 
+	    else if ( s2 * sh < 0 )  { xlow  = x2 ; flow  = f2 ; }
+	    //
 	    if ( std::abs ( xhigh - xlow ) < s_DX   ) { return  0.5 * ( xlow + xhigh ) ; }
-	    // successful regular falsi step 
-	    if ( 2 * std::abs ( xhigh - xlow ) < dx ) { continue ; } 
+	    if ( std::abs ( xhigh - xlow ) <   DD   ) { break ; }  // BREAK 
 	  }
 	//
- 	//
 	// normal bisection:
 	xmid = 0.5 * ( xlow + xhigh ) ;
 	//
@@ -1744,15 +1824,8 @@ namespace
 	else                     { xlow  = xmid ; flow  = fmid ; }
 	//
 	if ( std::abs ( xhigh - xlow ) < s_DX ) { return  0.5 * ( xlow + xhigh ) ; } 
+	if ( std::abs ( xhigh - xlow ) <   DD ) { break ; }  // BREAK 
 	//
-	flow  *= 2 ;
-	fhigh *= 2 ;
-	//
-	std::cout
-	  << " ITERATION : " << i
-	  << " xmid        " << xmid
-	  << " dx "          << ( xhigh - xlow )
-	  << std::endl ;
       }
     // ==========================================================================
     // (2) switch to Newton method
@@ -1771,26 +1844,36 @@ namespace
 	  {
 	    for ( std::size_t j = 0 ; j < s_N3 ; ++j )
 	      {
+		// (a) bisection:  
 		const double xmid = 0.5 * ( xlow + xhigh ) ;
-		const double fmid = f ( xmid ) ;
+		// (b) regular falsi: 
+		const double xrf  = ( xlow * fhigh - xhigh * flow ) / ( fhigh - flow ) ;
+		//	       
+		const double x1 = std::min ( xmid , xrf ) ;
+		const double x2 = std::max ( xmid , xrf ) ;
+		// 
+		const double f1 = f ( x1 ) ;
+		if   ( s_zero ( x1  ) ) { return x1 ; }               // RETURN
+		const double f2 = f ( x2 ) ; 
+		if   ( s_zero ( x2  ) ) { return x2 ; }               // RETURN
 		//
-		if   ( s_zero ( fmid ) ) { return xmid ; }      // RETURN
+		const int sl = ( 0 < flow  ) ? +1 : -1 ;
+		const int s1 = ( 0 < f1    ) ? +1 : -1 ;
+		const int s2 = ( 0 < f2    ) ? +1 : -1 ;
+		const int sh = ( 0 < fhigh ) ? +1 : -1 ;
 		//
-		if   ( flow * fmid < 0 ) { xhigh = xmid ; fhigh = fmid ; }
-		else                     { xlow  = xmid ; flow  = fmid ; }
-		//
+		if      ( sl * s1 < 0 ) { xhigh = x1 ; fhigh = f1 ; } 
+		else if ( s1 * s2 < 0 ) { xlow  = x1 ; flow  = f1 ; xhigh = x2 ; fhigh = f2 ; } 
+		else if ( s2 * sh < 0 ) { xlow  = x2 ; flow  = f2 ; }
+		//		
 		if ( std::abs ( xhigh - xlow ) < s_DX )
-		  { return 0.5 * ( xlow + xhigh ) ; }           // RETURN
-		//	      
-		flow  *= 2 ;
-		fhigh *= 2 ;
+		  { return 0.5 * ( xlow + xhigh ) ; }                 // RETURN
 		//	      
 	      }
-	    //
-	    x0 = 0.5 * ( xlow + xhigh ) ;          
-	    continue ;                                      // CONTINUE 
+	    x0 = 0.5 * ( xlow + xhigh ) ;
+	    continue ;
 	  }
-	// 
+	//
 	// check convergency:
 	//
 	// (a) function is zero 
@@ -1801,26 +1884,39 @@ namespace
 	x0 = x1 ;
       }
     // ========================================================================
-    // (3) no Newton convergency ? more bisection iterations!
+    // (3) no Newton convergency ? more bisection/regular falsi  iterations!
     // ========================================================================
     for ( std::size_t j = 0 ; j < s_N4 ; ++j )
       {
-	xmid = 0.5 * ( xlow + xhigh ) ;
-	const double fmid = f ( xmid ) ;
+	// (a) bisection:  
+	const double xmid = 0.5 * ( xlow + xhigh ) ;
+	// (b) regular falsi: 
+	const double xrf  = ( xlow * fhigh - xhigh * flow ) / ( fhigh - flow ) ;
+	//	       
+	const double x1 = std::min ( xmid , xrf ) ;
+	const double x2 = std::max ( xmid , xrf ) ;
+	// 
+	const double f1 = f ( x1 ) ;
+	if   ( s_zero ( x1  ) ) { return x1 ; }               // RETURN
+	const double f2 = f ( x2 ) ; 
+	if   ( s_zero ( x2  ) ) { return x2 ; }               // RETURN
 	//
-	if ( s_zero ( fmid ) ) { return xmid ; }                    // RETURN
+	const int sl = ( 0 < flow  ) ? +1 : -1 ;
+	const int s1 = ( 0 < f1    ) ? +1 : -1 ;
+	const int s2 = ( 0 < f2    ) ? +1 : -1 ;
+	const int sh = ( 0 < fhigh ) ? +1 : -1 ;
 	//
-	if   ( flow * fmid < 0 ) { xhigh = xmid ; fhigh = fmid ; }
-	else                     { xlow  = xmid ; flow  = fmid ; }
+	if      ( sl * s1 < 0 )  { xhigh = x1 ; fhigh = f1 ; } 
+	else if ( s1 * s2 < 0 )  { xlow  = x1 ; flow  = f1 ; xhigh = x2 ; fhigh = f2 ; } 
+	else if ( s2 * sh < 0 )  { xlow  = x2 ; flow  = f2 ; }
 	//
-	if ( std::abs ( xhigh - xlow ) < s_DX ) { return 0.5 * ( xlow + xhigh ) ; }
-	//	            
-	flow  *= 2 ;
-	fhigh *= 2 ;
-	//
+	if ( std::abs ( xhigh - xlow ) < s_DX )
+	  { return 0.5 * ( xlow + xhigh ) ; }                 // RETURN
+	//	      
       }
-    //
-    // What can we do here ? nothing...just the final bisection step.... 
+    // ========================================================================
+    // (4) What else can we do here ? nothing... just the final bisection step..
+    // ========================================================================
     return 0.5 * ( xlow + xhigh ) ;
   }
   // ==========================================================================
@@ -5339,6 +5435,53 @@ double Ostap::Math::E1  ( const double x )
 // =============================================================================
 
 
+
+// =============================================================================
+/* Integal sinh 
+ *  \f[ f(x) = \int\ilmits_{0}^x}\frac{\sinh t}{t} dt \f]
+ */
+// =============================================================================
+double Ostap::Math::Shi ( const double x )
+{
+  if ( s_zero ( x ) ) { return 0 ; }
+  //
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_Shi_e ( x , &result ) ;
+  if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_Shi_e" , __FILE__ , __LINE__ , ierror ) ;
+      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+	{ return std::numeric_limits<double>::quiet_NaN(); }
+    }
+  return result.val ;
+}
+// =============================================================================
+/** Integral cosh 
+ *  \f[ f(x) = R\left[ \gamma + \log x \int\limits_{0}^x}\frac{\cosh t - t }{t} dt \right]\f]
+ *  @see gsl_fs_Chi_e 
+ */
+// =============================================================================
+double Ostap::Math::Chi ( const double x )
+{
+  //
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_Chi_e ( x , &result ) ;
+  if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_Chi_e" , __FILE__ , __LINE__ , ierror ) ;
+      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+	{ return std::numeric_limits<double>::quiet_NaN(); }
+    }
+  return result.val ;
+  
+}
+// =========================================================================
 namespace
 {
   // ===========================================================================
@@ -5931,6 +6074,111 @@ double Ostap::Math::probit
     alpha > 1             ?  std::numeric_limits<double>::quiet_NaN () :
     gsl_cdf_ugaussian_Pinv ( alpha ) ; 
 }
+// ============================================================================
+
+// ============================================================================
+// Hypergeometric functions
+// ============================================================================
+/*  confluent Hypergeometric  function  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
+ *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+ *  @see gsl_sf_hyperg_1F1_e
+ */
+// ============================================================================
+double Ostap::Math::hyperg_1F1 
+( const double a ,
+  const double b ,
+  const double x )
+{ 
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_hyperg_1F1_e ( a , b , x , &result ) ;
+  if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_hyperg_1F1_e" , __FILE__ , __LINE__ , ierror ) ;
+      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+	{ return std::numeric_limits<double>::quiet_NaN(); }
+    }
+  return result.val ;
+}  
+// ============================================================================
+/*  confluent Hypergeometric  function  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
+ *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+ *  @see gsl_sf_hyperg_1F1_int_e
+ */
+// ============================================================================
+double Ostap::Math::hyperg_1F1 
+( const int            a ,
+  const unsigned short b ,
+  const double         x )
+{
+  //
+  const int n = a ;
+  const int m = b ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_hyperg_1F1_int_e ( n , m ,  x , &result ) ;
+  if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_hyperg_1F1_int_e" , __FILE__ , __LINE__ , ierror ) ;
+      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+	{ return std::numeric_limits<double>::quiet_NaN(); }
+    }
+  return result.val ;  
+}
+// ============================================================================
+/*  Gauss's hypergeometric function 
+ *  \f$ {}_2F_1 (a,b,c,x) = \sum \frac{a_nb_n}{c_n} \frac{x^n}{n!}\f$ 
+ *  for \f$ \left|x\right|<1\f$
+ *  @see gsl_sf_hyperg_2F1
+ */
+// ============================================================================
+double Ostap::Math::hyperg_2F1
+( const double a ,
+  const double b ,
+  const double c ,
+  const double x )
+{
+  //
+  if ( 1 <= std::abs ( x ) || s_equal ( std::abs ( x ) , 1 ) )
+    { return std::numeric_limits<double>::quiet_NaN () ; } 
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_hyperg_2F1_e ( a , b , c , x , &result ) ;
+  if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_hyperg_2F1_e" , __FILE__ , __LINE__ , ierror ) ;
+      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+	{ return std::numeric_limits<double>::quiet_NaN(); }
+    }
+  return result.val ; 
+}
+// =============================================================================
+/** Regularized/renormalized  Gauss's hypergeometric function 
+ *  \f$   \frac{ {}_2F_1 (a,b,c,x)}{\Gamma(c)} \f$ 
+ *  for \f$ \left|x\right|<1\f$ 
+ *  @see gsl_sf_hyperg_2F1_renorm
+ */
+// =============================================================================
+double Ostap::Math::hyperg_2F1_renorm
+( const double a ,
+  const double b ,
+  const double c ,
+  const double x )
+{
+  //
+  if ( 1 <= std::abs ( x ) || s_equal ( std::abs ( x ) , 1 ) )
+    { return std::numeric_limits<double>::quiet_NaN () ; } 
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_hyperg_2F1_renorm_e ( a , b , c ,  x , &result ) ;
+  if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_hyperg_2F1_e" , __FILE__ , __LINE__ , ierror ) ;
+      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+	{ return std::numeric_limits<double>::quiet_NaN(); }
+    }
+  return result.val ; 
+}
+// 
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

@@ -33,8 +33,11 @@ from ostap.core.core import Ostap
 GSLInfo  = namedtuple ( 'GSLInfo'  , ( 'major' , 'minor' ) )
 gsl_info = GSLInfo ( Ostap.GSL.GSL_version_major() , Ostap.GSL.GSL_version_minor() )
 
-## helper base class/context manager  
+# ============================================================================
+## Helper base class/context manager  
 class ErrHandler(object) :
+    """ Helper base class/context manager  
+    """
     def __init__  ( self , force = True ) :
         self.err_handler = None
         self.__force     = True if force else False 
@@ -46,7 +49,7 @@ class ErrHandler(object) :
         self.err_handler = None
     @property
     def force ( self ) :
-        """``force'' : force usge of error handler?"""
+        """`force' : force usage of error handler?"""
         return self.__force
     
 # =============================================================================
@@ -57,7 +60,7 @@ class ErrHandler(object) :
 #      ... do something 
 #  @endcode 
 class GslIgnore(ErrHandler) :
-    """Simple context manager to ignore all GSL errors
+    """ Simple context manager to ignore all GSL errors
     >>> with GslIgnore() :
     >>>    ... do something...
     """
@@ -73,7 +76,7 @@ class GslIgnore(ErrHandler) :
 #      ... do something 
 #  @endcode 
 class GslError(ErrHandler) :
-    """Simple context manager to print GSL errors to stderr
+    """ Simple context manager to print GSL errors to stderr
     >>> with GslError() :
     >>>    ... do something...
     """
@@ -89,7 +92,7 @@ class GslError(ErrHandler) :
 #      ... do something 
 #  @endcode 
 class GslCount(ErrHandler) :
-    """Simple context manager to count GSL errors 
+    """ Simple context manager to count GSL errors 
     >>> with GslCount() :
     >>>    ... do something...
     """
@@ -105,7 +108,7 @@ class GslCount(ErrHandler) :
 #      ... do something 
 #  @endcode 
 class GslException (ErrHandler) :
-    """Simple context manager to turn GSL Errors into C++/Python exceptions 
+    """ Simple context manager to turn GSL Errors into C++/Python exceptions 
     >>> with GslException() :
     >>>    ... do something...
     """
@@ -120,7 +123,7 @@ class GslException (ErrHandler) :
 #      ... do something 
 #  @endcode 
 def gslIgnore   ( force = True ) :
-    """Simple context manager to ignore all GSL errors
+    """ Simple context manager to ignore all GSL errors
     >>> with gslIgnore() :
     >>>    ... do something...
     """
@@ -133,7 +136,7 @@ def gslIgnore   ( force = True ) :
 #      ... do something 
 #  @endcode 
 def gslCount   ( force = True ) :
-    """Simple context manager to count GSL errors
+    """ Simple context manager to count GSL errors
     >>> with gslCount () :
     >>>    ... do something...
     """
@@ -146,7 +149,7 @@ def gslCount   ( force = True ) :
 #      ... do something 
 #  @endcode 
 def gslError    ( force = True ) :
-    """Simple context manager to print GSL errors to stderr
+    """ Simple context manager to print GSL errors to stderr
     >>> with gslError() :
     >>>    ... do something...
     """
@@ -159,7 +162,7 @@ def gslError    ( force = True ) :
 #      ... do something 
 #  @endcode 
 def gslException ( force = True ) :
-    """Simple context manager to turn GSL Errors into C++/Python exceptions 
+    """ Simple context manager to turn GSL Errors into C++/Python exceptions 
     >>> with glException() :
     >>>    ... do something...
     """
@@ -178,7 +181,7 @@ def _setHandler ( handler ) :
     return _global_gsl_handler
 
 # =============================================================================
-## Make use ``global'' GSL handler
+## Make use `global' GSL handler
 #  @code
 #  setHandler ( None        ) ## clean up global  handlers 
 #  setHandler ( 'Ignore'    ) ## ignore all GSL erorrs 
@@ -188,7 +191,7 @@ def _setHandler ( handler ) :
 #  setHandler ( 'Throw'     ) ## ditto 
 #  @endcode 
 def setHandler ( handler , force = True ) :
-    """Use ``global'' GSL handler
+    """ Use `global' GSL handler
     >>> setGlobalHandler ( None        ) ## clean up global  handlers 
     >>> setGlobalHandler ( 'Ignore'    ) ## ignore all GSL erorrs 
     >>> setGlobalHandler ( 'Error'     ) ## print GSL errors to stderr and continue
@@ -258,7 +261,7 @@ def print_gsl_errors () :
             logger.warning ('print_gs_errors: failure to decode line: %s, skip it!' % str ( tline ) )
             continue 
         
-        row = '%4d' % n , '%3d:%s' % ( code , msg ) , reason , file , line 
+        row = '%4d' % n , '%3d' % code , '%s' % msg  , reason , file , line 
         rows.append ( row ) 
         
     if rows :
@@ -266,13 +269,18 @@ def print_gsl_errors () :
         from   ostap.logger.logger import getLogger
         logger = getLogger ( 'ostap.utils.gsl' )
         
-        rows = [  ( '#' , 'error' , 'reason' , 'file', 'line' ) ] + rows 
+        rows = [ ( '#'       ,
+                   'code'    ,
+                   'message' ,
+                   'reason'  ,
+                   'file'    ,
+                   'line'    ) ] + rows 
         
         title = 'Summary of GSL errors'
         
         import ostap.logger.table     as     T
         from   ostap.logger.colorized import attention 
-        logger.error ( '%s\n%s' % ( attention ( title ) , T.table ( rows , title = title, prefix = '# ' , alignment = 'ccccl') ) ) 
+        logger.error ( '%s\n%s' % ( attention ( title ) , T.table ( rows , title = title, prefix = '# ' , alignment = 'crlllc') ) ) 
         
     ## clear the errors 
     gsl_cnt.clear() 
