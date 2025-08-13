@@ -102,7 +102,7 @@ jobs:
 
  - template: template-pipelines.yml  # Template reference
    parameters:
-    name: el9_LCG_107_clang19
+    name: el9_LCG_108_clang19
     vmImage:  'ubuntu-latest'
     dockername: 'gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest'
     LCG: 'LCG_109'
