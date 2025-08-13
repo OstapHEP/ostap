@@ -93,6 +93,24 @@ jobs:
 
  - template: template-pipelines.yml  # Template reference
    parameters:
+    name: el9_LCG_108_gcc15
+    vmImage:  'ubuntu-latest'
+    dockername: 'gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest'
+    LCG: 'LCG_108'
+    CMTCONFIG: 'x86_64-el9-gcc15-opt'
+    artifact: 'test_al9_LCG_108_gcc15'
+
+ - template: template-pipelines.yml  # Template reference
+   parameters:
+    name: el9_LCG_107_clang19
+    vmImage:  'ubuntu-latest'
+    dockername: 'gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest'
+    LCG: 'LCG_109'
+    CMTCONFIG: 'x86_64-el9-clang19-opt'
+    artifact: 'test_al9_LCG_108_clang19'
+
+ - template: template-pipelines.yml  # Template reference
+   parameters:
     name: el9_LCG_dev3_gcc15
     vmImage:  'ubuntu-latest'
     dockername: 'gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest'
