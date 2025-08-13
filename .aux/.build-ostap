@@ -6,7 +6,7 @@ if [[ $ROOTSYS && -d $ROOTSYS ]]
 then 
   true  
 else 
-  echo 'BUILD OSTAP No ROOTSYS directory:' $ROOTSYS 
+  echo 'BUILD OSTAP    : No ROOTSYS directory:' $ROOTSYS 
   return 100
 fi
 
@@ -21,7 +21,7 @@ if [[ $OSTAP_SOURCE                &&
 then  	 
   true
 else 	
-  echo 'BUILD OSTAP: No valid source directory is found!' $OSTAP_SOURCE 
+  echo 'BUILD OSTAP       : No valid source directory is found!' $OSTAP_SOURCE 
   return 200 
 fi
 
@@ -34,41 +34,46 @@ elif [[ -w $OSTAP_SOURCE ]]
 then 
     mkdir $OSTAP_SOURCE/build
     OSTAP_BUILD=$OSTAP_SOURCE/build  
-    echo 'Build directory is created' $OSTAP_BUILD
+    echo  'BUILD OSTAP       : Build directory is created' $OSTAP_BUILD
 else
     OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
-    echo 'Build directory is created' $OSTAP_BUILD
+    echo  'BUILD OSTAP       : Build directory is created' $OSTAP_BUILD
 fi 
 
 OSTAP_INSTALL=${3:-$OSTAP_BUILD/INSTALL}
 
 if [[ -f $OSTAP_BUILD/build.ninja ]]
 then
-    ( echo '[1/6] BUILD OSTAP: CLEAN REMNANTS'             ; cd $OSTAP_BUILD ; echo '      BUILD OSTAP: PWD' $PWD  ; cd $OSTAP_BUILD ; echo ninja clean )
+( echo 'BUILD OSTAP [1/7] : CLEAN BUILD REMNANTS'       ; cd $OSTAP_BUILD ; echo ' - BUILD OSTAP    : CWD ' $PWD ; cd $OSTAP_BUILD ; echo ninja clean )
 fi
-(  echo '[2/6] BUILD OSTAP: REMOVE REMNANTS & GARBAGE'  ; cd $OSTAP_BUILD ; echo '      BUILD OSTAP: PWD' $PWD ; rm -rfv $OSTAP_INSTALL CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* Tes* *.py~ *.C~ __* _CPa* \#* *~ .*~ .\#*  )
-(  echo '[3/6] BUILD OSTAP: FIRST  PASS OF CMAKE+NINJA' ; cd $OSTAP_BUILD ; echo '      BUILD OSTAP: PWD' $PWD ; cmake $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
-(  echo '[4/6] BUILD OSTAP: SECOND PASS OF CMAKE+NINJA' ; cd $OSTAP_BUILD ; echo '      BUILD OSTAP: PWD' $PWD ; cmake $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
+
+if [[ $OSTAP_INSTALL && -d $OSTAP_INSTALL ]]
+then
+( echo 'BUILD OSTAP [2/7] : CLEAN INSTALL DIRECTORY' ; cd $OSTAP_INSTALL ; echo ' - BUILD OSTAP    : CWD ' $PWD ;  ) ## rm -rf * )
+fi
+
+( echo 'BUILD OSTAP [3/7] : REMOVE REMNANTS & GARBAGE'  ; cd $OSTAP_BUILD ; echo ' - BUILD OSTAP    : CWD ' $PWD ; rm -rfv CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* Tes* *.py~ *.C~ __* _CPa* \#* *~ .*~ .\#*  )
+( echo 'BUILD OSTAP [4/7] : FIRST  PASS OF CMAKE+NINJA' ; cd $OSTAP_BUILD ; echo ' - BUILD OSTAP    : CWD ' $PWD ; cmake $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
+( echo 'BUILD OSTAP [5/7] : SECOND PASS OF CMAKE+NINJA' ; cd $OSTAP_BUILD ; echo ' - BUILD OSTAP    : CWD ' $PWD ; cmake $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
 
 if [[ -f $OSTAP_INSTALL/thisostap.sh &&
       -x $OSTAP_INSTALL/thisostap.sh ]]
 then
   source $OSTAP_INSTALL/thisostap.sh
-else 
-  echo 'BUILD OSTAP: No thisostap.sh is found!' $OSTAP_INSTALL/thisostap.sh 
+else
+  echo 'BUILD OSTAP       : No thisostap.sh is found ' $OSTAP_INSTALL/thisostap.sh 
   return 300 
 fi
+(  echo 'BUILD OSTAP [6/7] : THIRD  PASS OF CMAKE+NINJA' ; cd $OSTAP_BUILD ; echo ' - BUILD OSTAP    : CWD ' $PWD ; cmake $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
+(  echo 'BUILD OSTAP [7/7] : LAST   PASS OF NINJA'       ; cd $OSTAP_BUILD ; echo ' - BUILD OSTAP    : CWD ' $PWD ; ninja ; ninja install | grep -v Up-to-date )
 
-(  echo '[5/6] BUILD OSTAP: THIRD  PASS OF CMAKE+NINJA' ; cd $OSTAP_BUILD ; echo '      BUILD OSTAP: PWD' $PWD ; cmake $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
-(  echo '[6/6] BUILD OSTAP: LAST   PASS OF NINJA'       ; cd $OSTAP_BUILD ; echo '      BUILD OSTAP: PWD' $PWD ; ninja ; ninja install | grep -v Up-to-date )
-
-echo 'BUILD OSTAP: OSTAP_SOURCE   :' $OSTAP_SOURCE
-echo 'BUILD OSTAP: OSTAP_BUILD    :' $OSTAP_BUILD
-echo 'BUILD OSTAP: OSTAP_INSTALL  :' $OSTAP_INSTALL
-echo 'BUILD OSTAP: OSTAPDIR       :' $OSTAPDIR
-echo 'BUILD OSTAP: ROOTSYS        :' $ROOTSYS
-echo 'BUILD OSTAP: python         :' `which python`
-echo 'BUILD OSTAP: root.exe       :' `which root.exe`
-echo 'BUILD OSTAP: ostap          :' `which ostap`
-echo 'BUILD OSTAP: PYTHON VERSION :' `python --version`
-echo 'BUILD OSTAP: OSTAP  VERSION :' `ostap  --version`
+echo 'BUILD OSTAP       : OSTAP_SOURCE    : ' $OSTAP_SOURCE
+echo 'BUILD OSTAP       : OSTAP_BUILD     : ' $OSTAP_BUILD
+echo 'BUILD OSTAP       : OSTAP_INSTALL   : ' $OSTAP_INSTALL
+echo 'BUILD OSTAP       : OSTAPDIR        : ' $OSTAPDIR
+echo 'BUILD OSTAP       : ROOTSYS         : ' $ROOTSYS
+echo 'BUILD OSTAP       : python          : ' `which python`
+echo 'BUILD OSTAP       : root.exe        : ' `which root.exe`
+echo 'BUILD OSTAP       : ostap           : ' `which ostap`
+echo 'BUILD OSTAP       : PYTHON VERSION  : ' `python --version`
+echo 'BUILD OSTAP       : OSTAP  VERSION  : ' `ostap  --version`

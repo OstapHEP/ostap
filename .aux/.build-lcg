@@ -9,7 +9,7 @@ if [[ $LCG && -d /cvmfs/sft.cern.ch/lcg/views/$LCG ]]
 then
     true 
 else
-    echo 'BUILD WITH LCG: Valid LCGs are:' `ls /cvmfs/sft.cern.ch/lcg/views`
+    echo 'BUILD WITH LCG    : Valid LCGs are:' `ls /cvmfs/sft.cern.ch/lcg/views`
     return 110  
 fi
 
@@ -17,7 +17,7 @@ if [[ $PLATFORM && -d /cvmfs/sft.cern.ch/lcg/views/$LCG/$PLATFORM ]]
 then
     true
 else
-    echo 'BUILD_WITH_LCG: Valid platforms are:' `ls /cvmfs/sft.cern.ch/lcg/views/$LCG`
+    echo 'BUILD_WITH_LCG    : Valid platforms are:' `ls /cvmfs/sft.cern.ch/lcg/views/$LCG`
     return 120
 fi
 
@@ -26,7 +26,7 @@ ls -al $LCG_SETUP
 
 if [[ $LCG && $PLATFORM && -f $LCG_SETUP ]]
 then
-    echo 'BUILD WITH LCG: source LCG setup   : ' $LCG_SETUP  
+    echo 'BUILD WITH LCG    : source LCG setup   : ' $LCG_SETUP  
     source $LCG_SETUP
 else
     echo 'no valid LCG/PLATFORM/setup script: ' $LCG_SETUP
@@ -37,7 +37,7 @@ if [[ $ROOTSYS &&  -d $ROOTSYS ]]
 then
     true 
 else 
-    echo 'BUILD WITH LCG: No ROOTSYS directory : ' $ROOTSYS 
+    echo 'BUILD WITH LCG    : No ROOTSYS directory : ' $ROOTSYS 
     return 140
 fi
  
@@ -65,7 +65,7 @@ if [[ $OSTAP_SOURCE                      &&
 then
     true
 else
-    echo 'BUILD WITH LCG: No valid source directory is found!' $OSTAP_SOURCE 
+    echo 'BUILD WITH LCG    : No valid source directory is found!' $OSTAP_SOURCE 
     return 150 
 fi 
 
@@ -79,10 +79,11 @@ elif [[ -w $OSTAP_SOURCE ]]
 then 
     mkdir $OSTAP_SOURCE/build
     OSTAP_BUILD=$OSTAP_SOURCE/build  
-    echo 'BUILD WITH LCG: Build directory is created' $OSTAP_BUILD
+    echo 'BUILD WITH LCG    : Build directory is created ' $OSTAP_BUILD
 else
     OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
-    echo 'BUILD WITH LCG: Build directory is created' $OSTAP_BUILD
+    echo 'BUILD WITH LCG    : Build directory is created ' $OSTAP_BUILD
+
 fi 
 
 if [[ -f $OSTAP_BUILD/.build-ostap ]]
@@ -90,31 +91,32 @@ then
     echo 'BUILD WITH LCG: use  existing .build.ostap ' $OSTAP_BUILD/.build-ostap
 else 
     cp $OSTAP_SOURCE/.aux/.build-ostap $OSTAP_BUILD/.build-ostap
-    echo 'BUILD WITH LCG: copy .build-ostap from     ' $OSTAP_BUILD/.aux/.build-ostap
+    echo 'BUILD WITH LCG    : copy .build-ostap from     ' $OSTAP_BUILD/.aux/.build-ostap
 fi
 
 ## parameter #5: install directory 
 OSTAP_INSTALL=${5:-$OSTAP_BUILD/INSTALL/LCG$LCG_VERSION/$PLATFORM}
 
-echo 'BUILD WITH LCG: LCG VERSION        : ' $LCG
-echo 'BUILD WITH LCG: LCG PLATFORM       : ' $PLATFORM
-echo 'BUILD WITH LCG: ROOTSYS            : ' $ROOTSYS 
-echo 'BUILD WITH LCG: OSTAP_SOURCE       : ' $OSTAP_SOURCE
-echo 'BUILD WITH LCG: OSTAP_BUILD        : ' $OSTAP_BUILD
-echo 'BUILD WITH LCG: OSTAP_INSTALL      : ' $OSTAP_INSTALL
+echo 'BUILD WITH LCG    : LCG VERSION        : ' $LCG
+echo 'BUILD WITH LCG    : LCG PLATFORM       : ' $PLATFORM
+echo 'BUILD WITH LCG    : ROOTSYS            : ' $ROOTSYS 
+echo 'BUILD WITH LCG    : OSTAP_SOURCE       : ' $OSTAP_SOURCE
+echo 'BUILD WITH LCG    : OSTAP_BUILD        : ' $OSTAP_BUILD
+echo 'BUILD WITH LCG    : OSTAP_INSTALL      : ' $OSTAP_INSTALL
 
 source $OSTAP_BUILD/.build-ostap $OSTAP_SOURCE $OSTAP_BUILD $OSTAP_INSTALL 
 
 result=$?
 
 echo ''
-echo 'BUILD WITH LCG: LCG VERSION        : ' $LCG
-echo 'BUILD WITH LCG: LCG PLATFORM       : ' $PLATFORM
+echo 'BUILD WITH LCG    : LCG VERSION     : ' $LCG
+echo 'BUILD WITH LCG    : LCG PLATFORM    : ' $PLATFORM
+
 if [[ $result -eq 0 ]]
 then
-    echo 'BUILD WITH LCG: RESULT             : ' SUCCESS
+    echo 'BUILD WITH LCG    : RESULT             : ' SUCCESS
 else
-    echo 'BUILD WITH LCG: RESULT             : ' FAILURE  $result     
+    echo 'BUILD WITH LCG    : RESULT             : ' FAILURE  $result
 fi
 
 return $result 

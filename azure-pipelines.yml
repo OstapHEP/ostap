@@ -105,7 +105,7 @@ jobs:
     name: el9_LCG_108_clang19
     vmImage:  'ubuntu-latest'
     dockername: 'gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest'
-    LCG: 'LCG_109'
+    LCG: 'LCG_108'
     CMTCONFIG: 'x86_64-el9-clang19-opt'
     artifact: 'test_al9_LCG_108_clang19'
 
