@@ -114,9 +114,9 @@ echo 'BUILD WITH LCG    : LCG PLATFORM    : ' $PLATFORM
 
 if [[ $result -eq 0 ]]
 then
-    echo 'BUILD WITH LCG    : RESULT             : ' SUCCESS
+    echo 'BUILD WITH LCG    : RESULT          : ' SUCCESS
 else
-    echo 'BUILD WITH LCG    : RESULT             : ' FAILURE  $result
+    echo 'BUILD WITH LCG    : RESULT          : ' FAILURE  $result
 fi
 
 return $result 
