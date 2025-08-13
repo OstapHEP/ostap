@@ -1218,7 +1218,9 @@ class Trainer(object):
         - returns the names of output XML file with the weights 
         >>> trainer.train () 
         """
-
+        
+        Ostap.Tmva.disable_scatter_plots ()
+        
         ## # =========================================================================
         ## ROOT.TMVA.gConfig().GetVariablePlotting().fMaxNumOfAllowedVariablesForScatterPlots = 1
         ## if ( 6 , 32 ) <= root_info :             
@@ -1581,6 +1583,8 @@ class Trainer(object):
 
             self.logger.debug ( 'Output ROOT file: %s ' %  outFile.GetName() )
             
+            Ostap.Tmva.disable_scatter_plots ()
+            
             factory = ROOT.TMVA.Factory (                
                 self.name             ,
                 outFile               ,
@@ -1663,6 +1667,7 @@ class Trainer(object):
                 factory.BookMethod ( dataloader , *m )
 
             # ==========================================================================
+            Ostap.Tmva.disable_scatter_plots ()
             # Train MVAs
             ms = self.method_names
             with timing ( "Train    all methods %s " % str ( ms ) , logger = self.logger ) : factory.TrainAllMethods    ()
@@ -2183,14 +2188,15 @@ class Reader(object)  :
     #  @code
     #  weights_files = [ ('MPL','my_weights.xml') , ('BDTG','weights2.xml') ] 
     #  @endcode
-    def __init__ ( self                 , * , 
-                   variables                   ,
-                   weights_files               ,
-                   spectators   = ()           ,   
-                   options      = ''           ,
-                   name         = 'TMVAReader' , 
-                   logger       = None         , 
-                   verbose      = True         ) :
+    def __init__ ( self                       , 
+                  *                           , 
+                  variables                   ,
+                  weights_files               ,
+                  spectators   = ()           ,   
+                  options      = ''           ,
+                  name         = 'TMVAReader' , 
+                  logger       = None         , 
+                  verbose      = True         ) :
         """ Construct the TMVA reader         
         >>> from ostap.tools.tmva import Reader
         >>> r = Reader ( 'MyTMVA' ,
@@ -2217,11 +2223,12 @@ class Reader(object)  :
         >>> weights_files = [ ('MPL','my_weights.xml') , ('BDTG','weights2.xml') ]
         
         """            
-
+        
         self.__name   = name
         self.__logger = logger if logger else getLogger ( self.name )
 
         verbose = True if verbose else False
+        
         ##
         options = opts_replace ( options , 'V:'      ,     verbose )
         options = opts_replace ( options , 'Silent:' , not verbose )
@@ -2230,7 +2237,9 @@ class Reader(object)  :
         #
         options = opts_replace ( options , 'Color:'           , verbose and isatty () ) 
 
-        self.__reader = ROOT.TMVA.Reader( options , verbose )
+        self.__reader = ROOT.TMVA.Reader()
+        self.__reader.SetOptions ( options ) 
+        self.__reader.SetVerbose ( True if verbose else False )
 
         ## treat the weigths files
         self.__weights = WeightsFiles ( weights_files )
@@ -2306,10 +2315,17 @@ class Reader(object)  :
         for v in self.__variables  : self.__reader.AddVariable  ( v [ 0 ] , v [ 2 ] )
         for v in self.__spectators : self.__reader.AddSpectator ( v [ 0 ] , v [ 2 ] )
 
+        ##  datainfo = self.__reader.DataInfo()
+        ##  lvars = datainfo.GetListOfVariables() 
+        ## print ( 'VARIABLS' , [ v for v in lvars ] ) 
+        
         self.__methods = self.weights.methods
-
+        
         for method , xml in  items_loop ( self.weights.files ) :
-            m = self.__reader.BookMVA ( method , xml )
+            mstr = ROOT.TString ( method )
+            xstr = ROOT.TString ( xml    ) 
+            ## m = self.__reader.BookMVA ( method , xml  )
+            m = self.__reader.BookMVA ( mstr   , xstr ) 
             assert  m , 'Error in booking %s/%s' % (  method  , xml )
             self.logger.debug ('TMVA Reader is booked for method:%s xml: %s' % ( method , xml ) )
             
