@@ -1,3 +1,5 @@
+# v3.0.2.0
+
 ## New features
 
   1. Add treatment of TMVA&Chopping `spectators` into parallel TMVA&Chopping `addResponse` methods 
