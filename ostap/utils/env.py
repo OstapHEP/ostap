@@ -26,6 +26,7 @@ __all__     = (
     'OSTAP_PROTOCOL'    , ## Ostap pickling protocol     
     'OSTAP_TABLE'       , ## Ostap table style
     'OSTAP_PARALLEL'    , ## Ostap parallel worker 
+    'OSTAP_NCPUS'       , ## max number of paralell workers 
     ## 
 )
 # =============================================================================
@@ -41,6 +42,7 @@ OSTAP_TMP_DIR       = 'OSTAP_TMP_DIR'     ## Ostap TMP   dir
 OSTAP_PROTOCOL      = 'OSTAP_PROTOCOL'    ## pickling protocol 
 OSTAP_TABLE         = 'OSTAP_TABLE'       ## table style 
 OSTAP_PARALLEL      = 'OSTAP_PARALLEL'    ## Ostap parallel worker 
+OSTAP_NCPUS         = 'OSTAP_NCPUS'       ##Max number of parallel workers 
 # =============================================================================
 ## transformation:  no blanks, no understores, no dashes 
 #  - case-insensitive

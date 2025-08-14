@@ -436,8 +436,18 @@ def numcpu () :
     """ Get number of CPUs (non-negative integer number)
     - it uses the function `cpu_count` from `%s` module  
     """
-    return max ( 1 , cpu_count () ) 
-
+    from ostap.utils.env import has_env, get_env, OSTAP_NCPUS
+    nn = cpu_count () 
+    if has_env ( OSTAP_NCPUS ) :
+        nc = get_env ( OSTAP_NCPUS , '%d' % nn  ) 
+        try  :            
+            nc = int ( nc )
+            if   nc <= 0  : pass
+            elif 1  <= nc : nn = min ( nc , nn ) 
+        except :
+            pass
+        
+    return max ( 1 , nn  ) 
 
 # =============================================================================
 ## get some file info for the given path
