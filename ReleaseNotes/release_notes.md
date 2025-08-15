@@ -1,7 +1,7 @@
 ## New features
 
   1. add environment variable `OSTAP_NCPUS` to limit the maximal number of CPUs
-  1. A few minir tweaks here and there
+  1. A few minor tweaks here and there
   1. The first step towards the `tkrzw` database
   
 ## Backward-incompatible
