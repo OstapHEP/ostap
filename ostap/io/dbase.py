@@ -223,8 +223,10 @@ def whichdb ( filename  ) :
         # =====================================================================
         return None
 
-    ## TKRZW: Hash 
-    if s16[:9] == b'TkrzwHDB\n': return 'TkrzwHDB'
+    ## TKRZW: Hash, Skip & Tree  
+    if s16[:9] == b'TkrzwHDB\n': return 'TkrzwHDB' ## Hash
+    if s16[:9] == b'TkrzwSDB\n': return 'TkrzwSDB' ## Skip 
+    if s16[:4] == b'TDB\n'     : return 'TDB'      ## Tree 
 
     s = s16[:4]
     # Return "" if not at least 4 bytes

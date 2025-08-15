@@ -49,7 +49,7 @@ fi
 
 if [[ $OSTAP_INSTALL && -d $OSTAP_INSTALL ]]
 then
-( echo 'BUILD OSTAP [2/7] : CLEAN INSTALL DIRECTORY' ; cd $OSTAP_INSTALL ; echo ' - BUILD OSTAP    : CWD ' $PWD ;  ) ## rm -rf * )
+( echo 'BUILD OSTAP [2/7] : CLEAN INSTALL DIRECTORY'    ; cd $OSTAP_INSTALL ; echo ' - BUILD OSTAP    : CWD ' $PWD ; rm -rfv .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib scripts thisostap.sh )
 fi
 
 ( echo 'BUILD OSTAP [3/7] : REMOVE REMNANTS & GARBAGE'  ; cd $OSTAP_BUILD ; echo ' - BUILD OSTAP    : CWD ' $PWD ; rm -rfv CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* Tes* *.py~ *.C~ __* _CPa* \#* *~ .*~ .\#*  )

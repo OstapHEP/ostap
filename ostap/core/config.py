@@ -33,7 +33,7 @@ __all__     = (
 # =============================================================================
 import configparser, os, sys  
 import ostap.core.default_config as     default_config 
-from   ostap.utils.env           import get_env, OSTAP_CONFIG 
+from   ostap.utils.env           import get_env, OSTAP_CONFIG, OSTAP_NCPUS 
 # =============================================================================
 ## print for configparger 
 def _cp_str_ ( cp ) :
@@ -47,13 +47,25 @@ config = configparser.ConfigParser()
 type(config).__str__  = _cp_str_
 type(config).__repr__ = _cp_str_
 
-## Define the major sections
-config [ 'General'  ] = {
+cnf = { 
     'Quiet'              : str ( default_config.quiet   ) ,
     'Verbose'            : str ( default_config.verbose ) ,
     'Parallel'           : 'PATHOS'                       ,
-    'WebDisplay'         : default_config.web             , ## ROOT.TROOT.Set/Get WebDisplay                        
+    'WebDisplay'         : default_config.web             , ## ROOT.TROOT.Set/Get WebDisplay
 }
+# ===========================================================================
+try : # =====================================================================
+    # =======================================================================
+    ncpu_ = get_env ( OSTAP_NCPUS , -1 )
+    ncpu_ = int ( ncpu_ )
+    if 1 <= ncpu_ : cnf ['Ncpus' ] = ncpu_
+    # ======================================================================
+except: # ==================================================================
+    # ======================================================================
+    pass
+
+## Define the major sections
+config [ 'General'  ] = cnf
 
 ## generic TCanvas configuration
 config [ 'Canvas'      ] = { 'Width'       :  '1000' , 'Height'       :  '800' , 

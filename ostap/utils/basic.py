@@ -432,21 +432,32 @@ else                         : from os import         cpu_count
 
 # =============================================================================
 ## Get number of CPUs     
+#  - it uses the function `cpu_count` from `%s` module  
+#  - it reads OSTAP_NCPUS envrironment variable 
+#  - it checks `General.NCPUS` section of global config
 def numcpu () :
     """ Get number of CPUs (non-negative integer number)
     - it uses the function `cpu_count` from `%s` module  
+    - it reads OSTAP_NCPUS envrironment variable 
+    - it checks `General.NCPUS` section of global config
     """
-    from ostap.utils.env import has_env, get_env, OSTAP_NCPUS
-    nn = cpu_count () 
-    if has_env ( OSTAP_NCPUS ) :
-        nc = get_env ( OSTAP_NCPUS , '%d' % nn  ) 
-        try  :            
-            nc = int ( nc )
-            if   nc <= 0  : pass
-            elif 1  <= nc : nn = min ( nc , nn ) 
-        except :
-            pass
-        
+    nn = cpu_count() 
+    ## (1) check the environment variable 
+    from   ostap.utils.env   import get_env, OSTAP_NCPUS
+    # ========================================================================
+    try  : # =================================================================
+        nv = int ( get_env ( 'OSTAP_NCPUS' , -1 ) )
+        if 1 <= nv : nn = min ( nv , nn )
+        # ====================================================================
+    except : # ===============================================================
+        # ====================================================================
+        pass
+    # ========================================================================
+    ## (2) check the global setting 
+    import ostap.core.config as OCC
+    ng = OCC.general.getint ( 'ncpus' , -1 )
+    if 1 <= ng : nn = min ( nn , ng )
+    ## 
     return max ( 1 , nn  ) 
 
 # =============================================================================

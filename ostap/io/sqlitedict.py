@@ -26,7 +26,7 @@ don't forget to call `mydict.commit()` when done with a transaction.
 """
 # =============================================================================
 __all__ = (
-    'SqliteDict' , ## sqlite3-persisten disctionary
+    'SqliteDict' , ## sqlite3-persistent dictionary
     'issqlite3'  , ## is it a  sqlite3 file?
     )
 # =============================================================================
@@ -128,7 +128,7 @@ class Connect ( object ) :
 #  - Keys are strings or bytes
 #  - Values are bytes 
 class SqliteDict(DictClass):
-    """ A downgraded version of original SqliteDict  (no pickling!)
+    """ A downgraded version of the original SqliteDict  (no pickling!)
       - Keys are strings or bytes
       - Values are bytes 
     """
@@ -142,8 +142,7 @@ class SqliteDict(DictClass):
                    ## journal_mode = "DELETE" ,
                    journal_mode = "OFF"    ,
                    timeout      = 30       ) :
-        """
-        Initialize a thread-safe sqlite-backed dictionary. The dictionary will
+        """ Initialize a thread-safe sqlite-backed dictionary. The dictionary will
         be a table `tablename` in database file `filename`. A single file (=database)
         may contain multiple tables.
 
@@ -225,7 +224,7 @@ class SqliteDict(DictClass):
     # =========================================================================
     ## Context manager: ENTER 
     def __enter__(self):
-        """Context manager:ENTER
+        """ Context manager:ENTER
         """
         if self.conn is None: self.conn = self._new_conn()
         return self
@@ -268,7 +267,7 @@ class SqliteDict(DictClass):
     __nonzero__ = __bool__ 
     # =========================================================================
     def tables ( self ) :
-        """ get list of tables in DBASE"""
+        """ Get list of tables in DBASE"""
         GET_TABLES = "SELECT name FROM sqlite_master WHERE type='table';"
         tables = [] 
         for table in self.conn.select ( GET_TABLES ) :
@@ -354,14 +353,14 @@ class SqliteDict(DictClass):
     # =========================================================================
     ## The key in dbase? 
     def __contains__(self, key):
-        """ th ekey in dbase? """
+        """ Is the key in the dbase? """
         HAS_ITEM = 'SELECT 1 FROM "%s" WHERE key = ?' % self.tablename
         return self.conn.select_one ( HAS_ITEM , ( key , ) ) is not None
     
     # =========================================================================
     ## get value form DB 
     def get ( self , key , default = None ) :
-        """ Get vaoleu from dbase 
+        """ Get value from dbase 
         >>> db = ...
         >>> value = db.get ( key , 42 ) 
         """
@@ -373,7 +372,7 @@ class SqliteDict(DictClass):
     # =========================================================================
     ## get value from DB 
     def __getitem__ ( self , key ) :
-        """ Get vaoleu from dbase 
+        """ Get value from dbase 
         >>> db = ...
         >>> value = db [ key ] 
         """
@@ -385,7 +384,7 @@ class SqliteDict(DictClass):
     # =========================================================================
     ## write value to dbase
     def __setitem__(self, key, value):
-        """ Write valeu to dbase 
+        """ Write value to dbase 
         >>> db = ...
         >>> db [ key ] = value 
         """
@@ -455,7 +454,7 @@ class SqliteDict(DictClass):
         
     @staticmethod
     def get_tablenames(filename):
-        """get the names of the tables in an sqlite db as a list"""
+        """ Get the names of the tables in an sqlite db as a list"""
         if not os.path.isfile(filename):
             raise IOError('file %s does not exist' % (filename))
         GET_TABLENAMES = 'SELECT name FROM sqlite_master WHERE type="table"'
@@ -496,12 +495,18 @@ class SqliteDict(DictClass):
                 self.conn.commit ( blocking = True )
             self.conn.close ( force = force )
             self.conn = None
-            
-        ## remove temporary DBASE 
-        if self.in_temp:
-            try:
+
+        # =====================================================================
+        ## remove temporary DBASE
+        # =====================================================================
+        if self.in_temp: # ====================================================
+            # =================================================================
+            try: # ============================================================
+                # =============================================================
                 os.remove ( self.filename )
-            except:
+                # =============================================================
+            except: # =========================================================
+                # =============================================================
                 pass
 
     # =========================================================================
@@ -518,10 +523,13 @@ class SqliteDict(DictClass):
         if self.filename == ':memory:': return
 
         logger.debug ( "deleting %s" % self.filename )
-        try:
+        # =====================================================================
+        try: # ================================================================
+            # =================================================================
             if os.path.exists ( self.filename ) and os.path.isfile ( self.filename ) :
                 os.remove ( self.filename )
-        except ( OSError , IOError ) :
+        except ( OSError , IOError ) : # ======================================
+            # =================================================================
             logger.exception("failed to delete %s" % (self.filename))
 
     # =========================================================================
@@ -560,7 +568,7 @@ class SqliteMultithread(Thread):
         self.timeout      = timeout
         
         # use request queue of unlimited size
-        self.reqs = Queue()
+        self.reqs     = Queue()
         
         ## self.setDaemon(True)  # python2.5-compatible
         self.daemon    = True
@@ -582,7 +590,7 @@ class SqliteMultithread(Thread):
             return self.run__ (  conn )
 
     # =========================================================================
-    def run__( self, conn ):
+    def run__ ( self , conn ):
         
         if self.autocommit:
             conn = sqlite3.connect ( self.filename , isolation_level = None , check_same_thread = False )
@@ -677,8 +685,7 @@ class SqliteMultithread(Thread):
 
     # =========================================================================
     def execute(self, req, arg=None, res=None):
-        """
-        `execute` calls are non-blocking: just queue up the request and return immediately.
+        """ `execute` calls are non-blocking: just queue up the request and return immediately.
         """
         self.check_raise_error()
 
@@ -712,7 +719,7 @@ class SqliteMultithread(Thread):
             yield rec
 
     def select_one(self, req, arg=None):
-        """Return only the first row of the SELECT, or None if there are no matching rows."""
+        """ Return only the first row of the SELECT, or None if there are no matching rows."""
         try:
             return next(iter(self.select(req, arg)))
         except StopIteration:

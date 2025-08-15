@@ -135,7 +135,7 @@ _ncpus = []
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-03-31
 def ncpu ( events ) :
-    """Prepare 'NumCPU' argument with reasonable choice of #cpu, depending on
+    """ Prepare 'NumCPU' argument with reasonable choice of #cpu, depending on
     the number of events in dataset 
     """
     #

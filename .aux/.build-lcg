@@ -83,7 +83,6 @@ then
 else
     OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
     echo 'BUILD WITH LCG    : Build directory is created ' $OSTAP_BUILD
-
 fi 
 
 if [[ -f $OSTAP_BUILD/.build-ostap ]]
@@ -96,6 +95,13 @@ fi
 
 ## parameter #5: install directory 
 OSTAP_INSTALL=${5:-$OSTAP_BUILD/INSTALL/LCG$LCG_VERSION/$PLATFORM}
+
+
+if   [[ $OSTAP_INSTALL && -d $OSTAP_INSTALL && -w $OSTAP_INSTALL ]]
+then
+    ( echo 'BUILD WITH LCG    : CLEAN INSTALL DIRECTORY'    ; cd $OSTAP_INSTALL ; echo ' - BUILD OSTAP    : CWD ' $PWD ;  rm -rfv .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib scripts thisostap.sh )
+fi
+
 
 echo 'BUILD WITH LCG    : LCG VERSION        : ' $LCG
 echo 'BUILD WITH LCG    : LCG PLATFORM       : ' $PLATFORM
