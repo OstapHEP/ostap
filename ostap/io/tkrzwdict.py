@@ -89,13 +89,24 @@ class TkrzwDict ( MutableMapping ) :
     >>> del mydict [ key ]
     
     """
+    FLAGS      = 'rwcn'
+    EXTENSIONS = ( 'tkh'  , 'tkt'     , 'tks' )
+    CLASSES    = ( 'hash' , 'hashdbm' ,
+                   'tree' , 'treedbm' ,
+                   'skip' , 'skipdbm' )
+    
     def __init__ ( self         ,
                    path         ,
                    flag   = 'r' , **kwargs )  :
         
-        ## check presence of the tkrzwmodule 
+        ## check presence of the tkrzwz module 
         assert trkzw , "`tkrzw` module is not available!"
- 
+        
+        assert 1 == len ( flag ) and isinstance ( flag , str ) and flag.lower() in sefl.FLAGS , "Invalid `flag`:%s" % flag
+        
+        flag = flag.lower() 
+        
+
         conf = { 'truncate'   : False ,
                  'concurrent' : True  ,
                  'no_create'  : True  , 
@@ -103,6 +114,9 @@ class TkrzwDict ( MutableMapping ) :
                  'no_lock'    : True  }
         
         conf.update ( kwargs )
+
+        dbtype = conf.pop ( 'dbm' ) 
+
         
         writable  = 'r' != flag  
 
