@@ -44,7 +44,7 @@ OSTAP_INSTALL=${3:-$OSTAP_BUILD/INSTALL}
 
 if [[ -f $OSTAP_BUILD/build.ninja ]]
 then
-( echo 'BUILD OSTAP [1/7] : CLEAN BUILD REMNANTS'       ; cd $OSTAP_BUILD ; echo ' - BUILD OSTAP    : CWD ' $PWD ; cd $OSTAP_BUILD ; echo ninja clean )
+( echo 'BUILD OSTAP [1/7] : CLEAN BUILD REMNANTS'       ; cd $OSTAP_BUILD   ; echo ' - BUILD OSTAP    : CWD ' $PWD ; ninja clean )
 fi
 
 if [[ $OSTAP_INSTALL && -d $OSTAP_INSTALL ]]
@@ -52,9 +52,9 @@ then
 ( echo 'BUILD OSTAP [2/7] : CLEAN INSTALL DIRECTORY'    ; cd $OSTAP_INSTALL ; echo ' - BUILD OSTAP    : CWD ' $PWD ; rm -rfv .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib scripts thisostap.sh )
 fi
 
-( echo 'BUILD OSTAP [3/7] : REMOVE REMNANTS & GARBAGE'  ; cd $OSTAP_BUILD ; echo ' - BUILD OSTAP    : CWD ' $PWD ; rm -rfv CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* Tes* *.py~ *.C~ __* _CPa* \#* *~ .*~ .\#*  )
-( echo 'BUILD OSTAP [4/7] : FIRST  PASS OF CMAKE+NINJA' ; cd $OSTAP_BUILD ; echo ' - BUILD OSTAP    : CWD ' $PWD ; cmake $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
-( echo 'BUILD OSTAP [5/7] : SECOND PASS OF CMAKE+NINJA' ; cd $OSTAP_BUILD ; echo ' - BUILD OSTAP    : CWD ' $PWD ; cmake $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
+( echo 'BUILD OSTAP [3/7] : REMOVE REMNANTS & GARBAGE'  ; cd $OSTAP_BUILD   ; echo ' - BUILD OSTAP    : CWD ' $PWD ; rm -rfv CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* Tes* *.py~ *.C~ __* _CPa* \#* *~ .*~ .\#*  )
+( echo 'BUILD OSTAP [4/7] : FIRST  PASS OF CMAKE+NINJA' ; cd $OSTAP_BUILD   ; echo ' - BUILD OSTAP    : CWD ' $PWD ; cmake --fresh $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
+( echo 'BUILD OSTAP [5/7] : SECOND PASS OF CMAKE+NINJA' ; cd $OSTAP_BUILD   ; echo ' - BUILD OSTAP    : CWD ' $PWD ; cmake         $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
 
 if [[ -f $OSTAP_INSTALL/thisostap.sh &&
       -x $OSTAP_INSTALL/thisostap.sh ]]

@@ -2473,7 +2473,7 @@ Ostap::Math::FoM
   const double value = v.value () ;
   if ( value <= 0 || s_zero ( value ) ) { return -1 ; }
   //
-  return value / std::sqrt ( cov2 ) ; 
+  return v / std::sqrt ( cov2 ) ; 
 }
 // ============================================================================
 /*  Another Figure-of-merit, aka "significance times purity"
