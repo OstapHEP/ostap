@@ -110,29 +110,6 @@ class TkrzwDict ( MutableMapping ) :
         assert 1 == len ( flag ) and isinstance ( flag , str ) and flag.lower() in sefl.FLAGS , "Invalid `flag`:%s" % flag
         
         flag = flag.lower() 
-        
-        conf = { 'truncate'   : False ,
-                 'concurrent' : True  ,
-                 'no_create'  : True  , 
-                 'no_wait'    : True  , 
-                 'no_lock'    : True  }
-        
-        conf.update ( kwargs )
-
-        dbtype = conf.pop ( 'dbm' ) 
-
-        
-        writable  = 'r' != flag  
-
-        if   'r' == flag :
-            conf [ 'no_create' ] = True 
-        elif 'w' == flag :
-            conf [ 'no_create' ] = False 
-        elif 'c' == flag :
-            conf [ 'no_create' ] = False 
-        elif 'n' == flag :
-            conf [ 'no_create' ] = False 
-            conf [ 'truncate'  ] = True            
 
         if 'n' == flag and path and os.path.exists ( path ) :
             if   os.path.isfile ( path ) :
@@ -144,6 +121,25 @@ class TkrzwDict ( MutableMapping ) :
             if os.path.exists ( path ) :
                 logger.warning ( 'path exists!' )
 
+
+
+        
+        conf = { 'truncate'   : False ,
+                 'concurrent' : True  ,
+                 'no_create'  : False , 
+                 'no_wait'    : True  , 
+                 'no_lock'    : True  }
+        
+        conf.update ( kwargs )
+
+        dbtype = conf.pop ( 'dbm' ) 
+
+        
+
+        if   'r' == flag : conf [ 'no_create' ] = True 
+        elif 'w' == flag : pass 
+        elif 'c' == flag : pass 
+        elif 'n' == flag : conf [ 'truncate'  ] = True            
 
         if path :
             ## get the extension 
@@ -159,8 +155,9 @@ class TkrzwDict ( MutableMapping ) :
         self.__conf = conf
         self.__dbm  = tkrzw.DBM()
         
+        writable  = 'r' != flag  
         sc = self.__dbm.Open ( path , writeable , **conf )
-        assert sc.IsOK() , "Can't opent database %s with conf:%s" % ( path , conf ) 
+        assert sc.IsOK() , "Can't opent database %s with conf=%s" % ( path , conf ) 
 
         self.__path     = path
         self.__conf     = conf

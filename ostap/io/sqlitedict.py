@@ -176,13 +176,16 @@ class SqliteDict(DictClass):
         if self.flag not in SqliteDict.VALID_FLAGS:
             raise RuntimeError ( "Unrecognized flag: %s" % flag )
 
-        if self.flag == 'n':
-            if os.path.exists ( filename ) and os.path.isfile ( fielname ) :
-                try : 
-                    os.remove ( filename )
-                except :
-                    pass
-                
+        if self.flag == 'n' and fielname and os.path.exists ( filename ) and os.path.isfile ( fielname ) :
+            # ============================================================================
+            try : # ======================================================================
+                # ========================================================================
+                os.remove ( filename )
+                # ========================================================================
+            except : # ===================================================================
+                # ========================================================================
+                pass
+    
         dirname = os.path.dirname(filename)
         if dirname:
             if not os.path.exists ( dirname ):

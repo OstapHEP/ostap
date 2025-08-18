@@ -1708,7 +1708,19 @@ class Trainer(object):
         self.__weights_files = tuple ( [ f for f in glob.glob ( self.__pattern_xml   ) ] )
         self.__class_files   = tuple ( [ f for f in glob.glob ( self.__pattern_C     ) ] ) 
         self.__plots         = tuple ( [ f for f in glob.glob ( self.__pattern_plots ) ] )
-        
+
+        # rename plots
+        import shutil 
+        for p in self.__plots : 
+            head, tail = os.path.split ( p ) 
+            new_tail = '%s_%s' % ( self.name , tail )
+            new_plot = os.path.join ( head , new_tail )
+            shutil.move ( p , new_plot )
+            
+        self.__plots         = tuple ( [ f for f in glob.glob ( self.__pattern_plots ) ] )
+
+
+            
         tfile = make_tarfile ( output  = '.'.join ( [ self.name , 'tgz'] ) ,
                                files   = self.weights_files + self.class_files + self.plots + ( self.log_file , ) ,
                                verbose = self.verbose  ,
