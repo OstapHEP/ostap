@@ -32,7 +32,7 @@ except ImportError: # =========================================================
     tkrzw= None
 
 # =============================================================================
-## Is it a tkzw file?
+## Is it a tkrzw file?
 #  @code
 #  ok = istkrzw ( 'mydbase' ) 
 #  @endcode
@@ -90,10 +90,15 @@ class TkrzwDict ( MutableMapping ) :
     
     """
     FLAGS      = 'rwcn'
-    EXTENSIONS = ( 'tkh'  , 'tkt'     , 'tks' )
-    CLASSES    = ( 'hash' , 'hashdbm' ,
-                   'tree' , 'treedbm' ,
-                   'skip' , 'skipdbm' )
+    ## classes and extensions 
+    CLASSES    = { 'HashDBM'    : ( 'thk'  , 'hash'    ) ,
+                   'TreeDBM'    : ( 'tkt'  , 'tree'    ) ,
+                   'SkipDBM'    : ( 'tks'  , 'skip'    ) ,
+                   'TinyDBM'    : ( 'tkmt' , 'tiny'    , 'flat' ) ,
+                   'BabyDBM'    : ( 'tkmb' , 'baby'    ) ,
+                   'CacheDBM'   : ( 'tkmc' , 'cache'   ) ,
+                   'StdHashDBM' : ( 'tksh' , 'stdhash' ) ,
+                   'StdTreeDBM' : ( 'tkst' , 'stdtree' ) }
     
     def __init__ ( self         ,
                    path         ,
@@ -106,7 +111,6 @@ class TkrzwDict ( MutableMapping ) :
         
         flag = flag.lower() 
         
-
         conf = { 'truncate'   : False ,
                  'concurrent' : True  ,
                  'no_create'  : True  , 
@@ -129,9 +133,7 @@ class TkrzwDict ( MutableMapping ) :
         elif 'n' == flag :
             conf [ 'no_create' ] = False 
             conf [ 'truncate'  ] = True            
-        else :
-            raise ValueError ( "Invalid flag: %s" % flag )
-        
+
         if 'n' == flag and path and os.path.exists ( path ) :
             if   os.path.isfile ( path ) :
                 try    : os.unlink ( path )
@@ -142,24 +144,35 @@ class TkrzwDict ( MutableMapping ) :
             if os.path.exists ( path ) :
                 logger.warning ( 'path exists!' )
 
+
+        if path :
+            ## get the extension 
+            base , ext = os.path.splitext (  path )            
+            if 2 <= len ( ext ) :
+                lext = ext[1:].lower() 
+                for c , extensions in CLASSES.items() :
+                    if lext in extensions : continue
+                else : 
+                    a = 1 
+            
                 
         self.__conf = conf
         self.__dbm  = tkrzw.DBM()
         
         sc = self.__dbm.Open ( path , writeable , **conf )
-        
+        assert sc.IsOK() , "Can't opent database %s with conf:%s" % ( path , conf ) 
+
         self.__path     = path
         self.__conf     = conf
-
         
-    @property
-    def db ( self ) :
-        """`db` : the actual Tkrzw database ( same ad `dbm`) """
-        return self.__db
-    
     @property
     def dbm ( self ) :
         """`dbm` : the actual Tkrzw database ( same ad `db`) """
+        return self.__dbm
+    
+    @property
+    def db  ( self ) :
+        """`db` : the actual Tkrzw database ( same ad `dbm`) """
         return self.db 
 
     # =========================================================================
@@ -185,6 +198,7 @@ class TkrzwDict ( MutableMapping ) :
         >>> db = ...
         >>> value = db [ key ]
         """
+        assert not self.db is None , "TkrzwDB is invalid!"
         value = self.db.Get ( key )
         return default if value is None else self.decode_value ( value ) 
     
@@ -206,6 +220,7 @@ class TkrzwDict ( MutableMapping ) :
         >>> db = ...
         >>> db [ key ] = value 
         """
+        assert not self.db is None , "TkrzwDB is invalid!"
         vv = self.encode_value ( value )
         self.db.Set ( key , vv  )  
 
@@ -216,6 +231,7 @@ class TkrzwDict ( MutableMapping ) :
         >>> db = ...
         >>> for key, value in db.items () : ...
         """
+        assert not self.db is None , "TkrzwDB is invalid!"
         for k, value in self.db :
             yield key, self.decode_value ( value )
 
@@ -235,6 +251,7 @@ class TkrzwDict ( MutableMapping ) :
         >>>  db = ...
         >>>  for key in db.keys() : .... 
         """
+        assert not self.db is None , "TkrzwDB is invalid!"
         for k, _ in self.db : yield key
 
     # ========================================================================
@@ -244,12 +261,14 @@ class TkrzwDict ( MutableMapping ) :
         >>> db = ...
         >>> for value in db.values() : ...
         """
+        assert not self.db is None , "TkrzwDB is invalid!"
         for _ , value in self.db : yield self.decode_value ( value )
 
     # =========================================================================
     ## check the key in database 
     def __contains__ ( self , key ) :
         """ Check the key in database """
+        assert not self.db is None , "TkrzwDB is invalid!"
         value = self.get ( key ) 
         return value is not None
 
@@ -269,6 +288,7 @@ class TkrzwDict ( MutableMapping ) :
         >>> db = ...
         >>> nu m= len ( db ) 
         """
+        assert not self.db is None , "TkrzwDB is invalid!"
         return len ( self.db ) 
 
     # =======================================================================--
@@ -278,6 +298,7 @@ class TkrzwDict ( MutableMapping ) :
         >>> db = ...
         >>> value = db.pop ( key ) 
         """
+        assert not self.db is None , "TkrzwDB is invalid!"
         sc , value = self.db.RemoveAndGet( key )
         if sc.IsOK () and not value is None : return self.decode_value ( value )
         return default 
@@ -289,6 +310,7 @@ class TkrzwDict ( MutableMapping ) :
         >>> db = ...
         >>> del db[ key ]
         """
+        assert not self.db is None , "TkrzwDB is invalid!"
         sc = self.db.Remove ( key )
         
     # ========================================================================
@@ -298,6 +320,7 @@ class TkrzwDict ( MutableMapping ) :
         >>> db = ...
         >>> db.sync () 
         """
+        assert not self.db is None , "TkrzwDB is invalid!"
         self.db.Synchronize ( True )
 
     # =========================================================================
@@ -307,14 +330,12 @@ class TkrzwDict ( MutableMapping ) :
         >>> db = ...
         >>> db.close() 
         """
-        if not self.db : return
+        if self.db is None : return
         
         if self.db.IsWritable () and self.db.ShouldBeRebuild() :
             self.db.Rebuild()
             
         self.db.Close ()
-        del self.__db
-        
         self.__db = None 
 
     # =========================================================================
