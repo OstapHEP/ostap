@@ -3,7 +3,8 @@
   1. add environment variable `OSTAP_NCPUS` to limit the maximal number of CPUs
   1. A few minor tweaks here and there
   1. The first step towards the `tkrzw` database
-  
+  1. TMVA&Chopping: prepend the names of plot-files with the trainer name
+
 ## Backward-incompatible
 
 ## Bug fixes
