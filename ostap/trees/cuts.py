@@ -100,7 +100,7 @@ def vars_and_cuts ( expressions , cuts ) :
 # =============================================================================
 # ROOT.TCut
 # =============================================================================
-symbols = '+-*/)(&|^%!~:[]{}$<>/ '
+symbols = '+-=*/)(&|^%!~:[]{}$<>/ '
 ## printout of TCut (add extra parentheses when needed
 def _tc_str_ ( cut ) :
     cut.strip()
@@ -129,6 +129,10 @@ def _tc_new_init_ ( self , *args ) :
     while '  ' in cut : cut = cut.replace ( '  ' , ' ' )
     if cut in  ( '()' , '( )' )  : cut = ''
     ##
+    if any ( s in cut for s in symbols ) :
+        if cut.startswith('(') and cut.endswith(')') : pass
+        else : cut = '(%s)' % cut
+    ## 
     self.SetTitle ( cut  )
     ##
     assert balanced ( cut , left = '[(' , right = '])' ) , \

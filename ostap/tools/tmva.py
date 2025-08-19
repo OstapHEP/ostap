@@ -31,7 +31,8 @@ __all__     = (
     "Trainer"         , ## the basic TMVA trainer 
     "Reader"          , ## the basic TMVA reader
     "addTMVAResponse" , ## add TMVA response to RooDataSet/TTree/TChain
-    "tmvaGUI"
+    "tmvaGUI"         , ##
+    "plot_variables"  , ## helper function to plto variables 
     )
 # =============================================================================
 from   ostap.core.meta_info      import python_info, root_info  
@@ -1718,8 +1719,6 @@ class Trainer(object):
             shutil.move ( p , new_plot )
             
         self.__plots         = tuple ( sorted ( [ f for f in glob.glob ( self.__pattern_plots ) ] ) ) 
-
-
             
         tfile = make_tarfile ( output  = '.'.join ( [ self.name , 'tgz'] ) ,
                                files   = self.weights_files + self.class_files + self.plots + ( self.log_file , ) ,
@@ -2952,6 +2951,98 @@ def addTMVAResponse ( dataset                     ,   ## input dataset to be upd
                                   report     = report     )
 
 
+# =============================================================================
+## Make plots for variables using the tree from the  output TMVA file
+#  - due to some mistic reasons the standard macro `TMVA::variables` often
+#  crashes
+# 
+#  This function is a ligthweigth replacement
+#  @see `TMVA::variables`
+#
+#  @code
+#  plot_varibables ( tmva_name , file_name , skipvars = [ 'BDTG' ] ) 
+#  @endcode
+def plot_variables ( name , tmva_file , skipvars = () ) :
+    """ Make plots for variables using the tree from the  output TMVA file
+    - due to some mistic reasons the standard macro `ROOT.TMVA.variables` often crashes
+     
+    This function is a ligthweigth replacement
+    - see `ROOT.TMVA.variables`
+
+    >>> plot_variables ( tmva_name , file_name , skipvars = [ 'BDTG' ] ) 
+    """
+    
+    from   ostap.core.core       import hID 
+    from   ostap.utils.utils     import chunked
+    from   ostap.plotting.canvas import use_canvas
+    from   ostap.math.base       import axis_range
+    import ostap.io.root_file
+    import ostap.trees.trees 
+    import ostap.trees.cuts  
+    import ostap.histos.histos
+    import ostap.histos.graphs
+    import ROOT 
+
+    ROOT.ROOT.EnableImplicitMT()
+    
+    ## temporary storage of histograms 
+    histos = []
+
+    chain = ROOT.TChain ( '%s/TrainTree' % name )
+    chain.Add ( tmva_file )
+    
+    vars = set ( chain.branches () ) | set ( chain.leaves() )        
+    vars = tuple ( sorted ( vars - set ( [ 'weight' , 'classID' , 'className' ] ) - set ( skipvars ) ) )
+    
+    chunks = chunked ( vars , 6 )
+    stats  = chain.statVars ( vars , 'weight' , as_weight = True , use_frame = True ) 
+    
+    wcut       = ROOT.TCut ( 'weight' )
+    signal     = ROOT.TCut ( 'classID==0' ) * wcut 
+    background = ROOT.TCut ( 'classID==1' ) * wcut 
+
+    for i, chunk in enumerate ( chunks , start = 1 ) :
+        cname =  '%s_variables_%i' % ( name , i )
+        with use_canvas ( cname , width = 1400 , height = 1000 , ) as cnv  :
+            cnv.Clear  () 
+            cnv.Divide ( 3 , 2 )
+            
+            for ip , var in enumerate ( chunk , start = 1 ) :
+                
+                vstat        = stats [ var ]
+                xmin , xmax  = vstat.minmax()
+                xmin , xmax  = axis_range ( xmin , xmax , 0.05 )
+                
+                h1 = ROOT.TH1F ( hID() , '%s;%s' % ( var , var )  , 100 , xmin , xmax )
+                h2 = h1.clone  () 
+                
+                h1.red  ( size = 1 )
+                h2.blue ( size = 1 )
+                
+                chain.project ( h1 , var , signal     , use_frame = True ) ## signal 
+                chain.project ( h2 , var , background , use_frame = True ) ## background 
+                
+                ymax0  = max ( h1.ymax() , h2.ymax() )
+                ymin0  = max ( h1.ymax() , h2.ymax() )
+                ymin  , ymax = axis_range ( ymin0 , ymax0 , 0.15 )
+                
+                h1.SetMaximum ( ymax )
+                h2.SetMaximum ( ymax )
+                    
+                if ymin0 < 0 :  
+                    h1.SetMinimum ( ymin )
+                    h2.SetMinimum ( ymin )
+                else : 
+                    h1.SetMinimum (    0 )
+                    h2.SetMinimum (    0 )
+                    
+                histos.append ( h1 ) 
+                histos.append ( h2 ) 
+                
+                cnv.cd ( ip )
+                h1.draw (          copy = True )
+                h2.draw ( 'same' , copy = True )
+                    
 # =============================================================================
 if '__main__' == __name__ :
     

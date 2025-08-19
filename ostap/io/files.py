@@ -906,9 +906,9 @@ def sync_dirs  ( source_dir             ,
     Essentially a common prefix for all input files is replaced  
     by the destination directory 
 
-    - file_to_copy sequence of files to be copied
-    - new_dir      destination directory, for None temproary directory wil lbe used
-    - copier       low-level copy routine ot be used 
+    - source_dir    source directory
+    - new_dir       destination directory, for None temproary directory wil lbe used
+    - copier        low-level copy routine ot be used 
     - progress      show progrees bar if possible
     
     A list of copied files is returned 
@@ -948,7 +948,6 @@ def sync_dirs  ( source_dir             ,
                         progress = progress )
 
 # =============================================================================
-
 
 
 # =============================================================================

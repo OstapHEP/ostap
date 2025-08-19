@@ -1112,6 +1112,8 @@ class Canvas(KeepCanvas) :
         self.__kwargs = kwargs
         self.__cnv    = None
 
+        if plot is True : plot = name if name else 'plot'
+        
         if plot : plot = plot.strip().replace ( ' ' , '_' )
             
         self.__plot   = plot            
