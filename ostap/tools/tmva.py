@@ -1717,7 +1717,7 @@ class Trainer(object):
             new_plot = os.path.join ( head , new_tail )
             shutil.move ( p , new_plot )
             
-        self.__plots         = tuple ( [ f for f in glob.glob ( self.__pattern_plots ) ] )
+        self.__plots         = tuple ( sorted ( [ f for f in glob.glob ( self.__pattern_plots ) ] ) ) 
 
 
             
@@ -2016,7 +2016,16 @@ def make_Plots ( name , output , show_plots = True ) :
                 fun ( *args )
 
         plots = tuple ( [ f for f in glob.glob ( pattern_PLOTS % name ) ] )
-
+        
+        import shutil 
+        for p in plots : 
+            head, tail = os.path.split ( p ) 
+            new_tail = '%s_%s' % ( self.name , tail )
+            new_plot = os.path.join ( head , new_tail )
+            shutil.move ( p , new_plot )
+            
+        plots = tuple ( [ f for f in glob.glob ( pattern_PLOTS % name ) ] )
+                    
         if plots :
             
             ## tarfile with plots 

@@ -675,7 +675,11 @@ class Files(object):
     ## Sync/copy all the files to new directory
     #  - new directory will be created (if needed)
     #  - common path (prefix) for all files will be replaced by new directory
-    def sync_files ( self , new_dir = None , parallel = False ) :
+    def sync_files ( self             ,
+                     new_dir  = None  ,
+                     parallel = False ,
+                     copier   = None  , 
+                     copy_cmd = ''    ) :
         """ Sync/copy all the files to new directory
         - new directory will be created (if needed)
         - common path (prefix) for all files will be replaced by new directory
@@ -687,6 +691,8 @@ class Files(object):
         copied = sync_files ( files_to_copy              ,
                               new_dir  = new_dir         ,   
                               parallel = parallel        ,
+                              copier   = copier          , 
+                              copy_cmd = copy_cmd        , 
                               progress = not self.silent )
         
         if not self.silent :

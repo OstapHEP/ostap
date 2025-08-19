@@ -15,7 +15,7 @@
 
   1. Add treatment of TMVA&Chopping `spectators` into parallel TMVA&Chopping `addResponse` methods 
   1. Tweak a bit `Ostap::Math::beta` and `Ostap::Math::lnbeta`
-  1. Add an overloaf for `Ostap::Math::beta` for the (positive) integer arguments
+  1. Add an overload for `Ostap::Math::beta` for the (positive) integer arguments
   1. Add `beta_pdf`, `beta_cdf` & `beta_quantile`
   1. Add `bayes_interval` for eauation of binomial intervals
   1. Add `histogram.eff_bayes` to get the "efficiency" graph 
