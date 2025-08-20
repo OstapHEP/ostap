@@ -9,8 +9,7 @@
 # This code was inspired by:
 #  * http://code.activestate.com/recipes/576638-draft-for-an-sqlite3-based-dbm/
 #  * http://code.activestate.com/recipes/526618/
-"""
-A lightweight wrapper around Python's sqlite3 database, with a dict-like interface
+""" A lightweight wrapper around Python's sqlite3 database, with a dict-like interface
 and multi-thread access support::
 
 >>> mydict = SqliteDict('some.db', autocommit=True) # the mapping will be persisted to file `some.db`
@@ -176,7 +175,7 @@ class SqliteDict(DictClass):
         if self.flag not in SqliteDict.VALID_FLAGS:
             raise RuntimeError ( "Unrecognized flag: %s" % flag )
 
-        if self.flag == 'n' and fielname and os.path.exists ( filename ) and os.path.isfile ( fielname ) :
+        if self.flag == 'n' and filename and os.path.exists ( filename ) and os.path.isfile ( filename ) :
             # ============================================================================
             try : # ======================================================================
                 # ========================================================================
