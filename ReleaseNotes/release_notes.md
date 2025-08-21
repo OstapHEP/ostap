@@ -1,3 +1,5 @@
+# v3.0.2.2
+
 ## New features
 
   1. add environment variable `OSTAP_NCPUS` to limit the maximal number of CPUs
