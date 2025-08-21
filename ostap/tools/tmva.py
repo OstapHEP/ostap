@@ -2962,7 +2962,7 @@ def addTMVAResponse ( dataset                     ,   ## input dataset to be upd
 #  @code
 #  plot_varibables ( tmva_name , file_name , skipvars = [ 'BDTG' ] ) 
 #  @endcode
-def plot_variables ( name , tmva_file , skipvars = () ) :
+def plot_variables ( name , tmva_file , skipvars = () , width = 1500 , height = 800 ) :
     """ Make plots for variables using the tree from the  output TMVA file
     - due to some mistic reasons the standard macro `ROOT.TMVA.variables` often crashes
      
@@ -3002,16 +3002,16 @@ def plot_variables ( name , tmva_file , skipvars = () ) :
     background = ROOT.TCut ( 'classID==1' ) * wcut 
 
     for i, chunk in enumerate ( chunks , start = 1 ) :
-        cname =  '%s_variables_%i' % ( name , i )
-        with use_canvas ( cname , width = 1400 , height = 1000 , ) as cnv  :
+        cname =  '%s_variables_p%i' % ( name , i )
+        with use_canvas ( cname , width = width , height = height , plot = True ) as cnv  :
             cnv.Clear  () 
             cnv.Divide ( 3 , 2 )
             
             for ip , var in enumerate ( chunk , start = 1 ) :
                 
-                vstat        = stats [ var ]
-                xmin , xmax  = vstat.minmax()
-                xmin , xmax  = axis_range ( xmin , xmax , 0.05 )
+                vstat       = stats [ var ]
+                xmin , xmax = vstat.minmax()
+                xmin , xmax = axis_range ( xmin , xmax , 0.05 )
                 
                 h1 = ROOT.TH1F ( hID() , '%s;%s' % ( var , var )  , 100 , xmin , xmax )
                 h2 = h1.clone  () 
@@ -3023,8 +3023,8 @@ def plot_variables ( name , tmva_file , skipvars = () ) :
                 chain.project ( h2 , var , background , use_frame = True ) ## background 
                 
                 ymax0  = max ( h1.ymax() , h2.ymax() )
-                ymin0  = max ( h1.ymax() , h2.ymax() )
-                ymin  , ymax = axis_range ( ymin0 , ymax0 , 0.15 )
+                ymin0  = min ( h1.ymin() , h2.ymin() )
+                ymin  , ymax = axis_range ( ymin0 , ymax0 , 0.20 )
                 
                 h1.SetMaximum ( ymax )
                 h2.SetMaximum ( ymax )
@@ -3040,8 +3040,8 @@ def plot_variables ( name , tmva_file , skipvars = () ) :
                 histos.append ( h2 ) 
                 
                 cnv.cd ( ip )
-                h1.draw (          copy = True )
-                h2.draw ( 'same' , copy = True )
+                h1.draw ( 'histo'      , copy = True , fill = 3645 )
+                h2.draw ( 'same histo' , copy = True , fill = 3654 )
                     
 # =============================================================================
 if '__main__' == __name__ :
