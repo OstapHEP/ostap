@@ -1,0 +1,112 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# =============================================================================
+## @file ostap-sync-dirs
+#  Simple utility for (parallel) syncronization of directories 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2013-02-10
+# =============================================================================
+""" Simple utility for (parallel) syncronization of directories 
+"""
+# =============================================================================
+__version__ = "$Revision$"
+__author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
+__date__    = "2013-02-10"
+# =============================================================================
+__all__     = ()
+# =============================================================================
+from   ostap.utils.basic  import numcpu
+from   ostap.utils.timing import timing
+from   ostap.io.files     import sync_dirs, fsize_unit
+import ostap.logger.table  as    T
+import sys, os, argparse
+# =============================================================================
+from   ostap.logger.logger import getLogger
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.sync-dirs' )
+else                       : logger = getLogger( __name__          )
+del getLogger
+
+
+# =============================================================================
+if '__main__' == __name__ :
+    
+    parser = argparse.ArgumentParser  (
+        prog       = "ostap-sync-dirs" )
+    parser.add_argument    (
+        '--parallel' ,
+        type    = int         , 
+        help    = "Parallel processing [default: %d]" % numcpu()  ,
+        default = numcpu()    ) 
+
+    parser.add_argument    (
+        '--progress'                  ,
+        help    = "Show progress bar" ,
+        action  = "store_true"        )
+    
+    parser.add_argument    (
+        '--verbose' ,
+        help    = "Verbose processing [default: False]" ,
+        action  = "store_true" )
+    
+    parser.add_argument   (
+        '-c' , '--command' ,
+        type    = str , 
+        help    = "Underlying command  [ default iis `%(default)s' ] " ,
+        default = ''    )
+    
+    parser.add_argument   (
+        "source"      ,
+        type    = str , 
+        help    = "The source directory" )
+    parser.add_argument   (
+        "target"      ,
+        type    = str , 
+        help    = "The target directory" )
+    
+    config = parser.parse_args ( sys.argv[1:] )
+
+
+    if config.verbose : 
+        logger.debug ( "Configuration: %s" % config )
+        ## from ostap.utils.docme import docme
+        ## docme ( __name__ , logger = logger )
+        
+        with timing ( 'Sync %s' % config.source , logger = logger if config.verbose else None ) as timer : 
+            result = sync_dirs ( source_dir = config.source   ,
+                                 new_dir    = config.target   ,
+                                 parallel   = config.parallel ,
+                                 copy_cmd   = config.command  ,
+                                 progress   = config.progress or config.verbose )
+            
+    if config.verbose : 
+        rows  = [ ( '#' , 'Synched' , 'size' ) ]
+        ts    = 0 
+        for i, r in enumerate ( result , start = 1 ) :
+            fs  = os.path.getsize ( r  )
+            ts += fs 
+            s , u = fsize_unit   ( fs ) 
+            row = '%d' % i , r , '%.1f%s' %  ( s , u )
+            rows.append ( row )
+            
+        s , u = fsize_unit   ( ts )             
+        row = 'Total' , '' , '%.1f%s' %  ( s , u )
+        rows.append ( row ) 
+
+
+        speed = int ( ts / timer.delta ) 
+        s1 , u1 = fsize_unit ( ts    )
+        s2 , u2 = fsize_unit ( speed )
+        
+        tsize   = '%.1f%s'   % ( s1 , u1 )
+        speed   = '%.1f%s/s' % ( s2 , u2 )
+        
+        title = 'Synched #files: %d size: %s speed: %s' % ( len ( result ) , tsize , speed ) 
+        table = T.table ( rows , title = title , alignment = 'llc' , prefix = '# ' )
+        logger.info ( '%s:\n%s' % ( title , table ) )
+        
+# =============================================================================
+##                                                                      The END 
+# =============================================================================
+
+
+
