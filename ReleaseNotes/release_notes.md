@@ -1,5 +1,7 @@
 ## New features
 
+  1. add script `ostap-sync-dirs` for (parallel) synchronization of directories
+
 ## Backward-incompatible
 
 ## Bug fixes
