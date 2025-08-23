@@ -15,7 +15,7 @@ __date__    = "2013-02-10"
 # =============================================================================
 __all__     = ()
 # =============================================================================
-from   ostap.utils.basic  import numcpu
+from   ostap.utils.basic  import numcpu, commonpath 
 from   ostap.utils.timing import timing
 from   ostap.io.files     import sync_dirs, fsize_unit
 import ostap.logger.table  as    T
@@ -78,21 +78,24 @@ if '__main__' == __name__ :
                                  copy_cmd   = config.command  ,
                                  progress   = config.progress or config.verbose )
             
-    if config.verbose : 
+    if config.verbose :
+        
         rows  = [ ( '#' , 'Synched' , 'size' ) ]
-        ts    = 0 
+        ts    = 0
+        cp    = commonpath ( result )
+        cp    = cp if os.path.isdir ( cp ) else os.path.dirname ( cp )
+        lcp   = len ( cp )
+        
         for i, r in enumerate ( result , start = 1 ) :
             fs  = os.path.getsize ( r  )
             ts += fs 
-            s , u = fsize_unit   ( fs ) 
-            row = '%d' % i , r , '%.1f%s' %  ( s , u )
+            s , u = fsize_unit   ( fs )
+            
+            rp    = r[lcp+1:]
+            
+            row = '%d' % i , rp , '%.0f%s' %  ( s , u )
             rows.append ( row )
             
-        s , u = fsize_unit   ( ts )             
-        row = 'Total' , '' , '%.1f%s' %  ( s , u )
-        rows.append ( row ) 
-
-
         speed = int ( ts / timer.delta ) 
         s1 , u1 = fsize_unit ( ts    )
         s2 , u2 = fsize_unit ( speed )
@@ -100,8 +103,8 @@ if '__main__' == __name__ :
         tsize   = '%.1f%s'   % ( s1 , u1 )
         speed   = '%.1f%s/s' % ( s2 , u2 )
         
-        title = 'Synched #files: %d size: %s speed: %s' % ( len ( result ) , tsize , speed ) 
-        table = T.table ( rows , title = title , alignment = 'llc' , prefix = '# ' )
+        title = 'Synched to %s : #files: %d, size: %s, speed: %s' % ( cp , len ( result ) , tsize , speed ) 
+        table = T.table ( rows , title = title , alignment = 'llr' , prefix = '# ' )
         logger.info ( '%s:\n%s' % ( title , table ) )
         
 # =============================================================================
