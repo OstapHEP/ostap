@@ -2511,6 +2511,17 @@ Ostap::Math::precision
   return std::sqrt ( cov2 ) / abs ( v ) ;
 }
 // ============================================================================
+/*  calculate the effective background 
+ *  \f$ B \equiv \sigma^2_S - S \f$ 
+ *  @param s signal with uncertainty
+ *  @return the effective background 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::background 
+( const Ostap::Math::ValueWithError& s )
+{ return s.cov2() - s ; }
+// ============================================================================
 /* calculate the "effective purity" ratio using the identity
  *  \f$ p_{\mathrm{eff}} = \frac{S}{S+B} = \frac{1}{1+\frac{B}{S}}\f$
  *  and the effective "background-to-signal" ratio is estimated as 

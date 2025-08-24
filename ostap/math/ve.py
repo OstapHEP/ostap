@@ -147,6 +147,23 @@ def _ve_punzi_ ( s , alpha = 5.0 ) :
     return Ostap.Math.punzi ( VE ( s ) , float ( alpha ) ) 
 
 # =============================================================================
+## Get the effective background
+#
+#  \f$ B \equiv \sigma^2_S - S \f$ 
+#
+#  @param s     (INPUT) signal (with uncertainty)
+#  @return      effective background 
+#  @see Ostap::Math::background 
+def _ve_background_ ( s ) :
+    """ Get the effective background
+
+    B = sigma^2 - S 
+
+    - see `Ostap.Math.background`
+    """
+    return Ostap.Math.backgound ( VE ( s )  )
+
+# =============================================================================
 ## Calculate the "effective purity" ratio using the identity
 #  \f$ p_{\mathrm{eff}} = \frac{S}{S+B} = \frac{1}{1+\frac{B}{S}}\f$
 #  and the effective "background-to-signal" ratio is estimated as 
@@ -159,9 +176,9 @@ def _ve_punzi_ ( s , alpha = 5.0 ) :
 #  @return the effective purity or -1
 #  @see Ostap.Math.purity 
 def _ve_purity_ ( s ) :
-    """ Calculate the ``effective purity'' ratio using the identity
+    """ Calculate the `effective purity' ratio using the identity
     p = S/(S+B) = 1/( 1 + B/S ), 
-    - and the effective ``background-to-signal'' ratio B/S is estimated as
+    - and the effective `background-to-signal' ratio B/S is estimated as
     B/S = sigma^2(S)/S - 1
     - Finally one gets
     p = S / sigma^2(S) 
@@ -174,7 +191,7 @@ def _ve_purity_ ( s ) :
 ## Get precision with ``some'' error estimate.
 #  @see Ostap::Math::precision 
 def _ve_precision_ ( s )  :
-    """ Get precision with `some' error estimate.
+    """ Get `precision' with `some' error estimate.
     >>> v = ...
     >>> p = v.prec()
     - see `Ostap.Math.precision`
@@ -208,6 +225,7 @@ VE . prec       = _ve_precision_
 VE . FoM        = _ve_fom_
 VE . FoM1       = _ve_fom_
 VE . FoM2       = _ve_fom2_
+VE . background = _ve_background_
 
 _is_le_    = Ostap.Math.LessOrEqual ( 'double' )()
 
@@ -572,6 +590,7 @@ _new_methods_ = (
     VE . FoM              , 
     VE . FoM1             , 
     VE . FoM2             , 
+    VE . background       , 
     VE . __lt__           ,
     VE . __le__           , 
     VE . __gt__           , 

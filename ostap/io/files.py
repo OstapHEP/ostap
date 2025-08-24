@@ -24,6 +24,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, path_types, sized_types  
 from   ostap.utils.basic      import typename 
+from   ostap.utils.timing     import timing 
 from   ostap.parallel.task    import Task
 from   ostap.logger.symbols   import tape           as file_symbol
 from   ostap.logger.symbols   import folder         as folder_symbol
@@ -31,6 +32,7 @@ from   ostap.logger.symbols   import union          as union_symbol
 from   ostap.logger.symbols   import intersection   as intersection_symbol
 from   ostap.logger.symbols   import exclusive_or   as xor_symbol
 from   ostap.logger.symbols   import difference     as diff_symbol
+import ostap.logger.table     as     T
 import os, glob, random, math   
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -582,7 +584,6 @@ class Files(object):
             title = '%s %s' % ( typename ( self ) , self.description )
             if folder_symbol : title = '%s %s' % ( folder_symbol , title )
             
-        import ostap.logger.table as T
         return T.table ( rows , title = title , prefix = prefix , alignment = 'rrw' ) 
 
     # =========================================================================
@@ -649,7 +650,11 @@ class Files(object):
     ## copy all the files to new directory
     #  - new directory will be created (if needed)
     #  - common path (prefix) for all files will be replaced by new directory
-    def copy_files ( self , new_dir = None , parallel = False ) :
+    def copy_files ( self             ,
+                     new_dir  = None  ,
+                     parallel = False , 
+                     progress = True  , 
+                     report   = False ) :
         """ Copy all the files to new directory
         - new directory will be created (if needed)
         - common path (prefix) for all files will be replaced by new directory
@@ -658,16 +663,40 @@ class Files(object):
         files_to_copy = set ( self.__files )
 
         ## use generic function 
-        copied = copy_files ( files_to_copy              ,
-                              new_dir  = new_dir         ,   
-                              parallel = parallel        ,
-                              progress = not self.silent )
+        with timing ( 'Copy %d files' % len ( files_to_copy ) , logger = logger if not self.silent else None ) as timer : 
+            copied = copy_files ( files_to_copy               ,
+                                  new_dir  = new_dir          ,   
+                                  parallel = parallel                    ,
+                                  progress = progress or not self.silent )
         
-        if not self.silent :
+        if report or not self.silent :
+            
             from ostap.utils.basic import commonpath 
-            cp = commonpath ( copied  )
-            logger.info ( "copy_files: #%d files are copied to '%s'" %  ( len ( copied ) , cp ) )
-
+            cp  = commonpath ( copied  )
+            lcp = len ( cp )
+            ts  = 0
+            
+            rows  = [ ( '#' , 'Copied', 'size' ) ]            
+            for i, r in enumerate ( copied , start = 1 ) :
+                fs    = os.path.getsize ( r  )
+                ts   += fs 
+                s , u = fsize_unit   ( fs )                
+                rp    = r[lcp+1:]                
+                row = '%d' % i , rp , '%.0f%s' %  ( s , u )
+                rows.append ( row )
+            
+            speed = int ( ts / timer.delta ) 
+            s1 , u1 = fsize_unit ( ts    )
+            s2 , u2 = fsize_unit ( speed )
+            
+            tsize   = '%.1f%s'   % ( s1 , u1 )
+            speed   = '%.1f%s/s' % ( s2 , u2 )
+            
+            title = 'Copy to %s: #%d files, size %s, speed %s' % ( cp , len ( copied ) , tsize , speed )
+            table = T.table ( rows , title = title , alignment = 'llr' , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) )            
+            logger.info ( title )
+            
         return self.clone ( files = sorted ( copied ) ) 
 
 
@@ -679,7 +708,9 @@ class Files(object):
                      new_dir  = None  ,
                      parallel = False ,
                      copier   = None  , 
-                     copy_cmd = ''    ) :
+                     copy_cmd = ''    ,
+                     progress = True  , 
+                     report   = False ) :
         """ Sync/copy all the files to new directory
         - new directory will be created (if needed)
         - common path (prefix) for all files will be replaced by new directory
@@ -687,18 +718,42 @@ class Files(object):
 
         files_to_copy = set ( self.__files )
 
-        ## use generic function 
-        copied = sync_files ( files_to_copy              ,
-                              new_dir  = new_dir         ,   
-                              parallel = parallel        ,
-                              copier   = copier          , 
-                              copy_cmd = copy_cmd        , 
-                              progress = not self.silent )
-        
-        if not self.silent :
+        ## use generic function
+        with timing ( 'Sync %d files' % len ( files_to_copy) , logger = logger if not self.silent else None ) as timer : 
+            copied = sync_files ( files_to_copy              ,
+                                  new_dir  = new_dir         ,   
+                                  parallel = parallel        ,
+                                  copier   = copier          , 
+                                  copy_cmd = copy_cmd        , 
+                                  progress = progress or not self.silent )
+            
+        if report or not self.silent :
+            
             from ostap.utils.basic import commonpath 
-            cp = commonpath ( copied  )
-            logger.info ( "sync_files: #%d files are sync/copied to '%s'" %  ( len ( copied ) , cp ) )
+            cp  = commonpath ( copied  )
+            lcp = len ( cp )
+            ts  = 0
+            
+            rows  = [ ( '#' , 'Synced' , 'size' ) ]            
+            for i, r in enumerate ( copied , start = 1 ) :
+                fs    = os.path.getsize ( r  )
+                ts   += fs 
+                s , u = fsize_unit   ( fs )                
+                rp    = r[lcp+1:]                
+                row = '%d' % i , rp , '%.0f%s' %  ( s , u )
+                rows.append ( row )
+            
+            speed = int ( ts / timer.delta ) 
+            s1 , u1 = fsize_unit ( ts    )
+            s2 , u2 = fsize_unit ( speed )
+            
+            tsize   = '%.1f%s'   % ( s1 , u1 )
+            speed   = '%.1f%s/s' % ( s2 , u2 )
+            
+            title = 'Sync to %s: #%d files, size %s, speed %s' % ( cp , len ( copied ) , tsize , speed )
+            table = T.table ( rows , title = title , alignment = 'llr' , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) )            
+            logger.info ( title )
 
         return self.clone ( files = sorted ( copied ) ) 
         

@@ -86,8 +86,6 @@ logger.verbose ( '  margin_bottom : %s ' % margin_bottom )
 logger.verbose ( '  margin_left   : %s ' % margin_left   )
 logger.verbose ( '  margin_right  : %s ' % margin_right  )
 
-
-
 # =============================================================================
 ## default font 
 ostap_font       = 132     ## Times-Roman 
@@ -120,7 +118,7 @@ ostap_latex . SetTextAlign  ( 12          )
 ## @class StyleStore
 #  Store for all created/configured styles
 class StyleStore(object) :
-    """ Store for all created/cofigures styles
+    """ Store for all created/configures styles 
     """
     __styles     = {}
     __own_styles = {}
@@ -296,7 +294,7 @@ def table_style ( style , prefix = '' , title = '' ) :
     """ Dump the style as a table"""
 
     conf = dump_style ( style )
-    
+
     for i in range ( 31 ) :
         key = 'LineStyleString_%s' % i  
         fmt = style.GetLineStyleString ( i )
@@ -583,10 +581,10 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
             changed [ key ] = style.GetLineStyleString ( i )                         
             style.SetLineStyleString ( i , conf.pop ( k ) .strip() ) 
 
-    if 'palette' in conf :
-        style.SetPalette ( conf.pop ( 'palette' ) )
-
-    ## Extra attribtes 
+    if   'Palette'      in conf : style.SetPalette ( conf.pop ( 'Palette'      ) )
+    elif 'ColorPalette' in conf : style.SetPalette ( conf.pop ( 'ColorPalette' ) )
+        
+    ## Extra attributes 
     for e in extra :
         if e in conf : conf.pop ( e ) 
         
@@ -643,48 +641,51 @@ def make_styles ( config = None ) :
                     
 # ==============================================================================
 def get_float ( config , name , default ) :
-    try :
+    # ==========================================================================
+    try : # ====================================================================
+        # ======================================================================
         if hasattr ( config , 'getfloat' ) :
             value = config.getfloat ( name , fallback = default )
         else : value = config.get   ( name , default ) 
         return float ( value )
-    except :
+    except : # =================================================================
+        # ======================================================================
         return default 
 
-# =============================================================================
+# ==============================================================================
 def get_int    ( config , name , default ) :
-    
-    try :
+    # ==========================================================================
+    try : # ====================================================================
         if hasattr ( config , 'getint') :         
             value = config.getint ( name , fallback = default )
         else : value = config.get ( name , default ) 
         return int ( value )
-    except :
+    except : # =================================================================
         return default 
 
-# =============================================================================
+# ==============================================================================
 def get_bool    ( config , name , default ) :
-    
-    try :
+    # ==========================================================================
+    try : # ====================================================================
         if hasattr ( config , 'getboolean') :         
             value = config.getboolean ( name , fallback = default )
         else : value = config.get ( name , default ) 
         return bool ( value )
-    except :
+    except : # =================================================================
         return default 
 
-# =============================================================================
+# ==============================================================================
 def get_str    ( config , name , default ) :
-    
-    try :
+    # ==========================================================================
+    try : # ====================================================================
         if hasattr ( config , 'getint') :         
             value = config.get ( name , fallback = default )
         else : value = config.get ( name , default ) 
         return str ( value )
-    except :
+    except : # ================================================================
         return default 
 
-# ============================================================================
+# =============================================================================
 ## make Ostap-like style
 def make_ostap_style ( name                      ,
                        description = 'The Style' ,   
@@ -715,7 +716,6 @@ def make_ostap_style ( name                      ,
     conf [ 'BarOffset'         ] = get_float ( config , 'BarOffset'           , 0.0 )
     conf [ 'BarWidth'          ] = get_float ( config , 'BarWidth'            , 1.0 )
     
-
     conf [ 'CanvasBorderMode'  ] = get_int   ( config , 'CanvasBorderMode'    , 0      ) 
     conf [ 'CanvasBorderSize'  ] = get_int   ( config , 'CanvasBorderSize'    , 2      ) 
     conf [ 'CanvasColor'       ] = get_int   ( config , 'CanvasColor'         , 0      ) 
@@ -805,7 +805,7 @@ def make_ostap_style ( name                      ,
     conf [ 'Ndivisions_Y'      ] = get_int   ( config , 'Ndivisions_Y'       , 510  )
     conf [ 'Ndivisions_Z'      ] = get_int   ( config , 'Ndivisions_Z'       , 510  )
 
-    conf [ 'NumberContours'    ] = get_int   ( config , 'NumberContours'     , 127  )
+    conf [ 'NumberContours'    ] = get_int   ( config , 'NumberContours'     ,  98  )
     
     conf [ 'NumberOfColors'    ] = get_int   ( config , 'NumberOfColors'     , 255  )
 
@@ -941,9 +941,11 @@ def make_ostap_style ( name                      ,
     conf [ 'TextFont'          ] = get_int   ( config , 'TextFont'            , font )
     conf [ 'TextSize'          ] = get_float ( config , 'TextSize'            , 0.08 * scale )
 
+    conf [ 'ColorPalette'      ] = get_int   ( config , 'ColorPalette'        , ROOT.kDarkBodyRadiator )
+
     ## maximal number of digits for the axis labels 
     conf [ 'AxisMaxDigits'     ] = 3
-    
+
     ## create the style
     style = root_style ( name )
 

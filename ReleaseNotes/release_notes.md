@@ -1,11 +1,16 @@
+# v3.0.2.4
+
 ## New features
 
-  1. add script `ostap-sync-dirs` for (parallel) synchronization of directories
-
+  1. Add script `ostap-sync-dirs` for (parallel) synchronization of directories
+  1. More tweaks for `sync_files` & `copy_files`
+  1. A tiny improvement for the TH2 and TH3 summary printout
+  1. Add `Ostap::Math::background` function and
+  1. Add `background` method for `Ostap.Math.ValueWithError`
+  
 ## Backward-incompatible
 
 ## Bug fixes
-
 
 # v3.0.2.2
 

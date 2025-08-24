@@ -6,6 +6,8 @@ LCG=${1:-dev3/latest}
 PLATFORM=${2:-x86_64-el9-clang19-opt} 
 
 ( cd /cvmfs/sft.cern.ch/lcg/views 2> /dev/null ; echo 'BUILD WITH LCG    : LCG-views     :' $PWD ) 
+( cd /cvmfs/sft.cern.ch/lcg/views 2> /dev/null ; cat /cvmfs/sft.cern.ch/lcg/views/setupViews.sh  > /dev/null )
+( cd /cvmfs/sft.cern.ch/lcg/views 2> /dev/null ; cat /cvmfs/sft.cern.ch/lcg/views/setupViews.csh > /dev/null )
 
 if [[ $LCG && -d /cvmfs/sft.cern.ch/lcg/views/$LCG ]]
 then

@@ -1583,6 +1583,14 @@ namespace Ostap
      */
     ValueWithError precision 
     ( const ValueWithError& v ) ;
+    // =========================================================================
+    /** calculate the effective background 
+     *  \f$ B \equiv \sigma^2_S - S \f$ 
+     *  @param s signal with uncertainty
+     *  @return the effective background 
+     */
+    ValueWithError background  
+    ( const ValueWithError& s ) ;    
     // ========================================================================
     /** calculate the "effective purity" ratio using the identity
      *  \f[ p_{\mathrm{eff}} = \frac{S}{S+B} = \frac{1}{1+\frac{B}{S}}\f]

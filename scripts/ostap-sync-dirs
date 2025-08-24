@@ -51,7 +51,7 @@ if '__main__' == __name__ :
     parser.add_argument   (
         '-c' , '--command' ,
         type    = str , 
-        help    = "Underlying command  [ default iis `%(default)s' ] " ,
+        help    = "Underlying command  [default is `%(default)s' ] " ,
         default = ''    )
     
     parser.add_argument   (
@@ -80,20 +80,18 @@ if '__main__' == __name__ :
             
     if config.verbose :
         
-        rows  = [ ( '#' , 'Synched' , 'size' ) ]
         ts    = 0
         cp    = commonpath ( result )
         cp    = cp if os.path.isdir ( cp ) else os.path.dirname ( cp )
         lcp   = len ( cp )
-        
+
+        rows  = [ ( '#' , 'Sync' , 'size' ) ]
         for i, r in enumerate ( result , start = 1 ) :
-            fs  = os.path.getsize ( r  )
-            ts += fs 
-            s , u = fsize_unit   ( fs )
-            
-            rp    = r[lcp+1:]
-            
-            row = '%d' % i , rp , '%.0f%s' %  ( s , u )
+            fs     = os.path.getsize ( r  )
+            ts    += fs 
+            s , u  = fsize_unit   ( fs )
+            rp     = r[lcp+1:]            
+            row    = '%d' % i , rp , '%.0f%s' %  ( s , u )
             rows.append ( row )
             
         speed = int ( ts / timer.delta ) 
@@ -103,9 +101,10 @@ if '__main__' == __name__ :
         tsize   = '%.1f%s'   % ( s1 , u1 )
         speed   = '%.1f%s/s' % ( s2 , u2 )
         
-        title = 'Synched to %s : #files: %d, size: %s, speed: %s' % ( cp , len ( result ) , tsize , speed ) 
+        title = 'Sync to %s: #%d files, size %s, speed %s' % ( cp , len ( result ) , tsize , speed ) 
         table = T.table ( rows , title = title , alignment = 'llr' , prefix = '# ' )
         logger.info ( '%s:\n%s' % ( title , table ) )
+        logger.info ( title )
         
 # =============================================================================
 ##                                                                      The END 
