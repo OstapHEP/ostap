@@ -8947,7 +8947,7 @@ def _h1_table_ ( h1 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
                                      'True' if h1.all_zero        () else 'False' ) , ''
     rows.append ( row )
 
-    riemann = '\U000003a3v\U00000394x' if show else "Riemann sum"
+    riemann = '\U000003a3y\U00000394x' if show else "Riemann sum"
     rsum , expo  = pretty_float ( h1.riemann_sum ()   , width = width , precision = precision ) 
     row =  riemann , rsum  ,  '10^%+d' % expo if expo else '' 
     rows.append ( row )
@@ -9103,7 +9103,7 @@ def _h2_table_ ( h2 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
                                      'True' if h2.all_zero        () else 'False' ) , '' 
     rows.append ( row )
 
-    riemann = '\U000003a3v\U00000394x\U00000394y' if show else "Riemann sum"
+    riemann = '\U000003a3z\U00000394x\U00000394y' if show else "Riemann sum"
     rsum , expo  = pretty_float ( h2.riemann_sum ()   , width = width , precision = precision ) 
     row = riemann , rsum  ,  '10^%+d' % expo if expo else '' 
     rows.append ( row )
