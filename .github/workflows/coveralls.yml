@@ -27,7 +27,7 @@ jobs:
        - name: Install dependencies
          run: |
           ls 
-       - uses: cvmfs-contrib/github-action-cvmfs@main
+       - uses: cvmfs-contrib/github-action-cvmfs@v4
        - name: Build
          run: |
           ls /cvmfs/sft.cern.ch 
