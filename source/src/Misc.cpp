@@ -19,12 +19,12 @@
 // ============================================================================
 TVirtualPad* Ostap::Utils::get_pad ()
 {
-  TVirtualPad* pad = nullptr ; 
-  const TROOT* groot = ROOT::GetROOT() ;
+  // TVirtualPad* pad  = nullptr ; 
+  // const TROOT* groot = ROOT::GetROOT() ;
   // (1) current` pad?
-  if ( nullptr != groot ) { pad = groot->GetSelectedPad() ; }
+  // if ( nullptr != groot ) { pad = groot->GetSelectedPad() ; }
   // (2) global  pad? 
-  if ( nullptr != pad   ) { return pad ; }
+  // if ( nullptr != pad   ) { return pad ; }
   return TVirtualPad::Pad() ;
 }
 // ============================================================================
@@ -73,7 +73,6 @@ TVirtualPad* Ostap::Utils::pad_update_async  ( TVirtualPad* pad )
   return pad ;
 }
 // ============================================================================
-
 
 // ============================================================================
 //                                                                      The END 

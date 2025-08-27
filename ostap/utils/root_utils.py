@@ -22,11 +22,6 @@ __all__     = (
     'batch'              , ## context manager to keep/force certain ROOT ``batch''-mode
     'batch_env'          , ## chek&set the bacth from environment 
     ##
-    'KeepCanvas'         , ## context manager to keep the current ROOT canvas
-    'keepCanvas'         , ## context manager to keep the current ROOT canvas
-    'InvisibleCanvas'    , ## context manager to use the invisible current ROOT canvas
-    'invisibleCanvas'    , ## context manager to use the invisible current ROOT canvas
-    ##
     'implicitMT'         , ## context manager to enable/disable implicit MT in ROOT 
     ##
     'ImplicitMT'         , ## context manager to enable/disable implicit MT in ROOT    
@@ -36,7 +31,6 @@ __all__     = (
     )
 
 # =============================================================================
-from   ostap.utils.timing import Wait
 from   ostap.utils.basic  import typename 
 import ROOT
 # =============================================================================
@@ -142,105 +136,6 @@ def batch( batch = True ) :
     ... do something here 
     """
     return Batch ( batch )
-
-
-# =============================================================================
-## @class KeepCanvas
-#  helper class to keep the current canvas
-#  @code
-#  with KeepCanvas() :
-#  ... do something here 
-#  @endcode 
-class KeepCanvas(Wait) :
-    """ Helper class to keep the current canvas
-    >>> with KeepCanvas() :
-    ... do something here 
-    """
-    def __init__ ( self , wait = 0 ) :
-        Wait.__init__ ( self , after = wait ) 
-        self.__old_canvas  = None 
-    def __enter__ ( self ) :
-        Wait.__enter__ ( self )
-        ## 
-        ## pad  = ROOT.TVirtualPad.Pad()
-        ## pad  = ROOT.Ostap.Utils.get_pad()  
-        ## cnv  = pad.GetCanvas()  if pad  else None
-        ## 
-        cnv = self.current 
-        self.__old_canvas = cnv if cnv else None
-        
-    def __exit__  ( self , *_ ) :
-        Wait.__exit__ ( self , *_ )         
-        if self.__old_canvas:
-            cnv = self.__old_canvas 
-            self.__old_canvas.cd()
-        ## self.__old_canvas = None             
-    @property
-    def old_canvas ( self ) :
-        """`old_canvas': canvas to be preserved"""
-        return self.__old_canvas
-    @property
-    def current ( self ) :
-        """`current` : get the pointer to the current TCanvas"""
-        return ROOT.Ostap.Utils.get_canvas() 
-    
-# =============================================================================
-#  Keep the current canvas
-#  @code
-#  with keepCanvas() :
-#  ... do something here 
-#  @endcode
-def keepCanvas() :
-    """Keep the current canvas
-    >>> with keepCanvas() :
-    ... do something here
-    """
-    return KeepCanvas()
-
-
-
-# =============================================================================
-## @class InvisibleCanvas
-#  Use context ``invisible canvas''
-#  @code
-#  with InvisibleCanvas() :
-#  ... do somehing here 
-#  @endcode
-class InvisibleCanvas(KeepCanvas) :
-    """Use context ``invisible canvas''
-    >>> with InvisibleCanvas() :
-    ... do something here 
-    """
-    ## context manager: ENTER 
-    def __enter__ ( self ) :
-        ## start from keeping the current canvas 
-        KeepCanvas.__enter__ ( self )
-        ## create new canvas in batch mode 
-        with Batch( True ) : 
-            import ROOT 
-            self.batch_canvas = ROOT.TCanvas()
-            self.batch_canvas.cd ()
-            return self.canvas
-
-    ## context manager: EXIT
-    def __exit__ ( self , *_ ) :
-        if self.batch_canvas :
-            self.batch_canvas.Close() 
-            del self.batch_canvas             
-        KeepCanvas.__exit__ ( self , *_ )
-
-# =============================================================================
-## Use context ``invisible canvas''
-#  @code
-#  with invisibleCanvas() :
-#  ... do something here 
-#  @endcode
-def invisibleCanvas() :
-    """ Use context ``invisible canvas''
-    >>> with invisibleCanvas() :
-    ... do something here 
-    """
-    return InvisibleCanvas() 
 
 # =============================================================================
 ## EnableImplicitMT

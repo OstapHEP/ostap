@@ -13,29 +13,34 @@ __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = "2014-10-19"
 __version__ = '$Revision$'
 __all__     = (
-    'getCanvas'        , ## get/create canvas 
-    'getCanvases'      , ## get all existing canvases 
-    'canvas_partition' , ## split canvas into several pads with no space between pads 
-    'partition_draw'   , ## split canvas into several pads with no space between pads & draw  
-    'canvas_pull'      , ## split canvas into two pads with no vertical interspace
-    'draw_pads'        , ## plot sequence of object on sequence of pads, adjustinng axis label size
-    'AutoPlots'        , ## context manager to activate the auto-plotting machinery
-    'auto_plots'       , ## ditto, but as function
-    'UseWeb'           , ## constext manmager to use Web Displya 
-    'useWeb'           , ## constext manmager to use Web Displya
-    'setWebDisplay'    , ## set WebDisplay, see ROOT.TROOT.SetWebDisplay
-    'use_pad'          , ## context manager to modifty TPad
-    'KeepCanvas'       , ## context manager to keep/preserve currect canvas 
-    'keepCanvas'       , ## context manager to keep/preserve currect canvas 
-    'Canvas'           , ## context manager to create currect canvas
-    'use_canvas'       , ## context manager to create currect canvas
+    'getCanvas'          , ## get/create canvas 
+    'getCanvases'        , ## get all existing canvases 
+    'canvas_partition'   , ## split canvas into several pads with no space between pads 
+    'partition_draw'     , ## split canvas into several pads with no space between pads & draw  
+    'canvas_pull'        , ## split canvas into two pads with no vertical interspace
+    'draw_pads'          , ## plot sequence of object on sequence of pads, adjustinng axis label size
+    'AutoPlots'          , ## context manager to activate the auto-plotting machinery
+    'auto_plots'         , ## ditto, but as function
+    'UseWeb'             , ## constext manmager to use Web Displya 
+    'useWeb'             , ## constext manmager to use Web Displya
+    'setWebDisplay'      , ## set WebDisplay, see ROOT.TROOT.SetWebDisplay
+    'use_pad'            , ## context manager to modifty TPad
+    'KeepCanvas'         , ## context manager to keep/preserve currect canvas 
+    'keepCanvas'         , ## context manager to keep/preserve currect canvas 
+    'Canvas'             , ## context manager to create currect canvas
+    'use_canvas'         , ## context manager to create currect canvas
+    'KeepCanvas'         , ## context manager to keep the current ROOT canvas
+    'keepCanvas'         , ## context manager to keep the current ROOT canvas
+    'InvisibleCanvas'    , ## context manager to use the invisible current ROOT canvas
+    'invisibleCanvas'    , ## context manager to use the invisible current ROOT canvas
+    ##
     )
 # =============================================================================
 from   ostap.core.ostap_types    import ordered_dict 
 from   ostap.utils.cidict        import cidict, cidict_fun 
-from   ostap.utils.root_utils    import KeepCanvas, keepCanvas 
 from   ostap.core.core           import rootWarning
 from   ostap.utils.utils         import which
+from   ostap.utils.timing        import Wait
 from   ostap.plotting.makestyles import ( canvas_width , canvas_height ,
                                           margin_left  , margin_right  ,
                                           margin_top   , margin_bottom )
@@ -51,7 +56,7 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 
 # =============================================================================
-#$ define WebDispla
+## define WebDisplay
 #  @see TROOT::SetWebDisplay
 def setWebDisplay ( web ) :
     """ Define WebDispllay
@@ -136,6 +141,100 @@ if web : # ====================================================================
     logger.debug  ( 'Set WebDisplay to be `%s`' % web ) 
     setWebDisplay ( web )
 
+
+
+# =============================================================================
+## @class KeepCanvas
+#  helper class to keep the current canvas
+#  @code
+#  with KeepCanvas() :
+#  ... do something here 
+#  @endcode 
+class KeepCanvas(Wait) :
+    """ Helper class to keep the current canvas
+    >>> with KeepCanvas() :
+    ... do something here 
+    """
+    def __init__ ( self , wait = 0 ) :
+        Wait.__init__ ( self , after = wait ) 
+        self.__old_canvas  = None 
+    def __enter__ ( self ) :
+        Wait.__enter__ ( self )
+        cnv = self.current
+        if not cnv :
+            cnv = getCanvas()
+            cnv.cd() 
+        self.__old_canvas = cnv if cnv else None
+        
+    def __exit__  ( self , *_ ) :
+        Wait.__exit__ ( self , *_ )         
+        if self.old_canvas : self.old_canvas.cd()
+        self.__old_canvas = None
+    @property
+    def old_canvas ( self ) :
+        """`old_canvas': canvas to be preserved"""
+        return self.__old_canvas
+    @property
+    def current ( self ) :
+        """`current` : get the pointer to the current TCanvas"""
+        return ROOT.Ostap.Utils.get_canvas() 
+    
+# =============================================================================
+#  Keep the current canvas
+#  @code
+#  with keepCanvas() :
+#  ... do something here 
+#  @endcode
+def keepCanvas() :
+    """ Keep the current canvas
+    >>> with keepCanvas() :
+    ... do something here
+    """
+    return KeepCanvas()
+
+# =============================================================================
+## @class InvisibleCanvas
+#  Use context ``invisible canvas''
+#  @code
+#  with InvisibleCanvas() :
+#  ... do somehing here 
+#  @endcode
+class InvisibleCanvas(KeepCanvas) :
+    """ Use context `invisible canvas'
+    >>> with InvisibleCanvas() :
+    ... do something here 
+    """
+    ## context manager: ENTER 
+    def __enter__ ( self ) :
+        ## start from keeping the current canvas 
+        KeepCanvas.__enter__ ( self )
+        ## create new canvas in batch mode 
+        with Batch( True ) : 
+            import ROOT 
+            self.batch_canvas = ROOT.TCanvas()
+            self.batch_canvas.cd ()
+            return self.canvas
+
+    ## context manager: EXIT
+    def __exit__ ( self , *_ ) :
+        if self.batch_canvas :
+            self.batch_canvas.Close() 
+            del self.batch_canvas             
+        KeepCanvas.__exit__ ( self , *_ )
+
+# =============================================================================
+## Use context ``invisible canvas''
+#  @code
+#  with invisibleCanvas() :
+#  ... do something here 
+#  @endcode
+def invisibleCanvas() :
+    """ Use context `invisible canvas'
+    >>> with invisibleCanvas() :
+    ... do something here 
+    """
+    return InvisibleCanvas() 
+    
 # =============================================================================
 ## list of created canvases 
 _canvases = [] 
@@ -1170,7 +1269,7 @@ class Canvas(KeepCanvas) :
                 
         ## switch to the previous canvas 
         KeepCanvas.__exit__ ( self , *_ ) 
-        ## self.__cnv = None 
+        self.__cnv = None 
     
 # =============================================================================
 ## helper context manager to create and configure a canvas (and pad)

@@ -1,6 +1,9 @@
 
 ## New features
 
+  1. Fix `KeepCanvas` and `Canvas` context managers to correctly switch to the initial stage.
+  1. reshuffle code between `ostap.plotting.canvas.py` and `ostap.utils.root_utils.py`
+  
 ## Backward-incompatible
 
 ## Bug fixes
