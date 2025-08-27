@@ -1,3 +1,4 @@
+
 ## New features
 
 ## Backward-incompatible
@@ -59,24 +60,24 @@
 
 ## New features
 
-   1. More improvements in TMVA & Choping printout
-   1. For TMVA & Chppoing add new arguemnts `signal_add_vars` and `backrgound_add_vars` to add more variables to transformed data sets
-       to release the intrincis requirmeent fot the same structure for singal ad backgrnu samples.
+   1. More improvements in TMVA & Chopping printout
+   1. For TMVA & Chppoing add new arguments `signal_add_vars` and `backrgound_add_vars` to add more variables to transformed data sets
+       to release the intrinsic requirments fot the same structure for signal ad background samples.
        In this way one can `on-fly` add more  missing variables to please TMVA, see example `test_tools_chopping2.py`
-   1. Modernize `AFUN1.load_params` : issue  warnigs for the parameter setting outside the allowed range.
+   1. Modernize `AFUN1.load_params` : issue  warnings for the parameter setting outside the allowed range.
      
 ## Backward-incompatible
 
 ## Bug fixes 
 
-   1. fix a bug in `histo.eff` for non-uniform bining  (thanks to Evgenia Nekrasova)
+   1. fix a bug in `histo.eff` for non-uniform binning  (thanks to Evgenia Nekrasova)
                   
 # v3.0.1.24
 
 ## New features
 
    1. Extend `pdf_convolution` to accept the histogram as the first argument using the historgam->PDF transformation
-   1. Add `convolute` method for histogram (internally using `odf_convolution`
+   1. Add `convolute` method for histogram (internally using `pdf_convolution`)
           
 ## Backward-incompatible
 

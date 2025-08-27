@@ -4144,8 +4144,6 @@ def _h3_oper_ ( h1 , h2 , oper ) :
     result.ResetStats() 
     return result
 
-
-
 # =============================================================================
 ## operation with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -4322,7 +4320,6 @@ def _h3_pow_ ( h1 , val ) :
         
     result.ResetStats() 
     return result 
-
 
 # =============================================================================
 ## Division with the histograms 
@@ -5409,7 +5406,6 @@ ROOT.TH1D . FoM_2 = _fom_2_
 ROOT.TH1F . FoM_1 = _fom_1_ 
 ROOT.TH1F . FoM_2 = _fom_2_ 
 
-
 # =============================================================================
 # rebin the histograms
 # =============================================================================
@@ -5530,7 +5526,8 @@ def _rebin_nums_1D_ ( h1 , template ) :
             h2 [ i2[0] ] +=  o * i1[2] 
 
     h2.ResetStats() 
-    return h2 
+    return h2
+
 # =============================================================================
 ## rebin 1D-histogram as FUNCTION 
 def _rebin_func_1D_ ( h1 , template ) :
@@ -5577,7 +5574,6 @@ def _rebin_func_1D_ ( h1 , template ) :
             
     h2.ResetStats() 
     return h2 
-
 
 # ==============================================================================
 ## rebin 2D-histogram with NUMBERS 
@@ -6079,7 +6075,6 @@ def _h1_shift_ ( h , bias ) :
     result.ResetStats() 
     return result
 
-
 # =============================================================================
 ## simple shift of the histogram
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -6545,7 +6540,6 @@ def _h1_std_moment_ ( h1 , order ,  exp_moment = False ) :
       sign(cmom)*(abs(cmom)**1.0/order)
      
     """
-    #
 
     if   1 == order : return VE ( 0 , 0 ) 
     elif 2 == order : return VE ( 1 , 1 )
@@ -6794,7 +6788,6 @@ def _h3_moment_ ( h3 , orderx , ordery , orderz  , x0 = 0.0 , y0 = 0.0 , z0 = 0.
 
 _h3_moment_ . __doc__ +=  '\n' + HStats.moment3.__doc__ 
 
-
 # =============================================================================
 ## calculate bin-by-bin central moment
 #  \f$ m(k_x,k_y,k_z; x , y  , z ) \equiv 
@@ -6876,59 +6869,12 @@ def _h_stat_ ( h ) :
 
 ROOT.TH1.stat = _h_stat_
 
-
 # =============================================================================
 ## get some (weighted) statistic information on the histogram content
 #  @code 
 #  >>> histo = ... 
 #  >>> wstat = histo.wstat()
 #  >>> print ( wstat ) 
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2014-03-26
-def _h_wstat_ ( h ) :
-    """ Get some weighted statistic infomration on the histogram content
-    >>> histo = ... 
-    >>> wstat  = histo.wstat()
-    >>> print wstat 
-    """
-    cnt = WSE() 
-    for i in h :
-        v = h[i]
-        cnt.add ( v.value() , 1.0/v.cov2() ) 
-    return cnt
-
-ROOT.TH1.wstat = _h_wstat_
-
-# =============================================================================
-## get some (weighted) statistic information on the histogram content
-#  @code 
-#  >>> histo = ... 
-#  >>> wstat = histo.wstat()
-#  >>> print wstat
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2014-03-26
-def _h_wstat_ ( h ) :
-    """ Get some weighted statistic information on the histogram content
-    >>> histo = ... 
-    >>> wstat  = histo.wstat()
-    >>> print wstat 
-    """
-    cnt = WSE() 
-    for i in h :
-        v = h[i]
-        cnt.add ( v.value() , 1.0/v.cov2() ) 
-    return cnt
-
-ROOT.TH1.wstat = _h_wstat_
-
-# =============================================================================
-## get some (weighted) statistic information on the histogram content
-#  @code 
-#  >>> histo = ... 
-#  >>> wstat = histo.wstat()
-#  >>> print ( wstat)
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-03-26
@@ -6968,7 +6914,6 @@ def _h_xstat_ ( h ) :
 
 ROOT.TH1F.xstat = _h_xstat_
 ROOT.TH1D.xstat = _h_xstat_
-
 
 # =============================================================================
 ## get some (weighted) statistic information on the histogram X-content
@@ -7102,7 +7047,6 @@ ROOT.TH1F. hline = _level_
 ROOT.TH1F. vline = _vline_
 ROOT.TH1D. hline = _level_
 ROOT.TH1D. vline = _vline_
-
 
 # =============================================================================
 ## add "fake" bin into the histogram
@@ -7281,7 +7225,6 @@ def _h2_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
     hn.ResetStats()
     return hn 
 
-
 for _h in ( ROOT.TH2F , ROOT.TH2D ) :
     _h.add_fake_side       = _h2_add_fake_side_
 
@@ -7395,7 +7338,6 @@ def _h3_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
 for _h in ( ROOT.TH3F , ROOT.TH3D ) :
     _h.add_fake_side       = _h3_add_fake_side_
 
-
 # =============================================================================
 ## make the solution for equation   h(x)=v
 #
@@ -7449,9 +7391,7 @@ def _solve_ ( h1 , value ) :
 
         solutions.append ( xs )
 
-
     return tuple  ( solutions ) 
-
 
 # =============================================================================
 ## propose edge for "equal" bins 
@@ -7569,7 +7509,6 @@ ROOT.TH2D . slice  = _h2_get_slice_
 ROOT.TH2D . sliceX = lambda s , ibin : _h2_get_slice_ ( s , 1 , ibin ) 
 ROOT.TH2D . sliceY = lambda s , ibin : _h2_get_slice_ ( s , 2 , ibin ) 
 
-
 # =============================================================================
 ## "Slice" iteration over x-bin
 #   @code
@@ -7621,12 +7560,10 @@ def _h2_islice_Y_ (  h2 , ybin ) :
     
     for xbin in range(1,nx+1) :
         yield xbin,ybin
-        
-        
+                
 for _h in ( ROOT.TH2F , ROOT.TH2D ) :
     _h.islice_X = _h2_islice_X_ 
     _h.islice_Y = _h2_islice_Y_ 
-
 
 # =============================================================================
 ## define 2D slice for 3D-histogram
@@ -7694,8 +7631,6 @@ ROOT.TH3D . sliceX = lambda s,ibin : _h3_get_slice_ ( s , 1 , ibin )
 ROOT.TH3D . sliceY = lambda s,ibin : _h3_get_slice_ ( s , 2 , ibin ) 
 ROOT.TH3D . sliceZ = lambda s,ibin : _h3_get_slice_ ( s , 3 , ibin ) 
 
-
-
 # =============================================================================
 ## "Slice" iteration over x-bin
 #   @code
@@ -7756,7 +7691,6 @@ def _h3_islice_Y_ (  h3 , ybin ) :
         for xbin in range(1,nx+1) :
             yield xbin,ybin,zbin
             
-
 # =============================================================================
 ## "Slice" iteration over z-bin
 #   @code
@@ -7786,7 +7720,6 @@ def _h3_islice_Z_ (  h3 , zbin ) :
     for ybin in range(1,ny+1) :
         for xbin in range(1,nx+1) :
             yield xbin,ybin,zbin
-
 
 for _h in ( ROOT.TH3F , ROOT.TH3D ) :
     _h.islice_X = _h3_islice_X_ 
@@ -7833,8 +7766,6 @@ ROOT. TH3 . projXZ = lambda s : s.Project3D ( 'xze' )
 ROOT. TH3 . projZX = lambda s : s.Project3D ( 'zxe' )
 ROOT. TH3 . projYZ = lambda s : s.Project3D ( 'yze' )
 ROOT. TH3 . projZY = lambda s : s.Project3D ( 'zye' )
-
-
 
 # =============================================================================
 ## convert TProfile to TH1D  (needed for the proper math) 
@@ -7914,7 +7845,6 @@ def axis_bins ( bins         ) :
         raise AttributeError("axis_bins: insufficient length of bins: %s" % bins )
     #
     return ROOT.TAxis ( len ( bins ) - 1 , array.array ( 'd' , bins ) )
-    #
 
 # =============================================================================
 ## prepare "slice" for the axis
@@ -7944,7 +7874,6 @@ def _axis_getslice_ ( self , i , j ) :
     edges = self.edges()
     
     return axis_bins ( edges [i-1:j] ) 
-
 
 ROOT.TAxis. __getslice__ = _axis_getslice_
 
@@ -8022,10 +7951,8 @@ def histoGuess ( histo , mass , sigma ) :
     
     return p00, p03, p04 , smin , smax  
 
-
 ROOT.TH1F . histoGuess = histoGuess
 ROOT.TH1D . histoGuess = histoGuess
-
 
 # =============================================================================
 ## use likelihood in histogram fit ? 
@@ -8045,7 +7972,6 @@ def useLL ( histo         ,
         minv = min ( minv , v.value() )
         
     return  minv < abs ( minc ) 
-
 
 ROOT.TH1.useLL = useLL
 
@@ -8121,7 +8047,6 @@ for t in ( ROOT.TH1F , ROOT.TH1D ) :
     t.allInts = _h1_allInts
     t.natural = _h1_allInts
 
-
 # =============================================================================
 ## Axis with uniform bins?
 #  @code
@@ -8168,19 +8093,8 @@ ROOT.TH1.uniform      = _h_uniform_bins_
 def _h_same_dims_ ( histo , another ) :
     """ Two histograms with the same dimension?
     - see `ROOT.TH1.GetDimension`
-    """
-    
+    """    
     return histo.GetDimension() == another.GetDimension()
-
-    ## if   isinstance ( histo , ROOT.TH3 ) :
-    ##     return isinstance ( another , ROOT.TH3 )
-    ## elif isinstance ( histo , ROOT.TH2 ) :
-    ##     return isinstance ( another , ROOT.TH2 ) \
-    ##            and not isinstance ( another , ROOT.TH3 )
-    ## elif isinstance ( histo , ROOT.TH1 ) :
-    ##     return isinstance ( another , ROOT.TH1 ) \
-    ##            and not isinstance ( another , ( ROOT.TH2 , ROOT.TH3 ) ) 
-    ## return False 
 
 ROOT.TH1. same_dims = _h_same_dims_
 
@@ -8357,7 +8271,6 @@ def _h1_transform_x_function_ ( h1 , fun , deriv = None ) :
     """    
     return _h1_transform_x_ ( h1 , fun , numbers = False , deriv = deriv )
     
-
 for t in ( ROOT.TH1F , ROOT.TH1D ) :
     t.transform_X_numbers  =  _h1_transform_x_numbers_
     t.transform_X_function =  _h1_transform_x_function_

@@ -29,7 +29,7 @@ namespace Ostap
      *  @return  bool indicating whether intersection exists
      */
     template<typename aLine, typename aPlane, typename aPoint>
-    bool intersection
+    inline bool intersection
     ( const aLine&  line      ,
       const aPlane& plane     ,
       aPoint&       intersect ,
@@ -54,7 +54,7 @@ namespace Ostap
      *  @todo    test for planes being parallel
      */
     template<typename aLine, typename aPlane>
-    bool intersection
+    inline bool intersection
     ( const aPlane& plane0    ,
       const aPlane& plane1    ,
       aLine&        intersect ) ;
@@ -77,7 +77,7 @@ namespace Ostap
      *  @todo test for any two planes being parallel.
     */
     template<typename aPoint, typename aPlane>
-    bool intersection
+    inline bool intersection
     ( const aPlane& plane0    ,
       const aPlane& plane1    ,
       const aPlane& plane2    ,
@@ -92,7 +92,7 @@ namespace Ostap
      *  @return  distance between point and line (double)
      */
     template<typename aPoint, typename aLine>
-    double impactParameter
+    inline double impactParameter
     ( const aPoint&  point ,
       const aLine&   line  ) ;
     // ========================================================================
@@ -109,7 +109,7 @@ namespace Ostap
      *  @return  distance between lines (double)
      */
     template <typename aLine, typename bLine>
-    double distance
+    inline double distance
     ( const aLine& line0 ,
       const bLine& line1 );
     // ========================================================================
@@ -130,7 +130,7 @@ namespace Ostap
      *  @return  false if not numerically calculable
      */
     template <typename aLine, typename bLine, typename aPoint>
-    bool closestPoints
+    inline bool closestPoints
     ( const aLine& line0 ,
       const bLine& line1 ,
       aPoint&      p0    ,
@@ -151,7 +151,7 @@ namespace Ostap
      *  @return  scalar defining aPoint on line which is closest to point
      */
     template <typename aLine, typename aPoint>
-    double closestPointParam
+    inline double closestPointParam
     ( const aPoint&  point ,
       const aLine&   line  ) ;
     // ========================================================================
@@ -170,8 +170,9 @@ namespace Ostap
      *  @return  aPoint on line which is closest to point
      */
     template <typename aLine, typename aPoint>
-    aPoint closestPoint(const aPoint&  point ,
-                        const aLine& line);
+    inline aPoint closestPoint
+    ( const aPoint&  point ,
+      const aLine&   line  );
     // ========================================================================
     /** Calculate scalar parameters defining points of nearest approach 
      *  between aLine line0 and bLine line1. If p0 and p1 are the points of closest
@@ -188,7 +189,7 @@ namespace Ostap
      *  @return  true
      */
     template <typename aLine, typename bLine>
-    bool closestPointParams
+    inline bool closestPointParams
     ( const aLine& line0 ,
       const bLine& line1 ,
       double&      mu0   , 
@@ -205,7 +206,7 @@ namespace Ostap
      */
     // ========================================================================
     template <typename aLine, typename bLine>
-    bool parallel
+    inline bool parallel
     ( const aLine& line0 ,
       const bLine& line1 ) ;
     // ========================================================================

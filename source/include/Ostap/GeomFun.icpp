@@ -21,10 +21,11 @@
  */
 // ============================================================================
 template<typename aLine, typename aPlane, typename aPoint>
-bool Ostap::Math::intersection(const aLine& line,
-                               const aPlane& plane,
-                               aPoint& intersect,
-                               double& mu)
+bool Ostap::Math::intersection
+( const aLine&  line      ,
+  const aPlane& plane     ,
+  aPoint&       intersect ,
+  double&       mu        )
 {
   bool canCalculate = true;
 
@@ -42,9 +43,10 @@ bool Ostap::Math::intersection(const aLine& line,
 }
 // ============================================================================
 template<typename aLine, typename aPlane>
-bool Ostap::Math::intersection(const aPlane& plane0,
-                               const aPlane& plane1,
-                               aLine& intersect)
+bool Ostap::Math::intersection
+( const aPlane& plane0    ,
+  const aPlane& plane1    ,
+  aLine&        intersect )
 {
 
   const typename aLine::Vector  n0 = plane0.Normal();
@@ -69,10 +71,11 @@ bool Ostap::Math::intersection(const aPlane& plane0,
 }
 // ============================================================================
 template<typename aPoint, typename aPlane>
-bool Ostap::Math::intersection(const aPlane& plane0,
-                               const aPlane& plane1,
-                               const aPlane& plane2,
-                               aPoint& intersect)
+bool Ostap::Math::intersection
+( const aPlane& plane0    ,
+  const aPlane& plane1    ,
+  const aPlane& plane2    ,
+  aPoint&       intersect )
 {
   bool OK = true;
 
@@ -198,10 +201,10 @@ inline bool Ostap::Math::closestPointParams
 // ============================================================================
 template <typename aLine, typename bLine, typename aPoint>
 inline bool Ostap::Math::closestPoints
-(const aLine& line0 ,
- const bLine& line1 ,
- aPoint&      p0    ,
- aPoint&      p1    )
+( const aLine& line0 ,
+  const bLine& line1 ,
+  aPoint&      p0    ,
+  aPoint&      p1    )
 {
   bool OK = true;
   double mu0(0.);
