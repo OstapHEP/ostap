@@ -38,7 +38,6 @@ logger.info ( 'Test for Reweighting machinery')
 batch_env ( logger )
 # =============================================================================
 
-
 testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-reweight-' )
 tag_data   = 'DATA_histogram'
 tag_mc     = 'MC_tree'
@@ -72,7 +71,8 @@ for i in range( 0, N2 ) :
     while v <   0 : v +=100
     while v > 100 : v -=100        
     hdata.Fill(v)
-    
+
+# ========================================================================================
 with ROOT.TFile.Open( testdata ,'recreate') as mc_file:
     mc_file.cd() 
 
@@ -124,7 +124,7 @@ import ostap.parallel.parallel_fill
 weighting = ( Weight.Var     ( 'x'       ,  address = 'x-reweight'  ) , )
 # ============================================================================
 ## variables to be used in MC-dataset 
-variables  = [ Variable ( 'x'  , 'x-variable' , 0  , 100 ) ]
+variables = [ Variable ( 'x'  , 'x-variable' , 0  , 100 ) ]
 
 converged = False 
 # =============================================================================
@@ -148,15 +148,10 @@ for iter in range ( 1 , maxIter + 1  ) :
                                          selection = '0<x && x<100' , 
                                          silent    = True           ) 
         
-        
-        ## selector = SelectorWithVars ( variables , '0<x && x<100 ' , silence = True )
-        ## mctree.process ( selector , silent = True )
-        ## mcds     = selector.data ## dataset
-        
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
       
         ## 1b) add "weight" variable to the dataset
-        mcds.add_reweighting ( weighter , name = 'weight' )
+        mcds.add_reweighting ( weighter , name = 'weight' , progress = True , report = False )
         if 1 == iter % 10  : logger.info ( ( tag + ' MCDATA:\n%s' ) % mcds )
         
     with timing ( tag + ': make the actual reweighting:' , logger = logger ) :
@@ -168,7 +163,7 @@ for iter in range ( 1 , maxIter + 1  ) :
                                    dbname             ,
                                    delta      = 0.005 ,
                                    minmax     = 0.01  ,
-                                   power      = 1.05  , ## tiny ``overreweighting''
+                                   power      = 1.05  , ## tiny `overreweighting'
                                    make_plots = True  , 
                                    tag        = tag   )
         
@@ -229,14 +224,14 @@ for key in graphs :
     with use_canvas ( "Convergency graph for '%s'" % key , wait = 1 ) :
         graph = graphs [ key ]
         graph.draw ( 'a' )
+        
 # =============================================================================
 if converged :
-    with timing ( "Add reweigitng resuls to original MC-tree" , logger = logger ) :
+    with timing ( "Add reweighting results to original MC-tree" , logger = logger ) :
         mctree.add_reweighting ( weighter , name = 'weight' )
     title = 'MC-tree with weights'
     logger.info ( '%s:\n%s' % ( title , mctree.table ( title = title , prefix = '# ') ) ) 
         
-    
 del mcds 
 
 # =============================================================================

@@ -2030,7 +2030,7 @@ def add_new_branch ( tree , branch , / , **kwargs ) :
 #  @param params parameters
 #  @see Ostap::Trees::add_branch
 def push_2tree ( tree , *config , progress = True , report = True ) :
-    """ Add new brnaches to (snigole) TTree according to specificaions
+    """ Add new branches to (snigole) TTree according to specificaions
     - @see `Ostap.Trees.add_branch`
     """
     assert isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree  ) , \
@@ -2096,7 +2096,10 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
             table = chain.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
             chain = ROOT.TChain ( treepath )
-            chain.Add  ( filename )     
+            chain.Add  ( filename )
+        else :
+            logger.warning ( "No branches are added  to TTree(%s)" % treepath ) 
+            
             
     return chain
 
@@ -2148,6 +2151,8 @@ def push_2chain ( chain , *config , progress = True , report = True ) :
             logger.info ( '%s:\n%s' % ( title , table ) ) 
             chain = ROOT.TChain ( cname )
             for fname in files : chain.Add ( fname )
+        else :
+            logger.warning ( "No branches are added to TChain(%s)" % cname ) 
     
     return chain
 

@@ -1649,7 +1649,7 @@ def _rds_addVar_ ( dataset , vname , formula ) :
 #  dataset.add_new_var ( 'Pt' , 'eta' , 'A' , h3 ) ## sample from 3D histogram
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-def add_new_var ( dataset , varname , what , *args , progress = False ) : 
+def add_new_var ( dataset , varname , what , *args , progress = False , report = False ) : 
     """ Add/calculate/sample variable to RooDataSet
 
     >>> dataset.add_new_var ( 'ratio' , 'pt/pz' )  ## use RooFormulaVar
@@ -1667,11 +1667,14 @@ def add_new_var ( dataset , varname , what , *args , progress = False ) :
     >>> dataset.add_new_var ( 'Pt' , 'eta' , 'A' , h3 ) ## sample from 3D histogram
     
     """
+
+    branches =  set ( dataset.branches() ) if report else set()
+    
     if isinstance ( varname , string_types ) :
-        if    isinstance ( what , string_types   ) : pass
-        elif  isinstance ( what , sequence_types )  and \
-                 len ( what ) == len ( dataset    ) and \
-                 all ( isinstance ( v , num_types ) for v in what ) :
+        if    isinstance ( what , string_types    ) : pass
+        elif  isinstance ( what , sequence_types  )   and \
+                 len ( what ) == len ( dataset    )   and \
+                 all ( isinstance ( v , num_types )   for v in what ) :
             
             vvar  = ROOT.RooRealVar ( varname , 'variable %s' % varname , -999.999 )
             vset  = ROOT.RooArgSet  ( vvar )
@@ -1696,6 +1699,17 @@ def add_new_var ( dataset , varname , what , *args , progress = False ) :
     vv = adder.add_var ( dataset , varname , what , *args )
     if not  vv : logger.error('add_new_var: NULLPTR from Ostap.AddVars.add_var')
     #
+    if report :
+        new_branches = sorted ( set ( dataset.branches() ) - branches ) 
+        if new_branches :
+            n = len ( new_branches )
+            if 1 >= n : title = "Added %s variable to RooDataSet(%s)"  % ( n , dataset.GetName () ) 
+            else      : title = "Added %s variables to RooDataSet(%s)" % ( n , dataset.GetName () )            
+            table = dataset.table ( new_branches , title = title , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) )
+        else :                                
+            logger.warning ( "No variables are added to RooDataSet(%s)" %  dataset.GetName () )
+    
     return dataset 
 
 # =============================================================================

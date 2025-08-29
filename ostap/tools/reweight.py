@@ -23,7 +23,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info   import root_info 
 from   ostap.core.pyrouts     import VE, SE, Ostap 
-from   ostap.math.base        import iszero
+from   ostap.math.base        import iszero, axis_range 
 from   ostap.utils.strings    import split_string 
 from   ostap.core.ostap_types import string_types, list_types, num_types, sized_types, sequence_types    
 from   ostap.math.operations  import Mul  as MULT       ## needed for proper abstract multiplication
@@ -69,6 +69,56 @@ class AttrGetter(object):
     def __str__ ( self ) :
         return ','.join ( self.__attributes )
     __repr__ = __str__ 
+
+# =============================================================================
+## Set the proper axis range for the comparison plots
+def adjust_histo_range ( histo ) :
+    """ Set the proper axis range for the comparison plots
+    """
+    
+    vmin, vmax  = histo.minmax()
+    vmax        = max ( vmax , 1.05 )
+    vmin        = min ( vmin , 0.95 )
+    
+    if   0.95 <= vmin and vmax <= 1.05 :
+        
+        histo.SetMinimum  ( 0.95 )
+        histo.SetMaximum  ( 1.05 )
+        histo.SetContour  ( 50   )
+        
+    elif 0.90 <= vmin and vmax <= 1.10 :
+        
+        histo.SetMinimum  ( 0.90 )
+        histo.SetMaximum  ( 1.10 )
+        histo.SetContour  ( 40   )
+        
+    elif 0.80 <= vmin and vmax <= 1.20 :
+        
+        histo.SetMinimum  ( 0.80 )
+        histo.SetMaximum  ( 1.20 )
+        histo.SetContour  ( 40   )
+        
+    elif 0.75 <= vmin and vmax <= 1.25 :
+        
+        histo.SetMinimum  ( 0.75 )
+        histo.SetMaximum  ( 1.25 )
+        histo.SetContour  ( 50   )
+        
+    elif 0.50 <= vmin and vmax <= 1.50 :
+        
+        histo.SetMinimum  ( 0.50 )
+        histo.SetMaximum  ( 1.50 )
+        histo.SetContour  ( 50   )
+        
+    else :
+        
+        vmn, vmx = axis_range ( vmin , vmax , delta = 0.20 )
+        histo.SetMinimum  ( vmn  )
+        histo.SetMaximum  ( vmx  )
+        histo.SetContour  ( 50   ) 
+
+    return histo 
+    
 # =============================================================================
 ## @class Weight
 #  helper class for semiautomatic reweighting of data 
@@ -362,7 +412,7 @@ class Weight(object) :
     # =========================================================================
     ## reduce the object for serialization (for parallel processing)
     def __reduce__ ( self ) :
-        """Reduce the object for serialization (for parallel processing)
+        """ Reduce the object for serialization (for parallel processing)
         """
         return root_factory , ( type ( self )  ,
                                 self.__dbase   ,
@@ -380,7 +430,7 @@ class Weight(object) :
     # Schematic data flow to get the weigth for the given event 
     #  - tree/chain/dataset -> accessor -> database(address) -> weight
     class  Var(object) :
-        """Helper class to keep information about singe reweighting
+        """ Helper class to keep information about singe reweighting
         - `accessor'  : an accessor function that extracts the variable(s) from  TTree/TChain/RooDataSet
         - `address'   : the  address in DBASE, where reweigftjnig callable(s) is/are stored
         - `merge'     : merge list of callables from DB into the single callable ?
@@ -399,7 +449,7 @@ class Weight(object) :
                        address          ,   ## the address of   reweighting object in DBASE 
                        merge     = True ,   ## merge sequence of reweighting objects ?
                        skip      = None ) : ## skip some reweigting objects ? 
-            """Keep information about single reweighting
+            """ Keep information about single reweighting
             - `accessor' : an accessor function that extracts the variable(s) from  TTree/TChain/RooDataSet
             - `address'  : the  address in DBASE, where reweigftjnig callable(s) is/are stored
             - `merge'    : merge list of callables from DB into the single callable ?
@@ -498,7 +548,7 @@ def mc_data_projector  ( dataset , histo , what , how ) :
 ## @class WeightingPlot
 #  helper class to manage/keep `weighting-plot' 
 class WeightingPlot(object) :    
-    """Helper class to manage/keep `weighting-plot'
+    """ Helper class to manage/keep `weighting-plot'
     
     - `what' : the variable/expression to be used for `weighting-plot'
     Used  as the second argument of `dataset.project' method to produce
@@ -534,7 +584,7 @@ class WeightingPlot(object) :
                    w         = 1.0   ,
                    projector = None  ,
                    ignore    = False ) :
-        """Helper class to manage/keep `weighting-plot'
+        """ Helper class to manage/keep `weighting-plot'
         
         - `what' : the variable/expression to be used for `weighting-plot'
         Used  as the second argument of `dataset.project' method to produce
@@ -591,7 +641,7 @@ class WeightingPlot(object) :
         
     @property
     def  what ( self ) :
-        """'what' : the variable/expression to be used for `weighting-plot'
+        """`what` : the variable/expression to be used for `weighting-plot'
         Used  as the second argument of `dataset.project' method to produce
         `weighted-plot':
         >>> dataset.project ( mchisto , WHAT , how , ... ) 
@@ -599,7 +649,7 @@ class WeightingPlot(object) :
         return self.__what
     @property
     def  how  ( self ) :
-        """'how' : the `weight' expression to be used for `weighed-plots'
+        """`how` : the `weight' expression to be used for `weighed-plots'
         Used  as the third argument of `dataset.project' method to produce
         `weighted-plot':
         >>> dataset.project ( mchisto , what , HOW , ... )
@@ -608,37 +658,39 @@ class WeightingPlot(object) :
         return self.__how 
     @property
     def  address ( self ) :
-        """'address' : the address in `weighting-database'
+        """`address` : the address in `weighting-database'
         where to store the obtained weights
         """
         return self.__address
     @property
     def  data ( self ) :
-        """'data' : the `data' object, or  the `target' for the reweighting procedure
+        """`data` : the `data' object, or  the `target' for the reweighting procedure
         Typically it is a histogram. But it could be any kind of callable/function 
         """
         return self.__data 
     @property
     def  mc_histo ( self ) :
-        """'mc_histo' : template/shape for the mc-histogram, to be used for reweighting.
+        """`mc_histo` : template/shape for the mc-histogram, to be used for reweighting.
         It is used as the  first argument of `dataset.project' method 
         >>> dataset.project ( MCHISTO , what , how , ... )         
         """
         return self.__mc
     @property
     def projector ( self ) :
-        """'projector' :  callable function to build MC distribution:
+        """`projector` :  callable function to build MC distribution:
         hmc = projector ( dataset , hmc ) 
         """
         return self.__projector
     
     @property
     def w  ( self )   :
-        """'w'  - relative weight (relative importance is this variable)"""
+        """`w`  - relative weight (relative importance of this variable)
+        """
         return self.__w 
     @property
     def ignore ( self ) :
-        """'ignore' : do not use variable in reweights, but use for comparsion"""
+        """`ignore` : do not use variable in reweights, but use for comparsion
+        """
         return self.__ignore
     
 # =============================================================================
@@ -655,6 +707,7 @@ def _cmp_draw_ ( self ) :
     hmc  = self.mc
     hw   = self.weight 
 
+    adjust_histo_range ( hw ) 
     if   isinstance ( hw , ROOT.TH3 ) and 3 == hw.dim () :
         hw.draw  ( copy = True )
 
@@ -682,31 +735,6 @@ def _cmp_draw_ ( self ) :
     elif isinstance ( hw , ROOT.TH2 ) and 2 == hw.dim () :
 
         zmin,zmax = hw.zminmax()
-
-        if   0.95 <= zmin and zmax <= 1.05 :
-            hw.SetMinimum  ( 0.95 )
-            hw.SetMaximum  ( 1.05 )
-            hw.SetContour  ( 50   ) 
-        elif 0.90 <= zmin and zmax <= 1.10 :
-            hw.SetMinimum  ( 0.90 )
-            hw.SetMaximum  ( 1.10 )
-            hw.SetContour  ( 40   ) 
-        elif 0.80 <= zmin and zmax <= 1.20 :
-            hw.SetMinimum  ( 0.80 )
-            hw.SetMaximum  ( 1.20 )
-            hw.SetContour  ( 40   ) 
-        elif 0.75 <= zmin and zmax <= 1.25 :
-            hw.SetMinimum  ( 0.75 )
-            hw.SetMaximum  ( 1.25 )
-            hw.SetContour  ( 50   ) 
-        elif 0.50 <= zmin and zmax <= 1.50 :
-            hw.SetMinimum  ( 0.50 )
-            hw.SetMaximum  ( 1.50 )
-            hw.SetContour  ( 50   )
-        else :
-            hw.SetMinimum  ( 0.50 )
-            hw.SetMaximum  ( 2.00 )
-            hw.SetContour  ( 50   ) 
 
         nx = hw.binsx()
         ny = hw.binsy()
@@ -741,11 +769,10 @@ def _cmp_draw_ ( self ) :
         ##                                                                           ax.GetBinCenter ( maxx ) ,
         ##                                                                           ay.GetBinCenter ( maxy ) ) ) 
         
-    elif isinstance ( hw , ROOT.TH1 ) and 1 == hw.dim () :
+    elif isinstance ( hw , ROOT.TH1 ) and 1 == hw.dim () :        
         if hasattr ( hw     , 'red'   ) : hw .red   ()         
-        hw.SetMinimum  ( 0 )
-        hw.SetMaximum  ( max ( 1.3 , 1.2 * hw.ymax () ) ) 
-        hw.draw ( copy = True )
+
+        hw.draw  ( copy = True )
         hw.level ( 1.0 , linestyle = 1 , linecolor = ROOT.kRed )
             
     if isinstance ( hd , ROOT.TH1 ) and isinstance ( hmc , ROOT.TH1 ) and 1 == hd.dim() :
@@ -837,7 +864,7 @@ def makeWeights  ( dataset                    ,
                    wtruncate    = ( 0.5 , 1.5 ) , ## truncate too small/large weights
                    force_update = False         , ## force DB update  ven for "good" results 
                    tag          = "Reweighting" ) :
-    """The main  function: perform one re-weighting iteration 
+    """ The main  function: perform one re-weighting iteration 
     and reweight `MC'-data set to looks as `data'(reference) dataset
     >>> results = makeWeights (
     ... dataset           , ## data source to be  reweighted (DataSet, TTree, abstract source)
@@ -1102,7 +1129,7 @@ def makeWeights  ( dataset                    ,
 
 
 # =============================================================================
-## helper factory fro proper (de)serialization 
+## helper factory for proper (de)serialization 
 def w2t_factory ( *args ) : return W2Tree ( *args ) 
 # =============================================================================
 ## @class W2Tree
@@ -1155,7 +1182,7 @@ class W2Tree(FuncTree) :
 
     @property
     def weight ( self ) :
-        """`weight' : get the weighter object"""
+        """`weight` : get the weighter object"""
         return  self.__weight
 
 # =============================================================================
@@ -1196,7 +1223,6 @@ class W2Data(FuncData) :
         """`weight' : get the weighter object"""
         return  self.__weight
 
-
 # =============================================================================
 ## Add specific re-weighting information into <code>ROOT.TTree</code>
 #  @see ostap.tools.reweight
@@ -1211,7 +1237,8 @@ def tree_add_reweighting ( tree                 ,
                            weighter             ,
                            name      = 'weight' ,
                            progress  = True     ,
-                           report    = True     ) :
+                           report    = True     ,
+                           parallel  = False    ) :
     """ Add specific re-weighting information into ROOT.TTree
     
     >>> w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
@@ -1221,17 +1248,20 @@ def tree_add_reweighting ( tree                 ,
     - see ostap.tools.reweight.Weight 
     - see ostap.tools.reweight.W2Tree 
     """
-    
-    assert isinstance ( weighter , Weight ), "Invalid type of `weighter'!"  
+    assert isinstance ( weighter , Weight     ), "Invalid type of `weighter'!"  
+    assert isinstance ( tree     , ROOT.TTree ), "Invaild type of `tree`!"
     
     ## create the weighting function 
     wfun = W2Tree ( weighter )
     
-    ## return tree.add_new_branch (  name , wfun , verbose = verbose  , report = report ) 
-    return tree.add_new_branch ( wfun , name = name  , progress = progress , report = report ) 
+    if parallel and isinstance ( tree , ROOT.TChain ) and 1 < tree.nFiles : 
+        import ostap.parallel.parallel_add_branch
+        return tree.padd_new_branch ( wfun , name = name  , progress = progress , report = report ) 
+    
+    ## regular sequential processing 
+    return tree.add_new_branch ( wfun , name = name , progress = progress , report = report ) 
 
 ROOT.TTree.add_reweighting = tree_add_reweighting    
-
 
 # =============================================================================
 ## Add specific re-weighting information into dataset
@@ -1246,7 +1276,8 @@ ROOT.TTree.add_reweighting = tree_add_reweighting
 def data_add_reweighting ( data                ,
                            weighter            ,
                            name     = 'weight' ,
-                           progress = False    ) :
+                           progress = False    ,
+                           report   = True     ) :
     """ Add specific re-weighting information into dataset
     
     >>> w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
@@ -1257,7 +1288,8 @@ def data_add_reweighting ( data                ,
     - see ostap.tools.reweight.W2Data 
     """
     
-    assert isinstance ( weighter , Weight ), "Invalid type of `weighter'!"
+    assert isinstance ( weighter , Weight          ), "Invalid type of `weighter'!"
+    assert isinstance ( data     , ROOT.RooDataSet ), "Invaild type of `data`!"
     
     ## create the weigthting function 
     wfun = W2Data ( weighter  )
