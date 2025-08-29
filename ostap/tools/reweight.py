@@ -436,9 +436,9 @@ class Weight(object) :
     # Schematic data flow to get the weigth for the given event 
     #  - tree/chain/dataset -> accessor -> database(address) -> weight
     class  Var(object) :
-        """ Helper class to keep information about singe reweighting
+        """ Helper class to keep information about single reweighting
         - `accessor'  : an accessor function that extracts the variable(s) from  TTree/TChain/RooDataSet
-        - `address'   : the  address in DBASE, where reweigftjnig callable(s) is/are stored
+        - `address'   : the address in DBASE, where reweighting  callable(s) is/are stored
         - `merge'     : merge list of callables from DB into the single callable ?
         - `skip'      : use only certain elements from the list of callables from DBASE
         
@@ -518,8 +518,10 @@ class Weight(object) :
         @property
         def address  ( self ) :
             """`address'  - the address in DB with the reweighting information
-            for the  given varibale(s).
+            for the  given variables(s).
+
             A callable (or list of  callables) is expected in database
+
             These callables accept their result of `accessor' as their argument
             """
             return self.__address
@@ -603,12 +605,12 @@ class WeightingPlot(object) :
         
         >>> dataset.project ( mchisto , what , HOW , ... )
         
-        Typically it refers to `weight' variable in datasete
+        Typically it refers to `weight' variable in dataset
         
         - `address' : the addres in `weighting-database'
         where to store the obtained weights
         
-        - `data' : the `data' object, or  the `target' for the reweighting procedure
+        - `data' : the `data' object, or the `target' for the reweighting procedure
         Typically it is a histotgram. But it could be any kind of callable 
         
         - `mc_histo' : template/shape for the mc-histogram, to be used for reweighting.
@@ -617,7 +619,7 @@ class WeightingPlot(object) :
         >>> dataset.project ( MCHISTO , what , how , ... )         
         """
 
-        assert data and callable ( data ) , "ReweightingPlot: `data' object must be callable!"
+        assert data and callable ( data ) , "WeightingPlot: `data' object must be callable!"
         
         self.__what      = str(what)     if isinstance ( what , str ) else what 
         self.__how       = str(how )     if isinstance ( how  , str ) else how 
@@ -633,7 +635,7 @@ class WeightingPlot(object) :
         self.__mc       = mc_histo      if mc_histo else data.clone()
         
         assert isinstance ( self.__mc , ROOT.TH1 ), \
-               "WPlot: invalid type of `mchisto' %s/%s"  % ( self.__mc , typename ( self.__mc ) )
+               "WeightingPlot: invalid type of `mchisto' %s/%s"  % ( self.__mc , typename ( self.__mc ) )
         self.__w         = w
 
         if not projector : projector = mc_data_projector
@@ -682,7 +684,7 @@ class WeightingPlot(object) :
     @property
     def projector ( self ) :
         """`projector` :  callable function to build MC distribution:
-        hmc = projector ( dataset , hmc ) 
+        >>> hmc = projector ( dataset , hmc ) 
         """
         return self.__projector
     
@@ -896,7 +898,7 @@ ComparisonPlot. draw = _cmp_draw_
 #  If no more rewighting iteratios required, <code>active</code> is an empty tuple 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-05-10
-def makeWeights  ( dataset                    ,
+def makeWeights  ( dataset                      ,
                    plots        = []            , 
                    database     = "weights.db"  ,
                    compare      = None          , ## comparison function 
@@ -905,8 +907,8 @@ def makeWeights  ( dataset                    ,
                    power        = None          , ## auto-determination
                    debug        = True          , ## save intermediate information in DB
                    make_plots   = True          , ## make comparison plots (and draw them)
-                   wtruncate    = ( 0.5 , 1.5 ) , ## truncate too small/large weights
-                   force_update = False         , ## force DB update  ven for "good" results 
+                   wtruncate    = ( 0.5 , 1.5 ) , ## truncate too small or too large weights
+                   force_update = False         , ## force DB update even for "good" results 
                    tag          = "Reweighting" ) :
     """ The main  function: perform one re-weighting iteration 
     and reweight `MC'-data set to looks as `data'(reference) dataset
@@ -1139,6 +1141,7 @@ def makeWeights  ( dataset                    ,
             db [ address ] = db.get( address , [] ) + [ weight ]
 
             ## update the list of known reweightings
+            
             tag = 'reweightings'
             addresses = db.get( tag , () )
             addresses = set ( addresses ) 
