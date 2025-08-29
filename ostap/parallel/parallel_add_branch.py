@@ -198,6 +198,8 @@ def add_new_branch ( chain           ,
             else       : title = 'Added %s branches to TChain(%s)' % ( n , cname ) 
             table = nc.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
+        else :
+            logger.warning ( "No branches are added  to TChain(%s)" % cname ) 
 
     del keeper 
     return nc 

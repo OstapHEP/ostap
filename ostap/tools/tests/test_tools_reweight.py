@@ -161,8 +161,8 @@ for iter in range ( 1 , maxIter + 1  ) :
         active , _ = makeWeights ( mcds               ,
                                    plots              ,
                                    dbname             ,
-                                   delta      = 0.005 ,
-                                   minmax     = 0.01  ,
+                                   delta      = 0.002 ,
+                                   minmax     = 0.005 ,
                                    power      = 1.05  , ## tiny `overreweighting'
                                    make_plots = True  , 
                                    tag        = tag   )
@@ -189,7 +189,7 @@ for iter in range ( 1 , maxIter + 1  ) :
         logger.info ( '%s:\n%s' % ( title , hdata.cmp_diff_prnt
                                     ( hmc , density = True , title = title , prefix = '# ' ) ) )
 
-    if not active and 3 < iter :
+    if not active and 5 < iter :
         
         logger.info    ( allright ( 'No more iterations, converged after #%d%s' % ( iter , iteration ) ) )
         title = 'Reweighted dataset after #%d iterations' % iter 
@@ -218,10 +218,11 @@ title = 'Weighter object'
 logger.info ( '%s:\n%s' % ( title , weighter.table ( prefix = '# ' ) ) )
 # ============================================================================
 
+# ============================================================================
 ## draw the convergency graphs 
 graphs = weighter.graphs ()
 for key in graphs : 
-    with use_canvas ( "Convergency graph for '%s'" % key , wait = 1 ) :
+    with use_canvas ( "Convergency graph for '%s'" % key , wait = 4 ) :
         graph = graphs [ key ]
         graph.draw ( 'a' )
         
@@ -233,6 +234,13 @@ if converged :
     logger.info ( '%s:\n%s' % ( title , mctree.table ( title = title , prefix = '# ') ) ) 
         
 del mcds 
+
+# ===========================================================================
+with DBASE.open   ( dbname , 'r' ) as db :
+    logger.info("(Reweighting database %s " % dbname ) 
+    db.ls ()
+
+# ============================================================================
 
 # =============================================================================
 ##                                                                      The END 

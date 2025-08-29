@@ -2099,8 +2099,7 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
             chain.Add  ( filename )
         else :
             logger.warning ( "No branches are added  to TTree(%s)" % treepath ) 
-            
-            
+                        
     return chain
 
 # =============================================================================
@@ -2405,8 +2404,10 @@ def buffer_2tree ( tree , buffer , * ,  name = '' , progress = True , report = T
             if 1 == n : title = "Added %s branch to TTree(%s)"   % ( n , tpath )  
             else      : title = "Added %s branches to TTree(%s)" % ( n , tpath ) 
             table = chain.table ( new_branches , title = title , prefix = '# ' )
-            logger.info ( '%s:\n%s' % ( title , table ) ) 
-          
+            logger.info ( '%s:\n%s' % ( title , table ) )
+        else :
+            logger.warning ( "No branches are added  to TTree(%s)" % tpath ) 
+                      
     return chain
 
 # =============================================================================
@@ -2457,13 +2458,14 @@ def buffer_2chain ( chain , buffer , * , name = '' , progress = True , report = 
             if 1 >= n : title = "Added %s branch to TChain(%s)"   % ( n , cname ) 
             else      : title = "Added %s branches to TChain(%s)" % ( n , cname ) 
             table = chain.table ( new_branches , title = title , prefix = '# ' )
-            logger.info ( '%s:\n%s' % ( title , table ) ) 
-          
+            logger.info ( '%s:\n%s' % ( title , table ) )     
+        else :
+            logger.warning ( "No branches are added  to TChain(%s)" % cname ) 
+
     return chain
 
 ROOT.TTree.add_new_branch  = add_new_branch 
 ROOT.TTree.add_new_buffer  = add_new_buffer 
-
 
 # ============================================================================
 ## Produce  "efficiency" histogram for boolean <code>criteriaon</c>

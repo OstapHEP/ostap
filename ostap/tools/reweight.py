@@ -30,9 +30,11 @@ from   ostap.math.operations  import Mul  as MULT       ## needed for proper abs
 import ostap.io.zipshelve     as     DBASE              ## needed to store the weights&histos
 from   ostap.trees.funcs      import FuncTree, FuncData ## add weight to TTree/RooDataSet
 from   ostap.utils.utils      import CallThem
-from   ostap.utils.strings    import is_formula  
+from   ostap.utils.strings    import is_formula
+from   ostap.utils.basic      import typename 
 from   ostap.math.reduce      import root_factory
-from   ostap.logger.symbols   import plus_minus 
+from   ostap.logger.symbols   import plus_minus
+import ostap.logger.table     as     T 
 import ostap.core.core 
 import ostap.histos.histos 
 import ostap.histos.compare 
@@ -125,47 +127,51 @@ def adjust_histo_range ( histo ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-05-10
 class Weight(object) :
-    """Helper class for semi-automatic reweighting of data
+    """ Helper class for semi-automatic reweighting of data
 
-    It reads various `weigth components' from DBASE and calculates
+    It reads various `weight components' from DBASE and calculates
     the `global' event weight via simple accumulation of weights
     
-    Simplest case: calculate weights for one variable.
+    Simplest case: calculate weights for one variable:
     
     factors = [ ( fun , name ) ] 
+
     where `fun' is a function to get variable from TTree/RooDataSet 
     and   `name' is address in data base with reweighting information 
     e.g.
     
     >>> factors = [ ( lambda s : s.pt  , 'pt-data' ) ]
     
-    It assumes, that DBASE has an entry with name 'pt-data', such
-    that
+    It assumes, that DBASE has an entry with name 'pt-data', such that
     
     >>> funcs = database['pt-data']
     
-    Here `func' will be function/callable or list of functions/callables 
+    Here `funcs' will be callable or list of callables 
     with weights:
     
-    >>> pt = fun ( entry ) 
+    >>> pt = fun  ( entry ) 
     >>> w  = 1.0    
     >>> w *= func ( pt )              ## for the single function/callable
     >>> for f in funcs : w*= f ( pt ) ## for list of functions/callables  
     
-    quantity `w' will be an event  weight
+    The quantity `w' will be an event  weight
     
-    if list of `factors' constains more than one entry,
+    If list of `factors' constains more than one entry,
     to each entry weigth is calculated independently and total weight
     is a product of individual weights.
 
     For simplistic case one can put some storable function or function object
+
     >>> db['pt-data'] = math.exp
     >>> db['pt-data'] = [ math.exp , math.cosh ] ## List of object also works
     
     For realistic case the weights usually stored as (a list of) 1D or 2D histograms
+
     >>>  db['pt-data'] = [h1,h2,h3,...,hn]
+
     where h1,...,hn are iteratively obtained histograms with corrections, such as
     the total correction is calculated by the product of them
+
     """
     ## constructor of  
     def __init__ ( self                   ,
@@ -298,7 +304,7 @@ class Weight(object) :
     
     ## calculate the weight for the given "event"
     def __call__ ( self , s ) :
-        """Calculate the weigth for the given `event' (==record in TTree/TChain or RooDataSet):
+        """ Calculate the weigth for the given `event' (==record in TTree/TChain or RooDataSet):
         >>> weight = Weight ( ... )
         >>> tree   = ...
         >>> w = weight ( tree )
@@ -362,11 +368,11 @@ class Weight(object) :
             
             for i in self.__vars :
                 
-                address   = i[0]
+                address   = i [ 0 ]
                 functions = db.get ( address , () )
                 if not functions : continue
 
-                ## grpah with the spread(min/max) weights 
+                ## graph with the spread(min/max) weights 
                 gr1 = ROOT.TGraphAsymmErrors ( len ( functions )  )
                 ## graph with the rms weights 
                 gr2 = ROOT.TGraphErrors      ( len ( functions )  )
@@ -543,7 +549,6 @@ def mc_data_projector  ( dataset , histo , what , how ) :
     dataset.project ( histo , what , cuts = how )
     return histo 
 
-
 # =============================================================================
 ## @class WeightingPlot
 #  helper class to manage/keep `weighting-plot' 
@@ -619,9 +624,8 @@ class WeightingPlot(object) :
         self.__address   = str(address)
 
         ## ATTENTION! make a ty to convert data to density!!
-        if isinstance ( data , ROOT.TH1 ) :
-            if not data.is_density() :
-                logger.info ( "WeightingPlot: Convert 'data' histogram into 'density' for '%s'" % self.what )
+        if isinstance ( data , ROOT.TH1 ) and not data.is_density() :
+            logger.attention ( "WeightingPlot: Convert 'data' histogram into 'density' for '%s'" % self.what )
             self.__data = data.density()
         else :
             self.__data = data
@@ -629,7 +633,7 @@ class WeightingPlot(object) :
         self.__mc       = mc_histo      if mc_histo else data.clone()
         
         assert isinstance ( self.__mc , ROOT.TH1 ), \
-               "WPlot: invalid type of `mchisto' %s/%s"  % ( self.__mc , type ( self.__mc ) )
+               "WPlot: invalid type of `mchisto' %s/%s"  % ( self.__mc , typename ( self.__mc ) )
         self.__w         = w
 
         if not projector : projector = mc_data_projector
@@ -709,72 +713,112 @@ def _cmp_draw_ ( self ) :
 
     adjust_histo_range ( hw ) 
     if   isinstance ( hw , ROOT.TH3 ) and 3 == hw.dim () :
+
         hw.draw  ( copy = True )
 
-        ## minx, miny, minz = hw.minimum_bin()
-        ## maxx, maxy, maxz = hw.maximum_bin()
+        minx, miny, minz = hw.minimum_bin()
+        maxx, maxy, maxz = hw.maximum_bin()
         
-        ## ax = hw.GetXaxis()
-        ## ay = hw.GetYaxis()
-        ## az = hw.GetZaxis()
+        ax   = hw.GetXaxis()
+        ay   = hw.GetYaxis()
+        az   = hw.GetZaxis()
 
-        ## minv = hw [ minx, miny, minz ]
-        ## maxv = hw [ maxx, maxy, maxz ]
+        minv = hw [ minx, miny, minz ]
+        maxv = hw [ maxx, maxy, maxz ]
+
+        rows = [ ( '' , 'value' , 'x' , 'y' , 'z' ) ]
         
-        ## logger.info ( "ComparisonPlot('%s'): min-weight %+.3f at (%.5g,%.5g,%.5g)" % ( self.what ,
-        ##                                                                                minv      ,
-        ##                                                                                ax.GetBinCenter ( minx ) ,
-        ##                                                                                ay.GetBinCenter ( miny ) ,
-        ##                                                                                az.GetBinCenter ( minz ) ) )
-        ## logger.info ( "ComparisonPlot('%s'): max-weight %+.3f at (%.5g,%.5g,%.5g)" % ( self.what ,
-        ##                                                                                maxv      ,
-        ##                                                                                ax.GetBinCenter ( maxx ) ,
-        ##                                                                                ay.GetBinCenter ( maxy ) ,
-        ##                                                                                az.GetBinCenter ( maxz ) ) )
-                
+        x , y , z = ax.GetBinCenter ( minx ) , ay.GetBinCenter ( miny ) , az.GetBinCenter ( minz )        
+        row  = 'Min-weight' , '%.3f' % minv , '%.4g' % x , '%.4g' % y , '%.4g' % z
+        rows.append ( row )
+
+        x , y , z = ax.GetBinCenter ( maxx ) , ay.GetBinCenter ( maxy ) , az.GetBinCenter ( maxz )        
+        row  = 'Max-weight' , '%.3f' % maxv , '%.4g' % x , '%.4g' % y , '%.4g' % z
+        rows.append ( row )
+
+        title = 'Comparison plot %s' % self.what
+        table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lcccc' )
+        logger.info ( '%s:\n%s' % ( title , table ) )
+        
     elif isinstance ( hw , ROOT.TH2 ) and 2 == hw.dim () :
 
         zmin,zmax = hw.zminmax()
 
         nx = hw.binsx()
         ny = hw.binsy()
-        if   10 <  nx and 10 < ny : hw.draw  ( 'cont4z' ,                copy = True )
-        elif 10 <  nx or  10 < ny : hw.draw  ( 'cont4z' ,                copy = True )
-        else                      : hw.texte ( 'colz'   , fmt = '5.3f' , copy = True )
 
+        from ostap.plotting.style import useStyle 
+        with useStyle ( 'Z' ) :
+            
+            if   10 <  nx and 10 < ny : hw.draw  ( 'cont4z' ,                copy = True )
+            elif 10 <  nx or  10 < ny : hw.draw  ( 'cont4z' ,                copy = True )
+            else                      : hw.texte ( 'colz'   , fmt = '5.3f' , copy = True )
+    
         minx, miny = hw.minimum_bin()
         maxx, maxy = hw.maximum_bin()
 
-        ax = hw.GetXaxis()
-        ay = hw.GetYaxis()
+        ax   = hw.GetXaxis()
+        ay   = hw.GetYaxis()
+        
+        minv = hw [ minx, miny ]
+        maxv = hw [ maxx, maxy ]
 
         pmin = ROOT.TMarker ( ax.GetBinCenter ( minx ) , ay.GetBinCenter ( miny ) , 43 )
-        pmax = ROOT.TMarker ( ax.GetBinCenter ( maxx ) , ay.GetBinCenter ( maxy ) , 20 )
+        pmax = ROOT.TMarker ( ax.GetBinCenter ( maxx ) , ay.GetBinCenter ( maxy ) , 47 )
+        
         pmin.SetMarkerColor ( 2 )
         pmax.SetMarkerColor ( 2 )
-        pmin.SetMarkerSize  ( 2 )
-        pmax.SetMarkerSize  ( 2 )
+        pmin.SetMarkerSize  ( 6 )
+        pmax.SetMarkerSize  ( 6 )
         pmin.DrawClone() 
         pmax.DrawClone()
+
+        _store.add ( pmin )
+        _store.add ( pmax )
         
-        ## minv = hw [ minx, miny ]
-        ## maxv = hw [ maxx, maxy ]
+        rows = [ ( '' , 'value' , 'x' , 'y'  ) ]
         
-        ## logger.info ( "ComparisonPlot('%s'): min-weight %+.3f at (%.5g,%.5g)" % ( self.what ,
-        ##                                                                           minv      ,
-        ##                                                                           ax.GetBinCenter ( minx ) ,
-        ##                                                                           ay.GetBinCenter ( miny ) ) ) 
-        ## logger.info ( "ComparisonPlot('%s'): max-weight %+.3f at (%.5g,%.5g)" % ( self.what ,
-        ##                                                                           maxv      ,
-        ##                                                                           ax.GetBinCenter ( maxx ) ,
-        ##                                                                           ay.GetBinCenter ( maxy ) ) ) 
+        x , y = ax.GetBinCenter ( minx ) , ay.GetBinCenter ( miny ) 
+        row  = 'Min-weight' , '%.3f' % minv , '%.4g' % x , '%.4g' % y 
+        rows.append ( row )
+
+        x , y = ax.GetBinCenter ( maxx ) , ay.GetBinCenter ( maxy ) 
+        row  = 'Max-weight' , '%.3f' % maxv , '%.4g' % x , '%.4g' % y 
+        rows.append ( row )
+
+        title = 'Comparison plot %s' % self.what
+        table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lccc' )
+        logger.info ( '%s:\n%s' % ( title , table ) )
+
+    elif isinstance ( hw , ROOT.TH1 ) and 1 == hw.dim () :
         
-    elif isinstance ( hw , ROOT.TH1 ) and 1 == hw.dim () :        
-        if hasattr ( hw     , 'red'   ) : hw .red   ()         
+        if hasattr ( hw , 'red' ) : hw .red ()         
 
         hw.draw  ( copy = True )
         hw.level ( 1.0 , linestyle = 1 , linecolor = ROOT.kRed )
-            
+
+        minx = hw.minimum_bin()
+        maxx = hw.maximum_bin()
+
+        ax = hw.GetXaxis()
+
+        minv = hw [ minx ]
+        maxv = hw [ maxx ]
+
+        rows = [ ( '' , 'value' , 'x' ) ]
+        
+        x = ax.GetBinCenter ( minx ) 
+        row  = 'Min-weight' , '%.3f' % minv , '%.4g' % x 
+        rows.append ( row )
+
+        x    = ax.GetBinCenter ( maxx ) 
+        row  = 'Max-weight' , '%.3f' % maxv , '%.4g' % x 
+        rows.append ( row )
+
+        title = 'Comparison plot %s' % self.what
+        table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lcc' )
+        logger.info ( '%s:\n%s' % ( title , table ) )
+        
     if isinstance ( hd , ROOT.TH1 ) and isinstance ( hmc , ROOT.TH1 ) and 1 == hd.dim() :
 
         hd  = hd .clone()
@@ -931,7 +975,7 @@ def makeWeights  ( dataset                    ,
         hdata = hdata0
         if isinstance ( hdata , ROOT.TH1 ) and not hdata.is_density() : 
             hdata = hdata.density ()
-            logger.warning ( "'Data' histogram converted to 'density' for '%s'" %  what )
+            logger.atention ( "'Data' histogram converted to 'density' for '%s'" %  what )
                                                                         
         # =====================================================================
         ## make a plot on (MC) data with the weight
@@ -1094,6 +1138,13 @@ def makeWeights  ( dataset                    ,
             
             db [ address ] = db.get( address , [] ) + [ weight ]
 
+            ## update the list of known reweightings
+            tag = 'reweightings'
+            addresses = db.get( tag , () )
+            addresses = set ( addresses ) 
+            addresses.add ( address )
+            db [ 'reweightings' ] = tuple ( addresses )
+            
             ## save more information to database 
             if debug :
                 addr        = address + ':REWEIGHTING'
@@ -1249,7 +1300,7 @@ def tree_add_reweighting ( tree                 ,
     - see ostap.tools.reweight.W2Tree 
     """
     assert isinstance ( weighter , Weight     ), "Invalid type of `weighter'!"  
-    assert isinstance ( tree     , ROOT.TTree ), "Invaild type of `tree`!"
+    assert isinstance ( tree     , ROOT.TTree ), "Invalid type of `tree`!"
     
     ## create the weighting function 
     wfun = W2Tree ( weighter )
@@ -1289,7 +1340,7 @@ def data_add_reweighting ( data                ,
     """
     
     assert isinstance ( weighter , Weight          ), "Invalid type of `weighter'!"
-    assert isinstance ( data     , ROOT.RooDataSet ), "Invaild type of `data`!"
+    assert isinstance ( data     , ROOT.RooDataSet ), "Invalid type of `data`!"
     
     ## create the weigthting function 
     wfun = W2Data ( weighter  )
